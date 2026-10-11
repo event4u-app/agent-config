@@ -125,13 +125,37 @@ check must also require the full contrast to appear inside the window.
       `ui:render --profile asset` call with nothing else is refused; a
       `vitest` or `eslint` run after an `.svg` edit is refused; a
       renderer-absent manifest whose static witness reports an error is
-      refused.
+      refused. Four precisions, from a third review:
+      (i) **One record, not two.** On the renderer-absent path the asset
+      profile runs W 1.1's static witness itself and writes
+      `static: { errors: <n>, digest: <sha> }` into the same manifest, so path
+      (2) reads one file and never depends on how a separate lint run is named
+      or stored — W 1.1 alone writes findings to stdout only.
+      (ii) **Planted fixtures are not obligations.** An `.svg` under
+      `tests/design-artifacts/fixtures/**` or
+      `tests/design-artifacts/scenarios/**` opens no SVG obligation: W 0.1's
+      planted files carry errors on purpose and can never reach `verified`, so
+      without this exemption every turn that creates or edits the fixture is
+      refused on a blocking gate. The exemption is by path, not by inline
+      ignore markers, because a marker would hide the planted error from the
+      very test that must find it.
+      (iii) **A manifest counts only if this turn's render wrote it.** On the
+      record path the recorder proves an `ui:render` invocation after the
+      edit; on the transcript path a matching `ui:render --profile asset`
+      Bash call after the edit must be present. A manifest written by hand
+      (an agent `Write` under `agents/runtime/state/render/`, digest
+      included) discharges nothing.
+      (iv) **A deleted `.svg` opens no obligation** — it has no current digest.
       verify: `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t bare-asset-render-without-playwright-is-refused --reporter=verbose` -> /✓.*bare-asset-render-without-playwright-is-refused/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t svg-edit-accepted-on-verified-matching-digest --reporter=verbose` -> /✓.*svg-edit-accepted-on-verified-matching-digest/ <!-- ref-ignore -->
       and `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t asset-profile-exits-nonzero-on-unverified --reporter=verbose` -> /✓.*asset-profile-exits-nonzero-on-unverified/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t renderer-absent-plus-clean-static-witness-is-static-only --reporter=verbose` -> /✓.*renderer-absent-plus-clean-static-witness-is-static-only/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t unrelated-check-does-not-discharge-svg-edit --reporter=verbose` -> /✓.*unrelated-check-does-not-discharge-svg-edit/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t svg-then-html-edit-keeps-the-svg-obligation --reporter=verbose` -> /✓.*svg-then-html-edit-keeps-the-svg-obligation/ <!-- ref-ignore -->
+      and `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t renderer-absent-manifest-carries-static-digest --reporter=verbose` -> /✓.*renderer-absent-manifest-carries-static-digest/ <!-- ref-ignore -->
+      and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t planted-fixture-edit-is-no-svg-obligation --reporter=verbose` -> /✓.*planted-fixture-edit-is-no-svg-obligation/ <!-- ref-ignore -->
+      and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t hand-written-manifest-discharges-nothing --reporter=verbose` -> /✓.*hand-written-manifest-discharges-nothing/ <!-- ref-ignore -->
+      and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t deleted-svg-opens-no-obligation --reporter=verbose` -> /✓.*deleted-svg-opens-no-obligation/ <!-- ref-ignore -->
 - [ ] **2.2 Amend W 3.1 and W 3.5: `verified` needs a clean witness, and the
       pass cap is never success.** `verified` means a digest-bound render
       manifest (2.1) **and** 0 error findings from W 1.1 and W 2.1 on that
