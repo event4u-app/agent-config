@@ -481,7 +481,7 @@ function disagreementIsInsideTextBoxes(
 
 /**
  * TWO numbers per region, because S4 and S13 show either alone misleads:
- * silhouette agreement over the saturated regions, and the colour error over
+ * silhouette agreement over the saturated regions, and the color error over
  * every non-background pixel with the share that is badly off beside it.
  */
 function rasterRegionReading(

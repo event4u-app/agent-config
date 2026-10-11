@@ -317,6 +317,28 @@ export interface AssetRenderResult {
     degradationReason?: string;
 }
 
+/**
+ * One screenshot, with exactly one retry on a protocol error.
+ *
+ * Measured on a GitHub-hosted ubuntu runner with `chromium_headless_shell`:
+ * `page.screenshot` failed with `Protocol error (Page.captureScreenshot):
+ * Unable to capture screenshot` on one asset while the same asset captured
+ * cleanly in another test of the same run — a compositor surface that was not
+ * ready, not a property of the file. ONE retry, deliberately: a genuine failure
+ * fails twice and still surfaces, while a loop would turn a real break into a
+ * slow one. A `path` write also creates its parent directories, so a missing
+ * `outDir` is not what this is for.
+ */
+async function captureWithOneRetry(page: Page, shot: string): Promise<void> {
+    try {
+        await page.screenshot({ path: shot });
+    } catch (first) {
+        if (!/Unable to capture screenshot|Protocol error/i.test(String(first))) throw first;
+        await page.waitForTimeout(250);
+        await page.screenshot({ path: shot });
+    }
+}
+
 /** A reading pass over one asset. The caller owns the browser's lifetime. */
 export async function runAssetRender(browser: Browser, opts: AssetRenderOptions): Promise<AssetRenderResult> {
     const bytes = fs.readFileSync(opts.file);
@@ -402,7 +424,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
                     blocked,
                 });
                 const shot = path.join(opts.outDir, `asset-${size.label}-${mode}.png`);
-                await page.screenshot({ path: shot });
+                await captureWithOneRetry(page, shot);
                 reading.sizes.push({
                     label: size.label,
                     css_width: size.width,

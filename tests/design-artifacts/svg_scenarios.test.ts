@@ -64,7 +64,11 @@ let outRoot = '';
 beforeAll(async () => {
     const { chromium } = await import('@playwright/test');
     browser = await chromium.launch({ headless: true });
-    outRoot = fs.mkdtempSync(path.join(ROOT, 'agents', 'runtime', 'state', 'render', 'scenario-'));
+    // `agents/runtime/` is gitignored, so a fresh checkout does not have it and
+    // `mkdtemp` fails with ENOENT before a single assertion runs.
+    const renderRoot = path.join(ROOT, 'agents', 'runtime', 'state', 'render');
+    fs.mkdirSync(renderRoot, { recursive: true });
+    outRoot = fs.mkdtempSync(path.join(renderRoot, 'scenario-'));
 }, 120_000);
 
 afterAll(async () => {

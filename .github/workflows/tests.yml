@@ -271,8 +271,6 @@ jobs:
           --exclude 'tests/server/workspace.test.ts'
           --exclude 'tests/scripts/collector_lifecycle.test.ts'
           --exclude 'tests/scripts/cli/python/**'
-          --exclude 'tests/cli/ui_render_asset_profile.test.ts'
-          --exclude 'tests/design-artifacts/svg_scenarios.test.ts'
 
   static-checks:
     # Whole-tree gates that have nothing to shard: ESLint, tsc --noEmit, and
@@ -583,6 +581,11 @@ jobs:
         run: npm run build --silent
 
       - name: Vitest (the browser witness)
+        # The env var is what puts these two files back: `vitest.config.ts`
+        # excludes them at the PROJECT level, because a `--exclude` flag does
+        # not reach a project's include set and the file runs anyway.
+        env:
+          AGENT_CONFIG_BROWSER_SUITES: '1'
         run: >-
           npm run test:ts --silent --
           tests/cli/ui_render_asset_profile.test.ts

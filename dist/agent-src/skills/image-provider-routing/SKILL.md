@@ -52,7 +52,7 @@ Image 2 (when an OpenAI key is available and an existing image is being edited).
 The split exists because the single "Vector / SVG logo or icon" row sent every
 icon and every geometric mark to an adapter whose header reads `experimental —
 scaffold tier. dry-run plumbing only` and whose live calls exit at
-`src/scripts/ai-image/adapters/recraft.sh:39`. The routed path ended in a plan;
+the adapter's own live-call guard. The routed path ended in a plan;
 the icon floor meanwhile sent icons to the set. Neither produced an asset for
 the one case that needs one — a glyph the set does not have.
 

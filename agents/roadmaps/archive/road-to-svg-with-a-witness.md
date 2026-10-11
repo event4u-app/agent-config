@@ -257,6 +257,7 @@ renderer.
       the blocker and the verdict. The extraction (`_lib/svg_rules.ts`) landed and
       is not reopened; `tests/scripts/design_pass_svg.test.ts` pins the predicate
       this step must not widen, so a later attempt cannot take the cheap route.
+      <!-- deferred-resolution: carried-to=road-to-svg-rules-in-the-dispatch-path -->
 - [x] **1.5 One safety profile per delivery mode.** The safety family reads
       the declared delivery mode and grades by what can execute there: inline
       DOM (scripts, `on*`, `javascript:` hrefs and `foreignObject` run in the
@@ -587,6 +588,7 @@ The two plans argue in their own ids; each lands here, in
       unchanged for `.svg` paths. **Partially met, and carried with 1.4:** the
       DQ4 half is done and tested; the design-pass half is deferred on the
       council verdict recorded at 1.4. `isUiWrite` is unchanged and pinned.
+      <!-- deferred-resolution: carried-to=road-to-svg-rules-in-the-dispatch-path -->
 - [x] AC-6 — "SVG icon the set lacks" and "simple geometric logo" requests
       route to an asset-producing lane in the trigger corpus; the dry-run
       provider is reached only for illustrative vector art and says so.

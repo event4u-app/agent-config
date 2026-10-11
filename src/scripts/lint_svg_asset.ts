@@ -63,9 +63,9 @@ export function canonicalAttrs(attrs: Record<string, string>): Record<string, st
         const v = (attrs[key] ?? '')
             .replace(/\s+/g, ' ')
             .trim()
-            // Numbers only where a number is what it is. A hex colour is a
+            // Numbers only where a number is what it is. A hex color is a
             // TOKEN, not a quantity: normalising inside `#00ff00` collapses it
-            // onto `#0ff0`, and the readout then reports no change for a colour
+            // onto `#0ff0`, and the readout then reports no change for a color
             // edit outside the allowed ids — a surgical-edit witness that
             // cannot see a recolour.
             .replace(/#[0-9a-fA-F]+|-?\d+\.?\d*(?:[eE][-+]?\d+)?/g, (tok) => {

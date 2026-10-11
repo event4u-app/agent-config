@@ -75,7 +75,8 @@ execution:
      DOCTYPE is fine).
 5. **Run the static check** — `lint_svg_asset`, with the delivery mode declared:
    ```bash
-   ./scripts-run src/scripts/lint_svg_asset --file path/to/asset.svg --delivery inline
+   npx tsx node_modules/@event4u/agent-config/src/scripts/lint_svg_asset.ts \
+     --file path/to/asset.svg --delivery inline
    ```
 6. **Run the witness** — the asset profile, which opens the file in a real engine:
    ```bash
@@ -100,7 +101,8 @@ execution:
 Declare the ids the edit is allowed to touch, then let the readout decide:
 
 ```bash
-./scripts-run src/scripts/lint_svg_asset --file after.svg --baseline before.svg --allow hat,hat-band
+npx tsx node_modules/@event4u/agent-config/src/scripts/lint_svg_asset.ts \
+  --file after.svg --baseline before.svg --allow hat,hat-band
 ```
 
 Every element outside the allowed set that changed is reported with the attribute
@@ -198,7 +200,7 @@ report a non-zero natural width.
 ## See also
 
 > Named rather than linked, and that is a correctness property rather than a
-> style one: this skill ships in four packs, so a relative link to an artefact
+> style one: this skill ships in four packs, so a relative link to an artifact
 > that lives in only one of them resolves for a consumer who installed that pack
 > and is dead for the other three. The names are stable; the paths are not
 > promises this skill can keep.

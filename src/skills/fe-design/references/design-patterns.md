@@ -254,7 +254,7 @@ any other.
   `transform-origin` on an SVG child means what it reads as. The initial
   reference box is the nearest viewport — the `viewBox` — not the element's own
   bounds, so `transform-origin: center` on a shape away from the origin scales
-  it about the canvas centre and translates it as a side effect. The shape still
+  it about the canvas center and translates it as a side effect. The shape still
   moves, nothing errors, and the value looks correct in the stylesheet, which is
   why this is a silent failure rather than a visible one.
 - **`pathLength="1"`** normalises a path's length for a draw-on, so

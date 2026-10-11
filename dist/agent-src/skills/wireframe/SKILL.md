@@ -81,7 +81,7 @@ branded, recommendation-bearing). A single refined implementation →
 1. **One file** (HTML or annotated markdown/SVG canvas) with ≥3 greyscale
    variations side-by-side — flows as small storyboards (3–5 screens each);
    no brand color, no styled typography, no real imagery. An SVG canvas is
-   authored under [`svg-authoring`](../svg-authoring/SKILL.md); its greys are
+   authored under [`svg-authoring`](../svg-authoring/SKILL.md); its grays are
    the wireframe's own non-decisions, so the fidelity floor does not reproduce
    them as choices.
 2. **Per-variation annotations** — 2–4 callouts naming the structural bet and
