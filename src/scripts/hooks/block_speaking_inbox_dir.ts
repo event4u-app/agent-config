@@ -149,16 +149,23 @@ function isGlobOverAcceptableInboxDir(name: string): boolean {
     if (!/[*?[\]]/.test(name)) {
         return false;
     }
-    const literal = name.replace(/[*?]|\[[^\]]*\]/g, '');
+    // Only a single-range class like `[a-z]` is stripped; any other bracket
+    // payload stays in the literal and is judged, because `[acme]` names it.
+    const literal = name.replace(/[*?]|\[[a-z0-9]-[a-z0-9]\]/gi, '');
+    if (OPAQUE_FAMILY_WILDCARD_RE.test(name)) {
+        return true;
+    }
     const trimmed = literal.replace(/-+$/, '');
-    return trimmed !== '' && (isAcceptableInboxDir(trimmed) || OPAQUE_FAMILY_PREFIX_RE.test(trimmed));
+    return trimmed !== '' && isAcceptableInboxDir(trimmed);
 }
 
 /**
- * The fixed head of an opaque identifier family. `round-*` lists hex rounds; as
- * a literal it would create `round-*`, which carries no source either.
+ * The fixed head of an opaque identifier family followed by wildcards only.
+ * `round-*` lists hex rounds; as a literal it would create `round-*`, which
+ * carries no source. Brackets are excluded because their payload survives as
+ * literal text: `round-[acme]-*` must not pass by stripping to `round`.
  */
-const OPAQUE_FAMILY_PREFIX_RE = /^(?:inbox|round|set|src-set|source-set)(?:-\d{4}(?:-\d{2})?)?$/i;
+const OPAQUE_FAMILY_WILDCARD_RE = /^(?:inbox|round|set|src-set|source-set)(?:-\d{4}(?:-\d{2})?)?-[*?]+$/i;
 
 /**
  * The paths a redirect inside one segment would create.

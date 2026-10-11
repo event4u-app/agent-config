@@ -272,8 +272,21 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
             'agents/tmp/inbox-202-*/x.md',
             'agents/tmp/round-2026-1-*/x.md',
             'agents/tmp/my-round-*/x.md',
+            'agents/tmp/round-[acme]-*/x.md',
+            'agents/tmp/inbox-2026-[vendor]-*/x.md',
+            'agents/tmp/set-*acme/x.md',
+            'agents/tmp/inbox-2026-09-[acme]/x.md',
+            'agents/tmp/inbox-2026-09-[acme]*/x.md',
         ])('refuses %s', (p) => {
             expect(blocks(p)).toBe(true);
+        });
+
+        it('refuses a bracket payload in a full Bash command', () => {
+            const tokens = creatableTokens("mkdir -p 'agents/tmp/round-[acme]-*/x'").filter((t) =>
+                t.includes('agents/tmp'),
+            );
+            expect(tokens.length).toBeGreaterThan(0);
+            expect(tokens.some((t) => blocks(t))).toBe(true);
         });
     });
 
