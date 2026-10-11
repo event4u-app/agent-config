@@ -59,6 +59,39 @@ export type OpenPage = (
  * Holes are excluded by declaration, never by geometry: a ring's middle is
  * ground on purpose, and only the author can say which gaps are intended.
  */
+/**
+ * What FRACTION of the capture the graphic covers, width and height.
+ *
+ * Finding 4 of this change's second completion review. The capture is the
+ * VIEWPORT, floored at 64 px, while the page is `margin:0` with
+ * `body>svg{width:cssWidth}` — so the graphic sits in the top-left corner and
+ * covers only part of the image whenever `cssWidth` is smaller. Every icon is
+ * such a case: the sizes are 16/24/48 against a floor of 64. Mapping a
+ * user-unit box across the whole capture therefore put every declared hole and
+ * every declared-translucent shape 4/3 too far out, and the exclusions the
+ * author declared were applied to the wrong part of their own file.
+ *
+ * A FRACTION rather than a pixel count, because the image's size is known only
+ * inside the page while everything this needs is known outside it — which is
+ * also what makes the arithmetic testable without a renderer. Clamped to 1:
+ * `cssWidth` above the viewport is the graphic filling the capture, not
+ * overflowing the coordinate space.
+ */
+export function graphicFraction(spec: {
+    width: number;
+    height: number;
+    cssWidth: number;
+    viewBox: ViewBox | null;
+}): { w: number; h: number } {
+    if (spec.width <= 0 || spec.height <= 0 || spec.cssWidth <= 0) return { w: 1, h: 1 };
+    const w = Math.min(1, spec.cssWidth / spec.width);
+    const vb = spec.viewBox;
+    if (!vb || vb.w <= 0) return { w, h: 1 };
+    // The rendered height follows the viewBox aspect from the rendered width.
+    const cssHeight = spec.cssWidth * (vb.h / vb.w);
+    return { w, h: Math.min(1, cssHeight / spec.height) };
+}
+
 export async function readGrounds(
     context: Awaited<ReturnType<Browser['newContext']>>,
     openPage: OpenPage,
@@ -133,6 +166,19 @@ export async function readGrounds(
                     // replaced by a literal `3` — the same defect class this
                     // change fixes two files away for `Registration.scale`.
                     minContrast: number;
+                    /**
+                     * Finding 4 of the second completion review. The capture is
+                     * the VIEWPORT, floored at 64 px, while the graphic is laid
+                     * out at `cssWidth` in the top-left corner of a page with
+                     * zero margin. Mapping `x / w` across the whole image into
+                     * the viewBox therefore assumed the graphic filled the
+                     * capture — true only for an asset 64 px or wider. For a
+                     * 48 px icon every declared hole and every declared
+                     * translucent shape landed on pixels 4/3 too far out, so
+                     * the exclusions the author declared were applied to the
+                     * wrong part of their own file.
+                     */
+                    graphic: { w: number; h: number };
                 }): Promise<{ silhouette: number; painted: number; low: number; bleed: number } | null> => {
                     const load = async (b64: string): Promise<HTMLImageElement | null> => {
                         const img = new Image();
@@ -206,10 +252,20 @@ export async function readGrounds(
 
                     // Declared holes and translucent shapes, mapped from user
                     // units into this image.
+                    //
+                    // The graphic's own extent in IMAGE pixels, which is what a
+                    // user-unit coordinate maps into — not the capture's. The
+                    // page is `margin:0` with `body>svg{width:cssWidth}`, so it
+                    // sits at the top-left corner and the height follows the
+                    // viewBox aspect. A file with no viewBox is not mapped at
+                    // all (the guard below), so there is no aspect to miss.
+                    const gW = w * args.graphic.w;
+                    const gH = h * args.graphic.h;
                     const within = (boxes: ReadonlyArray<Box>, x: number, y: number): boolean => {
                         if (!args.vb || boxes.length === 0) return false;
-                        const ux = args.vb.x + (x / w) * args.vb.w;
-                        const uy = args.vb.y + (y / h) * args.vb.h;
+                        if (gW <= 0 || gH <= 0 || x >= gW || y >= gH) return false;
+                        const ux = args.vb.x + (x / gW) * args.vb.w;
+                        const uy = args.vb.y + (y / gH) * args.vb.h;
                         return boxes.some(
                             (box) => ux >= box.x && ux <= box.x + box.w && uy >= box.y && uy <= box.y + box.h,
                         );
@@ -305,6 +361,7 @@ export async function readGrounds(
                     soft: spec.softBoxes,
                     vb: spec.viewBox,
                     minContrast: MIN_CONTRAST_RATIO,
+                    graphic: graphicFraction(spec),
                 },
             );
             if (counts === null) continue;

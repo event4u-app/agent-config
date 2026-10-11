@@ -38,28 +38,41 @@ export function staticBox(el: SvgElement): Box | null {
         if (!/^-?\d+(\.\d+)?$/.test(v.trim())) return null;
         return Number(v);
     };
+    /**
+     * A coordinate that defaults to 0 when ABSENT — and refuses the element
+     * when present and unreadable.
+     *
+     * Finding 7 of this change's second completion review. `num(k) ?? 0`
+     * conflated the two, so `<rect x="50%" width="10" height="10"/>` read as
+     * `x = 0`: a percentage, which this function's own doc promises to refuse,
+     * silently became a number. The rule that reads this box then reported an
+     * element outside the viewBox that is not, and missed one that is — a
+     * wrong answer in both directions, from a function whose entire safety
+     * margin is that it returns `null` when it cannot be sure.
+     */
+    const originOr0 = (k: string): number | null => (el.attrs[k] === undefined ? 0 : num(k));
     switch (el.name) {
         case 'rect': {
-            const x = num('x') ?? 0;
-            const y = num('y') ?? 0;
+            const x = originOr0('x');
+            const y = originOr0('y');
             const w = num('width');
             const h = num('height');
-            if (w === null || h === null) return null;
+            if (x === null || y === null || w === null || h === null) return null;
             return { minX: x, minY: y, maxX: x + w, maxY: y + h };
         }
         case 'circle': {
-            const cx = num('cx') ?? 0;
-            const cy = num('cy') ?? 0;
+            const cx = originOr0('cx');
+            const cy = originOr0('cy');
             const r = num('r');
-            if (r === null) return null;
+            if (cx === null || cy === null || r === null) return null;
             return { minX: cx - r, minY: cy - r, maxX: cx + r, maxY: cy + r };
         }
         case 'ellipse': {
-            const cx = num('cx') ?? 0;
-            const cy = num('cy') ?? 0;
+            const cx = originOr0('cx');
+            const cy = originOr0('cy');
             const rx = num('rx');
             const ry = num('ry');
-            if (rx === null || ry === null) return null;
+            if (cx === null || cy === null || rx === null || ry === null) return null;
             return { minX: cx - rx, minY: cy - ry, maxX: cx + rx, maxY: cy + ry };
         }
         case 'line': {
@@ -312,8 +325,17 @@ export function pathDataError(d: string): string | null {
     const argCount: Record<string, number> = {
         m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0,
     };
-    const tokens = trimmed.match(/[a-zA-Z]|-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
-    if (!tokens) return 'path data holds no commands';
+    // The SAME tokeniser `pathExtent` reads. Finding 5 of this change's second
+    // completion review: this one kept the superseded letter-or-number
+    // alternation, so `M 0 0 a 5 5 0 0130 30` — valid path data whose two arc
+    // flags are written without separators — read as five arguments where the
+    // arc takes seven, and was reported as an UNPARSEABLE PATH. Worse than
+    // finding 17's wrong extent: a finding against a correct file, from the
+    // rule whose job is to say a file cannot be read.
+    const tokens = tokenisePath(trimmed);
+    if (!tokens) {
+        return 'path data could not be read — a coordinate, an arc flag or a command letter is malformed';
+    }
     let i = 0;
     while (i < tokens.length) {
         const tok = tokens[i] as string;

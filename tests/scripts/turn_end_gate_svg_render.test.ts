@@ -6,7 +6,8 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { openSvgObligation } from '../../src/scripts/hooks/svg_obligation.js';
-import { isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
+import { isVerificationAttempt, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
+import { detectUnverifiedEdit } from '../../src/scripts/hooks/turn_end_gate_hook.js';
 import { isAssetRenderCommand } from '../../src/scripts/hooks/svg_obligation.js';
 import type { ToolCall } from '../../src/scripts/_lib/turn_end_transcript.js';
 
@@ -154,7 +155,7 @@ describe('the turn-end gate reads the render, never the call', () => {
         });
         const noRender = openSvgObligation(root, [edit(file), bash('npx vitest run x')]);
         expect(noRender).not.toBeNull();
-        expect(noRender?.reason).toContain('naming this file ran after the edit');
+        expect(noRender?.reason).toContain("naming this file ran after THIS file's last edit");
     });
 
     it('svg-then-html-edit-keeps-the-svg-obligation', () => {
@@ -263,5 +264,72 @@ describe('the turn-end gate reads the render, never the call', () => {
         // does is a guard that gets switched off.
         expect(openSvgObligation(root, [edit('src/index.ts'), bash('npx vitest run')])).toBeNull();
         expect(openSvgObligation(root, [])).toBeNull();
+    });
+});
+
+describe('what the second review round found by reading, and a run confirmed', () => {
+    it('an interleaved turn is not refused for a file it rendered', () => {
+        // Finding 2. The render window used to start at the turn's LAST `.svg`
+        // edit globally, while the obligation is per file. So the ordinary
+        // shape — edit a, render a, edit b, render b — hid render-a behind
+        // edit-b and refused a turn in which both files were rendered after
+        // their own edits. Verified red against the previous code.
+        const a = writeSvg('assets/a.svg', SVG_CLEAN);
+        const b = writeSvg('assets/b.svg', SVG_CLEAN.replace('#2563eb', '#16a34a'));
+        writeManifest('a', {
+            profile: 'asset',
+            verification: 'verified',
+            goal: 'unassessed',
+            asset: { digest: digestOf(SVG_CLEAN) },
+        });
+        writeManifest('b', {
+            profile: 'asset',
+            verification: 'verified',
+            goal: 'unassessed',
+            asset: { digest: digestOf(SVG_CLEAN.replace('#2563eb', '#16a34a')) },
+        });
+        expect(
+            openSvgObligation(root, [
+                edit(a),
+                bash('agent-config ui:render assets/a.svg --profile asset'),
+                edit(b),
+                bash('agent-config ui:render assets/b.svg --profile asset'),
+            ]),
+        ).toBeNull();
+
+        // The window is still a window, and it is per file: re-editing `a`
+        // AFTER its render reopens `a` alone. A rule that only widened would
+        // have passed the case above by accident.
+        expect(
+            openSvgObligation(root, [
+                edit(a),
+                bash('agent-config ui:render assets/a.svg --profile asset'),
+                edit(b),
+                bash('agent-config ui:render assets/b.svg --profile asset'),
+                edit(a),
+            ])?.evidence,
+        ).toBe('assets/a.svg');
+    });
+
+    it('the prescribed render satisfies detector C without discharging the obligation', () => {
+        // Finding 3, and it is the exact converse of round one's claim C2 —
+        // both are right, about different detectors. Detector C asks whether
+        // the author tried; the obligation asks what the render found.
+        const file = writeSvg('assets/logo.svg', SVG_CLEAN);
+        const calls = [edit(file), RENDER];
+
+        // Tried: detector C is satisfied. Before this it refused the one
+        // command this package PRESCRIBES for an `.svg`.
+        expect(detectUnverifiedEdit(calls)).toBeNull();
+        // Found nothing: the obligation still fires, with its own better reason.
+        expect(openSvgObligation(root, calls)?.reason).toContain('no asset manifest matches');
+
+        // And the predicate round one reversed is UNCHANGED — the attempt
+        // question has its own name rather than widening the verdict question.
+        expect(isVerificationCommand('agent-config ui:render assets/logo.svg --profile asset')).toBe(false);
+        expect(isVerificationAttempt('agent-config ui:render assets/logo.svg --profile asset')).toBe(true);
+        expect(isVerificationAttempt('npx vitest run tests/x.test.ts')).toBe(true);
+        // A page render is not an asset render and satisfies neither.
+        expect(isVerificationAttempt('agent-config ui:render page.html')).toBe(false);
     });
 });

@@ -224,10 +224,19 @@ export interface GroundReading {
     low_contrast_px: number;
     low_contrast_share: number;
     /**
-     * Pixels INSIDE the silhouette whose colour sits within the anti-alias band
-     * of this ground — background showing through where the file claims to
-     * paint. Seams between abutting shapes, and the pinholes where three parts
-     * meet. Declared holes are excluded.
+     * Pixels INSIDE the outer silhouette that the graphic does not fully
+     * cover — background showing through where the file claims to paint.
+     * Seams between abutting shapes, and the pinholes where three parts meet.
+     * Declared holes and declared-translucent shapes are excluded.
+     *
+     * The test is ALPHA, not colour. Finding 11 of this change's second
+     * completion review: this doc still described the colour-band definition
+     * that was tried and withdrawn, so a reader asking why a seam did not fire
+     * would have debugged a comparison the code does not perform. Two
+     * colour-based definitions were implemented before this one and each
+     * measured 0 bleed pixels on the planted fixture — a blended seam is not
+     * within tolerance of either neighbour, which is why it is not a colour
+     * question at all.
      */
     bleed_px: number;
     bleed_share: number;

@@ -143,7 +143,10 @@ export const EXIT_RENDERER_ABSENT = 3;
  * whether the file is broken. The digest is of the SAME bytes, so a later
  * reader can tell whether this reading describes the file in front of it.
  */
-export function staticWitness(absFile: string): { errors: number; digest: string } | null {
+export function staticWitness(
+    absFile: string,
+    delivery?: DeliveryMode | undefined,
+): { errors: number; digest: string } | null {
     let content: string;
     try {
         content = fs.readFileSync(absFile, 'utf8');
@@ -151,7 +154,16 @@ export function staticWitness(absFile: string): { errors: number; digest: string
         return null;
     }
     const digest = crypto.createHash('sha256').update(content).digest('hex');
-    const errors = scanSvg(content, path.basename(absFile)).filter((f) => f.severity === 'error').length;
+    // The DELIVERY MODE is threaded through. Finding 6 of this change's second
+    // completion review: `scanSvg` grades an undeclared mode as `inline`, the
+    // strictest, because that is the safe default for a file whose embedding
+    // nobody stated. Here the embedding WAS stated — `--delivery img` is on the
+    // same command line — so defaulting raised the safety family to `error` for
+    // an asset that cannot execute anything, and a correct `img`-delivered file
+    // was refused the static-only discharge it qualifies for.
+    const errors = scanSvg(content, path.basename(absFile), { delivery }).filter(
+        (f) => f.severity === 'error',
+    ).length;
     return { errors, digest };
 }
 
@@ -231,7 +243,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         // static witness itself and binds it to the same digest, so the gate's
         // static-only discharge reads ONE file and never depends on how a
         // separate lint run was named or stored.
-        const staticReading = isAsset && !isUrl ? staticWitness(abs) : null;
+        const staticReading = isAsset && !isUrl ? staticWitness(abs, opts.delivery) : null;
         const manifest: RenderManifest = {
             schema: 1,
             generated_at: new Date().toISOString(),
@@ -392,7 +404,7 @@ async function runAssetProfile(
         // once for the value — so the verified path re-read the file, re-hashed
         // it and re-ran the whole rule suite, and the two reads could disagree
         // if the file moved between them.
-        const staticReading = staticWitness(opts.abs);
+        const staticReading = staticWitness(opts.abs, opts.delivery);
         const manifest: RenderManifest = {
             schema: 1,
             generated_at: new Date().toISOString(),

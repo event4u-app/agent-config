@@ -24,6 +24,41 @@ import type { Box, IconGridReading } from './uiRenderAssetTypes.js';
  */
 const NON_RENDERING = new Set(['defs', 'clippath', 'mask', 'symbol', 'marker', 'pattern']);
 
+/**
+ * The elements that actually paint: everything outside a transformed subtree
+ * and outside a non-rendering container.
+ *
+ * Extracted by finding 9 of this change's second completion review. The extent
+ * reading did this walk and the stroke-width reading did not, so an icon whose
+ * clip path carried `stroke-width="8"` reported 8 as its stroke while its
+ * padding was measured from the 1.5 the viewer sees. Two readings of the same
+ * file disagreeing about which elements are in it is the shape a shared walk
+ * removes by construction — the previous fix widened the extent half and left
+ * the other, which is exactly how the pair came to disagree.
+ */
+function renderingElements(elements: ReadonlyArray<SvgElement>): SvgElement[] {
+    const out: SvgElement[] = [];
+    const openSkips: boolean[] = [];
+    let skipDepth = 0;
+    for (const el of elements) {
+        if (el.closing) {
+            const was = openSkips.pop();
+            if (was === true) skipDepth -= 1;
+            continue;
+        }
+        const carries =
+            Boolean(el.attrs['transform'] || el.attrs['style']?.includes('transform')) ||
+            NON_RENDERING.has(el.name);
+        if (!el.selfClosing) {
+            openSkips.push(carries);
+            if (carries) skipDepth += 1;
+        }
+        if (skipDepth > 0 || (el.selfClosing && carries)) continue;
+        out.push(el);
+    }
+    return out;
+}
+
 export interface IconReference {
     file: string;
     viewBox: ViewBox;
@@ -79,22 +114,7 @@ export function centrelineExtent(elements: readonly SvgElement[]): {
     // zeroes. The old `d`-scraping reader had the same blind spot; reading
     // primitives widened it, because clip and mask shapes are rects and
     // circles.
-    const openSkips: boolean[] = [];
-    let skipDepth = 0;
-    for (const el of elements) {
-        if (el.closing) {
-            const was = openSkips.pop();
-            if (was === true) skipDepth -= 1;
-            continue;
-        }
-        const carries =
-            Boolean(el.attrs['transform'] || el.attrs['style']?.includes('transform')) ||
-            NON_RENDERING.has(el.name);
-        if (!el.selfClosing) {
-            openSkips.push(carries);
-            if (carries) skipDepth += 1;
-        }
-        if (skipDepth > 0 || (el.selfClosing && carries)) continue;
+    for (const el of renderingElements(elements)) {
         const box = elementExtent(el);
         if (!box) continue;
         minX = Math.min(minX, box.minX);
@@ -202,8 +222,7 @@ export function gradeIconGrid(
     );
     const comparable = vb ? refs.filter((r) => r.viewBox.w === vb.w && r.viewBox.h === vb.h) : [];
     const strokes = new Set<number>();
-    for (const el of elements) {
-        if (el.closing) continue;
+    for (const el of renderingElements(elements)) {
         const sw = Number(el.attrs['stroke-width']);
         if (Number.isFinite(sw) && sw > 0) strokes.add(sw);
     }

@@ -64,7 +64,17 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { isAssetRenderCommand } from '../_lib/verification_command.js';
 import type { ToolCall } from '../_lib/turn_end_transcript.js';
+
+/**
+ * Re-exported, not re-derived. Finding 3 of this change's SECOND completion
+ * review moved the predicate into `_lib/verification_command.ts`, because
+ * detector C needs it too and a `_lib` module may not import from `hooks/`.
+ * Two copies of a command-shape regex is how the two detectors come to
+ * disagree about what a render is.
+ */
+export { isAssetRenderCommand };
 
 /**
  * Tools that WRITE. One copy, here rather than imported from the gate: the
@@ -187,21 +197,29 @@ export function dischargeFor(manifests: readonly AssetManifestish[], digest: str
 }
 
 export interface SvgObligationInputs {
-    /** Repo-relative paths the turn EDITED, in order, `.svg` and otherwise. */
-    editedPaths: readonly string[];
     /**
-     * The `ui:render --profile asset` command lines this turn ran AFTER its
-     * last `.svg` edit, verbatim.
+     * One entry per file the turn EDITED, in order, `.svg` and otherwise, each
+     * carrying the `ui:render --profile asset` command lines that ran after
+     * THAT file's last edit, verbatim.
      *
-     * Precision (iii), and it is now PER FILE. It used to be a single boolean:
-     * any asset render anywhere unlocked every manifest on disk, so a
+     * Precision (iii), and both halves of it were wrong once.
+     *
+     * The first round made it per file by NAME: a single boolean used to mean
+     * that any asset render anywhere unlocked every manifest on disk, so a
      * hand-written manifest plus a decoy render on an unrelated file
-     * discharged the obligation — which is exactly the hole the header claims
-     * to have closed. Finding 2 of this change's own completion review.
+     * discharged the obligation. A command must NAME the file it discharges.
      *
-     * A command must NAME the file it discharges.
+     * The second round made it per file by TIME, which is finding 2 of that
+     * round. The render window was taken from the turn's LAST `.svg` edit
+     * globally while the obligation is per file, so the ordinary interleaved
+     * turn — edit a, render a, edit b, render b — hid render-a behind edit-b
+     * and refused a turn in which both files were rendered correctly after
+     * their own edits. Confirmed by running it before it was changed.
+     *
+     * Both windows are the same shape: a render counts for a file only if it
+     * names that file AND follows that file's own last edit.
      */
-    renderedTargets: readonly string[];
+    edits: ReadonlyArray<{ path: string; rendered: readonly string[] }>;
 }
 
 /**
@@ -214,7 +232,7 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
     const seen = new Set<string>();
     let manifests: AssetManifestish[] | null = null;
 
-    for (const raw of inputs.editedPaths) {
+    for (const { path: raw, rendered } of inputs.edits) {
         if (!/\.svg$/i.test(raw)) continue;
         // Repo-relative FIRST, so `seen`, the planted exemption and the
         // reported `file` all speak the same dialect — the doc on
@@ -240,11 +258,12 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
         // (iii) The manifests are only consulted once a render was observed.
         // Reading them first and then discarding the verdict would make the
         // ordering look like a performance detail rather than the rule.
-        if (!renderNames(inputs.renderedTargets, relPath)) {
+        if (!renderNames(rendered, relPath)) {
             open.push({
                 file: relPath,
                 reason:
-                    'no `ui:render --profile asset` naming this file ran after the edit, so no manifest on ' +
+                    'no `ui:render --profile asset` naming this file ran after THIS file\'s last edit, so no ' +
+                    'manifest on ' +
                     'disk can be attributed to it — a manifest written by any other route, and a render of ' +
                     'some other file, both discharge nothing',
             });
@@ -267,11 +286,14 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
 }
 
 /**
- * Does this Bash command invoke the asset render?
+ * Does one of the observed renders NAME this file?
  *
- * Narrow on purpose, and NOT added to `isVerificationCommand`: matching here
- * makes the command a precondition for reading a manifest, while matching
- * there would make it a discharge on its own — which is the hole.
+ * The render is a precondition for reading a manifest, never a discharge on
+ * its own — `isVerificationCommand` still does not match it, so the command's
+ * text cannot satisfy the obligation on the transcript path. Detector C reads
+ * `isVerificationAttempt` instead, which is a different question with a
+ * different right answer; both live in `_lib/verification_command.ts`, where
+ * the split is argued.
  */
 export function renderNames(commands: readonly string[], relPath: string): boolean {
     const base = relPath.split('/').pop() ?? relPath;
@@ -289,9 +311,7 @@ function escapeRe(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function isAssetRenderCommand(command: string): boolean {
-    return /\bui:render\b/.test(command) && /--profile[= ]\s*asset\b/.test(command);
-}
+
 
 /**
  * An `.svg` this turn edited that no render describes — step 2.1(b) of
@@ -317,30 +337,38 @@ export function openSvgObligation(
     workspaceRoot: string,
     toolCalls: readonly ToolCall[],
 ): { detector: 'verification'; evidence: string; reason: string; mode: 'transcript' } | null {
-    const editedPaths: string[] = [];
-    let lastSvgEdit = -1;
+    // Precision (iii). The render has to come AFTER the edit it describes, on
+    // both evidence paths — `toolCalls` is assembled for both, so one rule
+    // covers them rather than two that can disagree.
+    //
+    // The window is per FILE, which finding 2 of the second review round is
+    // about: taking it from the turn's last `.svg` edit globally hid an
+    // earlier file's render behind a later file's edit, so the ordinary
+    // interleaved turn was refused although every file had been rendered after
+    // its own edit. The last edit of each path is the one that counts, because
+    // an earlier render describes bytes a later edit replaced.
+    const lastEditOf = new Map<string, number>();
     for (let i = 0; i < toolCalls.length; i += 1) {
         const c = toolCalls[i]!;
         if (!EDIT_TOOLS.has(c.name) || c.path === undefined) continue;
-        editedPaths.push(c.path);
-        if (/\.svg$/i.test(c.path)) lastSvgEdit = i;
+        lastEditOf.set(c.path, i);
     }
-    if (lastSvgEdit === -1) return null;
+    if (lastEditOf.size === 0) return null;
 
-    // Precision (iii). The render has to come AFTER the edit it is supposed to
-    // describe, on both evidence paths — `toolCalls` is assembled for both, so
-    // one rule covers them rather than two that can disagree.
-    const renderedTargets: string[] = [];
-    for (let i = lastSvgEdit + 1; i < toolCalls.length; i += 1) {
-        const c = toolCalls[i]!;
-        if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
-            renderedTargets.push(c.command);
+    const edits = [...lastEditOf].map(([p, at]) => {
+        const rendered: string[] = [];
+        for (let i = at + 1; i < toolCalls.length; i += 1) {
+            const c = toolCalls[i]!;
+            if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
+                rendered.push(c.command);
+            }
         }
-    }
+        return { path: p, rendered };
+    });
 
     let reading: SvgObligationReading;
     try {
-        reading = readSvgObligations(workspaceRoot, { editedPaths, renderedTargets });
+        reading = readSvgObligations(workspaceRoot, { edits });
     } catch {
         // A gate that crashed on its own instrument is a new failure mode on a
         // path meant to be inert. An unreadable render directory is no finding.

@@ -322,7 +322,7 @@
       "file": "assets/id-only-in-a-comment.svg",
       "twin": "assets/id-only-in-a-comment.clean.svg",
       "twin_kind": "one-edit",
-      "note": "The only id=\"a\" sits inside a comment, so it is not in the document. A pattern over the raw text reads it as defined and reports the file clean; the element parser never saw it. Step 3.1 of road-to-svg-review-followups."
+      "note": "The only id=\"planted-badge\" sits inside a comment, so it is not in the document. A pattern over the raw text reads it as defined and reports the file clean; the element parser never saw it. Step 3.1 of road-to-svg-review-followups."
     },
     {
       "id": "mis-nested-tags",

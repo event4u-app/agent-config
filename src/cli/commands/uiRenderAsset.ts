@@ -497,7 +497,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         });
 
         if (!isHost) {
-            const raw = await page.evaluate(readAssetInPage);
+            const raw = await page.evaluate(readAssetInPage, { nearWhite: NEAR_WHITE_CHANNEL });
             applyGeometry(reading, raw, vb);
         }
 
@@ -707,7 +707,7 @@ interface RawAssetReading {
     texts: RawTextReading[];
 }
 
-function readAssetInPage(): RawAssetReading {
+function readAssetInPage(args: { nearWhite: number }): RawAssetReading {
     const svg = document.querySelector('svg');
     if (!svg) return { viewBox: null, elements: [], texts: [] };
     const vbAttr = (svg.getAttribute('viewBox') ?? '').trim().split(/[\s,]+/).map(Number);
@@ -878,11 +878,14 @@ function readAssetInPage(): RawAssetReading {
     // results are discarded. The reading is identical; only the pairs nobody
     // asks about are gone.
     //
-    // The predicate is INLINE rather than imported: this body runs in the page
-    // and cannot close over module scope — the same trap finding 4 names two
-    // files away. The channel floor is the one constant it needs and it is
-    // spelled here with the reason, not silently duplicated.
-    const NEAR_WHITE = 237; // uiRenderAssetTypes.NEAR_WHITE_CHANNEL
+    // The channel floor is PASSED, not spelled twice. Finding 10 of this
+    // change's second completion review: a literal `237` on this side of the
+    // page boundary and `NEAR_WHITE_CHANNEL` on the other, bound only by a
+    // trailing comment, is the same shape as the dead constants this branch
+    // fixes elsewhere — one of them changes and nothing says so. A
+    // `page.evaluate` body cannot close over module scope, so it arrives as an
+    // argument, exactly as `minContrast` does two files away.
+    const NEAR_WHITE = args.nearWhite;
     const candidates = elements.filter((el) => {
         if (el.geom === null || !el.opaque) return false;
         const m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(el.fill);

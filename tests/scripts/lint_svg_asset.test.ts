@@ -9,10 +9,12 @@ import {
     type Finding,
     preservationReadout,
     safetySeverity,
+    pathDataError,
     pathExtent,
     scanHostHtml,
     scanSvg,
     maskComments,
+    staticBox,
     tokenisePath,
     vectorVerdict,
     parseElements,
@@ -607,5 +609,42 @@ describe("the two readings a completion review found wrong rather than missing",
         // A leading `+` is legal and was dropped by the same alternation.
         expect(tokenisePath('M +10 +20')).toEqual(['M', '+10', '+20']);
         expect(pathExtent('M +10 +20 L +30 +40')).toEqual(pathExtent('M 10 20 L 30 40'));
+    });
+});
+
+describe('what the second review round found in the geometry readings', () => {
+    it('a compact arc is not reported as an unparseable path', () => {
+        // Finding 5. `pathDataError` kept the superseded tokeniser after
+        // `pathExtent` was fixed, so the same legal path that read as a wrong
+        // BOX there read as a FINDING here — against a correct file, from the
+        // rule whose job is to say a file cannot be read.
+        expect(pathDataError('M 0 0 a 5 5 0 0130 30')).toBeNull();
+        expect(pathDataError('M 0 0 a 5 5 0 0 1 30 30')).toBeNull();
+        expect(pathDataError('M +10 +20 L +30 +40')).toBeNull();
+        // Still a reader, not a rubber stamp: a short arc and a wrong command
+        // letter are both still reported.
+        expect(pathDataError('M 0 0 a 5 5 0 0 1 30')).not.toBeNull();
+        expect(pathDataError('M 0 0 Q 1 1')).not.toBeNull();
+        expect(pathDataError('M 0 0 k 1 1')).not.toBeNull();
+    });
+
+    it('a present-but-unreadable coordinate refuses the box', () => {
+        // Finding 7. `num(k) ?? 0` conflated ABSENT with UNREADABLE, so a
+        // percentage — which this function's doc promises to refuse — became 0.
+        const el = (attrs: Record<string, string>) =>
+            ({ name: 'rect', attrs, line: 1, start: 0, selfClosing: true, closing: false, raw: '' });
+        // Absent still defaults to 0, which is what the SVG spec says.
+        expect(staticBox(el({ width: '10', height: '10' }))).toEqual({ minX: 0, minY: 0, maxX: 10, maxY: 10 });
+        // Present and unreadable is null, in both directions that matter: a
+        // percentage and a unit.
+        expect(staticBox(el({ x: '50%', width: '10', height: '10' }))).toBeNull();
+        expect(staticBox(el({ y: '2em', width: '10', height: '10' }))).toBeNull();
+        // And a readable one is still read.
+        expect(staticBox(el({ x: '4', y: '4', width: '10', height: '10' }))).toEqual({
+            minX: 4,
+            minY: 4,
+            maxX: 14,
+            maxY: 14,
+        });
     });
 });

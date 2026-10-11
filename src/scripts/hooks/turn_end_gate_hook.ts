@@ -197,7 +197,7 @@ import {
     graphUntestedVerdict,
 } from '../_lib/graph_feeder_record.js';
 import { type GraphState, graphState } from '../code_graph/detect.js';
-import { isVerificationCommand } from '../_lib/verification_command.js';
+import { isVerificationAttempt, isVerificationCommand } from '../_lib/verification_command.js';
 import { openSvgObligation } from './svg_obligation.js';
 // Round 8 — the record path detector C prefers over its own regex. The regex
 // reads a command's TEXT and `echo test` matches it; these read what the run
@@ -762,7 +762,7 @@ export function detectUnverifiedEdit(
 
     for (let i = lastEdit + 1; i < toolCalls.length; i += 1) {
         const c = toolCalls[i]!;
-        if (c.name === 'Bash' && c.command !== undefined && isVerificationCommand(c.command)) {
+        if (c.name === 'Bash' && c.command !== undefined && isVerificationAttempt(c.command)) {
             return null;
         }
     }
@@ -773,7 +773,7 @@ export function detectUnverifiedEdit(
         evidence: edited,
         reason:
             'this turn changed a file and then ran no verification command — ' +
-            'no test, type-check, lint or build call follows the last edit ' +
+            'no test, type-check, lint, build or asset render follows the last edit ' +
             '(verify-before-complete: a claim without a fresh run is unverified)',
         mode: 'transcript',
     };

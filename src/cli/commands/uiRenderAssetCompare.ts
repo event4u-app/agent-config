@@ -370,14 +370,31 @@ export async function compareGeometry(
               // construction, whatever that sample is worth in user units.
               dilate(baselineMask.painted, frame.w, frame.h, 1)
             : null;
+        // ALIGNMENT FIRST, ON THE UNCLIPPED CANDIDATE — finding 1 of this
+        // change's second completion review, and it is a proof rather than an
+        // observation. Clipping the candidate to the baseline's silhouette
+        // makes it a SUBSET of the baseline, and for a subset the IoU at zero
+        // shift is |candidate| / |baseline|, which no shift can beat: shifting
+        // can only move part of the subset off the baseline (the intersection
+        // shrinks) and off its own footprint (the union grows). `bestAlignment`
+        // replaces its (0,0) seed only on a STRICTLY greater value, so it
+        // returned dx = dy = 0 for every registered raster ever measured, and
+        // `sub_pixel_offset` was a constant reported as a reading. That is the
+        // defect class this branch exists to fix, reintroduced by the clip that
+        // fixed a different one.
+        //
+        // So the offset is read from the candidate as rendered — registration
+        // has already cropped the source to the subject, so this is the mark
+        // against the mark — and the clip is applied to the ALIGNED candidate,
+        // where it still does its own job of keeping a neighbour out of the IoU.
+        const { dx, dy } = bestAlignment(baselineMask.painted, candidateMask.painted, frame.w, frame.h);
+        const aligned = shift(candidateMask.painted, frame.w, frame.h, dx, dy);
         const candidateForJudging =
-            subjectForJudging === null
-                ? candidateMask.painted
-                : intersect(candidateMask.painted, subjectForJudging);
+            subjectForJudging === null ? aligned : intersect(aligned, subjectForJudging);
 
-        const { iou, dx, dy } = bestAlignment(baselineMask.painted, candidateForJudging, frame.w, frame.h);
-        const shifted = shift(candidateForJudging, frame.w, frame.h, dx, dy);
-        const maxDistance = boundaryDistance(baselineMask.painted, shifted, frame.w, frame.h) * unitsPerSample;
+        const iou = iouOf(baselineMask.painted, candidateForJudging);
+        const maxDistance =
+            boundaryDistance(baselineMask.painted, candidateForJudging, frame.w, frame.h) * unitsPerSample;
 
         const foreign =
             subjectForForeign === null ? null : shareOutside(candidateMask.painted, subjectForForeign);
@@ -502,7 +519,7 @@ function dilate(mask: Uint8Array, w: number, h: number, radius: number): Uint8Ar
 }
 
 /** `a AND b`, pixel for pixel. */
-function intersect(a: Uint8Array, b: Uint8Array): Uint8Array {
+export function intersect(a: Uint8Array, b: Uint8Array): Uint8Array {
     const out = new Uint8Array(a.length);
     for (let i = 0; i < a.length; i += 1) out[i] = a[i] === 1 && b[i] === 1 ? 1 : 0;
     return out;
@@ -746,7 +763,7 @@ function shift(mask: Uint8Array, w: number, h: number, dx: number, dy: number): 
     return out;
 }
 
-function iouOf(a: Uint8Array, b: Uint8Array): number {
+export function iouOf(a: Uint8Array, b: Uint8Array): number {
     let inter = 0;
     let union = 0;
     for (let i = 0; i < a.length; i++) {
@@ -759,7 +776,7 @@ function iouOf(a: Uint8Array, b: Uint8Array): number {
 }
 
 /** The sub-pixel offset of the candidate against the baseline is PART of the reading (S12). */
-function bestAlignment(a: Uint8Array, b: Uint8Array, w: number, h: number): { iou: number; dx: number; dy: number } {
+export function bestAlignment(a: Uint8Array, b: Uint8Array, w: number, h: number): { iou: number; dx: number; dy: number } {
     let best = { iou: iouOf(a, b), dx: 0, dy: 0 };
     for (let dy = -2; dy <= 2; dy++) {
         for (let dx = -2; dx <= 2; dx++) {

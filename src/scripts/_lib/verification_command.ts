@@ -344,3 +344,40 @@ const _WIDE_CANDIDATE_RE =
 export function mightBeVerification(command: string): boolean {
     return _WIDE_CANDIDATE_RE.test(command);
 }
+
+/**
+ * `agent-config ui:render … --profile asset`, by shape.
+ *
+ * Moved here from `hooks/svg_obligation.ts` by finding 3 of this change's
+ * SECOND completion review: two detectors need it and one of them is in
+ * `_lib`, so a hook module was the wrong home. Re-exported there, so no
+ * caller moved.
+ */
+export function isAssetRenderCommand(command: string): boolean {
+    return /\bui:render\b/.test(command) && /--profile[= ]\s*asset\b/.test(command);
+}
+
+/**
+ * Did this command ATTEMPT to verify something — as opposed to: did it produce
+ * a verdict this gate may read?
+ *
+ * The distinction is the whole point, and the first review round and the
+ * second each saw one half of it. Round one (claim C2) was right that
+ * `isVerificationCommand` must NOT learn the asset render: the transcript path
+ * never sees an exit code, so the command's TEXT would have discharged the SVG
+ * obligation on a machine where the render produced nothing. Round two
+ * (finding 3) was right that removing it left detector C — "did any
+ * verification command follow the last edit" — unable to see the one command
+ * this package PRESCRIBES for an `.svg`, so the prescribed turn was refused.
+ *
+ * Both hold because they are about different detectors. Detector C asks
+ * whether the author tried; it is satisfied by `eslint` and must be satisfied
+ * by a render too. The SVG obligation asks what the render FOUND, and still
+ * reads the manifest and the file's digest — an attempt that produced nothing
+ * discharges nothing there, with a far better reason than detector C's.
+ *
+ * So: one predicate per question, and `isVerificationCommand` is unchanged.
+ */
+export function isVerificationAttempt(command: string): boolean {
+    return isVerificationCommand(command) || isAssetRenderCommand(command);
+}
