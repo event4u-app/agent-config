@@ -255,7 +255,7 @@ renderer.
 
 ## Phase 2 — Engine witness: an asset profile for `ui:render`
 
-- [ ] **2.1 `ui:render <file> --profile asset`.** The page profile and its
+- [x] **2.1 `ui:render <file> --profile asset`.** The page profile and its
       `VIEWPORTS` contract stay untouched. The asset profile renders per class
       (icon at 16/24/48 px; other classes at 1× and 2× intrinsic) on a light
       and a dark background read from the project's tokens, and records:
@@ -274,13 +274,13 @@ renderer.
       and the `ui:render` synopsis in `src/cli/registry.ts:50` name the
       profile in the same change.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*every-engine-row-found-and-twins-clean/ <!-- ref-ignore -->
-- [ ] **2.2 The manifest stays readable.** New fields are optional and keyed
+- [x] **2.2 The manifest stays readable.** New fields are optional and keyed
       under `profile: asset`; a reader of today's manifest sees what it sees
       today. No second manifest schema. `generated_at` is written per run
       (`uiRender.ts:144`, `:212`, `:232`), so the comparison drops that one key
       and nothing else.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t page-manifest-unchanged-except-generated-at --reporter=verbose` -> /✓.*page-manifest-unchanged-except-generated-at/ <!-- ref-ignore -->
-- [ ] **2.3 Absence path unchanged.** No Playwright → `verification:
+- [x] **2.3 Absence path unchanged.** No Playwright → `verification:
       unverified`, and the owner (3.1) then reports `static-only`. Playwright
       stays a devDependency; no rasteriser or renderer dependency is added.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t absent-path-reads-unverified --reporter=verbose` -> /✓.*absent-path-reads-unverified/ <!-- ref-ignore -->
@@ -294,7 +294,7 @@ renderer.
 - [x] **2.5 Fix the stale reference** at `uiRender.ts:26` (`package.json:97` →
       the line that holds `@playwright/test`, `:111` today).
       verify: `grep -c 'package.json:97' src/cli/commands/uiRender.ts` -> /^0$/
-- [ ] **2.6 Geometry comparison with declared tolerances.** One comparison
+- [x] **2.6 Geometry comparison with declared tolerances.** One comparison
       for two renders of the same frame — before and after an edit, or a
       source raster against its vector (S3, S4): silhouette IoU and the
       largest boundary distance, both in viewBox units, against a tolerance
@@ -375,7 +375,7 @@ renderer.
       SVG", "turn the logo in this PNG into a real vector without the app
       name" (S1).
       verify: `./scripts-run src/scripts/check_trigger_evals` -> 0
-- [ ] **3.5 Status follows render evidence.** The owner may report
+- [x] **3.5 Status follows render evidence.** The owner may report
       `verified` only when a render manifest from 2.1 exists whose recorded
       file digest equals the delivered file's digest on disk — a manifest from
       an earlier pass does not count. A parser or `xmllint` pass alone reports
@@ -408,11 +408,11 @@ renderer.
 
 ## Phase 5 — Measured outcome
 
-- [ ] **5.1 Re-run the fixture with every layer on** and write the per-row
+- [x] **5.1 Re-run the fixture with every layer on** and write the per-row
       table beside 0.2's baseline in the fixture README. Claims in the owner
       skill follow the numbers, not the plan.
       verify: the README carries both tables with identical row sets.
-- [ ] **5.2 Record the promotion bar, not the promotion.** Beside each rule
+- [x] **5.2 Record the promotion bar, not the promotion.** Beside each rule
       in 5.1's table, record its finding count on clean twins and on Phase 6's
       outputs across two consecutive measured runs. A rule is a blocking
       candidate only at zero twin findings in both runs and at least one true
@@ -427,7 +427,7 @@ task text, the inputs and the delivered files committed under
 `tests/design-artifacts/scenarios/` <!-- ref-ignore -->. The witnesses — never a
 model — decide the outcome, and one test file checks all five.
 
-- [ ] **6.1 A new logo as a true vector.** Two sub-cases, because the session
+- [x] **6.1 A new logo as a true vector.** Two sub-cases, because the session
       showed they fail differently. (a) From a brief: the delivered file has 0
       `<image>`, 0 `foreignObject`, no `<text>` unless the brief asks for one,
       a fill ratio inside its class threshold, `lint_svg_asset` at 0 errors and
@@ -442,25 +442,25 @@ model — decide the outcome, and one test file checks all five.
       at least that well, and a run that needs more than five scored passes
       to get there fails.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t new-logo-true-vector --reporter=verbose` -> /✓.*new-logo-true-vector/ <!-- ref-ignore -->
-- [ ] **6.2 Remove only one figure's face, keep its hat.** Input: an SVG of a
+- [x] **6.2 Remove only one figure's face, keep its hat.** Input: an SVG of a
       figure whose hat and face are separate, with transforms and a `<use>`.
       Outcome: 1.2 reports 0 changed elements outside the face's declared ids,
       and 2.6 reports no silhouette change outside the face's box beyond the
       anti-aliasing band.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t face-removed-hat-unchanged --reporter=verbose` -> /✓.*face-removed-hat-unchanged/ <!-- ref-ignore -->
-- [ ] **6.3 Scale 3000× without loss.** A 512 px tile clipped from an edge
+- [x] **6.3 Scale 3000× without loss.** A 512 px tile clipped from an edge
       of 6.1's output is rendered at 3000× device scale; the edge transition
       is at most 2 device pixels wide (an embedded raster would blur across
       hundreds), and the file still has 0 `<image>` and no filter that
       rasterises at a fixed resolution.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t scales-3000x-sharp --reporter=verbose` -> /✓.*scales-3000x-sharp/ <!-- ref-ignore -->
-- [ ] **6.4 An animated variant with a reduced-motion fallback.** `frame_seek`
+- [x] **6.4 An animated variant with a reduced-motion fallback.** `frame_seek`
       (2.4) at t = 0, mid and end yields three different frames; under
       emulated `reduce` the inline delivery yields equal frames; the `img`
       delivery records `not_witnessable` and its host carries the
       `<picture>` static route; DQ4 (1.3) and 1.1's motion family report 0.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t animated-with-reduced-motion-route --reporter=verbose` -> /✓.*animated-with-reduced-motion-route/ <!-- ref-ignore -->
-- [ ] **6.5 Working files, verified after re-opening.** Every file 6.1-6.4
+- [x] **6.5 Working files, verified after re-opening.** Every file 6.1-6.4
       delivered exists at its reported path with its reported digest, parses,
       re-renders non-empty from disk in a fresh context with the network
       aborted, and, for `img` delivery, loads through a host `<img>` with a
@@ -556,34 +556,34 @@ The two plans argue in their own ids; each lands here, in
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The fixture holds every planted row from 0.1 with a one-edit
+- [x] AC-1 — The fixture holds every planted row from 0.1 with a one-edit
       twin, and its README carried the 0.3 targets before any checker merged.
-- [ ] AC-2 — Every `static` row is reported by `lint_svg_asset`, with zero
+- [x] AC-2 — Every `static` row is reported by `lint_svg_asset`, with zero
       findings on twins; a raster beside a dummy path is never reported as a
       true vector and a `rect`/`circle` mark is never reported as non-vector.
-- [ ] AC-3 — Every surgical-edit pair reports exactly the moved neighbour and
+- [x] AC-3 — Every surgical-edit pair reports exactly the moved neighbour and
       nothing on its twin.
-- [ ] AC-4 — Every `engine` row is reported by the asset profile where
+- [x] AC-4 — Every `engine` row is reported by the asset profile where
       Playwright resolves; without it the manifest reads `unverified` and no
       layer reports a pass.
-- [ ] AC-5 — An inline SMIL animation with no reduced-motion route, or with
+- [x] AC-5 — An inline SMIL animation with no reduced-motion route, or with
       only a CSS route, is reported by DQ4; an `.svg` write receives
       `lint_svg_asset` findings from the design pass, and `isUiWrite` is
       unchanged for `.svg` paths.
-- [ ] AC-6 — "SVG icon the set lacks" and "simple geometric logo" requests
+- [x] AC-6 — "SVG icon the set lacks" and "simple geometric logo" requests
       route to an asset-producing lane in the trigger corpus; the dry-run
       provider is reached only for illustrative vector art and says so.
-- [ ] AC-7 — 5.1's table stands beside 0.2's baseline with identical rows,
+- [x] AC-7 — 5.1's table stands beside 0.2's baseline with identical rows,
       with 5.2's per-rule twin counts from two runs beside it.
-- [ ] AC-8 — Active content is graded per delivery mode; an undeclared mode
+- [x] AC-8 — Active content is graded per delivery mode; an undeclared mode
       is graded as inline, and `img` mode never reads clean.
-- [ ] AC-9 — The owner reports `verified` only with a render manifest whose
+- [x] AC-9 — The owner reports `verified` only with a render manifest whose
       digest equals the delivered file's; `xmllint` alone yields
       `static-only`, and the turn-end gate counts the asset render.
-- [ ] AC-10 — 2.6 reports silhouette agreement and boundary distance against
+- [x] AC-10 — 2.6 reports silhouette agreement and boundary distance against
       a declared per-class tolerance, and for a raster source also mean colour
       error and the share of pixels off, per region; a font-only delta reads
       `degraded`.
-- [ ] AC-11 — 6.1 (both sub-cases), 6.2, 6.3, 6.4 and 6.5 each pass their
+- [x] AC-11 — 6.1 (both sub-cases), 6.2, 6.3, 6.4 and 6.5 each pass their
       witness check on a recorded run, and every delivered file re-opens
       from disk.

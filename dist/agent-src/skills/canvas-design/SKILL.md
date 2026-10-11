@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: canvas-design
-description: "Creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — on 'design a poster' or 'mach uns ein Visual'. Grounded by design-intelligence."
+description: "Static visual art — posters, marketing visuals, brand assets, PDF/PNG pieces — on 'design a poster' or 'mach uns ein Visual'."
 domain: product
 workspaces:
   - small-business
@@ -73,7 +73,9 @@ Document it in `philosophy.md` under `## Subtle reference`.
 
 Produce `agents/design-assets/{slug}/{slug}.{pdf|png}`:
 
-1. Pick the execution tool (Pillow, matplotlib, SVG, or framework-native)
+1. Pick the execution tool (Pillow, matplotlib, SVG, or framework-native). When
+   it is SVG, author it under [`svg-authoring`](../svg-authoring/SKILL.md) —
+   the canvas is still an asset and gets the same static check and witness
 2. **Font selection** — pick a font that earns the philosophy. Inspect a working dir (e.g. `agents/design-assets/{slug}/fonts/` — create if missing) and place the chosen file there before render. System defaults (Arial, Helvetica, DejaVu, the matplotlib default sans) are the AI-template tell; reach for them only as deliberate fallback, never as the unexamined default
 3. Limited palette — 2–5 colors, intentional and cohesive
 4. Geometric or organic forms per philosophy

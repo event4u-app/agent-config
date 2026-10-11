@@ -1,0 +1,19 @@
+{
+  "skill": "svg-authoring",
+  "last_eval": "2026-10-11",
+  "description": "6 should-trigger + 6 should-not-trigger. Should-trigger covers the six lanes that produce hand-authored SVG — a glyph the incumbent set lacks, a simple geometric mark, an animated asset, a surgical edit to an existing file, an SVG diagram, and a raster converted to a vector. Should-not-trigger covers the near-miss neighbours this skill sits between: an icon the set already has (iconography), a full brand pipeline (logo-generation), a raster image (image-generation), provider choice (image-provider-routing), video motion (motion-choreographer), and reduced-motion policy (fe-design).",
+  "queries": [
+    {"q": "draw an SVG icon the set does not have — a 'split branch' glyph matching our Lucide stroke", "trigger": true},
+    {"q": "author a simple geometric mark as SVG — two overlapping circles, brand blue, no text", "trigger": true},
+    {"q": "animate this logo SVG so the ring draws on over 800ms", "trigger": true},
+    {"q": "change only the hat in this SVG and leave everything else byte-identical", "trigger": true},
+    {"q": "turn the logo in this PNG into a real vector without the app name", "trigger": true},
+    {"q": "hand-place an SVG architecture diagram — five boxes and typed edges", "trigger": true},
+    {"q": "which Heroicons name is the download action?", "trigger": false, "note": "the set already has it → iconography"},
+    {"q": "generate a logo for my bakery called Golden Crust", "trigger": false, "note": "full brand pipeline → logo-generation"},
+    {"q": "generate a photoreal hero image of a coffee shop at dawn", "trigger": false, "note": "raster generation → image-generation"},
+    {"q": "which provider should I use for complex illustrative vector art?", "trigger": false, "note": "provider choice → image-provider-routing"},
+    {"q": "choreograph the camera move and the cut timing for this product video", "trigger": false, "note": "video motion → motion-choreographer"},
+    {"q": "what is our policy on prefers-reduced-motion durations across the app?", "trigger": false, "note": "motion policy → fe-design § Motion; this skill points at it and never restates it"}
+  ]
+}
