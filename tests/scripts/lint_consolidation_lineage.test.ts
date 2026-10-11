@@ -66,6 +66,22 @@ describe('lint_consolidation_lineage — the six declaration shapes', () => {
     it('a complete folder produces zero findings', () => {
         expect(codesIn('complete')).toEqual([]);
     });
+
+    it('a present parent whose name is not road-to-* is NOT a missing parent', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lineage-nonroad-'));
+        fs.writeFileSync(
+            path.join(dir, 'road-to-master.md'),
+            '---\nconsolidates:\n  - road-to-a.md\n  - deep-plan-2026-09-30.md\n---\n# master\n',
+        );
+        fs.writeFileSync(path.join(dir, 'road-to-a.md'), '# a\n');
+        fs.writeFileSync(path.join(dir, 'deep-plan-2026-09-30.md'), '# b\n');
+        expect(analyseFolder(dir).map((f) => f.code)).toEqual([]);
+        fs.writeFileSync(
+            path.join(dir, 'road-to-master.md'),
+            '---\nconsolidates:\n  - road-to-a.md\n  - absent-plan.md\n---\n# master\n',
+        );
+        expect(analyseFolder(dir).map((f) => f.code)).toEqual(['missing-parent']);
+    });
 });
 
 describe('lint_consolidation_lineage — normalization', () => {

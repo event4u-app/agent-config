@@ -313,18 +313,21 @@ export function analyseFolder(
     surface: Surface = 'inbox',
 ): Finding[] {
     const findings: Finding[] = [];
-    let names: string[];
+    let entries: string[];
     try {
-        names = fs.readdirSync(dir).filter((n) => ROADMAP_RE.test(n)).sort();
+        entries = fs.readdirSync(dir);
     } catch {
         return findings;
     }
+    const names = entries.filter((n) => ROADMAP_RE.test(n)).sort();
     const artifacts: Artifact[] = names.map((n) => ({
         stem: n.replace(/\.md$/i, ''),
         file: n,
         decl: parseDeclaration(fs.readFileSync(path.join(dir, n), 'utf-8'), surface),
     }));
-    const present = new Set(artifacts.map((a) => a.stem));
+    // A parent need not be named road-to-*: a dated deep-dive plan is a parent
+    // too, and only its absence makes it missing.
+    const present = new Set(entries.filter((n) => /\.md$/i.test(n)).map((n) => n.replace(/\.md$/i, '')));
 
     for (const a of artifacts) {
         if (a.decl.unparseable) {
