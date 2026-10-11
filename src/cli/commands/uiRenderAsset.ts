@@ -1077,7 +1077,14 @@ export function gradeIconGrid(
     vb: ViewBox | null,
     elements: SvgElement[],
     iconSet: readonly string[],
-    paintedBox: Box | null,
+    /**
+     * The RENDERED painted box. Kept in the signature and deliberately unread:
+     * it is what the candidate's padding used to come from (finding 2.2), and
+     * dropping the parameter would make a caller that still passes it look
+     * correct while silently changing which argument lands where. Named with a
+     * leading underscore so the linter agrees it is not used.
+     */
+    _paintedBox: Box | null,
 ): IconGridReading {
     const self = path.resolve(file);
     const { refs, skipped } = readIconReferencesDetailed(

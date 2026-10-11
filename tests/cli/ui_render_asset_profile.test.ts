@@ -20,6 +20,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { runUiRender } from '../../src/cli/commands/uiRender.js';
 import type { RenderManifest } from '../../src/cli/commands/uiRender.js';
+import type * as UiRenderModuleNs from '../../src/cli/commands/uiRender.js';
 import {
     cropRect,
     gradeIconGrid,
@@ -29,6 +30,8 @@ import type { AssetClass } from '../../src/cli/commands/uiRenderAsset.js';
 import { parseRegistration } from '../../src/cli/commands/uiRenderAssetCompare.js';
 import { parseElements } from '../../src/scripts/lint_svg_asset.js';
 import type { DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
+
+type UiRenderModule = typeof UiRenderModuleNs;
 
 const FIXTURE_ROOT = path.resolve(process.cwd(), 'tests/design-artifacts/fixtures/svg-assets');
 const FIXTURE_MANIFEST = path.join(FIXTURE_ROOT, 'manifest.json');
@@ -613,7 +616,7 @@ describe('carried R2 findings — the icon grid and the registration', () => {
  * has the devDependency — and it is the path a consumer actually walks.
  */
 describe('the asset profile reports its own absence honestly', () => {
-    const withoutPlaywright = async <T>(fn: (mod: typeof import('../../src/cli/commands/uiRender.js')) => Promise<T>): Promise<T> => {
+    const withoutPlaywright = async <T>(fn: (mod: UiRenderModule) => Promise<T>): Promise<T> => {
         vi.resetModules();
         vi.doMock('@playwright/test', () => {
             throw new Error("Cannot find package '@playwright/test'");
