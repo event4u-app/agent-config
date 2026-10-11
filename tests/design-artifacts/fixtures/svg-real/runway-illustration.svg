@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180" role="img" aria-labelledby="runway-illustration-title">
+  <title id="runway-illustration-title">Cash runway falling to zero over six months</title>
+  <rect width="320" height="180" fill="#0f172a"/>
+  <polyline points="24,36 76,58 128,84 180,110 232,132 284,150" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="24" y1="156" x2="296" y2="156" stroke="#334155" stroke-width="2"/>
+  <text x="24" y="172" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#94a3b8">month 1</text>
+  <text x="248" y="172" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#94a3b8">month 6</text>
+</svg>

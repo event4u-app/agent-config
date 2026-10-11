@@ -212,6 +212,22 @@ renderer.
       branch is CSS, a `d` morph whose values differ in command count, type
       or order). Draw-on dead time is not a static rule — it moves to
       2.1. `corrected-from-reproduction` (R9).
+      AMENDED 2026-10-11 by `road-to-svg-review-followups` 3.1 and 3.2, review
+      claim C11. The checker builds an ELEMENT TREE with a dependency-free XML
+      well-formedness parser — elements, attributes, comments, CDATA,
+      processing instructions and DOCTYPE, each with a line and a column, in
+      one `src/scripts/_lib/` module — and the structure, reference,
+      accessibility and motion families read that tree: nesting, parentage and
+      `#id` resolution are never decided by a pattern over the raw text. A
+      file that is not well-formed is a FINDING
+      (`svg-structure-not-well-formed`), never a skipped file. 0.1 gains three
+      planted rows a text-pattern check misses — an id whose only definition
+      sits inside a comment, mis-nested tags, and a `<title>` that is not a
+      direct child of the graphic it names — and 0.3's pre-registration gains
+      a held-out set of real SVGs under
+      `tests/design-artifacts/fixtures/svg-real/` <!-- ref-ignore -->, covering
+      every asset class, whose outcome 5.1 reports in its own table beside the
+      planted one.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*every-static-row-found-and-twins-clean/ <!-- ref-ignore -->
 - [x] **1.2 Preservation readout for a surgical edit.** `lint_svg_asset
       --baseline <before.svg> --allow <id,…>` compares every element outside

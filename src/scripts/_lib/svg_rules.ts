@@ -17,6 +17,7 @@
  * every existing import keeps resolving.
  */
 
+import { parseDocument, type XmlNode } from './svg_dom.js';
 import {
     SMIL_TAGS,
     declarationsOf,
@@ -959,6 +960,16 @@ interface NameState {
 }
 
 /** Is `elements[index]` a direct child of the root `<svg>`? */
+/**
+ * Is the element at `index` a direct child of the root graphic?
+ *
+ * Counts open/close depth over the flat list. Step 3.1 of
+ * `road-to-svg-review-followups` moved the AUTHORITY for this question onto
+ * the parse tree ({@link directChildrenOfRoot}); this stays as the flat
+ * reading it is cross-checked against, because a depth counter and a tree
+ * agreeing on every fixture is evidence the tree is right, while replacing one
+ * with the other is evidence of nothing.
+ */
 function isDirectChildOfRoot(elements: SvgElement[], index: number): boolean {
     let depth = 0;
     for (let i = 0; i < index; i++) {
@@ -967,6 +978,50 @@ function isDirectChildOfRoot(elements: SvgElement[], index: number): boolean {
         else if (!el.selfClosing) depth += 1;
     }
     return depth === 1;
+}
+
+/**
+ * The root graphic's direct element children, from the parse tree.
+ *
+ * Parentage decided by ancestry rather than by a depth count: the two agree on
+ * a well-formed file and the tree is the one that stays right on a file that
+ * is not, because a stray closing tag moves a depth counter and does not move
+ * an ancestor chain.
+ */
+export function directChildrenOfRoot(content: string): XmlNode[] {
+    const doc = parseDocument(content);
+    const root = doc.elements.find((el) => el.name === 'svg');
+    if (root === undefined) return [];
+    return root.children.filter((n) => n.kind === 'element');
+}
+
+/**
+ * Well-formedness, reported rather than assumed.
+ *
+ * Step 3.1. `<g><path></g></path>` carries both tags, both spelled correctly,
+ * and is not a tree — which is precisely what a flat element list cannot see
+ * and what a pattern over the raw text cannot decide. A file that does not
+ * parse is a FINDING, never a skipped file: a skip reads as clean in every
+ * count that matters.
+ *
+ * Capped at the first five errors. One mistake inside a deep document can
+ * produce an error per remaining tag, and a wall of them buries the first,
+ * which is the only one a reader can act on.
+ */
+function ruleWellFormed(content: string, file: string): Finding[] {
+    const doc = parseDocument(content);
+    if (doc.errors.length === 0) return [];
+    const shown = doc.errors.slice(0, 5);
+    const more = doc.errors.length - shown.length;
+    return shown.map((e, i) => ({
+        rule: 'svg-structure-not-well-formed',
+        file,
+        line: e.line,
+        snippet:
+            `${e.message} (column ${String(e.column)})` +
+            (i === shown.length - 1 && more > 0 ? ` — and ${String(more)} further error(s)` : ''),
+        severity: 'error' as Severity,
+    }));
 }
 
 function rootNameState(content: string, elements: SvgElement[]): NameState {
@@ -979,7 +1034,15 @@ function rootNameState(content: string, elements: SvgElement[]): NameState {
     const titleIdx = elements.findIndex(
         (el, i) => el.name === 'title' && !el.closing && rootIdx !== -1 && isDirectChildOfRoot(elements, i),
     );
-    const hasTitle = titleIdx !== -1 && textOf(content, elements, titleIdx).trim().length > 0;
+    // Step 3.1: the PARSE TREE decides parentage, and the depth count above is
+    // kept as the reading it is checked against. The two agree on every
+    // well-formed file; where they disagree the file is not well-formed, which
+    // `svg-structure-not-well-formed` already reports, and the tree is the one
+    // that is still right — a stray closing tag moves a depth counter and does
+    // not move an ancestor chain.
+    const titleIsDirectChild = directChildrenOfRoot(content).some((n) => n.name === 'title');
+    const hasTitle =
+        titleIsDirectChild && titleIdx !== -1 && textOf(content, elements, titleIdx).trim().length > 0;
 
     // `aria-labelledby="x"` + `<title id="x">` is the CANONICAL pattern, not a
     // collision: the attribute POINTS AT the title rather than competing with
@@ -1235,6 +1298,7 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
     // here still names the right line in the raw text.
     const text = maskComments(content);
     const raw: Finding[] = [
+        ...ruleWellFormed(content, relPath),
         ...ruleMissingXmlns(elements, relPath),
         ...ruleOutsideViewBox(elements, relPath),
         ...ruleUnparseablePath(elements, relPath),

@@ -315,3 +315,43 @@ column scoped to its own twin would have scored it `yes`.
 | `motion/img-delivery-no-static-route` | `hosts/img-delivery.html` | engine | 1+ | 0 | 0 | yes |
 | `motion/no-reduced-motion-branch` | `hosts/smil-only.html` | static | 1+ | 1 | 1 (assets/guessed-dash.clean.svg) | no |
 | `motion/smil-css-only-branch` | `hosts/smil-css-only.html` | static | 1+ | 0 | 0 | yes |
+
+## The held-out real set
+
+Step 3.2 of `road-to-svg-review-followups`. Everything above this heading is
+**planted**: a defect written on purpose, with a one-edit twin. A promotion bar
+measured only on planted files says how well the checkers find defects somebody
+chose for them, and nothing about how they behave on a file written to be
+right. So there is a second set, and it is reported separately — never merged
+into the planted totals.
+
+It lives in `tests/design-artifacts/fixtures/svg-real/` <!-- ref-ignore --> and
+covers every asset class. Every file is this project's own: two are already in
+the tree (`site/public/favicon.svg`,
+`src/scripts/media/lib/fixtures/recraft/asset-0001.svg`), two are the
+conversion scenarios' delivered marks, and three were authored for this set.
+**No third-party file**, which is the same rule the scenario directory keeps.
+
+**Pre-registered, under 0.3's rule.** The expected column below was written
+before any checker ran over the set, and no rule has been tuned against it.
+The measured column is the reading that followed.
+
+| File | class | pre-registered | measured | reading |
+|---|---|---|---|---|
+| `favicon-32.svg` | icon | 0 | 0 | xmlns, viewBox, `role="img"`, `aria-label`, no references |
+| `recraft-asset-0001.svg` | icon | 1 · `svg-a11y-no-accessible-name` | 1 · `svg-a11y-no-accessible-name` | a generated 16-unit square with no role, title or label — a real file that is genuinely unnamed |
+| `authored-mark.svg` | mark | 0 | 0 | scenario 1's delivered mark |
+| `conversion-reference-mark.svg` | mark | 0 | 0 | scenario 1b's delivered mark |
+| `runway-illustration.svg` | illustration | 0 | 0 | `aria-labelledby` pointing at its own `<title>`, explicit font stack |
+| `dispatch-diagram.svg` | diagram | 0 | 0 | namespaced marker id, three labelled nodes |
+| `settle-spinner.svg` | animated | 0 | 0 | CSS animation with a `prefers-reduced-motion` branch and `transform-box` |
+
+**7 files, 1 finding, and the prediction matched the measurement on every
+row.** That is the reading, not a target: a second set exists so that a future
+rule which starts firing on correct files has somewhere to show up, and a row
+that moves is the signal rather than a failure to explain away.
+
+**What this set does NOT do.** It is small, it is ours, and it is therefore not
+a sample of SVGs in the wild. It bounds false positives on files written to
+this project's own conventions, which is the population the checkers actually
+meet, and it says nothing about a file written to anybody else's.

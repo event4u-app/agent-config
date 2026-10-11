@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">
+  <title>Planted — the only id="planted-badge" sits inside a comment</title>
+  <!-- <rect id="planted-badge" width="24" height="24" fill="#2563eb"/> -->
+  <use href="#planted-badge"/>
+</svg>

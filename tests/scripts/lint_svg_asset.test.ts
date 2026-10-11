@@ -16,6 +16,7 @@ import {
     parseElements,
 } from '../../src/scripts/lint_svg_asset.js';
 import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
+import { parseDocument } from '../../src/scripts/_lib/svg_dom.js';
 
 /**
  * Steps 1.1, 1.2 and 1.5 of `road-to-svg-with-a-witness`, measured against the
@@ -87,6 +88,7 @@ const TAXONOMY_TO_RULE: Record<string, string> = {
     'structure/unparseable-path-data': 'svg-structure-unparseable-path',
     'structure/unused-defs-entry': 'svg-structure-unused-defs',
     'structure/dangling-reference': 'svg-structure-dangling-reference',
+    'structure/not-well-formed': 'svg-structure-not-well-formed',
     'safety/active-content': 'svg-safety-active-content',
     'safety/internal-dtd-subset': 'svg-safety-internal-subset',
     'safety/external-reference': 'svg-safety-external-reference',
@@ -336,5 +338,174 @@ describe('a-commented-out-reference-is-not-a-reference', () => {
         expect(rules).not.toContain('svg-a11y-no-accessible-name');
         // The marker suppresses that rule and nothing else.
         expect(rules).toContain('svg-structure-missing-xmlns');
+    });
+});
+
+/**
+ * Step 3.1 of `road-to-svg-review-followups`, review claim C11.
+ *
+ * Nesting, parentage and `#id` resolution are decided by a parse tree, never
+ * by a pattern over the raw text. The three rows below are the ones a
+ * text-pattern check misses, and they are planted in the committed corpus
+ * (`manifest.json`) rather than invented here — the fixture is the contract.
+ *
+ * The parser is written rather than depended on, and the reasons were checked
+ * rather than assumed: `package.json` carries no runtime XML parser,
+ * `happy-dom` is dev-only, the three vendored tree-sitter grammars are php,
+ * typescript and javascript, and Playwright is absent in a consumer.
+ */
+describe('regex-blind-rows-found-by-the-tree', () => {
+    /** The rule ids one fixture reports — the shape every assertion below wants. */
+    const rules = (rel: string, delivery: DeliveryMode): string[] => scan(rel, delivery).map((f) => f.rule);
+
+    const row = (id: string): Row => {
+        const r = manifest.rows.find((x) => x.id === id);
+        if (!r) throw new Error(`row ${id} is not pre-registered in manifest.json`);
+        return r;
+    };
+
+    it('regex-blind-rows-found-by-the-tree', () => {
+        // (a) An id that is not in the document. The element parser never saw
+        //     it; a pattern over the text reads it as defined and calls the
+        //     file clean.
+        const comment = row('id-only-in-a-comment');
+        expect(rules(comment.file, comment.delivery)).toContain('svg-structure-dangling-reference');
+        expect(scan(comment.twin, comment.delivery)).toEqual([]);
+
+        // The two siblings of that case, which the corpus does not carry as
+        // their own rows because they are the same defect under a different
+        // hiding place.
+        const head = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img"><title>t</title>';
+        const inCdata = `${head}<style><![CDATA[ /* <rect id="planted-badge"/> */ ]]></style><use href="#planted-badge"/></svg>`;
+        expect(scanSvg(inCdata, 'a.svg').map((f) => f.rule)).toContain('svg-structure-dangling-reference');
+        const inAttrValue = `${head}<rect data-note='id="planted-badge"' width="1" height="1"/><use href="#planted-badge"/></svg>`;
+        expect(scanSvg(inAttrValue, 'b.svg').map((f) => f.rule)).toContain('svg-structure-dangling-reference');
+        // And a `url(#…)` inside CDATA IS a real reference — a `<style>` block
+        // is where SVG puts its CSS, so masking CDATA wholesale would have
+        // broken the thing this row is about in the other direction.
+        const realUse = `${head}<defs><linearGradient id="brand-grad"><stop offset="0"/></linearGradient></defs>` +
+            `<style><![CDATA[ .a{fill:url(#brand-grad)} ]]></style><rect class="a" width="1" height="1"/></svg>`;
+        expect(scanSvg(realUse, 'c.svg').map((f) => f.rule)).not.toContain('svg-structure-unused-defs');
+
+        // (b) Mis-nested tags. Both present, both spelled correctly, and the
+        //     document is not a tree — the case a flat element list cannot see.
+        const nested = row('mis-nested-tags');
+        expect(rules(nested.file, nested.delivery)).toContain('svg-structure-not-well-formed');
+        expect(scan(nested.twin, nested.delivery)).toEqual([]);
+
+        // (c) Parentage. A `<title>` inside a `<g>` names the group, so the
+        //     graphic still has no accessible name.
+        const title = row('title-not-a-direct-child');
+        expect(rules(title.file, title.delivery)).toContain('svg-a11y-no-accessible-name');
+        expect(scan(title.twin, title.delivery)).toEqual([]);
+    });
+
+    it('a file that is not well-formed is a finding, never a skipped file', () => {
+        const doc = parseDocument('<svg><g><path/></g></path></svg>');
+        expect(doc.errors.length).toBeGreaterThan(0);
+        expect(doc.errors[0]?.line).toBe(1);
+        expect(doc.errors[0]?.column).toBeGreaterThan(0);
+
+        // An unclosed element is reported against where it OPENED, which is
+        // the line a reader has to go to.
+        const unclosed = parseDocument('<svg>\n  <g>\n    <rect/>\n');
+        expect(unclosed.errors.map((e) => e.message).join(' ')).toContain('<g> is never closed');
+        expect(unclosed.errors.find((e) => e.message.includes('<g>'))?.line).toBe(2);
+
+        // A well-formed file produces no errors, so the assertions above are
+        // about the files and not about a parser that always complains.
+        expect(parseDocument(read('assets/hamburger-24-grid.svg')).errors).toEqual([]);
+    });
+
+    it('the tree and the flat element list agree on every committed fixture', () => {
+        // Two scanners over the same bytes is a drift risk, and this is the
+        // check that makes the risk visible instead of latent: the tree's
+        // element order and names must equal the flat list's open tags, on
+        // every fixture the corpus carries.
+        const files = manifest.rows.flatMap((r) => [r.file, r.twin]);
+        expect(files.length).toBeGreaterThan(20);
+        for (const rel of files) {
+            if (!rel.endsWith('.svg')) continue;
+            const content = read(rel);
+            const flat = parseElements(content)
+                .filter((el) => !el.closing)
+                .map((el) => el.name);
+            const tree = parseDocument(content).elements.map((el) => el.name);
+            expect(tree, `${rel}: the tree and the flat list disagree`).toEqual(flat);
+        }
+    });
+
+    it('every node kind carries a line and a column', () => {
+        const doc = parseDocument(
+            '<?xml version="1.0"?>\n<!DOCTYPE svg>\n<svg>\n  <!-- c -->\n  <style><![CDATA[ x ]]></style>\n</svg>\n',
+        );
+        const kinds = new Set<string>();
+        const walk = (nodes: readonly { kind: string; line: number; column: number; children: unknown[] }[]): void => {
+            for (const n of nodes) {
+                kinds.add(n.kind);
+                expect(n.line, `${n.kind} has no line`).toBeGreaterThan(0);
+                expect(n.column, `${n.kind} has no column`).toBeGreaterThan(0);
+                walk(n.children as typeof nodes);
+            }
+        };
+        walk(doc.roots as unknown as Parameters<typeof walk>[0]);
+        for (const kind of ['pi', 'doctype', 'element', 'comment', 'cdata']) {
+            expect(kinds, `no ${kind} node was produced`).toContain(kind);
+        }
+        expect(doc.errors).toEqual([]);
+    });
+});
+
+/**
+ * Step 3.2 of `road-to-svg-review-followups` — the held-out real set, reported
+ * beside the planted one and never merged into it.
+ *
+ * A promotion bar measured only on planted files says how well the checkers
+ * find defects somebody chose for them. This set is the other half: files
+ * written to be right, so a rule that starts firing on correct work has
+ * somewhere to show up. The expectations are pre-registered in
+ * `fixtures/svg-assets/README.md` under its "held-out real set" heading, and
+ * this file re-derives them rather than restating them.
+ */
+describe('the-real-set-is-reported-separately', () => {
+    const REAL = path.resolve(FIXTURES, '..', 'svg-real');
+
+    it('the-real-set-is-reported-separately', () => {
+        const files = fs
+            .readdirSync(REAL)
+            .filter((f) => f.endsWith('.svg'))
+            .sort();
+        // At least six, covering every asset class — the bar the step names.
+        expect(files.length, 'the held-out real set is smaller than the step requires').toBeGreaterThanOrEqual(6);
+
+        const readme = fs.readFileSync(path.join(FIXTURES, 'README.md'), 'utf-8');
+        const section = readme.slice(readme.search(/^##\s.*[Rr]eal/m));
+        expect(section.length, 'the README carries no held-out-real-set section').toBeGreaterThan(0);
+
+        // Every class is present in the pre-registration.
+        for (const cls of ['icon', 'mark', 'illustration', 'diagram', 'animated']) {
+            expect(section, `the real set declares no ${cls}`).toContain(`| ${cls} |`);
+        }
+
+        const findings: Record<string, string[]> = {};
+        for (const name of files) {
+            // Every file is pre-registered; a file nobody declared is a file
+            // whose reading nobody predicted.
+            expect(section, `${name} is not pre-registered in the README`).toContain(`\`${name}\``);
+            findings[name] = scanSvg(fs.readFileSync(path.join(REAL, name), 'utf-8'), name).map((f) => f.rule);
+        }
+
+        // The reading, asserted as the README records it. One finding, on the
+        // one file that is genuinely unnamed.
+        const total = Object.values(findings).reduce((n, f) => n + f.length, 0);
+        expect(total, `real-set findings: ${JSON.stringify(findings)}`).toBe(1);
+        expect(findings['recraft-asset-0001.svg']).toEqual(['svg-a11y-no-accessible-name']);
+
+        // And it is a SEPARATE reading: no file of this set is a planted row,
+        // so the two tables cannot silently merge.
+        const planted = new Set(manifest.rows.flatMap((r) => [r.file, r.twin]));
+        for (const name of files) {
+            expect(planted.has(`assets/${name}`), `${name} is also a planted row`).toBe(false);
+        }
     });
 });

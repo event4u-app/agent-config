@@ -3,10 +3,26 @@
   "roadmap": "road-to-svg-with-a-witness",
   "step": "0.1",
   "enums": {
-    "asset_class": ["icon", "mark", "illustration", "diagram", "animated"],
-    "delivery": ["inline", "img", "css-bg"],
-    "layer": ["static", "engine"],
-    "twin_kind": ["one-edit", "structural"]
+    "asset_class": [
+      "icon",
+      "mark",
+      "illustration",
+      "diagram",
+      "animated"
+    ],
+    "delivery": [
+      "inline",
+      "img",
+      "css-bg"
+    ],
+    "layer": [
+      "static",
+      "engine"
+    ],
+    "twin_kind": [
+      "one-edit",
+      "structural"
+    ]
   },
   "rows": [
     {
@@ -294,25 +310,66 @@
       "twin": "hosts/smil-css-only.clean.html",
       "twin_kind": "one-edit",
       "note": "The page's CSS kill switch is replaced by an element swap, because a CSS motion property leaves the SMIL timeline running under reduce (R4, D8)."
+    },
+    {
+      "id": "id-only-in-a-comment",
+      "asset_class": "icon",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "structure/dangling-reference",
+      "file": "assets/id-only-in-a-comment.svg",
+      "twin": "assets/id-only-in-a-comment.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "The only id=\"a\" sits inside a comment, so it is not in the document. A pattern over the raw text reads it as defined and reports the file clean; the element parser never saw it. Step 3.1 of road-to-svg-review-followups."
+    },
+    {
+      "id": "mis-nested-tags",
+      "asset_class": "icon",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "structure/not-well-formed",
+      "file": "assets/mis-nested-tags.svg",
+      "twin": "assets/mis-nested-tags.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "</g></path> closes in the wrong order. Both tags are present and correctly spelled, which is why a flat element list cannot see it and only a tree can. Step 3.1."
+    },
+    {
+      "id": "title-not-a-direct-child",
+      "asset_class": "icon",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "accessibility/meaningful-without-name",
+      "file": "assets/title-not-a-direct-child.svg",
+      "twin": "assets/title-not-a-direct-child.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "The <title> names the group it sits in, not the graphic, so the graphic has no accessible name. Parentage, which no pattern over the text decides. Step 3.1."
     }
   ],
   "controls": [
     {
       "id": "primitive-only-mark",
       "file": "assets/primitive-only-mark.svg",
-      "must_not_report": ["vector-honesty/embedded-raster", "vector-honesty/not-a-true-vector"],
+      "must_not_report": [
+        "vector-honesty/embedded-raster",
+        "vector-honesty/not-a-true-vector"
+      ],
       "note": "A mark built only from rect, circle and polygon. The presence check in logo-generation step 5 fails it; the vector-honesty family must count those primitives as vector geometry and report nothing (D3's false red)."
     },
     {
       "id": "spinner-intentional-dash",
       "file": "assets/spinner-intentional-dash.svg",
-      "must_not_report": ["motion/draw-on-dead-time", "motion/guessed-dash"],
+      "must_not_report": [
+        "motion/draw-on-dead-time",
+        "motion/guessed-dash"
+      ],
       "note": "stroke-dasharray=\"90 150\" with no pathLength is an intentional spinner pattern, not a guessed length. The prototype's static regex fired here (R12), which is why draw-on dead time is an engine reading in 2.1 and never a static rule."
     },
     {
       "id": "hamburger-24-grid",
       "file": "assets/hamburger-24-grid.svg",
-      "must_not_report": ["structure/loose-viewbox"],
+      "must_not_report": [
+        "structure/loose-viewbox"
+      ],
       "note": "Painted bbox 18 by 12 inside a 24 by 24 viewBox - a fill ratio of 0.375, which is designed padding. The prototype's global 0.5 threshold read it as loose (R12); at the icon-class threshold of 0.30 it must read clean."
     }
   ],
@@ -320,7 +377,9 @@
     {
       "id": "flat-paths",
       "before": "surgical/flat-paths/before.svg",
-      "allowed_ids": ["face"],
+      "allowed_ids": [
+        "face"
+      ],
       "good": "surgical/flat-paths/good.svg",
       "bad": "surgical/flat-paths/bad.svg",
       "moved_neighbour": "base",
@@ -329,7 +388,9 @@
     {
       "id": "grouped-transforms",
       "before": "surgical/grouped-transforms/before.svg",
-      "allowed_ids": ["face-group"],
+      "allowed_ids": [
+        "face-group"
+      ],
       "good": "surgical/grouped-transforms/good.svg",
       "bad": "surgical/grouped-transforms/bad.svg",
       "moved_neighbour": "hat-group",
@@ -338,7 +399,9 @@
     {
       "id": "use-symbol",
       "before": "surgical/use-symbol/before.svg",
-      "allowed_ids": ["use-right"],
+      "allowed_ids": [
+        "use-right"
+      ],
       "good": "surgical/use-symbol/good.svg",
       "bad": "surgical/use-symbol/bad.svg",
       "moved_neighbour": "use-left",
@@ -348,7 +411,12 @@
   "conversion": {
     "reference": "conversion/reference.svg",
     "note": "The ground truth for the raster-to-vector sub-case (6.1b). The raster is rendered FROM this file by Chromium at test time, so the geometry of every region is known exactly and no third-party brand image is committed (S1, S4). Flat two-stop gradients and no text element, so a re-derivation does not depend on the renderer's font stack. Regions: mark, mark-hole, wordmark, slogan - and mark-hole is a real hole with alpha 0, not near-white paint (S5).",
-    "region_ids": ["mark", "mark-hole", "wordmark", "slogan"]
+    "region_ids": [
+      "mark",
+      "mark-hole",
+      "wordmark",
+      "slogan"
+    ]
   },
   "support": [
     {
@@ -369,18 +437,33 @@
     }
   ],
   "fill_ratio_thresholds": {
-    "icon": 0.30,
+    "icon": 0.3,
     "mark": 0.45,
-    "illustration": 0.40,
+    "illustration": 0.4,
     "diagram": 0.35,
     "animated": 0.35
   },
   "geometry_tolerances": {
-    "icon": { "silhouette_iou_min": 0.98, "max_boundary_distance_units": 1.0 },
-    "mark": { "silhouette_iou_min": 0.98, "max_boundary_distance_units": 2.0 },
-    "illustration": { "silhouette_iou_min": 0.96, "max_boundary_distance_units": 3.0 },
-    "diagram": { "silhouette_iou_min": 0.97, "max_boundary_distance_units": 2.0 },
-    "animated": { "silhouette_iou_min": 0.97, "max_boundary_distance_units": 2.0 }
+    "icon": {
+      "silhouette_iou_min": 0.98,
+      "max_boundary_distance_units": 1.0
+    },
+    "mark": {
+      "silhouette_iou_min": 0.98,
+      "max_boundary_distance_units": 2.0
+    },
+    "illustration": {
+      "silhouette_iou_min": 0.96,
+      "max_boundary_distance_units": 3.0
+    },
+    "diagram": {
+      "silhouette_iou_min": 0.97,
+      "max_boundary_distance_units": 2.0
+    },
+    "animated": {
+      "silhouette_iou_min": 0.97,
+      "max_boundary_distance_units": 2.0
+    }
   },
   "raster_conversion_tolerance": {
     "silhouette_iou_min": 0.984,

@@ -180,7 +180,7 @@ check must also require the full contrast to appear inside the window.
 
 ## Phase 3 — The static witness reads a tree, and is measured on real SVGs
 
-- [ ] **3.1 Amend W 1.1: a structural parse, still dependency-free.** W 1.1
+- [x] **3.1 Amend W 1.1: a structural parse, still dependency-free.** W 1.1
       (W:196-213) corrected: "`lint_svg_asset.ts` builds an element tree with
       a dependency-free XML well-formedness parser (elements, attributes,
       comments, CDATA, processing instructions, DOCTYPE, with line and column)
@@ -193,7 +193,7 @@ check must also require the full contrast to appear inside the window.
       another attribute's value (dangling); mis-nested tags (`<g><path></g></path>`);
       a `<title>` that is not a direct child of the graphic it names. C11 and D3.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts -t regex-blind-rows-found-by-the-tree --reporter=verbose` -> /✓.*regex-blind-rows-found-by-the-tree/ <!-- ref-ignore -->
-- [ ] **3.2 Amend W 0.1, 0.3 and 5.1: a held-out set of real SVGs.** Beside
+- [x] **3.2 Amend W 0.1, 0.3 and 5.1: a held-out set of real SVGs.** Beside
       the planted fixture, a set of at least six real SVGs under
       `tests/design-artifacts/fixtures/svg-real/` <!-- ref-ignore -->
       covering every asset class: `site/public/favicon.svg`,
@@ -262,18 +262,18 @@ check must also require the full contrast to appear inside the window.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A's parser rule names the unescaped `/`, and a clause ending in
+- [x] AC-1 — A's parser rule names the unescaped `/`, and a clause ending in
       `-> /a\/ b/` keeps `a\/ b` as its regex source.
-- [ ] AC-2 — After an `.svg` edit, a turn whose only check is an asset render
+- [x] AC-2 — After an `.svg` edit, a turn whose only check is an asset render
       that rendered nothing is refused on both gate paths; a turn with a
       verified, digest-matching asset manifest is accepted.
-- [ ] AC-3 — No layer reports `verified` with error findings open or after a
+- [x] AC-3 — No layer reports `verified` with error findings open or after a
       pass cap was reached with findings, and every asset report carries a
       goal field that no renderer sets to `accepted`.
-- [ ] AC-4 — The static witness decides nesting and references from a parse
+- [x] AC-4 — The static witness decides nesting and references from a parse
       tree, finds the three text-pattern-blind rows, and the measured outcome
       is reported on the planted set and the real held-out set separately.
-- [ ] AC-5 — W 6.3 runs on a 512 × 512 surface, passes for the vector and
+- [x] AC-5 — W 6.3 runs on a 512 × 512 surface, passes for the vector and
       fails for the raster control.
-- [ ] AC-6 — A recorded owner run without a renderer reports `static-only`
+- [x] AC-6 — A recorded owner run without a renderer reports `static-only`
       and contains no browser-opening step.
