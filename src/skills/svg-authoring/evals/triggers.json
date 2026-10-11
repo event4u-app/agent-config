@@ -1,19 +1,79 @@
 {
   "skill": "svg-authoring",
   "last_eval": "2026-10-11",
-  "description": "6 should-trigger + 6 should-not-trigger. Should-trigger covers the six lanes that produce hand-authored SVG — a glyph the incumbent set lacks, a simple geometric mark, an animated asset, a surgical edit to an existing file, an SVG diagram, and a raster converted to a vector. Should-not-trigger covers the near-miss neighbours this skill sits between: an icon the set already has (iconography), a full brand pipeline (logo-generation), a raster image (image-generation), provider choice (image-provider-routing), video motion (motion-choreographer), and reduced-motion policy (fe-design).",
+  "description": "7 exemplars + 4 near-misses + 2 counterexamples. Exemplars cover the six lanes that produce hand-authored SVG — a glyph the incumbent set lacks, a simple geometric mark, an animated asset, a surgical edit to an existing file, an SVG diagram, and a raster converted to a vector — plus the German phrasing of the first, which is the lane a consumer reaches for most often. Near-misses are the four neighbours this skill sits between that share its vocabulary and are still somebody else's job: an icon the set already has (iconography), a full brand pipeline (logo-generation), provider choice for vector art (image-provider-routing), and reduced-motion policy (fe-design § Motion, which this skill points at and never restates). Counterexamples guard the two directions this skill could over-trigger in without sharing its subject at all: raster generation, and video motion choreography — both say 'make me an image' or 'animate' without any vector surface.",
   "queries": [
-    {"q": "draw an SVG icon the set does not have — a 'split branch' glyph matching our Lucide stroke", "trigger": true},
-    {"q": "author a simple geometric mark as SVG — two overlapping circles, brand blue, no text", "trigger": true},
-    {"q": "animate this logo SVG so the ring draws on over 800ms", "trigger": true},
-    {"q": "change only the hat in this SVG and leave everything else byte-identical", "trigger": true},
-    {"q": "turn the logo in this PNG into a real vector without the app name", "trigger": true},
-    {"q": "hand-place an SVG architecture diagram — five boxes and typed edges", "trigger": true},
-    {"q": "which Heroicons name is the download action?", "trigger": false, "note": "the set already has it → iconography"},
-    {"q": "generate a logo for my bakery called Golden Crust", "trigger": false, "note": "full brand pipeline → logo-generation"},
-    {"q": "generate a photoreal hero image of a coffee shop at dawn", "trigger": false, "note": "raster generation → image-generation"},
-    {"q": "which provider should I use for complex illustrative vector art?", "trigger": false, "note": "provider choice → image-provider-routing"},
-    {"q": "choreograph the camera move and the cut timing for this product video", "trigger": false, "note": "video motion → motion-choreographer"},
-    {"q": "what is our policy on prefers-reduced-motion durations across the app?", "trigger": false, "note": "motion policy → fe-design § Motion; this skill points at it and never restates it"}
+    {
+      "q": "draw an SVG icon the set does not have — a 'split branch' glyph matching our Lucide stroke",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "zeichne ein SVG-Icon, das unser Set nicht hat — ein Glyph für 'Zweig teilen' im Lucide-Strichstil",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "author a simple geometric mark as SVG — two overlapping circles, brand blue, no text",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "animate this logo SVG so the ring draws on over 800ms",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "change only the hat in this SVG and leave everything else byte-identical",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "turn the logo in this PNG into a real vector without the app name",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "hand-place an SVG architecture diagram — five boxes and typed edges",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "which Heroicons name is the download action?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the set already has it → iconography"
+    },
+    {
+      "q": "generate a logo for my bakery called Golden Crust",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "full brand pipeline → logo-generation"
+    },
+    {
+      "q": "which provider should I use for complex illustrative vector art?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "says vector and still asks a routing question → image-provider-routing"
+    },
+    {
+      "q": "what is our policy on prefers-reduced-motion durations across the app?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "motion policy → fe-design § Motion; this skill points at it and never restates it"
+    },
+    {
+      "q": "generate a photoreal hero image of a coffee shop at dawn",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "raster generation with no vector surface at all → image-generation"
+    },
+    {
+      "q": "choreograph the camera move and the cut timing for this product video",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "video motion, shares only the word animate → motion-choreographer"
+    }
   ]
 }

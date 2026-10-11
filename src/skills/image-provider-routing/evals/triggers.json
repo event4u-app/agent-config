@@ -1,20 +1,87 @@
 {
   "skill": "image-provider-routing",
-  "last_eval": "2026-06-16",
-  "description": "6 should-trigger + 7 should-not-trigger. Should-trigger covers job-shape to provider matching, including the two rows the vector split changed: an icon routing question whose routed answer is now no provider, and complex illustrative vector art, the one shape a vector provider still owns. Should-not-trigger covers near-miss neighbors: writing the actual prompt (prompt-engineering-image), invoking the adapter directly, media policy checks (media-governance-routing), general image editing without a routing question, and the two hand-authoring requests that go to svg-authoring rather than to any provider.",
+  "last_eval": "2026-10-11",
+  "description": "7 exemplars + 5 near-misses + 2 counterexamples. Re-authored 2026-10-11 when the vector split changed two of its rows and brought it back into the touched-skill scope. Exemplars cover job-shape to provider matching, including the two changed rows — an icon routing question whose routed answer is now NO provider, and complex illustrative vector art, the one shape a vector provider still owns — plus a German phrasing of the plainest routing question. Near-misses are the five neighbours that name a provider or a vector surface and are still somebody else's job: writing the prompt grammar (prompt-engineering-image), invoking an adapter directly, looking up a lifecycle tier (provider-lifecycle-discipline), and the two hand-authoring requests that go to svg-authoring rather than to any provider. Counterexamples guard the two requests that mention an image and ask nothing of routing: a likeness / rights question, and an edit to an existing photo.",
   "queries": [
-    {"q": "which image model should I use for a logo with text?", "trigger": true},
-    {"q": "route this image generation job — it needs a photorealistic product shot", "trigger": true},
-    {"q": "I need a vector SVG icon, what provider handles that?", "trigger": true, "note": "still a routing question, and after the vector split the routed answer is NO provider \u2014 the incumbent set first, then svg-authoring for a glyph it lacks"},
-    {"q": "which provider do I use for complex illustrative vector art?", "trigger": true, "note": "the one job shape a vector provider still owns; the answer states the adapter scaffold-tier lifecycle"},
-    {"q": "pick the right AI image provider for a bakery banner with the name on it", "trigger": true},
-    {"q": "should I use Ideogram or Flux for this image brief?", "trigger": true},
-    {"q": "write me an Ideogram prompt for this logo brief", "trigger": false, "note": "writing provider-specific prompt grammar → prompt-engineering-image"},
-    {"q": "run the recraft adapter with this prompt", "trigger": false, "note": "direct adapter invocation, not routing selection"},
-    {"q": "can I use a celebrity's face in this image?", "trigger": false, "note": "likeness / rights question → media-governance-routing / image-likeness-and-rights"},
-    {"q": "edit this existing photo to remove the background", "trigger": false, "note": "editing task, not a provider routing decision"},
-    {"q": "what lifecycle tier is the Flux adapter?", "trigger": false, "note": "lifecycle tier lookup → provider-lifecycle-discipline"},
-    {"q": "draw an SVG icon our set does not have \u2014 a split-branch glyph", "trigger": false, "note": "hand-authoring, not provider selection \u2192 iconography then svg-authoring"},
-    {"q": "author a simple geometric mark as SVG \u2014 two overlapping circles", "trigger": false, "note": "hand-authored mark \u2192 svg-authoring; no provider is involved"}
+    {
+      "q": "which image model should I use for a logo with text?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "welches Bildmodell nehme ich für ein Logo mit Schrift?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "route this image generation job — it needs a photorealistic product shot",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "I need a vector SVG icon, what provider handles that?",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "still a routing question, and after the vector split the routed answer is NO provider — the incumbent set first, then svg-authoring for a glyph it lacks"
+    },
+    {
+      "q": "which provider do I use for complex illustrative vector art?",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "the one job shape a vector provider still owns; the answer states the adapter scaffold-tier lifecycle"
+    },
+    {
+      "q": "pick the right AI image provider for a bakery banner with the name on it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "should I use Ideogram or Flux for this image brief?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "write me an Ideogram prompt for this logo brief",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "writing provider-specific prompt grammar → prompt-engineering-image"
+    },
+    {
+      "q": "run the recraft adapter with this prompt",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "direct adapter invocation, not routing selection"
+    },
+    {
+      "q": "what lifecycle tier is the Flux adapter?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "lifecycle tier lookup → provider-lifecycle-discipline"
+    },
+    {
+      "q": "draw an SVG icon our set does not have — a split-branch glyph",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "hand-authoring, not provider selection → iconography then svg-authoring"
+    },
+    {
+      "q": "author a simple geometric mark as SVG — two overlapping circles",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "hand-authored mark → svg-authoring; no provider is involved"
+    },
+    {
+      "q": "can I use a celebrity's face in this image?",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "a rights question that asks nothing of routing → media-governance-routing / image-likeness-and-rights"
+    },
+    {
+      "q": "edit this existing photo to remove the background",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "editing an asset that already exists; no provider is being chosen"
+    }
   ]
 }
