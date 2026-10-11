@@ -269,6 +269,9 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
         it('allows set-* (the hex-only family)', () => {
             expect(blocks('agents/tmp/set-*/x.md')).toBe(false);
         });
+        it('allows a ? wildcard tail', () => {
+            expect(blocks('agents/tmp/round-??????/x.md')).toBe(false);
+        });
         it.each([
             'agents/tmp/set-2026-*/x.md',
             'agents/tmp/rounder-*/x.md',
