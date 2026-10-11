@@ -847,3 +847,92 @@ describe('the witness stops warning about what is not there', () => {
         240_000,
     );
 });
+
+/**
+ * Phase 2 of `road-to-svg-from-a-live-session` — the raster comparison passes
+ * what was accepted.
+ *
+ * The witness failed the trace its owner accepted at 10:29Z, and ranked that
+ * rejected trace above the accepted construction on every number. Two causes,
+ * both measured: the background mask from the corner pixel folded neighbours
+ * and halo into IoU, and the per-region breakdown was unreachable so the worst
+ * region was always `whole`.
+ */
+describe('the raster comparison reads the subject, not the frame', () => {
+    const CONV = path.join(FIXTURE_ROOT, 'conversion');
+
+    it(
+        'registered-raster-of-the-reference-passes',
+        async () => {
+            // The reference compared against a rendering of ITSELF, with an
+            // unrelated mark and a soft glow inside the registration frame.
+            const m = await renderAsset({
+                file: path.join(CONV, 'subject-reference.svg'),
+                slug: 'conv-busy-frame',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(CONV, 'source-busy-frame.png'),
+                registration: '0,0,100,100@4',
+            });
+            const c = m.asset?.comparison;
+            expect(c?.verdict, `reason: ${c?.reason ?? '(none)'}`).toBe('pass');
+            // The foreign content is REPORTED rather than folded in — a
+            // reading, with its own finding, and not a silent exclusion.
+            expect(c?.raster?.foreign_content_share).toBeGreaterThan(0);
+            expect(rulesOf(m)).toContain('geometry/foreign-content-in-frame');
+            // And the subject itself is not cut.
+            expect(c?.raster?.frame_edge_contact).toEqual([]);
+            expect(rulesOf(m)).not.toContain('geometry/source-cut-by-frame');
+        },
+        240_000,
+    );
+
+    it(
+        'source-cut-by-frame-is-found',
+        async () => {
+            // The crown-cut case: the subject runs off the top of the crop. A
+            // trace of this crop agrees with it exactly, so IoU cannot see the
+            // cut and the frame contact is the only signal there is.
+            const m = await renderAsset({
+                file: path.join(CONV, 'subject-reference.svg'),
+                slug: 'conv-cut-frame',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(CONV, 'source-cut-by-frame.png'),
+                registration: '0,0,100,100@4',
+            });
+            expect(rulesOf(m)).toContain('geometry/source-cut-by-frame');
+            expect(m.asset?.comparison?.raster?.frame_edge_contact).toContain('top');
+        },
+        240_000,
+    );
+
+    it(
+        'top-level-groups-become-regions',
+        async () => {
+            // `CompareSpec.regions` existed and nothing could pass it, so
+            // `worst_region` was always `whole`. The file names its own parts.
+            const m = await renderAsset({
+                file: path.join(CONV, 'subject-reference.svg'),
+                slug: 'conv-regions',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(CONV, 'source-busy-frame.png'),
+                registration: '0,0,100,100@4',
+            });
+            const regions = m.asset?.comparison?.raster?.regions ?? [];
+            const ids = regions.map((r) => r.region);
+            // `whole` stays first — the reading every consumer already reads.
+            expect(ids[0]).toBe('whole');
+            expect(ids).toContain('badge');
+            expect(ids).toContain('tick');
+            // Each region carries its own numbers, so the worst is nameable.
+            for (const r of regions) {
+                expect(r.silhouette_iou).toBeGreaterThanOrEqual(0);
+                expect(r.mean_colour_error).toBeGreaterThanOrEqual(0);
+            }
+            expect(['whole', 'badge', 'tick']).toContain(m.asset?.comparison?.raster?.worst_region);
+        },
+        240_000,
+    );
+});

@@ -1259,6 +1259,32 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
         }
     }
 
+    // Step 2.1: the two readings the subject-only comparison separates out.
+    // Neither is folded into IoU, and neither is silent.
+    const raster = r.comparison?.raster;
+    if (raster) {
+        if (raster.frame_edge_contact.length > 0) {
+            out.push({
+                rule: 'geometry/source-cut-by-frame',
+                severity: 'warning',
+                detail:
+                    `the registered source runs into its frame on the ${raster.frame_edge_contact.join(', ')} ` +
+                    'edge(s) — content cut by a crop agrees with a trace of that crop exactly, so the silhouette ' +
+                    'reading cannot see the cut. Widen the crop and re-register before trusting the numbers',
+            });
+        }
+        if (raster.foreign_content_share > 0.02) {
+            out.push({
+                rule: 'geometry/foreign-content-in-frame',
+                severity: 'warning',
+                detail:
+                    `${(raster.foreign_content_share * 100).toFixed(1)} % of the registered source's painted pixels ` +
+                    'lie outside the subject — a neighbouring mark, a glow or a shadow inside the registration ' +
+                    'frame. It is reported here and kept out of the silhouette and colour readings',
+            });
+        }
+    }
+
     for (const n of r.near_white_regions) {
         // Step 1.2: a finding needs EVIDENCE of a hole. Without a registered
         // source the region is recorded in the manifest and nothing is pushed —

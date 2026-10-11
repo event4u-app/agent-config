@@ -233,7 +233,23 @@ export interface GeometryComparison {
     sub_pixel_offset: { dx_units: number; dy_units: number } | null;
     texts: TextDelta[];
     font_only_delta: boolean;
-    raster: { registration: Registration; regions: RasterRegionReading[]; worst_region: string } | null;
+    raster: {
+        registration: Registration;
+        regions: RasterRegionReading[];
+        worst_region: string;
+        /**
+         * The share of the candidate's painted pixels that lie OUTSIDE the
+         * subject — a neighbouring mark the crop included, a glow, a shadow.
+         * Its own reading (step 2.1), never folded into IoU.
+         */
+        foreign_content_share: number;
+        /**
+         * Frame sides the candidate's content runs into. A source cut by its
+         * own crop agrees with a trace of that crop exactly, so IoU cannot see
+         * the cut and this is the only signal there is.
+         */
+        frame_edge_contact: string[];
+    } | null;
 }
 
 export interface CompareSpec {
@@ -320,9 +336,43 @@ export async function compareGeometry(
             return { ...base, reason: 'one of the two inputs could not be decoded in the renderer' };
         }
 
-        const { iou, dx, dy } = bestAlignment(baselineMask.painted, candidateMask.painted, frame.w, frame.h);
-        const shifted = shift(candidateMask.painted, frame.w, frame.h, dx, dy);
+        // Step 2.1: against a REGISTERED RASTER the comparison judges the
+        // SUBJECT, not everything the crop happened to contain. The subject is
+        // the baseline's own silhouette widened by the anti-alias band the
+        // comparison already computes — not by a number chosen to pass a
+        // fixture. Foreign content and a frame-edge cut are reported as their
+        // own readings below rather than folded into IoU, where they made the
+        // witness fail a trace its owner had accepted.
+        const judgeSubjectOnly = candidateIsRaster && spec.registration !== undefined;
+        // The subject for JUDGING is the baseline's silhouette exactly, with no
+        // dilation. A dilated mask would let a one-sample ring of whatever
+        // surrounds the subject — a glow, a shadow — into the union and cost
+        // the IoU about four points on a small mark, which is a tax on being
+        // photographed next to something rather than a reading about the
+        // conversion. What the restricted IoU then measures is how much of the
+        // subject the candidate actually paints; a candidate that misses part
+        // of it, or is shifted, still fails.
+        //
+        // The subject for FOREIGN CONTENT is dilated by the anti-alias band
+        // the comparison already computes, so the rasteriser's own edge smear
+        // is not reported as a neighbouring mark. Two masks, because the two
+        // questions have different right answers at the boundary.
+        const subjectForJudging = judgeSubjectOnly ? baselineMask.painted : null;
+        const subjectForForeign = judgeSubjectOnly
+            ? dilate(baselineMask.painted, frame.w, frame.h, Math.max(1, Math.ceil(unitsPerSample)))
+            : null;
+        const candidateForJudging =
+            subjectForJudging === null
+                ? candidateMask.painted
+                : intersect(candidateMask.painted, subjectForJudging);
+
+        const { iou, dx, dy } = bestAlignment(baselineMask.painted, candidateForJudging, frame.w, frame.h);
+        const shifted = shift(candidateForJudging, frame.w, frame.h, dx, dy);
         const maxDistance = boundaryDistance(baselineMask.painted, shifted, frame.w, frame.h) * unitsPerSample;
+
+        const foreign =
+            subjectForForeign === null ? null : shareOutside(candidateMask.painted, subjectForForeign);
+        const cutSides = judgeSubjectOnly ? touchesFrameEdge(candidateMask.painted, frame.w, frame.h) : [];
 
         // Text is compared by box and resolved family only.
         const baseTexts = await readTextBoxes(page, spec.baseline);
@@ -350,13 +400,26 @@ export async function compareGeometry(
 
         let raster: GeometryComparison['raster'] = null;
         if (candidateIsRaster && spec.registration) {
-            const regions = spec.regions ?? [{ id: 'whole', box: { x: vb.x, y: vb.y, w: vb.w, h: vb.h } }];
+            // `whole` stays first, always — it is the reading every consumer
+            // already reads, and a per-group breakdown is added beside it
+            // rather than instead of it (step 2.2).
+            const derived = spec.regions ?? (await readTopLevelGroupBoxes(page, spec.baseline));
+            const regions = [
+                { id: 'whole', box: { x: vb.x, y: vb.y, w: vb.w, h: vb.h } },
+                ...derived.filter((r) => r.id !== 'whole'),
+            ];
             const readings = regions.map((region) => rasterRegionReading(baselineMask, candidateMask, frame, vb, region));
             const worst = readings.reduce(
                 (acc, r) => (r.mean_colour_error > acc.mean_colour_error ? r : acc),
                 readings[0] ?? { region: 'whole', silhouette_iou: 0, mean_colour_error: 0, share_off_by_40: 0 },
             );
-            raster = { registration: spec.registration, regions: readings, worst_region: worst.region };
+            raster = {
+                registration: spec.registration,
+                regions: readings,
+                worst_region: worst.region,
+                foreign_content_share: foreign?.share ?? 0,
+                frame_edge_contact: cutSides,
+            };
         }
 
         const withinIou = iou >= spec.tolerance.silhouette_iou_min;
@@ -389,6 +452,86 @@ export async function compareGeometry(
     } finally {
         await page.close();
     }
+}
+
+/**
+ * The subject's own neighbourhood — a dilation of the baseline's silhouette.
+ *
+ * Step 2.1 of `road-to-svg-from-a-live-session`. When the candidate is a
+ * REGISTERED RASTER, everything inside the frame is in the comparison:
+ * neighbouring marks the crop happened to include, a soft glow around the
+ * subject, a drop shadow. The background mask is taken from the corner pixel,
+ * so all of it counts as painted and all of it lands in IoU and in the
+ * boundary distance. Measured consequence: the witness failed a trace the
+ * owner had accepted, and ranked the rejected trace above the accepted
+ * construction on every number.
+ *
+ * `radius` is in SAMPLES, and the caller passes the anti-alias band the
+ * comparison already computes — so this widens by exactly the amount the
+ * rasteriser can smear an edge and not by a number chosen to make a fixture
+ * pass.
+ */
+function dilate(mask: Uint8Array, w: number, h: number, radius: number): Uint8Array {
+    if (radius <= 0) return mask;
+    const r = Math.ceil(radius);
+    const out = new Uint8Array(mask.length);
+    for (let y = 0; y < h; y += 1) {
+        for (let x = 0; x < w; x += 1) {
+            if (mask[y * w + x] !== 1) continue;
+            for (let dy = -r; dy <= r; dy += 1) {
+                const sy = y + dy;
+                if (sy < 0 || sy >= h) continue;
+                for (let dx = -r; dx <= r; dx += 1) {
+                    const sx = x + dx;
+                    if (sx < 0 || sx >= w) continue;
+                    out[sy * w + sx] = 1;
+                }
+            }
+        }
+    }
+    return out;
+}
+
+/** `a AND b`, pixel for pixel. */
+function intersect(a: Uint8Array, b: Uint8Array): Uint8Array {
+    const out = new Uint8Array(a.length);
+    for (let i = 0; i < a.length; i += 1) out[i] = a[i] === 1 && b[i] === 1 ? 1 : 0;
+    return out;
+}
+
+/** Painted pixels in `mask` that `within` does not cover, as a share of `mask`. */
+function shareOutside(mask: Uint8Array, within: Uint8Array): { share: number; count: number } {
+    let painted = 0;
+    let outside = 0;
+    for (let i = 0; i < mask.length; i += 1) {
+        if (mask[i] !== 1) continue;
+        painted += 1;
+        if (within[i] !== 1) outside += 1;
+    }
+    return { share: painted === 0 ? 0 : outside / painted, count: outside };
+}
+
+/**
+ * Does painted content touch the frame's own edge?
+ *
+ * Step 2.1, and the crown-cut case it exists for: a trace whose crop started
+ * five pixels below the top of the mark took the crop border for a contour,
+ * and a comparison against that same crop cannot see the cut — the trace and
+ * the source agree exactly, because both are missing the same thing. The only
+ * signal available is that the content runs into the border, which is what
+ * this reports.
+ */
+function touchesFrameEdge(mask: Uint8Array, w: number, h: number): string[] {
+    const sides: string[] = [];
+    const any = (idx: (i: number) => number, n: number): boolean => {
+        for (let i = 0; i < n; i += 1) if (mask[idx(i)] === 1) return true;
+        return false;
+    };
+    if (any((i) => i, w)) sides.push('top');
+    if (any((i) => (h - 1) * w + i, w)) sides.push('bottom');
+    if (any((i) => i * w, h)) sides.push('left');
+    if (any((i) => i * w + (w - 1), h)) sides.push('right');
+    return sides;
 }
 
 interface Rasterised {
@@ -535,6 +678,49 @@ async function readTextBoxes(page: Page, file: string): Promise<Array<{ family: 
     }, svg);
 }
 
+
+/**
+ * The rendered box of every TOP-LEVEL `<g id>`, in user units.
+ *
+ * Step 2.2 of `road-to-svg-from-a-live-session`. `CompareSpec.regions` existed
+ * and `main.ts` carried no option for it, so `worst_region` was always
+ * `whole` and the per-region breakdown an earlier learning asked for was
+ * unreachable from the CLI. A flag would have been one more input nobody
+ * passes; a hand-built file already names its own parts — `hat`, `head-group`,
+ * `arms`, `legs` — so the regions are read from the file instead.
+ *
+ * TOP-LEVEL only, and `id` required. A nested group is part of its parent's
+ * reading, and an anonymous group has no name to report a verdict under.
+ */
+async function readTopLevelGroupBoxes(page: Page, file: string): Promise<Array<{ id: string; box: Box }>> {
+    if (!/\.svg$/i.test(file)) return [];
+    const svg = fs.readFileSync(file, 'utf8').replace(/<\?xml[^>]*\?>\s*/i, '');
+    return page.evaluate((markup: string) => {
+        const holder = document.createElement('div');
+        holder.innerHTML = markup;
+        document.body.appendChild(holder);
+        const out: Array<{ id: string; box: { x: number; y: number; w: number; h: number } }> = [];
+        const root = holder.querySelector('svg');
+        if (root) {
+            for (const child of Array.from(root.children)) {
+                if (child.tagName.toLowerCase() !== 'g') continue;
+                const id = child.getAttribute('id');
+                if (!id) continue;
+                try {
+                    const bb = (child as SVGGraphicsElement).getBBox();
+                    if (bb.width > 0 || bb.height > 0) {
+                        out.push({ id, box: { x: bb.x, y: bb.y, w: bb.width, h: bb.height } });
+                    }
+                } catch {
+                    // A group the renderer cannot box contributes no region,
+                    // which leaves `whole` as its reading rather than a guess.
+                }
+            }
+        }
+        holder.remove();
+        return out;
+    }, svg);
+}
 
 function shift(mask: Uint8Array, w: number, h: number, dx: number, dy: number): Uint8Array {
     if (dx === 0 && dy === 0) return mask;

@@ -137,7 +137,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 2 — The raster comparison passes what was accepted
 
-- [ ] **2.1 The raster verdict reads the subject, not the frame.** A fixture
+- [x] **2.1 The raster verdict reads the subject, not the frame.** A fixture
       raster renders `conversion/reference.svg` on an opaque light ground with
       an unrelated mark and a soft glow inside the registration frame. The
       reference compared against it must read `pass`; today the background
@@ -148,7 +148,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
       the crop agree and IoU cannot see it. S16, S17, S30.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*registered-raster-of-the-reference-passes/ <!-- ref-ignore -->
       and `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*source-cut-by-frame-is-found/ <!-- ref-ignore -->
-- [ ] **2.2 Per-region readings without a regions file.** When no regions are
+- [x] **2.2 Per-region readings without a regions file.** When no regions are
       passed, the comparison derives one region per top-level `<g id>` from its
       rendered box and names the worst; `whole` stays as the first row. S12's
       per-region breakdown becomes reachable from the CLI. S30. D2.
