@@ -257,11 +257,24 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
         expect(blocks('agents/tmp/inbox-2026-09-[a-z]/x.md')).toBe(false);
     });
 
-    it('allows a glob over the bare prefix of an opaque family', () => {
-        expect(blocks('agents/tmp/round-*/prompt.md')).toBe(false);
-        expect(blocks('agents/tmp/set-*/x.md')).toBe(false);
-        expect(blocks('agents/tmp/inbox-2026-*/x.md')).toBe(false);
-        expect(blocks('agents/tmp/rounder-*/x.md')).toBe(true);
+    describe('a glob over the bare head of an opaque family', () => {
+        const heads = ['inbox', 'round', 'set', 'src-set', 'source-set'];
+        for (const head of heads) {
+            for (const suffix of ['', '-2026', '-2026-10']) {
+                it(`allows ${head}${suffix}-*`, () => {
+                    expect(blocks(`agents/tmp/${head}${suffix}-*/x.md`)).toBe(false);
+                });
+            }
+        }
+        it.each([
+            'agents/tmp/rounder-*/x.md',
+            'agents/tmp/round-x-*/x.md',
+            'agents/tmp/inbox-202-*/x.md',
+            'agents/tmp/round-2026-1-*/x.md',
+            'agents/tmp/my-round-*/x.md',
+        ])('refuses %s', (p) => {
+            expect(blocks(p)).toBe(true);
+        });
     });
 
     it('refuses a glob whose literal part still speaks', () => {
