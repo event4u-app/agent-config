@@ -289,7 +289,6 @@ open and which this file does not settle.
 | `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
-| `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
 | `test-performance` | `67d425384f8507688fdbe18d18d8235fa3dcf7fd1e2d4213a8e581f27fd80152` |
 | `testing-anti-patterns` | `66240715be7873af8ae59d00c416bd048e9699672ea00d0a604957fd6b6d8762` |
@@ -509,7 +508,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
-| `svg-authoring` | `cad77dee5064d8529a5c236f876c1757a624e6d46822c06b7cf3643885f553a1` |
+| `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
@@ -768,24 +767,28 @@ names the JSON as the current reading, release finding `237f203916c5`.)
   honest default is that this generation's hash stops describing the corpus the
   moment a file is added, which the set hash makes visible rather than silent.
 
-## Growth 2026-10-11 — one new TRAIN corpus, one TRAIN corpus edited
+## Re-pin 2026-10-11 — two TRAIN corpora re-hashed; the corpus did not grow
 
 ```
-BOTH ROWS THAT MOVED ARE TRAIN-SIDE. NO HOLDOUT FILE'S BYTES CHANGED.
+NEITHER ROW IS NEW. BOTH ARE TRAIN-SIDE RE-HASHES.
+NO HOLDOUT FILE'S BYTES CHANGED, AND THE HOLDOUT ROW COUNT IS UNMOVED AT 27.
 THE SEAL'S ORDERING CLAIM IS UNTOUCHED, AND IT STILL COVERS ONLY THE
 18 ROWS SEALED ON 2026-08-30 — THIS SECTION ADDS NOTHING TO IT.
 ```
 
-**What changed.** `road-to-svg-with-a-witness` added the `svg-authoring` skill
-with a routing corpus, and the vector split moved two rows of
-`image-provider-routing`'s. `lint_skill_trigger_corpus` then required a declared
-case class per query, a counterexample, and a German positive on both files,
-which is what actually re-wrote their bytes — the discipline is the gate's own
-remedy, the same shape as the 2026-09-30, 2026-10-01 and 2026-10-01b entries.
+**What changed.** Both rows were already in the tables; both carried bytes that
+no longer existed. `road-to-svg-with-a-witness` added the `svg-authoring` skill
+with a routing corpus earlier in the same branch, and the vector split moved two
+rows of `image-provider-routing`'s — neither re-pinned at the time.
+`lint_skill_trigger_corpus` then required a declared case class per query, a
+counterexample and a German positive on both files, which re-wrote their bytes a
+second time. The discipline is the gate's own remedy, the same shape as the
+2026-09-30, 2026-10-01 and 2026-10-01b entries; the difference here is that this
+is a correction of two stale rows rather than growth, so no count moves.
 
 | Row | Partition | `sha256(name)[0:2]` | Now |
 |---|---|---|---|
-| `svg-authoring` | train | `77` = 119 ≥ 51 | added |
+| `svg-authoring` | train | `77` = 119 ≥ 51 | re-hashed |
 | `image-provider-routing` | train | `3a` = 58 ≥ 51 | re-hashed |
 
 **What provably did NOT change, checked rather than asserted.** Recomputing this
@@ -797,14 +800,21 @@ somebody looks.
 
 - the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
 - no holdout file's bytes moved, so no holdout result is voided;
-- the corpus is now **125 files, 27 holdout and 98 train** — a realised split of
-  21.6 % against the rule's 19.9 % target.
+- the corpus is **125 files, 27 holdout and 98 train**, unchanged by this
+  section — a realised split of 21.6 % against the rule's 19.9 % target.
 
-**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
-run as the LAST act before publishing this section, after the final edit to both
-corpus files — not when the numbers were first computed. It is also what caught
-this: the `image-provider-routing` row had been stale since earlier in the same
-branch, when the vector split first edited that corpus without re-pinning.
+**The standing repair was followed, and a SECOND gate was needed.**
+`trigger_corpus_holdout_pin.test.ts` was run as the LAST act after the final edit
+to both corpus files, and it is what caught the two stale rows. It did NOT catch
+the first attempt at this re-pin, which inserted the `svg-authoring` row into the
+sealed table instead of the train one: that test asks only whether
+``| `skill` | `hash` |`` appears somewhere in the document, so a row in the wrong
+table satisfies it. `routing_signal_measurement.test.ts` § 5.1 is what refused —
+it reads the partition the loader derives and compares it against the published
+holdout rows, so it saw the holdout count go 27 → 28 and named the row. Whoever
+writes the next section should run BOTH: one checks that the hashes are current,
+the other that they are on the correct side of the seal, and neither substitutes
+for the other.
 
 **The residual every section since 2026-09-19 has named is unchanged and was
 paid again.** `SET-SHA256` is computed over the undivided list, so it moves
