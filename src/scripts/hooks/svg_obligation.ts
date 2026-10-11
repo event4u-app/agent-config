@@ -40,12 +40,28 @@
  *         there is nothing a render could be bound to.
  *
  * Its own module rather than another 200 lines inside the gate: the gate ships
- * in a byte-capped bundle, and a separate module is the unit whose cost can be
- * measured and, if it ever has to be, removed.
+ * in a byte-capped bundle AND sits two lines under the source-size ratchet, so
+ * a separate module is both the unit whose cost can be measured and the only
+ * place this could have gone.
+ *
+ * It is also why `openSvgObligation` returns a finding-shaped object rather
+ * than a reason the gate wraps: the gate's entry for it is ONE line, and the
+ * reasoning that would have been a comment there is the paragraph above.
+ *
+ * THE DETECTOR RUNS UNCONDITIONALLY, including while a subagent dispatch is
+ * open — nothing about a dispatch makes an unrendered graphic rendered.
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+
+import type { ToolCall } from '../_lib/turn_end_transcript.js';
+
+/**
+ * Tools that WRITE. One copy, here rather than imported from the gate: the
+ * gate imports this module, so the dependency runs one way.
+ */
+const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 /** Where `ui:render` writes. One copy of the path, shared with the CLI by value. */
 export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
@@ -218,4 +234,78 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
  */
 export function isAssetRenderCommand(command: string): boolean {
     return /\bui:render\b/.test(command) && /--profile[= ]\s*asset\b/.test(command);
+}
+
+/**
+ * An `.svg` this turn edited that no render describes — step 2.1(b) of
+ * `road-to-svg-review-followups`.
+ *
+ * REPORTED UNDER `verification`, not under a new detector id, and that is a
+ * choice rather than a shortcut: this IS a verification finding — a file
+ * changed and nothing that can fail was run over it — and a seventh id would
+ * ripple through `DETECTOR_IDS`, the per-detector counters and the demotion
+ * contract for a distinction the operator never makes.
+ *
+ * IT RUNS EVEN WHEN `detectUnverifiedEdit` IS SATISFIED. That is the point:
+ * review claim C2 is about a turn that edits an `.svg` and then runs something
+ * — a test suite, a linter, a bare `ui:render` — which looks like verification
+ * and did not look at the graphic. An unrelated check discharges nothing here.
+ *
+ * The companion half is that `isVerificationCommand` learns NEITHER `ui:render`
+ * NOR `xmllint`. Teaching it either would discharge the obligation on the
+ * transcript path from the command text alone, which is the hole rather than
+ * the fix. `svg_obligation.ts` carries the two records that do discharge it.
+ */
+export function openSvgObligation(
+    workspaceRoot: string,
+    toolCalls: readonly ToolCall[],
+): { detector: 'verification'; evidence: string; reason: string; mode: 'transcript' } | null {
+    const editedPaths: string[] = [];
+    let lastSvgEdit = -1;
+    for (let i = 0; i < toolCalls.length; i += 1) {
+        const c = toolCalls[i]!;
+        if (!EDIT_TOOLS.has(c.name) || c.path === undefined) continue;
+        editedPaths.push(c.path);
+        if (/\.svg$/i.test(c.path)) lastSvgEdit = i;
+    }
+    if (lastSvgEdit === -1) return null;
+
+    // Precision (iii). The render has to come AFTER the edit it is supposed to
+    // describe, on both evidence paths — `toolCalls` is assembled for both, so
+    // one rule covers them rather than two that can disagree.
+    let renderObserved = false;
+    for (let i = lastSvgEdit + 1; i < toolCalls.length; i += 1) {
+        const c = toolCalls[i]!;
+        if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
+            renderObserved = true;
+            break;
+        }
+    }
+
+    let reading: SvgObligationReading;
+    try {
+        reading = readSvgObligations(workspaceRoot, { editedPaths, renderObserved });
+    } catch {
+        // A gate that crashed on its own instrument is a new failure mode on a
+        // path meant to be inert. An unreadable render directory is no finding.
+        return null;
+    }
+    const first = reading.open[0];
+    if (first === undefined) return null;
+
+    const more = reading.open.length > 1 ? ` (and ${String(reading.open.length - 1)} more)` : '';
+    return {
+        // Reported under `verification` rather than a seventh detector id: it
+        // IS a verification finding — a file changed and nothing that can fail
+        // ran over it — and a new id would ripple through DETECTOR_IDS, the
+        // per-detector counters and the demotion contract for a distinction the
+        // operator never makes.
+        detector: 'verification',
+        mode: 'transcript',
+        evidence: first.file,
+        reason:
+            `this turn edited an .svg and no render describes it${more} — ${first.reason}. ` +
+            'A bare `ui:render --profile asset` that rendered nothing, and a test or lint run over other ' +
+            'files, both discharge nothing: the gate reads the render, never the call.',
+    };
 }

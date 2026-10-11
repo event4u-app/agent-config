@@ -117,6 +117,12 @@ Controls, same three instruments:
 | `assets/primitive-only-mark.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | **D3's false red, confirmed**: the geometric mark `logo-generation` recommends is rejected as non-vector. |
 | `assets/spinner-intentional-dash.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | An intentional dash pattern (R12); no static rule may fire on it. |
 | `assets/hamburger-24-grid.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Fill ratio 0.375 is designed padding (R12); it must stay clean at the icon threshold. |
+| `assets/id-only-in-a-comment.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | An id that exists only inside a comment. Accepted as a true vector while its only reference dangles. |
+| `assets/mis-nested-tags.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Both tags present and correctly spelled; the document is not a tree and nothing in the tree could say so. |
+| `assets/title-not-a-direct-child.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | The title names the group it sits in. Parentage, which no pattern over the text decides. |
+| `assets/degenerate-gradient.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | A gradient whose stops are identical. Renders correctly, costs bytes, and nothing counted it. |
+| `assets/seam-between-shapes.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | A ring abutting a disc leaves a hairline of ground inside the silhouette. An engine reading; nothing read it. |
+| `assets/dark-mark-on-dark.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Legible on white, nearly invisible on the dark capture. Contrast per ground is an engine reading; nothing read it. |
 
 ### The four pre-registered expectations, and whether they held
 
@@ -183,6 +189,12 @@ nobody looked, which is a different fact from "nothing was wrong".
 | `geometry/default-font-fallback` | engine | `default-serif-fallback` | 0 | — |
 | `geometry/near-white-hole` | engine | `near-white-hole` | 0 | — |
 | `geometry/icon-off-grid` | engine | `icon-off-grid` | 0 | read from the incumbent set's own SVGs (E6) |
+| `structure/dangling-reference` | static | `dangling-reference`, `id-only-in-a-comment` | 0 | — |
+| `structure/not-well-formed` | static | `mis-nested-tags` | 0 | — |
+| `structure/degenerate-gradient` | static | `degenerate-gradient` | 0 | — |
+| `accessibility/meaningful-without-name` | static | `meaningful-without-name`, `title-not-a-direct-child` | 0 | — |
+| `geometry/background-bleed-inside-silhouette` | engine | `seam-between-shapes` | 0 | bleed share > 0.002, dark row |
+| `accessibility/low-contrast-on-background` | engine | `dark-mark-on-dark` | 0 | low-contrast share > 0.5 |
 
 Three controls bound the whole table: `primitive-only-mark` must never be
 reported by the vector-honesty family, `spinner-intentional-dash` never by a

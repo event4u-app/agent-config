@@ -5,7 +5,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { detectOpenSvgObligation } from '../../src/scripts/hooks/turn_end_gate_hook.js';
+import { openSvgObligation } from '../../src/scripts/hooks/svg_obligation.js';
 import { isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 import { isAssetRenderCommand } from '../../src/scripts/hooks/svg_obligation.js';
 import type { ToolCall } from '../../src/scripts/_lib/turn_end_transcript.js';
@@ -68,9 +68,8 @@ describe('the turn-end gate reads the render, never the call', () => {
         // else. On a machine with no Playwright that call rendered nothing, so
         // there is no manifest describing these bytes.
         const file = writeSvg('assets/logo.svg', SVG_CLEAN);
-        const finding = detectOpenSvgObligation(root, [edit(file), RENDER]);
+        const finding = openSvgObligation(root, [edit(file), RENDER]);
         expect(finding).not.toBeNull();
-        expect(finding?.detector).toBe('verification');
         expect(finding?.evidence).toBe('assets/logo.svg');
         expect(finding?.reason).toContain('no asset manifest matches');
 
@@ -91,12 +90,12 @@ describe('the turn-end gate reads the render, never the call', () => {
             goal: 'unassessed',
             asset: { digest: digestOf(SVG_CLEAN) },
         });
-        expect(detectOpenSvgObligation(root, [edit(file), RENDER])).toBeNull();
+        expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
 
         // The digest is load-bearing. Editing the file after the render
         // reopens the obligation rather than inheriting the old verdict.
         fs.writeFileSync(path.join(root, file), SVG_CLEAN.replace('#2563eb', '#dc2626'));
-        expect(detectOpenSvgObligation(root, [edit(file), RENDER])).not.toBeNull();
+        expect(openSvgObligation(root, [edit(file), RENDER])).not.toBeNull();
     });
 
     it('renderer-absent-plus-clean-static-witness-is-static-only', () => {
@@ -110,7 +109,7 @@ describe('the turn-end gate reads the render, never the call', () => {
             goal: 'unassessed',
             static: { errors: 0, digest: digestOf(SVG_CLEAN) },
         });
-        expect(detectOpenSvgObligation(root, [edit(file), RENDER])).toBeNull();
+        expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
 
         // A renderer-absent manifest whose static witness reports an ERROR
         // discharges nothing — the file is broken, not merely unrendered.
@@ -121,7 +120,7 @@ describe('the turn-end gate reads the render, never the call', () => {
             reason: 'renderer-absent',
             static: { errors: 2, digest: digestOf(SVG_BROKEN) },
         });
-        expect(detectOpenSvgObligation(root, [edit(broken), RENDER])).not.toBeNull();
+        expect(openSvgObligation(root, [edit(broken), RENDER])).not.toBeNull();
 
         // And a render that RAN and FAILED is not an absent renderer: it is a
         // real failure and discharges nothing, whatever the static layer says.
@@ -135,7 +134,7 @@ describe('the turn-end gate reads the render, never the call', () => {
         // Same digest as the clean file, so this would discharge if the token
         // were ignored — which is exactly what must not happen.
         fs.rmSync(path.join(root, 'agents/runtime/state/render/logo'), { recursive: true, force: true });
-        expect(detectOpenSvgObligation(root, [edit(failed), RENDER])).not.toBeNull();
+        expect(openSvgObligation(root, [edit(failed), RENDER])).not.toBeNull();
     });
 
     it('unrelated-check-does-not-discharge-svg-edit', () => {
@@ -143,8 +142,8 @@ describe('the turn-end gate reads the render, never the call', () => {
         // A real verification command, which satisfies the OTHER detector and
         // must not satisfy this one.
         expect(isVerificationCommand('npx vitest run tests/scripts/foo.test.ts')).toBe(true);
-        expect(detectOpenSvgObligation(root, [edit(file), bash('npx vitest run tests/scripts/foo.test.ts')])).not.toBeNull();
-        expect(detectOpenSvgObligation(root, [edit(file), bash('npx eslint src')])).not.toBeNull();
+        expect(openSvgObligation(root, [edit(file), bash('npx vitest run tests/scripts/foo.test.ts')])).not.toBeNull();
+        expect(openSvgObligation(root, [edit(file), bash('npx eslint src')])).not.toBeNull();
 
         // Even with a verified manifest present, a turn that never rendered
         // after the edit is refused: precision (iii).
@@ -153,7 +152,7 @@ describe('the turn-end gate reads the render, never the call', () => {
             verification: 'verified',
             asset: { digest: digestOf(SVG_CLEAN) },
         });
-        const noRender = detectOpenSvgObligation(root, [edit(file), bash('npx vitest run x')]);
+        const noRender = openSvgObligation(root, [edit(file), bash('npx vitest run x')]);
         expect(noRender).not.toBeNull();
         expect(noRender?.reason).toContain('no `ui:render --profile asset` ran after the edit');
     });
@@ -163,7 +162,7 @@ describe('the turn-end gate reads the render, never the call', () => {
         // turn's LAST edit — an `.svg` → `.html` sequence stays covered.
         const svg = writeSvg('assets/logo.svg', SVG_CLEAN);
         writeSvg('site/index.html', '<!doctype html><title>x</title>\n');
-        const finding = detectOpenSvgObligation(root, [
+        const finding = openSvgObligation(root, [
             edit(svg),
             RENDER,
             edit('site/index.html'),
@@ -177,14 +176,14 @@ describe('the turn-end gate reads the render, never the call', () => {
         // reach `verified`, so without the exemption every turn that creates or
         // edits one would be refused on a blocking gate.
         const planted = writeSvg('tests/design-artifacts/fixtures/svg-assets/bad.svg', SVG_BROKEN);
-        expect(detectOpenSvgObligation(root, [edit(planted)])).toBeNull();
+        expect(openSvgObligation(root, [edit(planted)])).toBeNull();
         const scenario = writeSvg('tests/design-artifacts/scenarios/zoom/control.svg', SVG_BROKEN);
-        expect(detectOpenSvgObligation(root, [edit(scenario)])).toBeNull();
+        expect(openSvgObligation(root, [edit(scenario)])).toBeNull();
 
         // By PATH, not by an inline marker — and the exemption is narrow: a
         // neighbouring test file outside those two prefixes is NOT exempt.
         const elsewhere = writeSvg('tests/fixtures/other/logo.svg', SVG_CLEAN);
-        expect(detectOpenSvgObligation(root, [edit(elsewhere)])).not.toBeNull();
+        expect(openSvgObligation(root, [edit(elsewhere)])).not.toBeNull();
     });
 
     it('hand-written-manifest-discharges-nothing', () => {
@@ -197,7 +196,7 @@ describe('the turn-end gate reads the render, never the call', () => {
             verification: 'verified',
             asset: { digest: digestOf(SVG_CLEAN) },
         });
-        const finding = detectOpenSvgObligation(root, [
+        const finding = openSvgObligation(root, [
             edit(file),
             // The manifest arrived as a Write, not as a render.
             edit('agents/runtime/state/render/hand-written/manifest.json'),
@@ -208,19 +207,19 @@ describe('the turn-end gate reads the render, never the call', () => {
 
     it('deleted-svg-opens-no-obligation', () => {
         // Precision (iv): no current digest, so nothing could be bound to it.
-        const finding = detectOpenSvgObligation(root, [edit('assets/gone.svg'), RENDER]);
+        const finding = openSvgObligation(root, [edit('assets/gone.svg'), RENDER]);
         expect(finding).toBeNull();
 
         // The file existing is what makes the difference, so the assertion
         // above is about deletion and not about the path shape.
         writeSvg('assets/gone.svg', SVG_CLEAN);
-        expect(detectOpenSvgObligation(root, [edit('assets/gone.svg'), RENDER])).not.toBeNull();
+        expect(openSvgObligation(root, [edit('assets/gone.svg'), RENDER])).not.toBeNull();
     });
 
     it('a turn that touched no .svg is silent', () => {
         // The detector must not fire on the majority of turns — a guard that
         // does is a guard that gets switched off.
-        expect(detectOpenSvgObligation(root, [edit('src/index.ts'), bash('npx vitest run')])).toBeNull();
-        expect(detectOpenSvgObligation(root, [])).toBeNull();
+        expect(openSvgObligation(root, [edit('src/index.ts'), bash('npx vitest run')])).toBeNull();
+        expect(openSvgObligation(root, [])).toBeNull();
     });
 });

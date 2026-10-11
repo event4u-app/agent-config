@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
-  <title>Clean twin — the same two shapes, overlapping by one unit</title>
-  <!-- The one-edit fix the session arrived at: let the earlier surface reach a
-       unit under its later neighbour. Same colours, same outer silhouette; only
-       the inner disc grows from r = 20 to r = 21. -->
+  <title>A ring with a disc inside it</title>
   <path fill-rule="evenodd" fill="#767676" d="M 32 4 A 28 28 0 1 0 32 60 A 28 28 0 1 0 32 4 Z M 32 12 A 20 20 0 1 1 32 52 A 20 20 0 1 1 32 12 Z"/>
   <circle cx="32" cy="32" r="21" fill="#8a8a8a"/>
 </svg>

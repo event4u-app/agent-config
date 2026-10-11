@@ -343,8 +343,8 @@
       "rule": "accessibility/meaningful-without-name",
       "file": "assets/title-not-a-direct-child.svg",
       "twin": "assets/title-not-a-direct-child.clean.svg",
-      "twin_kind": "one-edit",
-      "note": "The <title> names the group it sits in, not the graphic, so the graphic has no accessible name. Parentage, which no pattern over the text decides. Step 3.1."
+      "twin_kind": "structural",
+      "note": "The <title> names the group it sits in, not the graphic, so the graphic has no accessible name. Parentage, which no pattern over the text decides. NOT one edit, and cannot be: moving a node from one parent to another is a structural change \u2014 the title is removed from inside the group and added before it, which is two hunks wherever the file shape puts them. Step 3.1 of road-to-svg-review-followups."
     },
     {
       "id": "degenerate-gradient",

@@ -219,9 +219,27 @@ describe("emission shaping through the real dispatcher", () => {
         // carry THIS turn's spend and never the running total. Seeding it above
         // the ceiling and watching the turn-start slot discard the seed proves
         // exactly that, and does not depend on any concern being stateless.
-        fs.writeFileSync(counter, JSON.stringify({ session: SESSION, bytes: 47_104 }));
+        //
+        // CORRECTED 2026-10-11, and for the second time on the same line. The
+        // assertion was `again < first`, which only holds while the FIRST turn
+        // happens to carry rule bodies the second does not — the comment above
+        // records 9,750 against 835 and the very next paragraph says the corpus
+        // is what moves. It moved again: both turns now spend 747 B, so
+        // `747 < 747` red on a tree where the counter is behaving exactly as
+        // described. Pinning the seed's disposal is what the paragraph above
+        // says this proves, and it is true whatever the corpus does.
+        const SEED = 47_104;
+        fs.writeFileSync(counter, JSON.stringify({ session: SESSION, bytes: SEED }));
         dispatchPrompt(ws, CO_FIRE_PROMPT);
         const again = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
-        expect(again["bytes"] as number).toBeLessThan(first);
+        // The seed is DISCARDED, not added to: a running total would read at
+        // least the seed, and this turn's own spend is a four-figure number at
+        // most.
+        expect(again["bytes"] as number).toBeLessThan(SEED);
+        expect(again["bytes"] as number).toBeGreaterThan(0);
+        // And the turn's own spend is on the record, so the counter is not
+        // merely being zeroed either.
+        expect(again["session"]).toBe(SESSION);
+        expect(first).toBeGreaterThan(0);
     });
 });
