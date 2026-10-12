@@ -68,7 +68,8 @@ THE SEAL AND THE ORDERING CLAIM ARE UNAFFECTED AND ARE RESTATED, NOT ASSUMED.
 skill bodies, and `check_routing_coverage` requires every touched skill to
 carry a corpus. Two did not: `form-handler` and `judge-security-auditor`. Each
 gained one, 10 labelled queries apiece — 5 exemplars, 3 near-misses, 2
-counterexamples.
+counterexamples — a German exemplar each, which `lint_skill_trigger_corpus`
+requires and which the first draft of both files omitted.
 
 | Row | Partition | `sha256(name)[0:2]` | Bucket |
 |---|---|---|---|
@@ -90,7 +91,7 @@ earlier stale-on-arrival pins were caused by not using. `rows` is 127.
 ## The set hash
 
 ```
-SET-SHA256  dbc9146cd32235ff02f54a3c95720ea83261c5760dd05b8963b9e152abb0666c
+SET-SHA256  b80202dd612ab2154e8edbcb3b67ed64aeeb2a78701a419397407a7f7ac8f73d
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -492,7 +493,7 @@ open and which this file does not settle.
 | `experiment-loop` | `7b64978277e8b29b2e58080914329d14274375f0195b59119cad7cede6ec55c0` |
 | `feature-planning` | `53747ead011ed29c480d407f66ff3803b43e585f390916ce0e5187340973142c` |
 | `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
-| `form-handler` | `f665208c5524a8691411218f91a659f6a9c7caf5a44d7c4a9b594d2c25ffbff8` |
+| `form-handler` | `5e88a2223f79b275411ba720155768414f4fe5bd99d8099a381ed9103e511805` |
 | `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
 | `gated-reach` | `8d39468e75ff725b8e4454fc3a783c2490447ac3f8658ec91e62dbc48352c8a1` |
 | `git-workflow` | `508cdaa8fac1ca9fe1da6934db8a6e1496fc6c46b39dd19ef068b752966b271d` |
@@ -508,7 +509,7 @@ open and which this file does not settle.
 | `jira-integration` | `fe9ba2d101335b5446f7efb6fcc22e8db93edf21be00e4cd23774789a01ec28d` |
 | `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
 | `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
-| `judge-security-auditor` | `09d99481c07aa7e3509cbecace82922a454fd6d2e490ddf625c9a52bfc83fe9a` |
+| `judge-security-auditor` | `b1915f90c4e7648f8cca7de9e43c73eb08616382827d69ee359dd3fa33b5f72f` |
 | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
 | `learning-tutor` | `3facfb90fa1ee593cf779862bfc79f88f70a915dc9638dc4af6ef5bbf98d9fd7` |
 | `legal-intake-triage` | `4b6afb88a3a7912ab8666d5e000172224e3e26f5940bbf09988e750a0d89b6fc` |

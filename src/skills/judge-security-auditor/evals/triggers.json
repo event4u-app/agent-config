@@ -1,7 +1,7 @@
 {
   "skill": "judge-security-auditor",
   "last_eval": "2026-10-12",
-  "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-12 under road-to-account-lifecycle-threat-rows 1.4, which extended this judge's information-disclosure and cryptography-misuse rows and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the shape its own description names: a DIFF that may carry security risk, dispatched by a review command. Near-misses are three neighbours that share security vocabulary and answer a different question: the threat model BEFORE the code exists (threat-modeling), the per-entrypoint authorization chain rather than a diff (authz-review), and the agent's own configuration rather than application code (agent-security-review). Counterexamples guard 'security' as a non-technical word — a physical badge policy and a security deposit are not this skill's subject.",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-12 under road-to-account-lifecycle-threat-rows 1.4, which extended this judge's information-disclosure and cryptography-misuse rows and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the shape its own description names: a DIFF that may carry security risk, dispatched by a review command. Near-misses are three neighbours that share security vocabulary and answer a different question: the threat model BEFORE the code exists (threat-modeling), the per-entrypoint authorization chain rather than a diff (authz-review), and the agent's own configuration rather than application code (agent-security-review). Counterexamples guard 'security' as a non-technical word — a physical badge policy and a security deposit are not this skill's subject.",
   "queries": [
     {
       "id": "jsa-e1",
@@ -32,6 +32,13 @@
       "q": "security pass on these changed files, with findings ranked",
       "trigger": true,
       "class": "exemplar"
+    },
+    {
+      "id": "jsa-e6",
+      "q": "prüfe diesen Diff auf Sicherheitsrisiken, bevor ich ihn merge",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "id": "jsa-n1",

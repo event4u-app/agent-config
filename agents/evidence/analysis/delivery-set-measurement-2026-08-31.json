@@ -19,24 +19,24 @@
   },
   "metrics": {
     "precision_at_k": 80.965,
-    "recall_at_k": 62.268,
-    "recall_loss_pp": 37.732,
+    "recall_at_k": 62.012,
+    "recall_loss_pp": 37.988,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 42.474,
-      "3": 55.464,
-      "5": 62.268,
-      "10": 71.34,
-      "20": 77.938
+      "1": 42.3,
+      "3": 55.236,
+      "5": 62.012,
+      "10": 71.253,
+      "20": 77.823
     },
     "false_activation_at_k": 14.885,
-    "context_cost_tokens": 235,
+    "context_cost_tokens": 234.8,
     "token_target_met": true,
-    "benefit_unconditional": 62.268,
+    "benefit_unconditional": 62.012,
     "benefit_conditional_on_activation": 80.965,
     "adjudicated_deliveries": 373,
-    "unadjudicated_deliveries": 4170,
-    "tie_decided_cut_pp": 81.073
+    "unadjudicated_deliveries": 4177,
+    "tie_decided_cut_pp": 81.007
   },
   "set_compatibility": {
     "shared_prompts": 10,
@@ -105,7 +105,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 962,
-    "prompts": 951
+    "cases": 964,
+    "prompts": 953
   }
 }

@@ -1,7 +1,7 @@
 {
   "skill": "form-handler",
   "last_eval": "2026-10-12",
-  "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-12 under road-to-account-lifecycle-threat-rows 1.1, which rewrote this skill's validation-timing guidance and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three things the skill actually owns — validation TIMING, the error-display contract, and the submission lifecycle including double-submit — in the explicit and the symptom-first phrasing its own description names. Near-misses are three neighbours that share form vocabulary and are somebody else's job: the visual design of a form (fe-design), the server-side validation rules behind it (laravel-validation), and the accessibility audit of the same screen (accessibility-auditor), which this skill defers to rather than performs. Counterexamples guard the 'form' homonym: a Google Form and a form letter are not this skill's subject.",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-12 under road-to-account-lifecycle-threat-rows 1.1, which rewrote this skill's validation-timing guidance and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three things the skill actually owns — validation TIMING, the error-display contract, and the submission lifecycle including double-submit — in the explicit and the symptom-first phrasing its own description names. Near-misses are three neighbours that share form vocabulary and are somebody else's job: the visual design of a form (fe-design), the server-side validation rules behind it (laravel-validation), and the accessibility audit of the same screen (accessibility-auditor), which this skill defers to rather than performs. Counterexamples guard the 'form' homonym: a Google Form and a form letter are not this skill's subject.",
   "queries": [
     {
       "id": "fh-e1",
@@ -32,6 +32,13 @@
       "q": "review this signup form before we ship it",
       "trigger": true,
       "class": "exemplar"
+    },
+    {
+      "id": "fh-e6",
+      "q": "wann soll dieses Feld validieren — beim Verlassen oder erst beim Absenden?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
     },
     {
       "id": "fh-n1",
