@@ -159,7 +159,7 @@ as today.
       stopword block beside the English one. A correctness fix, not a lift
       claim: the 0.3 run before and after is attached to the change and the
       ranker baseline file is regenerated in the same change.
-      verify: `npx vitest run tests/scripts/skill_ranking_tokenizer.test.ts --reporter=verbose` <!-- ref-ignore --> -> /✓.*keeps-non-ascii-letters/
+      verify: `npx vitest run tests/scripts/skill_ranking_tokenizer.test.ts --reporter=verbose` -> /✓.*keeps-non-ascii-letters/ <!-- ref-ignore -->
 
 ## Phase 2 — A search path on every host with a shell
 
