@@ -505,7 +505,7 @@ function ruleActiveContent(
         const local = localName(el.name, prefixes);
         // SMIL that writes an active URL into an href is the same href, later.
         const smil = local === 'set' || local === 'animate' ? rawAttrs(el.raw) : null;
-        const animatesHref = smil !== null && /^(xlink:)?href$/i.test(smil['attributename'] ?? '');
+        const animatesHref = smil !== null && /^(xlink:)?href$/i.test(resolvedUrl(smil['attributename'] ?? ''));
         if (
             animatesHref &&
             ['to', 'from', 'by', 'values'].some((k) => (smil[k] ?? '').split(';').some(isActiveUrl))

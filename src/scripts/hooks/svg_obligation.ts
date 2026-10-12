@@ -389,9 +389,11 @@ export function writesRenderDir(command: string): boolean {
     if (isPureRender(command)) return false;
     const slashed = command.split(path.sep).join('/');
     const names = /(^|[\s/'"])(render\/|manifest\.json\b)/.test(slashed) || slashed.includes('state/render');
-    // Any interpreter in a command that names the directory counts as a write:
-    // inline flag, long option, `eval` or a program on stdin — what it does
-    // with the path is not readable from the command line.
+    // A LISTED interpreter in a command that names the directory counts as a
+    // write — inline flag, long option, `eval` or a program on stdin — because
+    // what it does with the path is not readable from the command line. A
+    // read-only script is caught too, on purpose: the cost is one re-render.
+    // An unlisted or indirected interpreter is not seen; see the header residual.
     const writes = />(?!&)|\b(tee|sponge)\b|\b(cp|mv|ln|install|rsync|dd)\s|\bsed\s+-i|\bwriteFile|\b(python[\d.]*|perl|ruby|node|deno|bun|php|osascript)\b/.test(
         slashed.replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' '),
     );

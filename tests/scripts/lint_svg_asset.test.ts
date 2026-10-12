@@ -994,6 +994,11 @@ describe('what the 16.5.0 re-cut review found', () => {
             '<title>t</title><a><set attributeName=href to=javascript:alert(1)></set><rect width="8" height="8"/></a>' +
             '</svg></body></html>\n';
         expect(scanHostHtml(host, 'h.html').map((f) => f.rule)).toContain('svg-safety-active-content');
+        // A character reference in attributeName, and an upper-case SVG prefix.
+        const encodedName = host.replace('attributeName=href', 'attributeName=&#104;ref');
+        expect(scanHostHtml(encodedName, 'h2.html').map((f) => f.rule)).toContain('svg-safety-active-content');
+        const upper = '<S:svg xmlns:S="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><S:script>alert(1)</S:script></S:svg>\n';
+        expect(scanSvg(upper, 'u.svg').map((f) => f.rule)).toContain('svg-safety-active-content');
         // A non-SVG prefix and a non-URL attribute are not active content.
         expect(rulesOf('<foo:script xmlns:foo="urn:not-svg"/>')).not.toContain('svg-safety-active-content');
         expect(rulesOf('<rect data-note="data:text/html,hello" width="8" height="8"/>')).not.toContain(

@@ -270,6 +270,10 @@ describe('the turn-end gate reads the render, never the call', () => {
         ]) {
             expect(openSvgObligation(root, [edit(file), bash(w), RENDER]), w).not.toBeNull();
         }
+        // Deliberately conservative: a listed interpreter that only READS the
+        // directory also voids the manifests — the turn re-renders, which is cheap.
+        const readByScript = bash('python3 inspect.py agents/runtime/state/render/x/manifest.json');
+        expect(openSvgObligation(root, [edit(file), readByScript, RENDER])).not.toBeNull();
         const afterCd = bash('cd assets && agent-config ui:render logo.svg --profile asset');
         expect(openSvgObligation(root, [edit(file), afterCd])).toBeNull();
     });
