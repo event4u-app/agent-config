@@ -156,6 +156,10 @@ Reproduced on 2026-10-01:
       `default-flip-of-the-installed-layer` is resolved: the installer thins by
       default for `claude-code`, the receipt announces both numbers, and the
       rollback of 1.2 stays one setting.
+      **Form re-cut 2026-10-12:** the owner directive in round `inbox-2026-10-n`
+      removes the setting; `road-to-a-setup-that-decides-itself` Phase 3 replaces
+      the flip with a computed decision and an install-time brake, and its 5.3 is
+      where the default changes. The owner's (a) of D5 still sets the condition.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t default` -> 0
 - [ ] **3.2 The ceiling becomes required.** The installed-layer report fails CI
       above the measured thinned total plus 10 %, never above 75,000, and moves
