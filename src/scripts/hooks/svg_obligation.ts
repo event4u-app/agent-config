@@ -363,6 +363,36 @@ export function renderNames(commands: readonly string[], relPath: string): boole
     });
 }
 
+/**
+ * A render call standing alone — no second command chained to it and no
+ * redirect — so its text cannot also carry a write. A leading `cd <dir> &&`,
+ * piping its output to a read-only filter, and folding stderr into stdout are
+ * allowed.
+ */
+export function isPureRender(command: string): boolean {
+    if (!isAssetRenderCommand(command)) return false;
+    const [head, ...pipes] = command.replace(/^\s*cd\s+[^;&|<>`$\n]+&&\s*/, '').replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' ').split('|');
+    if (/[;&<>`\n]|\$\(/.test(head ?? '')) return false;
+    return pipes.every((p) => /^\s*(tail|head|grep|jq|cat|less|wc)\b[^;&<>`|]*$/.test(p) && !/\$\(/.test(p));
+}
+
+/**
+ * Does a shell command (other than a pure render) write somewhere a render
+ * manifest could live? Read by shape: a write operator, together with the
+ * render directory, a `render/` path or a `manifest.json` — so `cd` into the
+ * state directory and a relative write is caught, and reading a manifest
+ * back is not.
+ */
+export function writesRenderDir(command: string): boolean {
+    if (isPureRender(command)) return false;
+    const slashed = command.split(path.sep).join('/');
+    const names = /(^|[\s/'"])(render\/|manifest\.json\b)/.test(slashed) || slashed.includes('state/render');
+    const writes = />(?!&)|\btee\b|\b(cp|mv|ln|install|rsync|dd)\s|\bsed\s+-i|\bwriteFile/.test(
+        slashed.replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' '),
+    );
+    return names && writes;
+}
+
 /** Escape a path component for use inside a RegExp. */
 function escapeRe(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -416,7 +446,7 @@ export function openSvgObligation(
         const rendered: string[] = [];
         for (let i = at + 1; i < toolCalls.length; i += 1) {
             const c = toolCalls[i]!;
-            if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
+            if (c.name === 'Bash' && c.command !== undefined && isPureRender(c.command)) {
                 rendered.push(c.command);
             }
         }
@@ -428,12 +458,7 @@ export function openSvgObligation(
         if (EDIT_TOOLS.has(c.name) && c.path !== undefined) {
             return rel(workspaceRoot, c.path).startsWith(`${renderDir}/`);
         }
-        return (
-            c.name === 'Bash' &&
-            c.command !== undefined &&
-            !isAssetRenderCommand(c.command) &&
-            c.command.split(path.sep).join('/').includes(renderDir)
-        );
+        return c.name === 'Bash' && c.command !== undefined && writesRenderDir(c.command);
     });
 
     let reading: SvgObligationReading;

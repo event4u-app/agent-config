@@ -234,8 +234,24 @@ describe('the turn-end gate reads the render, never the call', () => {
         ]);
         expect(viaShell).not.toBeNull();
 
-        // Control: the same manifest with only the render discharges.
+        // A write sharing one shell call with the render, and a write through a
+        // relative path after `cd` (cross-provider review of this fix).
+        const sameCall = bash(
+            `printf '{}' > agents/runtime/state/render/hand-written/manifest.json; ` +
+                'agent-config ui:render assets/logo.svg --profile asset',
+        );
+        expect(openSvgObligation(root, [edit(file), sameCall])).not.toBeNull();
+        const viaCd = bash(`cd agents/runtime/state && printf '{}' > render/hand-written/manifest.json`);
+        expect(openSvgObligation(root, [edit(file), viaCd, RENDER])).not.toBeNull();
+
+        // Control: the same manifest with only the render discharges — also when
+        // the render's output is piped, and when the manifest is READ afterwards.
         expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
+        const piped = bash('agent-config ui:render assets/logo.svg --profile asset 2>&1 | tail -5');
+        const readBack = bash('cat agents/runtime/state/render/hand-written/manifest.json | jq .verification');
+        expect(openSvgObligation(root, [edit(file), piped, readBack])).toBeNull();
+        const afterCd = bash('cd assets && agent-config ui:render logo.svg --profile asset');
+        expect(openSvgObligation(root, [edit(file), afterCd])).toBeNull();
     });
 
     it('a render of SOME OTHER file discharges nothing', () => {
