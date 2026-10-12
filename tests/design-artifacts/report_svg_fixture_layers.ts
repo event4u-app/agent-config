@@ -65,6 +65,22 @@ interface Row {
     rule: string;
     file: string;
     twin: string;
+    /**
+     * The registered raster or vector SOURCE this row is measured against, and
+     * the frame it occupies — both optional, both declared by the rows that
+     * need them.
+     *
+     * The harness used to ignore these although the manifest carried them, so
+     * every rule whose claim is ABOUT the source could not fire here: step 1.2
+     * made `geometry/near-white-hole` conditional on what the source shows,
+     * and with no source the region keeps `no-source` and produces nothing.
+     * The committed Measured table still said `found` for it, written before
+     * that condition existed — so the table recorded a measurement the harness
+     * had stopped taking. Found by regenerating the table rather than by
+     * reading it, which is the argument for generating it at all.
+     */
+    source?: string;
+    registration?: string;
 }
 interface Control {
     id: string;
@@ -279,6 +295,7 @@ async function engineRules(
             : undefined;
     const renderer = await loadAssetRenderer();
     if (!renderer) return [];
+    const registration = row.registration === undefined ? null : renderer.parseRegistration(row.registration);
     const result = await renderer.runAssetRender(browser as never, {
         file: path.join(root, FIXTURE_REL, rel),
         projectRoot: root,
@@ -287,6 +304,8 @@ async function engineRules(
         delivery: row.delivery,
         thresholdsFile: path.join(root, FIXTURE_REL, 'manifest.json'),
         iconSet,
+        ...(row.source === undefined ? {} : { compareTo: path.join(root, FIXTURE_REL, row.source) }),
+        ...(registration === null ? {} : { registration }),
     });
     return result.reading.findings.map((f) => f.rule);
 }

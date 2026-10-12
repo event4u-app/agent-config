@@ -236,15 +236,33 @@ export function readThresholds(file: string | undefined): ThresholdSource {
         out.fillRatioSource = 'manifest';
     }
     const gt = obj.geometry_tolerances as Record<string, Partial<GeometryTolerance>> | undefined;
-    if (gt && ASSET_CLASSES.every((c) => gt[c] && typeof gt[c]?.silhouette_iou_min === 'number')) {
+    // EVERY SUPPLIED FIELD IS A NUMBER, not just the one the guard used to
+    // name. Finding 5 of the review of this branch: the merge closed the
+    // missing-key hole and left the wrong-TYPE one, so
+    // `max_boundary_distance_units: "lots"` was accepted as manifest-sourced
+    // and returned verbatim — and `0 <= "lots"` is false, which is the same
+    // fail-closed comparison the missing key produced. A threshold that is not
+    // a number is not a threshold.
+    const wellTyped = (t: Partial<GeometryTolerance> | undefined): boolean =>
+        t !== undefined &&
+        typeof t.silhouette_iou_min === 'number' &&
+        Object.values(t).every((v) => typeof v === 'number' && Number.isFinite(v));
+    if (gt && ASSET_CLASSES.every((c) => wellTyped(gt[c]))) {
         // MERGED PER CLASS, not spread over the class. Finding 3 of the sixth
         // completion review: the validation checks one field per class and the
         // spread then replaced the whole class object, so a manifest naming
         // every class but supplying only `silhouette_iou_min` was accepted as
         // `geometrySource: manifest` with `max_boundary_distance_units`
-        // UNDEFINED — a threshold read as `undefined` compares false against
-        // everything, so the boundary check silently stopped existing on a
-        // manifest the reader was told to trust.
+        // UNDEFINED.
+        //
+        // THE DIRECTION, corrected — the first version of this comment had it
+        // backwards and the review of this branch caught it. `undefined` does
+        // not make the boundary check vanish: `maxDistance <= undefined` is
+        // FALSE, so every comparison failed it, and a pixel-perfect render
+        // (iou 1.0, boundary distance 0.0) scored `fail`. It was fail-CLOSED,
+        // not silently absent. That is the better of the two directions and
+        // still wrong: a manifest the reader was told to trust refused every
+        // file it was applied to.
         const merged = {} as Record<AssetClass, GeometryTolerance>;
         for (const c of ASSET_CLASSES) {
             merged[c] = { ...DEFAULT_GEOMETRY_TOLERANCES[c], ...gt[c] };

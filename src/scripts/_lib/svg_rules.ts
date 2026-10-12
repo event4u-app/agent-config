@@ -1200,6 +1200,39 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
  * A nested graphic is part of its parent and is not returned separately: the
  * rules read the whole thing, exactly as a browser does.
  */
+/**
+ * Blank the BODY of every `<script>` and `<style>`, offsets and newlines kept.
+ *
+ * Finding 1 of the review of this branch, and it is a regression this branch
+ * introduced: emitting an unterminated graphic made `topLevelGraphics` count
+ * `<svg …>` wherever it appears — including inside a JavaScript string, where
+ * it is text rather than markup. A host containing NO SVG element at all, but
+ * mentioning one in a script, went from zero findings to five, four of them in
+ * the blocking families the static witness counts. Fail-CLOSED rather than
+ * fail-open, so it refuses a valid document instead of passing a bad one, but
+ * a gate that refuses a correct turn is the failure this change has spent six
+ * rounds removing.
+ *
+ * The tags survive; only what is between them is blanked. `ruleActiveContent`
+ * keys on the element NAME, so a real `<script>` inside a graphic is still
+ * found — masking its body hides nothing the rules read.
+ */
+function maskScriptBodies(content: string): string {
+    const out = content.split('');
+    const re = /<(script|style)\b[^>]*>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(content)) !== null) {
+        const bodyStart = m.index + m[0].length;
+        const close = content.toLowerCase().indexOf(`</${(m[1] as string).toLowerCase()}`, bodyStart);
+        const bodyEnd = close === -1 ? content.length : close;
+        for (let i = bodyStart; i < bodyEnd; i += 1) {
+            if (out[i] !== '\n' && out[i] !== '\r') out[i] = ' ';
+        }
+        re.lastIndex = bodyEnd;
+    }
+    return out.join('');
+}
+
 function topLevelGraphics(text: string): Array<{ start: number; end: number }> {
     const out: Array<{ start: number; end: number }> = [];
     const tagRe = /<(\/?)svg\b[^>]*?(\/?)>/gi;
@@ -1256,7 +1289,7 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
     // the page, so it is not scanned and its ids do not collide with anything.
     // Masking preserves offsets, so `lineOf` — built from the raw text — still
     // answers correctly for the graphics that survive.
-    const hostText = maskComments(content);
+    const hostText = maskScriptBodies(maskComments(content));
     for (const m of topLevelGraphics(hostText)) {
         // The MATCH is found in the masked text — a graphic inside an HTML
         // comment is not on the page — but the BODY is sliced from the raw

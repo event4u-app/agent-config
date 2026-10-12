@@ -888,6 +888,18 @@ describe('what the sixth review round found', () => {
         const closed = unclosed.replace('</body>', '</svg>\n</body>');
         expect(scanHostHtml(closed, 'b.html').map((f) => f.rule)).toContain('svg-safety-active-content');
 
+        // A host that merely MENTIONS `<svg …>` in a script string has no
+        // graphic in it, and must stay silent. The emit above made this
+        // document report five errors, four of them in the blocking families
+        // the static witness counts — fail-closed rather than fail-open, so it
+        // refused a valid document instead of passing a bad one, which is the
+        // failure this change spent six rounds removing. Script and style
+        // bodies are masked before the depth count.
+        const mentioned =
+            '<!doctype html><html><body>\n<p>no graphic here</p>\n' +
+            '<script>const t = "<svg viewBox=\'0 0 8 8\'>";</script>\n</body></html>\n';
+        expect(scanHostHtml(mentioned, 'd.html')).toEqual([]);
+
         // A clean host is still silent — an emitter that returned a fragment
         // for every document would pass the cases above and break this one.
         const clean =
