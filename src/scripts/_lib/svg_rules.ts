@@ -1226,6 +1226,24 @@ function topLevelGraphics(text: string): Array<{ start: number; end: number }> {
         if (depth === 0) start = t.index;
         depth += 1;
     }
+    // AN UNTERMINATED GRAPHIC IS STILL A GRAPHIC, to end of input.
+    //
+    // Finding 1 of the sixth completion review, and it FAILS OPEN, which is
+    // why it is the one that matters: a host whose inline `<svg>` is never
+    // closed was dropped whole, so `scanHostHtml` returned zero findings — a
+    // planted `<script>` included — `staticWitness` then reported `errors: 0`,
+    // and that is exactly the condition `dischargeFor` uses to discharge the
+    // BLOCKING turn-end obligation on the static-only path. A malformed file
+    // discharged a gate that a well-formed one with the same script does not.
+    //
+    // NOT a regression of the depth counter that replaced the regex: the old
+    // `/<svg\b[\s\S]*?<\/svg\s*>/` required a closing tag and matched nothing
+    // here either. The rewrite preserved the hole rather than opening it, and
+    // the honest version of that sentence is worth more than the flattering
+    // one. Emitting the fragment hands `scanSvg` a document whose root is
+    // never closed — it reports that AND everything inside it, which is both
+    // answers the reader needs.
+    if (depth > 0 && start !== -1) out.push({ start, end: text.length });
     return out;
 }
 

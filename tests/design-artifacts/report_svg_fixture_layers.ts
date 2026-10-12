@@ -84,6 +84,14 @@ export const TAXONOMY_TO_RULE: Readonly<Record<string, string>> = {
     'structure/unparseable-path-data': 'svg-structure-unparseable-path',
     'structure/unused-defs-entry': 'svg-structure-unused-defs',
     'structure/dangling-reference': 'svg-structure-dangling-reference',
+    // Finding 5 of the sixth completion review: this change adds two taxonomy
+    // ids to the fixture manifest and gave neither a row here, so both
+    // reported `answeredBy: "(unmapped)"` and `plantedFound: null` — the
+    // report said no linter rule answers them while the rules were right
+    // there. A fixture that measures nothing looks exactly like a fixture that
+    // passes.
+    'structure/not-well-formed': 'svg-structure-not-well-formed',
+    'structure/degenerate-gradient': 'svg-structure-degenerate-gradient',
     'safety/active-content': 'svg-safety-active-content',
     'safety/internal-dtd-subset': 'svg-safety-internal-subset',
     'safety/external-reference': 'svg-safety-external-reference',

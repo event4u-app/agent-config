@@ -184,13 +184,23 @@ export function staticWitness(
     absFile: string,
     delivery?: DeliveryMode | undefined,
 ): { errors: number; digest: string } | null {
-    let content: string;
+    // THE DIGEST IS OF THE BYTES, the scan is of the decoded text.
+    //
+    // Finding 2 of the sixth completion review: three places hash "the file"
+    // and two of them hashed the UTF-8 DECODED string while the render hashed
+    // the raw buffer. For any file the decode is not byte-exact over — a BOM,
+    // a lone surrogate, an invalid sequence replaced by U+FFFD — the two
+    // digests differ forever, so the gate never matches a render to the file
+    // it rendered and the obligation can never be discharged. One definition,
+    // and it is the one a digest normally means.
+    let bytes: Buffer;
     try {
-        content = fs.readFileSync(absFile, 'utf8');
+        bytes = fs.readFileSync(absFile);
     } catch {
         return null;
     }
-    const digest = crypto.createHash('sha256').update(content).digest('hex');
+    const content = bytes.toString('utf8');
+    const digest = crypto.createHash('sha256').update(bytes).digest('hex');
     // The DELIVERY MODE is threaded through. Finding 6 of this change's second
     // completion review: `scanSvg` grades an undeclared mode as `inline`, the
     // strictest, because that is the safe default for a file whose embedding

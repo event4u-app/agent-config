@@ -235,9 +235,21 @@ export function readThresholds(file: string | undefined): ThresholdSource {
         out.fillRatio = { ...DEFAULT_FILL_RATIO_THRESHOLDS, ...fr } as Record<AssetClass, number>;
         out.fillRatioSource = 'manifest';
     }
-    const gt = obj.geometry_tolerances as Record<string, GeometryTolerance> | undefined;
+    const gt = obj.geometry_tolerances as Record<string, Partial<GeometryTolerance>> | undefined;
     if (gt && ASSET_CLASSES.every((c) => gt[c] && typeof gt[c]?.silhouette_iou_min === 'number')) {
-        out.geometry = { ...DEFAULT_GEOMETRY_TOLERANCES, ...gt } as Record<AssetClass, GeometryTolerance>;
+        // MERGED PER CLASS, not spread over the class. Finding 3 of the sixth
+        // completion review: the validation checks one field per class and the
+        // spread then replaced the whole class object, so a manifest naming
+        // every class but supplying only `silhouette_iou_min` was accepted as
+        // `geometrySource: manifest` with `max_boundary_distance_units`
+        // UNDEFINED — a threshold read as `undefined` compares false against
+        // everything, so the boundary check silently stopped existing on a
+        // manifest the reader was told to trust.
+        const merged = {} as Record<AssetClass, GeometryTolerance>;
+        for (const c of ASSET_CLASSES) {
+            merged[c] = { ...DEFAULT_GEOMETRY_TOLERANCES[c], ...gt[c] };
+        }
+        out.geometry = merged;
         out.geometrySource = 'manifest';
     }
     return out;

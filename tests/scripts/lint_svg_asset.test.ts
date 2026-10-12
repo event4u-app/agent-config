@@ -862,3 +862,38 @@ describe('what the fifth review round found', () => {
         expect(scanSvg(vector, 'v.svg').map((f) => f.rule)).not.toContain('svg-vector-embedded-raster');
     });
 });
+
+describe('what the sixth review round found', () => {
+    it('an unterminated graphic is scanned, not dropped', () => {
+        // Finding 1, and it FAILS OPEN, which is why it is the one that
+        // mattered: a host whose inline `<svg>` is never closed was dropped
+        // whole, so the scan returned zero findings — a planted `<script>`
+        // included — the static witness then reported 0 errors, and that is
+        // exactly the condition the turn-end gate uses to discharge on the
+        // static-only path. A MALFORMED file discharged a blocking gate that a
+        // well-formed one with the same script does not.
+        const unclosed =
+            '<!doctype html><html><body>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img"><title>t</title>\n' +
+            '  <script>alert(1)</script>\n' +
+            '  <rect width="24" height="24"/>\n' +
+            '</body></html>\n';
+        const rules = scanHostHtml(unclosed, 'a.html').map((f) => f.rule);
+        expect(rules).toContain('svg-safety-active-content');
+        // And the file IS reported as malformed, which is the other half: the
+        // reader needs both the script and the reason the document is odd.
+        expect(rules).toContain('svg-structure-not-well-formed');
+
+        // The byte-identical document WITH the close is the control.
+        const closed = unclosed.replace('</body>', '</svg>\n</body>');
+        expect(scanHostHtml(closed, 'b.html').map((f) => f.rule)).toContain('svg-safety-active-content');
+
+        // A clean host is still silent — an emitter that returned a fragment
+        // for every document would pass the cases above and break this one.
+        const clean =
+            '<!doctype html><html><body>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>a</title>' +
+            '<rect width="8" height="8"/></svg>\n</body></html>\n';
+        expect(scanHostHtml(clean, 'c.html')).toEqual([]);
+    });
+});

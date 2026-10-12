@@ -282,6 +282,12 @@ a pass.
 | `assets/primitive-only-mark.svg` | static | `vector-honesty/embedded-raster / vector-honesty/not-a-true-vector` | must stay silent | n/a — control | 0 |
 | `assets/spinner-intentional-dash.svg` | static | `motion/draw-on-dead-time / motion/guessed-dash` | must stay silent | n/a — control | 0 |
 | `assets/hamburger-24-grid.svg` | static | `structure/loose-viewbox` | must stay silent | n/a — control | 0 |
+| `assets/id-only-in-a-comment.svg` | static | `structure/dangling-reference` | lint_svg_asset svg-structure-dangling-reference | found | 0 |
+| `assets/mis-nested-tags.svg` | static | `structure/not-well-formed` | lint_svg_asset svg-structure-not-well-formed | found | 0 |
+| `assets/title-not-a-direct-child.svg` | static | `accessibility/meaningful-without-name` | lint_svg_asset svg-a11y-no-accessible-name | found | 0 |
+| `assets/degenerate-gradient.svg` | static | `structure/degenerate-gradient` | lint_svg_asset svg-structure-degenerate-gradient | found | 0 |
+| `assets/seam-between-shapes.svg` | engine | `geometry/background-bleed-inside-silhouette` | ui:render --profile asset | found | 0 |
+| `assets/dark-mark-on-dark.svg` | engine | `accessibility/low-contrast-on-background` | ui:render --profile asset | found | 0 |
 
 ## § Promotion bar (step 5.2)
 
