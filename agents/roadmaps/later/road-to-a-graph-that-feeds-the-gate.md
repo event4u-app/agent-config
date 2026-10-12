@@ -51,7 +51,7 @@ depends: [road-to-leading-every-row]
 > corpus. Corrected from the supplied draft where reproduction diverged (tagged
 > `corrected-from-reproduction`).
 
-> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
+> **Arrivals:** 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews ask that the feeder's stop-slot cost (p95 up to about 1 s on this repository's graph) fall or move off the stop path before any graph verdict gates, and that graph-selected verification be measured against full verification; the cost is step 3.5 (measured) and the promotion it gates is 3.4, deferred behind 3.3's recall reading, so no step moved. The count before it read: 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
 
 ## Goal
 

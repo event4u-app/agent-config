@@ -73,6 +73,14 @@ relates:
 > (`install.ts:2069-2140`, three tests); `rule-inject` cap already lowered to
 > 16,384 on 2026-09-08 with measured truncation (`hook-token-budget.json:35-42`).
 
+> **Arrivals:** 1 — latest `inbox-2026-10-m` (2026-10-12): a plan asks for a two-stage
+> retriever (lexical BM25 plus alias and negative triggers, embeddings only on a measured
+> lift, a light rerank, an explicit no-skill abstention) with targets of recall at 10 at or
+> above 0.90 and first-place at or above 0.60 on the sealed slice. Ranker lift is this
+> file's; the same round's tokenizer fix (non-ASCII letters, German stopwords) and
+> description-carrying search rows went to `road-to-a-search-answer-a-model-can-choose-from`,
+> which changes no scoring formula and regenerates the baseline it moves.
+
 > **corrected-from-reproduction (2026-09-29, /analyze:inbox t06).** The supplied
 > file was reproduced against `main` read-only. Every `file:line` in its Source
 > block resolved. ONE correction applied: the Risk Register `Risk type` column

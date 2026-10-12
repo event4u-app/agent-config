@@ -8,7 +8,7 @@ blocker_opened: 2026-08-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Arrivals:** 15 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks for one state envelope with atomic, expiry and privacy primitives; `_lib/fs_atomic.ts` exists and no envelope type does. The count before it read: 14 (at least) - latest `inbox-2026-10-b` (2026-10-01), a two-author
+> **Arrivals:** 16 (at least) - latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews ask again for a small shared state library and for a persistent runtime; one sharpens it to an external CI watcher, citing `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` (184 of 261 CI-wait minutes ended with no verdict). The ci-wait mitigation of `road-to-blocking-time-by-cause` (D7, step 3.3) shipped and its effect re-read waits on a second window, so no track's gate moved. The count before it read: 15 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks for one state envelope with atomic, expiry and privacy primitives; `_lib/fs_atomic.ts` exists and no envelope type does. The count before it read: 14 (at least) - latest `inbox-2026-10-b` (2026-10-01), a two-author
 > bundle proposing a session task envelope with leases and a join packet; killed as
 > K18 in `road-to-leading-every-row` because the typed return already exists and the
 > rest is this stub's gated tracks; `inbox-2026-10-a` (2026-10-01), where three of

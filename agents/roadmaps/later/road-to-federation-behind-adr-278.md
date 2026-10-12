@@ -39,13 +39,17 @@ depends: [road-to-leading-every-row, road-to-a-tree-that-keeps-its-neighbours, r
 > author's proposal bundle, consolidated against this tree at `9bc8cd4` and against the
 > two coexistence lanes of the same set. Class: external proposal set + owner directive.
 >
-> **Arrivals:** 3 (at least) — latest `inbox-2026-10-k` (2026-10-11), which asked for
-> external skills to be consumed only as inspect → pin by digest → explicit capability
-> grant → ephemeral use, origin-labelled and never executed implicitly; earlier:
+> **Arrivals:** 4 (at least) — latest `inbox-2026-10-m` (2026-10-12), which asked for an
+> external first-party skill catalogue as an optional, read-only provider: index loaded at a
+> pinned commit and schema-checked, a lockfile of commit plus content digest, a licence
+> matrix, script and capability scan with no execution on import, shadow mode first and
+> enablement only on a measured net gain; earlier: `inbox-2026-10-k` (2026-10-11), which
+> asked for external skills to be consumed only as inspect → pin by digest → explicit
+> capability grant → ephemeral use, origin-labelled and never executed implicitly;
 > `inbox-2026-10-b` (this file's source), `inbox-2026-09-o`. Subject-matched floor;
 > the consumed-inbox tree is gitignored, so the count is machine-local.
 >
-> **The posed owner question — 3 arrivals.** Does consuming remote skills (inspect, pin by
+> **The posed owner question — 4 arrivals.** Does consuming remote skills (inspect, pin by
 > digest, explicit grant, ephemeral use, no implicit execution) belong to this file? Exactly
 > one of: (1) yes, as a `content`-class provider under ADR-280's trust contract, added as a
 > phase once Phase 1 lands; (2) no — this package is a content layer, not a host, and remote

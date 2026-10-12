@@ -204,8 +204,9 @@ the evidence does not move either way.
 
 ### The rejection arrived a second time (2026-09-11), and it HELD (2026-09-21)
 
-**Arrivals: 2. This is the arrival record, kept on this file so a third arrival
-meets it rather than a blank.** Risk row 1 of the register below predicted this
+**Arrivals: 3** — the third, `inbox-2026-10-m` (2026-10-12), is recorded with its owner
+question on `archive/road-to-a-declared-component-contract.md` § Arrivals. **This is the
+arrival record, kept on this file so a third arrival meets it rather than a blank.** Risk row 1 of the register below predicted this
 exact re-arrival — *"a three-tier vocabulary landing out of it will be read as a
 first step toward atoms and molecules, and the next contributor will 'complete'
 it"* — and it was right: the second arrival was written on 2026-09-11, inside

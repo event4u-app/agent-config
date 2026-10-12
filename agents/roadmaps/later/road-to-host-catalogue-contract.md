@@ -21,6 +21,13 @@ execution:
 > a separate authority rather than defer to it. The stub carried a **refuted**
 > premise and its own originating framework document was absent from the tree,
 > so there was no authority left to defer to.
+>
+> **Arrivals:** 1 — latest `inbox-2026-10-m` (2026-10-12): a plan asks for per-host
+> canaries separating what is on disk from what reaches the model. One build-pinned input
+> now exists in part: the installed host build 2.1.296 carries a per-skill listing override
+> in its settings schema (read statically), and
+> `road-to-a-search-answer-a-model-can-choose-from` step 0.1 records its behaviour in a
+> session — offered here as a catalogue observation against a named build.
 
 ## Goal
 
