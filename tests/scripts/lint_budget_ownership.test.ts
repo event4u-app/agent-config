@@ -133,7 +133,7 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         expect(rels).toContain('budgets.yml');
     });
 
-    it('the corpus is 16 — the fifteen JSON budgets plus the one named YAML', () => {
+    it('the corpus is 18 — the seventeen JSON budgets plus the one named YAML', () => {
         // A floor AND a ceiling: a drop means src/config/ moved, and a silent rise
         // is exactly the glob-widening failure this mechanism exists to prevent.
         //
@@ -175,7 +175,15 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         // raises above, CI named the count first: the budget file landed, this
         // assertion went red at 17-against-16, and the number moved after the
         // file was confirmed to carry the two fields rather than before.
-        expect(budgetFiles(CONFIG_DIR)).toHaveLength(17);
+        // 17 -> 18 on 2026-10-12, by `skill-body-budget.json`
+        // (road-to-surfaces-no-gate-reads 3.1), the per-skill byte ceiling for
+        // every `src/skills/<name>/SKILL.md`. It carries `owner` and
+        // `review_by`, which is the only thing that makes raising this
+        // legitimate — and CI named the count first again: the budget file
+        // landed, this assertion went red at 18-against-17 alongside the
+        // GREEN case, and the number moved after the file was confirmed to
+        // carry the two fields rather than before.
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(18);
     });
 
     it('an UNLISTED *budget*.yml is not silently included', () => {

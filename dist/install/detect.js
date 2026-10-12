@@ -1,5 +1,5 @@
 /**
- * Detection layer — Phase A2 port of `scripts/install.py:detect_*`.
+ * Detection layer — Phase A2 port of ``detect_` in the retired Python installer*`.
  *
  * Pure functions only: read once, return a plan. No side effects in
  * the detection itself — atomic writes and conflict resolution happen
@@ -75,7 +75,7 @@ export const SCOPE_DETECT_AI_FILES = [
 /**
  * Multi-signal scope detection (ADR-007 D2 / Phase 1.3).
  *
- * 1:1 port of `scripts/install.py:detect_scope`. Pure — no side effects.
+ * 1:1 port of `detect_scope` in the retired Python installer. Pure — no side effects.
  */
 export function detectScope(cwd) {
     if (existsSync(join(cwd, SETTINGS_FILE))) {
@@ -165,7 +165,7 @@ export function discoverPacks(workspaceRoot) {
 /**
  * Locate the agent-config package root from a project root.
  *
- * 1:1 port of `scripts/install.py:detect_package_root` — prefers an
+ * 1:1 port of `detect_package_root` in the retired Python installer — prefers an
  * npm-installed copy under `node_modules/@event4u/agent-config/`,
  * falls back to the project root itself for in-package development
  * (presence of `src/config/profiles/minimal.ini` is the development-mode

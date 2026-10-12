@@ -9,7 +9,7 @@
  * {@link buildInstallPlan}.
  *
  * Mirrors the canonical mapping tables in
- * `scripts/install.py:2029-2222`:
+ * the retired Python installer, line 2029-2222:
  *   - {@link USER_SCOPE_PATHS}     ← `USER_SCOPE_PATHS`
  *   - {@link GLOBAL_DEPLOY_SOURCES} ← `_CLAUDE_SKILL_BUNDLE` + `GLOBAL_DEPLOY_SOURCES`
  *
@@ -23,7 +23,7 @@ import { buildInstallPlan } from './plan.js';
 import { ruleFileArrives, LEGACY_ALL } from './rule_scope.js';
 /**
  * Per-tool user-scope anchor directory, mirrored 1:1 from
- * `scripts/install.py:USER_SCOPE_PATHS`. Values may use `~` for the
+ * `USER_SCOPE_PATHS` in the retired Python installer. Values may use `~` for the
  * user's home directory; {@link expandAnchor} resolves it server-side.
  *
  * Tools without a user-scope directory convention (e.g. `claude-desktop`
@@ -93,7 +93,7 @@ const CLAUDE_SKILL_BUNDLE = [
     // subdirs route as `/<cluster>:<sub>`. Council session 2026-05-28
     // converged on Option B (native slash-only) — see
     // agents/runtime/council/responses/claude-code-distribution.json
-    // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
+    // and `_CLAUDE_SKILL_BUNDLE` in the retired Python installer for the Python mirror.
     ['dist/agent-src/commands', 'commands'],
     ['dist/agent-src/personas', 'personas'],
 ];
@@ -104,7 +104,7 @@ const CLAUDE_SKILL_BUNDLE = [
  * `packageSrcRelative` resolves against the agent-config package root;
  * `destSubpath` is appended to `USER_SCOPE_PATHS[toolId]` (expanded).
  *
- * Mirrors `GLOBAL_DEPLOY_SOURCES` in `scripts/install.py:2178-2222`.
+ * Mirrors `GLOBAL_DEPLOY_SOURCES` in the retired Python installer, line 2178-2222.
  * Tools absent from this map have no deployable content in global scope
  * — they either follow a marker-only convention (handled by bridges in
  * Phase A6) or have no markdown convention at all.
