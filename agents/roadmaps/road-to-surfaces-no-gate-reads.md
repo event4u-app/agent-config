@@ -63,7 +63,7 @@ three places where the published surface can silently disagree with the tree.
 
 ## Phase 1 — README counts come from the counter
 
-- [ ] **1.1 Prose patterns in `TARGETS`, test first.** Add to the README entry
+- [x] **1.1 Prose patterns in `TARGETS`, test first.** Add to the README entry
       of `TARGETS` the four sub-note positions: `**Commands N**` →
       `commands_active`, `holds N at its top level` → a new kind
       `commands_toplevel` (non-recursive count of
@@ -74,28 +74,54 @@ three places where the published surface can silently disagree with the tree.
       the audit asked for the Commands figure; that one is already right and
       the Rules figure is the live drift.
       verify: `npx vitest run tests/scripts/update_counts.test.ts` -> 0
-- [ ] **1.2 Run the counter once and commit what it writes.** The sub-note
+- [x] **1.2 Run the counter once and commit what it writes.** The sub-note
       reads the tree's four figures; `--check` stays green afterwards.
       verify: `./scripts-run src/scripts/update_counts --check` -> 0
 
+      **Closed 2026-10-12.** The two Rules figures moved (121 -> 122 source,
+      120 -> 121 projected); the two Commands figures were already right, which
+      is how a hand-typed number fails — on some of them, silently.
+
+      **A second defect this step triggered rather than found.** Adding the two
+      new patterns without adding their kinds to `KINDS` rewrote the sub-note to
+      "holds undefined at its top level", and `--check` then said "All counts in
+      sync" because the pattern no longer matched its own output. A generator
+      that can corrupt the file it maintains and then call the corruption clean
+      is worse than one that does nothing. `apply_to_text` now refuses a kind
+      with no count and names it, and a structural test fails when a pattern is
+      added without its kind.
+
 ## Phase 2 — The installer is named where it is
 
-- [ ] **2.1 Repoint or reword every live reference.** Each non-archive file
+- [x] **2.1 Repoint or reword every live reference.** Each non-archive file
       that names `scripts/install.py` as a path or a command is changed to name
       `src/scripts/install.ts`, or — where the sentence is history ("ported
       from the retired Python installer") — reworded so it no longer reads as
       a path. `docs/contracts/skill-bundled-assets.md` is left to
       `road-to-skill-scripts-that-run-where-they-land`, which owns it.
       verify: `grep -rln 'scripts/install\.py' src README.md | wc -l` -> /^\s*0$/
-- [ ] **2.2 A test that keeps it gone.** One vitest case walks `src/` and fails
+- [x] **2.2 A test that keeps it gone.** One vitest case walks `src/` and fails
       on any `scripts/install.py` token, with the file and line in the
       message. It is seen red against a fixture file carrying the token before
       2.1's sweep is applied to the fixture tree.
       verify: `npx vitest run tests/install/installer_path_references.test.ts` -> 0
 
+      **Closed 2026-10-12, and the verify's zero needed a carve-out the step did
+      not anticipate.** 20 files under `src/` named the path (not the 61 the
+      Context records, which counted `docs/` at an older pin). Two of them name
+      it on purpose and neither names it AS a path:
+      `lint_pre_migration_refs.ts` is the gate that SEARCHES for it, and
+      `migration_status.ts` compares against the historical path to categorise a
+      file from the git history. The first sweep rewrote both — a detector's own
+      pattern and a path equality — which is how a sweep deletes the detector
+      instead of the defect. Caught by reading the diff before committing it.
+      The two are named individually in the test's allow-list, and the test
+      proves that list is load-bearing rather than assuming it: removing it reds
+      on exactly those two files.
+
 ## Phase 3 — A skill body may shrink, never silently grow
 
-- [ ] **3.1 A per-skill byte ceiling, measured at the base.**
+- [x] **3.1 A per-skill byte ceiling, measured at the base.**
       `src/config/skill-body-budget.json` records each `SKILL.md`'s byte count
       at the commit that lands this step, plus a `raised` list whose entries
       carry skill, old, new and a one-line reason. A new check
@@ -105,10 +131,25 @@ three places where the published surface can silently disagree with the tree.
       landing. It is wired where the other budget checks run, with a
       `scanned:` line.
       verify: `npx vitest run tests/scripts/check_skill_body_budget.test.ts` -> 0
-- [ ] **3.2 Seen red, then green.** The test raises one fixture body by one
+- [x] **3.2 Seen red, then green.** The test raises one fixture body by one
       byte and asserts exit 1; adds a `raised` entry and asserts exit 0;
       shrinks a body and asserts the ceiling is not moved by the check itself.
       verify: `npx vitest run tests/scripts/check_skill_body_budget.test.ts -t red` -> 0
+
+      **Closed 2026-10-12. Baseline: 300 bodies, median 8,164 bytes, max 24,902,
+      147 over 8 KB** — the measured distribution, recorded per skill, which is
+      why the non-goals declined a fixed bar.
+
+      **Three ratchets, as the estate's own record predicted.** The gate is
+      registered in `gate-coverage.yml` with a `min_scanned` floor of 250 and a
+      `no_canary_reason`: the only violation it can express is an in-place
+      growth, so a create-only canary would run it green and certify nothing.
+      It adopts `_lib/gate_self_test.ts` — six cases, three rejecting, over real
+      fixture trees through the real CLI — so the `registered-non-adopters`
+      ratchet stays at its baseline of 24 rather than rising to 25. And it
+      adopts `_lib/gate_ledger.ts`, so `check_gate_completeness` reads 237 on
+      this branch, exactly what `origin/main` reads: the gate adds nothing to a
+      red that was already there.
 
 ## What this roadmap deliberately does not do
 
@@ -125,11 +166,11 @@ three places where the published surface can silently disagree with the tree.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `update_counts --check` fails on a stale command or rule figure in
+- [x] AC-1 — `update_counts --check` fails on a stale command or rule figure in
       the README sub-note, and the live sub-note matches the tree.
-- [ ] AC-2 — No file under `src/` names `scripts/install.py`, and a test fails
+- [x] AC-2 — No file under `src/` names `scripts/install.py`, and a test fails
       when one does.
-- [ ] AC-3 — Growing any `SKILL.md` body without a recorded `raised` entry
+- [x] AC-3 — Growing any `SKILL.md` body without a recorded `raised` entry
       fails a check; shrinking one never does.
 
 ## Decisions
@@ -142,7 +183,7 @@ three places where the published surface can silently disagree with the tree.
 | D4 | deterministic | evidence | lean-default: 141 of 299 skills carry no class key and exceed 8,192 bytes at `d41121927`, against a lean target under 500 tokens; this roadmap freezes their growth and does not reclassify them | Byte census over `src/skills/*/SKILL.md` at the base | A reclassification roadmap lands |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
