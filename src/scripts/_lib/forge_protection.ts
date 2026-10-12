@@ -1,5 +1,5 @@
 /**
- * The five `forge_protection` rows, read from the forge rather than guessed.
+ * The six `forge_protection` rows, read from the forge rather than guessed.
  *
  * `road-to-adversarial-verification-and-long-runs` Phase 3.2. ADR-268 § 3 trades
  * the owner's confirmation for a mechanical check, and branch protection is the
@@ -45,13 +45,26 @@ export interface ProtectionRow {
     readonly detail: string;
 }
 
-/** The five rows, in the order the blocker's own table lists them. */
+/**
+ * The rows, in the order the blocker's own table lists them, plus the
+ * authority-surface row added 2026-10-12.
+ *
+ * **Why the sixth row exists.** A governance hold elsewhere in this package is
+ * declared resolved when this very command reports an external approver for the
+ * authority surface. Measured 2026-10-12: no row spoke about required reviewers
+ * at all, so that condition was unanswerable in EITHER direction — and a
+ * condition whose test cannot run is not a strict one, it is an unmeasured one.
+ * The row exists to make the negative answerable: it reports `unsatisfied` while
+ * no forge-side approval requirement covers the default branch, which is a
+ * machine-readable fact where silence was.
+ */
 export const PROTECTION_ROW_IDS: readonly string[] = [
     'default_branch_protected',
     'required_checks_present',
     'force_push_disabled',
     'auto_merge_available',
     'deploy_via_pipeline_only',
+    'authority_surface_external_approval',
 ] as const;
 
 /** What a caller must supply for a row to be readable. `null` = not read. */
@@ -210,6 +223,55 @@ function hasRule(rs: RulesetDetail, type: string): boolean {
     return (rs.rules ?? []).some((r) => r.type === type);
 }
 
+/**
+ * The `pull_request` rule's approval surface, as this row reads it.
+ *
+ * A NARROW PROJECTION of the real payload, declared the same way
+ * {@link EnvironmentPolicy} is and for the same reason: the response also
+ * carries `allowed_merge_methods`, `dismiss_stale_reviews_on_push`,
+ * `required_review_thread_resolution` and more, and naming only the three
+ * fields this decision rests on says which ones it rests on.
+ */
+interface ApprovalParameters {
+    readonly required_approving_review_count?: number;
+    readonly require_code_owner_review?: boolean;
+    readonly required_reviewers?: readonly unknown[];
+}
+
+/** The `pull_request` rule's parameters across `rs`, or `null` when it has none. */
+function approvalParameters(rs: RulesetDetail): ApprovalParameters | null {
+    for (const r of rs.rules ?? []) {
+        if (r.type !== 'pull_request') continue;
+        const p = r.parameters;
+        if (p === null || typeof p !== 'object') return {};
+        return p as ApprovalParameters;
+    }
+    return null;
+}
+
+/**
+ * Which forge-side mechanisms, if any, make an approving review mandatory.
+ *
+ * Three mechanisms, because GitHub has three and reading one would report "no
+ * approval required" for a repository that requires one by a different route:
+ * a numeric approving-review count, code-owner review (the path-scoped route,
+ * resolved through `CODEOWNERS`), and an explicit `required_reviewers` list.
+ */
+export function approvalMechanisms(rulesets: readonly RulesetDetail[]): string[] {
+    const found: string[] = [];
+    for (const rs of rulesets) {
+        const p = approvalParameters(rs);
+        if (p === null) continue;
+        const count = p.required_approving_review_count ?? 0;
+        if (count >= 1) found.push(`required_approving_review_count=${String(count)}`);
+        if (p.require_code_owner_review === true) found.push('require_code_owner_review');
+        if ((p.required_reviewers ?? []).length > 0) {
+            found.push(`required_reviewers=${String((p.required_reviewers ?? []).length)}`);
+        }
+    }
+    return found;
+}
+
 function requiredContexts(rs: RulesetDetail): string[] {
     for (const r of rs.rules ?? []) {
         if (r.type !== 'required_status_checks') continue;
@@ -352,7 +414,83 @@ export function forgeProtectionRows(reading: ForgeReading): ProtectionRow[] {
               },
     );
 
+    rows.push(authorityApprovalRow(covering));
+
     return rows;
+}
+
+/**
+ * The authority-surface row — and the one row that states what it does NOT
+ * establish, because overstating it is the specific failure here.
+ *
+ * It answers ONE of the three assertions a hold of this kind rests on:
+ *
+ * 1. *declared intent* — which surfaces a committed policy says need approval.
+ *    Not read here: that declaration lives in the candidate branch, so reading
+ *    it from the candidate would let the change under review supply its own
+ *    permission.
+ * 2. *observed forge state* — whether the live configuration actually requires
+ *    an approving review, and whether an unconditional bypass voids it. **This
+ *    is the half the row reads**, and it is the only one of the three a forge
+ *    payload can carry.
+ * 3. *principal qualification* — whether the approver is a genuinely separate
+ *    person who accepted the duty and is reachable. Not derivable from any API
+ *    response: membership and permissions are readable, custody and willingness
+ *    are not.
+ *
+ * So `satisfied` means *a forge-side approval requirement exists and no
+ * unconditional bypass voids it* — never *the approval comes from someone other
+ * than the author*. A caller that needs the stronger claim gets it from a live
+ * test, not from this row, and the detail line says so rather than leaving a
+ * reader to infer the narrower meaning.
+ *
+ * The bypass clause is not decoration: an approval requirement a listed actor
+ * may skip unconditionally is advisory, so reporting it `satisfied` would be
+ * the quiet false positive the three-state row type exists to prevent.
+ */
+function authorityApprovalRow(covering: readonly RulesetDetail[] | null): ProtectionRow {
+    if (covering === null) {
+        return {
+            id: 'authority_surface_external_approval',
+            state: 'unread',
+            source: SOURCE.rulesets,
+            detail: 'the rulesets were not queried',
+        };
+    }
+    const mechanisms = approvalMechanisms(covering);
+    if (mechanisms.length === 0) {
+        return {
+            id: 'authority_surface_external_approval',
+            state: 'unsatisfied',
+            source: SOURCE.rulesets,
+            detail:
+                'no covering ruleset requires an approving review — no approving-review count, ' +
+                'no code-owner review and no required reviewers. Any principal with write access ' +
+                'can therefore merge an authority-surface change alone.',
+        };
+    }
+    const bypass = covering.flatMap((rs) =>
+        (rs.bypass_actors ?? []).filter((a) => a.bypass_mode === 'always'),
+    );
+    if (bypass.length > 0) {
+        return {
+            id: 'authority_surface_external_approval',
+            state: 'unsatisfied',
+            source: SOURCE.rulesets,
+            detail:
+                `an approval requirement exists (${mechanisms.join(', ')}) but ` +
+                `${String(bypass.length)} actor(s) may bypass it unconditionally, so it does not bind`,
+        };
+    }
+    return {
+        id: 'authority_surface_external_approval',
+        state: 'satisfied',
+        source: SOURCE.rulesets,
+        detail:
+            `an approving review is required and unbypassable (${mechanisms.join(', ')}). ` +
+            'This states the forge requirement ONLY — it does not establish that the approver ' +
+            'is a principal distinct from the author, which no API response can show.',
+    };
 }
 
 /**
