@@ -69,18 +69,19 @@ const block = (r: ForgeReading, repo: string | null): Block =>
     forgeProtectionJson(r, repo) as unknown as Block;
 
 // provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
-describe('the five rows — the product output itself', () => {
+describe('the six rows — the product output itself', () => {
     // The council pass weighted this highest: the suites spent their effort on
     // acquisition choreography while the rows `doctor --json` actually emits —
     // the user-visible trust boundary — were barely asserted. Metadata was
     // thoroughly checked and the data was assumed correct.
-    it('emits exactly the five rows, by id and in order', () => {
+    it('emits exactly the six rows, by id and in order', () => {
         expect(block(LIVE, 'o/r').rows.map((r) => r.id)).toEqual([
             'default_branch_protected',
             'required_checks_present',
             'force_push_disabled',
             'auto_merge_available',
             'deploy_via_pipeline_only',
+            'authority_surface_external_approval',
         ]);
     });
 
@@ -90,7 +91,14 @@ describe('the five rows — the product output itself', () => {
         // field and asserts exactly one state changes.
         const states = (r: ForgeReading): string[] => block(r, 'o/r').rows.map((x) => x.state);
         const base = states(LIVE);
-        expect(base).toEqual(Array<string>(5).fill('satisfied'));
+        // The first five are satisfied under LIVE; the sixth —
+        // `authority_surface_external_approval` — is unsatisfied, because the
+        // separately authorised approver it asks for does not exist on this
+        // forge. So isolation is measured as a DELTA against this baseline,
+        // not as a count of non-`satisfied` rows: the latter was an
+        // abbreviation that only held while every row was satisfied, and it
+        // would now count the sixth row in every case.
+        expect(base).toEqual([...Array<string>(5).fill('satisfied'), 'unsatisfied']);
 
         const cases: [string, ForgeReading, number][] = [
             ['auto-merge', { ...LIVE, allowAutoMerge: false }, 3],
@@ -99,7 +107,7 @@ describe('the five rows — the product output itself', () => {
         for (const [, reading, idx] of cases) {
             const got = states(reading);
             expect(got[idx]).toBe('unsatisfied');
-            expect(got.filter((s) => s !== 'satisfied')).toHaveLength(1);
+            expect(got.filter((s, i) => s !== base[i])).toHaveLength(1);
         }
     });
 

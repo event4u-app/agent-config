@@ -154,10 +154,10 @@ describe('doctor --json spawns nothing on either offline path', () => {
         expect(calls).toEqual([]);
     });
 
-    it('keeps the block shape: five unread rows and no repository', () => {
+    it('keeps the block shape: six unread rows and no repository', () => {
         const block = forgeBlock(emit(['--json', '--no-forge']).payload);
         const rows = block['rows'] as Array<{ state: string; source: string }>;
-        expect(rows).toHaveLength(5);
+        expect(rows).toHaveLength(6);
         for (const r of rows) {
             expect(r.state).toBe('unread');
             expect(r.source).not.toBe('');
