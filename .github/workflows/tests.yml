@@ -45,6 +45,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Read-only token. The repository default is write, and these jobs run
+# untrusted inputs (planted SVG fixtures in a real browser among them).
+permissions:
+  contents: read
+
 jobs:
   install-tests:
     # test_install.sh runs each of 35 tests in its own mktemp dir,
