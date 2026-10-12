@@ -41,7 +41,7 @@ function writeRecord(): string {
             // The content binding of 2026-10-12. Asked of the gate rather than
             // typed, so this fixture proves the shipped membership rule and not
             // a second reading of it.
-            `subject: ${expectedSubjectFor([POLICY], root)}`,
+            `subject: ${expectedSubjectFor([POLICY], root).digest}`,
             'verdict: ratified',
             'effective_after: merge',
             'providers:',

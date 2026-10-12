@@ -68,6 +68,71 @@ export const DELETED_MARKER = '\u0000deleted\u0000';
 export const SYMLINK_MARKER = '\u0000symlink\u0000';
 
 /**
+ * Raised when a gated path exists but cannot be read.
+ *
+ * A 2026-10-13 council review refused the change over the shape this
+ * replaces: every `lstat` failure became `null`, and `null` is the DELETION
+ * marker — so a permission error, an I/O error or a transient filesystem
+ * failure on a gated file produced the digest of a tree in which that file
+ * had been removed. Both seats named it, and one named the consequence that
+ * makes it more than untidy: anyone who can provoke such an error on a gated
+ * path can force its real content out of the digest.
+ *
+ * Only ENOENT and ENOTDIR mean ABSENT. Everything else is a checkout this
+ * code cannot describe, and describing it anyway is the fail-open move a
+ * previous round of this same review already refused once.
+ */
+export class GatedPathEscapes extends Error {
+    constructor(readonly rel: string) {
+        super(
+            `gated path \`${rel}\` is absolute or contains a \`..\` segment, so joining it to ` +
+                'the tree root would read outside the revision under review — the digest refuses ' +
+                'rather than describing content that is not in the change',
+        );
+        this.name = 'GatedPathEscapes';
+    }
+}
+
+/**
+ * Refuse a gated path that would read outside `root`.
+ *
+ * FOUND BY THE TEST THAT PINS IT, on a 2026-10-13 council question: the gate's
+ * `KERNEL_RULE_PATH_RE` is `(?:^|\/)rules\/([a-z0-9-]+)\.md$`, which is NOT
+ * anchored at the start, so `../../elsewhere/rules/commit-policy.md` classifies
+ * as a kernel rule. That was harmless while the gate only read path NAMES. It
+ * stopped being harmless the moment this module began joining those names to a
+ * root and reading the bytes, which is what the content binding does — so the
+ * containment belongs here, with the read, and it FAILS CLOSED rather than
+ * dropping the path: dropping it would make the digest cover less than the gate
+ * gated, which is the divergence the same review refused elsewhere.
+ *
+ * Tightening the gate's own regex is a change to the gate's classification and
+ * therefore a separate, gated concern. This bound holds whatever that regex
+ * does.
+ */
+const ESCAPING_SEGMENT = /(?:^|\/)\.\.(?:\/|$)/u;
+
+function assertContained(rel: string): void {
+    if (rel.startsWith('/') || /^[A-Za-z]:[\\/]/u.test(rel) || ESCAPING_SEGMENT.test(rel)) {
+        throw new GatedPathEscapes(rel);
+    }
+}
+
+export class GatedFileUnreadable extends Error {
+    constructor(
+        readonly rel: string,
+        readonly cause: NodeJS.ErrnoException,
+    ) {
+        super(
+            `gated path \`${rel}\` exists but could not be read ` +
+                `(${cause.code ?? cause.message}) — the digest refuses to describe a tree it ` +
+                'could not read, because an unreadable file is not a deleted one',
+        );
+        this.name = 'GatedFileUnreadable';
+    }
+}
+
+/**
  * The self surface, by the gate's own constants rather than a copy of them.
  *
  * READ ON FIRST CALL, NOT AT MODULE SCOPE, and the reason is the import cycle
@@ -109,30 +174,52 @@ export function gatedFilesOf(
     for (const f of normalized) {
         if (self.has(f)) out.add(f);
     }
-    return [...out].sort();
+    const sorted = [...out].sort();
+    for (const rel of sorted) {
+        assertContained(rel);
+    }
+    return sorted;
+}
+
+/** A digest and, from the SAME classification, exactly what it covers. */
+export interface SubjectReading {
+    /** The `subject` a record must carry to answer for this change. */
+    readonly digest: string;
+    /** The gated files that digest is taken over, sorted. */
+    readonly gatedFiles: readonly string[];
 }
 
 /**
  * One digest over the sorted paths AND contents of the gated files, read from
- * `root`.
+ * `root`, together with the list it covers.
  *
  * The path is hashed alongside its content, so two files with identical bytes
  * do not collide and a rename moves the digest — a gated file moved to another
- * gated path is a different change, not the same one.
+ * gated path is a different change, not the same one. The separator is NUL,
+ * which no path on any supported filesystem may contain, and the content slot
+ * is a fixed-width 64-character hex digest — so the serialisation is
+ * unambiguous and no crafted path can reproduce another file's framing.
  *
  * `derived` is the plumbing closure the caller already computed, passed through
  * to {@link gatedFilesOf} unchanged. The gate HAS that list and classifies with
  * it; a digest that classified without it would cover fewer files than the gate
  * gated, so a record could be bound to a subset of what was reviewed. One list,
  * handed down, rather than two computed independently.
+ *
+ * RETURNS THE LIST RATHER THAN LETTING A CALLER RE-DERIVE IT. The 2026-10-13
+ * review found the CLI printing `gatedFilesOf(files)` while the digest came
+ * from `gatedFilesOf(files, derivedFor(root))` — two classifications with
+ * different inputs, so the coverage a human copied alongside a digest could
+ * disagree with what that digest actually covered. One call, one answer.
  */
-export function subjectDigest(
+export function subjectOf(
     root: string,
     files: readonly string[],
     derived?: readonly string[],
-): string {
+): SubjectReading {
+    const gatedFiles = gatedFilesOf(files, derived);
     const h = createHash('sha256');
-    for (const rel of gatedFilesOf(files, derived)) {
+    for (const rel of gatedFiles) {
         const abs = path.join(root, rel);
         // `lstat` rather than `existsSync`: the latter follows the link and
         // reports a broken symlink as absent, which would digest a link as a
@@ -141,8 +228,19 @@ export function subjectDigest(
         let stat: fs.Stats | null = null;
         try {
             stat = fs.lstatSync(abs);
-        } catch {
-            stat = null;
+        } catch (err) {
+            const code = (err as NodeJS.ErrnoException).code;
+            // ABSENT is two codes and no more. ENOENT is the file not being
+            // there; ENOTDIR is a parent component not being a directory,
+            // which is the same statement about a path that does not resolve.
+            // EACCES, EPERM, EIO, ELOOP and everything else say the file may
+            // well be there and this process could not look — a different
+            // fact, and not one a deletion marker may stand in for.
+            if (code === 'ENOENT' || code === 'ENOTDIR') {
+                stat = null;
+            } else {
+                throw new GatedFileUnreadable(rel, err as NodeJS.ErrnoException);
+            }
         }
         if (stat === null) {
             content = Buffer.from(DELETED_MARKER);
@@ -156,5 +254,19 @@ export function subjectDigest(
         h.update(createHash('sha256').update(content).digest('hex'));
         h.update('\n');
     }
-    return h.digest('hex');
+    return { digest: h.digest('hex'), gatedFiles };
+}
+
+/**
+ * The digest alone, for a caller that has no use for the covered list.
+ *
+ * Delegates rather than re-implementing: there is ONE classification and ONE
+ * hashing loop, and this is a projection of its result.
+ */
+export function subjectDigest(
+    root: string,
+    files: readonly string[],
+    derived?: readonly string[],
+): string {
+    return subjectOf(root, files, derived).digest;
 }

@@ -85,7 +85,11 @@ import {
     readRequiredProviders,
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
-import { subjectDigest } from './_lib/ratification_subject.js';
+import {
+    GatedFileUnreadable,
+    subjectOf,
+    type SubjectReading,
+} from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -392,7 +396,8 @@ function derivedFor(root: string): readonly string[] {
 }
 
 /**
- * The `subject` digest a record must carry to answer for this diff.
+ * The `subject` digest a record must carry to answer for this diff, AND the
+ * gated files it covers — from one classification, never two.
  *
  * Exported so that whoever WRITES a record asks the gate for the digest rather
  * than recomputing it from a second reading of the membership rule. A writer
@@ -400,9 +405,18 @@ function derivedFor(root: string): readonly string[] {
  * `ratification_subject`'s header exists to prevent — and it would fail only
  * for the diffs where the two lists disagree, which are exactly the diffs that
  * widen the gated set.
+ *
+ * RETURNS BOTH HALVES because a 2026-10-13 council review found the CLI
+ * printing a coverage list it had classified separately, with a different
+ * `derived` input, beside a digest classified here. A list that can disagree
+ * with the digest it is printed next to is the exact false reassurance that
+ * list exists to prevent, so there is now one call and one answer.
+ *
+ * THROWS {@link GatedFileUnreadable} when a gated path exists and cannot be
+ * read. Callers turn that into a refusal; none of them may continue.
  */
-export function expectedSubjectFor(files: readonly string[], root: string): string {
-    return subjectDigest(root, files, derivedFor(root));
+export function expectedSubjectFor(files: readonly string[], root: string): SubjectReading {
+    return subjectOf(root, files, derivedFor(root));
 }
 
 export interface GateResult {
@@ -424,20 +438,6 @@ export function evaluate(
     const derived = derivedFor(root);
     const gated = classifyPaths(files, derived);
     const scanned = files.length;
-
-    /**
-     * The digest of this diff's gated content, recomputed from the tree rather
-     * than read from the record.
-     *
-     * WHICH FILES COUNT IS DECIDED BY THIS CODE, AND IN CI THIS CODE IS THE BASE
-     * REVISION'S. The workflow runs the base's copy of this gate with `--root
-     * <head>`, so the membership rule a candidate is judged by is one the
-     * candidate did not write — and the same holds for the digest, which uses
-     * this module's `classifyPaths` and the derived list computed just above.
-     * A change that widens the gated set is therefore judged, and written, by
-     * the same list.
-     */
-    const expectedSubject = expectedSubjectFor(files, root);
 
     // Every changed path is a planned target: the gate's denominator is the
     // whole diff, and a path it decided was out of scope is a decision worth
@@ -478,6 +478,34 @@ export function evaluate(
                 `failed ${tally.failed} · out_of_scope ${tally.out_of_scope}`,
         );
     };
+
+    /**
+     * The digest of this diff's gated content, recomputed from the tree rather
+     * than read from the record.
+     *
+     * WHICH FILES COUNT IS DECIDED BY THIS CODE, AND IN CI THIS CODE IS THE BASE
+     * REVISION'S. The workflow runs the base's copy of this gate with `--root
+     * <head>`, so the membership rule a candidate is judged by is one the
+     * candidate did not write — and the same holds for the digest, which uses
+     * this module's `classifyPaths` and the derived list computed just above.
+     * A change that widens the gated set is therefore judged, and written, by
+     * the same list.
+     */
+    let expectedSubject: string;
+    try {
+        expectedSubject = expectedSubjectFor(files, root).digest;
+    } catch (err) {
+        // Fail closed, and before the "nothing to ratify" exit: a gated path
+        // this process could not read is a checkout the gate cannot describe,
+        // and a gate that cannot describe the content cannot say a record
+        // answers for it.
+        if (!(err instanceof GatedFileUnreadable)) {
+            throw err;
+        }
+        lines.push(`❌  ${err.message}`);
+        close(false);
+        return { exitCode: 1, lines, scanned };
+    }
 
     if (!requiresRatification(gated)) {
         lines.push(

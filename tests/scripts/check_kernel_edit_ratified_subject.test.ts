@@ -79,7 +79,7 @@ afterEach(() => {
 describe('a record carries only the diff it reviewed', () => {
     it('a record written for ANOTHER change does not carry this one', () => {
         // Valid in every respect — and bound to a different rule's content.
-        const foreign = expectedSubjectFor([OTHER_KERNEL], root);
+        const foreign = expectedSubjectFor([OTHER_KERNEL], root).digest;
         const rel = record('for-the-other-change.md', foreign);
 
         // It is a good record: read against the content it was written for it
@@ -94,12 +94,12 @@ describe('a record carries only the diff it reviewed', () => {
     it('a SECOND valid record for something else no longer carries the diff', () => {
         // The pre-binding shape: two artifacts in one diff, one of them good,
         // and "any one validates" let the other one through on its coat-tails.
-        const foreign = record('neighbour.md', expectedSubjectFor([OTHER_KERNEL], root));
+        const foreign = record('neighbour.md', expectedSubjectFor([OTHER_KERNEL], root).digest);
         const red = evaluate([KERNEL, foreign], root, 2);
         expect(red.exitCode).toBe(1);
 
         // Add the record that DID review this content and the same diff passes.
-        const mine = record('mine.md', expectedSubjectFor([KERNEL], root));
+        const mine = record('mine.md', expectedSubjectFor([KERNEL], root).digest);
         const green = evaluate([KERNEL, foreign, mine], root, 2);
         expect(green.exitCode, green.lines.join('\n')).toBe(0);
         // The one that did not answer is reported, not silently ignored.
@@ -109,7 +109,7 @@ describe('a record carries only the diff it reviewed', () => {
     it('a matching subject does not rescue a non-passing verdict', () => {
         // The binding is an ADDITIONAL condition, never a replacement for the
         // verdict rule — a record can review exactly this content and refuse it.
-        const rel = record('refused.md', expectedSubjectFor([KERNEL], root), 'refused');
+        const rel = record('refused.md', expectedSubjectFor([KERNEL], root).digest, 'refused');
         expect(evaluate([KERNEL, rel], root, 2).exitCode).toBe(1);
     });
 
@@ -117,7 +117,7 @@ describe('a record carries only the diff it reviewed', () => {
         const rel = path.join(RATIFICATION_DIR, 'self.md');
         write(
             rel,
-            recordText(expectedSubjectFor([KERNEL], root)).replace(
+            recordText(expectedSubjectFor([KERNEL], root).digest).replace(
                 'reviewed_by: council/anthropic+openai',
                 'reviewed_by: claude/session-a',
             ),
@@ -135,7 +135,7 @@ describe('records already on the trunk are not re-judged', () => {
         const onDisk = path.join(RATIFICATION_DIR, 'landed-long-ago.md');
         write(onDisk, '---\nnot even frontmatter the reader would accept\n');
 
-        const mine = record('mine.md', expectedSubjectFor([KERNEL], root));
+        const mine = record('mine.md', expectedSubjectFor([KERNEL], root).digest);
         const r = evaluate([KERNEL, mine], root, 2);
         expect(r.exitCode, r.lines.join('\n')).toBe(0);
         expect(r.lines.join('\n')).not.toContain('landed-long-ago');

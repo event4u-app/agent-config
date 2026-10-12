@@ -76,12 +76,15 @@ deleted gated file entered rather than skipped. `./scripts-run
 src/scripts/ratification_subject --files <f> …` prints it, and
 `check_kernel_edit_ratified` recomputes it from the tree it is pointed at and
 refuses a record whose `subject` is absent (`subject-absent`), not a digest
-(`subject-malformed`) or a different one (`subject-mismatch`).
+(`subject-malformed`) or a different one (`subject-mismatch`). A gated path it
+cannot read, or one that would resolve outside the tree, is a refusal too —
+an unreadable file is not a deleted one, and a digest that described either as
+the other would be the fail-open shape this mechanism exists to refuse.
 
 | What it adds | Why the other seven did not |
 |---|---|
 | the record says WHAT it reviewed | the six required fields say only WHO; a gated file edited after its review still landed on that review's record |
-| a record carries one change | the gate passed when **any** artifact in the diff validated, so a record written for one review carried a second change it never saw |
+| a record is checked against the content it is read beside | the gate passed when **any** artifact in the diff validated, so a record written for one review carried a second change it never saw. It does not establish that a record covers one *logical* change: the digest is over the whole gated file set of the diff |
 
 Three properties of the digest, each chosen against an alternative that looks
 equivalent and is not:
@@ -671,9 +674,14 @@ state. Steps 2.1 and 2.2 of
 The digest is computed by the gate from the tree and typed into the record by
 whoever writes it, so a record still asserts rather than proves that a review
 happened over that content — § What a passing record does not prove is
-unchanged and is the paragraph that matters. What it now makes impossible is
-narrower and real: a gated file edited after its review landing under that
-review's record, and one record carrying a second change it never saw.
+unchanged and is the paragraph that matters. An author who edits gated content
+and recomputes the digest produces a record the gate accepts, and nothing here
+detects that; the word for what the binding adds is **detects**, never
+*prevents*. What it detects is narrow and real: a gated file edited after its
+review, still carrying the digest of what the reviewers saw, and a record
+reused for a change whose content it does not match. A 2026-10-13 council
+review asked for this sentence in these words, because the paragraph it
+replaces claimed to make those two things impossible.
 
 **One consequence worth stating because it will be met before it is read.** The
 workflow runs the BASE revision's copy of the gate, so a change that is open

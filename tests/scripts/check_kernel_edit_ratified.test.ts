@@ -50,7 +50,7 @@ function writeArtifact(
     for (const [k, v] of Object.entries(fields)) {
         lines.push(`${k}: ${v}`);
     }
-    lines.push(`subject: ${expectedSubjectFor(gated, root)}`);
+    lines.push(`subject: ${expectedSubjectFor(gated, root).digest}`);
     lines.push('providers:');
     for (const p of providers) {
         lines.push(`  - ${p}`);

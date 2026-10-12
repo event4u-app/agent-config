@@ -27,7 +27,6 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { expectedSubjectFor } from './check_kernel_edit_ratified.js';
-import { gatedFilesOf } from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -45,7 +44,16 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             continue;
         }
         if (a === '--root') {
-            root = path.resolve(argv[i + 1] ?? '.');
+            // A missing value used to resolve `.` silently. For a command whose
+            // output is copied into a governance record, "it quietly used the
+            // current directory" is the wrong failure: the digest would be
+            // taken over a tree the caller never named.
+            const value = argv[i + 1];
+            if (value === undefined || value.startsWith('--')) {
+                process.stderr.write('error: --root takes a directory\n');
+                return 2;
+            }
+            root = path.resolve(value);
             i += 1;
             collecting = false;
             continue;
@@ -74,8 +82,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 2;
     }
 
-    const gated = gatedFilesOf(files);
-    const digest = expectedSubjectFor(files, root);
+    // ONE call for both halves. A 2026-10-13 council review found this
+    // function printing `gatedFilesOf(files)` — a second classification, with a
+    // different `derived` input — beside a digest classified by the gate. The
+    // list exists so nobody copies a confident-looking digest over no files;
+    // a list that can disagree with its own digest emits exactly that false
+    // reassurance instead of preventing it.
+    const { digest, gatedFiles: gated } = expectedSubjectFor(files, root);
 
     if (quiet) {
         process.stdout.write(`${digest}\n`);

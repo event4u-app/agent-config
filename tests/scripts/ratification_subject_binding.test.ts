@@ -45,7 +45,7 @@ function record(name: string, gated: readonly string[], verdict = 'ratified'): s
             'proposed_by: claude/session-a',
             'implemented_by: claude/session-a',
             'reviewed_by: council/anthropic+openai',
-            `subject: ${expectedSubjectFor(gated, root)}`,
+            `subject: ${expectedSubjectFor(gated, root).digest}`,
             `verdict: ${verdict}`,
             'effective_after: merge',
             'providers:',
@@ -233,29 +233,29 @@ describe('a gated path that is a symlink is hashed as the link', () => {
         fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
         fs.symlinkSync(path.join(root, 'outside.txt'), path.join(root, KERNEL));
 
-        const before = expectedSubjectFor([KERNEL], root);
+        const before = expectedSubjectFor([KERNEL], root).digest;
 
         // The target changes. The committed object did not, so the digest must
         // not move -- this is the case that was broken.
         write('outside.txt', 'second, and quite different\n');
-        expect(expectedSubjectFor([KERNEL], root)).toBe(before);
+        expect(expectedSubjectFor([KERNEL], root).digest).toBe(before);
 
         // Re-pointing the link IS a change to the committed object.
         fs.unlinkSync(path.join(root, KERNEL));
         write('elsewhere.txt', 'first\n');
         fs.symlinkSync(path.join(root, 'elsewhere.txt'), path.join(root, KERNEL));
-        expect(expectedSubjectFor([KERNEL], root)).not.toBe(before);
+        expect(expectedSubjectFor([KERNEL], root).digest).not.toBe(before);
     });
 
     it('a BROKEN link is a link, not a deletion', () => {
         fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
         fs.symlinkSync(path.join(root, 'never-existed.txt'), path.join(root, KERNEL));
-        const asBrokenLink = expectedSubjectFor([KERNEL], root);
+        const asBrokenLink = expectedSubjectFor([KERNEL], root).digest;
 
         // `existsSync` reported a broken link as absent, which digested it as a
         // removal -- the one change the record most needs to be bound to.
         fs.unlinkSync(path.join(root, KERNEL));
-        const asDeleted = expectedSubjectFor([KERNEL], root);
+        const asDeleted = expectedSubjectFor([KERNEL], root).digest;
 
         expect(asBrokenLink).not.toBe(asDeleted);
     });
@@ -264,10 +264,10 @@ describe('a gated path that is a symlink is hashed as the link', () => {
         fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
         write('target.txt', 'x\n');
         fs.symlinkSync(path.join(root, 'target.txt'), path.join(root, KERNEL));
-        const asLink = expectedSubjectFor([KERNEL], root);
+        const asLink = expectedSubjectFor([KERNEL], root).digest;
 
         fs.unlinkSync(path.join(root, KERNEL));
         write(KERNEL, 'x\n');
-        expect(expectedSubjectFor([KERNEL], root)).not.toBe(asLink);
+        expect(expectedSubjectFor([KERNEL], root).digest).not.toBe(asLink);
     });
 });
