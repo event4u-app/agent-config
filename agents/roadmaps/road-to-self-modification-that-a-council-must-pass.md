@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: archived
+status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "An owner directive of 2026-10-05 makes self-modification a goal on one condition: an AI council confirms it at the least, questions what the change does, and the user decides when the council cannot. At the pin the approval record names no change, the council has no question set and no verdict of its own for such a review, the reviewer's code sits outside the gate, a council that cannot conclude leaves no way for the owner's word to be recorded, and the lane meant to carry a change nobody asked for has produced no proposal. The roadmap that owns the ratification gate is a draft waiting on two owner blockers. Merging these steps into it was considered and rejected: they would wait behind blockers none of them needs. Adds no gate script and no verdict vocabulary; extends one artifact, one council review and one path list."
@@ -161,6 +161,44 @@ At `df377ca64`:
 - **Changing the reviewer is already owner-reserved.** "Governance
   self-amendment — reopening authority, quorum, escalation"
   (`src/rules/decision-revisit-gate.md:142`).
+
+## Staged, not abandoned — 2026-10-13
+
+The branch that closed Phases 2 to 6 went to a modification review on
+2026-10-12 and was **refused 2/2 over three rounds**
+(`agents/evidence/ratifications/drain-self-modification-20261012.md`). The
+dealbreaker of round 2 — a consequence class that failed OPEN, so a gate
+advertising 28 high-consequence rules enforced none when one file failed to
+parse — was corrected and the correction was accepted. Round 3 refused anyway,
+and for a reason no patch answers:
+
+> **smaller-change.** "This change bundles at least four independently
+> reversible concerns — digest binding, governed-surface expansion, proposal
+> validation, and a new standing Iron Law... Landing the binding first would
+> close replay risk while letting the broader self-governance design be
+> evaluated with a smaller blast radius."
+
+Both seats said it could be staged. It was not. A second fact compounds it and
+is recorded because it bounds what the refusal can be read as: the full
+`origin/main...HEAD` diff was **177 KB against the council’s 51 KB bundle
+ceiling**, so neither seat ever saw the whole change, and both said so in both
+rounds.
+
+So the branch was narrowed to the content binding alone — the `subject` digest
+over the gated content, and the gate refusing a record whose `subject` does not
+match — which is the piece both seats named as the smallest high-value change.
+Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
+worked example and its Iron Law (6.2), the record writer (3.4) and the
+escalation shape (5.2) were reverted to `origin/main` and are **open steps
+here**, not cancelled work. Each was verified by an empty net diff per file
+against `origin/main`, not by a revert command’s exit code.
+
+What this costs, stated rather than left to be discovered: until 4.1 lands, the
+modules that compute the digest and ask the review’s questions are **outside**
+the surface the gate watches, so the reviewer is not yet inside what it
+reviews. Until 4.2 lands, the 28 high-consequence rules beyond the kernel stay
+editable with no record. Those were the gaps before 2026-10-12 and they are the
+gaps again; the binding closes replay, and nothing else.
 
 ## Phase 1 — The directive is a decision on record
 
@@ -423,7 +461,7 @@ At `df377ca64`:
       fire first would turn "one reviewer said no" into "not enough reviewers
       answered" — a retryable condition rather than the objection it is.
       `required_providers` is a parameter, not baked in. 7 tests.
-- [x] **3.4 The record is written from the run, not typed.** One writer, in
+- [ ] **3.4 The record is written from the run, not typed.** One writer, in
       the module of 2.1, turns the session record of such a review into the
       artifact: `reviewed_by` in one spelling, `providers` from the seats that
       concluded, the derived verdict, `subject` for the tree the bundle was
@@ -485,9 +523,16 @@ At `df377ca64`:
       escalation the owner answers needs it in front of him. 14 tests, one of them
       end to end through the real gate including the post-review edit going red.
 
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
-- [x] **4.1 The review's own code is a gated surface.** The gate's watch list
+- [ ] **4.1 The review's own code is a gated surface.** The gate's watch list
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their
       own, an ordinary change to the council's prompts or transports stays
@@ -505,7 +550,15 @@ At `df377ca64`:
       passes with no record at all. The suite also pins the thing the step does not
       say out loud — each reviewer path enters `gatedFilesOf`, so it is covered by
       the digest and not only by the refusal. 14 tests.
-- [x] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
+- [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
       that list from its own tree, as it reads its policy, and the list and
@@ -526,7 +579,15 @@ At `df377ca64`:
       a file whose absence costs only the widening. 9 tests, with both polarities —
       a class member outside the kernel reds, a rule outside the class does not, and
       a kernel rule is still reported as a kernel rule rather than reclassified.
-- [x] **4.3 The comment matches the hooks.** The gate's header stops saying
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
+- [ ] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
       time.
       verify: `grep -c 'also denied at tool-call time' src/scripts/check_kernel_edit_ratified.ts` -> /^0$/
@@ -540,6 +601,13 @@ At `df377ca64`:
       now says. The 2026-10-10 probe that found this needed a record for a
       comment-only edit; this change carries one, for the whole diff.
 
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
 ## Phase 5 — A council that cannot settle it stops the run for the user
 
 - [x] **5.1 The conditions, once.** The contract lists when the user decides,
@@ -551,7 +619,7 @@ At `df377ca64`:
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [x] **5.2 The stop has a shape.** In those cases the run ends with the
+- [ ] **5.2 The stop has a shape.** In those cases the run ends with the
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
@@ -570,6 +638,14 @@ At `df377ca64`:
       malformed, self-ratified or content-stale record: those are authoring defects,
       and routing one to the owner spends the escalation on "write a record".
       13 tests, six of them polarity partners.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
       check is required, and the contract's bypass procedure is for incidents.
@@ -618,7 +694,7 @@ At `df377ca64`:
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
-- [x] **6.1 The pipeline's review is the council's record; the approval is the
+- [ ] **6.1 The pipeline's review is the council's record; the approval is the
       owner's.** For a proposal whose scope is the package, `check_proposal`
       accepts `stage: gated` only when the proposal names a record whose
       `subject` matches the files the proposal declares as its change AND the
@@ -656,7 +732,15 @@ At `df377ca64`:
       it was written: `upstream-contribute` § 6b stops on any stage that is not
       `gated`, and states the review-then-approval order for a package proposal.
       11 tests.
-- [x] **6.2 A worked example, for real.** One learning from this repository's
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
+- [ ] **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
       `agents/proposals/` naming the record, and the change passes the gate.
@@ -685,6 +769,13 @@ At `df377ca64`:
       `gated` would be an agent asserting the owner's approval — the one thing
       ADR-268 § 4 forbids. Every step of the lane an agent can walk is walked; the
       last one is the owner's and is named as his in the proposal's § 9.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
 
 ## What this roadmap deliberately does not do
 
@@ -769,7 +860,7 @@ At `df377ca64`:
       in both directions rather than once. Seen red for the intended reason:
       neutralising the binding drops 5 of the 9 cases and leaves the 4 that should
       stay green.
-- [x] AC-2 — A modification review with one provider concluding produces a
+- [ ] AC-2 — A modification review with one provider concluding produces a
       record that does not pass.
       **MET 2026-10-12, and the council changed WHICH rule refuses it.** The writer
       exists (3.4) and the one-concluding-seat case runs end to end in
@@ -780,7 +871,14 @@ At `df377ca64`:
       council verdict of 2026-10-12: quorum refuses the record, the header does not
       relabel the evidence. A record that said `non-convergent` here would make a
       grep for that verdict return two different failure modes.
-- [x] AC-3 — A change to the question list, the verdict rule or the writer is
+
+      **Reopened 2026-10-13.** The step this criterion was measured through
+      came off the 2026-10-12 branch with the three concerns the reviewers asked
+      to stage; the measurement stands as a record of what the code did, and the
+      criterion is open until that code lands on a branch of its own. See
+      § Staged, not abandoned.
+
+- [ ] AC-3 — A change to the question list, the verdict rule or the writer is
       refused without a passing record.
       **MET 2026-10-12, measured with the real CLI rather than from the test.**
       `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review_questions.ts
@@ -791,6 +889,13 @@ At `df377ca64`:
       The polarity partner is measured too: `prompts.ts`, `stance_tally.ts`,
       `quorum.ts` and `council_cli.ts` stay ungated, so the gate did not simply
       swallow `src/scripts/ai_council/`.
+
+      **Reopened 2026-10-13.** The step this criterion was measured through
+      came off the 2026-10-12 branch with the three concerns the reviewers asked
+      to stage; the measurement stands as a record of what the code did, and the
+      criterion is open until that code lands on a branch of its own. See
+      § Staged, not abandoned.
+
 - [x] AC-4 — The contract names the route by which the owner permits a change
       the council could not pass, and what that route cannot prove.
       **MET 2026-10-10, both limbs measured rather than read.**
@@ -799,7 +904,7 @@ At `df377ca64`:
       § What this route cannot prove at `:532` (the gate cannot see a forge bypass;
       nothing proves the ask preceded it). Step 5.3's test pins both and carries its
       own sensitivity case.
-- [x] AC-5 — One proposal under `agents/proposals/` names a change that
+- [ ] AC-5 — One proposal under `agents/proposals/` names a change that
       passes the gate and the record that passed it.
       **MET 2026-10-12, and the claim is scoped to exactly what is true.**
       `agents/proposals/polarity-fixture-repair.md` names
@@ -810,6 +915,13 @@ At `df377ca64`:
       `stage: proposed` rather than `stage: gated`; that is the owner blocker, not a
       gap in this criterion, and § 9 of the proposal says so in its own words
       rather than leaving a reader to infer it from a missing field.
+
+      **Reopened 2026-10-13.** The step this criterion was measured through
+      came off the 2026-10-12 branch with the three concerns the reviewers asked
+      to stage; the measurement stands as a record of what the code did, and the
+      criterion is open until that code lands on a branch of its own. See
+      § Staged, not abandoned.
+
 - [x] AC-6 — No instruction file shipped to a consumer says kernel rules
       cannot be changed.
       **MET 2026-10-10.** The four-pattern grep over the consumer template, its
@@ -822,6 +934,12 @@ At `df377ca64`:
       modules are library modules under `src/scripts/ai_council/`, not
       `check_*.ts` gates — which is the point of the criterion: this roadmap adds
       a review, not a new thing that can fail a build.
+
+      **Re-measured 2026-10-13 after the narrowing: 174 on `origin/main`, 174 in
+      this tree.** The base moved since 2026-10-10; what the criterion asserts is
+      that this branch does not move it, and it does not. The one script 2.1 adds,
+      `src/scripts/ratification_subject.ts`, prints a digest and exits 0 — it is
+      not a `check_*.ts` gate and nothing in CI runs it.
 
 - [x] AC-8 — No shipped text says a council record is the approval of a
       package self-modification, and none names a content binding the gate
@@ -836,17 +954,19 @@ At `df377ca64`:
       is absent, which is the opposite of naming a binding, and is excluded by
       the measurement rather than hidden from it. Closed by steps 1.4 and 1.5.
 
-      **Re-measured 2026-10-12 after 2.1 and 2.2, and one of the six patterns
-      retired.** ``whose `subject` matches`` is no longer a violation indicator:
-      the criterion's second limb forbids naming *a content binding the gate does
-      not perform*, and since 2.1 the gate recomputes that digest and refuses a
-      record whose `subject` is absent or different. So the clause returned to the
-      pipeline guideline's Stage 5 trigger deliberately, and it now names a
-      guarantee the gate keeps. The five patterns that measure the criterion's
-      FIRST limb — that no shipped text calls a council record the approval — still
-      return 0, and 6.1 strengthened that limb rather than weakening it: a
-      package proposal at `stage: gated` now needs the owner's authorization
-      alongside the council's record, and `upstream-contribute` § 6b says so.
+      **Re-measured 2026-10-13, after the narrowing, and the second limb is met
+      the OTHER way round.** The five patterns that measure the FIRST limb — that
+      no shipped text calls a council record the approval — return **0** over
+      `src/`, `dist/`, `docs/contracts/` and `docs/guidelines/`. The sixth,
+      ``whose `subject` matches``, was going to be retired on 2026-10-12 because
+      2.1 made the binding real and the clause could return to the pipeline
+      guideline naming a guarantee the gate keeps. That return rode on 6.1, which
+      is staged off this branch, so the guideline is back at `origin/main` and the
+      clause is absent again — the limb holds because nothing names the binding,
+      not because the binding is named truthfully. The contract’s new
+      § `subject:` does describe it, and describes a binding the gate now
+      performs, which is what the limb asks. Closed by steps 1.4 and 1.5; the
+      clause returns with 6.1.
 
 ## Decisions
 
@@ -863,6 +983,7 @@ At `df377ca64`:
 | D9 | deterministic | evidence | The digest covers the source of a gated file only; its projection is covered because `dist/agent-src/` is asserted byte-equal to the rewritten source | ADR-201; the "Verify dist == rewrite(src)" CI step | A gated surface gains a projection that is not a byte-exact rewrite |
 | D10 | product-owned | owner | the directive's reading is (a): the council is the lowest passing rung for the gated surface and for changes the learning lanes originate, with the verdict rule and escalation conditions as drafted in step 1.1; commissioned work keeps its present speed | owner answer 2026-10-06 to blocker `self-modification-directive-reading-confirmed`, options (a) / (b) wider at 22 in 49 commits / (c) gated surface only | the review load on the gated surface or the learning lanes changes materially, or the owner widens the reading |
 | D11 | product-owned | owner | the owner's route past a recorded council non-convergence is (b), the owner's own recorded bypass on the forge — preceded by an ask: on non-convergence, or on the red check it causes, the agent tells the owner at once and asks in-session with options; a yes is then given as the forge act, never as a chat answer, because a chat answer reaches the tree only as text an agent wrote and ADR-268 § 4 forbids an agent ratifying its own increase in power. The contract's two sentences ruling a bypass out are amended for recorded non-convergence only | owner answer 2026-10-06 to blocker `owner-permission-route`: "the user should be informed beforehand or on a failed CI run and be able to instruct the agent locally when it asks — otherwise option 1, if it cannot be done differently"; option (a) needs a place only a person writes, which does not exist at the pin | a place only a person writes exists (the gate-preauth stub's answer), at which point (a) becomes the route that needs no forge act |
+| D12 | reversible-technical | ai-council | Land the content binding alone; stage governed-surface expansion, proposal validation, the record writer, the escalation shape and the Iron Law as their own changes | The modification review of 2026-10-12 refused the bundled branch 2/2 and both seats answered `smaller-change` with "landing the binding first would close replay risk while letting the broader self-governance design be evaluated with a smaller blast radius"; the bundled diff was 177 KB against a 51 KB council bundle ceiling, so no seat saw the whole of it | A later council reviews the staged concerns together and asks for them as one change |
 
 ## Kill register
 
