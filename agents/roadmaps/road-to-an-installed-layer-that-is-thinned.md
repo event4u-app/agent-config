@@ -149,6 +149,37 @@ Reproduced on 2026-10-01:
 > decides open-vs-blocked from the inline annotation alone and never parses
 > `## Blockers`, so without it an impossible step reads as runnable work to the
 > one mechanism that acts on it, and every stop fire re-engages an agent into it.
+>
+> **Re-screened 2026-10-12 under `/roadmap:process-full`, and 2.3 has a SECOND
+> reason that is not the cancelled observer.** The capability screen asks per
+> step whether the agent can execute it at all, and a `## Blockers` entry is
+> evidence rather than a verdict — so each of the three was re-tested against the
+> tree rather than against its marker.
+>
+> 2.3 is the one that could have survived, because its own text names a source
+> that does not need the host event: "from records the dispatcher already
+> writes". Those records are real and the writer is in the tree —
+> `recordArrival` / `arrivalPath` in `src/scripts/hooks/rule_inject_hook.ts`
+> append one JSONL row per fire under the user-global
+> `state/rule-inject/<project-key>/<session>.arrival.jsonl`. **The corpus on this
+> machine is 16 files and every one of them is the fixture
+> `injection-budget-dispatch-test.arrival.jsonl`, under 16 synthetic
+> `injection-dispatch-*` project keys written by the hook's own test suite on
+> 2026-10-03 to 2026-10-05. Zero rows come from a real session, and no project
+> key corresponds to a real project.** So the instrument 2.3 names exists and is
+> empty, which is a different finding from the instrument not existing and is
+> worth separating: 2.3 needs sessions to have been recorded, not an observer to
+> be scheduled, and it will stay unsatisfiable on this machine until one is.
+> Its second half — correlating a body-path read with a preceding delivery —
+> additionally needs a transcript reader that nothing here binds.
+>
+> 2.1 and 2.4 were re-tested and are unchanged: `agents/evidence/analysis/`
+> matches no `installed-arrival-*.md`, and
+> `src/scripts/check_standing_rule_delivery.ts:289` still calls
+> `InstructionsLoaded` "a host feature this suite does not yet bind", with
+> `instructionsLoadedRecord()` existing only to report the record's absence.
+> Both remain externally impossible for the agent, which is the only blocker
+> class ADR-237 leaves standing. The markers stay as written.
 
 ## Phase 3 — The default, decided
 
@@ -161,6 +192,20 @@ Reproduced on 2026-10-01:
       the flip with a computed decision and an install-time brake, and its 5.3 is
       where the default changes. The owner's (a) of D5 still sets the condition.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t default` -> 0
+
+      **Re-screened 2026-10-12 — this step can no longer close in this file, and
+      its verify line says so by accident.** `-t default` matches **no test** in
+      `tests/scripts/install_thin_layer.test.ts`; the only occurrence of the word
+      there is a comment at line 15 naming this very blocker. That is not a test
+      somebody forgot to write — it is the shape of a step whose subject moved.
+      After the re-cut, the code that would make such a test pass is built by
+      `road-to-a-setup-that-decides-itself` Phase 3 (a decision function that
+      reads no settings key) and switched on by its 5.3, so the test belongs
+      beside the code that satisfies it. Left `[ ]` rather than `[~]` or `[-]` on
+      purpose: `[~]` needs a receiver carrying `parent_roadmap:` and these two
+      roadmaps are siblings (`relates: extends`), not parent and child, while
+      `[-]` is cancellation and owner-reserved. Open with its producer named is
+      the honest state; a glyph that laundered it into done or dropped is not.
 - [ ] **3.2 The ceiling becomes required.** The installed-layer report fails CI
       above the measured thinned total plus 10 %, never above 75,000, and moves
       down only.
@@ -243,6 +288,19 @@ Reproduced on 2026-10-01:
       > the step asks whether the FLIP made another host worse, and there has
       > been no flip, so closing it now would assert a guarantee about a state
       > that does not exist. It closes with 3.1, on a re-run, not on this note.
+      >
+      > **Re-verified 2026-10-12, and the last sentence above is now wrong.**
+      > `check_host_tree_parity` still exits 0 — `2 non-delivery host tree(s)
+      > byte-identical to eager-all · delivery hosts [claude-code]` — so both
+      > limbs continue to hold. What changed is the referent: 3.1 was re-cut the
+      > same day, and the flip it names now happens in
+      > `road-to-a-setup-that-decides-itself` 5.3. "It closes with 3.1" therefore
+      > points at a step that can no longer close here. This criterion is gated
+      > on that file's 5.3 and on a re-run of the command above against the tree
+      > as it stands after it — not on any work left in this roadmap. Recorded
+      > rather than closed, because the guarantee it asks for is still about an
+      > event that has not happened; what is corrected is where the event will
+      > happen, which until now this file named wrongly.
 
 ## What this roadmap deliberately does not do
 
