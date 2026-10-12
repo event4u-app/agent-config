@@ -279,9 +279,16 @@ a pass.
 | `hosts/img-delivery.html` | engine | `motion/img-delivery-no-static-route` | ui:render --profile asset | found | 0 |
 | `hosts/smil-only.html` | static | `motion/no-reduced-motion-branch` | lint_design_quality DQ4 | found | 0 |
 | `hosts/smil-css-only.html` | static | `motion/smil-css-only-branch` | lint_design_quality DQ4 | found | 0 |
+| `assets/id-only-in-a-comment.svg` | static | `structure/dangling-reference` | lint_svg_asset svg-structure-dangling-reference | found | 0 |
+| `assets/mis-nested-tags.svg` | static | `structure/not-well-formed` | lint_svg_asset svg-structure-not-well-formed | found | 0 |
+| `assets/title-not-a-direct-child.svg` | static | `accessibility/meaningful-without-name` | lint_svg_asset svg-a11y-no-accessible-name | found | 0 |
+| `assets/degenerate-gradient.svg` | static | `structure/degenerate-gradient` | lint_svg_asset svg-structure-degenerate-gradient | found | 0 |
+| `assets/seam-between-shapes.svg` | engine | `geometry/background-bleed-inside-silhouette` | ui:render --profile asset | found | 0 |
+| `assets/dark-mark-on-dark.svg` | engine | `accessibility/low-contrast-on-background` | ui:render --profile asset | found | 0 |
 | `assets/primitive-only-mark.svg` | static | `vector-honesty/embedded-raster / vector-honesty/not-a-true-vector` | must stay silent | n/a — control | 0 |
 | `assets/spinner-intentional-dash.svg` | static | `motion/draw-on-dead-time / motion/guessed-dash` | must stay silent | n/a — control | 0 |
 | `assets/hamburger-24-grid.svg` | static | `structure/loose-viewbox` | must stay silent | n/a — control | 0 |
+| `assets/near-white-paint.svg` | static | `geometry/near-white-hole` | must stay silent | n/a — control | 0 |
 
 ## § Promotion bar (step 5.2)
 
@@ -297,7 +304,7 @@ rule's own twin alone — a rule that reds a different row's clean file has not
 cleared a zero-false-positive bar in any sense a consumer would recognise, and a
 column scoped to its own twin would have scored it `yes`.
 
-**Outcome of this run: 23 of 26 rules meet the bar, 3 do not.** Each miss names the clean file it fired on, in its own row.
+**Outcome of this run: 27 of 32 rules meet the bar, 5 do not.** Each miss names the clean file it fired on, in its own row.
 
 | rule | file | layer | true findings on planted | twin findings run 1 | twin findings run 2 | meets bar |
 |---|---|---|---|---|---|---|
@@ -327,6 +334,12 @@ column scoped to its own twin would have scored it `yes`.
 | `motion/img-delivery-no-static-route` | `hosts/img-delivery.html` | engine | 1+ | 0 | 0 | yes |
 | `motion/no-reduced-motion-branch` | `hosts/smil-only.html` | static | 1+ | 1 | 1 (assets/guessed-dash.clean.svg) | no |
 | `motion/smil-css-only-branch` | `hosts/smil-css-only.html` | static | 1+ | 0 | 0 | yes |
+| `structure/dangling-reference` | `assets/id-only-in-a-comment.svg` | static | 1+ | 0 | 0 | yes |
+| `structure/not-well-formed` | `assets/mis-nested-tags.svg` | static | 1+ | 0 | 0 | yes |
+| `accessibility/meaningful-without-name` | `assets/title-not-a-direct-child.svg` | static | 1+ | 0 | 0 | yes |
+| `structure/degenerate-gradient` | `assets/degenerate-gradient.svg` | static | 1+ | 0 | 0 | yes |
+| `geometry/background-bleed-inside-silhouette` | `assets/seam-between-shapes.svg` | engine | 1+ | 1 | 1 (assets/near-white-hole.clean.svg) | no |
+| `accessibility/low-contrast-on-background` | `assets/dark-mark-on-dark.svg` | engine | 1+ | 4 | 4 (assets/loose-viewbox.clean.svg, assets/text-overflows-box.clean.svg, assets/default-serif-fallback.clean.svg, assets/icon-off-grid.clean.svg) | no |
 
 ## Pre-registered thresholds for the ground readings
 

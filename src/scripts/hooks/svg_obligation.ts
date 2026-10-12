@@ -264,13 +264,17 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
         // (iv) a deleted file has no current digest, so nothing could be bound
         // to it and no render could ever discharge it.
         const abs = path.isAbsolute(raw) ? raw : path.join(root, relPath);
-        let content: string;
+        // The BYTES, matching the render and the static witness. Finding 2 of
+        // the sixth completion review: this hashed the UTF-8 decoded string
+        // while the render hashed the raw buffer, so a file the decode is not
+        // byte-exact over could never have its obligation discharged.
+        let bytes: Buffer;
         try {
-            content = fs.readFileSync(abs, 'utf8');
+            bytes = fs.readFileSync(abs);
         } catch {
             continue;
         }
-        const digest = crypto.createHash('sha256').update(content).digest('hex');
+        const digest = crypto.createHash('sha256').update(bytes).digest('hex');
 
         // (iii) The manifests are only consulted once a render was observed.
         // Reading them first and then discarding the verdict would make the

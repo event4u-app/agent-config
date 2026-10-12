@@ -1,0 +1,282 @@
+diff --git a/src/cli/commands/uiRender.ts b/src/cli/commands/uiRender.ts
+index bc5a4f3933f56b8f06774cf4368b3cd57471cda2..6c2c4f67784fec6cd1df23ab9ebbe3a740a43d22 100644
+--- a/src/cli/commands/uiRender.ts
++++ b/src/cli/commands/uiRender.ts
+@@ -184,13 +184,23 @@ export function staticWitness(
+     absFile: string,
+     delivery?: DeliveryMode | undefined,
+ ): { errors: number; digest: string } | null {
+-    let content: string;
++    // THE DIGEST IS OF THE BYTES, the scan is of the decoded text.
++    //
++    // Finding 2 of the sixth completion review: three places hash "the file"
++    // and two of them hashed the UTF-8 DECODED string while the render hashed
++    // the raw buffer. For any file the decode is not byte-exact over — a BOM,
++    // a lone surrogate, an invalid sequence replaced by U+FFFD — the two
++    // digests differ forever, so the gate never matches a render to the file
++    // it rendered and the obligation can never be discharged. One definition,
++    // and it is the one a digest normally means.
++    let bytes: Buffer;
+     try {
+-        content = fs.readFileSync(absFile, 'utf8');
++        bytes = fs.readFileSync(absFile);
+     } catch {
+         return null;
+     }
+-    const digest = crypto.createHash('sha256').update(content).digest('hex');
++    const content = bytes.toString('utf8');
++    const digest = crypto.createHash('sha256').update(bytes).digest('hex');
+     // The DELIVERY MODE is threaded through. Finding 6 of this change's second
+     // completion review: `scanSvg` grades an undeclared mode as `inline`, the
+     // strictest, because that is the safe default for a file whose embedding
+diff --git a/src/cli/commands/uiRenderAsset.ts b/src/cli/commands/uiRenderAsset.ts
+index c560737bf37b5eed8ce293f7054a45f330efe54d..0f51ab0e4d52473bf90d9d73150563d8c1ca7d2c 100644
+--- a/src/cli/commands/uiRenderAsset.ts
++++ b/src/cli/commands/uiRenderAsset.ts
+@@ -235,9 +235,21 @@ export function readThresholds(file: string | undefined): ThresholdSource {
+         out.fillRatio = { ...DEFAULT_FILL_RATIO_THRESHOLDS, ...fr } as Record<AssetClass, number>;
+         out.fillRatioSource = 'manifest';
+     }
+-    const gt = obj.geometry_tolerances as Record<string, GeometryTolerance> | undefined;
++    const gt = obj.geometry_tolerances as Record<string, Partial<GeometryTolerance>> | undefined;
+     if (gt && ASSET_CLASSES.every((c) => gt[c] && typeof gt[c]?.silhouette_iou_min === 'number')) {
+-        out.geometry = { ...DEFAULT_GEOMETRY_TOLERANCES, ...gt } as Record<AssetClass, GeometryTolerance>;
++        // MERGED PER CLASS, not spread over the class. Finding 3 of the sixth
++        // completion review: the validation checks one field per class and the
++        // spread then replaced the whole class object, so a manifest naming
++        // every class but supplying only `silhouette_iou_min` was accepted as
++        // `geometrySource: manifest` with `max_boundary_distance_units`
++        // UNDEFINED — a threshold read as `undefined` compares false against
++        // everything, so the boundary check silently stopped existing on a
++        // manifest the reader was told to trust.
++        const merged = {} as Record<AssetClass, GeometryTolerance>;
++        for (const c of ASSET_CLASSES) {
++            merged[c] = { ...DEFAULT_GEOMETRY_TOLERANCES[c], ...gt[c] };
++        }
++        out.geometry = merged;
+         out.geometrySource = 'manifest';
+     }
+     return out;
+diff --git a/src/scripts/_lib/svg_rules.ts b/src/scripts/_lib/svg_rules.ts
+index 564a37e6bd2baaedb42f7a2020070eb28eda302b..6a589d1267cd868b8fd2e38227cdc1b34358356b 100644
+--- a/src/scripts/_lib/svg_rules.ts
++++ b/src/scripts/_lib/svg_rules.ts
+@@ -1226,6 +1226,24 @@ function topLevelGraphics(text: string): Array<{ start: number; end: number }> {
+         if (depth === 0) start = t.index;
+         depth += 1;
+     }
++    // AN UNTERMINATED GRAPHIC IS STILL A GRAPHIC, to end of input.
++    //
++    // Finding 1 of the sixth completion review, and it FAILS OPEN, which is
++    // why it is the one that matters: a host whose inline `<svg>` is never
++    // closed was dropped whole, so `scanHostHtml` returned zero findings — a
++    // planted `<script>` included — `staticWitness` then reported `errors: 0`,
++    // and that is exactly the condition `dischargeFor` uses to discharge the
++    // BLOCKING turn-end obligation on the static-only path. A malformed file
++    // discharged a gate that a well-formed one with the same script does not.
++    //
++    // NOT a regression of the depth counter that replaced the regex: the old
++    // `/<svg\b[\s\S]*?<\/svg\s*>/` required a closing tag and matched nothing
++    // here either. The rewrite preserved the hole rather than opening it, and
++    // the honest version of that sentence is worth more than the flattering
++    // one. Emitting the fragment hands `scanSvg` a document whose root is
++    // never closed — it reports that AND everything inside it, which is both
++    // answers the reader needs.
++    if (depth > 0 && start !== -1) out.push({ start, end: text.length });
+     return out;
+ }
+ 
+diff --git a/src/scripts/hooks/svg_obligation.ts b/src/scripts/hooks/svg_obligation.ts
+index 4367c54b4d9db82f0af8a0420a4be4f48d243360..0735bae2a3bd6523667135103825a6e8ed0cead1 100644
+--- a/src/scripts/hooks/svg_obligation.ts
++++ b/src/scripts/hooks/svg_obligation.ts
+@@ -264,13 +264,17 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
+         // (iv) a deleted file has no current digest, so nothing could be bound
+         // to it and no render could ever discharge it.
+         const abs = path.isAbsolute(raw) ? raw : path.join(root, relPath);
+-        let content: string;
++        // The BYTES, matching the render and the static witness. Finding 2 of
++        // the sixth completion review: this hashed the UTF-8 decoded string
++        // while the render hashed the raw buffer, so a file the decode is not
++        // byte-exact over could never have its obligation discharged.
++        let bytes: Buffer;
+         try {
+-            content = fs.readFileSync(abs, 'utf8');
++            bytes = fs.readFileSync(abs);
+         } catch {
+             continue;
+         }
+-        const digest = crypto.createHash('sha256').update(content).digest('hex');
++        const digest = crypto.createHash('sha256').update(bytes).digest('hex');
+ 
+         // (iii) The manifests are only consulted once a render was observed.
+         // Reading them first and then discarding the verdict would make the
+diff --git a/tests/cli/ui_render_digest_and_thresholds.test.ts b/tests/cli/ui_render_digest_and_thresholds.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f558eb369220560d0bcc4d337177acfb89166646
+--- /dev/null
++++ b/tests/cli/ui_render_digest_and_thresholds.test.ts
+@@ -0,0 +1,84 @@
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { staticWitness } from '../../src/cli/commands/uiRender.js';
++import { readThresholds } from '../../src/cli/commands/uiRenderAsset.js';
++import { ASSET_CLASSES } from '../../src/cli/commands/uiRenderAssetTypes.js';
++
++/** Findings 2 and 3 of the sixth completion review. */
++let root: string;
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'digest-thresholds-'));
++});
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++describe('one definition of a file digest, and thresholds that merge', () => {
++    it('the digest is of the bytes, so a lossy decode cannot split it', () => {
++        // Finding 2. Three places hash "the file" and two hashed the UTF-8
++        // DECODED string while the render hashed the raw buffer. For any file
++        // the decode is not byte-exact over, the two digests differ forever,
++        // so the gate never matches a render to the file it rendered and the
++        // obligation can never be discharged.
++        const body =
++            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img">' +
++            '<title>t</title><rect width="8" height="8"/></svg>\n';
++        // A BOM is the common case and is byte-exact; a lone 0xFF byte is not,
++        // and is what separates the two definitions.
++        const abs = path.join(root, 'bom.svg');
++        fs.writeFileSync(abs, Buffer.concat([Buffer.from([0xff]), Buffer.from(body, 'utf8')]));
++
++        const bytes = fs.readFileSync(abs);
++        const ofBytes = crypto.createHash('sha256').update(bytes).digest('hex');
++        const ofText = crypto.createHash('sha256').update(bytes.toString('utf8')).digest('hex');
++        // The premise of the finding: for this file the two differ.
++        expect(ofBytes).not.toBe(ofText);
++        // And the witness reports the byte digest, which is the one the render
++        // writes and the gate compares.
++        expect(staticWitness(abs)?.digest).toBe(ofBytes);
++
++        // For an ordinary ASCII file both definitions agree, which is why the
++        // split went unnoticed.
++        const plain = path.join(root, 'plain.svg');
++        fs.writeFileSync(plain, body);
++        const plainBytes = fs.readFileSync(plain);
++        expect(staticWitness(plain)?.digest).toBe(
++            crypto.createHash('sha256').update(plainBytes).digest('hex'),
++        );
++    });
++
++    it('a partial geometry manifest merges into the defaults', () => {
++        // Finding 3. The validation checks ONE field per class and the spread
++        // then replaced the whole class object, so a manifest naming every
++        // class but supplying only `silhouette_iou_min` was accepted as
++        // `manifest`-sourced with `max_boundary_distance_units` UNDEFINED — a
++        // threshold that compares false against everything, so the boundary
++        // check silently stopped existing.
++        const file = path.join(root, 'thresholds.json');
++        fs.writeFileSync(
++            file,
++            JSON.stringify({
++                geometry_tolerances: Object.fromEntries(
++                    ASSET_CLASSES.map((c) => [c, { silhouette_iou_min: 0.9 }]),
++                ),
++            }),
++        );
++        const t = readThresholds(file);
++        expect(t.geometrySource).toBe('manifest');
++        // The supplied field wins …
++        expect(t.geometry.icon.silhouette_iou_min).toBe(0.9);
++        // … and the one the manifest did not mention is still a number.
++        expect(typeof t.geometry.icon.max_boundary_distance_units).toBe('number');
++        for (const cls of ASSET_CLASSES) {
++            expect(t.geometry[cls].silhouette_iou_min).toBe(0.9);
++            expect(Number.isFinite(t.geometry[cls].max_boundary_distance_units)).toBe(true);
++        }
++        // No file at all is still the default source, unchanged.
++        expect(readThresholds(undefined).geometrySource).toBe('default');
++    });
++});
+diff --git a/tests/design-artifacts/fixtures/svg-assets/README.md b/tests/design-artifacts/fixtures/svg-assets/README.md
+index 6fa66b3fd14092c785da99d7c76c366419147b5a..d0e86f0e91728e0fab24b83175555dc9199eccbb 100644
+--- a/tests/design-artifacts/fixtures/svg-assets/README.md
++++ b/tests/design-artifacts/fixtures/svg-assets/README.md
+@@ -282,6 +282,12 @@ a pass.
+ | `assets/primitive-only-mark.svg` | static | `vector-honesty/embedded-raster / vector-honesty/not-a-true-vector` | must stay silent | n/a — control | 0 |
+ | `assets/spinner-intentional-dash.svg` | static | `motion/draw-on-dead-time / motion/guessed-dash` | must stay silent | n/a — control | 0 |
+ | `assets/hamburger-24-grid.svg` | static | `structure/loose-viewbox` | must stay silent | n/a — control | 0 |
++| `assets/id-only-in-a-comment.svg` | static | `structure/dangling-reference` | lint_svg_asset svg-structure-dangling-reference | found | 0 |
++| `assets/mis-nested-tags.svg` | static | `structure/not-well-formed` | lint_svg_asset svg-structure-not-well-formed | found | 0 |
++| `assets/title-not-a-direct-child.svg` | static | `accessibility/meaningful-without-name` | lint_svg_asset svg-a11y-no-accessible-name | found | 0 |
++| `assets/degenerate-gradient.svg` | static | `structure/degenerate-gradient` | lint_svg_asset svg-structure-degenerate-gradient | found | 0 |
++| `assets/seam-between-shapes.svg` | engine | `geometry/background-bleed-inside-silhouette` | ui:render --profile asset | found | 0 |
++| `assets/dark-mark-on-dark.svg` | engine | `accessibility/low-contrast-on-background` | ui:render --profile asset | found | 0 |
+ 
+ ## § Promotion bar (step 5.2)
+ 
+diff --git a/tests/design-artifacts/report_svg_fixture_layers.ts b/tests/design-artifacts/report_svg_fixture_layers.ts
+index c02302a845f52a09a6a3d0537818ab1bd9eab446..82b185f01df5a3e7a8a4bb70d4826232e5c6620f 100644
+--- a/tests/design-artifacts/report_svg_fixture_layers.ts
++++ b/tests/design-artifacts/report_svg_fixture_layers.ts
+@@ -84,6 +84,14 @@ export const TAXONOMY_TO_RULE: Readonly<Record<string, string>> = {
+     'structure/unparseable-path-data': 'svg-structure-unparseable-path',
+     'structure/unused-defs-entry': 'svg-structure-unused-defs',
+     'structure/dangling-reference': 'svg-structure-dangling-reference',
++    // Finding 5 of the sixth completion review: this change adds two taxonomy
++    // ids to the fixture manifest and gave neither a row here, so both
++    // reported `answeredBy: "(unmapped)"` and `plantedFound: null` — the
++    // report said no linter rule answers them while the rules were right
++    // there. A fixture that measures nothing looks exactly like a fixture that
++    // passes.
++    'structure/not-well-formed': 'svg-structure-not-well-formed',
++    'structure/degenerate-gradient': 'svg-structure-degenerate-gradient',
+     'safety/active-content': 'svg-safety-active-content',
+     'safety/internal-dtd-subset': 'svg-safety-internal-subset',
+     'safety/external-reference': 'svg-safety-external-reference',
+diff --git a/tests/scripts/lint_svg_asset.test.ts b/tests/scripts/lint_svg_asset.test.ts
+index 3899c72681f21c8352955743248a5b9357b132b4..37fef74448904054f549e1fc66a71cea2c89e586 100644
+--- a/tests/scripts/lint_svg_asset.test.ts
++++ b/tests/scripts/lint_svg_asset.test.ts
+@@ -862,3 +862,38 @@ describe('what the fifth review round found', () => {
+         expect(scanSvg(vector, 'v.svg').map((f) => f.rule)).not.toContain('svg-vector-embedded-raster');
+     });
+ });
++
++describe('what the sixth review round found', () => {
++    it('an unterminated graphic is scanned, not dropped', () => {
++        // Finding 1, and it FAILS OPEN, which is why it is the one that
++        // mattered: a host whose inline `<svg>` is never closed was dropped
++        // whole, so the scan returned zero findings — a planted `<script>`
++        // included — the static witness then reported 0 errors, and that is
++        // exactly the condition the turn-end gate uses to discharge on the
++        // static-only path. A MALFORMED file discharged a blocking gate that a
++        // well-formed one with the same script does not.
++        const unclosed =
++            '<!doctype html><html><body>\n' +
++            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img"><title>t</title>\n' +
++            '  <script>alert(1)</script>\n' +
++            '  <rect width="24" height="24"/>\n' +
++            '</body></html>\n';
++        const rules = scanHostHtml(unclosed, 'a.html').map((f) => f.rule);
++        expect(rules).toContain('svg-safety-active-content');
++        // And the file IS reported as malformed, which is the other half: the
++        // reader needs both the script and the reason the document is odd.
++        expect(rules).toContain('svg-structure-not-well-formed');
++
++        // The byte-identical document WITH the close is the control.
++        const closed = unclosed.replace('</body>', '</svg>\n</body>');
++        expect(scanHostHtml(closed, 'b.html').map((f) => f.rule)).toContain('svg-safety-active-content');
++
++        // A clean host is still silent — an emitter that returned a fragment
++        // for every document would pass the cases above and break this one.
++        const clean =
++            '<!doctype html><html><body>\n' +
++            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>a</title>' +
++            '<rect width="8" height="8"/></svg>\n</body></html>\n';
++        expect(scanHostHtml(clean, 'c.html')).toEqual([]);
++    });
++});
