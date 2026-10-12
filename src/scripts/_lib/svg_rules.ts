@@ -515,7 +515,7 @@ function ruleActiveContent(
                     severity,
                 });
             }
-            if (/^\s*javascript:/i.test(value)) {
+            if (/^javascript:/i.test(resolvedUrl(value))) {
                 findings.push({
                     rule: 'svg-safety-active-content',
                     file,
@@ -576,6 +576,26 @@ function ruleInternalSubset(content: string, file: string): Finding[] {
 
 const EXTERNAL_URL_RE = /^(?:https?:|ftp:|\/\/)/i;
 
+const NAMED_URL_ENTITIES: Record<string, string> = {
+    colon: ':', sol: '/', tab: '\t', newline: '\n', period: '.', lpar: '(', rpar: ')', amp: '&',
+};
+
+/**
+ * The URL a browser would actually resolve from an attribute value: character
+ * references decoded, leading/trailing C0 controls and spaces stripped, tab and
+ * newline removed anywhere. The raw value is attacker-chosen, so a scheme test
+ * against it is a test of one spelling — ` https:`, `ht\ttps:`, `&#106;avascript:`
+ * all load, and all passed.
+ */
+export function resolvedUrl(raw: string): string {
+    const decoded = raw.replace(/&(?:#x([0-9a-f]+)|#(\d+)|([a-z]+));?/gi, (m, hex, dec, name) => {
+        const cp = hex ? parseInt(hex, 16) : dec ? parseInt(dec, 10) : NaN;
+        if (!Number.isNaN(cp)) return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
+        return NAMED_URL_ENTITIES[(name as string).toLowerCase()] ?? m;
+    });
+    return decoded.replace(/^[\u0000- ]+|[\u0000- ]+$/g, '').replace(/[\t\n\r]/g, '');
+}
+
 function ruleExternalReference(
     content: string,
     elements: SvgElement[],
@@ -590,7 +610,7 @@ function ruleExternalReference(
         if (el.closing) continue;
         for (const key of ['href', 'xlink:href', 'src']) {
             const v = el.attrs[key];
-            if (v && EXTERNAL_URL_RE.test(v)) {
+            if (v && EXTERNAL_URL_RE.test(resolvedUrl(v))) {
                 findings.push({
                     rule: 'svg-safety-external-reference',
                     file,
@@ -609,6 +629,17 @@ function ruleExternalReference(
             file,
             line: lineOf(m.index),
             snippet: `url(${(m[1] ?? '').slice(0, 60)}) loads from outside the file; mode "${mode}" grades it ${severity}`,
+            severity,
+        });
+    }
+    // `@import "https://…"` names its target without `url()`.
+    const importRe = /@import\s+['"]\s*((?:https?:|ftp:|\/\/)[^'"\s]+)/gi;
+    while ((m = importRe.exec(content)) !== null) {
+        findings.push({
+            rule: 'svg-safety-external-reference',
+            file,
+            line: lineOf(m.index),
+            snippet: `@import "${(m[1] ?? '').slice(0, 60)}" loads from outside the file; mode "${mode}" grades it ${severity}`,
             severity,
         });
     }

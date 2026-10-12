@@ -909,3 +909,49 @@ describe('what the sixth review round found', () => {
         expect(scanHostHtml(clean, 'c.html')).toEqual([]);
     });
 });
+
+describe('what the 16.5.0 release review found', () => {
+    const wrap = (inner: string) =>
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ' +
+        `viewBox="0 0 8 8" role="img"><title>t</title>${inner}</svg>\n`;
+    const rulesOf = (inner: string) => scanSvg(wrap(inner), 'a.svg').map((f) => f.rule);
+
+    it('an external reference is found through whitespace, control characters and entities', () => {
+        // A browser strips leading/trailing C0 controls and spaces from a URL
+        // and drops tab/newline anywhere in it, so each spelling below loads
+        // the same remote resource as the plain one.
+        for (const href of [
+            ' https://evil.example/x.png',
+            '\thttps://evil.example/x.png',
+            'ht\ttps://evil.example/x.png',
+            '&#104;ttps://evil.example/x.png',
+            'https&#x3A;//evil.example/x.png',
+            ' //evil.example/x.png',
+        ]) {
+            expect(rulesOf(`<image href="${href}" width="8" height="8"/>`), href).toContain(
+                'svg-safety-external-reference',
+            );
+        }
+        // An out-of-range character reference is left as written, not thrown on.
+        expect(() => rulesOf('<image href="&#99999999;x.png" width="8" height="8"/>')).not.toThrow();
+        // A fragment reference stays clean.
+        expect(rulesOf('<use href="#a"/><path id="a" d="M0 0h8v8z"/>')).not.toContain('svg-safety-external-reference');
+    });
+
+    it('a javascript: URL is found through tab, newline and entity encoding', () => {
+        for (const href of ['java\tscript:alert(1)', 'java\nscript:alert(1)', '&#106;avascript:alert(1)', 'javascript&colon;alert(1)']) {
+            expect(rulesOf(`<a href="${href}"><rect width="8" height="8"/></a>`), JSON.stringify(href)).toContain(
+                'svg-safety-active-content',
+            );
+        }
+    });
+
+    it('a bare @import of a remote stylesheet is an external reference', () => {
+        expect(rulesOf('<style>@import "https://evil.example/s.css";</style><rect width="8" height="8"/>')).toContain(
+            'svg-safety-external-reference',
+        );
+        expect(rulesOf("<style>@import 'local.css';</style><rect width=\"8\" height=\"8\"/>")).not.toContain(
+            'svg-safety-external-reference',
+        );
+    });
+});
