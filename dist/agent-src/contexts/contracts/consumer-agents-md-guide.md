@@ -21,6 +21,43 @@ the sections below into AGENTS.md only when the project actually needs
 the content there (e.g. an unusual stack note that no `agents/` doc
 covers). Default: leave AGENTS.md thin and put detail under `agents/`.
 
+## Goal section (optional copy-in)
+
+```markdown
+## Goal
+
+{{one_to_three_sentences}}    # What this project is for, in terms a plan can
+                              # be checked against. Not a mission statement:
+                              # "every booking reaches the organiser within a
+                              # minute, and no booking is lost" is checkable,
+                              # "delight our users" is not.
+```
+
+## No-gos section (optional copy-in)
+
+```markdown
+## No-gos
+
+- Never {{forbidden_thing}}   # One per bullet. Name a PATH, a COMMAND, a
+                              # DEPENDENCY or a BEHAVIOR — "never edit
+                              # `migrations/` by hand", "never run `php
+                              # artisan migrate:fresh` outside a throwaway
+                              # database", "never add a runtime dependency
+                              # without an ADR".
+```
+
+**These two are the exception to "leave AGENTS.md thin".** The default above
+is right for detail: a stack note or a test convention is read when the agent
+reaches the thing it describes, so `agents/` is the better home. A goal and a
+no-go are different in kind — they bind **every** turn, including the ones
+that never open the file where they would otherwise live. What is not written
+in the always-loaded file does not exist for the agent at the moment it
+decides, and a no-go the agent reads after the edit is a no-go it has already
+broken.
+
+Keep both short for the same reason the root file is capped: a goal nobody
+finishes reading constrains nothing.
+
 ## Tech-stack section (optional copy-in)
 
 ```markdown
