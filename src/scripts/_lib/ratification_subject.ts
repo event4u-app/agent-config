@@ -43,15 +43,34 @@ import {
  */
 export const DELETED_MARKER = '\u0000deleted\u0000';
 
-/** The self surface, by the gate's own constants rather than a copy of them. */
-const SELF_SET: ReadonlySet<string> = new Set<string>([
-    SELF_PATH,
-    READER_PATH,
-    CLOSURE_READER_PATH,
-    POLICY_PATH,
-    WORKFLOW_PATH,
-    ...ANCHOR_PATHS,
-]);
+/**
+ * The self surface, by the gate's own constants rather than a copy of them.
+ *
+ * BUILT ON FIRST CALL, NOT AT MODULE SCOPE, and the reason is the import cycle
+ * this module deliberately has. The gate imports {@link subjectDigest} and this
+ * module imports the gate's path constants, so whichever of the two Node
+ * evaluates second sees the other half-evaluated. A module-scope `new Set([
+ * SELF_PATH, ... ])` reads those `const` bindings during that window and throws
+ * on the temporal dead zone. Deferring the read to call time moves it past both
+ * modules' evaluation, where the live bindings are initialised — which keeps the
+ * single definition of "gated" the header argues for instead of trading it for a
+ * second copy that cannot go stale because it is never right twice.
+ */
+let selfSetCache: ReadonlySet<string> | null = null;
+
+function selfSet(): ReadonlySet<string> {
+    if (selfSetCache === null) {
+        selfSetCache = new Set<string>([
+            SELF_PATH,
+            READER_PATH,
+            CLOSURE_READER_PATH,
+            POLICY_PATH,
+            WORKFLOW_PATH,
+            ...ANCHOR_PATHS,
+        ]);
+    }
+    return selfSetCache;
+}
 
 /**
  * The gated subset of a changed-file list: sorted, deduplicated, and stable
@@ -64,8 +83,9 @@ export function gatedFilesOf(
     const normalized = files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => f !== '');
     const g = derived === undefined ? classifyPaths(normalized) : classifyPaths(normalized, derived);
     const out = new Set<string>([...g.kernelRules, ...g.governanceHooks, ...g.plumbing]);
+    const self = selfSet();
     for (const f of normalized) {
-        if (SELF_SET.has(f)) out.add(f);
+        if (self.has(f)) out.add(f);
     }
     return [...out].sort();
 }
@@ -77,10 +97,20 @@ export function gatedFilesOf(
  * The path is hashed alongside its content, so two files with identical bytes
  * do not collide and a rename moves the digest — a gated file moved to another
  * gated path is a different change, not the same one.
+ *
+ * `derived` is the plumbing closure the caller already computed, passed through
+ * to {@link gatedFilesOf} unchanged. The gate HAS that list and classifies with
+ * it; a digest that classified without it would cover fewer files than the gate
+ * gated, so a record could be bound to a subset of what was reviewed. One list,
+ * handed down, rather than two computed independently.
  */
-export function subjectDigest(root: string, files: readonly string[]): string {
+export function subjectDigest(
+    root: string,
+    files: readonly string[],
+    derived?: readonly string[],
+): string {
     const h = createHash('sha256');
-    for (const rel of gatedFilesOf(files)) {
+    for (const rel of gatedFilesOf(files, derived)) {
         const abs = path.join(root, rel);
         const content = fs.existsSync(abs) ? fs.readFileSync(abs) : Buffer.from(DELETED_MARKER);
         h.update(rel);

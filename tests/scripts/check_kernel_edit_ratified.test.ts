@@ -8,6 +8,7 @@ import {
     classifyPaths,
     configuredProviderCount,
     evaluate,
+    expectedSubjectFor,
     POLICY_PATH,
     ratificationArtifactsIn,
     READER_PATH,
@@ -29,7 +30,19 @@ import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.j
 
 let root: string;
 
-function writeArtifact(name: string, fields: Record<string, string>, providers: string[]): string {
+/**
+ * `gated` is the gated half of the diff this record is meant to answer for, and
+ * the record's `subject` is asked of the GATE rather than hand-written — a
+ * fixture that typed its own digest would prove a second implementation of the
+ * membership rule rather than the shipped one. The default is the kernel rule
+ * most of these cases edit; the two cases that edit something else pass theirs.
+ */
+function writeArtifact(
+    name: string,
+    fields: Record<string, string>,
+    providers: string[],
+    gated: readonly string[] = ['src/rules/commit-policy.md'],
+): string {
     const rel = path.join(RATIFICATION_DIR, name);
     const abs = path.join(root, rel);
     fs.mkdirSync(path.dirname(abs), { recursive: true });
@@ -37,6 +50,7 @@ function writeArtifact(name: string, fields: Record<string, string>, providers: 
     for (const [k, v] of Object.entries(fields)) {
         lines.push(`${k}: ${v}`);
     }
+    lines.push(`subject: ${expectedSubjectFor(gated, root)}`);
     lines.push('providers:');
     for (const p of providers) {
         lines.push(`  - ${p}`);
@@ -241,7 +255,7 @@ describe('evaluate — G15', () => {
         expect(red.exitCode).toBe(1);
         expect(red.lines.join('\n')).toContain('hook-plumbing source src/scripts/hook_manifest.yaml');
 
-        const rel = writeArtifact('plumbing.md', GOOD, ['anthropic', 'openai']);
+        const rel = writeArtifact('plumbing.md', GOOD, ['anthropic', 'openai'], diff);
         const green = evaluate([...diff, rel], root, 2);
         expect(green.exitCode).toBe(0);
     });
@@ -262,10 +276,11 @@ describe('evaluate — G15', () => {
             'pending.md',
             { ...GOOD, verdict: 'non-convergent' },
             ['anthropic', 'openai'],
+            diff,
         );
         expect(evaluate([...diff, pending], root, 2).exitCode).toBe(1);
 
-        const ratified = writeArtifact('ratified.md', GOOD, ['anthropic', 'openai']);
+        const ratified = writeArtifact('ratified.md', GOOD, ['anthropic', 'openai'], diff);
         expect(evaluate([...diff, ratified], root, 2).exitCode).toBe(0);
     });
 

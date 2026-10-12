@@ -284,7 +284,7 @@ At `df377ca64`:
 
 ## Phase 2 — An approval is bound to what it approved
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.1 The record carries a digest of the gated content it reviewed.**
+- [x] **2.1 The record carries a digest of the gated content it reviewed.**
       The artifact gains a `subject` field: one digest over the sorted paths
       and contents of every file of the change that the gate classifies as
       gated, with a deleted file entered as deleted. One function in a module
@@ -316,11 +316,27 @@ At `df377ca64`:
       self surface as a boolean and the list cannot be read back out of it; a second
       definition of "gated" would be a second thing to keep in step. Verified ungated
       by running the gate against it: nothing to ratify. 10 tests.
-      **What is NOT shipped:** the gate recomputing it and refusing a record whose
-      `subject` is absent or different, and the two suites' fixtures gaining the
-      field. Both edit `check_kernel_edit_ratified.ts` and
-      `_lib/ratification_artifact.ts`, so the step stays open.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.2 Each record answers for its own change.** A record validates a
+      **Closed 2026-10-12 — the gated half landed.** `readRatification` gained an
+      `expectedSubject` parameter and three codes that are kept apart on purpose:
+      `subject-absent`, `subject-malformed` and `subject-mismatch`, because a typo'd
+      digest and a digest that moved because a gated file was edited after the review
+      send an author looking in different places. The gate computes the digest once
+      per run through the new `expectedSubjectFor`, which hands `subjectDigest` the
+      SAME derived plumbing list it classified with — a digest classified without it
+      would cover fewer files than the gate gated. Both existing suites' fixtures
+      carry the field, and the gate suite asks the gate for the digest rather than
+      typing one, so a fixture cannot prove a second implementation of the membership
+      rule. `src/scripts/ratification_subject` prints it for whoever writes a record,
+      by calling the gate's exported helper for the same reason.
+      **One thing the implementation had to solve that the step did not foresee:**
+      the gate now imports `ratification_subject` and that module already imported the
+      gate's path constants, so the module-scope `SELF_SET` read those `const`
+      bindings inside the cycle's dead zone. It is built on first call instead — which
+      keeps the single definition of "gated" rather than trading it for a second copy.
+      9 tests, seen red for the intended reason: neutralising the binding
+      (`readRatification(text, providerCount, null)`) drops 5 of the 9 and leaves
+      exactly the 4 polarity partners that should stay green.
+- [x] **2.2 Each record answers for its own change.** A record validates a
       diff only when its `subject` matches that diff's gated content; a second
       valid record for something else no longer carries it. The 23 records on
       the trunk are not rewritten: they were judged when they landed and are
@@ -328,6 +344,18 @@ At `df377ca64`:
       a record with a `subject` once its base carries the new gate, because
       the gate is judged from the base.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_subject.test.ts` -> 0
+
+      **Closed 2026-10-12.** The `anyRatified` loop no longer passes on "any one
+      artifact validates": every record is read against this diff's digest, so a
+      record written for another change is refused here even though it is a GOOD
+      record. Each case proves that rather than assuming it — the foreign record is
+      read against the content it was written for and validates with zero problems,
+      so the suite cannot be green because the record was broken for an unrelated
+      reason. Two polarity partners keep the binding from becoming a replacement for
+      the verdict rule: a matching `subject` rescues neither a `refused` verdict nor
+      a self-ratified record. The trunk's 23 records are pinned as never re-read: an
+      unparseable artifact on disk but absent from the changed-file list leaves the
+      diff green. 5 tests.
 
 ## Phase 3 — The council reviews a modification as one
 

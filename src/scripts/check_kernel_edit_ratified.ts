@@ -85,6 +85,7 @@ import {
     readRequiredProviders,
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
+import { subjectDigest } from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -381,6 +382,29 @@ function resolveBaseRef(explicit: string | null, root: string): string {
     return 'HEAD~1';
 }
 
+/**
+ * The plumbing closure this gate classifies with: the union of the list read
+ * from the tree under review and from this script's own tree, so a module
+ * present on either side is watched.
+ */
+function derivedFor(root: string): readonly string[] {
+    return [...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)])];
+}
+
+/**
+ * The `subject` digest a record must carry to answer for this diff.
+ *
+ * Exported so that whoever WRITES a record asks the gate for the digest rather
+ * than recomputing it from a second reading of the membership rule. A writer
+ * that derived its own list would be the second definition of "gated" that
+ * `ratification_subject`'s header exists to prevent — and it would fail only
+ * for the diffs where the two lists disagree, which are exactly the diffs that
+ * widen the gated set.
+ */
+export function expectedSubjectFor(files: readonly string[], root: string): string {
+    return subjectDigest(root, files, derivedFor(root));
+}
+
 export interface GateResult {
     exitCode: 0 | 1 | 3;
     lines: string[];
@@ -397,10 +421,23 @@ export function evaluate(
     // The union of the closure read from the tree under review and from this
     // script's own tree: under CI the gate code is the base revision's and
     // `root` is the head, so a module present on either side is watched.
-    const gated = classifyPaths(files, [
-        ...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)]),
-    ]);
+    const derived = derivedFor(root);
+    const gated = classifyPaths(files, derived);
     const scanned = files.length;
+
+    /**
+     * The digest of this diff's gated content, recomputed from the tree rather
+     * than read from the record.
+     *
+     * WHICH FILES COUNT IS DECIDED BY THIS CODE, AND IN CI THIS CODE IS THE BASE
+     * REVISION'S. The workflow runs the base's copy of this gate with `--root
+     * <head>`, so the membership rule a candidate is judged by is one the
+     * candidate did not write — and the same holds for the digest, which uses
+     * this module's `classifyPaths` and the derived list computed just above.
+     * A change that widens the gated set is therefore judged, and written, by
+     * the same list.
+     */
+    const expectedSubject = expectedSubjectFor(files, root);
 
     // Every changed path is a planned target: the gate's denominator is the
     // whole diff, and a path it decided was out of scope is a decision worth
@@ -494,14 +531,15 @@ export function evaluate(
             failures.push(`${rel}: listed in the diff but not readable on disk`);
             continue;
         }
-        const reading = readRatification(text, providerCount);
+        const reading = readRatification(text, providerCount, expectedSubject);
         if (isRatified(reading)) {
             anyRatified = true;
             lines.push('');
             lines.push(
                 `✅  ${rel} — ratified by ${reading.artifact?.reviewed_by} ` +
                     `(providers: ${reading.artifact?.providers.join(', ')}; ` +
-                    `effective after ${reading.artifact?.effective_after})`,
+                    `effective after ${reading.artifact?.effective_after}; ` +
+                    `subject ${String(reading.artifact?.subject).slice(0, 12)}…)`,
             );
             continue;
         }

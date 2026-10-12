@@ -68,6 +68,44 @@ pruned, so nothing on a runner could check them. The body's review record and
 the committed prompt package remain the evidence a reader checks the seats
 against.
 
+## `subject:` — the digest of the content the record reviewed
+
+An eighth field, `subject:`, is a sha-256 hex digest over the **gated** files of
+the change: their sorted paths, each hashed alongside its content, with a
+deleted gated file entered rather than skipped. `./scripts-run
+src/scripts/ratification_subject --files <f> …` prints it, and
+`check_kernel_edit_ratified` recomputes it from the tree it is pointed at and
+refuses a record whose `subject` is absent (`subject-absent`), not a digest
+(`subject-malformed`) or a different one (`subject-mismatch`).
+
+| What it adds | Why the other seven did not |
+|---|---|
+| the record says WHAT it reviewed | the six required fields say only WHO; a gated file edited after its review still landed on that review's record |
+| a record carries one change | the gate passed when **any** artifact in the diff validated, so a record written for one review carried a second change it never saw |
+
+Three properties of the digest, each chosen against an alternative that looks
+equivalent and is not:
+
+- **The path is hashed with the content**, so two gated files with identical
+  bytes do not collide and a rename moves the digest — a governance hook moved
+  to another gated path is a different change, not the same one.
+- **A deleted gated file is entered**, via a marker, rather than omitted.
+  Omitting it would make *this hook was removed* digest-identical to *this hook
+  was never gated*, which is the change a record most needs to be bound to.
+- **No base diff.** The digest is over the tree as it stands, so it reads the
+  same on a branch and on the merged checkout CI judges — unless the base moved
+  a gated file the change also touches, and then the content that would land is
+  not the content that was reviewed, which is exactly what should move it. The
+  review-scope hash of `dispatch_r2_reviewer` was considered for this and
+  rejected: it is taken over diff text against a base, and this gate is handed a
+  file list and no base.
+
+Which files count as gated is decided by the gate's own classifier, and in CI
+that classifier is the **base revision's** — so a change that widens the gated
+set and edits a newly gated file is judged, and written, by one list. The 23
+records on the trunk carry no `subject` and are not migrated: the gate reads
+only the artifacts the diff names, so a landed record is never re-judged.
+
 `ratified` and `confirmed-non-expanding` let a diff land; `refused` and
 `non-convergent` do not. The second passing verdict exists because the gate
 demands an artifact for **every** kernel and governance-hook diff, a typo fix
@@ -621,15 +659,29 @@ no record at all; a record whose reviewer is its own author; a diff that
 weakens the judge and is then approved by the weakened judge; and a quorum rule
 that silently does not fire because the file it needed was somewhere else.
 
-At this pin — 2026-10-12 — **a record is not bound to the content it
-reviewed.** ADR-281 § Consequences states the gate binds each record to what it
-reviewed; that sentence describes the intended end state and not today's gate,
-which reads the artifact's shape and the diff's paths and never compares a
-digest. So a record written against one revision of a gated file still reads as
-valid after that file changes, and nothing here detects it. The binding is
-steps 2.1 and 2.2 of
-`road-to-self-modification-that-a-council-must-pass`; this paragraph is dated
-so a reader can tell whether it still describes the gate they are running.
+**The binding landed on 2026-10-12**, and this paragraph replaces the dated one
+that said it had not. A record now carries `subject`, and the gate recomputes
+that digest from the tree it is pointed at and refuses a record whose `subject`
+is absent or different — so ADR-281 § Consequences ("the gate binds each record
+to the content it reviewed") now describes the gate rather than an intended end
+state. Steps 2.1 and 2.2 of
+`road-to-self-modification-that-a-council-must-pass` are what closed it.
+
+**What the binding does NOT close, said as plainly as the gap it replaces.**
+The digest is computed by the gate from the tree and typed into the record by
+whoever writes it, so a record still asserts rather than proves that a review
+happened over that content — § What a passing record does not prove is
+unchanged and is the paragraph that matters. What it now makes impossible is
+narrower and real: a gated file edited after its review landing under that
+review's record, and one record carrying a second change it never saw.
+
+**One consequence worth stating because it will be met before it is read.** The
+workflow runs the BASE revision's copy of the gate, so a change that is open
+when this lands is judged by the old gate and needs a `subject` only once its
+base carries the new one. The digest is also recomputed from the merged
+checkout, so a base that moves a gated file the change also touches moves the
+digest and reds the record — deliberately: the content that would land is then
+not the content that was reviewed. A base that moves anything else does not.
 
 ## What was NOT preserved from the mechanism this replaces
 
