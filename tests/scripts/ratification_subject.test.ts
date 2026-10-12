@@ -103,3 +103,27 @@ describe('2.1 — the digest binds paths AND contents', () => {
         expect(subjectDigest(root, [])).toMatch(/^[0-9a-f]{64}$/);
     });
 });
+
+describe('the import cycle stays survivable, and a regression reds here', () => {
+    it('the gated set resolves when THIS module is the entry point', async () => {
+        // A council reviewer named the cycle fragile: the gate imports
+        // `subjectDigest` and this module imports the gate's `SELF_SURFACE`, so
+        // whichever Node evaluates second sees the other half-evaluated, and a
+        // module-scope read of that `const` throws on the temporal dead zone.
+        // The mitigation is a read deferred to call time, and "a comment
+        // explains why" is not a control — this case is.
+        //
+        // The import below is deliberately dynamic and deliberately FIRST: it
+        // makes this module the entry point of the cycle, which is the order
+        // that breaks if the deferral is ever removed.
+        const mod = await import('../../src/scripts/_lib/ratification_subject.js');
+        expect(() => mod.gatedFilesOf([KERNEL])).not.toThrow();
+        expect([...mod.gatedFilesOf([KERNEL])]).toContain(KERNEL);
+
+        // And the self surface resolves through it, which is the half that
+        // reads the gate's binding rather than its own constants.
+        expect([...mod.gatedFilesOf(['src/scripts/check_kernel_edit_ratified.ts'])]).toContain(
+            'src/scripts/check_kernel_edit_ratified.ts',
+        );
+    });
+});
