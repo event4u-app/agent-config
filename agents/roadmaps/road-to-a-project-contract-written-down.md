@@ -98,48 +98,91 @@ company content ships in the package.
 
 ## Phase 2 — A no-go that names a path or a command is enforced
 
-> **Screened 2026-10-12, not started, and the reason is a price rather than an
-> impossibility.** Step 2.1 requires the host permission-rule syntax to be
-> pinned with its `docs_url` in `src/scripts/hooks/host_lowering.yaml`. That
-> file is deliberately OUTSIDE `block_plumbing_writes`'s refused set — only
-> the compiled `host_lowering.json` is refused — and its own comment says the
-> YAML sources "stay OUT of this set and keep carrying a ratification". So the
-> step is agent-executable and costs an independent council record for a
-> one-line pin.
+> **Re-screened 2026-10-13 against the tree, and the recorded price turned out
+> to be for the wrong purchase.** The 2026-10-12 screen was right that
+> `host_lowering.yaml` is agent-writable and that editing it costs an
+> independent ratification record. What it had not measured is that the pin
+> cannot be READ there: `_structure()` in `src/scripts/hooks/host_lowering.ts`
+> reads only named hook keys, so a `permissions:` block would be dropped from
+> the typed table while still moving the compiled body's fingerprint and
+> forcing both the recompile and the ratification. The price was real; what it
+> bought was a comment.
 >
-> Two facts a later run should have before paying it. The council's necessity
-> heuristic refuses a question like this on its WORDING, not its subject —
-> measured the same day on a different governance question, which skipped
-> twice (`bugfix`, then `syntax`) before the words were changed. And the
-> alternative of hard-coding the syntax in the classifier is what 2.1
-> explicitly forbids: "not taken from this file".
+> Put to the AI council on 2026-10-13 (design mode, deep, `anthropic` +
+> `openai`, 2/2 present, $0.00 subscription transport). Both seats refused that
+> home on the table's own declared subject — "how each host lowers a dispatcher
+> verdict into its own hook contract" — and both required a provenance gate in
+> place of the ratification the move avoids. D5 and D6 record the outcome;
+> `agents/evidence/council/no-go-deny-pin-home-20261013.md` is the record.
 >
-> Phase 1 is complete and stands alone: the sections exist, the initializer
-> asks for them, and the report says which are present. Phase 2 turns a
-> written no-go into an enforced one, which is a different claim and is worth
-> its own change.
+> So no plumbing file is touched by this phase and no ratification artifact is
+> owed. The syntax is still not taken from this file: it was read from the
+> host's own permission documentation on 2026-10-13 and pinned with that URL
+> and date.
 
 
-- [ ] **2.1 Classify each no-go bullet.** A pure function sorts each bullet
+- [x] **2.1 Classify each no-go bullet.** A pure function sorts each bullet
       into `path`, `command` or `prose`, and returns the deny rule it would
       become in the host's documented permission-rule syntax for the first two
       kinds. The syntax is checked against the host documentation when the step
-      is implemented and pinned with its `docs_url` in
-      `src/scripts/hooks/host_lowering.yaml`, not taken from this file. A bullet
-      the function cannot classify is `prose`, never guessed.
+      is implemented and pinned with its `docs_url`, not taken from this file.
+      A bullet the function cannot classify is `prose`, never guessed.
       verify: `npx vitest run tests/install/no_go_classify.test.ts` -> 0
-- [ ] **2.2 Shown, consented, appended.** After 1.2, `/agents:init` prints the
+
+      **Closed 2026-10-13.** `classifyNoGo` in `src/install/noGoRules.ts` emits
+      `{kind, token, action}` and NOTHING host-specific; `denyRulesFor` in
+      `src/install/hostPermissionsAdapter.ts` turns that into the host's
+      spelling and carries the pin. The split is D5's, not a style choice: a
+      classifier that resolves a host row is not the pure function this step
+      asked for.
+
+      Two signals must agree or the verdict is prose — exactly one backticked
+      token AND an action verb from a closed vocabulary. The second is what
+      makes "`vendor/` is generated" prose: the shape says path, the sentence
+      never says what must not happen to it, and choosing `Edit` over `Read`
+      on its behalf is the guess D4 forbids.
+
+      **A command bullet renders TWO rows, and that is the step's one
+      non-obvious finding.** The documentation states that `Bash(x *)` requires
+      a space after `x`, so the with-arguments form never matches the bare
+      command. A single row would be accepted by the settings file and would
+      leave `php artisan migrate:fresh` running — Risk 3 reached by a rule that
+      looks right.
+- [x] **2.2 Shown, consented, appended.** After 1.2, `/agents:init` prints the
       rows 2.1 produced and asks once whether to add them. On yes it appends
       them to the consumer's settings file's deny list, keeping every
       existing entry and its order; on no it writes nothing. `prose` bullets are
       reported as instruction-only. On a host with no native deny list the step
       reports the rows as instruction-only and writes nothing.
       verify: `npx vitest run tests/install/no_go_deny_rows.test.ts` -> 0
-- [ ] **2.3 Seen to block.** The deny-row test's fixture no-go "never edit
+
+      **Closed 2026-10-13.** `/agents:init` step 6b shows
+      `./scripts-run src/scripts/no_go_deny_rows AGENTS.md`, which writes
+      nothing, then asks once. The decline path is the ABSENCE of a second
+      call rather than an undo — the command's default is read-only, so there
+      is no window in which a skip has to be reversed.
+
+      The append is a textual splice, not a parse-and-reserialise: every byte
+      outside the insertion point is the byte that was there before. Risk 4 is
+      a rewrite dropping or reordering a user entry, and a re-serialising
+      writer is exactly how that happens while every value-level assertion
+      stays green.
+
+- [x] **2.3 Seen to block.** The deny-row test's fixture no-go "never edit
       `migrations/`" yields a deny row; a second fixture asserts an existing
       user deny entry survives the append byte-for-byte, and a third asserts a
       declined consent leaves the file unchanged.
       verify: `npx vitest run tests/install/no_go_deny_rows.test.ts -t preserves` -> 0
+
+      **Closed 2026-10-13, and the byte-for-byte assertion was WRONG on its
+      first pass.** Neutralising the splice — replacing it with
+      `JSON.stringify(root, null, 2)` — left all twenty tests green, because
+      the fixture happened to be formatted the way canonical stringify output
+      is formatted. A fixture that matches canonical output cannot tell a
+      splice from a rewrite. The fixture is now four-space-indented with a
+      one-line array, the same probe reds exactly one test, and the sibling
+      value-level assertion stays green — which is the discrimination the pair
+      is for.
 
 ## What this roadmap deliberately does not do
 
@@ -160,13 +203,24 @@ company content ships in the package.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `/agents:init` asks for a goal and for no-gos, writes only what
+- [x] AC-1 — `/agents:init` asks for a goal and for no-gos, writes only what
       the consumer answered, and never edits the shipped template.
-- [ ] AC-2 — `report_project_contract` prints `N of 4` for a consumer
+      Steps 3.4 and 3.5 ask; step 4 writes the sections into the consumer's
+      filled file and says in place why the template is not touched.
+      `git log --oneline -- src/agent-src/templates/AGENTS.md` carries nothing
+      from this roadmap.
+- [x] AC-2 — `report_project_contract` prints `N of 4` for a consumer
       `AGENTS.md` and writes nothing.
-- [ ] AC-3 — A no-go naming a path becomes a host deny row only after consent,
+- [x] AC-3 — A no-go naming a path becomes a host deny row only after consent,
       and existing deny entries survive unchanged.
-- [ ] AC-4 — No file under `src/` ships a consumer's goal or no-go content.
+      Run end to end on a fixture consumer tree: the dry run printed
+      `Edit(migrations/**)` and wrote nothing; `--apply` appended three rows
+      and left `Read(./.env)`, the sibling allow list, the `model` key and the
+      file's own four-space formatting exactly as they were.
+- [x] AC-4 — No file under `src/` ships a consumer's goal or no-go content.
+      Every bullet under `src/` is a fixture of this package's own example —
+      `migrations/`, `php artisan migrate:fresh`, `.env` — and the two
+      sections live only in the consumer's filled file.
 
 ## Decisions
 
@@ -176,6 +230,9 @@ company content ships in the package.
 | D2 | reversible-technical | agent | Enforce through the host's native deny list, not a new `pre_tool_use` concern | A concern costs hook-bundle bytes and binds on every install; a consented, consumer-authored deny row changes nothing for a consumer who declines | A hook host without a native deny list asks for the same enforcement |
 | D3 | reversible-technical | agent | Two new questions only | Architecture and conventions are already asked (`init/command.md:92-97`) | The report in 1.3 shows architecture or conventions missing on most filled files |
 | D4 | reversible-technical | agent | Unclassifiable bullets stay prose | A guessed deny row on a vague sentence blocks legitimate work silently | A classifier error rate is measured on real consumer files |
+| D5 | reversible-technical | council:2026-10-13 design, 2/2 present | **Step 2.1's named home is superseded.** The pin lives in `src/install/hostPermissionsAdapter.ts`, a typed per-host row carrying `docs_url`, `docs_at`, a chosen review-by date, the deny key and verbatim examples. The classifier stays host-neutral and emits `{kind, token, action}`; the adapter alone knows a host's spelling. No plumbing file is touched and no ratification artifact is owed | Measured before asking: `_structure()` in `host_lowering.ts` reads only named hook keys, so a `permissions:` block there is dropped from the typed table and read by nobody — while still moving `body_fingerprint` through `compile()` and pulling the diff into `PLUMBING_SOURCE_RE`. The literal instruction cost a ratification record and bought a comment. AI council 2026-10-13, design mode deep, `anthropic` + `openai`, 2/2 present, $0.00 subscription transport; both seats refused the hook table on its own declared subject — lowering a dispatcher verdict into a hook contract, which a permission rule is not — and both refused the run-time-lookup variant as contradicting the word "pure" in this step. Record: `agents/evidence/council/no-go-deny-pin-home-20261013.md` | A second non-hook per-host fact needs the same lifecycle — then a governed host-capabilities registry, which both seats named and both refused for one row |
+| D6 | reversible-technical | council:2026-10-13 design, 2/2 present, split recorded not resolved | **No authority label is asserted; the split effect is recorded instead.** The generated deny row REDUCES the agent's execution authority; the installer GAINS authority to mutate a consumer-owned settings file, after an explicit consent prompt that writes nothing when declined | One seat read this as a consented authority expansion — new enforcement capability plus a write to a consumer boundary. The other held the label is taxonomy-dependent, named the two directions above, and asked for the split to be recorded rather than a label chosen without a cited taxonomy. The narrower reading was taken, as it was on the fetch question in D5's record | This package records an authority taxonomy that settles which direction the label follows |
+| D7 | reversible-technical | council:2026-10-13 design, 2/2 present | The provenance control is `src/scripts/check_permission_deny_syntax`, driven in CI by `tests/scripts/permission_deny_syntax.test.ts`. It fetches nothing. It is NOT registered in `src/config/gate-coverage.yml` | Both seats required a provenance control as the replacement for the ratification D5's placement avoids, and one named the risk directly: moving the fact out of the gated tree could bypass scrutiny rather than correctly avoid irrelevant governance. On the shape, the seats split — one wanted a live documentation fetch and a six-month expiry, the other refused the fetch as nondeterministic and the six months as unsupported by evidence; the narrower reading was taken, so the review-by date is the drift signal and no network call runs in a build. Not registered because a newly registered gate owes a `--self-test` with a `--root` fixture seam, and this gate's corpus is a typed constant with no tree to point one at; the test file carries nine rejecting cases and drives the real argv path instead | A second host pin lands, or the gate acquires a file corpus a `--root` seam can address |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
