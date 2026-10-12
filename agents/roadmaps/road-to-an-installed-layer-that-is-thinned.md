@@ -185,10 +185,32 @@ Reproduced on 2026-10-01:
       does not belong with them: it waits on the FULL-BODIED SET SHRINKING, which no
       registered blocker in this file gates and which the flip would not change. A
       marker naming the flip would misstate what this step is waiting for.
-- [ ] <!-- blocked-by: default-flip-of-the-installed-layer | asked: no — the blocker is registered in this file, already answered (a) by the owner on 2026-10-06, and waits on the arrival record rather than on a new question --> **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
+- [x] **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
       projector to the installer, records why the template value is not a
       consent, and marks ADR-228's global-layer statement superseded.
       verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0
+
+      **Closed 2026-10-12 — and the blocked marker it carried was wrong, not
+      merely stale.** The step has three stated clauses and the blocker added a
+      fourth from outside: `default-flip-of-the-installed-layer` resolves "when
+      the ADR of step 3.3 records (a) with the arrival record it relied on". No
+      clause of 3.3 mentions the flip. Reading the blocker's clause back onto the
+      step made an ADR that was fully writable today look impossible, which is the
+      `## Blockers`-entry-as-verdict failure the capability screen exists to
+      refuse. The marker is removed rather than re-dated.
+      [ADR-284](../../docs/decisions/ADR-284-installer-honours-the-host-axis-on-an-explicit-opt-in.md)
+      discharges all three clauses: decision 1 extends ADR-267 decision 2 to the
+      installer, decision 2 records D3, and the record performs a **scoped**
+      supersession of ADR-228 — the verbatim-copy limb only, with the `paths:`
+      limb and its compaction objection named in `## Not reopened` and left to
+      `road-to-a-rule-carrier-that-works-outside-the-repo`. ADR-228 carries the
+      reciprocal `superseded_by` + `superseded_scope` and stays `accepted` for
+      the limb it is titled after.
+      **It deliberately does NOT discharge the flip blocker.** Decision 6 states
+      the owner's (a), states its condition, and states that the condition is
+      unmet — a record of the decision, never the decision taken. The blocker's
+      `Resolved when:` is repaired below to name a producer that is still open,
+      because a resolution clause pointing at a closed step cannot fire.
 - [x] **3.4 A new routed rule declares its cost.** A routed rule added after
       the flip fails CI without a law section under 2,000 characters and at
       least one trigger a prompt can fire.
@@ -254,8 +276,16 @@ Reproduced on 2026-10-01:
   once `agents/evidence/analysis/installed-arrival-*.md` exists for the current
   host version and the step 2.2 fixture is green, or (b) keep the thinned layer
   opt-in and record in the ADR of step 3.3 that consumers choose it.
-- **Resolved when:** the ADR of step 3.3 names (a) or (b), with the arrival
-  record it relied on.
+- **Resolved when:** an ADR names (a) or (b) **with the arrival record it relied
+  on**. **Re-pointed 2026-10-12:** this clause used to name "the ADR of step
+  3.3", and step 3.3 is now closed by ADR-284, which records the owner's (a) and
+  its unmet condition without discharging either. A resolution clause whose named
+  producer is closed can never fire, so the clause names the condition instead of
+  a step. Two files can supply it today: a successor ADR here once
+  `agents/evidence/analysis/installed-arrival-*.md` exists, or step 4.1 of
+  `road-to-a-setup-that-decides-itself`, whose "One ADR" already supersedes
+  ADR-267 decision 3, ADR-278 and this file's D3 — and whose Phase 5.3 is where
+  the default now actually changes.
 - **Recommendation:** (a) — every default install otherwise keeps tripping the
   host notice at 2.25 times its limit, and the opt-in records are the evidence
   the council asked for before an irreversible-looking change.
