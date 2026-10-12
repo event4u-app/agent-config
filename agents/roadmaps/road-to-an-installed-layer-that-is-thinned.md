@@ -230,6 +230,50 @@ Reproduced on 2026-10-01:
       does not belong with them: it waits on the FULL-BODIED SET SHRINKING, which no
       registered blocker in this file gates and which the flip would not change. A
       marker naming the flip would misstate what this step is waiting for.
+
+      **Re-opened and put to the council on 2026-10-12 — verdict REQUEST_CHANGES,
+      and this step now has a second reason that is better than D6's.** The
+      proposal was not D6's rejected mechanism: not a hard gate at 75,000, but a
+      **shrink-only ratchet seeded at the measured total plus 10 %**, green on
+      `main` the day it lands, with 75,000 recorded as the destination — the
+      shape `src/config/preamble-payload-budget.json` already uses for the same
+      tension. Council, 2026-10-12, convened on the two-seat configuration and
+      **concluded with one seat present**: the anthropic seat answered, the
+      openai seat failed to exchange (`os_error: ENOBUFS`). A one-seat reading is
+      recorded as a one-seat reading — it is not provider-diverse and it is not a
+      2/2 convergence.
+      - **Q1, the lock:** D6 does **not** bar the ratchet under a strict
+        mechanism-match reading, because D6 tested a hard 75,000 gate and this is
+        a different mechanism. The seat added that D6's own wording — "stays a
+        reported finding, not a hard CI gate, until the real total is reachable"
+        — admits a narrow reading (not *that* gate) and a broad one (not *any*
+        hard gate), and should be amended to say which. D6 is amended below.
+      - **Q2, the mechanism:** **UNSOUND as proposed.** A *stored* baseline
+        cannot ship over a measurement that moves with the environment: the stub
+        body pointer is absolute, so the total moves by 89 characters per
+        character of package-root prefix, and a ratchet over a drifting number
+        locks at the shortest path any runner ever had. The seat named the
+        in-repo precedent for exactly this — `estate-count-budget.json`, deleted
+        because its stored number moved on nearly every merge — and recommended
+        **base-ref comparison instead**: measure both revisions in one fixed-length
+        path, require `head <= base`, store nothing.
+      - **One seat finding is wrong, and correcting it does not rescue the
+        proposal.** The seat read an unexplained 4,139-character environment
+        variance out of the evidence page. It is not environment variance: 4,139
+        is the predicted effect of the **stub-form change** (111,197 -> 107,058),
+        and the environment term is the separate, documented 3,738 = 42 x 89. So
+        the arithmetic reconciles. What survives is the structural half, which was
+        never in doubt and is the half that decides: the figure is
+        environment-dependent by construction, so a stored baseline measures the
+        runner as much as the corpus.
+      **Disposition: the step stays open, and the reason is now the mechanism
+      rather than only the corpus.** Closing it needs a measurement that is
+      environment-independent before any ratchet over it means anything — a
+      normaliser that strips or substitutes every absolute-path occurrence, with
+      tests over different root lengths, or the base-ref form the seat preferred,
+      which costs two real installs per CI run. Neither exists. Noted rather than
+      built, because the council was asked whether to build it and said not in
+      this shape.
 - [x] **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
       projector to the installer, records why the template value is not a
       consent, and marks ADR-228's global-layer statement superseded.
@@ -360,7 +404,8 @@ Reproduced on 2026-10-01:
 | D3 | reversible-technical | agent | The template value is not consent to thin | The template already says `delivery`; reading it would flip every consumer as a side effect of the resolver fix | — |
 | D4 | product-owned | owner | Whether the default flips | Consumer-facing default change; blocker `default-flip-of-the-installed-layer` | — |
 | D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
-| D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
+| D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable. **Amended 2026-10-12, on the council's Q1 finding that the original wording admitted two readings.** The intended reading is the NARROW one: D6 settles the mechanism it tested — a hard gate at 75,000 — and does not bar every hard gate forever. A different mechanism is not governed by it and may be proposed. What governs a different mechanism is D7 | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
+| D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
