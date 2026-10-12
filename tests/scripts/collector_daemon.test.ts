@@ -165,8 +165,10 @@ async function waitForNoDaemonAt(root: string, timeoutMs = 10_000): Promise<void
         const mine = enumerateDaemonProcesses({ includeTestOwned: true }).filter((l) => l.includes(root));
         if (mine.length === 0) return;
         for (const line of mine) {
+            const pid = Number(pidOf(line));
+            if (!Number.isInteger(pid) || pid <= 0) continue;
             try {
-                process.kill(pidOf(line), 'SIGKILL');
+                process.kill(pid, 'SIGKILL');
             } catch {
                 /* already gone */
             }
