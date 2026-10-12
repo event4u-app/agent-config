@@ -4,7 +4,13 @@ status: accepted
 date: 2026-08-13
 decision: global-install-does-not-emit-paths
 supersedes: —
-superseded_by: —
+superseded_by: ADR-284
+superseded_scope: >-
+  Only the verbatim-copy limb — "the global install continues to copy
+  `dist/agent-src/rules` verbatim" — and only for a host inside
+  `lean_projection.hosts` on an install whose consumer-controlled layer sets
+  `lean_projection.mode: delivery`. The `paths:` limb of the same sentence, and
+  the compaction objection it rests on, are NOT superseded and stand as written.
 phase: road-to-inbox-harvest-2026-08-b-release-integrity
 type: structural
 review_trigger: >-
@@ -50,6 +56,22 @@ that roadmap unarchivable at 12/12 steps done.
 > Recorded by step 0.5 of `road-to-a-rule-carrier-that-works-outside-the-repo`,
 > whose Phase 0 changes no behaviour by design. The repair, if the title is what
 > should hold, belongs to that file's Phase 1 or to a successor ADR — not here.
+
+> **Scoped supersession, 2026-10-12 — the OTHER limb, by a different file.**
+> [ADR-284](ADR-284-installer-honours-the-host-axis-on-an-explicit-opt-in.md)
+> supersedes the **verbatim-copy** limb of this record's operative sentence, and
+> only that limb: on an install whose consumer-controlled layer sets
+> `lean_projection.mode: delivery` for a host inside `lean_projection.hosts`, the
+> global install writes the stub form rather than a verbatim copy of
+> `dist/agent-src/rules`. A consumer who sets nothing still gets the verbatim
+> copy, so the statement became conditional rather than false.
+>
+> The `paths:` limb is untouched, and so is the objection it rests on — that
+> path-scoping a safety-floor or Iron-Law rule makes the obligation stop applying
+> after `/compact`. ADR-284 neither weighs nor answers it, and says so in its own
+> `## Not reopened`. The two limbs now have two different owners, which is what
+> the successor note above could only describe: this record stays `accepted` for
+> the limb it is titled after.
 
 ## Context
 

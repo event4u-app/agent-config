@@ -149,6 +149,37 @@ Reproduced on 2026-10-01:
 > decides open-vs-blocked from the inline annotation alone and never parses
 > `## Blockers`, so without it an impossible step reads as runnable work to the
 > one mechanism that acts on it, and every stop fire re-engages an agent into it.
+>
+> **Re-screened 2026-10-12 under `/roadmap:process-full`, and 2.3 has a SECOND
+> reason that is not the cancelled observer.** The capability screen asks per
+> step whether the agent can execute it at all, and a `## Blockers` entry is
+> evidence rather than a verdict — so each of the three was re-tested against the
+> tree rather than against its marker.
+>
+> 2.3 is the one that could have survived, because its own text names a source
+> that does not need the host event: "from records the dispatcher already
+> writes". Those records are real and the writer is in the tree —
+> `recordArrival` / `arrivalPath` in `src/scripts/hooks/rule_inject_hook.ts`
+> append one JSONL row per fire under the user-global
+> `state/rule-inject/<project-key>/<session>.arrival.jsonl`. **The corpus on this
+> machine is 16 files and every one of them is the fixture
+> `injection-budget-dispatch-test.arrival.jsonl`, under 16 synthetic
+> `injection-dispatch-*` project keys written by the hook's own test suite on
+> 2026-10-03 to 2026-10-05. Zero rows come from a real session, and no project
+> key corresponds to a real project.** So the instrument 2.3 names exists and is
+> empty, which is a different finding from the instrument not existing and is
+> worth separating: 2.3 needs sessions to have been recorded, not an observer to
+> be scheduled, and it will stay unsatisfiable on this machine until one is.
+> Its second half — correlating a body-path read with a preceding delivery —
+> additionally needs a transcript reader that nothing here binds.
+>
+> 2.1 and 2.4 were re-tested and are unchanged: `agents/evidence/analysis/`
+> matches no `installed-arrival-*.md`, and
+> `src/scripts/check_standing_rule_delivery.ts:289` still calls
+> `InstructionsLoaded` "a host feature this suite does not yet bind", with
+> `instructionsLoadedRecord()` existing only to report the record's absence.
+> Both remain externally impossible for the agent, which is the only blocker
+> class ADR-237 leaves standing. The markers stay as written.
 
 ## Phase 3 — The default, decided
 
@@ -161,6 +192,20 @@ Reproduced on 2026-10-01:
       the flip with a computed decision and an install-time brake, and its 5.3 is
       where the default changes. The owner's (a) of D5 still sets the condition.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t default` -> 0
+
+      **Re-screened 2026-10-12 — this step can no longer close in this file, and
+      its verify line says so by accident.** `-t default` matches **no test** in
+      `tests/scripts/install_thin_layer.test.ts`; the only occurrence of the word
+      there is a comment at line 15 naming this very blocker. That is not a test
+      somebody forgot to write — it is the shape of a step whose subject moved.
+      After the re-cut, the code that would make such a test pass is built by
+      `road-to-a-setup-that-decides-itself` Phase 3 (a decision function that
+      reads no settings key) and switched on by its 5.3, so the test belongs
+      beside the code that satisfies it. Left `[ ]` rather than `[~]` or `[-]` on
+      purpose: `[~]` needs a receiver carrying `parent_roadmap:` and these two
+      roadmaps are siblings (`relates: extends`), not parent and child, while
+      `[-]` is cancellation and owner-reserved. Open with its producer named is
+      the honest state; a glyph that laundered it into done or dropped is not.
 - [ ] **3.2 The ceiling becomes required.** The installed-layer report fails CI
       above the measured thinned total plus 10 %, never above 75,000, and moves
       down only.
@@ -185,10 +230,76 @@ Reproduced on 2026-10-01:
       does not belong with them: it waits on the FULL-BODIED SET SHRINKING, which no
       registered blocker in this file gates and which the flip would not change. A
       marker naming the flip would misstate what this step is waiting for.
-- [ ] <!-- blocked-by: default-flip-of-the-installed-layer | asked: no — the blocker is registered in this file, already answered (a) by the owner on 2026-10-06, and waits on the arrival record rather than on a new question --> **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
+
+      **Re-opened and put to the council on 2026-10-12 — verdict REQUEST_CHANGES,
+      and this step now has a second reason that is better than D6's.** The
+      proposal was not D6's rejected mechanism: not a hard gate at 75,000, but a
+      **shrink-only ratchet seeded at the measured total plus 10 %**, green on
+      `main` the day it lands, with 75,000 recorded as the destination — the
+      shape `src/config/preamble-payload-budget.json` already uses for the same
+      tension. Council, 2026-10-12, convened on the two-seat configuration and
+      **concluded with one seat present**: the anthropic seat answered, the
+      openai seat failed to exchange (`os_error: ENOBUFS`). A one-seat reading is
+      recorded as a one-seat reading — it is not provider-diverse and it is not a
+      2/2 convergence.
+      - **Q1, the lock:** D6 does **not** bar the ratchet under a strict
+        mechanism-match reading, because D6 tested a hard 75,000 gate and this is
+        a different mechanism. The seat added that D6's own wording — "stays a
+        reported finding, not a hard CI gate, until the real total is reachable"
+        — admits a narrow reading (not *that* gate) and a broad one (not *any*
+        hard gate), and should be amended to say which. D6 is amended below.
+      - **Q2, the mechanism:** **UNSOUND as proposed.** A *stored* baseline
+        cannot ship over a measurement that moves with the environment: the stub
+        body pointer is absolute, so the total moves by 89 characters per
+        character of package-root prefix, and a ratchet over a drifting number
+        locks at the shortest path any runner ever had. The seat named the
+        in-repo precedent for exactly this — `estate-count-budget.json`, deleted
+        because its stored number moved on nearly every merge — and recommended
+        **base-ref comparison instead**: measure both revisions in one fixed-length
+        path, require `head <= base`, store nothing.
+      - **One seat finding is wrong, and correcting it does not rescue the
+        proposal.** The seat read an unexplained 4,139-character environment
+        variance out of the evidence page. It is not environment variance: 4,139
+        is the predicted effect of the **stub-form change** (111,197 -> 107,058),
+        and the environment term is the separate, documented 3,738 = 42 x 89. So
+        the arithmetic reconciles. What survives is the structural half, which was
+        never in doubt and is the half that decides: the figure is
+        environment-dependent by construction, so a stored baseline measures the
+        runner as much as the corpus.
+      **Disposition: the step stays open, and the reason is now the mechanism
+      rather than only the corpus.** Closing it needs a measurement that is
+      environment-independent before any ratchet over it means anything — a
+      normaliser that strips or substitutes every absolute-path occurrence, with
+      tests over different root lengths, or the base-ref form the seat preferred,
+      which costs two real installs per CI run. Neither exists. Noted rather than
+      built, because the council was asked whether to build it and said not in
+      this shape.
+- [x] **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
       projector to the installer, records why the template value is not a
       consent, and marks ADR-228's global-layer statement superseded.
       verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0
+
+      **Closed 2026-10-12 — and the blocked marker it carried was wrong, not
+      merely stale.** The step has three stated clauses and the blocker added a
+      fourth from outside: `default-flip-of-the-installed-layer` resolves "when
+      the ADR of step 3.3 records (a) with the arrival record it relied on". No
+      clause of 3.3 mentions the flip. Reading the blocker's clause back onto the
+      step made an ADR that was fully writable today look impossible, which is the
+      `## Blockers`-entry-as-verdict failure the capability screen exists to
+      refuse. The marker is removed rather than re-dated.
+      [ADR-284](../../docs/decisions/ADR-284-installer-honours-the-host-axis-on-an-explicit-opt-in.md)
+      discharges all three clauses: decision 1 extends ADR-267 decision 2 to the
+      installer, decision 2 records D3, and the record performs a **scoped**
+      supersession of ADR-228 — the verbatim-copy limb only, with the `paths:`
+      limb and its compaction objection named in `## Not reopened` and left to
+      `road-to-a-rule-carrier-that-works-outside-the-repo`. ADR-228 carries the
+      reciprocal `superseded_by` + `superseded_scope` and stays `accepted` for
+      the limb it is titled after.
+      **It deliberately does NOT discharge the flip blocker.** Decision 6 states
+      the owner's (a), states its condition, and states that the condition is
+      unmet — a record of the decision, never the decision taken. The blocker's
+      `Resolved when:` is repaired below to name a producer that is still open,
+      because a resolution clause pointing at a closed step cannot fire.
 - [x] **3.4 A new routed rule declares its cost.** A routed rule added after
       the flip fails CI without a law section under 2,000 characters and at
       least one trigger a prompt can fire.
@@ -221,6 +332,19 @@ Reproduced on 2026-10-01:
       > the step asks whether the FLIP made another host worse, and there has
       > been no flip, so closing it now would assert a guarantee about a state
       > that does not exist. It closes with 3.1, on a re-run, not on this note.
+      >
+      > **Re-verified 2026-10-12, and the last sentence above is now wrong.**
+      > `check_host_tree_parity` still exits 0 — `2 non-delivery host tree(s)
+      > byte-identical to eager-all · delivery hosts [claude-code]` — so both
+      > limbs continue to hold. What changed is the referent: 3.1 was re-cut the
+      > same day, and the flip it names now happens in
+      > `road-to-a-setup-that-decides-itself` 5.3. "It closes with 3.1" therefore
+      > points at a step that can no longer close here. This criterion is gated
+      > on that file's 5.3 and on a re-run of the command above against the tree
+      > as it stands after it — not on any work left in this roadmap. Recorded
+      > rather than closed, because the guarantee it asks for is still about an
+      > event that has not happened; what is corrected is where the event will
+      > happen, which until now this file named wrongly.
 
 ## What this roadmap deliberately does not do
 
@@ -254,8 +378,16 @@ Reproduced on 2026-10-01:
   once `agents/evidence/analysis/installed-arrival-*.md` exists for the current
   host version and the step 2.2 fixture is green, or (b) keep the thinned layer
   opt-in and record in the ADR of step 3.3 that consumers choose it.
-- **Resolved when:** the ADR of step 3.3 names (a) or (b), with the arrival
-  record it relied on.
+- **Resolved when:** an ADR names (a) or (b) **with the arrival record it relied
+  on**. **Re-pointed 2026-10-12:** this clause used to name "the ADR of step
+  3.3", and step 3.3 is now closed by ADR-284, which records the owner's (a) and
+  its unmet condition without discharging either. A resolution clause whose named
+  producer is closed can never fire, so the clause names the condition instead of
+  a step. Two files can supply it today: a successor ADR here once
+  `agents/evidence/analysis/installed-arrival-*.md` exists, or step 4.1 of
+  `road-to-a-setup-that-decides-itself`, whose "One ADR" already supersedes
+  ADR-267 decision 3, ADR-278 and this file's D3 — and whose Phase 5.3 is where
+  the default now actually changes.
 - **Recommendation:** (a) — every default install otherwise keeps tripping the
   host notice at 2.25 times its limit, and the opt-in records are the evidence
   the council asked for before an irreversible-looking change.
@@ -272,7 +404,8 @@ Reproduced on 2026-10-01:
 | D3 | reversible-technical | agent | The template value is not consent to thin | The template already says `delivery`; reading it would flip every consumer as a side effect of the resolver fix | — |
 | D4 | product-owned | owner | Whether the default flips | Consumer-facing default change; blocker `default-flip-of-the-installed-layer` | — |
 | D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
-| D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
+| D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable. **Amended 2026-10-12, on the council's Q1 finding that the original wording admitted two readings.** The intended reading is the NARROW one: D6 settles the mechanism it tested — a hard gate at 75,000 — and does not bar every hard gate forever. A different mechanism is not governed by it and may be proposed. What governs a different mechanism is D7 | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
+| D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
