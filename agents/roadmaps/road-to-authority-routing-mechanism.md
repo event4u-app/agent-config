@@ -154,7 +154,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
 
 *Record, required sequencing, item 2.*
 
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.1 Run the council on the committed-contract question.**
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **2.1 Run the council on the committed-contract question.**
       **Round run 2026-10-10 — SPLIT 1/1, which escalates (D13).** anthropic picked
       (b) conditional on the forge blocker being resolvable; openai picked (a) with an
       atomic watch-list entry. The convergent half is recorded and binding; the
@@ -166,12 +166,12 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       `docs/contracts/dangerous-action-predicates.md`, or a section appended
       to `docs/contracts/ratification-artifact.md`? Record the verdict as a
       `## Decisions` row.
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.2 Commit the six-predicate test verbatim**, at the location 2.1
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **2.2 Commit the six-predicate test verbatim**, at the location 2.1
       chose, with the "uncertainty routes to council, a council finding a
       predicate applies routes authorisation to the user" rule (record § 4)
       stated beside it.
       verify: `grep -rc 'Non-trivial loss, disclosure, expenditure' docs/contracts/` -> /^[1-9]/
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.3 Separate the collapsed verdict into three fields** in the same
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **2.3 Separate the collapsed verdict into three fields** in the same
       contract: `technical_outcome` (did the proposed change do what it
       claims), `authority_class` (dangerous / non-dangerous, per 2.2's test),
       `authorisation` (may it proceed — only ever set by the authority 2.2
@@ -181,7 +181,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       during migration — this step documents the mapping, it does not change
       the consumers.
       verify: `grep -c 'authority_class' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.4 Extend the `refused` vocabulary** to distinguish
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **2.4 Extend the `refused` vocabulary** to distinguish
       `refused-correctable` (names a concrete in-scope defect or asks for
       obtainable evidence — record § 6, "the agent remediates and
       re-submits"), `refused-non-convergent` (the existing `non-convergent`
@@ -191,7 +191,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       `refused-correctable` retains the prior objection and shows its
       disposition (record § 6).
       verify: `grep -c 'refused-correctable' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.5 Define the review-instance model**: a stable identity across
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **2.5 Define the review-instance model**: a stable identity across
       revisions of the same proposal, carrying its full history of prior
       objections and dispositions, so a remediation is provably the same
       review continuing rather than a fresh one laundering a prior refusal.
@@ -229,18 +229,18 @@ a stub.*
       layer (`check_platform_anchor`, `src/config/platform-anchor.json`) that
       `ratification-artifact.md` already trusts for branch integrity. Record
       the verdict as a `## Decisions` row.
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **3.2 Implement the registry** per 3.1's verdict, as an additive layer
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **3.2 Implement the registry** per 3.1's verdict, as an additive layer
       beside the existing platform-anchor trust stack — never a replacement
       for it without its own ratification (the contract's own rule: "a later
       change that removes the deny needs its own ratification and cannot cite
       this one").
       verify: `test -f src/config/approver-registry.json` -> 0
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **3.3 Build the verifier** that checks a ratification record's bound
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **3.3 Build the verifier** that checks a ratification record's bound
       attestation against the registry from 3.2, read from the BASE revision
       only — mirroring `check_kernel_edit_ratified.ts`'s existing defence
       against a candidate diff supplying the code that judges it.
       verify: `npx vitest run tests/scripts/check_approver_registry.test.ts` -> 0
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **3.4 Close the dealbreaker.** Choose exactly one, and record which:
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **3.4 Close the dealbreaker.** Choose exactly one, and record which:
       (a) the verifier and registry from 3.2–3.3 sit in a protected subset of
       the gated surface, needing the higher approval 2.1/3.1's council work
       defines; (b) they are externally verified (a mechanism outside this
@@ -369,10 +369,10 @@ merge candidate."*
       6.3 is still the step that closes it. Reading this box as evidence the
       defect is handled would be exactly the silent weakening the step refused
       to patch into the gate.
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new --> **6.2 Implement stable review-instance identity** (Phase 2.5's model,
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **6.2 Implement stable review-instance identity** (Phase 2.5's model,
       now wired) and the chosen serialisation mechanism from 6.1.
       verify: `npx vitest run tests/scripts/check_completion_review.test.ts` -> 0
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new --> **6.3 Wire `check_completion_review` to express a same-day re-review**
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **6.3 Wire `check_completion_review` to express a same-day re-review**
       (record defect 4) using 6.2's review-instance identity and 2.4's
       extended `refused` vocabulary — never by widening what counts as "the
       same review" without the identity check.
@@ -413,7 +413,7 @@ what the gate attests."*
       Record: `agents/evidence/council/live-tree-check-classification-20261010.md`
       and its `.question.md`.
       **Screened 2026-10-12 and deliberately NOT re-run.** What the seats asked
-      for is named in D13's own `revisit if`: a per-check contract registry from
+      for is named in D14's own `revisit if`: a per-check contract registry from
       which class, prerequisites, gate membership and refresh authority derive
       mechanically. No such registry exists in the tree, so a second round would
       put the same question to the same seats with no new substance behind it —
@@ -421,6 +421,22 @@ what the gate attests."*
       is the work this step is actually waiting on, it is larger than a step of
       this phase, and it is named here rather than built so that the next run
       sees a stated prerequisite instead of an open box that looks runnable.
+      **Re-screened 2026-10-13 against the tree, and the prerequisite is now
+      LOCATED rather than merely absent.** `src/config/gate-coverage.yml` is a
+      per-check registry that already exists and is already CI-enforced: 113
+      rows keyed by script stem, each carrying `argv`, `min_scanned`, `corpus`,
+      `status`, and optionally `ci_invocation` and `canary`. All four Phase 7
+      checks the round named — `check_gate_completeness` and the three
+      unclassified ones — resolve against it, and `check_gate_completeness`
+      carries a row (`min_scanned: 180`, corpus stated, `status: enforced`).
+      What it does NOT carry is the four fields D14's `revisit if` asks for:
+      class, prerequisites, gate membership and refresh authority. So the
+      prerequisite is not "build a registry from nothing" — it is **four fields
+      on an existing one**, plus the honest denominator problem that file
+      already states about itself: 113 of 354 gate scripts, 31.9 %, so a class
+      field added there would classify under a third of the population and the
+      round's own 16 would need the rest of the rows first. That is the shape of
+      the work, and naming it is what this screen adds over the previous one.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
@@ -441,14 +457,63 @@ current (unclassified, red) state — no check gets silently un-demoted.*
 
 *Record, required sequencing, item 8.*
 
-- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new --> **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
       (N decided by the council in 8.2) without gating anything — collect a
       false-positive / false-negative report comparing its verdicts against
       what actually happened.
       verify: `test -f agents/evidence/analysis/authority-verifier-shadow-run.md` -> 0
-- [ ] **8.2 Run the council on the shadow-run's acceptance bar** — what
+      **Two defects in this step's own text, found 2026-10-13 by the 8.2 round
+      and recorded in D18 rather than patched here.** FIRST, it is circular with
+      8.2 as written: this step takes its N *"decided by the council in 8.2"*
+      while 8.2 reads as an assessment of this step's report. The repaired order
+      is D18's nine-step sequence — freeze the surface, define the label
+      protocol, register the numbers, THEN run. SECOND, and sharper:
+      *"comparing its verdicts against what actually happened"* treats merged-PR
+      outcomes as ground truth, and they are observational and censored — a
+      merged PR with no reported incident may carry a latent defect, a near-miss,
+      or an issue another control caught. openai's hardest pushback of the round:
+      *"Increasing N cannot cure systematically incorrect or censored labels; it
+      merely produces a more precise measurement of the wrong thing."* The step
+      needs an observation window, a reference-label protocol with indeterminate
+      outcomes preserved, and independent adjudication before its report means
+      anything. Rewriting the step text is held for the same same-day stamp
+      reason recorded at 8.2.
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap; this marker records that the 2026-10-13 round added this step to the gate's reach, and asks nothing new --> **8.2 Run the council on the shadow-run's acceptance bar** — what
       false-positive / false-negative rate, over what N, justifies
       activation. Record the verdict.
+      **Round run 2026-10-13 — convergent 2/2, and BOTH SEATS WITHHOLD
+      GREENLIGHT on the step. It therefore stays open.** The step demands a
+      false-positive rate, a false-negative rate and an N; none of the three has
+      a stable referent while the decision surface (2.3–2.5) is undefined, so a
+      number set now would be unfalsifiable. **The option that looked like
+      progress was rejected by both:** pre-registering the FORM of the bar and
+      deferring the numbers does not close this step, it rewrites it —
+      *"Closing it without those values rewrites the requirement rather than
+      fulfilling it"* (openai); *"a new preparatory step, not a redefinition of
+      8.2's completion criteria"* (anthropic). The 7.1 precedent was put to them
+      explicitly and held: an acceptance bar is the same kind of thing as a
+      classification, and both need stable semantics first.
+      **Hold is NOT "wait for the data" — the opposite.** Once the surface is
+      frozen, the numbers are registered BEFORE corpus labels or verifier
+      outputs are disclosed. Record, with the repaired nine-step sequence, the
+      eight disqualifiers that no rate can trade away, the sealed-report
+      contents and the kill switch:
+      `agents/evidence/council/activation-bar-20261013.md`. Recorded as D18.
+      **The step is now marked blocked** on `external-bootstrap-boundary-for-phases-2-3`
+      per anthropic's finding 6, which went further than its peer: with one
+      active maintainer who is also the sole proposer and the only member of the
+      only reachable team, *"'independent review' is not achievable through role
+      separation or process design"* — so the independent adjudicator step 8.2's
+      own bar requires does not exist either.
+      **The non-closing predecessor both seats asked for is NOT in this change,
+      and the reason is this roadmap's own defect 4 for the third time.** Adding
+      a step adds a checkbox, `lint_plan_risk_register` counts checkboxes
+      file-wide as a substantial change, and the `reviewed:` stamp already reads
+      today's date — set earlier today by the D13 repair — so it cannot be
+      re-stamped to express a second same-day review. Measured, not inferred:
+      the same wall step 6.1 documented and the D13 repair waited two days for.
+      The predecessor is owed on the next calendar day; its content is fully
+      specified in D18's record, so nothing is lost but a day.
 - [ ] **8.3 Activate the verifier as a required gate ONLY through the
       external bootstrap authorisation this roadmap's break-glass blocker
       (`break-glass-authority-and-bootstrap-approval`) names** — never
@@ -461,6 +526,21 @@ current (unclassified, red) state — no check gets silently un-demoted.*
       identity verification unavailable beyond a declared duration, false
       rejections blocking all constitutional maintenance.
       verify: `npx vitest run tests/scripts/break_glass_stop_conditions.test.ts` -> 0
+      **D19, 2026-10-13: AC-4 as written protects the INITIAL activation only,
+      and 8.3's six conditions do not close that gap.** Both seats of the
+      activation-bar round found it unprompted: nothing in AC-4 prevents the
+      gate being weakened after it is live — the verifier changed, the rule
+      removed, a bypass introduced. An approval must therefore bind IMMUTABLE
+      VERSIONS — verifier, decision contract, configuration, corpus protocol,
+      enforcement mechanism — rather than an act in time, and a kill switch with
+      automatic suspension triggers must exist BEFORE activation, with the
+      authority to suspend held separately from the authority to reactivate.
+      **The AC-4 text is deliberately NOT edited here.** Its body sits inside
+      `## Acceptance Criteria`, which `lint_plan_risk_register` hashes, and
+      today's stamp was already spent on the D13 repair — the same same-day wall
+      recorded at 8.2 and 6.1. The finding is binding from D19 and the AC
+      sentence is owed on the next calendar day; recording it here rather than
+      silently widening AC-4 later is the point.
 
 *Exit: 8.3's six conditions each have a passing test and the bootstrap
 authorisation blocker is resolved. Rollback: the verifier stays shadow-only —
@@ -468,24 +548,35 @@ reverting 8.3 alone (never 8.1–8.2's evidence) is sufficient, since nothing
 before 8.3 gates anything.*
 
 
-> **Known defect, 2026-10-10 — two decisions share the id `D13`, and the repair
-> is deliberately NOT in this change.** PR #2293 numbered the Phase 7
-> classification `D13`, which PR #2286 had already used for the 2.1 split. The
-> two rows are **not** byte-identical, so deduplicating on the assumption they
-> are copies would delete a real record; the repair is to renumber the Phase 7
-> row and follow its one inbound reference.
+> **Repaired 2026-10-13 — the `D13` collision is gone, and the calendar is what
+> released it, not a fix to the gate.** Two decisions shared the id: PR #2293
+> numbered the Phase 7 classification `D13`, which PR #2286 had already used for
+> the 2.1 split. The rows were **not** byte-identical, so deduplicating on the
+> assumption they were copies would have deleted a real record. The repair was,
+> as planned, a one-row rename — the Phase 7 row is now `D14`, the id left free
+> for exactly this — plus its two inbound references: the one inside
+> `## Acceptance Criteria`, and step 7.1's own back-reference to the row carrying
+> its `revisit if`. Nothing was merged and nothing was dropped.
 >
-> That reference sits inside `## Acceptance Criteria`, and
-> `lint_plan_risk_register` hashes the whole AC body — so the repair cannot land
-> on the same calendar day as the stamp it would have to re-date. It is held
-> here rather than worked around, for the reason step 6.1's note gives at
-> length: the obvious patch to that gate cannot distinguish a re-reviewed
-> same-day change from an un-reviewed one.
+> **Why it could not land on 2026-10-10 and can now.** One of those references
+> sits inside the Acceptance Criteria body, which `lint_plan_risk_register`
+> hashes; editing it is a substantial change, and the baseline the gate compares
+> against is the commit that INTRODUCED the current `reviewed:` value. While the
+> stamp read the same calendar day as the repair, re-stamping produced no new
+> value, the run of commits carrying it extended backwards, and the gate reported
+> stale against a plan that had just been reviewed. The stamp now moves
+> `2026-10-12` → `2026-10-13`, which breaks that run at this commit — so the
+> baseline is this commit, and the comparison is against the content actually
+> reviewed.
 >
-> **`D14` is deliberately left free**, and the gap is not an accident: it is
-> the id the Phase 7 row takes when the renumber lands. The merge-serialisation
-> decision below is `D15` for that reason, so the repair is a one-row rename
-> with no second collision behind it.
+> **The defect that caused the wait is UNCHANGED, and reading this repair as
+> evidence otherwise would be the silent weakening step 6.1 refused to patch
+> in.** `lint_plan_risk_register` still cannot express a same-day re-review, and
+> neither can `check_completion_review`. Both wait on review-instance identity —
+> steps 2.5 and 6.3 — not on a date. This is the second held item the calendar
+> has released rather than the mechanism (step 6.1 was the first), which is
+> itself the measurement: a governance gate whose only exit is "wait a day" is
+> one the identity work has not reached yet.
 
 ## Decisions
 
@@ -504,11 +595,15 @@ before 8.3 gates anything.*
 | D11 | destructive-owned | council:2026-10-10 design, 2/2 present, peer review | 1.1 — the hold is **(c)**: a forge-side approval administered by a separately authorised principal, outside the candidate branch, required before the first Phase 2 authority-expanding merge and covering Phase 3. Neither shape the step anticipated was selected: a doc-only sentence is a description, not a hold, and a candidate-branch CI check is inside the write boundary the record's dealbreaker names. Condition 4 of `ratification-artifact.md` routes **Phase 2** to the owner (both seats) but does **not** conclusively reach Phase 3's verifier or approver registry (both seats) — the enumeration names computing a subject, writing a record, asking questions and deriving a verdict, and a verifier checks an attestation instead. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2 present, $0.00 subscription transport. Record and prompt: `agents/evidence/council/authority-routing-hold-form-20261010.md` and its `.question.md`. Split on scope: anthropic anchors Phase 3 only (Phase 2 already condition-4 routed, conf. 0.85); openai anchors both (Phase 2 defines the semantics Phase 3 will later bind, conf. 0.91). The stronger reading was taken on the parent record's own precedent — condition 4 routes a decision to a person, it does not prevent a merge. | condition 4's enumeration is amended to reach verification machinery explicitly, or the external control proves to block all constitutional maintenance |
 | D12 | reversible-technical | council:2026-10-10, same run | Phase 3 does not begin until the external approval path is **active and tested against an attempted bypass**. Designing or documenting it does not unblock implementation. | openai, unprompted and not in step 1.1's text; anthropic's § what-it-does-not-guarantee reaches the same place from the audit side | the bypass test proves unconstructible without production credentials |
 | D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **SPLIT, escalates** | 2.1 — the LOCATION of the six-predicate test is **not decided**: anthropic (b), a section of `ratification-artifact.md`, conditional on the forge blocker being resolvable (conf. 0.78); openai (a), a new `docs/contracts/dangerous-action-predicates.md` added atomically to the gate's watch list (conf. 0.88). What IS decided, both seats: whichever file holds the predicates **joins the gate's watch list in the same change**, references point at one canonical file and no second document restates them, and the sequence is contract-plus-watch-list-entry atomically → negative regression test that weakening it without a record is caught → only then may downstream routing depend on it. Fail closed: a trusted gate that cannot load the file or establish its comparison base stops authority routing; there is no temporarily-unwatched state. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/dangerous-action-predicates-home-20261010.md` and its `.question.md`. openai's unrefuted pushback: being on the watch list is not yet a security boundary, because the evidence shows the file is watched and not that the watcher runs from a revision the candidate cannot alter — the contract says the same ("THE GATE ADDS A REFUSAL. IT DOES NOT ADD AN ANCHOR"). Both seats' conditions reduce to `external-bootstrap-boundary-for-phases-2-3`. | the blocker is shown permanent (moves anthropic to (a)), a second consumer needs versioned independence (same), or trusted forge-side tooling is shown able to validate only an embedded definition atomically (moves openai to (b)) | <!-- ref-ignore -->
-| D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **classification convergent, step completion WITHHELD** | 7.1 — of the 16 checks genuinely red on the trunk: `check_gate_completeness` is a **governed snapshot** (refresh only on a reviewed change to population, scope, counting semantics or partition that makes the old count non-comparable; the agent may calculate and propose, a gate-policy CODEOWNER or the authority-record owner approves, never the agent that calculated it; refreshing because violations rose is forbidden, and it is blocked NOW until the 23 new violations are enumerated by rule); **12 are invariants**; **3 are unclassified** pending their predicates. **Zero tolerances, zero observations.** | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Both tables agree on all 16. Population measured at `bbe5b73be` after a first sweep was discarded for a harness fault (no `timeout(1)` on macOS) and two controls proved the rerun. Record and prompt: `agents/evidence/council/live-tree-check-classification-20261010.md`. openai's dissent: #1 holds TWO objects — the numeric baseline is a snapshot, the prohibition on unjustified new debt is an invariant, and one class field cannot carry both. anthropic's dissent: the step conflates classification with gate membership. | the three abstentions gain their predicates, or a per-check contract registry exists from which class, prerequisites, gate membership and refresh authority derive mechanically |
+| D14 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **classification convergent, step completion WITHHELD** | 7.1 — of the 16 checks genuinely red on the trunk: `check_gate_completeness` is a **governed snapshot** (refresh only on a reviewed change to population, scope, counting semantics or partition that makes the old count non-comparable; the agent may calculate and propose, a gate-policy CODEOWNER or the authority-record owner approves, never the agent that calculated it; refreshing because violations rose is forbidden, and it is blocked NOW until the 23 new violations are enumerated by rule); **12 are invariants**; **3 are unclassified** pending their predicates. **Zero tolerances, zero observations.** | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Both tables agree on all 16. Population measured at `bbe5b73be` after a first sweep was discarded for a harness fault (no `timeout(1)` on macOS) and two controls proved the rerun. Record and prompt: `agents/evidence/council/live-tree-check-classification-20261010.md`. openai's dissent: #1 holds TWO objects — the numeric baseline is a snapshot, the prohibition on unjustified new debt is an invariant, and one class field cannot carry both. anthropic's dissent: the step conflates classification with gate membership. | the three abstentions gain their predicates, or a per-check contract registry exists from which class, prerequisites, gate membership and refresh authority derive mechanically |
 | D15 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — convergent | 6.1 — a review instance is stable per branch; an ATTEMPT is immutable and records the scope hash, the target sha and, per touched file, that file's blob hash ON THE TARGET. At merge time a CI-side check re-reads those fingerprints: any differs -> **stale**, a new attempt under the same instance carrying unresolved objections forward; all match -> **valid**, even if the target advanced on other files. Ordering is **first-valid-wins** — non-overlapping branches retry mechanically, overlapping ones go stale. No owner decision in the common path, and the check is never run by the agent. openai adds, undisputed: a compare-and-swap on a sole protected writer, a policy hash per attempt so changing exclusions / diff flags / merge strategy / reviewer authorization / validator code revokes affected attempts mechanically, and fail-closed criteria when attestation, branch protection or lease history cannot be confirmed. | AI council 2026-10-10, anthropic + openai, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/merge-serialisation-20261010.md`. **The limit is recorded as a limit, not a caveat** — openai: "This mechanism establishes atomic, SYNTACTIC continuity of an explicitly defined review projection. It does not prove semantic equivalence, and the architecture must not describe it as doing so." Out of reach: semantic conflicts between non-overlapping changes, anything inside the configured exclusions, generated state, environment-dependent merge behaviour, an administrator bypass. anthropic's dissent: the instance/attempt split adds complexity justified only by Phase 2.5's objection retention, and the mechanism must fail closed when branch protection is disabled. | objection retention proves unnecessary (a flat attempt model then suffices), or a normalized review projection is defined that the landing authority can reconstruct from the prospective result |
+| D16 | contested-technical | council:2026-10-13 design, 2/2 present, peer review — convergent | The hold D11 selected is **dormant-but-declared** (option a). Its precondition — a separately authorised principal — measurably does not exist here, so the requirement is DECLARED and REPORTED, never activated: `forge_protection` carries a sixth row, `authority_surface_external_approval`, reporting `unsatisfied` while no forge-side approval requirement covers the default branch, and Phases 2–3 stay blocked. Both seats stated in their own words that this **makes the blocker checkable and does not resolve it**. Four properties keep it from being theatre: an explicit machine-readable `unsatisfied`; it blocks only authority-expanding changes; it cannot be flipped from the candidate branch; it is described as an unmet precondition, never an active control. anthropic adds a fifth, kept: the status must not be flippable by the owner acting alone. **Rejected:** (b) owner break-glass as bootstrap — both seats, as the parent record's own circularity ("a well-recorded violation remains a violation"); (c) an App or bot — contradicts D7 and buys no independence; (d) recruit a second human — **the intended activation path**, not executable today for want of acceptance, availability, independent administration and a tested enforcement path. The path-scoped narrowing does **not** rescue the requirement from `owner_ruling_2026_09_10`, which is about availability rather than scope. | AI council 2026-10-13, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, blind peer review, 2/2, $0.00. Record and verbatim prompt: `agents/evidence/council/hold-executable-form-20261012.md`. Confidence anthropic 0.75, openai 0.93. **anthropic's residual uncertainty is recorded rather than resolved:** whether this is council-decidable governance-APPLICABILITY (a decided control whose precondition is unmet) or owner-reserved governance SELF-AMENDMENT. Neither seat declared it reserved, so it was taken as decided; anthropic would defer to an owner ruling the other way. A time-boxed escape hatch was proposed in peer review and deliberately NOT adopted — choosing when a declared authority requirement may be relaxed is the self-amendment dimension anthropic had just flagged. | an owner rules the applicability question the other way; or a live test PR shows a named second principal accepted the duty and is forge-enforced across the whole trusted surface while the owner cannot self-satisfy or bypass |
+| D17 | reversible-technical | council:2026-10-13, same run, raised unprompted by openai | The authority surface is **larger than the four files** the blocker named. It also includes `.github/CODEOWNERS`, the `doctor` implementation and its output semantics, the workflows invoking or gating on the verifier, the configuration identifying the default branch or ruleset, and the ruleset itself — *"if those surfaces are mutable without the external approval, the protected four-file boundary can be disabled indirectly."* Three assertions stay separated and only ONE is forge-readable: declared intent (candidate-controlled unless read from a trusted base), observed forge state (what the row reads), principal qualification (partly organizational, derivable from no API response). The shipped row therefore says in its own detail line what it does not establish. | AI council 2026-10-13, same run; openai raised it unprompted and corrected its peer for overclaiming that a diagnostic can show an identity is "administered independently". openai also rejected an activity-based availability proxy ("one PR merge in 90 days") as proving neither acceptance, independent control, nor response capacity — no such test is adopted. | the forge exposes a path-scoped approval primitive that does not route through `CODEOWNERS`, which would move part of assertion 1 into assertion 2 |
+| D18 | contested-technical | council:2026-10-13 design, 2/2 present, peer review — convergent, **step completion WITHHELD** | 8.2 — the activation bar is **held** (option c), and the option that looked like progress was refused: pre-registering the FORM of the bar while deferring the numbers does not close 8.2, it rewrites it. A false-positive rate, a false-negative rate and an N have no stable referent while the decision surface (2.3–2.5) is undefined. **Hold is not "wait for the data":** once the surface is frozen, the numbers are registered BEFORE corpus labels or verifier outputs are disclosed. Repaired nine-step sequence: freeze the decision surface incl. abstention and missing-evidence behaviour → define the reference-label protocol and observation window → pre-register sampling, N, thresholds, confidence, severity weighting, exclusions → freeze verifier and contract hashes → select and independently label the corpus → run and seal the report → independently adjudicate → obtain the separate external authorisation → activate only the evaluated versions. **Disqualifying regardless of rate:** an authorisation or security-critical fail-open; treating absent, unverifiable or malformed evidence as a pass; nondeterminism on identical frozen inputs; evaluation-data leakage into verifier development; any unregistered post-freeze change to code, contract, labels, corpus or exclusions; an irreproducible verdict or missing audit evidence; an unaudited bypass; no genuinely independent activation authority. **The trust boundary is control, not readership** — the builder MAY read the sealed report and challenge factual errors, and may NOT select or exclude cases after seeing outputs, assign or resolve reference labels, be sole interpreter, change the evaluated verifier, or authorise activation. **Steps 8.1 and 8.2 are circular as written**, and 8.1's "compare against what actually happened" treats merged-PR outcomes as ground truth when they are observational and censored. | AI council 2026-10-13, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, blind peer review, 2/2, $0.00. Record and verbatim prompt: `agents/evidence/council/activation-bar-20261013.md`. openai: confidence high, greenlight blocked. The 7.1 precedent was put to the seats explicitly and HELD — an acceptance bar needs stable semantics exactly as a classification does. **One proposed disqualifier was rejected as too broad and the rejection is kept:** "blocks without cause" — a conservative verifier may intentionally block or abstain where evidence is insufficient, so "passes without sufficient evidence" is categorically dangerous while "blocks a case later judged safe" is a measured false positive, not automatically fatal. The non-closing predecessor both seats asked for is specified here and NOT added in the recording change: a new step adds a checkbox, which `lint_plan_risk_register` counts as substantial, and the stamp was already spent on the D13 repair the same day. | the decision surface is frozen (2.3–2.5 land), at which point the numeric round is owed BEFORE any corpus or output is exposed; or a versioned historical corpus is independently labelled under a documented observation window with indeterminate outcomes preserved and inter-reviewer agreement demonstrated, which openai named as the one thing that would move it |
+| D19 | reversible-technical | council:2026-10-13, same run, raised unprompted by both seats | AC-4 protects the **initial activation only**. Nothing in it prevents the gate being weakened once live — the verifier changed, the rule removed, a bypass introduced. An approval must bind IMMUTABLE VERSIONS (verifier, decision contract, configuration, corpus protocol, enforcement mechanism) rather than an act in time, and a kill switch must exist before activation: automatic suspension on any critical false negative, fail-open path, evidence-integrity loss, contract or version drift, or sustained operational failure beyond registered limits; emergency suspension may be immediate but is logged, time-bounded, and held SEPARATELY from the authority to reactivate; reactivation needs a fresh evaluation whenever the validated artifact or the decision surface materially changes. | AI council 2026-10-13, same run; both seats reached it independently of the question asked. Recorded at step 8.3 as well, where the six break-glass conditions sit. | the AC-4 sentence is widened to name version binding and the kill switch, which is owed on the next calendar day after 2026-10-13 — the AC body is hashed by `lint_plan_risk_register` and this date's stamp was spent on the D13 repair |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -525,8 +620,9 @@ before 8.3 gates anything.*
 - **Class:** 3
 - **Ownership:** destructive-owned
 - **Blocks:** step 1.2, and through it every Phase 2 and Phase 3 step — 2.3 is the first commit the hold must precede
-- **What to do:** on the forge, require review from the approver identity D7 already chose (a GitHub account or team, declared through `src/config/platform-anchor.json`) for merges touching the Phase 2–3 surface: `docs/contracts/ratification-artifact.md`, `src/scripts/check_kernel_edit_ratified.ts`, `src/scripts/_lib/ratification_artifact.ts`, `src/config/platform-anchor.json`, and the ruleset configuration itself. Then confirm the identity is the one named, and say so here. Branch protection on this repository is a **ruleset**, not classic protection — the control is a ruleset rule, not a branch-protection setting.
-- **Resolved when:** this blocker's `Status:` is `resolved` naming the ruleset and the approver identity, and `agent-config doctor --online --json` reports that identity under `forge_protection` for the Phase 2–3 paths.
+- **What to do:** on the forge, require review from an approver identity that is NOT the proposing/merging principal (a GitHub account or team, declared through `src/config/platform-anchor.json` per D7) for merges touching the authority surface. That surface is **larger than the four files this blocker first named**, per D17: `docs/contracts/ratification-artifact.md`, `src/scripts/check_kernel_edit_ratified.ts`, `src/scripts/_lib/ratification_artifact.ts`, `src/config/platform-anchor.json`, **plus** `.github/CODEOWNERS`, the `doctor` implementation and output semantics, the workflows that invoke or gate on the verifier, and the ruleset configuration itself. Then run a disposable test PR proving all four properties D16 lists, and say so here. Branch protection on this repository is a **ruleset**, not classic protection — the control is a ruleset rule, not a branch-protection setting.
+- **Resolved when:** a trusted, candidate-independent invocation of `agent-config doctor --online --json` reports `authority_surface_external_approval: satisfied`; at least one accepted reviewer distinct from the proposing/merging principal is eligible to satisfy it; owner self-approval and configured bypass cannot satisfy it; stale approval is dismissed after a relevant push; and live positive AND negative test PRs have demonstrated those properties. **The row alone is not the condition** — it reads the forge half, and D16 records in both seats' own words that making the blocker checkable does not resolve it. Rewritten 2026-10-13 per D16: the prior wording named a probe that had no row able to answer it in either direction, so the condition could not be run.
+- **Measured 2026-10-12, and the result is why the condition above changed.** Live forge: the one active ruleset (`17749383`) carries `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []`, `bypass_actors: []`; `.github/CODEOWNERS` maps every path — all four original Phase 2–3 files included — to `@matze4u`, who is also the only active proposer; the only reachable org team has one member, `@matze4u`. GitHub does not let an author approve their own PR, so **the separately authorised principal D11 requires does not exist on this repository today.** `src/config/platform-anchor.json`'s `owner_ruling_2026_09_10` had already ruled on the same availability fact. The agent-side half is now shipped: `forge_protection` carries a sixth row, `authority_surface_external_approval`, which reports `unsatisfied` against the live forge and distinguishes that from `unread` (an unqueried forge is never a confirmed absence).
 - **Recommendation:** turn it on before Phase 2.3 rather than before Phase 3. anthropic held that condition 4 already routes Phase 2 to the owner and that only Phase 3 needs the anchor; openai held that Phase 2 defines the semantics Phase 3 will later bind, so letting them bootstrap under the old boundary leaves Phase 3 binding an internally authorised constitutional change. The stronger reading was taken because condition 4 routes a *decision* to a person — it does not prevent a *merge*. If anthropic is right the extra coverage costs nothing; if openai is right and it was skipped, the gap is invisible until the verifier is already binding it.
 - **If you do nothing:** step 1.2 stays open and Phases 2 through 8 stay unstartable, which is the safe default and is exactly what the record's required-sequencing item 1 asks for. Nothing degrades; the whole mechanism simply stays unbuilt, and `check_kernel_edit_ratified` keeps running beside `block_kernel_rule_writes` as it does today.
 
@@ -620,9 +716,24 @@ before 8.3 gates anything.*
   1. State the default (provisional / final) and any exception classes, and record it as a `refused-escalate` finality note in `docs/contracts/ratification-artifact.md`.
 - **Resolved when:** This blocker's `Status:` is `resolved` with the policy recorded.
 
+> **AC-1 ticked 2026-10-12, and the tick is a STATE FLIP with no edit to the
+> criterion's body — deliberately.** Its text already names the single
+> outstanding item and the exact condition that closes it: *"Defect 4 is the one
+> outstanding … Step 6.1 is that round. The criterion closes when 6.1 records its
+> verdict; nothing else is missing."* 6.1 is now `[x]` and its verdict is recorded
+> as D15, with its evidence committed at
+> `agents/evidence/council/merge-serialisation-20261010.md`, so defect 4 now has
+> the disposition the criterion asks for — council-decided-and-recorded.
+> **Why no sentence was added inside the criterion:** `lint_plan_risk_register`
+> hashes the Acceptance Criteria body and normalises checkbox STATE out of that
+> hash, so a flip is free while a one-line note is a substantial change that
+> would demand a re-stamp this calendar day cannot express — the same defect-4
+> instance step 6.1 documents at length. The note therefore sits here, outside
+> the hashed body, rather than being skipped or smuggled in.
+
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every one of the six defects the authority-routing record
+- [x] AC-1 — Every one of the six defects the authority-routing record
       surfaced has a disposition traceable to a specific phase step or
       blocker in this file (agent-fixed, council-decided-and-recorded, or an
       owner-routed blocker resolved).
@@ -631,7 +742,7 @@ before 8.3 gates anything.*
       defect 1 → step 4.3 `[x]`, agent-fixed; defect 2 → D1,
       council-decided-and-recorded; defect 3 → steps 5.1/5.2 `[x]` plus D2, both
       forms; defect 5 → blocker `defect-5-merges-ahead-of-completion-review`,
-      **resolved** 2026-10-08 by the owner, plus D9; defect 6 → D13, recorded
+      **resolved** 2026-10-08 by the owner, plus D9; defect 6 → D14, recorded
       this date by the Phase 7 round.
       **Defect 4 is the one outstanding.** It is routed to Phase 6 — the file
       names it at the phase header and again at step 6.3 — but routing is not a
