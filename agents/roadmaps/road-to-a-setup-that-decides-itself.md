@@ -197,8 +197,8 @@ with that file.
   no matching key.
 - [ ] **3.6 The project tree uses the same function**, with the project's own
   dispatcher as its carrier.
-  verify: `check_host_tree_parity` green; ADR-267's three corpus figures
-  reproduce.
+  verify: ADR-267's three corpus figures reproduce, and
+  `./scripts-run src/scripts/check_host_tree_parity` -> 0
 - [ ] **3.7 Declare it.** `doctor` and the receipt print form, reason code, last
   arrival record and demotion state per layer and host.
   verify: snapshot per reason code.
@@ -222,7 +222,7 @@ with that file.
   verify: upgrade fixtures for every prior value.
 - [ ] **4.4 Remove `lean_projection.*`** from template, schema, whitelist
   (`src/scripts/_lib/agent_settings.ts:311-312`), wizard and docs.
-  verify: `grep -rn lean_projection src/config src/server docs/settings-reference.md` → 0.
+  verify: `! grep -rq lean_projection src/config src/server docs/settings-reference.md` -> 0
 - [ ] **4.5 Retire `tiered`** with its install branch; the measured null stays
   in `docs/CLAIMS.md`.
   verify: tests naming `tiered` are deleted with the branch, not skipped.

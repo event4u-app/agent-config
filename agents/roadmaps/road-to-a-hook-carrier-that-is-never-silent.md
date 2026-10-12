@@ -92,7 +92,7 @@ routed rule body with nothing in the session saying so.
   carrier and the stubs need — the dispatcher bundle and the rule bodies of the
   running version — under `~/.event4u/agent-config/`, which already holds the
   install state, and every absolute pointer and carrier path resolves there.
-  verify: `npx`-shaped install fixture, then the cache directory deleted —
+  verify: an npx-shaped install fixture, then the cache directory deleted —
   pointers and dispatcher still resolve.
 - [ ] **1.2 One version on disk.** Upgrade replaces the staged runtime
   atomically (stage, then move); a half-written stage is never the one pointers

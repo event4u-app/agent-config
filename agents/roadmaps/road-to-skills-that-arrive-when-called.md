@@ -132,7 +132,7 @@ needs a transcript.
 
 - [ ] **1.1 Rename the package key.** `context: large` → `context_window: large`
   across the schema, the writer, the six skills and every reader.
-  verify: `grep -rn '^context: large' src/skills` → 0; schema test green.
+  verify: the schema test is green, and `! grep -rq '^context: large' src/skills` -> 0
 - [ ] **1.2 Guard the host's keys.** A lint row: no package-owned skill
   frontmatter key may equal a key the host documents for skills; the host key
   list is data with its documentation URL, read date and expiry.
