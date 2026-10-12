@@ -345,7 +345,7 @@
       "skill": "skill-improvement-pipeline",
       "old": 10469,
       "new": 10599,
-      "reason": "Not this branch: PR #2313 restated the Reflexion reference under ADR-281's amendment (the council record is the review, the owner's authorization is the approval). The ceiling was measured before that merge and is recorded here rather than left to red the next unrelated change."
+      "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
     }
   ]
 }
