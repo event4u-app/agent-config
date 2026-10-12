@@ -84,17 +84,18 @@ resolved by its in-scope binding, not by a document-wide list.
 - [ ] **2.2 Grade by the stricter of declared and observed.** `inert` applies
       only when every observed delivery is `img` or `css-bg`. `unknown` or any
       inline delivery grades as inline, with the reason naming the reference.
-      verify: `--delivery img` on a file that is also inlined somewhere reports
-      `svg-safety-active-content` as an error and names that reference.
+      verify: a vitest case declaring delivery img for a file the fixture
+      project also inlines reports svg-safety-active-content as an error and
+      names that inline reference.
 
 ## Phase 3 — Prefixes resolve by scope
 
 - [ ] **3.1 Resolve each element's namespace from its in-scope bindings.** Use
       the `svg_dom` tree, not a document-wide set, and accept a prefixed root
       in the structure and name rules when its prefix is bound to SVG.
-      verify: `<g xmlns:p="urn:x"><p:script/></g>` under an SVG-bound `p` is not
-      active content; a prefixed root with its own binding draws no
-      `svg-structure-missing-xmlns`.
+      verify: a vitest case where a subtree re-binds an SVG prefix to a foreign
+      namespace reports no active content for the prefixed script there, and a
+      prefixed root carrying its own SVG binding draws no missing-xmlns finding.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
