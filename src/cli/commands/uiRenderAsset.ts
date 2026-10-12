@@ -33,21 +33,12 @@
  *     image document (R5), so the reading is `not_witnessable` and the HOST is
  *     checked for a `<picture>` route instead.
  *
- * NO NETWORK, NO SCRIPT. The asset under test is untrusted input. Scripts are
- * disabled for the whole context, so a `<script>` or `on*` handler in it never
- * runs — which is also what keeps WebSocket and WebRTC closed, since
- * `page.route` intercepts neither. Every request whose scheme is not `file:`
- * (plus the `data:`, `blob:` and `about:` schemes a page makes of itself) is
- * aborted, and a `file:` request is aborted too unless it resolves inside the
- * project root or the asset's own directory, so an asset cannot pull an arbitrary local file into a capture.
- * The cost, accepted: a host document that builds its visual state with
- * JavaScript is witnessed as its static markup, not as it would run.
+ * NO NETWORK, NO SCRIPT, NO FILE OUTSIDE THE PROJECT — `uiRenderAssetIsolation.ts`.
  */
 
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import type { Browser, Page, Route } from '@playwright/test';
 
@@ -57,6 +48,7 @@ import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js
 import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
 import { readGrounds, type OpenPage } from './uiRenderAssetGrounds.js';
 import { gradeIconGrid } from './uiRenderAssetGrid.js';
+import { fileRootsFor, injectStyle, requestAllowed } from './uiRenderAssetIsolation.js';
 export * from './uiRenderAssetGrid.js';
 import {
     ASSET_CLASSES,
@@ -65,7 +57,6 @@ import {
     DEFAULT_GEOMETRY_TOLERANCES,
     DRAW_ON_DEAD_TIME_THRESHOLD,
     FALLBACK_BACKGROUNDS,
-    ALLOWED_SCHEMES,
     BLEED_SHARE_THRESHOLD,
     FOREIGN_CONTENT_SHARE_THRESHOLD,
     HOLE_ATTRIBUTE,
@@ -501,8 +492,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
     const hostHtml = isHost ? null : inlineHost(content);
     const targetUrl = isHost ? `file://${opts.file}` : `file://${path.join(dir, HOST_BASENAME)}`;
 
-    // The project, and the directory of the file the caller named explicitly.
-    const fileRoots = [opts.projectRoot, path.dirname(path.resolve(opts.file))];
+    const fileRoots = fileRootsFor(opts.projectRoot, opts.file);
     const context = await browser.newContext({ javaScriptEnabled: false });
     // A transpiler shim, and it belongs here rather than in a test helper.
     // Running this file through `tsx` — which is how `./scripts-run` and every
@@ -677,26 +667,6 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
     return { reading, verification: 'verified' };
 }
 
-/** True unless `url` is a `file:` URL resolving outside `root` (symlinks followed). */
-export function fileInside(url: string, root: string): boolean {
-    if (!url.startsWith('file:')) return true;
-    const real = (p: string): string => {
-        try {
-            return fs.realpathSync(p);
-        } catch {
-            return path.resolve(p);
-        }
-    };
-    let target: string;
-    try {
-        target = real(fileURLToPath(url));
-    } catch {
-        return false;
-    }
-    const base = real(root);
-    return target === base || target.startsWith(base + path.sep);
-}
-
 /** The host document for an inline delivery: one background, one sized graphic. */
 function inlineHost(svg: string): string {
     const body = svg.replace(/<\?xml[^>]*\?>\s*/i, '').replace(/<!DOCTYPE[^>]*>\s*/i, '');
@@ -735,7 +705,7 @@ async function openPage(
             await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: spec.hostHtml });
             return;
         }
-        if (!ALLOWED_SCHEMES.some((s) => url.startsWith(s)) || !spec.fileRoots.some((root) => fileInside(url, root))) {
+        if (!requestAllowed(url, spec.fileRoots)) {
             spec.blocked.push(url);
             await route.abort();
             return;
@@ -743,13 +713,8 @@ async function openPage(
         await route.continue();
     });
     await page.goto(spec.url, { waitUntil: 'load', timeout: 30_000 });
-    // Not `page.addStyleTag`: it waits on a page-script `onload`, which never
-    // fires with scripts disabled. `evaluate` runs outside the page's scripts.
-    await page.evaluate((css: string) => {
-        const style = document.createElement('style');
-        style.textContent = css;
-        (document.head ?? document.documentElement).appendChild(style);
-    },
+    await injectStyle(
+        page,
         `html,body{margin:0;padding:0;background:${spec.background}}` +
             `body>svg{display:block;width:${spec.cssWidth}px;height:auto}`,
     );
