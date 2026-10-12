@@ -1246,8 +1246,9 @@ is the named exception in the claim itself.
   (4) UNDERPOWERED, per cause and never from the aggregate: fewer than 20 CI waits in the window for `ci-wait`; fewer than 5 structured asks for `user-wait`. A window with fewer total blocking calls than 145 is NOT underpowered on that ground alone — a fall in blocking calls may be the mitigation working. Underpowered is neither a pass nor a miss and may be cited for neither.
   (5) A MITIGATION THAT REMOVES A VERIFICATION STEP IS OUT OF SCOPE, and so is one that only moves a question from the question tool into plain text: the human waits the same either way and only the instrument stops seeing it.
   (6) SCOPE: one machine's transcript store, an mtime window that moves; a delta between two windows can be a corpus change, which is why each window's shape is recorded on the reading page.
+  (7) FIRST READING AGAINST THESE TARGETS, 2026-10-12 (`road-to-blocking-time-by-cause` step 3.4), published under `## Second window` on the reading page: `ci-wait` MET both targets — 0 of 54 waiter calls ended `DID NOT SETTLE` in the foreground against the baseline 20 of 44, and 5 blocking minutes against the 130-minute secondary target. `user-wait` is UNDERPOWERED on clause (4)'s floor: the window holds 0 structured asks against a floor of 5, so it is cited for neither direction. The entry therefore stays `unbacked` — half the claim has a verdict and half does not, and `backed` would assert both. The reading page also records the measurement gap the met verdict rests on: 31 of the 54 waiters were started as background jobs, whose outcome never reaches the last line of a tool result, so a background wait that ended without a verdict is invisible to this instrument.
 - status: unbacked
-- last_verified: 2026-10-07
+- last_verified: 2026-10-12
 
 ### claim: touched-file-quality-shadow-to-warn-bar
 - claim: PRE-REGISTERED, unmeasured. Whether the touched-file quality pass (`hooks.verify_before_complete.touched_file_quality`) may move its shipped default from `off`/`shadow` to `warn` — i.e. whether its advisory lines at stop are rare enough, real enough and cheap enough to be worth emitting by default.
