@@ -421,6 +421,22 @@ what the gate attests."*
       is the work this step is actually waiting on, it is larger than a step of
       this phase, and it is named here rather than built so that the next run
       sees a stated prerequisite instead of an open box that looks runnable.
+      **Re-screened 2026-10-13 against the tree, and the prerequisite is now
+      LOCATED rather than merely absent.** `src/config/gate-coverage.yml` is a
+      per-check registry that already exists and is already CI-enforced: 113
+      rows keyed by script stem, each carrying `argv`, `min_scanned`, `corpus`,
+      `status`, and optionally `ci_invocation` and `canary`. All four Phase 7
+      checks the round named — `check_gate_completeness` and the three
+      unclassified ones — resolve against it, and `check_gate_completeness`
+      carries a row (`min_scanned: 180`, corpus stated, `status: enforced`).
+      What it does NOT carry is the four fields D14's `revisit if` asks for:
+      class, prerequisites, gate membership and refresh authority. So the
+      prerequisite is not "build a registry from nothing" — it is **four fields
+      on an existing one**, plus the honest denominator problem that file
+      already states about itself: 113 of 354 gate scripts, 31.9 %, so a class
+      field added there would classify under a third of the population and the
+      round's own 16 would need the rest of the rows first. That is the shape of
+      the work, and naming it is what this screen adds over the previous one.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
