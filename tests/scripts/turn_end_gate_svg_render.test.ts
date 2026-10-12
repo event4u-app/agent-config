@@ -188,6 +188,13 @@ describe('the turn-end gate reads the render, never the call', () => {
         expect(openSvgObligation(root, [edit(elsewhere)])).not.toBeNull();
     });
 
+    it('a planted-fixture prefix reached through `..` is not exempt', () => {
+        const file = writeSvg('public/a.svg', SVG_CLEAN);
+        const sneaky = 'tests/design-artifacts/fixtures/../../../public/a.svg';
+        expect(openSvgObligation(root, [edit(sneaky)])).not.toBeNull();
+        expect(file).toBe('public/a.svg');
+    });
+
     it('hand-written-manifest-discharges-nothing', () => {
         // An agent writing a manifest under the render directory, digest
         // included, with no render in the turn. Precision (iii) is the only
@@ -250,6 +257,16 @@ describe('the turn-end gate reads the render, never the call', () => {
         const piped = bash('agent-config ui:render assets/logo.svg --profile asset 2>&1 | tail -5');
         const readBack = bash('cat agents/runtime/state/render/hand-written/manifest.json | jq .verification');
         expect(openSvgObligation(root, [edit(file), piped, readBack])).toBeNull();
+        // Every write route the re-cut review named voids the manifests too.
+        for (const w of [
+            'echo x | tee agents/runtime/state/render/hand-written/manifest.json',
+            'cp /tmp/m.json agents/runtime/state/render/hand-written/manifest.json',
+            `node -e "require('fs').writeFileSync('agents/runtime/state/render/x/manifest.json','{}')"`,
+            `python3 -c "open('render/x/manifest.json','w').write('{}')"`,
+            `jq . m.json | sponge agents/runtime/state/render/x/manifest.json`,
+        ]) {
+            expect(openSvgObligation(root, [edit(file), bash(w), RENDER]), w).not.toBeNull();
+        }
         const afterCd = bash('cd assets && agent-config ui:render logo.svg --profile asset');
         expect(openSvgObligation(root, [edit(file), afterCd])).toBeNull();
     });

@@ -154,7 +154,9 @@ function hasErrorFinding(m: AssetManifestish): boolean {
  */
 const rel = (root: string, p: string): string => {
     const slashed = p.split(path.sep).join('/');
-    if (!path.isAbsolute(p)) return slashed.replace(/^\.\//, '');
+    // Normalised, so `fixtures/../../../public/a.svg` is `public/a.svg` and not
+    // a planted fixture by prefix (16.5.0 re-cut review).
+    if (!path.isAbsolute(p)) return path.posix.normalize(slashed).replace(/^\.\//, '');
     const inside = path.relative(root, p).split(path.sep).join('/');
     // `path.relative` escaping the root with `..` means the path is NOT in this
     // workspace; keep it as given rather than inventing a relation to it.
@@ -387,7 +389,9 @@ export function writesRenderDir(command: string): boolean {
     if (isPureRender(command)) return false;
     const slashed = command.split(path.sep).join('/');
     const names = /(^|[\s/'"])(render\/|manifest\.json\b)/.test(slashed) || slashed.includes('state/render');
-    const writes = />(?!&)|\btee\b|\b(cp|mv|ln|install|rsync|dd)\s|\bsed\s+-i|\bwriteFile/.test(
+    // An inline interpreter program naming the directory counts as a write:
+    // what it does with the path is not readable from the command line.
+    const writes = />(?!&)|\b(tee|sponge)\b|\b(cp|mv|ln|install|rsync|dd)\s|\bsed\s+-i|\bwriteFile|\b(python3?|perl|ruby|node|deno|bun)\b[^|;&]*\s-(c|e|p)\b/.test(
         slashed.replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' '),
     );
     return names && writes;
