@@ -620,9 +620,24 @@ before 8.3 gates anything.*
   1. State the default (provisional / final) and any exception classes, and record it as a `refused-escalate` finality note in `docs/contracts/ratification-artifact.md`.
 - **Resolved when:** This blocker's `Status:` is `resolved` with the policy recorded.
 
+> **AC-1 ticked 2026-10-12, and the tick is a STATE FLIP with no edit to the
+> criterion's body — deliberately.** Its text already names the single
+> outstanding item and the exact condition that closes it: *"Defect 4 is the one
+> outstanding … Step 6.1 is that round. The criterion closes when 6.1 records its
+> verdict; nothing else is missing."* 6.1 is now `[x]` and its verdict is recorded
+> as D15, with its evidence committed at
+> `agents/evidence/council/merge-serialisation-20261010.md`, so defect 4 now has
+> the disposition the criterion asks for — council-decided-and-recorded.
+> **Why no sentence was added inside the criterion:** `lint_plan_risk_register`
+> hashes the Acceptance Criteria body and normalises checkbox STATE out of that
+> hash, so a flip is free while a one-line note is a substantial change that
+> would demand a re-stamp this calendar day cannot express — the same defect-4
+> instance step 6.1 documents at length. The note therefore sits here, outside
+> the hashed body, rather than being skipped or smuggled in.
+
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every one of the six defects the authority-routing record
+- [x] AC-1 — Every one of the six defects the authority-routing record
       surfaced has a disposition traceable to a specific phase step or
       blocker in this file (agent-fixed, council-decided-and-recorded, or an
       owner-routed blocker resolved).
