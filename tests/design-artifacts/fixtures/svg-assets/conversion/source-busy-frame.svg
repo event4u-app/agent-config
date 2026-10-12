@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img">
+  <title>Source raster — the subject plus everything the crop caught</title>
+  <!-- The fixture step 2.1 names: the SAME subject on an opaque light ground,
+       with an unrelated mark and a soft glow INSIDE the registration frame.
+       Before 2.1 the background mask from the corner pixel folded the
+       neighbour and the halo into IoU and into the boundary distance, and the
+       reference failed against its own rendering. -->
+  <defs>
+    <radialGradient id="source-busy-frame-glow">
+      <stop offset="0" stop-color="#2563eb" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#2563eb" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="100" height="100" fill="#f1f5f9"/>
+  <circle cx="50" cy="50" r="34" fill="url(#source-busy-frame-glow)"/>
+  <circle cx="12" cy="86" r="7" fill="#f97316"/>
+  <rect x="30" y="30" width="40" height="40" rx="6" fill="#2563eb"/>
+  <path d="M 38 50 L 46 58 L 62 42" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

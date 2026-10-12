@@ -80,7 +80,7 @@ check must also require the full contrast to appear inside the window.
 
 ## Phase 1 — The authorities roadmap's parser rule
 
-- [ ] **1.1 Amend A 0.1 and A 0.2: the regex ends at the first UNESCAPED `/`.**
+- [x] **1.1 Amend A 0.1 and A 0.2: the regex ends at the first UNESCAPED `/`.**
       A 0.2 (A:89-92) corrected wording: "The backticked tail accepts a
       slash-delimited regex up to the first unescaped closing `/` — one not
       preceded by an odd number of backslashes — that is followed by
@@ -93,7 +93,7 @@ check must also require the full contrast to appear inside the window.
 
 ## Phase 2 — Status, gate and goal (W 2.3, 3.1, 3.5, AC-9)
 
-- [ ] **2.1 Amend W 3.5 and W 2.3: the gate reads the render, never the
+- [x] **2.1 Amend W 3.5 and W 2.3: the gate reads the render, never the
       call.** Both exits from C2, because either alone leaves one gate path
       open. (a) W 2.3 (W:282-286) corrected: "No Playwright → `verification:
       unverified`, and the **asset** profile exits non-zero with a code
@@ -156,7 +156,7 @@ check must also require the full contrast to appear inside the window.
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t planted-fixture-edit-is-no-svg-obligation --reporter=verbose` -> /✓.*planted-fixture-edit-is-no-svg-obligation/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t hand-written-manifest-discharges-nothing --reporter=verbose` -> /✓.*hand-written-manifest-discharges-nothing/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t deleted-svg-opens-no-obligation --reporter=verbose` -> /✓.*deleted-svg-opens-no-obligation/ <!-- ref-ignore -->
-- [ ] **2.2 Amend W 3.1 and W 3.5: `verified` needs a clean witness, and the
+- [x] **2.2 Amend W 3.1 and W 3.5: `verified` needs a clean witness, and the
       pass cap is never success.** `verified` means a digest-bound render
       manifest (2.1) **and** 0 error findings from W 1.1 and W 2.1 on that
       digest. W 3.1's stop rule (W:328-331) corrected: "stop at a clean
@@ -167,7 +167,7 @@ check must also require the full contrast to appear inside the window.
       owner skill's behaviour — the renderer knows nothing of passes — so the
       case lives with W's scenarios, not with the render profile's tests.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t pass-cap-with-open-findings-is-unverified --reporter=verbose` -> /✓.*pass-cap-with-open-findings-is-unverified/ <!-- ref-ignore -->
-- [ ] **2.3 A second axis: render status is not goal status.** W 3.1's report
+- [x] **2.3 A second axis: render status is not goal status.** W 3.1's report
       (W:329-332) and W 3.5 gain a separate field: `goal: unassessed` by
       default, `accepted` or `rejected` only from an owner statement or from a
       Phase 6 scenario's pre-registered witness (W 6.1-6.5). The renderer and
@@ -180,7 +180,7 @@ check must also require the full contrast to appear inside the window.
 
 ## Phase 3 — The static witness reads a tree, and is measured on real SVGs
 
-- [ ] **3.1 Amend W 1.1: a structural parse, still dependency-free.** W 1.1
+- [x] **3.1 Amend W 1.1: a structural parse, still dependency-free.** W 1.1
       (W:196-213) corrected: "`lint_svg_asset.ts` builds an element tree with
       a dependency-free XML well-formedness parser (elements, attributes,
       comments, CDATA, processing instructions, DOCTYPE, with line and column)
@@ -193,7 +193,7 @@ check must also require the full contrast to appear inside the window.
       another attribute's value (dangling); mis-nested tags (`<g><path></g></path>`);
       a `<title>` that is not a direct child of the graphic it names. C11 and D3.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts -t regex-blind-rows-found-by-the-tree --reporter=verbose` -> /✓.*regex-blind-rows-found-by-the-tree/ <!-- ref-ignore -->
-- [ ] **3.2 Amend W 0.1, 0.3 and 5.1: a held-out set of real SVGs.** Beside
+- [x] **3.2 Amend W 0.1, 0.3 and 5.1: a held-out set of real SVGs.** Beside
       the planted fixture, a set of at least six real SVGs under
       `tests/design-artifacts/fixtures/svg-real/` <!-- ref-ignore -->
       covering every asset class: `site/public/favicon.svg`,
@@ -205,14 +205,14 @@ check must also require the full contrast to appear inside the window.
       W 5.2's bar (W:414-420) counts findings on the real set beside the twin
       count.
       verify: `grep -cE '^##\s.*[Rr]eal' tests/design-artifacts/fixtures/svg-assets/README.md` -> /^[1-9]/ <!-- ref-ignore -->
-- [ ] **3.3 Fix W:98-99's wording.** "fill ratio is per class (0.3)" →
+- [x] **3.3 Fix W:98-99's wording.** "fill ratio is per class (0.3)" →
       "fill-ratio thresholds are per asset class, pre-registered in 0.3's
       table". Prose only; no heading, checkbox or AC moves. C7.
       verify: `grep -c 'per class (0.3)' agents/roadmaps/road-to-svg-with-a-witness.md` -> /^0$/
 
 ## Phase 4 — Scenarios and the consumer path
 
-- [ ] **4.1 Amend W 6.3: zoom by `viewBox`, not device scale.** W 6.3
+- [x] **4.1 Amend W 6.3: zoom by `viewBox`, not device scale.** W 6.3
       (W:450-455) corrected: "A 512 px window whose `viewBox` spans
       512/3000 of the intrinsic render's units, centred on an edge interior to
       6.1's output — never on the bounds of an embedded image (R-Z4). The full
@@ -223,7 +223,7 @@ check must also require the full contrast to appear inside the window.
       the factor. The test name W's verify uses is kept; the control is its
       own case. R-Z1 to R-Z4.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t raster-control-fails-the-3000x-zoom --reporter=verbose` -> /✓.*raster-control-fails-the-3000x-zoom/ <!-- ref-ignore -->
-- [ ] **4.2 Amend W 3.1 and E9: the static-only path is walked cleanly in a
+- [x] **4.2 Amend W 3.1 and E9: the static-only path is walked cleanly in a
       consumer.** W 3.1 gains: "Where `ui:render` reports the renderer absent,
       the owner runs the static witness, reports `static-only`, names the
       missing capability in one line, and never makes opening the file in a
@@ -262,18 +262,18 @@ check must also require the full contrast to appear inside the window.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A's parser rule names the unescaped `/`, and a clause ending in
+- [x] AC-1 — A's parser rule names the unescaped `/`, and a clause ending in
       `-> /a\/ b/` keeps `a\/ b` as its regex source.
-- [ ] AC-2 — After an `.svg` edit, a turn whose only check is an asset render
+- [x] AC-2 — After an `.svg` edit, a turn whose only check is an asset render
       that rendered nothing is refused on both gate paths; a turn with a
       verified, digest-matching asset manifest is accepted.
-- [ ] AC-3 — No layer reports `verified` with error findings open or after a
+- [x] AC-3 — No layer reports `verified` with error findings open or after a
       pass cap was reached with findings, and every asset report carries a
       goal field that no renderer sets to `accepted`.
-- [ ] AC-4 — The static witness decides nesting and references from a parse
+- [x] AC-4 — The static witness decides nesting and references from a parse
       tree, finds the three text-pattern-blind rows, and the measured outcome
       is reported on the planted set and the real held-out set separately.
-- [ ] AC-5 — W 6.3 runs on a 512 × 512 surface, passes for the vector and
+- [x] AC-5 — W 6.3 runs on a 512 × 512 surface, passes for the vector and
       fails for the raster control.
-- [ ] AC-6 — A recorded owner run without a renderer reports `static-only`
+- [x] AC-6 — A recorded owner run without a renderer reports `static-only`
       and contains no browser-opening step.

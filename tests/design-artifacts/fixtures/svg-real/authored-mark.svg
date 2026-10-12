@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" width="64" height="64">
+  <title id="rising-mark-title">Rising arrow in a rounded square</title>
+  <rect id="rising-mark-plate" x="1" y="1" width="62" height="62" rx="14" fill="#1d4ed8"/>
+  <path id="rising-mark-arrow" d="M16 44 L30 30 L38 38 L50 26" fill="none" stroke="#bfdbfe" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path id="rising-mark-head" d="M38 20 L52 20 L52 34 Z" fill="#bfdbfe"/>
+</svg>

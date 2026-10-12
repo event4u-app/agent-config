@@ -71,6 +71,17 @@ export const BRAND_TOKEN_PATHS: readonly string[] = [
 export const ICON_SIZES: readonly number[] = [16, 24, 48];
 
 /**
+ * A `mark` is captured here too — step 4.3 of
+ * `road-to-svg-from-a-live-session`.
+ *
+ * A review sent an accepted mark back because its face turned to mush at
+ * 32 px, and a simplified small-size variant was built. Nothing in the profile
+ * produced a capture at those sizes, so the only way to know was to look at
+ * something that did not exist. 16 and 32 are the two the review named.
+ */
+export const MARK_SMALL_SIZES: readonly number[] = [16, 32];
+
+/**
  * Below this, a draw-on animation is not reported. The planted row reads
  * 0.283 (a 300-unit dash on a 215-unit path) and its twin reads 0.0, so the
  * band between them is wide; 0.05 is inside it with room on both sides.
@@ -156,7 +167,145 @@ export interface ReducedMotionReading {
     frames_equal: boolean | null;
     reason: string;
     host_picture_route?: boolean;
+    /**
+     * Whether the DELIVERED file moves — read from its own bytes, not from the
+     * host page.
+     *
+     * Step 1.1 of `road-to-svg-from-a-live-session`. For an `img` or CSS
+     * background delivery the animation lives inside the image document, which
+     * the host page cannot see: the host's own animation duration is 0 for a
+     * spinner and for a static logo alike. Gating the missing-route finding on
+     * the host's duration would have silenced the planted row it exists for,
+     * so the question is asked of the file that is actually delivered.
+     *
+     * `null` where the delivery is not through an image document, or where the
+     * referenced file could not be read — and `null` falls back to the page's
+     * own duration rather than to a guess.
+     */
+    delivered_animates?: boolean | null;
+    /**
+     * Delivered `.svg` references this host names that could not be read.
+     *
+     * Finding 13: absent evidence, reported as absent. They used to be skipped
+     * into the page-duration fallback, which is 0 for a spinner and a static
+     * logo alike — so an animating file behind an unreadable path produced no
+     * warning.
+     */
+    delivered_unreadable?: string[];
 }
+
+/**
+ * Per-capture readings taken against that capture's OWN ground — steps 4.1 and
+ * 4.2 of `road-to-svg-from-a-live-session`.
+ *
+ * Both are about the dark ground specifically, which is where a conversion
+ * session lost twice: hairlines between abutting traced segments were invisible
+ * on white and obvious on black, and a wordmark in dark violet shipped
+ * unreadable on a dark ground with no variant built.
+ */
+export interface GroundReading {
+    background: 'light' | 'dark';
+    background_color: string;
+    /**
+     * Pixels inside the file's own OUTER silhouette, from the transparent
+     * render — opaque pixels AND the interior gaps between them.
+     *
+     * The second half is the whole point of step 4.1: a hairline seam is
+     * exactly where alpha is LOW, so a silhouette defined as "alpha is high"
+     * excludes the thing the reading is looking for. Measured on the planted
+     * fixture, which read 0 bleed pixels under that definition. The interior
+     * is found by flooding the transparent region inwards from the border;
+     * what the flood cannot reach is inside.
+     */
+    silhouette_px: number;
+    /** Of those, the opaque ones — where asking about contrast means anything. */
+    painted_px: number;
+    /** Of the PAINTED pixels, how many fall below 3:1 against this ground. */
+    low_contrast_px: number;
+    low_contrast_share: number;
+    /**
+     * Pixels INSIDE the outer silhouette that the graphic does not fully
+     * cover — background showing through where the file claims to paint.
+     * Seams between abutting shapes, and the pinholes where three parts meet.
+     * Declared holes and declared-translucent shapes are excluded.
+     *
+     * The test is ALPHA, not colour. Finding 11 of this change's second
+     * completion review: this doc still described the colour-band definition
+     * that was tried and withdrawn, so a reader asking why a seam did not fire
+     * would have debugged a comparison the code does not perform. Two
+     * colour-based definitions were implemented before this one and each
+     * measured 0 bleed pixels on the planted fixture — a blended seam is not
+     * within tolerance of either neighbour, which is why it is not a colour
+     * question at all.
+     */
+    bleed_px: number;
+    bleed_share: number;
+}
+
+/**
+ * How a shape declares that a gap in the silhouette is DELIBERATE.
+ *
+ * Step 4.1. A ring has a hole in the middle and the ground shows through it on
+ * purpose; without a way to say so, every ring reads as a seam. By attribute
+ * rather than by geometry, because "is this gap intended" is a question only
+ * the author can answer.
+ */
+export const HOLE_ATTRIBUTE = 'data-hole';
+
+/**
+ * The bleed share above which `geometry/background-bleed-inside-silhouette`
+ * fires, pre-registered in `fixtures/svg-assets/README.md` before the reading
+ * was written.
+ *
+ * A seam is a hairline: one or two pixels wide along a shared edge. The
+ * overlap twin — the same two shapes overlapping by one unit — reads 0. The
+ * threshold sits between them with room on both sides.
+ *
+ * IT DOES MOVE WITH THE RENDER SIZE, and this doc used to claim it does not.
+ * Finding 7 of the third completion review. A share is scale-free only when
+ * both terms scale together: a seam whose width is a fraction of a USER UNIT
+ * grows with the capture and its share is stable, but one that is an
+ * anti-aliasing artefact stays one or two DEVICE pixels wide at every size, so
+ * its count grows with the perimeter while the denominator grows with the
+ * area — the share falls roughly as 1/width. The planted fixture is the second
+ * kind (a ring of inner radius 20 against a disc of radius 20), so this number
+ * is pre-registered against the capture sizes THIS PROFILE TAKES, which top
+ * out at 2x the intrinsic width. A caller rendering the same file at several
+ * thousand pixels would read a share below the threshold on a file that still
+ * has the seam.
+ *
+ * Not re-derived here: fixing it means making the reading a function of the
+ * seam's width in user units rather than of its pixel count, which is a
+ * different measurement and a larger change than a remediation should take.
+ * Stated so a reader is not told the opposite.
+ */
+export const BLEED_SHARE_THRESHOLD = 0.002;
+
+/**
+ * Above this share of the registered source's painted pixels lying OUTSIDE the
+ * subject, `geometry/foreign-content-in-frame` fires.
+ *
+ * Finding 14 of this change's completion review: it was an inline `0.02` beside
+ * two named, documented, pre-registered thresholds. 2 % is the band an
+ * anti-aliased outline can occupy on a small mark without anything foreign
+ * being in the frame — it is a NOISE FLOOR, not a measured quality line, and
+ * saying so is the difference between a number a reader can argue with and one
+ * they cannot find.
+ */
+export const FOREIGN_CONTENT_SHARE_THRESHOLD = 0.02;
+
+/** Below this contrast ratio against its ground, a painted pixel is hard to see. */
+export const MIN_CONTRAST_RATIO = 3;
+
+/**
+ * The share of painted pixels below {@link MIN_CONTRAST_RATIO} above which
+ * `accessibility/low-contrast-on-background` fires.
+ *
+ * Half the mark, not a few anti-aliased edge pixels: an edge blends into its
+ * ground by construction, and a rule that fired on that would fire on every
+ * file. Pre-registered with the bleed threshold above.
+ */
+export const LOW_CONTRAST_SHARE_THRESHOLD = 0.5;
 
 export interface AssetFinding {
     rule: string;
@@ -187,9 +336,69 @@ export interface AssetReading {
     duplicate_accessible_names: string[];
     frames: FrameReading[];
     distinct_frames: number;
+    /**
+     * Seconds until the last animation on the page ends, 0 when nothing moves.
+     *
+     * Step 1.1 of `road-to-svg-from-a-live-session`. The engine already
+     * computed this to decide whether to capture frames at all, and then threw
+     * it away — so `motion/img-delivery-no-static-route` had no way to ask
+     * whether the file animates and fired on all six real conversion files,
+     * none of which contains `<animate`, `@keyframes` or `animation`.
+     */
+    animation_duration_s: number;
     draw_on: DrawOnReading[];
     icon_grid: IconGridReading | null;
-    near_white_regions: Array<{ index: number; id: string; fill: string; enclosed_by: string }>;
+    near_white_regions: Array<{
+        index: number;
+        id: string;
+        fill: string;
+        enclosed_by: string;
+        /**
+         * The point the source is sampled at, in the graphic's user units —
+         * the region's own centre. Recorded so a reader can repeat the reading
+         * and so the sampling does not have to re-derive it from a geometry
+         * pass that has already been thrown away.
+         */
+        centre: { x: number; y: number };
+        /**
+         * What the SOURCE shows under this region — step 1.2 of
+         * `road-to-svg-from-a-live-session`.
+         *
+         * `hole` the source shows its own background there, so near-white
+         *        paint is covering a hole and reads white on a dark ground;
+         * `paint` the source shows paint there, so the near-white fill is a
+         *        deliberate choice and there is nothing to report;
+         * `no-source` no registered raster was supplied, so the question was
+         *        not asked. The region is still RECORDED — absent evidence is
+         *        reported as absent, never as a finding and never as clean.
+         *
+         * The rule's own message was always conditional ("if the source shows
+         * a hole there"), and nothing was reading the source: it fired six
+         * times on paint an owner had chosen, and zero times on the file the
+         * same owner rejected.
+         */
+        source_verdict: 'hole' | 'paint' | 'no-source';
+    }>;
+    /**
+     * What the file COSTS — step 3.2 of `road-to-svg-from-a-live-session`.
+     *
+     * Reported and never gated, deliberately. No threshold was measured, and
+     * one would have refused a 195 KB trace and a 59 KB accepted figure alike:
+     * the same owner accepted a 4.6 KB mark and a 59 KB mascot, a 13x spread.
+     * Static cost went unremarked through a whole conversion session while two
+     * external reviews counted gradients by hand, which is the gap this closes
+     * — a number beside the fidelity numbers, for a human to weigh.
+     */
+    cost: {
+        bytes: number;
+        elements: number;
+        paths: number;
+        gradients: number;
+        /** Coordinate-looking numbers in every `d` and `points` attribute. */
+        coordinates: number;
+    };
+    /** One row per capture background — steps 4.1 and 4.2. */
+    grounds: GroundReading[];
     network: { aborted: number; blocked_urls: string[] };
     findings: AssetFinding[];
     comparison?: GeometryComparison;

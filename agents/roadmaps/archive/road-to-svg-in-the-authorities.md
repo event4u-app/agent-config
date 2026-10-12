@@ -87,7 +87,8 @@ and the delivery mode that neutralises them. No value, band or curve moves.
       before 0.2 touches the parser.
       verify: `npx vitest run tests/scripts/_lib/verify_clause.test.ts --reporter=verbose` -> /✓.*backticked-form-keeps-a-space-bearing-regex/
 - [x] **0.2 Close the gap in the one parser.** The backticked tail accepts a
-      slash-delimited regex up to the first closing `/` that is followed by
+      slash-delimited regex up to the first UNESCAPED closing `/` — one not
+      preceded by an odd number of backslashes — that is followed by
       whitespace or the end of the text, so `-> /a b/` keeps its source and a
       step that continues after `-> /[1-9]/` still keeps `[1-9]` (the case at
       `:70`). Bare words stay refused. The module comment at `:129-145` and
@@ -185,7 +186,7 @@ the implementation.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Widening the tail swallows prose | implementation | A step whose prose after the clause contains a `/` followed by a space is read as part of the regex | 0.2 ends the regex at the first `/` followed by whitespace or end, and the `:70` continuation case stays green | Phase 0 — A space no longer erases a verify expectation |
+| 1 | Widening the tail swallows prose | implementation | A step whose prose after the clause contains a `/` followed by a space is read as part of the regex | 0.2 ends the regex at the first UNESCAPED `/` followed by whitespace or end, and the `:70` continuation case stays green | Phase 0 — A space no longer erases a verify expectation |
 | 2 | A mechanism line reads as a value | implementation | The drift gate parses a new SVG line as a motion value and reds, or a value slips in beside the mechanism | 1.2 records a verdict per line and greps the diff for durations | Phase 1 — The motion authority learns SVG |
 | 3 | Retrieval dilution in the ARIA corpus | implementation | The new graphic row steals the icon-button query, or the reverse | 2.1 and 2.2 run both queries before and after | Phase 2 — The ARIA corpus answers "graphic" |
 | 4 | The security row is read as "sanitise everything" | product | A consumer inlining its own trusted icons gets a sanitiser demand it does not need | The row is scoped to untrusted markup and names `<img>` delivery as the neutral route | Phase 3 — The render-security skill names the SVG sinks |

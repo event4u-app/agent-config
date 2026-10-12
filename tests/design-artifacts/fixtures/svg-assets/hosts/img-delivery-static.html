@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Static SVG delivered as img</title></head>
+<body>
+  <h1>Status</h1>
+  <!-- control (step 1.1 of road-to-svg-from-a-live-session): a NON-ANIMATED SVG
+       delivered through <img> with no <picture> route. There is nothing for a
+       reduced-motion route to stop, so the absence of one is correct and this
+       host must read 0 motion findings. Before 1.1 it read one, as did all six
+       files of a real conversion session. -->
+  <img src="pulse-static.svg" width="48" height="48" alt="Done">
+</body>
+</html>

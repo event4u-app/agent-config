@@ -48,6 +48,37 @@
  * reason instead of passing silently. `src/rules/design-review-after-ui-write.md`
  * already required that in prose with nothing to read it; this emits it.
  *
+ * SVG ROUTING, AND HOW TO REVERT IT. Step 1.3 of
+ * `road-to-svg-rules-in-the-dispatch-path`. An `.svg` write reaches
+ * `lint_svg_asset`'s rules from here, inside or outside a UI tree, through
+ * `svg_rules_loader` — a CJS chunk beside the dispatch bundle, required only
+ * for a path ending in `.svg`. The review that withdrew the first attempt
+ * named the gap plainly: a statically bundled rule set has no off switch, so
+ * the triggers and the mechanism are written down before they are needed.
+ *
+ *   REVERT WHEN any of these is read:
+ *     · the composition gate exceeds its ceiling attributable to this routing
+ *       (`check_hook_bundle_composition`; measured 2,128 B on 2026-10-11, with
+ *       16,910 B of headroom left);
+ *     · a non-`.svg` hook event is observed failing with a stack that passes
+ *       through the chunk — the containment case
+ *       `design_pass_svg.test.ts > rule-failure-does-not-reach-an-unrelated-event`
+ *       exists to make impossible, so one observation is enough;
+ *     · an operator reports SVG false positives on files they accept, at a rate
+ *       that would make them switch the carrier off — Risk 1 of the parent
+ *       roadmap, and the failure this whole concern is shaped around.
+ *
+ *   THE MECHANISM, in increasing order of blast radius:
+ *     1. Delete `dist/hooks/svg_rules.chunk.cjs`. The loader returns `null`,
+ *        the pass reports `verification: degraded` naming the missing file,
+ *        and every other finding family is unaffected. This is the per-install
+ *        off switch the static import could not have had.
+ *     2. Drop `isSvgAsset` from `isPassSurface` below. An `.svg` outside a UI
+ *        tree stops reaching the pass at all; one inside it reads as it did
+ *        before this step.
+ *     3. Turn the concern off entirely (`hooks.design_pass.enabled: false`),
+ *        which was already the default.
+ *
  * Default-OFF (`hooks.design_pass.enabled`), fail_closed: false.
  *
  * Exit codes (dispatcher contract): 0 allow · 1 block · 2 warn + JSON reason.
@@ -62,6 +93,7 @@ import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
+import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 const SETTINGS_FILE = '.agent-settings.yml';
@@ -129,7 +161,41 @@ export function enabled(root: string, key = 'design_pass'): boolean {
     return false;
 }
 
+/**
+ * True for a path this pass should look at.
+ *
+ * `.svg` is admitted HERE and nowhere else — step 1.2 of
+ * `road-to-svg-rules-in-the-dispatch-path`. The obvious way to reach an `.svg`
+ * from this pass was to add `svg` to `UI_EXTENSIONS`, and that is the thing the
+ * parent roadmap's decision E10 and `design_pass_svg.test.ts` forbid: the same
+ * predicate backs `ui_route_nudge_hook`'s `isUiWrite`, so widening it would
+ * draw a UI routing nudge and its tokens on every icon dropped into `public/`.
+ * A local disjunct reaches the asset without touching the shared predicate, in
+ * either direction.
+ */
+export const isSvgAsset = (p: string): boolean => /\.svg$/i.test(p);
+
+/**
+ * UNCHANGED, and that is the point of the predicate below it.
+ *
+ * Finding 6 of this change's own completion review: widening THIS predicate to
+ * admit every `.svg` would have moved the UI-turn denominator the
+ * consultation-rate measurement is defined against — which the
+ * `HANDOVER_TRIGGERS` note further down reserves, in writing, as a different
+ * decision than any routing change. It was widened and is widened no longer.
+ */
 export const isUiSurface = (p: string): boolean => isUiPath(p) || isUiTreePath(p);
+
+/**
+ * What this PASS looks at — a UI surface, or any `.svg`.
+ *
+ * The routing step 1.2 of `road-to-svg-rules-in-the-dispatch-path` asked for,
+ * in the one place it belongs: the pass's own entry gate. Keeping it out of
+ * `isUiSurface` leaves every other reading that predicate feeds — the
+ * conformance verdict's noteworthy test, the denominator above — reading
+ * exactly what it read before.
+ */
+export const isPassSurface = (p: string): boolean => isUiSurface(p) || isSvgAsset(p);
 
 /**
  * The shadow read of `ui-conformance.json` — Phase 5 of
@@ -441,6 +507,53 @@ function renderAvailable(root: string): boolean {
     }
 }
 
+/**
+ * SVG severity → this pass's severity.
+ *
+ * `error` and `warning` become P1 and P2; `inert` is dropped. Deliberately NOT
+ * P0: the P0 set above is a closed list of objective floors and it is the only
+ * thing that computes a block at stop. Routing a new rule family into it would
+ * change the block surface, which is a different decision than making the
+ * findings visible — and the one Risk 1 of the parent roadmap warns about.
+ */
+export function svgSeverity(s: 'error' | 'warning' | 'inert'): Finding['severity'] | null {
+    if (s === 'error') return 'P1';
+    if (s === 'warning') return 'P2';
+    return null;
+}
+
+export interface SvgRuleFinding {
+    rule: string;
+    file: string;
+    line: number;
+    snippet: string;
+    severity: 'error' | 'warning' | 'inert';
+}
+
+/**
+ * Map the SVG rule set's findings onto this pass's shape.
+ *
+ * Pure, and exported, so the routing can be proven without building a bundle:
+ * the half that is expensive to exercise end-to-end is the chunk load, and that
+ * has its own test in `svg_rules_loader`.
+ */
+export function svgFindings(raw: readonly SvgRuleFinding[], rel: string): Finding[] {
+    const out: Finding[] = [];
+    for (const f of raw) {
+        const severity = svgSeverity(f.severity);
+        if (severity === null) continue;
+        out.push({
+            file: rel,
+            severity,
+            catalogId: 'SVG',
+            rule: f.rule,
+            line: f.line,
+            message: `${f.rule}${f.snippet ? ` — ${f.snippet}` : ''}`,
+        });
+    }
+    return out;
+}
+
 /** Extracts the written path from a tool payload, whichever key the host uses. */
 export function targetPath(payload: unknown): string | null {
     if (typeof payload !== 'object' || payload === null) return null;
@@ -499,7 +612,7 @@ function main(): number {
         targets = state.touched;
     } else {
         const t = targetPath(payload);
-        if (!t || !isUiSurface(t)) return EXIT_ALLOW;
+        if (!t || !isPassSurface(t)) return EXIT_ALLOW;
         targets = [t];
         if (!state.touched.includes(t)) state.touched.push(t);
     }
@@ -508,6 +621,7 @@ function main(): number {
     // Findings come from the shipped registry, via the same entrypoint CI uses.
     const findings: Finding[] = [];
     let scanFailed: string | null = null;
+    let svgRulesUnavailable = false;
     try {
         const ctx = loadDesignContext(root);
         for (const rel of targets) {
@@ -517,6 +631,17 @@ function main(): number {
             // itself rather than handing over a path, which is also what lets a
             // post-write pass see the bytes that were just written.
             const content = fs.readFileSync(abs, 'utf-8');
+            if (isSvgAsset(rel)) {
+                // The conditional chunk. Loaded only here, so a hook event that
+                // never touched an `.svg` pays none of its bytes and runs none
+                // of its code — the containment `design_pass_svg.test.ts` pins.
+                // A null load is reported through `svgRulesUnavailable`, never
+                // thrown: a consumer whose install is missing the chunk must
+                // lose the SVG findings, not the whole dispatch.
+                const scan = loadSvgScan();
+                if (scan === null) svgRulesUnavailable = true;
+                else findings.push(...svgFindings(scan(content, rel) as SvgRuleFinding[], rel));
+            }
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,
@@ -532,11 +657,40 @@ function main(): number {
         scanFailed = String(err);
     }
 
-    const auditMissing = targets.filter((t) => !auditIsFresh(root, t));
-    recordAuditDischarge(root, targets, auditMissing);
+    // The audit question is asked of UI SURFACES, never of the pass surface.
+    // Findings 1 and 2 of the third completion review, both reproduced by
+    // running the hook: round one split the entry gate from the UI predicate,
+    // and `targets` carried the `.svg` past the split anyway. So a clean
+    // conformant icon write exited WARN with "no ui-audit.json newer than
+    // public/icon.svg" — an asset has no component inventory to be audited
+    // against — and, worse, `recordAuditDischarge` returns early on a non-empty
+    // `auditMissing`, so writing ONE `.svg` in a turn silently suppressed the
+    // ui-audit discharge row for every real UI file in that same turn.
+    const auditTargets = targets.filter((t) => isUiSurface(t));
+    const auditMissing = auditTargets.filter((t) => !auditIsFresh(root, t));
+    recordAuditDischarge(root, auditTargets, auditMissing);
     let result = decide(slot, findings, auditMissing, new Set(state.surfaced), renderAvailable(root));
     if (scanFailed) {
         result = { ...result, verification: 'unverified', degradation_reason: `detector unavailable: ${scanFailed}` };
+    } else if (svgRulesUnavailable) {
+        // Degraded, not unverified: the rest of the pass ran. An absent chunk
+        // is reported rather than silently producing a clean SVG verdict —
+        // "absent is not clean" is the same rule the conformance verdict keeps.
+        // APPENDED, never overwritten. Finding 6 of the fourth completion
+        // review: `decide` may already have set a reason — the renderer being
+        // absent is the one it sets — and assigning here threw it away, so a
+        // turn where both degradations held reported only the newer one. Two
+        // degradations are two facts; the operator needs both or they fix one
+        // and are surprised by the other.
+        const svgReason = `the SVG rule set could not be loaded (expected dist/hooks/${CHUNK_BASENAME} beside the dispatch bundle) — the .svg files in this turn were not checked`;
+        result = {
+            ...result,
+            verification: 'degraded',
+            degradation_reason:
+                result.degradation_reason === undefined || result.degradation_reason === ''
+                    ? svgReason
+                    : `${result.degradation_reason}; ${svgReason}`,
+        };
     }
 
     for (const f of result.findings) state.surfaced.push(`${f.file}::${f.rule}::${f.line}`);

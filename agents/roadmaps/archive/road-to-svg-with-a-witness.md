@@ -97,7 +97,8 @@ two engine false positives were first recorded as not reproducible; the second
 review located both files in the bundle and R12 reproduces them. R9 and R12 are
 the corrections this roadmap carries: `corrected-from-reproduction` — every
 motion rule in 1.1 binds per element or per selector, never per file; fill
-ratio is per class (0.3), and draw-on dead time is an engine reading (2.1),
+ratio thresholds are per asset class, pre-registered in 0.3's table, and
+draw-on dead time is an engine reading (2.1),
 never a static regex.
 
 ### A live conversion session (2026-10-11)
@@ -211,6 +212,22 @@ renderer.
       branch is CSS, a `d` morph whose values differ in command count, type
       or order). Draw-on dead time is not a static rule — it moves to
       2.1. `corrected-from-reproduction` (R9).
+      AMENDED 2026-10-11 by `road-to-svg-review-followups` 3.1 and 3.2, review
+      claim C11. The checker builds an ELEMENT TREE with a dependency-free XML
+      well-formedness parser — elements, attributes, comments, CDATA,
+      processing instructions and DOCTYPE, each with a line and a column, in
+      one `src/scripts/_lib/` module — and the structure, reference,
+      accessibility and motion families read that tree: nesting, parentage and
+      `#id` resolution are never decided by a pattern over the raw text. A
+      file that is not well-formed is a FINDING
+      (`svg-structure-not-well-formed`), never a skipped file. 0.1 gains three
+      planted rows a text-pattern check misses — an id whose only definition
+      sits inside a comment, mis-nested tags, and a `<title>` that is not a
+      direct child of the graphic it names — and 0.3's pre-registration gains
+      a held-out set of real SVGs under
+      `tests/design-artifacts/fixtures/svg-real/` <!-- ref-ignore -->, covering
+      every asset class, whose outcome 5.1 reports in its own table beside the
+      planted one.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*every-static-row-found-and-twins-clean/ <!-- ref-ignore -->
 - [x] **1.2 Preservation readout for a surgical edit.** `lint_svg_asset
       --baseline <before.svg> --allow <id,…>` compares every element outside
@@ -297,8 +314,18 @@ renderer.
       and nothing else.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t page-manifest-unchanged-except-generated-at --reporter=verbose` -> /✓.*page-manifest-unchanged-except-generated-at/ <!-- ref-ignore -->
 - [x] **2.3 Absence path unchanged.** No Playwright → `verification:
-      unverified`, and the owner (3.1) then reports `static-only`. Playwright
+      unverified`, and the **asset** profile exits non-zero with a code
+      distinct from an internal error; the page profile keeps its exit 0. The
+      owner (3.1) then reports `static-only`. Every `unverified` manifest
+      carries a machine-readable `reason` beside the prose
+      `degradation_reason` — `renderer-absent` for the missing devDependency,
+      `render-failed` for a renderer that ran and failed, `pass-cap-reached`
+      for 2.2 — and the renderer-absent path runs 1.1's static witness itself,
+      writing `static: { errors, digest }` into the same manifest. Playwright
       stays a devDependency; no rasteriser or renderer dependency is added.
+      AMENDED 2026-10-11 by `road-to-svg-review-followups` 2.1(a) and 2.1(i),
+      review claim C2: the asset profile used to exit 0 here, so a turn whose
+      only check was that call looked like a check that passed.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t absent-path-reads-unverified --reporter=verbose` -> /✓.*absent-path-reads-unverified/ <!-- ref-ignore -->
       (the case runs the existing render-absent fixture with the asset profile).
 - [x] **2.4 A time point is a primitive.** Add `frame_seek` to
@@ -343,10 +370,18 @@ renderer.
       (namespaced ids, `<title>`/`<desc>` or `aria-hidden`, colour from tokens
       or `currentColor`, an explicit `font-family` with a fallback the target
       ships); run 1.1; run 2.1; look at the render; fix; stop at a clean
-      witness or after three render passes, whichever comes first; report the
-      renderer and the checks that ran — `verified`, `static-only` or
+      witness or after three render passes, whichever comes first — a stop AT
+      the cap with error findings still open reports `unverified` with the
+      reason `pass-cap-reached` and lists them, never `verified` and never
+      done (AMENDED 2026-10-11 by `road-to-svg-review-followups` 2.2); report
+      the renderer and the checks that ran — `verified`, `static-only` or
       `unverified`, never a visual inspection that did not happen, and name
-      only output files it read back from disk. For an
+      only output files it read back from disk; report `goal: unassessed`
+      beside the status, and never write `accepted` from a digest match (2.3).
+      Where `ui:render` reports the renderer absent, run the static witness,
+      report `static-only`, name the missing capability in one line, and never
+      make opening the file in a browser a step of the procedure or of the
+      user's (4.2). For an
       edit to an existing SVG, 1.2 with the declared allowed ids replaces the
       look-and-compare, and it applies between the owner's own passes too: a
       part the user already accepted joins the baseline and may not move by
@@ -394,11 +429,29 @@ renderer.
 - [x] **3.5 Status follows render evidence.** The owner may report
       `verified` only when a render manifest from 2.1 exists whose recorded
       file digest equals the delivered file's digest on disk — a manifest from
-      an earlier pass does not count. A parser or `xmllint` pass alone reports
-      `static-only` (S6). `isVerificationCommand` (`verification_command.ts:293`)
-      learns `ui:render --profile asset`, so the turn-end gate accepts the
-      check that actually looks at the file, and does not learn `xmllint`.
-      verify: `npx vitest run tests/scripts/verification_command_asset_render.test.ts --reporter=verbose` -> /✓.*asset-render-verifies-and-xmllint-does-not/ <!-- ref-ignore -->
+      an earlier pass does not count — AND 1.1 and 2.1 report 0 error findings
+      on that digest. A parser or `xmllint` pass alone reports `static-only`
+      (S6).
+      AMENDED 2026-10-11 by `road-to-svg-review-followups` 2.1(b) and 2.2,
+      review claim C2, which REVERSES the last sentence this step used to
+      carry. `isVerificationCommand` learns NEITHER `ui:render` NOR `xmllint`:
+      the turn-end gate's transcript path matches a command and never sees an
+      exit code, so a render that produced nothing discharged the obligation
+      from its text alone. The gate reads the RENDER instead. Every `.svg`
+      edited in the turn whose current digest has no matching manifest is an
+      open SVG obligation — not only the turn's last edit — and it is
+      discharged on exactly one of two records: a manifest with
+      `verification: verified` whose digest matches, or one with
+      `reason: renderer-absent` whose `static` block reports 0 errors on that
+      same digest, which the turn reports as `static-only`. A `render-failed`
+      manifest discharges nothing. Four precisions: the renderer-absent path
+      writes its own static reading into the same manifest (one file, one
+      digest); an `.svg` under `tests/design-artifacts/fixtures/**` or
+      `tests/design-artifacts/scenarios/**` opens no obligation, because those
+      files carry errors on purpose; a manifest counts only when this turn's
+      render wrote it, so a hand-written one discharges nothing; and a deleted
+      `.svg` opens no obligation.
+      verify: `npx vitest run tests/scripts/verification_command_asset_render.test.ts --reporter=verbose` -> /✓.*neither-asset-render-nor-xmllint-verifies/ <!-- ref-ignore -->
 - [x] **3.6 Deliver, re-open, re-render.** The owner's last step reads every
       delivered file back from its final path in a fresh browser context
       (`file://`, other requests aborted), re-renders it from there — not from
@@ -597,8 +650,15 @@ The two plans argue in their own ids; each lands here, in
 - [x] AC-8 — Active content is graded per delivery mode; an undeclared mode
       is graded as inline, and `img` mode never reads clean.
 - [x] AC-9 — The owner reports `verified` only with a render manifest whose
-      digest equals the delivered file's; `xmllint` alone yields
-      `static-only`, and the turn-end gate counts the asset render.
+      digest equals the delivered file's AND 0 error findings on that digest;
+      `xmllint` alone yields `static-only`; a `verified` report carries a goal
+      field and no layer derives `accepted` from a digest match; and the
+      turn-end gate accepts an `.svg` edit only on a verified, digest-matching
+      asset manifest, or on a renderer-absent manifest plus a clean static
+      witness on the same digest.
+      AMENDED 2026-10-11 by `road-to-svg-review-followups` 2.1(b), 2.2 and
+      2.3 — the clause this replaces read "the turn-end gate counts the asset
+      render", which counted the call rather than the render.
 - [x] AC-10 — 2.6 reports silhouette agreement and boundary distance against
       a declared per-class tolerance, and for a raster source also mean colour
       error and the share of pixels off, per region; a font-only delta reads

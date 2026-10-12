@@ -61,7 +61,7 @@ when the written path ends in `.svg`. That has not been tried.
 
 ## Phase 0 — Make the alternative decidable
 
-- [ ] **0.1 Prototype a conditional chunk.** Emit the rule set as a second
+- [x] **0.1 Prototype a conditional chunk.** Emit the rule set as a second
       esbuild output beside the dispatch bundle and import it from the design
       pass only when the target path ends in `.svg`. Record what breaks rather
       than whether it feels right: the current build uses `--outfile`, which
@@ -70,20 +70,20 @@ when the written path ends in `.svg`. That has not been tried.
       path resolution from a bundle whose own location is resolved through a
       banner, and the four bundle gates that read the output.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0
-- [ ] **0.2 Measure both strategies at runtime, not in bytes.** Cold-start and
+- [x] **0.2 Measure both strategies at runtime, not in bytes.** Cold-start and
       steady-state dispatch for a non-`.svg` event and for an `.svg` event,
       under static inclusion and under the chunk, from the same tree. Bytes were
       the only axis the refused proposal carried, and both reviewers said so.
       verify: the readings land in `agents/evidence/analysis/` with the command
       that produced each one.
-- [ ] **0.3 Prove a rule failure cannot reach an unrelated event.** An import
+- [x] **0.3 Prove a rule failure cannot reach an unrelated event.** An import
       that throws, a top-level side effect, or a rule that loops must not break
       a hook event that never touched an `.svg`.
       verify: `npx vitest run tests/scripts/design_pass_svg.test.ts --reporter=verbose` -> /✓.*rule-failure-does-not-reach-an-unrelated-event/ <!-- ref-ignore -->
 
 ## Phase 1 — Choose, and record the choice
 
-- [ ] **1.1 Pick the loading strategy on the readings.** If the chunk is
+- [x] **1.1 Pick the loading strategy on the readings.** If the chunk is
       reliable and its first-use cost is small against a dispatch, take it and
       no budget changes. If it is not, the static import needs a ratified raise
       carrying the 30,924-byte attribution from an esbuild metafile, the
@@ -91,33 +91,87 @@ when the written path ends in `.svg`. That has not been tried.
       from a supported build matrix rather than from a round number.
       verify: the decision is recorded in this roadmap's Decisions table with
       the reading that settled it.
-- [ ] **1.2 Enable the routing.** An `.svg` write receives `lint_svg_asset`
+- [x] **1.2 Enable the routing.** An `.svg` write receives `lint_svg_asset`
       findings from the design pass, inside or outside a UI tree. `isUiWrite`
       stays unchanged for `.svg` paths in both directions — the predicate is not
       the mechanism, and widening it would nudge UI routing on every asset
       write.
       verify: `npx vitest run tests/scripts/design_pass_svg.test.ts --reporter=verbose` -> /✓.*svg-write-gets-svg-rules-and-no-new-nudge/ <!-- ref-ignore -->
-- [ ] **1.3 Define the rollback before it is needed.** What reading reverts
+- [x] **1.3 Define the rollback before it is needed.** What reading reverts
       this — dispatch latency, a failure rate, a false-positive report — and the
       mechanism that reverts it. A statically bundled rule set is not switched
       off by a config flag, which is the gap the review named.
       verify: the triggers and the mechanism are stated in this roadmap and in
       the design pass's own header.
 
+## Rollback — the triggers, and the mechanism (1.3)
+
+Written down before it is needed, because the review that withdrew the first
+attempt named exactly this gap: a statically bundled rule set has no off
+switch. The chunk does, and that is half of why it won.
+
+**Revert when any of these is read:**
+
+- the composition gate exceeds its ceiling attributable to this routing
+  (`./scripts-run src/scripts/check_hook_bundle_composition`; 2,128 B
+  attributable on 2026-10-11, 16,910 B of headroom left);
+- a non-`.svg` hook event is observed failing with a stack through the chunk —
+  `design_pass_svg.test.ts > rule-failure-does-not-reach-an-unrelated-event`
+  exists to make that impossible, so one observation is enough;
+- an operator reports SVG false positives on files they accept, at a rate that
+  would make them switch the carrier off. This is Risk 1 of the parent roadmap
+  and the failure the whole concern is shaped around.
+
+**The mechanism, in increasing order of blast radius:**
+
+1. Delete `dist/hooks/svg_rules.chunk.cjs`. The loader returns `null`, the pass
+   reports `verification: degraded` naming the missing file, and no other
+   finding family is affected. Per-install, no rebuild, no code change.
+2. Drop `isSvgAsset` from `isUiSurface` in `design_pass_hook.ts`. An `.svg`
+   outside a UI tree stops reaching the pass; one inside it reads as it did
+   before this step.
+3. `hooks.design_pass.enabled: false`, which is already the default.
+
+The same three are stated in `design_pass_hook.ts`'s own header, so an operator
+reading the code reaches them without finding this file.
+
 ## Blockers
 
 ### Blocker: the loading strategy is unresolved
 
-- **Status:** open
+- **Status:** resolved
+- **Resolved:** 2026-10-11 — branch (a), the conditional chunk, on the Phase 0
+  readings. Both limbs of the condition below hold: 1.1 is `[x]`, and
+  `check_hook_bundle_composition` exits 0 at 1,533,090 B / 1,550,000 B on the
+  tree that carries the chunk, with
+  `grep -c 'svg-structure-dangling-reference' dist/hooks/dispatch.js` = 0 and
+  the same grep against `dist/hooks/svg_rules.chunk.cjs` = 2 — so the gate's
+  green describes a tree where the rules are routed and are not in the shared
+  bundle, which is what the earlier wording could not distinguish. No budget
+  change was taken, so (b) was never reached and AC-4 is vacuous by
+  construction.
 - **Owner:** whoever executes Phase 0
-- **Blocks:** 1.1, 1.2, 1.3
+- **Blocks:** 1.2, 1.3. Narrowed from `1.1, 1.2, 1.3` on 2026-10-11 by
+  `/roadmap:resolve-blockers`: 1.1 **is** the choice this entry records, so
+  blocking it made the entry unclosable by construction. Phase 0 was never
+  blocked and is the work this entry waits on.
 - **What to do:** pick exactly one — (a) prototype the conditional chunk per
   0.1, measure per 0.2, and choose on the readings; or (b) declare the chunk out
   of scope with the reason recorded, and take the static import to an
   independent ratification carrying the corrected 30,924-byte attribution and
-  the runtime readings.
-- **Resolved when:** `./scripts-run src/scripts/check_hook_bundle_composition`
-  exits 0 with the routing enabled, under whichever strategy was chosen.
+  the runtime readings. **(b) is not reachable today**: D1's own reopening
+  condition names a prototype and runtime readings, so 0.1 and 0.2 are owed
+  under either branch, and (b) becomes a live option only once 0.1 records a
+  failure that is itself the reason to carry it (D4).
+- **Resolved when:** both limbs hold —
+  `grep -c '^- \[x\] \*\*1.1 Pick the loading strategy' agents/roadmaps/archive/road-to-svg-rules-in-the-dispatch-path.md`
+  returns 1, and `./scripts-run src/scripts/check_hook_bundle_composition`
+  exits 0 on the tree that carries the chosen strategy. Rewritten 2026-10-11 by
+  `/roadmap:resolve-blockers`: the earlier condition was the byte check alone
+  qualified by "with the routing enabled", which that command does not measure —
+  it reads bytes and module count. Executed on this tree it exits 0 while
+  `grep -c 'svgRules' dist/hooks/dispatch.js` returns 0, so the condition read
+  `met` with nothing done.
 - **Recommendation:** (a). The refused proposal never tried it, both reviewers
   asked for it by name, and it is the only option that charges the bytes to the
   events that use them.
@@ -131,25 +185,25 @@ Four findings from the R2 completion review of the parent change are carried
 here rather than closed in it, each with the reason the same diff was the wrong
 place for it. The other nine were fixed there.
 
-- [ ] **2.1 The icon reference set reads only `d` coordinates.** A reference
+- [x] **2.1 The icon reference set reads only `d` coordinates.** A reference
       drawn with `<rect>`/`<circle>`/`<line>` yields no finite extent, is
       dropped silently, and the reading then reports that no reference set was
       supplied although one was; the same regex reads relative commands as
       absolute. The reading degrades to `unverified` rather than to a pass, so
       no verdict is wrong today.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*primitive-drawn-reference-is-read/ <!-- ref-ignore -->
-- [ ] **2.2 Candidate and reference padding are measured by different
+- [x] **2.2 Candidate and reference padding are measured by different
       methods.** The candidate's comes from a rendered box that includes half
       the stroke and the caps; the reference's from raw centreline coordinates.
       A candidate matching the reference exactly measures one half-stroke less.
       Latent rather than live: the engine suite is green on the shipped pair.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*padding-is-measured-the-same-way-on-both-sides/ <!-- ref-ignore -->
-- [ ] **2.3 The content-level rules read commented-out markup.** `parseElements`
+- [x] **2.3 The content-level rules read commented-out markup.** `parseElements`
       strips comments; the regex rules do not, so a commented `url(#x)` marks a
       `<defs>` entry used and a commented media query suppresses the
       no-reduced-motion rule. Fixing it touches every content-level rule.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*a-commented-out-reference-is-not-a-reference/ <!-- ref-ignore -->
-- [ ] **2.4 `Registration.scale` is parsed and read by nothing.** It is
+- [x] **2.4 `Registration.scale` is parsed and read by nothing.** It is
       validated and recorded in the manifest, so `@2` is a silent no-op while
       `@0` makes the comparison report a missing registration that was in fact
       supplied. Using it changes a measured comparison and owes its own
@@ -176,15 +230,20 @@ place for it. The other nine were fixed there.
 | D1 | reversible-technical | council:2026-10-11 anthropic+openai 2/2 | The static import does not land on the measurement as first framed | AI council 2/2, 2026-10-11, two rounds, peer review, blind chairman, subscription transport, $0.0000: authority `confirmed-non-expanding`, engineering refused, both seats naming the same sequencing | a prototype and runtime readings answer what the refusal asked for |
 | D2 | reversible-technical | evidence | The rule set is split from its CLI regardless of which strategy wins | the split reclaimed 8,643 bytes and one reviewer endorsed it independently of the ceiling question | the CLI and the rules are shown to need each other |
 | D3 | reversible-technical | evidence | `UI_EXTENSIONS` is not the mechanism, under either strategy | it also gates `ui_route_nudge_hook`'s `isUiWrite`, so widening it spends tokens on every asset write in the tree | an `.svg` write outside a UI tree is shown to need UI routing |
+| D4 | reversible-technical | evidence | The 0.1 prototype is owed under both branches, so (b) is not a choice available before Phase 0 runs | D1's reopening condition reads `a prototype and runtime readings answer what the refusal asked for`; (b) proposes a ratification without the prototype, which is the framing both seats refused on 2026-10-11 | 0.1 records a failure that makes the chunk unbuildable in a consumer install, which is then itself the recorded reason (b) carries |
+| D5 | reversible-technical | evidence | **The conditional chunk (a) is the loading strategy.** The rule set ships as `dist/hooks/svg_rules.chunk.cjs`, `require`d only for a path ending in `.svg`; no ceiling change is taken | `agents/evidence/analysis/svg-rules-loading-strategy-2026-10-11.md`. Bundle: 1,533,090 B with the routing against 1,530,962 B without and 1,562,800 B statically — 2,128 B rather than 30,924 B, leaving 16,910 B of headroom. Runtime, n=21 cold starts each: `.svg` event 33.47 ms (chunk) against 33.35 ms (static), bands overlapping; non-`.svg` event 29.55 ms against 30.38 ms, so the chunk is 0.83 ms FASTER on the dispatch that does not use the rules. The chunk's own first `require` is 1.896 ms and is repaid by the 29 KB the static bundle parses first | `.svg` writes come to dominate the event mix AND the first-require cost rises enough to invert the `.svg` row, both measured on the same tree |
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An `.svg` write receives `lint_svg_asset` findings from the design
+- [x] AC-1 — An `.svg` write receives `lint_svg_asset` findings from the design
       pass, inside and outside a UI tree, and `isUiWrite` is unchanged for
       `.svg` paths in both directions.
-- [ ] AC-2 — `check_hook_bundle_composition` exits 0 with the routing enabled,
+- [x] AC-2 — `check_hook_bundle_composition` exits 0 with the routing enabled,
       and the reading is recorded with the strategy that produced it.
-- [ ] AC-3 — A rule failure is shown not to reach a hook event that never
+- [x] AC-3 — A rule failure is shown not to reach a hook event that never
       touched an `.svg`.
-- [ ] AC-4 — If a budget change was taken, its attribution comes from an esbuild
-      metafile and an independent party ratified it on that number.
+- [x] AC-4 — If a budget change was taken, its attribution comes from an esbuild
+      metafile and an independent party ratified it on that number. Satisfied
+      vacuously: D5 took the chunk, no budget change was proposed, and the
+      ceiling in `src/config/hook-bundle-budget.json` is byte-identical to
+      what it was before this roadmap.

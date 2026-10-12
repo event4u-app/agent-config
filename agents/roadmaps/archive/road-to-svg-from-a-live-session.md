@@ -116,7 +116,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 1 — The witness stops warning about what is not there
 
-- [ ] **1.1 `motion/img-delivery-no-static-route` fires only on a file that
+- [x] **1.1 `motion/img-delivery-no-static-route` fires only on a file that
       moves.** Today `uiRenderAsset.ts:1122` pushes the finding whenever the
       host has no reduced-motion `<picture>` route, without asking whether the
       file animates; six of six real files read it with no animation. Gate the
@@ -124,7 +124,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
       non-animated twin beside `hosts/img-delivery.html` that must read 0.
       S28.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*static-file-through-img-has-no-motion-finding/ <!-- ref-ignore -->
-- [ ] **1.2 `geometry/near-white-hole` needs evidence of a hole.** With a
+- [x] **1.2 `geometry/near-white-hole` needs evidence of a hole.** With a
       registered raster (`--compare` + `--registration`) the reading samples the
       source under the near-white region and reports only when the source there
       matches the source background; without a source it records the region
@@ -137,7 +137,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 2 — The raster comparison passes what was accepted
 
-- [ ] **2.1 The raster verdict reads the subject, not the frame.** A fixture
+- [x] **2.1 The raster verdict reads the subject, not the frame.** A fixture
       raster renders `conversion/reference.svg` on an opaque light ground with
       an unrelated mark and a soft glow inside the registration frame. The
       reference compared against it must read `pass`; today the background
@@ -148,12 +148,12 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
       the crop agree and IoU cannot see it. S16, S17, S30.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*registered-raster-of-the-reference-passes/ <!-- ref-ignore -->
       and `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*source-cut-by-frame-is-found/ <!-- ref-ignore -->
-- [ ] **2.2 Per-region readings without a regions file.** When no regions are
+- [x] **2.2 Per-region readings without a regions file.** When no regions are
       passed, the comparison derives one region per top-level `<g id>` from its
       rendered box and names the worst; `whole` stays as the first row. S12's
       per-region breakdown becomes reachable from the CLI. S30. D2.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*top-level-groups-become-regions/ <!-- ref-ignore -->
-- [ ] **2.3 A conversion records its registration and its scorer.** The
+- [x] **2.3 A conversion records its registration and its scorer.** The
       skill's Output format item 4 names the registration as `x,y,w,h` in the
       source's pixel frame, the scorer that produced each number (`ui:render`
       or a named script) and the sample resolution, so a later run can repeat
@@ -163,12 +163,12 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 3 — The static witness reads cost
 
-- [ ] **3.1 `svg-structure-degenerate-gradient`.** A gradient whose stops all
+- [x] **3.1 `svg-structure-degenerate-gradient`.** A gradient whose stops all
       carry the same colour and opacity is a flat fill in a gradient's clothes;
       warn. Planted row and clean twin in `tests/design-artifacts/fixtures/svg-assets/`,
       pre-registered in its README before the rule is written. S26.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*degenerate-gradient-is-found/ <!-- ref-ignore -->
-- [ ] **3.2 A cost reading, reported and never gated.** The asset manifest
+- [x] **3.2 A cost reading, reported and never gated.** The asset manifest
       gains `cost: { bytes, elements, paths, gradients, coordinates }`, and the
       skill's report quotes it beside the fidelity numbers. No threshold: none
       was measured, and a gate on bytes would have refused the 195 KB trace and
@@ -177,7 +177,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 4 — Seams, dark grounds and small sizes
 
-- [ ] **4.1 `geometry/background-bleed-inside-silhouette`.** On the dark
+- [x] **4.1 `geometry/background-bleed-inside-silhouette`.** On the dark
       capture, count pixels inside the file's own silhouette (from the
       transparent render) whose colour sits within the anti-alias band of the
       dark ground; ids declared as holes are excluded. Twins: two abutting
@@ -185,14 +185,14 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
       overlapping by one unit (clean). The count threshold is pre-registered
       in the fixture README before the reading is written. S16, S25.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*seam-between-abutting-shapes-is-found/ <!-- ref-ignore -->
-- [ ] **4.2 A contrast reading per background.** For each capture, the share
+- [x] **4.2 A contrast reading per background.** For each capture, the share
       of painted pixels whose contrast against that capture's background is
       below 3:1. A mark that is mostly below on one ground reads
       `accessibility/low-contrast-on-background` naming the ground. Twins: a
       dark-violet word on the dark capture (found) and a light one (clean).
       S20.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*dark-mark-on-dark-ground-is-found/ <!-- ref-ignore -->
-- [ ] **4.3 Marks are rendered small as well.** The `mark` class captures 16
+- [x] **4.3 Marks are rendered small as well.** The `mark` class captures 16
       and 32 px beside 1x and 2x, so the legibility look the review asked for
       has a capture to look at. Legibility stays a look; the capture is the
       evidence it happened. S16, S19.
@@ -200,7 +200,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 5 — The owner skill teaches what was accepted
 
-- [ ] **5.1 Trace or construct — decided, and the trace is the underlay by
+- [x] **5.1 Trace or construct — decided, and the trace is the underlay by
       default.** A new subsection in the conversion branch of
       `src/skills/svg-authoring/SKILL.md`: trace the source to measure and to
       align, then construct the deliverable from few points, palette colours
@@ -213,28 +213,28 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
       progress. Steps 2 and 6 of the branch are reworded to match. S16, S21,
       S23. D5.
       verify: `grep -cE '^###.*Trace.*construct' src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
-- [ ] **5.2 Crop with margin, and never trust a crop edge.** Step 1 of the
+- [x] **5.2 Crop with margin, and never trust a crop edge.** Step 1 of the
       branch gains: crop with a margin, and widen the crop when source content
       touches its edge (2.1's finding is the check). S17.
       verify: `grep -cE 'margin.*crop|crop.*margin' src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
-- [ ] **5.3 Stop on a plateau, not on a count.** The branch's stop rule gains:
+- [x] **5.3 Stop on a plateau, not on a count.** The branch's stop rule gains:
       when two consecutive passes each improve the score by less than 5 %
       relative, stop and report the residual's cause and the construct or
       redesign option, instead of starting another pass. The user's pass budget
       still wins when it is smaller. S21, S22.
       verify: `grep -cE '[Pp]lateau' src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
-- [ ] **5.4 One snapshot per delivered pass.** Every delivered pass is also
+- [x] **5.4 One snapshot per delivered pass.** Every delivered pass is also
       written as `<name>.pass-<n>.svg`, the next pass is diffed with
       `lint_svg_asset --baseline` against the last accepted snapshot, and the
       report lists the accepted properties carried forward. Restoring "version
       4" is a copy, not a reconstruction. Extends SKILL.md:99-117. S24.
       verify: `grep -cE 'pass-<n>\.svg' src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
-- [ ] **5.5 A mark names its variants.** The Output format gains a variants
+- [x] **5.5 A mark names its variants.** The Output format gains a variants
       line: the small-size variant when the 16/32 px captures (4.3) lose the
       detail, and a light-on-dark variant when 4.2 reads low contrast — built
       or named as missing, never silent. S19, S20.
       verify: `grep -cE '[Vv]ariants' src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
-- [ ] **5.6 Outlined lettering names its font.** A word set from an installed
+- [x] **5.6 Outlined lettering names its font.** A word set from an installed
       font and converted to outlines is reported with the font's name and
       whether its licence allows outlining into a distributed asset; unknown
       licence is reported as unknown, not as permitted. S27.
@@ -263,18 +263,18 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A non-animated SVG delivered through `<img>` reads no motion
+- [x] AC-1 — A non-animated SVG delivered through `<img>` reads no motion
       finding, and a white region reads as a hole only where a registered
       source shows background there.
-- [ ] AC-2 — A registered raster of the reference vector, with neighbours and a
+- [x] AC-2 — A registered raster of the reference vector, with neighbours and a
       glow in the frame, compares as `pass`; a source cut by its frame is a
       finding; per-group regions name the worst part.
-- [ ] AC-3 — A degenerate gradient is a static finding, and every asset
+- [x] AC-3 — A degenerate gradient is a static finding, and every asset
       manifest carries a cost reading that no gate reads.
-- [ ] AC-4 — Background bleed inside a silhouette and a mark below 3:1 on a
+- [x] AC-4 — Background bleed inside a silhouette and a mark below 3:1 on a
       capture's ground are engine findings, and a mark has 16 and 32 px
       captures.
-- [ ] AC-5 — The skill's conversion branch defaults to construct over a traced
+- [x] AC-5 — The skill's conversion branch defaults to construct over a traced
       underlay, crops with margin, stops on a plateau, snapshots every
       delivered pass, names variants and outlined fonts, and records the
       registration and scorer of every number it reports.

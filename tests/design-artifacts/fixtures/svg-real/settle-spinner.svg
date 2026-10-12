@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="settle-spinner-title">
+  <title id="settle-spinner-title">Waiting for CI to settle</title>
+  <style>
+    .settle-spinner-arc { transform-origin: 24px 24px; transform-box: view-box; animation: settle-spinner-turn 1.2s linear infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .settle-spinner-arc { animation: none; }
+    }
+    @keyframes settle-spinner-turn { to { transform: rotate(360deg); } }
+  </style>
+  <circle cx="24" cy="24" r="18" fill="none" stroke="#e2e8f0" stroke-width="5"/>
+  <path class="settle-spinner-arc" d="M 24 6 A 18 18 0 0 1 42 24" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/>
+</svg>

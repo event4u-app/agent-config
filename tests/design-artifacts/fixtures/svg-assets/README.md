@@ -117,6 +117,12 @@ Controls, same three instruments:
 | `assets/primitive-only-mark.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | **D3's false red, confirmed**: the geometric mark `logo-generation` recommends is rejected as non-vector. |
 | `assets/spinner-intentional-dash.svg` | not scanned (exit 1, scanned 0) | `false` | FAIL | An intentional dash pattern (R12); no static rule may fire on it. |
 | `assets/hamburger-24-grid.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Fill ratio 0.375 is designed padding (R12); it must stay clean at the icon threshold. |
+| `assets/id-only-in-a-comment.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | An id that exists only inside a comment. Accepted as a true vector while its only reference dangles. |
+| `assets/mis-nested-tags.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Both tags present and correctly spelled; the document is not a tree and nothing in the tree could say so. |
+| `assets/title-not-a-direct-child.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | The title names the group it sits in. Parentage, which no pattern over the text decides. |
+| `assets/degenerate-gradient.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | A gradient whose stops are identical. Renders correctly, costs bytes, and nothing counted it. |
+| `assets/seam-between-shapes.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | A ring abutting a disc leaves a hairline of ground inside the silhouette. An engine reading; nothing read it. |
+| `assets/dark-mark-on-dark.svg` | not scanned (exit 1, scanned 0) | `false` | PASS | Legible on white, nearly invisible on the dark capture. Contrast per ground is an engine reading; nothing read it. |
 
 ### The four pre-registered expectations, and whether they held
 
@@ -183,6 +189,12 @@ nobody looked, which is a different fact from "nothing was wrong".
 | `geometry/default-font-fallback` | engine | `default-serif-fallback` | 0 | — |
 | `geometry/near-white-hole` | engine | `near-white-hole` | 0 | — |
 | `geometry/icon-off-grid` | engine | `icon-off-grid` | 0 | read from the incumbent set's own SVGs (E6) |
+| `structure/dangling-reference` | static | `dangling-reference`, `id-only-in-a-comment` | 0 | — |
+| `structure/not-well-formed` | static | `mis-nested-tags` | 0 | — |
+| `structure/degenerate-gradient` | static | `degenerate-gradient` | 0 | — |
+| `accessibility/meaningful-without-name` | static | `meaningful-without-name`, `title-not-a-direct-child` | 0 | — |
+| `geometry/background-bleed-inside-silhouette` | engine | `seam-between-shapes` | 0 | bleed share > 0.002, dark row |
+| `accessibility/low-contrast-on-background` | engine | `dark-mark-on-dark` | 0 | low-contrast share > 0.5 |
 
 Three controls bound the whole table: `primitive-only-mark` must never be
 reported by the vector-honesty family, `spinner-intentional-dash` never by a
@@ -245,7 +257,7 @@ a pass.
 | `assets/element-outside-viewbox.svg` | static | `structure/element-outside-viewbox` | lint_svg_asset svg-structure-outside-viewbox | found | 0 |
 | `assets/text-overflows-box.svg` | engine | `geometry/text-overflows-box` | ui:render --profile asset | found | 0 |
 | `assets/default-serif-fallback.svg` | engine | `geometry/default-font-fallback` | ui:render --profile asset | found | 0 |
-| `hosts/inline-generic-ids.html` | static | `accessibility/generic-id-collision` | lint_svg_asset svg-a11y-generic-id | found | 0 |
+| `hosts/inline-generic-ids.html` | static | `accessibility/generic-id-collision` | lint_svg_asset svg-a11y-duplicate-id | found | 0 |
 | `assets/meaningful-without-name.svg` | static | `accessibility/meaningful-without-name` | lint_svg_asset svg-a11y-no-accessible-name | found | 0 |
 | `assets/double-name.svg` | static | `accessibility/double-name` | lint_svg_asset svg-a11y-double-name | found | 0 |
 | `assets/keysplines-out-of-range.svg` | static | `motion/keysplines-out-of-range` | lint_svg_asset svg-motion-keysplines-range | found | 0 |
@@ -315,3 +327,77 @@ column scoped to its own twin would have scored it `yes`.
 | `motion/img-delivery-no-static-route` | `hosts/img-delivery.html` | engine | 1+ | 0 | 0 | yes |
 | `motion/no-reduced-motion-branch` | `hosts/smil-only.html` | static | 1+ | 1 | 1 (assets/guessed-dash.clean.svg) | no |
 | `motion/smil-css-only-branch` | `hosts/smil-css-only.html` | static | 1+ | 0 | 0 | yes |
+
+## Pre-registered thresholds for the ground readings
+
+Steps 4.1 and 4.2 of `road-to-svg-from-a-live-session`. Both readings are
+taken inside the file's own silhouette — from the TRANSPARENT render, because
+a silhouette taken from the light capture loses every white part of the
+graphic, which is exactly the paint these two readings are about.
+
+Written here before the readings were implemented, under 0.3's rule:
+
+| Reading | Fires above | Why that number |
+|---|---|---|
+| `geometry/background-bleed-inside-silhouette` | `bleed_share > 0.002`, on the DARK row | A seam is a hairline along a shared edge. The planted row abuts a ring and a disc at the same radius and reads 0.0072; its one-edit twin overlaps them by a unit and reads 0. A SHARE rather than a count, so it does not move with the render size. |
+| `accessibility/low-contrast-on-background` | `low_contrast_share > 0.5` | Half the mark, never a few anti-aliased edge pixels — an edge blends into its ground by construction, and a rule that fired on that would fire on every file. |
+
+**Two definitions were measured, and the first one read zero.** "Inside the
+silhouette" as `alpha >= 200` excludes a seam by construction — a seam is
+exactly where alpha is low. And "within the anti-alias band of the ground" as
+a colour tolerance also read zero: a half-covered seam composites to a blend of
+the two shapes AND the ground, nowhere near the ground itself. What survived is
+geometric and renderer-independent: an INTERIOR pixel the graphic does not
+fully cover. Interior is found by flooding the transparent region inwards from
+the border, so a gap that splits the silhouette edge to edge is not interior —
+which is why the planted fixture is a ring abutting a disc rather than two
+halves of a square, the shape the session's own case had.
+
+The finding fires on the DARK row. The number is the same on both, because
+alpha is; the dark capture is where the consequence is visible, which is the
+measured fact the session recorded.
+
+A gap that is MEANT to be there — a ring's middle — is declared with
+`data-hole` on the shape that makes it, and is excluded. By attribute rather
+than by geometry, because "is this gap intended" is a question only the author
+can answer.
+
+## The held-out real set
+
+Step 3.2 of `road-to-svg-review-followups`. Everything above this heading is
+**planted**: a defect written on purpose, with a one-edit twin. A promotion bar
+measured only on planted files says how well the checkers find defects somebody
+chose for them, and nothing about how they behave on a file written to be
+right. So there is a second set, and it is reported separately — never merged
+into the planted totals.
+
+It lives in `tests/design-artifacts/fixtures/svg-real/` <!-- ref-ignore --> and
+covers every asset class. Every file is this project's own: two are already in
+the tree (`site/public/favicon.svg`,
+`src/scripts/media/lib/fixtures/recraft/asset-0001.svg`), two are the
+conversion scenarios' delivered marks, and three were authored for this set.
+**No third-party file**, which is the same rule the scenario directory keeps.
+
+**Pre-registered, under 0.3's rule.** The expected column below was written
+before any checker ran over the set, and no rule has been tuned against it.
+The measured column is the reading that followed.
+
+| File | class | pre-registered | measured | reading |
+|---|---|---|---|---|
+| `favicon-32.svg` | icon | 0 | 0 | xmlns, viewBox, `role="img"`, `aria-label`, no references |
+| `recraft-asset-0001.svg` | icon | 1 · `svg-a11y-no-accessible-name` | 1 · `svg-a11y-no-accessible-name` | a generated 16-unit square with no role, title or label — a real file that is genuinely unnamed |
+| `authored-mark.svg` | mark | 0 | 0 | scenario 1's delivered mark |
+| `conversion-reference-mark.svg` | mark | 0 | 0 | scenario 1b's delivered mark |
+| `runway-illustration.svg` | illustration | 0 | 0 | `aria-labelledby` pointing at its own `<title>`, explicit font stack |
+| `dispatch-diagram.svg` | diagram | 0 | 0 | namespaced marker id, three labelled nodes |
+| `settle-spinner.svg` | animated | 0 | 0 | CSS animation with a `prefers-reduced-motion` branch and `transform-box` |
+
+**7 files, 1 finding, and the prediction matched the measurement on every
+row.** That is the reading, not a target: a second set exists so that a future
+rule which starts firing on correct files has somewhere to show up, and a row
+that moves is the signal rather than a failure to explain away.
+
+**What this set does NOT do.** It is small, it is ours, and it is therefore not
+a sample of SVGs in the wild. It bounds false positives on files written to
+this project's own conventions, which is the population the checkers actually
+meet, and it says nothing about a file written to anybody else's.

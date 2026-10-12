@@ -36,6 +36,181 @@ export interface Registration {
     scale: number;
 }
 
+/**
+ * `--registration x,y,w,h[@scale]` — the source crop's own pixel frame (S9).
+ * An unparseable spec returns `null`, which leaves the raster reading
+ * `unverified` rather than letting the comparison guess an offset.
+ *
+ * Finding 2.4 of `road-to-svg-rules-in-the-dispatch-path`: `scale` was parsed
+ * and validated here and then read by nothing, so `@2` was a silent no-op. It
+ * now reaches the comparison, which multiplies the crop rect by it — the
+ * operator states the crop in logical units and `@2` says the raster is a 2x
+ * capture of them.
+ *
+ * `@0` and `@-1` still return `null`, and that is deliberate rather than
+ * leftover: a zero-scale crop has no pixels, so there is nothing to compare,
+ * and reporting the registration as absent is the same verdict a reader would
+ * reach from an empty crop. The caller prints the spec it could not parse, so
+ * "absent" is not the only thing the operator sees.
+ */
+export function parseRegistration(spec: string | undefined): Registration | null {
+    if (!spec) return null;
+    const [frame, scaleRaw] = spec.split('@');
+    const parts = (frame ?? '').split(',').map((n) => Number(n.trim()));
+    if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
+    const scale = scaleRaw === undefined ? 1 : Number(scaleRaw);
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+    // The CROP has to be a crop. Finding 7 of the fourth completion review:
+    // `scale <= 0` was refused with a reason — a zero or negative scale is not
+    // a frame — and the same reason applies to the rectangle, which was never
+    // checked. `0,0,0,0` and `10,10,-5,-5` were both accepted, and a crop with
+    // no area registers a subject that is not there.
+    if ((parts[2] as number) <= 0 || (parts[3] as number) <= 0) return null;
+    return {
+        x: parts[0] as number,
+        y: parts[1] as number,
+        width: parts[2] as number,
+        height: parts[3] as number,
+        scale,
+    };
+}
+
+/**
+ * The crop rect in the raster's OWN pixels.
+ *
+ * Finding 2.4 of `road-to-svg-rules-in-the-dispatch-path`: `Registration.scale`
+ * was parsed by the CLI, validated, recorded in the manifest and then read by
+ * nothing — `@2` was a silent no-op. The operator states the region in logical
+ * units; `@2` says the raster is a 2x capture of them, so the rect in image
+ * pixels is the region multiplied through.
+ *
+ * Its own exported function rather than four expressions inside a
+ * `page.evaluate` argument, because the defect was exactly that those four
+ * expressions were unreachable from any test that does not drive a browser.
+ */
+export function cropRect(
+    registration: Registration | null,
+): { x: number; y: number; width: number; height: number } | null {
+    if (!registration) return null;
+    const s = registration.scale;
+    return {
+        x: registration.x * s,
+        y: registration.y * s,
+        width: registration.width * s,
+        height: registration.height * s,
+    };
+}
+
+/**
+ * What the SOURCE raster shows at a list of points, and what its background is.
+ *
+ * Step 1.2 of `road-to-svg-from-a-live-session`. `geometry/near-white-hole`
+ * asks a question about the source — "is there a hole there?" — and until now
+ * nothing read the source to answer it. Measured consequence: the rule fired
+ * six times on paint an owner had chosen, and zero times on the file the same
+ * owner rejected.
+ *
+ * Points are in the VECTOR's user units; the registration maps them into the
+ * raster's own pixel frame, the same mapping the comparison uses, so the two
+ * cannot disagree about where a point is.
+ *
+ * The background is the raster's corner pixel. That is the same assumption the
+ * comparison's own background mask makes, and it is stated here rather than
+ * hidden: a source whose corner is not its background will answer `paint`
+ * everywhere, which is the direction that produces no finding.
+ */
+export interface SourceSample {
+    /** `true` when the source at this point matches its own background. */
+    isBackground: boolean;
+    rgb: [number, number, number];
+}
+
+export async function sampleSource(
+    context: Awaited<ReturnType<Browser['newContext']>>,
+    sourceFile: string,
+    vb: ViewBox,
+    registration: Registration,
+    points: ReadonlyArray<{ x: number; y: number }>,
+    blocked: string[],
+): Promise<SourceSample[] | null> {
+    if (points.length === 0) return [];
+    let buf: Buffer;
+    try {
+        buf = fs.readFileSync(sourceFile);
+    } catch {
+        return null;
+    }
+    const mime = /\.png$/i.test(sourceFile)
+        ? 'image/png'
+        : /\.webp$/i.test(sourceFile)
+          ? 'image/webp'
+          : /\.svg$/i.test(sourceFile)
+            ? 'image/svg+xml'
+            : 'image/jpeg';
+    const crop = cropRect(registration);
+    if (!crop) return null;
+
+    const page = await context.newPage();
+    await page.route('**/*', async (route: Route) => {
+        const url = route.request().url();
+        if (!ALLOWED_SCHEMES.some((p) => url.startsWith(p))) {
+            blocked.push(url);
+            await route.abort();
+            return;
+        }
+        await route.continue();
+    });
+    try {
+        await page.setContent('<!doctype html><body></body>');
+        return await page.evaluate(
+            async (args: {
+                url: string;
+                crop: { x: number; y: number; width: number; height: number };
+                vb: ViewBox;
+                points: ReadonlyArray<{ x: number; y: number }>;
+            }): Promise<SourceSample[] | null> => {
+                const img = new Image();
+                img.src = args.url;
+                try {
+                    await img.decode();
+                } catch {
+                    return null;
+                }
+                const w = Math.max(1, Math.round(args.crop.width));
+                const h = Math.max(1, Math.round(args.crop.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                if (!ctx) return null;
+                ctx.drawImage(img, args.crop.x, args.crop.y, args.crop.width, args.crop.height, 0, 0, w, h);
+                const data = ctx.getImageData(0, 0, w, h).data;
+                const at = (px: number, py: number): [number, number, number] => {
+                    const x = Math.min(w - 1, Math.max(0, Math.round(px)));
+                    const y = Math.min(h - 1, Math.max(0, Math.round(py)));
+                    const i = (y * w + x) * 4;
+                    return [data[i] as number, data[i + 1] as number, data[i + 2] as number];
+                };
+                const background = at(0, 0);
+                const near = (a: [number, number, number], b: [number, number, number]): boolean =>
+                    Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) <= 24;
+                return args.points.map((p) => {
+                    // User units → the crop's own pixels, which is the same
+                    // mapping the comparison stretches the vector through.
+                    const rgb = at(
+                        ((p.x - args.vb.x) / args.vb.w) * w,
+                        ((p.y - args.vb.y) / args.vb.h) * h,
+                    );
+                    return { isBackground: near(rgb, background), rgb };
+                });
+            },
+            { url: `data:${mime};base64,${buf.toString('base64')}`, crop, vb, points },
+        );
+    } finally {
+        await page.close();
+    }
+}
+
 export interface RasterRegionReading {
     region: string;
     silhouette_iou: number;
@@ -64,7 +239,23 @@ export interface GeometryComparison {
     sub_pixel_offset: { dx_units: number; dy_units: number } | null;
     texts: TextDelta[];
     font_only_delta: boolean;
-    raster: { registration: Registration; regions: RasterRegionReading[]; worst_region: string } | null;
+    raster: {
+        registration: Registration;
+        regions: RasterRegionReading[];
+        worst_region: string;
+        /**
+         * The share of the candidate's painted pixels that lie OUTSIDE the
+         * subject — a neighbouring mark the crop included, a glow, a shadow.
+         * Its own reading (step 2.1), never folded into IoU.
+         */
+        foreign_content_share: number;
+        /**
+         * Frame sides the candidate's content runs into. A source cut by its
+         * own crop agrees with a trace of that crop exactly, so IoU cannot see
+         * the cut and this is the only signal there is.
+         */
+        frame_edge_contact: string[];
+    } | null;
 }
 
 export interface CompareSpec {
@@ -151,9 +342,69 @@ export async function compareGeometry(
             return { ...base, reason: 'one of the two inputs could not be decoded in the renderer' };
         }
 
-        const { iou, dx, dy } = bestAlignment(baselineMask.painted, candidateMask.painted, frame.w, frame.h);
-        const shifted = shift(candidateMask.painted, frame.w, frame.h, dx, dy);
-        const maxDistance = boundaryDistance(baselineMask.painted, shifted, frame.w, frame.h) * unitsPerSample;
+        // Step 2.1: against a REGISTERED RASTER the comparison judges the
+        // SUBJECT, not everything the crop happened to contain. The subject is
+        // the baseline's own silhouette widened by the anti-alias band the
+        // comparison already computes — not by a number chosen to pass a
+        // fixture. Foreign content and a frame-edge cut are reported as their
+        // own readings below rather than folded into IoU, where they made the
+        // witness fail a trace its owner had accepted.
+        const judgeSubjectOnly = candidateIsRaster && spec.registration !== undefined;
+        // The subject for JUDGING is the baseline's silhouette exactly, with no
+        // dilation. A dilated mask would let a one-sample ring of whatever
+        // surrounds the subject — a glow, a shadow — into the union and cost
+        // the IoU about four points on a small mark, which is a tax on being
+        // photographed next to something rather than a reading about the
+        // conversion. What the restricted IoU then measures is how much of the
+        // subject the candidate actually paints; a candidate that misses part
+        // of it, or is shifted, still fails.
+        //
+        // The subject for FOREIGN CONTENT is dilated by the anti-alias band
+        // the comparison already computes, so the rasteriser's own edge smear
+        // is not reported as a neighbouring mark. Two masks, because the two
+        // questions have different right answers at the boundary.
+        const subjectForJudging = judgeSubjectOnly ? baselineMask.painted : null;
+        const subjectForForeign = judgeSubjectOnly
+            ? // ONE SAMPLE, and the units are the point. `unitsPerSample` is
+              // user units per sample — `dilate`'s own doc says its radius is
+              // in SAMPLES, so passing it read a units value as a sample count
+              // (finding 5). It happened to equal 1 only while
+              // `frame.scale >= 1`; on a coarse frame — a large viewBox against
+              // a small raster — it dilated by several samples and
+              // `foreign_content_share` under-reported exactly where the
+              // sampling is least precise. The anti-alias band IS one sample by
+              // construction, whatever that sample is worth in user units.
+              dilate(baselineMask.painted, frame.w, frame.h, 1)
+            : null;
+        // ALIGNMENT FIRST, ON THE UNCLIPPED CANDIDATE — finding 1 of this
+        // change's second completion review, and it is a proof rather than an
+        // observation. Clipping the candidate to the baseline's silhouette
+        // makes it a SUBSET of the baseline, and for a subset the IoU at zero
+        // shift is |candidate| / |baseline|, which no shift can beat: shifting
+        // can only move part of the subset off the baseline (the intersection
+        // shrinks) and off its own footprint (the union grows). `bestAlignment`
+        // replaces its (0,0) seed only on a STRICTLY greater value, so it
+        // returned dx = dy = 0 for every registered raster ever measured, and
+        // `sub_pixel_offset` was a constant reported as a reading. That is the
+        // defect class this branch exists to fix, reintroduced by the clip that
+        // fixed a different one.
+        //
+        // So the offset is read from the candidate as rendered — registration
+        // has already cropped the source to the subject, so this is the mark
+        // against the mark — and the clip is applied to the ALIGNED candidate,
+        // where it still does its own job of keeping a neighbour out of the IoU.
+        const { dx, dy } = bestAlignment(baselineMask.painted, candidateMask.painted, frame.w, frame.h);
+        const aligned = shift(candidateMask.painted, frame.w, frame.h, dx, dy);
+        const candidateForJudging =
+            subjectForJudging === null ? aligned : intersect(aligned, subjectForJudging);
+
+        const iou = iouOf(baselineMask.painted, candidateForJudging);
+        const maxDistance =
+            boundaryDistance(baselineMask.painted, candidateForJudging, frame.w, frame.h) * unitsPerSample;
+
+        const foreign =
+            subjectForForeign === null ? null : shareOutside(candidateMask.painted, subjectForForeign);
+        const cutSides = judgeSubjectOnly ? touchesFrameEdge(candidateMask.painted, frame.w, frame.h) : [];
 
         // Text is compared by box and resolved family only.
         const baseTexts = await readTextBoxes(page, spec.baseline);
@@ -181,13 +432,26 @@ export async function compareGeometry(
 
         let raster: GeometryComparison['raster'] = null;
         if (candidateIsRaster && spec.registration) {
-            const regions = spec.regions ?? [{ id: 'whole', box: { x: vb.x, y: vb.y, w: vb.w, h: vb.h } }];
+            // `whole` stays first, always — it is the reading every consumer
+            // already reads, and a per-group breakdown is added beside it
+            // rather than instead of it (step 2.2).
+            const derived = spec.regions ?? (await readTopLevelGroupBoxes(page, spec.baseline));
+            const regions = [
+                { id: 'whole', box: { x: vb.x, y: vb.y, w: vb.w, h: vb.h } },
+                ...derived.filter((r) => r.id !== 'whole'),
+            ];
             const readings = regions.map((region) => rasterRegionReading(baselineMask, candidateMask, frame, vb, region));
             const worst = readings.reduce(
                 (acc, r) => (r.mean_colour_error > acc.mean_colour_error ? r : acc),
                 readings[0] ?? { region: 'whole', silhouette_iou: 0, mean_colour_error: 0, share_off_by_40: 0 },
             );
-            raster = { registration: spec.registration, regions: readings, worst_region: worst.region };
+            raster = {
+                registration: spec.registration,
+                regions: readings,
+                worst_region: worst.region,
+                foreign_content_share: foreign?.share ?? 0,
+                frame_edge_contact: cutSides,
+            };
         }
 
         const withinIou = iou >= spec.tolerance.silhouette_iou_min;
@@ -220,6 +484,86 @@ export async function compareGeometry(
     } finally {
         await page.close();
     }
+}
+
+/**
+ * The subject's own neighbourhood — a dilation of the baseline's silhouette.
+ *
+ * Step 2.1 of `road-to-svg-from-a-live-session`. When the candidate is a
+ * REGISTERED RASTER, everything inside the frame is in the comparison:
+ * neighbouring marks the crop happened to include, a soft glow around the
+ * subject, a drop shadow. The background mask is taken from the corner pixel,
+ * so all of it counts as painted and all of it lands in IoU and in the
+ * boundary distance. Measured consequence: the witness failed a trace the
+ * owner had accepted, and ranked the rejected trace above the accepted
+ * construction on every number.
+ *
+ * `radius` is in SAMPLES, and the caller passes the anti-alias band the
+ * comparison already computes — so this widens by exactly the amount the
+ * rasteriser can smear an edge and not by a number chosen to make a fixture
+ * pass.
+ */
+function dilate(mask: Uint8Array, w: number, h: number, radius: number): Uint8Array {
+    if (radius <= 0) return mask;
+    const r = Math.ceil(radius);
+    const out = new Uint8Array(mask.length);
+    for (let y = 0; y < h; y += 1) {
+        for (let x = 0; x < w; x += 1) {
+            if (mask[y * w + x] !== 1) continue;
+            for (let dy = -r; dy <= r; dy += 1) {
+                const sy = y + dy;
+                if (sy < 0 || sy >= h) continue;
+                for (let dx = -r; dx <= r; dx += 1) {
+                    const sx = x + dx;
+                    if (sx < 0 || sx >= w) continue;
+                    out[sy * w + sx] = 1;
+                }
+            }
+        }
+    }
+    return out;
+}
+
+/** `a AND b`, pixel for pixel. */
+export function intersect(a: Uint8Array, b: Uint8Array): Uint8Array {
+    const out = new Uint8Array(a.length);
+    for (let i = 0; i < a.length; i += 1) out[i] = a[i] === 1 && b[i] === 1 ? 1 : 0;
+    return out;
+}
+
+/** Painted pixels in `mask` that `within` does not cover, as a share of `mask`. */
+function shareOutside(mask: Uint8Array, within: Uint8Array): { share: number; count: number } {
+    let painted = 0;
+    let outside = 0;
+    for (let i = 0; i < mask.length; i += 1) {
+        if (mask[i] !== 1) continue;
+        painted += 1;
+        if (within[i] !== 1) outside += 1;
+    }
+    return { share: painted === 0 ? 0 : outside / painted, count: outside };
+}
+
+/**
+ * Does painted content touch the frame's own edge?
+ *
+ * Step 2.1, and the crown-cut case it exists for: a trace whose crop started
+ * five pixels below the top of the mark took the crop border for a contour,
+ * and a comparison against that same crop cannot see the cut — the trace and
+ * the source agree exactly, because both are missing the same thing. The only
+ * signal available is that the content runs into the border, which is what
+ * this reports.
+ */
+function touchesFrameEdge(mask: Uint8Array, w: number, h: number): string[] {
+    const sides: string[] = [];
+    const any = (idx: (i: number) => number, n: number): boolean => {
+        for (let i = 0; i < n; i += 1) if (mask[idx(i)] === 1) return true;
+        return false;
+    };
+    if (any((i) => i, w)) sides.push('top');
+    if (any((i) => (h - 1) * w + i, w)) sides.push('bottom');
+    if (any((i) => i * w, h)) sides.push('left');
+    if (any((i) => i * w + (w - 1), h)) sides.push('right');
+    return sides;
 }
 
 interface Rasterised {
@@ -337,9 +681,7 @@ async function rasterise(
             url: dataUrl,
             w: frame.w,
             h: frame.h,
-            reg: registration
-                ? { x: registration.x, y: registration.y, width: registration.width, height: registration.height }
-                : null,
+            reg: cropRect(registration),
         },
     );
     if (!out) return null;
@@ -369,6 +711,49 @@ async function readTextBoxes(page: Page, file: string): Promise<Array<{ family: 
 }
 
 
+/**
+ * The rendered box of every TOP-LEVEL `<g id>`, in user units.
+ *
+ * Step 2.2 of `road-to-svg-from-a-live-session`. `CompareSpec.regions` existed
+ * and `main.ts` carried no option for it, so `worst_region` was always
+ * `whole` and the per-region breakdown an earlier learning asked for was
+ * unreachable from the CLI. A flag would have been one more input nobody
+ * passes; a hand-built file already names its own parts — `hat`, `head-group`,
+ * `arms`, `legs` — so the regions are read from the file instead.
+ *
+ * TOP-LEVEL only, and `id` required. A nested group is part of its parent's
+ * reading, and an anonymous group has no name to report a verdict under.
+ */
+async function readTopLevelGroupBoxes(page: Page, file: string): Promise<Array<{ id: string; box: Box }>> {
+    if (!/\.svg$/i.test(file)) return [];
+    const svg = fs.readFileSync(file, 'utf8').replace(/<\?xml[^>]*\?>\s*/i, '');
+    return page.evaluate((markup: string) => {
+        const holder = document.createElement('div');
+        holder.innerHTML = markup;
+        document.body.appendChild(holder);
+        const out: Array<{ id: string; box: { x: number; y: number; w: number; h: number } }> = [];
+        const root = holder.querySelector('svg');
+        if (root) {
+            for (const child of Array.from(root.children)) {
+                if (child.tagName.toLowerCase() !== 'g') continue;
+                const id = child.getAttribute('id');
+                if (!id) continue;
+                try {
+                    const bb = (child as SVGGraphicsElement).getBBox();
+                    if (bb.width > 0 || bb.height > 0) {
+                        out.push({ id, box: { x: bb.x, y: bb.y, w: bb.width, h: bb.height } });
+                    }
+                } catch {
+                    // A group the renderer cannot box contributes no region,
+                    // which leaves `whole` as its reading rather than a guess.
+                }
+            }
+        }
+        holder.remove();
+        return out;
+    }, svg);
+}
+
 function shift(mask: Uint8Array, w: number, h: number, dx: number, dy: number): Uint8Array {
     if (dx === 0 && dy === 0) return mask;
     const out = new Uint8Array(mask.length);
@@ -384,7 +769,7 @@ function shift(mask: Uint8Array, w: number, h: number, dx: number, dy: number): 
     return out;
 }
 
-function iouOf(a: Uint8Array, b: Uint8Array): number {
+export function iouOf(a: Uint8Array, b: Uint8Array): number {
     let inter = 0;
     let union = 0;
     for (let i = 0; i < a.length; i++) {
@@ -397,7 +782,7 @@ function iouOf(a: Uint8Array, b: Uint8Array): number {
 }
 
 /** The sub-pixel offset of the candidate against the baseline is PART of the reading (S12). */
-function bestAlignment(a: Uint8Array, b: Uint8Array, w: number, h: number): { iou: number; dx: number; dy: number } {
+export function bestAlignment(a: Uint8Array, b: Uint8Array, w: number, h: number): { iou: number; dx: number; dy: number } {
     let best = { iou: iouOf(a, b), dx: 0, dy: 0 };
     for (let dy = -2; dy <= 2; dy++) {
         for (let dx = -2; dx <= 2; dx++) {

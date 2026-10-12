@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">
+  <title>Badge addressed by a use element</title>
+  <!-- PLANTED: the only id="planted-badge" sits inside a comment, so it is not
+       in the document at all. A pattern over the raw text reads it as defined
+       and reports the file clean. <rect id="planted-badge" width="24" height="24" fill="#2563eb"/> -->
+  <use href="#planted-badge"/>
+</svg>

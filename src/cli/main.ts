@@ -24,7 +24,9 @@ import { runDoctorShell } from './commands/doctorShell.js';
 import { runRtkDetect } from './commands/rtkDetect.js';
 import { runUiAudit } from './commands/uiAudit.js';
 import { runUiRender } from './commands/uiRender.js';
-import type { AssetClass, Registration } from './commands/uiRenderAsset.js';
+import { parseRegistration } from './commands/uiRenderAssetCompare.js';
+import type { Registration } from './commands/uiRenderAssetCompare.js';
+import type { AssetClass } from './commands/uiRenderAsset.js';
 import type { DeliveryMode } from '../scripts/lint_svg_asset.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation, findInitGuiConflict, withoutGuiFlag } from './initRouting.js';
@@ -43,27 +45,6 @@ import { buildVersionReadout } from '../shared/capabilities.js';
 function readVersion(): string {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version?: unknown };
     return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
-}
-
-/**
- * `--registration x,y,w,h[@scale]` — the source crop's own pixel frame (S9).
- * An unparseable spec returns `null`, which leaves the raster reading
- * `unverified` rather than letting the comparison guess an offset.
- */
-function parseRegistration(spec: string | undefined): Registration | null {
-    if (!spec) return null;
-    const [frame, scaleRaw] = spec.split('@');
-    const parts = (frame ?? '').split(',').map((n) => Number(n.trim()));
-    if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
-    const scale = scaleRaw === undefined ? 1 : Number(scaleRaw);
-    if (!Number.isFinite(scale) || scale <= 0) return null;
-    return {
-        x: parts[0] as number,
-        y: parts[1] as number,
-        width: parts[2] as number,
-        height: parts[3] as number,
-        scale,
-    };
 }
 
 async function main(rawArgv: readonly string[]): Promise<number> {

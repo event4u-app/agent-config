@@ -130,10 +130,19 @@ function lastMatch(re: RegExp, text: string): RegExpExecArray | null {
  * the line. A caller may hand this parser a whole step BLOCK already joined
  * into one line, so "the rest of the line" can mean "the rest of the step": an
  * end-anchored tail would lose the expectation of any step that carries prose
- * after its clause. A slash-delimited regex therefore runs to the first closing
- * `/` that is followed by whitespace or the end of the text, and an exit code
- * is one non-space token — both self-terminating, so the step may continue and
+ * after its clause. A slash-delimited regex therefore runs to the first
+ * UNESCAPED closing `/` — one not preceded by an odd number of backslashes —
+ * that is followed by whitespace or the end of the text, and an exit code is
+ * one non-space token; both self-terminating, so the step may continue and
  * `-> /[1-9]/ and then note the result` still yields `[1-9]`.
+ *
+ * The word UNESCAPED is load-bearing and was added on 2026-10-11 (step 1.1 of
+ * `road-to-svg-review-followups`, review claim C4). The tail used to be a lazy
+ * `\/.*?\/(?=\s|$)`, which stops at ANY `/` followed by a space — so a clause
+ * ending in ``-> /a\/ b/`` was cut at the escaped slash and parsed to the
+ * regex source `a\`. A pattern that deliberately matches a path separator is
+ * exactly the case that spells it `\/`, and the truncation was silent: a
+ * shorter regex is still a regex, so nothing reported the loss.
  *
  * It was capped at a single non-space token until 2026-10-11, which cost this
  * form every expectation containing a space: `-> /Icon-only button/` parsed as
@@ -144,7 +153,8 @@ function lastMatch(re: RegExp, text: string): RegExpExecArray | null {
  * only where the tail ENDS. A bare word stays refused by the constant, so
  * widening the boundary widened no grammar.
  */
-const BACKTICKED_RE = /(?:`verify:`|verify:(?!`))\s*`([^`]+)`[ \t]*((?:->|→)[ \t]*(?:\/.*?\/(?=\s|$)|\S+))?/g;
+const BACKTICKED_RE =
+    /(?:`verify:`|verify:(?!`))\s*`([^`]+)`[ \t]*((?:->|→)[ \t]*(?:\/(?:[^\\/]|\\.)*\/(?=\s|$)|\S+))?/g;
 
 /** Prose after the label. The MANUAL form; the body is bounded separately. */
 const PROSE_RE = /(?:`verify:`|verify:(?!`))[ \t]*/g;

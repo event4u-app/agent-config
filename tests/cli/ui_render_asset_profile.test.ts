@@ -20,8 +20,18 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { runUiRender } from '../../src/cli/commands/uiRender.js';
 import type { RenderManifest } from '../../src/cli/commands/uiRender.js';
+import type * as UiRenderModuleNs from '../../src/cli/commands/uiRender.js';
+import {
+    cropRect,
+    gradeIconGrid,
+    readIconReferencesDetailed,
+} from '../../src/cli/commands/uiRenderAsset.js';
 import type { AssetClass } from '../../src/cli/commands/uiRenderAsset.js';
+import { parseRegistration } from '../../src/cli/commands/uiRenderAssetCompare.js';
+import { parseElements } from '../../src/scripts/lint_svg_asset.js';
 import type { DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
+
+type UiRenderModule = typeof UiRenderModuleNs;
 
 const FIXTURE_ROOT = path.resolve(process.cwd(), 'tests/design-artifacts/fixtures/svg-assets');
 const FIXTURE_MANIFEST = path.join(FIXTURE_ROOT, 'manifest.json');
@@ -34,11 +44,26 @@ interface FixtureRow {
     rule: string;
     file: string;
     twin: string;
+    /**
+     * The SOURCE raster this row is registered against, where the rule it
+     * plants asks a question about the source. Step 1.2 of
+     * `road-to-svg-from-a-live-session`: `geometry/near-white-hole` is about
+     * what the source shows under a near-white region, and before this the
+     * row carried no source for the engine to read.
+     */
+    source?: string;
+    registration?: string;
 }
 
 interface FixtureManifest {
     rows: FixtureRow[];
-    controls: Array<{ id: string; file: string; must_not_report: string[] }>;
+    controls: Array<{
+        id: string;
+        file: string;
+        must_not_report: string[];
+        source?: string;
+        registration?: string;
+    }>;
     fill_ratio_thresholds: Record<string, number>;
     geometry_tolerances: Record<string, { silhouette_iou_min: number; max_boundary_distance_units: number }>;
 }
@@ -70,6 +95,7 @@ interface RenderArgs {
     assetClass?: AssetClass;
     delivery?: DeliveryMode;
     compareTo?: string;
+    registration?: string;
 }
 
 async function renderAsset(args: RenderArgs): Promise<RenderManifest> {
@@ -83,6 +109,7 @@ async function renderAsset(args: RenderArgs): Promise<RenderManifest> {
         ...(args.assetClass ? { assetClass: args.assetClass } : {}),
         ...(args.delivery ? { delivery: args.delivery } : {}),
         ...(args.compareTo ? { compareTo: args.compareTo } : {}),
+        ...(args.registration ? { registration: parseRegistration(args.registration) ?? undefined } : {}),
     });
     expect(code, `ui:render exited ${code} for ${args.file}`).toBe(0);
     return manifestOf(args.slug);
@@ -110,6 +137,8 @@ describe('ui:render --profile asset', () => {
                     slug: `engine-${row.id}-planted`,
                     assetClass: row.asset_class,
                     delivery: row.delivery,
+                    ...(row.source ? { compareTo: path.join(FIXTURE_ROOT, row.source) } : {}),
+                    ...(row.registration ? { registration: row.registration } : {}),
                 });
                 expect(planted.profile, `${row.id}: the manifest must declare the asset profile`).toBe('asset');
                 expect(planted.verification, `${row.id}: Playwright resolved, so this is a real reading`).toBe(
@@ -126,6 +155,8 @@ describe('ui:render --profile asset', () => {
                     slug: `engine-${row.id}-twin`,
                     assetClass: row.asset_class,
                     delivery: row.delivery,
+                    ...(row.source ? { compareTo: path.join(FIXTURE_ROOT, row.source) } : {}),
+                    ...(row.registration ? { registration: row.registration } : {}),
                 });
                 expect(
                     rulesOf(twin),
@@ -141,6 +172,8 @@ describe('ui:render --profile asset', () => {
                 const reading = await renderAsset({
                     file: path.join(FIXTURE_ROOT, control.file),
                     slug: `control-${control.id}`,
+                    ...(control.source ? { compareTo: path.join(FIXTURE_ROOT, control.source) } : {}),
+                    ...(control.registration ? { registration: control.registration } : {}),
                 });
                 for (const rule of control.must_not_report) {
                     expect(rulesOf(reading), `${control.id} must never report ${rule}`).not.toContain(rule);
@@ -271,8 +304,14 @@ describe('ui:render --profile asset', () => {
                     delivery: 'inline',
                     thresholds: FIXTURE_MANIFEST,
                 });
-                // An absent devDependency is a capability fact, not a failure.
-                expect(code).toBe(0);
+                // asset-profile-exits-nonzero-on-unverified. Changed by step
+                // 2.1(a) of `road-to-svg-review-followups`, review claim C2:
+                // the asset profile used to exit 0 here, so a turn whose only
+                // check was `ui:render --profile asset` looked like a check
+                // that passed while nothing had rendered. The code is distinct
+                // from 1, which this command uses for an internal error.
+                expect(code).toBe(mod.EXIT_RENDERER_ABSENT);
+                expect(code).not.toBe(0);
 
                 const manifest = manifestOf('absent-asset');
                 expect(manifest.verification).toBe('unverified');
@@ -283,6 +322,21 @@ describe('ui:render --profile asset', () => {
                 // Never a pass, and never a silent one: the honest state is on the
                 // record, which is what the owner (3.1) reads as `static-only`.
                 expect(manifest.verification).not.toBe('verified');
+                // renderer-absent-manifest-carries-static-digest. The token the
+                // gate reads, beside the prose a human reads, and the static
+                // witness bound to the SAME bytes — so the static-only
+                // discharge is one file read rather than a search for a
+                // separately-stored lint run (precision (i)).
+                expect(manifest.reason).toBe('renderer-absent');
+                expect(manifest.goal).toBe('unassessed');
+                expect(manifest.static).toBeDefined();
+                expect(manifest.static?.digest).toBe(
+                    (await import('node:crypto'))
+                        .createHash('sha256')
+                        .update(fs.readFileSync(path.join(FIXTURE_ROOT, 'assets/loose-viewbox.svg'), 'utf8'))
+                        .digest('hex'),
+                );
+                expect(typeof manifest.static?.errors).toBe('number');
 
                 // The page profile degrades identically — one absence path, not two.
                 const pageCode = await mod.runUiRender({
@@ -290,10 +344,14 @@ describe('ui:render --profile asset', () => {
                     projectRoot: tmpRoot,
                     slug: 'absent-page',
                 });
+                // The PAGE profile keeps exit 0 — an absent devDependency is a
+                // capability fact there, and nothing gates on a page render.
                 expect(pageCode).toBe(0);
                 const pageManifest = manifestOf('absent-page');
                 expect(pageManifest.verification).toBe('unverified');
                 expect(pageManifest.profile).toBeUndefined();
+                expect(pageManifest.reason).toBeUndefined();
+                expect(pageManifest.static).toBeUndefined();
             } finally {
                 vi.doUnmock('@playwright/test');
                 vi.resetModules();
@@ -435,6 +493,620 @@ describe('ui:render --profile asset', () => {
             expect(a[0]?.digest).not.toBe(a[1]?.digest);
             expect(a[0]?.digest).toBe(a[2]?.digest);
             expect(first.asset?.distinct_frames).toBe(2);
+        },
+        300_000,
+    );
+});
+
+/**
+ * The three carried R2 findings of `road-to-svg-rules-in-the-dispatch-path`
+ * that live on this surface. None of them needs a browser: each is a pure
+ * reading that was wrong before a pixel was ever captured, which is also why
+ * each one survived the engine suite being green.
+ */
+describe('carried R2 findings — the icon grid and the registration', () => {
+    const svg = (body: string, vb = '0 0 24 24'): string =>
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img"><title>t</title>${body}</svg>`;
+
+    const write = (dir: string, name: string, content: string): string => {
+        const p = path.join(dir, name);
+        fs.writeFileSync(p, content);
+        return p;
+    };
+
+    it('primitive-drawn-reference-is-read', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'icon-refs-'));
+
+        // (a) A reference drawn ENTIRELY with primitives. The old reader
+        //     scraped `d` only, found no finite extent, and dropped the file —
+        //     after which the reading said no reference set had been supplied.
+        const prims = write(
+            dir,
+            'prims.svg',
+            svg('<rect x="2" y="2" width="20" height="20" fill="#000"/><circle cx="12" cy="12" r="6"/>'),
+        );
+        const readPrims = readIconReferencesDetailed([prims]);
+        expect(readPrims.skipped).toEqual([]);
+        expect(readPrims.refs).toHaveLength(1);
+        // minX/minY = 2, maxX/maxY = 22 against a 0..24 box → 2 on every side.
+        expect(readPrims.refs[0]?.padding).toBeCloseTo(2, 6);
+
+        // (b) Relative path commands are WALKED, not read as absolute. The old
+        //     regex read this as the points (3,3) and (18,0), giving an extent
+        //     anchored near the origin and a padding of 0.
+        const rel = write(dir, 'rel.svg', svg('<path d="m 3 3 l 18 0 l 0 18 l -18 0 z"/>'));
+        const readRel = readIconReferencesDetailed([rel]);
+        expect(readRel.skipped).toEqual([]);
+        expect(readRel.refs[0]?.padding).toBeCloseTo(3, 6);
+        // The same shape written absolutely must read the same padding — which
+        // is the whole claim, and is false under the old reader.
+        const abs = write(dir, 'abs.svg', svg('<path d="M 3 3 L 21 3 L 21 21 L 3 21 Z"/>'));
+        expect(readIconReferencesDetailed([abs]).refs[0]?.padding).toBeCloseTo(
+            readRel.refs[0]?.padding as number,
+            6,
+        );
+
+        // (c) A file that genuinely cannot be read is REPORTED, never dropped
+        //     silently, and the grading says so in its reason.
+        const opaque = write(dir, 'opaque.svg', svg('<g transform="rotate(9)"><rect x="2" y="2" width="4" height="4"/></g>'));
+        const readOpaque = readIconReferencesDetailed([opaque]);
+        expect(readOpaque.refs).toEqual([]);
+        expect(readOpaque.skipped).toHaveLength(1);
+
+        const graded = gradeIconGrid(
+            path.join(dir, 'candidate.svg'),
+            { x: 0, y: 0, w: 24, h: 24 },
+            parseElements(svg('<rect x="4" y="4" width="16" height="16"/>')),
+            [opaque],
+            null,
+        );
+        expect(graded.status).toBe('unverified');
+        // The old reason claimed no set was supplied. One was.
+        expect(graded.reason).not.toContain('no icon reference set was supplied');
+        expect(graded.reason).toContain('opaque.svg');
+
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('padding-is-measured-the-same-way-on-both-sides', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'icon-pad-'));
+        // One stroked shape, used as BOTH the reference and the candidate. A
+        // file compared against itself must report its own padding, whatever
+        // the stroke width is. Under the old code the candidate came from a
+        // rendered box (half the stroke wider on each side) and the reference
+        // from centreline coordinates, so this read one half-stroke short and
+        // `structure/off-grid` could fire on a clean twin (Risk 7).
+        const body = '<path d="M 4 4 L 20 4 L 20 20 L 4 20 Z" fill="none" stroke="#000" stroke-width="3"/>';
+        const ref = write(dir, 'ref.svg', svg(body));
+        const vb = { x: 0, y: 0, w: 24, h: 24 };
+        const refRead = readIconReferencesDetailed([ref]);
+        expect(refRead.refs[0]?.padding).toBeCloseTo(4, 6);
+
+        const graded = gradeIconGrid(
+            path.join(dir, 'candidate.svg'),
+            vb,
+            parseElements(svg(body)),
+            [ref],
+            // A rendered painted box that is deliberately WIDER than the
+            // centreline — the old code read the candidate from exactly this.
+            { x: 2.5, y: 2.5, w: 19, h: 19 },
+        );
+        expect(graded.status).toBe('read');
+        expect(graded.padding).toBeCloseTo(refRead.refs[0]?.padding as number, 6);
+        // And specifically NOT the painted-box number, which is what it used
+        // to be: min(2.5, 2.5, 24-21.5, 24-21.5) = 2.5.
+        expect(graded.padding).not.toBeCloseTo(2.5, 2);
+
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('a-declared-scale-changes-the-reading', () => {
+        // `Registration.scale` was parsed, validated, recorded in the manifest
+        // and read by nothing, so `@2` was a silent no-op.
+        const at1 = parseRegistration('10,20,100,200');
+        const at2 = parseRegistration('10,20,100,200@2');
+        expect(at1?.scale).toBe(1);
+        expect(at2?.scale).toBe(2);
+
+        expect(cropRect(at1)).toEqual({ x: 10, y: 20, width: 100, height: 200 });
+        // The reading changes — this is the assertion the finding is about.
+        expect(cropRect(at2)).toEqual({ x: 20, y: 40, width: 200, height: 400 });
+        expect(cropRect(at2)).not.toEqual(cropRect(at1));
+
+        // A half-scale capture reads smaller, so the direction is not an
+        // accident of one factor.
+        expect(cropRect(parseRegistration('10,20,100,200@0.5'))).toEqual({
+            x: 5,
+            y: 10,
+            width: 50,
+            height: 100,
+        });
+
+        // No registration stays no crop, and a zero scale is refused rather
+        // than silently drawing an empty rect.
+        expect(cropRect(null)).toBeNull();
+        expect(parseRegistration('10,20,100,200@0')).toBeNull();
+        expect(parseRegistration('10,20,100,200@-1')).toBeNull();
+    });
+});
+
+/**
+ * Steps 2.1 and 2.3 of `road-to-svg-review-followups`, as their own named
+ * cases because the roadmap's `verify:` clauses select them by name.
+ *
+ * The renderer-absent path is driven through a module mock rather than by
+ * uninstalling Playwright, which is the only way to reach it on a machine that
+ * has the devDependency — and it is the path a consumer actually walks.
+ */
+describe('the asset profile reports its own absence honestly', () => {
+    const withoutPlaywright = async <T>(fn: (mod: UiRenderModule) => Promise<T>): Promise<T> => {
+        vi.resetModules();
+        vi.doMock('@playwright/test', () => {
+            throw new Error("Cannot find package '@playwright/test'");
+        });
+        try {
+            return await fn(await import('../../src/cli/commands/uiRender.js'));
+        } finally {
+            vi.doUnmock('@playwright/test');
+            vi.resetModules();
+        }
+    };
+
+    it('asset-profile-exits-nonzero-on-unverified', async () => {
+        await withoutPlaywright(async (mod) => {
+            const code = await mod.runUiRender({
+                target: path.join(FIXTURE_ROOT, 'assets/loose-viewbox.svg'),
+                projectRoot: tmpRoot,
+                slug: 'nonzero-asset',
+                profile: 'asset',
+                assetClass: 'icon',
+                delivery: 'inline',
+                thresholds: FIXTURE_MANIFEST,
+            });
+            // The hole review claim C2 named: a bare `ui:render --profile asset`
+            // that rendered nothing used to exit 0, so a turn whose only check
+            // was that call looked like a check that passed.
+            expect(code).not.toBe(0);
+            expect(code).toBe(mod.EXIT_RENDERER_ABSENT);
+            // Distinct from the internal-error code, so a caller can tell
+            // "nothing rendered" from "you called it wrong".
+            expect(code).not.toBe(1);
+            expect(manifestOf('nonzero-asset').verification).toBe('unverified');
+
+            // The page profile is deliberately NOT changed by this.
+            const pageCode = await mod.runUiRender({
+                target: path.join(FIXTURE_ROOT, 'hosts/img-delivery.html'),
+                projectRoot: tmpRoot,
+                slug: 'nonzero-page',
+            });
+            expect(pageCode).toBe(0);
+        });
+    });
+
+    it('renderer-absent-manifest-carries-static-digest', async () => {
+        await withoutPlaywright(async (mod) => {
+            const target = path.join(FIXTURE_ROOT, 'assets/loose-viewbox.svg');
+            await mod.runUiRender({
+                target,
+                projectRoot: tmpRoot,
+                slug: 'static-digest',
+                profile: 'asset',
+                assetClass: 'icon',
+                delivery: 'inline',
+                thresholds: FIXTURE_MANIFEST,
+            });
+            const m = manifestOf('static-digest');
+            // The token the gate reads, told apart from a render that RAN and
+            // failed — which discharges nothing.
+            expect(m.reason).toBe('renderer-absent');
+            // One file, one digest: the static-only discharge never has to find
+            // a separately-stored lint run or trust how it was named.
+            const expected = (await import('node:crypto'))
+                .createHash('sha256')
+                .update(fs.readFileSync(target, 'utf8'))
+                .digest('hex');
+            expect(m.static?.digest).toBe(expected);
+            expect(m.static?.errors).toBe(0);
+
+            // And a file that IS broken reports its errors, so `errors: 0` is
+            // not simply what this field always says.
+            const broken = path.join(tmpRoot, 'broken.svg');
+            fs.writeFileSync(broken, '<svg viewBox="0 0 24 24"><use href="#nothing"/></svg>\n');
+            await mod.runUiRender({
+                target: broken,
+                projectRoot: tmpRoot,
+                slug: 'static-digest-broken',
+                profile: 'asset',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            expect(manifestOf('static-digest-broken').static?.errors).toBeGreaterThan(0);
+        });
+    });
+
+    it(
+        'renderer-never-writes-goal-accepted',
+        async () => {
+            // Step 2.3. `verified` says a digest-bound render happened and the
+            // witness found no errors. It has never said "the graphic is
+            // right", and it was read that way — so the manifest carries the
+            // second axis explicitly and the renderer only ever writes
+            // `unassessed` into it.
+            const verified = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/hamburger-24-grid.svg'),
+                slug: 'goal-axis',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            expect(verified.verification).toBe('verified');
+            expect(verified.goal).toBe('unassessed');
+            expect(verified.goal).not.toBe('accepted');
+
+            // Including on the absence path, where there is even less to claim.
+            await withoutPlaywright(async (mod) => {
+                await mod.runUiRender({
+                    target: path.join(FIXTURE_ROOT, 'assets/hamburger-24-grid.svg'),
+                    projectRoot: tmpRoot,
+                    slug: 'goal-axis-absent',
+                    profile: 'asset',
+                    assetClass: 'icon',
+                    delivery: 'inline',
+                });
+                expect(manifestOf('goal-axis-absent').goal).toBe('unassessed');
+            });
+        },
+        180_000,
+    );
+});
+
+/**
+ * Phase 1 of `road-to-svg-from-a-live-session` — the witness stops warning
+ * about what is not there.
+ *
+ * Both rules fired on a real conversion session's files: the motion rule on
+ * all six, none of which contains `<animate`, `@keyframes` or `animation`, and
+ * the hole rule six times on paint the owner had chosen and zero times on the
+ * file the same owner rejected. A warning that appears on every file is a
+ * warning an operator learns to scroll past, which is Risk 1 of the parent
+ * roadmap arriving through a different door.
+ */
+describe('the witness stops warning about what is not there', () => {
+    it(
+        'static-file-through-img-has-no-motion-finding',
+        async () => {
+            // The control: a NON-animated SVG delivered through <img> with no
+            // <picture> route. There is nothing for a route to stop.
+            const clean = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'hosts/img-delivery-static.html'),
+                slug: 'img-static-control',
+                assetClass: 'animated',
+                delivery: 'img',
+            });
+            expect(rulesOf(clean)).not.toContain('motion/img-delivery-no-static-route');
+            expect(clean.asset?.reduced_motion.host_picture_route).toBe(false);
+            // The reading that decides it, recorded rather than inferred.
+            expect(clean.asset?.reduced_motion.delivered_animates).toBe(false);
+
+            // And the planted row still reports, so the gate silenced a false
+            // positive rather than the rule.
+            const planted = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'hosts/img-delivery.html'),
+                slug: 'img-animated-planted',
+                assetClass: 'animated',
+                delivery: 'img',
+            });
+            expect(rulesOf(planted)).toContain('motion/img-delivery-no-static-route');
+            expect(planted.asset?.reduced_motion.delivered_animates).toBe(true);
+        },
+        240_000,
+    );
+
+    it(
+        'near-white-hole-is-decided-by-the-source',
+        async () => {
+            // Same shape in both files. The SOURCE is the only difference, and
+            // it is the thing the rule's own message was always conditional on.
+            const hole = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/near-white-hole.svg'),
+                slug: 'hole-with-source',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(FIXTURE_ROOT, 'assets/near-white-hole.source.svg'),
+                registration: '0,0,100,100',
+            });
+            expect(rulesOf(hole)).toContain('geometry/near-white-hole');
+            expect(hole.asset?.near_white_regions[0]?.source_verdict).toBe('hole');
+
+            const paint = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/near-white-paint.svg'),
+                slug: 'paint-with-source',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(FIXTURE_ROOT, 'assets/near-white-paint.source.svg'),
+                registration: '0,0,100,100',
+            });
+            expect(rulesOf(paint)).not.toContain('geometry/near-white-hole');
+            expect(paint.asset?.near_white_regions[0]?.source_verdict).toBe('paint');
+
+            // Without a source the region is RECORDED and nothing is pushed —
+            // absent evidence reported as absent, never as a finding and never
+            // as clean. This is the case the six real files were in.
+            const noSource = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/near-white-hole.svg'),
+                slug: 'hole-without-source',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            expect(rulesOf(noSource)).not.toContain('geometry/near-white-hole');
+            expect(noSource.asset?.near_white_regions).toHaveLength(1);
+            expect(noSource.asset?.near_white_regions[0]?.source_verdict).toBe('no-source');
+            // The region carries where it was measured, so a reader can repeat
+            // the reading with a source of their own.
+            expect(noSource.asset?.near_white_regions[0]?.centre).toEqual({ x: 50, y: 50 });
+        },
+        240_000,
+    );
+});
+
+/**
+ * Phase 2 of `road-to-svg-from-a-live-session` — the raster comparison passes
+ * what was accepted.
+ *
+ * The witness failed the trace its owner accepted at 10:29Z, and ranked that
+ * rejected trace above the accepted construction on every number. Two causes,
+ * both measured: the background mask from the corner pixel folded neighbours
+ * and halo into IoU, and the per-region breakdown was unreachable so the worst
+ * region was always `whole`.
+ */
+describe('the raster comparison reads the subject, not the frame', () => {
+    const CONV = path.join(FIXTURE_ROOT, 'conversion');
+
+    it(
+        'registered-raster-of-the-reference-passes',
+        async () => {
+            // The reference compared against a rendering of ITSELF, with an
+            // unrelated mark and a soft glow inside the registration frame.
+            const m = await renderAsset({
+                file: path.join(CONV, 'subject-reference.svg'),
+                slug: 'conv-busy-frame',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(CONV, 'source-busy-frame.png'),
+                registration: '0,0,100,100@4',
+            });
+            const c = m.asset?.comparison;
+            expect(c?.verdict, `reason: ${c?.reason ?? '(none)'}`).toBe('pass');
+            // The foreign content is REPORTED rather than folded in — a
+            // reading, with its own finding, and not a silent exclusion.
+            expect(c?.raster?.foreign_content_share).toBeGreaterThan(0);
+            expect(rulesOf(m)).toContain('geometry/foreign-content-in-frame');
+            // And the subject itself is not cut.
+            expect(c?.raster?.frame_edge_contact).toEqual([]);
+            expect(rulesOf(m)).not.toContain('geometry/source-cut-by-frame');
+        },
+        240_000,
+    );
+
+    it(
+        'source-cut-by-frame-is-found',
+        async () => {
+            // The crown-cut case: the subject runs off the top of the crop. A
+            // trace of this crop agrees with it exactly, so IoU cannot see the
+            // cut and the frame contact is the only signal there is.
+            const m = await renderAsset({
+                file: path.join(CONV, 'subject-reference.svg'),
+                slug: 'conv-cut-frame',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(CONV, 'source-cut-by-frame.png'),
+                registration: '0,0,100,100@4',
+            });
+            expect(rulesOf(m)).toContain('geometry/source-cut-by-frame');
+            expect(m.asset?.comparison?.raster?.frame_edge_contact).toContain('top');
+        },
+        240_000,
+    );
+
+    it(
+        'top-level-groups-become-regions',
+        async () => {
+            // `CompareSpec.regions` existed and nothing could pass it, so
+            // `worst_region` was always `whole`. The file names its own parts.
+            const m = await renderAsset({
+                file: path.join(CONV, 'subject-reference.svg'),
+                slug: 'conv-regions',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(CONV, 'source-busy-frame.png'),
+                registration: '0,0,100,100@4',
+            });
+            const regions = m.asset?.comparison?.raster?.regions ?? [];
+            const ids = regions.map((r) => r.region);
+            // `whole` stays first — the reading every consumer already reads.
+            expect(ids[0]).toBe('whole');
+            expect(ids).toContain('badge');
+            expect(ids).toContain('tick');
+            // Each region carries its own numbers, so the worst is nameable.
+            for (const r of regions) {
+                expect(r.silhouette_iou).toBeGreaterThanOrEqual(0);
+                expect(r.mean_colour_error).toBeGreaterThanOrEqual(0);
+            }
+            expect(['whole', 'badge', 'tick']).toContain(m.asset?.comparison?.raster?.worst_region);
+        },
+        240_000,
+    );
+});
+
+/**
+ * Phase 3 of `road-to-svg-from-a-live-session` — the witness reads cost.
+ *
+ * A rejected 195 KB trace carried 355 gradient definitions and the static
+ * witness reported one finding: a missing accessible name. Two external
+ * reviews counted the gradients by hand. Cost went unremarked through a whole
+ * conversion session.
+ */
+describe('the witness reads cost', () => {
+    it(
+        'manifest-carries-a-cost-reading',
+        async () => {
+            const m = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/degenerate-gradient.svg'),
+                slug: 'cost-reading',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            const cost = m.asset?.cost;
+            expect(cost).toBeDefined();
+            expect(cost?.bytes).toBe(
+                fs.statSync(path.join(FIXTURE_ROOT, 'assets/degenerate-gradient.svg')).size,
+            );
+            expect(cost?.gradients).toBe(1);
+            expect(cost?.paths).toBe(0);
+            expect(cost?.elements).toBeGreaterThan(3);
+            expect(cost?.coordinates).toBe(0);
+
+            // A file drawn with paths reports coordinates, so `0` above is a
+            // reading about that file and not a field that never fills.
+            const withPaths = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'conversion/subject-reference.svg'),
+                slug: 'cost-reading-paths',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            expect(withPaths.asset?.cost.paths).toBe(1);
+            expect(withPaths.asset?.cost.coordinates).toBeGreaterThan(5);
+
+            // NEVER GATED. No finding anywhere in this suite is derived from
+            // the cost reading — no threshold was measured, and one would have
+            // refused a 195 KB trace and a 59 KB accepted figure alike.
+            for (const manifest of [m, withPaths]) {
+                for (const f of manifest.asset?.findings ?? []) {
+                    expect(f.rule, `${f.rule} appears to gate on cost`).not.toMatch(/cost|bytes|size/i);
+                }
+            }
+        },
+        240_000,
+    );
+});
+
+/**
+ * Phase 4 of `road-to-svg-from-a-live-session` — seams, dark grounds and small
+ * sizes.
+ *
+ * All three come from the same review that sent an accepted mark back:
+ * hairlines between abutting traced segments, a wordmark unreadable on a dark
+ * ground with no variant built, and a face that turned to mush at 32 px with
+ * no capture at that size to look at.
+ */
+describe('seams, dark grounds and small sizes', () => {
+    const row = (id: string): FixtureRow => {
+        const fixture = JSON.parse(fs.readFileSync(FIXTURE_MANIFEST, 'utf8')) as FixtureManifest;
+        const r = fixture.rows.find((x) => x.id === id);
+        if (!r) throw new Error(`row ${id} is not pre-registered in manifest.json`);
+        return r;
+    };
+
+    it(
+        'seam-between-abutting-shapes-is-found',
+        async () => {
+            const r = row('seam-between-shapes');
+            const planted = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.file),
+                slug: 'seam-planted',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(planted)).toContain('geometry/background-bleed-inside-silhouette');
+            const dark = planted.asset?.grounds.find((g) => g.background === 'dark');
+            expect(dark?.bleed_px).toBeGreaterThan(0);
+            // The seam is INTERIOR: the silhouette covers it and the paint does
+            // not, which is the whole reading.
+            expect(dark?.silhouette_px).toBeGreaterThan(dark?.painted_px as number);
+
+            const twin = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.twin),
+                slug: 'seam-twin',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(twin)).not.toContain('geometry/background-bleed-inside-silhouette');
+            const twinDark = twin.asset?.grounds.find((g) => g.background === 'dark');
+            expect(twinDark?.bleed_px).toBe(0);
+            // Same outer silhouette — the twin is one edit, not a different file.
+            expect(twinDark?.silhouette_px).toBe(dark?.silhouette_px);
+        },
+        300_000,
+    );
+
+    it(
+        'dark-mark-on-dark-ground-is-found',
+        async () => {
+            const r = row('dark-mark-on-dark');
+            const planted = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.file),
+                slug: 'contrast-planted',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(planted)).toContain('accessibility/low-contrast-on-background');
+            // The finding NAMES the ground — "the mark is hard to see" is not a
+            // property of the mark.
+            const finding = (planted.asset?.findings ?? []).find(
+                (f) => f.rule === 'accessibility/low-contrast-on-background',
+            );
+            expect(finding?.detail).toContain('dark');
+            expect(planted.asset?.grounds.find((g) => g.background === 'dark')?.low_contrast_share).toBeGreaterThan(
+                0.5,
+            );
+            // And it is clean on the light ground, so the reading is per ground
+            // rather than per file.
+            expect(planted.asset?.grounds.find((g) => g.background === 'light')?.low_contrast_share).toBe(0);
+
+            const twin = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.twin),
+                slug: 'contrast-twin',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(twin)).not.toContain('accessibility/low-contrast-on-background');
+        },
+        300_000,
+    );
+
+    it(
+        'mark-class-captures-16-and-32',
+        async () => {
+            const m = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'conversion/subject-reference.svg'),
+                slug: 'mark-small-sizes',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            const labels = (m.asset?.sizes ?? []).map((s) => s.label);
+            expect(labels).toContain('16');
+            expect(labels).toContain('32');
+            // Beside the sizes that were already captured, never instead of them.
+            expect(labels).toContain('1x');
+            expect(labels).toContain('2x');
+            // Both grounds at every size, which is what makes a small capture
+            // worth looking at.
+            for (const px of ['16', '32']) {
+                const at = (m.asset?.sizes ?? []).filter((s) => s.label === px);
+                expect(at.map((s) => s.background).sort()).toEqual(['dark', 'light']);
+                for (const s of at) {
+                    expect(s.css_width).toBe(Number(px));
+                    expect(fs.existsSync(path.join(tmpRoot, s.screenshot)), s.screenshot).toBe(true);
+                }
+            }
+
+            // An ICON is unchanged — it already had 16/24/48 and gains nothing.
+            const icon = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/hamburger-24-grid.svg'),
+                slug: 'icon-sizes-unchanged',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            expect([...new Set((icon.asset?.sizes ?? []).map((s) => s.label))]).toEqual(['16', '24', '48']);
         },
         300_000,
     );
