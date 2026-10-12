@@ -162,6 +162,32 @@ export function count(kind: string): number {
         const [, , active] = canonical_counts();
         return active;
     }
+    if (kind === 'commands_toplevel') {
+        // Command files at the TOP LEVEL of the projected directory, not
+        // recursively. The README sub-note exists to explain why the badge and
+        // the linked directory disagree, so this count is the directory's own
+        // listing — a recursive count here would make the sentence explain
+        // nothing (`road-to-surfaces-no-gate-reads` 1.1).
+        const dir = path.join(REPO_ROOT, 'dist', 'agent-src', 'commands');
+        if (!_exists(dir)) return 0;
+        let n = 0;
+        for (const f of fs.readdirSync(dir)) {
+            if (f.endsWith('.md') && f !== 'AGENTS.md') n += 1;
+        }
+        return n;
+    }
+    if (kind === 'rules_projected') {
+        // Rules in the projection, which is NOT the source count: a dormant
+        // rule ships in `src/rules/` and is not projected. The sub-note states
+        // both and the difference is the thing it explains.
+        const dir = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
+        if (!_exists(dir)) return 0;
+        let n = 0;
+        for (const f of fs.readdirSync(dir)) {
+            if (f.endsWith('.md') && f !== 'README.md') n += 1;
+        }
+        return n;
+    }
     if (kind === 'skills_scoped') {
         // Skills a DEFAULT `projection.mode: scoped` install deploys. Derived
         // by the installer's own prune predicate over the same walk the
@@ -263,6 +289,19 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             ['(/badge/Commands-)(\\d+)(-)', 'commands_active'],
             ['(/badge/Guidelines-)(\\d+)(-)', 'guidelines'],
             ['(/badge/Personas-)(\\d+)(-)', 'personas'],
+            // The sub-note under the badges. The comment above used to end at
+            // "Prose counts were removed from the README on purpose", and the
+            // sub-note re-added four of them in `fc1bdec4f` without an owner.
+            // At 2026-10-12 two had drifted — "Rules 121" against 122 source
+            // rules, "projection holds 120" against 121 — while the two
+            // Commands figures happened to be right, which is exactly how a
+            // hand-typed number fails: silently, and only on some of them.
+            // Gated rather than deleted (D1): the sentence answers a real
+            // reader question about why the badge and the directory differ.
+            ['(\\*\\*Commands )(\\d+)(\\*\\* counts every command file)', 'commands_active'],
+            ['(holds )(\\d+)( at its top level)', 'commands_toplevel'],
+            ['(\\*\\*Rules )(\\d+)(\\*\\* counts the)', 'rules'],
+            ['(projection holds )(\\d+)()', 'rules_projected'],
         ],
     ],
     [
@@ -359,27 +398,42 @@ export function apply_to_text(
             process.stderr.write(`  ⚠️  pattern missed: /${pattern}/ (kind=${kind})\n`);
             continue;
         }
+        // A kind with no count is a BUG in TARGETS or KINDS, and writing it
+        // anyway puts the literal `undefined` into a published file. Measured
+        // on 2026-10-12: adding two patterns without adding their kinds to
+        // KINDS rewrote the README sub-note to "holds undefined at its top
+        // level" and `--check` then reported "All counts in sync", because the
+        // pattern no longer matched its own output. Refuse instead, loudly.
+        const next = counts[kind];
+        if (typeof next !== 'number' || !Number.isFinite(next)) {
+            process.stderr.write(
+                `  ❌  no count for kind=${kind} (pattern /${pattern}/) — ` +
+                    'add it to KINDS; refusing to write `undefined` into the target\n',
+            );
+            continue;
+        }
         for (const m of matches) {
             const old = Number.parseInt(m[2] as string, 10);
-            const next = counts[kind] as number;
             if (old !== next) {
                 drifts.push([kind, old, next]);
             }
         }
         const reSub = new RegExp(pattern, 'g');
         new_text = new_text.replace(reSub, (_full, g1: string, _g2: string, g3: string) => {
-            return `${g1}${counts[kind] as number}${g3}`;
+            return `${g1}${next}${g3}`;
         });
     }
     return [new_text, drifts];
 }
 
-const KINDS = [
+export const KINDS = [
     'skills',
     'skills_scoped',
     'rules',
     'commands',
     'commands_active',
+    'commands_toplevel',
+    'rules_projected',
     'guidelines',
     'personas',
     'router_rules',
