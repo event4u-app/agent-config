@@ -701,7 +701,7 @@ At `df377ca64`:
 | K11 | Automated promotion of learnings | `road-to-leading-every-row.md:231`; `later/road-to-ac-deep-capabilities.md:163-192` | The directive is noted there by 1.3 and decided by its owner |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -713,3 +713,4 @@ At `df377ca64`:
 | 6 | The worked example is chosen to be easy | product | A trivial learning proves the plumbing and little else. | 6.2 requires a change to a rule or skill body, reviewed with the full question set; the record's body shows what was asked. | Phase 6 — One change nobody asked for travels the whole lane |
 | 7 | Widening the path set slows ordinary rule work | product | 28 more files need a record per change, and so does any edit to the shared rule schema. | Four of the 49 commits touched a rule outside the kernel; D4 names the reading that would widen or narrow it. | Phase 4 — The reviewer and the consequence class are inside the gate |
 | 8 | A reviewed change turns red because the base moved | implementation | The digest changes when the base edits a gated file the change also touches. | That is content the council did not see; 2.1's test pins that a base move on any other file leaves the digest alone. | Phase 2 — An approval is bound to what it approved |
+| 9 | A step's own text outlives the decision it was written under | implementation | Step 6.1 still read "the pipeline's approval is the council's record" five days after the owner's amendment reversed exactly that, and nothing surfaced it: the amendment edited the ADR, 1.4 corrected the shipped texts, and the plan that instructs the work was in neither set. Implementing the step as written would have re-broken AC-8. | 6.1's title and text now state the amended rule, and AC-8's grep is scoped to shipped text only — so the same drift in a plan is still invisible to it. The check that caught this one was reading the step before running it; no gate replaces that. | Phase 6 — One change nobody asked for travels the whole lane |
