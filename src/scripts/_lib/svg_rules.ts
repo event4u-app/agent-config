@@ -1443,6 +1443,10 @@ export function parseIgnores(lines: string[]): Map<string, RuleIgnore> {
 }
 
 function isIgnored(ignores: Map<string, RuleIgnore>, finding: Finding): boolean {
+    // The safety family is not suppressible from inside the file it judges: the
+    // markers are the scanned file's own bytes, and a file that silences its
+    // own script zeroes the error count a blocking gate discharges on.
+    if (finding.rule.startsWith('svg-safety-')) return false;
     const hit = ignores.get(finding.rule.toLowerCase());
     if (hit === undefined) return false;
     return hit.wholeFile || hit.lines.has(finding.line);
