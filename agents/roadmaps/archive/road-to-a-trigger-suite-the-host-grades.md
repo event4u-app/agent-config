@@ -65,16 +65,30 @@ by the session that authored the corpus.
 
 ## Phase 1 — The case shape comes from the host
 
-- [ ] **1.1 Pin the host's blank case.** Run `claude plugin eval init --bare
+- [x] **1.1 Pin the host's blank case.** Run `claude plugin eval init --bare
       pin-shape` in a temporary directory, copy the produced case file into
       `tests/fixtures/plugin-eval/` with the host version in its header, and
       delete the temporary directory. If the command makes a model call or
       asks for one, stop and record that instead — this step spends nothing.
       verify: `ls tests/fixtures/plugin-eval/ | grep -c case` -> /^[1-9]/
 
+      **Closed 2026-10-12, with two corrections the reproduction forced.**
+      `claude plugin eval init --bare pin-shape` writes **two** files, not one:
+      `evals/<name>/prompt.md` and `evals/<name>/graders/criteria.md`. One case,
+      two files — the `case.yaml` form the host also accepts is not what the
+      scaffold emits. And in a bare temporary directory the command REFUSES
+      ("… is not a plugin or skill folder — run `claude plugin eval init` from
+      the plugin's root folder, or pass `--eval-dir` to scaffold here on
+      purpose"), so the step's temporary-directory instruction needs that flag.
+      Both files are pinned byte-identical as `case-prompt.md` and
+      `case-grader.md`; the host version (2.1.296) lives in a `README.md` beside
+      them rather than in their headers, because a pinned shape whose bytes were
+      edited is not a pin. The temporary directory was deleted. Nothing was run:
+      `init` makes no model call, so the step's stop condition did not fire.
+
 ## Phase 2 — One case per labelled query
 
-- [ ] **2.1 The compiler, test first.** `compile_trigger_evals` reads both
+- [x] **2.1 The compiler, test first.** `compile_trigger_evals` reads both
       corpus shapes and emits one case per query in the pinned shape: the
       prompt is the query; the grader asserts the named skill was used for a
       positive query and not used for a negative one; tags carry the skill,
@@ -84,19 +98,45 @@ by the session that authored the corpus.
       grader polarity per class, and the partition tag, and is seen red before
       the compiler exists.
       verify: `npx vitest run tests/scripts/compile_trigger_evals.test.ts` -> 0
-- [ ] **2.2 Parity with the live corpus.** A second test compiles the live
+- [x] **2.2 Parity with the live corpus.** A second test compiles the live
       corpus into a temporary directory and asserts the case count equals the
       labelled-query count and the holdout tags reproduce the frozen set hash.
       verify: `npx vitest run tests/scripts/compile_trigger_evals.test.ts -t parity` -> 0
 
+      **Closed 2026-10-12. The corpus has grown since this file was written**
+      — 125 files and **1,203** labelled queries (612 positive, 591 negative),
+      against the 124 / 1,186 / 603 / 583 the Context records from 2026-10-11.
+      The parity test asserts the live count rather than a pinned one, so the
+      growth is not a failure and the figure here is dated rather than frozen.
+      Compiled: **1,203 cases, 261 holdout, 942 train.**
+
+      **What the parity test asserts about the frozen set, exactly.** The
+      published `SET-SHA256` hashes each corpus file's CONTENT alongside its
+      partition, so it moves whenever any corpus file is edited —
+      `trigger_corpus_holdout_pin.test.ts` is what keeps that value true, and
+      duplicating it here would mean two places to re-pin. What this test owns
+      is the half the compiler is responsible for: every emitted partition tag
+      reproduces the frozen rule, every case of one skill lands on one side,
+      and the whole partition column equals the recipe recomputed over the live
+      tree. The claim is the partition, not the content hash, and the test says
+      so in its own comment.
+
 ## Phase 3 — The run is printed, never performed
 
-- [ ] **3.1 A print-only runner.** `compile_trigger_evals --print-run` prints
+- [x] **3.1 A print-only runner.** `compile_trigger_evals --print-run` prints
       the exact host command for a requested tag set, and refuses to print one
       that lacks the keep-local flag named in Context, an explicit `--runs`, a
       `--max-cost-usd`, and a path to a protocol file. It executes nothing. The protocol file is
       written by whoever runs it, under the parked roadmap's un-park condition.
       verify: `npx vitest run tests/scripts/compile_trigger_evals.test.ts -t print-run` -> 0
+
+      **Closed 2026-10-12.** `--print-run` returns a string and executes
+      nothing; a function that returns a command cannot have run one. It
+      refuses a request missing an explicit `--runs`, a `--max-cost-usd` or a
+      protocol path, and `--no-publish` is not a parameter at all — it is
+      always in the printed command, because D3's reason is that the host
+      publishes its report by default and an optional flag is the one somebody
+      drops under time pressure.
 
 ## What this roadmap deliberately does not do
 
@@ -115,12 +155,19 @@ by the session that authored the corpus.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every labelled query in the trigger corpus compiles to exactly one
+- [x] AC-1 — Every labelled query in the trigger corpus compiles to exactly one
       host-shaped case, tagged train or holdout by the frozen rule.
-- [ ] AC-2 — The only way the tool emits a run command is with the keep-local
+- [x] AC-2 — The only way the tool emits a run command is with the keep-local
       flag, an explicit run count, a cost cap and a protocol path, and it runs
       nothing.
-- [ ] AC-3 — No compiled case is committed to the tree.
+- [x] AC-3 — No compiled case is committed to the tree.
+      **MET 2026-10-12 by a refusal, not a convention.** `compileCorpus`
+      refuses an output directory inside the repository that `git check-ignore`
+      does not cover, and the test asserts both directions: a tracked path
+      throws and creates nothing, a gitignored one compiles. ~1,200 generated
+      directories swept in by one `git add -A` only has to happen once, and git
+      decides what counts as tracked so the check cannot drift from
+      `.gitignore`.
 
 ## Decisions
 
@@ -133,7 +180,7 @@ by the session that authored the corpus.
 | D5 | deterministic | evidence | The Context line naming the host's report flag carries a closure-ignore marker | `closure_scan`'s typed-op pattern matches the word inside the flag's literal name; no step here uploads, deploys or merges anything | The flag is renamed |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -141,6 +188,7 @@ by the session that authored the corpus.
 | 2 | The host's case format moves | implementation | A host update changes the case schema and every compiled case is silently ignored | 1.1 pins the shape with its host version; 2.2's parity test fails on a shape the fixture no longer matches | Phase 1 — The case shape comes from the host |
 | 3 | A negative case punishes a correct neighbour | product | A query that should not trigger skill A may rightly trigger skill B; a grader on "no skill used" would read that as a miss | The grader asserts only the named skill's absence, never "no skill at all" | Phase 2 — One case per labelled query |
 | 4 | The tool is read as a decision | product | A ready compiler reads as pressure to run it before the parked roadmap's condition holds | The non-goals and D1 say who decides; the tool prints and stops | Phase 3 — The run is printed, never performed |
+| 5 | The corpus outgrows the figures beside it | implementation | This file's Context pins 124 files and 1,186 queries from 2026-10-11; two days later the live tree held 125 and 1,203, and a test asserting the pinned number would have failed on growth that is not a defect. | The parity test asserts the LIVE count against the live corpus and never a frozen one; the figures in 2.2's closing note carry their date. The content-hash pin stays where it already is, in `trigger_corpus_holdout_pin.test.ts`. | Phase 2 — One case per labelled query |
 
 ## Provenance
 
