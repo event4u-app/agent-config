@@ -2,7 +2,7 @@
  * Conflict resolution — Phase A5 (simplified, three modes).
  *
  * Three decisions only, replacing the legacy `prompt → write / skip /
- * abort` triple from `scripts/install.py:_resolve_file_conflict`:
+ * abort` triple from `_resolve_file_conflict` in the retired Python installer:
  *
  * - `write`   — target either does not exist OR policy authorises overwrite.
  * - `skip`    — target exists, known path, not forced: leave it alone.
@@ -102,7 +102,7 @@ export type JsonArray = ReadonlyArray<JsonValue>;
 /**
  * Recursive object merge — overlay wins, nested dicts merged, arrays replaced.
  *
- * Mirrors `scripts/install.py:deep_merge`. Arrays do **not** concatenate;
+ * Mirrors `deep_merge` in the retired Python installer. Arrays do **not** concatenate;
  * Claude / Cursor / Cline hook configs rely on whole-array replacement to
  * stay idempotent across re-runs.
  *

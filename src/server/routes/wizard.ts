@@ -449,7 +449,7 @@ async function deleteLegacyArtefacts(
 /**
  * Spawn the installer in a child process and collect its stdout / stderr.
  * Used by `/api/v1/wizard/apply` to bridge the WizardApplyPayload into
- * `scripts/install.py --apply-payload`. Caller pre-resolved `scriptPath`
+ * `src/scripts/install.ts --apply-payload`. Caller pre-resolved `scriptPath`
  * so this helper stays I/O-only (no path discovery).
  */
 interface InstallerResult {
@@ -1188,7 +1188,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
 
         // road-to-single-install-source-of-truth § Phase 2 — Wizard Apply bridge.
         // Validates the WizardApplyPayload envelope and spills it to a temp file,
-        // then dispatches `scripts/install.py --apply-payload <tmp>` — the single
+        // then dispatches `src/scripts/install.ts --apply-payload <tmp>` — the single
         // installer (D12 / ADR-020). Two modes on the SAME endpoint:
         //   • dry_run:true  → buffered plan-summary preview (JSON), used by the
         //     Review step. Adds `--dry-run`.

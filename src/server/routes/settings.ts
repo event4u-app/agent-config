@@ -124,7 +124,7 @@ const SHARED_WRITE_MESSAGE =
     'Re-send with confirmSharedWrite:true to proceed, or run `agent-switch share off` for profile-local writes.';
 
 // Installer placeholders in `src/config/agent-settings.template.yml` that
-// `scripts/install.py` substitutes per-user. The TypeScript defaults layer
+// `src/scripts/install.ts` substitutes per-user. The TypeScript defaults layer
 // renders the same scalars so the wizard's first-run form is schema-valid.
 // Keep this map in lockstep with the template — any new `__*__` placeholder
 // added there must get its default here, or `settingsSchema.safeParse` on
@@ -197,7 +197,7 @@ interface ReadState {
 /**
  * Three-layer merged settings — defaults < global < project.
  *
- * Mirrors `scripts/install.py::read_layered_settings` so the Python
+ * Mirrors `read_layered_settings` in the retired Python installer so the Python
  * installer and the Fastify server produce the same effective tree.
  *
  *   - `values` is the deep-merged result across all layers.
@@ -331,7 +331,7 @@ async function readSingleLayer(root: string): Promise<ReadState | null> {
  * If neither global nor project exists, returns `hasRealFile: false`
  * so the route can emit 404 (ADR-020 § "Installed" semantic).
  *
- * Mirrors `scripts/install.py::read_layered_settings`.
+ * Mirrors `read_layered_settings` in the retired Python installer.
  */
 async function readLayeredSettings(
     packageRoot: string,

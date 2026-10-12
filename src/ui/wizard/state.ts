@@ -219,7 +219,7 @@ export interface DiscoveryWorkspace {
 }
 
 /**
- * Valid AI tool IDs accepted by `scripts/install.py --tools`. Mirrors
+ * Valid AI tool IDs accepted by `src/scripts/install.ts --tools`. Mirrors
  * `_VALID_TOOLS` in install.py (source of truth). The wizard hard-codes
  * the list because tools are NOT in the discovery manifest — they are
  * a substrate-level concept (which AI client the user runs), not a

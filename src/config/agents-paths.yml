@@ -21,7 +21,7 @@
 - path: .agent-settings.yml
   scope: both
   policy: ignored
-  writer: installer (scripts/install.py)
+  writer: installer (src/scripts/install.ts)
   rationale: Per-user active settings; contains local-path secrets
 
 - path: .agent-settings

@@ -4,7 +4,7 @@
  * Important contract: the template ships with comments that explain
  * every key — we MUST NOT discard them when the wizard writes back.
  * `js-yaml.dump` cannot preserve comments, so we use a key-level
- * replace strategy that mirrors `scripts/install.py::_replace_template_value`:
+ * replace strategy that mirrors `_replace_template_value` in the retired Python installer:
  * scan the rendered template line-by-line, replace only the scalar
  * value at each dotted path, leave comments and indentation alone.
  *
@@ -559,7 +559,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 /**
  * Recursive dict merge — overlay wins, nested dicts are merged, lists
- * are replaced (not concatenated). Mirrors `scripts/install.py::deep_merge`
+ * are replaced (not concatenated). Mirrors `deep_merge` in the retired Python installer
  * so the Python installer and the Fastify server produce the same
  * three-layer settings tree (`defaults < global < project`).
  */
