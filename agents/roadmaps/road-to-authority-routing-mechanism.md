@@ -325,7 +325,7 @@ describe block were rewritten to say so.
 hashing without serialisation still reviews a head that is no longer the
 merge candidate."*
 
-- [ ] **6.1 Run the council on the merge-serialisation mechanism** for
+- [x] **6.1 Run the council on the merge-serialisation mechanism** for
       `check_completion_review.ts` / `dispatch_r2_reviewer.ts`'s review-scope
       hash: how does a review instance (Phase 2.5) stay bound to the actual
       merge candidate across a same-day re-review, given concurrent
@@ -361,10 +361,18 @@ merge candidate."*
       `check_completion_review` cannot express a same-day re-review, and neither
       can `lint_plan_risk_register`. The box ticks on the next calendar day, or
       when 6.3 ships identity.
-- [ ] **6.2 Implement stable review-instance identity** (Phase 2.5's model,
+      **Ticked 2026-10-12 on the first of those two conditions — the calendar,
+      not a fix.** The stamp moved from `2026-10-10` to `2026-10-12` because
+      two days passed, so the gate can tell this re-review from the one it
+      already had. Defect 4 is UNCHANGED by that: `check_completion_review` and
+      `lint_plan_risk_register` still cannot express a same-day re-review, and
+      6.3 is still the step that closes it. Reading this box as evidence the
+      defect is handled would be exactly the silent weakening the step refused
+      to patch into the gate.
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new --> **6.2 Implement stable review-instance identity** (Phase 2.5's model,
       now wired) and the chosen serialisation mechanism from 6.1.
       verify: `npx vitest run tests/scripts/check_completion_review.test.ts` -> 0
-- [ ] **6.3 Wire `check_completion_review` to express a same-day re-review**
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new --> **6.3 Wire `check_completion_review` to express a same-day re-review**
       (record defect 4) using 6.2's review-instance identity and 2.4's
       extended `refused` vocabulary — never by widening what counts as "the
       same review" without the identity check.
@@ -404,6 +412,15 @@ what the gate attests."*
       classification is not gate membership — a decision this round did not take.
       Record: `agents/evidence/council/live-tree-check-classification-20261010.md`
       and its `.question.md`.
+      **Screened 2026-10-12 and deliberately NOT re-run.** What the seats asked
+      for is named in D13's own `revisit if`: a per-check contract registry from
+      which class, prerequisites, gate membership and refresh authority derive
+      mechanically. No such registry exists in the tree, so a second round would
+      put the same question to the same seats with no new substance behind it —
+      verdict shopping under `evaluator-independence`, not rigour. The registry
+      is the work this step is actually waiting on, it is larger than a step of
+      this phase, and it is named here rather than built so that the next run
+      sees a stated prerequisite instead of an open box that looks runnable.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
@@ -424,7 +441,7 @@ current (unclassified, red) state — no check gets silently un-demoted.*
 
 *Record, required sequencing, item 8.*
 
-- [ ] **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new --> **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
       (N decided by the council in 8.2) without gating anything — collect a
       false-positive / false-negative report comparing its verdicts against
       what actually happened.
@@ -491,12 +508,12 @@ before 8.3 gates anything.*
 | D15 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — convergent | 6.1 — a review instance is stable per branch; an ATTEMPT is immutable and records the scope hash, the target sha and, per touched file, that file's blob hash ON THE TARGET. At merge time a CI-side check re-reads those fingerprints: any differs -> **stale**, a new attempt under the same instance carrying unresolved objections forward; all match -> **valid**, even if the target advanced on other files. Ordering is **first-valid-wins** — non-overlapping branches retry mechanically, overlapping ones go stale. No owner decision in the common path, and the check is never run by the agent. openai adds, undisputed: a compare-and-swap on a sole protected writer, a policy hash per attempt so changing exclusions / diff flags / merge strategy / reviewer authorization / validator code revokes affected attempts mechanically, and fail-closed criteria when attestation, branch protection or lease history cannot be confirmed. | AI council 2026-10-10, anthropic + openai, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/merge-serialisation-20261010.md`. **The limit is recorded as a limit, not a caveat** — openai: "This mechanism establishes atomic, SYNTACTIC continuity of an explicitly defined review projection. It does not prove semantic equivalence, and the architecture must not describe it as doing so." Out of reach: semantic conflicts between non-overlapping changes, anything inside the configured exclusions, generated state, environment-dependent merge behaviour, an administrator bypass. anthropic's dissent: the instance/attempt split adds complexity justified only by Phase 2.5's objection retention, and the mechanism must fail closed when branch protection is disabled. | objection retention proves unnecessary (a flat attempt model then suffices), or a normalized review projection is defined that the landing authority can reconstruct from the prospective result |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Verdict-field split breaks existing consumers | implementation | Separating `verdict` into three fields (step 2.3) can silently desynchronise `check_kernel_edit_ratified.ts` / `_lib/ratification_artifact.ts` if the migration mapping is wrong, reopening the exact "false record" failure `ratification-artifact.md` was written to prevent. | Step 2.3 requires listing every existing consumer and its read-mode BEFORE any schema change lands; the verifier is built and shadow-run (step 8.1) before anything is gated on the new fields. | Phase 2, Phase 8 |
-| 2 | Concurrent work on the same contract surface | implementation | `road-to-self-modification-that-a-council-must-pass` (PR #2251) amends `docs/contracts/ratification-artifact.md`'s ladder section concurrently with this roadmap's Phase 1–3 work; a Phase 1 or Phase 2 step written against today's text can conflict with that merge. | `relates:` declares the `extends` relation; the Context and Prerequisites sections instruct re-reading the live contract at execution time rather than trusting this file's quoted text. | Phase 1, Phase 2 |
+| 2 | Concurrent work on the same contract surface | implementation | **This fired on 2026-10-12.** PR #2313 (`road-to-self-modification-that-a-council-must-pass` steps 1.4/1.5) rewrote the ladder section of `docs/contracts/ratification-artifact.md` — the council is now the review and the owner the approval, and the section gained an ADR-282 sentence — and added a dated paragraph to § Honest enforcement. Any Phase 1 or Phase 2 step here quoting the old ladder text is now quoting a revision that no longer exists. | `relates:` declares the `extends` relation; the Context and Prerequisites sections instruct re-reading the live contract at execution time rather than trusting this file's quoted text. | Phase 1, Phase 2 |
 | 3 | Activation without the full break-glass set | product | Flipping the verifier to a required gate (step 8.3) before all six break-glass stop conditions are implemented would recreate the dealbreaker the whole roadmap exists to close — a silent-fail-open path. | Step 8.3's own checklist names all six conditions and requires a passing test per condition before activation; the break-glass blocker is a structured, owner-routed gate, not a step the agent can self-clear. | Phase 8 |
 
 ## Blockers
