@@ -35,7 +35,16 @@ estate_offset_exempt: >-
 > tagged `corrected-from-reproduction`: the file the source proposes to extend for stack detection
 > is a consumer template, not package engine code, and no revision in the set noticed.
 
-> **Arrivals:** 2 — latest this roadmap (analysed 2026-09-11, ruled 2026-09-21); earlier
+> **Arrivals:** 3 — latest `inbox-2026-10-m` (2026-10-12): a maintainer transcript naming
+> Atomic Design among "our existing frontend skills", carried into a design-sync plan as a
+> workshop axis, a default atoms/molecules/organisms declaration and a story-first order. It
+> brought neither a levelled corpus nor a concrete ordering proposal; the resulting roadmap
+> `road-to-a-canvas-the-code-owns` carries none of the three (its Decision D7).
+> **Owner question (third arrival):** 1. uphold — tiers only as the detector records them ·
+> 2. reverse the five-level rejection · 3. send a concrete taxonomy-independent ordering
+> proposal to the council. Recommendation: 1.
+>
+> Second arrival: this roadmap (analysed 2026-09-11, ruled 2026-09-21); earlier
 > `agents/roadmaps/archive/road-to-component-granularity-vocabulary.md`, which rejected the
 > five-level taxonomy on a measurement and archived on 2026-08-26. Both arrivals were refused,
 > and the second refusal is recorded on the archived file as well as here, because that file is

@@ -31,6 +31,13 @@ relates:
 > into `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at
 > `main` @ `a75bb3210` on 2026-10-06.
 
+> **Arrivals:** 2 (at least) - latest `inbox-2026-10-m` (2026-10-12): 16.4.0
+> release reviews read the tuning figures (ties alone top-1 0.219, IDF plus ties
+> 0.238) and ask that the IDF variant be decided on a fresh sealed slice — the
+> read this file already holds behind its `entry_condition` — and, separately,
+> that candidate recall be fixed before ordering. No new fact. Earlier:
+> `inbox-2026-10-e` (2026-10-06), the round that produced this roadmap.
+
 > **Parked 2026-10-06.** Phases 1 to 5 landed on tuning; the council's D1
 > verdict keeps the one sealed read (4.2, AC-3) for a freshly cut slice past
 > 1,000 labelled rows. Resume when the `entry_condition` above holds.

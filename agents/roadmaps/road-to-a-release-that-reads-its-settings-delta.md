@@ -22,6 +22,15 @@ relates:
 > landed in between). Class: external harvest proposal, verified and
 > reproduced against this tree.
 
+> **Arrivals (blocker `what-a-minor-may-remove`):** 2 — latest `inbox-2026-10-m`
+> (2026-10-12): a 16.4.0 release review reads the 46-key retirement in a minor
+> as a breach of `BREAKING_CHANGES.md:13` ("settings keys are part of its public
+> contract") and cites `:52`, where 11.0.0 was a major for removing one key,
+> `worktrees.mode`. New evidence for the blocker, cutting toward option (a); it
+> does not change the question. It does widen step 5.1: `BREAKING_CHANGES.md:13`
+> is a fourth sentence stating the rule, and 5.1 names three.
+> Earlier: `inbox-2026-10-k` (2026-10-11).
+
 ## Goal
 
 When a version is cut, the release knows which settings keys the last release
