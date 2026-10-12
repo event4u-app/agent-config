@@ -50,6 +50,19 @@ export interface Budget {
     ceilings: Record<string, number>;
     /** Every rise, newest last. A rise with no reason is refused by the check. */
     raised: Raise[];
+    /**
+     * Every other top-level key, carried through `--update` untouched.
+     *
+     * `lint_budget_ownership` requires `owner` and `review_by` on every gate
+     * budget, and the first `--update` of this file DROPPED both — it wrote a
+     * fresh object from the two fields it knew about, and CI caught the loss
+     * on the next run. A writer that silently narrows the file it maintains is
+     * the same defect class this gate exists to catch in skill bodies.
+     *
+     * Optional so a caller constructing a Budget in a test need not invent
+     * metadata it is not testing; absent means the file carried none.
+     */
+    rest?: Record<string, unknown>;
 }
 
 /** Byte size of every `src/skills/<name>/SKILL.md`, by directory name. */
@@ -71,9 +84,18 @@ export function measureBodies(root = REPO_ROOT): Record<string, number> {
 
 export function readBudget(root = REPO_ROOT): Budget | null {
     try {
-        const doc = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf8')) as Partial<Budget>;
-        if (typeof doc.ceilings !== 'object' || doc.ceilings === null) return null;
-        return { ceilings: doc.ceilings as Record<string, number>, raised: Array.isArray(doc.raised) ? doc.raised : [] };
+        const doc = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf8')) as Record<string, unknown>;
+        const ceilings = doc['ceilings'];
+        if (typeof ceilings !== 'object' || ceilings === null) return null;
+        const rest: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(doc)) {
+            if (k !== 'ceilings' && k !== 'raised') rest[k] = v;
+        }
+        return {
+            ceilings: ceilings as Record<string, number>,
+            raised: Array.isArray(doc['raised']) ? (doc['raised'] as Raise[]) : [],
+            rest,
+        };
     } catch {
         return null;
     }
@@ -239,7 +261,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     if (argv.includes('--update')) {
-        const next: Budget = { ceilings: nextCeilings(bodies, budget), raised: budget.raised };
+        // Every other key first, so `owner`, `review_by` and `_comment` survive
+        // and stay at the top of the file where a reader meets them.
+        const next = { ...(budget.rest ?? {}), ceilings: nextCeilings(bodies, budget), raised: budget.raised };
         fs.writeFileSync(path.join(root, BUDGET_REL), JSON.stringify(next, null, 2) + '\n');
         process.stdout.write(`scanned: ${String(Object.keys(bodies).length)}\n`);
         process.stdout.write(`🔧  ${BUDGET_REL}: ${String(Object.keys(next.ceilings).length)} ceiling(s) recorded\n`);

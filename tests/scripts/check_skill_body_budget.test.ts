@@ -148,6 +148,29 @@ describe('check_skill_body_budget — against the real tree', () => {
     });
 });
 
+describe('check_skill_body_budget — --update preserves what it did not write', () => {
+    it('the real budget file keeps owner, review_by and _comment', () => {
+        // The first `--update` of this file DROPPED all three: it wrote a
+        // fresh object from the two fields it knew about, and
+        // lint_budget_ownership caught the loss on the next CI run. A writer
+        // that silently narrows the file it maintains is the same defect
+        // class this gate exists to catch in skill bodies.
+        const doc = JSON.parse(fs.readFileSync(path.join(REPO, BUDGET_REL), 'utf8')) as Record<string, unknown>;
+        expect(typeof doc['owner']).toBe('string');
+        expect(String(doc['owner']).trim().length).toBeGreaterThan(0);
+        expect(String(doc['review_by'])).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        expect(typeof doc['_comment']).toBe('string');
+    });
+
+    it('readBudget carries every other top-level key in `rest`', () => {
+        const budget = readBudget(REPO) as Budget;
+        expect((budget.rest ?? {})['owner']).toBeDefined();
+        expect((budget.rest ?? {})['review_by']).toBeDefined();
+        expect((budget.rest ?? {})['ceilings']).toBeUndefined();
+        expect((budget.rest ?? {})['raised']).toBeUndefined();
+    });
+});
+
 describe('check_skill_body_budget — the file on disk', () => {
     it('is committed under src/config and is valid JSON', () => {
         const abs = path.join(REPO, BUDGET_REL);
