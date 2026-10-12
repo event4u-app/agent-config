@@ -16,8 +16,8 @@ relates: []
 > accepted risk with this roadmap as the durable answer:
 > `1dc7d5c013e5` and `01536ef6db6a` (manifest-forgery detection is a command
 > pattern list) and `3b21e612b3ae` (a declared delivery mode is trusted
-> unverified). The release ledger
-> `agents/evidence/release-findings/16.5.0.json` carries all three.
+> unverified). The 16.5.0 release findings ledger, committed with that
+> release, carries all three with their dispositions.
 
 ## Goal
 
