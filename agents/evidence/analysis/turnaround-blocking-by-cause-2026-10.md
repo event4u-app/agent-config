@@ -184,3 +184,138 @@ rule one out, and this page does not claim it.
 
 `src/config/turnaround-budget.json` is not edited: `git diff --exit-code
 a75bb3210 -- src/config/turnaround-budget.json` exits 0.
+
+## Second window
+
+`road-to-blocking-time-by-cause` step 3.4. The window the targets in
+`docs/CLAIMS.md` claim `turnaround-blocking-by-cause-targets` were
+pre-registered against, read after the 3.3 mitigation merged in #2248 on
+2026-10-07. The targets were committed before that merge; this reading is the
+first one taken against them.
+
+### Window shape
+
+| | |
+|---|---|
+| Window | the 10 most recently modified sessions in the store, excluding the measuring session |
+| Read | 2026-10-12, ~12:50Z |
+| Oldest / newest mtime | 2026-10-11T09:32Z / 2026-10-12T14:51Z |
+| Sessions accrued after the 3.3 merge | 18 at the store root, so the 10 newest all post-date it |
+| User requests | 153 |
+| API calls | 2,956 (19.32 per request) |
+| Tool calls | 3,271 in 2,806 tool-using requests (batch 1.17) |
+| Tool time | 511 min |
+| Blocking calls (>60 s) | 119, holding 320 min (share 0.626) |
+| First-call context floor | 211,620–242,742 tokens |
+
+The newest file is a session that was still running while this was read, so its
+mtime moves; the window is a snapshot at the time above and not a reproducible
+selection. This window is also not the same KIND of work as the first: it is
+dominated by SVG-engine and release sessions, where the first window was
+dominated by parallel drain runs. Claim (6) names that: a delta between two
+windows can be a corpus change.
+
+### Blocking tail by cause
+
+| Cause | Calls | Minutes |
+|---|---:|---:|
+| `ci-wait` | 2 | 5 |
+| `subagent-wait` | 1 | 1 |
+| `test` | 22 | 120 |
+| `build` | 6 | 29 |
+| `network` | 41 | 82 |
+| `sleep-poll` | 3 | 11 |
+| `mcp` | 0 | 0 |
+| `user-wait` | 0 | 0 |
+| `unknown` | 44 | 71 |
+
+### The classifier was widened before this reading, and not toward the targets
+
+A first pass over this window left **70 of 119 blocking calls and 179 of 320
+minutes** `unknown` — more than the largest named cause, which is the condition
+step 2.2 names for calling a reading inconclusive and reopening the rule table.
+Reading those calls showed three shapes the rules could not see, each one fixed
+and pinned by a test in `tests/scripts/probe_turnaround_causes.test.ts`:
+
+| Shape | Example from this window | Now reads as |
+|---|---|---|
+| An env assignment sharing a segment with its command | `cd <wt> && AGENT_CONFIG_BROWSER_SUITES=1 npx vitest run` | `test` |
+| Git's global options before the subcommand | `git -C <wt> push -u origin <branch>` | `network` |
+| A provider CLI invoked directly rather than through `council_cli` | `codex exec --skip-git-repo-check …` | `network` |
+
+`NOISE_SEGMENT` anchors an assignment at the end of its segment, so it only ever
+saw the `D=/tmp/x;` form and never the prefix form; this package's own
+token-efficiency rule tells agents to write `git -C <path> …`, so that shape is
+common here and was invisible to a rule anchored on `git push`.
+
+**None of the three touches `ci-wait` or `user-wait`** — they move minutes into
+`test` and `network` only. So the two target causes are measured by exactly the
+rules the targets were pre-registered against, and the widening cannot have
+moved a target either way. The four existing figures are unchanged by it: the
+test that pins them is green, and the numbers in the shape table above are
+byte-identical before and after.
+
+After the widening, `unknown` holds 44 calls and 71 min — below `test` (120 min),
+so the reading is conclusive under 2.2's own rule. What is still in it, read in
+memory and published as counts only:
+
+| What the unknown calls were | Calls | Minutes |
+|---|---:|---:|
+| A `python3` script in a session scratchpad (image sweeps) | 28 | 42 |
+| A local script or gate run (`tsx src/scripts/…`, a `for` loop over gates) | 4 | 15 |
+| A `git` subcommand whose wait is a local hook (`commit`, `add`, `status`) | 6 | 7 |
+| The `Read` tool on a large file | 4 | 5 |
+| The `Write` tool | 1 | 1 |
+| Other shell | 1 | 1 |
+
+No new cause was added for them. The two largest groups are a one-off scratchpad
+workload and a local gate run; naming a cause after work that happened to fill
+one window is how a closed set grows a row per window, and 2.2's condition for
+reopening is no longer met.
+
+### Against the pre-registered targets
+
+Read over every call in the window whose command names a CI waiter — 55 emitted,
+54 with a result — and over every structured ask.
+
+| Cause | Target | Baseline | This window | Verdict |
+|---|---|---|---|---|
+| `ci-wait` | at most 10 waiter calls ending `DID NOT SETTLE` in the foreground | 20 of 44 | **0 of 54** | met |
+| `ci-wait` (secondary) | at most 130 blocking minutes | 261 | **5** | met |
+| `user-wait` | zero avoidable blocking minutes | 0 avoidable of 4 calls | **0 calls, 0 min** | underpowered |
+
+`user-wait` is underpowered on the floor the claim sets for it: clause (4) asks
+for at least 5 structured asks before the cause can be judged, and this window
+holds zero. Underpowered is neither a pass nor a miss and is cited for neither.
+
+`ci-wait` is **not** underpowered: clause (4)'s floor is fewer than 20 CI waits
+in the window, and this window holds 55. The window also holds fewer total
+blocking calls than the first (119 against 145), which clause (4) explicitly
+says is not an underpowering ground on its own.
+
+### How the `ci-wait` target was met, and what the instrument can no longer see
+
+Of the 54 waiter calls with a result:
+
+| Shape | Calls |
+|---|---:|
+| Started as a background job, returning at once | 31 |
+| Foreground `ci_settle` | 3 |
+| Foreground `gh pr checks` / `gh run watch` | 20 |
+
+Not one ended with `DID NOT SETTLE`. Three ended green, two red, and the rest
+ended on a checks table or a background-job handle. The mechanism is the one D7
+chose: the waiter names the still-pending checks and a background next wait
+rather than expiring in the foreground.
+
+**The honest limit, stated because the zero invites over-reading.** A background
+waiter does not block by construction, and its verdict never appears in the last
+line of the tool result, so this instrument cannot see a background wait that
+ended without a verdict. The target as written asks about FOREGROUND calls, and
+the zero answers that question correctly. The broader question — how often does
+a wait end with no verdict at all — is no longer answerable from the transcript
+alone, and a future reading that wants it needs the waiter to write its outcome
+somewhere the probe can read. That is recorded here as a measurement gap, not as
+a reason to discount the met verdict.
+
+`src/config/turnaround-budget.json` is still not edited by this reading.
