@@ -968,7 +968,7 @@ describe('what the 16.5.0 re-cut review found', () => {
         '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 8 8" role="img"><title>t</title>';
     const rulesOf = (inner: string) => scanSvg(`${svgOpen}${inner}<rect width="8" height="8"/></svg>\n`, 'a.svg').map((f) => f.rule);
 
-    it('a namespace-prefixed script or foreignObject is active content, and a prefixed root is the root', () => {
+    it('a script or foreignObject under a prefix bound to SVG is active content', () => {
         const prefixed =
             '<svg:svg xmlns:svg="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><svg:title>t</svg:title>' +
             '<svg:script>alert(1)</svg:script><svg:rect width="8" height="8"/></svg:svg>\n';
@@ -988,6 +988,17 @@ describe('what the 16.5.0 re-cut review found', () => {
         ]) {
             expect(rulesOf(inner), inner).toContain('svg-safety-active-content');
         }
+        // Unquoted SMIL attributes, which an HTML host parses (second review round).
+        const host =
+            '<!doctype html><html><body><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img">' +
+            '<title>t</title><a><set attributeName=href to=javascript:alert(1)></set><rect width="8" height="8"/></a>' +
+            '</svg></body></html>\n';
+        expect(scanHostHtml(host, 'h.html').map((f) => f.rule)).toContain('svg-safety-active-content');
+        // A non-SVG prefix and a non-URL attribute are not active content.
+        expect(rulesOf('<foo:script xmlns:foo="urn:not-svg"/>')).not.toContain('svg-safety-active-content');
+        expect(rulesOf('<rect data-note="data:text/html,hello" width="8" height="8"/>')).not.toContain(
+            'svg-safety-active-content',
+        );
         // An animation of an ordinary attribute, and a fragment href, stay clean.
         expect(rulesOf('<rect width="8" height="8"><animate attributeName="opacity" values="0;1" dur="1s"/></rect>')).not.toContain(
             'svg-safety-active-content',

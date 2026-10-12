@@ -29,6 +29,7 @@
  */
 
 import { attrsOf, parseDocument, tagEnd, type XmlDocument, type XmlNode } from './svg_dom.js';
+import { cssUnescape, isActiveUrl, localName, rawAttrs, resolvedUrl, svgPrefixes, URL_ATTRS } from './svg_urls.js';
 import {
     type Box,
     elementExtent,
@@ -293,7 +294,7 @@ export function referencedIds(content: string, elements: SvgElement[]): Set<stri
 // ---------------------------------------------------------------------------
 
 function ruleMissingXmlns(elements: SvgElement[], file: string): Finding[] {
-    const root = elements.find((el) => localName(el.name) === 'svg' && !el.closing);
+    const root = elements.find((el) => el.name === 'svg' && !el.closing);
     if (!root) return [];
     if (root.attrs['xmlns']) return [];
     return [
@@ -326,7 +327,7 @@ function buildContainerDepth(elements: SvgElement[]): Map<number, string[]> {
 const NON_RENDERED_CONTAINERS = new Set(['defs', 'symbol', 'clippath', 'mask', 'marker', 'pattern']);
 
 function ruleOutsideViewBox(elements: SvgElement[], file: string): Finding[] {
-    const root = elements.find((el) => localName(el.name) === 'svg' && !el.closing);
+    const root = elements.find((el) => el.name === 'svg' && !el.closing);
     const vb = readViewBox(root);
     if (!vb) return [];
     const ancestry = buildContainerDepth(elements);
@@ -484,16 +485,9 @@ export function safetySeverity(mode: DeliveryMode): Severity {
 // because an attacker writes whichever spelling is not checked.
 const ACTIVE_ATTR_RE = /\son[a-z]+\s*=\s*(["']|[^\s>"'])/i;
 
-/** An element's name without its namespace prefix: `svg:script` is a `script`. */
-export function localName(name: string): string {
-    return name.replace(/^[^:]*:/, '');
-}
 
 /** Elements that run or embed foreign content when the graphic is inlined. */
 const ACTIVE_ELEMENTS = new Set(['script', 'foreignobject', 'iframe', 'embed', 'object']);
-
-/** A URL that executes or opens a document when followed. */
-const isActiveUrl = (raw: string): boolean => /^(javascript:|data:text\/html)/i.test(resolvedUrl(raw));
 
 function ruleActiveContent(
     content: string,
@@ -504,16 +498,17 @@ function ruleActiveContent(
     const severity = safetySeverity(mode);
     const findings: Finding[] = [];
     const lineOf = lineIndexer(content);
+    const prefixes = svgPrefixes(content);
 
     for (const el of elements) {
         if (el.closing) continue;
-        const local = localName(el.name);
+        const local = localName(el.name, prefixes);
         // SMIL that writes an active URL into an href is the same href, later.
-        const animatesHref =
-            (local === 'set' || local === 'animate') && /^(xlink:)?href$/i.test(el.attrs['attributename'] ?? '');
+        const smil = local === 'set' || local === 'animate' ? rawAttrs(el.raw) : null;
+        const animatesHref = smil !== null && /^(xlink:)?href$/i.test(smil['attributename'] ?? '');
         if (
             animatesHref &&
-            ['to', 'from', 'by', 'values'].some((k) => (el.attrs[k] ?? '').split(';').some(isActiveUrl))
+            ['to', 'from', 'by', 'values'].some((k) => (smil[k] ?? '').split(';').some(isActiveUrl))
         ) {
             findings.push({
                 rule: 'svg-safety-active-content',
@@ -542,12 +537,12 @@ function ruleActiveContent(
                     severity,
                 });
             }
-            if (isActiveUrl(value)) {
+            if (/^javascript:/i.test(resolvedUrl(value)) || (URL_ATTRS.has(key) && isActiveUrl(value))) {
                 findings.push({
                     rule: 'svg-safety-active-content',
                     file,
                     line: el.line,
-                    snippet: `<${el.name} ${key}="javascript:…"> is an active URL; delivery mode "${mode}" grades it ${severity}`,
+                    snippet: `<${el.name} ${key}="${resolvedUrl(value).slice(0, 16)}…"> is an active URL; delivery mode "${mode}" grades it ${severity}`,
                     severity,
                 });
             }
@@ -603,40 +598,6 @@ function ruleInternalSubset(content: string, file: string): Finding[] {
 
 const EXTERNAL_URL_RE = /^(?:https?:|ftp:|\/\/)/i;
 
-const NAMED_URL_ENTITIES: Record<string, string> = {
-    colon: ':', sol: '/', tab: '\t', newline: '\n', period: '.', lpar: '(', rpar: ')', amp: '&',
-};
-
-/**
- * The URL a browser would actually resolve from an attribute value: character
- * references decoded, leading/trailing C0 controls and spaces stripped, tab and
- * newline removed anywhere. The trailing `;` of a reference is optional on
- * purpose: an `.svg` parsed as XML needs it, but the same graphic inlined in an
- * HTML host is parsed by the HTML tokenizer, which decodes `&#106avascript:`
- * too — over-reading XML here costs precision, under-reading HTML costs a miss.
- * The raw value is attacker-chosen, so a scheme test
- * against it is a test of one spelling — ` https:`, `ht\ttps:`, `&#106;avascript:`
- * all load, and all passed.
- */
-export function resolvedUrl(raw: string): string {
-    const decoded = raw.replace(/&(?:#x([0-9a-f]+)|#(\d+)|([a-z]+));?/gi, (m, hex, dec, name) => {
-        const cp = hex ? parseInt(hex, 16) : dec ? parseInt(dec, 10) : NaN;
-        if (!Number.isNaN(cp)) return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
-        return NAMED_URL_ENTITIES[(name as string).toLowerCase()] ?? m;
-    });
-    return decoded.replace(/^[\u0000- ]+|[\u0000- ]+$/g, '').replace(/[\t\n\r]/g, '');
-}
-
-/** CSS escapes decoded: `\\68 ` and `\\h` both read `h`. */
-function cssUnescape(raw: string): string {
-    return raw.replace(/\\([0-9a-f]{1,6})\s?|\\(.)/gi, (m, hex, ch) => {
-        if (hex) {
-            const cp = parseInt(hex, 16);
-            return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
-        }
-        return ch as string;
-    });
-}
 
 function ruleExternalReference(
     content: string,
@@ -847,7 +808,7 @@ function isDirectChildOfRoot(elements: SvgElement[], index: number): boolean {
  * an ancestor chain.
  */
 export function directChildrenOfRoot(doc: XmlDocument): XmlNode[] {
-    const root = doc.elements.find((el) => localName(el.name) === 'svg');
+    const root = doc.elements.find((el) => el.name === 'svg');
     if (root === undefined) return [];
     return root.children.filter((n) => n.kind === 'element');
 }
@@ -941,7 +902,7 @@ function ruleWellFormed(doc: XmlDocument, file: string): Finding[] {
 }
 
 function rootNameState(content: string, doc: XmlDocument, elements: SvgElement[]): NameState {
-    const rootIdx = elements.findIndex((el) => localName(el.name) === 'svg' && !el.closing);
+    const rootIdx = elements.findIndex((el) => el.name === 'svg' && !el.closing);
     const root = rootIdx === -1 ? undefined : elements[rootIdx];
     // A DIRECT child of the root only. The first `<title>` ANYWHERE was wrong
     // in both directions: a chart's nested series title read as the graphic's
