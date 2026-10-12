@@ -75,9 +75,13 @@ beforeEach(() => {
     userRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'collector-daemon-'));
 });
 
-afterEach(() => {
+afterEach(async () => {
     stop(userRoot);
-    fs.rmSync(userRoot, { recursive: true, force: true });
+    // `stop` asks the daemon to exit; it does not wait for the process to be
+    // gone, and a case that spawned one leaves a writer in `userRoot` racing
+    // the removal below.
+    await waitForNoDaemonAt(userRoot);
+    removeTree(userRoot);
 });
 
 /**
@@ -149,6 +153,48 @@ function enumerateDaemonProcesses(opts: { includeTestOwned?: boolean } = {}): st
         .filter((line) => opts.includeTestOwned === true || !line.includes('--root'));
 }
 
+/**
+ * Block until no `collector_daemon` process names `root` in its argv, so the
+ * directory can be removed without a writer still in it. Returns on a deadline
+ * rather than throwing: a stuck grandchild is a slower teardown, never a test
+ * failure attributed to the wrong suite.
+ */
+async function waitForNoDaemonAt(root: string, timeoutMs = 10_000): Promise<void> {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+        const mine = enumerateDaemonProcesses({ includeTestOwned: true }).filter((l) => l.includes(root));
+        if (mine.length === 0) return;
+        for (const line of mine) {
+            try {
+                process.kill(pidOf(line), 'SIGKILL');
+            } catch {
+                /* already gone */
+            }
+        }
+        await new Promise<void>((r) => setTimeout(r, 25));
+    }
+}
+
+/**
+ * `rm -rf` of a directory a process may still be writing into fails with
+ * `ENOTEMPTY`: the walk empties a directory, the writer re-creates a file, and
+ * the `rmdir` that follows finds it non-empty. One retry pass turns that into
+ * the no-op it should be. Any other error is re-thrown — a teardown that
+ * swallows errors hides the state it was meant to clean.
+ */
+function removeTree(dir: string, attempts = 5): void {
+    for (let i = 0; i < attempts; i++) {
+        try {
+            fs.rmSync(dir, { recursive: true, force: true });
+            return;
+        } catch (err) {
+            const code = (err as NodeJS.ErrnoException).code;
+            if (code !== 'ENOTEMPTY' && code !== 'EBUSY') throw err;
+            if (i === attempts - 1) throw err;
+        }
+    }
+}
+
 describe('4.1 — default-off, asserted by process enumeration', () => {
     it('POSITIVE CONTROL: the enumeration finds a RUNNING daemon', async () => {
         // Without this, the negative assertion below is unfalsifiable — a grep
@@ -197,6 +243,15 @@ describe('4.1 — default-off, asserted by process enumeration', () => {
                 if (child.exitCode !== null || child.signalCode !== null) return r();
                 child.once('exit', () => r());
             });
+            // `child` is the tsx WRAPPER; the daemon runs in a grandchild that
+            // SIGKILL on the wrapper does not reap. Waiting only on the wrapper
+            // leaves that grandchild writing into `userRoot` while `afterEach`
+            // removes it, and the removal loses the race: measured on CI
+            // 2026-10-12 as `ENOTEMPTY: directory not empty, rmdir
+            // '…/collector-daemon-*/agent-collector'` on macOS shard 4/4, green
+            // on every other shard and locally. So wait on the ROOT, which is
+            // what the next statement is about to delete.
+            await waitForNoDaemonAt(userRoot);
         }
     }, 60_000);
 
