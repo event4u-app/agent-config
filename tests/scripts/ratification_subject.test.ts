@@ -20,7 +20,16 @@ function tmpTree(files: Readonly<Record<string, string>>): string {
 }
 
 const KERNEL = 'src/rules/commit-policy.md';
-const UNGATED = 'docs/contracts/ratification-artifact.md';
+/**
+ * A document the gate does not watch.
+ *
+ * This was `docs/contracts/ratification-artifact.md` until 2026-10-12, when
+ * step 4.1 put the artifact contract on the reviewer list and these two cases
+ * went red — correctly, and the red is worth recording here rather than being
+ * quietly edited away: a test naming a file as ungated is a claim about the
+ * gate's reach, and the claim expired the moment the reach grew.
+ */
+const UNGATED = 'docs/architecture.md';
 
 describe('2.1 — the gated set, assembled from the gate’s own constants', () => {
     it('keeps a kernel rule and drops an ungated file', () => {

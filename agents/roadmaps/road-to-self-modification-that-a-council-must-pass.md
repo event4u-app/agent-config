@@ -455,14 +455,25 @@ At `df377ca64`:
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.1 The review's own code is a gated surface.** The gate's watch list
+- [x] **4.1 The review's own code is a gated surface.** The gate's watch list
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their
       own, an ordinary change to the council's prompts or transports stays
       ungated. A change to any watched one is a change to the reviewer: it
       needs a passing record and the owner.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_reviewer_paths.test.ts` -> 0
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
+      **Closed 2026-10-12.** `REVIEWER_PATHS` carries the five: the digest, the
+      writer, the questions, the verdict rule and the artifact contract. The
+      individual self-surface constants were folded into ONE exported
+      `SELF_SURFACE`, because the digest module had been re-assembling that set
+      from the individual constants — with five new paths a copy would have left
+      all five digest-invisible, which is a path the gate reds on and no record is
+      bound to. Every case has a polarity partner: `prompts.ts`, `stance_tally.ts`,
+      `quorum.ts` and `council_cli.ts` stay ungated, and an ordinary council edit
+      passes with no record at all. The suite also pins the thing the step does not
+      say out loud — each reviewer path enters `gatedFilesOf`, so it is covered by
+      the digest and not only by the refusal. 14 tests.
+- [x] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
       that list from its own tree, as it reads its policy, and the list and
@@ -470,11 +481,32 @@ At `df377ca64`:
       change cannot drop a member in order to edit it. The schema is shared
       by every rule, so any edit to it then needs a record too.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_consequence_class.test.ts` -> 0
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.3 The comment matches the hooks.** The gate's header stops saying
+      **Closed 2026-10-12.** `GatedPaths` gained `consequenceRules`, fed by
+      `consequenceRuleSlugs`, which reads the 28 members from the gate's OWN tree —
+      never from `--root`, for the reason the quorum policy is read that way: a
+      candidate that dropped a member would otherwise be judged against its own
+      shortened list. The list and `rule.schema.json` joined `SELF_SURFACE`, so the
+      drop-then-edit move carries a record either way, and that exact diff is a test.
+      **One deliberate asymmetry, recorded rather than silently chosen:** a missing
+      or unparseable list yields an EMPTY set rather than a refusal. The quorum
+      policy fails closed because it decides whether a control can measure at all;
+      this list only WIDENS, so failing closed on it would red every kernel PR over
+      a file whose absence costs only the widening. 9 tests, with both polarities —
+      a class member outside the kernel reds, a rule outside the class does not, and
+      a kernel rule is still reported as a kernel rule rather than reclassified.
+- [x] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
       time.
       verify: `grep -c 'also denied at tool-call time' src/scripts/check_kernel_edit_ratified.ts` -> /^0$/
       Positive control: the same grep returns 1 at `df377ca64`.
+      **Closed 2026-10-12, and the replacement states the true fact rather than
+      deleting the false one.** The claim was checked before it was replaced:
+      `block_plumbing_writes.ts` names `dispatch_hook` only in prose about reads and
+      protects three generated build outputs, and `block_kernel_rule_writes.ts`
+      merely IMPORTS `kernel_rules.ts` without protecting it. So for those two paths
+      the record is the only layer, not the second one — which is what the header
+      now says. The 2026-10-10 probe that found this needed a record for a
+      comment-only edit; this change carries one, for the whole diff.
 
 ## Phase 5 — A council that cannot settle it stops the run for the user
 
@@ -487,12 +519,25 @@ At `df377ca64`:
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **5.2 The stop has a shape.** In those cases the run ends with the
+- [x] **5.2 The stop has a shape.** In those cases the run ends with the
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
       undone.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_escalation_message.test.ts` -> 0
+      **Closed 2026-10-12.** `escalationMessage` prints the six, and the split down
+      the middle is the substance: the gate FILLS IN the verdict, the per-seat
+      dissent and the gated paths, and ASKS FOR the expected gain, the risk and the
+      rollback, naming the record and the diff as where they are written. It says in
+      the message that it does not know them and will not guess — a stop that handed
+      the owner a confident-looking summary the gate never computed would be this
+      mechanism's own failure mode arriving through its help text. It fires on
+      `non-convergent`, on `refused`, on diversity short of the required count, and
+      on any reviewer-surface change record or not (condition 4 is the owner's
+      whatever the seats said). It deliberately does NOT fire on a missing,
+      malformed, self-ratified or content-stale record: those are authoring defects,
+      and routing one to the owner spends the escalation on "write a record".
+      13 tests, six of them polarity partners.
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
       check is required, and the contract's bypass procedure is for incidents.
