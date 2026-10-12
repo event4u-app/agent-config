@@ -4,7 +4,7 @@
  *
  * `init` is the consumer install entry point. When the browser wizard can
  * actually be used, `init` opens it and lets it drive the whole install via
- * `/api/v1/wizard/apply` → `scripts/install.py --apply-payload` — no CLI
+ * `/api/v1/wizard/apply` → `src/scripts/install.ts --apply-payload` — no CLI
  * tool-picker, one installer. Otherwise `init` falls back to the bash CLI
  * install. These pure helpers make that decision (and the GUI option mapping)
  * unit-testable, separate from the self-executing CLI entry point.

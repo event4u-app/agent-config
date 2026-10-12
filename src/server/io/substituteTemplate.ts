@@ -1,7 +1,7 @@
 /**
  * Render `src/config/agent-settings.template.yml` for the wizard's "Skip" path.
  *
- * Source of truth for placeholder semantics is `scripts/install.py`
+ * Source of truth for placeholder semantics is the retired Python installer
  * (`_render_template`, `_parse_profile_ini`). The wizard's Skip handler
  * cannot shell out to Python — npm/npx flows ship Node only — so this
  * helper mirrors the install-time substitution in TypeScript.
@@ -37,7 +37,7 @@ export interface SubstituteOptions {
 const PLACEHOLDER_RE = /__[A-Z][A-Z0-9_]*__/g;
 
 /**
- * Parse a profile `.ini` file the same way `scripts/install.py` does:
+ * Parse a profile `.ini` file the same way the retired Python installer does:
  * `key=value` per line, `;` line comments, blank lines ignored. Whitespace
  * around `=` is stripped. Duplicate keys: last wins.
  */

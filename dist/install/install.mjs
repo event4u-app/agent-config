@@ -13361,7 +13361,7 @@ var CLAUDE_SKILL_BUNDLE = [
   // subdirs route as `/<cluster>:<sub>`. Council session 2026-05-28
   // converged on Option B (native slash-only) — see
   // agents/runtime/council/responses/claude-code-distribution.json
-  // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
+  // and `_CLAUDE_SKILL_BUNDLE` in the retired Python installer for the Python mirror.
   ["dist/agent-src/commands", "commands"],
   ["dist/agent-src/personas", "personas"]
 ];

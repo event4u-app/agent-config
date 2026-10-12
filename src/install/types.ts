@@ -47,7 +47,7 @@ export type FileKind = 'deployed' | 'marker' | 'bridge';
  * One file the install plan will touch.
  *
  * Mirrors the dict produced by `_file_entry(path, kind, hash_content=...)`
- * in `scripts/install.py:2744`. `sha256` is `null` for bridges (we do
+ * in the retired Python installer, line 2744. `sha256` is `null` for bridges (we do
  * not own the bytes) and a hex digest for deployed/marker files.
  *
  * `path` is the absolute target path on disk — the v2 manifest is
@@ -79,7 +79,7 @@ export type ConflictStrategy = 'skip' | 'overwrite' | 'surface-to-ui';
 /**
  * Per-install conflict resolution policy.
  *
- * 1:1 mirror of `class ConflictPolicy` in `scripts/install.py:169`.
+ * 1:1 mirror of `class ConflictPolicy` in the retired Python installer, line 169.
  *
  * - `force`         — true when `--force-overwrite` was passed OR the
  *                     `AGENT_CONFIG_ALLOW_OVERWRITE=1` env var is set.

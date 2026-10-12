@@ -5,7 +5,7 @@
  *   POST /api/v1/install/plan   — build an {@link InstallPlan} from a
  *                                 declarative {@link PlanSource}[] body.
  *
- * The real *apply* path is owned by `scripts/install.py --apply-payload`
+ * The real *apply* path is owned by `src/scripts/install.ts --apply-payload`
  * (single source of truth, D12 / ADR-020) and surfaced to the GUI via
  * `POST /api/v1/wizard/apply` (see `wizard.ts`). The legacy TypeScript
  * apply engine + its `POST /api/v1/install/apply` SSE route were removed in

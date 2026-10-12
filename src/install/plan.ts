@@ -1,5 +1,5 @@
 /**
- * Plan builder — Phase A3 port of `scripts/install.py:_build_install_plan`.
+ * Plan builder — Phase A3 port of `_build_install_plan` in the retired Python installer.
  *
  * Pure: walks one or more source directories, computes the target path
  * + SHA-256 of every file, and returns a declarative {@link InstallPlan}.

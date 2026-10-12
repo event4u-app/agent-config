@@ -863,7 +863,7 @@ async function finish(): Promise<void> {
                 : `Wizard complete.`;
         // road-to-single-install-source-of-truth § Phase 2 — Wizard Apply bridge.
         // After the 2PC settings commit lands, hand the AI-tool + pack
-        // selection to `/api/v1/wizard/apply` so `scripts/install.py` runs the
+        // selection to `/api/v1/wizard/apply` so the retired Python installer runs the
         // REAL install (single source of truth, D12). The endpoint streams SSE
         // progress (`progress`/`done`/`error`); we consume it and surface the
         // terminal outcome in the Finish banner. Skipped when no tool is
@@ -1104,7 +1104,7 @@ function WelcomeStepBody(): preact.JSX.Element {
 
 /**
  * Renderer for the extended-mode `ai-tools` step. The list is static
- * (mirrors `_VALID_TOOLS` in `scripts/install.py`) because tools are a
+ * (mirrors `_VALID_TOOLS` in the retired Python installer) because tools are a
  * substrate-level concept — which AI client the user runs — not a
  * package artefact discovered from the manifest.
  *

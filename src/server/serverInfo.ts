@@ -1,6 +1,6 @@
 /**
  * On-disk record of the currently-running local server, so a fresh
- * `agent-config init` (via `scripts/install.py`) can find and terminate a
+ * `agent-config init` (via `src/scripts/install.ts`) can find and terminate a
  * previous instance before starting a new one — guaranteeing a single live
  * server and a fresh wizard that re-enters at step 1.
  *

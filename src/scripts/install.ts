@@ -2,7 +2,7 @@
 /**
  * Agent Config — Project Bridge Installer (TypeScript twin).
  *
- * Ported from the retired Python `src/scripts/install.py` (ADR-200).
+ * Ported from the retired Python installer (ADR-200).
  * The CLI contract pins the historical contract exactly — same flags, same
  * exit codes, same stdout/stderr split, byte-identical emitted output,
  * same filesystem effects, same subprocess argv/cwd/env. No behaviour
