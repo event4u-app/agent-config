@@ -114,6 +114,8 @@ rg -n 'target=["'\'']_blank["'\'']'   # then confirm rel="noopener" present
 # on* attribute is ordinary React and matching it there would bury the signal;
 # an on* on INLINE svg inside a host document is DQ4's case, not this grep's.
 # <script is listed because the row above names it and the pattern did not.
+# A locator, not a verdict: entity-encoded or tab-split javascript:, <svg:script>
+# and SMIL writes into href get past it. `lint_svg_asset` (svg-authoring) decodes them.
 rg -n '<foreignObject|<script[\s>]|\son[a-z]+\s*=|(?:xlink:)?href\s*=\s*["'\'']?\s*javascript:' -g '*.svg'
 # Server-composed bootstrap payload — LOCATES it; the per-field judgement is yours
 rg -n '__NEXT_DATA__|__NUXT__|window\.__INITIAL_STATE__|@json\(|json_encode\([^)]*\)\s*\)?\s*</script>|dehydratedState'

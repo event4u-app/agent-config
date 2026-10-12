@@ -29,6 +29,7 @@
  */
 
 import { attrsOf, parseDocument, tagEnd, type XmlDocument, type XmlNode } from './svg_dom.js';
+import { cssUnescape, isActiveUrl, localName, rawAttrs, resolvedUrl, svgPrefixes, URL_ATTRS } from './svg_urls.js';
 import {
     type Box,
     elementExtent,
@@ -484,6 +485,10 @@ export function safetySeverity(mode: DeliveryMode): Severity {
 // because an attacker writes whichever spelling is not checked.
 const ACTIVE_ATTR_RE = /\son[a-z]+\s*=\s*(["']|[^\s>"'])/i;
 
+
+/** Elements that run or embed foreign content when the graphic is inlined. */
+const ACTIVE_ELEMENTS = new Set(['script', 'foreignobject', 'iframe', 'embed', 'object']);
+
 function ruleActiveContent(
     content: string,
     elements: SvgElement[],
@@ -493,10 +498,27 @@ function ruleActiveContent(
     const severity = safetySeverity(mode);
     const findings: Finding[] = [];
     const lineOf = lineIndexer(content);
+    const prefixes = svgPrefixes(content);
 
     for (const el of elements) {
         if (el.closing) continue;
-        if (el.name === 'script' || el.name === 'foreignobject') {
+        const local = localName(el.name, prefixes);
+        // SMIL that writes an active URL into an href is the same href, later.
+        const smil = local === 'set' || local === 'animate' ? rawAttrs(el.raw) : null;
+        const animatesHref = smil !== null && /^(xlink:)?href$/i.test(resolvedUrl(smil['attributename'] ?? ''));
+        if (
+            animatesHref &&
+            ['to', 'from', 'by', 'values'].some((k) => (smil[k] ?? '').split(';').some(isActiveUrl))
+        ) {
+            findings.push({
+                rule: 'svg-safety-active-content',
+                file,
+                line: el.line,
+                snippet: `<${el.name} attributeName="href"> animates in an active URL; delivery mode "${mode}" grades it ${severity}`,
+                severity,
+            });
+        }
+        if (ACTIVE_ELEMENTS.has(local)) {
             findings.push({
                 rule: 'svg-safety-active-content',
                 file,
@@ -515,12 +537,12 @@ function ruleActiveContent(
                     severity,
                 });
             }
-            if (/^javascript:/i.test(resolvedUrl(value))) {
+            if (/^javascript:/i.test(resolvedUrl(value)) || (URL_ATTRS.has(key) && isActiveUrl(value))) {
                 findings.push({
                     rule: 'svg-safety-active-content',
                     file,
                     line: el.line,
-                    snippet: `<${el.name} ${key}="javascript:…"> is an active URL; delivery mode "${mode}" grades it ${severity}`,
+                    snippet: `<${el.name} ${key}="${resolvedUrl(value).slice(0, 16)}…"> is an active URL; delivery mode "${mode}" grades it ${severity}`,
                     severity,
                 });
             }
@@ -576,40 +598,6 @@ function ruleInternalSubset(content: string, file: string): Finding[] {
 
 const EXTERNAL_URL_RE = /^(?:https?:|ftp:|\/\/)/i;
 
-const NAMED_URL_ENTITIES: Record<string, string> = {
-    colon: ':', sol: '/', tab: '\t', newline: '\n', period: '.', lpar: '(', rpar: ')', amp: '&',
-};
-
-/**
- * The URL a browser would actually resolve from an attribute value: character
- * references decoded, leading/trailing C0 controls and spaces stripped, tab and
- * newline removed anywhere. The trailing `;` of a reference is optional on
- * purpose: an `.svg` parsed as XML needs it, but the same graphic inlined in an
- * HTML host is parsed by the HTML tokenizer, which decodes `&#106avascript:`
- * too — over-reading XML here costs precision, under-reading HTML costs a miss.
- * The raw value is attacker-chosen, so a scheme test
- * against it is a test of one spelling — ` https:`, `ht\ttps:`, `&#106;avascript:`
- * all load, and all passed.
- */
-export function resolvedUrl(raw: string): string {
-    const decoded = raw.replace(/&(?:#x([0-9a-f]+)|#(\d+)|([a-z]+));?/gi, (m, hex, dec, name) => {
-        const cp = hex ? parseInt(hex, 16) : dec ? parseInt(dec, 10) : NaN;
-        if (!Number.isNaN(cp)) return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
-        return NAMED_URL_ENTITIES[(name as string).toLowerCase()] ?? m;
-    });
-    return decoded.replace(/^[\u0000- ]+|[\u0000- ]+$/g, '').replace(/[\t\n\r]/g, '');
-}
-
-/** CSS escapes decoded: `\\68 ` and `\\h` both read `h`. */
-function cssUnescape(raw: string): string {
-    return raw.replace(/\\([0-9a-f]{1,6})\s?|\\(.)/gi, (m, hex, ch) => {
-        if (hex) {
-            const cp = parseInt(hex, 16);
-            return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
-        }
-        return ch as string;
-    });
-}
 
 function ruleExternalReference(
     content: string,

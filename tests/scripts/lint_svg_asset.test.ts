@@ -962,3 +962,51 @@ describe('what the 16.5.0 release review found', () => {
         );
     });
 });
+
+describe('what the 16.5.0 re-cut review found', () => {
+    const svgOpen =
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 8 8" role="img"><title>t</title>';
+    const rulesOf = (inner: string) => scanSvg(`${svgOpen}${inner}<rect width="8" height="8"/></svg>\n`, 'a.svg').map((f) => f.rule);
+
+    it('a script or foreignObject under a prefix bound to SVG is active content', () => {
+        const prefixed =
+            '<svg:svg xmlns:svg="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><svg:title>t</svg:title>' +
+            '<svg:script>alert(1)</svg:script><svg:rect width="8" height="8"/></svg:svg>\n';
+        const rules = scanSvg(prefixed, 'p.svg').map((f) => f.rule);
+        expect(rules).toContain('svg-safety-active-content');
+        expect(rulesOf('<svg:foreignObject xmlns:svg="http://www.w3.org/2000/svg"/>')).toContain('svg-safety-active-content');
+    });
+
+    it('SMIL writing an active URL into href, embedding elements and data:text/html are active content', () => {
+        for (const inner of [
+            '<a><set attributeName="href" to="javascript:alert(1)"/><rect width="8" height="8"/></a>',
+            '<a><animate attributeName="xlink:href" values="#a;javascript:alert(1)"/></a>',
+            '<iframe src="x.html"/>',
+            '<embed src="x.swf"/>',
+            '<object data="x.html"/>',
+            '<a href="data:text/html,&lt;script&gt;alert(1)&lt;/script&gt;"><rect width="8" height="8"/></a>',
+        ]) {
+            expect(rulesOf(inner), inner).toContain('svg-safety-active-content');
+        }
+        // Unquoted SMIL attributes, which an HTML host parses (second review round).
+        const host =
+            '<!doctype html><html><body><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img">' +
+            '<title>t</title><a><set attributeName=href to=javascript:alert(1)></set><rect width="8" height="8"/></a>' +
+            '</svg></body></html>\n';
+        expect(scanHostHtml(host, 'h.html').map((f) => f.rule)).toContain('svg-safety-active-content');
+        // A character reference in attributeName, and an upper-case SVG prefix.
+        const encodedName = host.replace('attributeName=href', 'attributeName=&#104;ref');
+        expect(scanHostHtml(encodedName, 'h2.html').map((f) => f.rule)).toContain('svg-safety-active-content');
+        const upper = '<S:svg xmlns:S="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><S:script>alert(1)</S:script></S:svg>\n';
+        expect(scanSvg(upper, 'u.svg').map((f) => f.rule)).toContain('svg-safety-active-content');
+        // A non-SVG prefix and a non-URL attribute are not active content.
+        expect(rulesOf('<foo:script xmlns:foo="urn:not-svg"/>')).not.toContain('svg-safety-active-content');
+        expect(rulesOf('<rect data-note="data:text/html,hello" width="8" height="8"/>')).not.toContain(
+            'svg-safety-active-content',
+        );
+        // An animation of an ordinary attribute, and a fragment href, stay clean.
+        expect(rulesOf('<rect width="8" height="8"><animate attributeName="opacity" values="0;1" dur="1s"/></rect>')).not.toContain(
+            'svg-safety-active-content',
+        );
+    });
+});
