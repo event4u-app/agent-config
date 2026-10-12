@@ -39,7 +39,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let quiet = false;
 
     for (let i = 0; i < argv.length; i += 1) {
-        const a = argv[i];
+        const a = argv[i] ?? '';
         if (a === '--files') {
             collecting = true;
             continue;

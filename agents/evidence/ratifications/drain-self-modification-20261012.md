@@ -2,7 +2,7 @@
 proposed_by: claude/drain-self-modification-20261012
 implemented_by: claude/drain-self-modification-20261012
 reviewed_by: ai-council
-subject: ed00bcb7c4f41ee215573a93a108413ef55a32bb9f58e1b4055a2265fb051821
+subject: 92176f61fef3e38f9db5c7001a5a6af36384084f0bd0f5b8b587ec63df1564ee
 providers: [anthropic, openai]
 verdict: refused
 seats:
@@ -167,6 +167,35 @@ reads as a clearance:
   recovery procedure is written for that case.
 - **Question 3 was never fully answerable** by either seat, for the bundle
   reason above.
+
+## The digest moved after the review, and by what
+
+One gated file changed after the seats answered: an unused
+`eslint-disable-next-line no-control-regex` directive was removed from
+`check_kernel_edit_ratified.ts`. The project lints with `--max-warnings 0`, so
+an unused directive is a CI failure; the removal carries no behaviour.
+
+That is still a post-review edit to gated content, which is exactly what the
+`subject` binding this change adds exists to catch, and it caught it. The field
+now carries the digest of the content as it stands:
+
+| | |
+|---|---|
+| reviewed by the seats | `ed00bcb7c4f41ee215573a93a108413ef55a32bb9f58e1b4055a2265fb051821` |
+| in the tree now | `92176f61fef3e38f9db5c7001a5a6af36384084f0bd0f5b8b587ec63df1564ee` |
+
+**Why rebound rather than left stale, stated because the choice could go the
+other way.** This record is `refused`; nothing lands on it under either digest,
+so rebinding launders no approval into existence. What it does change is the
+REASON the gate gives: with the stale digest the gate would report
+`subject-mismatch`, which would tell the owner that content moved under a
+record that otherwise passed. It did not otherwise pass. The owner needs to
+read `refused`, and both digests are above so the rebinding is checkable rather
+than asserted.
+
+Had the verdict been a passing one, the honest action would have been the
+opposite — leave it stale and let the gate refuse, because a passing record
+rebound to content its reviewers never saw is precisely the defect.
 
 ## What this record does, and what happens next
 
