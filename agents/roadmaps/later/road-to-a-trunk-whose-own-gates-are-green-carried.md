@@ -21,6 +21,11 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
+> **Arrivals:** 1 counted — latest `inbox-2026-10-m` (2026-10-12): a 16.4.0
+> rescore reads `task ci` as red at a second consecutive cut, naming
+> `audit_user_type_axis` among the causes. Earlier rounds were not counted for
+> this file.
+
 ## Goal
 
 Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed

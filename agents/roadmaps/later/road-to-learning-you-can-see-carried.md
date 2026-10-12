@@ -35,6 +35,13 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
+> **Arrivals:** 2 (at least) - latest `inbox-2026-10-m` (2026-10-12): a 16.4.0
+> rescore reads the dogfood page — three hand-seeded signals from one origin
+> against `MIN_CORROBORATIONS` of two origins, so minting cannot happen — and
+> the GUI toggle that writes a file the hook does not read (step 2.4,
+> `src/scripts/memory_learn_hook.ts:163-169`). Both are already here; no new
+> fact. Earlier: `inbox-2026-10-e` (2026-10-06), which added step 2.4.
+
 ## Goal
 
 Every step road-to-learning-you-can-see deferred is either done here or explicitly disposed

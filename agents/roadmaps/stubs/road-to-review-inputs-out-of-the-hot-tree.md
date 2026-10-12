@@ -5,7 +5,14 @@ review_by: 2026-12-31
 
 # Stub: review inputs out of the hot tree
 
-> **Arrivals:** 1 — latest `inbox-2026-10-e` (2026-10-06), where two release
+> **Arrivals:** 2 — latest `inbox-2026-10-m` (2026-10-12): at least six 16.4.0
+> release reviews name the committed review inputs as the bulk of the release —
+> re-derived: `git diff --shortstat 16.3.0 d411219277 -- 'agents/evidence/reviews/*.review-input/diff.patch'`
+> prints 48 files, 273,686 insertions; the tree now holds 230 tracked
+> `diff.patch` files and `agents/evidence/reviews` is 54 MB of 62 MB. One
+> review asks for `{base_sha, head_sha}` plus a content hash in place of the
+> copy. Same mechanism as below; the council question is still unasked.
+> The count before it read: 1 — latest `inbox-2026-10-e` (2026-10-06), where two release
 > reviews of 16.3.0 name the committed review inputs as the largest single
 > source of the release's line count and ask for content-addressed storage
 > with only a manifest, the findings and the hashes kept in the tree.

@@ -33,7 +33,7 @@ estate_growth_exempt: "Parked, not active: it may not start before its parent sh
 > plan — the two benchmark **subjects** ADR-260 § 5 reserves are test subjects the owner
 > names in the corpus header, and this file wakes on that edit.
 
-> **Arrivals:** 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
+> **Arrivals:** 2 — latest `inbox-2026-10-m` (2026-10-12): 16.4.0 release reviews read the named benchmark repositories and ask that the benchmark finally run; no new fact. The count before it read: 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
 > `route` relation so account-flow entry points (login, reset, OAuth callback)
 > can be classified and graph-backed missing-control checks become decidable;
 > earlier: none.
