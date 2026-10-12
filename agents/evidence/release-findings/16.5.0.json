@@ -1,0 +1,957 @@
+{
+  "schema_version": 1,
+  "release": "16.5.0",
+  "findings": [
+    {
+      "finding_id": "296fb871369c",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Bundle-cost headline (30,924 B) does not match the byte readings in the same artefacts",
+      "detail": "The loading-strategy analysis and the archived dispatch-path roadmap both state the static import costs 30,924 B and the chunk 2,128 B. The recorded readings give different static costs. 1,562,800 - 1,530,962 = 31,838 B in the analysis table. 1,562,931 - 1,530,905 = 32,026 B in the roadmap table. Only the 2,128 B chunk figure (1,533,090 - 1,530,962) and the 12,800 / 16,910 B headroom figures reconcile. The roadmap's own history says the first ratification attempt was refused for misattributing this cost, so repeating an arithmetic mismatch in the proof is a CLAIMS-affecting defect. The figures should be recomputed from the esbuild metafile and made to agree.",
+      "file": "agents/evidence/analysis/svg-rules-loading-strategy-2026-10-11.md"
+    },
+    {
+      "finding_id": "ffb7917e5df5",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Published trigger-corpus numbers disagree with the verdict JSON and with the set hash on the same page",
+      "detail": "The 2026-10-11 note in the holdout doc says delta-recall moved 2.360 -> 3.383 pp and delta-false-activation 6.751 -> 7.495 pp, and that SET-SHA256 moved 88b54780… -> 940945fe…. The same page's SET-SHA256 line now reads 64e85c11…. The verdict JSON in this diff reports delta_recall 3.368, delta_false_activation 7.709, 942 cases and p=0.1982. The verdict reason is unchanged (harmful), but the published measurement prose is stale against the artefact it describes. The doc is meant to be the seal record for the evidence, so it needs one consistent reading.",
+      "file": "agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md"
+    },
+    {
+      "finding_id": "114fa99927f1",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Hook-loaded svg_rules chunk has no integrity digest, yet CHANGELOG lists no known limitations",
+      "detail": "The loading-strategy analysis records that write_bundle_digest covers dispatch.js only, so dist/hooks/svg_rules.chunk.cjs has no sidecar digest. The chunk is require()d by the design-pass hook, so it executes inside the hook process on every .svg write. The sibling bundle is digest-checked and this code is not, which makes it a tamper or supply-chain gap. The analysis calls it a known gap, but the 16.5.0 CHANGELOG says Known limitations: none. Either extend the digest and gates to cover the chunk or list the gap in the release notes.",
+      "file": "agents/evidence/analysis/svg-rules-loading-strategy-2026-10-11.md",
+      "status": "false_positive",
+      "rationale": "The chunk has a digest since #2305: a sidecar written by build:hook-chunks and checked by the loader before require.",
+      "verified_by": "grep -n \"write_bundle_digest.mjs dist/hooks/svg_rules.chunk.cjs\" package.json",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "23a260dd1872",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Ratification for the inbox-name guard was reached by seven rounds of re-prompting, with seat state edited between rounds",
+      "detail": "The ratification record covers a change to a kernel-gated hook (block_speaking_inbox_dir.ts). It shows two 2/2 or single-seat refusals (r3, r5) followed by diff and prompt changes until r7 cleared. The implementing session authored every prompt. Between rounds the openai seat's entry was removed from agents/runtime/state/council-probes.json so the seat would run again. evaluator-independence treats a second evaluation of the same work after an unwelcome verdict as verdict shopping, and the probe state edit changes which seats count. The refusals are recorded, which helps. Still, the r7 prompt package digest is not committed, the final seat set rests on the last round only, and the record does not show that an independent party chose the retry or the seat state edit. A maintainer or owner should confirm this record before it is treated as sufficient authority for a gated surface.",
+      "file": "agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md",
+      "contradicted": "the range deletes nothing matching `agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md`, and `agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "2d6096142410",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "New browser-witness CI job is skipped on release/ branches, so the 16.5.0 release PR never runs the SVG witness suites",
+      "detail": "The svg-witness-tests job has if: !startsWith(github.head_ref, 'release/'). Vitest now excludes the two browser suites from the sharded matrix unless AGENT_CONFIG_BROWSER_SUITES=1. A release PR therefore executes neither suite in CI, and the 'Tests: 27322' headline cannot include them on that branch. Planted active-content SVGs and real Chromium rendering are the highest-risk new code in this release. Confirm that the pre-release PR or main ran them, or run them on release branches too.",
+      "file": ".github/workflows/tests.yml"
+    },
+    {
+      "finding_id": "d343a8e5a256",
+      "severity": "low",
+      "kind": "security",
+      "title": "Planted active-content SVGs are opened in a real browser on CI runners",
+      "detail": "The new job renders fixtures with script, onload, foreignObject and javascript: hrefs in Chromium on ubuntu and macOS runners. Mitigations are present: non-file: requests are aborted, the token is read-only, and checkout does not persist credentials. The top-level permissions: contents: read also applies to every other job in the workflow. Verify no other job relied on a broader default token (comment, label or cache-write steps). The file:// fixture origin should also be confirmed unable to read sibling files.",
+      "file": ".github/workflows/tests.yml"
+    },
+    {
+      "finding_id": "2e4ec9fc2358",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "A verify clause in the archived review-followups roadmap points at a path that no longer exists",
+      "detail": "Step 3.3 greps agents/roadmaps/road-to-svg-with-a-witness.md, but that file is archived under agents/roadmaps/archive/ in this range. grep -c on a missing file prints nothing on stdout, so the expectation /^0$/ cannot be satisfied as written. The step is marked done on the strength of a clause that cannot currently run.",
+      "file": "agents/roadmaps/archive/road-to-svg-review-followups.md"
+    },
+    {
+      "finding_id": "4203bb97bfab",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Admission-ledger figures for svg-authoring disagree with the shipped description and lane edits",
+      "detail": "The ledger says the description is 130 characters and names the six jobs plus the two checks. The indexed description reads 'Hand-author or edit an SVG — icon, mark, illustration, diagram, animation, raster-to-vector — checked and rendered.', which is shorter and names no witness. The ledger also says four lane descriptions were trimmed, but the diff shows five (canvas-design, iconography, image-provider-routing, logo-generation, wireframe). The token and payload figures (11,460 -> 11,456; 135,975 vs 135,980) are not reproducible from this diff. Re-derive them from the final tree.",
+      "file": "agents/decisions/skill-admissions.jsonl"
+    },
+    {
+      "finding_id": "71ec6180d01d",
+      "severity": "low",
+      "kind": "claim",
+      "title": "CHANGELOG headline numbers and 'none' fields are not backed in the diff",
+      "detail": "'Tests: 27322 (+124 since 16.4.0)' has no recorded run in the diff. 'Honest nulls: none' and 'Known limitations: none' sit beside a body-signal verdict still reading harmful, a carried AC-5, a chunk with no digest, and an unmeasured proxy-to-real fidelity. 'Default changes + migration: none' is stated while the settings template example is in the packaging diff. Back or qualify these before publishing.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "d20b33fb8dae",
+      "severity": "low",
+      "kind": "claim",
+      "title": "CAPABILITIES coverage for ai-image rises from moderate to strong with no stated criterion",
+      "detail": "Adding one shared skill (svg-authoring, which also appears in three other areas) flips the ai-image coverage rating. The generated index shows no rule for the rating, so an external reader can take the upgrade as a capability claim made by a skill-count change.",
+      "file": "CAPABILITIES.yaml"
+    },
+    {
+      "finding_id": "74d3c4a55a56",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "svg-authoring adds three scoped dangling links",
+      "detail": "skill-link-census shows svg-authoring linking to canvas-design, image-provider-routing and logo-generation, which are pruned in some scoped installs. survivors_with_dangle goes 17 -> 18. In those installs the owner skill's pointers to its own lanes dangle, which undercuts the 'owner reachable from all lanes' rationale in the admission row.",
+      "file": "agents/evidence/metrics/skill-link-census.json"
+    },
+    {
+      "finding_id": "fae824c996f2",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Compare and source-sampling pages confine only the URL scheme, not the file root",
+      "detail": "The page route in `runAssetRender` goes through `requestAllowed`, which also checks `fileRoots`. `compareGeometry` and `sampleSource` open pages from the same JS-disabled context but only check `ALLOWED_SCHEMES`. Any `file:` path is therefore permitted. `readTextBoxes` also assigns an untrusted SVG's markup to `innerHTML` in that page. An asset's `<image href=\"file:///…\">` can load a local file outside the project or asset directory while this page is open. The module header presents the isolation as uniform ('a `file:` request only when it resolves inside the project root or the asset's own directory'), which is not true for these two pages. Route all pages through one shared opener or route helper that applies `requestAllowed`.",
+      "file": "src/cli/commands/uiRenderAssetCompare.ts",
+      "status": "fixed",
+      "commit": "d1f7c3b834bb43b8937dee44b7e38733d5eb70f2",
+      "rationale": "Every witness page goes through confinePage(); comparison pages get no file root. Measured: Chromium already refused file: from about:blank, so this was defence in depth.",
+      "verified_by": "npx vitest run tests/cli/ui_render_asset_isolation.test.ts",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "72cfcc7db446",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "An unparseable `--registration` is silently dropped; the doc comment says the caller reports it",
+      "detail": "`parseRegistration` documents that it returns `null` for bad specs and that 'the caller prints the spec it could not parse'. `main.ts` calls it twice, once as a guard and once for the value. A `null` result becomes an empty spread and nothing is printed. A malformed or zero-area spec such as `0,0,0,0` or `1,2,3,4@0` therefore turns the raster comparison into an `unverified` reading with no explanation at the command line. `--compare`, `--class` and `--delivery` are likewise ignored without a warning when `--profile asset` is absent. The caller should print the unparseable spec and exit 1, or the comment should be corrected.",
+      "file": "src/cli/main.ts"
+    },
+    {
+      "finding_id": "72bdf4e332fe",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Multi-file `grep -c` verifies pass when only one file is clean",
+      "detail": "Several roadmap steps run `grep -c` over two files and assert `/:0$/` or `/:[1-9]/`. These are 1.1 and 1.3 in road-to-sentences-the-tree-can-back, and 3.3 there. Step 2.1 in the same roadmap uses the same shape with `/:0$/`. The regex matches if any one output line matches, so a step can be declared verified while the other file still carries the defect. For step 3.3, one of the two skills could lack `research:deep` and the check would still pass. Use `grep -l`, `grep -c … | grep -c` with an expected count, or a sum.",
+      "file": "agents/roadmaps/road-to-sentences-the-tree-can-back.md"
+    },
+    {
+      "finding_id": "08595d0537e5",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Measured figures and a 'first denominator move' claim carry no evidence pointer",
+      "detail": "The contract adds 'three captures 300 ms apart read cx 21.3, 46.3 and 70.9 … held 100 and 100'. It also says an image document was 'measured unreachable by emulation'. Neither points to a fixture, probe file or test, although the surrounding text cites pre-registered READMEs for its other figures. The routing-coverage-seed history entry calls itself the 'FIRST entry on the skills scope where the DENOMINATOR moves', which the catalogue's growth from 283 to 299 skills makes doubtful. The sealed-holdout claim ('same 27 rows and byte-identical') also has no pointer. State where each number can be reproduced, or drop the superlative.",
+      "file": "docs/contracts/design-artifact-verification.md"
+    },
+    {
+      "finding_id": "c55c74af4efe",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Asset profile has an unreachable failure branch",
+      "detail": "`runAssetRender` always returns `verification: 'verified'`, and `degradationReason` is never set. In `runAssetProfile`, the `result.verification === 'verified' ? {} : { reason: 'render-failed' }` spread and the `degradation_reason` spread are therefore dead code. A failure only reaches the manifest through the `catch` block. This is a dead branch that reads as extra safety. Either narrow the result type or remove the branches.",
+      "file": "src/cli/commands/uiRender.ts"
+    },
+    {
+      "finding_id": "0981685173b9",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Installer-path step covers fewer files than the problem statement counts",
+      "detail": "The Context cites 61 non-archive files naming `install.py`, counted with `grep -rl 'install\\.py' src docs README.md`. Step 2.1, its verify command and AC-2 only cover `src` and `README.md`, and match the narrower token `scripts/install\\.py`. Only `docs/contracts/skill-bundled-assets.md` is explicitly handed to another roadmap. Any other `docs/` mentions are neither fixed nor tracked, so the goal 'the installer is named where it is' overstates the scope.",
+      "file": "agents/roadmaps/road-to-surfaces-no-gate-reads.md"
+    },
+    {
+      "finding_id": "4ad44c0c5bb4",
+      "severity": "low",
+      "kind": "style",
+      "title": "New npm script placed after `prepare`, and a run-on arrivals header",
+      "detail": "`build:hook-chunks` is appended after `prepare` instead of next to the other `build:*` scripts. The adr-134-expiry stub's Arrivals line now chains three nested 'The count before it read:' clauses in one blockquote, which is hard to read. Neither affects behaviour.",
+      "file": "package.json"
+    },
+    {
+      "finding_id": "6997ad433a1c",
+      "severity": "medium",
+      "kind": "security",
+      "title": "An SVG under scan can suppress its own safety findings",
+      "detail": "`scanSvg` and `scanHostHtml` read `svg-asset-disable <rule>` markers from the raw content of the file being scanned. That includes `svg-safety-active-content`, `svg-safety-external-reference` and `svg-safety-internal-subset`. A file containing `<!-- svg-asset-disable svg-safety-active-content -->` drops its own error findings. `staticWitness` then reports `errors: 0` on that digest. `dischargeFor` accepts that for a `renderer-absent` manifest, so the blocking turn-end obligation is discharged by a file that carries a script. The authoring agent, or a fetched or converted SVG it pastes in, controls those comments. The static-only discharge relies on a count the file itself can set. Safety rules should not be suppressible from inside the artifact. Honour inline ignores only for non-safety families, or ignore them when computing the discharge count.",
+      "file": "src/scripts/_lib/svg_rules.ts",
+      "status": "fixed",
+      "commit": "d1f7c3b834bb43b8937dee44b7e38733d5eb70f2",
+      "rationale": "The svg-safety-* family ignores in-file svg-asset-disable markers.",
+      "verified_by": "npx vitest run tests/scripts/lint_svg_asset.test.ts -t \"cannot suppress its own safety\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "1dc7d5c013e5",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Render-directory tamper check is an interpreter allow-list and misses indirected writes",
+      "detail": "`writesRenderDir` voids manifests only when the command names the render directory and matches a listed write operator or interpreter. A command that builds the path from variables or a glob, or uses an unlisted interpreter, is not seen. Examples are `d=$(echo cmVuZGVy|base64 -d)` and `swift`/`lua` one-liners. The header admits the residual. It still lets a hand-written `verified` manifest with a matching digest, plus any render naming the file, discharge a blocking gate. The wording 'the gate reads the render, never the call' overstates the assurance. Either state it as best-effort, or bind the manifest to the render, for example by having the CLI write a nonce or HMAC that the gate can check.",
+      "file": "src/scripts/hooks/svg_obligation.ts",
+      "status": "accepted_risk",
+      "rationale": "Owner decision 2026-10-12: the write detection is a pattern list and an unlisted or indirected interpreter is not seen; the gate is an omission check and says so. Replaced by a hook-observed render in road-to-svg-witness-provenance Phase 1.",
+      "verified_by": "grep -n \"Phase 1\" agents/roadmaps/road-to-svg-witness-provenance.md",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "8cef90704af9",
+      "severity": "low",
+      "kind": "security",
+      "title": "Hook chunk executes when its integrity sidecar is absent",
+      "detail": "`loadSvgScanUncached` refuses the chunk only on `state === 'mismatch'`. An `unverifiable` result, meaning no sidecar, is allowed. Deleting the sidecar and swapping `svg_rules.chunk.cjs` runs arbitrary code inside the dispatch process. This mirrors `dispatch.js`, but it adds a second code-loading surface via a computed `require`. Consider failing closed for the chunk when a sidecar is expected in a bundled install.",
+      "file": "src/scripts/hooks/svg_rules_loader.ts"
+    },
+    {
+      "finding_id": "89e7b2156cb9",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Measured figures in the skill body have no cited source or ledger entry",
+      "detail": "`svg-authoring/SKILL.md` states specific numbers as measured fact. These include 0.883 IoU against 0.984, 0.989 against 0.935, a 49 KB trace against a 4.5 KB rebuild, and mean error 16.78 to 6.12 with the off-by-40 share going 9.1% to 1.5%. It also says 'one session lost a crown' and that 'two scorers disagreed by a factor of four'. None of it carries a `<!-- harvest:id -->` citation or an explicit own-analysis label. `code-provenance` requires one of the two for externally sourced figures. The same applies to the byte counts in the `design_pass_hook.ts` and `svg_rules.ts` comments, such as '2,128 B' and '30,924 bytes'. A reader cannot trace them to evidence. Add citations or label them as own analysis.",
+      "file": "src/skills/svg-authoring/SKILL.md"
+    },
+    {
+      "finding_id": "2e9586292a89",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Promotion-bar README reports identical twin counts for two 'consecutive' runs",
+      "detail": "The README says 27 of 32 rules meet the bar, measured over two consecutive runs. Every row's run 1 and run 2 columns are identical, and no run artifact is committed. Several 'clean' twins fire other rules. `text-overflows-box.clean.svg` trips `structure/loose-viewbox`. `guessed-dash.clean.svg` trips `motion/no-reduced-motion-branch`, because it animates with SMIL and has no route. This is reported honestly as misses, but it shows the twins are clean only for their own rule. Link the run output, or state that the second run was a re-read of the same data.",
+      "file": "tests/design-artifacts/fixtures/svg-assets/README.md"
+    },
+    {
+      "finding_id": "545e1f3634ac",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "`ignoreFiles` globs are substring-matched",
+      "detail": "`scanned = targets.filter(f => !ignoreGlobs.some(g => f.includes(g.replace('**',''))))`. A pattern such as `*.svg` is never a glob, so it matches nothing unless the literal text appears in a path. A pattern like `**/a` becomes `/a` and ignores any path containing it. The docs advertise `vendor/**` globbing. Use a real glob matcher, or document the substring semantics.",
+      "file": "src/scripts/lint_svg_asset.ts"
+    },
+    {
+      "finding_id": "01412af95a21",
+      "severity": "low",
+      "kind": "style",
+      "title": "Misattached and orphaned doc comments",
+      "detail": "The doc for `ruleWellFormed` ('Well-formedness, reported rather than assumed') sits above `ruleDegenerateGradient`'s doc, so it documents the wrong function. An orphan `/** End of the tag ... */` comment is left with no declaration after `parseElements`. `isDirectChildOfRoot` carries two stacked JSDoc blocks. `parseElements` also refers to a 'module header below' that does not exist. These comments are narrative-heavy, which cuts against the repo's comment-discipline rule. They should be reattached or trimmed.",
+      "file": "src/scripts/_lib/svg_rules.ts"
+    },
+    {
+      "finding_id": "3b21e612b3ae",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Delivery mode is a free declaration, and declaring 'img' downgrades script findings to inert",
+      "detail": "lint_svg_asset grades svg-safety-active-content as error for inline/document and 'inert' for img/css-bg (safety-grade-follows-delivery-mode test). Nothing checks that the file is actually referenced through <img> or a CSS background. The turn-end gate and the static-only discharge path count errors only. An author, which here may be the agent, can pass --delivery img on a file containing <script> or an on* handler and discharge a blocking gate. The same bytes can be inlined later without any edit, which is the risk the E12 comment itself names. An undeclared mode is graded inline, which is good. A declared mode is trusted unverified. Recommend cross-checking the declared mode against the host reference, or refusing to discharge on 'inert' safety findings.",
+      "file": "tests/scripts/lint_svg_asset.test.ts",
+      "status": "accepted_risk",
+      "rationale": "Owner decision 2026-10-12: a declared delivery mode is trusted; an undeclared one grades inline. Checking it against the project is road-to-svg-witness-provenance Phase 2.",
+      "verified_by": "grep -n \"Phase 2\" agents/roadmaps/road-to-svg-witness-provenance.md",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "01536ef6db6a",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Manifest-forgery detection for the SVG obligation is a command denylist",
+      "detail": "The turn-end gate voids render manifests when a shell call writes into agents/runtime/state/render. The tests cover redirects, tee, cp, node -e, python3 -c, sponge, deno eval and a piped python3. The tested interpreter list does not include perl, ruby, php, bash -c, sed -i, mv, dd of=, install or rsync. The gate is declared blocking and its threat is agent self-attestation, so a denylist of write routes is evadable. The test file records that the re-cut review had to add routes after a bypass was found, which suggests more may exist. Stronger options: have the render write a nonce or MAC that the gate verifies, or have the gate re-run the static witness itself rather than trust a file in a writable directory.",
+      "file": "tests/scripts/turn_end_gate_svg_render.test.ts",
+      "status": "accepted_risk",
+      "rationale": "Owner decision 2026-10-12: same limit as 1dc7d5c013e5, carried by road-to-svg-witness-provenance Phase 1.",
+      "verified_by": "grep -n \"Phase 1\" agents/roadmaps/road-to-svg-witness-provenance.md",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "bfc2e4591d77",
+      "severity": "low",
+      "kind": "security",
+      "title": "Rules chunk without a .sha256 sidecar is loaded and executed",
+      "detail": "rule-failure-does-not-reach-an-unrelated-event pins that a chunk with no sidecar is 'unverifiable and allowed'. The chunk is require()d inside the hook dispatcher on every .svg write. A sidecar sitting beside the chunk is not an integrity boundary, because anyone who can replace the chunk can replace the sidecar. The behaviour matches the main bundle and is documented, so this is accepted risk rather than a regression. It should be named as a limitation, not presented as integrity checking.",
+      "file": "tests/scripts/design_pass_svg.test.ts"
+    },
+    {
+      "finding_id": "f76046421fc2",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Promotion-bar headline ('N of M rules meet the bar') ignores the two-run condition",
+      "detail": "report_svg_fixture_layers writes 'Outcome of this run: meetsCount of candidateCount rules meet the bar'. meetsCount is candidateCount minus rules that fire on any clean file, so it uses one run only. The table's own 'meets bar' column requires zero twin findings in two consecutive runs plus a true finding. The prose count can therefore state that rules meet a bar the table below it scores 'no' or 'pending'. The stated bar is two consecutive runs, and the headline contradicts it.",
+      "file": "tests/design-artifacts/report_svg_fixture_layers.ts"
+    },
+    {
+      "finding_id": "96b9b1e11698",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "The run-1 value never populates, so the bar can never be met",
+      "detail": "The README parser only records a previous value when capture group 4, the 'twin findings run 1' cell, is numeric. renderPromotionTable writes run 1 as 'pending' whenever previous is empty, so the first --write stores 'pending'. Every later run re-reads 'pending', previous stays empty, run1 stays 'pending', and bothZero is never true. Even if run 1 were populated, a third run would still compare against the first run's value, not the latest, so 'two consecutive' would not hold. Keying previous by file alone would also collide if a file ever carried two rules. Without a hand edit the table cannot reach 'meets bar: yes'.",
+      "file": "tests/design-artifacts/report_svg_fixture_layers.ts"
+    },
+    {
+      "finding_id": "ad86c608ed51",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "The 'held-out real set' is not held out and is partly synthetic",
+      "detail": "svg-real/conversion-reference-mark.svg has the same blob hash (d586d4708) as s1b delivered/mark.svg. That file was iterated against the witnesses over five scored passes, so it cannot serve as a held-out false-positive control. Other members (settle-spinner, dispatch-diagram, runway-illustration, favicon-32) are hand-authored for the fixture. recraft-asset-0001.svg is a one-line synthetic square named like provider output. The test hard-codes 'exactly 1 finding' against a README written alongside the files. Calling this a 'real' set, and reading its false-positive rate as evidence, overstates what 7 authored files show. Relabel it as authored controls, or add genuinely external SVGs.",
+      "file": "tests/design-artifacts/fixtures/svg-real/conversion-reference-mark.svg"
+    },
+    {
+      "finding_id": "da7e9028235e",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "The scenario manifest declares assertions the test does not run",
+      "detail": "scenarios/manifest.json says it is what svg_scenarios.test.ts reads, and the scenario task.md files name decisive checks. Several declared assertions have no corresponding check in the test. These include digest_matches in s5, hole_is_transparent_on_dark in s1b, silhouette_change_outside_box and changed_box in s2, dq4_findings and host-level DQ4 in s4, and fill_ratio_within_class_threshold (only compared in one direction). The s5 task states every file exists 'with its reported digest', yet no digest is recorded or compared. The s1b hole-transparency result exists only as a hand-reported number in report.md. Anyone reading the manifest would take these as machine-verified when they are not.",
+      "file": "tests/design-artifacts/scenarios/manifest.json"
+    },
+    {
+      "finding_id": "839aefde0466",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "The default test run no longer covers the browser suites or the owner-skill contract tests",
+      "detail": "vitest.config.ts excludes ui_render_asset_profile.test.ts and svg_scenarios.test.ts unless AGENT_CONFIG_BROWSER_SUITES=1. svg_scenarios.test.ts also holds browser-free cases: pass-cap, skill-never-derives-goal-accepted, and consumer-without-renderer-reports-static-only. They are dropped from the default run along with the browser cases. Coverage of those contracts now depends on a separate CI job (.github/workflows/tests.yml, not in this chunk). The job must set the env var, and it must be shown to run these files and fail on skip. Otherwise the scenario evidence behind the release claims is not exercised on ordinary runs. Consider moving the browser-free describe blocks into their own file."
+    },
+    {
+      "finding_id": "e4fd7d23f347",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "s2 task.md is referenced but was not added in this range",
+      "detail": "manifest.json and scenarios/README.md reference s2-surgical-face/task.md. The range facts list task.md for s1, s1b, s3, s4, s5 and s6, but only delivered/figure.svg and input/figure.svg for s2. If it is absent from the tree, the manifest pointer is dangling. The delivered figure.svg also carries a header comment copied from the input ('Scenario 2 delivered: the same figure…'), which does not describe a figure with its face removed.",
+      "file": "tests/design-artifacts/scenarios/manifest.json",
+      "contradicted": "the range deletes nothing matching `tests/design-artifacts/scenarios/manifest.json`, and `tests/design-artifacts/scenarios/manifest.json` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "42b33ea913fe",
+      "severity": "low",
+      "kind": "claim",
+      "title": "s1b report.md contains a stale 'unfixed harness defect' finding and process chatter",
+      "detail": "report.md says the sibling harness scores s1b with no registration against the full lockup (IoU 0.1768 'fail') and that the problem is 'reported rather than fixed'. In this same range svg_scenarios.test.ts derives a mark-only baseline, so the section describes a state that no longer exists. It also refers to 'another agent's live work', which is session narrative, not a committed record. A recorded run that contradicts the tree weakens its value as evidence. Update or remove that section.",
+      "file": "tests/design-artifacts/scenarios/s1b-conversion/report.md"
+    },
+    {
+      "finding_id": "cc51a56dea59",
+      "severity": "low",
+      "kind": "claim",
+      "title": "The conversion tolerance is derived from the one accepted session, then used to accept the new run",
+      "detail": "The test comment says the 0.984 IoU tolerance 'starts from the one accepted point on record'. The conversion is then asserted to meet it, and the roadmap frames the thresholds as pre-registered before any checker existed. A threshold equal to the previously accepted result, applied to a new run on a fixture rendered from known vector geometry, is a weak bar. It is not independent evidence of conversion quality. State it as a regression floor, not a quality claim.",
+      "file": "tests/design-artifacts/svg_scenarios.test.ts"
+    },
+    {
+      "finding_id": "329f52d73946",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "An assertion was loosened in the injection-budget test",
+      "detail": "The check 'again < first' became 'again < SEED' plus 'again > 0'. The comment explains that the old comparison depended on corpus size and had gone red at 747 vs 747. The new bound still fails if the counter accumulates, since seed plus spend exceeds the seed. This is a defensible must-fix-in-place with the reasoning recorded, but it is a weakened assertion on a counter and should be visible to the reviewer.",
+      "file": "tests/hooks/injection_budget_dispatch.test.ts"
+    },
+    {
+      "finding_id": "7ff585c74a2b",
+      "severity": "low",
+      "kind": "style",
+      "title": "Duplicated mapping table and a comma-operator no-op",
+      "detail": "TAXONOMY_TO_RULE is defined in both lint_svg_asset.test.ts and report_svg_fixture_layers.ts. A rule renamed in one but not the other will drift silently. In svg_scenarios.test.ts, `(scenario('delivered-files-reopen').asserts, manifest.scenarios)` uses a comma operator whose first operand is discarded.",
+      "file": "tests/design-artifacts/report_svg_fixture_layers.ts"
+    },
+    {
+      "finding_id": "503378a9e294",
+      "severity": "low",
+      "kind": "claim",
+      "title": "The host-listing model now agrees with the observation on four of eight sampled entries, down from five",
+      "detail": "composer-packages flipped to the SURVIVES side because shortened design-family descriptions loosened the budget boundary. The test comment documents it, and the pins were moved rather than deleted. Any doc or proof page that cites the earlier agreement count should be re-checked, since docs/proof.md and docs/CLAIMS.md changed in this range and are not in this chunk.",
+      "file": "tests/scripts/host_listing_model.test.ts",
+      "contradicted": "the range deletes nothing matching `tests/scripts/host_listing_model.test.ts`, and `tests/scripts/host_listing_model.test.ts` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "b4b5fe597ac8",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "The \"30,924 bytes\" static-import cost does not follow from the roadmap's own readings",
+      "detail": "The loading-strategy evidence and the rules-in-the-dispatch-path roadmap both state the static import costs 30,924 B. The roadmap's own readings give 1,562,931 − 1,530,905 = 32,026 B. The evidence page's readings give 1,562,800 − 1,530,962 = 31,838 B, or 29,710 B measured against the chunked build. None of these is 30,924. The council's refusal rested on correcting 12,931 (the ceiling overage) to 30,924 (the cost). The corrected figure is itself miscomputed. This is a headline number that drove the decision between the chunk and a budget raise. The chunk's own cost (2,128 B) and the 16,910 B headroom do check out arithmetically.",
+      "file": "agents/evidence/analysis/svg-rules-loading-strategy-2026-10-11.md"
+    },
+    {
+      "finding_id": "fdbdefd930e6",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Runtime readings are unreproducible, and the real dispatcher path was never exercised",
+      "detail": "The 33.47/33.35/29.55/30.38 ms medians and the 1.896 ms first-require figure come from `agents/runtime/tmp/svg-chunk-bench.mjs`, which is gitignored and not committed. Roadmap step 0.2 required the command that produced each reading to be recorded, and it is not. The page also admits the concern was driven directly, because the full dispatcher returned `allow` with no output even for a `.tsx` target. The end-to-end claim that an `.svg` write receives findings through `dist/hooks/dispatch.js` is therefore backed only by unit tests. The rollback section says `hooks.design_pass.enabled: false` is already the default, so the routing may be inert on a default install. AC-1 and the 'routing enabled' wording overstate what was demonstrated.",
+      "file": "agents/evidence/analysis/svg-rules-loading-strategy-2026-10-11.md"
+    },
+    {
+      "finding_id": "2b76e5d5e0dd",
+      "severity": "medium",
+      "kind": "security",
+      "title": "The lazily loaded SVG rules chunk is loaded with no integrity digest",
+      "detail": "`dist/hooks/svg_rules.chunk.cjs` is `require`d by the hook process on `.svg` writes via createRequire. The evidence page records that `write_bundle_digest` covers `dispatch.js` only, so the chunk has no sidecar digest. A modified or stale chunk would execute inside the hook process while bypassing the integrity and self-heal path the main bundle has. The gap is recorded only as a note in an evidence page, not as a roadmap step or a CHANGELOG limitation. The 16.5.0 entry says 'Known limitations: _none_', which is inaccurate.",
+      "file": "CHANGELOG.md",
+      "status": "fixed",
+      "commit": "5593838c01fab686e0856fba227ae4f37cd7b8f0",
+      "rationale": "build:hook-chunks writes svg_rules.chunk.cjs.sha256 and the loader refuses a chunk that mismatches it.",
+      "verified_by": "npx vitest run tests/scripts/design_pass_svg.test.ts -t \"rule-failure\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "f2d6fc793d57",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Holdout-pin note contradicts the committed measurement JSON and the pinned set hash",
+      "detail": "The 2026-10-11 note inside the holdout page says delta-recall moved 2.360→3.383 pp, delta-false-activation moved 6.751→7.495 pp, and SET-SHA256 moved `88b54780…`→`940945fe…`. The committed `routing-body-signal-verdict.json` reads 3.368 pp and 7.709 pp. The page header pins `64e85c11…`, not `940945fe…`. The note was written against an earlier corpus state and never updated, and the page's published numbers disagree with the instrument's. The verdict stays `harmful`, but the published figures are stale. `delivery-set-measurement-2026-08-31.json` is also overwritten in place under a dated name with new numbers, which conflicts with the 'never re-bound' stance the other evidence pages state.",
+      "file": "agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md"
+    },
+    {
+      "finding_id": "b8be86cc9cb0",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Ratification of the inbox-guard change is a seven-round, seat-state-adjusted pass without recorded prompts",
+      "detail": "The record shows two refusals, several rounds where the openai seat failed with `ENOBUFS` or was skipped, and a final pass only after the prompt was shrunk. It also states the openai entry was manually removed from the gitignored `council-probes.json` between rounds so the seat would be retried. That is re-running until the verdict is favourable, which the evaluator-independence rule treats as verdict shopping. The record says r7 was 'same diff as r6, smaller prompt'. Only the three questions are quoted verbatim. The prompt packages for each round are not committed, so rule item 3 (prompt ships with the verdict) is not met. The implementing session is Anthropic, and one of the two 'independent' seats is also Anthropic. The local transport defect that locked a seat out is reported only in a PR body, not tracked in a roadmap or step. The guard relaxation itself (opaque-family glob allowed, bracket payloads refused) looks bounded.",
+      "file": "agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md",
+      "contradicted": "the range deletes nothing matching `agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md`, and `agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "c177fd5adff6",
+      "severity": "medium",
+      "kind": "security",
+      "title": "SVG obligation gate may be satisfiable by command text and a hand-written manifest",
+      "detail": "The amended roadmap steps for the blocking turn-end gate rely on a matching `ui:render --profile asset` Bash call in the transcript, plus a digest-matching manifest under `agents/runtime/state/render/`. The roadmap itself notes the transcript path matches command text with no exit code. Command-string matching can be satisfied by a call that renders nothing useful, such as one against another file or one with the string only in a comment. A manifest in an agent-writable directory is only distinguished from a forged one by that same transcript check. The `hand-written-manifest-discharges-nothing` test is named, but its mechanism is the weak link. Phrase this as a reliability limit in the docs, not a guarantee.",
+      "file": "agents/roadmaps/archive/road-to-svg-review-followups.md",
+      "status": "fixed",
+      "commit": "5593838c01fab686e0856fba227ae4f37cd7b8f0",
+      "rationale": "Same fix as 56db1f3bd12f; the gate header states the residual as an omission check, not an attestation.",
+      "verified_by": "grep -n \"THE RESIDUAL\" src/scripts/hooks/svg_obligation.ts",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "d765c9d2494f",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Skill-admission ledger row misstates its own measurements",
+      "detail": "The `svg-authoring` admission says the description is 130 characters and 'names the six jobs plus the two checks'. The description in `agents/index.md` is about 115 characters and names six jobs but not two checks (it ends 'checked and rendered'). It says the catalogue cost is repaid by trimming 'four lane descriptions'. The diff changes five: canvas-design, iconography, image-provider-routing, logo-generation and wireframe. The token and payload figures (11,460→11,456; 135,975 vs 135,980) are asserted without a command.",
+      "file": "agents/decisions/skill-admissions.jsonl"
+    },
+    {
+      "finding_id": "a499f1b8e8c2",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "New skill adds three links that dangle under scoped delivery",
+      "detail": "`skill-link-census.json` now lists `svg-authoring` → `canvas-design`, `image-provider-routing` and `logo-generation` as scoped dangles, taking survivors_with_dangle from 17 to 18. A skill that routes lanes into itself is shipped with pointers a scoped install can prune. The census records it but nothing in the diff addresses it.",
+      "file": "agents/evidence/metrics/skill-link-census.json"
+    },
+    {
+      "finding_id": "684f8bdce05b",
+      "severity": "low",
+      "kind": "claim",
+      "title": "AI Image coverage upgraded moderate→strong by adding one skill",
+      "detail": "CAPABILITIES.yaml changes the ai-image area from `coverage: moderate` to `strong` with skill_count 6→7, the same skill added to three other areas. If coverage is derived from size or count, the upgrade is mechanical and not evidence of capability. If it is hand-set, it is an unbacked claim.",
+      "file": "CAPABILITIES.yaml"
+    },
+    {
+      "finding_id": "b20f0d589f3a",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Roadmap estate-count assertions contradict each other across the new roadmaps",
+      "detail": "Added roadmaps justify `estate_offset_exempt` with different active-roadmap counts: 'seven active roadmaps at d41121927', 'twenty top-level roadmaps', and 'active count moves from 19 to 18'. About 14 new active roadmaps are added against 5 archived, each exempted by free-text author assertion, so the active count rises. The offset exemption is self-granted and unratified, and the stated counts cannot all be true.",
+      "file": "agents/roadmaps/road-to-a-danger-gate-that-sees-what-governs.md"
+    },
+    {
+      "finding_id": "1ae81c1ca662",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "CI comment about where the absent-path test runs may be wrong; witness job is skipped on release PRs",
+      "detail": "The workflow comment says `absent-path-reads-unverified` needs no browser and stays in the sharded matrix. The roadmap places that test in `tests/cli/ui_render_asset_profile.test.ts`, one of the two files this job re-enables, and `vitest.config.ts` excludes at project level unless `AGENT_CONFIG_BROWSER_SUITES` is set. If so, the absence path is not run in the sharded matrix. The new job is also skipped when `head_ref` starts with `release/`, so this release PR does not execute the witness it ships.",
+      "file": ".github/workflows/tests.yml"
+    },
+    {
+      "finding_id": "d8b5a8ed7951",
+      "severity": "low",
+      "kind": "claim",
+      "title": "CHANGELOG test count and README count footnote are not backed or are stale",
+      "detail": "`Tests: 27311 (+113 since 16.4.0)` is a headline number with no recorded command. Two browser-gated suites are excluded from the sharded matrix, so it is unclear whether they are counted. The README footnote still says 'Rules 121' and 'Personas 29' while the badge on the changed line says Rules-122. The footnote claims the counter fails CI on a drift of one, so one of the two is stale.",
+      "file": "README.md"
+    },
+    {
+      "finding_id": "822aaa1a5b20",
+      "severity": "low",
+      "kind": "style",
+      "title": "Evidence-temperature report classifies itself and its predecessor as cold",
+      "detail": "The census lists `evidence-temperature-2026-10-12.md` and `-10-10.md` among the 74 cold files and reports itself as the one 'newly cold' file. Each dated report becomes dead weight the next report must re-list, so the set the following move step is checked against includes the report that defines it."
+    },
+    {
+      "finding_id": "6d1ec5e33bad",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Asset witness runs untrusted SVG with scripts enabled; the 'no network' guarantee only covers requests that go through page.route",
+      "detail": "uiRenderAsset.ts documents 'NO NETWORK' as absolute. It is enforced only by `page.route('**/*')`, which allows `file:`, `data:`, `blob:` and `about:`. The context is created with `browser.newContext()` and no `javaScriptEnabled:false`, and `inlineHost()` inlines the SVG body into an HTML page unchanged. A `<script>` or `onload` handler in the asset under test therefore executes in the browser. WebSocket and WebRTC traffic is not intercepted by `page.route`, so the egress claim is overstated. Because `file:` is allowed, an asset can also load arbitrary local files (for example `<image href='file:///…'>`) into captures written under agents/runtime. This is a local-only exposure, but it is exactly the surface this package's own rules treat as untrusted input. Either disable JS for the static readings or state the limit precisely, and add a fixture such as tests/fixtures/svg-active-content that proves a script cannot reach out.",
+      "file": "src/cli/commands/uiRenderAsset.ts",
+      "status": "fixed",
+      "commit": "5593838c01fab686e0856fba227ae4f37cd7b8f0",
+      "rationale": "The witness context runs with javaScriptEnabled false and file: requests are confined to the project root and the asset directory.",
+      "verified_by": "AGENT_CONFIG_BROWSER_SUITES=1 npx vitest run tests/cli/ui_render_asset_profile.test.ts -t \"untrusted input\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "bbebc58e9b5f",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "parseRegistration doc says the caller prints an unparseable spec; main.ts silently drops it",
+      "detail": "The parseRegistration comment states 'the caller prints the spec it could not parse, so absent is not the only thing the operator sees'. main.ts calls parseRegistration twice and omits the option when it returns null, with no message. A malformed `--registration` is indistinguishable from none. The operator then sees only 'a raster source needs a declared registration', which sends them looking for a missing flag rather than a typo. The calls also should not be duplicated. Parse once, and write a stderr line and exit 1 when the flag was given but did not parse.",
+      "file": "src/cli/main.ts"
+    },
+    {
+      "finding_id": "58cd2c128ddf",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Measured SMIL numbers added to the contract carry no evidence pointer",
+      "detail": "design-artifact-verification.md now asserts that three captures 300 ms apart read cx 21.3, 46.3 and 70.9, while pauseAnimations plus setCurrentTime held 100 and 100. These are specific measured figures. Unlike the neighbouring 'pre-registered in that fixture's README' sentence, they cite no fixture, report or exec: evidence, so check_claims cannot back them. Add a pointer to the fixture or reading, or label the figures as an unbacked observation.",
+      "file": "docs/contracts/design-artifact-verification.md"
+    },
+    {
+      "finding_id": "19b326ac8bc5",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Icon grid readings skip everything under a transformed group, so common exported icons come out 'unverified' or understate stroke width",
+      "detail": "renderingElements() treats any ancestor carrying `transform` as a reason to skip the whole subtree. That is correct for extent, because the box is not mapped through the transform. It is also applied to stroke-width collection in gradeIconGrid and readIconReferencesDetailed. An icon (or reference) whose geometry sits in a top-level `<g transform=…>`, which is typical of design-tool exports, reports no stroke and no padding, and the grid reading degrades to unverified. This is a stated limitation, but it is not named in the reading's reason string. The result is a quiet false 'unverified' rather than a diagnosed one.",
+      "file": "src/cli/commands/uiRenderAssetGrid.ts"
+    },
+    {
+      "finding_id": "c7371dc81cb6",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Stub records a host-evaluator capability and version that this tree never probed",
+      "detail": "The road-to-live-trigger-eval arrival note says the host's skill evaluator runs non-interactively (`--trust-plugin`) with a no-plugin baseline arm, reproduced on Claude Code 2.1.296. The tree's own probed host version is 2.1.241 (hook-architecture-v1.md). No probe artefact backs the new claim, and it argues against the stub's stated interactive-terminal obstacle. Cite an evidence file, or mark it as an unverified report.",
+      "file": "agents/roadmaps/stubs/road-to-live-trigger-eval.md"
+    },
+    {
+      "finding_id": "c4da32fcafd6",
+      "severity": "low",
+      "kind": "style",
+      "title": "New build script appended after `prepare` and chained into build:hooks",
+      "detail": "`build:hook-chunks` is placed at the end of the scripts block, after `prepare`, while the rest of the build:* family is grouped. `build:hooks` now shells out to it via `npm run`. Grouping it with the other build scripts would match the surrounding layout and make the chain easier to find.",
+      "file": "package.json"
+    },
+    {
+      "finding_id": "4970d28fb201",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Fixture README contradicts itself on twin false positives",
+      "detail": "The '§ Measured' table in tests/design-artifacts/fixtures/svg-assets/README.md reports 0 twin findings for every row. That includes structure/loose-viewbox, motion/no-reduced-motion-branch (asset row) and motion/no-reduced-motion-branch (hosts/smil-only.html). The '§ Promotion bar' table in the same file records 1 twin finding on run 1 and run 2 for those three rules. It names clean twins such as assets/text-overflows-box.clean.svg and assets/guessed-dash.clean.svg as the offenders. The README also states the pre-registered target as '0 findings on twins'. A reader of the Measured table gets a false zero-false-positive claim. If these figures feed docs/proof.md or CLAIMS.md, they need reconciling before release.",
+      "file": "tests/design-artifacts/fixtures/svg-assets/README.md"
+    },
+    {
+      "finding_id": "56db1f3bd12f",
+      "severity": "medium",
+      "kind": "security",
+      "title": "SVG turn-end obligation can be discharged with a hand-written manifest",
+      "detail": "src/scripts/hooks/svg_obligation.ts only requires that some `ui:render --profile asset` command naming the file ran after the edit. It does not check that the manifest on disk was produced by that command. The file's own header concedes this residual. An agent can write a manifest by hand with the right sha256 digest, and either `verification:verified` or `reason:renderer-absent` plus `static.errors:0`. It then runs any render command naming the file, which can fail or render nothing, and the blocking gate clears. The file's own docs say 'the gate reads the render, never the call'. In practice it reads a forgeable file. Nothing binds the manifest to the process, for example a nonce or mtime later than the command.",
+      "file": "src/scripts/hooks/svg_obligation.ts",
+      "status": "fixed",
+      "commit": "5593838c01fab686e0856fba227ae4f37cd7b8f0",
+      "rationale": "A write into the render directory by any other route voids the manifests; only a standalone render counts.",
+      "verified_by": "npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t \"still discharges nothing\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "c95a8c459853",
+      "severity": "low",
+      "kind": "security",
+      "title": "Planted-fixture exemption is a path-based bypass for the gate",
+      "detail": "isPlantedFixture exempts every .svg under tests/design-artifacts/fixtures/ and tests/design-artifacts/scenarios/ from the obligation. The scenarios directory also holds real deliverables, for example s1-new-logo/delivered/mark.svg. A turn that writes an SVG deliverable under those prefixes is never checked by the blocking gate. The exemption is applied by directory, not by a manifest of the planted files.",
+      "file": "src/scripts/hooks/svg_obligation.ts"
+    },
+    {
+      "finding_id": "21a2d2240541",
+      "severity": "medium",
+      "kind": "security",
+      "title": "External-reference and javascript: checks are bypassable by whitespace and obfuscation",
+      "detail": "EXTERNAL_URL_RE in svg_rules.ts is anchored with `^(?:https?:|ftp:|\\/\\/)` and is not trimmed, so href=\" https://evil/x.png\" is not flagged. Browsers strip leading whitespace in URLs. The javascript: test allows leading whitespace but not tab or newline inside the scheme (`java\\tscript:`), nor entity-encoded forms. The safety family is meant to grade the strictest delivery mode as an error, so these are real misses on attacker-controlled input. `@import \"https://…\"` without `url()` inside <style> is also not matched.",
+      "file": "src/scripts/_lib/svg_rules.ts",
+      "status": "fixed",
+      "commit": "5593838c01fab686e0856fba227ae4f37cd7b8f0",
+      "rationale": "URL checks resolve references, controls and CSS escapes before the scheme test; bare @import targets are resolved too.",
+      "verified_by": "npx vitest run tests/scripts/lint_svg_asset.test.ts -t \"16.5.0 release review\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "4dddb059cb17",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Unquoted on* fallback regex can fire on text content",
+      "detail": "ACTIVE_ATTR_RE (`\\son[a-z]+\\s*=\\s*…`) runs over the whole comment-masked text, including <title>, <text> and <style> bodies. A string such as 'Turn on = enabled' is reported as svg-safety-active-content at severity error. The fallback only runs when no other finding exists, but a false error on inline or document delivery now blocks through the P1 routing. Restrict it to tag interiors.",
+      "file": "src/scripts/_lib/svg_rules.ts"
+    },
+    {
+      "finding_id": "8d0a9bf6668c",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "isAssetRenderCommand matches on command text, not command position",
+      "detail": "The regex `/\\bui:render\\b/` plus `/--profile[= ]\\s*asset\\b/` matches anywhere in the string. `echo 'ui:render --profile asset'` therefore counts as a verification attempt for detector C (detectUnverifiedEdit). The `\\b` after `asset` also accepts `--profile asset-x`. The comments argue at length that command text must not discharge anything. Detector C still accepts it, because isVerificationAttempt is a text-only check. Detector C is weakened, and the svg_obligation gate behind it is the only backstop.",
+      "file": "src/scripts/_lib/verification_command.ts"
+    },
+    {
+      "finding_id": "c5a28e4760a1",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Quadratic ancestry scan on the per-.svg-write hook path",
+      "detail": "ruleOutsideViewBox calls hasTransformedAncestor(elements, idx) for every element with a non-empty chain. Each call re-walks elements[0..idx), so the cost is O(n²) in element count. buildContainerDepth also copies the stack per element. The code states this module now runs on every .svg write, and SVG traces with thousands of elements are expected. The measured 163 ms for 760 KB suggests it is tolerable today, but it scales poorly. Compute ancestor transforms in a single pass.",
+      "file": "src/scripts/_lib/svg_rules.ts"
+    },
+    {
+      "finding_id": "0809bdaf50e3",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Two independent scanners can disagree on file contents",
+      "detail": "svg_dom.parseDocument and svg_rules.parseElements scan the same bytes separately. The header of svg_dom.ts admits this and records one false error-severity finding it already caused. The rules combine both views, for example ruleWellFormed from the tree and ruleDanglingReference from the flat list, so another divergence would surface as a spurious error. Add a consistency test that runs both scanners over the fixture and real corpus and compares element counts."
+    },
+    {
+      "finding_id": "dae946058566",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Promotion-bar outcome count disagrees with its own table",
+      "detail": "report_svg_fixture_layers.ts writes 'N of M rules meet the bar'. It computes meetsCount as candidateCount minus the number of rules whose clean-file findings are non-empty. That ignores plantedFound (a MISSED planted row can still count as meeting the bar), and ignores the run 1 'pending' state and unverified engine rows. The per-row 'meets bar' column uses stricter logic (planted found, and zero on both runs). The headline number written into the fixture README can therefore be higher than the number of 'yes' rows in the table beside it. This is a headline figure, so it should be the count of 'yes' cells.",
+      "file": "tests/design-artifacts/report_svg_fixture_layers.ts"
+    },
+    {
+      "finding_id": "c83973b2f8ae",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Scenario manifest declares assertions that no test runs",
+      "detail": "manifest.json says 'the witnesses decide the outcome' and declares asserts that svg_scenarios.test.ts never checks. Examples: s2 changed_box and silhouette_change_outside_box, s1b hole_is_transparent_on_dark and wordmark_or_slogan_region, s3 resolution_fixed_filters (only a regex on fe* elements), and s6 browser_opening_steps. The recorded s1b report.md does state the hole alpha=0 and the region censuses, but as prose rather than re-derived checks. The README and manifest present these as machine-checked, which overstates what the suite proves.",
+      "file": "tests/design-artifacts/scenarios/manifest.json"
+    },
+    {
+      "finding_id": "45390f06d009",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Browser-driven suites are excluded from the default node project",
+      "detail": "vitest.config.ts removes ui_render_asset_profile.test.ts and svg_scenarios.test.ts from the node project unless AGENT_CONFIG_BROWSER_SUITES=1 is set. Every Phase 6 scenario result and the engine-layer evidence (zoom control, reduced-motion frames, reopen-from-disk) therefore only runs where a dedicated Chromium job sets that variable. The diff does not show that job's wiring. If it is missing or does not run on the release PR, those proof-bearing tests run nowhere. This needs confirming against .github/workflows/tests.yml."
+    },
+    {
+      "finding_id": "3998b95c758e",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Conversion test uses a looser boundary tolerance than the manifest",
+      "detail": "The s1b case hard-codes max_boundary_distance_units: 4 for compareGeometry. The manifest's geometry_tolerances.mark declares 2.0. Only the IoU floor is read from the manifest. The test therefore passes against a looser bound than the pre-registered one, which cuts against the 'thresholds fixed before the checker' claim.",
+      "file": "tests/design-artifacts/svg_scenarios.test.ts"
+    },
+    {
+      "finding_id": "963e437d47e0",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Test assertion weakened to fit current behaviour",
+      "detail": "injection_budget_dispatch.test.ts replaced 'again < first' with 'again < SEED (47104) and > 0'. The new bound is weak: any per-turn spend under 47 KB passes, so it no longer shows the counter reset to this turn's spend. The inline note explains the corpus moved, and the replacement still shows the seed was discarded. It proves less than before.",
+      "file": "tests/hooks/injection_budget_dispatch.test.ts"
+    },
+    {
+      "finding_id": "167c34c0bff1",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Stale statement in the conversion report",
+      "detail": "s1b-conversion/report.md says the sibling harness scores s1b with no registration against the full lockup and reads IoU 0.1768. The committed svg_scenarios.test.ts now derives a mark-only baseline and asserts IoU >= 0.984. The 'one finding outside this deliverable' section is out of date, as is its claim that the test asserts only verdict !== unverified.",
+      "file": "tests/design-artifacts/scenarios/s1b-conversion/report.md"
+    },
+    {
+      "finding_id": "dc657876ee61",
+      "severity": "low",
+      "kind": "style",
+      "title": "Comma-operator expression and stale comment",
+      "detail": "The 'delivered-files-reopen' case uses `(scenario(...).asserts, manifest.scenarios)`, which discards the scenario lookup, and ignores the manifest's 'covers' list. The s2 delivered figure.svg keeps the input's header comment ('the same figure…') and leaves a blank gap where the face group was removed.",
+      "file": "tests/design-artifacts/svg_scenarios.test.ts",
+      "contradicted": "the range deletes nothing matching `tests/design-artifacts/svg_scenarios.test.ts`, and `tests/design-artifacts/svg_scenarios.test.ts` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "b853af99d2e7",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Fragile README round-trip and a probe file written into the repo tree",
+      "detail": "report_svg_fixture_layers.ts recovers 'run 1' counts by regex-parsing its own markdown table. Any column reorder silently resets the two-consecutive-runs bar to 'pending'. The reopen test writes a .probe-*.html next to committed scenario files and removes it only in a finally block. A killed run can leave stray files in the committed tree."
+    },
+    {
+      "finding_id": "156e1159c50b",
+      "severity": "high",
+      "kind": "security",
+      "title": "Prototype-pollution-style bypass in inbox-name guard is replaced by a whitelist, but the ratification record admits a stale review window",
+      "detail": "The ratification record for block_speaking_inbox_dir.ts documents seven rounds in which the openai seat refused or failed with ENOBUFS in most rounds, and the author removed the seat's entry from agents/runtime/state/council-probes.json between rounds so it would be retried. Neither seat saw the final r7 diff plus the late `round-??????` test in the same review (stated as test-only), and the record states `effective_after: merge`. The governance surface is a deny guard. The record also reports that the availability probe locks a seat out on a local spawn-buffer error, and that defect is only noted, not fixed. The provenance (manual edit of a gitignored probe file to re-admit a seat) is a self-steering of the evaluator set that evaluator-independence says must be recorded with the prompt; the prompt is summarised, not committed verbatim for rounds r1-r6.",
+      "file": "agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md",
+      "contradicted": "the range deletes nothing matching `agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md`, and `agents/evidence/ratifications/inbox-2026-10-g-k-roadmaps.md` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "a0ebb35bb13e",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Wildcard-only opaque-family allowance in block-speaking-inbox-dir is an authority change shipped without the guard's source in this chunk",
+      "detail": "The ratification record says the change allows `inbox|round|src-set|source-set` (optional year/year-month) or `set` followed only by `-[*?]+`, and refuses dated ids with bracket payloads that origin/main allowed. The guard source (src/scripts/hooks/block_speaking_inbox_dir.ts) and its tests are in the range but not in this diff chunk, so the claim 'no newly allowed form can create a source-identifying name' cannot be checked here. Shell-variable names remain blocked only because the guard cannot see the expansion; a glob such as `inbox-2026-10-*` passed to a writing command (mkdir with brace/glob in a path that already exists as a literal) is judged non-creating only by the guard's command parser. Treat as unverified until the hook diff is reviewed.",
+      "file": "src/scripts/hooks/block_speaking_inbox_dir.ts",
+      "status": "false_positive",
+      "rationale": "The wildcard family form admits only -[*?]+ after a family head, so it cannot carry a source name; the finding said the guard source was outside its chunk rather than naming a defect.",
+      "verified_by": "npx vitest run tests/hooks/block_speaking_inbox_dir.test.ts",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "d0358c9816f3",
+      "severity": "medium",
+      "kind": "security",
+      "title": "New CI job installs Chromium with --with-deps on hosted runners and runs browser tests on SVG fixtures including active-content files",
+      "detail": "svg-witness-tests runs `npx playwright install --with-deps chromium` (apt/brew with sudo on the runner) and executes ui_render_asset_profile and svg_scenarios tests that render planted SVGs containing <script>, foreignObject and javascript: hrefs. The workflow relies on the renderer aborting every non-file:/data: request; that containment is in uiRender code not shown here. The job has no explicit `permissions:` block in the hunk (top-level default not visible), and runs on `pull_request` for forks via the same matrix conditions as other jobs only if the file's top-level permissions are read-only. Confirm the workflow-level permissions are contents: read and that no secrets are exposed to this job.",
+      "file": ".github/workflows/tests.yml",
+      "status": "fixed",
+      "commit": "990425836285eded0a6cb4370f8ded95823dd6c8",
+      "rationale": "The tests workflow runs with permissions: contents: read; the repository default is write.",
+      "verified_by": "grep -n -A1 \"^permissions:\" .github/workflows/tests.yml",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "ad02ca5ba367",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Test-count and fixture-count headline figures in the release are not backed in the shown diff",
+      "detail": "CHANGELOG states 'Tests: 27319 (+121 since 16.4.0)' and 'governance-only 6 vs consumer-only 1'. The README badge moves Skills 299→300, and the delivery-set measurement moves recall 62.876→62.316 etc. These are regenerated artifacts; no diff hunk shows the command output that produced 27319. The trigger-corpus doc says 'a split of 21.6 % against the rule's 19.9 % target' and '125 files, 27 holdout and 98 train' without the recomputation being part of a checked gate in this chunk. Under docs/CLAIMS.md discipline these should cite their generator output.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "5f412b3e6114",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Routing body-signal verdict still 'harmful' while the roadmap and analysis prose cite a different delta than the committed JSON",
+      "detail": "The trigger-corpus holdout analysis note says delta-recall moved 2.360→3.383 pp and delta-false-activation 6.751→7.495 pp. The committed routing-body-signal-verdict.json in the same range reads delta_recall 3.368 and delta_false_activation 7.709, and p_value 0.1982. The prose figures and the JSON do not agree (the corpus grew again after the prose was written). A published measurement that disagrees with its own machine-readable record is a claim-affecting inconsistency.",
+      "file": "agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md"
+    },
+    {
+      "finding_id": "e7bfcb4eef13",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Evidence-temperature census asserts 'zero inbound references' cold set and a count that its own list contradicts",
+      "detail": "The census states the cold set is '73 tracked files, 0.78 MiB' and the list shown contains `evidence-temperature-2026-10-10.md` (the previous census itself) as cold, while the report's 'Newly cold since the previous report' says 0 files. The per-subtree table also gives analysis cold=42 while the listed analysis entries can only be checked against the full list, and root cold=7 vs the listed root-level entries. Not independently verifiable from the diff; the census generated at 5593838c0 is also a file that now cites paths no later file references. Report-only, but quoted as a basis for a move.",
+      "file": "agents/evidence/analysis/evidence-temperature-2026-10-12.md"
+    },
+    {
+      "finding_id": "d995f575f33c",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Skill admission row carries unchecked budget figures",
+      "detail": "The svg-authoring admission row asserts the per-spawn preamble payload 'measures 135,975 against a measured ceiling of 135,980' and 'skill_description_tokens 11,460 -> 11,456'. These are stated as measured but are only checked by estate gates not shown; also it says 'the 299 already in the tree' in the ledger header which is now 300. A skill-count drift of one in an explanatory comment.",
+      "file": "agents/decisions/skill-admissions.jsonl"
+    },
+    {
+      "finding_id": "c5884adf5729",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Scoped-dangle census gains three new dangles from svg-authoring to skills pruned from some scopes",
+      "detail": "skill-link-census.json adds svg-authoring → canvas-design, image-provider-routing and logo-generation as scoped dangles (survivors_with_dangle 17→18). The roadmap claims lane pointers are one-line, but the new skill is reachable in a scope where its targets are pruned; the owner skill therefore points at skills absent in that projection. Disclosed by the census, but not dispositioned in the release.",
+      "file": "agents/evidence/metrics/skill-link-census.json"
+    },
+    {
+      "finding_id": "3dfce90d236b",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Roadmap archive moved with a deferred step and partially-met AC still recorded as archived",
+      "detail": "road-to-svg-with-a-witness is archived while step 1.4 is `[~]` and AC-5 is `[~]`, carried to road-to-svg-rules-in-the-dispatch-path. The carried roadmap is also archived in the same change with all items `[x]`, so the chain ends consistent, but the parent's archived text still claims routing is deferred and not delivered; readers of the parent alone see an unmet AC-5. Disclosed via deferred-resolution marker, so low.",
+      "file": "agents/roadmaps/archive/road-to-svg-with-a-witness.md"
+    },
+    {
+      "finding_id": "746d38fe577c",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Hex colour parser in the grounds reading accepts 3, 4, 6 and 8 digits, but the token reader admits 3 to 8",
+      "detail": "`findToken` in uiRenderAsset.ts accepts `#[0-9a-f]{3,8}`, so 5- and 7-digit values pass. The in-page `parse` in uiRenderAssetGrounds.ts handles only 3, 4, 6 and 8 digits. A 5- or 7-digit token falls through to white, so contrast and bleed are computed against a ground nobody chose. The injected CSS background is also invalid for those lengths. The reading has no error path for this case. The value is not an injection risk, because the regex still confines it to hex.",
+      "file": "src/cli/commands/uiRenderAssetGrounds.ts"
+    },
+    {
+      "finding_id": "331b9a987dbd",
+      "severity": "low",
+      "kind": "security",
+      "title": "Comparison, source-sampling and grounds scratch pages enforce the scheme allowlist but not the file-root confinement",
+      "detail": "`openPage` applies `requestAllowed`, which checks both scheme and `file:` root. The routes in `compareGeometry` and `sampleSource` check only `ALLOWED_SCHEMES`, so `file:` requests are not confined to the project root or asset directory. The `readGrounds` scratch page has no route handler at all. Impact is low: those pages load `about:blank` or `setContent` plus `data:` images, and scripts are disabled for the whole context. The isolation contract is therefore stronger on one path than on the others. It would be cheap to reuse `requestAllowed` in all of them.",
+      "file": "src/cli/commands/uiRenderAssetCompare.ts"
+    },
+    {
+      "finding_id": "deb8c7d58e0a",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Dead branch in the asset manifest: `reason: 'render-failed'` is conditional on a status that is always 'verified'",
+      "detail": "`runAssetRender` returns `verification: 'verified'` unconditionally. In `runAssetProfile`, the spread `...(result.verification === 'verified' ? {} : { reason: 'render-failed' })` can therefore never apply. The real failure path is the catch block. This is harmless today, but it reads as a degradation route that does not exist. A later change that adds a 'degraded' result would also need to revisit it.",
+      "file": "src/cli/commands/uiRender.ts"
+    },
+    {
+      "finding_id": "37f3e5d6c3b1",
+      "severity": "low",
+      "kind": "style",
+      "title": "Hard-coded `package.json:111` line reference in a source comment",
+      "detail": "The updated comment in uiRender.ts cites `package.json:111` for the Playwright devDependency. Any later edit to package.json, including the `build:hook-chunks` line added in this very diff, will make that anchor drift. The comment should name the dependency section instead of a line.",
+      "file": "src/cli/commands/uiRender.ts"
+    },
+    {
+      "finding_id": "6f785130dda3",
+      "severity": "low",
+      "kind": "claim",
+      "title": "\"approximately 25%\" reduction is stated against figures that compute to 23.7%",
+      "detail": "The default-install-context-cost claim in docs/CLAIMS.md and docs/proof.md now reads 229 of 300 skills, a reduction of 71 entries. 71/300 is 23.7%, which the claim calls \"approximately 25%\". The count was bumped here, and the rounded headline stayed. The percentage is generated by no gate. The count is checked by `update_counts --check`, but the prose percentage is not.",
+      "file": "docs/CLAIMS.md"
+    },
+    {
+      "finding_id": "50fa86fc63b6",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Host behaviour in the placeholders roadmap is quoted from source plans and not re-verified",
+      "detail": "road-to-placeholders-on-the-wire.md states host facts, such as `updatedToolOutput` replacement semantics and silent dropping of mismatched substitutions, as read by earlier plans on 2026-09-30. It says Phase 0 exists to re-probe them. Nothing downstream of the roadmap should treat those host facts as established until the 0.1 and 0.2 probe files exist. The roadmap's own framing already covers this, so the finding is only that these are unproven premises."
+    },
+    {
+      "finding_id": "104489d2ba7e",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Namespace-prefixed active-content elements are not recognised",
+      "detail": "parseElements keeps the element name verbatim, lowercased, with its namespace prefix, for example `svg:script` or `svg:foreignobject`. ruleActiveContent compares `el.name === 'script' || 'foreignobject'` exactly. In a standalone SVG that declares `xmlns:svg`, `<svg:script>` executes but is never flagged. The root lookup `el.name === 'svg'` also fails for a prefixed root, which disables the xmlns, viewBox and name rules for that file. An attacker spells the element the way the check does not look. The prefix needs stripping before the name comparison.",
+      "file": "src/scripts/_lib/svg_rules.ts",
+      "status": "fixed",
+      "commit": "990425836285eded0a6cb4370f8ded95823dd6c8",
+      "rationale": "Prefixes bound to the SVG namespace are stripped where active elements are compared.",
+      "verified_by": "npx vitest run tests/scripts/lint_svg_asset.test.ts -t \"prefix bound to SVG\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "c3d9df385114",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Active-content rule misses SMIL href mutation and embedding vectors",
+      "detail": "ruleActiveContent flags script, foreignObject, on* attributes and `javascript:` values on attributes. It does not flag `<set attributeName=\"href\" to=\"javascript:...\">` or `<animate>` writing an `href`, because the `to`/`values` payload is not an href attribute. It also misses `data:text/html` or `data:image/svg+xml` in `<use>`/`<a>` hrefs, and `<iframe>`, `<embed>` and `<object>` elements. The skill and the frontend-render-security row both present this family as the defense for inlined SVG, so the coverage gap is a real hole in a security gate.",
+      "file": "src/scripts/_lib/svg_rules.ts",
+      "status": "fixed",
+      "commit": "990425836285eded0a6cb4370f8ded95823dd6c8",
+      "rationale": "set/animate writing an active URL into href (raw tag, unquoted and reference-encoded attributeName included), iframe/embed/object and data:text/html on URL attributes are active content.",
+      "verified_by": "npx vitest run tests/scripts/lint_svg_asset.test.ts -t \"SMIL writing an active URL\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "30a3963191b9",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Planted-fixture exemption can be reached with `..` segments in a relative path",
+      "detail": "rel() normalises only separators for a relative path and does not resolve `..`. A tool-call path such as `tests/design-artifacts/fixtures/../../../public/a.svg` passes the `startsWith('tests/design-artifacts/fixtures/')` test in isPlantedFixture. That opens no obligation on a blocking gate for an arbitrary file. Absolute paths are handled through path.relative, so only relative paths are exposed. path.normalize should be applied first.",
+      "file": "src/scripts/hooks/svg_obligation.ts",
+      "status": "fixed",
+      "commit": "990425836285eded0a6cb4370f8ded95823dd6c8",
+      "rationale": "Relative paths are normalised before the planted-fixture prefix test.",
+      "verified_by": "npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t \"reached through\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "23cf006e9ace",
+      "severity": "low",
+      "kind": "security",
+      "title": "The render-evidence check is bypassable and attributes renders by basename",
+      "detail": "renderNames accepts a render that names only the basename, so rendering `other/icon.svg` counts for `public/icon.svg`. The manifest is matched by digest alone, and the code states that a hand-written manifest is not detected when the write comes from a shell route the transcript reader does not recognise. The header discloses this residual, which is a self-attestation limit and not tamper-proof evidence. The accepted limit should be visible in the user-facing status wording, not only in a code comment.",
+      "file": "src/scripts/hooks/svg_obligation.ts"
+    },
+    {
+      "finding_id": "102ba6306c67",
+      "severity": "low",
+      "kind": "security",
+      "title": "The dispatch-process chunk runs when its integrity sidecar is absent",
+      "detail": "loadSvgScanUncached only refuses a chunk when verifyBundle reports `mismatch`. A missing sidecar is `unverifiable` and is allowed, so `svg_rules.chunk.cjs` executes inside the dispatch process without a check. This is the same posture as dispatch.js. Anyone who can write the chunk can also write the sidecar, so the practical risk is small. It should still be stated as accepted rather than implied to be verified.",
+      "file": "src/scripts/hooks/svg_rules_loader.ts"
+    },
+    {
+      "finding_id": "c3afca01e1ae",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Fixture README promotion table presents two runs that are identical to the digit",
+      "detail": "The 'two consecutive measured runs' bar is reported as run 1 and run 2 columns with identical values on all 32 rows. Nothing in the diff shows that these were separate executions. The 'Measured' table also reports 0 twin findings per row while the promotion table reports non-zero cross-corpus twin findings for 5 rules, and the two use different scopes. The outcome line '27 of 32 rules meet the bar' should cite the command and run timestamps.",
+      "file": "tests/design-artifacts/fixtures/svg-assets/README.md"
+    },
+    {
+      "finding_id": "0a499da606d2",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Unsourced headline numbers in the svg-authoring skill",
+      "detail": "The skill states 'IoU 0.883 vs 0.984', 'mean error 16.78 to 6.12', 'off-by-40 share 9.1% to 1.5%', '49 KB vs 4.5 KB with 14 shapes and about 180 points', and '0.989 vs 0.935 region IoU'. None is tied to an evidence file or a harvest id, and the text does not say it is own analysis. Under the code-provenance knowledge-layer rule each should cite an artifact or be labelled as such. The same applies to the byte figures in svg_rules.ts and design_pass_hook.ts (30,924 B, 12,931 B over, 2,128 B, 16,910 B headroom), which do not reconcile with each other without a stated ceiling.",
+      "file": "src/skills/svg-authoring/SKILL.md"
+    },
+    {
+      "finding_id": "1c8c896cf267",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "`ignoreFiles` glob of `**` or an empty prefix ignores every file",
+      "detail": "The CLI filters with `f.includes(g.replace('**',''))`. A glob consisting of `**`, or any pattern that reduces to an empty string, makes `includes('')` true for every path. That silently scans nothing, and only the scanned-nothing refusal catches it afterwards. The glob handling is a substring match and not a glob match.",
+      "file": "src/scripts/lint_svg_asset.ts"
+    },
+    {
+      "finding_id": "8ec912929137",
+      "severity": "low",
+      "kind": "style",
+      "title": "Orphaned and duplicated doc comments",
+      "detail": "svg_rules.ts retains a stray `/** End of the tag, honouring quoted attribute values ... */` with no function after it, and a doubled docblock on isDirectChildOfRoot. Both are leftovers from the extraction and mislead readers about what follows.",
+      "file": "src/scripts/_lib/svg_rules.ts"
+    },
+    {
+      "finding_id": "ada69da75d97",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Documented SVG active-content backstop grep requires a quote, so it misses unquoted handlers and encoded javascript: URLs",
+      "detail": "The new test only asserts that the grep in frontend-render-security/SKILL.md contains `[\"']`, and the fixture has no unquoted-handler or encoded-URL case. The same change's lint_svg_asset review rounds found that `onload=alert(1)` runs in browsers and that tab-split, entity-encoded or `&colon;` javascript: URLs bypass naive matching. The skill's backstop grep is therefore weaker than the linter, and a green test pins that gap. Add unquoted and encoded planted files, or have the skill point at lint_svg_asset instead of a hand-written grep.",
+      "file": "tests/skills/frontend_render_security_svg_grep.test.ts",
+      "status": "fixed",
+      "commit": "990425836285eded0a6cb4370f8ded95823dd6c8",
+      "rationale": "The skill names the grep a locator and points at lint_svg_asset for a verdict.",
+      "verified_by": "grep -n \"A locator, not a verdict\" src/skills/frontend-render-security/SKILL.md",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "f561ef5a74b6",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Gate's manifest-forgery detection is pattern-based, so a hand-written manifest can still discharge a blocking obligation",
+      "detail": "The turn-end gate voids manifests only when it sees a write into the render directory via an edit tool or a recognized shell redirect (`>`, `cd` plus a relative path). Writes through `tee`, `cp`, `python -c`, `node -e` or `jq` are not shown to be covered. The `renderer-absent` plus `static.errors: 0` path needs only a manifest bound to the file's digest, so a forged manifest and any render command naming the file would discharge it. The tests cover echo, printf, cd and tool writes only. Add negative cases for the other write routes, or add a manifest provenance field the render command alone can produce.",
+      "file": "tests/scripts/turn_end_gate_svg_render.test.ts",
+      "status": "fixed",
+      "commit": "990425836285eded0a6cb4370f8ded95823dd6c8",
+      "rationale": "tee, sponge, cp and similar, and any listed interpreter naming the render directory, void the manifests.",
+      "verified_by": "npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t \"still discharges nothing\"",
+      "date": "2026-10-12"
+    },
+    {
+      "finding_id": "10d2076ac774",
+      "severity": "low",
+      "kind": "security",
+      "title": "Path-prefix exemption and missing-sidecar load weaken the SVG gate",
+      "detail": "Any `.svg` under tests/design-artifacts/fixtures/ or scenarios/ opens no obligation, so a real deliverable placed there skips the gate entirely. The dispatch chunk loader also executes a chunk with no `.sha256` sidecar ('unverifiable, allowed'). An attacker who can replace the chunk can also delete its sidecar. This matches the main bundle's stated posture, but the loader now executes more code from a path-derived location. Consider requiring the sidecar when running from a packed install.",
+      "file": "tests/scripts/design_pass_svg.test.ts"
+    },
+    {
+      "finding_id": "3be8cba2808b",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Scenario manifest declares assertions the test never checks",
+      "detail": "manifest.json and the scenarios README say the witnesses decide each outcome and that svg_scenarios.test.ts runs them. Several declared asserts have no check in the test: `hole_is_transparent_on_dark`, `wordmark_or_slogan_region`, s2's `changed_box` and `silhouette_change_outside_box`, s5's `digest_matches`, and s3's `resolution_fixed_filters`. The s1 digest check compares a reading's digest to the same file's hash. The s1b report's figures (IoU 0.99949, 2,734 bytes, the control table) come from a derivation pipeline that is not committed. The test checks only IoU >= 0.984 and that the report text contains 'bytes' or 'registration'. Either assert these properties or trim the manifest and report to what is actually checked.",
+      "file": "tests/design-artifacts/scenarios/manifest.json"
+    },
+    {
+      "finding_id": "cb170304119d",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "The suites that back the proof claims are excluded from the default test run",
+      "detail": "vitest.config.ts removes svg_scenarios.test.ts and ui_render_asset_profile.test.ts unless AGENT_CONFIG_BROWSER_SUITES=1. Whether the tests.yml job sets that variable is not visible in this diff. If it does not, the end-to-end scenario results and the engine-layer readings are never run in CI. The README, CAPABILITIES and CLAIMS text must not present them as continuously verified until a CI job that sets the variable is confirmed.",
+      "file": "vitest.config.ts"
+    },
+    {
+      "finding_id": "2f2c5397ec38",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "s1b report.md carries a stale 'finding' about the test harness",
+      "detail": "The report says the harness scores s1b with no registration (IoU 0.1768, verdict fail) and that the test asserts only `verdict !== 'unverified'`. The committed test now derives a mark-only reference and asserts IoU >= the pre-registered 0.984. The report contradicts the shipped test. It also tells readers a fix is pending that has already landed.",
+      "file": "tests/design-artifacts/scenarios/s1b-conversion/report.md"
+    },
+    {
+      "finding_id": "094a0e530dbc",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Test weakened in injection_budget_dispatch",
+      "detail": "The assertion `again < first` became `again < SEED` plus `> 0`. The justification (both turns now spend 747 B) is sound, and the seed-discard property is still pinned. The new bound is loose, though: any turn spending under 47 KB passes. Consider asserting `again <= first`, or an exact per-turn spend, so a regression that only slightly accumulates is still caught.",
+      "file": "tests/hooks/injection_budget_dispatch.test.ts"
+    },
+    {
+      "finding_id": "982b2b262a92",
+      "severity": "low",
+      "kind": "style",
+      "title": "Comma-operator expression and hardcoded tolerance in scenario test",
+      "detail": "`(scenario('delivered-files-reopen').asserts, manifest.scenarios)` discards its left operand, so the scenario lookup does nothing. The conversion check hardcodes `max_boundary_distance_units: 4` instead of reading `geometry_tolerances` from the fixture manifest, which contradicts the 'pre-registered tolerance' narrative. The test also writes `.probe-*.html` files into the committed scenario directory, which leaves strays if the process is killed before cleanup.",
+      "file": "tests/design-artifacts/svg_scenarios.test.ts"
+    }
+  ],
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 4,
+    "filesReviewed": 268,
+    "filesTotal": 268,
+    "unreviewed": [],
+    "reviewCopies": 32
+  },
+  "fact_claims": {
+    "asserting_removal": 3,
+    "disproved_by_tree": 3
+  }
+}
