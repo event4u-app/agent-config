@@ -52,14 +52,22 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-10-01)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-10-12)
 # ----------------------------------------------------------
-# 347 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 354 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **109 rows are listed below**, so the manifest covers 109/347 = 31.4 % of the
+# **113 rows are listed below**, so the manifest covers 113/354 = 31.9 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
+#
+# RECOUNTED 2026-10-12, on the change that adds `check_skill_body_budget`. The
+# header read 347 scripts against a measured 354 and 109 rows against 112
+# BEFORE this change — drift of 7 and 3, under the tolerance of 15 in
+# `check_gate_coverage.test.ts` § states an honest denominator, so nothing was
+# red and the next seven arrivals would not have redded it either. Both figures
+# are recomputed on this tree rather than incremented, which is the standing
+# instruction two blocks below and the reason this one exists at all.
 #
 # RECOUNTED 2026-09-29 ON A MERGE, and this is the hazard the two blocks below
 # predicted arriving in the form they predicted. Two branches each recounted
@@ -655,6 +663,24 @@ gates:
         denominator by one while the numerator stands still, so the ratio falls
         below seed and the ratchet must red. A gate that stayed green here would
         be a count ratchet wearing a ratio's name.
+  - id: check_skill_body_budget
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 250
+    corpus: >
+      every `src/skills/<name>/SKILL.md` — 300 at baseline. The floor sits at
+      250 because the skill set moves by ones and a reading two fifths below
+      baseline means the walk lost `src/skills/`, not that a hundred skills
+      were deleted in one change.
+    status: enforced
+    no_canary_reason: >-
+      The only violation this gate can express is a body that GREW past a
+      ceiling already recorded for it, which is an in-place edit of a tracked
+      file. A create-only canary cannot plant it: a new skill has no recorded
+      ceiling and is deliberately not a finding, so the plant would run the
+      gate green and certify nothing. The red path is proved instead by
+      `tests/scripts/check_skill_body_budget.test.ts`, which grows a real body
+      from the live corpus by one byte and asserts exactly one finding.
   - id: check_skill_admissions
     argv: []
     min_scanned: 0

@@ -715,6 +715,16 @@ tasks:
       has no corpus for. Regenerate with `--write`; the list is derived, so a
       correction belongs in the tree or the scanner, never in the table.
     cmd: ./scripts-run src/scripts/check_read_surface_coverage {{.QUIET_FLAG}}
+  check-skill-body-budget:
+    silent: true
+    desc: |
+      A skill body may shrink, never silently grow. `lint_token_budget_discipline`
+      gates only `token_budget_class: rich` and skips a skill with no key, so 141
+      of the 147 bodies over 8 KB had nothing stopping them growing. The ceiling
+      per skill is the measured distribution in `src/config/skill-body-budget.json`,
+      monotone down: re-record with `--update` after a shrink, and raise one only
+      through a `raised` entry carrying a reason. The check moves no ceiling itself.
+    cmd: ./scripts-run src/scripts/check_skill_body_budget {{.QUIET_FLAG}}
   check-host-format-column:
     silent: true
     desc: |
