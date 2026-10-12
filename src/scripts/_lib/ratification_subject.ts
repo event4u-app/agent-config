@@ -21,6 +21,15 @@
  * a branch and on the merged checkout CI judges — unless the base changed a
  * gated file the change also touches, and then the content that would land is
  * not the content that was reviewed, which is precisely what should move it.
+ *
+ * WHAT IT READS, AND WHAT IT THEREFORE DOES NOT PROVE. It reads the WORKING
+ * TREE, not Git objects. A reviewer of this mechanism asked for revision-based
+ * hashing instead; that remains the stronger shape and is not what ships here,
+ * so against a dirty tree the digest describes the dirty bytes. What the same
+ * review DID change is the symlink case below — a dereferenced link made the
+ * digest depend on content outside the revision entirely, which is a different
+ * and worse defect than depending on an uncommitted edit, because no amount of
+ * cleanliness in the checkout removes it.
  */
 
 import { createHash } from 'node:crypto';
@@ -36,6 +45,20 @@ import { SELF_SURFACE, classifyPaths } from '../check_kernel_edit_ratified.js';
  * hook is exactly the change the record most needs to be bound to.
  */
 export const DELETED_MARKER = '\u0000deleted\u0000';
+
+/**
+ * Prefixes the target of a gated path that is a SYMLINK, so the digest records
+ * the link rather than whatever it currently points at.
+ *
+ * A council review of this mechanism found the gap: `readFileSync`
+ * dereferences, so a gated path committed as a symlink was hashed as its
+ * target's bytes — which live outside the reviewed revision and can differ
+ * between two clean checkouts of the same commit. Git stores a symlink as a
+ * blob containing its target string, and that is what is hashed here, so the
+ * digest describes the committed object. A broken link is a link, not a
+ * deletion, and is recorded as one.
+ */
+export const SYMLINK_MARKER = '\u0000symlink\u0000';
 
 /**
  * The self surface, as the GATE's one exported list rather than a copy of it.
@@ -102,7 +125,23 @@ export function subjectDigest(
     const h = createHash('sha256');
     for (const rel of gatedFilesOf(files, derived)) {
         const abs = path.join(root, rel);
-        const content = fs.existsSync(abs) ? fs.readFileSync(abs) : Buffer.from(DELETED_MARKER);
+        // `lstat` rather than `existsSync`: the latter follows the link and
+        // reports a broken symlink as absent, which would digest a link as a
+        // deletion. One stat, and the three cases are told apart by it.
+        let content: Buffer;
+        let stat: fs.Stats | null = null;
+        try {
+            stat = fs.lstatSync(abs);
+        } catch {
+            stat = null;
+        }
+        if (stat === null) {
+            content = Buffer.from(DELETED_MARKER);
+        } else if (stat.isSymbolicLink()) {
+            content = Buffer.from(SYMLINK_MARKER + fs.readlinkSync(abs));
+        } else {
+            content = fs.readFileSync(abs);
+        }
         h.update(rel);
         h.update('\u0000');
         h.update(createHash('sha256').update(content).digest('hex'));

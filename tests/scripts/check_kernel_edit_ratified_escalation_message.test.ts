@@ -188,3 +188,83 @@ describe('when the gate emits it, and when it does not', () => {
         expect(r.lines.join('\n')).not.toContain('could not settle this change');
     });
 });
+
+describe('what a council review of this gate found, pinned', () => {
+    it('one record\u2019s diversity shortfall does not relabel ANOTHER record\u2019s defect', () => {
+        // `diversityShort` was declared outside the artifact loop, so the first
+        // record to set it made every later record's defect -- malformed, stale,
+        // self-ratified -- read as a diversity shortfall. The gate refused in
+        // both cases; what was wrong is what it told the owner they were looking
+        // at: an authoring error dressed as a judgement call.
+        const short = record('short.md', [KERNEL], { anthropic: 'ratified' }, 'ratified');
+
+        // A second record whose real defect is a stale subject, carrying a
+        // `refused` verdict scalar the old code would have surfaced.
+        const stale = path.join(RATIFICATION_DIR, 'stale.md');
+        write(
+            stale,
+            [
+                '---',
+                'proposed_by: claude/session-a',
+                'implemented_by: claude/session-a',
+                'reviewed_by: council/anthropic+openai',
+                `subject: ${'c'.repeat(64)}`,
+                'verdict: refused',
+                'effective_after: merge',
+                'providers:',
+                '  - anthropic',
+                '  - openai',
+                'seats:',
+                '  anthropic: refused',
+                '  openai: refused',
+                '---',
+                '',
+                'Body.',
+                '',
+            ].join('\n'),
+        );
+
+        const r = evaluate([KERNEL, short, stale], root, 2);
+        expect(r.exitCode).toBe(1);
+        const out = r.lines.join('\n');
+
+        // Scoped to the ESCALATION, not the whole output: the failures list
+        // above it names every record that did not validate, which is correct
+        // and is not what this case is about.
+        const escalation = out.slice(out.indexOf('could not settle this change'));
+        expect(escalation).not.toBe('');
+        expect(escalation).toContain('provider diversity unavailable');
+        // The stale record is neither the artifact the owner is sent to nor the
+        // verdict they are told the council reached.
+        expect(escalation).not.toContain('stale.md');
+        expect(escalation).not.toContain('`refused`');
+    });
+
+    it('a record whose ONLY defect is diversity is still offered to the owner', () => {
+        // The polarity partner: narrowing the flag must not silence the case it
+        // was there for.
+        const rel = record('only.md', [KERNEL], { anthropic: 'ratified' }, 'ratified');
+        const out = evaluate([KERNEL, rel], root, 2).lines.join('\n');
+        expect(out).toContain('provider diversity unavailable');
+    });
+
+    it('strips what a terminal would obey from paths and seat ids', () => {
+        // A crafted filename or provider id could move the cursor, clear the
+        // line or recolour the output, and so forge or conceal part of the stop
+        // the owner reads.
+        const out = escalationMessage({
+            artifact: 'agents/evidence/ratifications/\u001b[2Kinnocent.md',
+            verdict: 'non-\u001b[31mconvergent',
+            seats: new Map([['anth\u0007ropic', 'refu\nsed']]),
+            touched: ['kernel rule src/rules/\u001b[1mcommit-policy.md'],
+            reviewerSurface: false,
+        }).join('\n');
+
+        expect(out).not.toContain('\u001b');
+        expect(out).not.toContain('\u0007');
+        // Replaced rather than dropped, so the message still shows something
+        // was there.
+        expect(out).toContain('\uFFFD');
+        expect(out).toContain('innocent.md');
+    });
+});

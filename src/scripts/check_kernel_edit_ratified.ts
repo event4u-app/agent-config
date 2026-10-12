@@ -562,8 +562,29 @@ export interface EscalationInput {
  * confident-looking summary the gate could not have known would be the failure
  * this whole mechanism exists to prevent, reached through the help text.
  */
+/**
+ * Strip what a terminal would obey from a string the gate did not author.
+ *
+ * Paths, seat ids and verdict strings reach this message from the diff and from
+ * record frontmatter, and a council review of this gate named the consequence:
+ * an escape sequence in one of them can move the cursor, clear the line or
+ * recolour the output, so a crafted filename could forge or conceal part of the
+ * stop the owner reads. Control characters are replaced rather than dropped, so
+ * the message still shows that something was there.
+ */
+function safeForOperator(value: string): string {
+    // eslint-disable-next-line no-control-regex
+    return value.replace(/[\u0000-\u001f\u007f-\u009f]/gu, '\uFFFD');
+}
+
 export function escalationMessage(input: EscalationInput): string[] {
-    const { artifact, verdict, seats, touched, reviewerSurface } = input;
+    const { verdict: rawVerdict, reviewerSurface } = input;
+    const artifact = input.artifact === null ? null : safeForOperator(input.artifact);
+    const verdict = safeForOperator(rawVerdict);
+    const touched = input.touched.map(safeForOperator);
+    const seats = new Map<string, string>(
+        [...input.seats].map(([p, v]) => [safeForOperator(p), safeForOperator(v)]),
+    );
     const dissent = [...seats].filter(([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding');
     const concluded = [...seats].filter(([, v]) => v !== 'no-final-verdict');
 
@@ -782,8 +803,19 @@ export function evaluate(
     const failures: string[] = [];
     /** Records that parsed but did not pass, kept for the escalation message. */
     const nonPassing: { rel: string; verdict: string; seats: ReadonlyMap<string, string> }[] = [];
-    /** True when a record failed on provider diversity rather than on a verdict. */
-    let diversityShort = false;
+    /**
+     * True when SOME record in this diff failed on provider diversity.
+     *
+     * Read only after the loop, to decide whether the escalation fires at all.
+     * Whether a GIVEN record is a diversity case is decided per iteration by
+     * the local flag below — a council review of this gate found the two
+     * conflated: one artifact setting a loop-wide flag made every later
+     * artifact's defect, malformed or stale, read as a diversity shortfall and
+     * put it in front of the owner as a judgement call. The gate still refused
+     * in both cases; what was wrong was what it told the owner they were
+     * looking at.
+     */
+    let anyDiversityShort = false;
     for (const rel of artifacts) {
         const abs = path.join(root, rel);
         let text: string;
@@ -815,18 +847,22 @@ export function evaluate(
             nonPassing.push({ rel, verdict: reading.artifact.verdict, seats });
             continue;
         }
+        let onlyDiversity = reading.problems.length > 0;
         for (const p of reading.problems as RatificationProblem[]) {
             failures.push(`${rel}: ${p.message}`);
             if (p.code === 'diversity-required' || p.code === 'diversity-unverifiable') {
-                diversityShort = true;
+                anyDiversityShort = true;
+            } else {
+                onlyDiversity = false;
             }
         }
-        // A record whose only defect is diversity still carries a verdict the
+        // A record whose ONLY defect is diversity still carries a verdict the
         // user needs to see; one that failed on its shape or its binding does
         // not, and asking the owner to adjudicate a malformed file would turn
-        // an authoring error into a governance decision.
+        // an authoring error into a governance decision. `onlyDiversity` is
+        // per-record for exactly that reason.
         const verdictScalar = fm?.scalars['verdict'];
-        if (diversityShort && typeof verdictScalar === 'string') {
+        if (onlyDiversity && typeof verdictScalar === 'string') {
             nonPassing.push({ rel, verdict: verdictScalar.trim(), seats });
         }
     }
@@ -847,13 +883,13 @@ export function evaluate(
         const unsettled = nonPassing.find(
             (r) => r.verdict === 'non-convergent' || r.verdict === 'refused',
         );
-        if (unsettled !== undefined || diversityShort || gated.self) {
+        if (unsettled !== undefined || anyDiversityShort || gated.self) {
             lines.push(
                 ...escalationMessage({
                     artifact: unsettled?.rel ?? null,
                     verdict:
                         unsettled?.verdict ??
-                        (diversityShort ? 'provider diversity unavailable' : 'no record'),
+                        (anyDiversityShort ? 'provider diversity unavailable' : 'no record'),
                     seats: unsettled?.seats ?? new Map<string, string>(),
                     touched,
                     reviewerSurface: gated.self,
