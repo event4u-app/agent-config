@@ -33,6 +33,7 @@
 
 import process from 'node:process';
 
+import { asOf } from './_lib/as_of.js';
 import {
     HOST_PERMISSION_SYNTAX,
     denyRulesFor,
@@ -130,7 +131,12 @@ export function checkRow(row: HostPermissionSyntax, today: string): string[] {
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    let today = new Date().toISOString().slice(0, 10);
+    // `asOf()`, not the wall clock: this gate's only time-dependent verdict is
+    // whether a pin's review date has passed, and a staleness verdict that
+    // differs between Monday and Friday over an unchanged tree is not
+    // reproducible from the commit. `--today` stays as this gate's own pin,
+    // which is what the rejecting cases in its test drive.
+    let today = asOf().toISOString().slice(0, 10);
     for (let i = 0; i < argv.length; i += 1) {
         if (argv[i] === '--today') {
             const next = argv[i + 1];
