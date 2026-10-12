@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-11",
+  "measured_at": "2026-10-12",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,13 +11,13 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +7.71 pp breaches the +2.0 pp guard",
+    "reason": "false activation +7.13 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 3.368,
-    "delta_false_activation_pp": 7.709,
-    "p_value": 0.1982,
+    "delta_recall_pp": 3.711,
+    "delta_false_activation_pp": 7.128,
+    "p_value": 0.1476,
     "discordant_positive_pairs": {
-      "gained": 76,
+      "gained": 78,
       "lost": 60
     },
     "bars": {
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 475,
-        "positiveHits": 296,
-        "negatives": 467,
-        "negativeHits": 67
+        "positives": 485,
+        "positiveHits": 302,
+        "negatives": 477,
+        "negativeHits": 71
       },
       "description+body": {
-        "positives": 475,
-        "positiveHits": 312,
-        "negatives": 467,
-        "negativeHits": 103
+        "positives": 485,
+        "positiveHits": 320,
+        "negatives": 477,
+        "negativeHits": 105
       }
     },
     "recall_pp": {
-      "description": 62.316,
-      "description+body": 65.684
+      "description": 62.268,
+      "description+body": 65.979
     },
     "false_activation_pp": {
-      "description": 14.347,
-      "description+body": 22.056
+      "description": 14.885,
+      "description+body": 22.013
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 98,
+    "train_corpora": 100,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 942,
+    "cases": 962,
     "catalogue_size": 300
   }
 }

@@ -224,8 +224,16 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // EDITED `image-provider-routing`'s corpus (also train) without changing
         // the file count — that moves the holdout pin's per-file row and the set
         // hash, and nothing here.
+        //
+        // 125 -> 127 on 2026-10-12: `road-to-account-lifecycle-threat-rows`
+        // Phase 1 edited six skill bodies, and `check_routing_coverage`
+        // requires a corpus from every touched skill. `form-handler` (0x5d =
+        // 93) and `judge-security-auditor` (0xc8 = 200) had none and gained
+        // one each. Both are above the ceiling and train, moving the train
+        // count 98 -> 100; the holdout is unchanged at 27, so the seal is
+        // untouched by this growth too.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(125);
+        expect(all.length).toBe(127);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
     });
 });
@@ -262,7 +270,10 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 96 -> 97 on 2026-10-10: `database` trains. See the partition note above.
         // 97 -> 98 on 2026-10-11: `svg-authoring` trains. See the partition note
         // above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(98);
+        // 98 -> 100 on 2026-10-12: `form-handler` (0x5d = 93) and
+        // `judge-security-auditor` (0xc8 = 200) both train. See the partition
+        // note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(100);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
