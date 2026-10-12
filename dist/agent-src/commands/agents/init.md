@@ -92,9 +92,16 @@ always with numbered options where applicable:
 3. **Architecture style** — e.g. "Controllers thin, logic in services,
    validation via FormRequests". Offer `/agents optimize` style presets
    based on detected framework.
-4. **User-facing strings strategy** — translation files? hardcoded?
+4. **Goal** — one to three sentences a plan can be checked against, not a
+   mission statement. Offer no default and invent nothing: an empty answer
+   OMITS the section and is reported in step 8. A goal the agent wrote is a
+   goal nobody decided.
+5. **No-gos** — bullets, each naming a path, a command, a dependency or a
+   behaviour ("never edit `migrations/` by hand"). Same rule: empty omits
+   the section and is reported, never filled with a plausible default.
+6. **User-facing strings strategy** — translation files? hardcoded?
    default per framework.
-5. **Additional conventions** — free text, optional.
+7. **Additional conventions** — free text, optional.
 
 ### 4. Generate files
 
@@ -110,8 +117,21 @@ Read the templates, substitute placeholders:
 | `{{project_structure_notes}}`, `{{testing_notes}}`, `{{quality_tools_notes}}` | Offer framework-specific defaults, let user edit |
 | `{{architecture_notes}}`, `{{coding_standards}}`, `{{framework_conventions}}` | Offer defaults + user edits |
 | `{{test_all_command}}`, `{{test_targeted_command}}`, `{{testing_extra_notes}}` | From detected test framework |
-| `{{user_facing_strings_strategy}}` | Step 3.4 |
+| `{{project_goal}}` | Step 3.4 — omitted entirely when the answer was empty |
+| `{{project_no_gos}}` | Step 3.5 — omitted entirely when the answer was empty |
+| `{{user_facing_strings_strategy}}` | Step 3.6 |
 | `{{target_language_level}}` | e.g. "PHP 8.2 / Laravel 11" |
+
+Write the **Goal** and **No-gos** sections from 3.4 and 3.5 into the
+consumer's filled `AGENTS.md`, below the template's own content, using the
+copy-in shapes in `consumer-agents-md-guide.md`. An answer that was empty
+contributes no section and no heading.
+
+**The template file is never edited for this.** `src/agent-src/templates/AGENTS.md`
+sits one character under the 2,500-byte FAIL cap `lint_agents_md` enforces
+(2,499 since 2026-10-12), so nothing of any size fits there; and a section
+whose content comes from the consumer does not belong in a file shipped to
+every consumer.
 
 Remove the HTML comments starting with `<!-- AGENTS.md — entry point …`
 and `<!-- copilot-instructions.md — read by GitHub Copilot …` — they are
@@ -180,6 +200,18 @@ If `agents/` directory does not exist, suggest running `/optimize agents-dir --s
 If `.agent-settings.yml` does not exist, suggest running `scripts/install` (then `/onboard` for first-run setup).
 If module candidates surfaced in Step 7 but the user skipped, note that
 `./scripts-run src/scripts/propose_modules_config` can be re-run anytime.
+
+Report which of the four contract sections the filled file carries:
+
+```bash
+./scripts-run src/scripts/report_project_contract AGENTS.md
+```
+
+It prints `N of 4` and names the missing ones. It is READ-ONLY and infers
+nothing: a goal the agent could guess from the description is still a goal
+nobody wrote, so an omitted section is reported as missing rather than
+quietly filled. `4 of 4` is not a target the initializer pursues on the
+user's behalf — it is a statement about what the file says.
 
 ## Rules
 

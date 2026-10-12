@@ -59,7 +59,7 @@ company content ships in the package.
 
 ## Phase 1 — The two questions the initializer does not ask
 
-- [ ] **1.1 Two copy-in sections in the consumer guide.** The guide gains
+- [x] **1.1 Two copy-in sections in the consumer guide.** The guide gains
       `## Goal section (optional copy-in)` and `## No-gos section (optional
       copy-in)`, each with a short shape: the goal as one to three sentences a
       plan can be checked against; the no-gos as bullets, each naming a path,
@@ -67,14 +67,14 @@ company content ships in the package.
       belong in the always-loaded file when its default is "leave AGENTS.md
       thin": they bind every turn.
       verify: `grep -c '^## No-gos section (optional copy-in)' src/agent-src/contexts/contracts/consumer-agents-md-guide.md` -> /^1$/
-- [ ] **1.2 The initializer asks them, one at a time.** `/agents:init` step 3
+- [x] **1.2 The initializer asks them, one at a time.** `/agents:init` step 3
       gains two questions after "Architecture style": the goal, then the
       no-gos. An empty answer omits the section and is reported in step 8 —
       never filled with a default. The sections are written into the consumer's
       filled `AGENTS.md` below the template content; the template file is not
       edited. `corrected-from-reproduction` (see Context).
       verify: `grep -c 'No-gos' src/domains/meta/agents/init/command.md` -> /^[1-9]/
-- [ ] **1.3 A read-only report: N of 4.** `report_project_contract` reads a
+- [x] **1.3 A read-only report: N of 4.** `report_project_contract` reads a
       consumer `AGENTS.md` and prints which of goal, no-gos, architecture and
       conventions are present, as `N of 4` plus the missing names; it writes
       nothing and never infers a section from other prose. `/agents:init`
@@ -83,7 +83,39 @@ company content ships in the package.
       too, and the test is seen red before the reader exists.
       verify: `npx vitest run tests/scripts/report_project_contract.test.ts` -> 0
 
+      **Closed 2026-10-12. The reader's load-bearing part is a fence skip**,
+      and it is not tidiness: the consumer guide ships every one of these
+      headings INSIDE a ```markdown fence as copy-in material, so a reader
+      without it reports the guide itself as a complete contract. Proved by
+      neutralising it — one case reds — and by running the reader over the live
+      guide, which reports `0 of 4`. The "does not infer" case pins the other
+      half: a file saying "our goal is to delight every user" in prose reads as
+      having no goal, because a goal the agent recognises is still a goal
+      nobody wrote.
+
 ## Phase 2 — A no-go that names a path or a command is enforced
+
+> **Screened 2026-10-12, not started, and the reason is a price rather than an
+> impossibility.** Step 2.1 requires the host permission-rule syntax to be
+> pinned with its `docs_url` in `src/scripts/hooks/host_lowering.yaml`. That
+> file is deliberately OUTSIDE `block_plumbing_writes`'s refused set — only
+> the compiled `host_lowering.json` is refused — and its own comment says the
+> YAML sources "stay OUT of this set and keep carrying a ratification". So the
+> step is agent-executable and costs an independent council record for a
+> one-line pin.
+>
+> Two facts a later run should have before paying it. The council's necessity
+> heuristic refuses a question like this on its WORDING, not its subject —
+> measured the same day on a different governance question, which skipped
+> twice (`bugfix`, then `syntax`) before the words were changed. And the
+> alternative of hard-coding the syntax in the classifier is what 2.1
+> explicitly forbids: "not taken from this file".
+>
+> Phase 1 is complete and stands alone: the sections exist, the initializer
+> asks for them, and the report says which are present. Phase 2 turns a
+> written no-go into an enforced one, which is a different claim and is worth
+> its own change.
+
 
 - [ ] **2.1 Classify each no-go bullet.** A pure function sorts each bullet
       into `path`, `command` or `prose`, and returns the deny rule it would
