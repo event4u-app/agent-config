@@ -223,6 +223,13 @@ run tests**.
   chapter into separate Encoding-and-Sanitization and Validation-and-Business-Logic
   chapters, and drops direct CWE/NIST cross-mappings from the requirements.
   [owasp.org/www-project-application-security-verification-standard/](https://owasp.org/www-project-application-security-verification-standard/)
+- **OWASP ASVS v5.0.0 V6 Authentication** and **NIST SP 800-63B** (Digital
+  Identity Guidelines, Authentication and Lifecycle Management — read the
+  CURRENT revision, the series is re-issued). The authority the account-flow
+  rows defer to for password storage, verifier behavior, rate limiting and
+  recovery. Named as chapters, never quoted as values: a number copied out of
+  a standard goes stale silently where a pointer does not.
+  [pages.nist.gov/800-63-3/sp800-63b.html](https://pages.nist.gov/800-63-3/sp800-63b.html)
 - **OWASP Top 10 2021** — A01 Broken Access Control, A04 Insecure Design,
   A05 Security Misconfiguration — cross-reference when naming abuse cases.
   [owasp.org/Top10/](https://owasp.org/Top10/)

@@ -81,7 +81,16 @@ RateLimiter::for('api', function (Request $request) {
 });
 
 RateLimiter::for('auth', function (Request $request) {
-    return Limit::perMinute(5)->by($request->ip());
+    // Two limits, not one: the account and the source. An IP-only key fails
+    // in BOTH directions — one attacker rotating addresses gets five attempts
+    // per address against the same account, and one office NAT locks every
+    // colleague out after five attempts between them.
+    $account = Str::lower(trim((string) $request->input('email')));
+
+    return [
+        Limit::perMinute(5)->by('auth:acct:' . sha1($account)),
+        Limit::perMinute(5)->by('auth:ip:' . $request->ip()),
+    ];
 });
 ```
 
