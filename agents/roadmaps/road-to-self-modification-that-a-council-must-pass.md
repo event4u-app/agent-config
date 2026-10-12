@@ -212,7 +212,7 @@ At `df377ca64`:
       step, blocker field or decision in either file is edited, and the deny
       is not touched here.
       verify: `grep -l 'council-confirmed-self-modification' agents/roadmaps/road-to-typed-grants-that-persist.md agents/roadmaps/later/road-to-ac-deep-capabilities.md | wc -l` -> /^2$/
-- [ ] **1.4 The sentences 1.2 wrote follow the amendment of 2026-10-07.**
+- [x] **1.4 The sentences 1.2 wrote follow the amendment of 2026-10-07.**
       ADR-281 was amended (`f76e83e47`, § Amendment `:216-231`) so that a
       council verdict recommends passage and a favourable one is advisory until
       authenticated owner authorisation is bound to the same digest. The
@@ -232,7 +232,18 @@ At `df377ca64`:
       contract is on the reviewer list, so this lands by the owner's act.
       verify: `grep -c -e 'lowest rung that can pass' -e "council's ratification record, and the user is its last rung" -e 'user as last rung' docs/contracts/ratification-artifact.md docs/guidelines/agent-infra/self-improvement-pipeline.md src/skills/skill-improvement-pipeline/SKILL.md | grep -c ':[1-9]'` -> /^0$/
       Positive control: the same command at `d41121927` prints 3.
-- [ ] **1.5 No shipped sentence names a binding the gate does not perform, and
+
+      **Closed 2026-10-12.** All three texts now state the amended rule in
+      their own words — the digest-bound council record is required and is a
+      review, a refusal fails closed, and a favourable verdict stays advisory
+      until the owner's authenticated authorization is bound to the same
+      digest. The contract's ladder gained the ADR-282 sentence: a pull
+      request touching the gated surface is handed to the owner rather than
+      cleared by the council, which is why `classify_merge_risk` routes it
+      `needs-council` and the seats decide only whether the owner must look.
+      It names `road-to-a-danger-gate-that-sees-what-governs`. Measured 3 at
+      the pin before the change and 0 after.
+- [x] **1.5 No shipped sentence names a binding the gate does not perform, and
       the consumer template says where a kernel rule changes.** Three
       sentences describe a subject binding the reader and the gate do not
       have yet (`grep -c subject` is 0 in both): ADR-281's consequence that
@@ -253,6 +264,23 @@ At `df377ca64`:
       holds; `docs/threat-model.md:42-47` follows in the same words, and the
       projections are re-emitted by `task sync`.
       verify: `grep -c 'not bound to the content' docs/contracts/ratification-artifact.md` -> /^[1-9]/
+
+      **Closed 2026-10-12.** The contract's § Honest enforcement carries a
+      dated paragraph saying a record is not bound to the content it reviewed
+      at this pin, that ADR-281's consequence describes the intended end state
+      rather than today's gate, and that the binding is steps 2.1 and 2.2. The
+      pipeline guideline dropped "whose `subject` matches" and says in a block
+      quote why, naming the two steps that bring it back. The threat model's
+      Layer 2 follows the template's words.
+
+      **The consumer template landed at 2,499 of its 2,500-character FAIL cap.**
+      The sentence had to carry "upstream only" and "ratified" inside a 72-char
+      budget, so "in a consumer project nothing edits one" is carried by the
+      emergency-triage block instead (item 3, "Do not edit `.augment/` or
+      `dist/agent-src/` here"), which already said it. One character of
+      headroom is not a margin: the next addition to that file needs a
+      subtraction in the same change, and `lint_agents_md` is the gate that
+      will say so.
 
 ## Phase 2 — An approval is bound to what it approved
 
@@ -485,15 +513,27 @@ At `df377ca64`:
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
-- [ ] **6.1 The pipeline's approval is the council's record.** For a proposal
-      whose scope is the package, `check_proposal` accepts `stage: gated` only
-      when the proposal names a record whose `subject` matches the files the
-      proposal declares as its change; a proposal scoped to a consumer's own
-      project is checked as before. The stage-five skill refuses a proposal
-      that is not `stage: gated`, as its guideline has claimed. Sending the
-      result outward keeps the consent it has.
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the `subject` this step checks is built by 2.1 and 2.2, which share that gate; recording the shared gate asks nothing new --> **6.1 The pipeline's review is the council's record; the approval is the
+      owner's.** For a proposal whose scope is the package, `check_proposal`
+      accepts `stage: gated` only when the proposal names a record whose
+      `subject` matches the files the proposal declares as its change AND the
+      owner's authorization is bound to the same digest; a proposal scoped to
+      a consumer's own project is checked as before. The stage-five skill
+      refuses a proposal that is not `stage: gated`, as its guideline has
+      claimed. Sending the result outward keeps the consent it has.
       verify: `npx vitest run tests/scripts/check_proposal_gated_needs_record.test.ts` -> 0
-- [ ] **6.2 A worked example, for real.** One learning from this repository's
+
+      **Title and text corrected 2026-10-12, and the step marked blocked.**
+      It read "the pipeline's approval is the council's record", which the
+      owner's amendment of 2026-10-07 reversed and which AC-8 now forbids in
+      any shipped text — implementing the step as written would have re-broken
+      the criterion the same branch just closed. The correction states the
+      amended rule and adds nothing: the council reviews, the owner approves.
+      The step is also marked blocked rather than left open, because the
+      `subject` it checks is exactly the binding 1.5 records as absent and 2.1
+      and 2.2 build. No new question: both the amendment and the gate's owner
+      question are already on record.
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — it needs a record that passed, which needs 6.1 and through it 2.1 and 2.2; recording the shared gate asks nothing new --> **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
       `agents/proposals/` naming the record, and the change passes the gate.
@@ -615,9 +655,18 @@ At `df377ca64`:
       `check_*.ts` gates — which is the point of the criterion: this roadmap adds
       a review, not a new thing that can fail a build.
 
-- [ ] AC-8 — No shipped text says a council record is the approval of a
+- [x] AC-8 — No shipped text says a council record is the approval of a
       package self-modification, and none names a content binding the gate
       does not perform.
+      **MET 2026-10-12, with a stated positive control.** A six-pattern grep
+      (`lowest rung that can pass`, `approval is the AI`, `user as last rung`,
+      `is its last rung`, `council record is the approval`, ``whose `subject`
+      matches``) over `src/`, `dist/`, `docs/contracts/` and
+      `docs/guidelines/` returns **0** in this tree against **7** on
+      `origin/main` at `17f028941`. The one surviving occurrence of the
+      `subject` phrase is the guideline block quote explaining why the clause
+      is absent, which is the opposite of naming a binding, and is excluded by
+      the measurement rather than hidden from it. Closed by steps 1.4 and 1.5.
 
 ## Decisions
 
@@ -652,7 +701,7 @@ At `df377ca64`:
 | K11 | Automated promotion of learnings | `road-to-leading-every-row.md:231`; `later/road-to-ac-deep-capabilities.md:163-192` | The directive is noted there by 1.3 and decided by its owner |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -664,3 +713,4 @@ At `df377ca64`:
 | 6 | The worked example is chosen to be easy | product | A trivial learning proves the plumbing and little else. | 6.2 requires a change to a rule or skill body, reviewed with the full question set; the record's body shows what was asked. | Phase 6 — One change nobody asked for travels the whole lane |
 | 7 | Widening the path set slows ordinary rule work | product | 28 more files need a record per change, and so does any edit to the shared rule schema. | Four of the 49 commits touched a rule outside the kernel; D4 names the reading that would widen or narrow it. | Phase 4 — The reviewer and the consequence class are inside the gate |
 | 8 | A reviewed change turns red because the base moved | implementation | The digest changes when the base edits a gated file the change also touches. | That is content the council did not see; 2.1's test pins that a base move on any other file leaves the digest alone. | Phase 2 — An approval is bound to what it approved |
+| 9 | A step's own text outlives the decision it was written under | implementation | Step 6.1 still read "the pipeline's approval is the council's record" five days after the owner's amendment reversed exactly that, and nothing surfaced it: the amendment edited the ADR, 1.4 corrected the shipped texts, and the plan that instructs the work was in neither set. Implementing the step as written would have re-broken AC-8. | 6.1's title and text now state the amended rule, and AC-8's grep is scoped to shipped text only — so the same drift in a plan is still invisible to it. The check that caught this one was reading the step before running it; no gate replaces that. | Phase 6 — One change nobody asked for travels the whole lane |

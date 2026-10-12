@@ -45,7 +45,10 @@ company content ships in the package.
   `README.md` returns only internal uses, none on a consumer surface.
 - **The template cannot carry new sections.** `lint_agents_md` holds the
   consumer template (`src/agent-src/templates/AGENTS.md`) to a 2,500-character
-  fail cap; it measures 2,495 at the base. `corrected-from-reproduction`: the
+  fail cap; it measured 2,495 at this file's base and **2,499 since
+  2026-10-12**, when step 1.5 of
+  `road-to-self-modification-that-a-council-must-pass` had to say in that
+  pointer line where a kernel rule changes. `corrected-from-reproduction`: the
   supplied plan put the sections into a `CLAUDE.md` written by `init`; `init`
   only detects `CLAUDE.md` (`src/install/detect.ts:76`), the consumer entry
   point this package writes is `AGENTS.md`, and the template has five
@@ -137,7 +140,7 @@ company content ships in the package.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | deterministic | evidence | Sections go into the filled consumer `AGENTS.md` and the guide, not the template | Template 2,495 chars against a 2,500 fail cap (`lint_agents_md.ts:58`) | The template's cap is raised by its own owner |
+| D1 | deterministic | evidence | Sections go into the filled consumer `AGENTS.md` and the guide, not the template | Template 2,499 chars against a 2,500 fail cap (`lint_agents_md.ts:58`) — 2,495 when this was decided, and **one** character of headroom since 2026-10-12. The decision is unchanged and now rests on a harder fact: nothing of any size fits in that file without a subtraction in the same change | The template's cap is raised by its own owner |
 | D2 | reversible-technical | agent | Enforce through the host's native deny list, not a new `pre_tool_use` concern | A concern costs hook-bundle bytes and binds on every install; a consented, consumer-authored deny row changes nothing for a consumer who declines | A hook host without a native deny list asks for the same enforcement |
 | D3 | reversible-technical | agent | Two new questions only | Architecture and conventions are already asked (`init/command.md:92-97`) | The report in 1.3 shows architecture or conventions missing on most filled files |
 | D4 | reversible-technical | agent | Unclassifiable bullets stay prose | A guessed deny row on a vague sentence blocks legitimate work silently | A classifier error rate is measured on real consumer files |

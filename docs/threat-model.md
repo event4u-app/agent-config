@@ -41,8 +41,9 @@ together, not one:
    `docs/enforcement-by-host.md`).
 2. **Layer 2 — projected immutability statement (instruction-time).** The
    consumer projection states the rule set's immutability explicitly
-   (consumer `AGENTS.md` template: kernel rules change only through a
-   ratified edit — ADR-268 § 4, ADR-281 — and an override may tighten one) —
+   (consumer `AGENTS.md` template: kernel rules change upstream only, by a
+   ratified edit — ADR-268 § 4, ADR-281 as amended 2026-10-07 — and in a
+   consumer project an override may tighten one while nothing edits one) —
    the model-cooperative layer that reaches every host, including
    static-only ones.
 3. **Layer 3 — post-write SHA comparison (after the fact).** Already
