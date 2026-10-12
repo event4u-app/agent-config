@@ -207,6 +207,37 @@ describe('the turn-end gate reads the render, never the call', () => {
         expect(finding?.reason).toContain('discharge nothing');
     });
 
+    it('a hand-written manifest plus a render naming the file still discharges nothing', () => {
+        // 16.5.0 release review: the render only had to NAME the file, so a
+        // manifest written by hand — by an edit tool or by a shell redirect —
+        // followed by any render naming the file (one that failed, say)
+        // cleared a blocking gate. Writing into the render directory by any
+        // route other than the render itself now voids the manifests.
+        const file = writeSvg('assets/logo.svg', SVG_CLEAN);
+        writeManifest('hand-written', {
+            profile: 'asset',
+            verification: 'verified',
+            asset: { digest: digestOf(SVG_CLEAN) },
+        });
+        const viaTool = openSvgObligation(root, [
+            edit(file),
+            edit('agents/runtime/state/render/hand-written/manifest.json'),
+            RENDER,
+        ]);
+        expect(viaTool).not.toBeNull();
+        expect(viaTool?.reason).toContain('render directory');
+
+        const viaShell = openSvgObligation(root, [
+            edit(file),
+            bash(`echo '{}' > agents/runtime/state/render/hand-written/manifest.json`),
+            RENDER,
+        ]);
+        expect(viaShell).not.toBeNull();
+
+        // Control: the same manifest with only the render discharges.
+        expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
+    });
+
     it('a render of SOME OTHER file discharges nothing', () => {
         // Finding 2 of this change's completion review. `renderObserved` used
         // to be one boolean for the whole turn, so ANY asset render unlocked
