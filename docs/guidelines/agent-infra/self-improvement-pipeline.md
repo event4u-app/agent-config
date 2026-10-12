@@ -2,10 +2,13 @@
 
 Five-stage flow that turns real project experience into reviewed
 rule / skill / command / guideline changes. Self-modification is a goal
-(ADR-281): for a proposal scoped to the package the approval is the AI
-council's ratification record, and the user is its last rung; a change a
-user asked for keeps that user's approval as now. A passing record makes a
-change ready, not landed — every upstream change still ships via a PR.
+(ADR-281, as amended 2026-10-07): for a proposal scoped to the package a
+digest-bound AI council record is **required and is a review, not the
+approval** — a council refusal fails closed, and a favourable verdict
+recommends passage and stays advisory until the owner's authenticated
+authorization is bound to the same digest. A change a user asked for keeps
+that user's approval as now. A reviewed record makes a change ready, not
+landed — every upstream change still ships via a PR.
 
 Referenced by `road-to-curated-self-improvement.md`. Consumed by the live
 artifacts — the `skill-improvement-trigger` rule and the existing skills
@@ -88,10 +91,18 @@ blocks — it does not hand a half-filled doc to the next stage.
 ### Stage 5 — Upstream
 
 - **Trigger:** gate passed AND, for a proposal scoped to the package, a
-  council ratification record whose `subject` matches the proposal's change
-  passed it (ADR-281); where the council cannot conclude, the user decides by
-  the route ADR-281 § 5 names. A proposal scoped to a consumer's own project
-  needs that user's approval, as before.
+  council ratification record reviewed it favourably AND the owner's
+  authorization is on record (ADR-281 as amended 2026-10-07 — the council
+  record is the review, the owner's authorization is the approval); where the
+  council cannot conclude, the user decides by the route ADR-281 § 5 names. A
+  proposal scoped to a consumer's own project needs that user's approval, as
+  before.
+  > **"whose `subject` matches" is deliberately absent here.** It described a
+  > binding the gate does not perform at this pin: no record is bound to the
+  > content it reviewed. Steps 2.1 and 2.2 of
+  > `road-to-self-modification-that-a-council-must-pass` build that binding,
+  > and the clause returns with them. Naming it before it exists would state a
+  > guarantee a reader could rely on and the gate would not keep.
 - **Executor:** `upstream-contribute` skill. Refuses invocation if
   the proposal frontmatter is not `stage: gated`.
 - **Input:** gated proposal doc.

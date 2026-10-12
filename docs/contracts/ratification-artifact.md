@@ -497,9 +497,20 @@ list, so it reds the gate without its own ratification.
 
 Per ADR-268 § 4 as amended by ADR-281 § 2, in order: the AI council,
 CLI-first → a different provider → the owner. For a change to the gated
-surface, and for a change the package's own learning lanes originate, the
-council is the lowest rung that can pass; an independent session alone no
-longer ratifies.
+surface, and for a change the package's own learning lanes originate, a
+digest-bound council record is **required and is a review, never the
+approval**: a council refusal fails closed, and a favourable council verdict
+recommends passage and stays advisory until authenticated owner authorization
+is bound to the same digest (ADR-281 § Amendment, 2026-10-07). An independent
+session alone does not ratify, and neither an agent nor a council may waive
+the owner's reservation over the reviewer and its trust chain.
+
+Under ADR-282 the same shape reaches the merge: a pull request touching the
+gated surface is handed to the owner rather than cleared by the council, which
+is why `classify_merge_risk` routes it `needs-council` and the two seats decide
+only whether the owner must look, never whether the change passes. The gate
+that sees which surfaces those are is the subject of
+`road-to-a-danger-gate-that-sees-what-governs`.
 
 ### When the user decides — the conditions, once
 
@@ -609,6 +620,16 @@ What it makes impossible is narrower and real: a kernel-rule edit landing with
 no record at all; a record whose reviewer is its own author; a diff that
 weakens the judge and is then approved by the weakened judge; and a quorum rule
 that silently does not fire because the file it needed was somewhere else.
+
+At this pin — 2026-10-12 — **a record is not bound to the content it
+reviewed.** ADR-281 § Consequences states the gate binds each record to what it
+reviewed; that sentence describes the intended end state and not today's gate,
+which reads the artifact's shape and the diff's paths and never compares a
+digest. So a record written against one revision of a gated file still reads as
+valid after that file changes, and nothing here detects it. The binding is
+steps 2.1 and 2.2 of
+`road-to-self-modification-that-a-council-must-pass`; this paragraph is dated
+so a reader can tell whether it still describes the gate they are running.
 
 ## What was NOT preserved from the mechanism this replaces
 

@@ -243,7 +243,9 @@ finding never silently becomes a hard gate. Both halves, specified in
   Language agents that reinforce from verbal self-reflection on past
   trials. This pipeline adapts Reflexion by gating promotion with a
   review step — learnings only harden into rules/skills after explicit
-  approval, never auto-commit: for a proposal scoped to the package, on
-  the AI council's ratification record (user as last rung, ADR-281); for
-  a change a user asked for, on that user's approval.
+  approval, never auto-commit: for a proposal scoped to the package, a
+  digest-bound AI council record is the required **review** and the owner's
+  authenticated authorization is the **approval**, with a council refusal
+  failing closed (ADR-281 as amended 2026-10-07); for a change a user asked
+  for, on that user's approval.
 
