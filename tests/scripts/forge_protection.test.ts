@@ -1,6 +1,6 @@
 /**
- * The five `forge_protection` rows — `road-to-adversarial-verification-and-long-runs`
- * Phase 3.2.
+ * The six `forge_protection` rows — `road-to-adversarial-verification-and-long-runs`
+ * Phase 3.2, plus the authority-surface row added 2026-10-12.
  *
  * The load-bearing property is the THREE-state row: a value only exists when a
  * named call produced it, and a row nobody read is `unread` rather than a quiet
@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     PROTECTION_ROW_IDS,
+    approvalMechanisms,
     deployRestrictedFrom,
     forgeProtectionRows,
     protectionActions,
@@ -54,7 +55,7 @@ const LIVE_RULESET: RulesetDetail = {
 };
 
 describe('the three-state row', () => {
-    it('an unread forge yields five unread rows, never five false ones', () => {
+    it('an unread forge yields six unread rows, never six false ones', () => {
         const rows = forgeProtectionRows(UNREAD);
         expect(rows.map((r) => r.id)).toEqual(PROTECTION_ROW_IDS);
         expect(rows.every((r) => r.state === 'unread')).toBe(true);
@@ -70,7 +71,7 @@ describe('the three-state row', () => {
     it('an unread row still produces a human ACTION', () => {
         // Omitting it would make "nobody looked" indistinguishable from
         // "satisfied", which is the conflation the third state exists to stop.
-        expect(protectionActions(forgeProtectionRows(UNREAD))).toHaveLength(5);
+        expect(protectionActions(forgeProtectionRows(UNREAD))).toHaveLength(6);
     });
 });
 
@@ -309,5 +310,112 @@ describe('deployRestrictedFrom', () => {
         });
         const row = rows.find((r) => r.id === 'deploy_via_pipeline_only');
         expect(row?.state).toBe('satisfied');
+    });
+});
+
+/**
+ * The authority-surface row.
+ *
+ * Every case drives a direction the mapper could plausibly have got wrong, and
+ * the two that matter most are the ones a lazier implementation gets backwards:
+ * an approval requirement that a listed actor may skip unconditionally does NOT
+ * satisfy the row, and a `pull_request`-mode bypass — which is GitHub's name for
+ * "may bypass only via a pull request", i.e. still going through review — does.
+ */
+describe('authority_surface_external_approval', () => {
+    const rowFor = (rulesets: RulesetDetail[] | null): { state: string; detail: string } => {
+        const rows = forgeProtectionRows({
+            rulesets,
+            defaultBranch: rulesets === null ? null : 'main',
+            allowAutoMerge: null,
+            deployRestricted: null,
+        });
+        const row = rows.find((r) => r.id === 'authority_surface_external_approval');
+        return { state: row?.state ?? 'missing', detail: row?.detail ?? '' };
+    };
+
+    /** `LIVE_RULESET` with its `pull_request` parameters replaced wholesale. */
+    const withApproval = (parameters: Record<string, unknown>): RulesetDetail => ({
+        ...LIVE_RULESET,
+        rules: (LIVE_RULESET.rules ?? []).map((r) =>
+            r.type === 'pull_request' ? { type: 'pull_request', parameters } : r,
+        ),
+    });
+
+    it('is unsatisfied against the live ruleset — the measured state on 2026-10-12', () => {
+        // required_approving_review_count: 0, no code-owner review, no required
+        // reviewers. This is the reading that makes the governance hold's
+        // negative answerable rather than silent.
+        expect(rowFor([LIVE_RULESET]).state).toBe('unsatisfied');
+    });
+
+    it('is unread when the rulesets were never queried, never a quiet false', () => {
+        expect(rowFor(null).state).toBe('unread');
+    });
+
+    it('is unsatisfied when the ruleset carries no pull_request rule at all', () => {
+        const noPr = {
+            ...LIVE_RULESET,
+            rules: (LIVE_RULESET.rules ?? []).filter((x) => x.type !== 'pull_request'),
+        };
+        expect(rowFor([noPr]).state).toBe('unsatisfied');
+    });
+
+    it('each of the three approval mechanisms satisfies it on its own', () => {
+        for (const parameters of [
+            { required_approving_review_count: 1 },
+            { required_approving_review_count: 0, require_code_owner_review: true },
+            { required_approving_review_count: 0, required_reviewers: [{ reviewer_id: 7 }] },
+        ]) {
+            expect(rowFor([withApproval(parameters)]).state).toBe('satisfied');
+        }
+    });
+
+    it('an unconditional bypass UNSATISFIES an existing approval requirement', () => {
+        // The polarity that carries the row: a requirement a named actor may
+        // skip at will is advisory, and reporting it satisfied would be exactly
+        // the quiet false positive the three-state type exists to prevent.
+        const rs: RulesetDetail = {
+            ...withApproval({ required_approving_review_count: 1 }),
+            bypass_actors: [{ actor_type: 'RepositoryRole', actor_id: 5, bypass_mode: 'always' }],
+        };
+        const row = rowFor([rs]);
+        expect(row.state).toBe('unsatisfied');
+        expect(row.detail).toMatch(/bypass it unconditionally/);
+    });
+
+    it('a pull_request-mode bypass leaves it satisfied — that actor still goes through review', () => {
+        const rs: RulesetDetail = {
+            ...withApproval({ required_approving_review_count: 1 }),
+            bypass_actors: [{ actor_type: 'Team', actor_id: 9, bypass_mode: 'pull_request' }],
+        };
+        expect(rowFor([rs]).state).toBe('satisfied');
+    });
+
+    it('the satisfied detail states what the row does NOT establish', () => {
+        // Without this sentence a green row reads as proof of separation of
+        // authority, which no forge payload can carry — membership and
+        // permissions are readable, custody and willingness are not.
+        const row = rowFor([withApproval({ required_approving_review_count: 1 })]);
+        expect(row.detail).toMatch(/does not establish/);
+        expect(row.detail).toMatch(/distinct from the author/);
+    });
+
+    it('names the mechanism it found, so an action line is actionable', () => {
+        expect(rowFor([withApproval({ require_code_owner_review: true })]).detail).toMatch(
+            /require_code_owner_review/,
+        );
+    });
+
+    it('approvalMechanisms reports every mechanism across every covering ruleset', () => {
+        const a = withApproval({ required_approving_review_count: 2 });
+        const b = withApproval({
+            required_approving_review_count: 0,
+            require_code_owner_review: true,
+        });
+        expect(approvalMechanisms([a, b])).toEqual([
+            'required_approving_review_count=2',
+            'require_code_owner_review',
+        ]);
     });
 });

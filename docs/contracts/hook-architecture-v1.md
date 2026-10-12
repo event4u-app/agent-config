@@ -1230,7 +1230,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_DEPLOY_INVENTORY` | harness | Path override for the global deploy inventory | `_lib/global_deploy_inventory.ts:61` |
 | `AGENT_CONFIG_DEV_MODE` | maintainer | Maintainer dev mode; forces `--scope=project` and is captured into the corpus manifest | `_lib/corpus_manifest.ts:89` |
 | `AGENT_CONFIG_DISABLE_HOOKS` | maintainer | Bypasses every shim for one command | `_lib/runtime_wiring_checks.ts:315` |
-| `AGENT_CONFIG_DOCTOR_NO_FORGE` | operator | `=1` stops `doctor --json` reading branch protection from the forge, before any subprocess starts; the five `forge_protection` rows then report `unread` | `_lib/forge_reader.ts:103` |
+| `AGENT_CONFIG_DOCTOR_NO_FORGE` | operator | `=1` stops `doctor --json` reading branch protection from the forge, before any subprocess starts; the six `forge_protection` rows then report `unread` | `_lib/forge_reader.ts:103` |
 | `AGENT_CONFIG_EXEC_EVIDENCE` | maintainer | One-run opt-in to execution-evidence collection | `_lib/exec_evidence.ts:199` |
 | `AGENT_CONFIG_OFFLINE` | operator | `=1` means this run makes no network calls. Pre-dates this table and is read in several places; it reaches a scanned root through the forge read, which honours it alongside `AGENT_CONFIG_DOCTOR_NO_FORGE` and on the same literal-`1` contract `update` and `versions` already use | `_lib/forge_reader.ts:103` |
 | `AGENT_CONFIG_HOOKS_ISOLATED` | maintainer | `=1` forces every concern into a child process instead of the in-process fast path | `hooks/dispatch_hook.ts:690` |
