@@ -215,6 +215,12 @@ capability_gap: >-
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
+>
+> **Arrivals (the host-hook layer of 7.1):** 2 — latest `inbox-2026-10-m` (2026-10-12), which
+> reproduced that 7.1 landed only the observation-only watch and that no `pre_tool_use` concern
+> recognises a typed op or a destructive command; earlier: `inbox-2026-09-w` (where 7.1 was
+> written). The layer is now carried by `road-to-a-hard-floor-the-shell-cannot-talk-past`; this
+> file keeps the daemon, its kill switch and the 30-session bar.
 
 > **Proposal, not adopted — but its authority is decided.** This file is the replacement
 > control. Narrowing a Hard Floor without it is a removal, not a migration — which is why

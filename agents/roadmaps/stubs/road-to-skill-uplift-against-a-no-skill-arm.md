@@ -5,8 +5,12 @@ review_by: 2027-01-11
 
 # Stub: road to skill uplift measured against a no-skill arm
 
-> **Arrivals:** 4 (at least) — latest `inbox-2026-10-k` (2026-10-11); earlier:
-> `inbox-2026-09-o`, `inbox-2026-09-p`, `inbox-2026-09-b`. Subject-matched floor
+> **Arrivals:** 5 (at least) — latest `inbox-2026-10-m` (2026-10-12), which adds one
+> fact: an external first-party evaluation of a single skill used a with/without arm and a
+> deterministic failure check (use of a superseded API surface), so skills whose job is to
+> beat stale model knowledge are the cheapest pilot set for this stub's option (1);
+> earlier: `inbox-2026-10-k` (2026-10-11), `inbox-2026-09-o`, `inbox-2026-09-p`,
+> `inbox-2026-09-b`. Subject-matched floor
 > ("with skill vs without skill" outcome measurement); the consumed-inbox tree
 > is gitignored, so the count is machine-local and the ordering is the finding.
 
@@ -51,7 +55,7 @@ and choosing which skills to spend on is a priority call. ADR-263 already
 frames skills as explicitly invoked reference material, which is the setting a
 no-skill arm measures, so the question is not contested — only unfunded.
 
-## The posed owner question — 4 arrivals
+## The posed owner question — 5 arrivals
 
 Exactly one of:
 

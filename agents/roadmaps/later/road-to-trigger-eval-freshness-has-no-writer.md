@@ -37,6 +37,14 @@ estate_offset_exempt: >-
 > correction to it would still have left the gate exactly as red. This roadmap
 > records what is actually wrong.
 
+> **Arrivals:** 1 — latest `inbox-2026-10-m` (2026-10-12), offering a candidate writer for
+> the owner-held mechanism question: a change that edits a skill's `description`
+> invalidates that skill's trigger-eval freshness, and a change that edits only body prose
+> does not. Posed here as input to `freshness-mechanism-is-owner-owned`, not decided.
+> The same round's 16.4.0 rescore (topic `s03`) also asks for the writer — stale
+> evals rose about eight per release, and `task ci` was red at two consecutive
+> cuts on this gate — counted in the one arrival above, not as a second.
+
 > **Screened for promotion and archival 2026-10-05, and it moves to neither — every
 > verdict below is a command's output, not a reading of a status line.** The file reads
 > 4 done / 0 open / 2 deferred, which is the shape that normally precedes an archive.

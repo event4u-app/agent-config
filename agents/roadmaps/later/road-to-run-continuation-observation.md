@@ -12,7 +12,13 @@ estate_offset_exempt: >-
 
 # Road to a run-continuation engagement anybody can point at
 
-> **Arrivals:** 4 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 5 (at least) - latest `inbox-2026-10-m` (2026-10-12): a 16.4.0
+> rescore reads the concern on its withdrawal date — still bound
+> (`src/scripts/hook_manifest.yaml:1297`, `:1582`), no run recorded, and no
+> code reads the date. The kill criterion below needs no owner decision, so the
+> fifth arrival is not escalated: `road-to-what-was-built-and-never-ran` Phase 4
+> reads the record and executes the pre-registered withdrawal, and archives this
+> file. The count before it read: 4 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes

@@ -5,7 +5,11 @@ review_by: 2026-12-31
 
 # Stub: host capabilities observed per leg and per slot
 
-> **Arrivals:** 1 — latest `inbox-2026-10-e` (2026-10-06), where two release
+> **Arrivals:** 2 — latest `inbox-2026-10-m` (2026-10-12): two 16.4.0 release
+> reviews ask again for an outside-in host proof (canonical → lowered →
+> installed → loaded → real event → observed enforcement) on at least three
+> hosts; same mechanism, no new fact.
+> The count before it read: 1 — latest `inbox-2026-10-e` (2026-10-06), where two release
 > reviews of 16.3.0 ask for outside-in conformance per host and a third asks
 > that a capability row say which execution leg it was observed on.
 

@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it
 
-> **Arrivals:** 5 (at least) - latest `inbox-2026-10-i` (2026-10-11): an audit counts the lapsed expiry with no action and offers the same two outcomes. The count before it read: 4 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review counts the lapse three weeks after its fire date, plus the missing utilization null. The count before it read: 3 (at least) - latest `inbox-2026-10-a` (2026-10-01), where two of
+> **Arrivals:** 6 (at least) - latest `inbox-2026-10-m` (2026-10-12): two 16.4.0 release reviews count the lapse again — none of the release's 87 commits touches ADR-134, now 27 days past its fire date — and one asks again for the missing utilization null. No new fact; the owner question below is unanswered. The count before it read: 5 (at least) - latest `inbox-2026-10-i` (2026-10-11): an audit counts the lapsed expiry with no action and offers the same two outcomes. The count before it read: 4 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review counts the lapse three weeks after its fire date, plus the missing utilization null. The count before it read: 3 (at least) - latest `inbox-2026-10-a` (2026-10-01), where two of
 > sixteen release reviews count the lapse — one at 16 days post-fire, one at 19
 > days with the ADR series frozen at 277 — and ask for the two acknowledgements as
 > owner-reserved, dated steps. Counted as distinct prior round directories under

@@ -21,6 +21,15 @@ estate_growth_exempt: >-
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
+> **Arrivals:** 2 (at least) - latest `inbox-2026-10-m` (2026-10-12): two 16.4.0
+> release reviews ask again that the shadow bar count only `writer: consumer`
+> rows and that the settle concern refuse rather than shadow
+> (`src/scripts/hooks/obligation_settle_hook.ts:10`, `SHADOW ONLY`); one adds
+> that the round's first external contributor could produce the first
+> consumer row. Same mechanism, held by blocker `shadow-corpus-is-one-machine`.
+> Earlier: `inbox-2026-10-e` (2026-10-06), which declined the one-line filter
+> on that blocker.
+
 ## Goal
 
 Every step road-to-an-obligation-row-that-names-its-writer deferred is either done here or explicitly disposed

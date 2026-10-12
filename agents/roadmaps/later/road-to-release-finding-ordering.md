@@ -18,7 +18,7 @@ estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings O
 ---
 # Road to the release-finding ordering guarantee
 
-> **Arrivals:** 5 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks to close this deterministic defect; the owner question was a blockquote, not a `### blocker:`, so `/roadmap:resolve-blockers` could not see it - `road-to-parked-blockers-that-get-asked` step 3.1 rewrote it as blocker `release-pr-demonstration-owner-call` under `## Blockers`. The count before it read: 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
+> **Arrivals:** 6 (at least) - latest `inbox-2026-10-m` (2026-10-12): a 16.4.0 release review names `review_by` 2026-09-20 as three weeks past and asks to build Phase 1 now and hold only 2.2. New fact, checked in the tree: blocker `release-pr-demonstration-owner-call` blocks step 2.2 and AC-2 only, so Phase 1, 2.1, 2.3 and Phase 3 are not behind it — the park holds more than the blocker does. Owner question below unchanged. The count before it read: 5 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks to close this deterministic defect; the owner question was a blockquote, not a `### blocker:`, so `/roadmap:resolve-blockers` could not see it - `road-to-parked-blockers-that-get-asked` step 3.1 rewrote it as blocker `release-pr-demonstration-owner-call` under `## Blockers`. The count before it read: 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
 > asking that this leave `later/` because its `review_by` of 2026-09-20 has passed;
 > earlier: `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
