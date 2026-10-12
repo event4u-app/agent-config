@@ -97,7 +97,7 @@ always with numbered options where applicable:
    OMITS the section and is reported in step 8. A goal the agent wrote is a
    goal nobody decided.
 5. **No-gos** — bullets, each naming a path, a command, a dependency or a
-   behaviour ("never edit `migrations/` by hand"). Same rule: empty omits
+   behavior ("never edit `migrations/` by hand"). Same rule: empty omits
    the section and is reported, never filled with a plausible default.
 6. **User-facing strings strategy** — translation files? hardcoded?
    default per framework.

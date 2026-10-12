@@ -39,7 +39,7 @@ covers). Default: leave AGENTS.md thin and put detail under `agents/`.
 ## No-gos
 
 - Never {{forbidden_thing}}   # One per bullet. Name a PATH, a COMMAND, a
-                              # DEPENDENCY or a BEHAVIOUR — "never edit
+                              # DEPENDENCY or a BEHAVIOR — "never edit
                               # `migrations/` by hand", "never run `php
                               # artisan migrate:fresh` outside a throwaway
                               # database", "never add a runtime dependency
