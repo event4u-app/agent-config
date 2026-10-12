@@ -349,7 +349,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     process.stdout.write(
         `\nlint_svg_asset: ${errors.length} error(s), ${warnings.length} warning(s), ${inert.length} inert. ` +
-            'Use svg-asset-disable-next-line <rule> -- reason or .svg-asset.json to suppress. ' +
+            'Use svg-asset-disable-next-line <rule> -- reason or .svg-asset.json to suppress; ' +
+            'svg-safety-* findings yield only to .svg-asset.json, never to a marker in the file. ' +
             'Advisory: an "inert" row is not a clean row — the same file inlined tomorrow is an error.\n',
     );
     return 2;
