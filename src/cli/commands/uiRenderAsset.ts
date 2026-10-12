@@ -40,7 +40,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import type { Browser, Page, Route } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
 
 import { elementExtent, parseElements, readViewBox, vectorVerdict } from '../../scripts/lint_svg_asset.js';
 import type { DeliveryMode, SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
@@ -48,7 +48,7 @@ import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js
 import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
 import { readGrounds, type OpenPage } from './uiRenderAssetGrounds.js';
 import { gradeIconGrid } from './uiRenderAssetGrid.js';
-import { fileRootsFor, injectStyle, requestAllowed } from './uiRenderAssetIsolation.js';
+import { confinePage, fileRootsFor, injectStyle } from './uiRenderAssetIsolation.js';
 export * from './uiRenderAssetGrid.js';
 import {
     ASSET_CLASSES,
@@ -699,18 +699,10 @@ async function openPage(
     const page = await context.newPage();
     await page.setViewportSize({ width: Math.ceil(spec.width), height: Math.ceil(spec.height) });
     if (spec.reducedMotion) await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.route('**/*', async (route: Route) => {
-        const url = route.request().url();
-        if (spec.hostHtml && url.endsWith(`/${spec.hostBasename}`)) {
-            await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: spec.hostHtml });
-            return;
-        }
-        if (!requestAllowed(url, spec.fileRoots)) {
-            spec.blocked.push(url);
-            await route.abort();
-            return;
-        }
-        await route.continue();
+    await confinePage(page, spec.blocked, spec.fileRoots, async (route) => {
+        if (!spec.hostHtml || !route.request().url().endsWith(`/${spec.hostBasename}`)) return false;
+        await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: spec.hostHtml });
+        return true;
     });
     await page.goto(spec.url, { waitUntil: 'load', timeout: 30_000 });
     await injectStyle(

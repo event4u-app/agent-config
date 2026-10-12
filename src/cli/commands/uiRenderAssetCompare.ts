@@ -14,13 +14,13 @@
  */
 import * as fs from 'node:fs';
 
-import type { Browser, Page, Route } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
 
 import { parseElements, readViewBox } from '../../scripts/lint_svg_asset.js';
 import type { ViewBox } from '../../scripts/lint_svg_asset.js';
 
+import { confinePage } from './uiRenderAssetIsolation.js';
 import {
-    ALLOWED_SCHEMES,
     SAMPLE_RES,
     type AssetClass,
     type Box,
@@ -151,15 +151,7 @@ export async function sampleSource(
     if (!crop) return null;
 
     const page = await context.newPage();
-    await page.route('**/*', async (route: Route) => {
-        const url = route.request().url();
-        if (!ALLOWED_SCHEMES.some((p) => url.startsWith(p))) {
-            blocked.push(url);
-            await route.abort();
-            return;
-        }
-        await route.continue();
-    });
+    await confinePage(page, blocked, []);
     try {
         await page.setContent('<!doctype html><body></body>');
         return await page.evaluate(
@@ -320,15 +312,7 @@ export async function compareGeometry(
 
     const page = await context.newPage();
     await page.setViewportSize({ width: SAMPLE_RES, height: SAMPLE_RES });
-    await page.route('**/*', async (route: Route) => {
-        const url = route.request().url();
-        if (!ALLOWED_SCHEMES.some((s) => url.startsWith(s))) {
-            spec.blocked.push(url);
-            await route.abort();
-            return;
-        }
-        await route.continue();
-    });
+    await confinePage(page, spec.blocked, []);
     try {
         await page.goto('about:blank');
         const baselineMask = await rasterise(page, spec.baseline, vb, null);
