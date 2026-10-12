@@ -257,7 +257,7 @@
     "sentry-integration": 5536,
     "sequential-thinking": 6376,
     "server-hardening": 6711,
-    "skill-improvement-pipeline": 10469,
+    "skill-improvement-pipeline": 10599,
     "skill-management": 5347,
     "skill-reviewer": 9177,
     "skill-writing": 12413,
@@ -304,5 +304,12 @@
     "workspace-link": 5931,
     "worktree-lifecycle": 9515
   },
-  "raised": []
+  "raised": [
+    {
+      "skill": "skill-improvement-pipeline",
+      "old": 10469,
+      "new": 10599,
+      "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
+    }
+  ]
 }
