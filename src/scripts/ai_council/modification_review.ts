@@ -24,6 +24,12 @@
  */
 
 import { parse_stance_line } from './stance_tally.js';
+import {
+    SEAT_NO_FINAL_VERDICT,
+    deriveRatificationHeader,
+    type RatificationVerdict,
+    type SeatVerdict,
+} from '../_lib/ratification_artifact.js';
 
 /**
  * The closed vocabulary a seat may close on. Open it and a grep for a passing
@@ -74,7 +80,36 @@ export function readSeatConclusions(
 }
 
 /**
- * Derive the record's verdict. ONE rule, and the ORDER is the rule:
+ * Derive the review's DISPOSITION — never the artifact's `verdict` field.
+ *
+ * AMENDED 2026-10-12 BY A 2/2 CONVERGENT COUNCIL (anthropic + openai, design
+ * mode, 2 rounds, blind peer review, $0.00 on subscription seats), because this
+ * function and the shipped reader's `deriveRatificationHeader` disagreed on one
+ * case and step 3.4 could not build a writer that satisfied both. For seats
+ * `{anthropic: ratified, openai: no-final-verdict}` at `required_providers: 2`
+ * the reader returns `ratified` with one provider, and this returns
+ * `non-convergent`; a record carrying THIS verdict is then refused by the
+ * reader's own `header-not-derived` check as malformed.
+ *
+ * The council resolved it for the reader, and the argument is worth carrying
+ * here rather than filed away: `seats:` is EVIDENCE and the header is derived
+ * from it, so letting a policy parameter (`required_providers`) rewrite what
+ * the evidence says inverts the dependency. A grep for `non-convergent` would
+ * then return both "the providers disagreed" and "one provider ratified and
+ * the other never answered" — two different failure modes with two different
+ * remediations, retry being right for only one of them. The `refused`-first
+ * ordering below is the precedent: both rules already refuse to let quorum
+ * relabel what a seat actually said, and the council extended that to the
+ * passing labels.
+ *
+ * So: {@link deriveRatificationHeader} is the sole authority over what a record
+ * SAYS, quorum stays a separate validation (`diversity-required`), and this
+ * function's result drives ORCHESTRATION — retry, escalate, stop. The name is
+ * kept because step 3.3's contract and its test pin it; what changed is this
+ * paragraph and {@link deriveModificationOutcome}, which is what a caller that
+ * wants both should use.
+ *
+ * ONE rule, and the ORDER is the rule:
  *
  *   1. any concluding seat on `refused`  → `refused`
  *   2. concluding providers < required   → `non-convergent`
@@ -97,4 +132,54 @@ export function deriveModificationVerdict(
     if (concluded.length < requiredProviders) return 'non-convergent';
     if (concluded.includes('ratified')) return 'ratified';
     return 'confirmed-non-expanding';
+}
+
+/** What a run does next, and what the record says — kept apart by name. */
+export type ModificationDisposition =
+    | 'accepted'
+    | 'refused'
+    | 'quorum-short'
+    | 'non-convergent';
+
+export interface ModificationOutcome {
+    /** The header the record carries, from the ONE canonical derivation. */
+    header: { providers: string[]; verdict: RatificationVerdict };
+    /** Whether enough distinct providers concluded. */
+    quorumSatisfied: boolean;
+    /** What the run does next. Never written into the artifact. */
+    disposition: ModificationDisposition;
+}
+
+/**
+ * The two answers a run needs, from one call, so a caller cannot take the
+ * orchestration answer and write it into the record.
+ *
+ * That confusion is not hypothetical: it is the defect the council was asked
+ * about, and the shape is its remedy — `header` is what the record says,
+ * `disposition` is what the run does, and no field is both.
+ */
+export function deriveModificationOutcome(
+    seats: Readonly<Record<string, ModificationVerdictLabel | null>>,
+    requiredProviders: number,
+): ModificationOutcome {
+    const asSeatVerdicts: Record<string, SeatVerdict> = {};
+    for (const [seat, label] of Object.entries(seats)) {
+        asSeatVerdicts[seat] = label ?? SEAT_NO_FINAL_VERDICT;
+    }
+    const header = deriveRatificationHeader(asSeatVerdicts);
+    const quorumSatisfied = new Set(header.providers).size >= requiredProviders;
+    const disposition = deriveModificationVerdict(seats, requiredProviders);
+
+    return {
+        header,
+        quorumSatisfied,
+        disposition:
+            disposition === 'refused'
+                ? 'refused'
+                : !quorumSatisfied
+                  ? 'quorum-short'
+                  : disposition === 'non-convergent'
+                    ? 'non-convergent'
+                    : 'accepted',
+    };
 }

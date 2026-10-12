@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: archived
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "An owner directive of 2026-10-05 makes self-modification a goal on one condition: an AI council confirms it at the least, questions what the change does, and the user decides when the council cannot. At the pin the approval record names no change, the council has no question set and no verdict of its own for such a review, the reviewer's code sits outside the gate, a council that cannot conclude leaves no way for the owner's word to be recorded, and the lane meant to carry a change nobody asked for has produced no proposal. The roadmap that owns the ratification gate is a draft waiting on two owner blockers. Merging these steps into it was considered and rejected: they would wait behind blockers none of them needs. Adds no gate script and no verdict vocabulary; extends one artifact, one council review and one path list."
@@ -423,7 +423,7 @@ At `df377ca64`:
       fire first would turn "one reviewer said no" into "not enough reviewers
       answered" — a retryable condition rather than the objection it is.
       `required_providers` is a parameter, not baked in. 7 tests.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> **3.4 The record is written from the run, not typed.** One writer, in
+- [x] **3.4 The record is written from the run, not typed.** One writer, in
       the module of 2.1, turns the session record of such a review into the
       artifact: `reviewed_by` in one spelling, `providers` from the seats that
       concluded, the derived verdict, `subject` for the tree the bundle was
@@ -452,6 +452,38 @@ At `df377ca64`:
       same forge act as its neighbours, plus a decision about WHICH rule is right.
       That decision is not this file's to take: 3.3's rule is what the roadmap
       specifies, the reader's is what ships, and both are defensible.
+
+      **Closed 2026-10-12. The council took the decision, 2/2 convergent**
+      (anthropic + openai, design mode, 2 rounds, blind peer review, $0.00 — both
+      seats subscription-authed). Verdict: **the shipped reader is canonical.**
+      `deriveRatificationHeader` is the sole authority over what a record SAYS;
+      quorum stays a separate validation; `deriveModificationVerdict` keeps its
+      name and its test and is documented as the ORCHESTRATION disposition, with
+      a new `deriveModificationOutcome` returning `{header, quorumSatisfied,
+      disposition}` so a caller cannot take the orchestration answer and write it
+      into the record.
+      **The argument, because it outlives the vote:** `seats:` is EVIDENCE and the
+      header is derived from it, so letting a policy parameter
+      (`required_providers`) rewrite what the evidence says inverts the
+      dependency. A grep for `non-convergent` would otherwise return both "the
+      providers disagreed" and "one provider ratified and the other never
+      answered" — two failure modes with different remediations, retry being right
+      for only one. The `refused`-first ordering both rules already had is the
+      precedent; the council extended it to the passing labels.
+      **The writer** is `src/scripts/_lib/ratification_record_writer.ts`, not the
+      digest module. 3.4 said "in the module of 2.1", and that module's own header
+      argues for one responsibility while 4.1 lists "the digest and the writer" as
+      two — and 3.4's own verify names `ratification_record_writer.test.ts`. The
+      deviation is recorded rather than taken silently.
+      `reviewed_by` is one constant (`ai-council`) against 19 spellings in 22
+      trunk records; `providers`, `verdict` and `seats:` are derived; `subject` is
+      passed IN from the gate's `expectedSubjectFor`, so the writer never becomes a
+      second place that decides which files are gated. Both council seats asked for
+      the same safeguard and it is the round trip: the writer reads its own output
+      back through the canonical reader and throws rather than hand back a file
+      somebody will try to land. A non-passing record is still WRITTEN — the
+      escalation the owner answers needs it in front of him. 14 tests, one of them
+      end to end through the real gate including the post-review edit going red.
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
@@ -586,7 +618,7 @@ At `df377ca64`:
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the `subject` this step checks is built by 2.1 and 2.2, which share that gate; recording the shared gate asks nothing new --> **6.1 The pipeline's review is the council's record; the approval is the
+- [x] **6.1 The pipeline's review is the council's record; the approval is the
       owner's.** For a proposal whose scope is the package, `check_proposal`
       accepts `stage: gated` only when the proposal names a record whose
       `subject` matches the files the proposal declares as its change AND the
@@ -606,13 +638,53 @@ At `df377ca64`:
       `subject` it checks is exactly the binding 1.5 records as absent and 2.1
       and 2.2 build. No new question: both the amendment and the gate's owner
       question are already on record.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — it needs a record that passed, which needs 6.1 and through it 2.1 and 2.2; recording the shared gate asks nothing new --> **6.2 A worked example, for real.** One learning from this repository's
+
+      **Closed 2026-10-12.** `check_proposal` gained `_checkGatedRecord`: a
+      `scope: package` proposal at `stage: gated` must declare `changed_files:`
+      and name BOTH a `ratification_record:` and an `owner_authorization:`, each
+      carrying the `subject` digest of those files as the gate computes it. The
+      order is the amendment, and it is a test: a proposal carrying the council's
+      record and no owner authorization is refused, naming the missing one.
+      **What it cannot prove is in the function's own header, above what it can:**
+      the authorization is a path the proposal names and a digest the file
+      carries, and ADR-281 § 5 makes the owner's route a forge act that leaves
+      nothing a gate can authenticate. What IS established is that the review and
+      the approval name the same content, so last week's approval cannot carry
+      this week's diff — which the suite pins directly. A `scope: project`
+      proposal and any earlier stage are checked exactly as before.
+      The stage-five skill now carries the refusal its guideline had claimed since
+      it was written: `upstream-contribute` § 6b stops on any stage that is not
+      `gated`, and states the review-then-approval order for a package proposal.
+      11 tests.
+- [x] **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
       `agents/proposals/` naming the record, and the change passes the gate.
       An agent does each step on this roadmap's instruction; nothing is
       promoted by a loop, and whether the change lands is the usual call.
       verify: `grep -rl 'agents/evidence/ratifications/' agents/proposals | grep -vc README` -> /^[1-9]/
+
+      **Closed 2026-10-12, and it stops where the lane genuinely stops.**
+      `agents/proposals/polarity-fixture-repair.md` carries a learning this run
+      made rather than one chosen to be easy: widening a gate's path set turns its
+      NEGATIVE fixtures red, and the cheap repair — deleting them — leaves a gate
+      that passes its own suite while reaching too far. It happened here: step 4.1
+      put the artifact contract on the watch list and two cases in
+      `ratification_subject.test.ts` failed for naming that file as ungated. The
+      change is an 8th Iron Law plus a dated Gotcha in `testing-anti-patterns`,
+      and the proposal distinguishes it from law 7 rather than folding it in,
+      because deleting an expired fixture does not LOOK like gaming the green.
+      `proposal:check` returns PASS. It discharges the criterion the archived
+      `road-to-curated-self-improvement` left open and this roadmap's Context
+      records as having no artefact in the tree.
+
+      **It is `stage: proposed`, not `stage: gated`, and that is the honest
+      state.** Since the owner's amendment a package proposal reaches `gated` only
+      with an `owner_authorization:` bound to the same digest, and that
+      authorization is precisely what the open owner blocker is about. Writing
+      `gated` would be an agent asserting the owner's approval — the one thing
+      ADR-268 § 4 forbids. Every step of the lane an agent can walk is walked; the
+      last one is the owner's and is named as his in the proposal's § 9.
 
 ## What this roadmap deliberately does not do
 
@@ -686,23 +758,39 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-1 — A gated file edited after its review turns the gate red until a
+- [x] AC-1 — A gated file edited after its review turns the gate red until a
       new review exists, and a base that moved on other files does not.
-      **Measured 2026-10-10: not yet possible.** It is step 2.1's `subject` digest
-      that makes a post-review edit visible, and 2.1 edits the gate and its reader.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-2 — A modification review with one provider concluding produces a
+      **MET 2026-10-12, both limbs measured as a pair over one diff.**
+      `ratification_subject_binding.test.ts` writes a valid record, then changes ONE
+      byte of the reviewed kernel rule and the gate reds with "the record reviewed
+      different content"; the same suite moves `README.md` and `docs/architecture.md`
+      afterwards and the gate stays green. A third case moves a gated file that is
+      NOT in the diff and stays green, so the criterion's "on other files" is pinned
+      in both directions rather than once. Seen red for the intended reason:
+      neutralising the binding drops 5 of the 9 cases and leaves the 4 that should
+      stay green.
+- [x] AC-2 — A modification review with one provider concluding produces a
       record that does not pass.
-      **Half shipped 2026-10-10, and the half that is missing is named.** The RULE
-      is implemented and pinned: `deriveModificationVerdict` with one concluding
-      provider against `required_providers: 2` returns `non-convergent`, which the
-      policy's `verdicts_that_pass` excludes. What does not exist is the WRITER
-      that turns that into a record — step 3.4, which lives in 2.1's module.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-3 — A change to the question list, the verdict rule or the writer is
+      **MET 2026-10-12, and the council changed WHICH rule refuses it.** The writer
+      exists (3.4) and the one-concluding-seat case runs end to end in
+      `ratification_record_writer.test.ts`: the record IS written, it says
+      `verdict: ratified` with `providers: [anthropic]` — what the seats actually
+      said — and `recordWouldPass` is false. The measured reason is a single
+      `diversity-required` problem and nothing else, which is the point of the 2/2
+      council verdict of 2026-10-12: quorum refuses the record, the header does not
+      relabel the evidence. A record that said `non-convergent` here would make a
+      grep for that verdict return two different failure modes.
+- [x] AC-3 — A change to the question list, the verdict rule or the writer is
       refused without a passing record.
-      **Measured 2026-10-10: the three modules are NOT yet watched.**
-      `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review.ts`
-      reports nothing to ratify, which is correct today and is exactly what step 4.1
-      changes. Until 4.1 lands, this criterion is false by construction.
+      **MET 2026-10-12, measured with the real CLI rather than from the test.**
+      `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review_questions.ts
+      src/scripts/_lib/ratification_record_writer.ts` exits 1, names "the review
+      mechanism itself", and prints the escalation message — against the same
+      command reporting "nothing to ratify" for those paths at the 2026-10-10
+      measurement. `modification_review.ts` (the verdict rule) is on the same list.
+      The polarity partner is measured too: `prompts.ts`, `stance_tally.ts`,
+      `quorum.ts` and `council_cli.ts` stay ungated, so the gate did not simply
+      swallow `src/scripts/ai_council/`.
 - [x] AC-4 — The contract names the route by which the owner permits a change
       the council could not pass, and what that route cannot prove.
       **MET 2026-10-10, both limbs measured rather than read.**
@@ -711,10 +799,17 @@ At `df377ca64`:
       § What this route cannot prove at `:532` (the gate cannot see a forge bypass;
       nothing proves the ask preceded it). Step 5.3's test pins both and carries its
       own sensitivity case.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-5 — One proposal under `agents/proposals/` names a change that
+- [x] AC-5 — One proposal under `agents/proposals/` names a change that
       passes the gate and the record that passed it.
-      **Measured 2026-10-10: no such proposal exists, and none can yet.** It needs
-      a record that passed, which needs the writer (3.4) and the `subject` (2.1).
+      **MET 2026-10-12, and the claim is scoped to exactly what is true.**
+      `agents/proposals/polarity-fixture-repair.md` names
+      `agents/evidence/ratifications/drain-self-modification-20261012.md`, the
+      record of the modification review of the change it ships in, and that change
+      passes `check_kernel_edit_ratified` — which is the gate the criterion names.
+      What the proposal does NOT have is an `owner_authorization:`, so it stands at
+      `stage: proposed` rather than `stage: gated`; that is the owner blocker, not a
+      gap in this criterion, and § 9 of the proposal says so in its own words
+      rather than leaving a reader to infer it from a missing field.
 - [x] AC-6 — No instruction file shipped to a consumer says kernel rules
       cannot be changed.
       **MET 2026-10-10.** The four-pattern grep over the consumer template, its
@@ -740,6 +835,18 @@ At `df377ca64`:
       `subject` phrase is the guideline block quote explaining why the clause
       is absent, which is the opposite of naming a binding, and is excluded by
       the measurement rather than hidden from it. Closed by steps 1.4 and 1.5.
+
+      **Re-measured 2026-10-12 after 2.1 and 2.2, and one of the six patterns
+      retired.** ``whose `subject` matches`` is no longer a violation indicator:
+      the criterion's second limb forbids naming *a content binding the gate does
+      not perform*, and since 2.1 the gate recomputes that digest and refuses a
+      record whose `subject` is absent or different. So the clause returned to the
+      pipeline guideline's Stage 5 trigger deliberately, and it now names a
+      guarantee the gate keeps. The five patterns that measure the criterion's
+      FIRST limb — that no shipped text calls a council record the approval — still
+      return 0, and 6.1 strengthened that limb rather than weakening it: a
+      package proposal at `stage: gated` now needs the owner's authorization
+      alongside the council's record, and `upstream-contribute` § 6b says so.
 
 ## Decisions
 

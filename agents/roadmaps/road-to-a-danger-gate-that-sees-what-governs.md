@@ -320,7 +320,7 @@ revert; the record loses its fields and the reader its check.*
       `road-to-self-modification-that-a-council-must-pass` beside its Phase 4,
       and one in `road-to-authority-routing-mechanism` beside its Phase 3, each
       naming this roadmap and what it changed for that file's reader.
-      verify: `grep -l 'road-to-a-danger-gate-that-sees-what-governs' agents/roadmaps/road-to-self-modification-that-a-council-must-pass.md agents/roadmaps/road-to-authority-routing-mechanism.md | wc -l` -> /^2$/
+      verify: `grep -l 'road-to-a-danger-gate-that-sees-what-governs' agents/roadmaps/archive/road-to-self-modification-that-a-council-must-pass.md agents/roadmaps/road-to-authority-routing-mechanism.md | wc -l` -> /^2$/
 
 *Exit: 5.1 and 5.2 are green. Rollback: delete the evidence file and the
 notes; nothing reads them.*
