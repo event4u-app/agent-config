@@ -293,7 +293,7 @@ export function referencedIds(content: string, elements: SvgElement[]): Set<stri
 // ---------------------------------------------------------------------------
 
 function ruleMissingXmlns(elements: SvgElement[], file: string): Finding[] {
-    const root = elements.find((el) => el.name === 'svg' && !el.closing);
+    const root = elements.find((el) => localName(el.name) === 'svg' && !el.closing);
     if (!root) return [];
     if (root.attrs['xmlns']) return [];
     return [
@@ -326,7 +326,7 @@ function buildContainerDepth(elements: SvgElement[]): Map<number, string[]> {
 const NON_RENDERED_CONTAINERS = new Set(['defs', 'symbol', 'clippath', 'mask', 'marker', 'pattern']);
 
 function ruleOutsideViewBox(elements: SvgElement[], file: string): Finding[] {
-    const root = elements.find((el) => el.name === 'svg' && !el.closing);
+    const root = elements.find((el) => localName(el.name) === 'svg' && !el.closing);
     const vb = readViewBox(root);
     if (!vb) return [];
     const ancestry = buildContainerDepth(elements);
@@ -484,6 +484,17 @@ export function safetySeverity(mode: DeliveryMode): Severity {
 // because an attacker writes whichever spelling is not checked.
 const ACTIVE_ATTR_RE = /\son[a-z]+\s*=\s*(["']|[^\s>"'])/i;
 
+/** An element's name without its namespace prefix: `svg:script` is a `script`. */
+export function localName(name: string): string {
+    return name.replace(/^[^:]*:/, '');
+}
+
+/** Elements that run or embed foreign content when the graphic is inlined. */
+const ACTIVE_ELEMENTS = new Set(['script', 'foreignobject', 'iframe', 'embed', 'object']);
+
+/** A URL that executes or opens a document when followed. */
+const isActiveUrl = (raw: string): boolean => /^(javascript:|data:text\/html)/i.test(resolvedUrl(raw));
+
 function ruleActiveContent(
     content: string,
     elements: SvgElement[],
@@ -496,7 +507,23 @@ function ruleActiveContent(
 
     for (const el of elements) {
         if (el.closing) continue;
-        if (el.name === 'script' || el.name === 'foreignobject') {
+        const local = localName(el.name);
+        // SMIL that writes an active URL into an href is the same href, later.
+        const animatesHref =
+            (local === 'set' || local === 'animate') && /^(xlink:)?href$/i.test(el.attrs['attributename'] ?? '');
+        if (
+            animatesHref &&
+            ['to', 'from', 'by', 'values'].some((k) => (el.attrs[k] ?? '').split(';').some(isActiveUrl))
+        ) {
+            findings.push({
+                rule: 'svg-safety-active-content',
+                file,
+                line: el.line,
+                snippet: `<${el.name} attributeName="href"> animates in an active URL; delivery mode "${mode}" grades it ${severity}`,
+                severity,
+            });
+        }
+        if (ACTIVE_ELEMENTS.has(local)) {
             findings.push({
                 rule: 'svg-safety-active-content',
                 file,
@@ -515,7 +542,7 @@ function ruleActiveContent(
                     severity,
                 });
             }
-            if (/^javascript:/i.test(resolvedUrl(value))) {
+            if (isActiveUrl(value)) {
                 findings.push({
                     rule: 'svg-safety-active-content',
                     file,
@@ -820,7 +847,7 @@ function isDirectChildOfRoot(elements: SvgElement[], index: number): boolean {
  * an ancestor chain.
  */
 export function directChildrenOfRoot(doc: XmlDocument): XmlNode[] {
-    const root = doc.elements.find((el) => el.name === 'svg');
+    const root = doc.elements.find((el) => localName(el.name) === 'svg');
     if (root === undefined) return [];
     return root.children.filter((n) => n.kind === 'element');
 }
@@ -914,7 +941,7 @@ function ruleWellFormed(doc: XmlDocument, file: string): Finding[] {
 }
 
 function rootNameState(content: string, doc: XmlDocument, elements: SvgElement[]): NameState {
-    const rootIdx = elements.findIndex((el) => el.name === 'svg' && !el.closing);
+    const rootIdx = elements.findIndex((el) => localName(el.name) === 'svg' && !el.closing);
     const root = rootIdx === -1 ? undefined : elements[rootIdx];
     // A DIRECT child of the root only. The first `<title>` ANYWHERE was wrong
     // in both directions: a chart's nested series title read as the graphic's

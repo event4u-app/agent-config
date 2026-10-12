@@ -962,3 +962,35 @@ describe('what the 16.5.0 release review found', () => {
         );
     });
 });
+
+describe('what the 16.5.0 re-cut review found', () => {
+    const svgOpen =
+        '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 8 8" role="img"><title>t</title>';
+    const rulesOf = (inner: string) => scanSvg(`${svgOpen}${inner}<rect width="8" height="8"/></svg>\n`, 'a.svg').map((f) => f.rule);
+
+    it('a namespace-prefixed script or foreignObject is active content, and a prefixed root is the root', () => {
+        const prefixed =
+            '<svg:svg xmlns:svg="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><svg:title>t</svg:title>' +
+            '<svg:script>alert(1)</svg:script><svg:rect width="8" height="8"/></svg:svg>\n';
+        const rules = scanSvg(prefixed, 'p.svg').map((f) => f.rule);
+        expect(rules).toContain('svg-safety-active-content');
+        expect(rulesOf('<svg:foreignObject xmlns:svg="http://www.w3.org/2000/svg"/>')).toContain('svg-safety-active-content');
+    });
+
+    it('SMIL writing an active URL into href, embedding elements and data:text/html are active content', () => {
+        for (const inner of [
+            '<a><set attributeName="href" to="javascript:alert(1)"/><rect width="8" height="8"/></a>',
+            '<a><animate attributeName="xlink:href" values="#a;javascript:alert(1)"/></a>',
+            '<iframe src="x.html"/>',
+            '<embed src="x.swf"/>',
+            '<object data="x.html"/>',
+            '<a href="data:text/html,&lt;script&gt;alert(1)&lt;/script&gt;"><rect width="8" height="8"/></a>',
+        ]) {
+            expect(rulesOf(inner), inner).toContain('svg-safety-active-content');
+        }
+        // An animation of an ordinary attribute, and a fragment href, stay clean.
+        expect(rulesOf('<rect width="8" height="8"><animate attributeName="opacity" values="0;1" dur="1s"/></rect>')).not.toContain(
+            'svg-safety-active-content',
+        );
+    });
+});
