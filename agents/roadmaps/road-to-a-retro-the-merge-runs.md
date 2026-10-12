@@ -4,6 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-o found at 2bc5715c7 that no merge moment, session end or daily point feeds the learning loop that already exists: /pr:merge writes a per-PR summary nothing reads (src/domains/git/pr/merge/command.md:527-548), the session-end aggregation is class B default false (settings.ts:445), and the learning dogfood protocol can never mint a lesson. No active, later, stub or archived roadmap owns a retro, a merge-triggered learning step or a daily sweep (grep over agents/roadmaps for retro, push-settle, daily sweep). Archiving or parking costs more because the owner asked for this behaviour on by default on 2026-10-12; merging into road-to-learning-you-can-see-carried would wake a parked file whose class B key this plan deliberately leaves untouched."
+estate_growth_exempt: "open_blockers 74 -> 76, measured by check_estate_count at this change: one blocker here (retro-transcript-excerpts-by-default) and one in road-to-one-upstream-that-checks-what-leaves (upstream-pr-shows-the-account). Each records an owner-reserved privacy decision this round could not close - lowering the per-call transcript opt-in, and accepting that an upstream pull request reveals the opening account - and each blocks only the steps that need the answer."
 relates:
   - slug: road-to-one-upstream-that-checks-what-leaves
     relation: extends
