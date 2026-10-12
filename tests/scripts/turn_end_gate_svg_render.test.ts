@@ -264,6 +264,9 @@ describe('the turn-end gate reads the render, never the call', () => {
             `node -e "require('fs').writeFileSync('agents/runtime/state/render/x/manifest.json','{}')"`,
             `python3 -c "open('render/x/manifest.json','w').write('{}')"`,
             `jq . m.json | sponge agents/runtime/state/render/x/manifest.json`,
+            `printf 'open("agents/runtime/state/render/x/manifest.json","w").write("{}")' | python3`,
+            `deno eval 'Deno.writeTextFileSync("agents/runtime/state/render/x/manifest.json","{}")'`,
+            `node --eval 'require("fs").appendFileSync("agents/runtime/state/render/x/manifest.json","{}")'`,
         ]) {
             expect(openSvgObligation(root, [edit(file), bash(w), RENDER]), w).not.toBeNull();
         }
