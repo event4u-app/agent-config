@@ -714,3 +714,12 @@ jobs:
       # exists the gate runs in `taskfiles/ci-fast.yml` only, which is a real
       # pre-push control and not a CI one, and this comment is here so the next
       # reader does not spend the cycle re-discovering the scope list.
+      # A skill body may shrink, never silently grow. `lint_token_budget_discipline`
+      # gates only `token_budget_class: rich` and skips a skill with no key, so
+      # 141 of the 147 bodies over 8 KB had nothing stopping them growing. Here
+      # rather than in consistency.yml: that file hosts the ratification gate and
+      # is a gated surface, so a step added to it needs its own ratification
+      # record — a disproportionate price for registering an ordinary backstop,
+      # and this workflow is where enforced_by backstops live.
+      - name: Skill bodies are within their recorded ceilings
+        run: ./scripts-run src/scripts/check_skill_body_budget

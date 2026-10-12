@@ -665,7 +665,7 @@ gates:
         be a count ratchet wearing a ratio's name.
   - id: check_skill_body_budget
     argv: []
-    ci_invocation: .github/workflows/consistency.yml
+    ci_invocation: .github/workflows/rule-backstops.yml
     min_scanned: 250
     corpus: >
       every `src/skills/<name>/SKILL.md` — 300 at baseline. The floor sits at

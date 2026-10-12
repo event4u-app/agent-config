@@ -223,10 +223,6 @@ jobs:
       # the module header, or the structural detector disagree with the tree.
       - name: Verify the generated read-surface table matches the tree
         run: ./scripts-run src/scripts/check_read_surface_coverage --quiet
-      # A skill body may shrink, never silently grow. Registered here as well
-      # as in `task ci` for the reason above: no workflow invokes `task ci`.
-      - name: Skill bodies are within their recorded ceilings
-        run: ./scripts-run src/scripts/check_skill_body_budget
       # The format column of the same document, against the emitters rather than
       # against the lowering file. Same reason this step sits here rather than
       # only in `task ci`: no workflow invokes `task ci`, so a gate registered
