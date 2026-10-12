@@ -1,7 +1,4 @@
 {
-  "owner": "maintainer",
-  "review_by": "2027-04-12",
-  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down \u2014 check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat.",
   "ceilings": {
     "accessibility-auditor": 11085,
     "activation-design": 8513,
@@ -10,7 +7,7 @@
     "agent-docs-writing": 18341,
     "agent-security-review": 6120,
     "agents-md-thin-root": 13263,
-    "ai-code-blindspots": 12686,
+    "ai-code-blindspots": 13262,
     "ai-council": 21697,
     "alerting-doctrine": 8755,
     "analysis-autonomous-mode": 7380,
@@ -21,7 +18,7 @@
     "architecture-review-lens": 4929,
     "artisan-commands": 2710,
     "async-python-patterns": 8203,
-    "authz-review": 16983,
+    "authz-review": 17114,
     "aws-infrastructure": 7441,
     "blade-ui": 6841,
     "blameless-post-mortem": 7809,
@@ -60,7 +57,7 @@
     "corpus-grounding": 10697,
     "customer-research": 6731,
     "dashboard-design": 5855,
-    "data-flow-mapper": 6980,
+    "data-flow-mapper": 7207,
     "data-handling-judgment": 11444,
     "database": 5819,
     "dcf-modeling": 4903,
@@ -100,7 +97,7 @@
     "forecast-accuracy": 8187,
     "forecasting": 8626,
     "forensics-report": 5052,
-    "form-handler": 5851,
+    "form-handler": 6533,
     "frontend-render-security": 10106,
     "fundraising-narrative": 9878,
     "funnel-analysis": 7203,
@@ -128,7 +125,7 @@
     "judge-bug-hunter": 8560,
     "judge-code-quality": 7722,
     "judge-injection-defense": 6079,
-    "judge-security-auditor": 7714,
+    "judge-security-auditor": 8246,
     "judge-spec-compliance": 7186,
     "judge-synthesis": 12885,
     "judge-test-coverage": 7161,
@@ -257,7 +254,7 @@
     "sentry-integration": 5536,
     "sequential-thinking": 6376,
     "server-hardening": 6711,
-    "skill-improvement-pipeline": 10469,
+    "skill-improvement-pipeline": 10599,
     "skill-management": 5347,
     "skill-reviewer": 9177,
     "skill-writing": 12413,
@@ -282,7 +279,7 @@
     "test-driven-development": 16352,
     "test-performance": 6376,
     "testing-anti-patterns": 18233,
-    "threat-modeling": 11412,
+    "threat-modeling": 11943,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
@@ -304,5 +301,48 @@
     "workspace-link": 5931,
     "worktree-lifecycle": 9515
   },
-  "raised": []
+  "raised": [
+    {
+      "skill": "ai-code-blindspots",
+      "old": 12686,
+      "new": 13262,
+      "reason": "Two rg patterns the checklist was missing: a fast hash over a password (any SHA-2, not only md5/sha1) and a raw == on a token, OTP or MAC. road-to-account-lifecycle-threat-rows 1.4."
+    },
+    {
+      "skill": "authz-review",
+      "old": 16983,
+      "new": 17114,
+      "reason": "The ASVS pin moved 4.0.3 V4 -> 5.0.0 V8 and gained one sentence pointing at threat-modeling's References instead of repeating the old numbering. 1.2."
+    },
+    {
+      "skill": "data-flow-mapper",
+      "old": 6980,
+      "new": 7207,
+      "reason": "Same ASVS repin: 4.0.3 V5 -> 5.0.0 V1 + V2, with the chapter split named once rather than in both files. 1.2."
+    },
+    {
+      "skill": "form-handler",
+      "old": 5851,
+      "new": 6533,
+      "reason": "The availability check is qualified rather than called the canonical exception: an on-change check on an account identifier is an enumeration oracle, and the three conditions that make it acceptable are stated. 1.1."
+    },
+    {
+      "skill": "judge-security-auditor",
+      "old": 7714,
+      "new": 8246,
+      "reason": "The information-disclosure row now covers any observable difference between a known and an unknown account, and the cryptography row names a fast hash over a password and a raw compare on a secret. 1.4."
+    },
+    {
+      "skill": "threat-modeling",
+      "old": 11412,
+      "new": 11943,
+      "reason": "ASVS V6 Authentication and NIST SP 800-63B added as the authority the account-flow rows defer to, named as chapters and never as values. 1.2."
+    },
+    {
+      "skill": "skill-improvement-pipeline",
+      "old": 10469,
+      "new": 10599,
+      "reason": "Not this branch: PR #2313 restated the Reflexion reference under ADR-281's amendment (the council record is the review, the owner's authorization is the approval). The ceiling was measured before that merge and is recorded here rather than left to red the next unrelated change."
+    }
+  ]
 }
