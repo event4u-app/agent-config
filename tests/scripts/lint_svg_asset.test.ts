@@ -950,6 +950,13 @@ describe('what the 16.5.0 release review found', () => {
         expect(rulesOf('<style>@import "https://evil.example/s.css";</style><rect width="8" height="8"/>')).toContain(
             'svg-safety-external-reference',
         );
+        // Through a character reference and a CSS escape (cross-provider review).
+        for (const target of ['&#104;ttps://evil.example/s.css', '\\68 ttps://evil.example/s.css', 'url( "https://evil.example/s.css" )']) {
+            const spelled = target.startsWith('url(') ? target : `"${target}"`;
+            expect(rulesOf(`<style>@import ${spelled};</style><rect width="8" height="8"/>`), target).toContain(
+                'svg-safety-external-reference',
+            );
+        }
         expect(rulesOf("<style>@import 'local.css';</style><rect width=\"8\" height=\"8\"/>")).not.toContain(
             'svg-safety-external-reference',
         );

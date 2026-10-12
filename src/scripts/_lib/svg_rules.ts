@@ -583,7 +583,11 @@ const NAMED_URL_ENTITIES: Record<string, string> = {
 /**
  * The URL a browser would actually resolve from an attribute value: character
  * references decoded, leading/trailing C0 controls and spaces stripped, tab and
- * newline removed anywhere. The raw value is attacker-chosen, so a scheme test
+ * newline removed anywhere. The trailing `;` of a reference is optional on
+ * purpose: an `.svg` parsed as XML needs it, but the same graphic inlined in an
+ * HTML host is parsed by the HTML tokenizer, which decodes `&#106avascript:`
+ * too — over-reading XML here costs precision, under-reading HTML costs a miss.
+ * The raw value is attacker-chosen, so a scheme test
  * against it is a test of one spelling — ` https:`, `ht\ttps:`, `&#106;avascript:`
  * all load, and all passed.
  */
@@ -594,6 +598,17 @@ export function resolvedUrl(raw: string): string {
         return NAMED_URL_ENTITIES[(name as string).toLowerCase()] ?? m;
     });
     return decoded.replace(/^[\u0000- ]+|[\u0000- ]+$/g, '').replace(/[\t\n\r]/g, '');
+}
+
+/** CSS escapes decoded: `\\68 ` and `\\h` both read `h`. */
+function cssUnescape(raw: string): string {
+    return raw.replace(/\\([0-9a-f]{1,6})\s?|\\(.)/gi, (m, hex, ch) => {
+        if (hex) {
+            const cp = parseInt(hex, 16);
+            return cp <= 0x10ffff ? String.fromCodePoint(cp) : m;
+        }
+        return ch as string;
+    });
 }
 
 function ruleExternalReference(
@@ -632,14 +647,18 @@ function ruleExternalReference(
             severity,
         });
     }
-    // `@import "https://…"` names its target without `url()`.
-    const importRe = /@import\s+['"]\s*((?:https?:|ftp:|\/\/)[^'"\s]+)/gi;
+    // `@import "https://…"` names its target without `url()`. The target is
+    // resolved before the scheme test — XML references and CSS escapes both
+    // reach the stylesheet loader decoded.
+    const importRe = /@import\s+(?:url\(\s*)?(['"])([^'"]*)\1/gi;
     while ((m = importRe.exec(content)) !== null) {
+        const target = resolvedUrl(cssUnescape(resolvedUrl(m[2] ?? '')));
+        if (!EXTERNAL_URL_RE.test(target)) continue;
         findings.push({
             rule: 'svg-safety-external-reference',
             file,
             line: lineOf(m.index),
-            snippet: `@import "${(m[1] ?? '').slice(0, 60)}" loads from outside the file; mode "${mode}" grades it ${severity}`,
+            snippet: `@import "${target.slice(0, 60)}" loads from outside the file; mode "${mode}" grades it ${severity}`,
             severity,
         });
     }

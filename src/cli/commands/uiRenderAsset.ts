@@ -40,6 +40,8 @@
  * (plus the `data:`, `blob:` and `about:` schemes a page makes of itself) is
  * aborted, and a `file:` request is aborted too unless it resolves inside the
  * project root or the asset's own directory, so an asset cannot pull an arbitrary local file into a capture.
+ * The cost, accepted: a host document that builds its visual state with
+ * JavaScript is witnessed as its static markup, not as it would run.
  */
 
 import * as crypto from 'node:crypto';
