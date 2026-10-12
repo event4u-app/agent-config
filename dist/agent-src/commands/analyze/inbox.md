@@ -926,6 +926,13 @@ carrying every such item — never one question per item, which is the pacing
 same question is written onto the held object so the next round finds a posed
 question instead of re-deriving one.
 
+**The block carries only what the council could not take.** Every candidate —
+an escalated recurrence here, a blocker this run files, a closure residue —
+passes the council's owner test first, in one batched question
+([`/challenge-me closure`](../../../meta/challenge-me/closure/command.md) § Step 2,
+the owner gate). An `Owner: user` field this run wrote is the run's guess; an
+item the council decides is recorded as `council:<record>` and never asked.
+
 > **Three is a stated default, not a measured optimum** — said plainly rather
 > than implying a derivation it lacks. It sits above
 > [`recurring-criticism`](../../../../rules/recurring-criticism.md)'s own
