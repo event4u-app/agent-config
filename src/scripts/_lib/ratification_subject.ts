@@ -121,11 +121,11 @@ function assertContained(rel: string): void {
 export class GatedFileUnreadable extends Error {
     constructor(
         readonly rel: string,
-        readonly cause: NodeJS.ErrnoException,
+        readonly errno: NodeJS.ErrnoException,
     ) {
         super(
             `gated path \`${rel}\` exists but could not be read ` +
-                `(${cause.code ?? cause.message}) — the digest refuses to describe a tree it ` +
+                `(${errno.code ?? errno.message}) — the digest refuses to describe a tree it ` +
                 'could not read, because an unreadable file is not a deleted one',
         );
         this.name = 'GatedFileUnreadable';
