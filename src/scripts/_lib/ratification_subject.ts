@@ -7,15 +7,14 @@
  * does not say WHAT, so a gated file edited after its review still ships under
  * a record that approved something else.
  *
- * WHY IT READS THE GATE'S LIST RATHER THAN RE-DECIDING IT. The gate's
- * `classifyPaths` returns the kernel rules, the high-consequence rules, the
- * hooks and the plumbing by name but reports the self surface as a BOOLEAN, so
- * that part of the gated list cannot be read back out of it. This module
- * therefore imports the gate's own `SELF_SURFACE` — it never restates the
- * membership rule, because a second definition of "gated" is a second thing to
- * keep in step, and the first time the two diverged a file would be reviewed by
- * one and digested by the other. Step 4.1 is what made that concrete: the list
- * grew by five paths, and a copy here would have left all five digest-invisible.
+ * WHY IT RE-ASSEMBLES THE LIST RATHER THAN RE-DECIDING IT. The gate's
+ * `classifyPaths` returns the kernel rules, hooks and plumbing by name but
+ * reports the self surface as a BOOLEAN, so that part of the gated list cannot
+ * be read back out of it. This module therefore imports the gate's own path
+ * constants and re-assembles — it never restates the membership rule, because
+ * a second definition of "gated" is a second thing to keep in step, and the
+ * first time the two diverged a file would be reviewed by one and digested by
+ * the other.
  *
  * NO BASE DIFF. The digest is over the tree as it stands, so it is the same on
  * a branch and on the merged checkout CI judges — unless the base changed a
@@ -36,7 +35,15 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { SELF_SURFACE, classifyPaths } from '../check_kernel_edit_ratified.js';
+import {
+    ANCHOR_PATHS,
+    CLOSURE_READER_PATH,
+    POLICY_PATH,
+    READER_PATH,
+    SELF_PATH,
+    WORKFLOW_PATH,
+    classifyPaths,
+} from '../check_kernel_edit_ratified.js';
 
 /**
  * Stands in for the content of a gated file the change deletes. A deleted file
@@ -61,21 +68,28 @@ export const DELETED_MARKER = '\u0000deleted\u0000';
 export const SYMLINK_MARKER = '\u0000symlink\u0000';
 
 /**
- * The self surface, as the GATE's one exported list rather than a copy of it.
+ * The self surface, by the gate's own constants rather than a copy of them.
  *
  * READ ON FIRST CALL, NOT AT MODULE SCOPE, and the reason is the import cycle
- * this module deliberately has. The gate imports {@link subjectDigest} and this
- * module imports the gate's path list, so whichever of the two Node evaluates
- * second sees the other half-evaluated; a module-scope `new Set(SELF_SURFACE)`
- * reads that `const` binding inside the window and throws on the temporal dead
- * zone. Deferring to call time moves the read past both modules' evaluation,
- * where the live binding is initialised.
+ * the binding introduced. The gate now imports {@link subjectDigest} and this
+ * module imports the gate's path constants, so whichever of the two Node
+ * evaluates second sees the other half-evaluated; a module-scope
+ * `new Set([SELF_PATH, …])` reads those `const` bindings inside the window and
+ * throws on the temporal dead zone. Deferring to call time moves the read past
+ * both modules' evaluation, where the live bindings are initialised.
  */
 let selfSetCache: ReadonlySet<string> | null = null;
 
 function selfSet(): ReadonlySet<string> {
     if (selfSetCache === null) {
-        selfSetCache = new Set<string>(SELF_SURFACE);
+        selfSetCache = new Set<string>([
+            SELF_PATH,
+            READER_PATH,
+            CLOSURE_READER_PATH,
+            POLICY_PATH,
+            WORKFLOW_PATH,
+            ...ANCHOR_PATHS,
+        ]);
     }
     return selfSetCache;
 }
@@ -90,12 +104,7 @@ export function gatedFilesOf(
 ): readonly string[] {
     const normalized = files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => f !== '');
     const g = derived === undefined ? classifyPaths(normalized) : classifyPaths(normalized, derived);
-    const out = new Set<string>([
-        ...g.kernelRules,
-        ...g.consequenceRules,
-        ...g.governanceHooks,
-        ...g.plumbing,
-    ]);
+    const out = new Set<string>([...g.kernelRules, ...g.governanceHooks, ...g.plumbing]);
     const self = selfSet();
     for (const f of normalized) {
         if (self.has(f)) out.add(f);

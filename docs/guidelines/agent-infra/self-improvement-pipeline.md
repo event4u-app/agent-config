@@ -91,20 +91,18 @@ blocks — it does not hand a half-filled doc to the next stage.
 ### Stage 5 — Upstream
 
 - **Trigger:** gate passed AND, for a proposal scoped to the package, a
-  council ratification record **whose `subject` matches the files the proposal
-  declares as its change** reviewed it favourably AND the owner's authorization
-  is on record, bound to that same digest (ADR-281 as amended 2026-10-07 — the
-  council record is the review, the owner's authorization is the approval);
-  where the council cannot conclude, the user decides by the route ADR-281 § 5
-  names. A proposal scoped to a consumer's own project needs that user's
-  approval, as before.
-  > **The `subject` clause returned on 2026-10-12**, with steps 2.1 and 2.2 of
-  > `road-to-self-modification-that-a-council-must-pass`. It was dropped on
-  > 2026-10-12 earlier the same day because it described a binding the gate did
-  > not perform; the gate now recomputes the digest and refuses a record whose
-  > `subject` is absent or different, so the clause names a guarantee the gate
-  > keeps. What it still does not claim is that the review happened — see
-  > `ratification-artifact.md` § What a passing record does not prove.
+  council ratification record reviewed it favourably AND the owner's
+  authorization is on record (ADR-281 as amended 2026-10-07 — the council
+  record is the review, the owner's authorization is the approval); where the
+  council cannot conclude, the user decides by the route ADR-281 § 5 names. A
+  proposal scoped to a consumer's own project needs that user's approval, as
+  before.
+  > **"whose `subject` matches" is deliberately absent here.** It described a
+  > binding the gate does not perform at this pin: no record is bound to the
+  > content it reviewed. Steps 2.1 and 2.2 of
+  > `road-to-self-modification-that-a-council-must-pass` build that binding,
+  > and the clause returns with them. Naming it before it exists would state a
+  > guarantee a reader could rely on and the gate would not keep.
 - **Executor:** `upstream-contribute` skill. Refuses invocation if
   the proposal frontmatter is not `stage: gated`.
 - **Input:** gated proposal doc.

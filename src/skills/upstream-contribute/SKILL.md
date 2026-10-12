@@ -234,22 +234,6 @@ do not create the branch, do not push, do not open the PR. Surface the
 findings to the user, ask them to fix the proposal (add evidence,
 remove TODO markers, complete required sections), then rerun.
 
-**Second hard refusal: the proposal must be `stage: gated`.** Read its
-frontmatter and STOP on any other stage — earlier ones are unfinished,
-`upstream` is already left. The guideline has claimed this refusal since it was
-written; step 6.1 of `road-to-self-modification-that-a-council-must-pass` made
-it a sentence an executor can follow.
-
-A `scope: package` proposal — a change to THIS suite — additionally needs
-`changed_files:`, a `ratification_record:` and an `owner_authorization:`, all
-bound to one `subject` digest. The order is the owner's amendment of
-2026-10-07: **the council's record is the review, the owner's authorization is
-the approval.** A favourable verdict alone does not reach `gated`.
-
-That proves only the binding, never that the owner wrote it — ADR-281 § 5 makes
-his route a forge act no gate can authenticate. The binding is what stops last
-week's approval carrying this week's diff.
-
 When no proposal doc exists (small fix, typo, pure bug-fix), skip this
 step and document the rationale in the PR body under the Promotion
 Gate.

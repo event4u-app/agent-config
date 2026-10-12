@@ -86,8 +86,6 @@ import {
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
 import { subjectDigest } from './_lib/ratification_subject.js';
-import { readAdrFrontmatter } from './_lib/adr_frontmatter.js';
-import { readSeats } from './_lib/ratification_artifact.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -134,65 +132,6 @@ export const ANCHOR_PATHS: readonly string[] = [
     'src/config/platform-anchor.json',
     'src/scripts/_lib/platform_anchor.ts',
     'src/scripts/check_platform_anchor.ts',
-];
-
-/**
- * The review's OWN code, and the contract that states what a record means.
- *
- * Step 4.1. The gate watched itself, its reader, its policy, its workflow and
- * the anchor, and did not watch the modules that compute a record's `subject`,
- * write the record, ask the review's questions and derive its verdict — so the
- * reviewer sat outside what it reviews, which is the shape ADR-268 § 4 exists
- * to forbid one level up. A change to any of these is a change to the reviewer.
- *
- * They are modules of their OWN for exactly this reason: an ordinary change to
- * the council's prompts, transports or session handling stays ungated, because
- * widening the gate to all of `src/scripts/ai_council/` would make every
- * routine council edit carry a record and build the pressure that eventually
- * weakens the gate.
- */
-export const REVIEWER_PATHS: readonly string[] = [
-    'src/scripts/_lib/ratification_subject.ts',
-    'src/scripts/_lib/ratification_record_writer.ts',
-    'src/scripts/ai_council/modification_review_questions.ts',
-    'src/scripts/ai_council/modification_review.ts',
-    'docs/contracts/ratification-artifact.md',
-];
-
-/**
- * The high-consequence rule class and the criterion that selects it.
- *
- * Step 4.2. The list is watched so that a change cannot DROP a member in order
- * to edit the rule it names; the schema is watched because the criterion that
- * produced the list lives in its `consequence_class` property, and a criterion
- * nobody ratified selects a class nobody ratified. The schema is shared by
- * every rule, so any edit to it needs a record.
- */
-export const CONSEQUENCE_CLASS_PATHS: readonly string[] = [
-    'src/config/rule-consequence-class.json',
-    'src/scripts/schemas/rule.schema.json',
-];
-
-/**
- * Every path gated because it is part of the deciding mechanism rather than
- * part of what the mechanism decides about.
- *
- * ONE list, exported, because two consumers need it: `classifyPaths` below and
- * the digest in `_lib/ratification_subject.ts`. That module used to re-assemble
- * the set from the individual constants, since `classifyPaths` reports this
- * surface as a boolean and the list could not be read back out of it. A second
- * assembly is a second thing to keep in step, and the first edit to diverge
- * would be a path the gate gated and the digest did not cover.
- */
-export const SELF_SURFACE: readonly string[] = [
-    SELF_PATH,
-    READER_PATH,
-    CLOSURE_READER_PATH,
-    POLICY_PATH,
-    WORKFLOW_PATH,
-    ...ANCHOR_PATHS,
-    ...REVIEWER_PATHS,
-    ...CONSEQUENCE_CLASS_PATHS,
 ];
 
 /** Governance hooks: the blocking PreToolUse guards. */
@@ -244,15 +183,10 @@ const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
  *     from that list removes a rule from this gate's own reach — the one edit
  *     that could quietly narrow the gate while every other path kept working.
  *
- * NEITHER IS DENIED AT TOOL-CALL TIME, and this paragraph says so because the
- * sentence it replaces said the opposite. It claimed `dispatch_hook.ts` was in
- * the plumbing guard's source set and `kernel_rules.ts` behind the kernel-rule
- * write guard; `block_plumbing_writes.ts` protects three generated build
- * outputs and not the dispatcher source, and `block_kernel_rule_writes.ts`
- * IMPORTS `kernel_rules.ts` to resolve the nine names without protecting the
- * file it imports. So for these two paths the record is the only layer, not the
- * second one — step 4.3 of
- * `road-to-self-modification-that-a-council-must-pass`.
+ * Both are also denied at tool-call time, `dispatch_hook.ts` through the
+ * plumbing guard's source set and `kernel_rules.ts` through the kernel-rule
+ * write guard, so the pairing of deny-plus-record matches what the YAML sources
+ * already had.
  *
  * The compiled tables are REGENERATED, not hand-edited, by
  * `./scripts-run src/scripts/compile_hook_manifest --table manifest|host-lowering`,
@@ -345,95 +279,38 @@ export interface GatedPaths {
     governanceHooks: string[];
     /** Hook-plumbing sources — manifest, host lowering, dispatchers, budgets. */
     plumbing: string[];
-    /**
-     * Rules in the high-consequence class of `rule-consequence-class.json` that
-     * are NOT among the nine kernel rules. Step 4.2: rule law beyond the kernel.
-     */
-    consequenceRules: string[];
     self: boolean;
-}
-
-/**
- * The high-consequence rule slugs, read from the gate's OWN tree.
- *
- * From the script's tree and never from `--root`, for the reason the quorum
- * policy is: in CI this code is the base revision's, so a candidate that
- * removed a member from the list would still be judged against the list the
- * base carries. Reading it from the head would let a change drop a member in
- * order to edit the rule that member names — the exact move the list is on the
- * watch list to make visible.
- *
- * RETURNS `null` WHEN IT CANNOT BE READ, AND THE GATE TURNS THAT INTO A REFUSAL.
- *
- * An earlier version of this function returned an EMPTY SET on a read or parse
- * failure, on the argument that the quorum policy decides whether a control can
- * measure at all while this list only WIDENS, so losing it merely falls back to
- * the pre-4.2 reach. **A 2026-10-12 council review refused the change on exactly
- * that clause, 2/2, and was right.** An empty set is not a fallback, it is a
- * silent threshold reduction: a gate advertising 28 high-consequence rules
- * drops all 28 the moment one file fails to parse, reports success, and says
- * nothing. "Graceful fallback" was the name on it; "lowers a threshold" is what
- * `evaluator-independence` calls it, and that clause is one of the nine
- * questions this gate's own review asks.
- *
- * So it fails closed, exactly as `readRequiredProviders` does. The cost the old
- * comment feared — reddening every gated PR over a missing file — is real and
- * is the correct behaviour: the file is committed, so its absence is a defect
- * in the checkout and not a state to carry on through.
- */
-let consequenceSlugCache: ReadonlySet<string> | null = null;
-
-export function consequenceRuleSlugs(repoRoot: string = REPO): ReadonlySet<string> | null {
-    if (repoRoot === REPO && consequenceSlugCache !== null) {
-        return consequenceSlugCache;
-    }
-    let slugs: ReadonlySet<string> | null = null;
-    try {
-        const raw = fs.readFileSync(path.join(repoRoot, CONSEQUENCE_CLASS_PATHS[0] as string), 'utf8');
-        const parsed = JSON.parse(raw) as { members?: unknown };
-        const members = parsed.members;
-        if (members !== null && typeof members === 'object' && !Array.isArray(members)) {
-            slugs = new Set(Object.keys(members as Record<string, unknown>));
-        }
-    } catch {
-        slugs = null;
-    }
-    // Only a SUCCESSFUL read is cached. Caching a failure would make one
-    // transient error outlive itself for the rest of the process.
-    if (repoRoot === REPO && slugs !== null) {
-        consequenceSlugCache = slugs;
-    }
-    return slugs;
 }
 
 /** Partition a changed-file list into the surfaces this gate watches. */
 export function classifyPaths(
     files: readonly string[],
     derived: readonly string[] = derivedPlumbing(),
-    consequence: ReadonlySet<string> = consequenceRuleSlugs() ?? new Set<string>(),
 ): GatedPaths {
     const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
     const plumbing: string[] = [];
-    const consequenceRules: string[] = [];
     let self = false;
     for (const raw of files) {
         const p = raw.replace(/\\/g, '/').trim();
         if (p === '') {
             continue;
         }
-        if (SELF_SURFACE.includes(p)) {
+        if (
+            p === SELF_PATH ||
+            p === READER_PATH ||
+            p === CLOSURE_READER_PATH ||
+            p === POLICY_PATH ||
+            p === WORKFLOW_PATH ||
+            ANCHOR_PATHS.includes(p)
+        ) {
             self = true;
             continue;
         }
         const m = KERNEL_RULE_PATH_RE.exec(p);
         if (m !== null && is_kernel_rule(m[1] ?? '')) {
             kernelRules.push(p);
-            continue;
-        }
-        if (m !== null && consequence.has(m[1] ?? '')) {
-            consequenceRules.push(p);
             continue;
         }
         if (GOVERNANCE_HOOK_RE.test(p)) {
@@ -444,7 +321,7 @@ export function classifyPaths(
             plumbing.push(p);
         }
     }
-    return { kernelRules, governanceHooks, plumbing, consequenceRules, self };
+    return { kernelRules, governanceHooks, plumbing, self };
 }
 
 /** True when anything in the diff requires a ratification artifact. */
@@ -453,7 +330,6 @@ export function requiresRatification(gated: GatedPaths): boolean {
         gated.kernelRules.length > 0 ||
         gated.governanceHooks.length > 0 ||
         gated.plumbing.length > 0 ||
-        gated.consequenceRules.length > 0 ||
         gated.self
     );
 }
@@ -529,115 +405,6 @@ export function expectedSubjectFor(files: readonly string[], root: string): stri
     return subjectDigest(root, files, derivedFor(root));
 }
 
-/** What the escalation message is built from. */
-export interface EscalationInput {
-    /** The record that did not pass, or `null` when none was written at all. */
-    artifact: string | null;
-    /** Its verdict, or the reason it could not be read as one. */
-    verdict: string;
-    /** Per-seat final verdicts, where the record recorded them. */
-    seats: ReadonlyMap<string, string>;
-    /** The gated paths of this change, already described. */
-    touched: readonly string[];
-    /** True when the change edits the reviewing mechanism itself. */
-    reviewerSurface: boolean;
-}
-
-/**
- * The shape of the stop, when a council could not settle a gated change.
- *
- * Step 5.2 of `road-to-self-modification-that-a-council-must-pass`. The run
- * ends with the change open and labelled, the non-passing record in it, and ONE
- * question for the user carrying six things: the council's recommendation, the
- * dissent, the exact change, what it is expected to gain, what it risks, and
- * how it is undone.
- *
- * WHAT THIS FUNCTION CAN AND CANNOT FILL IN, because the difference is the
- * whole honesty of the message. The gate knows the verdict, the per-seat
- * dissent and the exact gated paths, and it fills those in. It does NOT know
- * the expected gain, the risk or the rollback — those are judgements that live
- * in the record's body and in the change itself. So the message ASKS for them
- * by name and says where they are written, rather than printing three empty
- * headings or, worse, inventing plausible ones. A stop that handed the user a
- * confident-looking summary the gate could not have known would be the failure
- * this whole mechanism exists to prevent, reached through the help text.
- */
-/**
- * Strip what a terminal would obey from a string the gate did not author.
- *
- * Paths, seat ids and verdict strings reach this message from the diff and from
- * record frontmatter, and a council review of this gate named the consequence:
- * an escape sequence in one of them can move the cursor, clear the line or
- * recolour the output, so a crafted filename could forge or conceal part of the
- * stop the owner reads. Control characters are replaced rather than dropped, so
- * the message still shows that something was there.
- */
-function safeForOperator(value: string): string {
-    return value.replace(/[\u0000-\u001f\u007f-\u009f]/gu, '\uFFFD');
-}
-
-export function escalationMessage(input: EscalationInput): string[] {
-    const { verdict: rawVerdict, reviewerSurface } = input;
-    const artifact = input.artifact === null ? null : safeForOperator(input.artifact);
-    const verdict = safeForOperator(rawVerdict);
-    const touched = input.touched.map(safeForOperator);
-    const seats = new Map<string, string>(
-        [...input.seats].map(([p, v]) => [safeForOperator(p), safeForOperator(v)]),
-    );
-    const dissent = [...seats].filter(([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding');
-    const concluded = [...seats].filter(([, v]) => v !== 'no-final-verdict');
-
-    const lines: string[] = [
-        '',
-        '━━━ The council could not settle this change. It is the user’s call. ━━━',
-        '',
-        `1. The council’s recommendation: \`${verdict}\`` +
-            (concluded.length === 0
-                ? ' — no seat reached a final verdict.'
-                : ` from ${String(concluded.length)} concluding seat(s).`),
-    ];
-
-    lines.push(
-        dissent.length === 0
-            ? '2. The dissent: none recorded in `seats:` — read the record’s body for it.'
-            : `2. The dissent: ${dissent.map(([p, v]) => `${p} → \`${v}\``).join(', ')}.`,
-    );
-
-    lines.push(`3. The exact change — ${String(touched.length)} gated path(s):`);
-    for (const t of touched) {
-        lines.push(`     · ${t}`);
-    }
-    if (reviewerSurface) {
-        lines.push(
-            '     This change edits the reviewing mechanism itself, which is condition 4 of',
-            '     `ratification-artifact.md` § When the user decides — the owner decides it',
-            '     whatever the seats said.',
-        );
-    }
-
-    const where =
-        artifact === null
-            ? 'no record was written; there is nothing to read the next three from'
-            : `read them from \`${artifact}\` and from the diff`;
-    lines.push(
-        '4. What it is expected to gain,',
-        '5. what it risks, and',
-        '6. how it is undone:',
-        `     ${where}. This gate does not know them and will not guess:`,
-        '     a confident summary it could not have computed is the failure the',
-        '     mechanism exists to prevent, arriving through the help text.',
-        '     And what the record says about them is the AUTHOR\u2019S claim, checked by',
-        '     nothing here \u2014 a record that understates the risk or overstates the',
-        '     rollback is repeated faithfully. Read the diff, not only the record.',
-        '',
-        'The route by which the user permits a change the council could not pass is',
-        '`ratification-artifact.md` § The owner-permission-route. A chat answer is not',
-        'that route; the record stays red until the owner acts where an agent cannot.',
-        '',
-    );
-    return lines;
-}
-
 export interface GateResult {
     exitCode: 0 | 1 | 3;
     lines: string[];
@@ -655,14 +422,7 @@ export function evaluate(
     // script's own tree: under CI the gate code is the base revision's and
     // `root` is the head, so a module present on either side is watched.
     const derived = derivedFor(root);
-    /**
-     * Read from THIS script's tree, which in CI is the base revision's — the
-     * reason the quorum policy is read that way. `null` means the list could
-     * not be read, and the gate refuses below rather than continuing with a
-     * narrower reach it never announced.
-     */
-    const consequence = consequenceRuleSlugs();
-    const gated = classifyPaths(files, derived, consequence ?? new Set<string>());
+    const gated = classifyPaths(files, derived);
     const scanned = files.length;
 
     /**
@@ -688,8 +448,7 @@ export function evaluate(
         ...gated.kernelRules,
         ...gated.governanceHooks,
         ...gated.plumbing,
-        ...gated.consequenceRules,
-        ...files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => SELF_SURFACE.includes(f)),
+        ...(gated.self ? [SELF_PATH] : []),
     ]);
     const artifactSet = new Set(ratificationArtifactsIn(files));
     for (const target of ledger.unaccountedTargets()) {
@@ -720,25 +479,10 @@ export function evaluate(
         );
     };
 
-    if (consequence === null) {
-        // Before the "nothing to ratify" exit, deliberately: a diff that looks
-        // ungated may only look that way because the list that would have
-        // gated it could not be read.
-        lines.push(
-            `❌  \`${CONSEQUENCE_CLASS_PATHS[0] as string}\` is missing or unparseable, so the ` +
-                'high-consequence rule class is unknown. This gate fails closed rather than ' +
-                'continuing with a narrower reach than it advertises — an earlier version ' +
-                'returned an empty class here, which a ratification review refused as a silent ' +
-                'threshold reduction.',
-        );
-        close(false);
-        return { exitCode: 1, lines, scanned };
-    }
-
     if (!requiresRatification(gated)) {
         lines.push(
-            '✅  no kernel rule, high-consequence rule, governance hook, hook-plumbing ' +
-                'source or review-mechanism edit in the diff — nothing to ratify',
+            '✅  no kernel rule, governance hook, hook-plumbing source or self edit in the ' +
+                'diff — nothing to ratify',
         );
         close(true);
         return { exitCode: 0, lines, scanned };
@@ -746,12 +490,9 @@ export function evaluate(
 
     const touched = [
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
-        ...gated.consequenceRules.map((p) => `high-consequence rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
         ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
-        ...(gated.self
-            ? ['the review mechanism itself (gate, reader, policy, workflow, anchor, the review\u2019s own modules, the artifact contract, or the rule-consequence class and its criterion)']
-            : []),
+        ...(gated.self ? ['the ratification mechanism itself (gate, reader, policy or workflow)'] : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
     for (const t of touched) {
@@ -766,25 +507,6 @@ export function evaluate(
                 'ADR-268 § 4: an agent may modify its constitution and may not ratify its own ' +
                 'increase in power. See docs/contracts/ratification-artifact.md.',
         );
-        /**
-         * No record at all is an AUTHORING state, not an unsettled council, so
-         * the escalation is withheld — except on the one surface where the
-         * owner decides whatever the seats would have said. Telling the author
-         * of a reviewer-surface change that before they spend a council round
-         * is the point of condition 4; telling the author of an ordinary kernel
-         * edit to ask the owner would spend the escalation on "write a record".
-         */
-        if (gated.self) {
-            lines.push(
-                ...escalationMessage({
-                    artifact: null,
-                    verdict: 'no record',
-                    seats: new Map<string, string>(),
-                    touched,
-                    reviewerSurface: true,
-                }),
-            );
-        }
         close(false);
         return { exitCode: 1, lines, scanned };
     }
@@ -800,21 +522,6 @@ export function evaluate(
 
     let anyRatified = false;
     const failures: string[] = [];
-    /** Records that parsed but did not pass, kept for the escalation message. */
-    const nonPassing: { rel: string; verdict: string; seats: ReadonlyMap<string, string> }[] = [];
-    /**
-     * True when SOME record in this diff failed on provider diversity.
-     *
-     * Read only after the loop, to decide whether the escalation fires at all.
-     * Whether a GIVEN record is a diversity case is decided per iteration by
-     * the local flag below — a council review of this gate found the two
-     * conflated: one artifact setting a loop-wide flag made every later
-     * artifact's defect, malformed or stale, read as a diversity shortfall and
-     * put it in front of the owner as a judgement call. The gate still refused
-     * in both cases; what was wrong was what it told the owner they were
-     * looking at.
-     */
-    let anyDiversityShort = false;
     for (const rel of artifacts) {
         const abs = path.join(root, rel);
         let text: string;
@@ -836,33 +543,12 @@ export function evaluate(
             );
             continue;
         }
-        const fm = readAdrFrontmatter(text);
-        const seatsReading = fm === null ? { kind: 'absent' as const } : readSeats(fm, text);
-        const seats: ReadonlyMap<string, string> =
-            seatsReading.kind === 'present' ? seatsReading.seats : new Map<string, string>();
-
         if (reading.artifact !== null) {
             failures.push(`${rel}: verdict is \`${reading.artifact.verdict}\`, not \`ratified\``);
-            nonPassing.push({ rel, verdict: reading.artifact.verdict, seats });
             continue;
         }
-        let onlyDiversity = reading.problems.length > 0;
         for (const p of reading.problems as RatificationProblem[]) {
             failures.push(`${rel}: ${p.message}`);
-            if (p.code === 'diversity-required' || p.code === 'diversity-unverifiable') {
-                anyDiversityShort = true;
-            } else {
-                onlyDiversity = false;
-            }
-        }
-        // A record whose ONLY defect is diversity still carries a verdict the
-        // user needs to see; one that failed on its shape or its binding does
-        // not, and asking the owner to adjudicate a malformed file would turn
-        // an authoring error into a governance decision. `onlyDiversity` is
-        // per-record for exactly that reason.
-        const verdictScalar = fm?.scalars['verdict'];
-        if (onlyDiversity && typeof verdictScalar === 'string') {
-            nonPassing.push({ rel, verdict: verdictScalar.trim(), seats });
         }
     }
 
@@ -871,29 +557,6 @@ export function evaluate(
         lines.push('❌  no valid `verdict: ratified` artifact for this diff:');
         for (const f of failures) {
             lines.push(`  · ${f}`);
-        }
-        /**
-         * The four conditions of `ratification-artifact.md` § When the user
-         * decides, in the order ADR-268 § 4 gives them. A refusal for any OTHER
-         * reason — a malformed record, a stale `subject`, a self-ratified one —
-         * is an authoring defect the author fixes, and routing it to the owner
-         * would spend the escalation on work nobody needs the owner for.
-         */
-        const unsettled = nonPassing.find(
-            (r) => r.verdict === 'non-convergent' || r.verdict === 'refused',
-        );
-        if (unsettled !== undefined || anyDiversityShort || gated.self) {
-            lines.push(
-                ...escalationMessage({
-                    artifact: unsettled?.rel ?? null,
-                    verdict:
-                        unsettled?.verdict ??
-                        (anyDiversityShort ? 'provider diversity unavailable' : 'no record'),
-                    seats: unsettled?.seats ?? new Map<string, string>(),
-                    touched,
-                    reviewerSurface: gated.self,
-                }),
-            );
         }
         close(false);
         return { exitCode: 1, lines, scanned };

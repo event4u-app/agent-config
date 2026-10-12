@@ -45,13 +45,7 @@ Do NOT use when:
 5. NEVER treat tests as an afterthought — write the failing test first.
 6. NEVER overfit an assertion — assert the general rule, derive expected values from inputs/seeded data, cover boundary + error cases.
 7. NEVER game the green — a failing test is a finding, not an obstacle; fix the code, never skip/weaken/delete the test or rewrite `expected` to the buggy output.
-8. NEVER repair a polarity fixture by dropping its claim — a test naming a path as OUT of scope asserts where a boundary ends; when the boundary moves, move the example and say why, never delete the assertion.
 ```
-
-Law 8 needs its own line because it does not look like gaming the green: the
-fixture is genuinely wrong, the deletion genuinely the smallest diff, and the
-result a suite that no longer tests over-reach. A gate with only positive
-fixtures reds on everything and passes its own tests.
 
 ## Procedure: Run the gate before each anti-pattern
 
@@ -268,7 +262,6 @@ return **0** occurrences, and `hardcoded` returns **6**.
 - Long mock setups (> 50% of the test) are a signal that integration tests would be simpler — consider it before piling on more mocks.
 - **Diagnose, do not brute-force.** If a test fails after a mock change, **never guess** at another mock tweak — drop a debugger / Xdebug breakpoint at the seam, observe the real call shape, then mock minimally. Two retries without a root-cause hypothesis = STOP and rethink.
 - An assertion that derives from seeded data but only checks the happy path is still overfit — a code mutation survives it. Require ≥1 boundary/error/abuse case per behavior, not just line coverage.
-- **A negative fixture goes red when the boundary it names moves, and that red is correct.** Measured here 2026-10-12: a suite named one file as its ungated example, a change put that file on the gate's watch list, two cases failed. Repair by re-pointing the example and saying the claim expired — deleting the cases leaves the widening untested in the only direction it can get wrong.
 
 ## Do NOT
 

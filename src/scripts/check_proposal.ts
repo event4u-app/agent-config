@@ -39,10 +39,6 @@ import { parse as parseYaml } from 'yaml';
 
 import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
-import { expectedSubjectFor } from './check_kernel_edit_ratified.js';
-
-/** This script's own tree — the root a named record path is resolved against. */
-const REPO = nodePath.resolve(nodePath.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 type Severity = 'error' | 'warning';
 
@@ -79,7 +75,7 @@ const REQUIRED_SECTIONS: ReadonlyArray<readonly [RegExp, string]> = [
 const BAD_MARKERS = /\b(TODO|TBD|FIXME|XXX)\b/;
 const FRONTMATTER_PATTERN = /^---\s*\n([\s\S]*?)\n---\s*\n/;
 
-export class Finding {
+class Finding {
     constructor(
         readonly severity: Severity,
         readonly section: string,
@@ -396,115 +392,7 @@ function _resolvePath(p: string): string {
     return nodePath.resolve(p);
 }
 
-/**
- * A package-scoped proposal may only reach `stage: gated` on a council record
- * bound to its own change, and an owner authorization bound to the same digest.
- *
- * Step 6.1 of `road-to-self-modification-that-a-council-must-pass`, and the
- * ORDER of the two is the owner's amendment of 2026-10-07: the council record
- * is the REVIEW, the owner's authorization is the APPROVAL. A guideline that
- * said the council's record was the approval was corrected by step 1.4; this is
- * the same correction reaching the gate that reads the proposal.
- *
- * WHAT THIS CANNOT PROVE, said before what it can. The authorization file is a
- * path the proposal names, and its digest is a string the file carries. Nothing
- * here establishes that the owner wrote it — ADR-281 § 5 makes the owner's
- * route his own recorded bypass on the forge, which leaves no artifact a gate
- * can authenticate, and the contract's § What this route cannot prove says so
- * in those words. What the check DOES establish is narrower and still worth
- * having: the review and the authorization name the SAME content, so neither
- * can be carried over from another change, and a proposal cannot reach `gated`
- * while naming nothing at all.
- *
- * A `scope: project` proposal is checked as before. Its approval is the user's,
- * on their own project, and nothing here applies.
- */
-function _checkGatedRecord(
-    fm: Frontmatter,
-    findings: Finding[],
-    repoRoot: string,
-): void {
-    if (fm['stage'] !== 'gated' || fm['scope'] !== 'package') {
-        return;
-    }
-
-    const changed = fm['changed_files'];
-    if (!Array.isArray(changed) || changed.length === 0) {
-        findings.push(
-            new Finding(
-                'error',
-                'gated',
-                'stage=gated with scope=package needs `changed_files:` — the files this ' +
-                    'proposal declares as its change, which the record\u2019s `subject` is checked against',
-            ),
-        );
-        return;
-    }
-    const files = changed.map((f) => String(f).trim()).filter((f) => f !== '');
-
-    let expected: string;
-    try {
-        expected = expectedSubjectFor(files, repoRoot);
-    } catch (err) {
-        findings.push(
-            new Finding('error', 'gated', `could not compute the subject digest: ${String(err)}`),
-        );
-        return;
-    }
-
-    for (const [key, what] of [
-        ['ratification_record', 'the council\u2019s review'],
-        ['owner_authorization', 'the owner\u2019s approval'],
-    ] as const) {
-        const named = fm[key];
-        if (typeof named !== 'string' || named.trim() === '') {
-            findings.push(
-                new Finding(
-                    'error',
-                    'gated',
-                    `stage=gated with scope=package needs \`${key}:\` — ${what}, ` +
-                        'bound to this proposal\u2019s own change (ADR-281 as amended 2026-10-07)',
-                ),
-            );
-            continue;
-        }
-        const rel = named.trim();
-        let text: string;
-        try {
-            text = fs.readFileSync(joinPath(repoRoot, rel), 'utf8');
-        } catch {
-            findings.push(new Finding('error', 'gated', `${key} names \`${rel}\`, which is not readable`));
-            continue;
-        }
-        const found = /^subject:\s*([0-9a-f]{64})\s*$/m.exec(text);
-        if (found === null) {
-            findings.push(
-                new Finding(
-                    'error',
-                    'gated',
-                    `${key} \`${rel}\` carries no \`subject:\` digest, so it is not bound to any change`,
-                ),
-            );
-            continue;
-        }
-        if (found[1] !== expected) {
-            findings.push(
-                new Finding(
-                    'error',
-                    'gated',
-                    `${key} \`${rel}\` is bound to \`${String(found[1]).slice(0, 12)}\u2026\`, not to this ` +
-                        `proposal\u2019s change (\`${expected.slice(0, 12)}\u2026\`) \u2014 it answers for different content`,
-                ),
-            );
-        }
-    }
-}
-
-export function _runChecks(
-    text: string,
-    p: string | null = null,
-    repoRoot: string = REPO,
-): Finding[] {
+function _runChecks(text: string, p: string | null = null): Finding[] {
     const findings: Finding[] = [];
     const fm = _loadFrontmatter(text);
     _checkFrontmatter(fm, findings);
@@ -514,7 +402,6 @@ export function _runChecks(
     _checkMarkers(body, findings);
     _checkSuccessSignal(body, findings);
     _checkOriginatingProject(body, fm, findings);
-    _checkGatedRecord(fm, findings, repoRoot);
     if (p !== null) {
         _proposalRateWarning(p, findings);
     }

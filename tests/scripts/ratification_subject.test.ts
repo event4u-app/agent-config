@@ -107,9 +107,9 @@ describe('2.1 — the digest binds paths AND contents', () => {
 describe('the import cycle stays survivable, and a regression reds here', () => {
     it('the gated set resolves when THIS module is the entry point', async () => {
         // A council reviewer named the cycle fragile: the gate imports
-        // `subjectDigest` and this module imports the gate's `SELF_SURFACE`, so
+        // `subjectDigest` and this module imports the gate's path constants, so
         // whichever Node evaluates second sees the other half-evaluated, and a
-        // module-scope read of that `const` throws on the temporal dead zone.
+        // module-scope read of those `const`s throws on the temporal dead zone.
         // The mitigation is a read deferred to call time, and "a comment
         // explains why" is not a control — this case is.
         //

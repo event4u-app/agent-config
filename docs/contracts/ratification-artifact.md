@@ -131,40 +131,6 @@ The body carries `<!-- evidence-type: ratification -->` and the review itself:
 what was proposed, what the reviewer checked, and what would have changed the
 verdict.
 
-## What the gate watches
-
-Four surfaces need a record, and the fourth arrived on 2026-10-12:
-
-| Surface | Selected by |
-|---|---|
-| the nine kernel rules | `_lib/kernel_rules.ts`, by name |
-| governance hooks and hook plumbing | `block_*.ts`, the manifest and lowering sources, the dispatcher's verdict-deciding import closure |
-| the review mechanism itself | the gate, its reader, the quorum policy, the workflow, the platform anchor, `REVIEWER_PATHS`, and the rule-consequence class with its criterion |
-| **high-consequence rules beyond the kernel** | the 28 members of `src/config/rule-consequence-class.json` |
-
-**The fourth row is selected by a criterion, not by a name list.** A rule earns
-its row by what its own law obligates — an authority boundary, a security
-boundary — and the criterion lives in the `consequence_class` property of
-`src/scripts/schemas/rule.schema.json`. Before this, a rule whose law is *"the
-per-object ownership and tenant check before data is returned"* was editable
-with no record purely because it was not one of the nine.
-
-Two things follow, and both are deliberate:
-
-- **The list and the schema are themselves watched**, so a change cannot drop a
-  member in order to edit the rule that member names. The schema is shared by
-  every rule, so any edit to it needs a record too.
-- **The list is read from the gate's own tree**, never from `--root`, for the
-  reason the quorum policy is: in CI this code is the base revision's, so a
-  candidate that removed a member would still be judged against the base's list.
-
-**A missing or unparseable list widens nothing and refuses nothing** — it falls
-back to the kernel-and-hooks reach the gate had before. That is asymmetric with
-the quorum policy, which fails closed, and the asymmetry is the point: the
-policy decides whether a control can **measure at all**, while this list only
-**widens**. Failing closed on it would red every kernel PR over a file whose
-absence costs only the widening.
-
 ## Both producer fields are checked against `reviewed_by`
 
 Phase 5.1 names one fixture — `proposed_by == reviewed_by` is rejected. The
@@ -594,41 +560,13 @@ In the order of ADR-268 § 4 (ADR-281 § 4), the user decides when:
    `decision-revisit-gate`;
 4. the change is to the reviewer itself — the modules that compute the
    record's `subject`, write the record, ask the questions and derive the
-   verdict, and this contract. Since 2026-10-12 that is not only a sentence
-   here: those five paths are `REVIEWER_PATHS` in the gate, so the reviewer is
-   inside what it reviews. An ordinary change to the council's prompts,
-   transports or session handling stays ungated, deliberately — widening the
-   gate to all of `src/scripts/ai_council/` would make every routine council
-   edit carry a record and build exactly the pressure that eventually weakens
-   a gate.
+   verdict, and this contract.
 
 In those cases the run stops with the change open and labelled, the
 non-passing record in it, and one question for the user: the council's
 recommendation, the dissent, the exact change, what it is expected to gain,
 what it risks, and how it is undone. A run never decides such a case alone,
 and a subagent fan-out is never a substitute for the council here.
-
-**The gate prints that question itself** (`escalationMessage`, step 5.2 of
-`road-to-self-modification-that-a-council-must-pass`), and what it does with
-the six is split down one line that matters more than the formatting:
-
-| It fills in | It asks for |
-|---|---|
-| 1 the verdict and how many seats concluded · 2 the per-seat dissent · 3 the gated paths, one per line | 4 the expected gain · 5 the risk · 6 the rollback |
-
-The three on the right are judgements that live in the record's body and in the
-change itself, and the gate names where to read them instead of printing three
-plausible sentences it never computed. A stop that handed the owner a
-confident-looking summary the gate could not have known would be this
-mechanism's own failure mode arriving through its help text.
-
-**When it fires, and when it deliberately does not.** It fires on a
-`non-convergent` or `refused` record, on provider diversity short of the
-required count, and on any change to the reviewing mechanism — condition 4,
-record or no record, because the owner decides that one whatever the seats
-said. It does **not** fire on a missing, malformed, self-ratified or
-content-stale record: those are authoring defects the author fixes, and
-routing one to the owner would spend the escalation on *write a record*.
 
 ### The owner-permission-route
 
@@ -683,42 +621,18 @@ line are deliberately not used: they answer which *option* wins a
 deliberation, not whether each *seat* passed a change. A missing line, an
 abstention or any other label is a seat that did not conclude.
 
-**Then two things are derived, and they are deliberately not the same thing.**
-This paragraph was rewritten on 2026-10-12 after a 2/2 convergent council
-(anthropic + openai, design mode, 2 rounds, blind peer review) resolved a
-contradiction between what this section said and what the shipped reader does.
-
-| Derived | By | Used for |
-|---|---|---|
-| the record's `providers` and `verdict` | `deriveRatificationHeader` | what the record SAYS |
-| the review's disposition | `modification_review.deriveModificationVerdict`, surfaced by `deriveModificationOutcome` | what the run DOES next |
-
-The header rule has no quorum count: `providers` is every seat that gave a
-final verdict, any refusing seat makes it `refused`, any non-convergent one
-`non-convergent`, and otherwise `ratified` if any seat said so. Quorum is
-enforced separately, by provider diversity, and a quorum-short record fails
-there rather than being relabelled.
-
-**Why the quorum count is not folded into the verdict.** `seats:` is EVIDENCE
-and the header is derived from it, so letting a policy parameter
-(`required_providers`) rewrite what the evidence says inverts the dependency: a
-record would mean something different next year because a number in a config
-file changed. And a grep for `non-convergent` would return both *the providers
-disagreed* and *one provider ratified and the other never answered* — two
-failure modes whose remediations differ, retry being right for only one.
-
-The disposition rule keeps its own order, and that ORDER is the rule:
+The record's verdict is then derived by one rule, and the ORDER is the rule
+(`modification_review.deriveModificationVerdict`):
 
 1. any concluding seat on `refused` gives `refused`;
-2. fewer concluding providers than `required_providers` gives `quorum-short`;
-3. any concluding seat on `ratified` gives `accepted`;
-4. otherwise, all concluded and all non-expanding, `accepted`.
+2. fewer concluding providers than `required_providers` gives `non-convergent`;
+3. any concluding seat on `ratified` gives `ratified`;
+4. otherwise, all concluded and all non-expanding, `confirmed-non-expanding`.
 
 Step 1 precedes step 2 deliberately. A single refusing seat is a refusal even
 when it is the only seat that concluded; letting the quorum rule fire first
 would turn *one reviewer said no* into *not enough reviewers answered*, which
-reads as a retryable condition rather than as the objection it is. That
-precedent is what the council extended to the passing labels.
+reads as a retryable condition rather than as the objection it is.
 
 ## What the artifact does NOT decide
 
