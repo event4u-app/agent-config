@@ -15,6 +15,24 @@ effective_after: merge
 
 # Modification review
 
+> **Read this first, 2026-10-13.** The change this record refused is **no
+> longer on the branch**. Its round-3 `smaller-change` answer — quoted in full
+> below — said the change bundled at least four independently reversible
+> concerns and that landing the binding first would close replay risk with a
+> smaller blast radius. That was done: governed-surface expansion, proposal
+> validation, the new standing Iron Law, the record writer and the escalation
+> message were reverted to `origin/main`, each verified as an empty net diff
+> per file, and reopened as `[ ]` steps on
+> `road-to-self-modification-that-a-council-must-pass` § Staged, not abandoned.
+> What remains on the branch is the content binding alone, and it has its own
+> record: `drain-self-modification-narrowed-20261013.md`.
+>
+> This record stays `refused` and stays here, because the review happened and a
+> refusal that is deleted once it is honoured teaches nothing. Its `subject`
+> is the digest of content the branch no longer carries, so the gate reports it
+> as a non-matching artifact beside the record that does match — which is the
+> binding working, not a defect in this file.
+
 Steps 2.1, 2.2, 3.4, 4.1, 4.2, 4.3, 5.2, 6.1 and 6.2 of road-to-self-modification-that-a-council-must-pass: a ratification record is bound by digest to the gated content it reviewed, the review's own modules and the 28 high-consequence rules beyond the kernel join the gated surface, the record is written from the run rather than typed, the stop has a shape, and one learning walks the improvement pipeline. Reviewed over three rounds; both seats concluded `refused`, and this record says so.
 
 At least one seat refused the change. This record does not let it land.

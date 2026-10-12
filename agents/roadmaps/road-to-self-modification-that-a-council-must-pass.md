@@ -395,6 +395,49 @@ gaps again; the binding closes replay, and nothing else.
       unparseable artifact on disk but absent from the changed-file list leaves the
       diff green. 5 tests.
 
+- [ ] **2.3 Every failure of the subject computation is one structured
+      refusal.** The gate catches `GatedFileUnreadable`, `GatedPathEscapes` and
+      a post-`lstat` read failure at ONE boundary around `expectedSubjectFor`
+      and returns `exitCode 1` with a named line, rather than letting any of
+      them leave `evaluate()` as an exception. Translation is narrow and typed,
+      never a blanket catch. An end-to-end case through the real gate asserts
+      the structured refusal for a traversing gated path and for a read that
+      fails after the stat.
+      verify: `npx vitest run tests/scripts/ratification_subject.test.ts tests/scripts/check_kernel_edit_ratified_subject.test.ts` -> 0
+
+      **Opened 2026-10-13 by a modification review that refused the change
+      carrying 2.1 and 2.2, 2/2, and was right.** The round-1 fixes introduced
+      two error classes and gave only one of them a catch boundary. In the
+      seats' words: *"`GatedFileUnreadable` gets the full treatment (defined →
+      thrown → caught → structured refusal). `GatedPathEscapes` gets only the
+      first half (defined → thrown), then escapes. The subsequent-read failures
+      get zero coverage. A complete fix needs one catch boundary in
+      `evaluate()` that handles all three failure classes."* And: *"the
+      `readFileSync(abs)` and `readlinkSync(abs)` calls ... are not wrapped, so
+      a permission change or I/O error after the stat escapes as a raw Node
+      error — exactly the TOCTOU window the fail-closed lstat was meant to
+      close."*
+      The blind peer-review stage added two bounds on the repair rather than
+      softening it: a blanket catch would *"conceal programming defects as
+      ordinary refusals"*, so the translation stays narrow and typed; and one
+      seat named a path-substitution race between the stat and the read —
+      whether symlink-swap resistance is inside this gate's threat model is
+      part of this step, not assumed.
+      **Not fixed in the change that was reviewed, deliberately.** `evaluate()`
+      is in `check_kernel_edit_ratified.ts`, a gated file, so editing it after
+      the seats answered would move the `subject` and leave the record either
+      stale or rebound to content its reviewers never saw — which is the exact
+      defect 2.1 exists to catch. A change whose first act is to launder its
+      own record does not land. Record:
+      `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+      Three further findings from the same round are carried here rather than
+      lost: the ENOENT polarity case asserts only that nothing throws and does
+      not prove the absent file was encoded with `DELETED_MARKER`; the
+      one-classification case uses a self-gated script and so would stay green
+      if `derived` were dropped again, and needs a derived-only file; and
+      `expectedSubjectFor` changing from `string` to `SubjectReading` is a type
+      break for any caller outside this tree.
+
 ## Phase 3 — The council reviews a modification as one
 
 - [x] **3.1 A fixed set of questions, in a module of its own.** When the
