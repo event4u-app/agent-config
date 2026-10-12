@@ -130,6 +130,34 @@ describe("classifyBlockingCall — 1.1", () => {
     expect(classifyBlockingCall("Bash", { command: "echo \\; ; npx vitest run" })).toBe("test");
   });
 
+  // 3.4: the second window left 70 of 119 blocking calls unknown, and reading
+  // them showed three shapes the rules could not see. Each line below is one
+  // command that actually appeared in that window, shortened.
+  it("looks past an env assignment that shares a segment with its command", () => {
+    expect(
+      classifyBlockingCall("Bash", { command: "cd /tmp/wt && AGENT_CONFIG_BROWSER_SUITES=1 npx vitest run" }),
+    ).toBe("test");
+    expect(classifyBlockingCall("Bash", { command: "FOO=1 BAR=2 npm run build" })).toBe("build");
+    // An assignment that IS the whole segment still reads as noise, as before.
+    expect(classifyBlockingCall("Bash", { command: "D=/tmp/x; npx vitest run" })).toBe("test");
+    // A value containing '=' or a path does not swallow the command after it.
+    expect(classifyBlockingCall("Bash", { command: "TSX_BIN=/a/b=c/tsx npx vitest run" })).toBe("test");
+  });
+
+  it("reads git's global options before the subcommand", () => {
+    expect(classifyBlockingCall("Bash", { command: "git -C /some/worktree push -u origin topic" })).toBe("network");
+    expect(classifyBlockingCall("Bash", { command: "git -c core.hooksPath=/dev/null fetch origin" })).toBe("network");
+    // A subcommand that waited on nothing stays unmatched.
+    expect(classifyBlockingCall("Bash", { command: "git -C /some/worktree status --short" })).toBe("unknown");
+  });
+
+  it("reads a provider CLI as a network wait", () => {
+    expect(classifyBlockingCall("Bash", { command: "codex exec --skip-git-repo-check -s read-only \"$(cat q.md)\"" })).toBe(
+      "network",
+    );
+    expect(classifyBlockingCall("Bash", { command: "cd /tmp && claude -p 'hello'" })).toBe("network");
+  });
+
   it("never invents a cause for an unmatched call", () => {
     expect(classifyBlockingCall("SomeNewTool", {})).toBe("unknown");
     expect(classifyBlockingCall("Bash", {})).toBe("unknown");

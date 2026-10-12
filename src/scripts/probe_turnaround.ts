@@ -100,10 +100,37 @@ const SHELL_RULES: ReadonlyArray<readonly [RegExp, BlockingCause]> = [
     [/^(task (sync|generate-tools|build)\b|npm (ci|install|run build)\b|(npx )?tsc\b|make\b|esbuild\b)/, 'build'],
     [/^(git (push|fetch|pull|clone)\b|curl\b|wget\b|gh (pr (merge|create)|api)\b)/, 'network'],
     [/^(\S*\/)?scripts-run \S*council_cli run\b/, 'network'],
+    // A provider CLI invoked directly rather than through `council_cli`: the
+    // wait is the same remote round-trip. Added by 3.4 — one council seat in the
+    // second window was reached this way and read as `unknown`.
+    [/^(codex exec\b|claude (-p|--print)\b)/, 'network'],
 ];
 
 /** A segment that only changes directory or sets a variable waited on nothing. */
 const NOISE_SEGMENT = /^(cd\b|export\b|set\b|[A-Za-z_][A-Za-z0-9_]*=\S*$)/;
+
+/**
+ * Assignments that PREFIX a command in the same segment —
+ * `AGENT_CONFIG_BROWSER_SUITES=1 npx vitest run`. `NOISE_SEGMENT` anchors at the
+ * end and so only sees an assignment that is the whole segment; this strips the
+ * prefix form so the command behind it can match. Added by 3.4: in the second
+ * window this one shape held ~80 of 179 unknown blocking minutes, all of them
+ * test runs.
+ */
+const ENV_PREFIX = /^(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)+/;
+
+/**
+ * Git's GLOBAL options sit between `git` and the subcommand, so `git -C <path>
+ * push` does not match a rule anchored on `git push`. Strips them so the
+ * subcommand decides. Added by 3.4 — this package's own token-efficiency rule
+ * tells agents to write `git -C <path> …`, so the shape is common here.
+ */
+const GIT_GLOBAL_OPTS = /^git\s+(?:(?:-[Cc]|--git-dir|--work-tree|--namespace|--exec-path)(?:[= ]\S+)\s+|--(?:no-pager|bare|literal-pathspecs|paginate)\s+)+/;
+
+/** Strip what sits in FRONT of the command a segment actually ran. */
+function commandHead(seg: string): string {
+    return seg.replace(ENV_PREFIX, '').replace(GIT_GLOBAL_OPTS, 'git ');
+}
 
 /** A loop keyword in front of a body: `for …; do sleep 60` reads as the sleep. */
 const LOOP_KEYWORD = /^(do|then|else)\s+/;
@@ -166,7 +193,8 @@ export function classifyBlockingCall(tool: string, input: unknown): BlockingCaus
     for (const raw of shellSegments(input['command'])) {
         const seg = raw.trim().replace(LOOP_KEYWORD, '');
         if (seg === '' || NOISE_SEGMENT.test(seg)) continue;
-        for (const [re, cause] of SHELL_RULES) if (re.test(seg)) return cause;
+        const head = commandHead(seg);
+        for (const [re, cause] of SHELL_RULES) if (re.test(head)) return cause;
     }
     return 'unknown';
 }
