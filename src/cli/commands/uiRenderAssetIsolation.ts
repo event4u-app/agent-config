@@ -8,6 +8,7 @@
  * only on the `file:`, `data:`, `blob:` and `about:` schemes, and a `file:`
  * request only when it resolves inside the project root or the asset's own
  * directory, so an asset cannot pull an arbitrary local file into a capture.
+ * The comparison pages inline everything they read, so they allow no `file:`.
  *
  * The cost, accepted: a host document that builds its visual state with
  * JavaScript is witnessed as its static markup, not as it would run.
@@ -16,7 +17,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { Page } from '@playwright/test';
+import type { Page, Route } from '@playwright/test';
 
 import { ALLOWED_SCHEMES } from './uiRenderAssetTypes.js';
 
@@ -45,9 +46,36 @@ export function fileInside(url: string, root: string): boolean {
     return target === base || target.startsWith(base + path.sep);
 }
 
-/** May the witness page load `url`? */
+/**
+ * May the witness page load `url`? A `file:` URL needs a root it resolves
+ * inside; with no roots — a page that inlines everything it reads — none does.
+ */
 export function requestAllowed(url: string, fileRoots: readonly string[]): boolean {
-    return ALLOWED_SCHEMES.some((s) => url.startsWith(s)) && fileRoots.some((root) => fileInside(url, root));
+    if (!ALLOWED_SCHEMES.some((s) => url.startsWith(s))) return false;
+    return !url.startsWith('file:') || fileRoots.some((root) => fileInside(url, root));
+}
+
+/**
+ * Route every request of `page` through `requestAllowed`, recording what was
+ * refused. One opener for every witness page, so no page confines less than
+ * another (16.5.0 review: the comparison pages checked the scheme only).
+ */
+export async function confinePage(
+    page: Page,
+    blocked: string[],
+    fileRoots: readonly string[],
+    fulfil?: (route: Route) => Promise<boolean>,
+): Promise<void> {
+    await page.route('**/*', async (route: Route) => {
+        if (fulfil && (await fulfil(route))) return;
+        const url = route.request().url();
+        if (!requestAllowed(url, fileRoots)) {
+            blocked.push(url);
+            await route.abort();
+            return;
+        }
+        await route.continue();
+    });
 }
 
 /**

@@ -1010,3 +1010,22 @@ describe('what the 16.5.0 re-cut review found', () => {
         );
     });
 });
+
+describe('what the third 16.5.0 review found', () => {
+    it('a file cannot suppress its own safety findings, while other families stay suppressible', () => {
+        const withScript = (marker: string) =>
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>' +
+            `<!-- ${marker} --><script>alert(1)</script><rect width="8" height="8"/></svg>\n`;
+        for (const marker of [
+            'svg-asset-disable svg-safety-active-content',
+            'svg-asset-disable-next-line svg-safety-active-content',
+        ]) {
+            expect(scanSvg(withScript(marker), 'a.svg').map((f) => f.rule), marker).toContain('svg-safety-active-content');
+        }
+        // Control: a non-safety rule is still silenced by its marker.
+        const generic =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>' +
+            '<!-- svg-asset-disable svg-a11y-generic-id --><rect id="icon" width="8" height="8"/></svg>\n';
+        expect(scanSvg(generic, 'g.svg').map((f) => f.rule)).not.toContain('svg-a11y-generic-id');
+    });
+});
