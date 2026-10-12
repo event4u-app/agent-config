@@ -101,7 +101,7 @@
         "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node src/scripts/prepack-check.mjs",
         "prepublishOnly": "./scripts-run src/scripts/check_release_includes_discovery",
         "prepare": "[ -d .git ] && bash src/scripts/install-hooks.sh || true",
-        "build:hook-chunks": "esbuild src/scripts/_lib/svg_rules.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/svg_rules.chunk.cjs"
+        "build:hook-chunks": "esbuild src/scripts/_lib/svg_rules.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/svg_rules.chunk.cjs && node src/scripts/write_bundle_digest.mjs dist/hooks/svg_rules.chunk.cjs"
     },
     "publishConfig": {
         "access": "public",

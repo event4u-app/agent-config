@@ -35,9 +35,18 @@
  *         FILE after the edit. Otherwise an agent could write a manifest by
  *         hand, digest included, and discharge its own obligation.
  *
- *         THE RESIDUAL, stated rather than implied. What is enforced is that a
- *         render naming the file ran; what is not enforced is that the manifest
- *         on disk is the one that render produced. A manifest left by an
+ *         A turn that writes into the render directory by any other route —
+ *         an edit tool, or a shell command naming the directory — voids every
+ *         manifest for that turn, so a hand-written manifest plus a render that
+ *         names the file (and failed) no longer discharges (16.5.0 release
+ *         review).
+ *
+ *         THE RESIDUAL, stated rather than implied. This is a check against an
+ *         omission, not a tamper-proof attestation: a process that can run a
+ *         shell can write a file by a route no transcript reading recognises.
+ *         What is enforced is that a render naming the file ran and that the
+ *         turn did not visibly write the render directory; what is not
+ *         enforced is that the manifest on disk is the one that render produced. A manifest left by an
  *         EARLIER turn whose digest still matches therefore discharges — and
  *         that is defensible, because a matching digest means the bytes have
  *         not moved since it was taken, which is the whole claim a digest
@@ -237,6 +246,13 @@ export interface SvgObligationInputs {
      * names that file AND follows that file's own last edit.
      */
     edits: ReadonlyArray<{ path: string; rendered: readonly string[] }>;
+    /**
+     * True when this turn wrote into the render directory by some route other
+     * than an asset render — an edit tool, or a shell command naming the
+     * directory. The manifests on disk are then not evidence of a render, so
+     * none of them discharges anything (16.5.0 release review).
+     */
+    renderDirTampered?: boolean;
 }
 
 /**
@@ -290,6 +306,15 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
             });
             continue;
         }
+        if (inputs.renderDirTampered) {
+            open.push({
+                file: relPath,
+                reason:
+                    'this turn wrote into the render directory by a route other than `ui:render`, so no manifest ' +
+                    'there is evidence of a render — re-run the render in a turn that does not touch it',
+            });
+            continue;
+        }
         manifests ??= readAssetManifests(root);
         const kind = dischargeFor(manifests, digest);
         if (kind === null) {
@@ -336,6 +361,36 @@ export function renderNames(commands: readonly string[], relPath: string): boole
             new RegExp(`(^|[\\s/'"])${escapeRe(needle)}(\\s|$|['"])`).test(slashed);
         return bounded(relPath) || bounded(base);
     });
+}
+
+/**
+ * A render call standing alone — no second command chained to it and no
+ * redirect — so its text cannot also carry a write. A leading `cd <dir> &&`,
+ * piping its output to a read-only filter, and folding stderr into stdout are
+ * allowed.
+ */
+export function isPureRender(command: string): boolean {
+    if (!isAssetRenderCommand(command)) return false;
+    const [head, ...pipes] = command.replace(/^\s*cd\s+[^;&|<>`$\n]+&&\s*/, '').replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' ').split('|');
+    if (/[;&<>`\n]|\$\(/.test(head ?? '')) return false;
+    return pipes.every((p) => /^\s*(tail|head|grep|jq|cat|less|wc)\b[^;&<>`|]*$/.test(p) && !/\$\(/.test(p));
+}
+
+/**
+ * Does a shell command (other than a pure render) write somewhere a render
+ * manifest could live? Read by shape: a write operator, together with the
+ * render directory, a `render/` path or a `manifest.json` — so `cd` into the
+ * state directory and a relative write is caught, and reading a manifest
+ * back is not.
+ */
+export function writesRenderDir(command: string): boolean {
+    if (isPureRender(command)) return false;
+    const slashed = command.split(path.sep).join('/');
+    const names = /(^|[\s/'"])(render\/|manifest\.json\b)/.test(slashed) || slashed.includes('state/render');
+    const writes = />(?!&)|\btee\b|\b(cp|mv|ln|install|rsync|dd)\s|\bsed\s+-i|\bwriteFile/.test(
+        slashed.replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' '),
+    );
+    return names && writes;
 }
 
 /** Escape a path component for use inside a RegExp. */
@@ -391,16 +446,24 @@ export function openSvgObligation(
         const rendered: string[] = [];
         for (let i = at + 1; i < toolCalls.length; i += 1) {
             const c = toolCalls[i]!;
-            if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
+            if (c.name === 'Bash' && c.command !== undefined && isPureRender(c.command)) {
                 rendered.push(c.command);
             }
         }
         return { path: p, rendered };
     });
 
+    const renderDir = RENDER_REL.split(path.sep).join('/');
+    const renderDirTampered = toolCalls.some((c) => {
+        if (EDIT_TOOLS.has(c.name) && c.path !== undefined) {
+            return rel(workspaceRoot, c.path).startsWith(`${renderDir}/`);
+        }
+        return c.name === 'Bash' && c.command !== undefined && writesRenderDir(c.command);
+    });
+
     let reading: SvgObligationReading;
     try {
-        reading = readSvgObligations(workspaceRoot, { edits });
+        reading = readSvgObligations(workspaceRoot, { edits, renderDirTampered });
     } catch {
         // A gate that crashed on its own instrument is a new failure mode on a
         // path meant to be inert. An unreadable render directory is no finding.

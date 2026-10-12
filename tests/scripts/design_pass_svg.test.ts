@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -134,6 +135,20 @@ describe('step 1.4, closed — the routing, and the predicate it must not widen'
         // A real chunk resolves, so "null" is not simply what this always says.
         const real = withChunk('module.exports = { scanSvg: () => [] };\n');
         expect(typeof loadSvgScanUncached(real, true)).toBe('function');
+
+        // A chunk whose bytes no longer match its sidecar is not executed —
+        // the same integrity posture `dispatch.js` has (16.5.0 release review).
+        // A matching sidecar loads, and so does a chunk with no sidecar at all,
+        // which is `unverifiable` and allowed exactly as for the main bundle.
+        const body = 'module.exports = { scanSvg: () => [] };\n';
+        const sha = createHash('sha256').update(body).digest('hex');
+        const sidecarOf = (url: string) => path.join(path.dirname(new URL(url).pathname), `${CHUNK_BASENAME}.sha256`);
+        const tampered = withChunk(body);
+        fs.writeFileSync(sidecarOf(tampered), `${'0'.repeat(64)}  ${CHUNK_BASENAME}\n`);
+        expect(loadSvgScanUncached(tampered, true)).toBeNull();
+        const matching = withChunk(body);
+        fs.writeFileSync(sidecarOf(matching), `${sha}  ${CHUNK_BASENAME}\n`);
+        expect(typeof loadSvgScanUncached(matching, true)).toBe('function');
         for (const dir of made) fs.rmSync(dir, { recursive: true, force: true });
 
         // (b) An event whose target is not an `.svg` never reaches the loader at

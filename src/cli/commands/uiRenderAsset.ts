@@ -33,9 +33,7 @@
  *     image document (R5), so the reading is `not_witnessable` and the HOST is
  *     checked for a `<picture>` route instead.
  *
- * NO NETWORK. Every request whose scheme is not `file:` (plus the `data:`,
- * `blob:` and `about:` schemes a page makes of itself) is aborted, so an asset
- * cannot fetch during its own witness.
+ * NO NETWORK, NO SCRIPT, NO FILE OUTSIDE THE PROJECT — `uiRenderAssetIsolation.ts`.
  */
 
 import * as crypto from 'node:crypto';
@@ -48,8 +46,9 @@ import { elementExtent, parseElements, readViewBox, vectorVerdict } from '../../
 import type { DeliveryMode, SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
 import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js';
 import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
-import { readGrounds } from './uiRenderAssetGrounds.js';
+import { readGrounds, type OpenPage } from './uiRenderAssetGrounds.js';
 import { gradeIconGrid } from './uiRenderAssetGrid.js';
+import { fileRootsFor, injectStyle, requestAllowed } from './uiRenderAssetIsolation.js';
 export * from './uiRenderAssetGrid.js';
 import {
     ASSET_CLASSES,
@@ -58,7 +57,6 @@ import {
     DEFAULT_GEOMETRY_TOLERANCES,
     DRAW_ON_DEAD_TIME_THRESHOLD,
     FALLBACK_BACKGROUNDS,
-    ALLOWED_SCHEMES,
     BLEED_SHARE_THRESHOLD,
     FOREIGN_CONTENT_SHARE_THRESHOLD,
     HOLE_ATTRIBUTE,
@@ -494,7 +492,8 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
     const hostHtml = isHost ? null : inlineHost(content);
     const targetUrl = isHost ? `file://${opts.file}` : `file://${path.join(dir, HOST_BASENAME)}`;
 
-    const context = await browser.newContext();
+    const fileRoots = fileRootsFor(opts.projectRoot, opts.file);
+    const context = await browser.newContext({ javaScriptEnabled: false });
     // A transpiler shim, and it belongs here rather than in a test helper.
     // Running this file through `tsx` — which is how `./scripts-run` and every
     // consumer script reach it — emits `__name(...)` wrappers around the
@@ -524,6 +523,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
                     background: colour,
                     cssWidth: size.width,
                     blocked,
+                    fileRoots,
                 });
                 const shot = path.join(opts.outDir, `asset-${size.label}-${mode}.png`);
                 await captureWithOneRetry(page, shot);
@@ -558,6 +558,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
             background: backgrounds.light,
             cssWidth: biggest.width,
             blocked,
+            fileRoots,
         });
 
         if (!isHost) {
@@ -604,6 +605,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
             duration,
             isHost,
             hostDir: path.dirname(path.resolve(opts.file)),
+            fileRoots,
         });
 
         if (opts.compareTo) {
@@ -637,7 +639,8 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         // size so the counts are not dominated by anti-aliasing. Not for a
         // host document — the silhouette of a page is the page.
         if (!isHost) {
-            reading.grounds = await readGrounds(context, openPage, {
+            const confinedOpen: OpenPage = (ctx, spec) => openPage(ctx, { ...spec, fileRoots });
+            reading.grounds = await readGrounds(context, confinedOpen, {
                 url: targetUrl,
                 hostHtml,
                 width: Math.max(biggest.width, 64),
@@ -679,6 +682,8 @@ interface OpenPageSpec {
     background: string;
     cssWidth: number;
     blocked: string[];
+    /** `file:` requests resolving outside every one of these directories are aborted. */
+    fileRoots: readonly string[];
     reducedMotion?: boolean;
 }
 
@@ -700,7 +705,7 @@ async function openPage(
             await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: spec.hostHtml });
             return;
         }
-        if (!ALLOWED_SCHEMES.some((s) => url.startsWith(s))) {
+        if (!requestAllowed(url, spec.fileRoots)) {
             spec.blocked.push(url);
             await route.abort();
             return;
@@ -708,11 +713,11 @@ async function openPage(
         await route.continue();
     });
     await page.goto(spec.url, { waitUntil: 'load', timeout: 30_000 });
-    await page.addStyleTag({
-        content:
-            `html,body{margin:0;padding:0;background:${spec.background}}` +
+    await injectStyle(
+        page,
+        `html,body{margin:0;padding:0;background:${spec.background}}` +
             `body>svg{display:block;width:${spec.cssWidth}px;height:auto}`,
-    });
+    );
     return page;
 }
 
@@ -1394,6 +1399,7 @@ interface ReducedMotionSpec {
     isHost: boolean;
     /** Directory the host's relative image references resolve against. */
     hostDir: string;
+    fileRoots: readonly string[];
 }
 
 async function readReducedMotion(
@@ -1411,6 +1417,7 @@ async function readReducedMotion(
         background: spec.background,
         cssWidth: spec.cssWidth,
         blocked: spec.blocked,
+        fileRoots: spec.fileRoots,
         reducedMotion: true,
     });
     try {

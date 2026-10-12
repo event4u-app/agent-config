@@ -43,6 +43,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { Finding as SvgFinding, ScanOptions } from '../_lib/svg_rules.js';
+import { verifyBundle } from './bundle_integrity.js';
 
 /** The signature `scanSvg` exports. Type-only, so no bytes reach the bundle. */
 export type SvgScan = (text: string, file: string, opts?: ScanOptions) => SvgFinding[];
@@ -112,8 +113,13 @@ export function loadSvgScanUncached(
     bundled: boolean = isBundled(),
 ): SvgScan | null {
     try {
+        const specifier = rulesSpecifier(selfUrl, bundled);
+        // The chunk runs inside the dispatch process, so it gets the bundle's
+        // own integrity check: a mismatch with its sidecar is not executed.
+        // No sidecar is `unverifiable` and allowed, as for `dispatch.js`.
+        if (bundled && verifyBundle(specifier).state === 'mismatch') return null;
         const req = createRequire(selfUrl);
-        const mod = req(rulesSpecifier(selfUrl, bundled)) as Record<string, unknown>;
+        const mod = req(specifier) as Record<string, unknown>;
         const scan = mod['scanSvg'];
         return typeof scan === 'function' ? (scan as SvgScan) : null;
     } catch {

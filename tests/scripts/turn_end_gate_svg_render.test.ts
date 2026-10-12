@@ -207,6 +207,53 @@ describe('the turn-end gate reads the render, never the call', () => {
         expect(finding?.reason).toContain('discharge nothing');
     });
 
+    it('a hand-written manifest plus a render naming the file still discharges nothing', () => {
+        // 16.5.0 release review: the render only had to NAME the file, so a
+        // manifest written by hand — by an edit tool or by a shell redirect —
+        // followed by any render naming the file (one that failed, say)
+        // cleared a blocking gate. Writing into the render directory by any
+        // route other than the render itself now voids the manifests.
+        const file = writeSvg('assets/logo.svg', SVG_CLEAN);
+        writeManifest('hand-written', {
+            profile: 'asset',
+            verification: 'verified',
+            asset: { digest: digestOf(SVG_CLEAN) },
+        });
+        const viaTool = openSvgObligation(root, [
+            edit(file),
+            edit('agents/runtime/state/render/hand-written/manifest.json'),
+            RENDER,
+        ]);
+        expect(viaTool).not.toBeNull();
+        expect(viaTool?.reason).toContain('render directory');
+
+        const viaShell = openSvgObligation(root, [
+            edit(file),
+            bash(`echo '{}' > agents/runtime/state/render/hand-written/manifest.json`),
+            RENDER,
+        ]);
+        expect(viaShell).not.toBeNull();
+
+        // A write sharing one shell call with the render, and a write through a
+        // relative path after `cd` (cross-provider review of this fix).
+        const sameCall = bash(
+            `printf '{}' > agents/runtime/state/render/hand-written/manifest.json; ` +
+                'agent-config ui:render assets/logo.svg --profile asset',
+        );
+        expect(openSvgObligation(root, [edit(file), sameCall])).not.toBeNull();
+        const viaCd = bash(`cd agents/runtime/state && printf '{}' > render/hand-written/manifest.json`);
+        expect(openSvgObligation(root, [edit(file), viaCd, RENDER])).not.toBeNull();
+
+        // Control: the same manifest with only the render discharges — also when
+        // the render's output is piped, and when the manifest is READ afterwards.
+        expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
+        const piped = bash('agent-config ui:render assets/logo.svg --profile asset 2>&1 | tail -5');
+        const readBack = bash('cat agents/runtime/state/render/hand-written/manifest.json | jq .verification');
+        expect(openSvgObligation(root, [edit(file), piped, readBack])).toBeNull();
+        const afterCd = bash('cd assets && agent-config ui:render logo.svg --profile asset');
+        expect(openSvgObligation(root, [edit(file), afterCd])).toBeNull();
+    });
+
     it('a render of SOME OTHER file discharges nothing', () => {
         // Finding 2 of this change's completion review. `renderObserved` used
         // to be one boolean for the whole turn, so ANY asset render unlocked
