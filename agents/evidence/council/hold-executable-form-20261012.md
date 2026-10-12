@@ -20,10 +20,17 @@ exist on this repository.
 
 Read from the live forge on 2026-10-12, not recalled:
 
+<!-- One row below carries a `<!-- ref-ignore -->` marker. `check_references`
+     reads a backticked token next to the word "rule" as a rule name of this
+     package and reports it broken; `pull_request` there is GitHub's ruleset
+     rule TYPE. The marker sits on that row because the marker is matched per
+     line as an exact literal, and this comment sits outside the table because
+     a comment block between two rows ends the table. -->
+
 | Fact | Value |
 |---|---|
 | Active branch rulesets | one, `17749383` "main protection", targeting `~DEFAULT_BRANCH` |
-| Its `pull_request` rule | `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []` |
+| Its `pull_request` rule | `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []` | <!-- ref-ignore -->
 | `bypass_actors` | `[]` |
 | Write-or-better collaborators | 5 — `matze4u` (admin, and the proposing/merging party), `h3xa2` (maintain), `phpjob`, `0sama`, `php-jesus` (write) |
 | Only reachable org team | `event4u-app/galawork`, **one** member: `matze4u` |

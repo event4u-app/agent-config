@@ -3,7 +3,13 @@
 <!-- The prompt given to the council on 2026-10-12, committed verbatim so the
      verdict beside it can be checked against what was actually asked
      (evaluator-independence: a recorded verdict whose prompt is not
-     recoverable is not evidence). Not edited after the run. -->
+     recoverable is not evidence). Not edited after the run — with one
+     exception, declared here rather than left for a diff to reveal: a single
+     `<!-- ref-ignore -->` marker was appended to the line quoting GitHub's
+     pull-request ruleset rule, because `check_references` reads that
+     backticked token as a rule name of this package and reds on it. The marker
+     is a build gate's annotation and renders as nothing; no word of the prompt
+     changed. -->
 
 # The hold D11 selected has a precondition this repository does not satisfy — what is its executable form?
 
@@ -44,7 +50,7 @@ had in front of them.
 All values read from the GitHub API on the date above, not recalled:
 
 1. **The ruleset.** One active branch ruleset (`17749383`, "main protection"),
-   targeting `~DEFAULT_BRANCH`. Its `pull_request` rule reads:
+   targeting `~DEFAULT_BRANCH`. Its `pull_request` rule reads: <!-- ref-ignore -->
    `required_approving_review_count: 0`, `require_code_owner_review: false`,
    `required_reviewers: []`, `dismiss_stale_reviews_on_push: true`,
    `required_review_thread_resolution: true`. `bypass_actors: []`.
