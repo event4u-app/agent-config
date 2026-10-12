@@ -929,7 +929,7 @@ question instead of re-deriving one.
 **The block carries only what the council could not take.** Every candidate —
 an escalated recurrence here, a blocker this run files, a closure residue —
 passes the council's owner test first, in one batched question
-([`/challenge-me closure`](../../../meta/challenge-me/closure/command.md) § Step 2,
+(`/challenge-me closure` § Step 2,
 the owner gate). An `Owner: user` field this run wrote is the run's guess; an
 item the council decides is recorded as `council:<record>` and never asked.
 
