@@ -363,19 +363,31 @@ export interface GatedPaths {
  * order to edit the rule that member names — the exact move the list is on the
  * watch list to make visible.
  *
- * A missing or unparseable file yields an EMPTY set, not a refusal, and the
- * asymmetry with the quorum policy is deliberate: the policy decides whether a
- * control can measure at all, while this list only WIDENS the gated set. An
- * empty list falls back to the kernel-and-hooks reach the gate had before step
- * 4.2, which is the pre-existing floor rather than an open door.
+ * RETURNS `null` WHEN IT CANNOT BE READ, AND THE GATE TURNS THAT INTO A REFUSAL.
+ *
+ * An earlier version of this function returned an EMPTY SET on a read or parse
+ * failure, on the argument that the quorum policy decides whether a control can
+ * measure at all while this list only WIDENS, so losing it merely falls back to
+ * the pre-4.2 reach. **A 2026-10-12 council review refused the change on exactly
+ * that clause, 2/2, and was right.** An empty set is not a fallback, it is a
+ * silent threshold reduction: a gate advertising 28 high-consequence rules
+ * drops all 28 the moment one file fails to parse, reports success, and says
+ * nothing. "Graceful fallback" was the name on it; "lowers a threshold" is what
+ * `evaluator-independence` calls it, and that clause is one of the nine
+ * questions this gate's own review asks.
+ *
+ * So it fails closed, exactly as `readRequiredProviders` does. The cost the old
+ * comment feared — reddening every gated PR over a missing file — is real and
+ * is the correct behaviour: the file is committed, so its absence is a defect
+ * in the checkout and not a state to carry on through.
  */
 let consequenceSlugCache: ReadonlySet<string> | null = null;
 
-export function consequenceRuleSlugs(repoRoot: string = REPO): ReadonlySet<string> {
+export function consequenceRuleSlugs(repoRoot: string = REPO): ReadonlySet<string> | null {
     if (repoRoot === REPO && consequenceSlugCache !== null) {
         return consequenceSlugCache;
     }
-    let slugs: ReadonlySet<string> = new Set<string>();
+    let slugs: ReadonlySet<string> | null = null;
     try {
         const raw = fs.readFileSync(path.join(repoRoot, CONSEQUENCE_CLASS_PATHS[0] as string), 'utf8');
         const parsed = JSON.parse(raw) as { members?: unknown };
@@ -384,9 +396,11 @@ export function consequenceRuleSlugs(repoRoot: string = REPO): ReadonlySet<strin
             slugs = new Set(Object.keys(members as Record<string, unknown>));
         }
     } catch {
-        slugs = new Set<string>();
+        slugs = null;
     }
-    if (repoRoot === REPO) {
+    // Only a SUCCESSFUL read is cached. Caching a failure would make one
+    // transient error outlive itself for the rest of the process.
+    if (repoRoot === REPO && slugs !== null) {
         consequenceSlugCache = slugs;
     }
     return slugs;
@@ -396,7 +410,7 @@ export function consequenceRuleSlugs(repoRoot: string = REPO): ReadonlySet<strin
 export function classifyPaths(
     files: readonly string[],
     derived: readonly string[] = derivedPlumbing(),
-    consequence: ReadonlySet<string> = consequenceRuleSlugs(),
+    consequence: ReadonlySet<string> = consequenceRuleSlugs() ?? new Set<string>(),
 ): GatedPaths {
     const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
@@ -592,6 +606,9 @@ export function escalationMessage(input: EscalationInput): string[] {
         `     ${where}. This gate does not know them and will not guess:`,
         '     a confident summary it could not have computed is the failure the',
         '     mechanism exists to prevent, arriving through the help text.',
+        '     And what the record says about them is the AUTHOR\u2019S claim, checked by',
+        '     nothing here \u2014 a record that understates the risk or overstates the',
+        '     rollback is repeated faithfully. Read the diff, not only the record.',
         '',
         'The route by which the user permits a change the council could not pass is',
         '`ratification-artifact.md` § The owner-permission-route. A chat answer is not',
@@ -618,7 +635,14 @@ export function evaluate(
     // script's own tree: under CI the gate code is the base revision's and
     // `root` is the head, so a module present on either side is watched.
     const derived = derivedFor(root);
-    const gated = classifyPaths(files, derived);
+    /**
+     * Read from THIS script's tree, which in CI is the base revision's — the
+     * reason the quorum policy is read that way. `null` means the list could
+     * not be read, and the gate refuses below rather than continuing with a
+     * narrower reach it never announced.
+     */
+    const consequence = consequenceRuleSlugs();
+    const gated = classifyPaths(files, derived, consequence ?? new Set<string>());
     const scanned = files.length;
 
     /**
@@ -675,6 +699,21 @@ export function evaluate(
                 `failed ${tally.failed} · out_of_scope ${tally.out_of_scope}`,
         );
     };
+
+    if (consequence === null) {
+        // Before the "nothing to ratify" exit, deliberately: a diff that looks
+        // ungated may only look that way because the list that would have
+        // gated it could not be read.
+        lines.push(
+            `❌  \`${CONSEQUENCE_CLASS_PATHS[0] as string}\` is missing or unparseable, so the ` +
+                'high-consequence rule class is unknown. This gate fails closed rather than ' +
+                'continuing with a narrower reach than it advertises — an earlier version ' +
+                'returned an empty class here, which a ratification review refused as a silent ' +
+                'threshold reduction.',
+        );
+        close(false);
+        return { exitCode: 1, lines, scanned };
+    }
 
     if (!requiresRatification(gated)) {
         lines.push(

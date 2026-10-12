@@ -683,18 +683,42 @@ line are deliberately not used: they answer which *option* wins a
 deliberation, not whether each *seat* passed a change. A missing line, an
 abstention or any other label is a seat that did not conclude.
 
-The record's verdict is then derived by one rule, and the ORDER is the rule
-(`modification_review.deriveModificationVerdict`):
+**Then two things are derived, and they are deliberately not the same thing.**
+This paragraph was rewritten on 2026-10-12 after a 2/2 convergent council
+(anthropic + openai, design mode, 2 rounds, blind peer review) resolved a
+contradiction between what this section said and what the shipped reader does.
+
+| Derived | By | Used for |
+|---|---|---|
+| the record's `providers` and `verdict` | `deriveRatificationHeader` | what the record SAYS |
+| the review's disposition | `modification_review.deriveModificationVerdict`, surfaced by `deriveModificationOutcome` | what the run DOES next |
+
+The header rule has no quorum count: `providers` is every seat that gave a
+final verdict, any refusing seat makes it `refused`, any non-convergent one
+`non-convergent`, and otherwise `ratified` if any seat said so. Quorum is
+enforced separately, by provider diversity, and a quorum-short record fails
+there rather than being relabelled.
+
+**Why the quorum count is not folded into the verdict.** `seats:` is EVIDENCE
+and the header is derived from it, so letting a policy parameter
+(`required_providers`) rewrite what the evidence says inverts the dependency: a
+record would mean something different next year because a number in a config
+file changed. And a grep for `non-convergent` would return both *the providers
+disagreed* and *one provider ratified and the other never answered* — two
+failure modes whose remediations differ, retry being right for only one.
+
+The disposition rule keeps its own order, and that ORDER is the rule:
 
 1. any concluding seat on `refused` gives `refused`;
-2. fewer concluding providers than `required_providers` gives `non-convergent`;
-3. any concluding seat on `ratified` gives `ratified`;
-4. otherwise, all concluded and all non-expanding, `confirmed-non-expanding`.
+2. fewer concluding providers than `required_providers` gives `quorum-short`;
+3. any concluding seat on `ratified` gives `accepted`;
+4. otherwise, all concluded and all non-expanding, `accepted`.
 
 Step 1 precedes step 2 deliberately. A single refusing seat is a refusal even
 when it is the only seat that concluded; letting the quorum rule fire first
 would turn *one reviewer said no* into *not enough reviewers answered*, which
-reads as a retryable condition rather than as the objection it is.
+reads as a retryable condition rather than as the objection it is. That
+precedent is what the council extended to the passing labels.
 
 ## What the artifact does NOT decide
 

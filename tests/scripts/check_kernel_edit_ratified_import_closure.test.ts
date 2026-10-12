@@ -15,7 +15,12 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { classifyPaths, closureArrivals, evaluate } from '../../src/scripts/check_kernel_edit_ratified.js';
+import {
+    classifyPaths,
+    closureArrivals,
+    evaluate,
+    expectedSubjectFor,
+} from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 
 const POLICY = 'src/scripts/hooks/concern_failure_policy.ts';
@@ -33,6 +38,10 @@ function writeRecord(): string {
             'proposed_by: claude/session-a',
             'implemented_by: claude/session-a',
             'reviewed_by: council/anthropic+openai',
+            // The content binding of 2026-10-12. Asked of the gate rather than
+            // typed, so this fixture proves the shipped membership rule and not
+            // a second reading of it.
+            `subject: ${expectedSubjectFor([POLICY], root)}`,
             'verdict: ratified',
             'effective_after: merge',
             'providers:',

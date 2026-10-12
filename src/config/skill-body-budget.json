@@ -281,7 +281,7 @@
     "test-case-discovery": 12325,
     "test-driven-development": 16352,
     "test-performance": 6376,
-    "testing-anti-patterns": 18233,
+    "testing-anti-patterns": 19200,
     "threat-modeling": 11943,
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
@@ -291,7 +291,7 @@
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
     "universal-project-analysis": 5540,
-    "upstream-contribute": 11501,
+    "upstream-contribute": 12500,
     "using-git-worktrees": 11762,
     "validate-feature-fit": 4252,
     "verify-completion-evidence": 9612,
@@ -346,6 +346,18 @@
       "old": 10469,
       "new": 10599,
       "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
-    }
+    },
+      {
+          "skill": "testing-anti-patterns",
+          "old": 18233,
+          "new": 19200,
+          "reason": "Iron Law 8 and its measured instance: a negative fixture whose boundary moved is repaired by re-pointing the example, never by deleting the assertion. Trimmed twice before raising; what remains is the law, the reason it is not law 7, and the dated case. road-to-self-modification-that-a-council-must-pass 6.2."
+      },
+      {
+          "skill": "upstream-contribute",
+          "old": 11501,
+          "new": 12500,
+          "reason": "The stage: gated refusal the pipeline guideline had claimed since it was written, plus the review-then-approval order a package proposal now needs and the one line saying what the binding does not prove. Trimmed once before raising. road-to-self-modification-that-a-council-must-pass 6.1."
+      }
   ]
 }
