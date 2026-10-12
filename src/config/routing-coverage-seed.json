@@ -10,7 +10,7 @@
     },
     "seed": {
         "rules": 0.9626,
-        "skills": 0.4167
+        "skills": 0.4233
     },
     "seed_provenance": {
         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
@@ -143,6 +143,13 @@
             "from": 0.4147,
             "to": 0.4167,
             "reason": "`svg-authoring` landed as a new skill on the design family's vector side and shipped its own evals/triggers.json in the same change (124 of 299 -> 125 of 300). This is the FIRST entry on the skills scope where the DENOMINATOR moves: every entry above adds a case to a fixed 299, and this one adds a unit and a case together. The _comment names that as the ratio's other failure direction -- units added without cases -- and the repair it prescribes is the corpus file, not the seed; the file landed with the skill, so the ratio ROSE across a denominator increase (0.4147 -> 0.4167) rather than falling, which is the same shape as the 2026-09-13 and 2026-10-06 entries on the RULES scope. The seed rises to the live value; it may never be LOWERED. The partition is TRAIN, not holdout: sha256('svg-authoring')[0:2] is 0x77 = 119, above the holdout ceiling of 51, so BOTH published train-side measurements are re-taken here on the terms the 2026-10-04, 2026-10-09 and 2026-10-10 entries set. routing-body-signal-verdict.json: verdict unchanged in kind, still `harmful`, false activation +7.50 pp against the +2.0 pp guard, delta-recall 2.360 -> 3.383 pp (still below the 5.0 pp bar), train corpora 97 -> 98, catalogue 299 -> 300. The holdout pin IS touched, for two reasons rather than one: svg-authoring adds a train row, and the same branch EDITED image-provider-routing's existing train corpus -- it splits the vector job shapes between a provider and hand-authoring -- which moves that row's hash while moving no count at all, the case a reader counting files would miss. The sealed holdout set is the same 27 rows and byte-identical, so the ordering claim is untouched. NO entry was removed from trigger_eval_grandfather.json: the skill is new, so it was never allowlisted, and check_trigger_eval_presence fires only on an entry whose skill HAS a corpus."
+        },
+        {
+            "date": "2026-10-12",
+            "scope": "skills",
+            "from": 0.4167,
+            "to": 0.4233,
+            "reason": "road-to-account-lifecycle-threat-rows Phase 1 edited six skill bodies to stop the suite teaching four account-flow anti-patterns, and check_routing_coverage requires a corpus for every skill a diff touches. Two had none: `form-handler` and `judge-security-auditor` (125 -> 127 of 300). Same shape as every entry above and for the same reason: the corpus file is the gate's own remedy rather than a coverage push. Ten cases each -- five exemplars in the explicit and the symptom-first phrasing each skill's own description names, three near-misses naming the neighbour that actually owns the query (fe-design and laravel-validation for a form, threat-modeling and authz-review for a security judge), and two counterexamples guarding each homonym (a Google Form and a form letter; a building badge and a security deposit). The seed rises to the live value; it may never be LOWERED. The partition is TRAIN for both, not holdout: sha256('form-handler')[0:2] is 0x5d = 93 and sha256('judge-security-auditor')[0:2] is 0xc8 = 200, both above the holdout ceiling of 51, so BOTH published train-side measurements are re-taken here on the terms the 2026-10-04, 2026-10-09, 2026-10-10 and 2026-10-11 entries set. routing-body-signal-verdict.json: verdict unchanged in kind, still `harmful`, false activation +7.13 pp against the +2.0 pp guard, delta-recall 3.383 -> 3.71 pp (still below the 5.0 pp bar), train corpora 98 -> 100, catalogue unchanged at 300. The holdout pin IS touched for the row-count reason only -- two train rows added, no holdout row's content changed -- so the sealed 27 rows are byte-identical and the ordering claim is untouched. NO entry was removed from trigger_eval_grandfather.json: neither skill was allowlisted, because neither had a corpus for check_trigger_eval_presence to fire on."
         }
     ]
 }

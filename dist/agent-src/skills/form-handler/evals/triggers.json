@@ -1,0 +1,77 @@
+{
+  "skill": "form-handler",
+  "last_eval": "2026-10-12",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-12 under road-to-account-lifecycle-threat-rows 1.1, which rewrote this skill's validation-timing guidance and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three things the skill actually owns — validation TIMING, the error-display contract, and the submission lifecycle including double-submit — in the explicit and the symptom-first phrasing its own description names. Near-misses are three neighbours that share form vocabulary and are somebody else's job: the visual design of a form (fe-design), the server-side validation rules behind it (laravel-validation), and the accessibility audit of the same screen (accessibility-auditor), which this skill defers to rather than performs. Counterexamples guard the 'form' homonym: a Google Form and a form letter are not this skill's subject.",
+  "queries": [
+    {
+      "id": "fh-e1",
+      "q": "should this field validate on blur or on submit?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fh-e2",
+      "q": "our checkout submits twice when the user double-clicks — fix the submission lifecycle",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fh-e3",
+      "q": "where should the error message sit relative to the field, and how do I wire aria-describedby?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fh-e4",
+      "q": "design the dirty/pristine state for this multi-step wizard so back does not lose answers",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fh-e5",
+      "q": "review this signup form before we ship it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fh-e6",
+      "q": "wann soll dieses Feld validieren — beim Verlassen oder erst beim Absenden?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "fh-n1",
+      "q": "make this form look less cramped — spacing, type scale, the submit button",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "fe-design owns the visual pass"
+    },
+    {
+      "id": "fh-n2",
+      "q": "write the FormRequest rules for the registration endpoint",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "laravel-validation owns server-side rules"
+    },
+    {
+      "id": "fh-n3",
+      "q": "is this form usable with a screen reader?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "accessibility-auditor; this skill defers to it"
+    },
+    {
+      "id": "fh-c1",
+      "q": "create a Google Form for the team offsite signup",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "fh-c2",
+      "q": "draft a form letter we can send to every customer",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

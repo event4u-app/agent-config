@@ -70,7 +70,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
 
 ## Phase 1 — Stop teaching the anti-patterns
 
-- [ ] **1.1 Qualify the availability check in `form-handler`.** Rewrite
+- [x] **1.1 Qualify the availability check in `form-handler`.** Rewrite
       `SKILL.md:57,60`: an on-change availability check is an enumeration
       oracle for any field that identifies an account (email, phone, login
       handle) and is never the default there; it is acceptable only for a
@@ -78,7 +78,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       explicit project decision. Point at the enumeration row from 2.2.
       verify: `grep -c 'canonical exception' src/skills/form-handler/SKILL.md` -> /^0$/
       and the rewritten lines name the enumeration row.
-- [ ] **1.2 Repin the authorities.** `authz-review/SKILL.md:250` → ASVS 5.0.0
+- [x] **1.2 Repin the authorities.** `authz-review/SKILL.md:250` → ASVS 5.0.0
       V8 Authorization; `data-flow-mapper/SKILL.md:159` → ASVS 5.0.0 V1 Encoding
       and Sanitization + V2 Validation and Business Logic, using the same
       migration-guide mapping `threat-modeling/SKILL.md:218-224` already
@@ -87,7 +87,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       the authentication rows defer to — names and chapters only, no values.
       verify: `grep -rl '4\.0\.3' src/skills src/rules docs/guidelines` -> /^src\/skills\/threat-modeling\/SKILL\.md\s*$/
       — only the provenance sentence in threat-modeling remains.
-- [ ] **1.3 Key the PHP `auth` limiter on the account, not only the IP.**
+- [x] **1.3 Key the PHP `auth` limiter on the account, not only the IP.**
       Change the example at `docs/guidelines/php/api-design.md:83-85` to limit
       on the normalised account identifier together with the IP (a composite
       key or two limiters), and say in one sentence why IP-only fails in both
@@ -95,7 +95,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       changes the key, not the threshold.
       verify: no `RateLimiter::for('auth'` block in `docs/guidelines/` is keyed
       by `$request->ip()` alone.
-- [ ] **1.4 Close the fast-hash and raw-compare gap in the two checklists.**
+- [x] **1.4 Close the fast-hash and raw-compare gap in the two checklists.**
       `judge-security-auditor/SKILL.md:69` — the information-disclosure row
       covers observable differences between known and unknown accounts
       (status, redirect, an early return before verification), not only the
@@ -110,6 +110,15 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       (`hash_file('sha256', $path)`, `password_verify(...)`,
       `hash_equals($a, $b)`) — the extended greps hit all four and none of the
       three.
+
+      **Closed 2026-10-12. Measured on the fixture the step describes:** the
+      extended patterns hit `sha256($salt.$password)`, `hash('sha512',
+      $password)`, `md5($password)` and `$token === $request->token`, and are
+      silent on `hash_file('sha256', $path)`, `password_verify(...)` and
+      `hash_equals($a, $b)` — 4 of 4 and 0 of 3. The first pattern draft
+      missed the `sha256(...)` form entirely, because it named only
+      `md5|sha1|hash`; the fixture is what caught that, which is the reason the
+      step asks for one.
 
 ## Phase 2 — The rows the corpus does not have
 
@@ -294,7 +303,7 @@ in a one-line decline.
   tree.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

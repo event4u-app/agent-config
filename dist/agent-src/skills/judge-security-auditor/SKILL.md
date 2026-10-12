@@ -66,8 +66,8 @@ escaping is a finding.
 | **XSS / template injection** | Unescaped output in HTML/markup; bypassed auto-escape; `v-html`-style primitives |
 | **Mass assignment** | Whole-request-body → model/ORM without an allowlist |
 | **CSRF / replay** | State-changing endpoint missing token, nonce, or idempotency key |
-| **Information disclosure** | Stack trace, internal path, or user enumeration in error response |
-| **Cryptography misuse** | Weak algorithm (MD5/SHA1 for passwords, ECB), static IV, missing auth-tag |
+| **Information disclosure** | Stack trace, internal path, or account enumeration through ANY observable difference between a known and an unknown account — status code, redirect target, response time, or an early return before the password is verified. Not only the error text: a handler that returns before hashing when the account is absent answers the same question faster. |
+| **Cryptography misuse** | A general-purpose FAST hash for passwords (MD5, SHA-1, or any SHA-2 — `sha256($salt.$password)` is the shape, not just `md5()`) or a hand-rolled salt scheme, where a memory-hard KDF belongs; `==` / `===` on a token, OTP, signature or MAC, where a constant-time compare belongs; also ECB, a static IV, a missing auth-tag. |
 
 ### 3. Cross-check policy
 

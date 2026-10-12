@@ -247,8 +247,10 @@ Runtime confirmation (e.g. *"reproduce the cross-tenant read against staging"*,
 
 ## References
 
-- **OWASP ASVS v4.0.3** — Chapter V4 Access Control, especially V4.1
-  (General Access Control Design) and V4.2 (Operation-level Access Control).
+- **OWASP ASVS v5.0.0** — Chapter V8 Authorization. `threat-modeling`'s
+  References records the chapter renumbering and the migration guide it comes
+  from; the old numbering is deliberately not repeated here, so there is one
+  place to correct when the standard moves again.
   [owasp.org/www-project-application-security-verification-standard/](https://owasp.org/www-project-application-security-verification-standard/)
 - **OWASP Top 10 2021 — A01 Broken Access Control** — canonical failure modes
   (IDOR, missing function-level checks, forced browsing, metadata tampering).

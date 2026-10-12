@@ -156,8 +156,11 @@ Runtime confirmation (e.g. *"actually POST a request and log the payload"*,
 
 ## References
 
-- **OWASP ASVS v4.0.3 V5** — Validation, Sanitization and Encoding — baseline
-  for naming validation / normalization hops.
+- **OWASP ASVS v5.0.0** — V1 Encoding and Sanitization + V2 Validation and
+  Business Logic — baseline for naming validation / normalization hops. The
+  two chapters were one in the previous revision; `threat-modeling`'s
+  References records that split and the migration guide it comes from, and the
+  old numbering is deliberately not repeated here.
   [owasp.org/www-project-application-security-verification-standard/](https://owasp.org/www-project-application-security-verification-standard/)
 - [`threat-modeling`](../threat-modeling/SKILL.md),
   [`authz-review`](../authz-review/SKILL.md),

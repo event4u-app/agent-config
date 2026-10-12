@@ -1,0 +1,77 @@
+{
+  "skill": "judge-security-auditor",
+  "last_eval": "2026-10-12",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-12 under road-to-account-lifecycle-threat-rows 1.4, which extended this judge's information-disclosure and cryptography-misuse rows and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the shape its own description names: a DIFF that may carry security risk, dispatched by a review command. Near-misses are three neighbours that share security vocabulary and answer a different question: the threat model BEFORE the code exists (threat-modeling), the per-entrypoint authorization chain rather than a diff (authz-review), and the agent's own configuration rather than application code (agent-security-review). Counterexamples guard 'security' as a non-technical word — a physical badge policy and a security deposit are not this skill's subject.",
+  "queries": [
+    {
+      "id": "jsa-e1",
+      "q": "review this diff for security risk before I merge it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jsa-e2",
+      "q": "does this change introduce an injection or a mass-assignment hole?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jsa-e3",
+      "q": "judge the security of the branch — secrets, deserialization, SSRF",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jsa-e4",
+      "q": "this PR touches the login handler; audit what it changed",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jsa-e5",
+      "q": "security pass on these changed files, with findings ranked",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "jsa-e6",
+      "q": "prüfe diesen Diff auf Sicherheitsrisiken, bevor ich ihn merge",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "jsa-n1",
+      "q": "we are about to build webhook ingest — what are the abuse cases?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "threat-modeling runs before the code"
+    },
+    {
+      "id": "jsa-n2",
+      "q": "walk every endpoint and check the ownership and tenant scope",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "authz-review owns the per-entrypoint chain"
+    },
+    {
+      "id": "jsa-n3",
+      "q": "red-team our agent's MCP and hook configuration",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "agent-security-review audits the agent, not the app"
+    },
+    {
+      "id": "jsa-c1",
+      "q": "what is our policy for issuing building security badges?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "jsa-c2",
+      "q": "how much security deposit should the rental contract ask for?",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

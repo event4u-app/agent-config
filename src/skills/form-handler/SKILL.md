@@ -54,10 +54,23 @@ field:
 |---|---|
 | On submit only | Forms with privacy concerns (passwords); short forms |
 | On blur | Default — feedback when the user finishes the field |
-| On change (debounced) | Typing-feedback fields (username availability, password strength) |
+| On change (debounced) | Typing-feedback fields (password strength) |
 
 Avoid validate-on-change for the whole form — premature errors
-shame the user. Username-availability is the canonical exception.
+shame the user.
+
+**An on-change availability check is an enumeration oracle, not a default.**
+For any field that IDENTIFIES an account — email, phone, login handle — it
+answers "does this account exist?" to anyone who types, at whatever rate the
+debounce allows. That is the account-enumeration threat row in
+`threat-modeling`'s corpus, and the field being a signup form rather than a
+login form changes nothing about what the answer tells an attacker.
+
+It is acceptable only where all three hold: the field is a PUBLIC handle that
+is not a login identifier, the endpoint is rate-limited per account and per
+source, and the project has recorded the trade deliberately. Otherwise the
+check belongs on submit, with a response that does not distinguish taken from
+free.
 
 ### 2. Lock the error display contract
 
