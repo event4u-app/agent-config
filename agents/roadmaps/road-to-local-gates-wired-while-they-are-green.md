@@ -123,6 +123,19 @@ with it and left alone.
       The parity baseline is lowered by twenty in the same change and the
       job's duration is recorded in the cost-budget page.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t baseline-at-most-143 --reporter=verbose` -> /✓.*baseline-at-most-143/
+      <br>**Closed 2026-10-13 with one deviation, recorded here rather than
+      only in a YAML comment.** The steps went into `.github/workflows/rule-backstops.yml`,
+      NOT `consistency.yml` as written above: that file hosts the ratification
+      gate, so any step added to it makes the whole diff ratification-gated,
+      and `rule-backstops.yml` is where `enforced_by` backstops already live
+      and is equally a `pull_request` workflow. The step's obligation — a
+      pull-request caller — is met; the file it names is not the one used.
+      The other two obligations are met literally: the baseline moved 165 ->
+      129 on CI's own reading (run 38373476139, never a local one), and the
+      job's duration is in `docs/contracts/ci-cost-budget.md` with its sample
+      size. The batch is twenty rather than the 119 the reading found wirable,
+      on a 2/2 council verdict of 2026-10-13 that one pull request carrying all
+      119 is the sweep the 2026-08-13 decision declines.
 - [ ] **2.2 The rest of the class, twenty at a time.** Each further batch is
       one change: wire, lower the baseline, record the duration. A gate found
       red at wiring time is skipped, listed in the evidence page, and handled
