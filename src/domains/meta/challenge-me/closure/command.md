@@ -80,6 +80,29 @@ For each detected decision, in order, and never skipping a rung upward:
    `destructive-owned`. A technical decision never reaches here, however hard
    it is.
 
+```
+AN OWNER CLASS THE AGENT ASSIGNED ITSELF IS A GUESS, NOT A ROUTE.
+BEFORE THE FIRST OWNER QUESTION OF A RUN, EVERY OWNER-LABELLED ITEM GOES TO
+THE COUNCIL IN ONE BATCHED QUESTION. ONLY WHAT THE COUNCIL CALLS
+OWNER-RESERVED — OR SPLITS ON, OR CANNOT REACH QUORUM ON — REACHES THE OWNER.
+```
+
+The batched question asks per item: (1) is it owner-reserved under the test in
+`decision-revisit-gate` § Who decides — does the option lower a recorded
+security, privacy or data-handling floor, create an undelegated external,
+irreversible or spend commitment, or amend governance; (2) which option; (3)
+what evidence would change it. An option set whose **floor-preserving option is
+on the table** is council-decidable — only *choosing* the lowering is reserved.
+A split on the choice (not on ownership) is broken by the option that reveals,
+spends or weakens less, with the dissent recorded; it is not a reason to ask.
+The verdict goes into `## Decisions` as `council:<record>`.
+
+Measured 2026-10-12, round `inbox-2026-10-o`: two privacy questions labelled
+`product-owned` by the authoring agent reached the owner directly. The owner
+answered the first with the recommended, floor-preserving option; the second,
+put to the council afterwards, came back not owner-reserved, 2/2. Each cost the
+owner a turn and decided nothing a council could not.
+
 `spend-exhaustion` leaves the ladder entirely: it **pauses and reports** — what
 needed the council, why the CLI rung was unavailable, the estimated spend, the
 mission state, and what can still proceed.

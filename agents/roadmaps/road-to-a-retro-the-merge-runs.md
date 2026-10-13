@@ -246,7 +246,7 @@ pre-registration in place, settings lint green with the new key.*
 ## Blockers
 
 ### blocker: retro-transcript-excerpts-by-default
-- **Status:** open
+- **Status:** resolved — owner chose (b) on 2026-10-12; recorded as D12
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 1.2 reads session facts only; transcript excerpts for a triaged session are added to 1.2 only after this resolves — no other step is blocked
@@ -254,7 +254,7 @@ pre-registration in place, settings lint green with the new key.*
 - **Recommendation:** (b). The directive asked for a retro on by default, not for transcript reading; the session facts survive pruning (F4) and carry the friction signals, and the per-call opt-in is a recorded privacy floor that only the owner may lower.
 - **If you do nothing:** the retro runs on facts only; a learning that needs the user's wording is drawn from `/retro --session` after an explicit opt-in, and every analysed unit says `transcript: not read`.
 - **What to do:** pick exactly one — (a) excerpts by default: add a class C key `retro.transcripts: excerpts | off` with default `excerpts`, local-only, around friction events only, to the ADR in step 0.2; or (b) facts by default: no new key, excerpts only through the existing per-call opt-in of `src/domains/meta/memory/mine-session/command.md:51`; or (c) no transcript reading at all in the retro, opt-in included.
-- **Resolved when:** step 0.2's ADR records the chosen option and this entry's Status reads resolved.
+- **Resolved when:** step 0.2's ADR records the chosen option and this entry's Status reads resolved. Resolved 2026-10-12: option (b).
 
 ## Decisions
 
@@ -270,6 +270,7 @@ pre-registration in place, settings lint green with the new key.*
 | D8 | deterministic | evidence | Catch-up window: 5 days | Must stay below the 7-day session-state TTL (`janitor.ts:77-78`) with a margin for a long weekend | the janitor TTL changes |
 | D9 | reversible-technical | agent | Local behaviour changes are proposals; nothing is applied automatically beyond intake signals | ADR-281 keeps the kill on automatic promotion; the directive's "improve the local setup" is met by intake signals plus proposals | the dogfood shows proposals never read |
 | D10 | reversible-technical | agent | No timed background agent; the sweep runs in the first session of a new day | T2; reopening needs its own council and owner decision | 5.2 shows the first-session moment is too late or too disruptive |
+| D12 | product-owned | owner | Facts by default: the retro reads no transcript; excerpts only through the existing per-call opt-in of `/memory:mine-session`; no `retro.transcripts` key | Owner answer 2026-10-12 to blocker `retro-transcript-excerpts-by-default`, option (b) | 5.2 shows learnings that facts alone cannot draw |
 | D11 | reversible-technical | agent | The daily sweep runs where this package is installed, on by default; no separate consumer pilot gates it | Directive (e) names no pilot; the triage, budget and switch bound the cost | a consumer reports cost before 5.2 lands |
 
 ## What this roadmap deliberately does not do
