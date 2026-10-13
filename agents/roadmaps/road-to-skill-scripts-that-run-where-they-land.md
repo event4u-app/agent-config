@@ -118,7 +118,7 @@ this names files that exist and a test that runs.
 
 ## Phase 3 — One runnable form
 
-- [ ] **3.1 A build script beside the ones that exist.** `build:skill-scripts`
+- [x] **3.1 A build script beside the ones that exist.** `build:skill-scripts`
       bundles each entry point to `src/skills/<name>/scripts/<tool>.mjs` from a
       fixed working directory with the same `--target=node20` the other
       bundles use, so path comments are relative and identical on every
@@ -126,12 +126,12 @@ this names files that exist and a test that runs.
       becomes a direct devDependency. `sync_non_md` carries the files into the
       projection unchanged; `condense.ts` is not edited.
       verify: `npx vitest run tests/scripts/skill_script_bundle.test.ts` -> 0
-- [ ] **3.2 A stale bundle fails a pull request.** The job that rebuilds the
+- [x] **3.2 A stale bundle fails a pull request.** The job that rebuilds the
       install bundle rebuilds these and fails on a diff, and the path-leakage
       check reads them. Positive control: the test changes one source line in
       a temporary copy without rebuilding and asserts the diff is non-empty.
       verify: `npx vitest run tests/scripts/skill_script_bundle.test.ts -t stale-control --reporter=verbose` -> /✓.*stale-control/
-- [ ] **3.3 The read-only lint counts each script once.**
+- [x] **3.3 The read-only lint counts each script once.**
       `lint_skill_scripts_readonly` walks `scripts/**`; with bundles present it
       would see every mutation primitive twice. The lint skips `*.mjs` that a
       sibling `.ts` produced, and its finding count on the tree is unchanged.
