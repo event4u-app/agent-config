@@ -58,6 +58,23 @@ broken.
 Keep both short for the same reason the root file is capped: a goal nobody
 finishes reading constrains nothing.
 
+### Removing a deny row your no-gos produced
+
+`/agents:init` can turn a no-go that names a path or a command into a rule the
+host refuses on, and a rule that blocks work you later need has to be
+removable without reading this package's source. It is:
+
+1. Open the settings file the rows were written to — `.claude/settings.json`
+   unless you chose another — and delete the line from the `permissions.deny`
+   array. Nothing else in the file is touched by removing one entry.
+2. Edit or delete the bullet in your `## No-gos` section, or the next run will
+   offer the same row again.
+
+Nothing re-adds a row you removed on its own: every write is behind an
+explicit question, and declining it writes nothing. There is no command that
+removes a row for you — a package-written entry and one you typed yourself are
+the same text in the same array, so a remover could not tell them apart.
+
 ## Tech-stack section (optional copy-in)
 
 ```markdown

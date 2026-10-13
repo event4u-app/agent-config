@@ -1,0 +1,3287 @@
+diff --git a/agents/evidence/council/no-go-deny-pin-home-20261013.md b/agents/evidence/council/no-go-deny-pin-home-20261013.md
+new file mode 100644
+index 000000000..d9dd30775
+--- /dev/null
++++ b/agents/evidence/council/no-go-deny-pin-home-20261013.md
+@@ -0,0 +1,96 @@
++<!-- evidence-type: analysis -->
++
++# A permission deny rule is not a hook fact, so it does not live in the hook table
++
++**Date:** 2026-10-13 · **Members:** `anthropic/claude-sonnet-4-5`, `openai/codex-default`
++**Mode:** design, deep · **Cost:** $0.00 (subscription transport, nothing billed)
++**Quorum:** 2/2 present, concluded · **Verdict: Path B — convergent**
++
++Executes step 2.1 of `road-to-a-project-contract-written-down`. The step
++instructs that the host permission-rule syntax be "pinned with its `docs_url`
++in `src/scripts/hooks/host_lowering.yaml`, not taken from this file". Three
++measurements taken before the question was put showed that home cannot hold a
++readable pin, and the council was asked whether to extend the table anyway.
++
++## What was measured first
++
++1. `_structure()` in `src/scripts/hooks/host_lowering.ts` reads only named hook
++   keys (`entry_shape`, `json_shape`, `fail_policy`, `timeout_unit`,
++   `timeout_default`, `verified`, `slots`). An unknown key is dropped from the
++   typed table, so a `permissions:` block there would be read by nobody.
++2. `compile()` in `src/scripts/compile_hook_manifest.ts` serialises the raw
++   parsed document, so that unread key still moves `body_fingerprint` and
++   forces a recompile.
++3. `PLUMBING_SOURCE_RE` in `src/scripts/check_kernel_edit_ratified.ts` matches
++   both the YAML and its compiled sibling, so the edit would carry an
++   independent ratification record with two distinct providers.
++
++Net: the literal instruction costs a ratification record and a fingerprint
++move, and buys a pin no reader can consume — unless the typed table is widened
++for a fact that is not a hook fact.
++
++## The verdict
++
++| Seat | Path | Hook table may carry it | Authority classification |
++|---|---|---|---|
++| `anthropic/claude-sonnet-4-5` | **B** | No | consented authority expansion |
++| `openai/codex-default` | **B** | No | taxonomy-dependent; record the split effect, do not assert a label |
++
++Both seats, independently and in the same words, anchored the refusal on the
++table's declared subject: it describes "how each host lowers a dispatcher
++verdict into its own hook contract", and a permission rule has neither a
++dispatcher verdict nor a slot. One seat put the pipeline difference plainly —
++hook lowering is consulted after a tool is approved, a permission deny before.
++
++Both seats also rejected the Path C variant the question offered, in which the
++classifier resolves the host row at run time: that contradicts step 2.1's own
++word "pure", and makes the classifier depend on host plumbing.
++
++## What both seats required beyond the placement
++
++1. **The classifier stays host-neutral.** It emits `{kind, token, action}`; a
++   separate install-layer adapter owns the host's spelling and its provenance.
++2. **Fail-closed on ambiguity** — an unresolvable bullet falls back to prose
++   and never broadens into a deny rule.
++3. **A provenance gate in place of the plumbing ratification.** Both seats
++   noted that moving the fact out of the gated tree could bypass scrutiny
++   rather than correctly avoid irrelevant governance, so the placement decision
++   owes a replacement control.
++4. **No live documentation fetch in CI.** One seat argued for a six-month
++   expiry and a fetching check; the other refused the fetch as
++   nondeterministic and network-dependent, and refused the six months as
++   unsupported by evidence. The narrower reading was taken: a committed read
++   date and a chosen review-by date, no network.
++5. **The departure recorded in the Decisions table with the measurement that
++   forced it**, so a later reader can check the reasoning rather than the
++   conclusion.
++
++## Where the seats differed
++
++On the authority label. One seat called it a consented authority expansion —
++new enforcement capability plus a write to a consumer-owned settings file. The
++other held that the label is taxonomy-dependent and that the effect is split in
++two directions at once: the generated deny rule **reduces** the agent's
++execution authority, while the installer **gains** authority to mutate a
++consumer's settings file after consent. Absent a cited taxonomy, it asked for
++the split effect to be recorded and the final label left open.
++
++The narrower reading was taken, as it was for the fetch: the split effect is
++recorded in the roadmap's Decisions table and no label is asserted.
++
++## What this run does NOT settle
++
++Both seats raised requirements this change does not carry, and they are named
++here rather than quietly dropped:
++
++- **Ownership-aware rollback** — distinguishing a package-written deny entry
++  from an identical user-authored one, so a removal path could tell them apart.
++  This change only ever appends and ships no removal path, so there is nothing
++  yet to disambiguate. It becomes real the day a removal path does.
++- **A host conformance probe** — the examples are verbatim quotes recorded with
++  their URL and read date, so the gate proves conformance to a recorded
++  reading, not to the live host. Only a probe against an installed host would
++  close that, and the gate's header says so rather than implying otherwise.
++- **A general `host_capabilities.yaml`** — both seats named it as the right
++  answer *if* a second non-hook per-host fact ever needs the same lifecycle,
++  and both refused it for one row.
+diff --git a/agents/roadmaps/road-to-a-project-contract-written-down.md b/agents/roadmaps/archive/road-to-a-project-contract-written-down.md
+similarity index 55%
+rename from agents/roadmaps/road-to-a-project-contract-written-down.md
+rename to agents/roadmaps/archive/road-to-a-project-contract-written-down.md
+index e96eba227..0d18fbfec 100644
+--- a/agents/roadmaps/road-to-a-project-contract-written-down.md
++++ b/agents/roadmaps/archive/road-to-a-project-contract-written-down.md
+@@ -98,49 +98,108 @@ company content ships in the package.
+ 
+ ## Phase 2 — A no-go that names a path or a command is enforced
+ 
+-> **Screened 2026-10-12, not started, and the reason is a price rather than an
+-> impossibility.** Step 2.1 requires the host permission-rule syntax to be
+-> pinned with its `docs_url` in `src/scripts/hooks/host_lowering.yaml`. That
+-> file is deliberately OUTSIDE `block_plumbing_writes`'s refused set — only
+-> the compiled `host_lowering.json` is refused — and its own comment says the
+-> YAML sources "stay OUT of this set and keep carrying a ratification". So the
+-> step is agent-executable and costs an independent council record for a
+-> one-line pin.
++> **Re-screened 2026-10-13 against the tree, and the recorded price turned out
++> to be for the wrong purchase.** The 2026-10-12 screen was right that
++> `host_lowering.yaml` is agent-writable and that editing it costs an
++> independent ratification record. What it had not measured is that the pin
++> cannot be READ there: `_structure()` in `src/scripts/hooks/host_lowering.ts`
++> reads only named hook keys, so a `permissions:` block would be dropped from
++> the typed table while still moving the compiled body's fingerprint and
++> forcing both the recompile and the ratification. The price was real; what it
++> bought was a comment.
+ >
+-> Two facts a later run should have before paying it. The council's necessity
+-> heuristic refuses a question like this on its WORDING, not its subject —
+-> measured the same day on a different governance question, which skipped
+-> twice (`bugfix`, then `syntax`) before the words were changed. And the
+-> alternative of hard-coding the syntax in the classifier is what 2.1
+-> explicitly forbids: "not taken from this file".
++> Put to the AI council on 2026-10-13 (design mode, deep, `anthropic` +
++> `openai`, 2/2 present, $0.00 subscription transport). Both seats refused that
++> home on the table's own declared subject — "how each host lowers a dispatcher
++> verdict into its own hook contract" — and both required a provenance gate in
++> place of the ratification the move avoids. D5 and D6 record the outcome;
++> `agents/evidence/council/no-go-deny-pin-home-20261013.md` is the record.
+ >
+-> Phase 1 is complete and stands alone: the sections exist, the initializer
+-> asks for them, and the report says which are present. Phase 2 turns a
+-> written no-go into an enforced one, which is a different claim and is worth
+-> its own change.
++> So no plumbing file is touched by this phase and no ratification artifact is
++> owed. The syntax is still not taken from this file: it was read from the
++> host's own permission documentation on 2026-10-13 and pinned with that URL
++> and date.
+ 
+ 
+-- [ ] **2.1 Classify each no-go bullet.** A pure function sorts each bullet
++- [x] **2.1 Classify each no-go bullet.** A pure function sorts each bullet
+       into `path`, `command` or `prose`, and returns the deny rule it would
+       become in the host's documented permission-rule syntax for the first two
+       kinds. The syntax is checked against the host documentation when the step
+-      is implemented and pinned with its `docs_url` in
+-      `src/scripts/hooks/host_lowering.yaml`, not taken from this file. A bullet
+-      the function cannot classify is `prose`, never guessed.
++      is implemented and pinned with its `docs_url`, not taken from this file.
++      A bullet the function cannot classify is `prose`, never guessed.
+       verify: `npx vitest run tests/install/no_go_classify.test.ts` -> 0
+-- [ ] **2.2 Shown, consented, appended.** After 1.2, `/agents:init` prints the
++
++      **Closed 2026-10-13.** `classifyNoGo` in `src/install/noGoRules.ts` emits
++      `{kind, token, action}` and NOTHING host-specific; `denyRulesFor` in
++      `src/install/hostPermissionsAdapter.ts` turns that into the host's
++      spelling and carries the pin. The split is D5's, not a style choice: a
++      classifier that resolves a host row is not the pure function this step
++      asked for.
++
++      Four signals must agree or the verdict is prose: exactly one backticked
++      token, a NEGATION, an action verb after it, and no clause break between
++      the verb and the token. The first two alone made "`vendor/` is generated"
++      prose. The last two were added by the completion review, which measured
++      the classifier rendering a deny row over the command a bullet
++      RECOMMENDS — "Never run migrations in production - use `php artisan
++      migrate --pretend` instead" denied the escape hatch named in its own
++      sentence. A no-go section is not the only place a backticked command
++      appears beside a verb.
++
++      **A command bullet renders TWO rows. The first stated reason was WRONG,
++      and the correction is the step's real finding.** It read: "`Bash(x *)`
++      requires a space after `x`, so the with-arguments form never matches the
++      bare command." The documentation says the opposite one line above the
++      sentence that was read — "A `*` at the end, with a space before it, also
++      matches the bare command." An independent completion review caught it
++      after this step was already marked closed.
++
++      The true reason is the page's own qualifier: the bare-command match
++      "holds only when the trailing `*` is the rule's only wildcard". A
++      consumer token carrying its own `*` breaks that, and the exact row is
++      what still guards the plain command then. One row would be right for most
++      tokens and silently wrong for those.
++
++      **What the episode is actually evidence of:** a pinned quote is only as
++      good as the lines around it. The pin now records the qualifier verbatim
++      beside the example, so the next reader sees the condition rather than
++      reconstructing it.
++- [x] **2.2 Shown, consented, appended.** After 1.2, `/agents:init` prints the
+       rows 2.1 produced and asks once whether to add them. On yes it appends
+       them to the consumer's settings file's deny list, keeping every
+       existing entry and its order; on no it writes nothing. `prose` bullets are
+       reported as instruction-only. On a host with no native deny list the step
+       reports the rows as instruction-only and writes nothing.
+       verify: `npx vitest run tests/install/no_go_deny_rows.test.ts` -> 0
+-- [ ] **2.3 Seen to block.** The deny-row test's fixture no-go "never edit
++
++      **Closed 2026-10-13.** `/agents:init` step 6b shows
++      `./scripts-run src/scripts/no_go_deny_rows AGENTS.md`, which writes
++      nothing, then asks once. The decline path is the ABSENCE of a second
++      call rather than an undo — the command's default is read-only, so there
++      is no window in which a skip has to be reversed.
++
++      The append is a textual splice, not a parse-and-reserialise: every byte
++      outside the insertion point is the byte that was there before. Risk 4 is
++      a rewrite dropping or reordering a user entry, and a re-serialising
++      writer is exactly how that happens while every value-level assertion
++      stays green.
++
++- [x] **2.3 Seen to block.** The deny-row test's fixture no-go "never edit
+       `migrations/`" yields a deny row; a second fixture asserts an existing
+       user deny entry survives the append byte-for-byte, and a third asserts a
+       declined consent leaves the file unchanged.
+       verify: `npx vitest run tests/install/no_go_deny_rows.test.ts -t preserves` -> 0
+ 
++      **Closed 2026-10-13, and the byte-for-byte assertion was WRONG on its
++      first pass.** Neutralising the splice — replacing it with
++      `JSON.stringify(root, null, 2)` — left all twenty tests green, because
++      the fixture happened to be formatted the way canonical stringify output
++      is formatted. A fixture that matches canonical output cannot tell a
++      splice from a rewrite. The fixture is now four-space-indented with a
++      one-line array, the same probe reds exactly one test, and the sibling
++      value-level assertion stays green — which is the discrimination the pair
++      is for.
++
+ ## What this roadmap deliberately does not do
+ 
+ - **No persona lowered to a host subagent, no generated roster.** ADR-109
+@@ -160,13 +219,26 @@ company content ships in the package.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-1 — `/agents:init` asks for a goal and for no-gos, writes only what
++- [x] AC-1 — `/agents:init` asks for a goal and for no-gos, writes only what
+       the consumer answered, and never edits the shipped template.
+-- [ ] AC-2 — `report_project_contract` prints `N of 4` for a consumer
++      Steps 3.4 and 3.5 ask; step 4 writes the sections into the consumer's
++      filled file and says in place why the template is not touched.
++      `git log --oneline -- src/agent-src/templates/AGENTS.md` carries nothing
++      from this roadmap.
++- [x] AC-2 — `report_project_contract` prints `N of 4` for a consumer
+       `AGENTS.md` and writes nothing.
+-- [ ] AC-3 — A no-go naming a path becomes a host deny row only after consent,
++- [x] AC-3 — A no-go naming a path becomes a host deny row only after consent,
+       and existing deny entries survive unchanged.
+-- [ ] AC-4 — No file under `src/` ships a consumer's goal or no-go content.
++      Discharged by `tests/install/no_go_deny_rows_cli.test.ts`, which runs the
++      command this criterion is about. It was a prose record of a manual run
++      until the completion review pointed out that an acceptance criterion
++      about a CLI, verified only by a sentence, is unverifiable from the tree —
++      and that both blocker-class defects of this change lived in that untested
++      half.
++- [x] AC-4 — No file under `src/` ships a consumer's goal or no-go content.
++      Every bullet under `src/` is a fixture of this package's own example —
++      `migrations/`, `php artisan migrate:fresh`, `.env` — and the two
++      sections live only in the consumer's filled file.
+ 
+ ## Decisions
+ 
+@@ -176,6 +248,9 @@ company content ships in the package.
+ | D2 | reversible-technical | agent | Enforce through the host's native deny list, not a new `pre_tool_use` concern | A concern costs hook-bundle bytes and binds on every install; a consented, consumer-authored deny row changes nothing for a consumer who declines | A hook host without a native deny list asks for the same enforcement |
+ | D3 | reversible-technical | agent | Two new questions only | Architecture and conventions are already asked (`init/command.md:92-97`) | The report in 1.3 shows architecture or conventions missing on most filled files |
+ | D4 | reversible-technical | agent | Unclassifiable bullets stay prose | A guessed deny row on a vague sentence blocks legitimate work silently | A classifier error rate is measured on real consumer files |
++| D5 | reversible-technical | council:2026-10-13 design, 2/2 present | **Step 2.1's named home is superseded.** The pin lives in `src/install/hostPermissionsAdapter.ts`, a typed per-host row carrying `docs_url`, `docs_at`, a chosen review-by date, the deny key and verbatim examples. The classifier stays host-neutral and emits `{kind, token, action}`; the adapter alone knows a host's spelling. No plumbing file is touched and no ratification artifact is owed | Measured before asking: `_structure()` in `host_lowering.ts` reads only named hook keys, so a `permissions:` block there is dropped from the typed table and read by nobody — while still moving `body_fingerprint` through `compile()` and pulling the diff into `PLUMBING_SOURCE_RE`. The literal instruction cost a ratification record and bought a comment. AI council 2026-10-13, design mode deep, `anthropic` + `openai`, 2/2 present, $0.00 subscription transport; both seats refused the hook table on its own declared subject — lowering a dispatcher verdict into a hook contract, which a permission rule is not — and both refused the run-time-lookup variant as contradicting the word "pure" in this step. Record: `agents/evidence/council/no-go-deny-pin-home-20261013.md` | A second non-hook per-host fact needs the same lifecycle — then a governed host-capabilities registry, which both seats named and both refused for one row |
++| D6 | reversible-technical | council:2026-10-13 design, 2/2 present, split recorded not resolved | **No authority label is asserted; the split effect is recorded instead.** The generated deny row REDUCES the agent's execution authority; the installer GAINS authority to mutate a consumer-owned settings file, after an explicit consent prompt that writes nothing when declined | One seat read this as a consented authority expansion — new enforcement capability plus a write to a consumer boundary. The other held the label is taxonomy-dependent, named the two directions above, and asked for the split to be recorded rather than a label chosen without a cited taxonomy. The narrower reading was taken, as it was on the fetch question in D5's record | This package records an authority taxonomy that settles which direction the label follows |
++| D7 | reversible-technical | council:2026-10-13 design, 2/2 present | The provenance control is `src/scripts/check_permission_deny_syntax`, driven in CI by `tests/scripts/permission_deny_syntax.test.ts`. It fetches nothing. It is NOT registered in `src/config/gate-coverage.yml` | Both seats required a provenance control as the replacement for the ratification D5's placement avoids, and one named the risk directly: moving the fact out of the gated tree could bypass scrutiny rather than correctly avoid irrelevant governance. On the shape, the seats split — one wanted a live documentation fetch and a six-month expiry, the other refused the fetch as nondeterministic and the six months as unsupported by evidence; the narrower reading was taken, so the review-by date is the drift signal and no network call runs in a build. Not registered because a newly registered gate owes a `--self-test` with a `--root` fixture seam, and this gate's corpus is a typed constant with no tree to point one at; the test file carries nine rejecting cases and drives the real argv path instead | A second host pin lands, or the gate acquires a file corpus a `--root` seam can address |
+ 
+ ## Risk Register
+ <!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+diff --git a/dist/agent-src/commands/agents/init.md b/dist/agent-src/commands/agents/init.md
+index 3e5202f8d..c0fa0ad6a 100644
+--- a/dist/agent-src/commands/agents/init.md
++++ b/dist/agent-src/commands/agents/init.md
+@@ -170,6 +170,37 @@ Next steps:
+   3. Run `/agents optimize` periodically to deduplicate against .augment/
+ ```
+ 
++### 6b. No-gos that name a path or a command (optional)
++
++A no-go the agent reads after the edit is a no-go it has already broken. The
++two kinds that CAN be enforced become deny rows the host refuses on; the rest
++stays instruction-only. Skips silently when step 3.5 was empty.
++
++Show what the bullets would become — this writes nothing:
++
++```bash
++./scripts-run src/scripts/no_go_deny_rows AGENTS.md --host {detected_host}
++```
++
++Then ask **once**, with the rows on screen (per
++[`user-interaction`](../../rules/user-interaction.md)):
++
++```
++> 1. Add these rows to .claude/settings.json
++> 2. Skip — leave every no-go instruction-only
++```
++
++On 1, re-run with `--apply`. It appends to the existing deny list, keeps every
++entry the consumer already had and its order, and skips a row the file already
++carries. On 2, run nothing — the command's default writes nothing, so a skip is
++the absence of a second call rather than an undo.
++
++A bullet that names neither a path nor a command is reported as
++instruction-only with the reason beside it, and no row is built for it: a
++guessed row on a vague sentence blocks legitimate work and the agent cannot
++say why. On a host with no deny list established in this tree the rows are
++printed as a report and nothing is written.
++
+ ### 7. Module-root proposal (optional)
+ 
+ Surface configurable-module candidates so the team file can opt in to
+diff --git a/dist/install/hostPermissionsAdapter.js b/dist/install/hostPermissionsAdapter.js
+new file mode 100644
+index 000000000..9277a4ba5
+--- /dev/null
++++ b/dist/install/hostPermissionsAdapter.js
+@@ -0,0 +1,106 @@
++/**
++ * How each host spells a permission deny rule, and where that spelling was
++ * read from.
++ *
++ * `road-to-a-project-contract-written-down` step 2.1 named
++ * `src/scripts/hooks/host_lowering.yaml` as the home for this pin. It is not
++ * the home, and the departure is recorded in the roadmap's Decisions table
++ * rather than taken quietly. The measurement that forced it:
++ *
++ *   - That table is keyed `(host, surface, slot)` and its own header states
++ *     its subject — "how each host lowers a dispatcher verdict into its own
++ *     hook contract". A permission deny rule has no slot and no verdict; it is
++ *     consulted BEFORE a tool runs, not after a hook dispatches.
++ *   - `_structure()` there reads only named hook keys, so a `permissions:`
++ *     block added to the YAML would be dropped from the typed table and read
++ *     by nobody, while still moving the compiled body's fingerprint.
++ *
++ * Put to the AI council on 2026-10-13 (anthropic + openai, 2/2 present, both
++ * seats converging): place the fact here, keep the classifier host-neutral,
++ * and let a provenance gate stand in for the plumbing ratification the hook
++ * table would have carried.
++ *
++ * ```
++ * THE CLASSIFIER DECIDES WHAT A BULLET MEANS. THIS DECIDES HOW A HOST SPELLS IT.
++ * A HOST ABSENT FROM THE TABLE IS A HOST NOBODY ESTABLISHED — NEVER A REFUSAL.
++ * ```
++ */
++export const HOST_PERMISSION_SYNTAX = {
++    claude: {
++        host: 'claude',
++        docs_url: 'https://code.claude.com/docs/en/permissions.md',
++        docs_at: '2026-10-13',
++        expires: '2027-10-13',
++        deny_key: 'permissions.deny',
++        examples: [
++            // "Claude Code checks file permissions against `Edit(path)` and
++            // `Read(path)` rules only. … Use `Edit(docs/**)` in place of
++            // `Write(docs/**)`, `NotebookEdit(docs/**)`, or `MultiEdit(docs/**)`."
++            'Edit(docs/**)',
++            // "To block Claude's file tools from reading a file or directory,
++            // add a `Read` deny rule for its path, such as `Read(./.env)` or
++            // `Read(./secrets/**)`."
++            'Read(./secrets/**)',
++            // "`Bash(npm run build)` | Matches the exact command `npm run build`"
++            'Bash(npm run build)',
++            // "A `*` at the end, with a space before it, also matches the bare
++            // command. `Bash(ls *)` matches `ls`, and `Bash(git log *)` matches
++            // `git log`. That holds only when the trailing `*` is the rule's
++            // only wildcard: `Bash(* --help *)` matches `npm --help x` but not
++            // `npm --help`."
++            'Bash(ls *)',
++        ],
++    },
++};
++/** The row for `host`, or `null` when nothing is established for it. */
++export function syntaxFor(host) {
++    return HOST_PERMISSION_SYNTAX[host] ?? null;
++}
++/**
++ * The path spec a rule carries.
++ *
++ * A trailing `/` means the directory's contents, which the host spells `/**`.
++ * Everything else is passed through as the consumer wrote it: "a deny or ask
++ * rule whose path isn't usable as a gitignore pattern still guards that exact
++ * path", and widening `src/generated` to `src/generated/**` on a guess would be
++ * the same guess the classifier refuses.
++ */
++function pathSpec(token) {
++    return token.endsWith('/') ? `${token}**` : token;
++}
++/**
++ * The deny rows `c` becomes on `host`. Empty for prose, and empty for a host
++ * with no established row.
++ *
++ * A COMMAND BECOMES TWO ROWS, and the reason is NOT the one an earlier version
++ * of this comment gave. It claimed `Bash(x *)` never matches the bare `x`; the
++ * page says the opposite one line above the sentence that was read — "A `*` at
++ * the end, with a space before it, also matches the bare command." A review
++ * caught it, and it had reached the roadmap as that step's "one non-obvious
++ * finding", so the correction is recorded rather than quietly applied.
++ *
++ * The real reason is the page's own qualifier: the bare-command match "holds
++ * only when the trailing `*` is the rule's only wildcard". A consumer token
++ * carrying its own `*` breaks that, and the exact row is what still guards the
++ * plain command then. One row would be right for most tokens and silently
++ * wrong for those — Risk 3 in the register, "a rule in the wrong syntax is
++ * accepted by the file and enforced by nothing".
++ *
++ * A READ no-go renders `Read(...)` AND `Edit(...)`. The `Read` deny covers the
++ * Edit and Write tools on the same path, but the page names the exception:
++ * "NotebookEdit isn't covered, so add an `Edit` deny rule for paths no tool may
++ * change." A read no-go over a directory holding notebooks would otherwise
++ * leave NotebookEdit able to change it.
++ */
++export function denyRulesFor(host, c) {
++    if (syntaxFor(host) === null || c.action === null || c.token === null)
++        return [];
++    if (c.kind === 'command')
++        return [`Bash(${c.token})`, `Bash(${c.token} *)`];
++    if (c.kind === 'path') {
++        const spec = pathSpec(c.token);
++        return c.action === 'read' ? [`Read(${spec})`, `Edit(${spec})`] : [`Edit(${spec})`];
++    }
++    return [];
++}
++//# sourceMappingURL=hostPermissionsAdapter.js.map
+\ No newline at end of file
+diff --git a/dist/install/hostPermissionsAdapter.js.map b/dist/install/hostPermissionsAdapter.js.map
+new file mode 100644
+index 000000000..3a333afe6
+--- /dev/null
++++ b/dist/install/hostPermissionsAdapter.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"hostPermissionsAdapter.js","sourceRoot":"","sources":["../../src/install/hostPermissionsAdapter.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;;;;;;;;;;GA0BG;AA+BH,MAAM,CAAC,MAAM,sBAAsB,GAAmD;IAClF,MAAM,EAAE;QACJ,IAAI,EAAE,QAAQ;QACd,QAAQ,EAAE,gDAAgD;QAC1D,OAAO,EAAE,YAAY;QACrB,OAAO,EAAE,YAAY;QACrB,QAAQ,EAAE,kBAAkB;QAC5B,QAAQ,EAAE;YACN,gEAAgE;YAChE,6DAA6D;YAC7D,uEAAuE;YACvE,eAAe;YACf,kEAAkE;YAClE,iEAAiE;YACjE,yBAAyB;YACzB,oBAAoB;YACpB,sEAAsE;YACtE,qBAAqB;YACrB,mEAAmE;YACnE,oEAAoE;YACpE,iEAAiE;YACjE,mEAAmE;YACnE,iBAAiB;YACjB,YAAY;SACf;KACJ;CACJ,CAAC;AAEF,wEAAwE;AACxE,MAAM,UAAU,SAAS,CAAC,IAAY;IAClC,OAAO,sBAAsB,CAAC,IAAI,CAAC,IAAI,IAAI,CAAC;AAChD,CAAC;AAED;;;;;;;;GAQG;AACH,SAAS,QAAQ,CAAC,KAAa;IAC3B,OAAO,KAAK,CAAC,QAAQ,CAAC,GAAG,CAAC,CAAC,CAAC,CAAC,GAAG,KAAK,IAAI,CAAC,CAAC,CAAC,KAAK,CAAC;AACtD,CAAC;AAED;;;;;;;;;;;;;;;;;;;;;;;GAuBG;AACH,MAAM,UAAU,YAAY,CAAC,IAAY,EAAE,CAAqB;IAC5D,IAAI,SAAS,CAAC,IAAI,CAAC,KAAK,IAAI,IAAI,CAAC,CAAC,MAAM,KAAK,IAAI,IAAI,CAAC,CAAC,KAAK,KAAK,IAAI;QAAE,OAAO,EAAE,CAAC;IACjF,IAAI,CAAC,CAAC,IAAI,KAAK,SAAS;QAAE,OAAO,CAAC,QAAQ,CAAC,CAAC,KAAK,GAAG,EAAE,QAAQ,CAAC,CAAC,KAAK,KAAK,CAAC,CAAC;IAC5E,IAAI,CAAC,CAAC,IAAI,KAAK,MAAM,EAAE,CAAC;QACpB,MAAM,IAAI,GAAG,QAAQ,CAAC,CAAC,CAAC,KAAK,CAAC,CAAC;QAC/B,OAAO,CAAC,CAAC,MAAM,KAAK,MAAM,CAAC,CAAC,CAAC,CAAC,QAAQ,IAAI,GAAG,EAAE,QAAQ,IAAI,GAAG,CAAC,CAAC,CAAC,CAAC,CAAC,QAAQ,IAAI,GAAG,CAAC,CAAC;IACxF,CAAC;IACD,OAAO,EAAE,CAAC;AACd,CAAC"}
+\ No newline at end of file
+diff --git a/dist/install/noGoDenyRows.js b/dist/install/noGoDenyRows.js
+new file mode 100644
+index 000000000..ee03908d8
+--- /dev/null
++++ b/dist/install/noGoDenyRows.js
+@@ -0,0 +1,282 @@
++/**
++ * The consent step between a classified no-go and a host deny list.
++ *
++ * `road-to-a-project-contract-written-down` step 2.2. Step 2.1 decides what a
++ * bullet WOULD become; nothing here happens without the consumer saying yes,
++ * and a no writes nothing at all.
++ *
++ * ```
++ * THE ROWS ARE SHOWN BEFORE THEY ARE WRITTEN. A DECLINE WRITES NOTHING.
++ * AN ENTRY THE CONSUMER ALREADY HAD SURVIVES THE APPEND BYTE FOR BYTE.
++ * A HOST WITH NO NATIVE DENY LIST GETS A REPORT, NEVER A FILE.
++ * ```
++ *
++ * WHY THE APPEND IS TEXTUAL. Parsing the settings file and re-serialising it
++ * would reformat a file the consumer owns — re-indenting it, dropping the key
++ * order a reader relies on, and rewriting lines this change has no business
++ * touching. Risk 4 in the roadmap's register is exactly that: "rewriting the
++ * settings file drops a user entry or reorders it". So the body is spliced:
++ * every byte outside the insertion point is the byte that was there before,
++ * which is a property a test can assert rather than a promise.
++ *
++ * The file is still PARSED first, to refuse a malformed one rather than splice
++ * into it.
++ */
++import { classifyNoGos } from './noGoRules.js';
++import { denyRulesFor, syntaxFor } from './hostPermissionsAdapter.js';
++/**
++ * Does this tree know how `host` spells a deny rule?
++ *
++ * A host absent from the adapter is not a host that forbids the idea — it is a
++ * host for which nothing here has established a native deny list. The rows are
++ * then REPORTED and no file is touched, which is the honesty
++ * `host_lowering.yaml` keeps for an unestablished hook slot: absent means
++ * nobody established anything, never "cannot".
++ */
++export function hasNativeDenyList(host) {
++    return syntaxFor(host) !== null;
++}
++export function planDenyRows(noGosSection, host) {
++    // Render against the one host whose spelling is established when the target
++    // host's is not, so an unsupported host still gets a REPORT of what its
++    // no-gos would become rather than an empty screen reading "nothing to do".
++    const renderHost = hasNativeDenyList(host) ? host : 'claude';
++    const classified = classifyNoGos(noGosSection);
++    const rows = classified.map((c) => ({
++        classification: c,
++        rules: denyRulesFor(renderHost, c),
++    }));
++    const seen = new Set();
++    const rules = [];
++    for (const r of rows) {
++        for (const rule of r.rules) {
++            if (seen.has(rule))
++                continue;
++            seen.add(rule);
++            rules.push(rule);
++        }
++    }
++    return {
++        rows,
++        rules,
++        prose: classified.filter((r) => r.kind === 'prose'),
++        enforceable: hasNativeDenyList(host),
++    };
++}
++/**
++ * The text shown before the one consent question.
++ *
++ * Every row names the bullet it came from. Risk 1 in the register is a broad
++ * row stopping an edit the consumer later needs "and the agent cannot say why";
++ * carrying the source bullet beside the rule is what lets it say why.
++ */
++export function renderDenyPlan(plan, host) {
++    const syntax = syntaxFor(plan.enforceable ? host : 'claude');
++    const out = [];
++    if (plan.rules.length === 0) {
++        out.push('No no-go bullet named a path or a command, so there is nothing to enforce.');
++    }
++    else if (plan.enforceable) {
++        out.push(`Deny rows for ${host} (${syntax?.deny_key ?? 'permissions.deny'}), one per enforceable no-go:`, '');
++        for (const r of plan.rows) {
++            for (const rule of r.rules)
++                out.push(`  ${rule}`);
++            if (r.rules.length > 0)
++                out.push(`      from: ${r.classification.bullet}`);
++        }
++    }
++    else {
++        out.push(`${host} has no native deny list established in this tree, so these rows are a`, 'report and nothing is written. They are spelled the way `claude` spells a deny', `rule, NOT the way ${host} does — nothing here has established that ${host} reads`, 'this syntax, or any syntax. They are what the no-gos would become there:', '');
++        for (const r of plan.rows)
++            for (const rule of r.rules)
++                out.push(`  ${rule}`);
++    }
++    if (plan.prose.length > 0) {
++        out.push('', 'Instruction-only — no row was built, and the reason for each:');
++        for (const p of plan.prose)
++            out.push(`  ${p.bullet}`, `      ${p.reason}`);
++    }
++    if (plan.rules.length > 0 && plan.enforceable) {
++        // What the rows do NOT cover, on the consent screen rather than in a
++        // comment. The point of the change is to replace a sentence the agent
++        // can read past with a rule the host refuses on; a consumer consenting
++        // to that should be told where the refusal stops.
++        out.push('', 'What these rows do not reach, per the same documentation:', '  · a Bash rule is prefix-matched, so `./artisan …`, `bash -c "…"` and a', '    wrapper such as `sail` or `devbox run` are not matched by it.', '  · Read and Edit rules reach the file tools and the file commands the host', '    recognises in Bash, but not a script that opens the file itself.', '  A no-go is still worth writing down when no row can be built for it.');
++    }
++    if (syntax !== null) {
++        out.push('', `Syntax read from ${syntax.docs_url} on ${syntax.docs_at}.`);
++    }
++    return `${out.join('\n')}\n`;
++}
++/**
++ * Walk `text` as JSON and return the span of the value at `path`.
++ *
++ * A hand-rolled walk rather than a regex because a regex over JSON cannot tell
++ * a brace inside a string from a brace that nests, and a settings file holds
++ * both. Returns `null` when the path is absent or the body is not an object.
++ */
++function locate(text, path) {
++    let i = 0;
++    const stack = [];
++    let pendingKey = null;
++    let target = null;
++    const opens = [];
++    const matches = (depthPath) => depthPath.length === path.length && depthPath.every((s, n) => s === path[n]);
++    while (i < text.length) {
++        const ch = text[i];
++        if (ch === '"') {
++            let j = i + 1;
++            while (j < text.length) {
++                if (text[j] === '\\') {
++                    j += 2;
++                    continue;
++                }
++                if (text[j] === '"')
++                    break;
++                j += 1;
++            }
++            const literal = text.slice(i + 1, j);
++            // A key is a string followed by a colon, inside an object.
++            let k = j + 1;
++            while (k < text.length && /\s/.test(text[k]))
++                k += 1;
++            if (text[k] === ':')
++                pendingKey = literal;
++            i = j + 1;
++            continue;
++        }
++        if (ch === '{' || ch === '[') {
++            if (opens.length > 0 && pendingKey !== null)
++                stack.push(pendingKey);
++            else if (opens.length > 0)
++                stack.push('');
++            opens.push(i);
++            pendingKey = null;
++            if (matches(stack))
++                target = { open: i, close: -1 };
++            i += 1;
++            continue;
++        }
++        if (ch === '}' || ch === ']') {
++            const open = opens.pop();
++            if (target !== null && target.close === -1 && open === target.open) {
++                target = { open: target.open, close: i };
++            }
++            if (opens.length > 0)
++                stack.pop();
++            // Clear it here too. A key is only pending for the container that
++            // opens right after it; carrying it across a close made the SECOND
++            // object in an array inherit the first one's last key, so
++            // `{"permissions": [{"deny": 1}, {"a": 2}]}` matched on the wrong
++            // element and spliced a bare string into an object.
++            pendingKey = null;
++            i += 1;
++            continue;
++        }
++        if (ch === ',') {
++            pendingKey = null;
++            i += 1;
++            continue;
++        }
++        i += 1;
++    }
++    return target !== null && target.close >= 0 ? target : null;
++}
++/** The indentation of the line `index` sits on. */
++function indentAt(text, index) {
++    const lineStart = text.lastIndexOf('\n', index - 1) + 1;
++    const m = /^[ \t]*/.exec(text.slice(lineStart, index));
++    return m === null ? '' : m[0];
++}
++/**
++ * Append `rules` to the settings body's deny list.
++ *
++ * Three shapes, in order, and all three splice rather than rewrite:
++ *   1. `permissions.deny` exists — insert before its `]`.
++ *   2. `permissions` exists without `deny` — insert the key after its `{`.
++ *   3. neither — insert a whole `permissions` block after the root `{`.
++ *
++ * Throws on a body that is not a JSON object: refusing a malformed file is the
++ * only safe answer, since a splice into one would produce a second malformed
++ * file and lose the consumer's content.
++ */
++export function appendDenyRules(body, rules) {
++    const parsed = JSON.parse(body);
++    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
++        throw new Error('settings body is not a JSON object');
++    }
++    const perms = parsed['permissions'];
++    // A `permissions` that is present but NOT an object has no span for
++    // `locate` to find, so without this the root branch below would insert a
++    // SECOND `"permissions"` key. The file stays parseable, the last key wins,
++    // and every row the consumer consented to is silently discarded while the
++    // command reports success — measured, and the defect this refusal exists
++    // for. Refusing is the only honest answer: merging would have to guess what
++    // the existing value meant.
++    if (Object.hasOwn(parsed, 'permissions') &&
++        (perms === null || typeof perms !== 'object' || Array.isArray(perms))) {
++        throw new Error('settings body has a `permissions` key that is not an object — refusing rather ' +
++            'than writing a second one');
++    }
++    const existing = perms !== null && typeof perms === 'object' && !Array.isArray(perms)
++        ? perms['deny']?.filter((e) => typeof e === 'string') ?? []
++        : [];
++    const have = new Set(existing);
++    const added = rules.filter((r) => !have.has(r));
++    const alreadyPresent = rules.filter((r) => have.has(r));
++    if (added.length === 0)
++        return { text: body, added, alreadyPresent };
++    const denySpan = locate(body, ['permissions', 'deny']);
++    if (denySpan !== null) {
++        const inner = body.slice(denySpan.open + 1, denySpan.close);
++        const closeIndent = indentAt(body, denySpan.open);
++        const indent = `${closeIndent}    `;
++        const entries = added.map((r) => `${indent}${JSON.stringify(r)}`).join(',\n');
++        if (inner.trim().length === 0) {
++            return {
++                text: `${body.slice(0, denySpan.open + 1)}\n${entries}\n${closeIndent}` +
++                    `${body.slice(denySpan.close)}`,
++                added,
++                alreadyPresent,
++            };
++        }
++        // Insert AFTER the last element rather than before the `]`, so the
++        // closing bracket keeps the line and the indentation it already had.
++        // Splicing at the bracket leaves the comma stranded on its own line and
++        // un-indents the `]` — a diff in a file the consumer owns, for nothing.
++        const lastChar = inner.replace(/\s+$/, '').length;
++        const at = denySpan.open + 1 + lastChar;
++        return {
++            text: `${body.slice(0, at)},\n${entries}${body.slice(at)}`,
++            added,
++            alreadyPresent,
++        };
++    }
++    const permSpan = locate(body, ['permissions']);
++    if (permSpan !== null) {
++        const indent = `${indentAt(body, permSpan.open)}    `;
++        const entries = added.map((r) => `${indent}    ${JSON.stringify(r)}`).join(',\n');
++        const inner = body.slice(permSpan.open + 1, permSpan.close);
++        const sep = inner.trim().length === 0 ? '' : ',';
++        const block = `\n${indent}"deny": [\n${entries}\n${indent}]${sep}`;
++        return {
++            text: `${body.slice(0, permSpan.open + 1)}${block}${body.slice(permSpan.open + 1)}`,
++            added,
++            alreadyPresent,
++        };
++    }
++    const rootSpan = locate(body, []);
++    if (rootSpan === null)
++        throw new Error('settings body has no root object');
++    const indent = '    ';
++    const entries = added.map((r) => `${indent}        ${JSON.stringify(r)}`).join(',\n');
++    const inner = body.slice(rootSpan.open + 1, rootSpan.close);
++    const sep = inner.trim().length === 0 ? '' : ',';
++    const block = `\n${indent}"permissions": {\n${indent}    "deny": [\n${entries}\n${indent}    ]\n${indent}}${sep}`;
++    return {
++        text: `${body.slice(0, rootSpan.open + 1)}${block}${body.slice(rootSpan.open + 1)}`,
++        added,
++        alreadyPresent,
++    };
++}
++//# sourceMappingURL=noGoDenyRows.js.map
+\ No newline at end of file
+diff --git a/dist/install/noGoDenyRows.js.map b/dist/install/noGoDenyRows.js.map
+new file mode 100644
+index 000000000..5bac10ea7
+--- /dev/null
++++ b/dist/install/noGoDenyRows.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"noGoDenyRows.js","sourceRoot":"","sources":["../../src/install/noGoDenyRows.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/noGoRules.js b/dist/install/noGoRules.js
+new file mode 100644
+index 000000000..b96a17342
+--- /dev/null
++++ b/dist/install/noGoRules.js
+@@ -0,0 +1,274 @@
++/**
++ * A consumer no-go bullet, sorted into `path`, `command` or `prose`, and
++ * rendered as the deny rule it would become.
++ *
++ * `road-to-a-project-contract-written-down` step 2.1. `/agents:init` asks the
++ * consumer for no-gos and writes them into their own `AGENTS.md`. A sentence
++ * there binds every turn and the agent may still read past it. This is what
++ * turns the two kinds that CAN be enforced into rows the host refuses on, and
++ * what refuses to turn the third kind into anything at all.
++ *
++ * ```
++ * A BULLET THE FUNCTION CANNOT CLASSIFY IS `prose`, NEVER A GUESSED ROW.
++ * A ROW ON A VAGUE SENTENCE BLOCKS LEGITIMATE WORK AND CANNOT SAY WHY.
++ * ```
++ *
++ * Pure: it reads a string and returns a verdict. Nothing here opens a settings
++ * file — the consent prompt and the append are step 2.2's.
++ *
++ * WHAT MAKES A VERDICT. Two independent signals must agree, and either one
++ * missing is `prose`:
++ *
++ *   1. ONE backticked token. The consumer guide's own `## No-gos` shape puts
++ *      the path or the command in backticks. Zero means the bullet names
++ *      neither; two or more means the subject is ambiguous, and picking one
++ *      would be the guess this module exists to refuse.
++ *   2. An action verb from a closed vocabulary. The token's SHAPE says what it
++ *      is; only the verb says what must not happen to it. "`vendor/` is
++ *      generated" carries a path and no action, and choosing `Edit` over `Read`
++ *      on its behalf would widen or narrow a rule nobody wrote.
++ */
++/** Verbs that forbid READING. A `Read` deny also covers edits and writes. */
++const READ_VERBS = ['read', 'open', 'view', 'cat', 'print', 'dump'];
++/** Verbs that forbid CHANGING. `Edit` is the only path rule the host checks. */
++const EDIT_VERBS = [
++    'edit',
++    'modify',
++    'change',
++    'write',
++    'touch',
++    'delete',
++    'remove',
++    'rename',
++    'commit',
++    'overwrite',
++    'regenerate',
++];
++/** Verbs that forbid EXECUTING. */
++const RUN_VERBS = ['run', 'execute', 'invoke', 'call'];
++/**
++ * Words that make a bullet a PROHIBITION rather than a description.
++ *
++ * Required, and that is the correction a review forced: a verb scan alone
++ * accepts "``npm run build`` is the only sanctioned build command" and renders
++ * a deny row over the command the bullet PRESCRIBES. A no-go section is not the
++ * only place a backticked command appears in a sentence with a verb near it.
++ */
++const NEGATIONS = ['never', 'not', 'no', 'dont', 'avoid', 'forbidden', 'prohibited'];
++/**
++ * Text that ends the clause the prohibition governs.
++ *
++ * The second half of the same correction. "Never run migrations in production
++ * - use `php artisan migrate --pretend` instead" negates, carries a run verb,
++ * and carries a backticked command — and the command is the ESCAPE HATCH the
++ * bullet recommends. A separator between the verb and the token means the token
++ * belongs to a different clause, so the verdict is prose.
++ */
++const CLAUSE_BREAK = /[-–—;:()]|\b(?:instead|use|using|prefer|except|unless|but|rather)\b/i;
++/** Backticked spans replaced by spaces, so a verb INSIDE the token is not read as the bullet's verb. */
++function maskTokens(bullet) {
++    return bullet.replace(/`[^`]+`/g, (m) => ' '.repeat(m.length));
++}
++/** First index at which any whole word in `words` occurs, or -1. */
++function firstWordIndex(haystack, words) {
++    let best = -1;
++    for (const w of words) {
++        const m = new RegExp(`\\b${w}\\b`, 'i').exec(haystack);
++        if (m !== null && (best === -1 || m.index < best))
++            best = m.index;
++    }
++    return best;
++}
++/** The first action verb at or after `from`, or `null`. */
++function verbAfter(masked, from) {
++    const groups = [
++        ['run', RUN_VERBS],
++        ['read', READ_VERBS],
++        ['edit', EDIT_VERBS],
++    ];
++    let best = null;
++    for (const [action, verbs] of groups) {
++        for (const v of verbs) {
++            const re = new RegExp(`\\b${v.replace("'", "'?")}\\b`, 'gi');
++            let m = re.exec(masked);
++            while (m !== null) {
++                if (m.index >= from && (best === null || m.index < best.start)) {
++                    best = { action, start: m.index, end: m.index + m[0].length };
++                }
++                m = re.exec(masked);
++            }
++        }
++    }
++    return best;
++}
++/** The backticked spans of a bullet, in order. */
++function backticked(bullet) {
++    const out = [];
++    const re = /`([^`]+)`/g;
++    let m = re.exec(bullet);
++    while (m !== null) {
++        const inner = m[1].trim();
++        if (inner.length > 0)
++            out.push(inner);
++        m = re.exec(bullet);
++    }
++    return out;
++}
++/**
++ * Does `token` look like a filesystem path?
++ *
++ * A path separator, a leading dot, or a file extension. A bare word is NOT a
++ * path: `migrations` alone could be a directory or a command, and the guide's
++ * own example writes the trailing slash.
++ */
++function looksLikePath(token) {
++    if (/\s/.test(token))
++        return false;
++    if (token.includes('/'))
++        return true;
++    if (token.startsWith('.'))
++        return true;
++    // A trailing extension only counts on a KNOWN file extension. The earlier
++    // `/\.[A-Za-z0-9]+$/` accepted `users.id`, `app.debug` and `v2.1` as paths,
++    // and rendered a rule over a path that does not exist.
++    return /\.(?:[a-z]{1,5}|[A-Z]{1,5})$/.test(token) && !/^[a-z]+\.[a-z]+$/.test(token);
++}
++/**
++ * Characters that make a path token mean something other than it reads.
++ *
++ * `!` is a gitignore NEGATION on the host: a deny row starting with it carves
++ * paths OUT of the deny rules listed before it, so a no-go bullet would weaken
++ * a consumer's existing list while being shown as a deny row. `[`, `]` and `?`
++ * are gitignore character classes, and the host does not escape a rule you
++ * wrote yourself — `reports/[2024]/**` matches `reports/2/`, never the
++ * directory the consumer named.
++ *
++ * `*` is deliberately NOT here: a consumer who writes `src/generated/**` means
++ * that glob, and the guide teaches the trailing slash for everything else.
++ */
++const UNSAFE_PATH_CHARS = /^!|[[\]?]/;
++const PROSE = (bullet, reason) => ({
++    bullet,
++    kind: 'prose',
++    token: null,
++    action: null,
++    reason,
++});
++/** Strip a leading markdown list marker, if present. */
++function stripMarker(line) {
++    return line.replace(/^\s*[-*+]\s+/, '').trim();
++}
++export function classifyNoGo(raw) {
++    const bullet = stripMarker(raw);
++    if (bullet.length === 0)
++        return PROSE(bullet, 'empty bullet');
++    const tokens = backticked(bullet);
++    if (tokens.length === 0) {
++        return PROSE(bullet, 'names no path and no command in backticks');
++    }
++    if (tokens.length > 1) {
++        return PROSE(bullet, `${String(tokens.length)} backticked tokens — the subject is ambiguous, so no row is built`);
++    }
++    const token = tokens[0];
++    const masked = maskTokens(bullet);
++    const tokenAt = bullet.indexOf(`\`${token}\``);
++    const negAt = firstWordIndex(masked, NEGATIONS);
++    if (negAt === -1) {
++        return PROSE(bullet, 'states no prohibition, so the backticked token may be what the bullet recommends');
++    }
++    const verb = verbAfter(masked, negAt);
++    if (verb === null) {
++        return PROSE(bullet, 'names no action verb, so what must not happen to it is unstated');
++    }
++    if (verb.start > tokenAt) {
++        return PROSE(bullet, 'the action verb comes after the token, so the two may not be related');
++    }
++    const between = bullet.slice(verb.end, tokenAt);
++    if (CLAUSE_BREAK.test(between)) {
++        return PROSE(bullet, `\`${token}\` sits in a different clause from the prohibition — it may be the ` +
++            'alternative the bullet recommends, so no rule is built');
++    }
++    if (verb.action === 'run') {
++        return {
++            bullet,
++            kind: 'command',
++            token,
++            action: verb.action,
++            reason: 'a negated run verb over a backticked command',
++        };
++    }
++    const action = verb.action;
++    if (!looksLikePath(token)) {
++        return PROSE(bullet, `a ${action} verb over \`${token}\`, which has no path shape — no rule is built`);
++    }
++    if (UNSAFE_PATH_CHARS.test(token)) {
++        return PROSE(bullet, `\`${token}\` carries a gitignore metacharacter (\`!\`, \`[\`, \`]\` or \`?\`) that the ` +
++            'host does not escape, so a rule built from it would guard something else');
++    }
++    return {
++        bullet,
++        kind: 'path',
++        token,
++        action,
++        reason: action === 'read'
++            ? 'a read verb over a backticked path'
++            : 'an edit verb over a backticked path',
++    };
++}
++/**
++ * Every bullet of a `## No-gos` section, in file order.
++ *
++ * Non-bullet lines — the heading, blanks, a sentence between bullets — are not
++ * no-gos and are skipped rather than classified as prose: a prose verdict is a
++ * statement about a bullet somebody wrote, and a heading is not one.
++ */
++export function classifyNoGos(section) {
++    return section
++        .split('\n')
++        .filter((line) => /^\s*[-*+]\s+\S/.test(line))
++        .map((line) => classifyNoGo(line));
++}
++/** The `##` heading spellings a no-gos section is written under. */
++const NO_GOS_HEADINGS = new Set(['no-gos', 'no-gos (never do this)']);
++/**
++ * The body of a consumer `AGENTS.md`'s `## No-gos` section, or `''`.
++ *
++ * Skips fenced blocks for the reason `report_project_contract` does, and it is
++ * the same load-bearing reason rather than a shared habit: the consumer guide
++ * ships this exact heading INSIDE a ```markdown fence as copy-in material, so a
++ * reader without the skip would classify the guide's own example bullets and
++ * offer to deny `migrations/` in a repository that never asked.
++ */
++export function extractNoGosSection(body) {
++    const out = [];
++    let fence = null;
++    let inside = false;
++    for (const raw of body.split('\n')) {
++        const line = raw.trimEnd();
++        const open = /^\s*(```+|~~~+)/.exec(line);
++        if (open !== null) {
++            const marker = open[1];
++            if (fence === null)
++                fence = marker[0];
++            else if (marker.startsWith(fence))
++                fence = null;
++            continue;
++        }
++        if (fence !== null)
++            continue;
++        // ANY heading level closes the section; only a level-two one with a
++        // matching title opens it. Matching `##` alone let a following `#
++        // Appendix` leave the section open, so every bullet of every later
++        // top-level section was classified as a no-go.
++        const h = /^(#{1,6})[ \t]+(.+?)[ \t]*#*$/.exec(line);
++        if (h !== null) {
++            const level2 = h[1].length === 2;
++            inside = level2 && NO_GOS_HEADINGS.has(h[2].trim().toLowerCase());
++            continue;
++        }
++        if (inside)
++            out.push(line);
++    }
++    return out.join('\n');
++}
++//# sourceMappingURL=noGoRules.js.map
+\ No newline at end of file
+diff --git a/dist/install/noGoRules.js.map b/dist/install/noGoRules.js.map
+new file mode 100644
+index 000000000..6719cb49f
+--- /dev/null
++++ b/dist/install/noGoRules.js.map
+@@ -0,0 +1 @@
++{"version":3,"file":"noGoRules.js","sourceRoot":"","sources":["../../src/install/noGoRules.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/src/domains/meta/agents/init/command.md b/src/domains/meta/agents/init/command.md
+index 813a6db4c..6ed09313e 100644
+--- a/src/domains/meta/agents/init/command.md
++++ b/src/domains/meta/agents/init/command.md
+@@ -170,6 +170,37 @@ Next steps:
+   3. Run `/agents optimize` periodically to deduplicate against .augment/
+ ```
+ 
++### 6b. No-gos that name a path or a command (optional)
++
++A no-go the agent reads after the edit is a no-go it has already broken. The
++two kinds that CAN be enforced become deny rows the host refuses on; the rest
++stays instruction-only. Skips silently when step 3.5 was empty.
++
++Show what the bullets would become — this writes nothing:
++
++```bash
++./scripts-run src/scripts/no_go_deny_rows AGENTS.md --host {detected_host}
++```
++
++Then ask **once**, with the rows on screen (per
++[`user-interaction`](../../rules/user-interaction.md)):
++
++```
++> 1. Add these rows to .claude/settings.json
++> 2. Skip — leave every no-go instruction-only
++```
++
++On 1, re-run with `--apply`. It appends to the existing deny list, keeps every
++entry the consumer already had and its order, and skips a row the file already
++carries. On 2, run nothing — the command's default writes nothing, so a skip is
++the absence of a second call rather than an undo.
++
++A bullet that names neither a path nor a command is reported as
++instruction-only with the reason beside it, and no row is built for it: a
++guessed row on a vague sentence blocks legitimate work and the agent cannot
++say why. On a host with no deny list established in this tree the rows are
++printed as a report and nothing is written.
++
+ ### 7. Module-root proposal (optional)
+ 
+ Surface configurable-module candidates so the team file can opt in to
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index 9ee065ff9..8170ba0a3 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -98,8 +98,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 3649
+-  commands_tokens: 253013
++  commands_tokens: 253327
+   other_tokens: 1298
+   rules_tokens: 63975
+-  total_tokens: 321935
++  total_tokens: 322249
+ trust_level_default: core
+diff --git a/src/install/hostPermissionsAdapter.ts b/src/install/hostPermissionsAdapter.ts
+new file mode 100644
+index 000000000..701336127
+--- /dev/null
++++ b/src/install/hostPermissionsAdapter.ts
+@@ -0,0 +1,136 @@
++/**
++ * How each host spells a permission deny rule, and where that spelling was
++ * read from.
++ *
++ * `road-to-a-project-contract-written-down` step 2.1 named
++ * `src/scripts/hooks/host_lowering.yaml` as the home for this pin. It is not
++ * the home, and the departure is recorded in the roadmap's Decisions table
++ * rather than taken quietly. The measurement that forced it:
++ *
++ *   - That table is keyed `(host, surface, slot)` and its own header states
++ *     its subject — "how each host lowers a dispatcher verdict into its own
++ *     hook contract". A permission deny rule has no slot and no verdict; it is
++ *     consulted BEFORE a tool runs, not after a hook dispatches.
++ *   - `_structure()` there reads only named hook keys, so a `permissions:`
++ *     block added to the YAML would be dropped from the typed table and read
++ *     by nobody, while still moving the compiled body's fingerprint.
++ *
++ * Put to the AI council on 2026-10-13 (anthropic + openai, 2/2 present, both
++ * seats converging): place the fact here, keep the classifier host-neutral,
++ * and let a provenance gate stand in for the plumbing ratification the hook
++ * table would have carried.
++ *
++ * ```
++ * THE CLASSIFIER DECIDES WHAT A BULLET MEANS. THIS DECIDES HOW A HOST SPELLS IT.
++ * A HOST ABSENT FROM THE TABLE IS A HOST NOBODY ESTABLISHED — NEVER A REFUSAL.
++ * ```
++ */
++
++import type { NoGoClassification } from './noGoRules.js';
++
++/**
++ * Everything a later reader needs to re-check one host's spelling.
++ *
++ * `examples` are VERBATIM quotes from the page at `docs_url`, as read on
++ * `docs_at`. They are the grammar the renderer is checked against by
++ * `check_permission_deny_syntax`; they are not independent of the renderer in
++ * the way a live probe would be, and that limit is stated here rather than
++ * implied — see that gate's own honesty note.
++ */
++export interface HostPermissionSyntax {
++    readonly host: string;
++    readonly docs_url: string;
++    /** The day the page was read, ISO. */
++    readonly docs_at: string;
++    /**
++     * Review-by date for this row. No host this package supports publishes a
++     * documentation cadence, so this is a date THIS PACKAGE chose — `docs_at`
++     * plus a year — and never a vendor commitment. The same convention
++     * `host_lowering.yaml` states for its own `expires`.
++     */
++    readonly expires: string;
++    /** Where a row goes in the settings file, as a dotted key path. */
++    readonly deny_key: string;
++    /** Verbatim rule spellings from the page. */
++    readonly examples: readonly string[];
++}
++
++export const HOST_PERMISSION_SYNTAX: Readonly<Record<string, HostPermissionSyntax>> = {
++    claude: {
++        host: 'claude',
++        docs_url: 'https://code.claude.com/docs/en/permissions.md',
++        docs_at: '2026-10-13',
++        expires: '2027-10-13',
++        deny_key: 'permissions.deny',
++        examples: [
++            // "Claude Code checks file permissions against `Edit(path)` and
++            // `Read(path)` rules only. … Use `Edit(docs/**)` in place of
++            // `Write(docs/**)`, `NotebookEdit(docs/**)`, or `MultiEdit(docs/**)`."
++            'Edit(docs/**)',
++            // "To block Claude's file tools from reading a file or directory,
++            // add a `Read` deny rule for its path, such as `Read(./.env)` or
++            // `Read(./secrets/**)`."
++            'Read(./secrets/**)',
++            // "`Bash(npm run build)` | Matches the exact command `npm run build`"
++            'Bash(npm run build)',
++            // "A `*` at the end, with a space before it, also matches the bare
++            // command. `Bash(ls *)` matches `ls`, and `Bash(git log *)` matches
++            // `git log`. That holds only when the trailing `*` is the rule's
++            // only wildcard: `Bash(* --help *)` matches `npm --help x` but not
++            // `npm --help`."
++            'Bash(ls *)',
++        ],
++    },
++};
++
++/** The row for `host`, or `null` when nothing is established for it. */
++export function syntaxFor(host: string): HostPermissionSyntax | null {
++    return HOST_PERMISSION_SYNTAX[host] ?? null;
++}
++
++/**
++ * The path spec a rule carries.
++ *
++ * A trailing `/` means the directory's contents, which the host spells `/**`.
++ * Everything else is passed through as the consumer wrote it: "a deny or ask
++ * rule whose path isn't usable as a gitignore pattern still guards that exact
++ * path", and widening `src/generated` to `src/generated/**` on a guess would be
++ * the same guess the classifier refuses.
++ */
++function pathSpec(token: string): string {
++    return token.endsWith('/') ? `${token}**` : token;
++}
++
++/**
++ * The deny rows `c` becomes on `host`. Empty for prose, and empty for a host
++ * with no established row.
++ *
++ * A COMMAND BECOMES TWO ROWS, and the reason is NOT the one an earlier version
++ * of this comment gave. It claimed `Bash(x *)` never matches the bare `x`; the
++ * page says the opposite one line above the sentence that was read — "A `*` at
++ * the end, with a space before it, also matches the bare command." A review
++ * caught it, and it had reached the roadmap as that step's "one non-obvious
++ * finding", so the correction is recorded rather than quietly applied.
++ *
++ * The real reason is the page's own qualifier: the bare-command match "holds
++ * only when the trailing `*` is the rule's only wildcard". A consumer token
++ * carrying its own `*` breaks that, and the exact row is what still guards the
++ * plain command then. One row would be right for most tokens and silently
++ * wrong for those — Risk 3 in the register, "a rule in the wrong syntax is
++ * accepted by the file and enforced by nothing".
++ *
++ * A READ no-go renders `Read(...)` AND `Edit(...)`. The `Read` deny covers the
++ * Edit and Write tools on the same path, but the page names the exception:
++ * "NotebookEdit isn't covered, so add an `Edit` deny rule for paths no tool may
++ * change." A read no-go over a directory holding notebooks would otherwise
++ * leave NotebookEdit able to change it.
++ */
++export function denyRulesFor(host: string, c: NoGoClassification): readonly string[] {
++    if (syntaxFor(host) === null || c.action === null || c.token === null) return [];
++    if (c.kind === 'command') return [`Bash(${c.token})`, `Bash(${c.token} *)`];
++    if (c.kind === 'path') {
++        const spec = pathSpec(c.token);
++        return c.action === 'read' ? [`Read(${spec})`, `Edit(${spec})`] : [`Edit(${spec})`];
++    }
++    return [];
++}
+diff --git a/src/install/noGoDenyRows.ts b/src/install/noGoDenyRows.ts
+new file mode 100644
+index 000000000..457fd31b9
+--- /dev/null
++++ b/src/install/noGoDenyRows.ts
+@@ -0,0 +1,340 @@
++/**
++ * The consent step between a classified no-go and a host deny list.
++ *
++ * `road-to-a-project-contract-written-down` step 2.2. Step 2.1 decides what a
++ * bullet WOULD become; nothing here happens without the consumer saying yes,
++ * and a no writes nothing at all.
++ *
++ * ```
++ * THE ROWS ARE SHOWN BEFORE THEY ARE WRITTEN. A DECLINE WRITES NOTHING.
++ * AN ENTRY THE CONSUMER ALREADY HAD SURVIVES THE APPEND BYTE FOR BYTE.
++ * A HOST WITH NO NATIVE DENY LIST GETS A REPORT, NEVER A FILE.
++ * ```
++ *
++ * WHY THE APPEND IS TEXTUAL. Parsing the settings file and re-serialising it
++ * would reformat a file the consumer owns — re-indenting it, dropping the key
++ * order a reader relies on, and rewriting lines this change has no business
++ * touching. Risk 4 in the roadmap's register is exactly that: "rewriting the
++ * settings file drops a user entry or reorders it". So the body is spliced:
++ * every byte outside the insertion point is the byte that was there before,
++ * which is a property a test can assert rather than a promise.
++ *
++ * The file is still PARSED first, to refuse a malformed one rather than splice
++ * into it.
++ */
++
++import { classifyNoGos, type NoGoClassification } from './noGoRules.js';
++import { denyRulesFor, syntaxFor } from './hostPermissionsAdapter.js';
++
++/**
++ * Does this tree know how `host` spells a deny rule?
++ *
++ * A host absent from the adapter is not a host that forbids the idea — it is a
++ * host for which nothing here has established a native deny list. The rows are
++ * then REPORTED and no file is touched, which is the honesty
++ * `host_lowering.yaml` keeps for an unestablished hook slot: absent means
++ * nobody established anything, never "cannot".
++ */
++export function hasNativeDenyList(host: string): boolean {
++    return syntaxFor(host) !== null;
++}
++
++/** A classified bullet together with what it spells on this host. */
++export interface PlannedRow {
++    readonly classification: NoGoClassification;
++    readonly rules: readonly string[];
++}
++
++/** What a run would do, before anything is written. */
++export interface DenyPlan {
++    /** Every bullet, classified and rendered, in file order. */
++    readonly rows: readonly PlannedRow[];
++    /** The deny rules the enforceable bullets produced, de-duplicated. */
++    readonly rules: readonly string[];
++    /** Bullets that stay instruction-only. */
++    readonly prose: readonly NoGoClassification[];
++    /** False when the host has no established deny list — then `rules` is a report. */
++    readonly enforceable: boolean;
++}
++
++export function planDenyRows(noGosSection: string, host: string): DenyPlan {
++    // Render against the one host whose spelling is established when the target
++    // host's is not, so an unsupported host still gets a REPORT of what its
++    // no-gos would become rather than an empty screen reading "nothing to do".
++    const renderHost = hasNativeDenyList(host) ? host : 'claude';
++    const classified = classifyNoGos(noGosSection);
++    const rows: PlannedRow[] = classified.map((c) => ({
++        classification: c,
++        rules: denyRulesFor(renderHost, c),
++    }));
++    const seen = new Set<string>();
++    const rules: string[] = [];
++    for (const r of rows) {
++        for (const rule of r.rules) {
++            if (seen.has(rule)) continue;
++            seen.add(rule);
++            rules.push(rule);
++        }
++    }
++    return {
++        rows,
++        rules,
++        prose: classified.filter((r) => r.kind === 'prose'),
++        enforceable: hasNativeDenyList(host),
++    };
++}
++
++/**
++ * The text shown before the one consent question.
++ *
++ * Every row names the bullet it came from. Risk 1 in the register is a broad
++ * row stopping an edit the consumer later needs "and the agent cannot say why";
++ * carrying the source bullet beside the rule is what lets it say why.
++ */
++export function renderDenyPlan(plan: DenyPlan, host: string): string {
++    const syntax = syntaxFor(plan.enforceable ? host : 'claude');
++    const out: string[] = [];
++    if (plan.rules.length === 0) {
++        out.push('No no-go bullet named a path or a command, so there is nothing to enforce.');
++    } else if (plan.enforceable) {
++        out.push(
++            `Deny rows for ${host} (${syntax?.deny_key ?? 'permissions.deny'}), one per enforceable no-go:`,
++            '',
++        );
++        for (const r of plan.rows) {
++            for (const rule of r.rules) out.push(`  ${rule}`);
++            if (r.rules.length > 0) out.push(`      from: ${r.classification.bullet}`);
++        }
++    } else {
++        out.push(
++            `${host} has no native deny list established in this tree, so these rows are a`,
++            'report and nothing is written. They are spelled the way `claude` spells a deny',
++            `rule, NOT the way ${host} does — nothing here has established that ${host} reads`,
++            'this syntax, or any syntax. They are what the no-gos would become there:',
++            '',
++        );
++        for (const r of plan.rows) for (const rule of r.rules) out.push(`  ${rule}`);
++    }
++    if (plan.prose.length > 0) {
++        out.push('', 'Instruction-only — no row was built, and the reason for each:');
++        for (const p of plan.prose) out.push(`  ${p.bullet}`, `      ${p.reason}`);
++    }
++    if (plan.rules.length > 0 && plan.enforceable) {
++        // What the rows do NOT cover, on the consent screen rather than in a
++        // comment. The point of the change is to replace a sentence the agent
++        // can read past with a rule the host refuses on; a consumer consenting
++        // to that should be told where the refusal stops.
++        out.push(
++            '',
++            'What these rows do not reach, per the same documentation:',
++            '  · a Bash rule is prefix-matched, so `./artisan …`, `bash -c "…"` and a',
++            '    wrapper such as `sail` or `devbox run` are not matched by it.',
++            '  · Read and Edit rules reach the file tools and the file commands the host',
++            '    recognises in Bash, but not a script that opens the file itself.',
++            '  A no-go is still worth writing down when no row can be built for it.',
++        );
++    }
++    if (syntax !== null) {
++        out.push('', `Syntax read from ${syntax.docs_url} on ${syntax.docs_at}.`);
++    }
++    return `${out.join('\n')}\n`;
++}
++
++/* ------------------------------------------------------------------ *
++ * Locating a span inside a JSON body, without re-serialising it.
++ * ------------------------------------------------------------------ */
++
++interface Span {
++    /** Index of the opening `[` or `{`. */
++    readonly open: number;
++    /** Index of the matching closing `]` or `}`. */
++    readonly close: number;
++}
++
++/**
++ * Walk `text` as JSON and return the span of the value at `path`.
++ *
++ * A hand-rolled walk rather than a regex because a regex over JSON cannot tell
++ * a brace inside a string from a brace that nests, and a settings file holds
++ * both. Returns `null` when the path is absent or the body is not an object.
++ */
++function locate(text: string, path: readonly string[]): Span | null {
++    let i = 0;
++    const stack: string[] = [];
++    let pendingKey: string | null = null;
++    let target: Span | null = null;
++    const opens: number[] = [];
++
++    const matches = (depthPath: readonly string[]): boolean =>
++        depthPath.length === path.length && depthPath.every((s, n) => s === path[n]);
++
++    while (i < text.length) {
++        const ch = text[i] as string;
++        if (ch === '"') {
++            let j = i + 1;
++            while (j < text.length) {
++                if (text[j] === '\\') {
++                    j += 2;
++                    continue;
++                }
++                if (text[j] === '"') break;
++                j += 1;
++            }
++            const literal = text.slice(i + 1, j);
++            // A key is a string followed by a colon, inside an object.
++            let k = j + 1;
++            while (k < text.length && /\s/.test(text[k] as string)) k += 1;
++            if (text[k] === ':') pendingKey = literal;
++            i = j + 1;
++            continue;
++        }
++        if (ch === '{' || ch === '[') {
++            if (opens.length > 0 && pendingKey !== null) stack.push(pendingKey);
++            else if (opens.length > 0) stack.push('');
++            opens.push(i);
++            pendingKey = null;
++            if (matches(stack)) target = { open: i, close: -1 };
++            i += 1;
++            continue;
++        }
++        if (ch === '}' || ch === ']') {
++            const open = opens.pop();
++            if (target !== null && target.close === -1 && open === target.open) {
++                target = { open: target.open, close: i };
++            }
++            if (opens.length > 0) stack.pop();
++            // Clear it here too. A key is only pending for the container that
++            // opens right after it; carrying it across a close made the SECOND
++            // object in an array inherit the first one's last key, so
++            // `{"permissions": [{"deny": 1}, {"a": 2}]}` matched on the wrong
++            // element and spliced a bare string into an object.
++            pendingKey = null;
++            i += 1;
++            continue;
++        }
++        if (ch === ',') {
++            pendingKey = null;
++            i += 1;
++            continue;
++        }
++        i += 1;
++    }
++    return target !== null && target.close >= 0 ? target : null;
++}
++
++/** The indentation of the line `index` sits on. */
++function indentAt(text: string, index: number): string {
++    const lineStart = text.lastIndexOf('\n', index - 1) + 1;
++    const m = /^[ \t]*/.exec(text.slice(lineStart, index));
++    return m === null ? '' : (m[0] as string);
++}
++
++export interface AppendResult {
++    readonly text: string;
++    /** Rules actually inserted — a rule already present is not re-added. */
++    readonly added: readonly string[];
++    /** Rules skipped because the file already carried them. */
++    readonly alreadyPresent: readonly string[];
++}
++
++/**
++ * Append `rules` to the settings body's deny list.
++ *
++ * Three shapes, in order, and all three splice rather than rewrite:
++ *   1. `permissions.deny` exists — insert before its `]`.
++ *   2. `permissions` exists without `deny` — insert the key after its `{`.
++ *   3. neither — insert a whole `permissions` block after the root `{`.
++ *
++ * Throws on a body that is not a JSON object: refusing a malformed file is the
++ * only safe answer, since a splice into one would produce a second malformed
++ * file and lose the consumer's content.
++ */
++export function appendDenyRules(body: string, rules: readonly string[]): AppendResult {
++    const parsed: unknown = JSON.parse(body);
++    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
++        throw new Error('settings body is not a JSON object');
++    }
++    const perms = (parsed as Record<string, unknown>)['permissions'];
++    // A `permissions` that is present but NOT an object has no span for
++    // `locate` to find, so without this the root branch below would insert a
++    // SECOND `"permissions"` key. The file stays parseable, the last key wins,
++    // and every row the consumer consented to is silently discarded while the
++    // command reports success — measured, and the defect this refusal exists
++    // for. Refusing is the only honest answer: merging would have to guess what
++    // the existing value meant.
++    if (
++        Object.hasOwn(parsed as Record<string, unknown>, 'permissions') &&
++        (perms === null || typeof perms !== 'object' || Array.isArray(perms))
++    ) {
++        throw new Error(
++            'settings body has a `permissions` key that is not an object — refusing rather ' +
++                'than writing a second one',
++        );
++    }
++    const existing: string[] =
++        perms !== null && typeof perms === 'object' && !Array.isArray(perms)
++            ? ((perms as Record<string, unknown>)['deny'] as unknown[] | undefined)?.filter(
++                  (e): e is string => typeof e === 'string',
++              ) ?? []
++            : [];
++
++    const have = new Set(existing);
++    const added = rules.filter((r) => !have.has(r));
++    const alreadyPresent = rules.filter((r) => have.has(r));
++    if (added.length === 0) return { text: body, added, alreadyPresent };
++
++    const denySpan = locate(body, ['permissions', 'deny']);
++    if (denySpan !== null) {
++        const inner = body.slice(denySpan.open + 1, denySpan.close);
++        const closeIndent = indentAt(body, denySpan.open);
++        const indent = `${closeIndent}    `;
++        const entries = added.map((r) => `${indent}${JSON.stringify(r)}`).join(',\n');
++        if (inner.trim().length === 0) {
++            return {
++                text:
++                    `${body.slice(0, denySpan.open + 1)}\n${entries}\n${closeIndent}` +
++                    `${body.slice(denySpan.close)}`,
++                added,
++                alreadyPresent,
++            };
++        }
++        // Insert AFTER the last element rather than before the `]`, so the
++        // closing bracket keeps the line and the indentation it already had.
++        // Splicing at the bracket leaves the comma stranded on its own line and
++        // un-indents the `]` — a diff in a file the consumer owns, for nothing.
++        const lastChar = inner.replace(/\s+$/, '').length;
++        const at = denySpan.open + 1 + lastChar;
++        return {
++            text: `${body.slice(0, at)},\n${entries}${body.slice(at)}`,
++            added,
++            alreadyPresent,
++        };
++    }
++
++    const permSpan = locate(body, ['permissions']);
++    if (permSpan !== null) {
++        const indent = `${indentAt(body, permSpan.open)}    `;
++        const entries = added.map((r) => `${indent}    ${JSON.stringify(r)}`).join(',\n');
++        const inner = body.slice(permSpan.open + 1, permSpan.close);
++        const sep = inner.trim().length === 0 ? '' : ',';
++        const block = `\n${indent}"deny": [\n${entries}\n${indent}]${sep}`;
++        return {
++            text: `${body.slice(0, permSpan.open + 1)}${block}${body.slice(permSpan.open + 1)}`,
++            added,
++            alreadyPresent,
++        };
++    }
++
++    const rootSpan = locate(body, []);
++    if (rootSpan === null) throw new Error('settings body has no root object');
++    const indent = '    ';
++    const entries = added.map((r) => `${indent}        ${JSON.stringify(r)}`).join(',\n');
++    const inner = body.slice(rootSpan.open + 1, rootSpan.close);
++    const sep = inner.trim().length === 0 ? '' : ',';
++    const block = `\n${indent}"permissions": {\n${indent}    "deny": [\n${entries}\n${indent}    ]\n${indent}}${sep}`;
++    return {
++        text: `${body.slice(0, rootSpan.open + 1)}${block}${body.slice(rootSpan.open + 1)}`,
++        added,
++        alreadyPresent,
++    };
++}
+diff --git a/src/install/noGoRules.ts b/src/install/noGoRules.ts
+new file mode 100644
+index 000000000..bb6f84d7e
+--- /dev/null
++++ b/src/install/noGoRules.ts
+@@ -0,0 +1,335 @@
++/**
++ * A consumer no-go bullet, sorted into `path`, `command` or `prose`, and
++ * rendered as the deny rule it would become.
++ *
++ * `road-to-a-project-contract-written-down` step 2.1. `/agents:init` asks the
++ * consumer for no-gos and writes them into their own `AGENTS.md`. A sentence
++ * there binds every turn and the agent may still read past it. This is what
++ * turns the two kinds that CAN be enforced into rows the host refuses on, and
++ * what refuses to turn the third kind into anything at all.
++ *
++ * ```
++ * A BULLET THE FUNCTION CANNOT CLASSIFY IS `prose`, NEVER A GUESSED ROW.
++ * A ROW ON A VAGUE SENTENCE BLOCKS LEGITIMATE WORK AND CANNOT SAY WHY.
++ * ```
++ *
++ * Pure: it reads a string and returns a verdict. Nothing here opens a settings
++ * file — the consent prompt and the append are step 2.2's.
++ *
++ * WHAT MAKES A VERDICT. Two independent signals must agree, and either one
++ * missing is `prose`:
++ *
++ *   1. ONE backticked token. The consumer guide's own `## No-gos` shape puts
++ *      the path or the command in backticks. Zero means the bullet names
++ *      neither; two or more means the subject is ambiguous, and picking one
++ *      would be the guess this module exists to refuse.
++ *   2. An action verb from a closed vocabulary. The token's SHAPE says what it
++ *      is; only the verb says what must not happen to it. "`vendor/` is
++ *      generated" carries a path and no action, and choosing `Edit` over `Read`
++ *      on its behalf would widen or narrow a rule nobody wrote.
++ */
++
++/** What a bullet turned out to be. */
++export type NoGoKind = 'path' | 'command' | 'prose';
++
++/**
++ * What the bullet forbids DOING — host-neutral, and the whole output of this
++ * module beside the token.
++ *
++ * `null` on a prose verdict. The split between this and the host's spelling is
++ * the council's convergent requirement of 2026-10-13 (anthropic + openai, 2/2):
++ * a classifier that resolves a host row at run time is not a pure classifier,
++ * and a renderer that re-derives the semantics is a second place for them to
++ * drift. The classifier never learns which host it is running for.
++ */
++export type NoGoAction = 'read' | 'edit' | 'run';
++
++export interface NoGoClassification {
++    /** The bullet as written, list marker stripped and trimmed. */
++    readonly bullet: string;
++    readonly kind: NoGoKind;
++    /** The one backticked token the verdict rests on; `null` for prose. */
++    readonly token: string | null;
++    /** What must not happen to it; `null` for prose. */
++    readonly action: NoGoAction | null;
++    /** Why the verdict is what it is — shown beside the row at consent time. */
++    readonly reason: string;
++}
++
++/** Verbs that forbid READING. A `Read` deny also covers edits and writes. */
++const READ_VERBS = ['read', 'open', 'view', 'cat', 'print', 'dump'] as const;
++
++/** Verbs that forbid CHANGING. `Edit` is the only path rule the host checks. */
++const EDIT_VERBS = [
++    'edit',
++    'modify',
++    'change',
++    'write',
++    'touch',
++    'delete',
++    'remove',
++    'rename',
++    'commit',
++    'overwrite',
++    'regenerate',
++] as const;
++
++/** Verbs that forbid EXECUTING. */
++const RUN_VERBS = ['run', 'execute', 'invoke', 'call'] as const;
++
++/**
++ * Words that make a bullet a PROHIBITION rather than a description.
++ *
++ * Required, and that is the correction a review forced: a verb scan alone
++ * accepts "``npm run build`` is the only sanctioned build command" and renders
++ * a deny row over the command the bullet PRESCRIBES. A no-go section is not the
++ * only place a backticked command appears in a sentence with a verb near it.
++ */
++const NEGATIONS = ['never', 'not', 'no', 'dont', 'avoid', 'forbidden', 'prohibited'] as const;
++
++/**
++ * Text that ends the clause the prohibition governs.
++ *
++ * The second half of the same correction. "Never run migrations in production
++ * - use `php artisan migrate --pretend` instead" negates, carries a run verb,
++ * and carries a backticked command — and the command is the ESCAPE HATCH the
++ * bullet recommends. A separator between the verb and the token means the token
++ * belongs to a different clause, so the verdict is prose.
++ */
++const CLAUSE_BREAK = /[-–—;:()]|\b(?:instead|use|using|prefer|except|unless|but|rather)\b/i;
++
++/** Backticked spans replaced by spaces, so a verb INSIDE the token is not read as the bullet's verb. */
++function maskTokens(bullet: string): string {
++    return bullet.replace(/`[^`]+`/g, (m) => ' '.repeat(m.length));
++}
++
++/** First index at which any whole word in `words` occurs, or -1. */
++function firstWordIndex(haystack: string, words: readonly string[]): number {
++    let best = -1;
++    for (const w of words) {
++        const m = new RegExp(`\\b${w}\\b`, 'i').exec(haystack);
++        if (m !== null && (best === -1 || m.index < best)) best = m.index;
++    }
++    return best;
++}
++
++interface VerbHit {
++    readonly action: NoGoAction;
++    readonly start: number;
++    readonly end: number;
++}
++
++/** The first action verb at or after `from`, or `null`. */
++function verbAfter(masked: string, from: number): VerbHit | null {
++    const groups: readonly (readonly [NoGoAction, readonly string[]])[] = [
++        ['run', RUN_VERBS],
++        ['read', READ_VERBS],
++        ['edit', EDIT_VERBS],
++    ];
++    let best: VerbHit | null = null;
++    for (const [action, verbs] of groups) {
++        for (const v of verbs) {
++            const re = new RegExp(`\\b${v.replace("'", "'?")}\\b`, 'gi');
++            let m = re.exec(masked);
++            while (m !== null) {
++                if (m.index >= from && (best === null || m.index < best.start)) {
++                    best = { action, start: m.index, end: m.index + m[0].length };
++                }
++                m = re.exec(masked);
++            }
++        }
++    }
++    return best;
++}
++
++/** The backticked spans of a bullet, in order. */
++function backticked(bullet: string): string[] {
++    const out: string[] = [];
++    const re = /`([^`]+)`/g;
++    let m = re.exec(bullet);
++    while (m !== null) {
++        const inner = (m[1] as string).trim();
++        if (inner.length > 0) out.push(inner);
++        m = re.exec(bullet);
++    }
++    return out;
++}
++
++/**
++ * Does `token` look like a filesystem path?
++ *
++ * A path separator, a leading dot, or a file extension. A bare word is NOT a
++ * path: `migrations` alone could be a directory or a command, and the guide's
++ * own example writes the trailing slash.
++ */
++function looksLikePath(token: string): boolean {
++    if (/\s/.test(token)) return false;
++    if (token.includes('/')) return true;
++    if (token.startsWith('.')) return true;
++    // A trailing extension only counts on a KNOWN file extension. The earlier
++    // `/\.[A-Za-z0-9]+$/` accepted `users.id`, `app.debug` and `v2.1` as paths,
++    // and rendered a rule over a path that does not exist.
++    return /\.(?:[a-z]{1,5}|[A-Z]{1,5})$/.test(token) && !/^[a-z]+\.[a-z]+$/.test(token);
++}
++
++/**
++ * Characters that make a path token mean something other than it reads.
++ *
++ * `!` is a gitignore NEGATION on the host: a deny row starting with it carves
++ * paths OUT of the deny rules listed before it, so a no-go bullet would weaken
++ * a consumer's existing list while being shown as a deny row. `[`, `]` and `?`
++ * are gitignore character classes, and the host does not escape a rule you
++ * wrote yourself — `reports/[2024]/**` matches `reports/2/`, never the
++ * directory the consumer named.
++ *
++ * `*` is deliberately NOT here: a consumer who writes `src/generated/**` means
++ * that glob, and the guide teaches the trailing slash for everything else.
++ */
++const UNSAFE_PATH_CHARS = /^!|[[\]?]/;
++
++const PROSE = (bullet: string, reason: string): NoGoClassification => ({
++    bullet,
++    kind: 'prose',
++    token: null,
++    action: null,
++    reason,
++});
++
++/** Strip a leading markdown list marker, if present. */
++function stripMarker(line: string): string {
++    return line.replace(/^\s*[-*+]\s+/, '').trim();
++}
++
++export function classifyNoGo(raw: string): NoGoClassification {
++    const bullet = stripMarker(raw);
++    if (bullet.length === 0) return PROSE(bullet, 'empty bullet');
++
++    const tokens = backticked(bullet);
++    if (tokens.length === 0) {
++        return PROSE(bullet, 'names no path and no command in backticks');
++    }
++    if (tokens.length > 1) {
++        return PROSE(
++            bullet,
++            `${String(tokens.length)} backticked tokens — the subject is ambiguous, so no row is built`,
++        );
++    }
++
++    const token = tokens[0] as string;
++    const masked = maskTokens(bullet);
++    const tokenAt = bullet.indexOf(`\`${token}\``);
++
++    const negAt = firstWordIndex(masked, NEGATIONS);
++    if (negAt === -1) {
++        return PROSE(
++            bullet,
++            'states no prohibition, so the backticked token may be what the bullet recommends',
++        );
++    }
++    const verb = verbAfter(masked, negAt);
++    if (verb === null) {
++        return PROSE(bullet, 'names no action verb, so what must not happen to it is unstated');
++    }
++    if (verb.start > tokenAt) {
++        return PROSE(bullet, 'the action verb comes after the token, so the two may not be related');
++    }
++    const between = bullet.slice(verb.end, tokenAt);
++    if (CLAUSE_BREAK.test(between)) {
++        return PROSE(
++            bullet,
++            `\`${token}\` sits in a different clause from the prohibition — it may be the ` +
++                'alternative the bullet recommends, so no rule is built',
++        );
++    }
++
++    if (verb.action === 'run') {
++        return {
++            bullet,
++            kind: 'command',
++            token,
++            action: verb.action,
++            reason: 'a negated run verb over a backticked command',
++        };
++    }
++    const action = verb.action;
++
++    if (!looksLikePath(token)) {
++        return PROSE(
++            bullet,
++            `a ${action} verb over \`${token}\`, which has no path shape — no rule is built`,
++        );
++    }
++    if (UNSAFE_PATH_CHARS.test(token)) {
++        return PROSE(
++            bullet,
++            `\`${token}\` carries a gitignore metacharacter (\`!\`, \`[\`, \`]\` or \`?\`) that the ` +
++                'host does not escape, so a rule built from it would guard something else',
++        );
++    }
++
++    return {
++        bullet,
++        kind: 'path',
++        token,
++        action,
++        reason:
++            action === 'read'
++                ? 'a read verb over a backticked path'
++                : 'an edit verb over a backticked path',
++    };
++}
++
++/**
++ * Every bullet of a `## No-gos` section, in file order.
++ *
++ * Non-bullet lines — the heading, blanks, a sentence between bullets — are not
++ * no-gos and are skipped rather than classified as prose: a prose verdict is a
++ * statement about a bullet somebody wrote, and a heading is not one.
++ */
++export function classifyNoGos(section: string): readonly NoGoClassification[] {
++    return section
++        .split('\n')
++        .filter((line) => /^\s*[-*+]\s+\S/.test(line))
++        .map((line) => classifyNoGo(line));
++}
++
++/** The `##` heading spellings a no-gos section is written under. */
++const NO_GOS_HEADINGS = new Set(['no-gos', 'no-gos (never do this)']);
++
++/**
++ * The body of a consumer `AGENTS.md`'s `## No-gos` section, or `''`.
++ *
++ * Skips fenced blocks for the reason `report_project_contract` does, and it is
++ * the same load-bearing reason rather than a shared habit: the consumer guide
++ * ships this exact heading INSIDE a ```markdown fence as copy-in material, so a
++ * reader without the skip would classify the guide's own example bullets and
++ * offer to deny `migrations/` in a repository that never asked.
++ */
++export function extractNoGosSection(body: string): string {
++    const out: string[] = [];
++    let fence: string | null = null;
++    let inside = false;
++    for (const raw of body.split('\n')) {
++        const line = raw.trimEnd();
++        const open = /^\s*(```+|~~~+)/.exec(line);
++        if (open !== null) {
++            const marker = open[1] as string;
++            if (fence === null) fence = marker[0] as string;
++            else if (marker.startsWith(fence)) fence = null;
++            continue;
++        }
++        if (fence !== null) continue;
++        // ANY heading level closes the section; only a level-two one with a
++        // matching title opens it. Matching `##` alone let a following `#
++        // Appendix` leave the section open, so every bullet of every later
++        // top-level section was classified as a no-go.
++        const h = /^(#{1,6})[ \t]+(.+?)[ \t]*#*$/.exec(line);
++        if (h !== null) {
++            const level2 = (h[1] as string).length === 2;
++            inside = level2 && NO_GOS_HEADINGS.has((h[2] as string).trim().toLowerCase());
++            continue;
++        }
++        if (inside) out.push(line);
++    }
++    return out.join('\n');
++}
+diff --git a/src/scripts/check_permission_deny_syntax.ts b/src/scripts/check_permission_deny_syntax.ts
+new file mode 100644
+index 000000000..abc23c5d6
+--- /dev/null
++++ b/src/scripts/check_permission_deny_syntax.ts
+@@ -0,0 +1,210 @@
++#!/usr/bin/env tsx
++/**
++ * check_permission_deny_syntax — the provenance gate over the host permission
++ * deny-rule pins in `src/install/hostPermissionsAdapter.ts`.
++ *
++ * `road-to-a-project-contract-written-down` step 2.1. The step named
++ * `src/scripts/hooks/host_lowering.yaml` as the home for this pin, which would
++ * have put it behind the plumbing ratification record. The AI council of
++ * 2026-10-13 (anthropic + openai, 2/2, both converging on the same path)
++ * refused that home — a permission rule has no hook slot and no dispatcher
++ * verdict — and required a provenance gate in its place. This is that gate.
++ *
++ * ```
++ * A PIN WITH NO URL, NO READ DATE, OR A PASSED REVIEW DATE IS NOT A PIN.
++ * EVERY RULE THE RENDERER PRODUCES MATCHES THE GRAMMAR THE QUOTED EXAMPLES SHOW.
++ * ```
++ *
++ * WHAT THIS DOES NOT CLAIM, stated rather than implied. The examples are
++ * verbatim quotes recorded with their URL and read date; the renderer is
++ * checked against the grammar they exhibit. That is CONFORMANCE TO A RECORDED
++ * READING, not conformance to the live host — the same honesty limit the
++ * council named when it observed that a test reading the renderer's own
++ * constant proves internal consistency and nothing more. Only a probe against
++ * an installed host would close it, and this gate does not pretend to.
++ *
++ * It also deliberately does NOT fetch `docs_url`. A build that depends on a
++ * mutable vendor page is nondeterministic and fails on an unrelated edit to
++ * that page; the review date is the drift signal instead.
++ *
++ * Usage: ./scripts-run src/scripts/check_permission_deny_syntax [--today YYYY-MM-DD]
++ * Exit codes: 0 — every pin is current and every rule conforms · 1 — a finding.
++ */
++
++import process from 'node:process';
++
++import { asOf } from './_lib/as_of.js';
++import { reportScanned } from './_lib/scan_scope.js';
++import {
++    HOST_PERMISSION_SYNTAX,
++    denyRulesFor,
++    type HostPermissionSyntax,
++} from '../install/hostPermissionsAdapter.js';
++import { classifyNoGo } from '../install/noGoRules.js';
++
++/**
++ * Bullets this gate renders, one per rule shape the adapter can produce.
++ *
++ * Committed here rather than generated, so a renderer change that silently
++ * stops producing one of the shapes is a finding instead of a smaller fixture.
++ */
++const FIXTURES: readonly string[] = [
++    'Never edit `migrations/` by hand',
++    'Never overwrite `.env`',
++    'Never read `secrets/`',
++    'Never run `php artisan migrate:fresh` outside a throwaway database',
++];
++
++/** `Tool(specifier)` — the shape every example on the page exhibits. */
++const RULE_RE = /^(Edit|Read|Bash)\(.+\)$/;
++
++const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
++
++/** The ISO day after `iso`. */
++function dayAfter(iso: string): string {
++    const d = new Date(`${iso}T00:00:00Z`);
++    d.setUTCDate(d.getUTCDate() + 1);
++    return d.toISOString().slice(0, 10);
++}
++
++/**
++ * Every finding against one row. Exported so the rejecting cases can be driven
++ * over crafted rows: this gate's corpus is a typed constant, not a file tree,
++ * so there is no `--root` fixture seam for a `_lib/gate_self_test.ts`
++ * `--self-test` to point at. `tests/scripts/permission_deny_syntax.test.ts`
++ * carries the discrimination proof instead, and runs on every commit.
++ */
++export function checkRow(row: HostPermissionSyntax, today: string): string[] {
++    const bad: string[] = [];
++    const where = `host \`${row.host}\``;
++    if (!row.docs_url.startsWith('https://')) {
++        bad.push(`${where}: docs_url is not an https URL`);
++    }
++    if (!ISO_RE.test(row.docs_at)) bad.push(`${where}: docs_at is not an ISO date`);
++    if (!ISO_RE.test(row.expires)) bad.push(`${where}: expires is not an ISO date`);
++    // One day of slack, because `docs_at` is written by a human in their own
++    // zone while `today` below is UTC. Without it a page read at 01:00 CEST
++    // reds the gate on the day it was read, which would teach the next author
++    // to back-date the field rather than to record when they read it.
++    if (ISO_RE.test(row.docs_at) && row.docs_at > dayAfter(today)) {
++        bad.push(`${where}: docs_at ${row.docs_at} is more than a day in the future`);
++    }
++    if (ISO_RE.test(row.expires) && row.expires < today) {
++        bad.push(
++            `${where}: the pin's review date ${row.expires} has passed — re-read ` +
++                `${row.docs_url}, update docs_at/expires, and re-check the examples`,
++        );
++    }
++    if (ISO_RE.test(row.docs_at) && ISO_RE.test(row.expires) && row.expires <= row.docs_at) {
++        bad.push(`${where}: expires ${row.expires} is not after docs_at ${row.docs_at}`);
++    }
++    if (row.deny_key.length === 0) bad.push(`${where}: deny_key is empty`);
++    if (row.examples.length === 0) bad.push(`${where}: no example is recorded`);
++    for (const ex of row.examples) {
++        if (!RULE_RE.test(ex)) bad.push(`${where}: example \`${ex}\` is not Tool(specifier)`);
++    }
++
++    // Every rule the renderer produces must use a tool the examples show, in
++    // the shape they show. A renderer that started emitting `Write(...)` — a
++    // rule the host accepts and never consults — is caught here.
++    const tools = new Set(row.examples.map((e) => e.slice(0, e.indexOf('('))));
++    const rendered: string[] = [];
++    for (const bullet of FIXTURES) {
++        for (const rule of denyRulesFor(row.host, classifyNoGo(bullet))) {
++            rendered.push(rule);
++            if (!RULE_RE.test(rule)) {
++                bad.push(`${where}: rendered \`${rule}\` is not Tool(specifier)`);
++                continue;
++            }
++            const tool = rule.slice(0, rule.indexOf('('));
++            if (!tools.has(tool)) {
++                bad.push(
++                    `${where}: rendered \`${rule}\` uses tool \`${tool}\`, which no recorded ` +
++                        'example shows',
++                );
++            }
++        }
++    }
++    if (rendered.length === 0) {
++        bad.push(`${where}: the fixtures rendered no rule at all`);
++        return bad;
++    }
++
++    // Each shape, asserted on its own. The earlier version checked only that
++    // SOME rule was produced and that each produced rule's tool was recorded,
++    // which a renderer that silently stopped emitting `Read(...)` passes — the
++    // comment above FIXTURES claimed this was covered and it was not.
++    for (const [label, matches] of SHAPES) {
++        if (!rendered.some(matches)) {
++            bad.push(
++                `${where}: the fixtures rendered no ${label} rule — a renderer that stops ` +
++                    'producing a shape must be a finding, not a smaller result',
++            );
++        }
++    }
++    return bad;
++}
++
++/** One entry per rule shape the adapter is expected to be able to render. */
++const SHAPES: readonly (readonly [string, (r: string) => boolean])[] = [
++    ['Edit(path)', (r) => r.startsWith('Edit(')],
++    ['Read(path)', (r) => r.startsWith('Read(')],
++    ['Bash(exact command)', (r) => r.startsWith('Bash(') && !r.endsWith(' *)')],
++    ['Bash(command with arguments)', (r) => r.startsWith('Bash(') && r.endsWith(' *)')],
++];
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    // `asOf()`, not the wall clock: this gate's only time-dependent verdict is
++    // whether a pin's review date has passed, and a staleness verdict that
++    // differs between Monday and Friday over an unchanged tree is not
++    // reproducible from the commit. `--today` stays as this gate's own pin,
++    // which is what the rejecting cases in its test drive.
++    let today = asOf().toISOString().slice(0, 10);
++    for (let i = 0; i < argv.length; i += 1) {
++        if (argv[i] === '--today') {
++            const next = argv[i + 1];
++            if (next === undefined || !ISO_RE.test(next)) {
++                process.stderr.write('check_permission_deny_syntax: --today needs YYYY-MM-DD\n');
++                return 1;
++            }
++            today = next;
++            i += 1;
++        }
++    }
++
++    const rows = Object.values(HOST_PERMISSION_SYNTAX);
++    // Through the shared resolver, not a hand-written line: a gate that reports
++    // a count it never asserted can print `scanned: 0` and exit green, which is
++    // exactly the certify-an-empty-corpus failure this seam exists to stop.
++    // No `allowEmpty` — a pin table with no rows is a dead scope here, never an
++    // expected state, and the gate should say so rather than pass.
++    try {
++        reportScanned({
++            gate: 'check_permission_deny_syntax',
++            scanned: rows.length,
++            units: 'host permission pin(s)',
++            roots: ['src/install/hostPermissionsAdapter.ts'],
++        });
++    } catch (err) {
++        process.stderr.write(`❌  ${err instanceof Error ? err.message : String(err)}\n`);
++        return 1;
++    }
++    const bad = rows.flatMap((row) => checkRow(row, today));
++    process.stdout.write(
++        `check_permission_deny_syntax ledger: scanned=${String(rows.length)} ` +
++            `planned=${String(rows.length)} skipped=0\n`,
++    );
++    if (bad.length > 0) {
++        for (const b of bad) process.stderr.write(`❌  ${b}\n`);
++        return 1;
++    }
++    process.stdout.write(
++        `✅  check_permission_deny_syntax: ${String(rows.length)} host pin(s) current, ` +
++            `every rendered rule in the recorded grammar.\n`,
++    );
++    return 0;
++}
++
++if (process.argv[1] !== undefined && import.meta.url === `file://${process.argv[1]}`) {
++    process.exit(main());
++}
+diff --git a/src/scripts/no_go_deny_rows.ts b/src/scripts/no_go_deny_rows.ts
+new file mode 100644
+index 000000000..c8caa6430
+--- /dev/null
++++ b/src/scripts/no_go_deny_rows.ts
+@@ -0,0 +1,208 @@
++#!/usr/bin/env tsx
++/**
++ * Show what a consumer's `## No-gos` section would become as host deny rows —
++ * and, only with `--apply`, append them.
++ *
++ * `road-to-a-project-contract-written-down` step 2.2. `/agents:init` runs this
++ * WITHOUT `--apply` first, shows the rows, asks once, and runs it again with
++ * `--apply` only on a yes.
++ *
++ * ```
++ * WITHOUT --apply THIS WRITES NOTHING. THAT IS THE DEFAULT AND THE POINT.
++ * A HOST WITH NO ESTABLISHED DENY LIST GETS A REPORT, NEVER A FILE.
++ * ```
++ *
++ * Usage:
++ *   ./scripts-run src/scripts/no_go_deny_rows [AGENTS.md] [--host claude]
++ *                                             [--settings .claude/settings.json]
++ *                                             [--apply]
++ *
++ * Exit codes: 0 — shown (or applied) · 1 — the file could not be read or the
++ * settings body is malformed · 2 — usage error.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import process from 'node:process';
++
++import { extractNoGosSection } from '../install/noGoRules.js';
++import {
++    appendDenyRules,
++    planDenyRows,
++    renderDenyPlan,
++} from '../install/noGoDenyRows.js';
++
++const USAGE =
++    'usage: no_go_deny_rows [AGENTS.md] [--host <host>] [--settings <path>] [--apply]\n\n' +
++    'Without --apply nothing is written.\n';
++
++interface Args {
++    readonly agentsMd: string;
++    readonly host: string;
++    readonly settings: string;
++    readonly apply: boolean;
++}
++
++function parse(argv: readonly string[]): Args | number {
++    if (argv.includes('-h') || argv.includes('--help')) {
++        process.stdout.write(USAGE);
++        return 0;
++    }
++    let host = 'claude';
++    let settings = '.claude/settings.json';
++    let apply = false;
++    const positional: string[] = [];
++    for (let i = 0; i < argv.length; i += 1) {
++        const a = argv[i] as string;
++        if (a === '--apply') {
++            apply = true;
++        } else if (a === '--host' || a === '--settings') {
++            const next = argv[i + 1];
++            if (next === undefined) {
++                process.stderr.write(`no_go_deny_rows: ${a} needs a value\n`);
++                return 2;
++            }
++            if (a === '--host') host = next;
++            else settings = next;
++            i += 1;
++        } else if (a.startsWith('-')) {
++            process.stderr.write(`no_go_deny_rows: unknown argument ${a}\n${USAGE}`);
++            return 2;
++        } else {
++            positional.push(a);
++        }
++    }
++    return { agentsMd: positional[0] ?? 'AGENTS.md', host, settings, apply };
++}
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    const args = parse(argv);
++    if (typeof args === 'number') return args;
++
++    const mdPath = path.resolve(args.agentsMd);
++    if (!fs.existsSync(mdPath)) {
++        process.stderr.write(`no_go_deny_rows: ${mdPath} not found\n`);
++        return 1;
++    }
++    const section = extractNoGosSection(fs.readFileSync(mdPath, 'utf8'));
++    const plan = planDenyRows(section, args.host);
++    process.stdout.write(renderDenyPlan(plan, args.host));
++
++    if (!args.apply) {
++        if (plan.rules.length > 0 && plan.enforceable) {
++            process.stdout.write(
++                '\nNothing was written. Re-run with --apply to append these rows.\n',
++            );
++        }
++        return 0;
++    }
++    if (!plan.enforceable) {
++        process.stdout.write(
++            `\n--apply ignored: no deny list is established for ${args.host}.\n`,
++        );
++        return 0;
++    }
++    if (plan.rules.length === 0) return 0;
++
++    const target = path.resolve(args.settings);
++    const before = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '{}\n';
++    let result;
++    try {
++        result = appendDenyRules(before, plan.rules);
++    } catch (err) {
++        process.stderr.write(
++            `no_go_deny_rows: ${target} — ${err instanceof Error ? err.message : String(err)}\n`,
++        );
++        return 1;
++    }
++    if (result.added.length === 0) {
++        process.stdout.write('\nEvery row was already present; the file is unchanged.\n');
++        return 0;
++    }
++
++    // Verify BEFORE the file moves, not after. The settings file is the
++    // consumer's; a write that lands and then turns out to have dropped an
++    // entry has already cost them the file. Both checks run on the candidate
++    // text, and a failure writes nothing at all.
++    let roundTrip: { permissions?: { deny?: unknown } };
++    try {
++        roundTrip = JSON.parse(result.text) as { permissions?: { deny?: unknown } };
++    } catch {
++        process.stderr.write('no_go_deny_rows: the result would not parse — nothing written\n');
++        return 1;
++    }
++    const deny = roundTrip.permissions?.deny;
++    const kept = Array.isArray(deny) ? deny.filter((e): e is string => typeof e === 'string') : [];
++    const lost = priorDeny(before).filter((e) => !kept.includes(e));
++    if (lost.length > 0) {
++        process.stderr.write(
++            `no_go_deny_rows: ${String(lost.length)} existing entr(ies) would be lost — nothing written\n`,
++        );
++        return 1;
++    }
++    // The STRONG form of the module's own claim: the result is the file that
++    // was there, plus text at one point. A deny-entry comparison is weaker than
++    // that and passes a result that duplicated a root key — measured. This
++    // check is the one that would have caught it.
++    if (!isSingleInsertion(before, result.text)) {
++        process.stderr.write(
++            'no_go_deny_rows: the result is not the existing file plus one insertion — ' +
++                'nothing written\n',
++        );
++        return 1;
++    }
++    if (!plan.rules.every((r) => kept.includes(r))) {
++        process.stderr.write(
++            'no_go_deny_rows: a consented row is not in the result — nothing written\n',
++        );
++        return 1;
++    }
++
++    fs.mkdirSync(path.dirname(target), { recursive: true });
++    // Write beside the target and rename, so an interrupted write leaves the
++    // consumer's file as it was rather than half of it.
++    const tmp = `${target}.agent-config.tmp`;
++    fs.writeFileSync(tmp, result.text, 'utf8');
++    fs.renameSync(tmp, target);
++    process.stdout.write(
++        `\n${String(result.added.length)} row(s) appended to ${args.settings}.\n`,
++    );
++    return 0;
++}
++
++/**
++ * Is `after` exactly `before` with one contiguous run of text inserted?
++ *
++ * Longest common prefix plus longest common suffix must account for every byte
++ * of `before`. Nothing is deleted, nothing is reordered, and nothing outside
++ * the insertion point moved — which is the property the splice claims and the
++ * property a deny-entry comparison cannot see.
++ */
++function isSingleInsertion(before: string, after: string): boolean {
++    if (after.length < before.length) return false;
++    let head = 0;
++    while (head < before.length && before[head] === after[head]) head += 1;
++    let tail = 0;
++    while (
++        tail < before.length - head &&
++        before[before.length - 1 - tail] === after[after.length - 1 - tail]
++    ) {
++        tail += 1;
++    }
++    return head + tail === before.length;
++}
++
++/** The deny entries a settings body already carried, or `[]`. */
++function priorDeny(body: string): readonly string[] {
++    try {
++        const parsed = JSON.parse(body) as { permissions?: { deny?: unknown } };
++        const deny = parsed.permissions?.deny;
++        return Array.isArray(deny) ? deny.filter((e): e is string => typeof e === 'string') : [];
++    } catch {
++        return [];
++    }
++}
++
++if (process.argv[1] !== undefined && import.meta.url === `file://${process.argv[1]}`) {
++    process.exit(main());
++}
+diff --git a/tests/install/no_go_classify.test.ts b/tests/install/no_go_classify.test.ts
+new file mode 100644
+index 000000000..eff2ab8fb
+--- /dev/null
++++ b/tests/install/no_go_classify.test.ts
+@@ -0,0 +1,324 @@
++// Tests for src/install/noGoRules.ts and src/install/hostPermissionsAdapter.ts —
++// road-to-a-project-contract-written-down Phase 2 (2.1).
++//
++// The canonical fixtures are the three bullets the consumer guide ships as its
++// own `## No-gos` example, one per kind: a path, a command, and a sentence that
++// names neither. The third is the load-bearing one — D4 says an unclassifiable
++// bullet stays `prose`, never a guessed deny row, because a row on a vague
++// sentence blocks legitimate work silently and the agent cannot say why.
++//
++// The two modules are tested together because 2.1 is one step, and apart
++// because the council of 2026-10-13 required the split: the classifier never
++// learns which host it runs for, and the adapter never re-derives semantics.
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { describe, expect, it } from 'vitest';
++
++import {
++    classifyNoGo,
++    classifyNoGos,
++    extractNoGosSection,
++    type NoGoClassification,
++    type NoGoKind,
++} from '../../src/install/noGoRules.js';
++import {
++    denyRulesFor,
++    HOST_PERMISSION_SYNTAX,
++    syntaxFor,
++} from '../../src/install/hostPermissionsAdapter.js';
++
++function kindOf(bullet: string): NoGoKind {
++    return classifyNoGo(bullet).kind;
++}
++
++/** What the bullet becomes on the one host whose spelling is established. */
++function rulesOf(bullet: string): readonly string[] {
++    return denyRulesFor('claude', classifyNoGo(bullet));
++}
++
++describe('classifyNoGo — the three kinds', () => {
++    it('reads a backticked path under an edit verb as `path`', () => {
++        const c = classifyNoGo('Never edit `migrations/` by hand');
++        expect(c.kind).toBe('path');
++        expect(c.token).toBe('migrations/');
++        expect(c.action).toBe('edit');
++    });
++
++    it('reads a backticked command under a run verb as `command`', () => {
++        const c = classifyNoGo(
++            'Never run `php artisan migrate:fresh` outside a throwaway database',
++        );
++        expect(c.kind).toBe('command');
++        expect(c.token).toBe('php artisan migrate:fresh');
++        expect(c.action).toBe('run');
++    });
++
++    it('reads a bullet with no backticked token as `prose`', () => {
++        const c = classifyNoGo('Never add a runtime dependency without an ADR');
++        expect(c.kind).toBe('prose');
++        expect(c.token).toBeNull();
++        expect(c.action).toBeNull();
++    });
++
++    it('carries no host spelling of its own', () => {
++        // The classifier's whole output is `{kind, token, action, reason}`.
++        // A `rules` field here would be the host coupling the split removes.
++        const c = classifyNoGo('Never edit `migrations/` by hand') as NoGoClassification &
++            Record<string, unknown>;
++        expect(c['rules']).toBeUndefined();
++        expect(Object.keys(c).sort()).toEqual(['action', 'bullet', 'kind', 'reason', 'token']);
++    });
++});
++
++describe('classifyNoGo — what it refuses to guess', () => {
++    it('stays prose when two backticked tokens leave the subject ambiguous', () => {
++        expect(kindOf('Never edit `migrations/` or `seeders/`')).toBe('prose');
++    });
++
++    it('stays prose when a path carries no action verb', () => {
++        // The shape says path; the sentence does not say what must not happen
++        // to it. Picking `Edit` over `Read` here would be the guess D4 forbids.
++        expect(kindOf('`vendor/` is generated')).toBe('prose');
++    });
++
++    it('stays prose when an edit verb names something with no path shape', () => {
++        expect(kindOf('Never change `the deploy process`')).toBe('prose');
++    });
++
++    it('stays prose on an empty bullet', () => {
++        expect(kindOf('')).toBe('prose');
++        expect(kindOf('   ')).toBe('prose');
++    });
++
++    it('stays prose when the bullet PRESCRIBES the backticked command', () => {
++        // Found by review. A verb scan alone rendered a deny row over the thing
++        // the bullet recommends — the sharpest possible wrong answer.
++        expect(kindOf('`npm run build` is the only sanctioned build command')).toBe('prose');
++        expect(kindOf('Use `bin/console` to run console commands')).toBe('prose');
++    });
++
++    it('stays prose when the token is the escape hatch the bullet names', () => {
++        // A correct, idiomatic no-go whose alternative is in the same sentence.
++        // Negated, carries a run verb, carries one backticked command — and the
++        // command is what the consumer is being told TO use.
++        expect(
++            kindOf(
++                'Never run migrations in production - use `php artisan migrate --pretend` instead',
++            ),
++        ).toBe('prose');
++        expect(kindOf('Never edit the schema directly; use `migrations/` instead')).toBe('prose');
++    });
++
++    it('stays prose when a verb sits only inside the backticks', () => {
++        // The verb scan masks the token, so `run/` does not supply the verb.
++        expect(kindOf('`run/` holds generated output')).toBe('prose');
++    });
++
++    it('stays prose on a dotted identifier that is not a path', () => {
++        for (const t of ['users.id', 'app.debug', 'v2.1']) {
++            expect(kindOf(`Never change \`${t}\``)).toBe('prose');
++        }
++        // …while a real dotted filename still reads as one.
++        expect(kindOf('Never modify `app.config.json`')).toBe('path');
++    });
++
++    it('stays prose on a token carrying a gitignore metacharacter', () => {
++        // `!` is a NEGATION on the host: the row would carve paths OUT of the
++        // consumer's existing deny list while being shown to them as a deny.
++        expect(kindOf('Never edit `!important/`')).toBe('prose');
++        // A character class the host does not escape: `reports/[2024]/**`
++        // matches `reports/2/`, never the directory the consumer named.
++        expect(kindOf('Never edit `reports/[2024]/`')).toBe('prose');
++        expect(kindOf('Never edit `logs/?/`')).toBe('prose');
++    });
++
++    it('builds no rule for any prose verdict', () => {
++        for (const bullet of [
++            'Never add a runtime dependency without an ADR',
++            'Never edit `migrations/` or `seeders/`',
++            '`vendor/` is generated',
++            'Never change `the deploy process`',
++        ]) {
++            expect(rulesOf(bullet)).toEqual([]);
++            expect(classifyNoGo(bullet).reason.length).toBeGreaterThan(0);
++        }
++    });
++});
++
++describe('deny rows are rendered in the pinned host syntax', () => {
++    it('a directory bullet becomes an Edit rule over its contents', () => {
++        expect(rulesOf('Never edit `migrations/` by hand')).toEqual(['Edit(migrations/**)']);
++    });
++
++    it('an already-globbed path is passed through as written', () => {
++        expect(rulesOf('Never modify `src/generated/**`')).toEqual(['Edit(src/generated/**)']);
++    });
++
++    it('a file bullet becomes an Edit rule on that exact path', () => {
++        expect(rulesOf('Never overwrite `.env`')).toEqual(['Edit(.env)']);
++    });
++
++    it('a read verb becomes a Read rule AND an Edit rule', () => {
++        // The Read deny covers the Edit and Write tools, but the page names the
++        // exception: "NotebookEdit isn't covered, so add an `Edit` deny rule for
++        // paths no tool may change."
++        expect(rulesOf('Never read `secrets/`')).toEqual([
++            'Read(secrets/**)',
++            'Edit(secrets/**)',
++        ]);
++    });
++
++    it('a command becomes BOTH the exact rule and the with-arguments rule', () => {
++        // NOT because `Bash(x *)` misses the bare command — the page says it
++        // matches it. Because that holds "only when the trailing `*` is the
++        // rule's only wildcard", which a consumer token carrying its own `*`
++        // breaks; the exact row is what still guards the plain command then.
++        expect(
++            rulesOf('Never run `php artisan migrate:fresh` outside a throwaway database'),
++        ).toEqual(['Bash(php artisan migrate:fresh)', 'Bash(php artisan migrate:fresh *)']);
++    });
++
++    it('a bare executable under a run verb is still a command', () => {
++        expect(rulesOf('Never run `terraform`')).toEqual(['Bash(terraform)', 'Bash(terraform *)']);
++    });
++
++    it('never emits a Write or NotebookEdit path rule', () => {
++        // The host accepts a path rule for `Write`, never consults it, and warns
++        // at startup. `Edit(...)` is the only path rule it checks on changes.
++        const all = classifyNoGos(
++            '- Never edit `migrations/` by hand\n- Never overwrite `.env`\n- Never read `secrets/`',
++        ).flatMap((c) => denyRulesFor('claude', c));
++        expect(all.some((r) => r.startsWith('Write(') || r.startsWith('NotebookEdit('))).toBe(
++            false,
++        );
++    });
++
++    it('builds nothing at all for a host with no established spelling', () => {
++        expect(denyRulesFor('cowork', classifyNoGo('Never edit `migrations/` by hand'))).toEqual(
++            [],
++        );
++        expect(syntaxFor('cowork')).toBeNull();
++    });
++});
++
++describe('classifyNoGos — a whole section', () => {
++    const SECTION = [
++        '## No-gos',
++        '',
++        '- Never edit `migrations/` by hand',
++        '- Never run `php artisan migrate:fresh` outside a throwaway database',
++        '- Never add a runtime dependency without an ADR',
++        '',
++    ].join('\n');
++
++    it('classifies one entry per bullet, in file order', () => {
++        expect(classifyNoGos(SECTION).map((r) => r.kind)).toEqual(['path', 'command', 'prose']);
++    });
++
++    it('ignores the heading and the blank lines', () => {
++        expect(classifyNoGos(SECTION)).toHaveLength(3);
++    });
++
++    it('accepts `*` and `+` list markers as well as `-`', () => {
++        expect(classifyNoGos('* Never edit `migrations/` by hand')).toHaveLength(1);
++        expect(classifyNoGos('+ Never edit `migrations/` by hand')).toHaveLength(1);
++    });
++
++    it('returns nothing for a section with no bullets', () => {
++        expect(classifyNoGos('## No-gos\n\nNothing yet.\n')).toEqual([]);
++    });
++});
++
++describe('extractNoGosSection — the fence skip is the load-bearing part', () => {
++    it('returns the bullets under the heading and stops at the next one', () => {
++        const md = [
++            '# Project',
++            '',
++            '## Goal',
++            '',
++            'Ship the thing.',
++            '',
++            '## No-gos',
++            '',
++            '- Never edit `migrations/` by hand',
++            '',
++            '## Tech Stack',
++            '',
++            '- **Language:** PHP',
++        ].join('\n');
++        expect(classifyNoGos(extractNoGosSection(md))).toHaveLength(1);
++    });
++
++    it('reads nothing from a heading that lives inside a fence', () => {
++        const md = ['# Guide', '', '```markdown', '## No-gos', '', '- Never edit `x/`', '```'].join(
++            '\n',
++        );
++        expect(extractNoGosSection(md).trim()).toBe('');
++    });
++
++    it('reads nothing from the live consumer guide, whose example IS fenced', () => {
++        // Run against the shipped file rather than a copy of it: the guide is
++        // the one document in this tree that carries this heading as copy-in
++        // material, and it is the file a reader without the skip would mistake
++        // for a filled contract.
++        const guide = path.resolve(
++            __dirname,
++            '../../src/agent-src/contexts/contracts/consumer-agents-md-guide.md',
++        );
++        const body = fs.readFileSync(guide, 'utf8');
++        expect(body).toContain('## No-gos section (optional copy-in)');
++        expect(classifyNoGos(extractNoGosSection(body))).toEqual([]);
++    });
++
++    it('returns empty for a file with no such section', () => {
++        expect(extractNoGosSection('# Project\n\n## Goal\n\nShip it.\n').trim()).toBe('');
++    });
++
++    it('is closed by a heading at ANY level, not only by another `##`', () => {
++        // Found by review: matching `##` alone left the section open across a
++        // following `# Appendix`, so every later bullet in the file was read as
++        // a no-go.
++        const md = [
++            '## No-gos',
++            '- Never edit `a/` by hand',
++            '# Appendix',
++            '- Never edit `b/` by hand',
++        ].join('\n');
++        expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/']);
++    });
++
++    it('is closed by a deeper heading too', () => {
++        const md = ['## No-gos', '- Never edit `a/` by hand', '### Notes', '- Never edit `b/`'].join(
++            '\n',
++        );
++        expect(classifyNoGos(extractNoGosSection(md))).toHaveLength(1);
++    });
++});
++
++describe('the syntax pin', () => {
++    it('names the documentation it was read from and the day it was read', () => {
++        for (const row of Object.values(HOST_PERMISSION_SYNTAX)) {
++            expect(row.docs_url).toMatch(/^https:\/\//);
++            expect(row.docs_at).toMatch(/^\d{4}-\d{2}-\d{2}$/);
++            expect(row.expires).toMatch(/^\d{4}-\d{2}-\d{2}$/);
++        }
++    });
++
++    it('names the settings key the rows belong under', () => {
++        expect(syntaxFor('claude')?.deny_key).toBe('permissions.deny');
++    });
++
++    it('keys every row by the host it describes', () => {
++        for (const [key, row] of Object.entries(HOST_PERMISSION_SYNTAX)) {
++            expect(row.host).toBe(key);
++        }
++    });
++
++    it('carries at least one verbatim example per rule shape it renders', () => {
++        const ex = syntaxFor('claude')?.examples ?? [];
++        expect(ex.some((e) => e.startsWith('Edit('))).toBe(true);
++        expect(ex.some((e) => e.startsWith('Read('))).toBe(true);
++        expect(ex.some((e) => e.startsWith('Bash('))).toBe(true);
++    });
++});
+diff --git a/tests/install/no_go_deny_rows.test.ts b/tests/install/no_go_deny_rows.test.ts
+new file mode 100644
+index 000000000..96a4a792e
+--- /dev/null
++++ b/tests/install/no_go_deny_rows.test.ts
+@@ -0,0 +1,267 @@
++// Tests for src/install/noGoDenyRows.ts —
++// road-to-a-project-contract-written-down Phase 2 (2.2, 2.3).
++//
++// Three properties, and each one is a risk in the roadmap's register rather
++// than a nicety: a path no-go produces a row at all (Risk 3, a rule enforced by
++// nothing); an entry the consumer already had survives byte-for-byte (Risk 4,
++// an append that clobbers the file); and a decline writes nothing (the consent
++// is the whole of 2.2).
++import { describe, expect, it } from 'vitest';
++
++import {
++    appendDenyRules,
++    hasNativeDenyList,
++    planDenyRows,
++    renderDenyPlan,
++} from '../../src/install/noGoDenyRows.js';
++
++const NO_GOS = [
++    '## No-gos',
++    '',
++    '- Never edit `migrations/` by hand',
++    '- Never run `php artisan migrate:fresh` outside a throwaway database',
++    '- Never add a runtime dependency without an ADR',
++].join('\n');
++
++describe('planDenyRows — the fixture no-go yields a deny row', () => {
++    it('turns "never edit `migrations/`" into an Edit rule', () => {
++        const plan = planDenyRows(NO_GOS, 'claude');
++        expect(plan.rules).toContain('Edit(migrations/**)');
++    });
++
++    it('reports the unenforceable bullet as instruction-only', () => {
++        const plan = planDenyRows(NO_GOS, 'claude');
++        expect(plan.prose.map((p) => p.bullet)).toEqual([
++            'Never add a runtime dependency without an ADR',
++        ]);
++    });
++
++    it('de-duplicates a rule two bullets would both produce', () => {
++        const twice = '- Never edit `migrations/`\n- Never modify `migrations/`';
++        expect(planDenyRows(twice, 'claude').rules).toEqual(['Edit(migrations/**)']);
++    });
++
++    it('marks a host with no established deny list as not enforceable', () => {
++        expect(hasNativeDenyList('claude')).toBe(true);
++        expect(hasNativeDenyList('cowork')).toBe(false);
++        expect(planDenyRows(NO_GOS, 'cowork').enforceable).toBe(false);
++    });
++
++    it('still names every row for a host that cannot enforce them', () => {
++        // Nothing is written there, but the consumer is told what the no-gos
++        // would have become — an empty report would read as "nothing to do".
++        const text = renderDenyPlan(planDenyRows(NO_GOS, 'cowork'), 'cowork');
++        expect(text).toContain('Edit(migrations/**)');
++        expect(text).toContain('nothing is written');
++    });
++
++    it('says whose spelling an unenforceable report is written in', () => {
++        // Found by review: the report rendered Claude's rules and closed with
++        // Claude's documentation URL, so a consumer on another host read them
++        // as their own.
++        const text = renderDenyPlan(planDenyRows(NO_GOS, 'cowork'), 'cowork');
++        expect(text).toContain('the way `claude` spells a deny');
++        expect(text).toContain('NOT the way cowork does');
++    });
++
++    it('tells the consumer where the enforcement stops', () => {
++        // A consent screen that shows only the rows invites the reader to
++        // believe the rows are the whole of it.
++        const text = renderDenyPlan(planDenyRows(NO_GOS, 'claude'), 'claude');
++        expect(text).toContain('prefix-matched');
++        expect(text).toContain('not a script that opens the file itself');
++    });
++
++    it('renders each row beside the classification it came from', () => {
++        const plan = planDenyRows(NO_GOS, 'claude');
++        expect(plan.rows.map((r) => r.classification.kind)).toEqual([
++            'path',
++            'command',
++            'prose',
++        ]);
++        expect(plan.rows[2]?.rules).toEqual([]);
++    });
++
++    it('names the source bullet beside each row', () => {
++        const text = renderDenyPlan(planDenyRows(NO_GOS, 'claude'), 'claude');
++        expect(text).toContain('from: Never edit `migrations/` by hand');
++    });
++
++    it('cites the documentation the syntax was read from', () => {
++        const text = renderDenyPlan(planDenyRows(NO_GOS, 'claude'), 'claude');
++        expect(text).toContain('https://');
++    });
++});
++
++describe('appendDenyRules preserves what the consumer already had', () => {
++    // Deliberately NOT formatted the way `JSON.stringify(x, null, 2)` formats:
++    // four-space indent and a one-line array. A fixture that happens to match
++    // canonical output cannot tell a splice from a re-serialiser, and the first
++    // version of this file had exactly that blind spot — a probe that replaced
++    // the splice with `JSON.stringify` left all twenty tests green.
++    const WITH_EXISTING = `{
++    "$schema": "https://json.schemastore.org/claude-code-settings.json",
++    "permissions": {
++        "allow": ["Bash(npm run lint)"],
++        "deny": [
++            "Read(./.env)",
++            "Read(./.env.*)"
++        ]
++    },
++    "model": "opus"
++}
++`;
++
++    it('preserves every existing deny entry byte-for-byte, in order', () => {
++        const out = appendDenyRules(WITH_EXISTING, ['Edit(migrations/**)']);
++        const deny = (
++            JSON.parse(out.text) as { permissions: { deny: string[] } }
++        ).permissions.deny;
++        expect(deny.slice(0, 2)).toEqual(['Read(./.env)', 'Read(./.env.*)']);
++        expect(deny[2]).toBe('Edit(migrations/**)');
++    });
++
++    it('preserves every byte of the file outside the deny array', () => {
++        // The strongest form of the claim: not "the values survive" but "the
++        // text survives". A re-serialising writer passes the assertion above
++        // and fails this one.
++        const out = appendDenyRules(WITH_EXISTING, ['Edit(migrations/**)']);
++        const before = WITH_EXISTING.slice(0, WITH_EXISTING.indexOf('"deny"'));
++        const after = WITH_EXISTING.slice(WITH_EXISTING.indexOf('"model"'));
++        expect(out.text.startsWith(before)).toBe(true);
++        expect(out.text.endsWith(after)).toBe(true);
++    });
++
++    it('preserves the closing bracket on its own line, at its own indent', () => {
++        // Splicing at the `]` instead of after the last element leaves the
++        // comma stranded on a line of its own and un-indents the bracket. The
++        // file stays valid JSON either way, so only a text assertion sees it.
++        const out = appendDenyRules(WITH_EXISTING, ['Edit(migrations/**)']);
++        expect(out.text).toContain('            "Edit(migrations/**)"\n        ]');
++        expect(out.text).not.toMatch(/\n\s*,\n/);
++    });
++
++    it('preserves the sibling allow list untouched', () => {
++        const out = appendDenyRules(WITH_EXISTING, ['Edit(migrations/**)']);
++        expect(out.text).toContain('"Bash(npm run lint)"');
++        const allow = (
++            JSON.parse(out.text) as { permissions: { allow: string[] } }
++        ).permissions.allow;
++        expect(allow).toEqual(['Bash(npm run lint)']);
++    });
++
++    it('preserves the file unchanged when every rule is already present', () => {
++        const out = appendDenyRules(WITH_EXISTING, ['Read(./.env)']);
++        expect(out.text).toBe(WITH_EXISTING);
++        expect(out.added).toEqual([]);
++        expect(out.alreadyPresent).toEqual(['Read(./.env)']);
++    });
++
++    it('writes a deny list into a permissions block that has none', () => {
++        const body = '{\n  "permissions": {\n    "allow": []\n  }\n}\n';
++        const out = appendDenyRules(body, ['Edit(migrations/**)']);
++        const parsed = JSON.parse(out.text) as {
++            permissions: { allow: string[]; deny: string[] };
++        };
++        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)']);
++        expect(parsed.permissions.allow).toEqual([]);
++    });
++
++    it('writes a permissions block into a file that has none', () => {
++        const body = '{\n  "model": "opus"\n}\n';
++        const out = appendDenyRules(body, ['Edit(migrations/**)', 'Bash(terraform)']);
++        const parsed = JSON.parse(out.text) as {
++            model: string;
++            permissions: { deny: string[] };
++        };
++        expect(parsed.model).toBe('opus');
++        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)', 'Bash(terraform)']);
++    });
++
++    it('writes into an empty root object', () => {
++        const out = appendDenyRules('{}\n', ['Edit(migrations/**)']);
++        const parsed = JSON.parse(out.text) as { permissions: { deny: string[] } };
++        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)']);
++    });
++
++    it('writes into an empty deny array', () => {
++        const body = '{\n  "permissions": {\n    "deny": []\n  }\n}\n';
++        const out = appendDenyRules(body, ['Edit(migrations/**)']);
++        const parsed = JSON.parse(out.text) as { permissions: { deny: string[] } };
++        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)']);
++    });
++
++    it('is not fooled by a brace inside a string value', () => {
++        const body = '{\n  "note": "a } and a ] in here",\n  "model": "opus"\n}\n';
++        const out = appendDenyRules(body, ['Edit(migrations/**)']);
++        const parsed = JSON.parse(out.text) as {
++            note: string;
++            permissions: { deny: string[] };
++        };
++        expect(parsed.note).toBe('a } and a ] in here');
++        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)']);
++    });
++
++    it('refuses a malformed settings body rather than splicing into it', () => {
++        expect(() => appendDenyRules('{ not json', ['Edit(x/**)'])).toThrow();
++    });
++
++    it('refuses rather than writing a SECOND `permissions` key', () => {
++        // Found by review, and it was the worst shape in the change: with a
++        // non-object `permissions`, `locate` finds no span, the root branch
++        // inserted a second key, `JSON.parse` kept the LAST one, and the rule
++        // the consumer consented to was silently discarded while the command
++        // reported success.
++        for (const body of [
++            '{\n  "permissions": null,\n  "model": "opus"\n}\n',
++            '{\n  "permissions": "none"\n}\n',
++            '{\n  "permissions": 1\n}\n',
++            '{\n  "permissions": ["Edit(x/**)"]\n}\n',
++        ]) {
++            expect(() => appendDenyRules(body, ['Edit(migrations/**)'])).toThrow(
++                /not an object/,
++            );
++        }
++    });
++
++    it('does not mis-key the second object of an array', () => {
++        // `pendingKey` survived a closing brace, so the second element
++        // inherited the first element's last key and the splice landed inside
++        // it — producing invalid JSON.
++        const body = '{\n  "hooks": [{"deny": 1}, {"a": 2}],\n  "model": "opus"\n}\n';
++        const out = appendDenyRules(body, ['Edit(migrations/**)']);
++        const parsed = JSON.parse(out.text) as {
++            hooks: unknown[];
++            permissions: { deny: string[] };
++        };
++        expect(parsed.hooks).toEqual([{ deny: 1 }, { a: 2 }]);
++        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)']);
++    });
++
++    it('refuses a body that is not an object', () => {
++        expect(() => appendDenyRules('[1, 2]', ['Edit(x/**)'])).toThrow(/not a JSON object/);
++    });
++});
++
++describe('a declined consent leaves the file unchanged', () => {
++    // An earlier version of this block asserted a `const` against its own
++    // literal and called `appendDenyRules(body, [])`, which early-returns.
++    // Neither line could fail, and the property it claimed to pin — that the
++    // planning half performs no write — was untestable here anyway, since
++    // `planDenyRows` takes a string and has no path to write to. The real
++    // property is on the CLI and lives in `no_go_deny_rows_cli.test.ts`.
++
++    it('adds nothing when the caller passes no rule', () => {
++        const body =
++            '{\n    "permissions": {\n        "deny": [\n            "Read(./.env)"\n        ]\n    }\n}\n';
++        const out = appendDenyRules(body, []);
++        expect(out.text).toBe(body);
++        expect(out.added).toEqual([]);
++    });
++
++    it('reports no rules at all for a section with no enforceable bullet', () => {
++        const plan = planDenyRows('- Never add a runtime dependency without an ADR', 'claude');
++        expect(plan.rules).toEqual([]);
++        expect(renderDenyPlan(plan, 'claude')).toContain('nothing to enforce');
++    });
++});
+diff --git a/tests/install/no_go_deny_rows_cli.test.ts b/tests/install/no_go_deny_rows_cli.test.ts
+new file mode 100644
+index 000000000..ddbfd4b5b
+--- /dev/null
++++ b/tests/install/no_go_deny_rows_cli.test.ts
+@@ -0,0 +1,176 @@
++// Tests for src/scripts/no_go_deny_rows.ts —
++// road-to-a-project-contract-written-down Phase 2 (2.2, 2.3).
++//
++// The CLI is what `/agents:init` step 6b actually invokes, and until a review
++// said so it had no test at all: the `--apply` gate, the unenforceable-host
++// refusal, the pre-write loss check and the temp-file rename all lived in the
++// untested half, and both blocker-class defects the review found were in it.
++//
++// AC-3 — "a no-go naming a path becomes a host deny row only after consent, and
++// existing deny entries survive unchanged" — is an acceptance criterion about
++// THIS command, so it is discharged here rather than by a prose record of a
++// manual run.
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, describe, expect, it, vi } from 'vitest';
++
++import { main } from '../../src/scripts/no_go_deny_rows.js';
++
++const tmps: string[] = [];
++
++afterEach(() => {
++    vi.restoreAllMocks();
++    for (const t of tmps.splice(0)) fs.rmSync(t, { recursive: true, force: true });
++});
++
++/** A consumer tree with an AGENTS.md and, optionally, a settings file. */
++function tree(noGos: string, settings?: string): { agentsMd: string; settingsPath: string } {
++    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'nogo-cli-'));
++    tmps.push(root);
++    const agentsMd = path.join(root, 'AGENTS.md');
++    fs.writeFileSync(agentsMd, `# Demo\n\n## No-gos\n\n${noGos}\n\n## Goal\n\nShip it.\n`, 'utf8');
++    const settingsPath = path.join(root, '.claude', 'settings.json');
++    if (settings !== undefined) {
++        fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
++        fs.writeFileSync(settingsPath, settings, 'utf8');
++    }
++    return { agentsMd, settingsPath };
++}
++
++/** Run `main` with stdout and stderr captured. */
++function run(argv: string[]): { code: number; out: string; err: string } {
++    let out = '';
++    let err = '';
++    vi.spyOn(process.stdout, 'write').mockImplementation((c: string | Uint8Array) => {
++        out += String(c);
++        return true;
++    });
++    vi.spyOn(process.stderr, 'write').mockImplementation((c: string | Uint8Array) => {
++        err += String(c);
++        return true;
++    });
++    const code = main(argv);
++    vi.restoreAllMocks();
++    return { code, out, err };
++}
++
++const EXISTING = `{
++    "permissions": {
++        "allow": ["Bash(npm run lint)"],
++        "deny": [
++            "Read(./.env)"
++        ]
++    },
++    "model": "opus"
++}
++`;
++
++describe('without --apply the command writes nothing', () => {
++    it('leaves the settings file byte-for-byte unchanged', () => {
++        // This is the decline path: a skip is the ABSENCE of a second call, so
++        // what has to hold is that the first call never writes.
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
++        const r = run([agentsMd, '--settings', settingsPath]);
++        expect(r.code).toBe(0);
++        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(EXISTING);
++    });
++
++    it('shows the row it would add, and says nothing was written', () => {
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
++        const r = run([agentsMd, '--settings', settingsPath]);
++        expect(r.out).toContain('Edit(migrations/**)');
++        expect(r.out).toContain('Nothing was written');
++    });
++
++    it('creates no settings file when none exists', () => {
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand');
++        run([agentsMd, '--settings', settingsPath]);
++        expect(fs.existsSync(settingsPath)).toBe(false);
++    });
++});
++
++describe('with --apply the command appends on consent', () => {
++    it('appends the row and preserves the existing entry and the file around it', () => {
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
++        const r = run([agentsMd, '--settings', settingsPath, '--apply']);
++        expect(r.code).toBe(0);
++        const after = fs.readFileSync(settingsPath, 'utf8');
++        const parsed = JSON.parse(after) as {
++            permissions: { allow: string[]; deny: string[] };
++            model: string;
++        };
++        expect(parsed.permissions.deny).toEqual(['Read(./.env)', 'Edit(migrations/**)']);
++        expect(parsed.permissions.allow).toEqual(['Bash(npm run lint)']);
++        expect(parsed.model).toBe('opus');
++        expect(after.startsWith(EXISTING.slice(0, EXISTING.indexOf('"deny"')))).toBe(true);
++        expect(after.endsWith(EXISTING.slice(EXISTING.indexOf('"model"')))).toBe(true);
++    });
++
++    it('leaves no temporary file behind', () => {
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
++        run([agentsMd, '--settings', settingsPath, '--apply']);
++        expect(fs.existsSync(`${settingsPath}.agent-config.tmp`)).toBe(false);
++    });
++
++    it('is idempotent — a second run adds nothing', () => {
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
++        run([agentsMd, '--settings', settingsPath, '--apply']);
++        const once = fs.readFileSync(settingsPath, 'utf8');
++        const r = run([agentsMd, '--settings', settingsPath, '--apply']);
++        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(once);
++        expect(r.out).toContain('already present');
++    });
++});
++
++describe('the command refuses rather than damaging the file', () => {
++    it('refuses a settings file whose `permissions` is not an object', () => {
++        // The blocker: this used to write a SECOND `permissions` key, report
++        // success, and leave the consented rule with no effect.
++        const body = '{\n    "permissions": null,\n    "model": "opus"\n}\n';
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', body);
++        const r = run([agentsMd, '--settings', settingsPath, '--apply']);
++        expect(r.code).toBe(1);
++        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(body);
++    });
++
++    it('refuses a malformed settings file', () => {
++        const body = '{ not json\n';
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', body);
++        const r = run([agentsMd, '--settings', settingsPath, '--apply']);
++        expect(r.code).toBe(1);
++        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(body);
++    });
++
++    it('exits 1 when the AGENTS.md does not exist', () => {
++        expect(run(['/nonexistent/AGENTS.md']).code).toBe(1);
++    });
++
++    it('refuses an unknown flag rather than guessing', () => {
++        expect(run(['--nope']).code).toBe(2);
++    });
++});
++
++describe('a host with no established deny list', () => {
++    it('writes nothing even with --apply, and says so', () => {
++        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
++        const r = run([agentsMd, '--settings', settingsPath, '--host', 'cowork', '--apply']);
++        expect(r.code).toBe(0);
++        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(EXISTING);
++        expect(r.out).toContain('--apply ignored');
++    });
++});
++
++describe('a section with nothing enforceable', () => {
++    it('writes nothing and reports the bullets as instruction-only', () => {
++        const { agentsMd, settingsPath } = tree(
++            '- Never add a runtime dependency without an ADR',
++            EXISTING,
++        );
++        const r = run([agentsMd, '--settings', settingsPath, '--apply']);
++        expect(r.code).toBe(0);
++        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(EXISTING);
++        expect(r.out).toContain('nothing to enforce');
++    });
++});
+diff --git a/tests/scripts/permission_deny_syntax.test.ts b/tests/scripts/permission_deny_syntax.test.ts
+new file mode 100644
+index 000000000..4266fcb7b
+--- /dev/null
++++ b/tests/scripts/permission_deny_syntax.test.ts
+@@ -0,0 +1,148 @@
++// Tests for src/scripts/check_permission_deny_syntax.ts —
++// road-to-a-project-contract-written-down Phase 2 (2.1).
++//
++// This gate's corpus is a typed constant, not a file tree, so there is no
++// `--root` fixture seam a `_lib/gate_self_test.ts` `--self-test` could point
++// at. These cases are the discrimination proof in its place: every rejecting
++// shape the gate can report, beside the accepting one, so a green here means
++// the reading changes the verdict rather than that the gate ran.
++//
++// The last four neutralise the RENDERER rather than the pin, because a review
++// measured the first version of this gate staying green while `Read(...)` rows
++// stopped being produced — the one thing its own comment claimed it covered.
++//
++// The AI council of 2026-10-13 (anthropic + openai, 2/2) required a provenance
++// gate as the substitute for the plumbing ratification the hook-lowering table
++// would have carried. A gate nothing proves discriminating would not have been
++// that substitute.
++import { afterEach, describe, expect, it, vi } from 'vitest';
++
++import { checkRow, main } from '../../src/scripts/check_permission_deny_syntax.js';
++import type { HostPermissionSyntax } from '../../src/install/hostPermissionsAdapter.js';
++
++const TODAY = '2026-10-13';
++
++const GOOD: HostPermissionSyntax = {
++    host: 'claude',
++    docs_url: 'https://code.claude.com/docs/en/permissions.md',
++    docs_at: '2026-10-13',
++    expires: '2027-10-13',
++    deny_key: 'permissions.deny',
++    examples: ['Edit(docs/**)', 'Read(./secrets/**)', 'Bash(npm run build)', 'Bash(ls *)'],
++};
++
++function row(patch: Partial<HostPermissionSyntax>): HostPermissionSyntax {
++    return { ...GOOD, ...patch };
++}
++
++describe('the accepting case', () => {
++    it('passes a pin that is complete and current', () => {
++        expect(checkRow(GOOD, TODAY)).toEqual([]);
++    });
++
++    it('passes the live pin through the real argv path', () => {
++        expect(main(['--today', TODAY])).toBe(0);
++    });
++});
++
++describe('the rejecting cases', () => {
++    it('refuses a pin whose review date has passed', () => {
++        expect(checkRow(GOOD, '2028-01-01').join(' ')).toContain('review date');
++    });
++
++    it('refuses a read date in the future by more than a day', () => {
++        expect(checkRow(row({ docs_at: '2027-01-01' }), TODAY).join(' ')).toContain('future');
++    });
++
++    it('accepts a read date one day ahead, because docs_at is local and today is UTC', () => {
++        expect(checkRow(row({ docs_at: '2026-10-14' }), TODAY)).toEqual([]);
++    });
++
++    it('refuses a docs_url that is not https', () => {
++        expect(checkRow(row({ docs_url: 'http://example.test' }), TODAY).join(' ')).toContain(
++            'https',
++        );
++    });
++
++    it('refuses a review date that is not after the read date', () => {
++        expect(checkRow(row({ expires: '2026-10-13' }), TODAY).join(' ')).toContain('not after');
++    });
++
++    it('refuses a pin with no recorded example', () => {
++        expect(checkRow(row({ examples: [] }), TODAY).join(' ')).toContain('no example');
++    });
++
++    it('refuses an example that is not Tool(specifier)', () => {
++        expect(checkRow(row({ examples: ['deny migrations/'] }), TODAY).join(' ')).toContain(
++            'not Tool(specifier)',
++        );
++    });
++
++    it('refuses a pin whose examples cannot account for a tool the renderer emits', () => {
++        // The case the gate exists for: a renderer that started emitting a rule
++        // shape no recorded reading of the documentation shows. Dropping `Bash`
++        // from the examples while the fixtures still render commands is that
++        // state, reached from the other side.
++        const findings = checkRow(row({ examples: ['Edit(docs/**)', 'Read(./secrets/**)'] }), TODAY);
++        expect(findings.join(' ')).toContain('which no recorded example shows');
++    });
++
++    it('refuses a host whose fixtures render nothing at all', () => {
++        // A pin for a host the adapter does not know renders zero rules, which
++        // would otherwise pass every assertion above by having nothing to check.
++        expect(checkRow(row({ host: 'not-a-host' }), TODAY).join(' ')).toContain(
++            'rendered no rule at all',
++        );
++    });
++
++    it('exits non-zero through the real argv path when the pin has expired', () => {
++        expect(main(['--today', '2028-01-01'])).toBe(1);
++    });
++
++    it('refuses a malformed --today rather than guessing one', () => {
++        expect(main(['--today', 'yesterday'])).toBe(1);
++    });
++});
++
++describe('a renderer that stops producing a shape is a finding', () => {
++    afterEach(() => {
++        vi.resetModules();
++        vi.doUnmock('../../src/install/hostPermissionsAdapter.js');
++    });
++
++    /** The gate, re-imported with `denyRulesFor` filtered by `keep`. */
++    async function gateWithout(drop: (rule: string) => boolean): Promise<number> {
++        vi.resetModules();
++        const real = await vi.importActual<
++            typeof import('../../src/install/hostPermissionsAdapter.js')
++        >('../../src/install/hostPermissionsAdapter.js');
++        vi.doMock('../../src/install/hostPermissionsAdapter.js', () => ({
++            ...real,
++            denyRulesFor: (host: string, c: Parameters<typeof real.denyRulesFor>[1]) =>
++                real.denyRulesFor(host, c).filter((r) => !drop(r)),
++        }));
++        const mod = await import('../../src/scripts/check_permission_deny_syntax.js');
++        return mod.checkRow(GOOD, TODAY).length;
++    }
++
++    it('reds when no Read rule is produced', async () => {
++        // Measured by a reviewer against the first version of this gate: the
++        // same neutralisation left it green, because it only checked that SOME
++        // rule was produced and that each produced rule's tool was recorded.
++        expect(await gateWithout((r) => r.startsWith('Read('))).toBeGreaterThan(0);
++    });
++
++    it('reds when no Edit rule is produced', async () => {
++        expect(await gateWithout((r) => r.startsWith('Edit('))).toBeGreaterThan(0);
++    });
++
++    it('reds when the with-arguments Bash row is dropped', async () => {
++        expect(await gateWithout((r) => r.endsWith(' *)'))).toBeGreaterThan(0);
++    });
++
++    it('reds when the exact Bash row is dropped', async () => {
++        expect(
++            await gateWithout((r) => r.startsWith('Bash(') && !r.endsWith(' *)')),
++        ).toBeGreaterThan(0);
++    });
++});

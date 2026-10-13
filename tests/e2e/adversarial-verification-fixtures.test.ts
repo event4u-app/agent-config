@@ -501,14 +501,19 @@ describe('3.1 — the six required layers, each with its command', () => {
 
 // provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
 describe('3.2 — doctor reads forge protection from the forge', () => {
-    it('an unread forge yields five rows that still name their API call', () => {
+    it('an unread forge yields six rows that still name their API call', () => {
+        // The count stays a LITERAL rather than `PROTECTION_ROW_IDS.length`:
+        // deriving it from the module under test would make a row silently
+        // dropped from both the id list and the builder invisible here. It moved
+        // 5 -> 6 on 2026-10-12 with `authority_surface_external_approval`; the
+        // assertion is not weakened, it is restated at the new true value.
         const rows = forgeProtectionRows({
             rulesets: null,
             defaultBranch: null,
             allowAutoMerge: null,
             deployRestricted: null,
         });
-        expect(rows).toHaveLength(5);
+        expect(rows).toHaveLength(6);
         for (const r of rows) {
             expect(r.state).toBe('unread');
             expect(r.source).toMatch(/^GET repos\//);

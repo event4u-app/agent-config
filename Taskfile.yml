@@ -422,6 +422,11 @@ tasks:
       # 2026-08-23; the seam is _lib/as_of.ts and this is the ratchet that keeps
       # them on it.
       - task: lint-deterministic-time
+      # src/scripts/check_permission_deny_syntax — the host permission
+      # deny-rule pins. road-to-a-project-contract-written-down D7 makes this
+      # gate the substitute for the plumbing ratification D5's placement
+      # avoids, so it has to be reachable locally as well as in CI.
+      - task: check-permission-deny-syntax
       # src/scripts/check_enforcement_denominator — exactly ONE enforcement
       # denominator is quotable, and it comes from check_enforcement_coverage.
       # The tree published five figures for that one property until 2026-08-23.
