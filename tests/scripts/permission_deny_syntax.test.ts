@@ -18,6 +18,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { checkRow, main } from '../../src/scripts/check_permission_deny_syntax.js';
+import type * as Adapter from '../../src/install/hostPermissionsAdapter.js';
 import type { HostPermissionSyntax } from '../../src/install/hostPermissionsAdapter.js';
 
 const TODAY = '2026-10-13';
@@ -113,9 +114,9 @@ describe('a renderer that stops producing a shape is a finding', () => {
     /** The gate, re-imported with `denyRulesFor` filtered by `keep`. */
     async function gateWithout(drop: (rule: string) => boolean): Promise<number> {
         vi.resetModules();
-        const real = await vi.importActual<
-            typeof import('../../src/install/hostPermissionsAdapter.js')
-        >('../../src/install/hostPermissionsAdapter.js');
+        const real = await vi.importActual<typeof Adapter>(
+            '../../src/install/hostPermissionsAdapter.js',
+        );
         vi.doMock('../../src/install/hostPermissionsAdapter.js', () => ({
             ...real,
             denyRulesFor: (host: string, c: Parameters<typeof real.denyRulesFor>[1]) =>
