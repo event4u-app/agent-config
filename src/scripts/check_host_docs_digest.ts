@@ -794,15 +794,16 @@ export async function main(argv: readonly string[]): Promise<number> {
         // surface headers, so a `pages/<id>` row would resolve to nothing and
         // be reported as a successful no-op.
         const pageFindings = findings.filter((f) => f.host === PAGES_PSEUDO_HOST);
-        const pageEdits = pageFindings.flatMap((f) =>
-            f.state === 'filled' && f.now !== null
-                ? [{ id: f.surface, digest: f.now }]
-                : f.state === 'changed'
-                    // Mirrors the sibling exactly: the recorded digest is
-                    // EVIDENCE and stays; `expires` is what moves.
-                    ? [{ id: f.surface, expires: dayBefore(today) }]
-                    : [],
-        );
+        const pageEdits: Array<{ id: string; digest?: string; expires?: string }> = [];
+        for (const f of pageFindings) {
+            if (f.state === 'filled' && f.now !== null) {
+                pageEdits.push({ id: f.surface, digest: f.now });
+            } else if (f.state === 'changed') {
+                // Mirrors the sibling exactly: the recorded digest is EVIDENCE
+                // and stays; `expires` is what moves.
+                pageEdits.push({ id: f.surface, expires: dayBefore(today) });
+            }
+        }
         if (pageEdits.length > 0) {
             const out = applyDocsPageEdits(pagesText, pageEdits);
             if (out.missed.length > 0) {
