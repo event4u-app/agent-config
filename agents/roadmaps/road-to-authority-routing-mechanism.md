@@ -802,7 +802,20 @@ before 8.3 gates anything.*
 - [ ] AC-4 — The Phase 3 verifier is never activated as a required gate
       except through the `break-glass-authority-and-bootstrap-approval`
       blocker's resolution (Phase 8.3) — never on the agent's own
-      determination that a shadow run "looked good enough".
+      determination that a shadow run "looked good enough". **And it is never
+      weakened after activation without the same authority (D19):** the
+      approval binds IMMUTABLE VERSIONS — verifier, decision contract,
+      configuration, corpus protocol, enforcement mechanism — rather than an
+      act in time, so changing the verifier, removing the rule or introducing
+      a bypass each need their own approval and cannot cite the activation
+      one. A kill switch exists BEFORE activation, with automatic suspension
+      on any critical false negative, fail-open path, evidence-integrity loss,
+      contract or version drift, or sustained operational failure beyond
+      registered limits; an emergency suspension may be immediate but is
+      logged and time-bounded, the authority to suspend is held SEPARATELY
+      from the authority to reactivate, and reactivation needs a fresh
+      evaluation whenever the validated artifact or the decision surface
+      materially changes.
 - [x] AC-5 — `task lint-roadmap-blockers`, `task lint-roadmap-complexity`,
       and `task lint-plan-risk-register` (or their direct `./scripts-run`
       equivalents) pass against this file.
