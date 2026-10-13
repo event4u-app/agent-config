@@ -104,37 +104,45 @@ export async function suggestSkillForTask(
  * lines there and reddened the ratchet; moving the whole entry across returns
  * thirty-seven and puts the prose in the file that already owns the behaviour it
  * describes.
+ *
+ * The prose below is DEDUPLICATED rather than shortened, and the distinction is
+ * worth keeping because the obvious edit is to put the words back. `mcp_schemas`
+ * is a 5%-relative ratchet against a committed baseline, and this entry read 17
+ * tokens past it. Three statements were each made twice and now are made once:
+ * the return shape (named in its own sentence AND in the read-only clause), the
+ * default depth (`default:` below AND spelled out in that field's prose), and
+ * the task's free-form-ness (the first sentence AND the `task` field). Every
+ * FACT the longer version carried is still here — the 402-entry measurement, the
+ * routing-criteria reading, the open-at-most-two rule, the read-only guarantee.
  */
 export const SUGGEST_SKILL_TOOL: BuiltinTool = {
     name: 'suggest_skill_for_task',
     side_effect: 'ro',
     description:
-        'Match a free-form task description to the most relevant skills, ' +
-        'ranked by a deterministic keyword scorer over SKILL.md ' +
-        'frontmatter. Use when a skill you need is not in the catalogue ' +
-        'the host delivered — a measured host dropped 402 entries from ' +
-        'its model-visible list — so asking by name is impossible while ' +
-        'asking by task is not. ' +
-        "Each row carries the skill's own description — its routing " +
-        'criteria, including any clause pointing elsewhere. Choose by ' +
-        'reading the rows, then open at most two bodies with read_skill. ' +
-        'Read-only: no shell, no writes, no bodies — names, scores, ' +
-        'personas and descriptions only.',
+        'Rank skills against a free-form task by deterministic keyword ' +
+        'scoring over SKILL.md frontmatter. Use when the skill you need ' +
+        "is absent from the host's catalogue — one measured host dropped " +
+        '402 entries from its model-visible list — so asking by name is ' +
+        'impossible and asking by task is not. ' +
+        "Each row gives a name, score, personas and the skill's own " +
+        'description, its routing criteria including any clause pointing ' +
+        'elsewhere. Read the rows to choose, then open at most two bodies ' +
+        'with read_skill. Read-only: no shell, no writes, no bodies.',
     input_schema: {
         type: 'object',
         required: ['task'],
         properties: {
             task: {
                 type: 'string',
-                description: 'Free-form description of the task to match skills against.',
+                description: 'The task to match skills against.',
             },
             limit: {
                 type: 'integer',
                 minimum: 1,
                 default: DEFAULT_SUGGEST_LIMIT,
                 description:
-                    `Maximum number of skills to return. Defaults to ${String(DEFAULT_SUGGEST_LIMIT)}, ` +
-                    'a pre-registered recall depth rather than a round number.',
+                    'Maximum skills to return; the default is a pre-registered ' +
+                    'recall depth, not a round number.',
             },
         },
         additionalProperties: false,

@@ -747,7 +747,7 @@
     },
     {
       "name": "suggest_skill_for_task",
-      "description": "Match a free-form task description to the most relevant skills, ranked by a deterministic keyword scorer over SKILL.md frontmatter. Use when a skill you need is not in the catalogue the host delivered — a measured host dropped 402 entries from its model-visible list — so asking by name is impossible while asking by task is not. Each row carries the skill's own description — its routing criteria, including any clause pointing elsewhere. Choose by reading the rows, then open at most two bodies with read_skill. Read-only: no shell, no writes, no bodies — names, scores, personas and descriptions only.",
+      "description": "Rank skills against a free-form task by deterministic keyword scoring over SKILL.md frontmatter. Use when the skill you need is absent from the host's catalogue — one measured host dropped 402 entries from its model-visible list — so asking by name is impossible and asking by task is not. Each row gives a name, score, personas and the skill's own description, its routing criteria including any clause pointing elsewhere. Read the rows to choose, then open at most two bodies with read_skill. Read-only: no shell, no writes, no bodies.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -760,13 +760,13 @@
         "properties": {
           "task": {
             "type": "string",
-            "description": "Free-form description of the task to match skills against."
+            "description": "The task to match skills against."
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "default": 8,
-            "description": "Maximum number of skills to return. Defaults to 8, a pre-registered recall depth rather than a round number."
+            "description": "Maximum skills to return; the default is a pre-registered recall depth, not a round number."
           }
         },
         "additionalProperties": false
