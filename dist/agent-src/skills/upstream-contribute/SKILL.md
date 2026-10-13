@@ -246,10 +246,12 @@ rm agents/overrides/{type}/{name}.md
 ```
 
 ```bash
-npm update @event4u/agent-config
+./agent-config update
 ```
 
-The shared version now replaces the local override.
+`update` moves the `agent_config_version` pin in `.agent-settings.yml`; the
+project's own package manager then fetches that version. The shared artifact
+replaces the local override.
 
 ## Output format
 

@@ -136,7 +136,7 @@ request exists.
 > After the contribution is merged and you update the package here:
 >
 > 1. rm agents/overrides/{type}/{name}.md
-> 2. npm update @event4u/agent-config
+> 2. ./agent-config update   (moves the version pin; your package manager fetches it)
 >
 > The shared version then replaces your local override.
 ```
