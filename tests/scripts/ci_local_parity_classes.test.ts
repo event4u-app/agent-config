@@ -174,16 +174,23 @@ describe("baseline-at-most-143", () => {
     expect(entry?.count).toBeLessThan(165);
   });
 
-  it("measures the same number the baseline claims", () => {
-    // The gate is the falsifier its own entry names. If the tree and the
-    // baseline disagree the gate says so, and a green exit is the claim that
-    // they do not — which is the half a number in a file cannot assert alone.
+  it("does not measure MORE violations than the baseline allows", () => {
+    // The gate is the falsifier its own entry names, and this asserts exactly
+    // one direction of it. `checkRatchet` returns ok when `actual < baseline`
+    // too, and `check_ci_local_parity` fails only on `!ok` — so a baseline set
+    // too HIGH stays green here, and an earlier version of this comment claimed
+    // the green exit meant tree and baseline agree. It does not; it means the
+    // tree is no worse than the baseline. An independent review made the point.
+    //
+    // The over-tight direction is not left unguarded, it is guarded elsewhere:
+    // the gate prints `ratchet is loose` and names the number to lower it to,
+    // and the case above caps the committed count at 143.
     expect(runGate("check_ci_local_parity", ["--quiet"]).code).toBe(0);
   });
 });
 
 describe("generated-docs-checks-wired", () => {
-  const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "rule-backstops.yml"), "utf8");
+  const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
 
   it("runs each generator's --check variant on a pull request", () => {
     for (const gate of ["generate_ownership_matrix", "generate_cookbook", "generate_role_experiences_catalog"]) {
@@ -200,12 +207,37 @@ describe("generated-docs-checks-wired", () => {
       expect(calls, `${gate} is called without --check`).toEqual([]);
     }
   });
+
+  it("keeps the writers that are not NAMED like writers out of both jobs", () => {
+    // THE CASE ABOVE MATCHES NAMES, AND A NAME IS NOT A BEHAVIOUR. An
+    // independent review made the point with a counter-example this suite had
+    // already waved through: `audit_command_surface` is not called
+    // `generate_*`, takes a `--check-new` flag that reads like a checker, and
+    // writes `agents/reports/command-surface.{json,md}` — two tracked files —
+    // unconditionally at the end of its run. It was a step of the scheduled
+    // job, and the case above was green.
+    //
+    // This case is the floor, not a proof: it names the writers that have been
+    // CAUGHT, and a writer nobody has caught yet would pass it exactly as that
+    // one did. Saying so here is cheaper than implying a coverage this suite
+    // does not have — deciding "does this script write a tracked file" in
+    // general needs the call graph, not a regex over YAML.
+    const canary = readFileSync(path.join(repoRoot, ".github", "workflows", "gate-canary.yml"), "utf8");
+    const scheduled = canary.slice(canary.indexOf("local-only-scheduled:"));
+    const drain = workflow.slice(workflow.indexOf("The local-only drain — batch 1"));
+
+    for (const writer of ["audit_command_surface"]) {
+      const re = new RegExp(`^\\s*\\./scripts-run src/scripts/${writer}\\b`, "m");
+      expect(re.test(drain), `${writer} writes tracked files; it must not run in the drain job`).toBe(false);
+      expect(re.test(scheduled), `${writer} writes tracked files; it must not run in the scheduled job`).toBe(false);
+    }
+  });
 });
 
 describe("every-wire-class-gate-has-a-workflow-caller", () => {
   it("wires exactly the batch the council bounded, and every one of them is reachable", () => {
-    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "rule-backstops.yml"), "utf8");
-    const job = workflow.slice(workflow.indexOf("local-only-drain:"));
+    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+    const job = workflow.slice(workflow.indexOf("The local-only drain — batch 1"));
 
     // READ FROM THE WORKFLOW, never from a literal this file also writes. An
     // earlier version of this case asserted `expect(wired).toHaveLength(20)`
@@ -254,15 +286,40 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     }
   });
 
+  it("lives in a REQUIRED context, and on a workflow with no paths filter", () => {
+    // The roadmap's non-goals say "No new required check. The steps join the
+    // job that is already required". An earlier revision of this change put
+    // them in a new job on `rule-backstops.yml`, which is neither — a red there
+    // is visible and merges anyway.
+    //
+    // THE RULESET IS EVIDENCE, NOT AN ASSERTION HERE. Read 2026-10-13 from
+    // `repos/event4u-app/agent-config/rulesets` (ruleset `main protection`,
+    // id 17749383): exactly two required contexts exist, `Sync + Generate Tools
+    // Consistency` and `Standing payload delta + budget gate`. A test cannot
+    // re-read that without network and auth, so what it pins is the half it
+    // CAN see: the job carries the name the ruleset requires, so a rename
+    // silently dropping the drain out of the required set fails here.
+    const wf = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+    expect(wf).toContain("name: Standing payload delta + budget gate");
+
+    // And no `paths:` filter on its trigger, which is why these gates run on
+    // EVERY pull request. Three of them read inputs (`src/flows`, `src/packs`,
+    // `AGENTS.md`) that the previously-chosen workflow's filter did not match,
+    // so a pull request touching only those started none of the twenty.
+    const header = wf.slice(0, wf.indexOf("jobs:"));
+    expect(header).toMatch(/pull_request:/);
+    expect(header).not.toMatch(/^\s*paths:/m);
+  });
+
   it("runs on pull requests, which is the whole point of the drain", () => {
-    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "rule-backstops.yml"), "utf8");
+    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
     expect(workflow.slice(0, workflow.indexOf("jobs:"))).toMatch(/pull_request/);
   });
 });
 
 describe("calendar-gates-scheduled-not-required", () => {
   const canary = readFileSync(path.join(repoRoot, ".github", "workflows", "gate-canary.yml"), "utf8");
-  const backstops = readFileSync(path.join(repoRoot, ".github", "workflows", "rule-backstops.yml"), "utf8");
+  const backstops = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
 
   // The thirteen the reading classed `calendar` — they call `checkRatchet`,
   // where a baseline unchanged for STALE_AFTER_DAYS fails with no diff at all,
@@ -290,7 +347,7 @@ describe("calendar-gates-scheduled-not-required", () => {
   });
 
   it("keeps every calendar gate out of the pull-request drain job", () => {
-    const job = backstops.slice(backstops.indexOf("local-only-drain:"));
+    const job = backstops.slice(backstops.indexOf("The local-only drain — batch 1"));
     for (const gate of calendarGates) {
       expect(job, `${gate} must not block a pull request`).not.toContain(`src/scripts/${gate}`);
     }
@@ -324,10 +381,18 @@ describe("calendar-gates-scheduled-not-required", () => {
     expect([...localOnly.matchAll(/^ {2}- id: /gm)]).toHaveLength(7);
   });
 
-  it("keeps the one slow gate off the pull-request path", () => {
-    const job = backstops.slice(backstops.indexOf("local-only-drain:"));
-    expect(canary).toContain("src/scripts/audit_command_surface");
-    expect(job).not.toContain("src/scripts/audit_command_surface");
+  it("keeps the one slow gate off the pull-request path, and out of the scheduled one too", () => {
+    // It was on the schedule as the `slow`-class member and has been removed:
+    // it writes two tracked files whatever flags it is given, so a scheduled
+    // run mutated its tree to compute an answer it then discarded. It stays in
+    // the local-only backlog with its class recorded until it grows a
+    // `--check`-shaped mode. Asserted in both directions so the removal cannot
+    // be quietly undone in either job.
+    const job = backstops.slice(backstops.indexOf("The local-only drain — batch 1"));
+    const scheduled = canary.slice(canary.indexOf("local-only-scheduled:"));
+    const call = /^\s*\.\/scripts-run src\/scripts\/audit_command_surface\b/m;
+    expect(call.test(job)).toBe(false);
+    expect(call.test(scheduled)).toBe(false);
   });
 
   it("runs the scheduled gates in their own job, not beside the canary", () => {

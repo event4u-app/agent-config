@@ -171,21 +171,25 @@ jobs:
         if: always()
         run: ./scripts-run src/scripts/check_council_pin_staleness
 
-      # `--baseline origin/main`, and the task's own argv omits it. The script
-      # defaults its baseline to the bare name `main`, which resolves in a
-      # developer's checkout where `main` is a real local branch and does NOT
-      # resolve on a runner, where `actions/checkout` leaves no local `main`:
-      # `git diff main...HEAD` exited 128 with "ambiguous argument". The
-      # remote-tracking ref is what exists in both places.
+      # `audit_command_surface` IS NOT HERE, and the reason is worth the
+      # paragraph because an earlier revision of this job did run it.
       #
-      # What this step does NOT claim: on a scheduled run of the default branch
-      # `origin/main` and `HEAD` are the same commit, so `--check-new` has no
-      # new commands to find and only the gate's budget half does real work.
-      # That is a property of running a diff-shaped gate on a schedule, and it
-      # is written down rather than left for the next reader to discover — the
-      # gate is here because it is `slow` (43.5 s, 48 % of the serial time of
-      # all 161 measured gates), which is a cost argument, not a claim that a
-      # scheduled run exercises all of it.
-      - name: The one slow gate — 43.5 s locally, too expensive for a pull request
-        if: always()
-        run: ./scripts-run src/scripts/audit_command_surface --check-new --baseline origin/main --quiet
+      # It is a GENERATOR, not a checker: `audit_command_surface.ts` writes
+      # `agents/reports/command-surface.json` and `.md` unconditionally at the
+      # end of its run (both tracked files), whatever flags it was given.
+      # `--check-new` does not suppress the write. An independent review caught
+      # it by running the exact argv this step used and watching two tracked
+      # files change.
+      #
+      # On a runner the mutation is discarded with the checkout, so the harm is
+      # not to CI. The harm is that the step did no work worth doing: on a
+      # scheduled run of the default branch `origin/main` and `HEAD` are the
+      # same commit, so `--check-new` has nothing to find, and what remained
+      # was a regeneration nobody reads and nobody commits. A step that mutates
+      # its tree to produce an answer it then discards is noise with a cost,
+      # and this job is the one whose sibling comment above demands a separate
+      # checkout precisely because tree mutation is contagious.
+      #
+      # It stays in the local-only backlog with its `slow` class recorded, which
+      # is what the evidence page already says about it. Wiring it needs a
+      # `--check`-shaped mode it does not have today.
