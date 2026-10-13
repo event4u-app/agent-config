@@ -94,7 +94,7 @@ this names files that exist and a test that runs.
       holding nothing but `node`. Today every row's runner is absent; the test
       asserts that count.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **1.2 Each entry point, started once.** The same test starts each of the
+- [x] **1.2 Each entry point, started once.** The same test starts each of the
       six entry points from an empty temporary directory with one fixture
       argument vector held in the test file, through the form its skill
       teaches. Today all six fail to start; the test asserts six.

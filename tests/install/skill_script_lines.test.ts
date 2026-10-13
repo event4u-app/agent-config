@@ -19,6 +19,7 @@
 // Determinism: a temp copy per test run, no network, no clock, no git. The
 // entry-point probes run in an empty temp cwd so a generator that writes
 // beside itself cannot touch the tree.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -170,6 +171,80 @@ function runnerAvailable(runner: string, root: string, consumerCwd: string): boo
     return false;
 }
 
+// Starting each entry point once.
+
+interface EntryPoint {
+    readonly skill: string;
+    readonly tool: string;
+    /**
+     * Arguments after the script path. `{ROOT}` is the installed skills root,
+     * so a fixture names a sibling asset the install itself deployed rather
+     * than a path in this repository.
+     */
+    readonly argv: readonly string[];
+    /** The code this vector exits with once the entry point can be started. */
+    readonly expectExit: number;
+}
+
+/**
+ * One argument vector per entry point, held here rather than read from a
+ * `--help` contract the six do not share: five of them parse `--help` as a
+ * positional or an unrecognised flag. Every vector is read-only and offline —
+ * `tailwind_config_gen` with no arguments writes a config beside the caller,
+ * so it is probed through `--validate-only`, and `shadcn_add` is probed
+ * through `--list`, which answers from the filesystem before it can reach the
+ * registry it would otherwise fetch from.
+ */
+const ENTRY_POINTS: readonly EntryPoint[] = [
+    {
+        skill: 'corpus-grounding',
+        tool: 'ground',
+        argv: ['validate', '--manifest', '{ROOT}/design-intelligence/data/manifest.json'],
+        expectExit: 0,
+    },
+    {
+        skill: 'design-tokens',
+        tool: 'tokens',
+        argv: ['generate', '--config', '{ROOT}/design-tokens/templates/design-tokens-starter.json'],
+        expectExit: 0,
+    },
+    { skill: 'js-library-packaging', tool: 'check_package_surface', argv: ['--self-test'], expectExit: 0 },
+    { skill: 'react-shadcn-ui', tool: 'shadcn_add', argv: ['--list'], expectExit: 1 },
+    { skill: 'storybook-workshop', tool: 'story_contrast_floor', argv: ['--self-test'], expectExit: 0 },
+    { skill: 'tailwind-engineer', tool: 'tailwind_config_gen', argv: ['--validate-only'], expectExit: 0 },
+];
+
+type StartOutcome =
+    | { readonly kind: 'untaught' }
+    | { readonly kind: 'no-runner'; readonly runner: string }
+    | { readonly kind: 'ran'; readonly status: number };
+
+function describeStart(o: StartOutcome): string {
+    if (o.kind === 'untaught') return 'no skill teaches an invocation line';
+    if (o.kind === 'no-runner') return `runner ${o.runner} not on this machine`;
+    return `exit ${o.status}`;
+}
+
+/**
+ * Start one entry point the way a consumer is told to: with the runner some
+ * shipped skill actually names for it, from a directory holding nothing.
+ */
+function startAsTaught(
+    entry: EntryPoint,
+    root: string,
+    rows: readonly TaughtLine[],
+    cwd: string,
+): StartOutcome {
+    const taught = rows.find((r) => r.ownerSkill === entry.skill && r.tool.replace(/\.\w+$/, '') === entry.tool);
+    if (!taught) return { kind: 'untaught' };
+    if (!runnerAvailable(taught.runner, root, cwd)) {
+        return { kind: 'no-runner', runner: taught.runner === '' ? '(none)' : taught.runner };
+    }
+    const args = entry.argv.map((a) => a.split('{ROOT}').join(root));
+    const r = spawnSync(taught.runner, [taught.target, ...args], { cwd, encoding: 'utf8' });
+    return { kind: 'ran', status: r.status ?? -1 };
+}
+
 // The taught path, checked as installed.
 
 describe('skill-script lines in an installed projection', () => {
@@ -192,6 +267,26 @@ describe('skill-script lines in an installed projection', () => {
             'rows whose runner a node-only machine can start',
         ).toEqual([]);
     });
+
+    it('entry-points-control: not one of the six can be started as taught', () => {
+        const root = installProjection();
+        const rows = collectTaughtLines(root);
+        const cwd = mkTmp('skill-script-start-');
+        const outcomes = ENTRY_POINTS.map((e) => `${e.skill}/${e.tool}: ${describeStart(startAsTaught(e, root, rows, cwd))}`);
+
+        // Three name a runner the machine does not have; three are named in
+        // prose by their own skill without ever being given an invocation
+        // line, so there is no form to start them through.
+        expect(outcomes).toEqual([
+            'corpus-grounding/ground: runner ./scripts-run not on this machine',
+            'design-tokens/tokens: runner ./scripts-run not on this machine',
+            'js-library-packaging/check_package_surface: no skill teaches an invocation line',
+            'react-shadcn-ui/shadcn_add: no skill teaches an invocation line',
+            'storybook-workshop/story_contrast_floor: no skill teaches an invocation line',
+            'tailwind-engineer/tailwind_config_gen: no skill teaches an invocation line',
+        ]);
+        expect(fs.readdirSync(cwd), 'a probe must not write beside itself').toEqual([]);
+    }, 180_000);
 
     it('control: every taught target resolves to a file that is shipped', () => {
         const root = installProjection();
