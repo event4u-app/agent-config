@@ -35,11 +35,33 @@
  * Pure — no imports, no I/O, no clock.
  */
 
-// re.compile(r"[a-z][a-z0-9]+") — applied to the lowercased text.
-const TOKEN_RE = /[a-z][a-z0-9]+/g;
+/**
+ * The token shape. A LETTER followed by letters or digits, in any script.
+ *
+ * It was `re.compile(r"[a-z][a-z0-9]+")`, ported verbatim from the Python
+ * scorer, and that class cannot see a letter outside ASCII. Reproduced on the
+ * tree this replaced it in: `Prüfung` indexed as `fung`, `Größe` as nothing at
+ * all, `Abhängigkeiten` as the two fragments `abh` and `ngigkeiten`. A prompt
+ * written in German was therefore not ranked badly — most of its content words
+ * were not ranked at all, because the class split each one at its first umlaut
+ * and the pieces fell under the three-code-point floor below.
+ *
+ * `\p{L}` and `\p{N}` keep the ASCII behaviour byte-identical — the lowercased
+ * `a-z` and `0-9` are a subset of both — so this is a widening and not a
+ * different tokenizer. It is a CORRECTNESS fix and not a lift claim, and the
+ * before/after reading over the trigger corpus train slice that says so is
+ * attached to the change that made it.
+ */
+const TOKEN_RE = /[\p{L}][\p{L}\p{N}]+/gu;
 
-/** Ported verbatim from the Python scorer. Order is irrelevant; membership is not. */
-export const STOPWORDS: ReadonlySet<string> = new Set([
+/**
+ * Ported verbatim from the Python scorer. Order is irrelevant; membership is not.
+ *
+ * Kept as its own block rather than merged into the union below so that a
+ * reader can still see exactly what the parity scorer dropped, which is the
+ * thing the CLI parity suite pins.
+ */
+export const ENGLISH_STOPWORDS: ReadonlySet<string> = new Set([
     'the', 'a', 'an', 'and', 'or', 'but', 'of', 'for', 'with', 'to', 'in',
     'on', 'at', 'by', 'from', 'as', 'is', 'are', 'was', 'were', 'be', 'been',
     'this', 'that', 'these', 'those', 'it', 'its', 'use', 'when', 'even',
@@ -47,6 +69,58 @@ export const STOPWORDS: ReadonlySet<string> = new Set([
     'code', 'file', 'files', 'doing', 'make', 'do', 'go', 'get', 'set',
     'not', 'no', 'yes', 'any', 'some', 'all', 'one', 'two', 'new', 'old',
     'user', 'users', 'our', 'your', 'their', 'they', 'we', 'you', 'i', 'me',
+]);
+
+/**
+ * The German block, beside the English one rather than inside it.
+ *
+ * WHY IT IS NEEDED AT ALL. The score is `|task ∩ skill| / |task|`, so a task
+ * term no skill indexes sits in the DENOMINATOR. Before the token class above
+ * was widened, a German function word mostly could not survive tokenization in
+ * one piece; now it can, and every one that does divides the whole score of
+ * every candidate. `das`, `die`, `der`, `und`, `für` carry no routing signal in
+ * either language and would otherwise be charged for.
+ *
+ * WHAT IS IN IT, AND WHAT IS DELIBERATELY NOT. Function words — articles,
+ * pronouns, conjunctions, prepositions, auxiliary and modal verbs — plus the
+ * direct counterparts of the generic verbs the English block already drops
+ * (`use`, `make`, `do`, `get`). Domain nouns are NOT in it: `fehler`, `test`,
+ * `datei` and `prüfung` are exactly the words a German prompt routes on, and
+ * mirroring the English block's `file` / `code` / `task` entries into German
+ * would delete the signal this change exists to recover.
+ *
+ * Words of three code points or fewer never reach this set — `tokenize` drops
+ * them first — so `in`, `am`, `zu`, `es` are listed nowhere and need not be.
+ */
+export const GERMAN_STOPWORDS: ReadonlySet<string> = new Set([
+    'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem',
+    'einer', 'eines', 'und', 'oder', 'aber', 'sondern', 'denn', 'also',
+    'für', 'mit', 'von', 'vom', 'zum', 'zur', 'auf', 'aus', 'bei', 'beim',
+    'nach', 'über', 'unter', 'durch', 'ohne', 'gegen', 'zwischen', 'vor',
+    'ist', 'sind', 'war', 'waren', 'bin', 'bist', 'sein', 'seine', 'seiner',
+    'wird', 'werden', 'wurde', 'wurden', 'worden',
+    'hat', 'habe', 'haben', 'hatte', 'hatten',
+    'kann', 'kannst', 'können', 'könnte', 'soll', 'sollte', 'sollen',
+    'muss', 'müssen', 'darf', 'dürfen', 'will', 'wollen', 'möchte',
+    'wie', 'was', 'wer', 'wen', 'wem', 'wann', 'warum', 'wieso', 'weshalb',
+    'wenn', 'dass', 'weil', 'damit', 'ob',
+    'dies', 'diese', 'dieser', 'dieses', 'diesem', 'diesen',
+    'nicht', 'kein', 'keine', 'keinen', 'keiner', 'nichts',
+    'alle', 'allen', 'alles', 'auch', 'noch', 'nur', 'schon', 'sehr', 'mehr',
+    'hier', 'dort', 'jetzt', 'dann', 'immer', 'wieder',
+    'ich', 'mir', 'mich', 'dir', 'dich', 'sie', 'ihr', 'ihre', 'ihren',
+    'wir', 'uns', 'euch', 'man', 'ihm', 'ihn', 'mein', 'meine', 'dein',
+    'bitte', 'mal', 'etwas', 'eigentlich', 'einfach',
+    // The counterparts of the English block's generic verbs. `mach` survives
+    // the three-code-point floor, so it is listed; `tu` does not and is not.
+    'mach', 'machen', 'macht', 'nutze', 'nutzen', 'verwende', 'verwenden',
+    'bekomme', 'bekommen', 'setze', 'setzen',
+]);
+
+/** The union both blocks are read through. One membership test, two sources. */
+export const STOPWORDS: ReadonlySet<string> = new Set([
+    ...ENGLISH_STOPWORDS,
+    ...GERMAN_STOPWORDS,
 ]);
 
 /** Mirror Python `len(str)` — count Unicode code points, not UTF-16 units. */
@@ -66,7 +140,7 @@ export function roundHalfToEven(x: number): number {
     return floor % 2 === 0 ? floor : floor + 1;
 }
 
-/** Lowercase, extract `[a-z][a-z0-9]+`, drop stopwords and tokens of ≤2 code points. */
+/** Lowercase, extract `[\p{L}][\p{L}\p{N}]+`, drop stopwords and tokens of ≤2 code points. */
 export function tokenize(text: string): Set<string> {
     const out = new Set<string>();
     const matches = text.toLowerCase().match(TOKEN_RE) ?? [];
@@ -110,6 +184,29 @@ export function triggerTextFromFlatLines(lines: readonly string[]): string[] {
     }
     return out;
 }
+
+/**
+ * How many ranked rows `suggest_skill_for_task` returns when the caller names
+ * no limit — on BOTH servers, which is why it lives in the module both import.
+ *
+ * It was 5. The number is now pre-registered rather than chosen: the bar, fixed
+ * before the measurement was read, was "the smallest depth whose recall gain
+ * over 5 exceeds 5 points on the train slice of the trigger corpus", with 5
+ * staying and the step closing as an honest null if no depth cleared it.
+ *
+ * The committed run selects 8. Over 487 positives, recall@5 is 0.620 and
+ * recall@8 is 0.686 — a gain of 6.6 points, the only candidate depth whose
+ * gain clears the bar at the smallest depth (10 adds 2.7 more, 20 another 6.5,
+ * neither of them the SMALLEST qualifying depth). The same bar selects 8 after
+ * the tokenizer widening too (+6.2 points), so the choice does not depend on
+ * which tokenizer was in the tree when it was read.
+ *
+ * Three more rows per call is the cost; each carries a description capped at
+ * 200 characters, so the ceiling it buys is bounded and paid only when the
+ * tool is actually called. Re-derive the figures with
+ * `measure_skill_ranker_baseline --corpus triggers-train`.
+ */
+export const DEFAULT_SUGGEST_LIMIT = 8;
 
 /** A skill as the ranker sees it. Deliberately not the body — see `rankSkills`. */
 export interface RankableSkill {

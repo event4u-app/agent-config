@@ -47,7 +47,7 @@ import {
     slice_around as _chSliceAround,
     read_header as _chReadHeaderImpl,
 } from '../chat_history.js';
-import { suggestSkillForTask } from './suggest_skill.js';
+import { SUGGEST_SKILL_TOOL } from './suggest_skill.js';
 import {
     type CatalogEntry,
     install_hint as _catalog_install_hint,
@@ -1202,38 +1202,7 @@ async function _readResourceBodyHandler(
 
 export const ALLOWLIST: Record<string, BuiltinTool> = {
     ...GRAPH_TOOLS,
-    suggest_skill_for_task: {
-        name: 'suggest_skill_for_task',
-        side_effect: 'ro',
-        description:
-            'Match a free-form task description to the most relevant skills, ' +
-            'ranked by a deterministic keyword scorer over SKILL.md ' +
-            'frontmatter. Use when a skill you need is not in the catalogue ' +
-            'the host delivered — a measured host dropped 402 entries from ' +
-            'its model-visible list — so asking by name is impossible while ' +
-            'asking by task is not. ' +
-            'Read-only: no shell, no writes, and no skill bodies are returned, ' +
-            'only names, scores and declared personas.',
-        input_schema: {
-            type: 'object',
-            required: ['task'],
-            properties: {
-                task: {
-                    type: 'string',
-                    description:
-                        'Free-form description of the task to match skills against.',
-                },
-                limit: {
-                    type: 'integer',
-                    minimum: 1,
-                    default: 5,
-                    description: 'Maximum number of skills to return. Defaults to 5.',
-                },
-            },
-            additionalProperties: false,
-        },
-        handler: suggestSkillForTask,
-    },
+    suggest_skill_for_task: SUGGEST_SKILL_TOOL,
     lint_skills: {
         name: 'lint_skills',
         side_effect: 'ro',

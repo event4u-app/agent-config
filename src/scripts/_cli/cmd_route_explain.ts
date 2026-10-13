@@ -32,6 +32,9 @@ import {
 import { measure, method_note } from '../_lib/token_count.js';
 import { load_agent_settings } from '../_lib/agent_settings.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { resolveSkillCatalogueRoots } from '../_lib/skill_catalogue.js';
+import { rankDetailed } from '../skill_tools/score_skill_relevance.js';
+import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
 
 // Marker-anchored, not hop-counted: this module runs from `src/scripts/_cli/`
 // (three levels down) AND from the precompiled `dist/cli-delegate/` (two), and
@@ -231,16 +234,119 @@ export function render_text(report: Report): string {
     return out.join('\n') + '\n';
 }
 
+/**
+ * `--skills "<task>"` — the SAME ranked rows the MCP servers return, on a host
+ * that has no MCP server at all.
+ *
+ * WHY A FLAG AND NOT A VERB. The ranker already exists as a script; what was
+ * missing was a reachable `agent-config` surface for it. A new top-level verb
+ * is the thing the package's own kill register refuses, and this answers the
+ * same question `route:explain` already answers — "what does this prompt
+ * reach" — one layer up from rules.
+ *
+ * WHY IT NAMES THE ROOT. Reproduced before the fallback below existed: a
+ * workspace carrying only another host's directory, with an empty home,
+ * resolves to zero catalogue roots and the shell path answers nothing, even
+ * though the installed package ships its own projected skills. The fallback
+ * closes that — but a row ranked out of the PACKAGE's own tree is a different
+ * claim from a row ranked out of the consumer's catalogue, so the output says
+ * which root answered rather than leaving the reader to assume.
+ */
+export interface SkillRow {
+    skill: string;
+    score: number;
+    personas: string[];
+    description: string;
+}
+
+export interface SkillsReport {
+    measurement_level: string;
+    task: string;
+    /** Every root that was ranked, in precedence order. Empty is a real answer. */
+    skills_roots: string[];
+    /** True when the ONLY root is the installed package's own projection. */
+    package_fallback_used: boolean;
+    skills_indexed: number;
+    limit: number;
+    suggestions: SkillRow[];
+}
+
+export const SKILLS_MEASUREMENT_HEADER =
+    'Measurement level: lexical ranking only — a high score is a pointer, not a verdict.';
+
+export function build_skills_report(
+    task: string,
+    opts: { workspaceRoot: string; packageRoot: string; limit: number; home?: string },
+): SkillsReport {
+    const roots = resolveSkillCatalogueRoots(opts.workspaceRoot, opts.home, {
+        packageFallback: opts.packageRoot,
+    });
+    const packageRootAbs = path.join(opts.packageRoot, 'dist', 'agent-src', 'skills');
+    const { rows, descriptions } = roots.length > 0
+        ? rankDetailed(task, roots)
+        : { rows: [], descriptions: new Map<string, string>() };
+    return {
+        measurement_level: SKILLS_MEASUREMENT_HEADER,
+        task,
+        skills_roots: roots,
+        package_fallback_used: roots.length === 1 && roots[0] === packageRootAbs,
+        skills_indexed: rows.length,
+        limit: opts.limit,
+        suggestions: rows.slice(0, opts.limit).map(([name, score, personas]) => ({
+            skill: name,
+            score,
+            personas,
+            description: descriptions.get(name) ?? '',
+        })),
+    };
+}
+
+export function render_skills_text(report: SkillsReport): string {
+    const out: string[] = [report.measurement_level, ''];
+    out.push(`task: ${JSON.stringify(report.task)}`);
+    if (report.skills_roots.length === 0) {
+        out.push('catalogue: NONE readable — no workspace root, no host root, no package fallback.');
+        out.push('');
+        out.push('  · (no catalogue to rank — this is "unknown", never "no skill covers this")');
+        return out.join('\n') + '\n';
+    }
+    out.push(
+        `catalogue: ${report.skills_roots.join(' · ')}`
+        + (report.package_fallback_used ? "  [the installed package's own projection — no workspace or host root resolved]" : ''),
+    );
+    out.push('');
+    out.push(`ranked skills (${report.suggestions.length} of ${report.skills_indexed} scoring above zero, limit ${report.limit}):`);
+    for (const r of report.suggestions) {
+        out.push(`  · ${r.skill}  [${r.score}]`);
+        if (r.description) out.push(`      ${r.description}`);
+        if (r.personas.length > 0) out.push(`      personas: ${r.personas.join(', ')}`);
+    }
+    if (report.suggestions.length === 0) {
+        out.push('  · (nothing scored above zero — say that, and proceed without a skill)');
+    }
+    return out.join('\n') + '\n';
+}
+
 export function main(argv: string[]): number {
     const args = [...argv];
     const as_json = args.includes('--json');
     let files: string[] = [];
     let profile = 'full';
+    let skillsTask: string | null = null;
+    let limit = DEFAULT_SUGGEST_LIMIT;
     const positional: string[] = [];
     for (let i = 0; i < args.length; i++) {
         const a = args[i] as string;
         if (a === '--json') continue;
-        if (a === '--files') {
+        if (a === '--skills') {
+            skillsTask = String(args[++i] ?? '');
+        } else if (a.startsWith('--skills=')) {
+            skillsTask = a.slice('--skills='.length);
+        } else if (a === '--limit') {
+            limit = Number.parseInt(String(args[++i] ?? ''), 10);
+        } else if (a.startsWith('--limit=')) {
+            limit = Number.parseInt(a.slice('--limit='.length), 10);
+        } else if (a === '--files') {
             files = String(args[++i] ?? '').split(',').map((s) => s.trim()).filter(Boolean);
         } else if (a.startsWith('--files=')) {
             files = a.slice('--files='.length).split(',').map((s) => s.trim()).filter(Boolean);
@@ -250,12 +356,36 @@ export function main(argv: string[]): number {
             profile = a.slice('--profile='.length);
         } else if (a === '-h' || a === '--help') {
             process.stdout.write(
-                'usage: agent-config route:explain "<prompt>" [--files a,b] [--profile full|balanced] [--json]\n',
+                'usage: agent-config route:explain "<prompt>" [--files a,b] [--profile full|balanced] [--json]\n'
+                + '       agent-config route:explain --skills "<task>" [--limit N] [--json]\n',
             );
             return 0;
         } else {
             positional.push(a);
         }
+    }
+    if (skillsTask !== null) {
+        const task = (skillsTask.trim() === '' ? positional.join(' ') : skillsTask).trim();
+        if (!task) {
+            process.stderr.write('route:explain: --skills needs a task description\n');
+            return 2;
+        }
+        if (!Number.isFinite(limit) || limit < 1) {
+            process.stderr.write('route:explain: --limit expects a positive integer\n');
+            return 2;
+        }
+        const report = build_skills_report(task, {
+            workspaceRoot: process.cwd(),
+            packageRoot: REPO_ROOT,
+            limit,
+        });
+        process.stdout.write(
+            as_json ? JSON.stringify(report, null, 2) + '\n' : render_skills_text(report),
+        );
+        // 1 is "nothing to show", the same meaning the rule arm gives it. A
+        // catalogue that could not be read and a catalogue with no match are
+        // both 1 here and are distinguished in the OUTPUT, never silently.
+        return report.suggestions.length === 0 ? 1 : 0;
     }
     const prompt = positional.join(' ').trim();
     if (!prompt) {
