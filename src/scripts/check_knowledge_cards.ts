@@ -202,13 +202,16 @@ function _check_card(
     }
 
     const lines = _splitlines(text);
+    const fm = _parse_frontmatter(text);
 
-    // C1 — size
-    if (lines.length > 150) {
+    // C1 — size. Scoped to the external arm with its five siblings: the README
+    // puts C1 in the C1–C6 band it calls "this variant's invariants", and says
+    // of that band that it is "not part of the `experience` variant at all".
+    // Running it on both arms while the comment below says the band is the
+    // external arm's was a contradiction between the code and its own note.
+    if ((fm['kind'] ?? 'external') !== 'experience' && lines.length > 150) {
         errors.push(`${rel}:${lines.length} — C1: card exceeds 150 lines (${lines.length})`);
     }
-
-    const fm = _parse_frontmatter(text);
 
     // The directory is a TAGGED UNION, and C1–C6 belong to ONE arm of it.
     //
@@ -252,6 +255,28 @@ function _check_card(
             if (!declared.has(field)) {
                 errors.push(`${rel}:0 — E1: experience card missing required '${field}' field`);
             }
+        }
+
+        // ADR-100's G1–G5 ARE NOT PART OF THE UNION, and returning without them
+        // was a real hole rather than a tidiness point. They ask whether a card
+        // may be in the GLOBAL store — tier, sensitivity, the promotion audit
+        // trail, and G3's confidential-pattern scan — which is an orthogonal
+        // axis to which arm the card belongs to. `agents/knowledge/README.md`
+        // scopes C1–C6 to `kind: external` and says nothing of the G band,
+        // because the G band is about the store.
+        //
+        // Measured before the repair, at --global on a fixture: an experience
+        // card carrying `ops@…` and `build-07.internal` exited 0 and reported
+        // nothing, while the byte-identical card as `kind: external` reported
+        // G3 on the email and G1/G4 on the missing tier and sensitivity. The
+        // promotion path reaches this: `knowledge_global_cli promote` does not
+        // filter on `kind`.
+        //
+        // Scope of the loss, stated rather than overclaimed: promotion still
+        // redacts at write time, so what the early return killed was the
+        // STANDING AUDIT over an already-promoted store, not the write gate.
+        if (global_mode) {
+            errors.push(..._check_global_card(rel, text, fm));
         }
         return errors;
     }

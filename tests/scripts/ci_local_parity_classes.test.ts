@@ -108,6 +108,37 @@ describe("unowned-gates-wired", () => {
     }
   });
 
+  it("still runs the ADR-100 global checks on an experience card", () => {
+    // The regression an independent review caught, and the reason the arm
+    // dispatch returns THROUGH the global block rather than before it. G1–G5
+    // ask whether a card may be in the GLOBAL store — tier, sensitivity, the
+    // promotion audit trail, and G3's confidential-pattern scan — which is
+    // orthogonal to which arm of the union it belongs to. An early return
+    // turned `--global` into a green light for a card carrying an email and an
+    // internal hostname, and `knowledge_global_cli promote` does not filter on
+    // `kind`, so the path is reachable.
+    const dir = mkdtempSync(path.join(tmpdir(), "kcards-g3-"));
+    try {
+      const leaky = experienceCard(null).replace(
+        "# A card\n\nBody.",
+        "# A card\n\nReach ops@acme-internal.example.com or build-07.internal.",
+      );
+      writeFileSync(path.join(dir, "leaky.md"), leaky, "utf8");
+
+      const r = runGate("check_knowledge_cards", ["--dir", dir, "--global"]);
+      expect(r.code, "a leaky experience card must not pass --global").not.toBe(0);
+      expect(r.out).toMatch(/G3: confidential pattern/);
+      expect(r.out).toMatch(/internal_hostname/);
+
+      // And the same card without --global is still only an arm check: the G
+      // band is about the store, so it must not fire where there is no store.
+      const local = runGate("check_knowledge_cards", ["--dir", dir]);
+      expect(local.out).not.toMatch(/G3:/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("treats an underscore-prefixed subagent file as a partial, and one really exists", () => {
     const dir = path.join(repoRoot, "src", "subagents");
     const partials = readdirSync(dir).filter((f) => f.startsWith("_") && f.endsWith(".md"));
@@ -150,7 +181,17 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "rule-backstops.yml"), "utf8");
     const job = workflow.slice(workflow.indexOf("local-only-drain:"));
 
-    const wired = [
+    // READ FROM THE WORKFLOW, never from a literal this file also writes. An
+    // earlier version of this case asserted `expect(wired).toHaveLength(20)`
+    // against a list defined three lines above it, which measures the test and
+    // not the job, and it asserted containment in one direction only — so a
+    // twenty-first gate added to the job would have gone unnoticed, which is
+    // the direction the council's bound actually cares about.
+    const actual = new Set(
+      [...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
+    );
+
+    const expected = [
       "lint_pack_dependencies",
       "check_originality_freshness",
       "check_context_paths",
@@ -172,10 +213,17 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
       "lint_subagent_determinism",
       "check_trigger_eval_presence",
     ];
-    expect(wired).toHaveLength(20);
 
-    for (const gate of wired) {
-      expect(job, `${gate} is not called in the drain job`).toContain(`src/scripts/${gate}`);
+    // Both directions. Missing: the batch lost a gate it claims to wire.
+    // Extra: the batch grew past the twenty the council bounded, which is the
+    // failure the one-directional version could not see.
+    const missing = expected.filter((g) => !actual.has(g));
+    const extra = [...actual].filter((g) => !expected.includes(g)).sort();
+    expect(missing, "expected gates with no caller in the drain job").toEqual([]);
+    expect(extra, "gates in the drain job beyond the bounded batch").toEqual([]);
+    expect(actual.size, "the council bounded this batch at twenty").toBe(20);
+
+    for (const gate of expected) {
       expect(existsSync(path.join(repoRoot, "src", "scripts", `${gate}.ts`)), `${gate}.ts does not exist`).toBe(true);
     }
   });
@@ -230,6 +278,24 @@ describe("calendar-gates-scheduled-not-required", () => {
 
   it("gives check_council_pin_staleness the caller it never had", () => {
     expect(canary).toContain("src/scripts/check_council_pin_staleness");
+  });
+
+  it("declares that gate ci_only, in the right list, so the other parity direction stays green", () => {
+    // This suite went green once while the tree was red on exactly this: giving
+    // a gate a CI caller and no local task reds `check_ci_local_parity` in the
+    // CI-only direction, and nothing here looked. The list matters as much as
+    // the entry — the first attempt put it under `local_only:`, whose growth
+    // the 2026-08-13 decision refuses by name, and the checker kept refusing.
+    const manifest = readFileSync(path.join(repoRoot, "src", "config", "ci-local-parity.yml"), "utf8");
+    const ciOnly = manifest.slice(manifest.indexOf("\nci_only:"), manifest.indexOf("\nlocal_only:"));
+    const localOnly = manifest.slice(manifest.indexOf("\nlocal_only:"));
+
+    expect(ciOnly).toContain("id: check_council_pin_staleness");
+    expect(localOnly).not.toContain("id: check_council_pin_staleness");
+
+    // The count the decision protects. Seven before this change and seven
+    // after; a declaration added to move a number would show up here.
+    expect([...localOnly.matchAll(/^ {2}- id: /gm)]).toHaveLength(7);
   });
 
   it("keeps the one slow gate off the pull-request path", () => {
