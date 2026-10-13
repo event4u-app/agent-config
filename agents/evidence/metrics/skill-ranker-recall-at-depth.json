@@ -12,54 +12,54 @@
   "negatives": 477,
   "all": {
     "positives": 487,
-    "zero_overlap": 83,
+    "zero_overlap": 85,
     "recall": {
       "recall@1": {
-        "hits": 206,
-        "rate": 0.423,
+        "hits": 211,
+        "rate": 0.433,
         "ci95": {
-          "lower": 0.38,
-          "upper": 0.467
+          "lower": 0.39,
+          "upper": 0.478
         }
       },
       "recall@3": {
-        "hits": 269,
-        "rate": 0.552,
+        "hits": 272,
+        "rate": 0.559,
         "ci95": {
-          "lower": 0.508,
-          "upper": 0.596
+          "lower": 0.514,
+          "upper": 0.602
         }
       },
       "recall@5": {
-        "hits": 302,
-        "rate": 0.62,
+        "hits": 303,
+        "rate": 0.622,
         "ci95": {
-          "lower": 0.576,
-          "upper": 0.662
+          "lower": 0.578,
+          "upper": 0.664
         }
       },
       "recall@8": {
-        "hits": 334,
-        "rate": 0.686,
+        "hits": 333,
+        "rate": 0.684,
         "ci95": {
-          "lower": 0.643,
-          "upper": 0.725
+          "lower": 0.641,
+          "upper": 0.724
         }
       },
       "recall@10": {
-        "hits": 347,
-        "rate": 0.713,
+        "hits": 346,
+        "rate": 0.71,
         "ci95": {
-          "lower": 0.671,
-          "upper": 0.751
+          "lower": 0.669,
+          "upper": 0.749
         }
       },
       "recall@20": {
-        "hits": 379,
-        "rate": 0.778,
+        "hits": 378,
+        "rate": 0.776,
         "ci95": {
-          "lower": 0.739,
-          "upper": 0.813
+          "lower": 0.737,
+          "upper": 0.811
         }
       }
     }
@@ -69,11 +69,11 @@
     "zero_overlap": 19,
     "recall": {
       "recall@1": {
-        "hits": 9,
-        "rate": 0.205,
+        "hits": 11,
+        "rate": 0.25,
         "ci95": {
-          "lower": 0.112,
-          "upper": 0.345
+          "lower": 0.146,
+          "upper": 0.394
         }
       },
       "recall@3": {
@@ -85,35 +85,35 @@
         }
       },
       "recall@5": {
-        "hits": 18,
-        "rate": 0.409,
+        "hits": 19,
+        "rate": 0.432,
         "ci95": {
-          "lower": 0.277,
-          "upper": 0.556
+          "lower": 0.297,
+          "upper": 0.578
         }
       },
       "recall@8": {
-        "hits": 21,
-        "rate": 0.477,
+        "hits": 22,
+        "rate": 0.5,
         "ci95": {
-          "lower": 0.338,
-          "upper": 0.621
+          "lower": 0.358,
+          "upper": 0.642
         }
       },
       "recall@10": {
-        "hits": 21,
-        "rate": 0.477,
+        "hits": 22,
+        "rate": 0.5,
         "ci95": {
-          "lower": 0.338,
-          "upper": 0.621
+          "lower": 0.358,
+          "upper": 0.642
         }
       },
       "recall@20": {
-        "hits": 23,
-        "rate": 0.523,
+        "hits": 24,
+        "rate": 0.545,
         "ci95": {
-          "lower": 0.379,
-          "upper": 0.662
+          "lower": 0.401,
+          "upper": 0.683
         }
       }
     }

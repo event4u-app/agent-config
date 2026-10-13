@@ -154,7 +154,7 @@ as today.
       offline reading in the Context puts that depth at 8 (+6.3 points); the
       committed 0.3 run decides, not this line.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0
-- [ ] **1.3 Let the tokenizer see letters.** Replace the ASCII token class at
+- [x] **1.3 Let the tokenizer see letters.** Replace the ASCII token class at
       `skillRanking.ts:39` with a Unicode letter class and add a German
       stopword block beside the English one. A correctness fix, not a lift
       claim: the 0.3 run before and after is attached to the change and the
