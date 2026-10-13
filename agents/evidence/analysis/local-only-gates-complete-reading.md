@@ -108,8 +108,19 @@ move the decision calls out by name.
 
 ### `slow` — 1
 
-`audit_command_surface`, 43.5 s. Routed with the `calendar` gates to the
-scheduled workflow rather than to a pull-request job.
+`audit_command_surface`, 43.5 s. **Routed nowhere, and this line is corrected
+from the one it replaced** — which said it joins the `calendar` gates on the
+scheduled workflow, as step 2.3 prescribes for the `slow` class. It did, and
+was taken back out: it is a GENERATOR, not a checker. `audit_command_surface.ts`
+writes `agents/reports/command-surface.json` and `.md` — both tracked —
+unconditionally at the end of every run, and `--check-new` does not suppress
+that. A scheduled run would mutate its tree to compute an answer it then
+discards, since on the default branch `origin/main` and `HEAD` are the same
+commit and `--check-new` has nothing to find.
+
+It therefore stays in the local-only backlog with its class recorded, which is
+what this page is for. Wiring it needs a `--check`-shaped mode it does not have
+today, and a test pins that it must appear in neither job.
 
 ## The 24 reds, split three ways
 

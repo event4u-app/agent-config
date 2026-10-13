@@ -159,8 +159,11 @@ describe("unowned-gates-wired", () => {
 describe("baseline-at-most-143", () => {
   it("lowers the parity ratchet by at least the batch it wired", () => {
     // 163 at the branch base minus the twenty of batch 1 is 143, which is what
-    // step 2.1 asks the baseline to be at most. The committed number is 129
-    // because the fourteen scheduled gates left the set too.
+    // step 2.1 asks the baseline to be at most. The committed number is 130,
+    // because the thirteen `calendar` gates left the set too — 163 - 33 = 130.
+    // `check_council_pin_staleness` also gained its first caller here and is
+    // NOT among the 33: it ran in no task either, so it was never in this
+    // count to leave.
     const baselines = JSON.parse(
       readFileSync(path.join(repoRoot, "src", "config", "gate-violation-baselines.json"), "utf8"),
     ) as { gates: Record<string, { count: number; note: string }> };

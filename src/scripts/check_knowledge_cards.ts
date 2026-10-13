@@ -236,13 +236,21 @@ function _check_card(
     // which is the contract the council named. Skipping outright would have
     // traded a wrong check for no check — nothing else walks this directory
     // for the experience arm.
-    // Presence, not a non-empty scalar. Four of the ten required fields are
-    // block lists (`trigger_context`, `contradictions`, `supersedes`) or block
-    // scalars (`strategy`, `falsifier`), and the tiny scalar-only parser above
-    // reads a key whose value is on the following lines as the empty string.
-    // Asking for a truthy value would report a declared `trigger_context:` with
-    // three entries under it as missing — a reading of the parser, not of the
-    // card.
+    // Presence, not a non-empty scalar — and the count below is corrected from
+    // an earlier comment that said "four" while naming five, which an
+    // independent review caught. FIVE of the ten required fields can carry
+    // their value on the FOLLOWING lines rather than on the key's own line:
+    // the block lists `trigger_context`, `contradictions` and `supersedes`,
+    // and the block scalars `strategy` and `falsifier`. The tiny scalar-only
+    // parser above reads such a key as the empty string.
+    //
+    // The number is a CEILING on the risk, not a claim that all five bite
+    // today: a card writing `strategy: one short line` parses truthy, so only
+    // the ones actually written as blocks would. Asking for a truthy value
+    // would report a declared `trigger_context:` with three entries under it as
+    // missing — a reading of the parser, not of the card — and the set of
+    // fields that bite would then depend on how each card happened to be
+    // formatted, which is the worst property a required-field check can have.
     const kind = fm['kind'] ?? 'external';
     if (kind === 'experience') {
         const block = FRONTMATTER_RE.exec(text)?.[1] ?? '';

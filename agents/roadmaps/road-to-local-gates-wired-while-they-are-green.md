@@ -124,18 +124,30 @@ with it and left alone.
       job's duration is recorded in the cost-budget page.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t baseline-at-most-143 --reporter=verbose` -> /✓.*baseline-at-most-143/
       <br>**Closed 2026-10-13 with one deviation, recorded here rather than
-      only in a YAML comment.** The steps went into `.github/workflows/rule-backstops.yml`,
-      NOT `consistency.yml` as written above: that file hosts the ratification
-      gate, so any step added to it makes the whole diff ratification-gated,
-      and `rule-backstops.yml` is where `enforced_by` backstops already live
-      and is equally a `pull_request` workflow. The step's obligation — a
-      pull-request caller — is met; the file it names is not the one used.
-      The other two obligations are met literally: the baseline moved 165 ->
-      129 on CI's own reading (run 38373476139, never a local one), and the
-      job's duration is in `docs/contracts/ci-cost-budget.md` with its sample
-      size. The batch is twenty rather than the 119 the reading found wirable,
-      on a 2/2 council verdict of 2026-10-13 that one pull request carrying all
-      119 is the sweep the 2026-08-13 decision declines.
+      only in a YAML comment.** The twenty are steps of
+      `Standing payload delta + budget gate` in
+      `.github/workflows/standing-payload-delta.yml`, NOT of `consistency.yml`
+      as written above: that file hosts the ratification gate, so any step
+      added to it makes the whole diff ratification-gated. The ruleset was read
+      rather than assumed — `repos/event4u-app/agent-config/rulesets`
+      (`main protection`) lists exactly two required contexts, and this is the
+      other one — so the step's obligation is met in the way it meant it: the
+      gates run in a REQUIRED job, on a workflow carrying no `paths:` filter,
+      and only the file name differs from the line above.
+      <br>An earlier revision of this closure note described a different
+      placement, a new job on `rule-backstops.yml`, and it is corrected rather
+      than quietly rewritten because the reason it was wrong is the reusable
+      part: that job is not a required context, so a red in it is visible and
+      merges anyway, and it inherits a `paths:` filter that three of these
+      gates' inputs do not match. An independent completion review found both.
+      <br>The other two obligations are met literally: the baseline moved
+      165 -> 130 on CI's own reading (run 38373476139 printed 129 and named it;
+      the extra one came back when a writing gate was removed from the
+      schedule, a correction to a number that never reached the trunk), and the
+      job's duration is in `docs/contracts/ci-cost-budget.md` measured in CI
+      with its sample size. The batch is twenty rather than the 119 the reading
+      found wirable, on a 2/2 council verdict of 2026-10-13 that one pull
+      request carrying all 119 is the sweep the 2026-08-13 decision declines.
 - [ ] **2.2 The rest of the class, twenty at a time.** Each further batch is
       one change: wire, lower the baseline, record the duration. A gate found
       red at wiring time is skipped, listed in the evidence page, and handled
@@ -147,6 +159,20 @@ with it and left alone.
       scheduled workflow that already runs the gate canary, which is not a
       required check; `slow` gates join them.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t calendar-gates-scheduled-not-required --reporter=verbose` -> /✓.*calendar-gates-scheduled-not-required/
+      <br>**Closed 2026-10-13 on the calendar half; the `slow` half is
+      deliberately NOT done, and that is a deviation rather than an oversight.**
+      All thirteen `calendar`-class gates and `check_council_pin_staleness` run
+      in the scheduled job, which is what this step is for. The one
+      `slow`-class gate — the evidence page counts exactly one,
+      `audit_command_surface` — is excluded: it writes
+      `agents/reports/command-surface.{json,md}`, both tracked, unconditionally
+      at the end of every run, so it is a generator rather than a checker and a
+      scheduled run would mutate its tree to compute an answer it discards. It
+      joined that job first and was taken back out when an independent review
+      measured the write. It stays in the local-only backlog with its class
+      recorded; wiring it needs a `--check`-shaped mode it does not have, and a
+      test pins that it appears in neither job. A later batch that gives it one
+      closes this half.
 
 ## Phase 3 — The reds nobody owns
 
@@ -209,7 +235,7 @@ with it and left alone.
 | D2 | reversible-technical | evidence | Calendar gates never join a required job | Two of the reds were red from elapsed time alone; six gates print an `as-of:` line | Those gates gain a pinned clock in CI |
 | D3 | reversible-technical | agent | A recorded reading, not a permanent runner | After the drain the workflow reports each gate | The undeclared set grows again by more than a batch |
 | D4 | reversible-technical | agent | Owned reds are listed and left | Each has a blocker or a step in the file that names it | An owning file is archived with its gate still red — which already fired once, for `check_knowledge_cards` |
-| D5 | reversible-technical | evidence | The round's step for `check_trigger_eval_presence` is dropped | It exits 0 on `d41121927` | It turns red again |
+| D5 | reversible-technical | evidence | **REOPENED 2026-10-13 — the revisit condition fired and the step is back.** Originally: the round's step for `check_trigger_eval_presence` is dropped. | Originally: it exits 0 on `d41121927`. **At the branch base `257e87de0` it exits 1**, because `form-handler` and `judge-security-auditor` gained a trigger corpus on 2026-10-12 without their grandfather entries being removed in the same change — so the gate was red on the trunk for a day with nothing remote to report it, which is itself an argument for this drain. The two entries are removed and it is wired. | Fired, and discharged. Reopens again only if the gate turns red for a NEW reason; the grandfather-entry-left-behind cause is now covered by wiring it. |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude -->
