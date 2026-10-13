@@ -60,6 +60,27 @@
  * run now SAYS so. The correspondence problem — getting handles into a handover
  * — is untouched, and nothing here promotes the probe out of shadow.
  *
+ * WHAT THAT RUN NOW REPORTS, and it is a smaller thing than the five rows.
+ * A reference with no handle carries a `page_signature`: per width, how many
+ * rendered leaves of each KIND there are — control, heading, media, text, empty
+ * — a multiset of `<child count>:<row|column|mixed>` over containers with two or
+ * more rendered children, and whether the page overflows horizontally. Counts
+ * and a flag; no aggregate, no coordinate, no size, no tag. It reports a removed
+ * element, a lost control, a container that stopped stacking and a page that
+ * started overflowing.
+ *
+ * AND WHAT IT STILL CANNOT. It establishes no correspondence between a
+ * reference element and a target one, so it can name no node, cannot be matched
+ * against a declared deviation, and is not a finding. Behaviour produces nothing
+ * from it: a removed hover colour and a dead click handler change no leaf, no
+ * arrangement and no overflow, and remain the business of the `interaction`
+ * dimension, which needs handles. A change in size or spacing produces nothing
+ * either, by the same construction that keeps it silent on a faithful port. And
+ * a second defect behind a removed child is masked, because a container that has
+ * lost a child drops out of the multiset entirely. The fixture README registers
+ * all of it, with the one place the reading disagrees with the table it was
+ * measured against.
+ *
  * THE NOISE CONTROL. Computed-style comparison over every property fires on
  * font fallbacks and token indirection nobody cares about, so the compared set
  * is curated (`COMPARED_PROPERTIES`) to the properties a design token actually

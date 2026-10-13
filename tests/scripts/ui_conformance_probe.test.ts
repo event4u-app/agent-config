@@ -709,6 +709,39 @@ describe('the structure reading without handles — Phase 3, a field beside the 
         expect(regen['375']!.overflow).toEqual({ reference: false, target: true });
     });
 
+    it('header-names-page-signature: the header describes the run that exists, and what it still cannot do', () => {
+        // Phase 4.2. The header's "every real run still lands in the
+        // not-applicable branch" was true and complete when it was written; it is
+        // true and INCOMPLETE now, which is the worse state of the two — a reader
+        // who stops there concludes a real run produces nothing.
+        const src = fs.readFileSync(path.join(ROOT, 'src', 'scripts', 'ui_conformance_probe.ts'), 'utf-8');
+        const header = src.slice(0, src.indexOf('*/'));
+
+        expect(header).toMatch(/lands in the not-applicable branch/);
+        const after = header.slice(header.indexOf('lands in the not-applicable branch'));
+
+        // What such a run now reports, named in the header rather than only in a
+        // type a reader has to go and find.
+        expect(after).toMatch(/page_signature/);
+        for (const kind of LEAF_KINDS) expect(after, `header omits the ${kind} kind`).toMatch(kind);
+        expect(after).toMatch(/row\|column\|mixed/);
+        expect(after).toMatch(/overflow/);
+
+        // And what it still cannot. Each of these is a limit the fixture
+        // registers; a header that listed the gains and not the limits would be
+        // the over-read the paragraph above it exists to prevent.
+        expect(after).toMatch(/no aggregate/i);
+        expect(after).toMatch(/not a finding/);
+        expect(after).toMatch(/declared deviation/);
+        expect(after).toMatch(/masked/);
+        expect(after).toMatch(/interaction/);
+
+        // The promotion clause is untouched: this reading changes nothing about
+        // the probe's standing.
+        expect(header).toMatch(/nothing here promotes the probe out of shadow/);
+        expect(header).toMatch(/NOT A GATE/);
+    });
+
     it('page-signature-scope-sentence: the field states what it is not, in one fixed sentence', () => {
         // Phase 3.3. The sentence travels WITH the reading, because a reader who
         // takes a changed count for a located defect will go looking for the node
