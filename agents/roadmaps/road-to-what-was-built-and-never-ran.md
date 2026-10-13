@@ -76,14 +76,14 @@ the tree's. A concern whose own record dated its withdrawal is withdrawn.
       inline code spans the way it already skips fences, and a ticked
       criterion with a bare `NOT met` still fails.
       verify: `npx vitest run tests/scripts/lint_ticked_unmet_criteria.test.ts --reporter=verbose` -> /✓.*inline-code-not-met-is-quoted/
-- [ ] **1.2 The other three hits are read, one at a time.** Each of
+- [x] **1.2 The other three hits are read, one at a time.** Each of
       `road-to-blocking-severities-where-a-refusal-can-land.md:175`,
       `road-to-governed-harness-evolution.md:2614` and `:2769` is either a
       quotation (left, and the detector's miss recorded in a test) or a real
       contradiction, whose tick becomes `[~]` with one line naming the unmet
       half. No criterion text is reworded to clear the lint.
       verify: `./scripts-run src/scripts/lint_ticked_unmet_criteria` -> 0
-- [ ] **1.3 Both lints join `ci-fast` with the arguments CI runs.** One task
+- [x] **1.3 Both lints join `ci-fast` with the arguments CI runs.** One task
       each, registered the way the parity checker reads, and the gate-coverage
       row each owes. `lint_blocker_citations`' baseline is lowered from 10 to 7
       only on a CI reading of the wired task, never on a local one.
