@@ -1,0 +1,129 @@
+{
+  "schema": 1,
+  "arm": "recall-at-depth",
+  "corpus": "triggers-train",
+  "ranker": "keyword-v1",
+  "commit": "c107aaf0f",
+  "skills_dir": "src/skills",
+  "skills_indexed": 300,
+  "train_corpora": 100,
+  "cases_total": 964,
+  "positives": 487,
+  "negatives": 477,
+  "all": {
+    "positives": 487,
+    "zero_overlap": 83,
+    "recall": {
+      "recall@1": {
+        "hits": 206,
+        "rate": 0.423,
+        "ci95": {
+          "lower": 0.38,
+          "upper": 0.467
+        }
+      },
+      "recall@3": {
+        "hits": 269,
+        "rate": 0.552,
+        "ci95": {
+          "lower": 0.508,
+          "upper": 0.596
+        }
+      },
+      "recall@5": {
+        "hits": 302,
+        "rate": 0.62,
+        "ci95": {
+          "lower": 0.576,
+          "upper": 0.662
+        }
+      },
+      "recall@8": {
+        "hits": 334,
+        "rate": 0.686,
+        "ci95": {
+          "lower": 0.643,
+          "upper": 0.725
+        }
+      },
+      "recall@10": {
+        "hits": 347,
+        "rate": 0.713,
+        "ci95": {
+          "lower": 0.671,
+          "upper": 0.751
+        }
+      },
+      "recall@20": {
+        "hits": 379,
+        "rate": 0.778,
+        "ci95": {
+          "lower": 0.739,
+          "upper": 0.813
+        }
+      }
+    }
+  },
+  "de": {
+    "positives": 44,
+    "zero_overlap": 19,
+    "recall": {
+      "recall@1": {
+        "hits": 9,
+        "rate": 0.205,
+        "ci95": {
+          "lower": 0.112,
+          "upper": 0.345
+        }
+      },
+      "recall@3": {
+        "hits": 17,
+        "rate": 0.386,
+        "ci95": {
+          "lower": 0.257,
+          "upper": 0.534
+        }
+      },
+      "recall@5": {
+        "hits": 18,
+        "rate": 0.409,
+        "ci95": {
+          "lower": 0.277,
+          "upper": 0.556
+        }
+      },
+      "recall@8": {
+        "hits": 21,
+        "rate": 0.477,
+        "ci95": {
+          "lower": 0.338,
+          "upper": 0.621
+        }
+      },
+      "recall@10": {
+        "hits": 21,
+        "rate": 0.477,
+        "ci95": {
+          "lower": 0.338,
+          "upper": 0.621
+        }
+      },
+      "recall@20": {
+        "hits": 23,
+        "rate": 0.523,
+        "ci95": {
+          "lower": 0.379,
+          "upper": 0.662
+        }
+      }
+    }
+  },
+  "near_miss": {
+    "cases": 84,
+    "first": 4,
+    "top3": 10,
+    "note": "Cases the corpus declares `class: near-miss`. Every one of them is a NEGATIVE (`trigger: false`), so `first` and `top3` are false-positive counts, not hits — lower is better, and they are printed beside recall so a depth change cannot be read as free."
+  },
+  "seal_note": "The sealed holdout corpora are never opened: `routing_corpus.loadTrainCases` decides the partition from the skill DIRECTORY NAME and skips a holdout path before reading any file. Filtering after the read would satisfy the letter of the freeze and not the seal.",
+  "denominator_note": "Positive cases of the TRAIN slice of `src/skills/*/evals/triggers.json`. The owning skill is the directory the case was read from, so no expected-skills label is involved and none can be stale. `recall@k` is the share of positives whose owning skill appears within the first k ranked rows."
+}

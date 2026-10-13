@@ -127,7 +127,7 @@ as today.
       protection as the table it sits beside.
       `corrected-from-reproduction`
       verify: `npx vitest run tests/scripts/host_docs_digest.test.ts` -> 0
-- [ ] **0.3 A recall-at-depth arm on the train slice.** One arm on
+- [x] **0.3 A recall-at-depth arm on the train slice.** One arm on
       `measure_skill_ranker_baseline` that takes its cases from
       `routing_corpus.loadTrainCases` — no second loader over the corpus
       (`routing_corpus.ts:6-9`) — and scores with the shipped `rank()`. It

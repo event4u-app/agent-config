@@ -28,22 +28,27 @@ import { parse as parseYaml } from 'yaml';
 import {
     MIN_POWERED_N,
     MIN_PROMPTS_PER_PACK,
+    RECALL_DEPTHS,
     SEALED_MODULUS,
     type SliceName,
     allPacks,
     main,
     measureAccuracy,
+    measureRecallAtDepth,
     packCensus,
     packsBelow,
     packsForSkill,
+    parseCorpus,
     partitionBySlice,
     rankOptionsFor,
     readMatrixCases,
     readMatrixLabelledPrompts,
     readMatrixPrompts,
+    recallKey,
     sliceForId,
     sliceSizes,
 } from '../../src/scripts/measure_skill_ranker_baseline';
+import { type Partition, partitionOf } from '../../src/scripts/_lib/routing_corpus';
 
 const REPO = path.resolve(__dirname, '..', '..');
 
@@ -508,5 +513,131 @@ describe('holdout — the sealed slice is a function of the id and nothing else'
         // a sealed-only report can see what it was held out from.
         expect(sealed.slice_sizes.all).toBe(whole.corpus_prompts);
         expect(sealed.slice_sizes.sealed).toBe(sealed.corpus_prompts);
+    });
+});
+
+// The recall-at-depth arm. Two things are worth guarding and they are not the
+// arithmetic: that the frozen holdout is never opened (asserted against a
+// control that IS opened and throws, so the assertion can fail), and that the
+// unreachable cases are counted apart from the ranked-too-deep ones — a report
+// that folded them together would make every depth look like a ranking choice.
+describe('recall-at-depth arm over the trigger corpus train slice', () => {
+    /**
+     * A skill directory name in the requested partition, found by trying
+     * suffixes rather than hardcoded.
+     *
+     * `partitionOf` is a sha256 over the name, so a literal would silently stop
+     * meaning what it says the day `HOLDOUT_CEILING` moves — and the whole point
+     * of this block is that the two partitions behave differently.
+     */
+    function nameIn(want: Partition, prefix: string): string {
+        for (let i = 0; i < 500; i += 1) {
+            const candidate = `${prefix}-${String(i)}`;
+            if (partitionOf(candidate) === want) return candidate;
+        }
+        throw new Error(`no ${want} name found under ${prefix}`);
+    }
+
+    function corpusSkill(name: string, description: string, body: string): void {
+        write(
+            `src/skills/${name}/SKILL.md`,
+            `---\nname: ${name}\ndescription: ${description}\n---\n\n# ${name}\n`,
+        );
+        write(`src/skills/${name}/evals/triggers.json`, body);
+    }
+
+    const UNREADABLE = '{{{ this is not json';
+
+    it('never opens a holdout corpus — proven against a control that is read and throws', () => {
+        const train = nameIn('train', 'sealprobe-train');
+        const holdout = nameIn('holdout', 'sealprobe-hold');
+
+        corpusSkill(
+            train,
+            'Containers and images.',
+            JSON.stringify({ queries: [{ q: 'containers and images', trigger: true }] }),
+        );
+        // TREATMENT: a holdout corpus that WOULD throw if it were opened.
+        corpusSkill(holdout, 'Something else entirely.', UNREADABLE);
+
+        const report = measureRecallAtDepth({ ranker: 'keyword-v1', commit: 'test', repo: root });
+        expect(report.cases_total).toBe(1);
+        expect(report.train_corpora).toBe(1);
+
+        // CONTROL: the identical unreadable body in a TRAIN directory does
+        // throw. Without this half the assertion above is satisfied just as well
+        // by a loader that reads nothing at all, and a test that cannot fail has
+        // not measured the seal.
+        corpusSkill(nameIn('train', 'sealprobe-broken'), 'Broken on purpose.', UNREADABLE);
+        expect(() =>
+            measureRecallAtDepth({ ranker: 'keyword-v1', commit: 'test', repo: root }),
+        ).toThrow();
+    });
+
+    it('prints every declared depth, monotone, with the unreachable cases counted apart', () => {
+        const owner = nameIn('train', 'depthprobe-owner');
+        corpusSkill(
+            owner,
+            'Containers and images and volumes.',
+            JSON.stringify({
+                queries: [
+                    { q: 'containers and images', trigger: true },
+                    { q: 'zzzqqq unrelated vocabulary', trigger: true },
+                    { q: 'containers but not this one', trigger: false, class: 'near-miss' },
+                ],
+            }),
+        );
+
+        const report = measureRecallAtDepth({ ranker: 'keyword-v1', commit: 'test', repo: root });
+        expect(report.arm).toBe('recall-at-depth');
+        expect(Object.keys(report.all.recall)).toEqual(RECALL_DEPTHS.map(recallKey));
+        expect(report.positives).toBe(2);
+        expect(report.negatives).toBe(1);
+        // The second positive shares no token with the description, so no depth
+        // reaches it — that is the zero-overlap column, not a ranking miss.
+        expect(report.all.zero_overlap).toBe(1);
+        expect(report.all.recall[recallKey(1)]!.hits).toBe(1);
+        expect(report.all.recall[recallKey(20)]!.hits).toBe(1);
+        // Near-miss counts come from NEGATIVES only; the two positives above must
+        // not reach them even though one of them ranks first.
+        expect(report.near_miss.cases).toBe(1);
+
+        let previous = 0;
+        for (const d of RECALL_DEPTHS) {
+            const hits = report.all.recall[recallKey(d)]!.hits;
+            expect(hits).toBeGreaterThanOrEqual(previous);
+            previous = hits;
+        }
+    });
+
+    it('splits `language: de` out of the same pass rather than re-ranking', () => {
+        const owner = nameIn('train', 'deprobe-owner');
+        corpusSkill(
+            owner,
+            'Containers and images and volumes.',
+            JSON.stringify({
+                queries: [
+                    { q: 'containers and images', trigger: true },
+                    { q: 'containers und images', trigger: true, language: 'de' },
+                ],
+            }),
+        );
+
+        const report = measureRecallAtDepth({ ranker: 'keyword-v1', commit: 'test', repo: root });
+        expect(report.all.positives).toBe(2);
+        expect(report.de.positives).toBe(1);
+        // The German case is counted in BOTH, never moved out of the whole.
+        expect(report.de.recall[recallKey(1)]!.hits).toBeLessThanOrEqual(
+            report.all.recall[recallKey(1)]!.hits,
+        );
+    });
+
+    it('`--corpus triggers-train` is accepted and no other spelling is', () => {
+        expect(parseCorpus(['--corpus', 'triggers-train'])).toBe('triggers-train');
+        expect(parseCorpus([])).toBe('labelled');
+        expect(() => parseCorpus(['--corpus', 'triggers-holdout'])).toThrow(/--corpus expects/);
+        // The refusal message must offer the new value, or a caller reading it
+        // concludes the corpus does not exist.
+        expect(() => parseCorpus(['--corpus', 'nope'])).toThrow(/triggers-train/);
     });
 });
