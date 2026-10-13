@@ -146,7 +146,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       before storing it" stayed `file-upload` (0.262, unchanged), so it steals
       nothing and is kept. `recovery` and `remember` were probed the same way
       against `data-exposure` and `public-endpoint` and changed neither.
-- [ ] **2.2 Add the account-lifecycle threat rows.** All in class
+- [x] **2.2 Add the account-lifecycle threat rows.** All in class
       `authentication`, existing seven columns, Source Refs as CWE plus the
       ASVS 5.0 chapter, every Negative Tests cell ending with the `Decided by:`
       literal the infrastructure rows use. One row each:
@@ -197,6 +197,53 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       four `threats` results, each original authentication row still returns
       for its own prompt, and the parameter grep over the added and amended
       rows prints nothing.
+
+      **Closed 2026-10-13. Thirteen rows added, row 2 amended in place, measured
+      on sixteen frozen prompts — one per added row and one per original
+      authentication row.** Every one of the sixteen returns its own row at
+      **rank 1** of the top-four `threats` results, so the dilution risk the
+      register ranks first did not materialise: the three original rows still
+      win their own prompts against thirteen new neighbours. The parameter grep
+      over the whole file prints nothing.
+
+      Two measurements corrected the work rather than confirming it. The
+      retrieval tokenizer does no stemming (`bm25_search.ts:108` keeps tokens
+      longer than two characters and nothing else), so the enumeration row's
+      "addresses have accounts" never matched a prompt saying "email address",
+      and the federated row — which does say "email" and "account" — won both
+      that prompt and the identity-mutation one. The fix was to give the two
+      rows the singular vocabulary a developer actually types, not to reword
+      the prompts to fit the rows. And "among the top four" is not readable
+      from `ground`'s markdown, which renders only the single best row per
+      domain; the measurement that answers the step is
+      `ground search --domain threats --json`, and the frozen prompt list is
+      written out below rather than left in a script nobody re-runs.
+
+      The sixteen frozen prompts, each returning the named row at rank 1:
+      `Credential stuffing` — "rate limit the login endpoint against credential
+      stuffing and password spraying" · `Session fixation` — "rotate the session
+      id after login and invalidate sessions on password change" ·
+      `Password-reset token abuse` — "password reset token should be single use
+      and short lived" · `Account enumeration` — "the login response tells the
+      attacker whether the email address is registered" · `Unverified email
+      ownership` — "grant account access only after the email verification link
+      is confirmed" · `Password acceptance` — "what composition rules and
+      maximum length should the password field enforce" · `Fast or home-made
+      password storage` — "store the user password with a salted sha256 digest
+      in the users table" · `Unsafe secret comparison` — "compare the one-time
+      code with the stored value using string equality" · `Password reset beyond
+      the token` — "the password reset link is built from the Host header and
+      signs the user in" · `Identity or credential change` — "let the user
+      change their email address and mfa factor in account settings" · `MFA
+      enforced only in the interface` — "enforce the two factor challenge and
+      store the totp backup codes" · `Persistent login and incomplete logout` —
+      "remember me cookie and logout should end the server session" · `Federated
+      sign-in account takeover` — "link the Google OAuth account to an existing
+      user by matching the email claim" · `Self-contained token validation
+      bypass` — "validate the jwt issuer audience and signing algorithm on every
+      request" · `Login cross-site request forgery` — "protect the login form
+      against cross-site request forgery" · `Signup abuse` — "block disposable
+      email domains at signup to stop free tier abuse".
 - [ ] **2.3 Give the authentication reasoning row its decisions.** Fill the
       empty Severity cell at `reasoning.csv:2` (every other class carries
       one) and add decision rules: `if_registration` verify-before-privilege;
