@@ -1,0 +1,1211 @@
+diff --git a/agents/roadmaps/road-to-account-surface-detector.md b/agents/roadmaps/road-to-account-surface-detector.md
+index 13f166d2b6f33731a5eee90e14d7e4d714c122b2..e94889359e30359194fe93fef1e5967217247dbe 100644
+--- a/agents/roadmaps/road-to-account-surface-detector.md
++++ b/agents/roadmaps/road-to-account-surface-detector.md
+@@ -50,7 +50,7 @@ reports `routes: empty`), so they are out of scope here.
+ 
+ ## Phase 1 — Fixtures and claim before code
+ 
+-- [ ] **1.1 Build the frozen fixture set.** Under
++- [x] **1.1 Build the frozen fixture set.** Under
+       `tests/fixtures/account-surface/`, two stacks (a PHP framework shape and
+       a Node/TypeScript shape), one unsafe file and one safe twin per class in
+       2.1, plus decoys that must stay silent: a login page that only changes
+@@ -60,7 +60,7 @@ reports `routes: empty`), so they are out of scope here.
+       ground-truth list beside them names every expected finding.
+       verify: the ground-truth list has an entry for every unsafe file and
+       none for a twin or decoy; no fixture file name ends in `.test.ts`.
+-- [ ] **1.2 Pre-register the claim.** Add `account-surface-finds-planted` to
++- [x] **1.2 Pre-register the claim.** Add `account-surface-finds-planted` to
+       `docs/CLAIMS.md` as `unbacked`, before any detector code: per class,
+       recall on the planted defects and false positives across twins and
+       decoys; a flagged decoy is a classification failure that fails the
+@@ -73,6 +73,16 @@ reports `routes: empty`), so they are out of scope here.
+ 
+ ## Phase 2 — The detector
+ 
++Still gated on the sibling roadmap, re-checked against the tree on 2026-10-13
++rather than read off this file: `src/skills/threat-modeling/data/threats.csv`
++carries three `authentication` rows (credential stuffing, session fixation,
++password-reset token abuse), and six of the Threat cells Phase 1's ground truth
++cites are not among them. They arrive with `road-to-account-lifecycle-threat-rows`
++step 2.2, which is unmerged. Until then a finding citing one of those cells
++would name a row that does not exist, so Phase 2 stays open; the pending cells
++are declared under `pending_threat_rows` in
++`tests/fixtures/account-surface/ground-truth.json` rather than assumed.
++
+ - [ ] **2.1 Write `src/scripts/check_account_surface.ts`.** A path predicate
+       first (route, controller, handler and config files whose names carry
+       login, register, signup, password, reset, verify, session, oauth,
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index 1b8fc70e983a3355a5a9cf89381411b77c9e8e50..fb33d23dd22aa2d90a129056477c8ad7a8d47d6e 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -263,6 +263,13 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - status: unbacked
+ - last_verified: 2026-08-25
+ 
++### claim: account-surface-finds-planted
++- claim: A deterministic, offline, read-only audit of a consumer repository's account-flow code finds the planted defect of every class it reports as violated, without flagging a safe twin or a decoy.
++- kind: quant
++- evidence: PRE-REGISTERED 2026-10-13 (road-to-account-surface-detector Phase 1.2), BEFORE any `check_account_surface` code exists -- the registering commit carries the frozen corpus and this entry and no detector, which is what makes this a pre-registration rather than a description of what a detector turned out to catch. BASELINE: zero, by construction. Nothing in the tree reads a consumer's login code: the scanners under `src/scripts/` check the package itself, the consumer's agent configuration, tool output or secrets; `grade_target_readiness.ts` grades thirteen dimensions, none of them authentication; and the prelaunch AUTH area is filled by the model with `unknown` as its honest default (`src/skills/launch-readiness/SKILL.md`). CORPUS: the frozen set at `tests/fixtures/account-surface/`, two stacks (a PHP framework shape, a Node/TypeScript shape), with twelve planted defects across eight lexical classes, a safe twin per planted file at the SAME basename so a path predicate cannot separate them, and six decoys that name every keyed word -- a digest over a file, a bucketing salt, a pagination token, a pepper read from the environment, a login surface that changes presentation only, and prose about passwords. Ground truth at `tests/fixtures/account-surface/ground-truth.json`, frozen before the detector. METRICS, PER CLASS: recall over that class's planted defects, and false positives over the twins and decoys. BARS, fixed here and not after the run: recall at or above 0.90 and false positives at or below 0.03 per class. WHAT THOSE BARS MEAN AT THIS CORPUS SIZE, stated because a proportion implies a precision the corpus does not have: a class carries one or two planted files, so its recall can only be 0, 0.5 or 1.0 and the 0.90 bar is in practice "every planted defect of this class"; the negative set is eighteen files in total, so the 0.03 bar is in practice "no false positive anywhere". A larger corpus would make the bars continuous; this one does not, and reporting 0.90 as if it tolerated a miss would overstate the measurement. HARD GATE, and it is the reason a class can fail while scoring perfect recall: a flagged decoy is a classification FAILURE that fails that class REGARDLESS of recall. A detector that finds everything by flagging everything is the failure a recall threshold cannot see. FALSIFICATION: (1) a decoy or a safe twin is flagged; (2) a class misses its recall bar; (3) the corpus cannot be scored against its ground truth, in which case the claim is UNDERPOWERED rather than dropped -- an unscoreable corpus says nothing about a detector. ON A CLASS MISSING ITS BAR: that class stays `suspected`-only in the detector's own output rather than the detector shipping a `violated` it did not earn. SCOPE, and it is a restriction this entry imposes on itself: twelve planted files over two stacks is one measurement of LEXICAL classes on a frozen corpus. It establishes whether THESE patterns separate THESE files, and generalises to neither a third stack nor a real consumer repository nor any defect the corpus does not carry. ABSENCE IS NEVER A RESULT: a class finding no pattern is reported as undecided, never as a passing account surface, so no figure here may be read as evidence that a login flow is safe.
++- status: unbacked
++- last_verified: 2026-10-13
++
+ ### claim: description-gate-catches-regressions
+ - claim: A diff-scoped gate on SKILL.md `description` frontmatter catches a description edit that makes a skill less distinguishable from its neighbours, at PR time and within the existing key budget.
+ - kind: quant
+diff --git a/docs/proof.md b/docs/proof.md
+index 3cde7d6e00297893dcad6c423f044ab81c81b2a0..568be86cebbf0fffb2e12c535611fbac2a956794 100644
+--- a/docs/proof.md
++++ b/docs/proof.md
+@@ -175,7 +175,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
+ fails the build on any count-shaped prose mention that drifts from the
+ source count — or on two different numbers for the same artefact kind.
+ 
+-We also publish our **debt**: 35 claim(s) are logged as
++We also publish our **debt**: 36 claim(s) are logged as
+ `unbacked` inventory in the ledger — not yet bound, and therefore not
+ allowed to carry a marker in public prose. Hiding them would be the
+ opposite of the point.
+@@ -356,10 +356,11 @@ resolution (`check_enforcement_coverage`) and the claims ledger
+ 
+ Undeclared rules (80, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
+ 
+-**Axis 2 — evidence form per public claim.** 104 ledger entries · 61 backed · 36 unbacked inventory · 7 resolved-null.
++**Axis 2 — evidence form per public claim.** 105 ledger entries · 61 backed · 37 unbacked inventory · 7 resolved-null.
+ 
+ | Claim id | Kind | Status | Measured on | Evidence pointer |
+ |---|---|---|---|---|
++| `account-surface-finds-planted` | quant | unbacked | — | `PRE-REGISTERED 2026-10-13 (road-to-account-surface-detector Phase 1.2), BEFORE any `check_account_surface` code exists -- the registering commit carries the frozen corpus and this entry and no detector, which is what makes this a pre-registration rather than a description of what a detector turned out to catch. BASELINE: zero, by construction. Nothing in the tree reads a consumer's login code: the scanners under `src/scripts/` check the package itself, the consumer's agent configuration, tool output or secrets; `grade_target_readiness.ts` grades thirteen dimensions, none of them authentication; and the prelaunch AUTH area is filled by the model with `unknown` as its honest default (`src/skills/launch-readiness/SKILL.md`). CORPUS: the frozen set at `tests/fixtures/account-surface/`, two stacks (a PHP framework shape, a Node/TypeScript shape), with twelve planted defects across eight lexical classes, a safe twin per planted file at the SAME basename so a path predicate cannot separate them, and six decoys that name every keyed word -- a digest over a file, a bucketing salt, a pagination token, a pepper read from the environment, a login surface that changes presentation only, and prose about passwords. Ground truth at `tests/fixtures/account-surface/ground-truth.json`, frozen before the detector. METRICS, PER CLASS: recall over that class's planted defects, and false positives over the twins and decoys. BARS, fixed here and not after the run: recall at or above 0.90 and false positives at or below 0.03 per class. WHAT THOSE BARS MEAN AT THIS CORPUS SIZE, stated because a proportion implies a precision the corpus does not have: a class carries one or two planted files, so its recall can only be 0, 0.5 or 1.0 and the 0.90 bar is in practice "every planted defect of this class"; the negative set is eighteen files in total, so the 0.03 bar is in practice "no false positive anywhere". A larger corpus would make the bars continuous; this one does not, and reporting 0.90 as if it tolerated a miss would overstate the measurement. HARD GATE, and it is the reason a class can fail while scoring perfect recall: a flagged decoy is a classification FAILURE that fails that class REGARDLESS of recall. A detector that finds everything by flagging everything is the failure a recall threshold cannot see. FALSIFICATION: (1) a decoy or a safe twin is flagged; (2) a class misses its recall bar; (3) the corpus cannot be scored against its ground truth, in which case the claim is UNDERPOWERED rather than dropped -- an unscoreable corpus says nothing about a detector. ON A CLASS MISSING ITS BAR: that class stays `suspected`-only in the detector's own output rather than the detector shipping a `violated` it did not earn. SCOPE, and it is a restriction this entry imposes on itself: twelve planted files over two stacks is one measurement of LEXICAL classes on a frozen corpus. It establishes whether THESE patterns separate THESE files, and generalises to neither a third stack nor a real consumer repository nor any defect the corpus does not carry. ABSENCE IS NEVER A RESULT: a class finding no pattern is reported as undecided, never as a passing account surface, so no figure here may be read as evidence that a login flow is safe.` |
+ | `adapter-lifecycle-day-one-table` | qual | backed | — | `docs/contracts/provider-lifecycle.md#Current tier assignment` |
+ | `adr-beneficiary-grade-bias` | quant | unbacked | — | `PRE-REGISTERED 2026-08-21 (road-to-evidence-based-adr-governance Phase 6.2). WHY THIS EXISTS: it is the measured form of the conflict of interest a two-seat council named as the design's central risk. An agent grading a record that constrains it has a structural incentive to grade it weak, and recording provenance documents the conflict without neutralising it — an audit log is not a control. METRIC: partition accepted records into CONSTRAINING (the record forbids, gates, or requires human involvement in an action an agent could otherwise take) and NON-CONSTRAINING, classified from the record's Decision section by a party that did not assign its grade; compare the E0/E1 rate across the two partitions. THRESHOLD, fixed now: the constraining partition's weak-grade rate may exceed the non-constraining partition's by no more than 15 percentage points. POWER: at least 25 records per partition, else UNDERPOWERED. FALSIFICATION: (1) a breach is evidence of grade deflation and suspends any authority consequence outright — it does not trigger a re-grade by the same party, which would be the same conflict applied to its own audit; (2) the reverse skew (constraining records graded STRONGER) is reported as-is and is not read as a virtue: it would suggest defensive over-grading, which inflates reopen burden instead of deflating it; (3) a null result here does NOT license the authority coupling on its own — it removes one objection out of four (`claim:adr-grade-accuracy-vs-gold`, `claim:adr-evidence-discovery-recall` and `claim:adr-interruption-baseline` are the others), and the coupling stays owner-reserved regardless.` |
+ | `adr-evidence-discovery-recall` | quant | unbacked | — | `PRE-REGISTERED 2026-08-21 (road-to-evidence-based-adr-governance Phase 6.2). WHAT IT MEASURES: the failure mode the `discovery` field exists for. A bare E0 collapses five states — evidence absent, evidence existed and was never cited, cited somewhere non-standard, present in the tree and not found, external and never fetched — and the last four are discovery failures, not evidence failures. A record graded weak because nobody looked is the cheapest possible way to manufacture a reopenable lock. METRIC: draw a random sample of at least 15 records carrying `strength: E0` with `discovery: complete`, run a deeper independent search on each (full-tree grep for the decision's own terms, the roadmap and PR that produced it, the external sources its body names), and count how many turn out to have locatable evidence. THRESHOLD, fixed now: no more than 20% of the sample may turn out to have findable evidence. FALSIFICATION: (1) a breach means `complete` is being asserted where `incomplete` is the honest value, and the remedy is to make `incomplete` the only permitted value for a heuristic proposal rather than to lower the floor; (2) if nearly every honest answer is `incomplete`, that is itself the finding — the field then records uncertainty rather than resolving it, which is stated in ADR-240 § Assumptions as an accepted possibility rather than discovered later. HONEST-NULL PATH: if no record ever carries `discovery: complete`, the recorded finding is that the strong form was never used, and this claim resolves null with the observation that E0 in this tree means "unsearched" in practice.` |
+diff --git a/tests/fixtures/account-surface/README.md b/tests/fixtures/account-surface/README.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..2c0a2f5f22c5671ae7f5544e30069f13ebe5ee59
+--- /dev/null
++++ b/tests/fixtures/account-surface/README.md
+@@ -0,0 +1,46 @@
++# Account-surface fixtures
++
++A frozen corpus of account-flow code with a known defect state, for
++`road-to-account-surface-detector`. Nothing here runs, imports resolve to
++nothing, and no file is shipped — this is sample application code, not this
++package's own code.
++
++## Why it exists before the detector
++
++The claim `account-surface-finds-planted` in `docs/CLAIMS.md` measures per-class
++recall and per-class false positives against this corpus. A fixture set written
++after the detector measures the authors rather than the detector, so the corpus
++and the claim land first, in a change carrying no `check_account_surface` code.
++That ordering is the whole point and is the roadmap's Phase 1.
++
++## Layout
++
++| Path | What it holds |
++|---|---|
++| `php/unsafe/` | One planted defect per class, in a PHP framework shape |
++| `php/safe/` | The twin of each, same path under a different root |
++| `node/unsafe/` | One planted defect per class, in a Node/TypeScript shape |
++| `node/safe/` | The twin of each, same path under a different root |
++| `decoys/` | Files that name the keyed words and must stay silent |
++| `ground-truth.json` | Every expected finding, and only those |
++
++A twin carries the **same basename** as its unsafe counterpart. A path
++predicate therefore cannot tell them apart; only the content can, which is what
++makes the twins a real false-positive measurement rather than a path test.
++
++## What a reader must not conclude
++
++`ground-truth.json` lists what a detector **should** find. It is not a
++measurement, and no figure in it is a result. The measured figures live in the
++claim entry and arrive in Phase 3.
++
++Six of the Threat cells cited in `ground-truth.json` are not in
++`src/skills/threat-modeling/data/threats.csv` yet; they arrive with
++`road-to-account-lifecycle-threat-rows` step 2.2 and are listed under
++`pending_threat_rows` with that dependency named.
++
++## Planted values
++
++Every planted secret-shaped value is an obvious placeholder
++(`changeme-pepper`), and the one line a credential scanner would match carries
++the audited inline allow-marker. No detector was weakened to let this corpus in.
+diff --git a/tests/fixtures/account-surface/decoys/docs/password-policy.md b/tests/fixtures/account-surface/decoys/docs/password-policy.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..2af7c1f52b40115c8995a0b826c814a5566d0aa3
+--- /dev/null
++++ b/tests/fixtures/account-surface/decoys/docs/password-policy.md
+@@ -0,0 +1,14 @@
++# Password policy
++
++Decoy: prose about passwords, with no code on any account surface. It names
++every word the lexical classes key on and must still produce no finding.
++
++- A password is at least twelve characters. No composition rule, no forced
++  rotation, no maximum below 64.
++- Candidate passwords are checked against a breached-password list before the
++  account is created.
++- Storage uses the platform's own password hash, never a general-purpose
++  digest such as `md5` or `sha256`, and never a hand-rolled salt scheme.
++- A pepper, where one is used, lives outside the credential store.
++- A reset token is single-use and compared with a constant-time helper, never
++  with `==`.
+diff --git a/tests/fixtures/account-surface/decoys/resources/views/auth/login.css b/tests/fixtures/account-surface/decoys/resources/views/auth/login.css
+new file mode 100644
+index 0000000000000000000000000000000000000000..429daaf5ed5a8e29109e82f94f1e6ced1e446b96
+--- /dev/null
++++ b/tests/fixtures/account-surface/decoys/resources/views/auth/login.css
+@@ -0,0 +1,19 @@
++/*
++ * Decoy: a login surface file that changes presentation only. Its path matches
++ * an account-surface predicate and it must still produce no finding.
++ */
++.login-card {
++  max-width: 24rem;
++  margin: 4rem auto;
++  padding: 2rem;
++  border-radius: 0.75rem;
++}
++
++.login-card__field + .login-card__field {
++  margin-top: 1rem;
++}
++
++.login-card__submit {
++  width: 100%;
++  font-weight: 600;
++}
+diff --git a/tests/fixtures/account-surface/decoys/src/analytics/bucket-salt.ts b/tests/fixtures/account-surface/decoys/src/analytics/bucket-salt.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..3a6aa92862434429899ffe2024bc0642dba2e640
+--- /dev/null
++++ b/tests/fixtures/account-surface/decoys/src/analytics/bucket-salt.ts
+@@ -0,0 +1,11 @@
++// Decoy: a `salt` that has nothing to do with passwords. It spreads visitors
++// across experiment buckets and must produce no finding.
++import { createHash } from 'node:crypto';
++
++const BUCKET_SALT = 'experiment-bucket-v3';
++
++export function bucketFor(visitorId: string, buckets: number): number {
++  const digest = createHash('sha256').update(BUCKET_SALT + visitorId).digest();
++
++  return digest.readUInt32BE(0) % buckets;
++}
+diff --git a/tests/fixtures/account-surface/decoys/src/config/crypto-pepper.ts b/tests/fixtures/account-surface/decoys/src/config/crypto-pepper.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..e950cb4022c8d9235e7576306403e95c785d112a
+--- /dev/null
++++ b/tests/fixtures/account-surface/decoys/src/config/crypto-pepper.ts
+@@ -0,0 +1,12 @@
++// Decoy: a `pepper` read from the environment rather than written as a
++// literal. It keys pseudonymous analytics identifiers, not credentials, and
++// must produce no finding.
++export function analyticsPepper(): string {
++  const value = process.env.ANALYTICS_PEPPER;
++
++  if (!value) {
++    throw new Error('ANALYTICS_PEPPER is not configured');
++  }
++
++  return value;
++}
+diff --git a/tests/fixtures/account-surface/decoys/src/search/page-token.ts b/tests/fixtures/account-surface/decoys/src/search/page-token.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..dea213d2f8e3af46f03681f45293846a74b6acd1
+--- /dev/null
++++ b/tests/fixtures/account-surface/decoys/src/search/page-token.ts
+@@ -0,0 +1,11 @@
++// Decoy: a `token` that is a pagination cursor, not a credential. Comparing it
++// with `===` is correct here and must produce no finding.
++export type PageToken = { offset: number; query: string };
++
++export function encodePageToken(token: PageToken): string {
++  return Buffer.from(JSON.stringify(token), 'utf8').toString('base64url');
++}
++
++export function isSamePage(token: string, previousToken: string): boolean {
++  return token === previousToken;
++}
+diff --git a/tests/fixtures/account-surface/decoys/src/storage/checksum.ts b/tests/fixtures/account-surface/decoys/src/storage/checksum.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..f7fe8da2c2947e706033f64d5405adfbbf0c73dc
+--- /dev/null
++++ b/tests/fixtures/account-surface/decoys/src/storage/checksum.ts
+@@ -0,0 +1,13 @@
++// Decoy: `sha256` over a file, for integrity, on no account surface.
++import { createHash } from 'node:crypto';
++import { createReadStream } from 'node:fs';
++
++export function fileDigest(path: string): Promise<string> {
++  return new Promise((resolve, reject) => {
++    const hash = createHash('sha256');
++    createReadStream(path)
++      .on('data', (chunk) => hash.update(chunk))
++      .on('error', reject)
++      .on('end', () => resolve(hash.digest('hex')));
++  });
++}
+diff --git a/tests/fixtures/account-surface/ground-truth.json b/tests/fixtures/account-surface/ground-truth.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..52481fdf54957e9d69cc96cf26f4cab5f784f9d8
+--- /dev/null
++++ b/tests/fixtures/account-surface/ground-truth.json
+@@ -0,0 +1,180 @@
++{
++  "$comment": "Frozen ground truth for road-to-account-surface-detector Phase 1.1. One entry per planted defect. A safe twin and a decoy appear in NO entry — that absence is what the false-positive figure is measured against. Written before any detector code exists.",
++  "frozen_at": "2026-10-13",
++  "stacks": {
++    "php": "php/unsafe and php/safe — a PHP framework shape",
++    "node": "node/unsafe and node/safe — a Node/TypeScript shape"
++  },
++  "pending_threat_rows": {
++    "$comment": "Threat cells this ground truth cites that threats.csv does not carry yet. They land with road-to-account-lifecycle-threat-rows step 2.2; until then a finding citing one of these is unresolvable, which is why Phase 2 of this roadmap may not land first. The exact cell wording is this roadmap's intent, not that roadmap's commitment — Phase 2 reconciles it against the merged rows.",
++    "source_roadmap": "road-to-account-lifecycle-threat-rows",
++    "cells": [
++      "Account enumeration through any observable difference",
++      "Fast or home-made password storage",
++      "Unsafe secret comparison and home-made credential primitives",
++      "Federated sign-in takeover",
++      "Self-contained token validation bypass",
++      "Persistent login and logout"
++    ]
++  },
++  "findings": [
++    {
++      "id": "php-fast-hash",
++      "class": "fast-hash",
++      "stack": "php",
++      "file": "php/unsafe/app/Http/Controllers/Auth/RegisterController.php",
++      "line": 26,
++      "evidence": "violated",
++      "remediation": "migration",
++      "threat_row": "Fast or home-made password storage",
++      "why": "A general-purpose fast hash stores a credential; a salt does not make it slow."
++    },
++    {
++      "id": "node-fast-hash",
++      "class": "fast-hash",
++      "stack": "node",
++      "file": "node/unsafe/src/auth/register.ts",
++      "line": 10,
++      "evidence": "violated",
++      "remediation": "migration",
++      "threat_row": "Fast or home-made password storage",
++      "why": "A general-purpose fast hash stores a credential; a salt does not make it slow."
++    },
++    {
++      "id": "php-secret-compare",
++      "class": "secret-compare",
++      "stack": "php",
++      "file": "php/unsafe/app/Http/Controllers/Auth/VerifyOtpController.php",
++      "line": 17,
++      "evidence": "violated",
++      "remediation": "mechanical",
++      "threat_row": "Unsafe secret comparison and home-made credential primitives",
++      "why": "A one-time secret is compared with a short-circuiting operator."
++    },
++    {
++      "id": "node-secret-compare",
++      "class": "secret-compare",
++      "stack": "node",
++      "file": "node/unsafe/src/auth/verify-otp.ts",
++      "line": 8,
++      "evidence": "violated",
++      "remediation": "mechanical",
++      "threat_row": "Unsafe secret comparison and home-made credential primitives",
++      "why": "A one-time secret is compared with a short-circuiting operator."
++    },
++    {
++      "id": "php-pepper-literal",
++      "class": "pepper-literal",
++      "stack": "php",
++      "file": "php/unsafe/app/Services/Auth/PasswordPepper.php",
++      "line": 12,
++      "evidence": "violated",
++      "remediation": "migration",
++      "threat_row": "Fast or home-made password storage",
++      "why": "The pepper is a source literal, so it is in version control and rotating it rehashes every credential."
++    },
++    {
++      "id": "php-host-derived-reset",
++      "class": "host-derived-reset",
++      "stack": "php",
++      "file": "php/unsafe/app/Http/Controllers/Auth/ForgotPasswordController.php",
++      "line": 20,
++      "evidence": "violated",
++      "remediation": "mechanical",
++      "threat_row": "Password-reset token abuse",
++      "why": "The link host comes from the request, so a forged Host header redirects the token."
++    },
++    {
++      "id": "node-email-linking",
++      "class": "email-linking",
++      "stack": "node",
++      "file": "node/unsafe/src/auth/signin-config.ts",
++      "line": 12,
++      "evidence": "violated",
++      "remediation": "policy",
++      "threat_row": "Federated sign-in takeover",
++      "why": "Account linking on an address alone lets any provider asserting it take over the local account."
++    },
++    {
++      "id": "php-token-verify-off",
++      "class": "token-verify-off",
++      "stack": "php",
++      "file": "php/unsafe/config/session_token.php",
++      "line": 11,
++      "evidence": "violated",
++      "remediation": "policy",
++      "threat_row": "Self-contained token validation bypass",
++      "why": "Signature verification is switched off in configuration."
++    },
++    {
++      "id": "node-token-verify-off",
++      "class": "token-verify-off",
++      "stack": "node",
++      "file": "node/unsafe/src/auth/session.ts",
++      "line": 8,
++      "evidence": "violated",
++      "remediation": "policy",
++      "threat_row": "Self-contained token validation bypass",
++      "why": "The accepted algorithm list contains `none`."
++    },
++    {
++      "id": "node-token-in-localstorage",
++      "class": "token-in-localstorage",
++      "stack": "node",
++      "file": "node/unsafe/src/auth/oauth-callback.ts",
++      "line": 9,
++      "evidence": "violated",
++      "remediation": "migration",
++      "threat_row": "Persistent login and logout",
++      "why": "A session token in script-readable storage leaves with any injected script."
++    },
++    {
++      "id": "php-account-disclosure",
++      "class": "account-disclosure",
++      "stack": "php",
++      "file": "php/unsafe/app/Http/Controllers/Auth/LoginController.php",
++      "line": 23,
++      "evidence": "suspected",
++      "remediation": "policy",
++      "threat_row": "Account enumeration through any observable difference",
++      "why": "The response separates an unknown address from a wrong secret. Reported `suspected`: the string alone does not prove the route is public."
++    },
++    {
++      "id": "node-account-disclosure",
++      "class": "account-disclosure",
++      "stack": "node",
++      "file": "node/unsafe/src/routes/login.ts",
++      "line": 14,
++      "evidence": "suspected",
++      "remediation": "policy",
++      "threat_row": "Account enumeration through any observable difference",
++      "why": "The response separates an unknown address from a wrong secret. Reported `suspected`: the string alone does not prove the route is public."
++    }
++  ],
++  "decoys": [
++    {
++      "file": "decoys/resources/views/auth/login.css",
++      "why_silent": "An account-surface path that changes presentation only."
++    },
++    {
++      "file": "decoys/docs/password-policy.md",
++      "why_silent": "Prose naming every keyed word, with no code on any account surface."
++    },
++    {
++      "file": "decoys/src/storage/checksum.ts",
++      "why_silent": "`sha256` over a file, for integrity, not for a credential."
++    },
++    {
++      "file": "decoys/src/analytics/bucket-salt.ts",
++      "why_silent": "A `salt` that buckets visitors and touches no credential."
++    },
++    {
++      "file": "decoys/src/search/page-token.ts",
++      "why_silent": "A `token` that is a pagination cursor; comparing it with `===` is correct."
++    },
++    {
++      "file": "decoys/src/config/crypto-pepper.ts",
++      "why_silent": "A `pepper` read from the environment, keying analytics identifiers."
++    }
++  ]
++}
+diff --git a/tests/fixtures/account-surface/node/safe/src/auth/oauth-callback.ts b/tests/fixtures/account-surface/node/safe/src/auth/oauth-callback.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fa359dbc11fd43daa163d0fe81e01b7a69e8238f
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/safe/src/auth/oauth-callback.ts
+@@ -0,0 +1,17 @@
++// Safe twin of the `token-in-localstorage` fixture. A detector must stay
++// silent here: the session never reaches client-side script storage.
++import type { Request, Response } from 'express';
++
++import { exchangeCode } from './exchange';
++
++export async function handleCallback(req: Request, res: Response) {
++  const { accessToken } = await exchangeCode(String(req.query.code));
++
++  res.cookie('session', accessToken, {
++    httpOnly: true,
++    secure: true,
++    sameSite: 'lax',
++  });
++
++  res.redirect('/dashboard');
++}
+diff --git a/tests/fixtures/account-surface/node/safe/src/auth/register.ts b/tests/fixtures/account-surface/node/safe/src/auth/register.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..30fc4c944a1e6095373013ae7fa47a47a0f96a15
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/safe/src/auth/register.ts
+@@ -0,0 +1,10 @@
++// Safe twin of the `fast-hash` fixture. A detector must stay silent here.
++import argon2 from 'argon2';
++
++import { users } from '../db/users';
++
++export async function register(email: string, password: string) {
++  const digest = await argon2.hash(password, { type: argon2.argon2id });
++
++  await users.insert({ email, password: digest });
++}
+diff --git a/tests/fixtures/account-surface/node/safe/src/auth/session.ts b/tests/fixtures/account-surface/node/safe/src/auth/session.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..bcc64f3bfa3090750e7c43cb5c504309d2939c36
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/safe/src/auth/session.ts
+@@ -0,0 +1,10 @@
++// Safe twin of the `token-verify-off` fixture. A detector must stay silent here.
++import jwt from 'jsonwebtoken';
++
++export function readSession(token: string) {
++  return jwt.verify(token, process.env.SESSION_KEY!, {
++    algorithms: ['HS256'],
++    issuer: 'https://id.example.test',
++    audience: 'https://app.example.test',
++  });
++}
+diff --git a/tests/fixtures/account-surface/node/safe/src/auth/signin-config.ts b/tests/fixtures/account-surface/node/safe/src/auth/signin-config.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..51b3ed2b8edd6e608f6e26239040774e9ad0086a
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/safe/src/auth/signin-config.ts
+@@ -0,0 +1,14 @@
++// Safe twin of the `email-linking` fixture. A detector must stay silent here.
++import EmailProvider from 'next-auth/providers/email';
++import GitHubProvider from 'next-auth/providers/github';
++
++export const authOptions = {
++  providers: [
++    GitHubProvider({
++      clientId: process.env.GITHUB_ID!,
++      clientSecret: process.env.GITHUB_SECRET!,
++      allowDangerousEmailAccountLinking: false,
++    }),
++    EmailProvider({ server: process.env.EMAIL_SERVER! }),
++  ],
++};
+diff --git a/tests/fixtures/account-surface/node/safe/src/auth/verify-otp.ts b/tests/fixtures/account-surface/node/safe/src/auth/verify-otp.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..83fb63275ef998cf083232c0e69f1c884031eb2f
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/safe/src/auth/verify-otp.ts
+@@ -0,0 +1,17 @@
++// Safe twin of the `secret-compare` fixture. A detector must stay silent here.
++import { timingSafeEqual } from 'node:crypto';
++
++import { pendingOtpFor } from '../db/otp';
++
++export async function verifyOtp(userId: string, submitted: string) {
++  const expected = await pendingOtpFor(userId);
++
++  const a = Buffer.from(submitted, 'utf8');
++  const b = Buffer.from(expected, 'utf8');
++
++  if (a.length === b.length && timingSafeEqual(a, b)) {
++    return { ok: true };
++  }
++
++  return { ok: false };
++}
+diff --git a/tests/fixtures/account-surface/node/safe/src/routes/login.ts b/tests/fixtures/account-surface/node/safe/src/routes/login.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c84b768afb8c72ad4990eb84c22e49eae896b8e
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/safe/src/routes/login.ts
+@@ -0,0 +1,15 @@
++// Safe twin of the `account-disclosure` fixture. A detector must stay silent
++// here: one outcome for both the unknown-address and the wrong-secret path.
++import type { Request, Response } from 'express';
++
++import { authenticate } from '../auth/credentials';
++
++export async function postLogin(req: Request, res: Response) {
++  const session = await authenticate(req.body.email, req.body.password);
++
++  if (!session) {
++    return res.status(401).json({ error: 'Those credentials do not match our records.' });
++  }
++
++  return res.redirect('/dashboard');
++}
+diff --git a/tests/fixtures/account-surface/node/unsafe/src/auth/oauth-callback.ts b/tests/fixtures/account-surface/node/unsafe/src/auth/oauth-callback.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..a5c767f883c805967b7f55afcd4c177d0cc8f5ed
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/unsafe/src/auth/oauth-callback.ts
+@@ -0,0 +1,12 @@
++// Fixture for the `token-in-localstorage` class. Planted defect, never shipped code.
++import { exchangeCode } from './exchange';
++
++export async function handleCallback(code: string) {
++  const { accessToken } = await exchangeCode(code);
++
++  // PLANTED: the session token is readable by any script on the origin, so
++  // one injected script exfiltrates it.
++  window.localStorage.setItem('auth_token', accessToken);
++
++  window.location.assign('/dashboard');
++}
+diff --git a/tests/fixtures/account-surface/node/unsafe/src/auth/register.ts b/tests/fixtures/account-surface/node/unsafe/src/auth/register.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..037780aa51d95a5e0384932797bbbe1aa7648e2b
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/unsafe/src/auth/register.ts
+@@ -0,0 +1,13 @@
++// Fixture for the `fast-hash` class. Planted defect, never shipped code.
++import { createHash, randomBytes } from 'node:crypto';
++
++import { users } from '../db/users';
++
++export async function register(email: string, password: string) {
++  const salt = randomBytes(16).toString('hex');
++
++  // PLANTED: a general-purpose fast hash used for credential storage.
++  const digest = createHash('sha256').update(salt + password).digest('hex');
++
++  await users.insert({ email, salt, password: digest });
++}
+diff --git a/tests/fixtures/account-surface/node/unsafe/src/auth/session.ts b/tests/fixtures/account-surface/node/unsafe/src/auth/session.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..eece328b5be63db9a1e832bead9caf24e4802d1f
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/unsafe/src/auth/session.ts
+@@ -0,0 +1,10 @@
++// Fixture for the `token-verify-off` class. Planted defect, never shipped code.
++import jwt from 'jsonwebtoken';
++
++export function readSession(token: string) {
++  // PLANTED: `none` is accepted, so an unsigned token the caller wrote is
++  // read as a valid session.
++  return jwt.verify(token, process.env.SESSION_KEY!, {
++    algorithms: ['none', 'HS256'],
++  });
++}
+diff --git a/tests/fixtures/account-surface/node/unsafe/src/auth/signin-config.ts b/tests/fixtures/account-surface/node/unsafe/src/auth/signin-config.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0b2273172aac39149d91df784afd16fc85da0b87
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/unsafe/src/auth/signin-config.ts
+@@ -0,0 +1,16 @@
++// Fixture for the `email-linking` class. Planted defect, never shipped code.
++import EmailProvider from 'next-auth/providers/email';
++import GitHubProvider from 'next-auth/providers/github';
++
++export const authOptions = {
++  providers: [
++    GitHubProvider({
++      clientId: process.env.GITHUB_ID!,
++      clientSecret: process.env.GITHUB_SECRET!,
++      // PLANTED: any provider that asserts an address takes over the local
++      // account holding it, verified or not.
++      allowDangerousEmailAccountLinking: true,
++    }),
++    EmailProvider({ server: process.env.EMAIL_SERVER! }),
++  ],
++};
+diff --git a/tests/fixtures/account-surface/node/unsafe/src/auth/verify-otp.ts b/tests/fixtures/account-surface/node/unsafe/src/auth/verify-otp.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..d7765d183e73aa4df104acf68444f941f794393e
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/unsafe/src/auth/verify-otp.ts
+@@ -0,0 +1,13 @@
++// Fixture for the `secret-compare` class. Planted defect, never shipped code.
++import { pendingOtpFor } from '../db/otp';
++
++export async function verifyOtp(userId: string, submitted: string) {
++  const expected = await pendingOtpFor(userId);
++
++  // PLANTED: a non-constant-time comparison on a one-time secret.
++  if (submitted === expected) {
++    return { ok: true };
++  }
++
++  return { ok: false };
++}
+diff --git a/tests/fixtures/account-surface/node/unsafe/src/routes/login.ts b/tests/fixtures/account-surface/node/unsafe/src/routes/login.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1fa54bfc85a4679650eff7e2c512e0c8acf8a45d
+--- /dev/null
++++ b/tests/fixtures/account-surface/node/unsafe/src/routes/login.ts
+@@ -0,0 +1,22 @@
++// Fixture for the `account-disclosure` class. Planted defect, never shipped
++// code. Expected evidence state is `suspected`: the string alone does not
++// prove the route is public.
++import type { Request, Response } from 'express';
++
++import { findByEmail, checkPassword } from '../auth/credentials';
++
++export async function postLogin(req: Request, res: Response) {
++  const user = await findByEmail(req.body.email);
++
++  if (!user) {
++    // PLANTED: the response separates "no such account" from "wrong
++    // password", which enumerates registered addresses.
++    return res.status(404).json({ error: 'That email is not registered.' });
++  }
++
++  if (!(await checkPassword(user, req.body.password))) {
++    return res.status(401).json({ error: 'Wrong password.' });
++  }
++
++  return res.redirect('/dashboard');
++}
+diff --git a/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/ForgotPasswordController.php b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/ForgotPasswordController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..077af143d9593bf2234b90a59350c6537292d9df
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/ForgotPasswordController.php
+@@ -0,0 +1,24 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Mail\ResetLink;
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Mail;
++
++/**
++ * Safe twin of the `host-derived-reset` fixture. A detector must stay silent here.
++ */
++final class ForgotPasswordController
++{
++    public function store(Request $request)
++    {
++        $token = bin2hex(random_bytes(32));
++
++        $link = rtrim(config('app.url'), '/') . '/reset/' . $token;
++
++        Mail::to($request->input('email'))->send(new ResetLink($link));
++
++        return back();
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/LoginController.php b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/LoginController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb08840149de596f3f33a9c9b45a0efb163b49f2
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/LoginController.php
+@@ -0,0 +1,24 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Auth;
++
++/**
++ * Safe twin of the `account-disclosure` fixture. A detector must stay silent
++ * here: one outcome for both the unknown-address and the wrong-secret path.
++ */
++final class LoginController
++{
++    public function store(Request $request)
++    {
++        if (! Auth::attempt($request->only('email', 'password'))) {
++            return back()->withErrors(['email' => 'Those credentials do not match our records.']);
++        }
++
++        $request->session()->regenerate();
++
++        return redirect('/dashboard');
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/RegisterController.php b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/RegisterController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..e80bfc8375d1554c372889168c34ebc6e531cb93
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/RegisterController.php
+@@ -0,0 +1,28 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Models\User;
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Hash;
++
++/**
++ * Safe twin of the `fast-hash` fixture. A detector must stay silent here.
++ */
++final class RegisterController
++{
++    public function store(Request $request)
++    {
++        $data = $request->validate([
++            'email' => ['required', 'email'],
++            'password' => ['required', 'min:12'],
++        ]);
++
++        User::create([
++            'email' => $data['email'],
++            'password' => Hash::make($data['password']),
++        ]);
++
++        return redirect('/dashboard');
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/VerifyOtpController.php b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/VerifyOtpController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..9516decdff00b0fb6699dc3eed27520663370239
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/safe/app/Http/Controllers/Auth/VerifyOtpController.php
+@@ -0,0 +1,22 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use Illuminate\Http\Request;
++
++/**
++ * Safe twin of the `secret-compare` fixture. A detector must stay silent here.
++ */
++final class VerifyOtpController
++{
++    public function store(Request $request)
++    {
++        $expected = (string) $request->user()->pending_otp;
++
++        if (hash_equals($expected, (string) $request->input('otp'))) {
++            return response()->json(['ok' => true]);
++        }
++
++        return response()->json(['ok' => false], 422);
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/safe/app/Services/Auth/PasswordPepper.php b/tests/fixtures/account-surface/php/safe/app/Services/Auth/PasswordPepper.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..ab66f9e5503c2a6fe01aa567deef19430a38af74
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/safe/app/Services/Auth/PasswordPepper.php
+@@ -0,0 +1,18 @@
++<?php
++
++namespace App\Services\Auth;
++
++/**
++ * Safe twin of the `pepper-literal` fixture. A detector must stay silent here.
++ */
++final class PasswordPepper
++{
++    public function __construct(private readonly PepperStore $store)
++    {
++    }
++
++    public function apply(string $password): string
++    {
++        return hash_hmac('sha256', $password, $this->store->current());
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/safe/config/session_token.php b/tests/fixtures/account-surface/php/safe/config/session_token.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..084e26fa5823d8efe23885183cee610b904c0798
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/safe/config/session_token.php
+@@ -0,0 +1,12 @@
++<?php
++
++/**
++ * Safe twin of the `token-verify-off` fixture. A detector must stay silent here.
++ */
++return [
++    'issuer' => 'https://id.example.test',
++    'audience' => 'https://app.example.test',
++    'verify' => true,
++    'algorithms' => ['RS256'],
++    'leeway' => 60,
++];
+diff --git a/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/ForgotPasswordController.php b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/ForgotPasswordController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..319a2012a8e88839a202b672b9ef0ca088921abd
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/ForgotPasswordController.php
+@@ -0,0 +1,31 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Mail\ResetLink;
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Mail;
++
++/**
++ * Fixture for the `host-derived-reset` class. Planted defect, never shipped code.
++ */
++final class ForgotPasswordController
++{
++    public function store(Request $request)
++    {
++        $token = $this->issueToken($request->input('email'));
++
++        // PLANTED: the reset link is built from the request Host, so an
++        // attacker-controlled Host header sends the token to their own domain.
++        $link = $request->getScheme() . '://' . $request->getHost() . '/reset/' . $token;
++
++        Mail::to($request->input('email'))->send(new ResetLink($link));
++
++        return back();
++    }
++
++    private function issueToken(string $email): string
++    {
++        return bin2hex(random_bytes(32));
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/LoginController.php b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/LoginController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..758b53effe8291aac582fe3154a84820d5b0385b
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/LoginController.php
+@@ -0,0 +1,32 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Models\User;
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Auth;
++
++/**
++ * Fixture for the `account-disclosure` class. Planted defect, never shipped
++ * code. Expected evidence state is `suspected`: the string alone does not
++ * prove the route is public.
++ */
++final class LoginController
++{
++    public function store(Request $request)
++    {
++        $user = User::where('email', $request->input('email'))->first();
++
++        if ($user === null) {
++            // PLANTED: the response separates "no such account" from
++            // "wrong password", which enumerates registered addresses.
++            return back()->withErrors(['email' => 'No account with that email address.']);
++        }
++
++        if (! Auth::attempt($request->only('email', 'password'))) {
++            return back()->withErrors(['password' => 'That password is incorrect.']);
++        }
++
++        return redirect('/dashboard');
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/RegisterController.php b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/RegisterController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..58e2f1c586f10702410bf8ce245f9eb7e477e190
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/RegisterController.php
+@@ -0,0 +1,31 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use App\Models\User;
++use Illuminate\Http\Request;
++
++/**
++ * Fixture for the `fast-hash` class. Planted defect, never shipped code.
++ */
++final class RegisterController
++{
++    public function store(Request $request)
++    {
++        $data = $request->validate([
++            'email' => ['required', 'email'],
++            'password' => ['required'],
++        ]);
++
++        $salt = bin2hex(random_bytes(16));
++
++        User::create([
++            'email' => $data['email'],
++            'salt' => $salt,
++            // PLANTED: a general-purpose fast hash, salted, used for credential storage.
++            'password' => md5($data['password'] . $salt),
++        ]);
++
++        return redirect('/dashboard');
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/VerifyOtpController.php b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/VerifyOtpController.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..5bce61881c66c2a30775c68846875762e8d97e3a
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/unsafe/app/Http/Controllers/Auth/VerifyOtpController.php
+@@ -0,0 +1,23 @@
++<?php
++
++namespace App\Http\Controllers\Auth;
++
++use Illuminate\Http\Request;
++
++/**
++ * Fixture for the `secret-compare` class. Planted defect, never shipped code.
++ */
++final class VerifyOtpController
++{
++    public function store(Request $request)
++    {
++        $expected = $request->user()->pending_otp;
++
++        // PLANTED: a non-constant-time comparison on a one-time secret.
++        if ($request->input('otp') === $expected) {
++            return response()->json(['ok' => true]);
++        }
++
++        return response()->json(['ok' => false], 422);
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/unsafe/app/Services/Auth/PasswordPepper.php b/tests/fixtures/account-surface/php/unsafe/app/Services/Auth/PasswordPepper.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..496294eb27b0f5c02a4d9889192b03aaaa9c963d
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/unsafe/app/Services/Auth/PasswordPepper.php
+@@ -0,0 +1,18 @@
++<?php
++
++namespace App\Services\Auth;
++
++/**
++ * Fixture for the `pepper-literal` class. Planted defect, never shipped code.
++ */
++final class PasswordPepper
++{
++    // PLANTED: the pepper is a source literal, so it lives in version control
++    // and rotates only with a deploy.
++    private const PEPPER = 'changeme-pepper'; // secret-allow -- audited fixture placeholder
++
++    public function apply(string $password): string
++    {
++        return hash_hmac('sha256', $password, self::PEPPER);
++    }
++}
+diff --git a/tests/fixtures/account-surface/php/unsafe/config/session_token.php b/tests/fixtures/account-surface/php/unsafe/config/session_token.php
+new file mode 100644
+index 0000000000000000000000000000000000000000..458466e11b83e42e2e53e67333972fae1fa378eb
+--- /dev/null
++++ b/tests/fixtures/account-surface/php/unsafe/config/session_token.php
+@@ -0,0 +1,14 @@
++<?php
++
++/**
++ * Fixture for the `token-verify-off` class. Planted defect, never shipped code.
++ */
++return [
++    'issuer' => 'https://id.example.test',
++
++    // PLANTED: signature verification is switched off, so any self-signed
++    // token the caller supplies is accepted as this issuer's.
++    'verify' => false,
++
++    'leeway' => 60,
++];
+diff --git a/tests/scripts/account_surface_ground_truth.test.ts b/tests/scripts/account_surface_ground_truth.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..cd879c2faa1f12c1cff88f03cbff38d5d8e7edcd
+--- /dev/null
++++ b/tests/scripts/account_surface_ground_truth.test.ts
+@@ -0,0 +1,178 @@
++/**
++ * Executes the `verify:` line of `road-to-account-surface-detector` step 1.1
++ * against the frozen corpus in `tests/fixtures/account-surface/`.
++ *
++ * It asserts the corpus is well-formed, never that a detector finds anything —
++ * no detector exists at this point, and a test that pretended otherwise would
++ * be the measurement-after-the-fact this roadmap's Phase 1 exists to prevent.
++ */
++
++import { readFileSync, readdirSync, statSync } from "node:fs";
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++
++import { describe, expect, it } from "vitest";
++
++const here = path.dirname(fileURLToPath(import.meta.url));
++const repoRoot = path.join(here, "..", "..");
++const root = path.join(repoRoot, "tests", "fixtures", "account-surface");
++
++type Finding = {
++  id: string;
++  class: string;
++  stack: string;
++  file: string;
++  line: number;
++  evidence: string;
++  remediation: string;
++  threat_row: string;
++  why: string;
++};
++
++type GroundTruth = {
++  pending_threat_rows: { source_roadmap: string; cells: string[] };
++  findings: Finding[];
++  decoys: { file: string; why_silent: string }[];
++};
++
++const truth = JSON.parse(
++  readFileSync(path.join(root, "ground-truth.json"), "utf8"),
++) as GroundTruth;
++
++/** Every file in the corpus, repo-relative to `account-surface/`. */
++function walk(dir: string, acc: string[] = []): string[] {
++  for (const entry of readdirSync(dir)) {
++    const full = path.join(dir, entry);
++    if (statSync(full).isDirectory()) {
++      walk(full, acc);
++    } else {
++      acc.push(path.relative(root, full));
++    }
++  }
++  return acc;
++}
++
++const corpus = walk(root).sort();
++const metaFiles = new Set(["ground-truth.json", "README.md"]);
++const sampleFiles = corpus.filter((f) => !metaFiles.has(f));
++
++describe("account-surface corpus shape", () => {
++  it("names an entry for every unsafe file, and only those", () => {
++    const unsafeFiles = sampleFiles.filter((f) => f.includes(`${path.sep}unsafe${path.sep}`)).sort();
++    const claimed = truth.findings.map((f) => f.file.split("/").join(path.sep)).sort();
++
++    expect(claimed).toEqual(unsafeFiles);
++  });
++
++  it("names no safe twin and no decoy", () => {
++    const claimed = new Set(truth.findings.map((f) => f.file));
++
++    for (const file of sampleFiles) {
++      const posix = file.split(path.sep).join("/");
++      if (posix.includes("/safe/") || posix.startsWith("decoys/")) {
++        expect(claimed.has(posix)).toBe(false);
++      }
++    }
++  });
++
++  it("gives every unsafe file a safe twin at the same basename", () => {
++    const safeBasenames = new Set(
++      sampleFiles
++        .filter((f) => f.includes(`${path.sep}safe${path.sep}`))
++        .map((f) => path.basename(f)),
++    );
++
++    for (const finding of truth.findings) {
++      expect(safeBasenames.has(path.basename(finding.file))).toBe(true);
++    }
++  });
++
++  it("lists every decoy that exists, and every listed decoy exists", () => {
++    const onDisk = sampleFiles
++      .filter((f) => f.startsWith(`decoys${path.sep}`))
++      .map((f) => f.split(path.sep).join("/"))
++      .sort();
++
++    expect(truth.decoys.map((d) => d.file).sort()).toEqual(onDisk);
++  });
++
++  it("carries both stacks", () => {
++    const stacks = new Set(truth.findings.map((f) => f.stack));
++
++    expect(stacks).toEqual(new Set(["php", "node"]));
++  });
++
++  it("names no fixture file `*.test.ts`", () => {
++    // A fixture under this name would be collected as a suite and run.
++    for (const file of corpus) {
++      expect(file.endsWith(".test.ts")).toBe(false);
++    }
++  });
++});
++
++describe("account-surface ground truth", () => {
++  it("points each finding at a line that exists and is not blank", () => {
++    for (const finding of truth.findings) {
++      const lines = readFileSync(path.join(root, finding.file), "utf8").split("\n");
++
++      expect(lines.length).toBeGreaterThanOrEqual(finding.line);
++      expect((lines[finding.line - 1] ?? "").trim()).not.toBe("");
++    }
++  });
++
++  it("uses one remediation value per class", () => {
++    const byClass = new Map<string, Set<string>>();
++
++    for (const finding of truth.findings) {
++      const seen = byClass.get(finding.class) ?? new Set<string>();
++      seen.add(finding.remediation);
++      byClass.set(finding.class, seen);
++    }
++
++    for (const [cls, values] of byClass) {
++      expect(values.size, `class ${cls} carries more than one remediation value`).toBe(1);
++    }
++  });
++
++  it("uses only the four declared evidence and remediation values", () => {
++    for (const finding of truth.findings) {
++      expect(["violated", "suspected", "unknown", "not-applicable"]).toContain(finding.evidence);
++      expect(["mechanical", "policy", "migration", "informational"]).toContain(
++        finding.remediation,
++      );
++    }
++  });
++
++  it("never calls a hash migration or a policy change mechanical", () => {
++    for (const finding of truth.findings) {
++      if (finding.class === "fast-hash" || finding.class === "pepper-literal") {
++        expect(finding.remediation).toBe("migration");
++      }
++      if (finding.class === "token-verify-off") {
++        expect(finding.remediation).toBe("policy");
++      }
++    }
++  });
++
++  it("resolves every cited threat row, or declares it pending", () => {
++    const csv = readFileSync(
++      path.join(repoRoot, "src", "skills", "threat-modeling", "data", "threats.csv"),
++      "utf8",
++    );
++    const pending = new Set(truth.pending_threat_rows.cells);
++
++    for (const finding of truth.findings) {
++      const present = csv.includes(`,${finding.threat_row},`);
++      expect(
++        present || pending.has(finding.threat_row),
++        `threat row "${finding.threat_row}" is neither in threats.csv nor declared pending`,
++      ).toBe(true);
++    }
++  });
++
++  it("names the roadmap the pending rows come from", () => {
++    expect(truth.pending_threat_rows.source_roadmap).toBe(
++      "road-to-account-lifecycle-threat-rows",
++    );
++  });
++});
