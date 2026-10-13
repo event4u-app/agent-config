@@ -23,9 +23,13 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 103 files, 19 holdout and 84 train.** Three growths since — see
-  § Growth 2026-09-19, § Growth 2026-09-30 and § Growth 2026-10-01, the last of
-  which is the first on the **holdout** side and is scoped accordingly.
+- **Now: 128 files, 27 holdout and 101 train.** Every dated `## Growth` and
+  `## Re-pin` section below records one step of that path; the first on the
+  **holdout** side is § Growth 2026-10-01, and it is scoped accordingly. This
+  line is the live figure and is re-derived from the reproduce recipe — it read
+  "103 files, 19 holdout and 84 train" until 2026-10-13, three growths behind
+  the section that corrected it, which is the fourth instance of the count-drift
+  § The set hash describes.
 
 Both are re-derivable from the reproduce recipe below; the second is the one the
 tables and the set hash describe.
@@ -88,10 +92,55 @@ over the whole merged tree by the recipe below rather than derived from the
 old value — the method every entry in this file records, and the one the four
 earlier stale-on-arrival pins were caused by not using. `rows` is 127.
 
+## Growth — 2026-10-13, one train corpus
+
+```
+ONE ROW ADDED. ZERO HOLDOUT ROWS CHANGED.
+THE SEAL AND THE ORDERING CLAIM ARE UNAFFECTED AND ARE RESTATED, NOT ASSUMED.
+```
+
+**What changed.** The same roadmap's Phase 3.1 gave `security` the `triggers:`
+block and the trigger corpus it had never carried — 16 labelled queries, 9
+exemplars including a German one, 5 near-misses and 2 counterexamples. Unlike
+the section above, this corpus is the step's own deliverable rather than a
+gate's remedy: the step exists because "add login with Google" was an explicit
+should-NOT for `authz-review` and a should-trigger for no skill in the tree.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `security` | train | `0x5d` | 93 ≥ 51 |
+
+**Why this does not touch the seal.** It hashes above the ceiling of 51, so it
+is train and it was not chosen — which is what a name-derived partition buys. No
+holdout row's content changed, so the sealed set is the same set it was, and the
+ordering claim stays scoped to the 18 rows sealed on 2026-08-30 for the reason
+the earlier entries give: a row authored today predates nothing.
+
+The `SET-SHA256` moved with the row, and the figure below is RECOMPUTED over the
+whole merged tree by the recipe in § The set hash rather than derived from the
+old value. `rows` is 128, 27 holdout and 101 train.
+
+**Both gates were run, in the order the section above prescribes**, and the
+prescription earned itself: `routing_signal_measurement.test.ts` § 5.1 passed
+19/19 on the first attempt, because it checks the partition and the counts the
+loader derives — and the per-file row this document publishes was stale the
+whole time. `trigger_corpus_holdout_pin.test.ts` is what refused, naming
+`security` as the row that does not reproduce from the tree. The two gates fail
+on different things and neither substitutes for the other; running only the one
+that happened to be green would have shipped a stale pin.
+
+**One stale figure outside this section was corrected rather than left.**
+§ The frozen set read "Now: 103 files, 19 holdout and 84 train" — twenty-five
+files and three growths behind, including the 2026-10-12 section directly above
+it. That paragraph is NOT inside a dated `## Growth` section, so the carve-out
+below does not cover it, and this document's own § The set hash names exactly
+this drift as the defect it chases. Correcting it is cheaper than adding a
+section next to a number the document says is live and knows is not.
+
 ## The set hash
 
 ```
-SET-SHA256  b80202dd612ab2154e8edbcb3b67ed64aeeb2a78701a419397407a7f7ac8f73d
+SET-SHA256  8c6120d24b5da758a5e54508047bb2fd7c7eb612268a41f112a7efbe3c78cdae
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -533,6 +582,7 @@ open and which this file does not settle.
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
+| `security` | `e5957997cd09e5fbad202c57ccf86650c666c3211f1d620bf65fedd0f3108e0a` |
 | `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |

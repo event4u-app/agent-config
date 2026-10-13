@@ -339,7 +339,20 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       seed file's convention requires: `security` hashes to 0x5d = 93, above the
       holdout ceiling of 51, so it trains and the sealed 27 holdout rows are
       byte-identical. Verdict unchanged in kind — still `harmful`, false
-      activation +7.02 pp against the +2.0 pp guard.
+      activation +7.02 pp against the +2.0 pp guard, delta-recall 3.71 → 4.234
+      pp, still under the 5.0 pp bar.
+
+      **The measurement was taken twice, and the first take was wrong.** It ran
+      after the corpus landed but before 3.2 added fifteen lines to the same
+      skill's **body** — and the body arm reads the body, so delta-recall sat at
+      3.831 pp until the re-take. `routing_signal_measurement.test.ts` caught it;
+      `trigger_corpus_holdout_pin.test.ts` could not, because the pin hashes the
+      corpus file and that file had not moved. The converse held in the same
+      run: the pin test caught the missing `security` row in the published
+      holdout artefact while the measurement test was green 19/19. Each gate is
+      blind to what the other sees, and running only the green one would have
+      shipped a stale pin. A train-side measurement is valid only once every
+      edit to a train skill — corpus and body alike — is already on disk.
 - [x] **3.2 Add an account-flow block to `security`.** At most fifteen lines
       under Conventions: public auth responses are an observable contract,
       not an error string; compare secrets with the library's constant-time
