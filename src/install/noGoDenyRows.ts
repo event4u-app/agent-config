@@ -132,6 +132,14 @@ export function renderDenyPlan(plan: DenyPlan, host: string): string {
             '  · Read and Edit rules reach the file tools and the file commands the host',
             '    recognises in Bash, but not a script that opens the file itself.',
             '  A no-go is still worth writing down when no row can be built for it.',
+            '',
+            'Where they reach FURTHER than the bullet reads:',
+            '  · a path row anchors at the session working directory, not at the repository',
+            '    root, and as a DENY rule a single-segment path matches that directory name',
+            '    at any depth — `Edit(migrations/**)` also covers `vendor/pkg/migrations/`.',
+            '  · the rows go into a file your whole team shares if it is committed. The',
+            '    per-developer alternative is `.claude/settings.local.json`; pass it with',
+            '    `--settings` if these should bind only you.',
         );
     }
     if (syntax !== null) {
@@ -271,12 +279,32 @@ export function appendDenyRules(body: string, rules: readonly string[]): AppendR
                 'than writing a second one',
         );
     }
-    const existing: string[] =
+    // The same refusal one level down, and it is NOT covered by the one above:
+    // `locate` finds no span for a `deny` that is not an array either, so the
+    // `permissions` branch would insert a SECOND `"deny"` key inside the same
+    // object — measured, with the consented row discarded and success
+    // reported. A `deny` that is a string or an object was worse still: the
+    // filter below threw `perms.deny?.filter is not a function`, which reached
+    // the consumer instead of the deliberate refusal written here.
+    const denyRaw =
         perms !== null && typeof perms === 'object' && !Array.isArray(perms)
-            ? ((perms as Record<string, unknown>)['deny'] as unknown[] | undefined)?.filter(
-                  (e): e is string => typeof e === 'string',
-              ) ?? []
-            : [];
+            ? (perms as Record<string, unknown>)['deny']
+            : undefined;
+    if (
+        perms !== null &&
+        typeof perms === 'object' &&
+        !Array.isArray(perms) &&
+        Object.hasOwn(perms as Record<string, unknown>, 'deny') &&
+        !Array.isArray(denyRaw)
+    ) {
+        throw new Error(
+            'settings body has a `permissions.deny` key that is not an array — refusing ' +
+                'rather than writing a second one',
+        );
+    }
+    const existing: string[] = Array.isArray(denyRaw)
+        ? denyRaw.filter((e): e is string => typeof e === 'string')
+        : [];
 
     const have = new Set(existing);
     const added = rules.filter((r) => !have.has(r));

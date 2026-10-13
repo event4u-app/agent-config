@@ -224,6 +224,21 @@ describe('appendDenyRules preserves what the consumer already had', () => {
         }
     });
 
+    it('refuses rather than writing a SECOND `deny` key', () => {
+        // The same shape as above, one level down, and the earlier refusal did
+        // not reach it: `locate` finds no span for a non-array `deny` either,
+        // so the `permissions` branch inserted a second `"deny"` INSIDE the
+        // same object and the consented row was shadowed by it. The string and
+        // object forms additionally threw `.filter is not a function`, which
+        // reached the consumer instead of a deliberate refusal.
+        for (const deny of ['null', '"Edit(x/**)"', '1', '{"a": 1}']) {
+            const body = `{\n    "permissions": {\n        "deny": ${deny}\n    }\n}\n`;
+            expect(() => appendDenyRules(body, ['Edit(migrations/**)'])).toThrow(
+                /not an array/,
+            );
+        }
+    });
+
     it('does not mis-key the second object of an array', () => {
         // `pendingKey` survived a closing brace, so the second element
         // inherited the first element's last key and the splice landed inside

@@ -135,6 +135,14 @@ describe('the command refuses rather than damaging the file', () => {
         expect(fs.readFileSync(settingsPath, 'utf8')).toBe(body);
     });
 
+    it('refuses a settings file whose `permissions.deny` is not an array', () => {
+        const body = '{\n    "permissions": {\n        "deny": null\n    }\n}\n';
+        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', body);
+        const r = run([agentsMd, '--settings', settingsPath, '--apply']);
+        expect(r.code).toBe(1);
+        expect(fs.readFileSync(settingsPath, 'utf8')).toBe(body);
+    });
+
     it('refuses a malformed settings file', () => {
         const body = '{ not json\n';
         const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', body);

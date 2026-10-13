@@ -115,12 +115,45 @@ describe('classifyNoGo — what it refuses to guess', () => {
         expect(kindOf('`run/` holds generated output')).toBe('prose');
     });
 
+    it('stays prose when the negation governs a different clause', () => {
+        // Round 2: requiring a negation SOMEWHERE narrowed round 1's finding
+        // without closing it. Each of these permits the thing it names.
+        expect(kindOf('If no cache exists, run `npm run build`')).toBe('prose');
+        expect(
+            kindOf('There is no need to run `npm install` — the lockfile is committed'),
+        ).toBe('prose');
+        expect(kindOf('Not every change needs to touch `docs/`')).toBe('prose');
+    });
+
     it('stays prose on a dotted identifier that is not a path', () => {
-        for (const t of ['users.id', 'app.debug', 'v2.1']) {
+        // Both halves measured: the open regex accepted the first group, and
+        // the replacement that excluded all-lowercase single-dot tokens
+        // refused the second — a consumer's most likely first no-go.
+        for (const t of ['users.id', 'app.debug', 'v2.1', 'Users.id', 'my_table.id', 'A.b']) {
             expect(kindOf(`Never change \`${t}\``)).toBe('prose');
         }
-        // …while a real dotted filename still reads as one.
-        expect(kindOf('Never modify `app.config.json`')).toBe('path');
+        for (const t of ['package.json', 'main.go', 'index.js', 'config.yml', 'app.config.json']) {
+            expect(kindOf(`Never modify \`${t}\``)).toBe('path');
+        }
+    });
+
+    it("accepts `Don't` as a negation, not only `Do not`", () => {
+        expect(kindOf("Don't edit `vendor/`")).toBe('path');
+        expect(kindOf('Do not edit `vendor/`')).toBe('path');
+    });
+
+    it('does not read a hyphen inside a word as a clause break', () => {
+        // The verdict was right and the REASON shown to the consumer was
+        // wrong, which on a consent screen is most of the value.
+        expect(kindOf('Do not edit the auto-generated `dist/` directory')).toBe('path');
+    });
+
+    it('stays prose on a single leading slash, which is not an absolute path', () => {
+        // The page: "A pattern like `/Users/alice/file` isn't an absolute path.
+        // The single leading slash anchors at the settings source."
+        expect(kindOf('Never read `/etc/passwd`')).toBe('prose');
+        // A doubled slash IS the absolute form and stays a path.
+        expect(kindOf('Never read `//etc/passwd`')).toBe('path');
     });
 
     it('stays prose on a token carrying a gitignore metacharacter', () => {
@@ -286,6 +319,27 @@ describe('extractNoGosSection — the fence skip is the load-bearing part', () =
             '- Never edit `b/` by hand',
         ].join('\n');
         expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/']);
+    });
+
+    it('is closed by a setext underline too', () => {
+        const md = [
+            '## No-gos',
+            '- Never edit `a/` by hand',
+            'Appendix',
+            '--------',
+            '- Never edit `b/` by hand',
+        ].join('\n');
+        expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/']);
+    });
+
+    it('is not defeated by a fence nested inside a longer one', () => {
+        // Tracking only the fence CHARACTER let a ````-delimited block close on
+        // its first inner ``` line, so the rest of a copy-in example leaked
+        // through as live markdown.
+        const md = ['# Guide', '', '````markdown', '```', '## No-gos', '', '- Never edit `leak/`', '````'].join(
+            '\n',
+        );
+        expect(classifyNoGos(extractNoGosSection(md))).toEqual([]);
     });
 
     it('is closed by a deeper heading too', () => {

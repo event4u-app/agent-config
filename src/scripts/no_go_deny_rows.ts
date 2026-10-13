@@ -141,9 +141,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
     // The STRONG form of the module's own claim: the result is the file that
-    // was there, plus text at one point. A deny-entry comparison is weaker than
-    // that and passes a result that duplicated a root key — measured. This
-    // check is the one that would have caught it.
+    // was there, plus text at one point.
+    //
+    // It is NOT what catches a duplicated key, and an earlier version of this
+    // comment said it was. A second `"permissions"` inserted after the root
+    // brace IS the existing file plus one contiguous insertion, so this check
+    // returns true on exactly that output — measured by a reviewer. What
+    // refuses it is the consented-row check below, which reads the PARSED
+    // result and finds the row missing because the later duplicate won.
+    //
+    // Both stay. This one covers a different class: a splice that deleted or
+    // moved existing content, which a parse-level check cannot see.
     if (!isSingleInsertion(before, result.text)) {
         process.stderr.write(
             'no_go_deny_rows: the result is not the existing file plus one insertion — ' +
@@ -151,6 +159,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         );
         return 1;
     }
+    // THIS is the duplicate-key net. It reads the parsed result, so a row that
+    // a later duplicate key shadowed is simply absent, whatever the text looks
+    // like.
     if (!plan.rules.every((r) => kept.includes(r))) {
         process.stderr.write(
             'no_go_deny_rows: a consented row is not in the result — nothing written\n',

@@ -54,7 +54,16 @@ const RUN_VERBS = ['run', 'execute', 'invoke', 'call'];
  * a deny row over the command the bullet PRESCRIBES. A no-go section is not the
  * only place a backticked command appears in a sentence with a verb near it.
  */
-const NEGATIONS = ['never', 'not', 'no', 'dont', 'avoid', 'forbidden', 'prohibited'];
+const NEGATIONS = [
+    'never',
+    'not',
+    'no',
+    "don't",
+    'dont',
+    'avoid',
+    'forbidden',
+    'prohibited',
+];
 /**
  * Text that ends the clause the prohibition governs.
  *
@@ -64,7 +73,7 @@ const NEGATIONS = ['never', 'not', 'no', 'dont', 'avoid', 'forbidden', 'prohibit
  * bullet recommends. A separator between the verb and the token means the token
  * belongs to a different clause, so the verdict is prose.
  */
-const CLAUSE_BREAK = /[-–—;:()]|\b(?:instead|use|using|prefer|except|unless|but|rather)\b/i;
+const CLAUSE_BREAK = /(?:^|\s)[-–—](?:\s|$)|[;:,()]|\b(?:instead|use|using|prefer|except|unless|but|rather|need|needs|needed|necessary|required|optional|if|when|while)\b/i;
 /** Backticked spans replaced by spaces, so a verb INSIDE the token is not read as the bullet's verb. */
 function maskTokens(bullet) {
     return bullet.replace(/`[^`]+`/g, (m) => ' '.repeat(m.length));
@@ -121,6 +130,21 @@ function backticked(bullet) {
  * path: `migrations` alone could be a directory or a command, and the guide's
  * own example writes the trailing slash.
  */
+/**
+ * File extensions a single-dot token is accepted on.
+ *
+ * A closed list, because neither open rule works. `/\.[A-Za-z0-9]+$/` accepted
+ * `users.id`, `app.debug` and `v2.1`; the replacement that excluded
+ * all-lowercase single-dot tokens refused `package.json`, `main.go` and
+ * `index.js` — a consumer's most likely first no-go — while still accepting
+ * `Users.id` and `my_table.id`. Both were measured; the list is what
+ * distinguishes the two classes without guessing either way.
+ */
+const FILE_EXTENSIONS = new Set([
+    'cjs', 'conf', 'css', 'csv', 'env', 'go', 'html', 'ini', 'java', 'js', 'json', 'jsx',
+    'kt', 'lock', 'log', 'md', 'mjs', 'php', 'pem', 'py', 'rb', 'rs', 'scss', 'sh', 'sql',
+    'sqlite', 'svg', 'toml', 'ts', 'tsx', 'txt', 'xml', 'yaml', 'yml',
+]);
 function looksLikePath(token) {
     if (/\s/.test(token))
         return false;
@@ -128,10 +152,10 @@ function looksLikePath(token) {
         return true;
     if (token.startsWith('.'))
         return true;
-    // A trailing extension only counts on a KNOWN file extension. The earlier
-    // `/\.[A-Za-z0-9]+$/` accepted `users.id`, `app.debug` and `v2.1` as paths,
-    // and rendered a rule over a path that does not exist.
-    return /\.(?:[a-z]{1,5}|[A-Z]{1,5})$/.test(token) && !/^[a-z]+\.[a-z]+$/.test(token);
+    const dot = token.lastIndexOf('.');
+    if (dot <= 0)
+        return false;
+    return FILE_EXTENSIONS.has(token.slice(dot + 1).toLowerCase());
 }
 /**
  * Characters that make a path token mean something other than it reads.
@@ -143,10 +167,18 @@ function looksLikePath(token) {
  * wrote yourself — `reports/[2024]/**` matches `reports/2/`, never the
  * directory the consumer named.
  *
+ * A single leading `/` joins them, and the page carries a warning box about it:
+ * a pattern with one leading slash "isn't an absolute path. The single leading
+ * slash anchors at the settings source, not the filesystem root" — the page's
+ * own example of the mistake is elided here because a home-shaped literal in a
+ * published file is what `check_bundle_path_leakage` exists to refuse. A
+ * consumer who writes `` `/etc/passwd` `` means the absolute path, and the row
+ * would guard `<working directory>/etc/passwd` — a path that does not exist.
+ *
  * `*` is deliberately NOT here: a consumer who writes `src/generated/**` means
  * that glob, and the guide teaches the trailing slash for everything else.
  */
-const UNSAFE_PATH_CHARS = /^!|[[\]?]/;
+const UNSAFE_PATH_CHARS = /^!|^\/(?!\/)|[[\]?]/;
 const PROSE = (bullet, reason) => ({
     bullet,
     kind: 'prose',
@@ -179,6 +211,14 @@ export function classifyNoGo(raw) {
     const verb = verbAfter(masked, negAt);
     if (verb === null) {
         return PROSE(bullet, 'names no action verb, so what must not happen to it is unstated');
+    }
+    // The negation must govern the VERB too, not merely appear earlier in the
+    // line. Without this, "If no cache exists, run `npm run build`" and "There
+    // is no need to run `npm install`" both denied the command they permit —
+    // round 1's finding narrowed rather than closed, measured by round 2.
+    if (CLAUSE_BREAK.test(masked.slice(negAt, verb.start))) {
+        return PROSE(bullet, 'the prohibition and the action verb sit in different clauses, so the bullet may ' +
+            'be permitting rather than forbidding');
     }
     if (verb.start > tokenAt) {
         return PROSE(bullet, 'the action verb comes after the token, so the two may not be related');
@@ -241,21 +281,37 @@ const NO_GOS_HEADINGS = new Set(['no-gos', 'no-gos (never do this)']);
  */
 export function extractNoGosSection(body) {
     const out = [];
+    /** The open fence's marker character AND its length. */
     let fence = null;
     let inside = false;
-    for (const raw of body.split('\n')) {
-        const line = raw.trimEnd();
-        const open = /^\s*(```+|~~~+)/.exec(line);
+    const lines = body.split('\n');
+    for (let n = 0; n < lines.length; n += 1) {
+        const line = lines[n].trimEnd();
+        const open = /^\s*(`{3,}|~{3,})/.exec(line);
         if (open !== null) {
             const marker = open[1];
-            if (fence === null)
-                fence = marker[0];
-            else if (marker.startsWith(fence))
+            const char = marker[0];
+            if (fence === null) {
+                fence = { char, len: marker.length };
+                continue;
+            }
+            // A fence closes only on the SAME character and at least its own
+            // length. Tracking the character alone let a ````-delimited block
+            // close on its first inner ``` line, so the rest of a guide's
+            // copy-in example was read as the consumer's own rules.
+            if (char === fence.char && marker.length >= fence.len)
                 fence = null;
             continue;
         }
         if (fence !== null)
             continue;
+        // A setext underline turns the PREVIOUS line into a heading, which
+        // closes the section the same way an ATX heading does.
+        if (/^(?:=+|-{2,})\s*$/.test(line) && out.length > 0 && inside) {
+            out.pop();
+            inside = false;
+            continue;
+        }
         // ANY heading level closes the section; only a level-two one with a
         // matching title opens it. Matching `##` alone let a following `#
         // Appendix` leave the section open, so every bullet of every later

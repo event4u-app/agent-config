@@ -142,6 +142,25 @@ export function checkRow(row: HostPermissionSyntax, today: string): string[] {
             );
         }
     }
+
+    // The PAIRING, not only the shapes. A `Read` no-go must also produce the
+    // `Edit` row the page requires for NotebookEdit, and a shape check alone
+    // cannot see that row disappear: the Edit shape stays satisfied by a
+    // different fixture's path rule.
+    for (const bullet of FIXTURES) {
+        const c = classifyNoGo(bullet);
+        if (c.action !== 'read') continue;
+        const rules = denyRulesFor(row.host, c);
+        const spec = rules
+            .find((r) => r.startsWith('Read('))
+            ?.slice('Read('.length, -1);
+        if (spec === undefined || !rules.includes(`Edit(${spec})`)) {
+            bad.push(
+                `${where}: the read fixture rendered no \`Edit(…)\` beside its \`Read(…)\` — ` +
+                    'the page names NotebookEdit as the tool a Read deny does not cover',
+            );
+        }
+    }
     return bad;
 }
 

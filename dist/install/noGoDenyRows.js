@@ -101,7 +101,7 @@ export function renderDenyPlan(plan, host) {
         // comment. The point of the change is to replace a sentence the agent
         // can read past with a rule the host refuses on; a consumer consenting
         // to that should be told where the refusal stops.
-        out.push('', 'What these rows do not reach, per the same documentation:', '  · a Bash rule is prefix-matched, so `./artisan …`, `bash -c "…"` and a', '    wrapper such as `sail` or `devbox run` are not matched by it.', '  · Read and Edit rules reach the file tools and the file commands the host', '    recognises in Bash, but not a script that opens the file itself.', '  A no-go is still worth writing down when no row can be built for it.');
+        out.push('', 'What these rows do not reach, per the same documentation:', '  · a Bash rule is prefix-matched, so `./artisan …`, `bash -c "…"` and a', '    wrapper such as `sail` or `devbox run` are not matched by it.', '  · Read and Edit rules reach the file tools and the file commands the host', '    recognises in Bash, but not a script that opens the file itself.', '  A no-go is still worth writing down when no row can be built for it.', '', 'Where they reach FURTHER than the bullet reads:', '  · a path row anchors at the session working directory, not at the repository', '    root, and as a DENY rule a single-segment path matches that directory name', '    at any depth — `Edit(migrations/**)` also covers `vendor/pkg/migrations/`.', '  · the rows go into a file your whole team shares if it is committed. The', '    per-developer alternative is `.claude/settings.local.json`; pass it with', '    `--settings` if these should bind only you.');
     }
     if (syntax !== null) {
         out.push('', `Syntax read from ${syntax.docs_url} on ${syntax.docs_at}.`);
@@ -218,8 +218,26 @@ export function appendDenyRules(body, rules) {
         throw new Error('settings body has a `permissions` key that is not an object — refusing rather ' +
             'than writing a second one');
     }
-    const existing = perms !== null && typeof perms === 'object' && !Array.isArray(perms)
-        ? perms['deny']?.filter((e) => typeof e === 'string') ?? []
+    // The same refusal one level down, and it is NOT covered by the one above:
+    // `locate` finds no span for a `deny` that is not an array either, so the
+    // `permissions` branch would insert a SECOND `"deny"` key inside the same
+    // object — measured, with the consented row discarded and success
+    // reported. A `deny` that is a string or an object was worse still: the
+    // filter below threw `perms.deny?.filter is not a function`, which reached
+    // the consumer instead of the deliberate refusal written here.
+    const denyRaw = perms !== null && typeof perms === 'object' && !Array.isArray(perms)
+        ? perms['deny']
+        : undefined;
+    if (perms !== null &&
+        typeof perms === 'object' &&
+        !Array.isArray(perms) &&
+        Object.hasOwn(perms, 'deny') &&
+        !Array.isArray(denyRaw)) {
+        throw new Error('settings body has a `permissions.deny` key that is not an array — refusing ' +
+            'rather than writing a second one');
+    }
+    const existing = Array.isArray(denyRaw)
+        ? denyRaw.filter((e) => typeof e === 'string')
         : [];
     const have = new Set(existing);
     const added = rules.filter((r) => !have.has(r));
