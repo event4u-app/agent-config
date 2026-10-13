@@ -1,0 +1,180 @@
+{
+  "$comment": "Frozen ground truth for road-to-account-surface-detector Phase 1.1. One entry per planted defect. A safe twin and a decoy appear in NO entry — that absence is what the false-positive figure is measured against. Written before any detector code exists.",
+  "frozen_at": "2026-10-13",
+  "stacks": {
+    "php": "php/unsafe and php/safe — a PHP framework shape",
+    "node": "node/unsafe and node/safe — a Node/TypeScript shape"
+  },
+  "pending_threat_rows": {
+    "$comment": "Threat cells this ground truth cites that threats.csv does not carry yet. They land with road-to-account-lifecycle-threat-rows step 2.2; until then a finding citing one of these is unresolvable, which is why Phase 2 of this roadmap may not land first. The exact cell wording is this roadmap's intent, not that roadmap's commitment — Phase 2 reconciles it against the merged rows.",
+    "source_roadmap": "road-to-account-lifecycle-threat-rows",
+    "cells": [
+      "Account enumeration through any observable difference",
+      "Fast or home-made password storage",
+      "Unsafe secret comparison and home-made credential primitives",
+      "Federated sign-in takeover",
+      "Self-contained token validation bypass",
+      "Persistent login and logout"
+    ]
+  },
+  "findings": [
+    {
+      "id": "php-fast-hash",
+      "class": "fast-hash",
+      "stack": "php",
+      "file": "php/unsafe/app/Http/Controllers/Auth/RegisterController.php",
+      "line": 26,
+      "evidence": "violated",
+      "remediation": "migration",
+      "threat_row": "Fast or home-made password storage",
+      "why": "A general-purpose fast hash stores a credential; a salt does not make it slow."
+    },
+    {
+      "id": "node-fast-hash",
+      "class": "fast-hash",
+      "stack": "node",
+      "file": "node/unsafe/src/auth/register.ts",
+      "line": 10,
+      "evidence": "violated",
+      "remediation": "migration",
+      "threat_row": "Fast or home-made password storage",
+      "why": "A general-purpose fast hash stores a credential; a salt does not make it slow."
+    },
+    {
+      "id": "php-secret-compare",
+      "class": "secret-compare",
+      "stack": "php",
+      "file": "php/unsafe/app/Http/Controllers/Auth/VerifyOtpController.php",
+      "line": 17,
+      "evidence": "violated",
+      "remediation": "mechanical",
+      "threat_row": "Unsafe secret comparison and home-made credential primitives",
+      "why": "A one-time secret is compared with a short-circuiting operator."
+    },
+    {
+      "id": "node-secret-compare",
+      "class": "secret-compare",
+      "stack": "node",
+      "file": "node/unsafe/src/auth/verify-otp.ts",
+      "line": 8,
+      "evidence": "violated",
+      "remediation": "mechanical",
+      "threat_row": "Unsafe secret comparison and home-made credential primitives",
+      "why": "A one-time secret is compared with a short-circuiting operator."
+    },
+    {
+      "id": "php-pepper-literal",
+      "class": "pepper-literal",
+      "stack": "php",
+      "file": "php/unsafe/app/Services/Auth/PasswordPepper.php",
+      "line": 12,
+      "evidence": "violated",
+      "remediation": "migration",
+      "threat_row": "Fast or home-made password storage",
+      "why": "The pepper is a source literal, so it is in version control and rotating it rehashes every credential."
+    },
+    {
+      "id": "php-host-derived-reset",
+      "class": "host-derived-reset",
+      "stack": "php",
+      "file": "php/unsafe/app/Http/Controllers/Auth/ForgotPasswordController.php",
+      "line": 20,
+      "evidence": "violated",
+      "remediation": "mechanical",
+      "threat_row": "Password-reset token abuse",
+      "why": "The link host comes from the request, so a forged Host header redirects the token."
+    },
+    {
+      "id": "node-email-linking",
+      "class": "email-linking",
+      "stack": "node",
+      "file": "node/unsafe/src/auth/signin-config.ts",
+      "line": 12,
+      "evidence": "violated",
+      "remediation": "policy",
+      "threat_row": "Federated sign-in takeover",
+      "why": "Account linking on an address alone lets any provider asserting it take over the local account."
+    },
+    {
+      "id": "php-token-verify-off",
+      "class": "token-verify-off",
+      "stack": "php",
+      "file": "php/unsafe/config/session_token.php",
+      "line": 11,
+      "evidence": "violated",
+      "remediation": "policy",
+      "threat_row": "Self-contained token validation bypass",
+      "why": "Signature verification is switched off in configuration."
+    },
+    {
+      "id": "node-token-verify-off",
+      "class": "token-verify-off",
+      "stack": "node",
+      "file": "node/unsafe/src/auth/session.ts",
+      "line": 8,
+      "evidence": "violated",
+      "remediation": "policy",
+      "threat_row": "Self-contained token validation bypass",
+      "why": "The accepted algorithm list contains `none`."
+    },
+    {
+      "id": "node-token-in-localstorage",
+      "class": "token-in-localstorage",
+      "stack": "node",
+      "file": "node/unsafe/src/auth/oauth-callback.ts",
+      "line": 9,
+      "evidence": "violated",
+      "remediation": "migration",
+      "threat_row": "Persistent login and logout",
+      "why": "A session token in script-readable storage leaves with any injected script."
+    },
+    {
+      "id": "php-account-disclosure",
+      "class": "account-disclosure",
+      "stack": "php",
+      "file": "php/unsafe/app/Http/Controllers/Auth/LoginController.php",
+      "line": 23,
+      "evidence": "suspected",
+      "remediation": "policy",
+      "threat_row": "Account enumeration through any observable difference",
+      "why": "The response separates an unknown address from a wrong secret. Reported `suspected`: the string alone does not prove the route is public."
+    },
+    {
+      "id": "node-account-disclosure",
+      "class": "account-disclosure",
+      "stack": "node",
+      "file": "node/unsafe/src/routes/login.ts",
+      "line": 14,
+      "evidence": "suspected",
+      "remediation": "policy",
+      "threat_row": "Account enumeration through any observable difference",
+      "why": "The response separates an unknown address from a wrong secret. Reported `suspected`: the string alone does not prove the route is public."
+    }
+  ],
+  "decoys": [
+    {
+      "file": "decoys/resources/views/auth/login.css",
+      "why_silent": "An account-surface path that changes presentation only."
+    },
+    {
+      "file": "decoys/docs/password-policy.md",
+      "why_silent": "Prose naming every keyed word, with no code on any account surface."
+    },
+    {
+      "file": "decoys/src/storage/checksum.ts",
+      "why_silent": "`sha256` over a file, for integrity, not for a credential."
+    },
+    {
+      "file": "decoys/src/analytics/bucket-salt.ts",
+      "why_silent": "A `salt` that buckets visitors and touches no credential."
+    },
+    {
+      "file": "decoys/src/search/page-token.ts",
+      "why_silent": "A `token` that is a pagination cursor; comparing it with `===` is correct."
+    },
+    {
+      "file": "decoys/src/config/crypto-pepper.ts",
+      "why_silent": "A `pepper` read from the environment, keying analytics identifiers."
+    }
+  ]
+}
