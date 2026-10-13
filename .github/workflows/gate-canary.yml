@@ -135,16 +135,24 @@ jobs:
           npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
             || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
 
+      # `--quiet` IS NOT UNIVERSAL, and four gates here reject it with exit 2
+      # (`unrecognized arguments: --quiet`) rather than ignoring it:
+      # domain_soundness_status, lint_roadmap_later_disposition,
+      # skill_eval_coverage and lint_one_off_age. They are invoked bare. This
+      # was found by dispatching the workflow manually on the branch — nothing
+      # else would have: this file runs on `schedule` and `workflow_dispatch`
+      # only, so a pull request never exercises it and the error would have
+      # surfaced first on a nightly run nobody was watching.
       - name: Ratchet-age readers
         run: |
           ./scripts-run src/scripts/check_roadmap_trackable --quiet
-          ./scripts-run src/scripts/domain_soundness_status --quiet
+          ./scripts-run src/scripts/domain_soundness_status
           ./scripts-run src/scripts/lint_artefact_frontmatter --quiet
           ./scripts-run src/scripts/lint_handoffs --quiet
           ./scripts-run src/scripts/lint_provenance_vocabulary --quiet
           ./scripts-run src/scripts/lint_roadmap_blockers --quiet
-          ./scripts-run src/scripts/lint_roadmap_later_disposition --quiet
-          ./scripts-run src/scripts/skill_eval_coverage --quiet
+          ./scripts-run src/scripts/lint_roadmap_later_disposition
+          ./scripts-run src/scripts/skill_eval_coverage
 
       - name: As-of verdict lines
         if: always()
@@ -152,13 +160,28 @@ jobs:
           ./scripts-run src/scripts/check_knowledge_pages
           ./scripts-run src/scripts/check_reach_staleness --quiet
           ./scripts-run src/scripts/lint_hook_manifest --quiet
-          ./scripts-run src/scripts/lint_one_off_age --quiet
+          ./scripts-run src/scripts/lint_one_off_age
           ./scripts-run src/scripts/lint_symptom_intake --quiet
 
       - name: The council pins, which had no caller at all
         if: always()
         run: ./scripts-run src/scripts/check_council_pin_staleness
 
+      # `--baseline origin/main`, and the task's own argv omits it. The script
+      # defaults its baseline to the bare name `main`, which resolves in a
+      # developer's checkout where `main` is a real local branch and does NOT
+      # resolve on a runner, where `actions/checkout` leaves no local `main`:
+      # `git diff main...HEAD` exited 128 with "ambiguous argument". The
+      # remote-tracking ref is what exists in both places.
+      #
+      # What this step does NOT claim: on a scheduled run of the default branch
+      # `origin/main` and `HEAD` are the same commit, so `--check-new` has no
+      # new commands to find and only the gate's budget half does real work.
+      # That is a property of running a diff-shaped gate on a schedule, and it
+      # is written down rather than left for the next reader to discover — the
+      # gate is here because it is `slow` (43.5 s, 48 % of the serial time of
+      # all 161 measured gates), which is a cost argument, not a claim that a
+      # scheduled run exercises all of it.
       - name: The one slow gate — 43.5 s locally, too expensive for a pull request
         if: always()
-        run: ./scripts-run src/scripts/audit_command_surface --check-new --quiet
+        run: ./scripts-run src/scripts/audit_command_surface --check-new --baseline origin/main --quiet
