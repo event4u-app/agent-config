@@ -97,7 +97,7 @@ every run, including a single-check run, is the surprising default, and
 
 💡 advisory · 🔄 automatic — **no consumer action unless you set one of them.**
 
-Each retired key's shipped default became fixed behaviour, and every reader of
+Each retired key's shipped default became fixed behavior, and every reader of
 it — code, rule and command prose, the setup wizard — was rewritten to state
 that default in the same change
 ([`b35d432b1`](https://github.com/event4u-app/agent-config/commit/b35d432b11cc3328517c7963c570bb1a06b8dda7)).
@@ -115,7 +115,7 @@ stderr:
 ```
 
 The exit code never changes, so a leftover key cannot fail a run; it can only
-tell you about itself. Each line names what decides the behaviour now, because
+tell you about itself. Each line names what decides the behavior now, because
 the 46 do not share one retirement reason — some were replaced by a fixed
 default, and five were never read by any code path at all.
 
