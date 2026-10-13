@@ -112,8 +112,8 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 0x04 = 4, the LOWEST bucket any row in the freeze artefact has drawn,
         // and seals. This is the first sealed row since 2026-10-06 and the first
         // since the ordering claim was last restated, so the claim's scope is
-        // now 18 of 28 rather than 18 of 27 — see the freeze artefact's
-        // § Growth — 2026-10-14.
+        // now 18 of 28 rather than 18 of 27, which the freeze artefact's growth
+        // entry for that date states in full.
         expect(sealed.length).toBe(28);
     });
 
