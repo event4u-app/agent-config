@@ -120,10 +120,16 @@ Nothing is sent without the person's word in that turn.
       `subjectDigest` if that lands first — one primitive, the other's reason
       recorded in the step's commit.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t changed-bytes-void-approval --reporter=verbose` -> /✓.*changed-bytes-void-approval/
-- [ ] **4.2 A consumer reaches a pull request.** Without a local checkout, the
-      release clones this package at a pinned commit into an ephemeral directory
-      and follows the same ladder; `AGENT_CONFIG_SOURCE` is documented.
-      verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t consumer-without-checkout-reaches-pr-step --reporter=verbose` -> /✓.*consumer-without-checkout-reaches-pr-step/
+- [ ] **4.2 A consumer reaches an issue, not yet a pull request (D5).** From a
+      consumer project the ladder stops at the issue step; a pull request is
+      opened only from a checkout of this package, and `AGENT_CONFIG_SOURCE` is
+      documented as that checkout's pointer. In the same step, a threat-model
+      matrix under `agents/evidence/analysis/` compares issue, same-repository PR
+      and fork PR across visible account, fork and repository linkage, branch
+      name, activity events, timestamps, notifications, retention and deletion;
+      if the fork PR adds no project linkage beyond the issue, D5 reopens toward
+      an ephemeral-checkout pull request from consumers.
+      verify: `ls agents/evidence/analysis/` -> /upstream-fork-pr-linkage/
 - [ ] **4.3 The remaining identity is said out loud.** The dry run states which
       account will appear on the pull request (blocker below).
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t dry-run-names-the-account --reporter=verbose` -> /✓.*dry-run-names-the-account/
@@ -142,15 +148,15 @@ Nothing is sent without the person's word in that turn.
 ## Blockers
 
 ### blocker: upstream-pr-shows-the-account
-- **Status:** open
-- **Owner:** user
-- **Ownership:** product-owned
-- **Blocks:** step 4.2 and Phase 5 — a pull request from a consumer always carries the GitHub account that opens it; Phases 1–3 and 4.1 are not blocked
+- **Status:** resolved — council 2026-10-12 (2/2: not owner-reserved; choice split, resolved by the privacy tie-break to option (b)); recorded as D5
+- **Owner:** maintainer
+- **Ownership:** reversible-technical — first filed as product-owned by the authoring agent; the council found it was not
+- **Blocks:** (was) step 4.2 and Phase 5 — a pull request from a consumer always carries the GitHub account that opens it; Phases 1–3 and 4.1 are not blocked
 - **Question:** Is it acceptable that every upstream pull request reveals the opening GitHub account, given that the payload carries nothing else about the project?
 - **Recommendation:** (a). An account is the floor of any pull request on a public forge; the issue route reveals it too, a relay service would be a new external party holding every finding, and saying it out loud in the dry run is the honest form.
 - **If you do nothing:** consumers keep the issue route only, which reveals the same account, and the owner's "neutral pull request" never exists.
 - **What to do:** pick exactly one — (a) accept and state it in every dry run (step 4.3); or (b) issues only from consumers, pull requests only from a checkout of this package; or (c) commission a relay design as its own roadmap and keep 4.2 blocked until it lands.
-- **Resolved when:** this entry's Status reads resolved and step 4.2 carries no blocked-by marker, or 4.2 is re-scoped to option (b).
+- **Resolved when:** this entry's Status reads resolved and step 4.2 carries no blocked-by marker, or 4.2 is re-scoped to option (b). Resolved 2026-10-12: 4.2 re-scoped to (b) and measures whether (a) is safe.
 
 ## Decisions
 
@@ -159,6 +165,7 @@ Nothing is sent without the person's word in that turn.
 | D1 | reversible-technical | agent | `/upstream-contribute` stays as a name and becomes a front on the ladder | Patching it alone keeps a second way alive; the name is a public contract | the ladder is renamed |
 | D2 | reversible-technical | agent | `learn-low-impact --apply` is retired, not repaired | It writes into a file that does not exist; the corpus it meant has its own path | a seed corpus is shipped again |
 | D3 | reversible-technical | agent | No organisation-level intermediate stage now | `stubs/road-to-org-telemetry-sink` is unscheduled, and creating a sink is an owner act | that stub is scheduled |
+| D5 | reversible-technical | council:2026-10-12-upstream-account-visibility | Consumer projects send issues; pull requests come only from a checkout of this package, until 4.2's matrix shows a fork PR adds no project linkage over an issue; until then AC-5 reads as reached by the issue step, and its wording is corrected at the next risk review | Both seats (anthropic, openai): not owner-reserved — every send is an explicit per-turn act and the issue route already shows the account. Choice split: anthropic (a) with an escape hatch, openai (b) because a fork PR adds a durable fork relationship and event metadata an issue does not. Tie-break: on a privacy split the option revealing less wins until evidence; dissent recorded here | 4.2's matrix finds no linkage beyond the issue |
 | D4 | reversible-technical | agent | No automatic upstream and no automerge of a retro pull request, in this repository either | `self-repair-loop` requires the person's word for the outward step | — |
 
 ## What this roadmap deliberately does not do
