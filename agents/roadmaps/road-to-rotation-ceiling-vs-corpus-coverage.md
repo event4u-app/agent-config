@@ -96,9 +96,8 @@ than left to be re-derived by the next person.
       moved ceiling. If the decision is a raise, say in the same sentence how
       many further suites it buys, so the next reader knows the headroom
       without recomputing it.
-      verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` is
-      green over the live suite list, and the docblock names both the value and
-      who decided it.
+      verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
+      — and the docblock names both the value and who decided it.
 - [ ] **1.2 Decouple the suite count from the weekly bill, or state why not.**
       A corpus exists so a routing claim is checkable; whether every corpus is
       replayed against a paid provider every ninety days is a separate policy
@@ -132,8 +131,8 @@ than left to be re-derived by the next person.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` is
-      green over the live suite list, and the value it checks against carries a
+- [ ] AC-1 — `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
+      over the live suite list, and the value it checks against carries a
       recorded owner decision rather than an agent's edit.
 - [ ] AC-2 — Adding one trigger corpus to the tree either leaves the peak week
       unchanged, or changes it by an amount the docblock states in advance — so
