@@ -25,13 +25,13 @@ NO SECRETS. NO EMAILS. NO PROJECT PATHS. NO CUSTOMER NAMES.
 NO INTERNAL HOSTNAMES. NO MONEY. NO BUSINESS SQL. NO LONG CODE.
 ```
 
-The redactor lives in `scripts/ai_council/redact_low_impact_entry.ts`
+The redactor lives in `src/scripts/ai_council/redact_low_impact_entry.ts`
 and runs at **both** gates:
 
 1. **Write gate** — every intake append to
-   `agents/decisions/low-impact-decisions.md` (Phase 12 § Step 2).
-2. **Upstream gate** — every `/memory learn-low-impact` PR draft,
-   before the diff leaves the repo (Phase 12 § Step 5).
+   `agents/decisions/low-impact-decisions.md`.
+2. **Review gate** — every `/memory learn-low-impact` preview, which
+   names each refused entry instead of promoting it.
 
 A failure at either gate refuses the operation, surfaces the
 offending pattern, and asks the user to rephrase. The redactor never
@@ -52,16 +52,20 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
 
 ## Locked target types
 
-- `agents/decisions/low-impact-decisions.md` — project-local corpus.
-- `data/low-impact-decisions-seed.md` (agent-config package) —
-  upstream seed shipped with the package.
+- `agents/decisions/low-impact-decisions.md` — the project-local corpus,
+  and the only one of the two that exists.
+- `data/low-impact-decisions-seed.md` — the package-side seed. **This file
+  is not in the tree**: the package ships no seed corpus, so the preview
+  diffs against an empty baseline. The path stays locked here, and in the
+  trigger block above, so that a seed reappearing is already under the floor
+  rather than arriving beneath it.
 
 ## When to invoke
 
 - The host agent has just received a user intake trigger (see
-  `scripts/ai_council/low_impact_intake.TRIGGER_PHRASES`).
-- The host agent is about to write an entry to the corpus or to
-  open a `/memory learn-low-impact` PR.
+  `TRIGGER_PHRASES` in `src/scripts/ai_council/low_impact_intake.ts`).
+- The host agent is about to write an entry to the corpus, or to render a
+  `/memory learn-low-impact` preview.
 
 ## What to surface on refusal
 
@@ -76,6 +80,6 @@ auto-rewrite.
 
 ## See also
 
-- `scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
-- `scripts/ai_council/low_impact_intake.ts` — write-gate caller.
+- `src/scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
+- `src/scripts/ai_council/low_impact_intake.ts` — write-gate caller.
 - `agents/decisions/low-impact-decisions.md` — corpus + Anti-Examples list.

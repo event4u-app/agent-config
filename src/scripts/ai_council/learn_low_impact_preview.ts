@@ -4,19 +4,33 @@
  * Ported from the retired Python `src/scripts/ai_council/learn_low_impact_preview.py`
  * (ADR-200 — Python→TS migration, Phase 1).
  *
- * Default invocation is `--preview`: build a structured plan describing
- * which Validated entries would be upstreamed to the package seed without
- * opening a PR. `--apply` (handled by the agent, not this module) is the
- * explicit opt-in that triggers the actual upstream-contribute PR flow.
+ * The command is read-only: it builds a structured plan describing which
+ * Validated entries would be worth upstreaming, and opens nothing. The
+ * `--apply` flag that once drove an upstream PR from here was retired on
+ * 2026-10-13 — it wrote into a package seed file that is not in the tree,
+ * and a second outward route would be a second set of guarantees. The one
+ * gated outward step is `self-repair:release`.
  *
  * The module is import-light by design — pure parsing + redaction + diff
- * rendering. PR creation lives in the `upstream-contribute` skill;
- * this module only hands the agent the material to surface.
+ * rendering. It hands the agent the material to surface and nothing else.
  */
 
 import * as fs from 'node:fs';
 
 import { parse_corpus_strict } from './low_impact_corpus.js';
+
+/**
+ * The package-side seed the preview diffs against — the ONE place this
+ * literal lives, so a caller never restates it.
+ *
+ * The file is deliberately NOT in the tree: the package ships no seed
+ * corpus, `_readSeedPhrases` treats a missing seed as an empty set, and the
+ * preview therefore diffs against an empty baseline. The path is still
+ * named here, and locked by `low-impact-corpus-privacy-floor`, so that a
+ * seed reappearing arrives already under the privacy floor.
+ */
+export const PACKAGE_SEED_PATH = 'data/low-impact-decisions-seed.md';
+
 import {
     type RedactionViolation,
     redact_low_impact_entry,
@@ -187,7 +201,7 @@ export class LearnLowImpactPreview {
         const bodyLines: string[] = [
             `# ${title}`,
             '',
-            'Upstream from `/memory learn-low-impact --apply`.',
+            'Prepared from `/memory learn-low-impact`, which sends nothing.',
             '',
             '## Entries',
             '',
