@@ -8,38 +8,55 @@ keep-beta-until: 2026-12-01
      reddened it as a FRESH lapse. Promoting the contract is a claim about
      ADR-061's asset-delivery pattern that this change did not examine and has no
      evidence for, and recording it superseded would be false — the pattern is
-     live and locked by tests/test_skill_bundled_assets.py. So the window moves
-     by three months, unchanged in substance, with the review left where it
-     belongs: with whoever owns the promotion decision. -->
+     live. So the window moves by three months, unchanged in substance, with the
+     review left where it belongs: with whoever owns the promotion decision.
+
+     Amended 2026-10-13: the extension above said the pattern was "locked by
+     tests/test_skill_bundled_assets.py", a file that is not in the tree and had
+     not been for some time. The claim is replaced below by the tests that do
+     exist, and the window itself is left where it was — a stale guard reference
+     is a reason to name the real one, not a reason to re-date a decision
+     somebody else owns. -->
 
 # Skill-bundled assets — `skills/<name>/{scripts,data}/` delivery contract
 
-> Sanctions and pins the pattern introduced by ADR-061: a skill may bundle
-> executable Python under `scripts/` and corpus/config files under `data/`
+> Sanctions and pins the pattern introduced by ADR-061: a skill may bundle an
+> executable script under `scripts/` and corpus/config files under `data/`
 > (plus `references/` docs), and those assets **reach and run at consumer
-> runtime**. Locked by `tests/test_skill_bundled_assets.py`.
+> runtime**. Locked by `tests/install/skill_script_lines.test.ts` and
+> `tests/scripts/skill_script_bundle.test.ts`.
 
 ## The delivery chain (verified)
 
 | Stage | Mechanism | Guarantee |
 |---|---|---|
 | 1. Authoring | `src/skills/<name>/{scripts,data,references}/` | Source of truth; `.md` prose is condensed, everything else is data. |
-| 2. Sync | `src/scripts/condense.py::sync_non_md` (`task sync`) | Every non-`.md` skill asset is copied byte-identical into `dist/agent-src/skills/<name>/…`. |
+| 1b. Build | `npm run build:skill-scripts` | Each entry point `scripts/<tool>.ts` is bundled to a single dependency-free ES module `scripts/<tool>.mjs` beside it, at the package's `engines.node` target. The module is **committed**, not emitted into the projection: a projected file with no source is deleted by the next sync. |
+| 2. Sync | `src/scripts/condense.ts::sync_non_md` (`task sync`) | Every non-`.md` skill asset — the TypeScript source and the emitted module alike — is copied byte-identical into `dist/agent-src/skills/<name>/…`. |
 | 3. Packaging | `package.json` ships `dist/agent-src/` | Assets are inside the published npm artifact. |
-| 4. Install | `install.py::_copy_dir_dereferencing_symlinks` | Whole skill directories (including `scripts/` + `data/`) are deployed to the consumer scope, e.g. `~/.claude/skills/<name>/…`, with symlinks dereferenced so the copy survives npx cache eviction. |
+| 4. Install | `src/scripts/install.ts::_copy_dir_dereferencing_symlinks` | Whole skill directories (including `scripts/` + `data/`) are deployed to the consumer scope, e.g. `~/.claude/skills/<name>/…`, with symlinks dereferenced so the copy survives npx cache eviction. |
 
 ## Invocation contract — skill-relative, never project-relative
 
 ```
 A BUNDLED SCRIPT RESOLVES EVERY SIBLING ASSET VIA ITS OWN FILE LOCATION
-(Path(__file__).resolve().parent…), NEVER VIA $PWD OR THE PROJECT ROOT.
+(fileURLToPath(import.meta.url)…), NEVER VIA $PWD OR THE PROJECT ROOT.
+THE TAUGHT RUNNER IS `node`, AND NOTHING ELSE. A LINE NAMING A DEVDEPENDENCY
+BINARY OR A REPOSITORY WRAPPER IS A LINE A CONSUMER CANNOT START.
 ```
 
 - The agent invokes bundled scripts with an **absolute or skills-root-
-  relative path**: `node_modules/.bin/tsx <skills-root>/<name>/scripts/<tool>.ts …`.
+  relative path**: `node <skills-root>/<name>/scripts/<tool>.mjs …`.
   `<skills-root>` = `~/.claude/skills` (Claude Code consumer install),
   the tool-specific projection dir for other agents, or `src/skills`
   inside this repo.
+- **The taught target is the `.mjs`, never the `.ts`.** The TypeScript
+  source ships beside it and is what a reader opens; the module is what
+  a machine starts. An install carries the runtime `package.json`
+  `engines.node` declares and nothing more — no TypeScript loader, and
+  not this repository's own dispatch wrapper, which `files[]` does not
+  list. `lint_consumer_internal_refs` reads every shipped `SKILL.md`
+  and every `references/*.md` beside it for exactly this form.
 - The consumer's working directory is **arbitrary** — scripts MUST work
   from any cwd. Writing output uses caller-supplied paths (flags), never
   cwd-implicit locations, except where a flag explicitly defaults to cwd.
@@ -63,12 +80,22 @@ A BUNDLED SCRIPT RESOLVES EVERY SIBLING ASSET VIA ITS OWN FILE LOCATION
 
 ## Regression lock
 
-`tests/test_skill_bundled_assets.py` builds a fixture skill
-(`scripts/probe.py` + `data/fixture.csv`), simulates the install copy into
-a temp skills root, invokes the script from an unrelated cwd, and asserts
-it finds its sibling data — plus runs the real `corpus-grounding` engine
-from a foreign cwd. If that test goes red, the grounding layer is theater
-at consumer runtime (road-to-frontend-design-intelligence Step 1.0).
+`tests/install/skill_script_lines.test.ts` copies the shipped projection
+into a temporary home, collects every line a `SKILL.md` or a
+`references/*.md` teaches, substitutes the placeholder, and asserts of
+each one that its target exists and that its runner is startable on a
+machine holding only `node` — then starts all six entry points from an
+empty directory and checks that directory is still empty afterwards.
+
+`tests/scripts/skill_script_bundle.test.ts` rebuilds every committed
+module into a temporary directory and asserts it reproduces the
+committed bytes, with a negative control that edits one source line in a
+mirror and asserts the rebuild no longer matches. The same comparison
+runs in CI as `Skill-script bundles are fresh`, beside the one that
+guards the install bundle.
+
+If either goes red, the grounding layer is theater at consumer runtime
+(road-to-frontend-design-intelligence Step 1.0).
 
 ## Port invariants — the behaviours a re-implementation must keep
 

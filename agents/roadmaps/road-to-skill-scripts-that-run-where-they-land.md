@@ -169,7 +169,7 @@ this names files that exist and a test that runs.
 
 ## Phase 5 — A contract that names what exists
 
-- [ ] **5.1 The contract is rewritten against the tree.**
+- [x] **5.1 The contract is rewritten against the tree.**
       `docs/contracts/skill-bundled-assets.md` names the TypeScript sources,
       the emitted module, the form of 4.1, the build script of 3.1 and the
       test of 1.1 as its guard. The beta note no longer cites an absent file.
@@ -193,16 +193,16 @@ this names files that exist and a test that runs.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — In a temporary-home install, every skill-script path a shipped
+- [x] AC-1 — In a temporary-home install, every skill-script path a shipped
       skill or reference teaches exists and its runner is `node`.
-- [ ] AC-2 — Each of the six entry points starts from an empty directory
+- [x] AC-2 — Each of the six entry points starts from an empty directory
       through the taught form.
-- [ ] AC-3 — `search` without `--domain` exits 0 on all six corpus manifests.
-- [ ] AC-4 — No consumer skill or skill reference teaches the skill-script
+- [x] AC-3 — `search` without `--domain` exits 0 on all six corpus manifests.
+- [x] AC-4 — No consumer skill or skill reference teaches the skill-script
       line through `./scripts-run` or `tsx`, and the lint that says so carries
       no allowlist.
-- [ ] AC-5 — A bundle that does not match its source fails a pull request.
-- [ ] AC-6 — Every path in `skill-bundled-assets.md` exists.
+- [x] AC-5 — A bundle that does not match its source fails a pull request.
+- [x] AC-6 — Every path in `skill-bundled-assets.md` exists.
 
 ## Decisions
 

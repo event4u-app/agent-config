@@ -245,6 +245,37 @@ function startAsTaught(
     return { kind: 'ran', status: r.status ?? -1 };
 }
 
+// Paths a contract names.
+
+/** Top-level directories a repository-relative path can start from. */
+const REPO_PREFIXES = ['src/', 'tests/', 'docs/', 'dist/', 'agents/', 'scripts/', '.github/', 'provenance/'];
+
+/**
+ * Backticked tokens in a document that state a repository path and are not in
+ * the tree.
+ *
+ * Only a token ROOTED in a top-level directory counts. A contract about
+ * skill-bundled assets is full of skill-relative shapes — `data/manifest.json`,
+ * `corpus-grounding/scripts/ground.ts`, a bare `SKILL.md` — which name a
+ * position inside an installed skill and resolve nowhere from the repository
+ * root. Reading those as repository paths reports six findings and no defect,
+ * and a check whose output is mostly noise stops being read.
+ *
+ * A token carrying a placeholder (`<name>`, `{scripts,data}`, `…`, `~`) names
+ * a shape rather than a file; a `path::symbol` form is read as the path.
+ */
+export function missingContractPaths(text: string): string[] {
+    const out = new Set<string>();
+    for (const m of text.matchAll(/`([^`\n]+)`/g)) {
+        let tok = (m[1] as string).split('::')[0] as string;
+        if (/[<>{}…~*$\s]/.test(tok)) continue;
+        tok = tok.replace(/[),.]+$/, '').replace(/\/$/, '');
+        if (!REPO_PREFIXES.some((p) => tok.startsWith(p))) continue;
+        if (!fs.existsSync(path.join(REPO_ROOT, tok))) out.add(tok);
+    }
+    return [...out].sort();
+}
+
 // The taught path, checked as installed.
 
 describe('skill-script lines in an installed projection', () => {
@@ -273,6 +304,26 @@ describe('skill-script lines in an installed projection', () => {
         expect(outcomes).toEqual(expected);
         expect(fs.readdirSync(cwd), 'a probe must not write beside itself').toEqual([]);
     }, 180_000);
+
+    it('contract-paths-exist: skill-bundled-assets names only files that are here', () => {
+        const contract = path.join(REPO_ROOT, 'docs', 'contracts', 'skill-bundled-assets.md');
+        const missing = missingContractPaths(fs.readFileSync(contract, 'utf-8'));
+        expect(missing, 'paths the contract names that are not in the tree').toEqual([]);
+
+        // The negative control. These three lines are what the contract said
+        // before this check existed; they are held here as a fixture rather
+        // than read back out of git, because CI clones to depth 1 and a check
+        // that silently cannot find its own baseline reports a clean tree.
+        const stale = [
+            'Locked by `tests/test_skill_bundled_assets.py`.',
+            '| 2. Sync | `src/scripts/condense.py::sync_non_md` (`task sync`) | … |',
+            '| 4. Install | `install.py::_copy_dir_dereferencing_symlinks` | … |',
+        ].join('\n');
+        expect(missingContractPaths(stale).sort()).toEqual([
+            'src/scripts/condense.py',
+            'tests/test_skill_bundled_assets.py',
+        ]);
+    });
 
     it('every taught target resolves to a file that is shipped', () => {
         const root = installProjection();
