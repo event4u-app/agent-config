@@ -45,7 +45,7 @@ which remains the full record.
 - A skill needs **pre-action selection** grounded in curated knowledge
   ("which layout pattern / threat class / index strategy applies here").
 - You are authoring a **new domain corpus** — write a manifest + CSVs,
-  validate with the grounding CLI (`ground validate` via ./scripts-run),
+  validate with the grounding CLI (`ground validate` via node),
   never fork the engine.
 - You need stack-scoped Do/Don't guidance (`--stack react …`).
 
@@ -73,17 +73,17 @@ Scripts resolve all paths **skill-relative** (per
 — they work from any cwd:
 
 ```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --manifest <skills-root>/<domain-skill>/data/manifest.json \
   "fintech dashboard" [--domain style] [--stack react] \
   [--filter "Severity=HIGH"] [--max-results 3] [--json]
 
-./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
+node <skills-root>/corpus-grounding/scripts/ground.mjs ground \
   --manifest <skills-root>/<domain-skill>/data/manifest.json \
   "luxury e-commerce" [--context '{"data_heavy": true}'] [--persist DIR] \
   [--variance 1-10] [--motion 1-10] [--density 1-10]
 
-./scripts-run <skills-root>/corpus-grounding/scripts/ground validate --manifest …
+node <skills-root>/corpus-grounding/scripts/ground.mjs validate --manifest …
 ```
 
 `<skills-root>` is wherever skills are deployed (`~/.claude/skills/` for
@@ -114,7 +114,7 @@ Stable v1 surface:
    `schema_validator.{load_manifest, validate_manifest, resolve_data_path,
    ManifestError, MANIFEST_VERSION, TIERS}`.
 2. **CLI** — the grounding CLI (`ground {search|ground|validate}` via
-   ./scripts-run) with the flags shown above.
+   node) with the flags shown above.
 3. **Result shape** — search: `{domain|stack, query, file, count, results,
    scores, filtered_from, confidence{label,score}, evidence_gap[]}`;
    ground: `{domain, query, category, rule, rules_evaluation{matched,
@@ -186,7 +186,7 @@ Each domain ships `data/manifest.json` beside its CSVs — declaring its
    row count; grounding must happen **before** action; "fits in 5 lines →
    it's a rule, not a corpus".
 2. Write `data/manifest.json` + CSVs in your domain skill; run
-   the grounding CLI (`ground validate` via ./scripts-run).
+   the grounding CLI (`ground validate` via node).
 3. Name an owner + refresh cadence in the manifest, pin the upstream SHA.
 4. Cite this skill from your domain skill; consult via the CLI (Tier-1
    consultation default — propose grounded options, human confirms).

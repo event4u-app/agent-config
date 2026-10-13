@@ -85,7 +85,7 @@ this names files that exist and a test that runs.
 
 ## Phase 1 — The control reading
 
-- [ ] **1.1 The taught path, checked as installed.** A test installs the
+- [x] **1.1 The taught path, checked as installed.** A test installs the
       shipped projection into a temporary home, collects every line in an
       installed `SKILL.md` or `references/*.md` that names
       `<skills-root>/<skill>/scripts/<tool>`, fenced or not, substitutes the
@@ -94,19 +94,22 @@ this names files that exist and a test that runs.
       holding nothing but `node`. Today every row's runner is absent; the test
       asserts that count.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **1.2 Each entry point, started once.** The same test starts each of the
+- [x] **1.2 Each entry point, started once.** The same test starts each of the
       six entry points from an empty temporary directory with one fixture
       argument vector held in the test file, through the form its skill
       teaches. Today all six fail to start; the test asserts six.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts -t entry-points-control --reporter=verbose` -> /✓.*entry-points-control/
-- [ ] **1.3 The corpus reading.** A test runs `search` without `--domain`
+- [x] **1.3 The corpus reading.** A test runs `search` without `--domain`
       against each of the six manifests in this tree and asserts the two
       failures named in Context.
-      verify: `npx vitest run tests/scripts/skills_corpus_grounding_ground.test.ts -t every-manifest-control --reporter=verbose` -> /✓.*every-manifest-control/
+      verify: `npx vitest run tests/scripts/skills_corpus_grounding_ground.test.ts -t every-manifest --reporter=verbose` -> /✓.*every-manifest/
+      The control assertion named `every-manifest-control` is the reading 2.1
+      replaces, kept where a replaced reading belongs — in the commit that
+      landed it, not as a second test asserting a bug that is gone.
 
 ## Phase 2 — The example returns rows
 
-- [ ] **2.1 Keyword detection escapes for the engine it runs on.**
+- [x] **2.1 Keyword detection escapes for the engine it runs on.**
       `_reEscape` escapes only what a `u`-flag pattern treats as syntax. The
       1.3 control flips: all six manifests exit 0 without `--domain`. This
       step ships alone, ahead of Phase 3, because it is a bug in the
@@ -115,7 +118,7 @@ this names files that exist and a test that runs.
 
 ## Phase 3 — One runnable form
 
-- [ ] **3.1 A build script beside the ones that exist.** `build:skill-scripts`
+- [x] **3.1 A build script beside the ones that exist.** `build:skill-scripts`
       bundles each entry point to `src/skills/<name>/scripts/<tool>.mjs` from a
       fixed working directory with the same `--target=node20` the other
       bundles use, so path comments are relative and identical on every
@@ -123,12 +126,12 @@ this names files that exist and a test that runs.
       becomes a direct devDependency. `sync_non_md` carries the files into the
       projection unchanged; `condense.ts` is not edited.
       verify: `npx vitest run tests/scripts/skill_script_bundle.test.ts` -> 0
-- [ ] **3.2 A stale bundle fails a pull request.** The job that rebuilds the
+- [x] **3.2 A stale bundle fails a pull request.** The job that rebuilds the
       install bundle rebuilds these and fails on a diff, and the path-leakage
       check reads them. Positive control: the test changes one source line in
       a temporary copy without rebuilding and asserts the diff is non-empty.
       verify: `npx vitest run tests/scripts/skill_script_bundle.test.ts -t stale-control --reporter=verbose` -> /✓.*stale-control/
-- [ ] **3.3 The read-only lint counts each script once.**
+- [x] **3.3 The read-only lint counts each script once.**
       `lint_skill_scripts_readonly` walks `scripts/**`; with bundles present it
       would see every mutation primitive twice. The lint skips `*.mjs` that a
       sibling `.ts` produced, and its finding count on the tree is unchanged.
@@ -136,14 +139,20 @@ this names files that exist and a test that runs.
 
 ## Phase 4 — The line the skill teaches
 
-- [ ] **4.1 One form, in skills and references.** Every taught skill-script
+- [x] **4.1 One form, in skills and references.** Every taught skill-script
       line reads `node <skills-root>/<skill>/scripts/<tool>.mjs …`. The
       placeholder and the sentence that defines it
-      (`src/skills/corpus-grounding/SKILL.md:89-90`) stay. The three skills
-      that name their script without a line — `js-library-packaging`,
-      `storybook-workshop`, `tailwind-engineer` — gain one.
+      (`src/skills/corpus-grounding/SKILL.md:89-90`) stay.
+      **Corrected from reproduction:** FOUR skills name their script without
+      a line, not three — `js-library-packaging`, `storybook-workshop`,
+      `tailwind-engineer` and `react-shadcn-ui`, whose only invocation
+      example sits inside `shadcn_add.ts`, which 1.1's scope does not read.
+      All four gain one, and that script's six usage examples are rewritten
+      with them. A sixth reference file, `design-intelligence/references/
+      integration-mapping.md:27`, names the wrapper in prose about the same
+      CLI and is repaired here too; Context listed only its line 41.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts -t runner-is-node --reporter=verbose` -> /✓.*runner-is-node/
-- [ ] **4.2 The allowlist is deleted and the lint reads references for this
+- [x] **4.2 The allowlist is deleted and the lint reads references for this
       class.** `SCRIPTS_RUN_ALLOWLIST` is removed. The lint's scope gains
       `skills/*/references/*.md` for the skill-script form only
       (`<skills-root>/…/scripts/`); a second pattern refuses
@@ -153,14 +162,14 @@ this names files that exist and a test that runs.
       carrying the old line in a reference file makes the lint exit 1.
       `corrected-from-reproduction`.
       verify: `npx vitest run tests/scripts/lint_consumer_internal_refs.test.ts -t references-and-allowlist --reporter=verbose` -> /✓.*references-and-allowlist/
-- [ ] **4.3 The controls flip.** 1.1 asserts every taught target exists and
+- [x] **4.3 The controls flip.** 1.1 asserts every taught target exists and
       every runner is `node`; 1.2 asserts all six entry points start and exit
       with the code their fixture expects.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts` -> 0
 
 ## Phase 5 — A contract that names what exists
 
-- [ ] **5.1 The contract is rewritten against the tree.**
+- [x] **5.1 The contract is rewritten against the tree.**
       `docs/contracts/skill-bundled-assets.md` names the TypeScript sources,
       the emitted module, the form of 4.1, the build script of 3.1 and the
       test of 1.1 as its guard. The beta note no longer cites an absent file.
@@ -184,16 +193,16 @@ this names files that exist and a test that runs.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — In a temporary-home install, every skill-script path a shipped
+- [x] AC-1 — In a temporary-home install, every skill-script path a shipped
       skill or reference teaches exists and its runner is `node`.
-- [ ] AC-2 — Each of the six entry points starts from an empty directory
+- [x] AC-2 — Each of the six entry points starts from an empty directory
       through the taught form.
-- [ ] AC-3 — `search` without `--domain` exits 0 on all six corpus manifests.
-- [ ] AC-4 — No consumer skill or skill reference teaches the skill-script
+- [x] AC-3 — `search` without `--domain` exits 0 on all six corpus manifests.
+- [x] AC-4 — No consumer skill or skill reference teaches the skill-script
       line through `./scripts-run` or `tsx`, and the lint that says so carries
       no allowlist.
-- [ ] AC-5 — A bundle that does not match its source fails a pull request.
-- [ ] AC-6 — Every path in `skill-bundled-assets.md` exists.
+- [x] AC-5 — A bundle that does not match its source fails a pull request.
+- [x] AC-6 — Every path in `skill-bundled-assets.md` exists.
 
 ## Decisions
 

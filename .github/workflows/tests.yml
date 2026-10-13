@@ -141,6 +141,16 @@ jobs:
           npm run build:install-bundle
           git diff --exit-code -- dist/install/
 
+      # The six skill entry points ship as committed single-file bundles, so a
+      # consumer can start them with the one runtime the install proves
+      # present. A source edit without a rebuild would ship old behaviour
+      # under a path the skill still teaches — the same class as the step
+      # above, and the reason that step exists.
+      - name: Skill-script bundles are fresh (src/skills/*/scripts/*.mjs)
+        run: |
+          npm run build:skill-scripts
+          git diff --exit-code -- 'src/skills/*/scripts/*.mjs'
+
       # road-to-feedback-9.2.0-followups Phase 4: three 9.1 commits each
       # manually rebuilt this bundle to strip a leaked build-machine path
       # (worktree-relative, repo-relative, and full /Users/<name>/... module
