@@ -40,16 +40,30 @@ interface Commitish {
     breaking: boolean;
 }
 
+type Classification = 'tombstoned' | 'renamed' | 'neither';
+
 interface HistoryFixture {
     template_paths: string[];
     version_tags: number;
+    consecutive_pairs: number;
     pairs_with_template: number;
+    excluded_pairs: {
+        count: number;
+        by_bump: Record<string, number>;
+        pairs: Array<{ from: string; to: string; bump: string; why: string }>;
+    };
     tally: Record<string, number>;
+    tally_at_tag: Record<string, number>;
     pairs: Array<{
         from: string;
         to: string;
         bump: string;
-        removed: Array<{ key: string; classification: 'tombstoned' | 'renamed' | 'neither' }>;
+        tombstone_map_files_at_tag: string[];
+        removed: Array<{
+            key: string;
+            classification: Classification;
+            classification_at_tag: Classification;
+        }>;
     }>;
 }
 
@@ -139,10 +153,34 @@ describe('release settings delta — control', () => {
             }
         }
 
-        // The eighteen unannotated removals are all pre-9.x. The recent era's
-        // discipline is real; the contract page's rule is what it never was.
+        // The eighteen unannotated removals are all pre-9.x, and at each of
+        // those tags NO tombstone map existed — so they are an era with no
+        // mechanism, not an era that had one and skipped it.
         const unannotated = h.pairs.filter((p) => p.removed.some((r) => r.classification === 'neither'));
         expect(unannotated.map((p) => p.to)).toEqual(['1.12.0', '1.20.0', '2.13.0', '3.1.0', '5.7.0']);
+        for (const p of unannotated) {
+            expect(`${p.to}:${String(p.tombstone_map_files_at_tag.length)}`).toBe(`${p.to}:0`);
+        }
+
+        // Classifying past removals against TODAY's maps could in principle
+        // credit a release with an entry added later. It does not here: the
+        // at-tag reading agrees with the today reading on every key, which is
+        // a measurement rather than a defence.
+        expect(h.tally_at_tag).toEqual(h.tally);
+        for (const p of h.pairs) {
+            for (const r of p.removed) {
+                expect(`${p.to}/${r.key}`).toBe(`${p.to}/${r.key}`);
+                expect(r.classification_at_tag).toBe(r.classification);
+            }
+        }
+
+        // The pairs the walk could not read are a contiguous PREFIX of
+        // history, before the template existed — and carry no major, so
+        // dropping them cannot tilt the minor-versus-major split above.
+        expect(h.consecutive_pairs).toBe(h.pairs_with_template + h.excluded_pairs.count);
+        expect(h.excluded_pairs.count).toBe(19);
+        expect(h.excluded_pairs.by_bump['major']).toBeUndefined();
+        expect(h.excluded_pairs.pairs.map((e) => e.to).every((t) => t.startsWith('1.'))).toBe(true);
     });
 });
 

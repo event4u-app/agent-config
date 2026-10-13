@@ -44,9 +44,17 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 
 - The contract: "These surfaces only change in a **breaking release** … Config
   formats — `.agent-settings.yml` keys and semantics" (`docs/releases.md:29-34`).
-- The practice. Reproduced with the round's tag-walk over this tree's local
-  tags: **196** consecutive tag pairs carry a settings template; **11** lost
-  leaf keys; **9 of the 11 were minors (74 keys)**, 2 were majors (5 keys).
+- The practice. Re-reproduced 2026-10-13 over this tree's local tags, reading
+  the template out of each tag over its four historical paths: **197**
+  consecutive tag pairs carry a settings template; **11** lost leaf keys;
+  **9 of the 11 were minors (75 keys)**, 2 were majors (5 keys). The 196/74
+  first written here is superseded by this reading, which the fixture carries.
+  Of the 80 lost keys, 61 are tombstoned, 1 renamed and 18 are in neither map;
+  classified against the maps as they stood AT each tag the answer is the same,
+  key for key, and at every tag carrying an unannotated removal no tombstone map
+  existed at all. The 19 pairs the walk cannot read are a contiguous prefix
+  (1.0.0 → 1.8.0) from before the template existed, and none of them is a
+  major.
   `corrected-from-reproduction` — the round read 8 minors / 29 keys at
   `f76e83e47`; 16.3.0 → 16.4.0 (`b35d432b1`, "retire 46 default-neutral
   derivable settings keys") is the ninth, the largest by far. All 46 of that
@@ -180,17 +188,38 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 | D3 | reversible-technical | agent | Reuse the consumer-side delta and its six kinds | A second vocabulary for the same change would be two clocks | The review form needs a kind the release must not read |
 | D4 | reversible-technical | agent | An untombstoned removal refuses under either owner answer | With no entry in either map the installed value stops applying with no warning; no reading of the contract permits that | A removal is ever meant to be silent |
 | D5 | reversible-technical | agent | The committed file has one writer and is cross-checked by the upgrade leg | The install-layout golden is the precedent; 4.1 ties the file to shipped bytes | The file and the published surface are found to differ |
+| D7 | contested-technical | council:settings-minor-removal-2026-10-13 | The owner, not the council and not the agent, picks (a) or (b). The council may advise and did; the blocker stays open and steps 3.3 and 5.1 stay open with it | Both seats, 2 of 2 present, quorum concluded, no billable spend (`anthropic` and `openai`, both subscription-authed). Independently reached owner-reserved: amending a published versioning promise is governance, not implementation. One seat: "A council can analyze and recommend. An agent can implement an owner decision. But amending the contract is governance." The other: "a council may recommend; an agent may implement only an explicit owner decision" | The owner delegates this class of contract amendment in writing |
+| D8 | reversible-technical | council:settings-minor-removal-2026-10-13 | The recommendation carried to the owner changes from (b) to (a); both readings are kept on the blocker so the owner sees the disagreement rather than only its outcome | Both seats chose (a) against this file's own (b). Their argument is one the file did not have: a tombstone reports breakage and does not prevent it, so membership in a runtime diagnostic map is not evidence of behavioural compatibility; and a contract amended to match its own violations is weaker than no published promise. `BREAKING_CHANGES.md:52` records 11.0.0 as a major for removing one key, which is the contract being honoured deliberately once | The owner picks (b), or behavioural-compatibility evidence for the 75 keys is produced |
 | D6 | deterministic | agent | Closure pass 2026-10-11: the four `typed-op` hits are the words "publish" and "push" in the frontmatter, a `relates` note and the non-goals — operations this roadmap explicitly does not perform; the one real owner question is the blocker below | `closure_scan` on this file: 4 typed-op listings, all in negated or descriptive prose | A step is added that publishes or pushes |
 
 ## Blockers
 
 ### blocker: what-a-minor-may-remove
-- **Status:** open — raised 2026-10-11 from inbox round `inbox-2026-10-k`, which carried no owner turn on this question.
+- **Status:** open — raised 2026-10-11 from inbox round `inbox-2026-10-k`, which carried no owner turn on this question. Put to the council 2026-10-13 (`council:settings-minor-removal-2026-10-13`, both seats, 2 of 2, concluded, no billable spend): **owner-reserved**, unanimously and independently. The council advised; it did not and may not settle it.
 - **Owner:** owner — the release contract is a public commitment; the council may advise.
 - **Blocks:** steps 3.3 and 5.1, AC-5.
 - **What to do:** pick exactly one — (a) keep `docs/releases.md:29-34` as written: any removal or rename of a settings key ships only in a major, and `src/scripts/_lib/settings_renamed_keys.ts:10` is changed to say an alias is dropped only in a major; or (b) amend `docs/releases.md` to say a key may be removed or renamed in a minor when it leaves an entry in `REMOVED_KEYS` or `RENAMED_KEYS`, and that an alias is dropped only in a major.
 - **Resolved when:** `docs/releases.md` states (a) or (b) and `npx vitest run tests/scripts/release_settings_delta.test.ts -t three-sentences-agree` exits 0.
-- **Recommendation:** (b). Nine minors removed 74 keys, each since the contract page landed carrying a tombstone or alias, including 16.4.0's 46; the page describes a rule the releases have not followed, and (a) would have made 16.4.0 a major. Keeping aliases until the next major means a rename never becomes a silent removal.
+- **Recommendation:** the two readings disagree, and both are carried here so the owner decides on the
+  disagreement rather than on one side of it.
+  - **This file's original reading — (b).** Nine minors removed 75 keys (reproduced: 75, not the 74
+    first written here), each since 9.29.0 carrying a tombstone or alias, including 16.4.0's 46; the
+    page describes a rule the releases have not followed, and (a) would have made 16.4.0 a major.
+    Keeping aliases until the next major means a rename never becomes a silent removal.
+  - **The council's reading 2026-10-13 — (a), both seats, independently.** A tombstone reports
+    breakage; it does not prevent it, so membership in a mutable runtime diagnostic map is evidence of
+    detectability and not of behavioural compatibility. The nine minors establish that enforcement was
+    absent, not that consumers consented to a weaker contract — `BREAKING_CHANGES.md:52` records 11.0.0
+    as a major taken deliberately for one key, `worktrees.mode`. And a contract amended to match its own
+    violations sets the precedent for the next ones. One seat added the sharpest form: under (b) the
+    tombstone map would both authorise a removal and decide whether it is detected, which is circular.
+  - **Both readings agree on one thing:** the alias-retention sentence at
+    `settings_renamed_keys.ts:10` changes under EITHER option, because dropping an alias IS the removal.
+    It cannot be deferred past whichever answer the owner picks.
+  - **What the council's circularity objection does NOT reach:** step 3.1, as built, grants nothing. It
+    refuses a removal carrying no entry in either map and reports a carried removal without refusing it;
+    no tombstone authorises anything today. The circularity would arrive with 3.3, which is exactly the
+    step this blocker holds.
 - **If you do nothing:** 3.1 still stops an untombstoned removal; the contract page keeps promising a rule the last nine minors broke, and the rename map keeps a retention rule that contradicts both.
 
 ## Risk Register
