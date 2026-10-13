@@ -11,6 +11,25 @@
  * `docs_digest` closes that window: the sha256 of the body as fetched by the
  * last digest run. This script re-fetches each `docs_url` and compares.
  *
+ * TWO CORPORA, ONE WATCHER. Every `docs_url` in the lowering table is a HOOKS
+ * page, because that is what a lowering row is about. A vendor page this tree
+ * cites for anything else — the skill LISTING contract that
+ * `_lib/host_listing_model.ts` reads every number off, say — had no row there
+ * and was therefore re-fetched by nothing: it reached the tree only by
+ * accident. `hooks/host_docs_pages.yaml` is the sibling list for those pages,
+ * carrying the same four provenance fields, and it is watched here on exactly
+ * the same terms. It is a separate FILE because a listing page is not a
+ * `(host, surface, slot)` and a row with every hook column null would be a lie
+ * shaped like data — and because the lowering table is on the plumbing list,
+ * where an edit carries a ratification artifact that a list of URLs does not
+ * need. A page row borrows the finding's `(host, surface)` pair as
+ * `pages/<id>`, so one `classify` serves both and the two writers stay apart.
+ *
+ * The scan-scope floor is checked PER CORPUS. Merging first and checking the
+ * total is how a second corpus silently repairs the first one's floor: an
+ * empty lowering table would pass on the strength of the page list, which is
+ * the one case that floor exists to catch.
+ *
  * It is deliberately NOT "as fetched on `docs_at`". Those are two events — the
  * reading a row's answers came from, and the hashing of a body — and the very
  * first fill separated them (digests taken 2026-10-01 against rows read
@@ -90,6 +109,13 @@ import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
+import {
+    HOST_DOCS_PAGES_PATH,
+    PAGES_PSEUDO_HOST,
+    applyDocsPageEdits,
+    parseDocsPages,
+    type DocsPage,
+} from './hooks/host_docs_pages.js';
 
 /** sha256, hex — the digest shape `verified.docs_digest` carries. */
 export function digestOf(body: string): string {
@@ -193,6 +219,26 @@ export function watchable(
         }
     }
     return out;
+}
+
+/**
+ * The same shape for the SIBLING page list.
+ *
+ * A page is not a (host, surface) and does not pretend to be one: it borrows
+ * the pair as `pages/<id>` so one `classify` serves both corpora and the
+ * output sorts them together. Growing a third axis on the finding would have
+ * forced every printer, filter and writer in this file to learn about it, for
+ * a distinction that is one row label wide.
+ */
+export function watchablePages(
+    pages: ReadonlyMap<string, DocsPage>,
+): ReadonlyArray<{ host: string; surface: string; url: string | null; digest: string | null }> {
+    return [...pages.values()].map((p) => ({
+        host: PAGES_PSEUDO_HOST,
+        surface: p.id,
+        url: p.docs_url,
+        digest: p.docs_digest,
+    }));
 }
 
 /**
@@ -357,6 +403,7 @@ const KNOWN_FLAGS: ReadonlySet<string> = new Set([
     '--strict-fetch',
     '--quiet',
     '--lowering',
+    '--pages',
     '--today',
 ]);
 
@@ -462,11 +509,19 @@ function selfTest(): number {
     fs.writeFileSync(emptyTable, 'schema_version: 1\nhosts: {}\n');
     const malformed = path.join(tmp, 'bad.yaml');
     fs.writeFileSync(malformed, 'schema_version: 1\nnot_hosts: []\n');
+    // The SIBLING corpus gets the same two polarity fixtures. Without them the
+    // page list would be the one corpus whose refusals nothing exercises, and
+    // its parser is the only thing standing between an empty list and a
+    // watcher that reports clean over zero pages.
+    const emptyPages = path.join(tmp, 'empty-pages.yaml');
+    fs.writeFileSync(emptyPages, 'pages: {}\n');
+    const malformedPages = path.join(tmp, 'bad-pages.yaml');
+    fs.writeFileSync(malformedPages, 'pages:\n  x:\n    docs_url: not-a-url\n');
 
     const cliCode = runSelfTest({
         gate: 'check_host_docs_digest',
-        minCases: 6,
-        minRejectCases: 4,
+        minCases: 8,
+        minRejectCases: 6,
         cases: [
             {
                 name: 'an unknown flag is refused, not ignored',
@@ -492,6 +547,16 @@ function selfTest(): number {
                 name: 'a malformed table exits non-zero instead of throwing past the contract',
                 expect: 'reject',
                 run: () => runGateCli(repoRoot, rel, ['--lowering', malformed, '--quiet'], repoRoot),
+            },
+            {
+                name: 'an empty page list is refused rather than reported clean',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--pages', emptyPages, '--quiet'], repoRoot),
+            },
+            {
+                name: 'a malformed page row exits non-zero instead of being skipped',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--pages', malformedPages, '--quiet'], repoRoot),
             },
             {
                 name: 'the committed table passes the offline report',
@@ -553,6 +618,9 @@ export async function main(argv: readonly string[]): Promise<number> {
         return next;
     };
     const tablePath = valueOf('--lowering') ?? HOST_LOWERING_PATH;
+    // Sibling of `--lowering`, for the same reason: a test must be able to
+    // drive the whole run over a fixture without touching the committed file.
+    const pagesPathArg = valueOf('--pages');
     const todayRaw = valueOf('--today');
     if (todayRaw !== null) {
         // Shape AND validity. Shape alone accepted `2026-13-45`, which then
@@ -607,7 +675,37 @@ export async function main(argv: readonly string[]): Promise<number> {
         );
         return 2;
     }
-    const rows = watchable(table);
+    // The sibling list, in the SAME guard and with the same contract: a page
+    // this tree cites for something other than a hook contract has no row in
+    // the table above, so before this list it was re-fetched by nothing.
+    const pagesPath = pagesPathArg ?? HOST_DOCS_PAGES_PATH;
+    let pagesText: string;
+    let pages: ReadonlyMap<string, DocsPage>;
+    try {
+        pagesText = fs.readFileSync(pagesPath, 'utf-8');
+        pages = parseDocsPages(pagesText);
+    } catch (exc) {
+        process.stderr.write(
+            `check_host_docs_digest: cannot read or parse ${pagesPath}: ` +
+                `${exc instanceof Error ? exc.message : String(exc)}\n`,
+        );
+        return 2;
+    }
+    const loweringRows = watchable(table);
+    const pageRows = watchablePages(pages);
+    // PER-CORPUS, not over the union. Merging first and checking the total is
+    // how a second corpus silently repairs the first one's scan-scope floor:
+    // an empty lowering table would pass on the strength of the page list, and
+    // the one case this floor exists to catch is exactly that. The page list's
+    // own emptiness is refused by its parser, one layer down.
+    if (loweringRows.length === 0) {
+        process.stderr.write(
+            `❌  check_host_docs_digest: ${tablePath} resolved zero verified rows. A watcher over an ` +
+                'empty corpus reports no drift and proves nothing.\n',
+        );
+        return 2;
+    }
+    const rows = [...loweringRows, ...pageRows];
     // Scan-scope hardening, the same contract every other gate here carries: a
     // gate that silently walks an empty corpus reports "clean" and is
     // indistinguishable from a gate that works. If the table is ever moved or
@@ -618,7 +716,10 @@ export async function main(argv: readonly string[]): Promise<number> {
             gate: 'check_host_docs_digest',
             scanned: rows.length,
             units: 'verified row(s)',
-            roots: ['src/scripts/hooks/host_lowering.yaml'],
+            roots: [
+                'src/scripts/hooks/host_lowering.yaml',
+                'src/scripts/hooks/host_docs_pages.yaml',
+            ],
         });
     } catch (exc) {
         // An empty or moved corpus is an ANTICIPATED input condition, so it
@@ -688,7 +789,42 @@ export async function main(argv: readonly string[]): Promise<number> {
     const unreachable = findings.filter((f) => f.state === 'unreachable');
 
     if (doWrite) {
-        const { text: next, expired, missed } = applyFindings(text, findings, today);
+        // Two corpora, two writers. A page-list finding must never reach
+        // `applyFindings`: that walk is keyed on the lowering table's host and
+        // surface headers, so a `pages/<id>` row would resolve to nothing and
+        // be reported as a successful no-op.
+        const pageFindings = findings.filter((f) => f.host === PAGES_PSEUDO_HOST);
+        const pageEdits = pageFindings.flatMap((f) =>
+            f.state === 'filled' && f.now !== null
+                ? [{ id: f.surface, digest: f.now }]
+                : f.state === 'changed'
+                    // Mirrors the sibling exactly: the recorded digest is
+                    // EVIDENCE and stays; `expires` is what moves.
+                    ? [{ id: f.surface, expires: dayBefore(today) }]
+                    : [],
+        );
+        if (pageEdits.length > 0) {
+            const out = applyDocsPageEdits(pagesText, pageEdits);
+            if (out.missed.length > 0) {
+                process.stderr.write(
+                    `❌  check_host_docs_digest: ${out.missed.length} page row(s) were resolved but NOT ` +
+                        `written: ${out.missed.join(', ')}. Nothing was claimed for them.\n`,
+                );
+                return 2;
+            }
+            if (out.text !== pagesText) {
+                fs.writeFileSync(pagesPath, out.text);
+                process.stdout.write(`✍️   ${path.basename(pagesPath)} updated.\n`);
+            }
+            for (const e of out.expired) {
+                process.stdout.write(
+                    `   pages/${e}: docs body changed — \`expires\` pulled to ${dayBefore(today)}, ` +
+                        'digest left as recorded. Read the page and re-establish the row by hand.\n',
+                );
+            }
+        }
+        const lowering = findings.filter((f) => f.host !== PAGES_PSEUDO_HOST);
+        const { text: next, expired, missed } = applyFindings(text, lowering, today);
         if (next !== text) {
             fs.writeFileSync(tablePath, next);
             process.stdout.write(`✍️   ${path.basename(tablePath)} updated.\n`);

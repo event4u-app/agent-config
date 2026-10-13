@@ -119,7 +119,7 @@ as today.
       `src/config/host-capabilities.yml`, which is the discipline-lift model
       list, not a host-behaviour store.
       verify: `./scripts-run src/scripts/lint_evidence_artifacts --all` -> 0
-- [ ] **0.2 Put the skills page under the digest watch.** A sibling page list
+- [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in
       `host_lowering.yaml`, whose rows are host-by-hook-slot and whose edits
