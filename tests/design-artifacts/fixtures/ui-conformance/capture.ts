@@ -35,6 +35,12 @@ export const VARIANTS = [
     'variant-no-handles-declared',
     'variant-no-handles-media-rule',
     'variant-no-handles-removed',
+    // D11, added after an independent review of the first implementation. Two
+    // pages that render the same thing and differ only in markup technique:
+    // the second wraps its buttons in a `display: contents` element. Neither
+    // carries a script, because neither has anything to bind to.
+    'reference-boxless',
+    'variant-boxless',
 ] as const;
 
 /**

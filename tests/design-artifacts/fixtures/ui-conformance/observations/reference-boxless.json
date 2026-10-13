@@ -1,0 +1,59 @@
+{
+  "variant": "reference-boxless",
+  "source": "tests/design-artifacts/fixtures/ui-conformance/reference-boxless/index.html",
+  "nodes": [],
+  "signature": {
+    "320": {
+      "leaves": {
+        "control": 2,
+        "heading": 0,
+        "media": 0,
+        "text": 1,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1
+      },
+      "overflow": false
+    },
+    "375": {
+      "leaves": {
+        "control": 2,
+        "heading": 0,
+        "media": 0,
+        "text": 1,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1
+      },
+      "overflow": false
+    },
+    "768": {
+      "leaves": {
+        "control": 2,
+        "heading": 0,
+        "media": 0,
+        "text": 1,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1
+      },
+      "overflow": false
+    },
+    "1440": {
+      "leaves": {
+        "control": 2,
+        "heading": 0,
+        "media": 0,
+        "text": 1,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1
+      },
+      "overflow": false
+    }
+  }
+}

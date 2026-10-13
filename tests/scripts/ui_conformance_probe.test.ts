@@ -334,6 +334,8 @@ describe('ui_conformance_probe — the frozen records are still true', () => {
             'variant-no-handles-declared',
             'variant-no-handles-media-rule',
             'variant-no-handles-removed',
+            'reference-boxless',
+            'variant-boxless',
         ] as const) {
             const fresh = await captureVariant(path.join(FIXTURE, variant, 'index.html'));
             const frozen = readObservation(path.join(OBS, `${variant}.json`));
@@ -707,6 +709,89 @@ describe('the structure reading without handles — Phase 3, a field beside the 
             expect(arrangementChanges(regen[w]!)).toContain('3:row 0->1');
         }
         expect(regen['375']!.overflow).toEqual({ reference: false, target: true });
+    });
+
+    it('page-signature-table: a boxless wrapper is a markup technique, not a design loss', () => {
+        // D11, added after an INDEPENDENT review of the first implementation
+        // converged on this as a blocker. `reference-boxless/` and
+        // `variant-boxless/` render the same page; the second wraps its two
+        // buttons in a `display: contents` element, which generates no box, so
+        // its children lay themselves out in `main` exactly as the first page's
+        // do. A faithful port does this whenever a component boundary must not
+        // become a layout box.
+        const r = reading('reference-boxless', 'variant-boxless');
+        for (const w of VIEWPORTS) {
+            expect(leafChanges(r[String(w)]!), `boxless at ${w}`).toEqual([]);
+            expect(arrangementChanges(r[String(w)]!), `boxless at ${w}`).toEqual([]);
+            expect(r[String(w)]!.overflow.reference).toBe(r[String(w)]!.overflow.target);
+        }
+
+        // Silence is not enough on its own: two pages the census cannot SEE also
+        // read as identical. The absolute counts are asserted so the agreement is
+        // an agreement about something.
+        //
+        // `control: 2` is the blocker's regression. Measured on a reduced form of
+        // this page before the fix: 0, because an element whose own box was zero
+        // was dropped TOGETHER WITH ITS SUBTREE.
+        //
+        // `empty: 1` is the second defect's. The bordered div's only content is
+        // hidden, so the page shows an empty box; `textContent` returns the
+        // hidden words and would have made it a `text` leaf.
+        for (const name of ['reference-boxless', 'variant-boxless'] as const) {
+            const sig = readObservation(path.join(OBS, `${name}.json`)).signature;
+            for (const w of VIEWPORTS) {
+                expect(sig?.[String(w)]?.leaves, `${name} at ${w}`).toEqual({
+                    control: 2,
+                    heading: 0,
+                    media: 0,
+                    text: 1,
+                    empty: 1,
+                });
+            }
+        }
+    });
+
+    it('signature-absent-is-not-available: a structurally short record is withheld, not read as zeroes', () => {
+        // Also from the independent review. An observation crosses a JSON
+        // boundary through an unchecked cast, so `WidthSignature` is a claim
+        // about the file rather than a guarantee. Reading a missing leaf count as
+        // 0 turns a short record into a confident "this kind is at zero" and can
+        // report a change the file never recorded — the fabricated-clean reading
+        // the rest of this module refuses, arriving through an unwatched door.
+        const whole = readObservation(path.join(OBS, 'reference-no-handles.json'));
+        expect(evaluate(whole, whole, []).page_signature?.status).toBe('read');
+
+        const maim = (edit: (sig: Record<string, Record<string, unknown>>) => void) => {
+            const copy = JSON.parse(JSON.stringify(whole)) as typeof whole;
+            edit(copy.signature as unknown as Record<string, Record<string, unknown>>);
+            return evaluate(copy, whole, []).page_signature;
+        };
+
+        // A whole width gone · one leaf kind gone · a count that is not a count ·
+        // a negative count · an overflow flag that is not a flag. Each on its own
+        // withholds the WHOLE reading, because a partial one cannot say which of
+        // its rows the short record touched.
+        for (const [name, edit] of [
+            ['a width missing', (s: Record<string, Record<string, unknown>>) => delete s['375']],
+            ['a kind missing', (s: Record<string, Record<string, unknown>>) => delete (s['1440']!['leaves'] as Record<string, unknown>)['media']],
+            ['a count that is a string', (s: Record<string, Record<string, unknown>>) => ((s['768']!['leaves'] as Record<string, unknown>)['text'] = '2')],
+            ['a negative count', (s: Record<string, Record<string, unknown>>) => ((s['320']!['leaves'] as Record<string, unknown>)['control'] = -1)],
+            ['overflow that is not a boolean', (s: Record<string, Record<string, unknown>>) => (s['1440']!['overflow'] = 'no')],
+        ] as const) {
+            const field = maim(edit);
+            expect(field?.status, name).toBe('not_available');
+            expect(field?.widths, name).toEqual([]);
+        }
+
+        // Sensitivity in the other direction: an arrangement key absent on one
+        // side is NOT a short record. The multiset is sparse by construction — a
+        // missing key means no container on that side had that shape, which is a
+        // measured zero. Withholding here would make the reading useless, since
+        // every real difference shows up as exactly this.
+        const sparse = maim((s) => delete (s['1440']!['arrangement'] as Record<string, unknown>)['2:row']);
+        expect(sparse?.status).toBe('read');
+        const at1440 = sparse?.widths.find((w) => w.width === '1440');
+        expect(at1440?.arrangement.map((a) => a.key)).toContain('2:row');
     });
 
     it('header-names-page-signature: the header describes the run that exists, and what it still cannot do', () => {

@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — no handles, the plain side of the boxless pair</title>
+<link rel="stylesheet" href="styles.css">
+<!-- D11 (the plain side) — added by `road-to-a-structure-reading-without-handles`
+     AFTER an independent review of the first implementation found two defects
+     that this directory now pins.
+
+     The pair asks one question: does the reading say anything when two pages
+     RENDER THE SAME THING and differ only in markup technique? Its sibling
+     `variant-boxless/` wraps the two buttons in a `display: contents` element.
+     Such an element generates no box, so its children lay themselves out in
+     `main` exactly as these do and the two pages are pixel-identical.
+
+     REGISTERED READING for the pair: nothing, at every width.
+
+     Measured BEFORE the fix, on a reduced form of this page: control 0 where
+     the page showed 2. The first implementation dropped any element whose own
+     box was zero TOGETHER WITH ITS SUBTREE, so every control behind such a
+     wrapper was invisible and the census reported a loss that had not happened.
+
+     The `.box` div below pins the second defect. Its only content is hidden, so
+     the page shows an empty bordered box. It must count as an `empty` leaf.
+     `textContent` returns the hidden words and would make it a `text` leaf — the
+     census inventing a leaf, which is the first defect's mirror image. -->
+<main>
+  <button>One</button>
+  <button>Two</button>
+  <p>Visible paragraph.</p>
+  <div class="box"><span class="gone">hidden words that do not render</span></div>
+</main>

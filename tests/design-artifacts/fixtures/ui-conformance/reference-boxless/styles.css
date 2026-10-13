@@ -1,0 +1,15 @@
+/* Shared, byte-identical with `variant-boxless/styles.css`. The two pages must
+   render the same thing; only their markup differs, which is what makes the
+   pair a control for a port technique rather than a layout question. */
+body { margin: 0; font-family: system-ui, sans-serif; }
+main { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 16px; }
+button { padding: 8px 16px; border: 0; background-color: rgb(21, 94, 117); color: rgb(255, 255, 255); }
+.box { padding: 20px; border: 1px solid rgb(15, 23, 42); }
+
+/* The wrapper under test. It generates NO box at all, so its children lay
+   themselves out in `main` exactly as if the wrapper were not written. */
+.contents { display: contents; }
+
+/* Hidden, and hidden is the point: its text is in `textContent` and is not on
+   the page. A census that reads `textContent` invents a leaf here. */
+.gone { display: none; }

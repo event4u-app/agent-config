@@ -285,3 +285,77 @@ A control that wraps a whole region — an `<a>` around a card, say — is one
 control leaf, and nothing inside it is counted. This is a loss of sensitivity
 rather than a false report, and it is the price of not looking inside a semantic
 atom. It joins the two limits above as something this reading does not do.
+
+### Two defects an independent review found, and the fixture that pins them
+
+The first implementation was reviewed by two models of different providers,
+neither of which wrote it. Both returned REQUEST_CHANGES and both named the same
+blocker. The fix and this directory pair are the response; the measurements
+below were taken before and after it.
+
+**1. A boxless element was dropped together with its subtree.** The traversal
+confused "has a rendered box" with "contains rendered descendants". An element
+with `display: contents` generates no box at all while rendering its children
+normally, and a zero-height wrapper with overflowing content is the same case
+from the other side. Both were dropped whole.
+
+```
+measured on a reduced page showing two buttons behind a `display: contents` wrapper
+  before:  control 0      after:  control 2
+```
+
+Zero where the page showed two. Not a loss of sensitivity — the census reporting
+a loss that had not happened, on a technique a faithful port uses whenever a
+component boundary must not become a layout box. A boxless, non-hidden element
+is now transparent: neither a leaf nor a container, with its children lifted
+into its parent's list in document order. "A zero box is not rendered" still
+holds of the element itself; it never held of the element's children.
+
+**2. Hidden text was counted as a rendered leaf.** `textContent` includes the
+text of `display: none` and `visibility: hidden` descendants, so a box-bearing
+wrapper whose only content was hidden counted as a `text` leaf — the census
+inventing a leaf the page does not show, which is the first defect's mirror.
+The reading is `innerText` now, which is the rendered one.
+
+**3. A short record was read as zeroes.** An observation crosses a JSON boundary
+through an unchecked cast, so a missing leaf count was read as "this kind is at
+zero" and could report a change the file never recorded. A width that is not
+structurally complete now withholds the whole reading. The arrangement multiset
+is deliberately exempt: it is sparse by construction, so a key absent on one side
+is a measured zero, not a short record.
+
+| Directory | What it is |
+|---|---|
+| `reference-boxless/` | D11 — two buttons, a paragraph and a bordered box whose only content is hidden. |
+| `variant-boxless/` | D11 — the same rendered page, with the two buttons inside a `display: contents` wrapper. |
+
+**Registered reading for the pair: nothing, at every width**, with absolute
+counts `control 2 · text 1 · empty 1` on both sides. Silence alone would also be
+produced by a census that cannot see the page at all, so the counts are asserted
+beside it.
+
+**What the fix did not move.** Every observation committed before it re-captured
+byte-identical: no existing fixture uses a boxless wrapper, hidden-only text in a
+box-bearing leaf, or a short record. All six exactly-reproducing registered rows
+and the one disagreeing row stand unchanged.
+
+**One finding was checked and rejected.** Both reviewers stated that the field
+is produced when EITHER side carries no handle, quoting a condition
+`!referenceNodes.length || !targetNodes.length`. No such line exists: the branch
+is a single reference-side test, and a test named `fires on the reference side
+only` has pinned that asymmetry since before this work. Two independent seats
+agreeing on a line that is not in the file is the reason a converged verdict is
+read against the tree rather than applied to it.
+
+**Three limits the review added**, registered beside the three above rather than
+fixed, because each is a property of a kind-level reading rather than a defect
+in one:
+
+- Arrangement is decided over consecutive children in DOM order, so a flex or
+  grid reorder that changes only visual order is invisible.
+- `overflow` is horizontal only, which is what the reading was asked for; a page
+  that starts overflowing vertically produces nothing.
+- The control selector is a curated subset of roles, in the same spirit as
+  `COMPARED_PROPERTIES` — `radio`, `slider`, `spinbutton` and `combobox` are
+  absent. An element carrying one of those is counted by what it contains rather
+  than as a control.

@@ -81,6 +81,16 @@
  * all of it, with the one place the reading disagrees with the table it was
  * measured against.
  *
+ * SO "IT REPORTS A REMOVED ELEMENT" IS TRUE OF A SINGLE CHANGE AND NOT IN
+ * GENERAL, and the difference is worth the sentence. These are COUNTS: a
+ * removal offset by an addition of the same kind at the same width nets to
+ * nothing, and so does a reparenting that leaves the arrangement multiset
+ * standing. Content removed from inside a heading or a control is invisible for
+ * the same reason the wrapper around one is — the reading does not look in
+ * there. Arrangement is decided over consecutive children in DOM order, so a
+ * flex or grid reorder that changes only visual order produces nothing, and the
+ * overflow flag is horizontal only.
+ *
  * THE NOISE CONTROL. Computed-style comparison over every property fires on
  * font fallbacks and token indirection nobody cares about, so the compared set
  * is curated (`COMPARED_PROPERTIES`) to the properties a design token actually
@@ -396,14 +406,39 @@ const EMPTY_REFERENCE_REASON =
  * The check runs on BOTH sides, because a reader that only looked at the
  * reference would say "no change" for a target captured by an older probe.
  */
+/**
+ * Is one width's record complete enough to be read?
+ *
+ * VALIDATED AT THE BOUNDARY, BECAUSE THE INTERFACE DOES NOT REACH IT. An
+ * observation arrives through `JSON.parse` and an unchecked cast, so
+ * `WidthSignature` is a claim about the file rather than a guarantee. The first
+ * version read a missing leaf count as `a.leaves[k] ?? 0`, which turns a
+ * structurally incomplete record into a confident "this kind is at zero" and
+ * can report a change that is an artefact of the file being short. That is the
+ * fabricated-clean reading the rest of this module refuses, arriving through the
+ * one door nothing was watching.
+ */
+function widthIsComplete(row: unknown): row is WidthSignature {
+    if (!row || typeof row !== 'object') return false;
+    const r = row as Partial<WidthSignature>;
+    if (typeof r.overflow !== 'boolean') return false;
+    if (!r.leaves || typeof r.leaves !== 'object') return false;
+    if (!r.arrangement || typeof r.arrangement !== 'object') return false;
+    const countable = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+    if (!LEAF_KINDS.every((k) => countable((r.leaves as Record<string, unknown>)[k]))) return false;
+    return Object.values(r.arrangement as Record<string, unknown>).every(countable);
+}
+
 export function readPageSignature(reference: Observation, target: Observation): PageSignatureField {
     const missing: string[] = [];
     if (!reference.signature) missing.push('the reference');
     if (!target.signature) missing.push('the target');
-    const widthsMissing =
+    const incomplete =
         !missing.length &&
-        VIEWPORTS.some((w) => !reference.signature?.[String(w)] || !target.signature?.[String(w)]);
-    if (missing.length || widthsMissing) {
+        VIEWPORTS.some(
+            (w) => !widthIsComplete(reference.signature?.[String(w)]) || !widthIsComplete(target.signature?.[String(w)]),
+        );
+    if (missing.length || incomplete) {
         return {
             status: 'not_available',
             scope: PAGE_SIGNATURE_SCOPE,
@@ -411,8 +446,10 @@ export function readPageSignature(reference: Observation, target: Observation): 
                 ? `${missing.join(' and ')} carries no page signature, so there was nothing to read. ` +
                   'An observation captured before the probe swept widths has none; this is not a ' +
                   'statement that the two pages agree.'
-                : 'a page signature is present but does not cover every width the probe sweeps, so ' +
-                  'the reading would be partial. Re-capture rather than read it.',
+                : 'a page signature is present but is not complete at every width the probe sweeps — a ' +
+                  'width is absent, or a leaf count or overflow flag is missing or not a count. A short ' +
+                  'record read as zeroes would report a change the file never recorded, so the whole ' +
+                  'reading is withheld. Re-capture rather than read it.',
             widths: [],
         };
     }
@@ -421,15 +458,22 @@ export function readPageSignature(reference: Observation, target: Observation): 
         const key = String(w);
         const a = reference.signature![key]!;
         const b = target.signature![key]!;
-        const leaves: LeafChange[] = LEAF_KINDS.filter((k) => (a.leaves[k] ?? 0) !== (b.leaves[k] ?? 0)).map((k) => ({
+        // No `?? 0` here, and the asymmetry with the arrangement block below is
+        // the whole point. Every leaf kind is present in a record the validator
+        // accepted, so a default would only ever paper over a record it rejected.
+        const leaves: LeafChange[] = LEAF_KINDS.filter((k) => a.leaves[k] !== b.leaves[k]).map((k) => ({
             kind: k,
-            reference: a.leaves[k] ?? 0,
-            target: b.leaves[k] ?? 0,
+            reference: a.leaves[k],
+            target: b.leaves[k],
         }));
         // The union of both sides' keys, so a key that exists only in the target
         // is reported as 0 -> n rather than silently skipped. A multiset read
         // from one side alone is the add-half blindness the structure dimension
         // already had to be taught out of.
+        //
+        // `?? 0` IS CORRECT HERE and wrong one block up. The multiset is sparse
+        // by construction: a key absent on a side means no container on that side
+        // had that shape, which is a measured zero, not a short record.
         const arrangementKeys = [...new Set([...Object.keys(a.arrangement), ...Object.keys(b.arrangement)])].sort();
         const arrangement: ArrangementChange[] = arrangementKeys
             .filter((k) => (a.arrangement[k] ?? 0) !== (b.arrangement[k] ?? 0))
@@ -803,9 +847,14 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
     arrangement: Record<string, number>;
     overflow: boolean;
 } => {
+    // CURATED, NOT EXHAUSTIVE — the same stance `COMPARED_PROPERTIES` takes one
+    // screen up, and stated because the prose around this reads like a semantic
+    // classification rather than a selector list. An element carrying a role
+    // outside this set is counted by what it contains rather than as a control.
     const CONTROL =
         'a[href],button,input,select,textarea,summary,[role="button"],[role="link"],' +
-        '[role="checkbox"],[role="switch"],[role="tab"],[role="menuitem"],[contenteditable]';
+        '[role="checkbox"],[role="switch"],[role="tab"],[role="menuitem"],[role="radio"],' +
+        '[role="slider"],[role="spinbutton"],[role="combobox"],[role="option"],[contenteditable]';
     const HEADING = 'h1,h2,h3,h4,h5,h6,[role="heading"]';
     const MEDIA = 'img,svg,canvas,video,audio,picture,iframe,object,embed,[role="img"]';
 
@@ -826,16 +875,41 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
             continue;
         }
 
+        // A BOXLESS ELEMENT IS TRANSPARENT, NOT ABSENT — the two are opposites
+        // and the first version of this conflated them. "A zero box is not
+        // rendered" is true of the ELEMENT and says nothing about its children:
+        // `display: contents` generates no box at all while rendering its
+        // subtree normally, and a zero-height wrapper with overflowing content
+        // is the same case from the other side. Dropping such an element
+        // together with its subtree made every control inside a
+        // `display: contents` wrapper invisible — measured at 0 where the page
+        // showed 2 — which is the census reporting a loss that did not happen.
+        // So a boxless, non-hidden element is neither a leaf nor a container:
+        // its children are lifted into its parent's list, in document order, and
+        // it contributes nothing of its own. An element that is boxless AND has
+        // no children still contributes nothing, exactly as before.
         const children: Element[] = [];
-        for (const c of Array.from(el.children)) {
+        const pending: Element[] = Array.from(el.children);
+        while (pending.length) {
+            const c = pending.shift() as Element;
             const cs = getComputedStyle(c);
             if (cs.display === 'none' || cs.visibility === 'hidden') continue;
             const r = c.getBoundingClientRect();
             if (r.width > 0 && r.height > 0) children.push(c);
+            else pending.unshift(...Array.from(c.children));
         }
 
         if (children.length === 0) {
-            kind = (el.textContent ?? '').trim().length ? 'text' : 'empty';
+            // RENDERED TEXT, NOT TEXT CONTENT. `textContent` includes the text
+            // of `display: none` and `visibility: hidden` descendants, so a
+            // wrapper whose only content is hidden counted as a text leaf — the
+            // census inventing a leaf the page does not show, which is the exact
+            // mirror of the defect above. `innerText` is the rendered reading and
+            // is the right primitive; `textContent` stays as the fallback for an
+            // element that has no `innerText`, such as a non-HTML one.
+            const asHtml = el as Partial<HTMLElement>;
+            const shown = typeof asHtml.innerText === 'string' ? asHtml.innerText : (el.textContent ?? '');
+            kind = shown.trim().length ? 'text' : 'empty';
             leaves[kind] = (leaves[kind] ?? 0) + 1;
             continue;
         }
