@@ -424,7 +424,10 @@ function widthIsComplete(row: unknown): row is WidthSignature {
     if (typeof r.overflow !== 'boolean') return false;
     if (!r.leaves || typeof r.leaves !== 'object') return false;
     if (!r.arrangement || typeof r.arrangement !== 'object') return false;
-    const countable = (v: unknown): boolean => typeof v === 'number' && Number.isFinite(v) && v >= 0;
+    // A COUNT IS AN INTEGER. `Number.isFinite` admitted 3.7, which is not a
+    // number of leaves any capture can produce, so a hand-edited or
+    // half-written record carrying one would have been read as a reading.
+    const countable = (v: unknown): boolean => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0;
     if (!LEAF_KINDS.every((k) => countable((r.leaves as Record<string, unknown>)[k]))) return false;
     return Object.values(r.arrangement as Record<string, unknown>).every(countable);
 }
@@ -895,8 +898,33 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
             const cs = getComputedStyle(c);
             if (cs.display === 'none' || cs.visibility === 'hidden') continue;
             const r = c.getBoundingClientRect();
-            if (r.width > 0 && r.height > 0) children.push(c);
-            else pending.unshift(...Array.from(c.children));
+            if (r.width > 0 && r.height > 0) {
+                children.push(c);
+                continue;
+            }
+            // A TRANSPARENT ELEMENT STILL RENDERS ITS OWN DIRECT TEXT, and the
+            // first version of this lift did not see it. `children` is elements
+            // only, so `<div style="display: contents">Visible text</div>`
+            // beside a rendered sibling lifted nothing, its parent stayed a
+            // container rather than becoming a text leaf, and the text was
+            // counted nowhere. Measured: `text: 0` on a page that renders it.
+            //
+            // NARROWED TO `display: contents` ON PURPOSE. That is the one case
+            // where the element provably generates no box AND its content is
+            // laid out by the parent, so the text certainly renders. Any other
+            // zero-box element is ambiguous — a `height: 0; overflow: hidden`
+            // wrapper CLIPS its text — and counting there would invent a leaf,
+            // which is the one direction this reading must not fail in. Such an
+            // element keeps lifting its element children and loses its own text:
+            // sensitivity, not a false report.
+            if (cs.display === 'contents') {
+                let direct = '';
+                for (const n of Array.from(c.childNodes)) {
+                    if (n.nodeType === 3) direct += n.nodeValue ?? '';
+                }
+                if (direct.trim().length) leaves['text'] = (leaves['text'] ?? 0) + 1;
+            }
+            pending.unshift(...Array.from(c.children));
         }
 
         if (children.length === 0) {

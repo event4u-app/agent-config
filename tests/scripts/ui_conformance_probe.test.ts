@@ -737,6 +737,15 @@ describe('the structure reading without handles — Phase 3, a field beside the 
         // `empty: 1` is the second defect's. The bordered div's only content is
         // hidden, so the page shows an empty box; `textContent` returns the
         // hidden words and would have made it a `text` leaf.
+        //
+        // `text: 2` is the third's, found by a SECOND round of the same
+        // independent review, against the fix for the first. The paragraph is
+        // one; the other is an inline run inside a boxless wrapper. The lift
+        // that fixed the first defect moves ELEMENT children, so a wrapper
+        // carrying only text lifted nothing, its parent stayed a container
+        // rather than becoming a text leaf, and the text was counted nowhere.
+        // Measured `text: 0` on a page that renders it. A regression reads 1
+        // here, which is why the count is asserted and not just the silence.
         for (const name of ['reference-boxless', 'variant-boxless'] as const) {
             const sig = readObservation(path.join(OBS, `${name}.json`)).signature;
             for (const w of VIEWPORTS) {
@@ -744,7 +753,7 @@ describe('the structure reading without handles — Phase 3, a field beside the 
                     control: 2,
                     heading: 0,
                     media: 0,
-                    text: 1,
+                    text: 2,
                     empty: 1,
                 });
             }
@@ -776,6 +785,10 @@ describe('the structure reading without handles — Phase 3, a field beside the 
             ['a kind missing', (s: Record<string, Record<string, unknown>>) => delete (s['1440']!['leaves'] as Record<string, unknown>)['media']],
             ['a count that is a string', (s: Record<string, Record<string, unknown>>) => ((s['768']!['leaves'] as Record<string, unknown>)['text'] = '2')],
             ['a negative count', (s: Record<string, Record<string, unknown>>) => ((s['320']!['leaves'] as Record<string, unknown>)['control'] = -1)],
+            // A count is an integer. `Number.isFinite` admitted 3.7, which no
+            // capture can produce, so a half-written record carrying one was
+            // read as a reading. Found by the second review round.
+            ['a fractional count', (s: Record<string, Record<string, unknown>>) => ((s['768']!['leaves'] as Record<string, unknown>)['empty'] = 3.7)],
             ['overflow that is not a boolean', (s: Record<string, Record<string, unknown>>) => (s['1440']!['overflow'] = 'no')],
         ] as const) {
             const field = maim(edit);

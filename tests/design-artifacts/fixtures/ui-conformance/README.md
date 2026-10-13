@@ -359,3 +359,48 @@ in one:
   `COMPARED_PROPERTIES` — `radio`, `slider`, `spinbutton` and `combobox` are
   absent. An element carrying one of those is counted by what it contains rather
   than as a control.
+
+### A second round, against the fix for the first
+
+The same two seats reviewed the fixed state and returned REQUEST_CHANGES again,
+converging on a defect the first fix introduced by omission.
+
+**4. A boxless wrapper carrying only text lost that text.** The lift moves
+ELEMENT children, so `<div style="display: contents">Visible text</div>` beside
+a rendered sibling lifted nothing; its parent kept an element child, stayed a
+container rather than becoming a text leaf, and the text was counted nowhere.
+
+```
+measured on a page showing a boxless text run beside one button
+  before:  text 0        after:  text 1
+```
+
+A transparent element now contributes a `text` leaf when its own direct text
+nodes are non-empty. **Narrowed to `display: contents`**, which is the one case
+where the element provably generates no box AND its content is laid out by the
+parent, so the text certainly renders. Any other zero-box element is ambiguous —
+a `height: 0; overflow: hidden` wrapper CLIPS its text — and counting there would
+invent a leaf, the one direction this reading must not fail in. Such an element
+keeps lifting its element children and loses its own text: sensitivity, not a
+false report.
+
+**5. A fractional count passed validation.** `Number.isFinite` admitted `3.7`,
+which no capture can produce. A count is `Number.isSafeInteger` now.
+
+The pair carries the text case on **both** sides, so it stays silent and the
+absolute counts are what pin the fix: `control 2 · text 2 · empty 1`. A
+regression reads `text 1`.
+
+Neither fix moved any other committed observation.
+
+### What this review record is, and is not
+
+Two rounds, two providers, four seats, neither of which wrote the code. Five
+defects found and fixed, one converged claim checked and rejected, six limits
+registered. No Gate R2 findings artifact is filed for it: the contract's
+findings-before-fixes ancestry (`plan-review-gates` §2.5) requires the artifact's
+first commit to precede every fix it references, and these findings were fixed
+before the artifact mechanism was reached. Writing one now would backdate the
+record, which is the single thing that rule exists to prevent. The rounds are
+recorded here and in the pull request instead, and the gate is advisory in both
+the pre-push and the CI layer.
