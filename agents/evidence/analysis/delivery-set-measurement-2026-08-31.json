@@ -18,25 +18,25 @@
     "token_target": 500
   },
   "metrics": {
-    "precision_at_k": 80.965,
-    "recall_at_k": 62.012,
-    "recall_loss_pp": 37.988,
+    "precision_at_k": 81.016,
+    "recall_at_k": 62.218,
+    "recall_loss_pp": 37.782,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 42.3,
-      "3": 55.236,
-      "5": 62.012,
-      "10": 71.253,
-      "20": 77.823
+      "1": 43.326,
+      "3": 55.852,
+      "5": 62.218,
+      "10": 71.047,
+      "20": 77.618
     },
     "false_activation_at_k": 14.885,
-    "context_cost_tokens": 234.8,
+    "context_cost_tokens": 230.1,
     "token_target_met": true,
-    "benefit_unconditional": 62.012,
-    "benefit_conditional_on_activation": 80.965,
-    "adjudicated_deliveries": 373,
-    "unadjudicated_deliveries": 4177,
-    "tie_decided_cut_pp": 81.007
+    "benefit_unconditional": 62.218,
+    "benefit_conditional_on_activation": 81.016,
+    "adjudicated_deliveries": 374,
+    "unadjudicated_deliveries": 4079,
+    "tie_decided_cut_pp": 79.433
   },
   "set_compatibility": {
     "shared_prompts": 10,
