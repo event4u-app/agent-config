@@ -174,6 +174,34 @@ describe('release settings delta — control', () => {
             }
         }
 
+        // The ASSERTION classifies the frozen history exactly as the fixture
+        // marks it — not a second copy of the same predicate, but the function
+        // the cut actually calls, fed each pair as a removal.
+        const live = emitReleasedSurface('16.6.0');
+        for (const p of h.pairs) {
+            const keys = p.removed.map((r) => r.key);
+            const before: ReleasedSurface = {
+                ...live,
+                version: p.from,
+                entries: {
+                    ...live.entries,
+                    ...Object.fromEntries(keys.map((k) => [k, { type: 'string', default: '' }])),
+                },
+            };
+            const after: ReleasedSurface = { ...live, version: p.to };
+            const f = classifySettingsDelta(before, after);
+            const got = new Map<string, Classification>();
+            for (const k of f.untombstoned_removals) got.set(k, 'neither');
+            for (const c of f.carried_removals) got.set(c.key, c.via === 'renamed' ? 'renamed' : 'tombstoned');
+            for (const r of p.removed) {
+                expect(`${p.to}/${r.key}=${String(got.get(r.key))}`).toBe(
+                    `${p.to}/${r.key}=${r.classification}`,
+                );
+            }
+            // Every removal of the pair is accounted for, none invented.
+            expect(f.untombstoned_removals.length + f.carried_removals.length).toBe(keys.length);
+        }
+
         // The pairs the walk could not read are a contiguous PREFIX of
         // history, before the template existed — and carry no major, so
         // dropping them cannot tilt the minor-versus-major split above.

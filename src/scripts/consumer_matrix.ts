@@ -683,7 +683,7 @@ function legUpgrade(ctx: Ctx): string {
  * `tests/scripts/consumer_matrix_settings_delta.test.ts`, which does not need
  * the network to exercise the branches.
  */
-function assertUpgradeDelta(upHome: string, published: string): string {
+export function assertUpgradeDelta(upHome: string, published: string): string {
     const deltaPath = path.join(upHome, '.event4u', 'agent-config', 'state', 'settings-delta.json');
     if (!fs.existsSync(deltaPath)) return 'no settings delta written (surfaces identical)';
     const installer = JSON.parse(fs.readFileSync(deltaPath, 'utf8')) as InstallerDelta;

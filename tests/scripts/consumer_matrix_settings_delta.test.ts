@@ -10,11 +10,13 @@
  * both reachable in vitest rather than only in the weekly matrix.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { assertUpgradeDelta } from '../../src/scripts/consumer_matrix.js';
 import {
     classifySettingsDelta,
     compareInstallerDelta,
@@ -110,24 +112,49 @@ describe('the upgrade leg reads the delta the installer wrote', () => {
         expect(out.join('\n')).toContain('y');
     });
 
-    it('the leg calls the comparison and fails on a disagreement', () => {
+    it('the leg is wired to the path the installer actually writes', () => {
         const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/consumer_matrix.ts'), 'utf8');
         expect(src).toContain('assertUpgradeDelta(upHome, published)');
-        expect(src).toContain('compareInstallerDelta(installer, computed)');
-        expect(src).toContain('settings delta disagrees after');
-        // The path the installer actually writes, not a guess at it.
+        // Not a guess at the path — the one `install.ts` writes.
         const installer = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/install.ts'), 'utf8');
         expect(installer).toContain("path.join('state', 'settings-delta.json')");
         expect(src).toContain("'state', 'settings-delta.json'");
     });
 
-    it('a pair the committed file is not about is skipped, not failed', () => {
-        // During a release window the registry's latest can differ from the
-        // version the committed surface was cut at. That is a different pair,
-        // and a different pair is not a disagreement about this one.
-        const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/consumer_matrix.ts'), 'utf8');
-        expect(src).toContain('released.version !== installer.oldVersion');
-        expect(src).toContain('settings delta skipped');
+    it('the leg itself throws on a disagreement, and returns on agreement', () => {
+        // The leg function is RUN here, against a delta file on disk — the
+        // network half (two npm installs) is the weekly matrix's, but the
+        // failure path is this test's and is exercised rather than read.
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'cm-delta-'));
+        const stateDir = path.join(home, '.event4u', 'agent-config', 'state');
+        fs.mkdirSync(stateDir, { recursive: true });
+        const deltaFile = path.join(stateDir, 'settings-delta.json');
+        const base = readReleasedSurface();
+        const write = (d: InstallerDelta): void =>
+            fs.writeFileSync(deltaFile, `${JSON.stringify(d, null, 2)}\n`, 'utf8');
+
+        try {
+            // No file at all — nothing to compare is not a disagreement.
+            expect(assertUpgradeDelta(home, base.version)).toContain('no settings delta');
+
+            // A pair the committed file is not about is skipped, not failed.
+            write({ oldVersion: '0.0.1', newVersion: base.version, changes: [] });
+            expect(assertUpgradeDelta(home, '0.0.1')).toContain('skipped');
+
+            // The real pair with nothing in it: the surfaces agree.
+            write({ oldVersion: base.version, newVersion: base.version, changes: [] });
+            expect(assertUpgradeDelta(home, base.version)).toContain('agrees');
+
+            // A removal the release does not compute: the leg throws.
+            write({
+                oldVersion: base.version,
+                newVersion: base.version,
+                changes: [{ kind: 'removed', key: 'quality.local_auto_run' }],
+            });
+            expect(() => assertUpgradeDelta(home, base.version)).toThrow(/settings delta disagrees/);
+        } finally {
+            fs.rmSync(home, { recursive: true, force: true });
+        }
     });
 
     it('the released surface this leg reads is the one the cut writes', () => {

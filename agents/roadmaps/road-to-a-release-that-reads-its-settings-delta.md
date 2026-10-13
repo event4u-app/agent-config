@@ -168,13 +168,13 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A key removed with no tombstone and no rename entry is reported in
+- [x] AC-1 — A key removed with no tombstone and no rename entry is reported in
       dry-run and refuses a real cut, and a test shows both.
-- [ ] AC-2 — The last release's settings surface is one committed file that
+- [x] AC-2 — The last release's settings surface is one committed file that
       only the release script writes.
-- [ ] AC-3 — The frozen history is classified by the assertion exactly as the
+- [x] AC-3 — The frozen history is classified by the assertion exactly as the
       fixture marks it.
-- [ ] AC-4 — The upgrade leg fails when the installer's delta and the release's
+- [x] AC-4 — The upgrade leg fails when the installer's delta and the release's
       delta disagree.
 - [ ] AC-5 — The release contract, the rename map and the tombstone map state
       one rule.
