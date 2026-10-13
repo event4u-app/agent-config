@@ -247,13 +247,13 @@ describe('release settings delta — the assertion', () => {
         expect(refusalLines(classifySettingsDelta(base, retyped)).join('\n')).toContain('type changed');
 
         // (3) a vocabulary value removed
-        const vocab = base.entries[enumKey as string];
+        const vocab = base.entries[enumKey as string] as ReleasedSurface['entries'][string];
         const narrowed: ReleasedSurface = {
             ...base,
             version: '16.6.0',
             entries: {
                 ...base.entries,
-                [enumKey as string]: { ...vocab, enum: (vocab?.enum ?? []).slice(0, 1) },
+                [enumKey as string]: { ...vocab, enum: (vocab.enum ?? []).slice(0, 1) },
             },
         };
         const lost = classifySettingsDelta(base, narrowed).enum_removed;
