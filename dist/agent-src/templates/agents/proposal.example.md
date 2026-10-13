@@ -15,7 +15,7 @@ proposal_id: ""                    # stable kebab-case slug, unique per repo
 type: ""                           # rule | skill | command | guideline
 scope: ""                          # project | package
 stage: proposed                    # captured | classified | proposed | gated | upstream
-source_learning: ""                # agents/learnings/<date>-<slug>.md
+source_learning: ""                # agents/memory/intake/signals-<YYYY-MM>.jsonl#<signal id>
 target_artifact: ""                # dist/agent-src/<type>/<name>.md (for upstream scope)
                                    # or agents/overrides/<...> (for project scope)
 author: ""                         # name or team slug
