@@ -38,6 +38,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // _lib package layout shifts; the TS twins always exist, so a static import is
 // byte-faithful for behaviour (the only observable effect is the --global path).
 import { asOf } from './_lib/as_of.js';
+import { REQUIRED_CARD_FIELDS } from './_lib/experience_card.js';
 import * as _kg from './_lib/knowledge_global.js';
 import * as _kgr from './_lib/knowledge_global_redaction.js';
 import { assertScanned } from './_lib/scan_scope.js';
@@ -208,6 +209,52 @@ function _check_card(
     }
 
     const fm = _parse_frontmatter(text);
+
+    // The directory is a TAGGED UNION, and C1–C6 belong to ONE arm of it.
+    //
+    // `agents/knowledge/README.md` records the AI council of 2026-08-30
+    // (anthropic + openai, 2/2) deciding the shape: `kind: external` cards
+    // cache expensive remote structural evidence and carry an authoritative
+    // pointer, a trust tier and a pinned source_version — "Checks C1–C6 in
+    // check_knowledge_cards are this variant's invariants". `kind: experience`
+    // cards are mined from this repository's own audit stream, have no remote
+    // source to point at, and the council was explicit that the external
+    // variant's checks "are not part of the `experience` variant at all".
+    //
+    // The port that produced this file froze the retired implementation's
+    // behaviour deliberately, and that implementation predates the union. So
+    // it ran C2 and C4 over an experience card and demanded `links.authoritative`,
+    // `trust` and `type: anti-hallucination` — three fields the experience
+    // contract does not define. One committed card reported three violations
+    // for having exactly the shape its own contract prescribes.
+    //
+    // Dispatching on `kind` rather than skipping: the experience arm is now
+    // checked against `REQUIRED_CARD_FIELDS` from `_lib/experience_card.ts`,
+    // which is the contract the council named. Skipping outright would have
+    // traded a wrong check for no check — nothing else walks this directory
+    // for the experience arm.
+    // Presence, not a non-empty scalar. Four of the ten required fields are
+    // block lists (`trigger_context`, `contradictions`, `supersedes`) or block
+    // scalars (`strategy`, `falsifier`), and the tiny scalar-only parser above
+    // reads a key whose value is on the following lines as the empty string.
+    // Asking for a truthy value would report a declared `trigger_context:` with
+    // three entries under it as missing — a reading of the parser, not of the
+    // card.
+    const kind = fm['kind'] ?? 'external';
+    if (kind === 'experience') {
+        const block = FRONTMATTER_RE.exec(text)?.[1] ?? '';
+        const declared = new Set(
+            _splitlines(block)
+                .filter((l) => l.length > 0 && l[0] !== ' ' && l[0] !== '\t' && l.includes(':'))
+                .map((l) => l.slice(0, l.indexOf(':')).trim()),
+        );
+        for (const field of REQUIRED_CARD_FIELDS) {
+            if (!declared.has(field)) {
+                errors.push(`${rel}:0 — E1: experience card missing required '${field}' field`);
+            }
+        }
+        return errors;
+    }
 
     // C4 — trust tagging
     if (!fm['trust']) {
