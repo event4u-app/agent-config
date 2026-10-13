@@ -105,7 +105,16 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 25 -> 27 on 2026-10-06 (third growth of the day): the git.*
         // convention-settings branch touched `conventional-commits-writing`
         // (0x2f = 47) and `merge-conflicts` (0x25 = 37); both seal.
-        expect(sealed.length).toBe(27);
+        //
+        // 27 -> 28 on 2026-10-14: road-to-skill-scripts-that-run-where-they-land
+        // moved the taught runner line in seven skill bodies, and every touched
+        // skill owes a corpus. Six of the seven train; `dashboard-design` is
+        // 0x04 = 4, the LOWEST bucket any row in the freeze artefact has drawn,
+        // and seals. This is the first sealed row since 2026-10-06 and the first
+        // since the ordering claim was last restated, so the claim's scope is
+        // now 18 of 28 rather than 18 of 27 — see the freeze artefact's
+        // § Growth — 2026-10-14.
+        expect(sealed.length).toBe(28);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -232,9 +241,21 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // one each. Both are above the ceiling and train, moving the train
         // count 98 -> 100; the holdout is unchanged at 27, so the seal is
         // untouched by this growth too.
+        //
+        // 127 -> 134 on 2026-10-14: `road-to-skill-scripts-that-run-where-they-land`
+        // moved the taught invocation line to `node <skills-root>/…/<tool>.mjs`
+        // in seven skill bodies, and every touched skill owes a corpus. THE
+        // SECOND LINE BELOW IS THE ONE THAT MATTERS HERE, and for the first
+        // time since 2026-10-06 it moves: `api-endpoint` (0x3b = 59),
+        // `blade-ui` (0x78 = 120), `flux` (0xa2 = 162), `livewire` (0xd9 =
+        // 217), `react-shadcn-ui` (0x47 = 71) and `sql-writing` (0xf0 = 240)
+        // train, moving the train count 100 -> 106; `dashboard-design` is
+        // 0x04 = 4 and SEALS, moving the holdout 27 -> 28. Every comment above
+        // could say the seal was untouched; this one cannot, which is exactly
+        // the case the second line exists to catch rather than assume.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(127);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
+        expect(all.length).toBe(134);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(28);
     });
 });
 
@@ -273,7 +294,14 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 98 -> 100 on 2026-10-12: `form-handler` (0x5d = 93) and
         // `judge-security-auditor` (0xc8 = 200) both train. See the partition
         // note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(100);
+        // 100 -> 106 on 2026-10-14: six of the seven corpora the runner-line
+        // roadmap added hash above the ceiling and train — `api-endpoint`,
+        // `blade-ui`, `flux`, `livewire`, `react-shadcn-ui`, `sql-writing`.
+        // The seventh, `dashboard-design` (0x04 = 4), sealed and is deliberately
+        // NOT counted here; that it is absent from this number is the seal
+        // working, which is the same sentence the 2026-10-01 and 2026-10-02
+        // growths needed and the five entries between them did not.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(106);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
