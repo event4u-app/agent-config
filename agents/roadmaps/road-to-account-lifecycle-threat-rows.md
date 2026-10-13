@@ -244,7 +244,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       request" · `Login cross-site request forgery` — "protect the login form
       against cross-site request forgery" · `Signup abuse` — "block disposable
       email domains at signup to stop free tier abuse".
-- [ ] **2.3 Give the authentication reasoning row its decisions.** Fill the
+- [x] **2.3 Give the authentication reasoning row its decisions.** Fill the
       empty Severity cell at `reasoning.csv:2` (every other class carries
       one) and add decision rules: `if_registration` verify-before-privilege;
       `if_federated_signin` identity-is-issuer-plus-subject;
@@ -255,10 +255,47 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       `if_provider_managed` verify-configuration-not-rebuild.
       verify: `./scripts-run src/skills/corpus-grounding/scripts/ground ground --manifest src/skills/threat-modeling/data/manifest.json "build user registration with email verification"` -> /authentication/
       — the new rules appear under its reasoning block, with no `no reasoning rule matched` gap.
-- [ ] **2.4 Record the re-derivation in the manifest.** Update
+
+      **Closed 2026-10-13, with one half re-screened against the tree and found
+      already settled.** The Severity cell at `reasoning.csv:2` was **never
+      empty**: `git show 1e9e4354a` — the commit that created the file — already
+      carries `HIGH` there, and all ten classes carry a severity today. The
+      roadmap's premise for that half came from the source transcript and was
+      wrong when it was written; nothing was changed for it.
+
+      The real half landed: the authentication row now carries ten decision
+      rules, the three original ones plus the seven this step names. The
+      registration prompt grounds to `authentication` (0.497), matches
+      `if_registration` → `verify-before-privilege`, and the evidence gap reads
+      "none — every planned domain returned a scored match".
+
+      Measured which of the seven fire, because a rule that cannot fire is
+      decoration: `if_registration`, `if_pepper` and `if_email_canonicalization`
+      fire on ordinary phrasing. `if_federated_signin`, `if_sensitive_mutation`
+      and `if_unknown_identity` need their exact words, and
+      `if_provider_managed` likewise — a developer writes "add login with Google
+      OAuth", not "federated signin". That is not a defect introduced here: the
+      matcher requires every underscore-separated token of the key to be a
+      substring of the query (`decision_engine.ts:353-357`), and eighteen of the
+      twenty keys already in the corpus are built the same way —
+      `if_mass_assignment_possible` and `if_reports_or_exports` are no more
+      reachable from a natural prompt. The second entrance is the `context`
+      argument, which sets a condition by name without the words. Keeping the
+      keys this step specifies therefore holds the corpus's own convention; a
+      unilateral rename would have made this one row the exception. Revisit if
+      the matcher ever gains a synonym layer.
+- [x] **2.4 Record the re-derivation in the manifest.** Update
       `manifest.json` `upstream.sha` to name the added rows and their
       authorities.
       verify: `./scripts-run src/scripts/check_corpus_staleness` -> 0
+
+      **Closed 2026-10-13.** `upstream.sha` now names the surface row, all
+      thirteen threat rows with their CWE ids, the amendment to the
+      credential-stuffing row, and the seven ASVS 5.0 chapters the rows cite —
+      with the note that those chapter numbers were read from the standard's own
+      5.0 chapter listing on the day, not recalled. `last_checked` moves to
+      2026-10-13. `check_corpus_staleness` exits 0 over six manifests and
+      forty-one CSVs.
 
 ## Phase 3 — Reach the rows from the skills a consumer asks through
 
