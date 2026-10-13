@@ -1,0 +1,88 @@
+{
+    "skill": "security",
+    "last_eval": "2026-10-13",
+    "description": "9 exemplars (1 de), 5 near-misses, 2 counterexamples. The exemplars are the account-lifecycle entry points a consumer actually asks through — sign-up, verification, reset, storage, MFA, passkey, session, logout, and 'add login with Google', which was a should-trigger for no skill before this set existed. The near-misses are this skill's own four 'Do NOT use when' routes plus request validation: each belongs to a sibling that answers a different question. The counterexamples carry no security vocabulary at all and guard against over-triggering on ordinary engineering work.",
+    "queries": [
+        {
+            "q": "add login with Google",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "build user registration with email verification",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "implement the password reset flow",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "how should we store the user password",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add two factor authentication with mfa to the account",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "let people sign up with a passkey instead of a password",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "rotate the session id after the user logs in",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add a logout that really ends the session",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wie sichern wir den Login gegen Brute Force ab?",
+            "trigger": true,
+            "language": "de",
+            "class": "exemplar"
+        },
+        {
+            "q": "review the authorization on this endpoint",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "write a threat model for the upload feature",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "run a full security audit of the repository",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "how should we model tenants in the schema?",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "validate the shape of this request payload",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "rename this variable to something clearer",
+            "trigger": false,
+            "class": "counterexample"
+        },
+        {
+            "q": "write the release notes for the next version",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}

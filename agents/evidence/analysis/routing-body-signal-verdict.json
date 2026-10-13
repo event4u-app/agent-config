@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-12",
+  "measured_at": "2026-10-13",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,10 +11,10 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +7.13 pp breaches the +2.0 pp guard",
+    "reason": "false activation +7.02 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 3.901,
-    "delta_false_activation_pp": 7.128,
+    "delta_recall_pp": 3.831,
+    "delta_false_activation_pp": 7.025,
     "p_value": 0.1265,
     "discordant_positive_pairs": {
       "gained": 79,
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 487,
+        "positives": 496,
         "positiveHits": 302,
-        "negatives": 477,
+        "negatives": 484,
         "negativeHits": 71
       },
       "description+body": {
-        "positives": 487,
+        "positives": 496,
         "positiveHits": 321,
-        "negatives": 477,
+        "negatives": 484,
         "negativeHits": 105
       }
     },
     "recall_pp": {
-      "description": 62.012,
-      "description+body": 65.914
+      "description": 60.887,
+      "description+body": 64.718
     },
     "false_activation_pp": {
-      "description": 14.885,
-      "description+body": 22.013
+      "description": 14.669,
+      "description+body": 21.694
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 100,
+    "train_corpora": 101,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 964,
+    "cases": 980,
     "catalogue_size": 300
   }
 }

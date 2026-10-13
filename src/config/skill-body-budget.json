@@ -251,7 +251,7 @@
     "screenshot-hygiene": 9081,
     "script-writing": 9324,
     "secrets-management": 12029,
-    "security": 5168,
+    "security": 6728,
     "security-audit": 9042,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
@@ -346,6 +346,12 @@
       "old": 10469,
       "new": 10599,
       "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
+    },
+    {
+      "skill": "security",
+      "old": 5168,
+      "new": 6728,
+      "reason": "An account-flow block under Conventions: the lifecycle traced as one path, the public auth response as an observable contract, constant-time comparison with its length precondition, no fast hash and no invented primitive, fresh re-authentication on an identity change, and a pointer to the corpus rows rather than a restatement of them. No value in it; the numbers stay with the authority the block below already names. 3.2, plus the triggers block from 3.1."
     }
   ]
 }
