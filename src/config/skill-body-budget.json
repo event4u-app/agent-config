@@ -278,7 +278,7 @@
     "technical-specification": 7733,
     "terraform": 8893,
     "terragrunt": 5842,
-    "test-case-discovery": 12325,
+    "test-case-discovery": 12862,
     "test-driven-development": 16352,
     "test-performance": 6376,
     "testing-anti-patterns": 18233,
@@ -346,6 +346,12 @@
       "old": 10469,
       "new": 10599,
       "reason": "#2313 restated the promotion gate after ADR-281's 2026-10-07 amendment: council record is the review, owner authorization the approval, refusal fails closed"
+    },
+    {
+      "skill": "test-case-discovery",
+      "old": 12325,
+      "new": 12862,
+      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
     },
     {
       "skill": "security",
