@@ -187,8 +187,19 @@ with it and left alone.
 - [x] AC-3 — No gate whose verdict depends on the date is a step of a
       required job, and `check_council_pin_staleness` has a scheduled caller.
 - [ ] AC-4 — The eleven reds with no live owner are green and wired.
-- [ ] AC-5 — The consistency job's recorded duration is under the ceiling the
+- [x] AC-5 — The consistency job's recorded duration is under the ceiling the
       cost-budget page sets.
+      <br>**Closed 2026-10-13 against the job the drain actually joined, which
+      is not the one this line names** — the same deviation recorded at step
+      2.1, and flagged here rather than flipped quietly. The twenty gates are
+      steps of `Standing payload delta + budget gate`, the repository's other
+      required context, because `consistency.yml` hosts the ratification gate.
+      Measured in CI on this branch: the host job ran 21 s and 27 s before the
+      steps landed and 56 s and 60 s after, against the 300 s per-job ceiling
+      in `docs/contracts/ci-cost-budget.md` — about a fifth of it. The
+      consistency job itself is untouched by this change and its recorded 75 s
+      is unchanged, so the criterion holds for both readings of which job it
+      means.
 
 ## Decisions
 
