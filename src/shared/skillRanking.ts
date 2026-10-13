@@ -48,9 +48,9 @@
  *
  * `\p{L}` and `\p{N}` keep the ASCII behaviour byte-identical — the lowercased
  * `a-z` and `0-9` are a subset of both — so this is a widening and not a
- * different tokenizer. It is a CORRECTNESS fix and not a lift claim: the
- * before/after reading over the trigger corpus train slice is attached to the
- * change that made it, in `agents/evidence/analysis/`.
+ * different tokenizer. It is a CORRECTNESS fix and not a lift claim, and the
+ * before/after reading over the trigger corpus train slice that says so is
+ * attached to the change that made it.
  */
 const TOKEN_RE = /[\p{L}][\p{L}\p{N}]+/gu;
 
@@ -201,10 +201,10 @@ export function triggerTextFromFlatLines(lines: readonly string[]): string[] {
  * the tokenizer widening too (+6.2 points), so the choice does not depend on
  * which tokenizer was in the tree when it was read.
  *
- * `agents/evidence/metrics/skill-ranker-recall-at-depth.json` is the run.
  * Three more rows per call is the cost; each carries a description capped at
  * 200 characters, so the ceiling it buys is bounded and paid only when the
- * tool is actually called.
+ * tool is actually called. Re-derive the figures with
+ * `measure_skill_ranker_baseline --corpus triggers-train`.
  */
 export const DEFAULT_SUGGEST_LIMIT = 8;
 
