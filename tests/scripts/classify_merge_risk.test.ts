@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -9,7 +10,9 @@ import {
     DELETION_THRESHOLD,
     main,
     parseNameStatus,
+    resolvePr,
     type ChangeEntry,
+    type ResolveDeps,
 } from '../../src/scripts/classify_merge_risk.js';
 
 /**
@@ -24,6 +27,30 @@ const noDirExists = (): boolean => false;
 
 function ids(entries: ChangeEntry[], dirExists: (d: string) => boolean = everyDirExists): string[] {
     return classifyChanges(entries, { dirExistsInHead: dirExists }).triggers.map((t) => t.id);
+}
+
+/**
+ * A real repository with one base commit, so a range can be diffed for real.
+ *
+ * The non-ASCII case cannot be made from a hand-written fixture string: the
+ * defect is in what GIT prints, and only git prints it.
+ */
+function tmpRepo(): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cmr-repo-'));
+    const g = (...args: string[]): void => {
+        const r = spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr ?? ''}`);
+    };
+    g('init', '-q', '-b', 'main');
+    g('config', 'user.email', 't@example.com');
+    g('config', 'user.name', 'T');
+    // The default, stated rather than inherited: it is the setting that makes
+    // git quote a non-ASCII path, which is the defect under test.
+    g('config', 'core.quotePath', 'true');
+    fs.writeFileSync(path.join(dir, 'README.md'), 'base\n');
+    g('add', '-A');
+    g('commit', '-q', '-m', 'base');
+    return dir;
 }
 
 const mod = (p: string): ChangeEntry => ({ status: 'M', path: p });
@@ -142,5 +169,123 @@ describe('fail closed', () => {
         expect(code).toBe(1);
         expect(out.join('\n')).toContain('diff-unreadable');
         expect(out[out.length - 1]).toMatch(/^verdict: needs-council/);
+    });
+});
+
+describe('non-ascii-workflow-is-not-routine — the classifier reads the path git prints', () => {
+    function repoAdding(name: string): string {
+        const dir = tmpRepo();
+        const g = (...args: string[]): void => {
+            spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        };
+        fs.mkdirSync(path.join(dir, '.github', 'workflows'), { recursive: true });
+        fs.writeFileSync(path.join(dir, '.github', 'workflows', name), 'on: push\n');
+        g('add', '-A');
+        g('commit', '-q', '-m', 'add workflow');
+        return dir;
+    }
+
+    it('non-ascii-workflow-is-not-routine — a workflow git quotes still reaches the council', () => {
+        const dir = repoAdding('ci-ö.yml');
+        const out: string[] = [];
+        const code = main(['--range', 'HEAD~1...HEAD', '--root', dir], (l) => out.push(l));
+        expect(out.join('\n')).toContain('ci-workflow');
+        expect(out[out.length - 1]).toMatch(/^verdict: needs-council/u);
+        expect(code).toBe(1);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('the ASCII sibling was already needs-council, so the quoting is the whole difference', () => {
+        const dir = repoAdding('plain.yml');
+        const out: string[] = [];
+        main(['--range', 'HEAD~1...HEAD', '--root', dir], (l) => out.push(l));
+        expect(out.join('\n')).toContain('ci-workflow');
+        expect(out[out.length - 1]).toMatch(/^verdict: needs-council/u);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('a rename of an ordinary file stays routine, so the NUL parse did not widen the verdict', () => {
+        const dir = tmpRepo();
+        const g = (...args: string[]): void => {
+            spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        };
+        fs.writeFileSync(path.join(dir, 'a.ts'), 'x'.repeat(400));
+        g('add', '-A');
+        g('commit', '-q', '-m', 'a');
+        fs.renameSync(path.join(dir, 'a.ts'), path.join(dir, 'b.ts'));
+        g('add', '-A');
+        g('commit', '-q', '-m', 'rename');
+        const out: string[] = [];
+        const code = main(['--range', 'HEAD~1...HEAD', '--root', dir], (l) => out.push(l));
+        expect(out[out.length - 1]).toMatch(/^verdict: routine/u);
+        expect(code).toBe(0);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+});
+
+describe('parseNameStatus on NUL-separated output', () => {
+    it('reads modify, delete and scored rename records', () => {
+        expect(parseNameStatus('M\0a.ts\0D\0b.ts\0R087\0old.ts\0new.ts\0')).toEqual([
+            { status: 'M', path: 'a.ts' },
+            { status: 'D', path: 'b.ts' },
+            { status: 'R', oldPath: 'old.ts', path: 'new.ts' },
+        ]);
+    });
+
+    it('reads a copy record, which carries two paths like a rename', () => {
+        expect(parseNameStatus('C100\0src.ts\0copy.ts\0')).toEqual([
+            { status: 'C', oldPath: 'src.ts', path: 'copy.ts' },
+        ]);
+    });
+
+    it('refuses a record it cannot read rather than skipping it', () => {
+        expect(() => parseNameStatus('garbage\0')).toThrow();
+    });
+
+    it('refuses a rename whose second path is missing rather than reading one path', () => {
+        expect(() => parseNameStatus('R087\0old.ts\0')).toThrow();
+    });
+});
+
+describe('fetch-failure-fails-closed — a base that could not be refreshed is not diffed', () => {
+    const META = JSON.stringify({ baseRefName: 'main', headRefOid: 'deadbeef' });
+
+    function deps(fetchOk: boolean): ResolveDeps & { calls: string[][] } {
+        const calls: string[][] = [];
+        return {
+            calls,
+            gh: (_root, args) => {
+                calls.push(['gh', ...args]);
+                return { ok: true, out: META };
+            },
+            git: (_root, args) => {
+                calls.push(['git', ...args]);
+                return { ok: fetchOk, out: '' };
+            },
+        };
+    }
+
+    it('fetch-failure-fails-closed — resolvePr returns null when the fetch exits non-zero', () => {
+        expect(resolvePr('/tmp', '42', deps(false))).toBeNull();
+    });
+
+    it('fetch-failure-fails-closed — a successful fetch still resolves, so the guard is not blanket', () => {
+        expect(resolvePr('/tmp', '42', deps(true))).toEqual({ base: 'origin/main', head: 'deadbeef' });
+    });
+
+    it('fetch-failure-fails-closed — the fetch is actually attempted, not assumed', () => {
+        const d = deps(true);
+        resolvePr('/tmp', '42', d);
+        expect(d.calls.some((c) => c[0] === 'git' && c[1] === 'fetch')).toBe(true);
+    });
+
+    it('fetch-failure-fails-closed — an unresolvable target is needs-council with diff-unreadable', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cmr-fc-'));
+        const out: string[] = [];
+        const code = main(['--range', 'no-such-base...no-such-head', '--root', dir], (l) => out.push(l));
+        expect(out.join('\n')).toContain('diff-unreadable');
+        expect(out[out.length - 1]).toMatch(/^verdict: needs-council/u);
+        expect(code).toBe(1);
+        fs.rmSync(dir, { recursive: true, force: true });
     });
 });

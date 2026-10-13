@@ -93,7 +93,7 @@ the tree's. A concern whose own record dated its withdrawal is withdrawn.
 
 ## Phase 2 — The classifier reads the diff it classifies
 
-- [ ] **2.1 A quoted path is read, red first.** A case named
+- [x] **2.1 A quoted path is read, red first.** A case named
       `non-ascii-workflow-is-not-routine` builds a temporary repository whose
       range adds only a workflow file with a non-ASCII name and asserts
       `needs-council`; it fails today. Then the diff is read with
@@ -102,7 +102,7 @@ the tree's. A concern whose own record dated its withdrawal is withdrawn.
       `corrected-from-reproduction`: the review read the defect as robustness
       that "fails conservatively"; the reproduction shows it fails open.
       verify: `npx vitest run tests/scripts/classify_merge_risk.test.ts --reporter=verbose` -> /✓.*non-ascii-workflow-is-not-routine/
-- [ ] **2.2 A failed fetch fails closed.** `resolvePr` returns null when the
+- [x] **2.2 A failed fetch fails closed.** `resolvePr` returns null when the
       fetch exits non-zero, so the run reads `needs-council` with the
       `diff-unreadable` trigger instead of diffing a stale base.
       verify: `npx vitest run tests/scripts/classify_merge_risk.test.ts -t fetch-failure-fails-closed --reporter=verbose` -> /✓.*fetch-failure-fails-closed/
