@@ -19,30 +19,30 @@
   },
   "metrics": {
     "precision_at_k": 80.965,
-    "recall_at_k": 62.012,
-    "recall_loss_pp": 37.988,
+    "recall_at_k": 60.887,
+    "recall_loss_pp": 39.113,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 42.3,
-      "3": 55.236,
-      "5": 62.012,
-      "10": 71.253,
-      "20": 77.823
+      "1": 41.532,
+      "3": 54.234,
+      "5": 60.887,
+      "10": 70.161,
+      "20": 76.613
     },
-    "false_activation_at_k": 14.885,
+    "false_activation_at_k": 14.669,
     "context_cost_tokens": 234.8,
     "token_target_met": true,
-    "benefit_unconditional": 62.012,
+    "benefit_unconditional": 60.887,
     "benefit_conditional_on_activation": 80.965,
     "adjudicated_deliveries": 373,
-    "unadjudicated_deliveries": 4177,
-    "tie_decided_cut_pp": 81.007
+    "unadjudicated_deliveries": 4243,
+    "tie_decided_cut_pp": 80.972
   },
   "set_compatibility": {
-    "shared_prompts": 10,
+    "shared_prompts": 12,
     "jointly_wrong_pairs_delivered_at_k": 0,
     "pairs_delivered_at_k": [],
-    "jointly_wrong_pairs_in_corpus": 7,
+    "jointly_wrong_pairs_in_corpus": 9,
     "candidates": [
       {
         "prompt": "is this diff clean — naming, structure, conventions?",
@@ -53,10 +53,26 @@
         "jointlyDeliveredAtK": null
       },
       {
+        "prompt": "rename this variable to something clearer",
+        "pair": [
+          "command-routing",
+          "security"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
         "prompt": "review my changes before I open the PR",
         "pair": [
           "experiment-loop",
           "verify-repair-loop"
+        ],
+        "jointlyDeliveredAtK": null
+      },
+      {
+        "prompt": "review the authorization on this endpoint",
+        "pair": [
+          "security",
+          "supply-chain-intake"
         ],
         "jointlyDeliveredAtK": null
       },
@@ -105,7 +121,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 964,
-    "prompts": 953
+    "cases": 980,
+    "prompts": 967
   }
 }
