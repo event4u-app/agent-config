@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: later
+status: archived
 execution:
   mode: autonomous
 parent_roadmap: road-to-long-horizon-execution
@@ -91,6 +91,57 @@ estate_offset_exempt: >-
 > **Venue:** council, 2 seats, 2 rounds, blind chairman, quorum concluded. Both seats
 > converged on 2026-10-11 with automatic withdrawal; they split only on relaxing the
 > trigger, and that split is resolved above by measurement rather than by vote.
+
+> ## WITHDRAWAL EXECUTED — 2026-10-13
+>
+> **No qualifying run exists.** The reading was taken with the resume trigger's
+> own reader, `./scripts-run src/scripts/interruption_report --root
+> <main-checkout>`, and against the event ledger directly.
+>
+> | What was read | What it says |
+> |---|---|
+> | `agents/runtime/state/run-continuation.jsonl` | **three lines, the last dated 2026-08-19**, across two run ids |
+> | run `12653f90d7cb4243821392afd5d8c4db` | `engage`, iteration 1, roadmap `road-to-run-continuation-observation` |
+> | run `e9bcaa908c103495bd817f4217a03316` | `engage`, iterations 1 and 2, same roadmap |
+> | `interruption_report`, 183 runs | every row reads `roadmap=-`; the only non-zero `re=` is `e9bcaa90…` at 2 |
+>
+> Both recorded runs claimed THIS roadmap, which carries one `### Phase 0`
+> section. The resume trigger requires a roadmap with "open steps in three or
+> more `## Phase` sections" run to completion from a worktree and reaching a
+> PR. Neither run satisfies it, and nothing else in the ledger comes close.
+>
+> The deadline of 2026-10-11 therefore passed with no qualifying run, which is
+> the condition the kill criterion pre-registered. Withdrawal is "automatic on
+> that date" and "needs no further decision on the merits", so this is an
+> execution and not a new decision.
+>
+> **What was removed**, on branch `drain/what-was-built-never-ran-20261013`
+> (`road-to-what-was-built-and-never-ran` Phase 4.2): the concern's definition
+> and its single `stop` binding in `src/scripts/hook_manifest.yaml`, its entry
+> and import in `src/scripts/hooks/concern_registry.ts`, the script
+> `src/scripts/hooks/run_continuation_hook.ts` (1,529 lines), its two test
+> suites, its `concern_sla_ms` row, its blocking-severity allowlist entry, its
+> `loop-surfaces.yaml` surface and its kill-switch row in the hook-architecture
+> contract. Every remaining reference was updated to the past tense in the same
+> change.
+>
+> **What was KEPT, as the kill criterion requires** — "its decision history and
+> observation record retained": this file in full, the 0.0 observation table and
+> its two recorded limits, ADR-118, the changelog entries, and
+> `agents/runtime/state/run-continuation.jsonl` itself, which
+> `interruption_report` still reads for the autonomy axis. The termination
+> ladder (`src/scripts/_lib/continuation_ladder.ts`) is also kept: it is the
+> decision the withdrawal did not test, and a successor would start from it.
+>
+> **One consequence recorded rather than smoothed over.** With the concern gone,
+> the inline `<!-- blocked-by: … -->` marker changes no runtime behaviour: its
+> only reader was this concern. `lint_roadmap_blockers` still validates every
+> marker, and `roadmap-process-loop` now says so in place of the runtime reason
+> it used to give.
+>
+> **No successor is built.** The kill criterion says any successor needs a new
+> forward decision with a trigger derived from the roadmap modes that actually
+> occur, and that decision is not taken here.
 
 > **Source:** the sole deferred acceptance criterion of
 > `road-to-long-horizon-execution`, carried here under the preservation

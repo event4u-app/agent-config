@@ -925,9 +925,11 @@ is described wrongly.
 
 **Enforcement is real on tier 1 and nowhere else.** On tier 2 the loop is a
 suggestion the model may decline, and on tier 3 it is a log line. That is why
-`run-continuation` carries `severity: blocking` and why the honest claim about it
-is *"the loop is enforced on claude and advisory elsewhere"* — not *"the loop is
-enforced"*.
+the withdrawn `run-continuation` carried `severity: blocking`, and why the honest
+claim about it was *"the loop is enforced on claude and advisory elsewhere"* —
+not *"the loop is enforced"*. The concern was withdrawn on its own
+pre-registered kill date (road-to-what-was-built-and-never-ran Phase 4); the tiering it illustrates is
+unchanged and binds every stop-slot concern that follows it.
 
 Two consequences worth stating rather than leaving to be re-derived:
 
@@ -1241,7 +1243,6 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
 | `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
 | `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
-| `AGENT_CONFIG_NO_RUN_CONTINUATION` | maintainer | `=1` makes the run-continuation concern allow unconditionally | `hooks/run_continuation_hook.ts:1018` |
 | `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
 | `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |
 | `AGENT_CONFIG_PACKAGE_VERSION` | harness | Version stamped into telemetry | `hooks/telemetry_usage_hook.ts:177` |

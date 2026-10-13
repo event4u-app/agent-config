@@ -39,7 +39,9 @@
  * `closure_scan` report the unfalsifiable share as a number rather than an
  * impression.
  *
- * WHY ONE PARSER. Two importers read this grammar — the run-continuation hook
+ * WHY ONE PARSER. Three importers read this grammar — `roadmap_verify_share`,
+ * `check_verify_expectation_delta` and `closure_scan`. A fourth, the
+ * run-continuation hook
  * (which names the next step and its verify line) and `closure_scan` (which
  * reports the share that cannot fail). A second copy of the arrow regex is how
  * those two drift, and a drifted grammar fails silently: an expectation simply
@@ -256,7 +258,7 @@ export function parseVerifyClause(stepText: string): VerifyClause | null {
 /**
  * The clause's command half only — `null` where the clause is prose or absent.
  *
- * The narrowing the run-continuation hook wants: it renders a command for the
+ * The narrowing the withdrawn run-continuation hook wanted: it rendered a command for the
  * next step, and a prose clause is not one. Kept here rather than at the call
  * site so the hook imports a decision rather than re-deriving it.
  */

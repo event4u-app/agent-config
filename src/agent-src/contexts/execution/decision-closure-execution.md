@@ -76,7 +76,7 @@ expanding the mission. Both lists, closed:
 
 ## What `blocked-by:` may point at, after the retirement
 
-The marker itself is unchanged — `run-continuation` reads blockedness from it
+The marker itself is unchanged — the withdrawn `run-continuation` read blockedness from it
 and from nothing else. What narrows is its contents.
 
 A `## Blockers` entry is the record of a decision the agent **correctly did not

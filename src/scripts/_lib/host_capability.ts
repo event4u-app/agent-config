@@ -267,7 +267,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   the archival reading implies an ACTIVE copy of the same clause would bite.
  *   It would not. NOTHING IN THIS TREE EXECUTES A `verify:` CLAUSE'S COMMAND,
  *   archived or active: `_lib/verify_clause.ts` is a parser, and its four
- *   importers — `roadmap_verify_share`, `closure_scan`, `run_continuation_hook`
+ *   importers — `roadmap_verify_share`, `closure_scan`
  *   and `check_verify_expectation_delta` — shell out to nothing but `git`. The
  *   step also scoped itself to its own merge ("returns 0 at merge"), which it
  *   did. Its stated successor was to record the first observed row with its

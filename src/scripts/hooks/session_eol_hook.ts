@@ -377,7 +377,7 @@ export function main(): number {
     //     record, which is the deliberate departure from resuming by
     //     bookkeeping (Phase 3.2).
     //
-    // "Inside a running contract" is the same carrier `run-continuation`
+    // "Inside a running contract" is the same carrier the withdrawn `run-continuation`
     // uses — a `sessions:claim` for this session — and no second one is
     // invented. Outside a contract this is silent: a checkpoint for a
     // conversational session names work nobody is executing.

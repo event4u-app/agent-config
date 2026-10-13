@@ -327,8 +327,8 @@
             "id": "run-continuation.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "locus": "src/scripts/hooks/run_continuation_hook.ts:41",
-            "reason": "An append-only event ledger for the stop-slot continuation gate. It records what the gate decided, and nothing reads it to restore a session."
+            "locus": "src/scripts/interruption_report.ts:233",
+            "reason": "An append-only event ledger of a stop-slot continuation gate that NO LONGER EXISTS. The concern was withdrawn on its own pre-registered kill date (road-to-what-was-built-and-never-ran Phase 4), so nothing writes this file any more; the kill criterion kept the observation record, and `interruption_report` still reads it for the autonomy axis. The row stays because a source still names the leaf, which is what this inventory is keyed on."
         },
         {
             "id": "session-eol",

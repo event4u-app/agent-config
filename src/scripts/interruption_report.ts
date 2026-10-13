@@ -94,7 +94,17 @@ export interface RunReport {
     elapsed_minutes: number | null;
     waiting_minutes: number | null;
     working_minutes: number | null;
-    /** `engage` events for this run in `run-continuation.jsonl`. */
+    /**
+     * `engage` events for this run in `run-continuation.jsonl`.
+     *
+     * The concern that wrote that ledger was withdrawn on its own
+     * pre-registered kill date (road-to-what-was-built-and-never-ran Phase 4),
+     * so this reads a HISTORICAL record: three lines, the last from
+     * 2026-08-19. The read is kept because the kill criterion kept the
+     * observation record, and a run that engaged before the withdrawal did
+     * engage. A fresh checkout has no file and the count is 0, which is the
+     * same answer it gave for every run that never engaged.
+     */
     reengagements: number;
     /** `halt-stall` events — the anti-stall rung firing, not the loop working. */
     stall_halts: number;

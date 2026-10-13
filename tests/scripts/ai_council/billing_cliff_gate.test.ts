@@ -39,7 +39,6 @@ import {
     revokeBillingGrant,
 } from '../../../src/scripts/_lib/billing_grant.js';
 import { hardenedSpawnEnv } from '../../../src/scripts/_lib/spawn_env.js';
-import { clearRunState } from '../../../src/scripts/hooks/run_continuation_hook.js';
 
 describe('parseApiOnQuota — three values, and a refusal for everything else', () => {
     it('round-trips each of the three', () => {
@@ -282,10 +281,14 @@ describe('the run-scoped grant', () => {
         expect(isBillingGrantActive(root, 'run-a', env('run-a'), wayLater)).toBe(false);
     });
 
-    it('is revoked by the run-end state-cleared path', () => {
+    it('is revoked by the run-end revocation path', () => {
+        // Called through `clearRunState` until that hook was withdrawn
+        // (road-to-what-was-built-and-never-ran Phase 4). The grant's TTL is
+        // the run, and `revokeBillingGrant` is what ends it; the wrapper only
+        // ever forwarded to it.
         issueBillingGrant(root, 'run-a');
         expect(isBillingGrantActive(root, 'run-a', env('run-a'))).toBe(true);
-        clearRunState(root, 'run-a', path.join(root, 'nonexistent-state.json'), false);
+        revokeBillingGrant(root, 'run-a');
         expect(isBillingGrantActive(root, 'run-a', env('run-a'))).toBe(false);
     });
 

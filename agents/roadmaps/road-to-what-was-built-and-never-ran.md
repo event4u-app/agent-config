@@ -62,7 +62,8 @@ the tree's. A concern whose own record dated its withdrawal is withdrawn.
   supersedes ADR-118 § 3 rejection 2 in scope — the tool reads a successor
   only from the record's own `superseded_by` (`adr_cite_check.ts:545-546`).
 - **A dated withdrawal did not execute.**
-  `later/road-to-run-continuation-observation.md:49-56` withdraws the
+  `archive/road-to-run-continuation-observation.md` (at `later/` when this was
+  written) withdraws the
   `run-continuation` concern "automatic on that date" if no qualifying run is
   recorded by the end of 2026-10-11. `hook_manifest.yaml:1297` still defines
   it and `:1582` still binds it to `stop`; the local event record's last line
@@ -131,19 +132,19 @@ the classifier classes it non-routine and it lands by the owner's act.*
 
 ## Phase 4 — The dated withdrawal lands
 
-- [ ] **4.1 Read the record before acting.** Run the resume trigger's own
+- [x] **4.1 Read the record before acting.** Run the resume trigger's own
       reader, `./scripts-run src/scripts/interruption_report --root
       <main-checkout>`, and record in the parked file whether a qualifying run
       exists. One exists: stop this phase and record it there instead.
-      verify: `grep -c 'qualifying run' agents/roadmaps/later/road-to-run-continuation-observation.md` -> /^[1-9]/
-- [ ] **4.2 Withdraw the concern, keep its history.** Remove the manifest
+      verify: `grep -c 'qualifying run' agents/roadmaps/archive/road-to-run-continuation-observation.md` -> /^[1-9]/ (the file was at `later/` when 4.1 ran; 4.3 moved it)
+- [x] **4.2 Withdraw the concern, keep its history.** Remove the manifest
       definition and every host binding of `run-continuation`, its script and
       its registry entry, and update every caller the name sweep finds; keep
       the decision history and the observation record, as the kill criterion
       says. The ratification record the dispatcher's import closure requires
       lands with it.
       verify: `grep -c 'run-continuation' src/scripts/hook_manifest.yaml` -> /^0$/
-- [ ] **4.3 Archive the parked roadmap with its disposition.** The parked
+- [x] **4.3 Archive the parked roadmap with its disposition.** The parked
       file records the withdrawal date and commit and moves to `archive/`,
       which is this roadmap's estate offset.
       verify: `test -f agents/roadmaps/archive/road-to-run-continuation-observation.md` -> 0
@@ -188,13 +189,30 @@ the classifier classes it non-routine and it lands by the owner's act.*
 - [ ] AC-1 — Both roadmap lints run in `ci-fast`, both are green on the
       pull request that wires them, and a planted inline-code quotation is not
       a finding while a bare one is.
-- [ ] AC-2 — A range adding only a non-ASCII workflow path classifies
+      **OPEN on one conjunct of three, and deliberately left open rather than
+      ticked.** Both lints are in `taskfiles/ci-fast.yml`, in the `ci` chain in
+      `Taskfile.yml` and in `.github/workflows/rule-backstops.yml`; both exit 0
+      locally; and the quotation half is pinned in both directions by
+      `inline-code-not-met-is-quoted` and by the bare-phrase and
+      unterminated-backtick cases beside it. What is not established is
+      "**green on the pull request**": the lane that wired them does not wait
+      on CI by construction, so the one reading this conjunct asks for is the
+      one nobody here has taken. Closing it needs the pull request's own run.
+- [x] AC-2 — A range adding only a non-ASCII workflow path classifies
       `needs-council`, a failed fetch classifies `needs-council`, and the case
       for the first was seen red before the parser changed.
-- [ ] AC-3 — No sentence in `check_kernel_edit_ratified.ts` or
+      The non-ASCII case was built as a real repository and failed before the
+      `-z` parse landed, with its ASCII sibling green beside it; both
+      mechanisms were then neutralised and only their own two cases went red.
+- [x] AC-3 — No sentence in `check_kernel_edit_ratified.ts` or
       `report_required_checks_drift.ts` describes a hook or a schedule the tree
       does not have, and `adr_cite_check ADR-118` names ADR-281's scoped
       supersession.
-- [ ] AC-4 — `run-continuation` is bound on no host, its decision history is
+- [x] AC-4 — `run-continuation` is bound on no host, its decision history is
       kept, and the parked roadmap is archived with the withdrawal recorded —
       or 4.1 recorded a qualifying run and Phase 4 stopped.
+      4.1 found no qualifying run: the ledger holds three lines, the last from
+      2026-08-19, both runs claiming the observation roadmap itself, which has
+      one phase. The deadline of 2026-10-11 passed, so the withdrawal executed.
+      ADR-118, the changelog entries, the 0.0 observation table and the event
+      ledger are all kept, as the kill criterion requires.

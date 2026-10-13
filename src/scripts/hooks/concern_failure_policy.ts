@@ -95,7 +95,7 @@ export function _is_blocking(concern: JsonObject): boolean {
  * it is honoured, however slow it was.
  *
  * THE ONE-RETRY ESCAPE, AND WHY THE STOP SLOT NEEDS IT.
- * `turn-end-gate` and `run-continuation` are `severity: blocking` on `stop`,
+ * `turn-end-gate` is `severity: blocking` on `stop` (`run-continuation` was too,
  * and `tests/hooks/concern_severity.test.ts` records the hazard in as many
  * words: a turn-end gate that fails closed "does not degrade, it wedges the
  * session". Neither carries `skip_on_refusal_retry`, so without this clause a
