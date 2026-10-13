@@ -210,19 +210,37 @@ function searchShippedCorpus(skill: string): { status: number; stderr: string } 
 }
 
 describe('ground search without --domain, across every shipped corpus', () => {
-    it('every-manifest-control: two of six cannot compile their keyword patterns', () => {
-        const failing: string[] = [];
-        const errors: Record<string, string> = {};
+    it('every-manifest: all six shipped corpora return rows', () => {
+        const failures: string[] = [];
         for (const skill of SHIPPED_MANIFESTS) {
             const { status, stderr } = searchShippedCorpus(skill);
-            if (status !== 0) {
-                failing.push(skill);
-                errors[skill] = stderr.trim().split('\n').find((l) => l.includes('Invalid')) ?? stderr.trim();
-            }
+            if (status !== 0) failures.push(`${skill}: exit ${status} — ${stderr.trim().split('\n')[0]}`);
         }
-        // The reading this roadmap starts from, recorded before it is repaired.
-        expect(failing).toEqual(['brand', 'design-intelligence']);
-        expect(errors['brand']).toContain('Invalid escape');
-        expect(errors['design-intelligence']).toContain('Invalid escape');
+        expect(failures, `corpora that cannot run the documented example:\n${failures.join('\n')}`).toEqual([]);
     }, 120_000);
+
+    it('keyword escaping survives the characters that used to break compilation', () => {
+        // A space, a hash and a dash: a `u`-flag pattern rejects an identity
+        // escape on each, and one rejected keyword took the whole manifest
+        // down with it rather than merely failing to match.
+        const hostile = {
+            detect: { a: ['brand personality'], b: ['#'], c: ['end-to-end'] },
+            domains: { a: {}, b: {}, c: {} },
+        };
+        expect(() => de.detect_domain(hostile as never, 'anything at all')).not.toThrow();
+        expect(de.detect_domain(hostile as never, 'brand personality matters')).toBe('a');
+        expect(de.detect_domain(hostile as never, 'end-to-end coverage')).toBe('c');
+
+        // A syntax character stays escaped, so it is matched as a literal and
+        // not compiled as a wildcard. `default_domain` carries the no-hit
+        // case, so the wildcard reading is distinguishable from a fallback
+        // rather than hiding inside it.
+        const syntax = {
+            detect: { x: ['a.b'] },
+            domains: { x: {}, nohit: {} },
+            default_domain: 'nohit',
+        };
+        expect(de.detect_domain(syntax as never, 'a.b here')).toBe('x');
+        expect(de.detect_domain(syntax as never, 'axb here')).toBe('nohit');
+    });
 });

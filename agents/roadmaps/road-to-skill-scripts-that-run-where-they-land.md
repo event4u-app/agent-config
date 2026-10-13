@@ -102,11 +102,14 @@ this names files that exist and a test that runs.
 - [x] **1.3 The corpus reading.** A test runs `search` without `--domain`
       against each of the six manifests in this tree and asserts the two
       failures named in Context.
-      verify: `npx vitest run tests/scripts/skills_corpus_grounding_ground.test.ts -t every-manifest-control --reporter=verbose` -> /✓.*every-manifest-control/
+      verify: `npx vitest run tests/scripts/skills_corpus_grounding_ground.test.ts -t every-manifest --reporter=verbose` -> /✓.*every-manifest/
+      The control assertion named `every-manifest-control` is the reading 2.1
+      replaces, kept where a replaced reading belongs — in the commit that
+      landed it, not as a second test asserting a bug that is gone.
 
 ## Phase 2 — The example returns rows
 
-- [ ] **2.1 Keyword detection escapes for the engine it runs on.**
+- [x] **2.1 Keyword detection escapes for the engine it runs on.**
       `_reEscape` escapes only what a `u`-flag pattern treats as syntax. The
       1.3 control flips: all six manifests exit 0 without `--domain`. This
       step ships alone, ahead of Phase 3, because it is a bug in the
