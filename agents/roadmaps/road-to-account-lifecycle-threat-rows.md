@@ -476,20 +476,49 @@ in a one-line decline.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The five Context prompts ground to `authentication` and each
+All five measured 2026-10-13 at `971ae0ce6`.
+
+- [x] AC-1 — The five Context prompts ground to `authentication` and each
       returns at least one row added in 2.2 among its top four threats; the
       other nine surface classes ground as they did before.
-- [ ] AC-2 — `threats.csv` carries a populated row for every failure class
+      **Met, 5 of 5.** Registration → `Unverified email ownership`; the login
+      error message → `Account enumeration`; Google OAuth → `Federated sign-in
+      account takeover`; passkey → `Identity or credential change`; reset flow →
+      `Password reset beyond the token`. Each of the nine other classes returned
+      its own class on its own probe, before and after both the surface row and
+      the thirteen threat rows. Several confidence figures rose — the aggregate
+      is the weakest link across planned domains, and the `threats` domain now
+      scores where it used to return nothing — but no class moved.
+- [x] AC-2 — `threats.csv` carries a populated row for every failure class
       listed in 2.2, and no added or amended row carries a length, attempt
       count, iteration count, work factor or algorithm preference order.
-- [ ] AC-3 — The enumeration row's Negative Tests require known and unknown
+      **Met.** Sixteen `authentication` rows, thirty-three in the file; no row
+      has an empty cell in any of the seven columns; every row added or amended
+      here ends its Negative Tests with the `Decided by:` literal, and the two
+      rows that do not carry it are the two originals this roadmap did not
+      touch. The parameter grep over the whole file prints nothing.
+- [x] AC-3 — The enumeration row's Negative Tests require known and unknown
       identities to produce the same public outcome — status, body category,
       redirect, cookies — not only the same sentence (the source's own
       "never say the password for user X is wrong", stated as a test).
-- [ ] AC-4 — The storage row prohibits every general-purpose fast hash,
+      **Met**, in those four words, across login, reset request, sign-up and
+      verification resend, with the registered-address sign-up emitting a notice
+      to the owner and no distinguishing response.
+- [x] AC-4 — The storage row prohibits every general-purpose fast hash,
       SHA-2 included and salted or not, and states that a pepper, when used,
       lives outside the credential store and is never a literal; its absence
       is not a finding.
-- [ ] AC-5 — No file under `src/skills`, `src/rules` or `docs/guidelines`
+      **Met**, verbatim: "never a general-purpose hash - MD5, SHA-1 and every
+      SHA-2 included, salted or not", and "a pepper, where one is used, lives
+      outside the credential store with a rotation plan and is never a literal
+      in the tree - its absence is not a finding".
+- [x] AC-5 — No file under `src/skills`, `src/rules` or `docs/guidelines`
       presents an identity-field availability check as a default, keys the
       `auth` limiter on the IP alone, or cites ASVS 4.0.3 as current.
+      **Met.** Zero hits for `canonical exception`; the PHP `auth` limiter block
+      is keyed on the account and the source and says in its own comment why
+      IP-only fails in both directions; `4.0.3` survives in exactly two places,
+      both past-tense provenance records of the re-derivation rather than a
+      current citation — `threat-modeling/SKILL.md`, which 1.2's verify names as
+      the one permitted remainder, and the manifest's `upstream.sha` describing
+      the 2026-09-27 repin.
