@@ -8,7 +8,7 @@ inputs:
   diff_sha: 8fba3f08533b3a665814c77fef4f4cedaad99de8
   scope_hash: ae63cf583a8063f4405a5e175e448ef0d562acfd982df6664f270b890a7b3e96
   roadmap: agents/roadmaps/road-to-account-surface-detector.md
-  roadmap_hash: 49bb3398e7c2d0c8c8bcba7ed126a600117c928b3a8ef15253e40598dea29672
+  roadmap_hash: ad441a97ffde8e41dd9e670ed7a04743ac08d9c696f26d31904a87dd86864c27
   ac_hash: cd73e106ca80754dd485b9463cd4082906c2f70cf061d1d4d8b1c5a3e572f5d0
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
