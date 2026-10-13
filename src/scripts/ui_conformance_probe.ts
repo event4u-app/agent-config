@@ -892,6 +892,7 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
         // it contributes nothing of its own. An element that is boxless AND has
         // no children still contributes nothing, exactly as before.
         const children: Element[] = [];
+        let liftedText = '';
         const pending: Element[] = Array.from(el.children);
         while (pending.length) {
             const c = pending.shift() as Element;
@@ -918,11 +919,9 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
             // element keeps lifting its element children and loses its own text:
             // sensitivity, not a false report.
             if (cs.display === 'contents') {
-                let direct = '';
                 for (const n of Array.from(c.childNodes)) {
-                    if (n.nodeType === 3) direct += n.nodeValue ?? '';
+                    if (n.nodeType === 3) liftedText += n.nodeValue ?? '';
                 }
-                if (direct.trim().length) leaves['text'] = (leaves['text'] ?? 0) + 1;
             }
             pending.unshift(...Array.from(c.children));
         }
@@ -935,12 +934,27 @@ const READ_SIGNATURE = (kinds: readonly string[]): {
             // mirror of the defect above. `innerText` is the rendered reading and
             // is the right primitive; `textContent` stays as the fallback for an
             // element that has no `innerText`, such as a non-HTML one.
+            //
+            // The lifted text is deliberately NOT added on top: `innerText` is
+            // this element's whole RENDERED text and already includes whatever a
+            // transparent child contributed. Crediting it in both places counted
+            // one run twice — measured `text: 2` for a single
+            // `<p><span style="display: contents">hello</span></p>`.
             const asHtml = el as Partial<HTMLElement>;
             const shown = typeof asHtml.innerText === 'string' ? asHtml.innerText : (el.textContent ?? '');
             kind = shown.trim().length ? 'text' : 'empty';
             leaves[kind] = (leaves[kind] ?? 0) + 1;
             continue;
         }
+
+        // A CONTAINER IS NOT CLASSIFIED BY ITS TEXT, which is exactly where the
+        // lifted text would otherwise be lost: this element has a rendered child,
+        // so it never reaches the branch above and its `innerText` is never read.
+        // The text a transparent child contributed is credited here, once, and
+        // only here. Direct text of a container that sits behind no transparent
+        // child stays uncounted — a pre-existing property of counting leaves,
+        // registered as a limit rather than quietly changed under a defect fix.
+        if (liftedText.trim().length) leaves['text'] = (leaves['text'] ?? 0) + 1;
 
         if (children.length > 1) {
             let shape = '';

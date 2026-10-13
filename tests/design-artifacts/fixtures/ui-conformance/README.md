@@ -404,3 +404,25 @@ before the artifact mechanism was reached. Writing one now would backdate the
 record, which is the single thing that rule exists to prevent. The rounds are
 recorded here and in the pull request instead, and the gate is advisory in both
 the pre-push and the CI layer.
+
+### One more, found by re-reading the fix rather than by a review
+
+**6. The fix for 4 counted one rendered run twice.** A transparent wrapper
+NESTED inside a leaf is covered twice: the lift credited its text, and then the
+parent — which has no rendered element child — was classified by its own
+`innerText`, which already includes it.
+
+```
+measured on `<p><span style="display: contents">hello</span></p>`
+  before:  text 2        after:  text 1
+```
+
+The lifted text is accumulated and credited in exactly one place: the branch
+where the element becomes a CONTAINER, which is the branch whose `innerText` is
+never read. A leaf keeps being classified by its own rendered text and nothing
+is added on top.
+
+The pair carries this case too, on both sides, so the registered counts are now
+`control 2 · text 3 · empty 1`. A double count reads 4 and a lost count reads 2 —
+and both read as "identical pages" if only the silence is checked, which is why
+the absolute counts are asserted beside it.

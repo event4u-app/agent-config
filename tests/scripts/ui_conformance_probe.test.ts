@@ -744,8 +744,16 @@ describe('the structure reading without handles — Phase 3, a field beside the 
         // that fixed the first defect moves ELEMENT children, so a wrapper
         // carrying only text lifted nothing, its parent stayed a container
         // rather than becoming a text leaf, and the text was counted nowhere.
-        // Measured `text: 0` on a page that renders it. A regression reads 1
-        // here, which is why the count is asserted and not just the silence.
+        // Measured `text: 0` on a page that renders it.
+        //
+        // The third is the SAME wrapper nested inside a leaf, and it is there
+        // because the first attempt at the fix above credited it twice: the
+        // parent has no rendered element child, so it is classified by its own
+        // rendered text, which already includes the wrapper's. Measured
+        // `text: 2` for one paragraph. Each of the three runs must contribute
+        // exactly one, which is why the counts are asserted rather than just the
+        // silence — a double count and a lost count both read as "identical
+        // pages" when only the agreement is checked.
         for (const name of ['reference-boxless', 'variant-boxless'] as const) {
             const sig = readObservation(path.join(OBS, `${name}.json`)).signature;
             for (const w of VIEWPORTS) {
@@ -753,7 +761,7 @@ describe('the structure reading without handles — Phase 3, a field beside the 
                     control: 2,
                     heading: 0,
                     media: 0,
-                    text: 2,
+                    text: 3,
                     empty: 1,
                 });
             }

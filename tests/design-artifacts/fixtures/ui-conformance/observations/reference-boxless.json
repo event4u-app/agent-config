@@ -8,11 +8,11 @@
         "control": 2,
         "heading": 0,
         "media": 0,
-        "text": 2,
+        "text": 3,
         "empty": 1
       },
       "arrangement": {
-        "4:column": 1
+        "5:column": 1
       },
       "overflow": false
     },
@@ -21,11 +21,11 @@
         "control": 2,
         "heading": 0,
         "media": 0,
-        "text": 2,
+        "text": 3,
         "empty": 1
       },
       "arrangement": {
-        "4:column": 1
+        "5:column": 1
       },
       "overflow": false
     },
@@ -34,11 +34,11 @@
         "control": 2,
         "heading": 0,
         "media": 0,
-        "text": 2,
+        "text": 3,
         "empty": 1
       },
       "arrangement": {
-        "4:column": 1
+        "5:column": 1
       },
       "overflow": false
     },
@@ -47,11 +47,11 @@
         "control": 2,
         "heading": 0,
         "media": 0,
-        "text": 2,
+        "text": 3,
         "empty": 1
       },
       "arrangement": {
-        "4:column": 1
+        "5:column": 1
       },
       "overflow": false
     }

@@ -35,5 +35,11 @@
        It is on both sides so the pair stays silent; the absolute counts
        asserted in the test are what pin it. -->
   <div class="contents">Inline run inside a boxless wrapper.</div>
+  <!-- D11d — the same wrapper NESTED inside a leaf, which is the double-count
+       case. The parent has no rendered element child, so it is classified by
+       its own rendered text, which already includes the wrapper's. Crediting
+       the wrapper a second time counted one rendered run twice: measured
+       `text: 2` for this one paragraph. It must contribute exactly one. -->
+  <p><span class="contents">One run, counted once.</span></p>
   <div class="box"><span class="gone">hidden words that do not render</span></div>
 </main>
