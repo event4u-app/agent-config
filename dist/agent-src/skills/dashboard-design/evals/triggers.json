@@ -1,0 +1,77 @@
+{
+  "skill": "dashboard-design",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which rewrote this skill's grounded chart-type invocation to the bundled `node <skills-root>/…/ground.mjs` form and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the four decisions its own procedure owns — which signals a dashboard should carry, which surface it belongs on (Grafana / app / embed), the RED-USE-Golden-Signals layout, and the per-panel visualization and threshold choice. Near-misses are three neighbours that share observability vocabulary and answer a different question: the query and JSON behind a panel (grafana), the component that renders an in-app dashboard (livewire), and which of those signals earns a page (alerting-doctrine). Counterexamples guard two words this skill does not own on their own — a 'Dashboard' nav label and a solar 'panel' datasheet.",
+  "queries": [
+    {
+      "id": "dd-e1",
+      "q": "we need a dashboard for the checkout service — which panels and which signals?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "dd-e2",
+      "q": "should this live in Grafana or as an admin screen inside the app?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "dd-e3",
+      "q": "lay out the ops dashboard — RED for the HTTP layer, USE for the queue workers",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "dd-e4",
+      "q": "which visualization for p95 latency per endpoint, and where do the thresholds sit?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "dd-e5",
+      "q": "embed the existing Grafana latency panel in the Laravel admin page — is that the right surface?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "dd-e6",
+      "q": "wir brauchen ein Dashboard für den Checkout-Service — welche Panels und welche Signale?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "dd-n1",
+      "q": "write the PromQL for the error-rate panel and save the dashboard JSON",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "queries and JSON → grafana"
+    },
+    {
+      "id": "dd-n2",
+      "q": "build the Livewire component that renders this admin metrics table",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the component, not the dashboard design → livewire"
+    },
+    {
+      "id": "dd-n3",
+      "q": "which of these metrics deserves to page someone at 3am?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "same signals, the paging question → alerting-doctrine"
+    },
+    {
+      "id": "dd-c1",
+      "q": "rename the 'Dashboard' item in the marketing site navigation to 'Home'",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "dd-c2",
+      "q": "the solar panel supplier changed their datasheet columns — update the importer",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}
