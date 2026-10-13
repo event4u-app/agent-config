@@ -747,7 +747,7 @@
     },
     {
       "name": "suggest_skill_for_task",
-      "description": "Rank skills against a free-form task by deterministic keyword scoring over SKILL.md frontmatter. Use when the skill you need is absent from the host's catalogue — one measured host dropped 402 entries from its model-visible list — so asking by name is impossible and asking by task is not. Each row gives a name, score, personas and the skill's own description, its routing criteria including any clause pointing elsewhere. Read the rows to choose, then open at most two bodies with read_skill. Read-only: no shell, no writes, no bodies.",
+      "description": "Rank skills against a free-form task by deterministic keyword scoring over SKILL.md frontmatter. Use when the skill you need is absent from the host's catalogue — one measured host dropped 402 entries from its model-visible list — so asking by name is impossible and asking by task is not. Each row gives a name, score, personas and the skill's own description, its routing criteria including any clause pointing elsewhere. Choose by reading the rows, then open at most two bodies with read_skill. Read-only: no shell, no writes, no bodies.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"

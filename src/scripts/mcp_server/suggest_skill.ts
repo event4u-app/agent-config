@@ -126,7 +126,13 @@ export const SUGGEST_SKILL_TOOL: BuiltinTool = {
         'impossible and asking by task is not. ' +
         "Each row gives a name, score, personas and the skill's own " +
         'description, its routing criteria including any clause pointing ' +
-        'elsewhere. Read the rows to choose, then open at most two bodies ' +
+        // "Choose by reading the rows" rather than "Read the rows to choose":
+        // `mcp_server_tools.test.ts` pins this clause, and the gerund is what it
+        // pins. The two phrasings carry the same instruction, so the text bends
+        // to the assertion rather than the assertion to the text — an evaluator
+        // is not something the code it checks gets to edit for its own
+        // convenience. Costs one token against eight of headroom.
+        'elsewhere. Choose by reading the rows, then open at most two bodies ' +
         'with read_skill. Read-only: no shell, no writes, no bodies.',
     input_schema: {
         type: 'object',
