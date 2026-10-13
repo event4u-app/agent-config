@@ -179,3 +179,50 @@ describe('decision_engine — ground (async) on a real fixture', () => {
         expect(Array.isArray(grounded.evidence_gap)).toBe(true);
     });
 });
+
+// Every shipped corpus, searched without --domain.
+//
+// The first example `corpus-grounding` documents is `search` WITHOUT
+// `--domain`, which routes through `detect_domain` and therefore compiles one
+// `u`-flag RegExp per keyword in every manifest's `detect` block. Two of the
+// six shipped manifests carry a keyword whose escaped form is not a valid
+// `u`-flag escape, so the documented example cannot return rows there.
+//
+// `every-manifest-control` records that reading; `every-manifest` is the
+// obligation. Both run the same sweep so a regression in either direction is
+// visible from one place.
+
+const SHIPPED_MANIFESTS = [
+    'accessibility-auditor',
+    'api-design',
+    'brand',
+    'database',
+    'design-intelligence',
+    'threat-modeling',
+] as const;
+
+/** `search` with no `--domain` on one shipped corpus → exit code + stderr. */
+function searchShippedCorpus(skill: string): { status: number; stderr: string } {
+    const manifest = path.join(REPO_ROOT, 'src', 'skills', skill, 'data', 'manifest.json');
+    expect(fs.existsSync(manifest), `${skill}: manifest must exist`).toBe(true);
+    const r = run(TSX_BIN, [TS, 'search', '--manifest', manifest, 'dashboard layout']);
+    return { status: r.status ?? -1, stderr: r.stderr };
+}
+
+describe('ground search without --domain, across every shipped corpus', () => {
+    it('every-manifest-control: two of six cannot compile their keyword patterns', () => {
+        const failing: string[] = [];
+        const errors: Record<string, string> = {};
+        for (const skill of SHIPPED_MANIFESTS) {
+            const { status, stderr } = searchShippedCorpus(skill);
+            if (status !== 0) {
+                failing.push(skill);
+                errors[skill] = stderr.trim().split('\n').find((l) => l.includes('Invalid')) ?? stderr.trim();
+            }
+        }
+        // The reading this roadmap starts from, recorded before it is repaired.
+        expect(failing).toEqual(['brand', 'design-intelligence']);
+        expect(errors['brand']).toContain('Invalid escape');
+        expect(errors['design-intelligence']).toContain('Invalid escape');
+    }, 120_000);
+});

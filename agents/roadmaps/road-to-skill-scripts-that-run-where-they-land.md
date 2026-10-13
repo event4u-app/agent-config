@@ -85,7 +85,7 @@ this names files that exist and a test that runs.
 
 ## Phase 1 — The control reading
 
-- [ ] **1.1 The taught path, checked as installed.** A test installs the
+- [x] **1.1 The taught path, checked as installed.** A test installs the
       shipped projection into a temporary home, collects every line in an
       installed `SKILL.md` or `references/*.md` that names
       `<skills-root>/<skill>/scripts/<tool>`, fenced or not, substitutes the
@@ -99,7 +99,7 @@ this names files that exist and a test that runs.
       argument vector held in the test file, through the form its skill
       teaches. Today all six fail to start; the test asserts six.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts -t entry-points-control --reporter=verbose` -> /✓.*entry-points-control/
-- [ ] **1.3 The corpus reading.** A test runs `search` without `--domain`
+- [x] **1.3 The corpus reading.** A test runs `search` without `--domain`
       against each of the six manifests in this tree and asserts the two
       failures named in Context.
       verify: `npx vitest run tests/scripts/skills_corpus_grounding_ground.test.ts -t every-manifest-control --reporter=verbose` -> /✓.*every-manifest-control/
