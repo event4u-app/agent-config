@@ -55,6 +55,23 @@ describe('planDenyRows — the fixture no-go yields a deny row', () => {
         expect(text).toContain('nothing is written');
     });
 
+    it('says whose spelling an unenforceable report is written in', () => {
+        // Found by review: the report rendered Claude's rules and closed with
+        // Claude's documentation URL, so a consumer on another host read them
+        // as their own.
+        const text = renderDenyPlan(planDenyRows(NO_GOS, 'cowork'), 'cowork');
+        expect(text).toContain('the way `claude` spells a deny');
+        expect(text).toContain('NOT the way cowork does');
+    });
+
+    it('tells the consumer where the enforcement stops', () => {
+        // A consent screen that shows only the rows invites the reader to
+        // believe the rows are the whole of it.
+        const text = renderDenyPlan(planDenyRows(NO_GOS, 'claude'), 'claude');
+        expect(text).toContain('prefix-matched');
+        expect(text).toContain('not a script that opens the file itself');
+    });
+
     it('renders each row beside the classification it came from', () => {
         const plan = planDenyRows(NO_GOS, 'claude');
         expect(plan.rows.map((r) => r.classification.kind)).toEqual([
@@ -189,22 +206,57 @@ describe('appendDenyRules preserves what the consumer already had', () => {
         expect(() => appendDenyRules('{ not json', ['Edit(x/**)'])).toThrow();
     });
 
+    it('refuses rather than writing a SECOND `permissions` key', () => {
+        // Found by review, and it was the worst shape in the change: with a
+        // non-object `permissions`, `locate` finds no span, the root branch
+        // inserted a second key, `JSON.parse` kept the LAST one, and the rule
+        // the consumer consented to was silently discarded while the command
+        // reported success.
+        for (const body of [
+            '{\n  "permissions": null,\n  "model": "opus"\n}\n',
+            '{\n  "permissions": "none"\n}\n',
+            '{\n  "permissions": 1\n}\n',
+            '{\n  "permissions": ["Edit(x/**)"]\n}\n',
+        ]) {
+            expect(() => appendDenyRules(body, ['Edit(migrations/**)'])).toThrow(
+                /not an object/,
+            );
+        }
+    });
+
+    it('does not mis-key the second object of an array', () => {
+        // `pendingKey` survived a closing brace, so the second element
+        // inherited the first element's last key and the splice landed inside
+        // it — producing invalid JSON.
+        const body = '{\n  "hooks": [{"deny": 1}, {"a": 2}],\n  "model": "opus"\n}\n';
+        const out = appendDenyRules(body, ['Edit(migrations/**)']);
+        const parsed = JSON.parse(out.text) as {
+            hooks: unknown[];
+            permissions: { deny: string[] };
+        };
+        expect(parsed.hooks).toEqual([{ deny: 1 }, { a: 2 }]);
+        expect(parsed.permissions.deny).toEqual(['Edit(migrations/**)']);
+    });
+
     it('refuses a body that is not an object', () => {
         expect(() => appendDenyRules('[1, 2]', ['Edit(x/**)'])).toThrow(/not a JSON object/);
     });
 });
 
 describe('a declined consent leaves the file unchanged', () => {
-    const BODY = '{\n  "permissions": {\n    "deny": [\n      "Read(./.env)"\n    ]\n  }\n}\n';
+    // An earlier version of this block asserted a `const` against its own
+    // literal and called `appendDenyRules(body, [])`, which early-returns.
+    // Neither line could fail, and the property it claimed to pin — that the
+    // planning half performs no write — was untestable here anyway, since
+    // `planDenyRows` takes a string and has no path to write to. The real
+    // property is on the CLI and lives in `no_go_deny_rows_cli.test.ts`.
 
-    it('preserves the file byte-for-byte when no rule is applied', () => {
-        // The decline path is the absence of a call: 2.2 plans and renders, and
-        // only an explicit yes reaches `appendDenyRules`. This pins that the
-        // planning half has no write in it.
-        const plan = planDenyRows(NO_GOS, 'claude');
-        renderDenyPlan(plan, 'claude');
-        expect(BODY).toBe('{\n  "permissions": {\n    "deny": [\n      "Read(./.env)"\n    ]\n  }\n}\n');
-        expect(appendDenyRules(BODY, []).text).toBe(BODY);
+    it('adds nothing when the caller passes no rule', () => {
+        const body =
+            '{\n    "permissions": {\n        "deny": [\n            "Read(./.env)"\n        ]\n    }\n}\n';
+        const out = appendDenyRules(body, []);
+        expect(out.text).toBe(body);
+        expect(out.added).toEqual([]);
     });
 
     it('reports no rules at all for a section with no enforceable bullet', () => {

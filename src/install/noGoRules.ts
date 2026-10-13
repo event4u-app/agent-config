@@ -77,14 +77,69 @@ const EDIT_VERBS = [
 /** Verbs that forbid EXECUTING. */
 const RUN_VERBS = ['run', 'execute', 'invoke', 'call'] as const;
 
-function actionOf(bullet: string): NoGoAction | null {
-    const words = new Set(bullet.toLowerCase().match(/[a-z]+/g) ?? []);
-    // Run first: "never run `x`" is decided by the verb alone, while a read or
-    // edit verb still has to clear the path-shape test below.
-    if (RUN_VERBS.some((v) => words.has(v))) return 'run';
-    if (READ_VERBS.some((v) => words.has(v))) return 'read';
-    if (EDIT_VERBS.some((v) => words.has(v))) return 'edit';
-    return null;
+/**
+ * Words that make a bullet a PROHIBITION rather than a description.
+ *
+ * Required, and that is the correction a review forced: a verb scan alone
+ * accepts "``npm run build`` is the only sanctioned build command" and renders
+ * a deny row over the command the bullet PRESCRIBES. A no-go section is not the
+ * only place a backticked command appears in a sentence with a verb near it.
+ */
+const NEGATIONS = ['never', 'not', 'no', 'dont', 'avoid', 'forbidden', 'prohibited'] as const;
+
+/**
+ * Text that ends the clause the prohibition governs.
+ *
+ * The second half of the same correction. "Never run migrations in production
+ * - use `php artisan migrate --pretend` instead" negates, carries a run verb,
+ * and carries a backticked command — and the command is the ESCAPE HATCH the
+ * bullet recommends. A separator between the verb and the token means the token
+ * belongs to a different clause, so the verdict is prose.
+ */
+const CLAUSE_BREAK = /[-–—;:()]|\b(?:instead|use|using|prefer|except|unless|but|rather)\b/i;
+
+/** Backticked spans replaced by spaces, so a verb INSIDE the token is not read as the bullet's verb. */
+function maskTokens(bullet: string): string {
+    return bullet.replace(/`[^`]+`/g, (m) => ' '.repeat(m.length));
+}
+
+/** First index at which any whole word in `words` occurs, or -1. */
+function firstWordIndex(haystack: string, words: readonly string[]): number {
+    let best = -1;
+    for (const w of words) {
+        const m = new RegExp(`\\b${w}\\b`, 'i').exec(haystack);
+        if (m !== null && (best === -1 || m.index < best)) best = m.index;
+    }
+    return best;
+}
+
+interface VerbHit {
+    readonly action: NoGoAction;
+    readonly start: number;
+    readonly end: number;
+}
+
+/** The first action verb at or after `from`, or `null`. */
+function verbAfter(masked: string, from: number): VerbHit | null {
+    const groups: readonly (readonly [NoGoAction, readonly string[]])[] = [
+        ['run', RUN_VERBS],
+        ['read', READ_VERBS],
+        ['edit', EDIT_VERBS],
+    ];
+    let best: VerbHit | null = null;
+    for (const [action, verbs] of groups) {
+        for (const v of verbs) {
+            const re = new RegExp(`\\b${v.replace("'", "'?")}\\b`, 'gi');
+            let m = re.exec(masked);
+            while (m !== null) {
+                if (m.index >= from && (best === null || m.index < best.start)) {
+                    best = { action, start: m.index, end: m.index + m[0].length };
+                }
+                m = re.exec(masked);
+            }
+        }
+    }
+    return best;
 }
 
 /** The backticked spans of a bullet, in order. */
@@ -109,8 +164,28 @@ function backticked(bullet: string): string[] {
  */
 function looksLikePath(token: string): boolean {
     if (/\s/.test(token)) return false;
-    return token.includes('/') || token.startsWith('.') || /\.[A-Za-z0-9]+$/.test(token);
+    if (token.includes('/')) return true;
+    if (token.startsWith('.')) return true;
+    // A trailing extension only counts on a KNOWN file extension. The earlier
+    // `/\.[A-Za-z0-9]+$/` accepted `users.id`, `app.debug` and `v2.1` as paths,
+    // and rendered a rule over a path that does not exist.
+    return /\.(?:[a-z]{1,5}|[A-Z]{1,5})$/.test(token) && !/^[a-z]+\.[a-z]+$/.test(token);
 }
+
+/**
+ * Characters that make a path token mean something other than it reads.
+ *
+ * `!` is a gitignore NEGATION on the host: a deny row starting with it carves
+ * paths OUT of the deny rules listed before it, so a no-go bullet would weaken
+ * a consumer's existing list while being shown as a deny row. `[`, `]` and `?`
+ * are gitignore character classes, and the host does not escape a rule you
+ * wrote yourself — `reports/[2024]/**` matches `reports/2/`, never the
+ * directory the consumer named.
+ *
+ * `*` is deliberately NOT here: a consumer who writes `src/generated/**` means
+ * that glob, and the guide teaches the trailing slash for everything else.
+ */
+const UNSAFE_PATH_CHARS = /^!|[[\]?]/;
 
 const PROSE = (bullet: string, reason: string): NoGoClassification => ({
     bullet,
@@ -141,25 +216,54 @@ export function classifyNoGo(raw: string): NoGoClassification {
     }
 
     const token = tokens[0] as string;
-    const action = actionOf(bullet);
-    if (action === null) {
+    const masked = maskTokens(bullet);
+    const tokenAt = bullet.indexOf(`\`${token}\``);
+
+    const negAt = firstWordIndex(masked, NEGATIONS);
+    if (negAt === -1) {
+        return PROSE(
+            bullet,
+            'states no prohibition, so the backticked token may be what the bullet recommends',
+        );
+    }
+    const verb = verbAfter(masked, negAt);
+    if (verb === null) {
         return PROSE(bullet, 'names no action verb, so what must not happen to it is unstated');
     }
+    if (verb.start > tokenAt) {
+        return PROSE(bullet, 'the action verb comes after the token, so the two may not be related');
+    }
+    const between = bullet.slice(verb.end, tokenAt);
+    if (CLAUSE_BREAK.test(between)) {
+        return PROSE(
+            bullet,
+            `\`${token}\` sits in a different clause from the prohibition — it may be the ` +
+                'alternative the bullet recommends, so no rule is built',
+        );
+    }
 
-    if (action === 'run') {
+    if (verb.action === 'run') {
         return {
             bullet,
             kind: 'command',
             token,
-            action,
-            reason: 'a run verb over a backticked command',
+            action: verb.action,
+            reason: 'a negated run verb over a backticked command',
         };
     }
+    const action = verb.action;
 
     if (!looksLikePath(token)) {
         return PROSE(
             bullet,
             `a ${action} verb over \`${token}\`, which has no path shape — no rule is built`,
+        );
+    }
+    if (UNSAFE_PATH_CHARS.test(token)) {
+        return PROSE(
+            bullet,
+            `\`${token}\` carries a gitignore metacharacter (\`!\`, \`[\`, \`]\` or \`?\`) that the ` +
+                'host does not escape, so a rule built from it would guard something else',
         );
     }
 
@@ -215,9 +319,14 @@ export function extractNoGosSection(body: string): string {
             continue;
         }
         if (fence !== null) continue;
-        const h = /^##[ \t]+(.+?)[ \t]*#*$/.exec(line);
+        // ANY heading level closes the section; only a level-two one with a
+        // matching title opens it. Matching `##` alone let a following `#
+        // Appendix` leave the section open, so every bullet of every later
+        // top-level section was classified as a no-go.
+        const h = /^(#{1,6})[ \t]+(.+?)[ \t]*#*$/.exec(line);
         if (h !== null) {
-            inside = NO_GOS_HEADINGS.has((h[1] as string).trim().toLowerCase());
+            const level2 = (h[1] as string).length === 2;
+            inside = level2 && NO_GOS_HEADINGS.has((h[2] as string).trim().toLowerCase());
             continue;
         }
         if (inside) out.push(line);

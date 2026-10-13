@@ -91,6 +91,48 @@ describe('classifyNoGo — what it refuses to guess', () => {
         expect(kindOf('   ')).toBe('prose');
     });
 
+    it('stays prose when the bullet PRESCRIBES the backticked command', () => {
+        // Found by review. A verb scan alone rendered a deny row over the thing
+        // the bullet recommends — the sharpest possible wrong answer.
+        expect(kindOf('`npm run build` is the only sanctioned build command')).toBe('prose');
+        expect(kindOf('Use `bin/console` to run console commands')).toBe('prose');
+    });
+
+    it('stays prose when the token is the escape hatch the bullet names', () => {
+        // A correct, idiomatic no-go whose alternative is in the same sentence.
+        // Negated, carries a run verb, carries one backticked command — and the
+        // command is what the consumer is being told TO use.
+        expect(
+            kindOf(
+                'Never run migrations in production - use `php artisan migrate --pretend` instead',
+            ),
+        ).toBe('prose');
+        expect(kindOf('Never edit the schema directly; use `migrations/` instead')).toBe('prose');
+    });
+
+    it('stays prose when a verb sits only inside the backticks', () => {
+        // The verb scan masks the token, so `run/` does not supply the verb.
+        expect(kindOf('`run/` holds generated output')).toBe('prose');
+    });
+
+    it('stays prose on a dotted identifier that is not a path', () => {
+        for (const t of ['users.id', 'app.debug', 'v2.1']) {
+            expect(kindOf(`Never change \`${t}\``)).toBe('prose');
+        }
+        // …while a real dotted filename still reads as one.
+        expect(kindOf('Never modify `app.config.json`')).toBe('path');
+    });
+
+    it('stays prose on a token carrying a gitignore metacharacter', () => {
+        // `!` is a NEGATION on the host: the row would carve paths OUT of the
+        // consumer's existing deny list while being shown to them as a deny.
+        expect(kindOf('Never edit `!important/`')).toBe('prose');
+        // A character class the host does not escape: `reports/[2024]/**`
+        // matches `reports/2/`, never the directory the consumer named.
+        expect(kindOf('Never edit `reports/[2024]/`')).toBe('prose');
+        expect(kindOf('Never edit `logs/?/`')).toBe('prose');
+    });
+
     it('builds no rule for any prose verdict', () => {
         for (const bullet of [
             'Never add a runtime dependency without an ADR',
@@ -117,14 +159,21 @@ describe('deny rows are rendered in the pinned host syntax', () => {
         expect(rulesOf('Never overwrite `.env`')).toEqual(['Edit(.env)']);
     });
 
-    it('a read verb becomes a Read rule, which the host applies to edits too', () => {
-        expect(rulesOf('Never read `secrets/`')).toEqual(['Read(secrets/**)']);
+    it('a read verb becomes a Read rule AND an Edit rule', () => {
+        // The Read deny covers the Edit and Write tools, but the page names the
+        // exception: "NotebookEdit isn't covered, so add an `Edit` deny rule for
+        // paths no tool may change."
+        expect(rulesOf('Never read `secrets/`')).toEqual([
+            'Read(secrets/**)',
+            'Edit(secrets/**)',
+        ]);
     });
 
     it('a command becomes BOTH the exact rule and the with-arguments rule', () => {
-        // `Bash(x *)` requires a space after `x`, so it does not match the bare
-        // command. One row alone would be a rule the file accepts and the host
-        // enforces over half the cases — Risk 3 in the register.
+        // NOT because `Bash(x *)` misses the bare command — the page says it
+        // matches it. Because that holds "only when the trailing `*` is the
+        // rule's only wildcard", which a consumer token carrying its own `*`
+        // breaks; the exact row is what still guards the plain command then.
         expect(
             rulesOf('Never run `php artisan migrate:fresh` outside a throwaway database'),
         ).toEqual(['Bash(php artisan migrate:fresh)', 'Bash(php artisan migrate:fresh *)']);
@@ -224,6 +273,26 @@ describe('extractNoGosSection — the fence skip is the load-bearing part', () =
 
     it('returns empty for a file with no such section', () => {
         expect(extractNoGosSection('# Project\n\n## Goal\n\nShip it.\n').trim()).toBe('');
+    });
+
+    it('is closed by a heading at ANY level, not only by another `##`', () => {
+        // Found by review: matching `##` alone left the section open across a
+        // following `# Appendix`, so every later bullet in the file was read as
+        // a no-go.
+        const md = [
+            '## No-gos',
+            '- Never edit `a/` by hand',
+            '# Appendix',
+            '- Never edit `b/` by hand',
+        ].join('\n');
+        expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/']);
+    });
+
+    it('is closed by a deeper heading too', () => {
+        const md = ['## No-gos', '- Never edit `a/` by hand', '### Notes', '- Never edit `b/`'].join(
+            '\n',
+        );
+        expect(classifyNoGos(extractNoGosSection(md))).toHaveLength(1);
     });
 });
 

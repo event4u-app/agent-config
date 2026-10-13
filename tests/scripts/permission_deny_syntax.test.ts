@@ -3,15 +3,19 @@
 //
 // This gate's corpus is a typed constant, not a file tree, so there is no
 // `--root` fixture seam a `_lib/gate_self_test.ts` `--self-test` could point
-// at. These cases are the discrimination proof in its place: six rejecting
-// shapes beside the accepting one, so a green here means the reading changes
-// the verdict rather than that the gate ran.
+// at. These cases are the discrimination proof in its place: every rejecting
+// shape the gate can report, beside the accepting one, so a green here means
+// the reading changes the verdict rather than that the gate ran.
+//
+// The last four neutralise the RENDERER rather than the pin, because a review
+// measured the first version of this gate staying green while `Read(...)` rows
+// stopped being produced — the one thing its own comment claimed it covered.
 //
 // The AI council of 2026-10-13 (anthropic + openai, 2/2) required a provenance
 // gate as the substitute for the plumbing ratification the hook-lowering table
 // would have carried. A gate nothing proves discriminating would not have been
 // that substitute.
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { checkRow, main } from '../../src/scripts/check_permission_deny_syntax.js';
 import type { HostPermissionSyntax } from '../../src/install/hostPermissionsAdapter.js';
@@ -97,5 +101,48 @@ describe('the rejecting cases', () => {
 
     it('refuses a malformed --today rather than guessing one', () => {
         expect(main(['--today', 'yesterday'])).toBe(1);
+    });
+});
+
+describe('a renderer that stops producing a shape is a finding', () => {
+    afterEach(() => {
+        vi.resetModules();
+        vi.doUnmock('../../src/install/hostPermissionsAdapter.js');
+    });
+
+    /** The gate, re-imported with `denyRulesFor` filtered by `keep`. */
+    async function gateWithout(drop: (rule: string) => boolean): Promise<number> {
+        vi.resetModules();
+        const real = await vi.importActual<
+            typeof import('../../src/install/hostPermissionsAdapter.js')
+        >('../../src/install/hostPermissionsAdapter.js');
+        vi.doMock('../../src/install/hostPermissionsAdapter.js', () => ({
+            ...real,
+            denyRulesFor: (host: string, c: Parameters<typeof real.denyRulesFor>[1]) =>
+                real.denyRulesFor(host, c).filter((r) => !drop(r)),
+        }));
+        const mod = await import('../../src/scripts/check_permission_deny_syntax.js');
+        return mod.checkRow(GOOD, TODAY).length;
+    }
+
+    it('reds when no Read rule is produced', async () => {
+        // Measured by a reviewer against the first version of this gate: the
+        // same neutralisation left it green, because it only checked that SOME
+        // rule was produced and that each produced rule's tool was recorded.
+        expect(await gateWithout((r) => r.startsWith('Read('))).toBeGreaterThan(0);
+    });
+
+    it('reds when no Edit rule is produced', async () => {
+        expect(await gateWithout((r) => r.startsWith('Edit('))).toBeGreaterThan(0);
+    });
+
+    it('reds when the with-arguments Bash row is dropped', async () => {
+        expect(await gateWithout((r) => r.endsWith(' *)'))).toBeGreaterThan(0);
+    });
+
+    it('reds when the exact Bash row is dropped', async () => {
+        expect(
+            await gateWithout((r) => r.startsWith('Bash(') && !r.endsWith(' *)')),
+        ).toBeGreaterThan(0);
     });
 });

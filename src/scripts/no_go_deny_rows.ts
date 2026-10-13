@@ -140,6 +140,23 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         );
         return 1;
     }
+    // The STRONG form of the module's own claim: the result is the file that
+    // was there, plus text at one point. A deny-entry comparison is weaker than
+    // that and passes a result that duplicated a root key — measured. This
+    // check is the one that would have caught it.
+    if (!isSingleInsertion(before, result.text)) {
+        process.stderr.write(
+            'no_go_deny_rows: the result is not the existing file plus one insertion — ' +
+                'nothing written\n',
+        );
+        return 1;
+    }
+    if (!plan.rules.every((r) => kept.includes(r))) {
+        process.stderr.write(
+            'no_go_deny_rows: a consented row is not in the result — nothing written\n',
+        );
+        return 1;
+    }
 
     fs.mkdirSync(path.dirname(target), { recursive: true });
     // Write beside the target and rename, so an interrupted write leaves the
@@ -151,6 +168,28 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         `\n${String(result.added.length)} row(s) appended to ${args.settings}.\n`,
     );
     return 0;
+}
+
+/**
+ * Is `after` exactly `before` with one contiguous run of text inserted?
+ *
+ * Longest common prefix plus longest common suffix must account for every byte
+ * of `before`. Nothing is deleted, nothing is reordered, and nothing outside
+ * the insertion point moved — which is the property the splice claims and the
+ * property a deny-entry comparison cannot see.
+ */
+function isSingleInsertion(before: string, after: string): boolean {
+    if (after.length < before.length) return false;
+    let head = 0;
+    while (head < before.length && before[head] === after[head]) head += 1;
+    let tail = 0;
+    while (
+        tail < before.length - head &&
+        before[before.length - 1 - tail] === after[after.length - 1 - tail]
+    ) {
+        tail += 1;
+    }
+    return head + tail === before.length;
 }
 
 /** The deny entries a settings body already carried, or `[]`. */

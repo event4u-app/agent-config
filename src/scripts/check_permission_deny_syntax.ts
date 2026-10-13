@@ -34,6 +34,7 @@
 import process from 'node:process';
 
 import { asOf } from './_lib/as_of.js';
+import { reportScanned } from './_lib/scan_scope.js';
 import {
     HOST_PERMISSION_SYNTAX,
     denyRulesFor,
@@ -107,10 +108,10 @@ export function checkRow(row: HostPermissionSyntax, today: string): string[] {
     // the shape they show. A renderer that started emitting `Write(...)` — a
     // rule the host accepts and never consults — is caught here.
     const tools = new Set(row.examples.map((e) => e.slice(0, e.indexOf('('))));
-    let produced = 0;
+    const rendered: string[] = [];
     for (const bullet of FIXTURES) {
         for (const rule of denyRulesFor(row.host, classifyNoGo(bullet))) {
-            produced += 1;
+            rendered.push(rule);
             if (!RULE_RE.test(rule)) {
                 bad.push(`${where}: rendered \`${rule}\` is not Tool(specifier)`);
                 continue;
@@ -124,11 +125,33 @@ export function checkRow(row: HostPermissionSyntax, today: string): string[] {
             }
         }
     }
-    if (produced === 0) {
+    if (rendered.length === 0) {
         bad.push(`${where}: the fixtures rendered no rule at all`);
+        return bad;
+    }
+
+    // Each shape, asserted on its own. The earlier version checked only that
+    // SOME rule was produced and that each produced rule's tool was recorded,
+    // which a renderer that silently stopped emitting `Read(...)` passes — the
+    // comment above FIXTURES claimed this was covered and it was not.
+    for (const [label, matches] of SHAPES) {
+        if (!rendered.some(matches)) {
+            bad.push(
+                `${where}: the fixtures rendered no ${label} rule — a renderer that stops ` +
+                    'producing a shape must be a finding, not a smaller result',
+            );
+        }
     }
     return bad;
 }
+
+/** One entry per rule shape the adapter is expected to be able to render. */
+const SHAPES: readonly (readonly [string, (r: string) => boolean])[] = [
+    ['Edit(path)', (r) => r.startsWith('Edit(')],
+    ['Read(path)', (r) => r.startsWith('Read(')],
+    ['Bash(exact command)', (r) => r.startsWith('Bash(') && !r.endsWith(' *)')],
+    ['Bash(command with arguments)', (r) => r.startsWith('Bash(') && r.endsWith(' *)')],
+];
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // `asOf()`, not the wall clock: this gate's only time-dependent verdict is
@@ -150,8 +173,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     const rows = Object.values(HOST_PERMISSION_SYNTAX);
-    if (rows.length === 0) {
-        process.stderr.write('❌  check_permission_deny_syntax: no host pin is recorded\n');
+    // Through the shared resolver, not a hand-written line: a gate that reports
+    // a count it never asserted can print `scanned: 0` and exit green, which is
+    // exactly the certify-an-empty-corpus failure this seam exists to stop.
+    // No `allowEmpty` — a pin table with no rows is a dead scope here, never an
+    // expected state, and the gate should say so rather than pass.
+    try {
+        reportScanned({
+            gate: 'check_permission_deny_syntax',
+            scanned: rows.length,
+            units: 'host permission pin(s)',
+            roots: ['src/install/hostPermissionsAdapter.ts'],
+        });
+    } catch (err) {
+        process.stderr.write(`❌  ${err instanceof Error ? err.message : String(err)}\n`);
         return 1;
     }
     const bad = rows.flatMap((row) => checkRow(row, today));

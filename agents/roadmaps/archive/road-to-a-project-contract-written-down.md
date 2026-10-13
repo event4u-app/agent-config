@@ -136,18 +136,34 @@ company content ships in the package.
       classifier that resolves a host row is not the pure function this step
       asked for.
 
-      Two signals must agree or the verdict is prose — exactly one backticked
-      token AND an action verb from a closed vocabulary. The second is what
-      makes "`vendor/` is generated" prose: the shape says path, the sentence
-      never says what must not happen to it, and choosing `Edit` over `Read`
-      on its behalf is the guess D4 forbids.
+      Four signals must agree or the verdict is prose: exactly one backticked
+      token, a NEGATION, an action verb after it, and no clause break between
+      the verb and the token. The first two alone made "`vendor/` is generated"
+      prose. The last two were added by the completion review, which measured
+      the classifier rendering a deny row over the command a bullet
+      RECOMMENDS — "Never run migrations in production - use `php artisan
+      migrate --pretend` instead" denied the escape hatch named in its own
+      sentence. A no-go section is not the only place a backticked command
+      appears beside a verb.
 
-      **A command bullet renders TWO rows, and that is the step's one
-      non-obvious finding.** The documentation states that `Bash(x *)` requires
-      a space after `x`, so the with-arguments form never matches the bare
-      command. A single row would be accepted by the settings file and would
-      leave `php artisan migrate:fresh` running — Risk 3 reached by a rule that
-      looks right.
+      **A command bullet renders TWO rows. The first stated reason was WRONG,
+      and the correction is the step's real finding.** It read: "`Bash(x *)`
+      requires a space after `x`, so the with-arguments form never matches the
+      bare command." The documentation says the opposite one line above the
+      sentence that was read — "A `*` at the end, with a space before it, also
+      matches the bare command." An independent completion review caught it
+      after this step was already marked closed.
+
+      The true reason is the page's own qualifier: the bare-command match
+      "holds only when the trailing `*` is the rule's only wildcard". A
+      consumer token carrying its own `*` breaks that, and the exact row is
+      what still guards the plain command then. One row would be right for most
+      tokens and silently wrong for those.
+
+      **What the episode is actually evidence of:** a pinned quote is only as
+      good as the lines around it. The pin now records the qualifier verbatim
+      beside the example, so the next reader sees the condition rather than
+      reconstructing it.
 - [x] **2.2 Shown, consented, appended.** After 1.2, `/agents:init` prints the
       rows 2.1 produced and asks once whether to add them. On yes it appends
       them to the consumer's settings file's deny list, keeping every
@@ -213,10 +229,12 @@ company content ships in the package.
       `AGENTS.md` and writes nothing.
 - [x] AC-3 — A no-go naming a path becomes a host deny row only after consent,
       and existing deny entries survive unchanged.
-      Run end to end on a fixture consumer tree: the dry run printed
-      `Edit(migrations/**)` and wrote nothing; `--apply` appended three rows
-      and left `Read(./.env)`, the sibling allow list, the `model` key and the
-      file's own four-space formatting exactly as they were.
+      Discharged by `tests/install/no_go_deny_rows_cli.test.ts`, which runs the
+      command this criterion is about. It was a prose record of a manual run
+      until the completion review pointed out that an acceptance criterion
+      about a CLI, verified only by a sentence, is unverifiable from the tree —
+      and that both blocker-class defects of this change lived in that untested
+      half.
 - [x] AC-4 — No file under `src/` ships a consumer's goal or no-go content.
       Every bullet under `src/` is a fixture of this package's own example —
       `migrations/`, `php artisan migrate:fresh`, `.env` — and the two

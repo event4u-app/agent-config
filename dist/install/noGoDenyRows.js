@@ -86,7 +86,7 @@ export function renderDenyPlan(plan, host) {
         }
     }
     else {
-        out.push(`${host} has no native deny list established in this tree, so these rows are a`, 'report and nothing is written. They are what the no-gos WOULD become:', '');
+        out.push(`${host} has no native deny list established in this tree, so these rows are a`, 'report and nothing is written. They are spelled the way `claude` spells a deny', `rule, NOT the way ${host} does — nothing here has established that ${host} reads`, 'this syntax, or any syntax. They are what the no-gos would become there:', '');
         for (const r of plan.rows)
             for (const rule of r.rules)
                 out.push(`  ${rule}`);
@@ -95,6 +95,13 @@ export function renderDenyPlan(plan, host) {
         out.push('', 'Instruction-only — no row was built, and the reason for each:');
         for (const p of plan.prose)
             out.push(`  ${p.bullet}`, `      ${p.reason}`);
+    }
+    if (plan.rules.length > 0 && plan.enforceable) {
+        // What the rows do NOT cover, on the consent screen rather than in a
+        // comment. The point of the change is to replace a sentence the agent
+        // can read past with a rule the host refuses on; a consumer consenting
+        // to that should be told where the refusal stops.
+        out.push('', 'What these rows do not reach, per the same documentation:', '  · a Bash rule is prefix-matched, so `./artisan …`, `bash -c "…"` and a', '    wrapper such as `sail` or `devbox run` are not matched by it.', '  · Read and Edit rules reach the file tools and the file commands the host', '    recognises in Bash, but not a script that opens the file itself.', '  A no-go is still worth writing down when no row can be built for it.');
     }
     if (syntax !== null) {
         out.push('', `Syntax read from ${syntax.docs_url} on ${syntax.docs_at}.`);
@@ -157,6 +164,17 @@ function locate(text, path) {
             }
             if (opens.length > 0)
                 stack.pop();
+            // Clear it here too. A key is only pending for the container that
+            // opens right after it; carrying it across a close made the SECOND
+            // object in an array inherit the first one's last key, so
+            // `{"permissions": [{"deny": 1}, {"a": 2}]}` matched on the wrong
+            // element and spliced a bare string into an object.
+            pendingKey = null;
+            i += 1;
+            continue;
+        }
+        if (ch === ',') {
+            pendingKey = null;
             i += 1;
             continue;
         }
@@ -188,6 +206,18 @@ export function appendDenyRules(body, rules) {
         throw new Error('settings body is not a JSON object');
     }
     const perms = parsed['permissions'];
+    // A `permissions` that is present but NOT an object has no span for
+    // `locate` to find, so without this the root branch below would insert a
+    // SECOND `"permissions"` key. The file stays parseable, the last key wins,
+    // and every row the consumer consented to is silently discarded while the
+    // command reports success — measured, and the defect this refusal exists
+    // for. Refusing is the only honest answer: merging would have to guess what
+    // the existing value meant.
+    if (Object.hasOwn(parsed, 'permissions') &&
+        (perms === null || typeof perms !== 'object' || Array.isArray(perms))) {
+        throw new Error('settings body has a `permissions` key that is not an object — refusing rather ' +
+            'than writing a second one');
+    }
     const existing = perms !== null && typeof perms === 'object' && !Array.isArray(perms)
         ? perms['deny']?.filter((e) => typeof e === 'string') ?? []
         : [];
