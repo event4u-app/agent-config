@@ -59,6 +59,11 @@ const ALLOWLIST_GLOBS = [
     // its regenerated dist twin (kept in lockstep with package.json.version).
     'src/agent-src/templates/agents/agent-project-settings.example.yml',
     'dist/agent-src/templates/agents/agent-project-settings.example.yml',
+    // Released settings surface — rewritten by release.ts writeReleasedSurface
+    // inside the cut, so without this entry the release PR carries a file its
+    // own shape step refuses. It is the base the NEXT cut's settings-delta
+    // assertion reads.
+    'tests/fixtures/settings_surface_released.json',
 ] as const;
 
 /**

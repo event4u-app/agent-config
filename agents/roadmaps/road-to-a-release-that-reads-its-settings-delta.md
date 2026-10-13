@@ -88,23 +88,23 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 
 ## Phase 1 — The control reading
 
-- [ ] **1.1 A planted removal passes today.** A test deletes one key from the
+- [x] **1.1 A planted removal passes today.** A test deletes one key from the
       settings schema in a temporary copy, adds no tombstone, commits with a
       `feat:` subject and runs the planner in dry-run. The output proposes a
       minor and names no settings change.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **1.2 The history is a fixture.** The eleven tag pairs with their
+- [x] **1.2 The history is a fixture.** The eleven tag pairs with their
       removed keys are frozen as a test fixture, each key marked tombstoned,
       renamed or neither, so Phase 3 has known inputs of every class.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t history-fixture --reporter=verbose` -> /✓.*history-fixture/
 
 ## Phase 2 — The last release's surface, written by the release
 
-- [ ] **2.1 The surface is derived.** A small module emits the flattened
+- [x] **2.1 The surface is derived.** A small module emits the flattened
       settings surface from the live schema, sorted, without descriptions and
       without timestamps, plus the keys of both tombstone maps.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t emit --reporter=verbose` -> /✓.*emit/
-- [ ] **2.2 One committed file, one writer.**
+- [x] **2.2 One committed file, one writer.**
       `tests/fixtures/settings_surface_released.json` is rewritten by the
       release script when it cuts a version and is added to the release pull
       request's allowlist. A test fails when the file changes in a commit that
@@ -113,14 +113,14 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 
 ## Phase 3 — The cut answers the delta
 
-- [ ] **3.1 A third assertion beside the two.** A module under `_lib/`
+- [x] **3.1 A third assertion beside the two.** A module under `_lib/`
       computes the delta between the committed file and the live surface with
       `computeSurfaceDelta`, and the planner calls it where it calls the other
       two. On a real cut it refuses; in dry-run it reports. It refuses on: a
       removed key in neither map; a type change; a removed vocabulary value; a
       key added without a default. Each refusal names the keys.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t refuses --reporter=verbose` -> /✓.*refuses/
-- [ ] **3.2 The 1.1 control flips.** The planted removal is reported in dry-run
+- [x] **3.2 The 1.1 control flips.** The planted removal is reported in dry-run
       and refused on a real cut; the same removal with a tombstone is not
       refused by 3.1.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t control-flipped --reporter=verbose` -> /✓.*control-flipped/

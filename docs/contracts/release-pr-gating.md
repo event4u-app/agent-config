@@ -97,6 +97,10 @@ hold:
    - `dist/agent-src/templates/agents/agent-project-settings.example.yml` —
      the project-settings template pin and its regenerated twin, kept in
      lockstep with `package.json.version`
+   - `tests/fixtures/settings_surface_released.json` — the settings surface
+     this version ships, rewritten by `release.ts` §
+     `writeReleasedSurface` inside the cut and read by the NEXT cut's
+     settings-delta assertion
 
    **`*` and `?` both cross `/` here.** These are fnmatch patterns, not shell or
    `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`

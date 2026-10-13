@@ -140,6 +140,7 @@ import {
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
 import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { assert_settings_surface_delta, writeReleasedSurface } from './_lib/release_settings_surface.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
 // as a referenceable constant so the first docstring line is preserved exactly.
@@ -974,6 +975,11 @@ function execute(
             set_augment_manifest_version(AUGMENT_PLUGIN_JSON, plan.target);
             set_augment_manifest_version(AUGMENT_MARKETPLACE_JSON, plan.target);
             set_template_pin(PROJECT_TEMPLATE, plan.target);
+            // The cut is the only writer of the released settings surface: it
+            // records what THIS version ships so the NEXT cut has a base to
+            // read. Written after the assertion above has already accepted the
+            // delta, so a refused cut never advances the base.
+            writeReleasedSurface(plan.target);
             prepend_changelog(CHANGELOG, plan.changelog_entry);
         }
 
@@ -1587,6 +1593,9 @@ function main(argv: readonly string[] | null = null): number {
         mix: measure_mix_obligation(target, prev),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });
+    // Third assertion, same preview semantics as the two above: the settings
+    // surface the last release shipped against the one this cut would ship.
+    assert_settings_surface_delta(target, { previewOnly: args.dry_run });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
     // The drift test measures the era AFTER this release's section is
