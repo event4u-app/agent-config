@@ -100,14 +100,14 @@ with it and left alone.
 
 ## Phase 1 — The reading, recorded
 
-- [ ] **1.1 The table is evidence.** The round's reading — per gate: entry,
+- [x] **1.1 The table is evidence.** The round's reading — per gate: entry,
       command, exit code, seconds, first finding line — is re-taken on the
       branch base and written to
       `agents/evidence/analysis/local-only-gates-complete-reading.md` with its
       `evidence-type` marker, the method, the two gates with no task command,
       the checkout artefact as its own row, and the date it was read.
       verify: `grep -c 'audit_command_surface' agents/evidence/analysis/local-only-gates-complete-reading.md` -> /^[1-9]/
-- [ ] **1.2 Each green gate gets a class.** In the same page every green gate
+- [x] **1.2 Each green gate gets a class.** In the same page every green gate
       is marked `wire`, `calendar` (reads the clock or a ratchet age),
       `machine` (reads the developer's checkout or branch) or `slow` (over ten
       seconds). A `machine` gate is declared under `local_only:` in
@@ -129,7 +129,7 @@ with it and left alone.
       by Phase 3. A batch that would take the job past its ceiling goes into a
       second job of the same workflow.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
-- [ ] **2.3 Calendar gates get a scheduled caller, not a required one.** The
+- [x] **2.3 Calendar gates get a scheduled caller, not a required one.** The
       `calendar`-class gates and `check_council_pin_staleness` run in the
       scheduled workflow that already runs the gate canary, which is not a
       required check; `slow` gates join them.
@@ -137,7 +137,7 @@ with it and left alone.
 
 ## Phase 3 — The reds nobody owns
 
-- [ ] **3.1 Generated files that are stale.** The ownership matrix, the
+- [x] **3.1 Generated files that are stale.** The ownership matrix, the
       cookbook and the role-experiences catalogue are regenerated, and their
       three `--check` gates are wired in the same change.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t generated-docs-checks-wired --reporter=verbose` -> /✓.*generated-docs-checks-wired/
