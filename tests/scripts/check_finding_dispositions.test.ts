@@ -19,6 +19,7 @@ import {
     disposition_summary,
     disposition_tally,
     empty_ledger_problem,
+    unreviewed_ledger_problem,
     isBlocking,
     MEDIUM_SECURITY_BLOCKS_AFTER,
     localTagHit,
@@ -672,5 +673,62 @@ describe('coverage label — partial coverage is printed, never enforced', () =>
             coverage: { chunks: 1, filesReviewed: 678, filesTotal: 678, unreviewed: [] },
         });
         expect(runGate(dir, '1.0.0').out).not.toContain('(partial)');
+    });
+});
+
+/**
+ * An empty ledger that says a review NEVER RAN is not a reviewed release.
+ *
+ * `empty_ledger_problem` closed the unexplained-empty half: a ledger now has to
+ * say why it is empty. It did not close the other half, because any non-empty
+ * reason satisfies it — including one whose own first words are "NOT REVIEWED".
+ * The 16.4.0 ledger this case reads is that file: `assurance: unreviewed`,
+ * `reviewers: []`, `findings: []`, and a reason recording three runs the
+ * provider refused with HTTP 400. The gate read the reason, found it non-empty
+ * and exited 0, so a release whose self-review produced nothing passed the cut
+ * on a reason string alone.
+ *
+ * Recorded red before anything changed, on the committed 16.4.0 ledger copied
+ * verbatim under a version this repository never tagged:
+ *
+ *     $ tsx src/scripts/check_finding_dispositions.ts --release 99.99.0 --dir <tmp>
+ *     scanned: 0
+ *     ✅  no recorded findings for 99.99.0 (ledger empty)
+ *     EXIT=0
+ *
+ * WHY THE DECISION IS PINNED ON A PURE FUNCTION, NOT ON THE CLI. The refusal is
+ * scoped to a version the released-vs-unreleased discriminator reads as
+ * `unreleased`, and that answer is offline only when the local tag list is
+ * COMPLETE — a full clone carrying tags. Neither place this suite runs is one:
+ * the `node-tests` job checks out at depth 1 with no tags, and a git worktree
+ * of a shallow clone reports `is-shallow-repository: true` even while 227 tags
+ * are visible. A CLI case for the red path would therefore reach for the
+ * network in both, and a case guarded on `tags_complete` would assert nothing
+ * in either — a test that is green because it ran no assertion is the failure
+ * mode this file already warns about twice. So the decision is injected and
+ * pinned in every direction here, exactly as `releaseStatus` above is, and the
+ * CLI is asserted on the branches that are offline by construction.
+ */
+describe('an unreviewed ledger at the cut', () => {
+    const SIXTEEN_FOUR_ZERO = JSON.parse(
+        fs.readFileSync(
+            path.join(_REPO_ROOT, 'agents/evidence/release-findings/16.4.0.json'),
+            'utf-8',
+        ),
+    ) as Ledger;
+    const noDirective = (): string | null => null;
+
+    it('unreviewed-ledger-at-the-cut: the committed 16.4.0 ledger is refused at an unreleased cut', () => {
+        expect(
+            unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '99.99.0', 'unreleased', noDirective),
+        ).not.toBeNull();
+    });
+
+    it('the shape it is about is really the shape the committed file carries', () => {
+        expect(SIXTEEN_FOUR_ZERO.assurance).toBe('unreviewed');
+        expect(SIXTEEN_FOUR_ZERO.findings).toHaveLength(0);
+        // The reason string is non-empty, so the older gate passed it: this is
+        // the half `empty_ledger_problem` was never able to see.
+        expect(empty_ledger_problem(SIXTEEN_FOUR_ZERO)).toBeNull();
     });
 });
