@@ -73,7 +73,24 @@ const NEGATIONS = [
  * bullet recommends. A separator between the verb and the token means the token
  * belongs to a different clause, so the verdict is prose.
  */
-const CLAUSE_BREAK = /(?:^|\s)[-–—](?:\s|$)|[;:,()]|\b(?:instead|use|using|prefer|except|unless|but|rather|need|needs|needed|necessary|required|optional|if|when|while)\b/i;
+const CLAUSE_BREAK = /(?:^|\s)[-–—](?:\s|$)|[;:,()]|\b(?:instead|use|using|prefer|except|unless|but|rather|need|needs|needed|necessary|required|optional|if|when|while|other than)\b/i;
+/**
+ * Words between the negation and the verb that INVERT what the negation does.
+ *
+ * The structural half of the fix, because a word list alone has now failed
+ * three times. "Don't forget to run `npm ci`" negates the OMISSION of the
+ * action, so the sentence prescribes exactly what a deny row would forbid.
+ * The shape is always the same — a negation, a verb of omission or
+ * hesitation, an infinitive marker, then the real verb — and `to` is the part
+ * that gives it away: a prohibition reads "never run X", never "never
+ * <something> to run X".
+ *
+ * So: an infinitive `to` between the negation and the action verb means the
+ * action is the OBJECT of some other verb rather than the thing forbidden.
+ * That catches `forget`, `hesitate`, `fail`, `neglect` and every sibling
+ * nobody has thought of yet, which a fourth word list would not.
+ */
+const INVERTS_THE_NEGATION = /\bto\b/i;
 /** Backticked spans replaced by spaces, so a verb INSIDE the token is not read as the bullet's verb. */
 function maskTokens(bullet) {
     return bullet.replace(/`[^`]+`/g, (m) => ' '.repeat(m.length));
@@ -138,7 +155,14 @@ function backticked(bullet) {
  * all-lowercase single-dot tokens refused `package.json`, `main.go` and
  * `index.js` — a consumer's most likely first no-go — while still accepting
  * `Users.id` and `my_table.id`. Both were measured; the list is what
- * distinguishes the two classes without guessing either way.
+ * distinguishes the two classes.
+ *
+ * It is NOT exhaustive, and an earlier version of this comment said it
+ * distinguished them "without guessing either way", which overstated it.
+ * `Dockerfile`, `Makefile`, `terraform.tfvars`, `build.gradle`, `app.vue` and
+ * a long tail of real extensions fall to prose. The direction is the safe one
+ * — no row is built and a reason is printed — and a consumer who means a path
+ * can always write the trailing slash or a `/`, which both bypass this list.
  */
 const FILE_EXTENSIONS = new Set([
     'cjs', 'conf', 'css', 'csv', 'env', 'go', 'html', 'ini', 'java', 'js', 'json', 'jsx',
@@ -216,9 +240,14 @@ export function classifyNoGo(raw) {
     // line. Without this, "If no cache exists, run `npm run build`" and "There
     // is no need to run `npm install`" both denied the command they permit —
     // round 1's finding narrowed rather than closed, measured by round 2.
-    if (CLAUSE_BREAK.test(masked.slice(negAt, verb.start))) {
+    const negToVerb = masked.slice(negAt, verb.start);
+    if (CLAUSE_BREAK.test(negToVerb)) {
         return PROSE(bullet, 'the prohibition and the action verb sit in different clauses, so the bullet may ' +
             'be permitting rather than forbidding');
+    }
+    if (INVERTS_THE_NEGATION.test(negToVerb)) {
+        return PROSE(bullet, 'the action is the object of another verb rather than the thing forbidden — ' +
+            '"do not forget to X" asks for X, it does not forbid it');
     }
     if (verb.start > tokenAt) {
         return PROSE(bullet, 'the action verb comes after the token, so the two may not be related');
@@ -306,8 +335,17 @@ export function extractNoGosSection(body) {
         if (fence !== null)
             continue;
         // A setext underline turns the PREVIOUS line into a heading, which
-        // closes the section the same way an ATX heading does.
-        if (/^(?:=+|-{2,})\s*$/.test(line) && out.length > 0 && inside) {
+        // closes the section the same way an ATX heading does — but ONLY when
+        // that previous line is a paragraph. After a blank line or a list
+        // item, CommonMark makes `---` a thematic break, and the first version
+        // of this branch treated every one of them as a heading: it popped the
+        // preceding bullet and closed the section, so a `---` separator before
+        // the next heading silently ate bullets. Silently is the word that
+        // matters — a dropped bullet produces no row AND no reason line, so
+        // the consent screen never mentions it.
+        const prev = out.length > 0 ? out[out.length - 1] : '';
+        const prevIsParagraph = prev.trim().length > 0 && !/^\s*[-*+>#]|^\s*\d+[.)]/.test(prev);
+        if (/^(?:=+|-{2,})\s*$/.test(line) && inside && prevIsParagraph) {
             out.pop();
             inside = false;
             continue;

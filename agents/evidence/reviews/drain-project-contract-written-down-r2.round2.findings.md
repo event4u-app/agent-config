@@ -93,8 +93,8 @@ stops; it does not say where it over-reaches, which is Risk 1.
 
 **3.3 — No other rendering defect found.** The `Read` + `Edit` pair, the
 two-row command rendering and its corrected rationale, the `/**` expansion, the
-absence of `Write`/`NotebookEdit` rules, and the prefix-match caveat all match
-the page.
+fact that no path row is emitted for the Write or NotebookEdit tool, and the
+prefix-match caveat all match the page.
 
 ## 4. The settings-file append
 

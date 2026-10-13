@@ -146,4 +146,27 @@ describe('a renderer that stops producing a shape is a finding', () => {
             await gateWithout((r) => r.startsWith('Bash(') && !r.endsWith(' *)')),
         ).toBeGreaterThan(0);
     });
+
+    it('reds when ONLY the Edit row beside a Read row is dropped', async () => {
+        // The pairing control's own case, and the one the shape checks cannot
+        // see: drop just this row and the `Edit(path)` shape stays satisfied
+        // by the `migrations/` fixture. Measured by a reviewer — deleting the
+        // pairing block left every test green, so the control was unproven.
+        const drop = (rule: string, all: readonly string[]): boolean =>
+            rule.startsWith('Edit(') && all.some((r) => r.startsWith('Read('));
+        vi.resetModules();
+        const real = await vi.importActual<typeof Adapter>(
+            '../../src/install/hostPermissionsAdapter.js',
+        );
+        vi.doMock('../../src/install/hostPermissionsAdapter.js', () => ({
+            ...real,
+            denyRulesFor: (host: string, c: Parameters<typeof real.denyRulesFor>[1]) => {
+                const rules = real.denyRulesFor(host, c);
+                return rules.filter((r) => !drop(r, rules));
+            },
+        }));
+        const mod = await import('../../src/scripts/check_permission_deny_syntax.js');
+        const findings = mod.checkRow(GOOD, TODAY);
+        expect(findings.join(' ')).toContain('no `Edit(…)` beside its `Read(…)`');
+    });
 });

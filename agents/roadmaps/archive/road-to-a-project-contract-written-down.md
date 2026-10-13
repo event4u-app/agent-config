@@ -196,9 +196,14 @@ company content ships in the package.
       the fixture happened to be formatted the way canonical stringify output
       is formatted. A fixture that matches canonical output cannot tell a
       splice from a rewrite. The fixture is now four-space-indented with a
-      one-line array, the same probe reds exactly one test, and the sibling
-      value-level assertion stays green — which is the discrimination the pair
-      is for.
+      one-line array, and the sibling value-level assertion stays green —
+      which is the discrimination the pair is for.
+
+      This line claimed "the same probe reds exactly one test". A round-3
+      review re-ran the probe and measured **four**, across two files. The
+      figure was written before the CLI suite existed and was never
+      re-measured; it is corrected here rather than quietly swapped, because
+      an under-claim is still a number nobody checked.
 
 ## What this roadmap deliberately does not do
 
@@ -257,7 +262,7 @@ company content ships in the package.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A deny row blocks legitimate work | product | A broad path no-go stops an edit the consumer later needs, and the agent cannot say why | Rows are shown before consent; each row names the bullet it came from; the guide documents removing one | Phase 2 — A no-go that names a path or a command is enforced |
+| 1 | A deny row blocks legitimate work | product | A broad path no-go stops an edit the consumer later needs, and the agent cannot say why | Rows are shown before consent; each row names the bullet it came from; the guide documents removing one — § "Removing a deny row your no-gos produced", added 2026-10-13 after a round-3 review found this mitigation listed and never built. The consent screen also states where the rows reach FURTHER than the bullet reads, which is this risk's real shape | Phase 2 — A no-go that names a path or a command is enforced |
 | 2 | The always-loaded file grows | product | Long goal or no-go sections add tokens to every turn on every host | The guide's shape caps each section at a few lines; 1.3's report prints the section sizes | Phase 1 — The two questions the initializer does not ask |
 | 3 | The deny syntax is guessed | implementation | A row in the wrong syntax is accepted by the file and enforced by nothing | 2.1 pins the syntax to the host documentation with a `docs_url`; 2.3 asserts the produced row, not only that a row was written | Phase 2 — A no-go that names a path or a command is enforced |
 | 4 | Writing the settings file clobbers it | implementation | Rewriting the settings file drops a user entry or reorders it | 2.2 appends, never replaces; 2.3 asserts byte-for-byte survival | Phase 2 — A no-go that names a path or a command is enforced |

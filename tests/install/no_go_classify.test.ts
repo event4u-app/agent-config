@@ -115,6 +115,25 @@ describe('classifyNoGo — what it refuses to guess', () => {
         expect(kindOf('`run/` holds generated output')).toBe('prose');
     });
 
+    it('stays prose when the negation negates the OMISSION of the action', () => {
+        // Round 3, and the class had survived three narrowings by then: these
+        // all prescribe what a deny row would forbid. The discriminator is
+        // structural rather than a fourth word list — an infinitive `to`
+        // between the negation and the verb means the action is some other
+        // verb's object, which catches `forget`, `hesitate`, `fail` and every
+        // sibling nobody has thought of.
+        expect(kindOf("Don't forget to run `npm ci` before the tests")).toBe('prose');
+        expect(kindOf('Never forget to run `npm ci`')).toBe('prose');
+        expect(kindOf('Do not hesitate to run `make fmt`')).toBe('prose');
+        expect(kindOf('Never fail to run `npm audit`')).toBe('prose');
+    });
+
+    it('stays prose on a permission-granting "anything other than"', () => {
+        expect(kindOf('Never read anything other than `docs/`')).toBe('prose');
+        // Its already-caught sibling, kept so the pair is visible.
+        expect(kindOf('Never edit anything except `config/local.php`')).toBe('prose');
+    });
+
     it('stays prose when the negation governs a different clause', () => {
         // Round 2: requiring a negation SOMEWHERE narrowed round 1's finding
         // without closing it. Each of these permits the thing it names.
@@ -330,6 +349,27 @@ describe('extractNoGosSection — the fence skip is the load-bearing part', () =
             '- Never edit `b/` by hand',
         ].join('\n');
         expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/']);
+    });
+
+    it('is not truncated by a thematic break inside the section', () => {
+        // The setext fix introduced this: every `---` was read as a heading
+        // underline, so it popped the preceding bullet and closed the section.
+        // A dropped bullet is INVISIBLE — no row, no reason line — which is
+        // why it mattered more than the conservative direction suggests.
+        const md = [
+            '## No-gos',
+            '- Never edit `a/` by hand',
+            '---',
+            '- Never edit `b/` by hand',
+        ].join('\n');
+        expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/', 'b/']);
+    });
+
+    it('is not truncated by a thematic break after a blank line', () => {
+        const md = ['## No-gos', '- Never edit `a/` by hand', '', '---', '', '- Never edit `b/`'].join(
+            '\n',
+        );
+        expect(classifyNoGos(extractNoGosSection(md)).map((c) => c.token)).toEqual(['a/', 'b/']);
     });
 
     it('is not defeated by a fence nested inside a longer one', () => {

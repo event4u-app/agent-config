@@ -108,6 +108,20 @@ describe('with --apply the command appends on consent', () => {
         expect(after.endsWith(EXISTING.slice(EXISTING.indexOf('"model"')))).toBe(true);
     });
 
+    it('creates a readable settings file when none exists', () => {
+        // The common case for a fresh repository, and the one shape no
+        // existing-file fixture covers. An inline `{}` seed produced a file
+        // ending `}}`.
+        const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand');
+        expect(run([agentsMd, '--settings', settingsPath, '--apply']).code).toBe(0);
+        const after = fs.readFileSync(settingsPath, 'utf8');
+        expect(
+            (JSON.parse(after) as { permissions: { deny: string[] } }).permissions.deny,
+        ).toEqual(['Edit(migrations/**)']);
+        expect(after).not.toContain('}}');
+        expect(after.endsWith('}\n')).toBe(true);
+    });
+
     it('leaves no temporary file behind', () => {
         const { agentsMd, settingsPath } = tree('- Never edit `migrations/` by hand', EXISTING);
         run([agentsMd, '--settings', settingsPath, '--apply']);

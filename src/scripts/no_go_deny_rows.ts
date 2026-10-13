@@ -105,7 +105,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (plan.rules.length === 0) return 0;
 
     const target = path.resolve(args.settings);
-    const before = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '{}\n';
+    // `{\n}\n`, not `{}`. The splice inserts after the opening brace, so an
+    // inline `{}` produced a file ending `    }}` — which every consumer
+    // WITHOUT a settings file would have seen, the common case for a fresh
+    // repository. The "never reformat a file the consumer owns" rationale does
+    // not reach a file this command creates, so the created one is given a
+    // shape the splice lands in cleanly.
+    const before = fs.existsSync(target) ? fs.readFileSync(target, 'utf8') : '{\n}\n';
     let result;
     try {
         result = appendDenyRules(before, plan.rules);
