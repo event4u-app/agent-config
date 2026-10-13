@@ -938,5 +938,59 @@
       },
       "click_effect": null
     }
-  ]
+  ],
+  "signature": {
+    "320": {
+      "leaves": {
+        "control": 1,
+        "heading": 1,
+        "media": 0,
+        "text": 1,
+        "empty": 0
+      },
+      "arrangement": {
+        "3:column": 1
+      },
+      "overflow": false
+    },
+    "375": {
+      "leaves": {
+        "control": 1,
+        "heading": 1,
+        "media": 0,
+        "text": 1,
+        "empty": 0
+      },
+      "arrangement": {
+        "3:column": 1
+      },
+      "overflow": false
+    },
+    "768": {
+      "leaves": {
+        "control": 1,
+        "heading": 1,
+        "media": 0,
+        "text": 1,
+        "empty": 0
+      },
+      "arrangement": {
+        "3:column": 1
+      },
+      "overflow": false
+    },
+    "1440": {
+      "leaves": {
+        "control": 1,
+        "heading": 1,
+        "media": 0,
+        "text": 1,
+        "empty": 0
+      },
+      "arrangement": {
+        "3:column": 1
+      },
+      "overflow": false
+    }
+  }
 }

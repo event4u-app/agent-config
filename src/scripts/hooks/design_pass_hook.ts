@@ -287,6 +287,16 @@ export function conformanceVerdict(root: string, opts: ConformanceOptions = {}):
             inputs?: unknown;
             dimensions?: { dimension: string; status: string; findings: number | null; reason?: string }[];
             findings?: { dimension?: string; probe_id?: string; expected?: string; observed?: string }[];
+            page_signature?: {
+                status?: string;
+                reason?: string;
+                widths?: {
+                    width?: string;
+                    leaves?: unknown[];
+                    arrangement?: unknown[];
+                    overflow?: { reference?: boolean; target?: boolean };
+                }[];
+            };
         };
 
         // Before anything is counted. A finding count measured against inputs
@@ -335,6 +345,32 @@ export function conformanceVerdict(root: string, opts: ConformanceOptions = {}):
                 `  · ${addedElements.length} element(s) present in the target and absent from the reference: ` +
                     `${addedElements.map((f) => f.probe_id ?? '?').join(', ')} — added, not ported`,
             );
+        }
+        // ONE LINE, BELOW THE LINES THIS ALREADY PRINTS, and present only when
+        // the artefact carries the field — which is only when the reference
+        // collected no handle at all. The headline and the shadow-verdict trailer
+        // are byte-identical to what the same artefact without the field
+        // produces: this adds a line, it does not change one.
+        //
+        // The counts are per width and the overflow is a PAIR, never a change
+        // flag. A reader who is told "overflow changed" has to go and find out
+        // which way; a reader who is told `false/true` already knows.
+        const sig = a.page_signature;
+        if (sig) {
+            if (sig.status === 'read') {
+                const perWidth = (sig.widths ?? [])
+                    .map((w) => {
+                        const changed = (w.leaves?.length ?? 0) + (w.arrangement?.length ?? 0);
+                        return `${w.width}: ${changed} changed, overflow ${w.overflow?.reference}/${w.overflow?.target}`;
+                    })
+                    .join('; ');
+                parts.push(
+                    `  · page signature (the reference carried no handle, so the five rows above could ask ` +
+                        `nothing): ${perWidth} — kinds of leaf and of container, never nodes; not a finding`,
+                );
+            } else {
+                parts.push(`  · page signature: not available — ${sig.reason ?? 'no reason given'}`);
+            }
         }
         parts.push(
             inputs.verdict === 'unchanged'

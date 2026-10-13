@@ -1,0 +1,71 @@
+{
+  "variant": "port-regenerated",
+  "source": "tests/design-artifacts/fixtures/port-regenerated.html",
+  "nodes": [],
+  "signature": {
+    "320": {
+      "leaves": {
+        "control": 2,
+        "heading": 4,
+        "media": 0,
+        "text": 5,
+        "empty": 0
+      },
+      "arrangement": {
+        "4:column": 1,
+        "2:row": 1,
+        "3:row": 1,
+        "2:column": 4
+      },
+      "overflow": true
+    },
+    "375": {
+      "leaves": {
+        "control": 2,
+        "heading": 4,
+        "media": 0,
+        "text": 5,
+        "empty": 0
+      },
+      "arrangement": {
+        "4:column": 1,
+        "2:row": 1,
+        "3:row": 1,
+        "2:column": 4
+      },
+      "overflow": true
+    },
+    "768": {
+      "leaves": {
+        "control": 2,
+        "heading": 4,
+        "media": 0,
+        "text": 5,
+        "empty": 0
+      },
+      "arrangement": {
+        "4:column": 1,
+        "2:row": 1,
+        "3:row": 1,
+        "2:column": 4
+      },
+      "overflow": false
+    },
+    "1440": {
+      "leaves": {
+        "control": 2,
+        "heading": 4,
+        "media": 0,
+        "text": 5,
+        "empty": 0
+      },
+      "arrangement": {
+        "4:column": 1,
+        "2:row": 1,
+        "3:row": 1,
+        "2:column": 4
+      },
+      "overflow": false
+    }
+  }
+}
