@@ -369,9 +369,33 @@ function main(argv: string[] = process.argv.slice(2)): number {
     // stale exactly when its block was edited, and an edited block is usually
     // also a new hit. Returning early here would print the bookkeeping failure
     // and hide the criterion it was covering.
-    const matched = new Set(historical.map((h) => `${h.file}\u0000${h.criterion}`));
-    const stale =
-        root === _DEFAULT_ROOT ? HISTORICAL.filter((h) => !matched.has(`${h.file}\u0000${h.criterion}`)) : [];
+    const key = (h: { file: string; criterion: string }): string => `${h.file}\u0000${h.criterion}`;
+    const matched = new Set(historical.map(key));
+    const stale = root === _DEFAULT_ROOT ? HISTORICAL.filter((h) => !matched.has(key(h))) : [];
+
+    // Uniqueness, checked rather than assumed. The stale scan above collapses
+    // entries into a Set keyed by file and criterion, so two entries for one
+    // criterion — the second with a wrong digest, say — would both read as
+    // matched the moment either one did. Not a bypass today, because a
+    // criterion is exempt only on its own digest; it is a way the list could
+    // stop meaning what it reads as, which is the property the list exists for.
+    const seen = new Set<string>();
+    const duplicates = HISTORICAL.filter((h) => {
+        const k = key(h);
+        if (seen.has(k)) return true;
+        seen.add(k);
+        return false;
+    });
+    if (duplicates.length > 0) {
+        process.stderr.write(
+            `❌  lint_ticked_unmet_criteria: ${String(duplicates.length)} duplicate grandfathered key(s). ` +
+                'One criterion carries at most one entry — two entries for one key make the second unreadable:\n',
+        );
+        for (const h of duplicates) {
+            process.stderr.write(`  ${h.file} · ${h.criterion}\n`);
+        }
+        return 1;
+    }
 
     if (hits.length > 0) {
         process.stderr.write(
