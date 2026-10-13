@@ -1,6 +1,6 @@
 # Cookbook — things you can do in a minute
 
-> **Generated** by `scripts/generate_cookbook.py` from `src/flows/cookbook.yaml` + `src/flows/<flow>.yaml` — do NOT hand-edit.
+> **Generated** by `generate_cookbook` from `src/flows/cookbook.yaml` + `src/flows/<flow>.yaml` — do NOT hand-edit.
 > Every command and skill below is validated to exist at generation time; a recipe naming a missing command fails the build.
 
 Each recipe is a short command sequence. Run the commands in order; the listed skills are the capabilities they compose.
@@ -142,7 +142,7 @@ Build it. The core "make the change" front — drive a prompt, ticket, or featur
 Check it. Self-review, judge, fix/quality, and threat-model a change before it ships.
 
 - **Path:** `/review:changes` → `/judge` → `/fix:quality` → `/threat-model`
-- **Skills:** `code-review`, `adversarial-review`, `quality-tools`, `threat-modeling`, `receiving-code-review`
+- **Skills:** `code-review`, `adversarial-review`, `quality-tools`, `threat-modeling`, `receiving-code-review`, `design-review`
 
 ### Delivery flow
 
