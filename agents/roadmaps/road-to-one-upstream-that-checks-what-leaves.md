@@ -61,23 +61,44 @@ Nothing is sent without the person's word in that turn.
 
 ## Phase 1 — Repair what sends people to nowhere (executable now)
 
-- [ ] **1.1 `/upstream-contribute` becomes a thin front on the ladder (D1).** Its
+- [x] **1.1 `/upstream-contribute` becomes a thin front on the ladder (D1).** Its
       command and skill drop the condensed-copy step, the `.augment/` targets, the
       wrong `condense.sh` path, `composer update` and `git add .`, and hand the
       finding to `self-repair:release --dry-run`. The command name stays as a
       public contract.
       verify: `grep -c 'self-repair:release' src/domains/meta/upstream-contribute/command.md` -> /[1-9]/
-- [ ] **1.2 The pipeline document matches the tree.** `agents/learnings/` and the
+- [x] **1.2 The pipeline document matches the tree.** `agents/learnings/` and the
       wrong organisation are replaced by the sidecar and `event4u-app`.
+      The sibling-search over the exact construct `agents/learnings/` found
+      **4 sites in 4 files** — the pipeline document plus
+      `src/agent-src/templates/agents/proposal.example.md`,
+      `src/skills/learning-to-rule-or-skill/SKILL.md` and
+      `src/skills/context-authoring/SKILL.md`; all four are closed, 0 remain.
+      Two further dangling paths in the same document were repaired with it:
+      `scripts/check_proposal.ts` (the verb is `./agent-config proposal:check`)
+      and the installed-tree prohibition, which named only the legacy
+      `.agent-src.uncondensed/`.
       verify: `grep -c 'agents/learnings/' docs/guidelines/agent-infra/self-improvement-pipeline.md` -> /^0$/
-- [ ] **1.3 The third way is retired (D2).** `learn-low-impact --apply` is
+- [x] **1.3 The third way is retired (D2).** `learn-low-impact --apply` is
       removed with its documentation, the rule's locked-target line names the
       corpus that exists, and the `/memory` row in
-      `later/road-to-surface-consolidation` is updated.
+      `later/road-to-surface-consolidation` is updated. The seed literal now
+      lives in exactly one place — `PACKAGE_SEED_PATH` in
+      `src/scripts/ai_council/learn_low_impact_preview.ts` — which states that
+      the file is deliberately absent, so the preview diffs against an empty
+      baseline rather than against a path nobody can open. The rule keeps the
+      seed's `path_prefix` trigger: a seed reappearing then arrives already
+      under the floor instead of beneath it.
       verify: `grep -c 'low-impact-decisions-seed' src/domains/meta/memory/learn-low-impact/command.md` -> /^0$/
 - [ ] **1.4 The four threshold sites cite one table.** Each points at the
       canonical evidence-threshold table in `docs/contracts/retro-v1.md`
       instead of restating its own.
+      **Open for a named reason, 2026-10-13:** executed against the tree,
+      `docs/contracts/retro-v1.md` does not exist. It is step 0.3 of
+      `road-to-a-retro-the-merge-runs`, whose 24 steps are all open. Writing
+      the citation now would create exactly the dangling reference AC-1
+      forbids — this step would break the acceptance criterion the rest of
+      Phase 1 was closed to satisfy. It opens when that contract lands.
       verify: `grep -c 'retro-v1.md' src/skills/upstream-contribute/SKILL.md` -> /[1-9]/
 
 ## Phase 2 — A floor over the whole payload
