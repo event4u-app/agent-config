@@ -76,12 +76,22 @@ reports `routes: empty`), so they are out of scope here.
 Still gated on the sibling roadmap, re-checked against the tree on 2026-10-13
 rather than read off this file: `src/skills/threat-modeling/data/threats.csv`
 carries three `authentication` rows (credential stuffing, session fixation,
-password-reset token abuse), and six of the Threat cells Phase 1's ground truth
-cites are not among them. They arrive with `road-to-account-lifecycle-threat-rows`
-step 2.2, which is unmerged. Until then a finding citing one of those cells
-would name a row that does not exist, so Phase 2 stays open; the pending cells
-are declared under `pending_threat_rows` in
-`tests/fixtures/account-surface/ground-truth.json` rather than assumed.
+password-reset token abuse), and **none** of the seven Threat cells Phase 1's
+ground truth cites is among them. They arrive with
+`road-to-account-lifecycle-threat-rows` step 2.2, which is unmerged. Until then
+every finding would name a row that does not exist, so Phase 2 stays open; the
+pending cells are declared under `pending_threat_rows` in
+`tests/fixtures/account-surface/ground-truth.json` rather than assumed, and a
+corpus test reds the moment one of them appears in the CSV, naming the
+reconciliation. When that list empties, Phase 2 is unblocked.
+
+The existing `Password-reset token abuse` row was considered for the
+`host-derived-reset` class and rejected on its content: its Required Controls
+cover token handling (single use, short TTL, hashed at rest, no token in URL
+logs) and say nothing about where the link host comes from. Citing it would
+have resolved against today's CSV while pointing at a row carrying no control
+for the defect reported — the dangling-citation failure one level down — so
+that class cites the pending dedicated row instead.
 
 - [ ] **2.1 Write `src/scripts/check_account_surface.ts`.** A path predicate
       first (route, controller, handler and config files whose names carry
@@ -156,7 +166,7 @@ probes, no network, no LLM verdict as a finding. No new command or verb.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Fixtures trip the secret guard | implementation | A planted pepper literal or token is exactly what `check_secret_leak` and the secret-in-VCS guard exist to stop, so the fixture commit is blocked or a real-looking value lands in the tree | Every planted value is an obvious placeholder (`changeme-pepper`), and the fixture directory carries the audited allow-marker rather than a weakened detector | Phase 1 — Fixtures and claim before code |
+| 1 | Fixtures trip the secret guard | implementation | A planted pepper literal or token is exactly what `check_secret_leak` and the secret-in-VCS guard exist to stop, so the fixture commit is blocked or a real-looking value lands in the tree | Every planted value is an obvious placeholder (`changeme-pepper`), and the fixture directory carries the audited allow-marker rather than a weakened detector. MEASURED IN 1.1 and the predicted mechanism is not the operative one: `check_secret_leak` excludes any `fixtures` or `tests` path segment in every scope (`src/scripts/check_secret_leak.ts:54-55`), so the corpus is never scanned and the marker suppresses nothing. The risk is closed, for a different reason than the one planned | Phase 1 — Fixtures and claim before code |
 | 2 | A regex certifies safety | product | The detector finds no pattern and a reader takes that as "login is safe" — the false green the source names as the failure | Absence is never a finding state; the report states what was scanned and which classes it cannot decide, and 3.2 tells callers to read `unknown` as unknown | Phase 2 — The detector |
 | 3 | Fixtures written to fit the detector | implementation | The fixture set and ground truth drift towards what the detector already catches, so the claim measures the authors | 1.1 and 1.2 land before any detector code, in a commit 1.2's verify checks for its absence | Phase 1 — Fixtures and claim before code |
 | 4 | Decoy noise on unrelated code | implementation | `token`, `hash` and `salt` are everywhere; without the path predicate the detector flags CSRF tokens and file checksums | Classes run only inside the path predicate, and three decoys target exactly these words | Phase 2 — The detector |
