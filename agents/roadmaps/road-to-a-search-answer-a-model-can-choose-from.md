@@ -163,14 +163,14 @@ as today.
 
 ## Phase 2 — A search path on every host with a shell
 
-- [ ] **2.1 One flag, no new verb.** `./agent-config route:explain --skills
+- [x] **2.1 One flag, no new verb.** `./agent-config route:explain --skills
       "<task>"` prints the same rows as 1.1. When no project or host root
       resolves, the catalogue resolver falls back to the installed package's
       own `dist/agent-src/skills` as the last root — never ahead of an
       existing root — and the output names which root answered.
       `corrected-from-reproduction`
       verify: `npx vitest run tests/scripts/suggest_skill_for_task.test.ts tests/scripts/tiered_projection.test.ts` -> 0
-- [ ] **2.2 Give the recovery rule a second rung.** Step 5 of
+- [x] **2.2 Give the recovery rule a second rung.** Step 5 of
       `missing-skill-recovery.md` becomes a ladder: the MCP tool, then the
       2.1 command, then say which rung failed and proceed. A rung that is not
       reachable is named, never retried in a loop and never answered from
