@@ -1,6 +1,6 @@
 # Role experiences — taglines at a glance
 
-> **Generated** by `scripts/generate_role_experiences_catalog.py` from
+> **Generated** by `generate_role_experiences_catalog` from
 > `agents/roles/<role>/index.md` — do NOT hand-edit. Taglines are the
 > existing role-level strings (validated by `lint_role_experiences.py`,
 > rendered in the GUI workspace); this page surfaces them in a catalog.
