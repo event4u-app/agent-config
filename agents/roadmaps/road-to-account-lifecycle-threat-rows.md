@@ -122,7 +122,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
 
 ## Phase 2 — The rows the corpus does not have
 
-- [ ] **2.1 Give account flows their own surface row.** Add a second
+- [x] **2.1 Give account flows their own surface row.** Add a second
       `authentication` row to `surfaces.csv` — registration, email
       verification, account and credential change, MFA and recovery,
       federated sign-in — keyed on `register registration signup sign-up
@@ -133,6 +133,19 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       with webhook signature verification — probe it, drop it if it steals).
       verify: the five Context prompts return `authentication`, and one probe
       per existing class (nine) returns that class unchanged, before and after.
+
+      **Closed 2026-10-13. Measured before and after on the same fourteen
+      prompts.** All five Context prompts now ground to `authentication`
+      (registration moved `file-upload` 0.201 → `authentication` 0.296; passkey
+      moved `General` 0.0 → `authentication`, though its `threats` domain still
+      returns nothing until 2.2 lands). All nine other classes returned their
+      own class before and after, with the identical score in every case.
+      `verify` was probed rather than assumed: with it in the keyword set,
+      "verify the webhook signature before processing the callback" stayed
+      `external-integration` (0.488 → 0.521) and "verify the uploaded file type
+      before storing it" stayed `file-upload` (0.262, unchanged), so it steals
+      nothing and is kept. `recovery` and `remember` were probed the same way
+      against `data-exposure` and `public-endpoint` and changed neither.
 - [ ] **2.2 Add the account-lifecycle threat rows.** All in class
       `authentication`, existing seven columns, Source Refs as CWE plus the
       ASVS 5.0 chapter, every Negative Tests cell ending with the `Decided by:`

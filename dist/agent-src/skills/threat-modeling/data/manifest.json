@@ -43,6 +43,10 @@
     "surfaces": [
       "surface",
       "login",
+      "register",
+      "signup",
+      "passkey",
+      "verify",
       "upload",
       "webhook",
       "tenant",
