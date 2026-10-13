@@ -115,7 +115,7 @@ spacing, and it stays in shadow.
 
 ## Phase 3 — A field beside the five rows
 
-- [ ] **3.1 `page_signature` on the artefact, only without handles.** When the
+- [x] **3.1 `page_signature` on the artefact, only without handles.** When the
       reference collected no handles, the artefact carries a top-level
       `page_signature` with, per width, the changed leaf kinds, the changed
       arrangement keys and the overflow pair. The five dimension rows, the
@@ -123,12 +123,12 @@ spacing, and it stays in shadow.
       test passes untouched. With handles in the reference the field is
       absent.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t page-signature-field --reporter=verbose` -> /✓.*page-signature-field/
-- [ ] **3.2 Both controls and every registered row hold.** A test asserts each
+- [x] **3.2 Both controls and every registered row hold.** A test asserts each
       row of the pre-registered table, including the four that must be empty:
       the faithful port, the declared deviation, the renamed handle and the
       reference with handles.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t page-signature-table --reporter=verbose` -> /✓.*page-signature-table/
-- [ ] **3.3 The field states its scope.** It carries one fixed sentence: the
+- [x] **3.3 The field states its scope.** It carries one fixed sentence: the
       reading names kinds of leaf and of container, not nodes; it cannot be
       matched to a declared deviation and is not a finding.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t page-signature-scope-sentence --reporter=verbose` -> /✓.*page-signature-scope-sentence/

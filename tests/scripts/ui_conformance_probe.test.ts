@@ -24,6 +24,7 @@ import {
     LEAF_KINDS,
     PAGE_SIGNATURE_SCOPE,
     VIEWPORTS,
+    type WidthReading,
     captureVariant,
     chromiumAvailable,
     evaluate,
@@ -580,5 +581,151 @@ describe('the structure reading without handles — Phase 1, registered before t
         expect(readme).toMatch(/Registered table/);
         expect(readme).toMatch(/Masking reads as absence/);
         expect(readme).toMatch(/Behaviour produces nothing/);
+    });
+});
+
+describe('the structure reading without handles — Phase 3, a field beside the five rows', () => {
+    const obs = (name: string) => readObservation(path.join(OBS, `${name}.json`));
+
+    /** The reading for one pair, as the artefact carries it, keyed by width. */
+    const reading = (ref: string, tgt: string): Record<string, WidthReading> => {
+        const field = evaluate(obs(ref), obs(tgt), []).page_signature;
+        expect(field?.status, `${ref} to ${tgt}`).toBe('read');
+        return Object.fromEntries((field?.widths ?? []).map((w) => [w.width, w]));
+    };
+
+    const leafChanges = (w: WidthReading): string[] =>
+        w.leaves.map((l) => `${l.kind} ${l.reference}->${l.target}`).sort();
+    const arrangementChanges = (w: WidthReading): string[] =>
+        w.arrangement.map((a) => `${a.key} ${a.reference}->${a.target}`).sort();
+
+    it('page-signature-field: the field is on the artefact only where the reference carried no handle', () => {
+        // Phase 3.1. The five rows, the findings list and the structure gate are
+        // what the two archived roadmaps built; none of them moves.
+        const empty = evaluate(obs('reference-no-handles'), obs('variant-no-handles-removed'), []);
+        expect(empty.page_signature).toBeDefined();
+        expect(empty.page_signature?.status).toBe('read');
+        expect(empty.page_signature?.widths.map((w) => w.width)).toEqual([...VIEWPORTS].map(String));
+        for (const row of empty.dimensions) {
+            expect(row.status).toBe('not_applicable');
+            expect(row.findings).toBeNull();
+        }
+        expect(empty.findings).toEqual([]);
+        expect(empty.structure_gate).toBe('stopped');
+
+        // With handles the five dimensions have a question to ask, and a weaker
+        // second reading beside them would be read as corroboration it is not.
+        const handled = evaluate(reference(), defects(), declarations());
+        expect(handled.page_signature).toBeUndefined();
+        expect(evaluate(reference(), reference(), []).page_signature).toBeUndefined();
+        expect(evaluate(reference(), added(), []).page_signature).toBeUndefined();
+        // Including the degrade path: a host with no browser read no page at all.
+        expect(unavailableArtefact('x/index.html', 'no browser').page_signature).toBeUndefined();
+
+        // NO AGGREGATE. The probe's own header forbids a single number standing
+        // for conformance, and the walk that proves it for the five dimensions is
+        // run here over the branch that actually carries the new field.
+        const keys = new Set<string>();
+        const walk = (v: unknown): void => {
+            if (Array.isArray(v)) return v.forEach(walk);
+            if (v && typeof v === 'object') {
+                for (const [k, inner] of Object.entries(v)) {
+                    keys.add(k);
+                    walk(inner);
+                }
+            }
+        };
+        walk(empty);
+        for (const k of keys) expect(k).not.toMatch(/score|percent|fidelity|(^|_)rate(_|$)/i);
+        expect(keys.has('page_signature')).toBe(true);
+    });
+
+    it('page-signature-table: every registered row holds, and the four that must be empty are empty', () => {
+        // Phase 3.2. The four silent rows come first, because they carry more
+        // weight than the loud ones: a reading that is loud about a real loss is
+        // worth nothing if it is also loud about a faithful port, a declared
+        // change of size, a renamed handle, or the same page with handles on it.
+        for (const target of ['variant-no-handles-declared', 'variant-renamed', 'reference'] as const) {
+            const r = reading('reference-no-handles', target);
+            for (const w of VIEWPORTS) {
+                expect(leafChanges(r[String(w)]!), `${target} at ${w}`).toEqual([]);
+                expect(arrangementChanges(r[String(w)]!), `${target} at ${w}`).toEqual([]);
+                expect(r[String(w)]!.overflow.reference).toBe(r[String(w)]!.overflow.target);
+            }
+        }
+
+        // The faithful port — the fourth silent row, and the one the whole shape
+        // was chosen for. Its markup is restructured the way a real port
+        // restructures markup, and the reading says nothing at any width.
+        const faithful = reading('design', 'port-faithful');
+        for (const w of VIEWPORTS) {
+            expect(leafChanges(faithful[String(w)]!), `faithful at ${w}`).toEqual([]);
+            expect(arrangementChanges(faithful[String(w)]!), `faithful at ${w}`).toEqual([]);
+            expect(faithful[String(w)]!.overflow.reference).toBe(faithful[String(w)]!.overflow.target);
+        }
+        // Registered as "both overflow at 320", which is a statement about the
+        // pages and not only about their agreement.
+        expect(faithful['320']!.overflow).toEqual({ reference: true, target: true });
+        expect(faithful['1440']!.overflow).toEqual({ reference: false, target: false });
+
+        // The removed element, on its single-change variant.
+        const removed = reading('reference-no-handles', 'variant-no-handles-removed');
+        for (const w of VIEWPORTS) {
+            expect(leafChanges(removed[String(w)]!), `removed at ${w}`).toEqual(['text 2->1']);
+        }
+
+        // The missing narrow-width media block, at 375 and 320 ONLY. The two wide
+        // widths are the sensitivity half: a reading that fired at every width
+        // would satisfy the first assertion and be measuring nothing.
+        const media = reading('reference-no-handles', 'variant-no-handles-media-rule');
+        for (const w of ['1440', '768'] as const) {
+            expect(leafChanges(media[w]!), `media at ${w}`).toEqual([]);
+            expect(arrangementChanges(media[w]!), `media at ${w}`).toEqual([]);
+        }
+        for (const w of ['375', '320'] as const) {
+            expect(leafChanges(media[w]!), `media at ${w}`).toEqual([]);
+            expect(arrangementChanges(media[w]!), `media at ${w}`).toEqual(['2:column 1->0', '2:row 0->1']);
+        }
+
+        // The regenerated port. The second leaf kind here is the one place this
+        // reading disagrees with the table the fixture README registers, which
+        // attributes the same lost leaf to `text`. The disagreement, its cause and
+        // what would settle it are in that README; asserting the measured label
+        // rather than the registered one is deliberate, and neither is silently
+        // corrected to the other.
+        const regen = reading('design', 'port-regenerated');
+        for (const w of VIEWPORTS) {
+            expect(leafChanges(regen[String(w)]!), `regenerated at ${w}`).toEqual([
+                'control 5->2',
+                'empty 1->0',
+                'heading 5->4',
+            ]);
+            expect(arrangementChanges(regen[String(w)]!).length, `regenerated arrangement at ${w}`).toBeGreaterThan(0);
+        }
+        for (const w of ['375', '320'] as const) {
+            expect(arrangementChanges(regen[w]!)).toContain('3:column 1->0');
+            expect(arrangementChanges(regen[w]!)).toContain('3:row 0->1');
+        }
+        expect(regen['375']!.overflow).toEqual({ reference: false, target: true });
+    });
+
+    it('page-signature-scope-sentence: the field states what it is not, in one fixed sentence', () => {
+        // Phase 3.3. The sentence travels WITH the reading, because a reader who
+        // takes a changed count for a located defect will go looking for the node
+        // it happened to, and there is no such node.
+        const field = evaluate(obs('reference-no-handles'), obs('variant-no-handles-removed'), []).page_signature;
+        expect(field?.scope).toBe(PAGE_SIGNATURE_SCOPE);
+        expect(PAGE_SIGNATURE_SCOPE).toMatch(/kinds of leaf and of container/);
+        expect(PAGE_SIGNATURE_SCOPE).toMatch(/never nodes/);
+        expect(PAGE_SIGNATURE_SCOPE).toMatch(/declared deviation/);
+        expect(PAGE_SIGNATURE_SCOPE).toMatch(/not a finding/);
+
+        // It travels on the withheld reading too. An operator who sees
+        // `not_available` is exactly the operator most likely to go looking for
+        // the thing this sentence says is not there.
+        const legacy = readObservation(path.join(OBS, 'legacy-no-signature.json'));
+        const withheld = evaluate(legacy, legacy, []).page_signature;
+        expect(withheld?.status).toBe('not_available');
+        expect(withheld?.scope).toBe(PAGE_SIGNATURE_SCOPE);
     });
 });
