@@ -87,11 +87,11 @@ spacing, and it stays in shadow.
 
 ## Phase 1 — The expectation, registered before the code
 
-- [ ] **1.1 Today's answer is pinned.** A test asserts that a no-handles
+- [x] **1.1 Today's answer is pinned.** A test asserts that a no-handles
       reference yields only `not_applicable` rows and no structural reading at
       all — the control every later step flips or keeps.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t no-handles-control --reporter=verbose` -> /✓.*no-handles-control/
-- [ ] **1.2 The table is pre-registered.** The table above and the fixture
+- [x] **1.2 The table is pre-registered.** The table above and the fixture
       rows are added to the conformance fixture's README as the expectation,
       with the two limits and the two refuted prototypes and what refuted
       them. Three single-change variants — declared deviation only, missing

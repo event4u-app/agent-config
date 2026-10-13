@@ -1,0 +1,28 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — no handles, the missing media rule alone</title>
+<link rel="stylesheet" href="styles.css">
+<!-- D9 (single change: the missing narrow-width media rule only) — Phase 1.2 of
+     `road-to-a-structure-reading-without-handles`. Markup byte-identical to
+     `reference-no-handles/index.html`; the only difference in the directory is
+     that `styles.css` no longer carries the `max-width: 480px` block, so the
+     toolbar never stacks at narrow width. This is D2 of the original fixture,
+     planted on its own and on a page that carries no handle.
+
+     REGISTERED READING: the arrangement key `2:column` becomes `2:row` at 375
+     and 320 only, and nothing changes at 1440 or 768 where the rule never
+     applied. Leaf counts are unchanged at every width: no element is added or
+     removed, only laid out differently. -->
+<main class="card">
+  <header class="toolbar">
+    <h1 class="title">Conformance reference</h1>
+    <span class="badge">ready</span>
+  </header>
+  <p class="body">
+    The reference implementation. Every planted defect in a sibling variant is a
+    deliberate removal from this file or its stylesheet.
+  </p>
+  <button class="action" aria-expanded="false">Toggle details</button>
+  <section class="panel" hidden>Details panel content.</section>
+</main>
+<script src="app.js"></script>

@@ -389,3 +389,96 @@ describe('the artefact knows what it read — Phase 1', () => {
         expect(compareInputs(artefact.inputs, (p) => p).verdict).toBe('unchanged');
     });
 });
+
+describe('the structure reading without handles — Phase 1, registered before the code', () => {
+    // Phase 1.1 and 1.2 of `road-to-a-structure-reading-without-handles`. Both
+    // tests were written BEFORE the capture learned to record a signature, so
+    // what they assert is a prediction rather than a transcription.
+
+    const SIGNATURE_VARIANTS = [
+        'variant-no-handles-declared',
+        'variant-no-handles-media-rule',
+        'variant-no-handles-removed',
+    ] as const;
+
+    it('no-handles-control: the five dimension rows stay not-applicable and no row is added', () => {
+        // THE CONTROL EVERY LATER STEP FLIPS OR KEEPS, and it is the keeping half
+        // that matters. A reading for a handle-free handover is worth having only
+        // if it costs nothing that already works: the zero-nodes invariant of
+        // `road-to-a-probe-that-cannot-report-a-false-green` says no dimension may
+        // be exercised on zero nodes, and this asserts the new reading did not
+        // quietly become a sixth dimension that violates it.
+        const artefact = evaluate(noHandles(), noHandles(), []);
+
+        expect(artefact.dimensions).toHaveLength(DIMENSIONS.length);
+        expect(artefact.dimensions.map((r) => r.dimension).sort()).toEqual([...DIMENSIONS].sort());
+        for (const row of artefact.dimensions) {
+            expect(row.status).toBe('not_applicable');
+            expect(row.findings).toBeNull();
+        }
+        expect(artefact.findings).toEqual([]);
+        expect(artefact.structure_gate).toBe('stopped');
+        expect(artefact.reference_nodes).toBe(0);
+    });
+
+    it('signature-fixture-variants-exist: three single-change variants sit beside the existing ones', () => {
+        // Phase 1.2. Each variant differs from `reference-no-handles/` in exactly
+        // one file and in one way. A fixture that drifted into carrying two
+        // changes would let a reading claim a defect it had not isolated, so the
+        // single-change property is asserted rather than described.
+        const refDir = path.join(FIXTURE, 'reference-no-handles');
+        const read = (dir: string, file: string): string => fs.readFileSync(path.join(dir, file), 'utf-8');
+
+        for (const variant of SIGNATURE_VARIANTS) {
+            const dir = path.join(FIXTURE, variant);
+            expect(fs.existsSync(dir), `${variant} is missing`).toBe(true);
+            for (const file of ['index.html', 'styles.css', 'app.js']) {
+                expect(fs.existsSync(path.join(dir, file)), `${variant}/${file}`).toBe(true);
+            }
+            // The behaviour file never differs: every one of the three is a
+            // structural or stylistic change, and a script difference would make
+            // the variant a second question.
+            expect(read(dir, 'app.js'), `${variant}/app.js`).toBe(read(refDir, 'app.js'));
+            // And none carries a handle: the reading under test applies only where
+            // the reference collected none, so a variant that grew one would
+            // silently move the comparison onto the five dimensions instead.
+            //
+            // Matched on the ATTRIBUTE form, not on the name. The first version of
+            // this assertion grepped the bare token and failed on the fixture's own
+            // comment, which names the attribute to explain why there is none —
+            // a true report of the wrong thing. An attribute is an `=` away from a
+            // mention, and only the former is a handle.
+            expect(read(dir, 'index.html')).not.toMatch(/data-probe-id\s*=/);
+        }
+
+        // Declared deviation: the stylesheet moved, the markup did not.
+        const declared = path.join(FIXTURE, 'variant-no-handles-declared');
+        expect(read(declared, 'styles.css')).toMatch(/line-height: 28px/);
+        expect(read(declared, 'styles.css')).not.toMatch(/line-height: 24px/);
+
+        // Missing media block: the narrow-width rule is gone, nothing else is.
+        const media = path.join(FIXTURE, 'variant-no-handles-media-rule');
+        expect(read(refDir, 'styles.css')).toMatch(/max-width: 480px/);
+        expect(read(media, 'styles.css')).not.toMatch(/max-width: 480px/);
+        expect(read(media, 'styles.css')).toMatch(/line-height: 24px/);
+
+        // Removed element: the markup lost the badge, the stylesheet is identical.
+        const removed = path.join(FIXTURE, 'variant-no-handles-removed');
+        expect(read(refDir, 'index.html')).toMatch(/class="badge"/);
+        expect(read(removed, 'index.html')).not.toMatch(/class="badge"/);
+        expect(read(removed, 'styles.css')).toBe(read(refDir, 'styles.css'));
+    });
+
+    it('signature-fixture-variants-exist: the README registers a reading for each of them', () => {
+        // A fixture whose expected reading lives only in a test is a fixture whose
+        // prediction can be edited to match the code. The README is where the
+        // registration is auditable without reading the assertions.
+        const readme = fs.readFileSync(path.join(FIXTURE, 'README.md'), 'utf-8');
+        for (const variant of SIGNATURE_VARIANTS) {
+            expect(readme, `README does not register ${variant}`).toMatch(variant);
+        }
+        expect(readme).toMatch(/Registered table/);
+        expect(readme).toMatch(/Masking reads as absence/);
+        expect(readme).toMatch(/Behaviour produces nothing/);
+    });
+});
