@@ -170,6 +170,37 @@ Next steps:
   3. Run `/agents optimize` periodically to deduplicate against .augment/
 ```
 
+### 6b. No-gos that name a path or a command (optional)
+
+A no-go the agent reads after the edit is a no-go it has already broken. The
+two kinds that CAN be enforced become deny rows the host refuses on; the rest
+stays instruction-only. Skips silently when step 3.5 was empty.
+
+Show what the bullets would become — this writes nothing:
+
+```bash
+./scripts-run src/scripts/no_go_deny_rows AGENTS.md --host {detected_host}
+```
+
+Then ask **once**, with the rows on screen (per
+[`user-interaction`](../../rules/user-interaction.md)):
+
+```
+> 1. Add these rows to .claude/settings.json
+> 2. Skip — leave every no-go instruction-only
+```
+
+On 1, re-run with `--apply`. It appends to the existing deny list, keeps every
+entry the consumer already had and its order, and skips a row the file already
+carries. On 2, run nothing — the command's default writes nothing, so a skip is
+the absence of a second call rather than an undo.
+
+A bullet that names neither a path nor a command is reported as
+instruction-only with the reason beside it, and no row is built for it: a
+guessed row on a vague sentence blocks legitimate work and the agent cannot
+say why. On a host with no deny list established in this tree the rows are
+printed as a report and nothing is written.
+
 ### 7. Module-root proposal (optional)
 
 Surface configurable-module candidates so the team file can opt in to

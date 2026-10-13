@@ -329,6 +329,18 @@ jobs:
       - name: gate scripts resolve "now" through the as-of seam
         run: ./scripts-run src/scripts/lint_deterministic_time --quiet
 
+      # The host permission deny-rule pins in hostPermissionsAdapter.ts.
+      # road-to-a-project-contract-written-down D7 makes this gate the
+      # substitute for the plumbing ratification that D5's placement avoids,
+      # and makes the pin's review-by date "the drift signal instead" of a live
+      # documentation fetch. A round-2 review measured that signal unable to
+      # fire: the gate's only carrier was a test that pins `--today` to the
+      # read date, so `expires` was never reached against a real clock. This
+      # step is what makes the substitute a control rather than a sentence — it
+      # passes no `--today`, so the gate resolves the date through `asOf()`.
+      - name: host permission deny-rule pins are current
+        run: ./scripts-run src/scripts/check_permission_deny_syntax
+
       # Five figures for one property is not five errors, it is one defect: a
       # denominator quoted without the frame it was taken over. The resolver
       # publishes it with its frame and docs/proof.md § 4b projects that output;
