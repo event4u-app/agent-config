@@ -530,10 +530,17 @@ describe('the structure reading without handles — Phase 1, registered before t
         // decide row from column and then dropped; a serialized signature that
         // contained a pixel value would make this reading a size comparison by
         // accident, which is the thing D1 rejected.
+        // Asserted over the COMMITTED FILE, not over the parsed object. The file
+        // is what a later reader opens, and a value that survives serialization
+        // is the one that could be mined back into a coordinate. `design.json`
+        // is the right subject because its `nodes` are empty — the five
+        // dimensions legitimately record `padding-top` and `padding-left` per
+        // node, so a whole-file assertion only means something where there are
+        // no nodes to record.
         const raw = fs.readFileSync(path.join(OBS, 'design.json'), 'utf-8');
-        const signatureBlock = JSON.stringify(readObservation(path.join(OBS, 'design.json')).signature);
-        expect(raw.length).toBeGreaterThan(0);
-        expect(signatureBlock).not.toMatch(/px|width"\s*:\s*[0-9]+\.|top|left|bottom|right/);
+        expect(readObservation(path.join(OBS, 'design.json')).nodes).toEqual([]);
+        expect(raw).toMatch(/"signature"/);
+        expect(raw).not.toMatch(/px|top|left|bottom|right|height|scroll|rect|[0-9]+\.[0-9]/);
 
         // The width sweep reaches a page WITH handles too — it is not a
         // handle-free special case, it is unconditional.
