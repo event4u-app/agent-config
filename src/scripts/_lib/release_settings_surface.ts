@@ -114,6 +114,13 @@ export function readReleasedSurface(target = SETTINGS_SURFACE_FIXTURE): Released
     return JSON.parse(fs.readFileSync(target, 'utf8')) as ReleasedSurface;
 }
 
+/** The shape `install.ts` persists to `state/settings-delta.json` on an upgrade. */
+export interface InstallerDelta {
+    oldVersion: string;
+    newVersion: string;
+    changes: Array<{ kind: string; key: string; values?: Array<string | number> }>;
+}
+
 export interface SettingsDeltaFindings {
     /** Removed, and in NEITHER tombstone map. Refuses under either owner answer (D4). */
     untombstoned_removals: string[];
@@ -259,4 +266,66 @@ export function assert_settings_surface_delta(
             'type or vocabulary change, or give the new key a default — then re-run.',
     );
     return findings;
+}
+
+/**
+ * Disagreements between the delta an installed upgrade WROTE and the one the
+ * release COMPUTES for the same version pair. Empty means they agree.
+ *
+ * Three kinds only — `removed`, `type_changed`, `enum_removed`. The other
+ * three are deliberately out: `added` and `default_changed` are the review
+ * form's business and neither refuses a cut, and `enum_added` widens a
+ * vocabulary, which no installed value can be invalid under.
+ *
+ * The comparison is the point of the leg: the release reads a COMMITTED file
+ * and the installer recomputes the surface from SHIPPED bytes, so an
+ * agreement is evidence the committed file describes what was actually
+ * published, and a disagreement means it does not.
+ */
+export function compareInstallerDelta(
+    installer: InstallerDelta,
+    release: SettingsDeltaFindings,
+): string[] {
+    const out: string[] = [];
+    const seen = (kind: string): string[] =>
+        installer.changes
+            .filter((c) => c.kind === kind)
+            .map((c) => c.key)
+            .sort();
+
+    const releaseRemoved = [
+        ...release.untombstoned_removals,
+        ...release.carried_removals.map((r) => r.key),
+    ].sort();
+    const pairs: Array<[string, string[], string[]]> = [
+        ['removed', seen('removed'), releaseRemoved],
+        ['type_changed', seen('type_changed'), [...release.type_changed].sort()],
+        ['enum_removed', seen('enum_removed'), release.enum_removed.map((e) => e.key).sort()],
+    ];
+    for (const [kind, installed, computed] of pairs) {
+        if (installed.join('\u0000') === computed.join('\u0000')) continue;
+        out.push(
+            `${kind}: installer wrote [${installed.join(', ')}], the release computes ` +
+                `[${computed.join(', ')}]`,
+        );
+    }
+    // Per-key values for the one kind that carries them: a vocabulary that
+    // lost DIFFERENT values on the two sides is the same disagreement as one
+    // that lost them on only one side.
+    const installedVals = new Map(
+        installer.changes
+            .filter((c) => c.kind === 'enum_removed')
+            .map((c) => [c.key, [...(c.values ?? [])].sort()] as const),
+    );
+    for (const e of release.enum_removed) {
+        const theirs = installedVals.get(e.key);
+        if (theirs === undefined) continue;
+        const ours = [...e.values].sort();
+        if (theirs.join('\u0000') === ours.join('\u0000')) continue;
+        out.push(
+            `enum_removed ${e.key}: installer wrote [${theirs.join(', ')}], the release computes ` +
+                `[${ours.join(', ')}]`,
+        );
+    }
+    return out;
 }

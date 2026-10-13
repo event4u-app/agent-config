@@ -131,7 +131,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 
 ## Phase 4 — The leg asserts what it was written to assert
 
-- [ ] **4.1 The upgrade leg reads the delta.** After upgrading from the last
+- [x] **4.1 The upgrade leg reads the delta.** After upgrading from the last
       published version to the tarball, the leg reads the delta the installer
       writes and asserts that its `removed`, `type_changed` and `enum_removed`
       entries equal the ones 3.1 computes for the same pair.
