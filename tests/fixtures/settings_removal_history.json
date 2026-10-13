@@ -1,0 +1,659 @@
+{
+  "note": "Frozen reading of this tree's local version tags: every consecutive tag pair whose BOTH sides carry a settings template, and the leaf keys the later tag lost. Each key is classified twice — against the tombstone maps as they stand TODAY, and against the maps as they stood AT the later tag. A figure here that moves silently is the defect this file exists to pin.",
+  "classification_note": "The two classifications agree on every key, so the reading does not depend on applying future maps to past releases. The at-tag reader accepts any declaration whose name carries REMOVED/RENAMED and KEYS, in either the ReadonlyMap shape used today or the readonly-string-array shape used at 9.29.0 — a reader pinned to one shape read five tombstoned keys as untombstoned. An empty tombstone_map_files_at_tag means no tombstone map existed at that tag at all, which is the state for every removal before 9.29.0.",
+  "exclusion_note": "The excluded pairs are a contiguous PREFIX of history, before the settings template existed. None of them is a major, so the exclusion cannot bias the minor-versus-major split the pairs below are read for.",
+  "template_paths": [
+    "src/config/agent-settings.template.yml",
+    "config/agent-settings.template.yml",
+    "agents/settings/agent-settings.template.yml",
+    ".augment/agent-settings.template.yml"
+  ],
+  "tombstone_map_paths": [
+    "src/scripts/_lib/settings_removed_keys.ts",
+    "src/scripts/_lib/settings_renamed_keys.ts",
+    "src/scripts/_lib/agent_settings.ts",
+    "src/shared/agent_settings.ts",
+    "src/scripts/agent_settings.ts"
+  ],
+  "version_tags": 217,
+  "consecutive_pairs": 216,
+  "pairs_with_template": 197,
+  "excluded_pairs": {
+    "count": 19,
+    "by_bump": {
+      "patch": 11,
+      "minor": 8
+    },
+    "pairs": [
+      {
+        "from": "1.0.0",
+        "to": "1.0.1",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.0.1",
+        "to": "1.0.2",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.0.2",
+        "to": "1.0.3",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.0.3",
+        "to": "1.0.4",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.0.4",
+        "to": "1.1.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.1.0",
+        "to": "1.1.1",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.1.1",
+        "to": "1.2.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.2.0",
+        "to": "1.2.1",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.2.1",
+        "to": "1.2.2",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.2.2",
+        "to": "1.3.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.3.0",
+        "to": "1.3.1",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.3.1",
+        "to": "1.3.2",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.3.2",
+        "to": "1.3.3",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.3.3",
+        "to": "1.3.4",
+        "bump": "patch",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.3.4",
+        "to": "1.4.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.4.0",
+        "to": "1.5.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.5.0",
+        "to": "1.6.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.6.0",
+        "to": "1.7.0",
+        "bump": "minor",
+        "why": "no template at either tag"
+      },
+      {
+        "from": "1.7.0",
+        "to": "1.8.0",
+        "bump": "minor",
+        "why": "no template at the earlier tag"
+      }
+    ]
+  },
+  "tally": {
+    "tombstoned": 61,
+    "renamed": 1,
+    "neither": 18
+  },
+  "tally_at_tag": {
+    "neither": 18,
+    "tombstoned": 61,
+    "renamed": 1
+  },
+  "pairs": [
+    {
+      "from": "1.10.0",
+      "to": "1.12.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [],
+      "removed": [
+        {
+          "key": "project.pr_comment_bot_icon",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        }
+      ]
+    },
+    {
+      "from": "1.19.0",
+      "to": "1.20.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [],
+      "removed": [
+        {
+          "key": "chat_history.heartbeat",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        }
+      ]
+    },
+    {
+      "from": "2.12.0",
+      "to": "2.13.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [],
+      "removed": [
+        {
+          "key": "ai_council.cost_budget.max_calls",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.cost_budget.max_input_tokens",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.cost_budget.max_output_tokens",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.cost_budget.max_total_usd",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.deep_min_rounds",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.enabled",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.max_output_tokens",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.members.anthropic.enabled",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.members.anthropic.model",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.members.openai.enabled",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.members.openai.model",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.min_rounds",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.mode",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        },
+        {
+          "key": "ai_council.session_retention_days",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        }
+      ]
+    },
+    {
+      "from": "3.0.0",
+      "to": "3.1.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [],
+      "removed": [
+        {
+          "key": "personal.user_name",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        }
+      ]
+    },
+    {
+      "from": "5.6.1",
+      "to": "5.7.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [],
+      "removed": [
+        {
+          "key": "cost_profile",
+          "classification": "neither",
+          "classification_at_tag": "neither"
+        }
+      ]
+    },
+    {
+      "from": "9.28.0",
+      "to": "9.29.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [
+        "src/scripts/_lib/agent_settings.ts"
+      ],
+      "removed": [
+        {
+          "key": "ai_team.enabled",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "subagents.auto",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "subagents.budget_routing",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "subagents.enabled",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "subagents.host_capabilities",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        }
+      ]
+    },
+    {
+      "from": "9.36.0",
+      "to": "10.0.0",
+      "bump": "major",
+      "tombstone_map_files_at_tag": [
+        "src/scripts/_lib/agent_settings.ts"
+      ],
+      "removed": [
+        {
+          "key": "hooks.turn_end_gate.enabled",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "hooks.turn_end_gate.language",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "hooks.turn_end_gate.promissory",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "hooks.turn_end_gate.verification",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        }
+      ]
+    },
+    {
+      "from": "10.1.0",
+      "to": "10.2.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [
+        "src/scripts/_lib/agent_settings.ts"
+      ],
+      "removed": [
+        {
+          "key": "chat_history.max_size_kb",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "chat_history.on_overflow",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "legal_review_prep.consented_at",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "quality.wait_for_remote_ci",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "telegraph.speak_scope",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        }
+      ]
+    },
+    {
+      "from": "10.4.0",
+      "to": "11.0.0",
+      "bump": "major",
+      "tombstone_map_files_at_tag": [
+        "src/scripts/_lib/agent_settings.ts"
+      ],
+      "removed": [
+        {
+          "key": "worktrees.mode",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        }
+      ]
+    },
+    {
+      "from": "16.0.0",
+      "to": "16.1.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [
+        "src/scripts/_lib/settings_renamed_keys.ts",
+        "src/scripts/_lib/agent_settings.ts"
+      ],
+      "removed": [
+        {
+          "key": "planning.challenge_on_create",
+          "classification": "renamed",
+          "classification_at_tag": "renamed"
+        }
+      ]
+    },
+    {
+      "from": "16.3.0",
+      "to": "16.4.0",
+      "bump": "minor",
+      "tombstone_map_files_at_tag": [
+        "src/scripts/_lib/settings_removed_keys.ts",
+        "src/scripts/_lib/settings_renamed_keys.ts",
+        "src/scripts/_lib/agent_settings.ts"
+      ],
+      "removed": [
+        {
+          "key": "ai_team.suppress_setup_hint",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.auto_detect",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.create_pr.api_examples",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.create_pr.api_paths",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.create_pr.ui_paths",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.suggestion.confidence_floor",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.suggestion.cooldown_seconds",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.suggestion.enabled",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "commands.suggestion.max_options",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "consistency.cross_source",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "decision_engine.on_block_fallback",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "decision_engine.surface_traces",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "explain.enable_last",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "hooks.concern_budget.hard_fail",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "hooks.concern_budget.max_per_event",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "knowledge.global_sharing.auto_promote_threshold",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "knowledge.global_sharing.freshness.hypothesis_after_days",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "knowledge.global_sharing.freshness.stale_after_days",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "knowledge.global_sharing.redaction.enabled",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "knowledge.global_sharing.redaction.halt_on_trigger",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "memory.cadence",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "memory.review_threshold",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "personal.minimal_output",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "personal.play_by_play",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "personal.pr_comment_bot_icon",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "pipelines.skill_improvement",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "project.pr_template",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.auto_gate",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.complexity_first",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.decision_ledger",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.grounding",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.intent",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.notes_first",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.orchestrator",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.prediction_tracking",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.uncertainty_budget",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "reasoning.components.verifier_default",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "roadmap.dashboard_regen_cadence",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "roadmap.skip_pre_run_gate",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "subagents.downshift",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "telegraph.speak",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "tokens.rich_skills",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "verbosity.intent_announcements",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "verbosity.post_action_reports",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "verbosity.preview_artifacts",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        },
+        {
+          "key": "verbosity.routine_confirmations",
+          "classification": "tombstoned",
+          "classification_at_tag": "tombstoned"
+        }
+      ]
+    }
+  ]
+}

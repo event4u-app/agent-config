@@ -43,6 +43,13 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { MANAGED_SIGNATURE } from './_lib/claude_settings_hooks.js';
+import {
+    classifySettingsDelta,
+    compareInstallerDelta,
+    emitReleasedSurface,
+    readReleasedSurface,
+    type InstallerDelta,
+} from './_lib/release_settings_surface.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -657,7 +664,48 @@ function legUpgrade(ctx: Ctx): string {
     if (r.status !== 0) {
         throw new Error(`conformance red after ${published} → tarball upgrade: ${(r.stdout + r.stderr).slice(-600)}`);
     }
-    return `upgrade ${published} → packed tarball, conformance green`;
+    return `upgrade ${published} → packed tarball, conformance green; ${assertUpgradeDelta(upHome, published)}`;
+}
+
+/**
+ * The assertion the archived upgrade step promised and never wrote.
+ *
+ * `road-to-proof-under-real-conditions` closed a step reading "settings-sync
+ * produces the expected upgrade-delta" and named `conformance` as the probe.
+ * `conformance` reads no delta, so the leg installed two versions and asserted
+ * nothing about the surface between them. This reads the delta the UPGRADE
+ * wrote from shipped bytes and requires it to equal the one the release
+ * computes from its committed file for the same pair.
+ *
+ * Absent delta file: the installer only writes one when the two versions
+ * differ and something changed. Nothing to compare is not a disagreement, and
+ * saying so is the honest reading — the test for this comparison lives in
+ * `tests/scripts/consumer_matrix_settings_delta.test.ts`, which does not need
+ * the network to exercise the branches.
+ */
+export function assertUpgradeDelta(upHome: string, published: string): string {
+    const deltaPath = path.join(upHome, '.event4u', 'agent-config', 'state', 'settings-delta.json');
+    if (!fs.existsSync(deltaPath)) return 'no settings delta written (surfaces identical)';
+    const installer = JSON.parse(fs.readFileSync(deltaPath, 'utf8')) as InstallerDelta;
+    const released = readReleasedSurface();
+    if (released.version !== installer.oldVersion) {
+        // A different pair is not a disagreement about this one. It happens
+        // when the registry's latest is not the version the committed file was
+        // cut at — during a release, for one window.
+        return (
+            `settings delta skipped: installed ${installer.oldVersion}, ` +
+            `committed surface is ${released.version}`
+        );
+    }
+    const computed = classifySettingsDelta(released, emitReleasedSurface(installer.newVersion));
+    const disagreements = compareInstallerDelta(installer, computed);
+    if (disagreements.length > 0) {
+        throw new Error(
+            `settings delta disagrees after ${published} → tarball: ${disagreements.join(' | ')}`,
+        );
+    }
+    return `settings delta ${installer.oldVersion} → ${installer.newVersion} agrees ` +
+        `(${String(installer.changes.length)} changes)`;
 }
 
 // ── main ────────────────────────────────────────────────────────────
