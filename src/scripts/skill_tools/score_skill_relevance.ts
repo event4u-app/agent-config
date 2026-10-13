@@ -51,6 +51,8 @@ import {
     type TermStats,
 } from '../../shared/skillRanking.js';
 
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/skill_tools/score_skill_relevance.ts → parents[3] of the .py
 // (skill_tools → scripts → src → repo root) is the package root.
@@ -879,6 +881,26 @@ export function main(argv: string[] | null = null): number {
 }
 
 function _isCliEntry(): boolean {
+    // INSIDE A CLI-DELEGATE BUNDLE THIS MODULE IS NEVER THE ENTRY.
+    //
+    // esbuild bundles every import of a `cmd_*.ts` into ONE file, and in that
+    // file `import.meta.url` is the BUNDLE's url for every inlined module. So
+    // the comparisons below see argv[1] and `import.meta.url` as the same path
+    // and fire — running this CLI's argparse over the HOST command's argv.
+    //
+    // Measured, not predicted: `route:explain "commit this and push to main"`
+    // answered `score_skill_relevance.py: error: unrecognized arguments` the
+    // moment `cmd_route_explain.ts` imported this module, and only through the
+    // bundle — the tsc path was green.
+    //
+    // The define is the right discriminator rather than a heuristic: the
+    // delegate bundles are built from `src/scripts/_cli/cmd_*.ts`,
+    // `src/agent-src/scripts/*.ts` and two named aux entries, and this file is
+    // none of them. It can be a LIBRARY in such a bundle; it can never be the
+    // entry.
+    if (typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__) {
+        return false;
+    }
     if (process.argv[1] === undefined) {
         return false;
     }
