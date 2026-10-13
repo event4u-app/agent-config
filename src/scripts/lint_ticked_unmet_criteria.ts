@@ -23,30 +23,39 @@
  * NOT met" — a statement about a different proposition, parked in a comment
  * beside a criterion it does not describe.
  *
- * A criterion whose block carries a DATED closure marker — `MET YYYY-MM-DD` or
- * `CLOSED YYYY-MM-DD` — is read as closed, and a `NOT met` below it as the
- * history that closure resolved. Archived roadmaps preserve their audits on
- * purpose ("the audit below is preserved"), and a preserved audit saying what
- * WAS missing is not the glyph lying about what IS. Excluded criteria are
- * COUNTED AND NAMED in the pass line rather than silently dropped, so the
- * exemption is auditable without a suppression marker.
+ * Two archived criteria preserve a dated audit of what WAS missing before the
+ * same block records its closure, which is not the glyph lying about what IS.
+ * They are exempt — through {@link HISTORICAL}, a FROZEN list in this file
+ * pinning each one by path, criterion id AND the SHA-256 of the criterion block
+ * itself. Editing an exempt block changes its digest, the entry stops matching,
+ * and the criterion is reported again.
  *
- * What all of this costs, stated rather than discovered later, and pinned by
- * tests:
+ * It is a frozen list rather than a marker an author types, and that is a
+ * REFUSAL honoured rather than a design preference. The first version of this
+ * exemption keyed on a `MET YYYY-MM-DD` / `CLOSED YYYY-MM-DD` marker anywhere
+ * in the block. The ratification review refused it, 1 seat of 2, and named the
+ * defect exactly: the marker is "an author-controlled suppression" — the same
+ * author whose change is under review types their own pass token, the regex
+ * accepted impossible dates, and wiring a dormant lint into CI with a bypass
+ * attached narrows the control it is supposed to add. Its own alternative is
+ * what ships here: grandfather the legitimate cases through a checked-in
+ * baseline keyed by path, criterion and content hash, and let a new or
+ * modified exception fail.
  *
- *   · an author who writes the unmet half inside backticks escapes the lint;
- *   · an author who writes it inside an HTML comment escapes the lint;
- *   · an author who stamps `CLOSED <date>` on a block whose other half really
- *     is unmet escapes the lint — this detector cannot tell an honest closure
- *     from a dishonest one, and a dishonest one is a review finding rather
- *     than something a text scanner can decide.
+ * An entry that matches NO criterion in the scanned tree is itself an error,
+ * so the list cannot rot into a set of dead permissions nobody reviews. That
+ * check runs only on the repository's own tree: a `--root` fixture has no
+ * archived roadmaps and would red every self-test case.
  *
- * The bare phrase with no date and no masking still fails, which is the case
- * the lint exists for.
+ * What the masks still cost, stated rather than discovered later, and pinned
+ * by tests: an author who writes the unmet half inside backticks, or inside an
+ * HTML comment, escapes this lint. The bare phrase with no masking still
+ * fails, which is the case the lint exists for.
  *
- * Verdict of the AI council, 2026-10-13, ONE seat of two (the second returned
+ * On the DISPOSITION of the three archived hits the detector refinement was
+ * decided on: AI council, 2026-10-13, ONE seat of two (the second returned
  * `os_error: ENOBUFS` and answered nothing — a one-seat reading, not
- * convergence): refine the detector rather than edit the archived prose,
+ * convergence). Refine the detector rather than edit the archived prose,
  * because the roadmap step's "no criterion text is reworded to clear the lint"
  * carries no exception for a case change.
  *
@@ -61,6 +70,7 @@
  *
  * Exit codes: 0 no hit · 1 at least one hit · 2 usage error.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -96,14 +106,38 @@ function maskHtmlComments(text: string): string {
     return text.replace(/<!--[\s\S]*?-->/gu, (m) => m.replace(/[^\n]/gu, ' '));
 }
 
+/** One grandfathered criterion, pinned by content so an edit un-grandfathers it. */
+interface Historical {
+    file: string;
+    criterion: string;
+    /** SHA-256 of the criterion block, exactly as {@link scanText} joins it. */
+    sha256: string;
+    why: string;
+}
+
 /**
- * `MET 2026-08-31`, `CLOSED 2026-08-31` — a criterion stamping its own closure
- * with a date.
- *
- * Upper-case and dated on purpose, the same convention `NOT met` follows: a
- * lower-case "closed" or an undated "CLOSED" is prose and does not exempt.
+ * The frozen exemption list. Add nothing here without a review that reads the
+ * block — this is the baseline the ratification review asked for in place of a
+ * marker, and a list that grows on an author's own say-so is the marker again.
  */
-const DATED_CLOSURE_RE = /\b(?:MET|CLOSED)\s+\d{4}-\d{2}-\d{2}\b/u;
+const HISTORICAL: readonly Historical[] = [
+    {
+        file: 'agents/roadmaps/archive/road-to-governed-harness-evolution.md',
+        criterion: 'AC-1',
+        sha256: '7746f218f52621c771b05696fdf56b240c6afc435618923e703dcf98d34c9d25',
+        why: 'Reads "MET 2026-08-31, and it was NOT met when this audit started" — a dated closure whose own sentence puts the unmet state in the past.',
+    },
+    {
+        file: 'agents/roadmaps/archive/road-to-governed-harness-evolution.md',
+        criterion: 'AC-5',
+        sha256: 'f78a74e4a7a3e30b81f33cc59a53c0e01f147d6ed3d7d7bcbbfc47a76e13c2fd',
+        why: 'Reads "CLOSED 2026-08-31 … The audit below is preserved"; the phrase sits 29 lines down inside that preserved audit.',
+    },
+];
+
+function blockDigest(text: string): string {
+    return createHash('sha256').update(text, 'utf8').digest('hex');
+}
 
 function maskInlineCode(text: string): string {
     let out = '';
@@ -176,13 +210,15 @@ function scanText(text: string, file: string, historical: Hit[] = []): Hit[] {
             }
             block.push(next);
         }
-        const visible = maskHtmlComments(maskInlineCode(block.join('\n')));
+        const raw = block.join('\n');
+        const visible = maskHtmlComments(maskInlineCode(raw));
         if (visible.includes(UNMET)) {
-            if (DATED_CLOSURE_RE.test(visible)) {
-                historical.push({ file, line: i + 1, criterion: m[2] as string });
-            } else {
-                hits.push({ file, line: i + 1, criterion: m[2] as string });
-            }
+            const criterion = m[2] as string;
+            const digest = blockDigest(raw);
+            const exempt = HISTORICAL.some(
+                (h) => h.file === file && h.criterion === criterion && h.sha256 === digest,
+            );
+            (exempt ? historical : hits).push({ file, line: i + 1, criterion });
         }
     }
     return hits;
@@ -246,7 +282,7 @@ function selfTest(): number {
     return runSelfTest({
         gate: 'lint_ticked_unmet_criteria',
         minCases: 6,
-        minRejectCases: 3,
+        minRejectCases: 4,
         cases: [
             {
                 name: 'a bare NOT met under a tick is rejected',
@@ -269,14 +305,14 @@ function selfTest(): number {
                 run: over('- [x] AC-1 — The gate ships.\n      <!-- the Goal clause is NOT met -->\n'),
             },
             {
-                name: 'a dated closure marker exempts the block',
-                expect: 'accept',
+                name: 'a dated closure marker does NOT exempt — the exemption is a frozen digest list',
+                expect: 'reject',
                 run: over('- [x] AC-1 — Both halves land.\n      **CLOSED 2026-08-31.** First conjunct — NOT met.\n'),
             },
             {
-                name: 'an UNDATED closure word does not exempt, so the block is rejected',
+                name: 'a MET marker does not exempt either',
                 expect: 'reject',
-                run: over('- [x] AC-1 — Both halves land.\n      **CLOSED.** First conjunct — NOT met.\n'),
+                run: over('- [x] AC-1 — Both halves land.\n      **MET 2026-08-31.** First conjunct — NOT met.\n'),
             },
             {
                 name: 'a roadmap tree with no criterion at all is accepted',
@@ -320,28 +356,50 @@ function main(argv: string[] = process.argv.slice(2)): number {
         allowEmpty: 'EMPTY_VALID: a checkout with no roadmap has no criterion to tick',
     });
     // Named, not merely counted: an exemption nobody can enumerate is a
-    // suppression surface, and this one is granted by a date stamp an author
-    // types.
+    // suppression surface however narrow its key is.
     for (const h of historical) {
-        process.stdout.write(
-            `   exempt (dated closure): ${h.file}:${String(h.line)} · ${h.criterion}\n`,
-        );
+        process.stdout.write(`   exempt (grandfathered): ${h.file}:${String(h.line)} · ${h.criterion}\n`);
     }
-    if (hits.length === 0) {
-        process.stdout.write(
-            `✅  lint_ticked_unmet_criteria: ${String(scanned)} roadmap file(s), ` +
-                `no criterion ticked over "${UNMET}" (${String(historical.length)} exempt by a dated closure marker).\n`,
+    // A frozen list has one failure mode a marker does not: an entry that
+    // matches nothing is a dead permission nobody re-reads. Checked on the
+    // repository's own tree only — a `--root` fixture carries none of these
+    // files and would red every self-test case.
+    //
+    // Reported ALONGSIDE the hits rather than instead of them: an entry goes
+    // stale exactly when its block was edited, and an edited block is usually
+    // also a new hit. Returning early here would print the bookkeeping failure
+    // and hide the criterion it was covering.
+    const matched = new Set(historical.map((h) => `${h.file}\u0000${h.criterion}`));
+    const stale =
+        root === _DEFAULT_ROOT ? HISTORICAL.filter((h) => !matched.has(`${h.file}\u0000${h.criterion}`)) : [];
+
+    if (hits.length > 0) {
+        process.stderr.write(
+            `❌  lint_ticked_unmet_criteria: ${String(hits.length)} criterion/criteria ticked [x] over their own "${UNMET}":\n`,
         );
-        return 0;
+        for (const h of hits) {
+            process.stderr.write(`  ${h.file}:${String(h.line)} · ${h.criterion}\n`);
+        }
+        process.stderr.write('\n    The unmet half is a deferral: use `[~]` and carry it, or meet it.\n');
     }
-    process.stderr.write(
-        `❌  lint_ticked_unmet_criteria: ${String(hits.length)} criterion/criteria ticked [x] over their own "${UNMET}":\n`,
+    if (stale.length > 0) {
+        process.stderr.write(
+            `❌  lint_ticked_unmet_criteria: ${String(stale.length)} grandfathered entry/entries matched nothing. ` +
+                'The block was edited, moved or deleted, so the exemption no longer describes it — ' +
+                'remove the entry, or re-read the block and re-pin its digest:\n',
+        );
+        for (const h of stale) {
+            process.stderr.write(`  ${h.file} · ${h.criterion} · ${h.sha256}\n`);
+        }
+    }
+    if (hits.length > 0 || stale.length > 0) {
+        return 1;
+    }
+    process.stdout.write(
+        `✅  lint_ticked_unmet_criteria: ${String(scanned)} roadmap file(s), ` +
+            `no criterion ticked over "${UNMET}" (${String(historical.length)} grandfathered by digest).\n`,
     );
-    for (const h of hits) {
-        process.stderr.write(`  ${h.file}:${String(h.line)} · ${h.criterion}\n`);
-    }
-    process.stderr.write('\n    The unmet half is a deferral: use `[~]` and carry it, or meet it.\n');
-    return 1;
+    return 0;
 }
 
 if (process.argv[1] !== undefined) {
@@ -358,5 +416,5 @@ if (process.argv[1] !== undefined) {
     }
 }
 
-export { maskHtmlComments, maskInlineCode, scanText, scanTree, main };
+export { HISTORICAL, maskHtmlComments, maskInlineCode, scanText, scanTree, main };
 export type { Hit };

@@ -3,7 +3,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { main, maskHtmlComments, scanText, scanTree } from '../../src/scripts/lint_ticked_unmet_criteria.js';
+import { HISTORICAL, main, maskHtmlComments, scanText, scanTree } from '../../src/scripts/lint_ticked_unmet_criteria.js';
 import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -90,51 +90,61 @@ describe('lint_ticked_unmet_criteria', () => {
         expect(maskHtmlComments('a<!--b-->c\nd')).toBe('a        c\nd');
     });
 
-    it('a dated closure marker exempts the block, and the exemption is reported not dropped', () => {
+    it('a dated closure marker is NOT a pass token — a self-typed CLOSED <date> still fails', () => {
+        // The shape the ratification review refused: an author-controlled
+        // suppression on a lint that had just become an enforced CI gate.
         const historical: { file: string; line: number; criterion: string }[] = [];
         const text = [
             '- [x] AC-5 — Promotion is decided per metric.',
             '      **CLOSED 2026-08-31 — the conjunct now has the caller it lacked.**',
-            '      The audit below is preserved.',
             '      First conjunct — NOT met. It has no caller.',
         ].join('\n');
-        expect(scanText(text, 'f.md', historical)).toEqual([]);
-        expect(historical).toEqual([{ file: 'f.md', line: 1, criterion: 'AC-5' }]);
+        expect(scanText(text, 'f.md', historical)).toEqual([{ file: 'f.md', line: 1, criterion: 'AC-5' }]);
+        expect(historical).toEqual([]);
     });
 
-    it('an UNDATED closure word does not exempt — the date is the whole discriminator', () => {
-        const text = [
-            '- [x] AC-5 — Promotion is decided per metric.',
-            '      **CLOSED — the conjunct now has the caller it lacked.**',
-            '      First conjunct — NOT met. It has no caller.',
-        ].join('\n');
+    it('an impossible date is not special either — nothing about the text exempts', () => {
+        const text = ['- [x] AC-5 — Both halves land.', '      **CLOSED 2026-99-99.** Second half is NOT met.'].join(
+            '\n',
+        );
         expect(scanText(text, 'f.md')).toEqual([{ file: 'f.md', line: 1, criterion: 'AC-5' }]);
     });
 
-    it('records what the three masks cost: a dishonest dated closure escapes this lint', () => {
-        // Not a gap to fix in the scanner. A block stamped `MET <date>` whose
-        // other half genuinely is unmet reads, to a text matcher, exactly like
-        // the two archived criteria this exemption exists for. Telling them
-        // apart is a review question. The exemption is printed per criterion so
-        // a reviewer can enumerate every block that took it.
+    it('the grandfathered list is keyed by content, so an edited block loses its exemption', () => {
+        const entry = HISTORICAL[0];
+        expect(entry).toBeDefined();
+        const rel = entry?.file ?? '';
+        const body = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
         const historical: { file: string; line: number; criterion: string }[] = [];
-        const text = [
-            '- [x] AC-9 — Both halves land.',
-            '      **MET 2026-01-01.** The second half is NOT met and never was.',
-        ].join('\n');
-        expect(scanText(text, 'f.md', historical)).toEqual([]);
-        expect(historical).toHaveLength(1);
+
+        // As committed: exempt.
+        expect(scanText(body, rel, historical).filter((h) => h.criterion === entry?.criterion)).toEqual([]);
+        expect(historical.some((h) => h.criterion === entry?.criterion)).toBe(true);
+
+        // One word changed inside the block: the digest moves and it is reported.
+        const edited = body.replace('the point of the criterion', 'THE POINT of the criterion');
+        expect(edited).not.toBe(body);
+        const after: { file: string; line: number; criterion: string }[] = [];
+        expect(scanText(edited, rel, after).some((h) => h.criterion === entry?.criterion)).toBe(true);
     });
 
-    it('the real tree is green, and every exemption it grants is a dated closure', () => {
+    it('records what the masks cost: a backticked or commented unmet half escapes this lint', () => {
+        // Not a gap the scanner can close. Both are constructs the lint reads as
+        // quotation by design, and an author who uses one deliberately is a
+        // review question rather than something a text matcher can decide.
+        expect(scanText('- [x] AC-9 — Both halves land, `the second is NOT met`.', 'f.md')).toEqual([]);
+        expect(scanText('- [x] AC-9 — Both halves land.\n      <!-- second is NOT met -->', 'f.md')).toEqual([]);
+    });
+
+    it('the real tree is green, and every exemption it grants is on the frozen list', () => {
         const { hits, historical } = scanTree(REPO_ROOT);
         expect(hits).toEqual([]);
-        // The two archived criteria the detector refinement was decided on.
-        // A third would mean a block took the exemption without anyone looking.
-        expect(historical.map((h) => `${h.file}:${String(h.criterion)}`).sort()).toEqual([
-            'agents/roadmaps/archive/road-to-governed-harness-evolution.md:AC-1',
-            'agents/roadmaps/archive/road-to-governed-harness-evolution.md:AC-5',
-        ]);
+        // The exemption set is the frozen list and nothing else: a third entry
+        // would mean a block took a pass without anyone reading it.
+        expect(historical.map((h) => `${h.file}:${String(h.criterion)}`).sort()).toEqual(
+            HISTORICAL.map((h) => `${h.file}:${h.criterion}`).sort(),
+        );
+        expect(HISTORICAL).toHaveLength(2);
     });
 
     it('reads the real tree, and reports the archived plumbing AC-3 while it is still ticked', () => {
