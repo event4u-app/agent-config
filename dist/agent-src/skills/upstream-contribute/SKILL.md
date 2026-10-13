@@ -36,18 +36,34 @@ Do NOT use when:
 
 ## Goal
 
-Contribute a learning, skill, rule, or fix from a consumer project back to the
-shared `agent-config` package — with correct file placement, quality gates, and PR structure.
+Decide whether a learning, skill, rule, or fix from a consumer project is worth
+contributing back to the shared `agent-config` package — and hand the ones that
+are to the single outward step, which owns everything that leaves the machine.
+
+## One way out
+
+```
+THIS SKILL NEVER PUSHES, NEVER OPENS A PULL REQUEST, AND NEVER WRITES
+A SECOND, HAND-CONDENSED COPY OF AN ARTIFACT.
+EVERY BYTE THAT LEAVES — BRANCH NAME, COMMIT IDENTITY, COMMIT MESSAGE,
+DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`, WHICH SCANS IT.
+A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
+```
+
+`self-repair:release` carries the privacy floor, the may-not-modify deny list,
+the route ladder (pull request, then issue, then a local record) and the
+per-turn Hard-Floor confirmation. A checkbox in a skill carries none of them,
+which is why this skill asks a *worth it* question and nothing else.
 
 ## Core principles
 
-- **⛔ Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
+- **Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
 - **Universality first** — the contribution must work for ALL consumers, not just one project
 - **Generalize when possible** — project-specific content CAN become universal with adaptation
 - **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
-- **Complete pairs** — both uncondensed and condensed versions required
-- **Quality verified** — must pass linter before PR creation
-- **Local benefit immediately** — use override for instant project benefit while PR is pending
+- **One source** — an artifact is authored in `src/` only; projections are regenerated, never hand-written
+- **The floor is over the bytes** — a privacy judgement a human ticks is not a privacy check
+- **Local benefit immediately** — use override for instant project benefit while the contribution is pending
 
 ## A repeated override is a signal, and a signal is not evidence
 
@@ -102,30 +118,36 @@ GitHub: `https://github.com/event4u-app/agent-config`
 
 **This step is NON-NEGOTIABLE. No exceptions.**
 
-Before ANY upstream work (branch, files, PR), ask the user:
+Before ANY upstream work, ask the user:
 
 ```
-> 🔄 This [skill/rule/guideline] could improve the shared agent-config package.
+> This [skill/rule/guideline] could improve the shared agent-config package.
 > [Brief explanation of what would be contributed and why it's valuable]
 >
-> 1. Yes — create an upstream PR
+> 1. Yes — hand it to the upstream step
 > 2. No — keep it project-local only
 ```
 
-- **If user picks 2** → STOP. Do not mention upstream again for this item.
-- **If user picks 1** → continue with the procedure below.
-- **If `project.upstream_repo` is empty in `.agent-settings.yml`** → ask the user to configure it first.
+- **If user picks 2** — STOP. Do not mention upstream again for this item.
+- **If user picks 1** — continue with the procedure below.
 - **NEVER skip this step**, even if the user previously agreed to other contributions.
+
+Consent here authorizes the *preparation*. The send is a separate, per-turn
+word in step 5 and this gate never substitutes for it.
 
 ### 1. Determine contribution type
 
-| Type | Source path | Condensed path |
-|---|---|---|
-| **New skill** | `src/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
-| **New rule** | `src/rules/{name}.md` | `.augment/rules/{name}.md` |
-| **New command** | `src/domains/{domain}/{name}/command.md` | `.augment/commands/{name}.md` |
-| **New guideline** | `docs/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
-| **Update to existing** | Same path as original | Same path as original |
+`src/` is the only place an artifact is authored. ADR-201 copies every `.md`
+verbatim into the projections, so there is no second version to write and no
+condensation ratio to hit.
+
+| Type | Source path |
+|---|---|
+| **New skill** | `src/skills/{name}/SKILL.md` |
+| **New rule** | `src/rules/{name}.md` |
+| **New command** | `src/domains/{domain}/{name}/command.md` |
+| **New guideline** | `docs/guidelines/{category}/{name}.md` |
+| **Update to existing** | Same path as original |
 
 ### 2. Apply locally as override (immediate benefit)
 
@@ -155,118 +177,76 @@ If the content is project-specific but could be made universal:
 3. **Show the user the diff** — original vs. generalized version
 4. **Get approval** — user must confirm the generalized version is correct
 
-Example: A project-specific "import-csv" skill → generic "file-import" skill with configurable format.
+Example: A project-specific "import-csv" skill becomes a generic "file-import"
+skill with a configurable format.
 
-### 3. Prepare the upstream contribution
+Generalizing is an editorial act and it is not the privacy floor. What the
+floor refuses in step 4 stays local; it is never rewritten into shape.
 
-The agent needs access to the package repository. Ask the user:
-
-```
-> The improvement should go to the shared agent-config package.
-> I need to create a PR in `event4u-app/agent-config`.
->
-> 1. I have the package repo cloned locally — tell me the path
-> 2. Clone it for me into a temp directory
-> 3. I'll handle the PR manually — just give me the files
-```
-
-**Option 1:** User provides path → work directly in that repo.
-
-**Option 2:** Clone into temp directory:
-
-```bash
-git clone git@github.com:event4u-app/agent-config.git /tmp/agent-config-upstream
-cd /tmp/agent-config-upstream
-```
-
-**Option 3:** Output the file contents as copyable blocks for the user.
-
-### 4. Create branch and files
-
-```bash
-cd {package-repo-path}
-git checkout main && git pull
-git checkout -b feat/skills/{name}  # or fix/rules/{name}, etc.
-```
-
-Create both files:
-
-- **Source version** → `src/{type}/{name}` (full, verbose, human-readable)
-- **Condensed version** → `.augment/{type}/{name}` (token-efficient, preserving all code blocks,
-  headings, frontmatter, validation, gotchas)
-
-For skills, the condensed version should be 40-60% shorter than uncondensed.
-For rules and commands, they are usually copied 1:1 (no condensation).
-
-### 5. Ensure file quality
-
-The files must:
-
-- Have correct YAML frontmatter (`name`, `description`, `source: package`)
-- NOT contain project-specific references (no domain names, local paths, FQDNs)
-- Follow the skill/rule/command template structure
-- Have exactly one trailing newline
-
-### 6. Run quality gates (if working in the package repo)
-
-```bash
-./scripts-run src/scripts/skill_linter --all          # 0 FAIL required
-./scripts-run src/scripts/check_condensation            # No errors for this file
-./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
-bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
-```
-
-If not in the package repo, note that these checks will run in CI after the PR is created.
-
-### 6b. Proposal gate — MANDATORY when a proposal doc exists
+### 3. Proposal gate — MANDATORY when a proposal doc exists
 
 If the contribution originates from a proposal under `agents/proposals/`
 (produced by `learning-to-rule-or-skill` via the pipeline in
 [`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md)),
-run the Stage-4 gate before opening the PR:
+run the Stage-4 gate first:
 
 ```bash
 ./agent-config proposal:check agents/proposals/{slug}.md
 ```
 
-**Hard refusal rule:** if `./agent-config proposal:check` exits non-zero, STOP —
-do not create the branch, do not push, do not open the PR. Surface the
-findings to the user, ask them to fix the proposal (add evidence,
+**Hard refusal rule:** if `./agent-config proposal:check` exits non-zero, STOP.
+Surface the findings to the user, ask them to fix the proposal (add evidence,
 remove TODO markers, complete required sections), then rerun.
 
-When no proposal doc exists (small fix, typo, pure bug-fix), skip this
-step and document the rationale in the PR body under the Promotion
-Gate.
+When no proposal doc exists (small fix, typo, pure bug-fix), skip this step and
+record the rationale in the finding.
 
-### 7. Commit and create PR
-
-Branch naming: `feat/skills/{name}`, `fix/rules/{name}`, `feat/commands/{name}`
-
-Commit message format:
-
-```
-feat(skills): add {name} skill
-fix(rules): improve {name} rule — {what changed}
-feat(commands): add {name} command
-```
-
-PR title: Same as commit message.
-
-PR body must use the package's PR template with these gates:
-
-- **Promotion Gate** — learning occurred 2+ times, improves correctness, prevents real failure
-- **Quality Gate** — linter passes, tests pass
-- **Universality Gate** — no project-specific assumptions, benefits all consumers
-- **Completeness Gate** — both versions present, symlinks regenerated
-
-### 8. After merge — clean up override
-
-Once the PR is merged and the package is updated in the project:
+### 4. See every byte before any byte leaves
 
 ```bash
-# In the consumer project
+./agent-config self-repair:release <fingerprint> --dry-run
+```
+
+The dry run resolves the route, names the account that will appear on the pull
+request, and prints the title, body, branch name and diff in full. It touches
+no network.
+
+A refusal from the privacy floor is **final**: the finding stays local. There
+is no scrubbing pass, because a rewritten identifier is still a leaked one.
+
+### 5. Send — one command, one turn, one word
+
+```bash
+./agent-config self-repair:release <fingerprint>
+```
+
+Running that command IS the user's word, and it is a Hard-Floor action under
+`non-destructive-by-default`. No autonomy setting, standing instruction or
+earlier consent substitutes for it.
+
+The ladder picks the vehicle: a pull request from a checkout of this package,
+an issue otherwise, a local record when nothing may leave. Degrading changes
+the vehicle, never what leaves.
+
+### 6. Quality gates (only inside a checkout of this package)
+
+```bash
+task ci
+```
+
+Outside such a checkout, the package CI runs after the issue or pull request
+exists.
+
+### 7. After merge — clean up override
+
+Once the contribution is merged and the package is updated in the project:
+
+```bash
 rm agents/overrides/{type}/{name}.md
-composer update event4u/agent-config  # or npm update
+```
+
+```bash
+npm update @event4u/agent-config
 ```
 
 The shared version now replaces the local override.
@@ -274,27 +254,27 @@ The shared version now replaces the local override.
 ## Output format
 
 1. Summary of what is being contributed (type, name, why)
-2. File contents for both uncondensed and condensed versions
-3. If working in the package repo: branch name, commit message, PR title
-4. If Option 3: copyable file blocks for the user to paste
-5. Reminder to clean up local override after upstream merge
+2. The source path under `src/` that the contribution targets
+3. The dry-run output, verbatim — route, account, title, body, branch, diff
+4. The one command the user runs to send it, and nothing executed on their behalf
+5. Reminder to clean up the local override after the contribution merges
 
 ## Gotcha
 
 - Agent in consumer project doesn't know the package repo URL — this skill provides it
-- Agent may try to edit `.augment/` in the consumer project — that's read-only (symlinked)
-- Agent may forget the condensed version — both are mandatory
-- Agent may include project-specific references in the skill — must be universal
-- The `source` field in frontmatter must be `package`, not `project`
-- Agent may not have git access to the package repo — Option 3 handles this gracefully
+- Agent may try to hand-edit a generated projection — `src/` is the source
+- Agent may try to write a second condensed copy — ADR-201 removed that step
+- Agent may include project-specific references — the floor in step 4 refuses them
+- Agent may not have git access to the package repo — the ladder degrades to an issue
+- A consumer install reaches the issue step, not the pull-request step
 
 ## Do NOT
 
 - **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
-- **Do NOT open a PR if `./agent-config proposal:check` blocks** — fix the proposal first (step 6b)
-- Do NOT edit `.augment/` in the consumer project — it's managed by the package
-- Do NOT submit project-specific content without generalizing it first
-- Do NOT skip the condensed version — both files are mandatory
-- Do NOT forget to clean up the local override after upstream merge
-- Do NOT bypass quality gates — they exist for a reason
+- **Do NOT open a contribution if `./agent-config proposal:check` blocks** — fix the proposal first (step 3)
+- Do NOT push, open a pull request, or open an issue by hand — the ladder owns the send
+- Do NOT edit a generated projection; author in `src/` and let `task sync` regenerate
+- Do NOT write a hand-condensed second copy of an artifact
+- Do NOT stage with a bare `git add .` — name the paths
+- Do NOT rewrite what the privacy floor refused; a refused finding stays local
 - Do NOT assume consent from a previous contribution — ask every time
