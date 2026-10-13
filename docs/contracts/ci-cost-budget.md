@@ -71,25 +71,26 @@ about.)
 | `tests.yml` | `collector-lifecycle` | macOS only, no matrix | **~150 s measured locally, not yet in CI** | same as above |
 | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
 | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
-| `rule-backstops.yml` | `local-only-drain` — batch 1 | ubuntu, single job | **44 s, n=1** | always-on (PR / push) |
+| `rule-backstops.yml` | `local-only-drain` — batch 1 | ubuntu, single job | **44–53 s, n=3** | always-on (PR / push) |
 | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
 | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
 
 **`local-only-drain`, and what its figure is and is not.** Step 2.1 of
 `road-to-local-gates-wired-while-they-are-green` asks for the job's duration
-beside the ceiling, so it is here rather than in a commit message. **44 s on its
-first CI run, and n=1** — stated with the sample size because this file's own
-method clause asks for an average "across the most-recent 50 main-branch runs"
-and one run is not that. It is written down anyway because the alternative is a
-figure nobody recorded; the honest form is the number plus what it is worth.
-Well under the 300 s ceiling, so it earns no follow-up today — the twenty gates
-measured 35.6 s serially on a developer's machine, and a runner adding ~8 s over
-that is the ordinary difference rather than a signal.
+beside the ceiling, so it is here rather than in a commit message. **44 s, 49 s
+and 53 s across its first three CI runs, n=3** — the range is given rather than
+a mean, and the sample size is in the table cell, because this file's own method
+clause asks for an average "across the most-recent 50 main-branch runs" and
+three branch runs are not that. It is written down anyway because the
+alternative is a figure nobody recorded; the honest form is the number plus what
+it is worth. Well under the 300 s ceiling, so it earns no follow-up today — the
+twenty gates measured 35.6 s serially on a developer's machine, and a runner
+adding 10-18 s over that is the ordinary difference rather than a signal.
 
 *Revisit-if:* a later batch takes this job near the ceiling (2.2 names a second
 job of the same workflow as the overflow), or fifty main-branch runs accumulate
-and the real average differs from 44 s by enough to matter.
+and the real average sits outside this range by enough to matter.
 
 **`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
 five process-level lifecycle properties plus the operator stop verb — six cases,
