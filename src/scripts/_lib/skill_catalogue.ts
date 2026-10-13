@@ -180,7 +180,37 @@ export const DEFAULT_CATALOGUE_ROOTS = [
  *
  * @param home override for the user's home; production callers omit it.
  */
-export function resolveSkillCatalogueRoots(workspaceRoot: string, home?: string): string[] {
+export interface CatalogueRootOptions {
+    /**
+     * A package root whose own `dist/agent-src/skills` is used as a LAST
+     * resort — only when no workspace or host root resolved at all.
+     *
+     * WHY IT IS A PARAMETER AND NOT A FOURTH CANDIDATE. Reproduced before it
+     * was added: a workspace carrying only another host's directory, with an
+     * empty home, resolves to ZERO roots — so a shell on such a machine gets
+     * `no_catalogue` even though the installed package ships 300 skills two
+     * directories away. That is a real gap for a SHELL path, which has nowhere
+     * else to go.
+     *
+     * It is NOT a gap for the MCP handler, and that is why this is opt-in. The
+     * package tree always exists wherever the handler runs, so folding it in
+     * unconditionally would make `status: no_catalogue` unreachable — and that
+     * status is the one thing standing between "I could not read a catalogue"
+     * and "no skill covers this task", which is the conclusion
+     * `missing-skill-recovery` exists to prevent. A caller asks for the
+     * fallback when it has no second answer; the handler does not ask.
+     */
+    packageFallback?: string;
+}
+
+/** Where a package-root fallback looks for the shipped catalogue. */
+export const PACKAGE_FALLBACK_CATALOGUE_ROOT = path.join('dist', 'agent-src', 'skills');
+
+export function resolveSkillCatalogueRoots(
+    workspaceRoot: string,
+    home?: string,
+    opts: CatalogueRootOptions = {},
+): string[] {
     const userHome = home ?? process.env['HOME'] ?? os.homedir();
     const candidates = [
         ...PROJECT_CATALOGUE_ROOTS.map((c) => path.join(workspaceRoot, c)),
@@ -188,19 +218,29 @@ export function resolveSkillCatalogueRoots(workspaceRoot: string, home?: string)
     ];
     const roots: string[] = [];
     const seen = new Set<string>();
+    const readable = (abs: string): boolean => {
+        try {
+            if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) return false;
+            return fs.readdirSync(abs).length > 0;
+        } catch {
+            // Unreadable candidate is not a match; try the next.
+            return false;
+        }
+    };
     for (const abs of candidates) {
         // A workspace that IS the home directory would offer `~/.claude/skills`
         // twice and rank every skill in it twice. Cheap to exclude, and the
         // duplicate would be invisible in the output.
         if (seen.has(abs)) continue;
         seen.add(abs);
-        try {
-            if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) continue;
-            if (fs.readdirSync(abs).length === 0) continue;
-            roots.push(abs);
-        } catch {
-            // Unreadable candidate is not a match; try the next.
-        }
+        if (readable(abs)) roots.push(abs);
+    }
+    // LAST, and only when the list is empty. Appending it to a non-empty list
+    // would rank the package's own projection beside a consumer's real
+    // catalogue and duplicate every shipped skill under two roots.
+    if (roots.length === 0 && opts.packageFallback) {
+        const abs = path.join(opts.packageFallback, PACKAGE_FALLBACK_CATALOGUE_ROOT);
+        if (!seen.has(abs) && readable(abs)) roots.push(abs);
     }
     return roots;
 }

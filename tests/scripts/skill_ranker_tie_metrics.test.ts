@@ -108,10 +108,22 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
         expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-11').toBe(300);
     });
 
-    it('reproduces 67 of 315 on tuning and 15 of 75 on sealed', () => {
+    // 67/15 -> 69/14 on 2026-10-13: the TOKENIZER moved, not the corpus and not
+    // the metric. `src/shared/skillRanking.ts` now extracts a Unicode letter
+    // class instead of `[a-z][a-z0-9]+`, so a term that used to fragment at an
+    // umlaut is one token, and two tuning rows crossed into a tie block while
+    // one sealed row crossed out of one. Re-measured against the tree rather
+    // than loosened — the canary did what its header says it is for, reddening
+    // on a scoring-input change while the metric itself was intact.
+    //
+    // The evidence page that published 67/15 is a DATED record of a reading
+    // taken under the old token class; it is annotated rather than rewritten,
+    // because its `idf` narration is about a comparison made that day. The pin
+    // below is the live reading, which is what this test is for.
+    it('reproduces 69 of 315 on tuning and 14 of 75 on sealed', () => {
         const tuning = readRows(partitionBySlice(whole, 'tuning'), SKILLS_DIR, 'keyword-v1');
         const sealed = readRows(partitionBySlice(whole, 'sealed'), SKILLS_DIR, 'keyword-v1');
-        expect([tuning.length, tuning.filter((r) => r.lostOnTie).length]).toEqual([315, 67]);
-        expect([sealed.length, sealed.filter((r) => r.lostOnTie).length]).toEqual([75, 15]);
+        expect([tuning.length, tuning.filter((r) => r.lostOnTie).length]).toEqual([315, 69]);
+        expect([sealed.length, sealed.filter((r) => r.lostOnTie).length]).toEqual([75, 14]);
     }, 120_000);
 });

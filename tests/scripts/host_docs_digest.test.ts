@@ -24,8 +24,14 @@ import {
     digestOf,
     main,
     watchable,
+    watchablePages,
 } from '../../src/scripts/check_host_docs_digest.js';
 import { parseHostLowering } from '../../src/scripts/hooks/host_lowering.js';
+import {
+    PAGES_PSEUDO_HOST,
+    applyDocsPageEdits,
+    parseDocsPages,
+} from '../../src/scripts/hooks/host_docs_pages.js';
 import { _check_host_lowering } from '../../src/scripts/lint_hook_manifest.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -287,5 +293,118 @@ describe('docs digest — the write is surgical', () => {
         expect(text).toContain('THE FINDING THIS ROW CARRIES');
         // The hand-aligned flow mappings are not this watcher's to reformat.
         expect(text).toContain('stop:               { native: Stop,              block_exit: 2,');
+    });
+});
+
+// The sibling page list — vendor pages this tree cites that are NOT a hook
+// contract, and which therefore have no row in `host_lowering.yaml`.
+//
+// The failure it closes is an absence, so the first test is the one that
+// matters: the page the listing model cites for every number in it must be ON
+// the list. Before it was, a vendor could rewrite that contract and the only
+// thing watching was the model's own prose.
+describe('docs digest — the sibling page list', () => {
+    const PAGES_FILE = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_docs_pages.yaml');
+    const PAGES_SOURCE = fs.readFileSync(PAGES_FILE, 'utf8');
+
+    it('watches the skills page the listing model reads every number off', () => {
+        const pages = parseDocsPages(PAGES_SOURCE);
+        const skills = pages.get('claude-code-skills');
+        expect(skills).toBeDefined();
+        // Not merely present — the URL must be the one the model cites, or the
+        // watch is over a different page than the claim.
+        const model = fs.readFileSync(
+            path.join(REPO_ROOT, 'src', 'scripts', '_lib', 'host_listing_model.ts'),
+            'utf8',
+        );
+        expect(model).toContain('code.claude.com/docs/en/skills');
+        expect(skills!.docs_url).toContain('code.claude.com/docs/en/skills');
+    });
+
+    it('every row carries all four provenance fields, digest included', () => {
+        for (const p of parseDocsPages(PAGES_SOURCE).values()) {
+            expect(p.docs_url, `${p.id} has no url`).toMatch(/^https:\/\//);
+            expect(p.docs_at, `${p.id} has no read date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(p.expires, `${p.id} has no review-by date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+            expect(p.docs_digest, `${p.id} cites a page with no digest`).toMatch(/^[0-9a-f]{64}$/);
+            // A page nobody cites does not belong on the list, so the row has
+            // to say what reads it.
+            expect(p.why.length, `${p.id} has no reason`).toBeGreaterThan(40);
+        }
+    });
+
+    it('the watcher ranks the list beside the table, under a label that is not a host', () => {
+        const rows = watchablePages(parseDocsPages(PAGES_SOURCE));
+        expect(rows.length).toBeGreaterThan(0);
+        for (const r of rows) expect(r.host).toBe(PAGES_PSEUDO_HOST);
+        // `pages` must not collide with a real host, or a finding would be
+        // written back into the wrong file by the wrong writer.
+        const hosts = new Set(watchable(parseHostLowering(SOURCE)).map((r) => r.host));
+        expect(hosts.has(PAGES_PSEUDO_HOST)).toBe(false);
+    });
+
+    it('a FILLED page gets its digest; a CHANGED page keeps it and loses `expires`', () => {
+        const filled = applyDocsPageEdits(PAGES_SOURCE, [
+            { id: 'claude-code-skills', digest: 'a'.repeat(64) },
+        ]);
+        expect(filled.written).toEqual(['claude-code-skills']);
+        expect(parseDocsPages(filled.text).get('claude-code-skills')!.docs_digest).toBe('a'.repeat(64));
+
+        const drifted = applyDocsPageEdits(PAGES_SOURCE, [
+            { id: 'claude-code-skills', expires: '2026-10-12' },
+        ]);
+        expect(drifted.expired).toEqual(['claude-code-skills']);
+        const row = parseDocsPages(drifted.text).get('claude-code-skills')!;
+        expect(row.expires).toBe('2026-10-12');
+        // The recorded digest is EVIDENCE of what the page was, not a cache.
+        // Erasing it on drift would make a page that later returned classify as
+        // `filled` and lose the signal permanently — the exact defect the
+        // sibling writer's `gone` skip-list was added to close.
+        expect(row.docs_digest).toBe(parseDocsPages(PAGES_SOURCE).get('claude-code-skills')!.docs_digest);
+    });
+
+    it('the write is surgical — one line, and never a sibling row', () => {
+        const before = PAGES_SOURCE.split('\n');
+        const after = applyDocsPageEdits(PAGES_SOURCE, [
+            { id: 'claude-code-skills', expires: '2026-10-12' },
+        ]).text.split('\n');
+        expect(after.length).toBe(before.length);
+        expect(before.reduce((n, l, i) => (l === after[i] ? n : n + 1), 0)).toBe(1);
+    });
+
+    it('a row the walk cannot find is REPORTED, never silently reported as written', () => {
+        const out = applyDocsPageEdits(PAGES_SOURCE, [{ id: 'no-such-page', digest: 'b'.repeat(64) }]);
+        expect(out.missed).toEqual(['no-such-page']);
+        expect(out.written).toEqual([]);
+        expect(out.text).toBe(PAGES_SOURCE);
+    });
+
+    it('refuses a malformed row rather than working around it', () => {
+        const bad = (body: string): (() => unknown) => (): unknown => parseDocsPages(body);
+        expect(bad('pages:\n  x:\n    docs_url: http://insecure\n    docs_at: 2026-01-01\n    expires: 2027-01-01\n    why: because\n')).toThrow(/https/);
+        expect(bad('pages:\n  x:\n    docs_url: https://a\n    docs_at: nope\n    expires: 2027-01-01\n    why: because\n')).toThrow(/docs_at/);
+        expect(bad('pages:\n  x:\n    docs_url: https://a\n    docs_at: 2026-01-01\n    docs_digest: short\n    expires: 2027-01-01\n    why: because\n')).toThrow(/64 hex/);
+        // An EMPTY list is refused, not reported clean: a watcher over zero
+        // rows is indistinguishable from a watcher that works.
+        expect(bad('pages: {}\n')).toThrow(/empty/);
+    });
+
+    it('the offline report lists the page beside the hook rows', async () => {
+        const out: string[] = [];
+        const write = process.stdout.write.bind(process.stdout);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (process.stdout as any).write = (s: string): boolean => {
+            out.push(String(s));
+            return true;
+        };
+        try {
+            expect(await main(['--quiet', '--today', TODAY])).toBe(0);
+        } finally {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (process.stdout as any).write = write;
+        }
+        // `--quiet` suppresses the per-row lines; what must hold is that the
+        // run SUCCEEDS with the second corpus wired in, offline and unwritten.
+        expect(fs.readFileSync(PAGES_FILE, 'utf8')).toBe(PAGES_SOURCE);
     });
 });
