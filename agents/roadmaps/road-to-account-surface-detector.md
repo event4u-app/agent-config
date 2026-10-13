@@ -50,7 +50,7 @@ reports `routes: empty`), so they are out of scope here.
 
 ## Phase 1 — Fixtures and claim before code
 
-- [ ] **1.1 Build the frozen fixture set.** Under
+- [x] **1.1 Build the frozen fixture set.** Under
       `tests/fixtures/account-surface/`, two stacks (a PHP framework shape and
       a Node/TypeScript shape), one unsafe file and one safe twin per class in
       2.1, plus decoys that must stay silent: a login page that only changes
@@ -60,7 +60,7 @@ reports `routes: empty`), so they are out of scope here.
       ground-truth list beside them names every expected finding.
       verify: the ground-truth list has an entry for every unsafe file and
       none for a twin or decoy; no fixture file name ends in `.test.ts`.
-- [ ] **1.2 Pre-register the claim.** Add `account-surface-finds-planted` to
+- [x] **1.2 Pre-register the claim.** Add `account-surface-finds-planted` to
       `docs/CLAIMS.md` as `unbacked`, before any detector code: per class,
       recall on the planted defects and false positives across twins and
       decoys; a flagged decoy is a classification failure that fails the
@@ -72,6 +72,16 @@ reports `routes: empty`), so they are out of scope here.
       in the same change.
 
 ## Phase 2 — The detector
+
+Still gated on the sibling roadmap, re-checked against the tree on 2026-10-13
+rather than read off this file: `src/skills/threat-modeling/data/threats.csv`
+carries three `authentication` rows (credential stuffing, session fixation,
+password-reset token abuse), and six of the Threat cells Phase 1's ground truth
+cites are not among them. They arrive with `road-to-account-lifecycle-threat-rows`
+step 2.2, which is unmerged. Until then a finding citing one of those cells
+would name a row that does not exist, so Phase 2 stays open; the pending cells
+are declared under `pending_threat_rows` in
+`tests/fixtures/account-surface/ground-truth.json` rather than assumed.
 
 - [ ] **2.1 Write `src/scripts/check_account_surface.ts`.** A path predicate
       first (route, controller, handler and config files whose names carry
