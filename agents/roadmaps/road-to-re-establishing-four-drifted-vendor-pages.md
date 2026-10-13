@@ -3,6 +3,7 @@ complexity: lightweight
 status: draft
 execution:
   mode: phase-checkpoints
+estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It ships `status: draft`, so it is excluded from the gated active_roadmaps count; this exemption covers the growth half only."
 relates:
   - slug: road-to-a-search-answer-a-model-can-choose-from
     relation: extends
