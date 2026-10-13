@@ -117,9 +117,19 @@ So the candidate repairs to:
 > is a governed snapshot. A check with no committed baseline, or whose baseline
 > can only move in the **restrictive** direction, is an invariant.
 
-On this corpus that rule separates 16 of 16 correctly — one snapshot, fifteen
-not — and it does so from a property of the baseline file's own contract rather
-than from anyone's reading of what the check means.
+On this corpus that rule separates **13 of 16** — one snapshot, twelve
+invariants — from a property of the baseline file's own contract rather than
+from anyone's reading of what the check means.
+
+> **Corrected after independent review, 2026-10-13.** This sentence first read
+> *"separates 16 of 16"*, and a council reviewer caught it as an overclaim that
+> contradicts this file's own limits section two screens down. The three checks
+> D14 recorded as **abstentions** are not thirteen-plus-three; counting them as
+> invariants because the predicate finds no baseline is precisely the default
+> answer the limits section says would be "the discretion the seats refused
+> wearing a mechanical coat". The headline number was asserting what the small
+> print disclaimed. 13 of 16 is what was measured; the remaining three are
+> unresolved, not sorted.
 
 It also lands on openai's recorded dissent from the other side. That dissent
 says check #1 "holds TWO objects — the numeric baseline is a snapshot, the
@@ -129,11 +139,38 @@ competing for one field: they are the baseline's **direction of travel** and the
 gate's **finding set**, which are different properties of the row and can each
 have their own field.
 
+> **That reading was rejected on review, 2026-10-13, and the rejection is
+> sharper than the proposal.** Calling the dissent a schema problem understates
+> it: it is a **taxonomy** problem. If `check_gate_completeness` genuinely is a
+> snapshot in its floor and an invariant in its prohibition on unjustified new
+> gaps, then classifying the whole check as `snapshot` does not dissolve the
+> dissent — it discards half the check's semantics, and two tidy fields on one
+> row do not change which of the two the `class` field reports. The live options
+> are a multi-valued class, aspect-level rows, or splitting the check; the
+> reviewer's standing challenge is to demonstrate that **every** check in the
+> tree fits exactly one of the four classes with no loss, which the dissent
+> suggests is false.
+
 ## The limits, stated
 
 - **One corpus, sixteen rows, no holdout.** The rule was repaired after seeing
-  the counter-examples it is now scored against, so 16/16 is a fit, not a
-  prediction. It has never been run against the other 338 scripts.
+  the counter-examples it is now scored against, so 13/16 is a fit, not a
+  prediction. It has never been run against the other 338 scripts, and a
+  reviewer put the consequence more plainly than this file had: zero predictive
+  power, so it may fit these sixteen and fail on the seventeenth.
+- **It covers two of four classes, not four.** The corpus holds one snapshot and
+  twelve invariants and **zero tolerances, zero observations**, so a predicate
+  built on baseline direction cannot recognise half the taxonomy however well it
+  is perfected — a tolerance is an accepted-risk trade-off and an observation is
+  informational, and neither depends on a baseline at all. Added after review;
+  this file had framed the rule as deriving "one of four FIELDS" without noticing
+  it also derives only two of four CLASSES.
+- **"Permissive" is itself a reading.** Which direction weakens depends on what
+  the number means: raising a minimum floor permits more gaps, raising a
+  maximum-allowed-failures count also permits more. The predicate is mechanical
+  only once each baseline file declares its own weakening direction in
+  machine-readable form. Until then the word is asserted by whoever writes the
+  row, which is the discretion this whole exercise is trying to remove.
 - **It derives one field of four.** Prerequisites, gate membership and refresh
   authority are untouched, and D14 asks for all four. Gate membership in
   particular is a *decision* — anthropic's dissent says the step conflates it
