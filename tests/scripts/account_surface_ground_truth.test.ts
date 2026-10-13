@@ -86,11 +86,7 @@ const safeFiles = new Set(sampleFiles.filter((f) => f.includes("/safe/")));
  * a cell wrongly reported present would leave the pending set and let Phase 2
  * cite a row that is not there.
  */
-function threatColumn(): Set<string> {
-  const csv = readFileSync(
-    path.join(repoRoot, "src", "skills", "threat-modeling", "data", "threats.csv"),
-    "utf8",
-  );
+function parseThreatColumn(csv: string): Set<string> {
   const cells = new Set<string>();
 
   for (const line of csv.split("\n").slice(1)) {
@@ -118,6 +114,46 @@ function threatColumn(): Set<string> {
 
   return cells;
 }
+
+function threatColumn(): Set<string> {
+  return parseThreatColumn(
+    readFileSync(
+      path.join(repoRoot, "src", "skills", "threat-modeling", "data", "threats.csv"),
+      "utf8",
+    ),
+  );
+}
+
+describe("threat-column parsing", () => {
+  // The real CSV cannot exercise this: every Threat cell in it occurs exactly
+  // once in the whole file, so a substring match and a column match agree on
+  // every row. The property is therefore pinned on a synthetic corpus, or it
+  // is only asserted in a comment.
+  const synthetic = [
+    "Surface Class,Threat,Source Refs,Abuse Case,Required Controls,Negative Tests,Severity",
+    'authentication,Real threat row,CWE-1,abuse,"Single-use tokens,Decoy threat row,no token in URL logs",test,HIGH',
+    "authorization,Another real row,CWE-2,abuse,controls,test,LOW",
+  ].join("\n");
+
+  it("reads the Threat column, not any column", () => {
+    const cells = parseThreatColumn(synthetic);
+
+    expect(cells).toEqual(new Set(["Real threat row", "Another real row"]));
+  });
+
+  it("does not resolve a string that only appears inside a quoted field", () => {
+    // A substring match over the file would report this present, which fails
+    // OPEN: the cell leaves the pending set and Phase 2 proceeds against a row
+    // that is not there.
+    expect(parseThreatColumn(synthetic).has("Decoy threat row")).toBe(false);
+
+    // The discriminator, asserted rather than described: the superseded
+    // predicate was `csv.includes(',<cell>,')`, and it resolves this string.
+    // Without this line the case would pass under the implementation it
+    // exists to rule out.
+    expect(synthetic.includes(",Decoy threat row,")).toBe(true);
+  });
+});
 
 describe("account-surface corpus shape", () => {
   it("names an entry for every unsafe file, and only those", () => {
