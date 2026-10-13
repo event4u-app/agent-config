@@ -100,14 +100,14 @@ with it and left alone.
 
 ## Phase 1 — The reading, recorded
 
-- [ ] **1.1 The table is evidence.** The round's reading — per gate: entry,
+- [x] **1.1 The table is evidence.** The round's reading — per gate: entry,
       command, exit code, seconds, first finding line — is re-taken on the
       branch base and written to
       `agents/evidence/analysis/local-only-gates-complete-reading.md` with its
       `evidence-type` marker, the method, the two gates with no task command,
       the checkout artefact as its own row, and the date it was read.
       verify: `grep -c 'audit_command_surface' agents/evidence/analysis/local-only-gates-complete-reading.md` -> /^[1-9]/
-- [ ] **1.2 Each green gate gets a class.** In the same page every green gate
+- [x] **1.2 Each green gate gets a class.** In the same page every green gate
       is marked `wire`, `calendar` (reads the clock or a ratchet age),
       `machine` (reads the developer's checkout or branch) or `slow` (over ten
       seconds). A `machine` gate is declared under `local_only:` in
@@ -118,26 +118,65 @@ with it and left alone.
 
 ## Phase 2 — The drain, in batches
 
-- [ ] **2.1 The first twenty.** The twenty fastest `wire`-class gates run as
+- [x] **2.1 The first twenty.** The twenty fastest `wire`-class gates run as
       steps of the consistency workflow with the arguments their tasks pass.
       The parity baseline is lowered by twenty in the same change and the
       job's duration is recorded in the cost-budget page.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t baseline-at-most-143 --reporter=verbose` -> /✓.*baseline-at-most-143/
+      <br>**Closed 2026-10-13 with one deviation, recorded here rather than
+      only in a YAML comment.** The twenty are steps of
+      `Standing payload delta + budget gate` in
+      `.github/workflows/standing-payload-delta.yml`, NOT of `consistency.yml`
+      as written above: that file hosts the ratification gate, so any step
+      added to it makes the whole diff ratification-gated. The ruleset was read
+      rather than assumed — `repos/event4u-app/agent-config/rulesets`
+      (`main protection`) lists exactly two required contexts, and this is the
+      other one — so the step's obligation is met in the way it meant it: the
+      gates run in a REQUIRED job, on a workflow carrying no `paths:` filter,
+      and only the file name differs from the line above.
+      <br>An earlier revision of this closure note described a different
+      placement, a new job on `rule-backstops.yml`, and it is corrected rather
+      than quietly rewritten because the reason it was wrong is the reusable
+      part: that job is not a required context, so a red in it is visible and
+      merges anyway, and it inherits a `paths:` filter that three of these
+      gates' inputs do not match. An independent completion review found both.
+      <br>The other two obligations are met literally: the baseline moved
+      165 -> 130 on CI's own reading (run 38373476139 printed 129 and named it;
+      the extra one came back when a writing gate was removed from the
+      schedule, a correction to a number that never reached the trunk), and the
+      job's duration is in `docs/contracts/ci-cost-budget.md` measured in CI
+      with its sample size. The batch is twenty rather than the 119 the reading
+      found wirable, on a 2/2 council verdict of 2026-10-13 that one pull
+      request carrying all 119 is the sweep the 2026-08-13 decision declines.
 - [ ] **2.2 The rest of the class, twenty at a time.** Each further batch is
       one change: wire, lower the baseline, record the duration. A gate found
       red at wiring time is skipped, listed in the evidence page, and handled
       by Phase 3. A batch that would take the job past its ceiling goes into a
       second job of the same workflow.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
-- [ ] **2.3 Calendar gates get a scheduled caller, not a required one.** The
+- [x] **2.3 Calendar gates get a scheduled caller, not a required one.** The
       `calendar`-class gates and `check_council_pin_staleness` run in the
       scheduled workflow that already runs the gate canary, which is not a
       required check; `slow` gates join them.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t calendar-gates-scheduled-not-required --reporter=verbose` -> /✓.*calendar-gates-scheduled-not-required/
+      <br>**Closed 2026-10-13 on the calendar half; the `slow` half is
+      deliberately NOT done, and that is a deviation rather than an oversight.**
+      All thirteen `calendar`-class gates and `check_council_pin_staleness` run
+      in the scheduled job, which is what this step is for. The one
+      `slow`-class gate — the evidence page counts exactly one,
+      `audit_command_surface` — is excluded: it writes
+      `agents/reports/command-surface.{json,md}`, both tracked, unconditionally
+      at the end of every run, so it is a generator rather than a checker and a
+      scheduled run would mutate its tree to compute an answer it discards. It
+      joined that job first and was taken back out when an independent review
+      measured the write. It stays in the local-only backlog with its class
+      recorded; wiring it needs a `--check`-shaped mode it does not have, and a
+      test pins that it appears in neither job. A later batch that gives it one
+      closes this half.
 
 ## Phase 3 — The reds nobody owns
 
-- [ ] **3.1 Generated files that are stale.** The ownership matrix, the
+- [x] **3.1 Generated files that are stale.** The ownership matrix, the
       cookbook and the role-experiences catalogue are regenerated, and their
       three `--check` gates are wired in the same change.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t generated-docs-checks-wired --reporter=verbose` -> /✓.*generated-docs-checks-wired/
@@ -167,15 +206,26 @@ with it and left alone.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A dated page lists every undeclared local-only gate with exit
+- [x] AC-1 — A dated page lists every undeclared local-only gate with exit
       code, seconds and class, at the commit it was read.
 - [ ] AC-2 — Every `wire`-class gate has a pull-request caller, and the
       parity baseline is lower by that count.
-- [ ] AC-3 — No gate whose verdict depends on the date is a step of a
+- [x] AC-3 — No gate whose verdict depends on the date is a step of a
       required job, and `check_council_pin_staleness` has a scheduled caller.
 - [ ] AC-4 — The eleven reds with no live owner are green and wired.
-- [ ] AC-5 — The consistency job's recorded duration is under the ceiling the
+- [x] AC-5 — The consistency job's recorded duration is under the ceiling the
       cost-budget page sets.
+      <br>**Closed 2026-10-13 against the job the drain actually joined, which
+      is not the one this line names** — the same deviation recorded at step
+      2.1, and flagged here rather than flipped quietly. The twenty gates are
+      steps of `Standing payload delta + budget gate`, the repository's other
+      required context, because `consistency.yml` hosts the ratification gate.
+      Measured in CI on this branch: the host job ran 21 s and 27 s before the
+      steps landed and 56 s and 60 s after, against the 300 s per-job ceiling
+      in `docs/contracts/ci-cost-budget.md` — about a fifth of it. The
+      consistency job itself is untouched by this change and its recorded 75 s
+      is unchanged, so the criterion holds for both readings of which job it
+      means.
 
 ## Decisions
 
@@ -185,14 +235,15 @@ with it and left alone.
 | D2 | reversible-technical | evidence | Calendar gates never join a required job | Two of the reds were red from elapsed time alone; six gates print an `as-of:` line | Those gates gain a pinned clock in CI |
 | D3 | reversible-technical | agent | A recorded reading, not a permanent runner | After the drain the workflow reports each gate | The undeclared set grows again by more than a batch |
 | D4 | reversible-technical | agent | Owned reds are listed and left | Each has a blocker or a step in the file that names it | An owning file is archived with its gate still red — which already fired once, for `check_knowledge_cards` |
-| D5 | reversible-technical | evidence | The round's step for `check_trigger_eval_presence` is dropped | It exits 0 on `d41121927` | It turns red again |
+| D5 | reversible-technical | evidence | **REOPENED 2026-10-13 — the revisit condition fired and the step is back.** Originally: the round's step for `check_trigger_eval_presence` is dropped. | Originally: it exits 0 on `d41121927`. **At the branch base `257e87de0` it exits 1**, because `form-handler` and `judge-security-auditor` gained a trigger corpus on 2026-10-12 without their grandfather entries being removed in the same change — so the gate was red on the trunk for a day with nothing remote to report it, which is itself an argument for this drain. The two entries are removed and it is wired. | Fired, and discharged. Reopens again only if the gate turns red for a NEW reason; the grandfather-entry-left-behind cause is now covered by wiring it. |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A wired gate reds unrelated pull requests | implementation | A gate that was green can depend on state the reading did not exercise. | Batches of twenty, so a bad gate is one revert; 1.2 keeps clock- and machine-dependent gates out; 2.2 records each batch. | Phase 2 — The drain, in batches |
-| 2 | The required job outgrows its ceiling | implementation | 131 gates measured 116 s locally; runner time differs. | 2.1 and 2.2 record the job duration per batch and 2.2 names the second job as the overflow. | Phase 2 — The drain, in batches |
-| 3 | The reading is one machine's and a week old | implementation | The 139 green readings come from the round's fresh checkout at `f76e83e47`. | 1.1 re-takes the reading on the branch base before any wiring; wiring is the real test, gate by gate. | Phase 1 — The reading, recorded |
+| 1 | A wired gate reds unrelated pull requests, and now BLOCKS them | implementation | RAISED at the v2 review. Batch 1 landed as steps of `Standing payload delta + budget gate`, a required context, which is what the roadmap's non-goals ask for and is strictly more dangerous than the first attempt: a gate that was green can depend on state the reading did not exercise, and in a required job that stalls every open pull request rather than showing a red somebody scrolls past. | Unchanged in kind and now carrying evidence: batches of twenty, so a bad gate is one revert of a contiguous step block; 1.2 keeps clock- and machine-dependent gates out; each of the twenty was run with the workflow's own argv at the base, on the merged tree and on the final tree, and the host job has passed CI on this branch. The residue is a gate whose first failure needs a condition none of those runs produced. | Phase 2 — The drain, in batches |
+| 2 | The required job outgrows its ceiling | implementation | MEASURED at the v2 review, replacing an estimate. The host job runs 56-60 s with the drain against 21-27 s without, on a 300 s per-job ceiling — about a fifth of it. The 11.5 s serial sum of the twenty gates is a floor and not the cost: ~22 s is per-step `tsx` startup, so cost grows with the number of STEPS as much as with gates. | 2.1 and 2.2 record the duration per batch; 2.2 names a second job of the same workflow as the overflow. A later batch should prefer adding gates to existing steps over adding steps. | Phase 2 — The drain, in batches |
+| 3 | The reading is one machine's and a week old | implementation | DISCHARGED for batch 1 at the v2 review. 1.1 re-took the reading on the branch base, and the twenty have since run green in CI on the host job, which is the only reading that was ever authoritative. It stands for batches 2+, whose gates have been read on one machine and not yet in CI. | 1.1's re-reading per batch; wiring is the real test, gate by gate. | Phase 1 — The reading, recorded |
 | 4 | Fixing eight gates touches shared files | implementation | README prose and rule descriptions are edited by other live roadmaps. | 3.2 is one change per gate, each small enough to rebase. | Phase 3 — The reds nobody owns |
+| 5 | A gate that WRITES is mistaken for one that checks | implementation | ADDED at the v2 review, from a defect that reached a workflow before an independent review caught it: `audit_command_surface` takes a `--check-new` flag, is not named `generate_*`, and writes two tracked files unconditionally at the end of every run. The name-shaped guard in `tests/scripts/ci_local_parity_classes.test.ts` was green over it. | The guard now names caught writers explicitly and states in its own comment that it is a floor, not a proof — deciding "does this script write a tracked file" in general needs the call graph. Before wiring, a later batch runs each candidate on a clean worktree and checks `git status`. | Phase 2 — The drain, in batches |
