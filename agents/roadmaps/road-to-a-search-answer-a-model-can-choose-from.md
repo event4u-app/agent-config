@@ -133,6 +133,19 @@ as today.
       is the CLI layer, so this run says nothing about project-versus-user
       precedence and the schema string does not either — it describes what each
       VALUE means, never which LAYER wins.
+      STILL OPEN after a second attempt, 2026-10-13, and the reason is now
+      TESTED rather than asserted. The note above reads "could not set `HOME`",
+      which sounds like a limitation of that session; this run set it, and also
+      set `CLAUDE_CONFIG_DIR`, the config-directory redirect the same binary
+      carries. BOTH return `Not logged in` on build 2.1.296, so the credentials
+      are reached THROUGH the config directory and relocating it to isolate the
+      user layer also detaches the login. The two isolation routes are CLOSED,
+      not untried, and the only authenticated user layer on this machine is the
+      owner's real settings file. What closes this step is the owner's
+      go-ahead for a write-then-restore against that file, or a host build whose
+      login survives the redirect — not a better isolation trick. Both probes
+      are recorded in the artifact's own "reason, corrected" section so the next
+      run does not re-walk this dead end.
 - [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in

@@ -70,6 +70,41 @@ So the precedence question stays open, and the schema does not answer it: it
 describes what each VALUE means, never which LAYER wins. Anyone citing this
 artifact for a precedence claim is citing something that is not in it.
 
+### The reason, corrected 2026-10-13 — the isolated-layer route is closed, not merely untried
+
+The paragraph above says this run "could not set `HOME`", and a later run read
+that as an environment limitation of the probing session and retried it. It is
+not one. `HOME` is settable here, and so is `CLAUDE_CONFIG_DIR`, which the same
+binary carries as a config-directory redirect. **Both were tried on build
+`2.1.296`, from `/private/tmp`, outside any checkout, and both answer
+identically:**
+
+```
+env HOME=<scratch> claude -p --model haiku ...          → Not logged in · Please run /login
+env CLAUDE_CONFIG_DIR=<scratch> claude -p --model haiku  → Not logged in · Please run /login
+```
+
+So the credentials are reached THROUGH the config directory rather than beside
+it — relocating the directory to isolate the user layer also detaches the login,
+and an unauthenticated session cannot list a skill, let alone report whether a
+project value beat a user one. The two obvious isolation routes are therefore
+not untried, they are **closed**: the only user layer that is authenticated on
+this machine is the user's real `~/.claude/settings.json`.
+
+That leaves exactly one way to establish column five — writing a
+`skillOverrides` key into that file and removing it afterwards. The removal is
+what makes it look cheap, and the removal is the part that is not guaranteed: a
+run that stops between the write and the cleanup leaves the user's own
+configuration mutated, outside the repository, where no `git checkout` reaches
+it. That is an owner's decision about an owner's file, not a probe an agent
+takes on its own initiative.
+
+**What would close this step** is therefore not a better isolation trick. It is
+either the owner's explicit go-ahead for a write-then-restore against their own
+settings file, or a host build whose credentials survive a `CLAUDE_CONFIG_DIR`
+move. Until one of those exists, the column stays open and the step stays open
+with it.
+
 ## A second observation, taken on the way
 
 Asked to count its own listing, the baseline session reported **497 skill
