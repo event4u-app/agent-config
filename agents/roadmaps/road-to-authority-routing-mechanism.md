@@ -577,6 +577,27 @@ current (unclassified, red) state — no check gets silently un-demoted.*
       recorded at 8.2 and 6.1. The finding is binding from D19 and the AC
       sentence is owed on the next calendar day; recording it here rather than
       silently widening AC-4 later is the point.
+      **The wall was TESTED on 2026-10-13, not inherited — and it binds. This is
+      the fourth data point for defect 4, and the first one measured by running
+      the gate against a committed change rather than reasoning about the gate.**
+      A drain re-screen is supposed to execute a condition rather than trust the
+      note that records it, so the widened AC-4 sentence was written in full and
+      committed. Two readings, and the first one is a trap worth naming: run
+      against the WORKING TREE the gate reports clean, because
+      `lint_plan_risk_register.hasUncommittedChanges` **skips the staleness check
+      entirely** while the file is modified — it judges committed history, and
+      with uncommitted edits there is no committed history to judge. So a local
+      green over an unstaged AC edit proves nothing. Committed, the same edit
+      reports `stale_review`: *"`reviewed: 2026-10-13` predates the last
+      substantial change"*. The edit was then reverted and the gate re-measured
+      clean. **The three ways out were each refused on their own terms:**
+      back-dating the stamp to 2026-10-14 is writing a review date into the
+      future, which 6.1 already refused; teaching the gate to treat a same-day
+      stamp as fresh is the silent weakening 6.1 refused to patch in, because it
+      cannot tell a re-reviewed same-day change from an un-reviewed one; and
+      landing the widening anyway would ship a red gate. The sentence is still
+      owed on the next calendar day, and it now sits here in full so that
+      landing it is a copy rather than a re-derivation.
 
 *Exit: 8.3's six conditions each have a passing test and the bootstrap
 authorisation blocker is resolved. Rollback: the verifier stays shadow-only —
@@ -802,20 +823,7 @@ before 8.3 gates anything.*
 - [ ] AC-4 — The Phase 3 verifier is never activated as a required gate
       except through the `break-glass-authority-and-bootstrap-approval`
       blocker's resolution (Phase 8.3) — never on the agent's own
-      determination that a shadow run "looked good enough". **And it is never
-      weakened after activation without the same authority (D19):** the
-      approval binds IMMUTABLE VERSIONS — verifier, decision contract,
-      configuration, corpus protocol, enforcement mechanism — rather than an
-      act in time, so changing the verifier, removing the rule or introducing
-      a bypass each need their own approval and cannot cite the activation
-      one. A kill switch exists BEFORE activation, with automatic suspension
-      on any critical false negative, fail-open path, evidence-integrity loss,
-      contract or version drift, or sustained operational failure beyond
-      registered limits; an emergency suspension may be immediate but is
-      logged and time-bounded, the authority to suspend is held SEPARATELY
-      from the authority to reactivate, and reactivation needs a fresh
-      evaluation whenever the validated artifact or the decision surface
-      materially changes.
+      determination that a shadow run "looked good enough".
 - [x] AC-5 — `task lint-roadmap-blockers`, `task lint-roadmap-complexity`,
       and `task lint-plan-risk-register` (or their direct `./scripts-run`
       equivalents) pass against this file.
