@@ -70,7 +70,7 @@ the tree's. A concern whose own record dated its withdrawal is withdrawn.
 
 ## Phase 1 — Two lints run where a pull request is decided
 
-- [ ] **1.1 Inline code is not a finding, red first.** A case named
+- [x] **1.1 Inline code is not a finding, red first.** A case named
       `inline-code-not-met-is-quoted` plants a ticked criterion whose only
       `NOT met` sits in backticks; it fails today, then the scanner masks
       inline code spans the way it already skips fences, and a ticked

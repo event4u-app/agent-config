@@ -24,6 +24,8 @@ const FIXTURE = [
     '- [x] AC-6 — inside a fence, NOT met',
     '```',
     '- [x] AC-7 — prose saying it is not met in lower case.',
+    '- [x] AC-8 — the lint reports a criterion whose text contains `NOT met`.',
+    '- [x] AC-9 — two spans: ``a `NOT met` nested`` and more prose.',
     '',
 ].join('\n');
 
@@ -39,6 +41,20 @@ describe('lint_ticked_unmet_criteria', () => {
     it('reports only a ticked criterion whose own text says NOT met', () => {
         const hits = scanText(FIXTURE, 'f.md');
         expect(hits).toEqual([{ file: 'f.md', line: 4, criterion: 'AC-2' }]);
+    });
+
+    it('inline-code-not-met-is-quoted — a backticked NOT met is a quotation, a bare one is not', () => {
+        const hits = scanText(FIXTURE, 'f.md');
+        // AC-8 and AC-9 quote the phrase inside backticks; neither is a finding.
+        expect(hits.map((h) => h.criterion)).not.toContain('AC-8');
+        expect(hits.map((h) => h.criterion)).not.toContain('AC-9');
+        // The trade this masking buys: the bare phrase of AC-2 still fails.
+        expect(hits.map((h) => h.criterion)).toContain('AC-2');
+    });
+
+    it('an unterminated backtick masks nothing, so a bare NOT met after it still fails', () => {
+        const text = ['- [x] AC-1 — an opening ` and then NOT met in the clear.'].join('\n');
+        expect(scanText(text, 'f.md')).toEqual([{ file: 'f.md', line: 1, criterion: 'AC-1' }]);
     });
 
     it('exits 1 on a planted tick over NOT met, 0 when the glyph is honest', () => {

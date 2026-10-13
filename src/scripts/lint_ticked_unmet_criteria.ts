@@ -9,9 +9,17 @@
  *
  * The criterion's text is the bullet line plus its indented continuation lines,
  * up to a blank line, a less-indented line or the next checkbox. Fenced code is
- * skipped, so a quoted example is not a finding. The match is the literal
- * `NOT met` — upper-case on purpose, because that is how an author marks the
- * unmet half, and a lower-case "not met" inside an explanation is prose.
+ * skipped and inline code spans are masked, so a quoted example is not a
+ * finding — a roadmap that writes ABOUT this lint quotes the phrase it hunts,
+ * and reporting the quoter is the detector reading its own name. The match is
+ * the literal `NOT met` — upper-case on purpose, because that is how an author
+ * marks the unmet half, and a lower-case "not met" inside an explanation is
+ * prose.
+ *
+ * What the masking costs, stated rather than discovered later: an author who
+ * writes the unmet half inside backticks escapes this lint. That trade is
+ * pinned by a test — the bare phrase still fails, and an unterminated backtick
+ * masks nothing.
  *
  * Usage:
  *   ./scripts-run src/scripts/lint_ticked_unmet_criteria
@@ -44,6 +52,59 @@ function _indent(line: string): number {
     return (/^[ \t]*/.exec(line)?.[0] ?? '').length;
 }
 
+/**
+ * Blanks the contents of every inline code span, keeping the delimiters and
+ * every newline so offsets and line structure survive.
+ *
+ * A run of N backticks opens a span that closes at the next run of exactly N.
+ * An unterminated run is literal text in markdown and masks nothing here, so a
+ * stray backtick cannot blind the scanner for the rest of a criterion.
+ */
+function maskInlineCode(text: string): string {
+    let out = '';
+    let i = 0;
+    while (i < text.length) {
+        if (text[i] !== '`') {
+            out += text[i];
+            i += 1;
+            continue;
+        }
+        let n = 0;
+        while (text[i + n] === '`') {
+            n += 1;
+        }
+        let j = i + n;
+        let close = -1;
+        while (j < text.length) {
+            if (text[j] === '`') {
+                let m = 0;
+                while (text[j + m] === '`') {
+                    m += 1;
+                }
+                if (m === n) {
+                    close = j;
+                    break;
+                }
+                j += m;
+            } else {
+                j += 1;
+            }
+        }
+        if (close === -1) {
+            out += text.slice(i, i + n);
+            i += n;
+            continue;
+        }
+        out += text.slice(i, i + n);
+        out += text
+            .slice(i + n, close)
+            .replace(/[^\n]/gu, ' ');
+        out += text.slice(close, close + n);
+        i = close + n;
+    }
+    return out;
+}
+
 function scanText(text: string, file: string): Hit[] {
     const lines = text.split('\n');
     const hits: Hit[] = [];
@@ -70,7 +131,7 @@ function scanText(text: string, file: string): Hit[] {
             }
             block.push(next);
         }
-        if (block.join('\n').includes(UNMET)) {
+        if (maskInlineCode(block.join('\n')).includes(UNMET)) {
             hits.push({ file, line: i + 1, criterion: m[2] as string });
         }
     }
@@ -161,5 +222,5 @@ if (process.argv[1] !== undefined) {
     }
 }
 
-export { scanText, scanTree, main };
+export { maskInlineCode, scanText, scanTree, main };
 export type { Hit };
