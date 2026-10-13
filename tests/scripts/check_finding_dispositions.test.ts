@@ -20,6 +20,7 @@ import {
     disposition_tally,
     empty_ledger_problem,
     unreviewed_ledger_problem,
+    OWNER_DIRECTIVES_DIR,
     isBlocking,
     MEDIUM_SECURITY_BLOCKS_AFTER,
     localTagHit,
@@ -730,5 +731,134 @@ describe('an unreviewed ledger at the cut', () => {
         // The reason string is non-empty, so the older gate passed it: this is
         // the half `empty_ledger_problem` was never able to see.
         expect(empty_ledger_problem(SIXTEEN_FOUR_ZERO)).toBeNull();
+    });
+
+    it('names the review before the override, and never asks for a reason', () => {
+        const msg = unreviewed_ledger_problem(
+            SIXTEEN_FOUR_ZERO,
+            '99.99.0',
+            'unreleased',
+            noDirective,
+        )!;
+        expect(msg.indexOf('self_review_gate')).toBeLessThan(msg.indexOf('assurance_override'));
+        expect(msg.indexOf('--ingest')).toBeLessThan(msg.indexOf('assurance_override'));
+        expect(msg).not.toContain('no_findings_reason');
+    });
+
+    /** The four outcomes, one fixture each. */
+    it('a reviewed ledger passes — findings are what a review that ran leaves behind', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, findings: [finding({ ...COMPLETE })] },
+                '99.99.0',
+                'unreleased',
+                noDirective,
+            ),
+        ).toBeNull();
+    });
+
+    it("a shipped version's backfilled ledger passes — refusing it would red history", () => {
+        expect(
+            unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '16.4.0', 'released', noDirective),
+        ).toBeNull();
+    });
+
+    it('an override naming a committed directive that names the version passes', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/d.md` },
+                '99.99.0',
+                'unreleased',
+                () => 'the owner permits cutting 99.99.0 without a review',
+            ),
+        ).toBeNull();
+    });
+
+    it('an undeterminable status passes — a tagless clone cannot tell a backfill from a cut', () => {
+        expect(
+            unreviewed_ledger_problem(
+                SIXTEEN_FOUR_ZERO,
+                '99.99.0',
+                'undeterminable',
+                noDirective,
+            ),
+        ).toBeNull();
+    });
+
+    /** Three ways an override fails, so the escape hatch is not a free pass. */
+    it('an override outside the directives directory is refused', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: 'the owner said it was fine' },
+                '99.99.0',
+                'unreleased',
+                () => 'anything',
+            ),
+        ).toContain('never a sentence');
+    });
+
+    it('an override naming an uncommitted file is refused', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/gone.md` },
+                '99.99.0',
+                'unreleased',
+                noDirective,
+            ),
+        ).toContain('not committed');
+    });
+
+    it('an override whose directive names another version is refused', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/d.md` },
+                '99.99.0',
+                'unreleased',
+                () => 'the owner permits cutting 16.4.0 without a review',
+            ),
+        ).toContain('does not mention');
+    });
+
+    /**
+     * The CLI half, on the branches that are offline by construction: an
+     * override is read from the working tree and decided without any tag probe,
+     * so these cases assert the wiring the pure tests above cannot.
+     */
+    it('the CLI refuses an override that points at nothing, whatever the release status', () => {
+        const dir = ledgerDir(
+            { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/absent.md` },
+            '99.99.0',
+        );
+        const r = runGate(dir, '99.99.0');
+        expect(r.code, r.out).toBe(1);
+        expect(r.out).toContain('not committed');
+    });
+
+    it('the CLI reads a committed directive rather than merely checking the path shape', () => {
+        // The directive that IS committed, against a version it does not name.
+        // Reaching this message proves the file was opened and its text read;
+        // a check that stopped at the path prefix would have passed here.
+        const name = fs
+            .readdirSync(path.join(_REPO_ROOT, OWNER_DIRECTIVES_DIR))
+            .find((f) => f.endsWith('.md'))!;
+        const dir = ledgerDir(
+            { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/${name}` },
+            '99.99.0',
+        );
+        const r = runGate(dir, '99.99.0');
+        expect(r.code, r.out).toBe(1);
+        expect(r.out).toContain('does not mention');
+    });
+
+    it('the CLI leaves a ledger with findings alone — this branch never fires there', () => {
+        const dir = ledgerDir(
+            {
+                ...SIXTEEN_FOUR_ZERO,
+                assurance: 'unreviewed',
+                findings: [finding({ ...COMPLETE })],
+            },
+            '99.99.0',
+        );
+        expect(runGate(dir, '99.99.0').code).toBe(0);
     });
 });

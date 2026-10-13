@@ -72,7 +72,7 @@ work.
 
 ## Phase 0 — The control
 
-- [ ] **0.1 The 16.4.0 ledger passes the cut today, recorded red-first.** A
+- [x] **0.1 The 16.4.0 ledger passes the cut today, recorded red-first.** A
       fixture copies `16.4.0.json` verbatim under a test version that is not
       released; a case named `unreviewed-ledger-at-the-cut` asserts the
       `--release` check exits 1 on it. Run it against the current gate and
@@ -81,25 +81,25 @@ work.
 
 ## Phase 1 — An empty review stops the cut, and says how to proceed
 
-- [ ] **1.1 `assurance: unreviewed` refuses at the cut.** In `--release` mode
+- [x] **1.1 `assurance: unreviewed` refuses at the cut.** In `--release` mode
       for a version the release-status discriminator reads as unreleased, an
       empty ledger whose `assurance` is `unreviewed` exits 1 unless it carries
       `assurance_override` naming a committed file under
       `agents/evidence/owner-directives/` whose text contains the version. A
       released version's backfilled ledger keeps passing (decision D2).
       verify: `npx vitest run tests/scripts/check_finding_dispositions.test.ts -t unreviewed --reporter=verbose` -> /✓.*unreviewed-ledger-at-the-cut/
-- [ ] **1.2 The stop names the review first and the override second.** The
+- [x] **1.2 The stop names the review first and the override second.** The
       message at `release_findings_ingest.ts:137` and the refusal of 1.1 name
       the local CLI review the self-review gate resolves first, then the
       ingest command, then the override; no message tells the operator to
       write a reason for a review that did not run.
       verify: `grep -c 'record a no_findings_reason if none ran' src/scripts/_lib/release_findings_ingest.ts` -> /^0$/
-- [ ] **1.3 The field has a schema and a reader.** `assurance_override` is
+- [x] **1.3 The field has a schema and a reader.** `assurance_override` is
       added to the ledger schema `check_review_schema` reads, with the
       directive path as its only value, and the override is printed in the
       release's known limitations so a reader of the published notes sees it.
       verify: `npx vitest run tests/scripts/review_findings_schema.test.ts -t assurance_override --reporter=verbose` -> /✓.*assurance_override/
-- [ ] **1.4 Four fixtures, one per outcome.** The 16.4.0 ledger at the cut
+- [x] **1.4 Four fixtures, one per outcome.** The 16.4.0 ledger at the cut
       exits 1; `16.5.0.json` exits 0; the 16.4.0 ledger with an override
       naming an existing directive exits 0; the 16.4.0 ledger for a released
       version exits 0.
