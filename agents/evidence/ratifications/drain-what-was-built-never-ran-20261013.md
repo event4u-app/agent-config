@@ -1,7 +1,7 @@
 ---
 proposed_by: claude-code drain lane L, road-to-what-was-built-and-never-ran (2026-10-13)
 implemented_by: claude-code drain lane L, same session — see § Independence
-reviewed_by: ai-council 2026-10-13 — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
+reviewed_by: ai-council 2026-10-13 (rounds 1-4, Phases 1-3) and 2026-10-14 (round 5, Phase 4) — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
 providers: [anthropic, openai]
 verdict: ratified
 seats:
@@ -19,8 +19,10 @@ before a PR number exists.
 
 ## What was proposed
 
-Phases 1, 2 and 3 of `road-to-what-was-built-and-never-ran`. Gated surfaces in
-the diff:
+Phases 1, 2 and 3 of `road-to-what-was-built-and-never-ran` in rounds 1 to 4,
+and Phase 4 in round 5 — see § Round 5 below, which carries its own gated-surface
+table, its own verdicts and its own prompt. Gated surfaces in the Phases 1-3
+diff:
 
 | Surface | Change |
 |---|---|
@@ -187,3 +189,190 @@ disappear quietly; the second is not attempted anywhere in the diff.
 
 $0. All four rounds ran on subscription CLI seats; the council reported
 `billable=0` on every invocation and `TOTAL: $0.0000`.
+
+---
+
+# Round 5 — Phase 4, the dated withdrawal
+
+Rounds 1 to 4 reviewed Phases 1 to 3 and were written before Phase 4 existed.
+Commit `7c7cc0823` then landed on the same branch and touches hook plumbing, so
+it falls inside the same gate's watched set and inside no record. This section
+is that record. It was written on 2026-10-14 by a later session of the same
+lane, after the session that ran rounds 1 to 4 ended mid-sentence.
+
+## What was proposed
+
+Commit `7c7cc0823`, `feat(hooks)!: withdraw run-continuation on its own
+pre-registered kill date` — 39 files, 223 insertions, 3,728 deletions. Gated
+surfaces, as `check_kernel_edit_ratified` lists them on this branch:
+
+| Surface | Change |
+|---|---|
+| `src/scripts/hook_manifest.yaml` | the `run-continuation` definition and its single `stop` binding removed; no other concern's row or binding touched |
+| `src/scripts/hook_manifest.json` | the compiled form of the YAML, recompiled with it |
+| `src/config/hook-latency-budget.json` | that concern's `concern_sla_ms` row removed |
+| `src/scripts/hooks/concern_failure_policy.ts` | COMMENT ONLY — one paragraph moved to the past tense; no executable line changed |
+
+Reviewed alongside, not gated: `hooks/concern_registry.ts` (import and registry
+entry), the deleted `hooks/run_continuation_hook.ts` and its two test suites,
+`src/config/loop-surfaces.yaml`, `docs/contracts/hook-architecture-v1.md`,
+ADR-118 and the parked roadmap that records the disposition.
+
+## Why this is an execution and not a decision
+
+The merits were settled on 2026-09-12 by a converged two-seat council, recorded
+in `agents/roadmaps/archive/road-to-run-continuation-observation.md`: if no run
+satisfying the resume trigger is recorded by the end of 2026-10-11, the concern
+is withdrawn, "automatic on that date" and needing "no further decision on the
+merits". Step 4.1 ran the trigger's own reader first. The ledger
+`agents/runtime/state/run-continuation.jsonl` holds three lines, the last from
+2026-08-19, across two run ids, and both claim the observation roadmap itself,
+which has one phase section. The trigger requires three or more. The deadline
+passed.
+
+## Round 5 — both seats approve, on different labels
+
+One invocation, 2026-10-14, subscription CLI, $0. Quorum read after the run:
+2/2 present.
+
+- **anthropic/claude-sonnet-4-5 — `ratified`.** "The commit faithfully executes
+  a converged two-seat council's dated kill criterion ... The hook-plumbing
+  changes are surgical: only `run-continuation` is removed from the manifest,
+  registry, latency budget, and policy comments. No other concern is touched,
+  weakened, or renumbered." It named one change to make before merge, below.
+- **openai/codex-default — `confirmed-non-expanding`, approving.** It confirmed
+  non-expansion of every reproduced hunk and declined the stronger label on an
+  evidence ground rather than a substantive one: "With 39 changed files but only
+  four source excerpts shown, this seat can confirm non-expansion of the
+  reproduced plumbing, not ratify the complete commit."
+
+Neither refused. Both answered question 4 the same way: the merits are already
+decided and a council need not decide them again. The openai seat added that
+"lands by the owner's act through its ratification" reserves the **merge** to
+the owner, which this branch does not perform and this record does not claim.
+
+## What was adopted
+
+- **The unclosed parenthesis, named by both seats.** The comment edit in
+  `concern_failure_policy.ts` opened a parenthesis it never closed, and left
+  "Neither carries `skip_on_refusal_retry`" referring to one live concern and
+  one withdrawn one. Fixed in the same change as this record, at the same line
+  count, with the sentence re-pointed at the one concern that remains.
+- **The retention claim, which both seats said the excerpt could not verify.**
+  Re-run on the tree on 2026-10-14 rather than asserted: the parked roadmap
+  (571 lines), ADR-118 (238 lines) and `_lib/continuation_ladder.ts` (340
+  lines) are present; the changelog entries and the hook-architecture contract
+  still carry the concern's history; the ledger is present in the checkout and
+  `interruption_report` still reads it. On the removal side,
+  `hooks/run_continuation_hook.ts` and both test suites are gone, and
+  `hook_manifest.yaml` and `concern_registry.ts` carry zero references. Two
+  mentions survive and are deliberate: `loop-surfaces.yaml:138` describes an
+  instrument built "for the withdrawn `run_continuation_hook`", and a
+  measurement string in `hook-latency-budget.json` records a per-concern ratio
+  that was measured while the concern existed. Neither is a binding.
+
+## What was recorded as a residual rather than fixed
+
+The openai seat's evidence refinement, kept in the roadmap's risk register as
+well: `roadmap=-` on all 183 rows `interruption_report` scans is not positive
+evidence that no qualifying roadmap ran, and the three-line ledger is strong
+only if that ledger was reliably emitted for every eligible run. A qualifying
+run the concern never recorded — unbound on the host, or crashed before the
+write — would be invisible to this reader. The reader is the one the kill
+criterion named in advance, so this is the pre-registered test executed as
+written. It is not a test that excludes every route by which a qualifying run
+could have been missed, and this record does not claim that it is.
+
+## What would have changed the verdict
+
+The openai seat named it: a qualifying pre-deadline run in the complete commit,
+deletion of required history or observation evidence, mutation of another
+concern, generated-manifest drift, a surviving execution path, or a failed
+hook-contract check. It named what would upgrade its own label to `ratified`:
+a complete-commit reference scan, generated YAML/JSON parity, passing manifest,
+registry, hook-contract and source-budget checks, confirmation that the retained
+artefacts still exist, and the owner-authorized act. The retention half of that
+list is discharged above by measurement; the gate-run half is what the pull
+request's own CI answers and this lane does not wait for it; the owner act is
+the merge.
+
+## Independence, stated rather than implied
+
+`proposed_by` and `implemented_by` name the session that wrote the commit;
+round 5 was run by a later session of the same lane, which wrote the prompt.
+That is the evaluator-independence risk and it is not removed by the session
+boundary, so the prompt is reproduced below in full apart from its appended
+diff, which is `git show 7c7cc0823 -- src/scripts/hook_manifest.yaml
+src/config/hook-latency-budget.json src/scripts/hooks/concern_failure_policy.ts
+src/scripts/hooks/concern_registry.ts` and is recoverable from the commit. The
+prompt states no expected outcome and offers `refused` as one of three verdicts
+in the same sentence as the other two. Against that, a reader should weigh that
+the prompt quotes the kill criterion at length, which is the case for the
+change, and that the two seats returned different labels on the same artefact,
+which is weak evidence the prompt was not steering toward one.
+
+## The round-5 prompt
+
+> # Ratification review — Phase 4 of `road-to-what-was-built-and-never-ran`
+>
+> You are reviewing one commit on branch `drain/what-was-built-never-ran-20261013`
+> (PR #2336) of the `event4u/agent-config` package: a governed suite of skills,
+> rules, commands and CI gates for AI coding tools. No application runtime.
+>
+> This commit touches **hook plumbing**, a surface the package's own gate
+> `check_kernel_edit_ratified` watches. A diff touching it may not merge without a
+> ratification record whose reviewer differs from its proposer and implementer and
+> whose seats span two providers (ADR-268 § 4). You are one of those seats.
+>
+> An earlier record on this branch,
+> `agents/evidence/ratifications/drain-what-was-built-never-ran-20261013.md`,
+> ratified Phases 1-3 over four rounds. It does **not** cover this commit. This
+> round is to decide whether it should be extended to cover it, refused, or
+> narrowed.
+>
+> [§ What the commit does — the file counts and the removal list reproduced above.]
+>
+> [§ Where the decision to remove it came from — the kill criterion quoted verbatim,
+> its resume trigger, and its pre-registered reading of what failure does and does
+> not mean.]
+>
+> [§ What the reading found — step 4.1, the three ledger lines, the 183 rows.]
+>
+> [§ What is kept — the retention list, and that no successor is built.]
+>
+> [§ One consequence recorded rather than smoothed over — the `blocked-by:` marker.]
+>
+> [§ The risk the roadmap's own register names — row 5 quoted verbatim.]
+>
+> ## Questions
+>
+> 1. Is this commit a faithful **execution** of the pre-registered disposition, or
+>    does it take a decision the kill criterion did not already take? Name any
+>    part that is the latter.
+> 2. Does the hook-plumbing diff below remove, weaken or renumber anything beyond
+>    the named concern — another concern's binding, a severity policy that governs
+>    others, a latency budget entry that is not this concern's?
+> 3. Is anything in the retained set misdescribed — is something the kill
+>    criterion required kept actually gone, or something it required gone actually
+>    kept?
+> 4. Row 5 asserts the owner may have changed his mind. Is this transition
+>    council-decidable, or is it owner-reserved — and on what reading of the
+>    record?
+> 5. What would change your verdict?
+>
+> Answer with a verdict from `ratified`, `confirmed-non-expanding`, or `refused`,
+> and state the finding behind it.
+>
+> [§ The hook-plumbing diff — the four files named above, in full.]
+
+The bracketed sections are the prompt's own headings with their bodies
+summarized; every one of them reproduces material quoted verbatim elsewhere in
+this record or in the commit, which is why they are named rather than repeated.
+The questions and the verdict instruction are the parts a reader checks for
+steering and they are reproduced exactly.
+
+## Spend
+
+$0. Round 5 ran on the same two subscription CLI seats; the council reported
+`billable=0` and `TOTAL: $0.0000`. Quota after the run: anthropic 27/50,
+openai 27/50.

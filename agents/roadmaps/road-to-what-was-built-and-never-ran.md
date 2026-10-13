@@ -174,15 +174,43 @@ the classifier classes it non-routine and it lands by the owner's act.*
 - It does not build a successor to the withdrawn concern.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude-opus -->
+<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude-opus + ai-council (anthropic, openai) -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A newly wired lint reds every pull request | implementation | The ticked-unmet lint is red on the trunk today; wiring it red would block unrelated work | 1.1 and 1.2 make it green before 1.3 wires it, and 1.3 names the CI reading | Phase 1 — Two lints run where a pull request is decided |
-| 2 | Masking inline code hides a real contradiction | implementation | An author who writes the unmet half inside backticks escapes the lint | 1.1 keeps a bare-phrase case red and records the trade in the test | Phase 1 — Two lints run where a pull request is decided |
-| 3 | The NUL parse changes a rename's reading | implementation | `-z` emits rename pairs as separate fields, and a wrong split misreads old and new paths | 2.1 keeps every existing rename and near-miss case green | Phase 2 — The classifier reads the diff it classifies |
-| 4 | Withdrawal leaves a dangling reference | implementation | Ten files outside the hook name the concern; one missed reference breaks a reader or a test | 4.2 sweeps the name and updates every caller in the same change | Phase 4 — The dated withdrawal lands |
-| 5 | Withdrawal removes a mechanism the owner still wants | product | The kill criterion is a past decision and the owner may have changed his mind | 4.1 reads the record first, and the change lands by the owner's act through its ratification | Phase 4 — The dated withdrawal lands |
+| 1 | A newly wired lint reds every pull request | implementation | The ticked-unmet lint is red on the trunk today; wiring it red would block unrelated work | 1.1 and 1.2 landed and both lints exit 0 locally; the residual is now exactly AC-1's open conjunct, the reading on the pull request's own runner that this lane does not take | Phase 1 — Two lints run where a pull request is decided |
+| 2 | An author silences the lint on his own change | implementation | Backtick-masking was the shape this row named; the larger hole was the historical exemption, which keyed on a `MET` / `CLOSED` marker the checked author types himself | 1.1 keeps a bare-phrase case red and records the trade in the test; `227bd1018` then replaced the typed marker with a frozen digest list pinned by path, criterion id and content hash, after a council seat refused the marker | Phase 1 — Two lints run where a pull request is decided |
+| 3 | The NUL parse changes a rename's reading | implementation | `-z` emits rename pairs as separate fields, and a wrong split misreads old and new paths | Landed: 2.1 kept every existing rename and near-miss case green, and the non-ASCII case was seen red before the parse changed | Phase 2 — The classifier reads the diff it classifies |
+| 4 | Withdrawal leaves a dangling reference | implementation | Ten files outside the hook name the concern; one missed reference breaks a reader or a test | Landed and measured on 2026-10-14: `hook_manifest.yaml` and `concern_registry.ts` carry zero references, and the two surviving mentions are deliberate past-tense records of a withdrawn mechanism, not bindings | Phase 4 — The dated withdrawal lands |
+| 5 | Withdrawal removes a mechanism the owner still wants | product | The kill criterion is a past decision and the owner may have changed his mind | 4.1 read the record first and found no qualifying run; the ratification round over the Phase-4 diff ran on 2026-10-14 with both seats approving; the owner's act itself is the merge, which this branch does not perform | Phase 4 — The dated withdrawal lands |
+| 6 | The two wired lints can be removed with no record | implementation | `check_kernel_edit_ratified` does not watch `src/config/gate-coverage.yml`, so deleting both workflow steps together with both coverage rows takes the two lints out of CI without demanding a ratification record | Not fixed in this diff, and recorded as a residual both round-4 seats accepted: measurement C showed the coordinated route still reds `check_ci_local_parity`, and widening the ratification gate's watched set is itself a change to the ratification mechanism and needs its own proposal | Phase 1 — Two lints run where a pull request is decided |
+
+**Re-review 2026-10-14 — what changed since the 2026-10-12 stamp.** Phases 1 to
+4 all landed between the two dates, so four of the five rows were re-read
+against a tree that now carries their mitigation rather than a plan for it.
+Rows 3 and 4 are discharged and say so; row 4's sweep was re-run rather than
+assumed. Row 1 narrowed: its mitigation landed and the only residual left is the
+pull-request reading AC-1 keeps open. Row 2 was rewritten rather than confirmed:
+the row named backtick-masking, and the hole a council seat actually refused on
+was the historical exemption keying on a marker the checked author types
+himself, which `227bd1018` replaced with a frozen digest list. Row 5's second
+half was exercised on 2026-10-14 and is recorded below. Row 6 is new: it is the
+residual the Phase-1 ratification rounds recorded in the evidence file and the
+register did not carry.
+
+**Row 5, and the limit of the evidence behind it.** The Phase-4 ratification
+round ran on 2026-10-14 with both configured seats present: `anthropic`
+returned `ratified`, `openai` returned `confirmed-non-expanding` with an
+approval. Neither refused, and neither read the transition as owner-reserved on
+the merits — the kill criterion says the withdrawal "needs no further decision
+on the merits", so what was reviewed was the execution, not the decision. One
+seat named an evidence limit that is worth keeping rather than smoothing over:
+the ledger is positive evidence only for runs the concern actually recorded. A
+qualifying run that the concern failed to record — unbound on the host, or
+crashed before the write — would be invisible to the same reader. That reader is
+the one the kill criterion named in advance, so this is the pre-registered test
+executed as written; it is not a test that excludes every way a qualifying run
+could have been missed.
 
 ## Acceptance Criteria
 
