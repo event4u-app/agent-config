@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: archived
 execution:
   mode: phase-checkpoints
 relates:
@@ -110,25 +110,25 @@ returns to accepting a reason string.*
 
 ## Phase 2 — The published record says what it carried
 
-- [ ] **2.1 The mix line prints every bucket.** `release_publication.ts`
+- [x] **2.1 The mix line prints every bucket.** `release_publication.ts`
       renders `governance-only N vs consumer-only M (mixed K, maintenance L;
       taxonomy …; range …)`. Every reader of the line is found with
       `grep -rn 'Governance mix' src tests` and updated in the same change.
       verify: `npx vitest run tests/scripts/release_mix_line_reproduces.test.ts -t mix-line-carries-mixed --reporter=verbose` -> /✓.*mix-line-carries-mixed/
-- [ ] **2.2 `[Unreleased]` is drained, preserved verbatim.** The twenty
+- [x] **2.2 `[Unreleased]` is drained, preserved verbatim.** The twenty
       entries at `CHANGELOG.md:31-889` move into
       `docs/archive/CHANGELOG-unreleased-drain-2026-10.md` with the archive
       header the 6.0.0 drain used, each entry tagged with the first release
       tag that contains the commit that added it; `[Unreleased]` keeps its
       placeholder.
       verify: `grep -c '46 settings keys are retired' docs/archive/CHANGELOG-unreleased-drain-2026-10.md` -> /^1$/
-- [ ] **2.3 The migration guide carries the removed keys.** `docs/MIGRATION.md`
+- [x] **2.3 The migration guide carries the removed keys.** `docs/MIGRATION.md`
       § 16.4.0 gains the retired-keys note — a set value is ignored, one
       deprecation line per key and process, where the list lives
       (`src/scripts/_lib/settings_removed_keys.ts`) — and `:113` points at the
       16.4.0 section instead of calling the default open.
       verify: `grep -c 'open owner decision' docs/MIGRATION.md` -> /^0$/
-- [ ] **2.4 The drain guard sees the new shape.** A case in
+- [x] **2.4 The drain guard sees the new shape.** A case in
       `tests/lib/changelog_eras.test.ts` fails when a `- **` entry under
       `[Unreleased]` was added by a commit the newest release tag already
       contains; the 2.2 state is green and a fixture with one shipped entry is
@@ -172,15 +172,15 @@ leave together.*
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The 16.4.0 ledger, placed at an unreleased cut, exits 1 with a
+- [x] AC-1 — The 16.4.0 ledger, placed at an unreleased cut, exits 1 with a
       message that names the local CLI review before the override, and the
       case was seen red before the gate changed.
-- [ ] AC-2 — A reviewed ledger, an overridden ledger and a shipped version's
+- [x] AC-2 — A reviewed ledger, an overridden ledger and a shipped version's
       backfilled ledger each exit 0.
-- [ ] AC-3 — The published mix line carries `mixed` and `maintenance`, and
+- [x] AC-3 — The published mix line carries `mixed` and `maintenance`, and
       every reader of the line passes.
-- [ ] AC-4 — `[Unreleased]` holds no entry a release tag already contains, the
+- [x] AC-4 — `[Unreleased]` holds no entry a release tag already contains, the
       drained entries exist verbatim in one archive file, and a fixture with a
       shipped entry fails the guard.
-- [ ] AC-5 — The migration guide names the retired keys' behaviour in its
+- [x] AC-5 — The migration guide names the retired keys' behaviour in its
       16.4.0 section and no longer calls the offline default open.

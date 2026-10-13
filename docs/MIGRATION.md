@@ -93,6 +93,41 @@ every run, including a single-check run, is the surprising default, and
   Both still work and are still the more specific instruction: they beat
   `--online` when both are given.
 
+### Also in 16.4.0 — 46 settings keys are retired
+
+💡 advisory · 🔄 automatic — **no consumer action unless you set one of them.**
+
+Each retired key's shipped default became fixed behaviour, and every reader of
+it — code, rule and command prose, the setup wizard — was rewritten to state
+that default in the same change
+([`b35d432b1`](https://github.com/event4u-app/agent-config/commit/b35d432b11cc3328517c7963c570bb1a06b8dda7)).
+The registry went from 15 retired keys to 61; the 46 new ones span 21 prefixes,
+the largest being `reasoning` (10), `commands` (8) and `hooks` (6).
+
+**What happens to a leftover value.** Nothing applies it. No reader consults a
+retired key, so a value still sitting in your `.agent-settings.yml` is ignored
+rather than honoured — including a value that differs from the default it
+replaced. The loader surfaces it instead, once per key per process run, on
+stderr:
+
+```
+<key> was removed (<what decides instead>); ignored.
+```
+
+The exit code never changes, so a leftover key cannot fail a run; it can only
+tell you about itself. Each line names what decides the behaviour now, because
+the 46 do not share one retirement reason — some were replaced by a fixed
+default, and five were never read by any code path at all.
+
+**What to do.** Delete the keys from your `.agent-settings.yml` when the notice
+names one. If you were relying on a non-default value, the line tells you where
+that decision now lives; there is no replacement key to set.
+
+**Where the list lives.** `src/scripts/_lib/settings_removed_keys.ts` — the
+`REMOVED_KEYS` map, one row per key with its reason. It is the single source
+for both the notice and the settings linter, so the file is the answer to "was
+this key retired, and what replaced it?".
+
 ### How to tell the two apart in the output
 
 The block gained a **`not_checked`** key, present on every run, so a consumer
@@ -110,8 +145,9 @@ row states, which is the misreading this key exists to prevent.
 `read_from_forge` keeps its meaning and is unchanged.
 
 The flag is additive: a run that passes none of these reads the forge exactly
-as before. Whether offline becomes the default is an open owner decision
-(`road-to-findings-that-get-a-disposition`, blocker `doctor-network-default`).
+as before. **Offline is the default as of 16.4.0** — see the section above,
+which is where blocker `doctor-network-default` of
+`road-to-findings-that-get-a-disposition` was settled and shipped.
 
 ## 16.0.0 — the stored standing-payload ceiling is deleted
 
