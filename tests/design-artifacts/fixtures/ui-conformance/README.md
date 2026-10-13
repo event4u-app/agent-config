@@ -225,3 +225,63 @@ Kept because a rejected prototype that leaves no record gets re-proposed.
 No number above may be revised after a capture run. If the implementation
 disagrees with a row, the disagreement is the finding and is recorded beside the
 row — the registered number stays, and the measured one is added next to it.
+
+### Measured, 2026-10-13 — six of seven rows reproduce exactly
+
+Taken with `capture.ts` on this branch, against the frozen observations it
+writes. Recorded here rather than only in a test, because a registered table
+whose measurement lives somewhere else is a table nobody re-reads.
+
+| Row | Registered | Measured |
+|---|---|---|
+| `design` to `port-faithful` | no change at any width, overflow same, both overflow at 320 | **exact** — no leaf, no arrangement key and no overflow flag differs at any width; both pages overflow at 320 and neither at 1440, 768 or 375 |
+| `design` to `port-regenerated` | control 5 to 2, text 6 to 5, one empty leaf gone, at all four | **control 5 to 2** and **one empty leaf gone** at all four, as registered. The second changed kind is **heading 5 to 4**, not text 6 to 5 — see below |
+| `design` to `port-regenerated`, arrangement | changed at all four; `3:column` becomes `3:row` at 375 and 320 | **exact** |
+| `design` to `port-regenerated`, overflow | false to true at 375 | **exact** |
+| no handles to `variant-no-handles-removed` | text 2 to 1 at all four | **exact** |
+| no handles to `variant-no-handles-media-rule` | `2:column` becomes `2:row` at 375 and 320 only | **exact** |
+| no handles to declared, renamed, reference-with-handles | nothing at any width | **exact** — nothing at any width in all three |
+
+### The one disagreement, and the decision that explains it
+
+The registered row attributes the regenerated port's second lost leaf to `text`;
+this implementation attributes it to `heading` and reports `text` unchanged.
+Both report exactly one lost non-control leaf, at all four widths, alongside the
+same lost control count and the same lost empty leaf. The direction and the
+magnitude agree; the label does not.
+
+The cause is one line of the fixture and one decision about it:
+
+```
+<h1 class="wordmark">Led<em>ger</em></h1>
+```
+
+Under the literal reading of "a leaf is an element with no rendered element
+child", that heading is a container and its `<em>` is a text leaf: `design.html`
+then holds four headings and six texts, and the regenerated port — whose `<h1>`
+carries no inline markup — holds four headings and five texts. That is the
+registered row exactly. This implementation does not look inside a heading, a
+control or a media element, so the same page holds five headings and five texts
+and the lost leaf is a heading.
+
+**What the fixture does and does not settle.** It does not discriminate between
+the two readings: `port-faithful.html` keeps `Led<em>ger</em>` verbatim, so both
+readings are silent on the control that matters most. The case that would
+discriminate is a port that unwraps the `<em>` while keeping the visible word —
+the literal reading reports a lost text leaf and a gained heading; this one
+reports nothing. The argument for not looking inside a semantic atom is
+therefore **a priori** and is set out at `READ_SIGNATURE` in
+`src/scripts/ui_conformance_probe.ts`; it is not a measurement, and no fixture
+here makes it one.
+
+**Revisit if** a fixture lands that unwraps inline markup inside a heading or a
+control, or a real handover produces a leaf-kind change that only one of the two
+readings sees. Either settles this empirically, and then the registered label
+can be corrected against evidence rather than against an argument.
+
+### A third limit, found while implementing
+
+A control that wraps a whole region — an `<a>` around a card, say — is one
+control leaf, and nothing inside it is counted. This is a loss of sensitivity
+rather than a false report, and it is the price of not looking inside a semantic
+atom. It joins the two limits above as something this reading does not do.

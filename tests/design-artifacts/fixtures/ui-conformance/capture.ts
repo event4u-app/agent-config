@@ -28,6 +28,29 @@ export const VARIANTS = [
     // reference does not.
     'reference-no-handles',
     'variant-added',
+    // Added by `road-to-a-structure-reading-without-handles`. Three
+    // single-change variants of the handle-free reference: each carries exactly
+    // one difference, so a reading that fires on one of them cannot be crediting
+    // a defect it did not isolate.
+    'variant-no-handles-declared',
+    'variant-no-handles-media-rule',
+    'variant-no-handles-removed',
+] as const;
+
+/**
+ * The port pair, which lives one directory up and is not laid out as a variant.
+ *
+ * These three files are the evidence base for the handle-free reading's two
+ * registered controls — a faithful port must read as unchanged, a regenerated
+ * one must not — and they are pinned by `internal/bench/ui/fixtures.lock.json`,
+ * so they are READ here and never written. They carry no handle and no
+ * `index.html`, which is why they need their own list rather than a sixth entry
+ * above: `VARIANTS` names directories, and these name files.
+ */
+export const PORT_PAIR = [
+    { name: 'design', rel: '../design.html' },
+    { name: 'port-faithful', rel: '../port-faithful.html' },
+    { name: 'port-regenerated', rel: '../port-regenerated.html' },
 ] as const;
 
 async function main(): Promise<number> {
@@ -44,6 +67,16 @@ async function main(): Promise<number> {
         obs.source = path.posix.join('tests/design-artifacts/fixtures/ui-conformance', variant, 'index.html');
         fs.writeFileSync(path.join(outDir, `${variant}.json`), `${JSON.stringify(obs, null, 2)}\n`);
         process.stdout.write(`captured ${variant}: ${obs.nodes.length} node(s)\n`);
+    }
+    for (const { name, rel } of PORT_PAIR) {
+        const obs = await captureVariant(path.join(HERE, rel));
+        // `captureVariant` names a variant after its parent directory, which is
+        // `fixtures` for all three of these. Named explicitly rather than left to
+        // collide.
+        obs.variant = name;
+        obs.source = path.posix.join('tests/design-artifacts/fixtures', `${name}.html`);
+        fs.writeFileSync(path.join(outDir, `${name}.json`), `${JSON.stringify(obs, null, 2)}\n`);
+        process.stdout.write(`captured ${name}: ${obs.nodes.length} node(s)\n`);
     }
     return 0;
 }

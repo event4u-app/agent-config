@@ -101,13 +101,13 @@ spacing, and it stays in shadow.
 
 ## Phase 2 — The capture records a signature
 
-- [ ] **2.1 A sweep that does not need a handle.** The capture resizes the
+- [x] **2.1 A sweep that does not need a handle.** The capture resizes the
       page to each of the four widths once, outside the per-handle loop, and
       records leaves by kind, the arrangement multiset and the overflow flag.
       It stores no coordinate and no size. An element with `display: none`,
       `visibility: hidden` or a zero box is not rendered.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t signature-captured-at-four-widths --reporter=verbose` -> /✓.*signature-captured-at-four-widths/
-- [ ] **2.2 An observation without a signature says so.** The committed
+- [x] **2.2 An observation without a signature says so.** The committed
       observation files are re-captured with the signature. A file that lacks
       it yields `not_available` for the reading, never "no change". Positive
       control: one fixture observation with the field deleted.

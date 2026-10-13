@@ -146,10 +146,39 @@ export interface NodeObservation {
     click_effect: string | null;
 }
 
+/**
+ * The kinds a leaf is counted as. Four are the roadmap's; `empty` is the
+ * residual and is named rather than folded into `text`, because "a wrapper that
+ * renders nothing" and "a paragraph" are different things to lose.
+ */
+export const LEAF_KINDS = ['control', 'heading', 'media', 'text', 'empty'] as const;
+export type LeafKind = (typeof LEAF_KINDS)[number];
+
+/** One width's reading. Counts and a flag — no coordinate, no size, no tag. */
+export interface WidthSignature {
+    /** Every kind is present, including the zeroes: absent would read as 0 anyway. */
+    leaves: Record<LeafKind, number>;
+    /** A multiset: `<child count>:<row|column|mixed>` to how many containers carry it. */
+    arrangement: Record<string, number>;
+    overflow: boolean;
+}
+
+/** Keyed by viewport width, as a string, because JSON keys are strings. */
+export type PageSignatureReading = Record<string, WidthSignature>;
+
 export interface Observation {
     variant: string;
     source: string;
     nodes: NodeObservation[];
+    /**
+     * OPTIONAL, AND THAT IS THE CONTRACT RATHER THAN A CONVENIENCE. An
+     * observation captured before this field existed has no signature, and a
+     * reader must say `not_available` for it — never "no change", which is the
+     * same fabricated green the five dimensions already refuse. Making the field
+     * required would have forced every committed record to be re-captured on a
+     * host with a browser before anything could read them at all.
+     */
+    signature?: PageSignatureReading;
 }
 
 export interface Declaration {
@@ -178,6 +207,61 @@ export interface DimensionRow {
     /** `null` on a not-applicable row. Never 0 — see the header. */
     findings: number | null;
     reason?: string;
+}
+
+/** One leaf kind whose count moved between the two sides, at one width. */
+export interface LeafChange {
+    kind: LeafKind;
+    reference: number;
+    target: number;
+}
+
+/** One arrangement key whose multiplicity moved. A key absent on a side is 0. */
+export interface ArrangementChange {
+    key: string;
+    reference: number;
+    target: number;
+}
+
+export interface WidthReading {
+    width: string;
+    /** Changed kinds only. An empty array means every kind held. */
+    leaves: LeafChange[];
+    /** Changed keys only. An empty array means the multiset held. */
+    arrangement: ArrangementChange[];
+    /** A PAIR, never a change flag: both sides are stated at every width. */
+    overflow: { reference: boolean; target: boolean };
+}
+
+/**
+ * THE FIXED SENTENCE, and it is fixed because the reading is easy to over-read.
+ * A reader who takes a changed count for a located defect will go looking for
+ * the node it happened to, and there is no such node: this reading never put the
+ * two sides' elements into correspondence, which is the entire reason it can be
+ * taken on a handover with no handles at all.
+ */
+export const PAGE_SIGNATURE_SCOPE =
+    'This reading names kinds of leaf and of container, never nodes. It establishes no ' +
+    'correspondence between a reference element and a target one, so it cannot be matched ' +
+    'against a declared deviation and it is not a finding.';
+
+/**
+ * The handle-free reading as it reaches the artefact.
+ *
+ * A FIELD, NEVER A SIXTH DIMENSION. The five dimension rows answer "was this
+ * node compared, and what diverged"; this answers neither, because it has no
+ * node. Giving it a row would make `findings` a count over two different kinds
+ * of statement and would break the invariant that no dimension is exercised on
+ * zero nodes — which is the one thing the roadmap this comes from was told to
+ * keep untouched.
+ */
+export interface PageSignatureField {
+    status: 'read' | 'not_available';
+    /** Present on `not_available` only, naming which side was missing it. */
+    reason?: string;
+    scope: typeof PAGE_SIGNATURE_SCOPE;
+    /** One entry per viewport width when read; empty when not available. */
+    widths: WidthReading[];
 }
 
 export interface SuppressedDeviation {
@@ -213,6 +297,14 @@ export interface ProbeArtefact {
     dimensions: DimensionRow[];
     findings: Finding[];
     declared_suppressed: SuppressedDeviation[];
+    /**
+     * PRESENT ONLY WHERE THE REFERENCE COLLECTED NO HANDLE. With handles there
+     * are five dimensions that can answer about located nodes, and a second,
+     * weaker reading beside them would be read as corroboration it is not:
+     * a kind-level count agreeing with a per-node comparison adds nothing and
+     * disagreeing with one says nothing about which is right.
+     */
+    page_signature?: PageSignatureField;
 }
 
 // ---------------------------------------------------------------- pure core
@@ -273,6 +365,60 @@ const EMPTY_REFERENCE_REASON =
     'compare against. The capture ran and collected zero nodes: this is a property of the ' +
     'handover, not of this machine.';
 
+/**
+ * The handle-free reading, taken from two captured signatures.
+ *
+ * ABSENT IS `not_available`, NEVER "NO CHANGE", and that is the same contract
+ * `findings: null` carries one level up. An observation captured before the
+ * capture learned to sweep widths has no signature at all; reporting it as
+ * unchanged would be a comparison that never happened, presented as a clean one.
+ * The check runs on BOTH sides, because a reader that only looked at the
+ * reference would say "no change" for a target captured by an older probe.
+ */
+export function readPageSignature(reference: Observation, target: Observation): PageSignatureField {
+    const missing: string[] = [];
+    if (!reference.signature) missing.push('the reference');
+    if (!target.signature) missing.push('the target');
+    const widthsMissing =
+        !missing.length &&
+        VIEWPORTS.some((w) => !reference.signature?.[String(w)] || !target.signature?.[String(w)]);
+    if (missing.length || widthsMissing) {
+        return {
+            status: 'not_available',
+            scope: PAGE_SIGNATURE_SCOPE,
+            reason: missing.length
+                ? `${missing.join(' and ')} carries no page signature, so there was nothing to read. ` +
+                  'An observation captured before the probe swept widths has none; this is not a ' +
+                  'statement that the two pages agree.'
+                : 'a page signature is present but does not cover every width the probe sweeps, so ' +
+                  'the reading would be partial. Re-capture rather than read it.',
+            widths: [],
+        };
+    }
+
+    const widths = VIEWPORTS.map((w) => {
+        const key = String(w);
+        const a = reference.signature![key]!;
+        const b = target.signature![key]!;
+        const leaves: LeafChange[] = LEAF_KINDS.filter((k) => (a.leaves[k] ?? 0) !== (b.leaves[k] ?? 0)).map((k) => ({
+            kind: k,
+            reference: a.leaves[k] ?? 0,
+            target: b.leaves[k] ?? 0,
+        }));
+        // The union of both sides' keys, so a key that exists only in the target
+        // is reported as 0 -> n rather than silently skipped. A multiset read
+        // from one side alone is the add-half blindness the structure dimension
+        // already had to be taught out of.
+        const arrangementKeys = [...new Set([...Object.keys(a.arrangement), ...Object.keys(b.arrangement)])].sort();
+        const arrangement: ArrangementChange[] = arrangementKeys
+            .filter((k) => (a.arrangement[k] ?? 0) !== (b.arrangement[k] ?? 0))
+            .map((k) => ({ key: k, reference: a.arrangement[k] ?? 0, target: b.arrangement[k] ?? 0 }));
+        return { width: key, leaves, arrangement, overflow: { reference: a.overflow, target: b.overflow } };
+    });
+
+    return { status: 'read', scope: PAGE_SIGNATURE_SCOPE, widths };
+}
+
 export function evaluate(
     reference: Observation,
     target: Observation,
@@ -309,6 +455,11 @@ export function evaluate(
             })),
             findings: [],
             declared_suppressed: [],
+            // The one branch that carries it. Everything above this line is the
+            // honest statement that nothing was compared; this is the one thing
+            // that could still be said about the pages, and saying it does not
+            // move a single row above out of `not_applicable`.
+            page_signature: readPageSignature(reference, target),
         };
     }
 
@@ -591,6 +742,104 @@ const READ_STYLES = (el: Element, props: readonly string[]): Record<string, stri
     return out;
 };
 
+/**
+ * The handle-free reading, taken in the page. Serialized into the browser by
+ * `page.evaluate`, so it closes over nothing and takes its vocabulary as an
+ * argument.
+ *
+ * WHAT IT DOES NOT LOOK INSIDE, which is the whole design rather than an
+ * optimisation. A control, a heading and a media element are counted as one
+ * leaf each and never descended into. The literal reading — "an element with no
+ * rendered element child" — would make `<button>Save</button>` a control and
+ * `<button><span>Save</span></button>` a text leaf inside a container, so
+ * wrapping a label in a span, which is the most ordinary thing a component
+ * framework does on a faithful port, would read as a lost control. That is the
+ * exact false-positive class the census-by-tag prototype was refuted for, and
+ * refusing to look inside a semantic atom excludes it by construction instead of
+ * by a tolerance. An `<svg>` is the same case from the other side: descending
+ * into its paths would make the count a function of how complex the icon is.
+ *
+ * THE COST, stated rather than discovered later: an `<a>` that wraps a whole
+ * card is one control leaf, and everything inside it is invisible to this
+ * reading. That is a loss of SENSITIVITY, never a false report, and this
+ * reading is built to prefer silence over noise — it is registered as a limit
+ * in the fixture README beside the other two.
+ *
+ * Row, column or mixed is decided from the rendered boxes of consecutive
+ * children and then thrown away: nothing a coordinate could be reconstructed
+ * from reaches the record.
+ *
+ * FLAT ON PURPOSE — no inner helper and no recursion, and that is a constraint
+ * of the carrier rather than a style. This file is run through a transform that
+ * keeps function names, which wraps every named inner function in a `__name`
+ * helper that exists in the module and not in the page. `page.evaluate`
+ * serializes the function and nothing else, so the first version of this
+ * reading threw `ReferenceError: __name is not defined` in the browser on its
+ * first run. An explicit stack has no inner function to be named.
+ */
+const READ_SIGNATURE = (kinds: readonly string[]): {
+    leaves: Record<string, number>;
+    arrangement: Record<string, number>;
+    overflow: boolean;
+} => {
+    const CONTROL =
+        'a[href],button,input,select,textarea,summary,[role="button"],[role="link"],' +
+        '[role="checkbox"],[role="switch"],[role="tab"],[role="menuitem"],[contenteditable]';
+    const HEADING = 'h1,h2,h3,h4,h5,h6,[role="heading"]';
+    const MEDIA = 'img,svg,canvas,video,audio,picture,iframe,object,embed,[role="img"]';
+
+    const leaves: Record<string, number> = {};
+    for (const k of kinds) leaves[k] = 0;
+    const arrangement: Record<string, number> = {};
+
+    const stack: Element[] = document.body ? [document.body] : [];
+    while (stack.length) {
+        const el = stack.pop() as Element;
+
+        let kind = '';
+        if (el.matches(CONTROL)) kind = 'control';
+        else if (el.matches(HEADING)) kind = 'heading';
+        else if (el.matches(MEDIA)) kind = 'media';
+        if (kind) {
+            leaves[kind] = (leaves[kind] ?? 0) + 1;
+            continue;
+        }
+
+        const children: Element[] = [];
+        for (const c of Array.from(el.children)) {
+            const cs = getComputedStyle(c);
+            if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+            const r = c.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) children.push(c);
+        }
+
+        if (children.length === 0) {
+            kind = (el.textContent ?? '').trim().length ? 'text' : 'empty';
+            leaves[kind] = (leaves[kind] ?? 0) + 1;
+            continue;
+        }
+
+        if (children.length > 1) {
+            let shape = '';
+            for (let i = 1; i < children.length; i += 1) {
+                const a = (children[i - 1] as Element).getBoundingClientRect();
+                const b = (children[i] as Element).getBoundingClientRect();
+                const sharesRows = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0;
+                const sharesColumns = Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0;
+                shape += !sharesRows ? 'c' : sharesColumns ? 'm' : 'r';
+            }
+            const axis = /^r+$/.test(shape) ? 'row' : /^c+$/.test(shape) ? 'column' : 'mixed';
+            const key = `${children.length}:${axis}`;
+            arrangement[key] = (arrangement[key] ?? 0) + 1;
+        }
+
+        for (const c of children) stack.push(c);
+    }
+
+    const doc = document.documentElement;
+    return { leaves, arrangement, overflow: doc.scrollWidth > doc.clientWidth };
+};
+
 export async function captureVariant(indexHtml: string): Promise<Observation> {
     const pw = loadPlaywright();
     if (!pw) throw new Error('captureVariant: @playwright/test is not resolvable on this host');
@@ -598,6 +847,7 @@ export async function captureVariant(indexHtml: string): Promise<Observation> {
     const url = pathToFileURL(indexHtml).href;
     const props = [...COMPARED_PROPERTIES];
     const nodes: NodeObservation[] = [];
+    const signature: PageSignatureReading = {};
 
     try {
         const page = await browser.newPage({ viewport: { width: VIEWPORTS[0], height: 900 } });
@@ -605,6 +855,23 @@ export async function captureVariant(indexHtml: string): Promise<Observation> {
         const ids = await page.$$eval('[data-probe-id]', (els) =>
             els.map((e) => e.getAttribute('data-probe-id') ?? ''),
         );
+
+        // OUTSIDE THE PER-HANDLE LOOP, which is the one structural thing this
+        // change does. Every width sweep this file had lived inside that loop, so
+        // a page with no handles was never resized at all and the capture of the
+        // commonest input in the tree — a handover carrying no `data-probe-id` —
+        // consisted of opening the page and closing it. Four resizes and one DOM
+        // walk each now happen whether or not a handle is ever found.
+        //
+        // Before the loop rather than after it, so the loop starts from the same
+        // state it always did; the viewport is put back explicitly rather than
+        // left to the loop's own first `setViewportSize`, because relying on that
+        // would couple two things that have no reason to stay coupled.
+        for (const w of VIEWPORTS) {
+            await page.setViewportSize({ width: w, height: 900 });
+            signature[String(w)] = (await page.evaluate(READ_SIGNATURE, [...LEAF_KINDS])) as WidthSignature;
+        }
+        await page.setViewportSize({ width: VIEWPORTS[0], height: 900 });
 
         for (const id of ids.filter(Boolean).sort()) {
             const sel = `[data-probe-id="${id}"]`;
@@ -664,7 +931,7 @@ export async function captureVariant(indexHtml: string): Promise<Observation> {
         await browser.close();
     }
 
-    return { variant: path.basename(path.dirname(indexHtml)), source: indexHtml, nodes };
+    return { variant: path.basename(path.dirname(indexHtml)), source: indexHtml, nodes, signature };
 }
 
 /**

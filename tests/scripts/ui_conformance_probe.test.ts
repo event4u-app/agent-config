@@ -21,6 +21,9 @@ import { fileURLToPath } from 'node:url';
 
 import {
     DIMENSIONS,
+    LEAF_KINDS,
+    PAGE_SIGNATURE_SCOPE,
+    VIEWPORTS,
     captureVariant,
     chromiumAvailable,
     evaluate,
@@ -327,12 +330,31 @@ describe('ui_conformance_probe — the frozen records are still true', () => {
             'variant-renamed',
             'reference-no-handles',
             'variant-added',
+            'variant-no-handles-declared',
+            'variant-no-handles-media-rule',
+            'variant-no-handles-removed',
         ] as const) {
             const fresh = await captureVariant(path.join(FIXTURE, variant, 'index.html'));
             const frozen = readObservation(path.join(OBS, `${variant}.json`));
             expect(fresh.nodes, `${variant} drifted from its frozen observation`).toEqual(frozen.nodes);
+            // The signature is frozen on exactly the same terms as the nodes: CI
+            // installs no browser, so the committed record IS the evidence, and a
+            // record nothing re-measures is a recording of a claim.
+            expect(fresh.signature, `${variant} signature drifted`).toEqual(frozen.signature);
         }
-    }, 300_000);
+
+        // The port pair lives one directory up and carries no handle, so `nodes`
+        // is empty on both sides and the signature is the only thing to compare —
+        // which is the point: these three files are the whole evidence base for
+        // the faithful-port control, and a stale record of them would make that
+        // control a recording of a claim rather than evidence for it.
+        for (const name of ['design', 'port-faithful', 'port-regenerated'] as const) {
+            const fresh = await captureVariant(path.join(FIXTURE, '..', `${name}.html`));
+            const frozen = readObservation(path.join(OBS, `${name}.json`));
+            expect(fresh.nodes).toEqual([]);
+            expect(fresh.signature, `${name} signature drifted`).toEqual(frozen.signature);
+        }
+    }, 600_000);
 
     it('records whether the live layer ran, so a skip is visible rather than silent', () => {
         // Not an assertion about the host — an assertion that the host question
@@ -467,6 +489,84 @@ describe('the structure reading without handles — Phase 1, registered before t
         expect(read(refDir, 'index.html')).toMatch(/class="badge"/);
         expect(read(removed, 'index.html')).not.toMatch(/class="badge"/);
         expect(read(removed, 'styles.css')).toBe(read(refDir, 'styles.css'));
+    });
+
+    it('signature-captured-at-four-widths: every committed observation carries a reading at each width', () => {
+        // Phase 2.1. The sweep moved OUT of the per-handle loop, which is the one
+        // structural thing the capture change does: every width sweep this file
+        // had lived inside that loop, so a page with no handles was never resized
+        // and the capture of the commonest input in the tree consisted of opening
+        // the page and closing it. A record whose `nodes` is empty and whose
+        // `signature` is full is the proof the sweep is no longer gated on a
+        // handle, and it is asserted on the HANDLE-FREE records specifically.
+        const handleFree = ['reference-no-handles', 'design', 'port-faithful', 'port-regenerated'];
+        for (const name of handleFree) {
+            const obs = readObservation(path.join(OBS, `${name}.json`));
+            expect(obs.nodes, `${name} is supposed to carry no handle`).toEqual([]);
+            const sig = obs.signature;
+            expect(sig, `${name} carries no signature`).toBeDefined();
+            expect(Object.keys(sig ?? {}).sort()).toEqual([...VIEWPORTS].map(String).sort());
+            for (const w of VIEWPORTS) {
+                const row = (sig ?? {})[String(w)];
+                expect(row, `${name} at ${w}`).toBeDefined();
+                // Every kind present, including the zeroes: an absent key and a
+                // zero would be read the same way by a diff, and only one of them
+                // is honest about a page that has no media at all.
+                expect(Object.keys(row!.leaves).sort()).toEqual([...LEAF_KINDS].sort());
+                for (const k of LEAF_KINDS) expect(typeof row!.leaves[k]).toBe('number');
+                expect(typeof row!.overflow).toBe('boolean');
+                for (const key of Object.keys(row!.arrangement)) {
+                    expect(key, `${name} at ${w} carries a malformed arrangement key`).toMatch(
+                        /^[0-9]+:(row|column|mixed)$/,
+                    );
+                }
+            }
+        }
+
+        // NO COORDINATE AND NO SIZE REACHES THE RECORD. The boxes are read to
+        // decide row from column and then dropped; a serialized signature that
+        // contained a pixel value would make this reading a size comparison by
+        // accident, which is the thing D1 rejected.
+        const raw = fs.readFileSync(path.join(OBS, 'design.json'), 'utf-8');
+        const signatureBlock = JSON.stringify(readObservation(path.join(OBS, 'design.json')).signature);
+        expect(raw.length).toBeGreaterThan(0);
+        expect(signatureBlock).not.toMatch(/px|width"\s*:\s*[0-9]+\.|top|left|bottom|right/);
+
+        // The width sweep reaches a page WITH handles too — it is not a
+        // handle-free special case, it is unconditional.
+        expect(readObservation(path.join(OBS, 'reference.json')).signature).toBeDefined();
+    });
+
+    it('signature-absent-is-not-available: a record without the field yields not-available, never no-change', () => {
+        // Phase 2.2 and Risk 4. `legacy-no-signature.json` is the committed
+        // pre-change record of `reference-no-handles`, taken from git rather than
+        // hand-written, so the positive control is a real artefact of the state
+        // this branch migrates from and not a mock that resembles one.
+        const legacy = readObservation(path.join(OBS, 'legacy-no-signature.json'));
+        expect(legacy.signature).toBeUndefined();
+
+        const fresh = readObservation(path.join(OBS, 'reference-no-handles.json'));
+        expect(fresh.signature).toBeDefined();
+
+        // Either side missing it is enough to withhold the reading. Asserted in
+        // both directions because a reader that checked only the reference would
+        // report "no change" for a target captured by an older probe, which is
+        // the fabricated green this whole artefact refuses elsewhere.
+        for (const [a, b] of [
+            [legacy, fresh],
+            [fresh, legacy],
+            [legacy, legacy],
+        ] as const) {
+            const artefact = evaluate(a, b, []);
+            expect(artefact.page_signature?.status).toBe('not_available');
+            expect(artefact.page_signature?.widths).toEqual([]);
+            expect(artefact.page_signature?.reason ?? '').toMatch(/signature/);
+        }
+
+        // Sensitivity in the other direction: with both sides carrying the field
+        // the same call reads it rather than withholding it. Without this, the
+        // assertions above are satisfied by a probe that never reads a signature.
+        expect(evaluate(fresh, fresh, []).page_signature?.status).toBe('read');
     });
 
     it('signature-fixture-variants-exist: the README registers a reading for each of them', () => {
