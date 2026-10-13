@@ -48,6 +48,7 @@ import {
     read_header as _chReadHeaderImpl,
 } from '../chat_history.js';
 import { suggestSkillForTask } from './suggest_skill.js';
+import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
 import {
     type CatalogEntry,
     install_hint as _catalog_install_hint,
@@ -1212,8 +1213,11 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
             'the host delivered — a measured host dropped 402 entries from ' +
             'its model-visible list — so asking by name is impossible while ' +
             'asking by task is not. ' +
-            'Read-only: no shell, no writes, and no skill bodies are returned, ' +
-            'only names, scores and declared personas.',
+            'Each row carries the skill\'s own description — its routing ' +
+            'criteria, including any clause pointing elsewhere. Choose by ' +
+            'reading the rows, then open at most two bodies with read_skill. ' +
+            'Read-only: no shell, no writes, no bodies — names, scores, ' +
+            'personas and descriptions only.',
         input_schema: {
             type: 'object',
             required: ['task'],
@@ -1226,8 +1230,10 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                 limit: {
                     type: 'integer',
                     minimum: 1,
-                    default: 5,
-                    description: 'Maximum number of skills to return. Defaults to 5.',
+                    default: DEFAULT_SUGGEST_LIMIT,
+                    description:
+                        `Maximum number of skills to return. Defaults to ${String(DEFAULT_SUGGEST_LIMIT)}, ` +
+                        'a pre-registered recall depth rather than a round number.',
                 },
             },
             additionalProperties: false,

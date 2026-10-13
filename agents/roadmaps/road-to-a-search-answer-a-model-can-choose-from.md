@@ -139,7 +139,7 @@ as today.
 
 ## Phase 1 — A search answer a model can choose from
 
-- [ ] **1.1 Return the description with each row.** Both servers, one
+- [x] **1.1 Return the description with each row.** Both servers, one
       envelope: `description` beside `skill`, `score`, `personas`. The tool
       description says the model chooses among the rows by reading them and
       opens at most two bodies. Tool-definition cost stays under
@@ -147,7 +147,7 @@ as today.
       description per row, each already capped at 200 characters by the
       skill schema.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts tests/contracts/catalogue_layer_parity.test.ts tests/scripts/mcp_server_tools.test.ts` -> 0
-- [ ] **1.2 Return to the depth recall supports.** Pre-registered before the
+- [x] **1.2 Return to the depth recall supports.** Pre-registered before the
       change: the default `limit` moves to the smallest depth whose recall
       gain over 5 exceeds 5 points on the train slice, as printed by 0.3; if
       none does, 5 stays and the step closes as an honest null. The one

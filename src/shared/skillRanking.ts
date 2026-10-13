@@ -185,6 +185,29 @@ export function triggerTextFromFlatLines(lines: readonly string[]): string[] {
     return out;
 }
 
+/**
+ * How many ranked rows `suggest_skill_for_task` returns when the caller names
+ * no limit — on BOTH servers, which is why it lives in the module both import.
+ *
+ * It was 5. The number is now pre-registered rather than chosen: the bar, fixed
+ * before the measurement was read, was "the smallest depth whose recall gain
+ * over 5 exceeds 5 points on the train slice of the trigger corpus", with 5
+ * staying and the step closing as an honest null if no depth cleared it.
+ *
+ * The committed run selects 8. Over 487 positives, recall@5 is 0.620 and
+ * recall@8 is 0.686 — a gain of 6.6 points, the only candidate depth whose
+ * gain clears the bar at the smallest depth (10 adds 2.7 more, 20 another 6.5,
+ * neither of them the SMALLEST qualifying depth). The same bar selects 8 after
+ * the tokenizer widening too (+6.2 points), so the choice does not depend on
+ * which tokenizer was in the tree when it was read.
+ *
+ * `agents/evidence/metrics/skill-ranker-recall-at-depth.json` is the run.
+ * Three more rows per call is the cost; each carries a description capped at
+ * 200 characters, so the ceiling it buys is bounded and paid only when the
+ * tool is actually called.
+ */
+export const DEFAULT_SUGGEST_LIMIT = 8;
+
 /** A skill as the ranker sees it. Deliberately not the body — see `rankSkills`. */
 export interface RankableSkill {
     name: string;

@@ -6,7 +6,16 @@
  * -32601. Pure — a synthetic tree, no disk.
  */
 import { describe, expect, it } from 'vitest';
-import { dispatch, wireNameOf, PROTOCOL_VERSION, RPC_METHOD_NOT_FOUND, RPC_INVALID_PARAMS } from './dispatch.js';
+import {
+    dispatch,
+    wireNameOf,
+    liteToolsTokenCost,
+    LITE_TOOLS_TOKEN_CAP,
+    PROTOCOL_VERSION,
+    RPC_METHOD_NOT_FOUND,
+    RPC_INVALID_PARAMS,
+} from './dispatch.js';
+import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
 import type { ContentTree, ContentEntry } from './content.js';
 import type { JsonRpcRequest, JsonRpcSuccess, JsonRpcError } from './dispatch.js';
 
@@ -123,5 +132,96 @@ describe('wireNameOf', () => {
     it('skill keeps name, command maps colons to dots', () => {
         expect(wireNameOf(entry({ name: 'x', kind: 'skill' }))).toBe('skill.x');
         expect(wireNameOf(entry({ name: 'a:b:c', kind: 'command' }))).toBe('command.a.b.c');
+    });
+});
+
+// The search ANSWER, as opposed to the search. A name is not a choosing
+// criterion: a caller handed five names either guesses or opens five bodies,
+// and a handoff clause written into a description ("use X instead when …")
+// can only act on a reader. These pin that the description reaches the caller,
+// that the default depth is the pre-registered one, and that no body does.
+describe('suggest_skill_for_task — the row a model chooses from', () => {
+    const CHOOSABLE: ContentTree = {
+        uris: Object.fromEntries(
+            [
+                entry({
+                    name: 'merge-conflicts',
+                    kind: 'skill',
+                    description: 'Resolve merge conflicts; use git-workflow for rebase strategy.',
+                    body: 'a long body nobody should have to read to choose',
+                }),
+                entry({
+                    name: 'git-workflow',
+                    kind: 'skill',
+                    description: 'Branching, rebase and merge strategy.',
+                }),
+                entry({ name: 'commit-policy', kind: 'rule' }),
+            ].map((e) => [e.uri, e]),
+        ),
+    };
+
+    function call(args: Record<string, unknown>): Record<string, unknown> {
+        const r = ok(dispatch(CHOOSABLE, ID, req('tools/call', {
+            name: 'suggest_skill_for_task',
+            arguments: args,
+        })));
+        return (r.result as { structuredContent: Record<string, unknown> }).structuredContent;
+    }
+
+    it('carries each row\'s own description, and no body at any depth', () => {
+        const out = call({ task: 'resolve merge conflicts' });
+        expect(out.status).toBe('ok');
+        const rows = out.suggestions as Record<string, unknown>[];
+        expect(rows.length).toBeGreaterThan(0);
+        expect(rows[0]).toMatchObject({
+            skill: 'merge-conflicts',
+            description: 'Resolve merge conflicts; use git-workflow for rebase strategy.',
+        });
+        // Every row carries the four fields and nothing resembling a body.
+        for (const row of rows) {
+            expect(Object.keys(row).sort()).toEqual([
+                'description',
+                'personas',
+                'score',
+                'skill',
+            ]);
+            expect(String(row.description)).not.toContain('a long body');
+        }
+    });
+
+    it('a row\'s description is ITS own, never the top row\'s', () => {
+        const rows = call({ task: 'merge conflicts rebase strategy' })
+            .suggestions as { skill: string; description: string }[];
+        const byName = new Map(rows.map((r) => [r.skill, r.description]));
+        expect(byName.get('git-workflow')).toBe('Branching, rebase and merge strategy.');
+        expect(byName.get('merge-conflicts')).toBe(
+            'Resolve merge conflicts; use git-workflow for rebase strategy.',
+        );
+    });
+
+    it('defaults to the pre-registered depth, and an explicit limit still wins', () => {
+        const schema = ((ok(dispatch(CHOOSABLE, ID, req('tools/list'))).result as {
+            tools: { name: string; inputSchema: { properties: { limit: { default: number } } } }[];
+        }).tools.find((t) => t.name === 'suggest_skill_for_task'))!;
+        expect(schema.inputSchema.properties.limit.default).toBe(DEFAULT_SUGGEST_LIMIT);
+        expect(DEFAULT_SUGGEST_LIMIT).toBe(8);
+        // The handler's own fallback must agree with the schema it published —
+        // two numbers for one default is how a caller that omits the field gets
+        // a different depth from the one the tool advertises.
+        expect((call({ task: 'merge conflicts' }).suggestions as unknown[]).length).toBeLessThanOrEqual(
+            DEFAULT_SUGGEST_LIMIT,
+        );
+        expect((call({ task: 'merge conflicts', limit: 1 }).suggestions as unknown[]).length).toBe(1);
+    });
+
+    it('the tool definition tells the caller to read the rows and open at most two', () => {
+        const tool = (ok(dispatch(CHOOSABLE, ID, req('tools/list'))).result as {
+            tools: { name: string; description: string }[];
+        }).tools.find((t) => t.name === 'suggest_skill_for_task')!;
+        expect(tool.description).toMatch(/read/i);
+        expect(tool.description).toMatch(/at most two bodies/i);
+        // The tool definition is standing cost in every session; the row payload
+        // is paid only when it is called. The cap is on the first.
+        expect(liteToolsTokenCost()).toBeLessThanOrEqual(LITE_TOOLS_TOKEN_CAP);
     });
 });

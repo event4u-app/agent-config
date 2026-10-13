@@ -50,8 +50,9 @@ NEVER REBUILD A CAPABILITY BECAUSE ITS SKILL WAS NOT DELIVERED.
 
 1. **Ask by task, not by name.** A name you cannot see is a name you cannot
    type; a task description always works. The `suggest_skill_for_task` MCP tool
-   ranks `SKILL.md` frontmatter over the source tree and returns names, scores
-   and personas — no bodies, so a wrong rank costs one read.
+   ranks `SKILL.md` frontmatter over the source tree and returns names, scores,
+   personas and each row's own description — no bodies. Choose by reading the
+   descriptions; a wrong rank then costs one read, not five.
 2. **Open the winner and check it yourself.** The ranker is deterministic
    keyword scoring, not judgement. A high score is a pointer, not a verdict.
 3. **Say which source answered.** "The catalogue had no entry, the ranker

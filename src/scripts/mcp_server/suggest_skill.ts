@@ -12,6 +12,8 @@
  * of the skill-catalogue resolver on the server side.
  */
 
+import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
+
 /**
  * `suggest_skill_for_task` — the recovery path for a truncated catalogue.
  *
@@ -42,7 +44,9 @@ export async function suggestSkillForTask(
     // caller for cosmetic reasons.
     const limitRaw = args['limit'];
     const limit =
-        typeof limitRaw === 'number' && Number.isFinite(limitRaw) ? Math.floor(limitRaw) : 5;
+        typeof limitRaw === 'number' && Number.isFinite(limitRaw)
+            ? Math.floor(limitRaw)
+            : DEFAULT_SUGGEST_LIMIT;
 
     const catalogue = await import('../_lib/skill_catalogue.js');
     // EVERY readable root — see `resolveSkillCatalogueRoots` on why not the first.
@@ -59,14 +63,28 @@ export async function suggestSkillForTask(
         };
     }
 
-    const { rank } = await import('../skill_tools/score_skill_relevance.js');
-    const rows = rank(task, roots).slice(0, Math.max(1, limit));
+    const { rankDetailed } = await import('../skill_tools/score_skill_relevance.js');
+    const { rows, descriptions } = rankDetailed(task, roots);
     return {
         status: 'ok',
         // `skills_root` kept verbatim (a consumer may read it); `skills_roots` is
         // the additive truth about what was actually ranked.
         skills_root: roots[0] as string,
         skills_roots: roots,
-        suggestions: rows.map(([name, score, personas]) => ({ skill: name, score, personas })),
+        // `description` rides with the row because a NAME is not a choosing
+        // criterion. A caller handed five names either guesses or opens five
+        // bodies; handed five descriptions it reads the one text each skill
+        // wrote as its routing criteria — including the handoff clauses that
+        // say when NOT to use it, which only act on a reader. Each is capped at
+        // 200 characters by `skill.schema.json`, so the envelope grows by a
+        // bounded amount per row and no body is returned at any depth.
+        suggestions: rows
+            .slice(0, Math.max(1, limit))
+            .map(([name, score, personas]) => ({
+                skill: name,
+                score,
+                personas,
+                description: descriptions.get(name) ?? '',
+            })),
     };
 }

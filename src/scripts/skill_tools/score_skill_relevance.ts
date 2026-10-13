@@ -553,7 +553,7 @@ export function rankDetailed(
     skillsDir: string | readonly string[],
     opts: RankOptions = {},
     ctx?: NeighbourContext,
-): { rows: RankRow[]; raw: ReadonlyMap<string, number> } {
+): { rows: RankRow[]; raw: ReadonlyMap<string, number>; descriptions: ReadonlyMap<string, string> } {
     const taskTerms = _tokenize(task);
     const skills = _load_skills_across(
         typeof skillsDir === 'string' ? [skillsDir] : skillsDir,
@@ -566,6 +566,12 @@ export function rankDetailed(
     const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), termSets) : undefined;
     const rows: RankRow[] = [];
     const raw = new Map<string, number>();
+    // The description is carried OUT of the loop rather than added to `RankRow`:
+    // the tuple shape is the Python-parity one and several callers destructure
+    // it positionally, so widening it would break them for a field most of them
+    // do not want. A caller that needs the choosing text reads this map by the
+    // same qualified name the row carries.
+    const descriptions = new Map<string, string>();
     for (let i = 0; i < skills.length; i += 1) {
         const s = skills[i] as Skill;
         const unrounded = _rawScore(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
@@ -573,12 +579,13 @@ export function rankDetailed(
         if (score > 0) {
             rows.push([s.qualified, score, [...s.personas]]);
             raw.set(s.qualified, unrounded);
+            descriptions.set(s.qualified, s.description);
         }
     }
     // rows.sort(key=lambda r: (-r[1], r[0])) — Python stable tuple sort, with
     // the opt-in unrounded tie-break between the two keys.
     rows.sort((a, b) => compareRanked(a[0], a[1], b[0], b[1], opts, raw));
-    return { rows, raw };
+    return { rows, raw, descriptions };
 }
 
 /** Mirror Python `f"{s:<{w}}"` (left-justify) over code-point width. */
