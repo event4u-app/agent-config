@@ -769,6 +769,12 @@ jobs:
   # SECOND job rather than steps in `rule-backstops`: that job averages 192 s
   # over its last ten successful main runs, max 291 s, against the 300 s
   # per-job ceiling in docs/contracts/ci-cost-budget.md — it has no room.
+  #
+  # EVERY GATE IN A STEP GETS A READING, which is why each block collects into
+  # `rc` instead of relying on `bash -e`. Under `-e` the first red ends the step
+  # and the gates after it are never run, so a batch whose purpose is to learn
+  # WHICH gates survive remote conditions would report one name and hide three.
+  # The step still fails — `exit "$rc"` — it just fails after measuring.
   local-only-drain:
     name: Local-only drain — batch 1
     runs-on: ubuntu-latest
@@ -799,31 +805,37 @@ jobs:
       # than after the cheap ones have already passed.
       - name: Drain 1a — pack dependencies, originality freshness, context paths, suppression hygiene
         run: |
-          ./scripts-run src/scripts/lint_pack_dependencies
-          ./scripts-run src/scripts/check_originality_freshness
-          ./scripts-run src/scripts/check_context_paths
-          ./scripts-run src/scripts/check_suppression_hygiene
+          rc=0
+          ./scripts-run src/scripts/lint_pack_dependencies || rc=1
+          ./scripts-run src/scripts/check_originality_freshness || rc=1
+          ./scripts-run src/scripts/check_context_paths || rc=1
+          ./scripts-run src/scripts/check_suppression_hygiene || rc=1
+          exit "$rc"
 
       # Batch 1b — the mid band, 0.4 s to 0.8 s locally, one per gate family so
       # a family-wide environment assumption surfaces here rather than later.
       - name: Drain 1b — dispatcher, hook-injection bench, skill overlap, memory replay
         if: always()
         run: |
-          ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs
-          ./scripts-run src/scripts/bench_hook_injection
-          ./scripts-run src/scripts/audit_skill_overlap --quiet --print-table --strict
-          ./scripts-run src/scripts/memory_replay --check
+          rc=0
+          ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs || rc=1
+          ./scripts-run src/scripts/bench_hook_injection || rc=1
+          ./scripts-run src/scripts/audit_skill_overlap --quiet --print-table --strict || rc=1
+          ./scripts-run src/scripts/memory_replay --check || rc=1
+          exit "$rc"
 
       # Batch 1c — the fast band, under 0.5 s each.
       - name: Drain 1c — framework leakage, gate paths, quickstart smoke, router, pack YAML, augment budget
         if: always()
         run: |
-          ./scripts-run src/scripts/lint_framework_leakage
-          ./scripts-run src/scripts/check_gate_paths
-          ./scripts-run src/scripts/smoke_quickstart
-          ./scripts-run src/scripts/compile_router --check
-          ./scripts-run src/scripts/validate_pack_yaml
-          ./scripts-run src/scripts/measure_augment_budget --check
+          rc=0
+          ./scripts-run src/scripts/lint_framework_leakage || rc=1
+          ./scripts-run src/scripts/check_gate_paths || rc=1
+          ./scripts-run src/scripts/smoke_quickstart || rc=1
+          ./scripts-run src/scripts/compile_router --check || rc=1
+          ./scripts-run src/scripts/validate_pack_yaml || rc=1
+          ./scripts-run src/scripts/measure_augment_budget --check || rc=1
+          exit "$rc"
 
       # Phase 3.1 — three generated documents whose `--check` gate was red at
       # the base because the document was stale. The documents are regenerated
@@ -832,9 +844,11 @@ jobs:
       - name: Drain 3.1 — generated documents are not stale
         if: always()
         run: |
-          ./scripts-run src/scripts/generate_ownership_matrix --check
-          ./scripts-run src/scripts/generate_cookbook --check
-          ./scripts-run src/scripts/generate_role_experiences_catalog --check
+          rc=0
+          ./scripts-run src/scripts/generate_ownership_matrix --check || rc=1
+          ./scripts-run src/scripts/generate_cookbook --check || rc=1
+          ./scripts-run src/scripts/generate_role_experiences_catalog --check || rc=1
+          exit "$rc"
 
       # Phase 3.2 — three reds with no live owner, each fixed in this change.
       # The trigger-eval presence ratchet is the correction the reading made to
@@ -845,6 +859,8 @@ jobs:
       - name: Drain 3.2 — knowledge cards, subagent determinism, trigger-eval presence
         if: always()
         run: |
-          ./scripts-run src/scripts/check_knowledge_cards
-          ./scripts-run src/scripts/lint_subagent_determinism
-          ./scripts-run src/scripts/check_trigger_eval_presence
+          rc=0
+          ./scripts-run src/scripts/check_knowledge_cards || rc=1
+          ./scripts-run src/scripts/lint_subagent_determinism || rc=1
+          ./scripts-run src/scripts/check_trigger_eval_presence || rc=1
+          exit "$rc"

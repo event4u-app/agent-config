@@ -145,23 +145,27 @@ jobs:
       # surfaced first on a nightly run nobody was watching.
       - name: Ratchet-age readers
         run: |
-          ./scripts-run src/scripts/check_roadmap_trackable --quiet
-          ./scripts-run src/scripts/domain_soundness_status
-          ./scripts-run src/scripts/lint_artefact_frontmatter --quiet
-          ./scripts-run src/scripts/lint_handoffs --quiet
-          ./scripts-run src/scripts/lint_provenance_vocabulary --quiet
-          ./scripts-run src/scripts/lint_roadmap_blockers --quiet
-          ./scripts-run src/scripts/lint_roadmap_later_disposition
-          ./scripts-run src/scripts/skill_eval_coverage
+          rc=0
+          ./scripts-run src/scripts/check_roadmap_trackable --quiet || rc=1
+          ./scripts-run src/scripts/domain_soundness_status || rc=1
+          ./scripts-run src/scripts/lint_artefact_frontmatter --quiet || rc=1
+          ./scripts-run src/scripts/lint_handoffs --quiet || rc=1
+          ./scripts-run src/scripts/lint_provenance_vocabulary --quiet || rc=1
+          ./scripts-run src/scripts/lint_roadmap_blockers --quiet || rc=1
+          ./scripts-run src/scripts/lint_roadmap_later_disposition || rc=1
+          ./scripts-run src/scripts/skill_eval_coverage || rc=1
+          exit "$rc"
 
       - name: As-of verdict lines
         if: always()
         run: |
-          ./scripts-run src/scripts/check_knowledge_pages
-          ./scripts-run src/scripts/check_reach_staleness --quiet
-          ./scripts-run src/scripts/lint_hook_manifest --quiet
-          ./scripts-run src/scripts/lint_one_off_age
-          ./scripts-run src/scripts/lint_symptom_intake --quiet
+          rc=0
+          ./scripts-run src/scripts/check_knowledge_pages || rc=1
+          ./scripts-run src/scripts/check_reach_staleness --quiet || rc=1
+          ./scripts-run src/scripts/lint_hook_manifest --quiet || rc=1
+          ./scripts-run src/scripts/lint_one_off_age || rc=1
+          ./scripts-run src/scripts/lint_symptom_intake --quiet || rc=1
+          exit "$rc"
 
       - name: The council pins, which had no caller at all
         if: always()

@@ -13,12 +13,12 @@
  *    job. These read the workflow YAML, because "has a pull-request caller" is
  *    a property of the workflow file and of nothing else.
  *
- * There is deliberately NO `baseline-at-most-143` case yet. Roadmap step 2.1
- * asks for one, and the parity baseline has not moved: `gate-violation-
- * baselines.json` records a 165 -> 164 lowering attempted and reverted on
- * 2026-08-24 because it was taken on a local reading, and its conclusion is
- * that this baseline moves on a reading from the enforcing environment. A test
- * asserting a number nobody has measured there yet would assert a hope.
+ * `baseline-at-most-143` exists only because the baseline has since moved on a
+ * reading from the ENFORCING environment — CI printed 129 and named it. While
+ * it had not, this case was deliberately absent: `gate-violation-baselines.json`
+ * records a 165 -> 164 lowering attempted and reverted on 2026-08-24 for being
+ * taken on a local run, and a test asserting a number nobody had measured
+ * remotely would have asserted a hope rather than a fact.
  */
 
 import { execFileSync } from "node:child_process";
@@ -153,6 +153,32 @@ describe("unowned-gates-wired", () => {
     expect(body.startsWith("---")).toBe(false);
 
     expect(runGate("lint_subagent_determinism", []).code).toBe(0);
+  });
+});
+
+describe("baseline-at-most-143", () => {
+  it("lowers the parity ratchet by at least the batch it wired", () => {
+    // 163 at the branch base minus the twenty of batch 1 is 143, which is what
+    // step 2.1 asks the baseline to be at most. The committed number is 129
+    // because the fourteen scheduled gates left the set too.
+    const baselines = JSON.parse(
+      readFileSync(path.join(repoRoot, "src", "config", "gate-violation-baselines.json"), "utf8"),
+    ) as { gates: Record<string, { count: number; note: string }> };
+    const entry = baselines.gates["ci-parity:local-only"];
+
+    expect(entry, "the parity ratchet has no entry").toBeTruthy();
+    expect(entry?.count).toBeLessThanOrEqual(143);
+
+    // A ratchet only turns one way, and this is the assertion that catches a
+    // later change quietly handing the gain back.
+    expect(entry?.count).toBeLessThan(165);
+  });
+
+  it("measures the same number the baseline claims", () => {
+    // The gate is the falsifier its own entry names. If the tree and the
+    // baseline disagree the gate says so, and a green exit is the claim that
+    // they do not — which is the half a number in a file cannot assert alone.
+    expect(runGate("check_ci_local_parity", ["--quiet"]).code).toBe(0);
   });
 });
 

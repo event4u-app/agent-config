@@ -118,7 +118,7 @@ with it and left alone.
 
 ## Phase 2 — The drain, in batches
 
-- [ ] **2.1 The first twenty.** The twenty fastest `wire`-class gates run as
+- [x] **2.1 The first twenty.** The twenty fastest `wire`-class gates run as
       steps of the consistency workflow with the arguments their tasks pass.
       The parity baseline is lowered by twenty in the same change and the
       job's duration is recorded in the cost-budget page.
@@ -167,11 +167,11 @@ with it and left alone.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A dated page lists every undeclared local-only gate with exit
+- [x] AC-1 — A dated page lists every undeclared local-only gate with exit
       code, seconds and class, at the commit it was read.
 - [ ] AC-2 — Every `wire`-class gate has a pull-request caller, and the
       parity baseline is lower by that count.
-- [ ] AC-3 — No gate whose verdict depends on the date is a step of a
+- [x] AC-3 — No gate whose verdict depends on the date is a step of a
       required job, and `check_council_pin_staleness` has a scheduled caller.
 - [ ] AC-4 — The eleven reds with no live owner are green and wired.
 - [ ] AC-5 — The consistency job's recorded duration is under the ceiling the
