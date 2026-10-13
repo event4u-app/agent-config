@@ -619,6 +619,16 @@ export interface MixObligation {
     to_sha?: string;
     governance_only?: number;
     consumer_only?: number;
+    /**
+     * The two buckets the line used to drop. `mixed` is the commits touching
+     * more than one classified category, and the measurer states that it "is
+     * never collapsed" into either side — yet over 16.3.0..16.4.0 it was the
+     * LARGEST bucket at 41 against governance 42 and consumer 1, and the
+     * published line named neither it nor maintenance. A reader of "42 vs 1"
+     * had no way to know that almost half the span was in a third bucket.
+     */
+    mixed?: number;
+    maintenance?: number;
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */
