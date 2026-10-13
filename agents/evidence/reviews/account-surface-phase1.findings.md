@@ -1,12 +1,12 @@
 # Findings: account-surface-phase1
-<!-- completion-review: v1 | reviewed: 2026-10-13 | scope: ae63cf583a8063f4405a5e175e448ef0d562acfd982df6664f270b890a7b3e96 | diff: 8fba3f08533b3a665814c77fef4f4cedaad99de8 | reviewer: r2-fresh-subagent-account-surface-phase1 | prompt_hash: 1c08977e8413e955e87bf06f2093c71ae227d6381599a89b7d19aebc6769b8be -->
+<!-- completion-review: v1 | reviewed: 2026-10-13 | scope: c18465be6d8643349ef1169f46e0cffc26b3872fec1f22578732d10957a59a20 | diff: a72065205b873d11fa5140a5797044a906c71921 | reviewer: r2-fresh-subagent-account-surface-phase1 | prompt_hash: 1c08977e8413e955e87bf06f2093c71ae227d6381599a89b7d19aebc6769b8be -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-account-surface-phase1"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-13 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 8fba3f08533b3a665814c77fef4f4cedaad99de8
-  scope_hash: ae63cf583a8063f4405a5e175e448ef0d562acfd982df6664f270b890a7b3e96
+  diff_sha: a72065205b873d11fa5140a5797044a906c71921
+  scope_hash: c18465be6d8643349ef1169f46e0cffc26b3872fec1f22578732d10957a59a20
   roadmap: agents/roadmaps/road-to-account-surface-detector.md
   roadmap_hash: ad441a97ffde8e41dd9e670ed7a04743ac08d9c696f26d31904a87dd86864c27
   ac_hash: cd73e106ca80754dd485b9463cd4082906c2f70cf061d1d4d8b1c5a3e572f5d0
