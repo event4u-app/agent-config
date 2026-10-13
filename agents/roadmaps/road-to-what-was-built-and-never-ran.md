@@ -112,15 +112,15 @@ the classifier classes it non-routine and it lands by the owner's act.*
 
 ## Phase 3 — Three sentences say what the tree says
 
-- [ ] **3.1 The kernel-write deny is named as bound.** The comment at
+- [x] **3.1 The kernel-write deny is named as bound.** The comment at
       `check_kernel_edit_ratified.ts:263` names `block-kernel-rule-writes` and
       its manifest row instead of a retired hook, with its ratification record
       in the same change.
       verify: `grep -c 'retired hook' src/scripts/check_kernel_edit_ratified.ts` -> /^0$/
-- [ ] **3.2 The drift report says how it runs.** `report_required_checks_drift.ts:14`
+- [x] **3.2 The drift report says how it runs.** `report_required_checks_drift.ts:14`
       drops "or on a schedule"; a scheduled job is a non-goal here.
       verify: `grep -c 'on a schedule' src/scripts/report_required_checks_drift.ts` -> /^0$/
-- [ ] **3.3 A scoped supersession reaches the cited record.**
+- [x] **3.3 A scoped supersession reaches the cited record.**
       `adr_cite_check` prints, for a record another ADR's `supersedes:`
       names, a `superseded in scope by` line with that ADR and the first
       sentence of its `supersedes_scope`, and keeps the verdict `LIVE`.

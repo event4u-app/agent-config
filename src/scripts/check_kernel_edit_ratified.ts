@@ -260,13 +260,19 @@ export function closureArrivals(root: string, baseRoot: string = REPO): string[]
 /**
  * A kernel rule, in the source tree or in any projection.
  *
- * The reach is deliberately the same as the retired hook's: any path whose
- * basename is a kernel rule filename and which sits under a `rules/` path
- * segment. `src/rules/commit-policy.md` is the source; `.claude/rules/…`,
- * `.augment/rules/…` and `dist/agent-src/rules/…` are projections. A
- * hand-edited projection reaches consumers without the source ever changing,
- * so narrowing this to the source alone would have quietly dropped half of
- * what the deny covered — a retirement is not supposed to be a reduction.
+ * The reach is deliberately the same as the tool-call deny's, and that deny is
+ * bound rather than retired: `block-kernel-rule-writes` has a row in
+ * `src/scripts/hook_manifest.yaml` and sits in the `pre_tool_use` list of three
+ * host sections there. The header above says why both mechanisms stand; this
+ * sentence described the deny as already withdrawn and contradicted it.
+ *
+ * The reach: any path whose basename is a kernel rule filename and which sits
+ * under a `rules/` path segment. `src/rules/commit-policy.md` is the source;
+ * `.claude/rules/…`, `.augment/rules/…` and `dist/agent-src/rules/…` are
+ * projections. A hand-edited projection reaches consumers without the source
+ * ever changing, so narrowing this to the source alone would cover half of
+ * what the deny covers — the gate that reaches every host is not supposed to
+ * be the narrower of the two.
  *
  * A kernel-NAMED file outside a `rules/` directory (a doc, a fixture) is not a
  * rule file and is not matched.
