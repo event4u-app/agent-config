@@ -47,8 +47,7 @@ import {
     slice_around as _chSliceAround,
     read_header as _chReadHeaderImpl,
 } from '../chat_history.js';
-import { suggestSkillForTask } from './suggest_skill.js';
-import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
+import { SUGGEST_SKILL_TOOL } from './suggest_skill.js';
 import {
     type CatalogEntry,
     install_hint as _catalog_install_hint,
@@ -1203,43 +1202,7 @@ async function _readResourceBodyHandler(
 
 export const ALLOWLIST: Record<string, BuiltinTool> = {
     ...GRAPH_TOOLS,
-    suggest_skill_for_task: {
-        name: 'suggest_skill_for_task',
-        side_effect: 'ro',
-        description:
-            'Match a free-form task description to the most relevant skills, ' +
-            'ranked by a deterministic keyword scorer over SKILL.md ' +
-            'frontmatter. Use when a skill you need is not in the catalogue ' +
-            'the host delivered — a measured host dropped 402 entries from ' +
-            'its model-visible list — so asking by name is impossible while ' +
-            'asking by task is not. ' +
-            'Each row carries the skill\'s own description — its routing ' +
-            'criteria, including any clause pointing elsewhere. Choose by ' +
-            'reading the rows, then open at most two bodies with read_skill. ' +
-            'Read-only: no shell, no writes, no bodies — names, scores, ' +
-            'personas and descriptions only.',
-        input_schema: {
-            type: 'object',
-            required: ['task'],
-            properties: {
-                task: {
-                    type: 'string',
-                    description:
-                        'Free-form description of the task to match skills against.',
-                },
-                limit: {
-                    type: 'integer',
-                    minimum: 1,
-                    default: DEFAULT_SUGGEST_LIMIT,
-                    description:
-                        `Maximum number of skills to return. Defaults to ${String(DEFAULT_SUGGEST_LIMIT)}, ` +
-                        'a pre-registered recall depth rather than a round number.',
-                },
-            },
-            additionalProperties: false,
-        },
-        handler: suggestSkillForTask,
-    },
+    suggest_skill_for_task: SUGGEST_SKILL_TOOL,
     lint_skills: {
         name: 'lint_skills',
         side_effect: 'ro',

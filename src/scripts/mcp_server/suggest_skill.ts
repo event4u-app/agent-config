@@ -13,6 +13,10 @@
  */
 
 import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
+// TYPE-only, so the `tools.ts` <-> this cycle is erased at runtime: the
+// allowlist spreads the entry below in, and the entry names the shape the
+// allowlist declares. A value import either way would be a real cycle.
+import type { BuiltinTool } from './tools.js';
 
 /**
  * `suggest_skill_for_task` — the recovery path for a truncated catalogue.
@@ -88,3 +92,52 @@ export async function suggestSkillForTask(
             })),
     };
 }
+
+/**
+ * The allowlist ENTRY, declared here rather than in `tools.ts`.
+ *
+ * Same argument the handler was extracted on, applied to its metadata. `tools.ts`
+ * sits far past the 1,500-line ceiling `check_source_size_budget` enforces as a
+ * shrink-only ratchet, so every line there costs one unit of excess and the gate
+ * names re-pinning the baseline a defect rather than a fix. Describing this tool
+ * properly — what a row now carries, and why the default depth is 8 — cost six
+ * lines there and reddened the ratchet; moving the whole entry across returns
+ * thirty-seven and puts the prose in the file that already owns the behaviour it
+ * describes.
+ */
+export const SUGGEST_SKILL_TOOL: BuiltinTool = {
+    name: 'suggest_skill_for_task',
+    side_effect: 'ro',
+    description:
+        'Match a free-form task description to the most relevant skills, ' +
+        'ranked by a deterministic keyword scorer over SKILL.md ' +
+        'frontmatter. Use when a skill you need is not in the catalogue ' +
+        'the host delivered — a measured host dropped 402 entries from ' +
+        'its model-visible list — so asking by name is impossible while ' +
+        'asking by task is not. ' +
+        "Each row carries the skill's own description — its routing " +
+        'criteria, including any clause pointing elsewhere. Choose by ' +
+        'reading the rows, then open at most two bodies with read_skill. ' +
+        'Read-only: no shell, no writes, no bodies — names, scores, ' +
+        'personas and descriptions only.',
+    input_schema: {
+        type: 'object',
+        required: ['task'],
+        properties: {
+            task: {
+                type: 'string',
+                description: 'Free-form description of the task to match skills against.',
+            },
+            limit: {
+                type: 'integer',
+                minimum: 1,
+                default: DEFAULT_SUGGEST_LIMIT,
+                description:
+                    `Maximum number of skills to return. Defaults to ${String(DEFAULT_SUGGEST_LIMIT)}, ` +
+                    'a pre-registered recall depth rather than a round number.',
+            },
+        },
+        additionalProperties: false,
+    },
+    handler: suggestSkillForTask,
+};
