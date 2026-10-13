@@ -1,3 +1,11 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-13, committed verbatim so the
+     verdict beside it can be checked against what was actually asked -- in
+     particular that it told the seats the asking agent produced the
+     measurement and would implement the result, and invited them to call it
+     overclaimed. They did. -->
+
 # The per-check contract registry: what shape makes a class field a derivation rather than an assertion?
 
 You are advising on step 7.1 of an internal governance roadmap. Answer on the
