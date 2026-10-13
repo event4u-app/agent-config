@@ -27,7 +27,7 @@ Do NOT use when:
 2. **Pick the surface** — Use the decision tables below to choose Grafana, app dashboard, or embed; document audience and refresh cadence.
 3. **Draft the layout** — Sketch panels, choose visualization per signal (RED / USE / Golden Signals), define filters and thresholds.
    **Ground the chart-type choice** in the adopted data-viz corpus instead
-   of memory: `./scripts-run <skills-root>/corpus-grounding/scripts/ground
+   of memory: `node <skills-root>/corpus-grounding/scripts/ground.mjs
    search --manifest
    <skills-root>/design-intelligence/data/manifest.json --domain chart
    "<data shape>"` returns the best chart type, when-NOT-to-use, data-volume

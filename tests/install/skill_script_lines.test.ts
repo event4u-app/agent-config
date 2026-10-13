@@ -248,47 +248,33 @@ function startAsTaught(
 // The taught path, checked as installed.
 
 describe('skill-script lines in an installed projection', () => {
-    it('control: no taught runner can be started on a machine holding only node', () => {
+    it('runner-is-node: every taught line names the one runtime the install proves present', () => {
         const root = installProjection();
         const rows = collectTaughtLines(root);
         expect(rows.length, 'the projection must teach at least one skill-script line').toBeGreaterThan(0);
 
-        const consumerCwd = mkTmp('skill-script-consumer-');
-        const startable = rows.filter((r) => runnerAvailable(r.runner, root, consumerCwd));
         const runners = [...new Set(rows.map((r) => r.runner))].sort();
+        expect(runners).toEqual(['node']);
 
-        // Two shapes ship today, and neither starts: the maintainer-only
-        // dispatch wrapper `package.json` `files[]` does not list, and one
-        // line that names no runner at all, leaving the consumer to execute
-        // a `.ts` file directly.
-        expect(runners).toEqual(['', './scripts-run']);
+        const consumerCwd = mkTmp('skill-script-consumer-');
+        const unstartable = rows.filter((r) => !runnerAvailable(r.runner, root, consumerCwd));
         expect(
-            startable.map((r) => `${r.rel}:${r.lineNo}`),
-            'rows whose runner a node-only machine can start',
+            unstartable.map((r) => `${r.rel}:${r.lineNo}`),
+            'rows whose runner a node-only machine cannot start',
         ).toEqual([]);
     });
 
-    it('entry-points-control: not one of the six can be started as taught', () => {
+    it('entry-points: each of the six starts as taught, from a directory holding nothing', () => {
         const root = installProjection();
         const rows = collectTaughtLines(root);
         const cwd = mkTmp('skill-script-start-');
         const outcomes = ENTRY_POINTS.map((e) => `${e.skill}/${e.tool}: ${describeStart(startAsTaught(e, root, rows, cwd))}`);
-
-        // Three name a runner the machine does not have; three are named in
-        // prose by their own skill without ever being given an invocation
-        // line, so there is no form to start them through.
-        expect(outcomes).toEqual([
-            'corpus-grounding/ground: runner ./scripts-run not on this machine',
-            'design-tokens/tokens: runner ./scripts-run not on this machine',
-            'js-library-packaging/check_package_surface: no skill teaches an invocation line',
-            'react-shadcn-ui/shadcn_add: no skill teaches an invocation line',
-            'storybook-workshop/story_contrast_floor: no skill teaches an invocation line',
-            'tailwind-engineer/tailwind_config_gen: no skill teaches an invocation line',
-        ]);
+        const expected = ENTRY_POINTS.map((e) => `${e.skill}/${e.tool}: exit ${e.expectExit}`);
+        expect(outcomes).toEqual(expected);
         expect(fs.readdirSync(cwd), 'a probe must not write beside itself').toEqual([]);
     }, 180_000);
 
-    it('control: every taught target resolves to a file that is shipped', () => {
+    it('every taught target resolves to a file that is shipped', () => {
         const root = installProjection();
         const rows = collectTaughtLines(root);
         // The path half is already sound — `sync_non_md` carries `scripts/`

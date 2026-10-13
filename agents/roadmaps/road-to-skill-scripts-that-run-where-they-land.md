@@ -139,14 +139,20 @@ this names files that exist and a test that runs.
 
 ## Phase 4 — The line the skill teaches
 
-- [ ] **4.1 One form, in skills and references.** Every taught skill-script
+- [x] **4.1 One form, in skills and references.** Every taught skill-script
       line reads `node <skills-root>/<skill>/scripts/<tool>.mjs …`. The
       placeholder and the sentence that defines it
-      (`src/skills/corpus-grounding/SKILL.md:89-90`) stay. The three skills
-      that name their script without a line — `js-library-packaging`,
-      `storybook-workshop`, `tailwind-engineer` — gain one.
+      (`src/skills/corpus-grounding/SKILL.md:89-90`) stay.
+      **Corrected from reproduction:** FOUR skills name their script without
+      a line, not three — `js-library-packaging`, `storybook-workshop`,
+      `tailwind-engineer` and `react-shadcn-ui`, whose only invocation
+      example sits inside `shadcn_add.ts`, which 1.1's scope does not read.
+      All four gain one, and that script's six usage examples are rewritten
+      with them. A sixth reference file, `design-intelligence/references/
+      integration-mapping.md:27`, names the wrapper in prose about the same
+      CLI and is repaired here too; Context listed only its line 41.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts -t runner-is-node --reporter=verbose` -> /✓.*runner-is-node/
-- [ ] **4.2 The allowlist is deleted and the lint reads references for this
+- [x] **4.2 The allowlist is deleted and the lint reads references for this
       class.** `SCRIPTS_RUN_ALLOWLIST` is removed. The lint's scope gains
       `skills/*/references/*.md` for the skill-script form only
       (`<skills-root>/…/scripts/`); a second pattern refuses
@@ -156,7 +162,7 @@ this names files that exist and a test that runs.
       carrying the old line in a reference file makes the lint exit 1.
       `corrected-from-reproduction`.
       verify: `npx vitest run tests/scripts/lint_consumer_internal_refs.test.ts -t references-and-allowlist --reporter=verbose` -> /✓.*references-and-allowlist/
-- [ ] **4.3 The controls flip.** 1.1 asserts every taught target exists and
+- [x] **4.3 The controls flip.** 1.1 asserts every taught target exists and
       every runner is `node`; 1.2 asserts all six entry points start and exit
       with the code their fixture expects.
       verify: `npx vitest run tests/install/skill_script_lines.test.ts` -> 0

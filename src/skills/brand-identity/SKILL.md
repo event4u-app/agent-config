@@ -38,7 +38,7 @@ Grounding + Method skill. Turns a confirmed brand strategy into an identity cons
 2. **Ground the colour story** via the brand corpus:
 
 ```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<archetype + sector>" --domain color --json
 ```
@@ -48,7 +48,7 @@ Grounding + Method skill. Turns a confirmed brand strategy into an identity cons
 3. **Ground the type story** via:
 
 ```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<archetype + sector>" --domain typography --json
 ```
@@ -58,7 +58,7 @@ Grounding + Method skill. Turns a confirmed brand strategy into an identity cons
 4. **Ground the logo direction** via:
 
 ```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --manifest <skills-root>/brand/data/manifest.json \
   "<archetype + sector>" --domain logo --json
 ```

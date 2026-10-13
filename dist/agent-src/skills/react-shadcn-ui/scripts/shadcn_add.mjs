@@ -178,22 +178,22 @@ optional arguments:
 
 Examples:
   # Add single component
-  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button
+  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button
 
   # Add multiple components
-  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button card dialog
+  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button card dialog
 
   # Add all components
-  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add --all
+  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs --all
 
   # Overwrite existing components
-  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button --overwrite
+  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button --overwrite
 
   # Dry run (show what would be done)
-  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button card --dry-run
+  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button card --dry-run
 
   # List installed components
-  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add --list
+  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs --list
         
 `;
 var USAGE = `usage: ${PROG} [-h] [--all] [--overwrite] [--dry-run] [--list]
