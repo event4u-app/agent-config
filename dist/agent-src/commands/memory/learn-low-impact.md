@@ -7,7 +7,6 @@ cluster: memory
 sub: learn-low-impact
 skills: [ai-council]
 description: Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing.
-argument-hint: ""
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
