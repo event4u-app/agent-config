@@ -119,6 +119,20 @@ as today.
       `src/config/host-capabilities.yml`, which is the discipline-lift model
       list, not a host-behaviour store.
       verify: `./scripts-run src/scripts/lint_evidence_artifacts --all` -> 0
+      PARTIAL, 2026-10-13. The artifact exists and is committed; four of the
+      five columns are observed on build 2.1.296 and agree with the schema
+      string: `name-only` keeps the entry and drops the description while both
+      invocation paths still work, `user-invocable-only` hides it from the
+      model and refuses a Skill-tool call by name while `/name` still runs,
+      `off` refuses `/name` too. The FIFTH column — a project value overriding
+      the user value — is NOT established and the step stays open for it. The
+      user layer on the probing machine carries no `skillOverrides` key, so
+      there is no user value to override, and establishing one would mean
+      writing into the user's own settings file outside the repository; that
+      run declined. The values reached the session through `--settings`, which
+      is the CLI layer, so this run says nothing about project-versus-user
+      precedence and the schema string does not either — it describes what each
+      VALUE means, never which LAYER wins.
 - [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in
@@ -213,14 +227,14 @@ permission rules never depend on which skill the model picks.
 
 - [ ] AC-1 — The listing override has a build-pinned observation per value
       (0.1) and the page documenting it is under the digest watch (0.2).
-- [ ] AC-2 — A committed run prints recall at depth over the train slice
+- [x] AC-2 — A committed run prints recall at depth over the train slice
       without opening a holdout corpus (0.3), and the default depth is the
       one the pre-registered bar in 1.2 selects, a recorded null included.
-- [ ] AC-3 — Every search row on both servers and on the shell path carries
+- [x] AC-3 — Every search row on both servers and on the shell path carries
       its description (1.1, 2.1), and the shell path answers on a workspace
       with no host catalogue root (2.1).
-- [ ] AC-4 — The tokenizer keeps non-ASCII letters, with the before/after run
+- [x] AC-4 — The tokenizer keeps non-ASCII letters, with the before/after run
       attached and the baseline regenerated (1.3).
-- [ ] AC-5 — The recovery rule's last step names only rungs a test proves
+- [x] AC-5 — The recovery rule's last step names only rungs a test proves
       exist, at no growth in bytes (2.2), and every skill remains installed,
       listed and invocable as before.
