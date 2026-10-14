@@ -132,3 +132,58 @@ describe('review-findings schema — the two subset-validator spellings', () => 
         expect(items?.['properties']).toBeDefined();
     });
 });
+
+/**
+ * The field that records a cut taken without a review.
+ *
+ * It is the one escape hatch from the refusal `unreviewed_ledger_problem`
+ * applies, so the shape it accepts is the whole of its strength: a PATH to a
+ * committed directive, never a sentence. A sentence is `no_findings_reason`,
+ * and a non-empty one was all it took to cut 16.4.0 on a paragraph whose own
+ * first words are "NOT REVIEWED".
+ */
+describe('assurance_override — the escape hatch has a shape', () => {
+    const base = {
+        schema_version: 1,
+        release: '1.0.0',
+        findings: [],
+        no_findings_reason: 'nothing ran',
+    };
+
+    it('accepts a path under the owner-directives directory', () => {
+        expect(
+            errs({
+                ...base,
+                assurance_override: 'agents/evidence/owner-directives/2026-10-07-round-7a2e1c.md',
+            }),
+        ).toEqual([]);
+    });
+
+    it('rejects a sentence — the free-text field is what this one replaces', () => {
+        expect(
+            errs({ ...base, assurance_override: 'the owner said it was fine' }).length,
+        ).toBeGreaterThan(0);
+    });
+
+    it('rejects a path outside the directives directory, and a nested one', () => {
+        expect(errs({ ...base, assurance_override: 'docs/ok.md' }).length).toBeGreaterThan(0);
+        expect(
+            errs({ ...base, assurance_override: 'agents/evidence/owner-directives/a/b.md' }).length,
+        ).toBeGreaterThan(0);
+    });
+
+    it('rejects a non-markdown file, which is not the shape a directive has', () => {
+        expect(
+            errs({ ...base, assurance_override: 'agents/evidence/owner-directives/d.json' }).length,
+        ).toBeGreaterThan(0);
+    });
+
+    it('is optional — a reviewed release has nothing to override', () => {
+        expect(errs(base)).toEqual([]);
+    });
+
+    it('is declared on the schema, with the pattern that makes the path half checkable', () => {
+        const props = (schema()['properties'] ?? {}) as Record<string, Record<string, unknown>>;
+        expect(props['assurance_override']?.['pattern']).toBeTypeOf('string');
+    });
+});

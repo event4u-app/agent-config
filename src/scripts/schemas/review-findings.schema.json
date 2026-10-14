@@ -44,6 +44,14 @@
       ],
       "description": "How much INDEPENDENT evidence backs the verdict — deliberately orthogonal to how much effort the review spent. Collapsing the two is the mechanism by which a long, careful, single-model pass reads as acceptance: effort is visible in the artifact (finding count, detail, rationale) and independence is not, so a reader with only one axis substitutes the one they can see. A five-hour same-family review is `single-pass`; a terse two-family one is `independent`."
     },
+    "assurance_override": {
+      "type": "string",
+      "pattern": "^agents/evidence/owner-directives/[^/]+\\.md$",
+      "description": "Repo-relative path to a committed owner directive permitting this version to be cut although nothing reviewed it. Read by check_finding_dispositions.unreviewed_ledger_problem, which refuses an `assurance: unreviewed` ledger at an unreleased cut unless this field names a directive whose TEXT mentions the version — so the escape hatch leaves an artifact somebody signed. A PATH and never free text, deliberately: `no_findings_reason` is already free text and a non-empty one was all it took to cut 16.4.0 on a paragraph beginning \"NOT REVIEWED\". The `pattern` is what makes the path half checkable in the schema; whether the named file exists and names the version is conditional on both, which this repo's Draft-07 subset validator cannot express, so that half lives in the gate. ABSENT on every ordinary ledger: a reviewed release has nothing to override.",
+      "examples": [
+        "agents/evidence/owner-directives/2026-10-07-round-7a2e1c.md"
+      ]
+    },
     "reviewers": {
       "type": "array",
       "description": "The member names the independence verdict was derived from, recorded so the derivation is auditable rather than asserted. Provider names as `ai_council/config.ts::_VALID_PROVIDERS` spells them.",

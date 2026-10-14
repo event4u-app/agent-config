@@ -5,6 +5,9 @@ review_by: 2026-12-24
 
 # Stub: road to the remaining estate-triage batches
 
+> **Arrivals:** 2 — latest `inbox-2026-10-q` (2026-10-14); earlier: the round behind
+> `archive/road-to-estate-drawdown`. 28 of 29 active roadmaps carry `estate_offset_exempt`.
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-21, from
 > [`road-to-estate-drawdown.md`](../archive/road-to-estate-drawdown.md) steps
 > **2.1** and **2.2** plus **AC-2**. Council disposition **B**, outcome state

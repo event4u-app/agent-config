@@ -4,14 +4,15 @@
  * Ported from the retired Python `src/scripts/ai_council/learn_low_impact_preview.py`
  * (ADR-200 — Python→TS migration, Phase 1).
  *
- * Default invocation is `--preview`: build a structured plan describing
- * which Validated entries would be upstreamed to the package seed without
- * opening a PR. `--apply` (handled by the agent, not this module) is the
- * explicit opt-in that triggers the actual upstream-contribute PR flow.
+ * The command is read-only: it builds a structured plan describing which
+ * Validated entries would be worth upstreaming, and opens nothing. The
+ * `--apply` flag that once drove an upstream PR from here was retired on
+ * 2026-10-13 — it wrote into a package seed file that is not in the tree,
+ * and a second outward route would be a second set of guarantees. The one
+ * gated outward step is `self-repair:release`.
  *
  * The module is import-light by design — pure parsing + redaction + diff
- * rendering. PR creation lives in the `upstream-contribute` skill;
- * this module only hands the agent the material to surface.
+ * rendering. It hands the agent the material to surface and nothing else.
  */
 
 import * as fs from 'node:fs';
@@ -21,6 +22,24 @@ import {
     type RedactionViolation,
     redact_low_impact_entry,
 } from './redact_low_impact_entry.js';
+
+/**
+ * The package-side seed the preview diffs against — the one place a CALLER
+ * reads this literal from, so no caller restates it. The privacy floor names
+ * the same path for its own purpose, which is a lock rather than a second
+ * source: the rule has to name what it locks.
+ *
+ * The file is deliberately NOT in the tree: the package ships no seed
+ * corpus, `_readSeedPhrases` treats a missing seed as an empty set, and the
+ * preview therefore diffs against an empty baseline. The path is still
+ * named here, and locked by `low-impact-corpus-privacy-floor`, so that a
+ * seed reappearing arrives already under the privacy floor.
+ *
+ * It is RELATIVE. A caller resolves it against the package root; resolving it
+ * against an arbitrary cwd would let a same-named file in a consumer project
+ * mark entries `already_seeded` and suppress them silently.
+ */
+export const PACKAGE_SEED_PATH = 'data/low-impact-decisions-seed.md';
 
 // Python: re.compile(r"^last-upstreamed:\s*([0-9a-f]{6,40}|0+)\s*$",
 //                     re.IGNORECASE | re.MULTILINE)
@@ -57,10 +76,10 @@ export class RefusedEntry {
 }
 
 /**
- * Structured preview for `/memory learn-low-impact --preview`.
+ * Structured preview for `/memory learn-low-impact`.
  *
- * Consumed by the agent which renders the human-facing preview block,
- * then waits for explicit `--apply` before invoking `upstream-contribute`.
+ * Consumed by the agent which renders the human-facing preview block. The
+ * command ends there: it opens nothing and sends nothing.
  */
 export class LearnLowImpactPreview {
     readonly promoted: readonly PreviewEntry[];
@@ -97,10 +116,14 @@ export class LearnLowImpactPreview {
     }
 
     /**
-     * True when `--apply` would actually open a PR.
+     * True when the promoted set is both non-empty and wholly clean — the
+     * shape an upstream contribution would need. Nothing here acts on it;
+     * `render()` reads it to decide which closing line to print.
      *
-     * Iron Law: any redactor refusal blocks the PR — the author must
-     * rephrase or drop the offending entry locally and re-run.
+     * The name predates the retirement of `--apply` and is kept because it
+     * is the published accessor; what changed is that no caller opens
+     * anything. Iron Law, unchanged: any redactor refusal blocks promotion —
+     * the author rephrases or drops the offending entry locally and re-runs.
      */
     get would_open_pr(): boolean {
         return this.promoted.length > 0 && this.refused.length === 0;
@@ -148,13 +171,17 @@ export class LearnLowImpactPreview {
         }
         if (this.refused.length > 0) {
             lines.push(
-                '> Refusals block the PR. Rephrase the entries locally' +
+                '> Refusals block promotion. Rephrase the entries locally' +
                     ' (or drop them) and re-run.',
             );
         } else if (this.promoted.length > 0) {
             lines.push(
-                '> Re-run with `--apply` to open the draft PR via' +
-                    ' `upstream-contribute`.',
+                // Deliberately no onward pointer. The outward ladder releases
+                // a RECORDED defect and nothing here opens a record, so a
+                // corpus entry cannot ride it today; naming a route the
+                // reader cannot take is worse than naming none.
+                '> This command sends nothing. Promoting an entry upstream is' +
+                    ' a separate, explicitly authorised decision.',
             );
         }
         // Python: "\n".join(lines).rstrip() + "\n"
@@ -162,11 +189,11 @@ export class LearnLowImpactPreview {
     }
 
     /**
-     * Source-project-stripped diff that `--apply` would propose.
+     * Source-project-stripped diff the preview proposes for a reader.
      *
      * Emits unified-diff-style `+` lines for each promoted phrase under the
-     * seed file's `## Validated` section. The agent uses this as the
-     * `upstream-contribute` patch body.
+     * seed file's `## Validated` section — material for a reader to judge,
+     * not a patch this command applies anywhere.
      */
     render_diff(): string {
         if (this.promoted.length === 0) {
@@ -187,7 +214,7 @@ export class LearnLowImpactPreview {
         const bodyLines: string[] = [
             `# ${title}`,
             '',
-            'Upstream from `/memory learn-low-impact --apply`.',
+            'Prepared from `/memory learn-low-impact`, which sends nothing.',
             '',
             '## Entries',
             '',
@@ -223,9 +250,10 @@ function _rstrip(s: string): string {
 /**
  * Return the set of normalised phrases already in the seed file.
  *
- * Missing seed file is not an error — it returns an empty set so the
- * first-ever upstream PR can seed the whole corpus. Reuses the strict
- * parser so the seed itself is contract-validated.
+ * Missing seed file is not an error — it returns an empty set, which is the
+ * standing case rather than an edge one: the package ships no seed, so every
+ * preview diffs against an empty baseline (see `PACKAGE_SEED_PATH`). Reuses
+ * the strict parser so a seed that does appear is contract-validated.
  */
 function _readSeedPhrases(seedPath: string): Set<string> {
     if (!fs.existsSync(seedPath)) {

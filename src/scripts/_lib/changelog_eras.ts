@@ -12,6 +12,7 @@
  *
  * Normative source: `docs/contracts/CHANGELOG-conventions.md § Era splits`.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -552,4 +553,86 @@ export function perform_split(plan: SplitPlan): void {
     fs.mkdirSync(path.dirname(plan.archive_path), { recursive: true });
     fs.writeFileSync(plan.archive_path, archive_text, 'utf-8');
     fs.writeFileSync(CHANGELOG, new_text, 'utf-8');
+}
+
+/** A released tag of this repository, bare `N.Y.Z`. */
+const RELEASE_TAG_RE = /^\d+\.\d+\.\d+$/u;
+
+/**
+ * The headline of every `- **…` entry staged under `## [Unreleased]`.
+ *
+ * The headline alone, not the whole entry: it is the first line, which is what
+ * `git log -S` can search for as a single string. Entries wrap over many lines
+ * and a multi-line needle finds nothing.
+ */
+export function unreleased_entry_headlines(lines: readonly string[]): string[] {
+    const start = lines.findIndex((l) => /^## \[Unreleased\]/u.test(l));
+    if (start < 0) {
+        return [];
+    }
+    const out: string[] = [];
+    for (let i = start + 1; i < lines.length; i++) {
+        const l = lines[i] ?? '';
+        if (/^## \[?\d+\.\d+\.\d+/u.test(l) || /^# Era:/u.test(l)) {
+            break;
+        }
+        if (l.startsWith('- **')) {
+            out.push(l.slice(2));
+        }
+    }
+    return out;
+}
+
+function _git(args: readonly string[], cwd: string): string | null {
+    const r = spawnSync('git', args as string[], {
+        encoding: 'utf-8',
+        cwd,
+        maxBuffer: 32 * 1024 * 1024,
+    });
+    return r.status === 0 ? (r.stdout ?? '') : null;
+}
+
+/**
+ * The newest release tag reachable in this checkout, or null when git cannot
+ * say — a tagless clone, a shallow one with no tags fetched, or no git at all.
+ *
+ * Null is a real answer and the caller is expected to stop on it. A checkout
+ * that cannot see tags cannot distinguish "never shipped" from "not fetched",
+ * and asserting either way would be an answer invented from an absence.
+ */
+export function newest_release_tag(cwd: string = REPO_ROOT): string | null {
+    const out = _git(['tag', '--list', '--sort=-v:refname'], cwd);
+    if (out === null) {
+        return null;
+    }
+    const tags = out.split('\n').map((t) => t.trim()).filter((t) => RELEASE_TAG_RE.test(t));
+    return tags[0] ?? null;
+}
+
+/**
+ * Has the entry carrying this headline already shipped in `tag`?
+ *
+ * Asked of git: the OLDEST commit that introduced the headline into
+ * `CHANGELOG.md`, then whether `tag` contains it. The oldest rather than the
+ * newest, because an entry edited or moved later still dates from the commit
+ * that first wrote it, and the newest would make every touched entry look new.
+ *
+ * `false` on a headline no commit ever wrote — an entry added in the working
+ * tree and not yet committed is exactly that, and it is genuinely unreleased.
+ */
+export function entry_is_contained_in_tag(
+    headline: string,
+    tag: string,
+    cwd: string = REPO_ROOT,
+): boolean {
+    const log = _git(['log', '--format=%H', '-S', headline, '--', 'CHANGELOG.md'], cwd);
+    if (log === null) {
+        return false;
+    }
+    const shas = log.split('\n').map((s) => s.trim()).filter(Boolean);
+    const oldest = shas[shas.length - 1];
+    if (oldest === undefined) {
+        return false;
+    }
+    return _git(['merge-base', '--is-ancestor', oldest, tag], cwd) !== null;
 }

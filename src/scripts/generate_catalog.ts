@@ -32,8 +32,12 @@ export const CATALOG_MD = path.join(REPO_ROOT, 'docs', 'skills-catalog.md');
 // re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL) anchored with .match (start only).
 // JS \s matches newlines like Python's, so `\s*\n` and `(.*?)` (DOTALL → [\s\S]).
 const FRONTMATTER_RE = /^---\s*\n([\s\S]*?)\n---/;
-// re.compile(r"^name:\s*(.+?)\s*$", re.MULTILINE)
-const NAME_RE = /^name:[^\S\n]*(.+?)[^\S\n]*$/m;
+// Was re.compile(r"^name:\s*(.+?)\s*$", re.MULTILINE) in the retired Python,
+// which captured the quotes a YAML-quoted `name:` carries and rendered them
+// into the catalogue row and its link. The optional `"?` mirrors DESC_RE and
+// strips ONE pair of surrounding quotes; the retired source is gone, so this
+// is a deliberate deviation from it rather than a parity break.
+const NAME_RE = /^name:[^\S\n]*"?(.+?)"?[^\S\n]*$/m;
 // re.compile(r"^description:\s*\"?(.+?)\"?\s*$", re.MULTILINE)
 const DESC_RE = /^description:[^\S\n]*"?(.+?)"?[^\S\n]*$/m;
 

@@ -5,9 +5,8 @@ pack: memory
 visibility: internal
 cluster: memory
 sub: learn-low-impact
-skills: [ai-council, upstream-contribute]
-description: Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
-argument-hint: "[--preview|--apply]"
+skills: [ai-council]
+description: Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing.
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -19,28 +18,30 @@ packs:
 
 # /memory learn-low-impact
 
-Promote `## Validated` entries from
+Show which `## Validated` entries from
 [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
-into the upstream seed at
-`.agent-src.uncondensed/data/low-impact-decisions-seed.md` via a DRAFT
-PR against the agent-config package. **Validated entries only** — probation
-entries never upstream, they're unconfirmed signal.
+would be worth upstreaming, and which the privacy floor refuses.
+**Validated entries only** — probation entries are unconfirmed signal and
+never appear here.
 
-## Flags
+## This command opens nothing
 
-| Flag | Default | Behaviour |
-|---|---|---|
-| `--preview` | **on** | Build the plan, run the redactor, render promoted / refused / already-seeded buckets + draft PR body. **No file write, no branch, no PR.** Default behaviour. |
-| `--apply` | off | Mutually exclusive with `--preview`. Required to invoke `upstream-contribute` and open the draft PR. Refusals from the redactor still block. |
+```
+READ-ONLY. NO BRANCH, NO COMMIT, NO PUSH, NO PULL REQUEST, NO FILE WRITE.
+THE `--apply` FLAG WAS RETIRED: IT WROTE INTO A PACKAGE SEED FILE
+THAT DOES NOT EXIST, AND A SECOND WAY OUT WOULD BE A SECOND SET
+OF GUARANTEES. ONE WAY OUT IS `self-repair:release`.
+```
 
-Iron Law: ``--apply`` never auto-fires on the first invocation. The
-user always sees the preview block first and re-runs explicitly.
+The package ships no seed corpus today, so the already-seeded baseline is
+empty and every validated entry that clears the redactor shows as promotable.
+That is a true reading of the tree, not a backlog.
 
 ## Iron Law — privacy floor runs TWICE
 
 ```
-THE REDACTOR RUNS AT INTAKE (WRITE GATE) AND AGAIN HERE (UPSTREAM GATE).
-ANY VIOLATION → REFUSE THE PR. NO SILENT REWRITES.
+THE REDACTOR RUNS AT INTAKE (WRITE GATE) AND AGAIN HERE (REVIEW GATE).
+ANY VIOLATION → THE ENTRY IS REFUSED AND NAMED. NO SILENT REWRITES.
 ```
 
 See [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
@@ -50,37 +51,55 @@ for the eight forbidden-content classes.
 
 ### 1. Build the preview plan
 
-Call
-`scripts/ai_council/learn_low_impact_preview.ts::build_preview` with
-the project-local corpus and the package seed:
+Call `build_preview` from
+`src/scripts/ai_council/learn_low_impact_preview.ts` with the project-local
+corpus and the exported seed path:
 
-```python
-from scripts.ai_council.learn_low_impact_preview import build_preview
-plan = build_preview(
-    corpus_path="agents/decisions/low-impact-decisions.md",
-    seed_path=".agent-src.uncondensed/data/low-impact-decisions-seed.md",
-    repo_slug="<owner>/<repo>",  # from `git remote get-url origin`
-    repo_root="<absolute repo root>",
-    private_domains=(),   # from .agent-settings.yml policy
-    customer_names=(),    # from .agent-settings.yml policy
-    sql_identifiers=(),   # from .agent-settings.yml policy
-)
+```ts
+import * as path from 'node:path';
+
+import {
+    build_preview,
+    PACKAGE_SEED_PATH,
+} from 'src/scripts/ai_council/learn_low_impact_preview.js';
+
+// Both paths are RELATIVE and must be resolved explicitly — the corpus
+// against the project root, the seed against the PACKAGE root. Passed bare
+// they resolve against cwd, where a consumer project carrying a file at the
+// seed's own path would be read as the package seed and silently mark its
+// entries `already_seeded`.
+const plan = build_preview(
+    path.join(projectRoot, 'agents/decisions/low-impact-decisions.md'),
+    path.join(packageRoot, PACKAGE_SEED_PATH),
+    {
+        repoSlug: '<owner>/<repo>', // from `git remote get-url origin`
+        repoRoot: '<absolute repo root>',
+        privateDomains: [], // from .agent-settings.yml policy
+        customerNames: [], // from .agent-settings.yml policy
+        sqlIdentifiers: [], // from .agent-settings.yml policy
+    },
+);
 ```
+
+`PACKAGE_SEED_PATH` is the one place a CALLER reads that literal from, so no
+caller restates it; the privacy floor names the same path to lock it, which is
+a lock rather than a second source. The file it names is not in the tree, and
+that is not an error: the builder returns an empty already-seeded set, which
+is the current state of this package.
 
 The builder runs all three contract checks in one pass:
 
-1. Parses `## Validated` (strict mode — drift surfaces as
-   `CorpusParseError`).
+1. Parses `## Validated` (strict mode — drift surfaces as a parse error).
 2. Diffs against the seed file — already-seeded entries land in
-   `plan.already_seeded` and never upstream.
-3. Re-runs `redact_low_impact_entry` on every candidate. Failures
-   land in `plan.refused`.
+   `plan.already_seeded`.
+3. Re-runs `redact_low_impact_entry` on every candidate. Failures land in
+   `plan.refused`.
 
 ### 2. Surface the preview block
 
-Print `plan.render()` verbatim. Always. This is the user-facing
-audit trail per `fast-path-marker-visibility` Iron Law — the host
-agent MUST NOT swallow or paraphrase it.
+Print `plan.render()` verbatim. Always. This is the user-facing audit trail
+per the `fast-path-marker-visibility` Iron Law — the host agent MUST NOT
+swallow or paraphrase it.
 
 ```
 ## learn-low-impact preview — repo=<slug>
@@ -92,57 +111,25 @@ seed: <path>
 ### Already seeded (K) …
 ```
 
-### 3. Decide based on the flag
+### 3. Stop
 
-- **`--preview` (default)** — stop here. If `plan.would_open_pr` is
-  true, the rendered block ends with
-  `> Re-run with \`--apply\` to open the draft PR via \`upstream-contribute\`.`
-  Hand control back to the user.
-- **`--apply`** — refuse when `plan.refused` is non-empty; surface
-  the refusals and stop. Otherwise invoke
-  [`upstream-contribute`](../skills/upstream-contribute/SKILL.md)
-  with:
-    - **target file:** `.agent-src.uncondensed/data/low-impact-decisions-seed.md`
-    - **PR title:** `plan.render_pr_body()` first heading
-    - **PR body:** `plan.render_pr_body()`
-    - **patch:** `plan.render_diff()`
-    - **draft:** `true` — never auto-merge; review is a human gate.
-
-### 4. Advance the local baseline (`--apply` path only)
-
-When the PR is opened (step 3 returns a PR URL + new commit SHA on
-the package branch):
-
-```bash
-# update the local pointer so subsequent runs are deltas
-sed -i.bak -E "s|^last-upstreamed: .*|last-upstreamed: <new-sha>|" \
-    agents/decisions/low-impact-decisions.md
-rm agents/decisions/low-impact-decisions.md.bak
-```
-
-### 5. Surface result (`--apply` path only)
-
-```
-> Drafted PR <url>
-> Entries upstreamed: N
-> Provenance bumped: <old-sha> → <new-sha>
-```
+Hand control back to the user. The block is the deliverable. Nothing in this
+command sends anything; if the package ever ships a seed corpus again, the
+`revisit if` on decision D2 of
+`road-to-one-upstream-that-checks-what-leaves` fires and the route is designed
+once, on the one ladder.
 
 ## Halt conditions
 
-- Redactor refuses (any class) — surface, stop. `--apply` is rejected.
-- No candidates (`plan.has_work == False`) — exit 0 with the preview
-  block; no PR even on `--apply`.
-- `--preview` (default) — always stops before any side-effect.
-- Package repo unavailable per `upstream-contribute § Step 4` — surface
-  the access options, stop.
-- User explicitly declines the PR option — exit 0, no PR.
+- Redactor refuses (any class) — surface the refusals in the block, stop.
+- No candidates (`plan.has_work` is false) — exit 0 with the preview block.
+- Corpus missing or drifted — surface the parse error, stop.
 
 ## See also
 
-- [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — PR
-  machinery (branch, commit, gates).
 - [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
   — the project-local corpus.
 - [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
   — Iron Law.
+- [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — the one
+  front on the one outward step, for findings that are worth sending.

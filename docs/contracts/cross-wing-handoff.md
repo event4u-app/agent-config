@@ -89,11 +89,21 @@ MUST NOT be flagged.
 | **No dangling references** | `handoff_dangling` | Every link must resolve to an existing skill file. | WHEN-to-use **and** WHEN-NOT |
 | **No tier mismatch** | `handoff_tier_mismatch` | A senior skill MAY only reference other senior skills (delegate to OR offer as alternative). | WHEN-to-use **and** WHEN-NOT |
 
-Optional rule (warning only, locked in Phase 6):
+Optional rule, **not enforced by anything today**:
 
-| Rule | Code | Description |
+| Rule | Status | Description |
 |---|---|---|
-| Input shape declared | `handoff_missing_input` | Delegated skill SHOULD declare `## Input`. Warning today; error after Phase 6. |
+| Input shape declared | no code, no emitter | Delegated skill SHOULD declare `## Input`. |
+
+This row used to name a failure code, `handoff_missing_input`, and call it
+"Warning today; error after Phase 6". `lint_handoffs` has never emitted it —
+it emits `handoff_cycle`, `handoff_dangling` and `handoff_tier_mismatch` and
+nothing else — so a reader checking their skill against the code found a code
+that does not exist, and "warning today" named a warning nobody could receive.
+The convention stands; the claim that a lint carries it does not. Naming a
+code here is what binds it: `tests/scripts/lint_handoffs.test.ts` ›
+`handoff-missing-input-agrees` fails if a code appears in the table above
+without an emitter in `lint_handoffs.ts`.
 
 Lint runs in CI between `task lint-skills` and `task test`. Output
 mirrors `lint_skills` (`file:line:reason`).

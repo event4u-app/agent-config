@@ -134,6 +134,11 @@ Produce the entry plan artifact. P2 composes P3 (`competitive-positioning`) for 
 
 ## Do NOT
 
+- Do NOT write a market size, growth rate, deadline, price or competitor
+  claim without its source. These are fresh-lookup-class fields under the
+  rule `/research:deep` states: a cited live source, never model memory,
+  `[uncertain]` for what could not be sourced. A beachhead chosen on an
+  unsourced number is a guess with a table around it.
 - Do NOT mix entry axes — sequence them.
 - Do NOT pick a beachhead without a named 18-month failure mode + mitigation.
 - Do NOT skip the expansion sequence — the beachhead's value is which next moves it unlocks.

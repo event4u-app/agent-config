@@ -142,6 +142,14 @@ skill — that is `messaging-architecture`'s job.
 3. **`non-goals.md`** — three sentences naming adjacent segments the
    product refuses to serve, each grounded in the product slot.
 
+## Sourcing
+
+Each claim about the segment, the category or the named alternative carries
+its source — an interview, the competitor's own page, an analyst — under the
+rule `/research:deep` states: a cited live source, never model memory,
+`[uncertain]` for the rest. A position built on an unsourced belief is
+opposable to nothing.
+
 ## Gotcha
 
 - A category sentence the segment does not already use is a coined

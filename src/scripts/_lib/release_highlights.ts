@@ -25,7 +25,11 @@
  */
 import { spawnSync } from 'node:child_process';
 
+import { assuranceOverrideLimitation } from './release_findings_ingest.js';
 import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
+
+/** The label a cut taken on an assurance override reports itself under. */
+export const KNOWN_LIMITATIONS_LABEL = 'Known limitations';
 
 /** The five curated labels, in the order an operator reads them. */
 export const HEAD_LABELS: readonly string[] = [
@@ -33,7 +37,7 @@ export const HEAD_LABELS: readonly string[] = [
     'Default changes + migration',
     'Security and correctness',
     'Honest nulls',
-    'Known limitations',
+    KNOWN_LIMITATIONS_LABEL,
 ];
 
 export const HEAD_NONE = '_none_';
@@ -615,6 +619,16 @@ export interface MixObligation {
     to_sha?: string;
     governance_only?: number;
     consumer_only?: number;
+    /**
+     * The two buckets the line used to drop. `mixed` is the commits touching
+     * more than one classified category, and the measurer states that it "is
+     * never collapsed" into either side — yet over 16.3.0..16.4.0 it was the
+     * LARGEST bucket at 41 against governance 42 and consumer 1, and the
+     * published line named neither it nor maintenance. A reader of "42 vs 1"
+     * had no way to know that almost half the span was in a third bucket.
+     */
+    mixed?: number;
+    maintenance?: number;
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */
@@ -759,11 +773,22 @@ export function derive_head_prefill(
     from: string | null,
     to: string,
     cwd: string,
+    version?: string | null,
 ): Record<string, string> {
     const span = collect_span_commits(from, to, cwd);
-    return render_derived_head_values(
+    const out = render_derived_head_values(
         derive_category_hits(span, { readTouchedFile: make_span_file_reader(to, cwd) }),
     );
+    // A cut taken on an assurance override is a known limitation no commit in
+    // the span declares, so the classifier above cannot derive it: it is a fact
+    // about the ledger, not about the range. Appended rather than substituted —
+    // a derived limitation and this one are both true.
+    const override = version ? assuranceOverrideLimitation(version, cwd) : null;
+    if (override !== null) {
+        const existing = out[KNOWN_LIMITATIONS_LABEL];
+        out[KNOWN_LIMITATIONS_LABEL] = existing ? `${existing} ${override}` : override;
+    }
+    return out;
 }
 
 /** Latest reachable release tag before `ref`, or null when there is none. */

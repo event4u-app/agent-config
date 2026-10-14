@@ -15,6 +15,7 @@ import {
 } from '../../src/scripts/check_finding_dispositions.js';
 import {
     FINDINGS_WORKFLOW,
+    assuranceOverrideLimitation,
     blockingWithoutDisposition,
     dispositionStopMessage,
     ledgerAbsentMessage,
@@ -467,11 +468,19 @@ describe('ledgerAbsentMessage', () => {
 
     // Most causes are ordinary and one is a standing cost. An operator who
     // meets this message needs to know which, in the order worth checking.
-    it('names waiting first, and the keyless case as its own answer', () => {
+    //
+    // The keyless answer used to be "write one with a no_findings_reason",
+    // which told the operator to record that nothing was reviewed and then cut
+    // anyway — the fail-open the cut now refuses. It is a LOCAL REVIEW instead,
+    // and the assertion moved with it rather than being dropped: the message
+    // must still answer the keyless case, and must no longer answer it that way.
+    it('names waiting first, and answers the keyless case with a local review', () => {
         const msg = ledgerAbsentMessage('1.2.3', 'b', 'origin');
         expect(msg).toContain('has not finished yet');
         expect(msg).toContain('ANTHROPIC_API_KEY');
-        expect(msg).toContain('no_findings_reason');
+        expect(msg).toContain('self_review_gate --findings-out');
+        expect(msg).toContain('--ingest /tmp/findings.json --release 1.2.3');
+        expect(msg).not.toContain('no_findings_reason');
     });
 
     // The job declines to push without the PAT, so its absence surfaces HERE as
@@ -489,5 +498,63 @@ describe('ledgerAbsentMessage', () => {
 describe('ledgerRelPath', () => {
     it('resolves beside the committed ledgers', () => {
         expect(fs.existsSync(path.join(REPO_ROOT, ledgerRelPath('14.23.0')))).toBe(true);
+    });
+});
+
+/**
+ * A cut taken on an override says so where a consumer reads, not only where a
+ * releaser does. The override lives inside the ledger JSON; without this line
+ * the published notes of an unreviewed release are byte-indistinguishable from
+ * those of a reviewed one, which is the silence-reads-as-acceptance defect
+ * `assurance` exists to end one layer down.
+ */
+describe('assuranceOverrideLimitation', () => {
+    function root(body: unknown | null): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aol-'));
+        if (body !== null) {
+            const abs = path.join(dir, ledgerRelPath('1.2.3'));
+            fs.mkdirSync(path.dirname(abs), { recursive: true });
+            fs.writeFileSync(abs, JSON.stringify(body), 'utf-8');
+        }
+        return dir;
+    }
+
+    it('names the version and the directive the cut was taken on', () => {
+        const line = assuranceOverrideLimitation(
+            '1.2.3',
+            root({
+                assurance: 'unreviewed',
+                assurance_override: 'agents/evidence/owner-directives/d.md',
+                findings: [],
+            }),
+        );
+        expect(line).toContain('1.2.3');
+        expect(line).toContain('agents/evidence/owner-directives/d.md');
+        expect(line).toContain('without a self-review');
+    });
+
+    it('is silent on every ordinary release — no ledger, no override, or reviewed', () => {
+        expect(assuranceOverrideLimitation('1.2.3', root(null))).toBeNull();
+        expect(
+            assuranceOverrideLimitation('1.2.3', root({ assurance: 'unreviewed', findings: [] })),
+        ).toBeNull();
+        expect(
+            assuranceOverrideLimitation(
+                '1.2.3',
+                root({
+                    assurance: 'single-pass',
+                    assurance_override: 'agents/evidence/owner-directives/d.md',
+                    findings: [],
+                }),
+            ),
+        ).toBeNull();
+    });
+
+    it('a malformed ledger is the disposition gate’s finding, not a crash here', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aol-bad-'));
+        const abs = path.join(dir, ledgerRelPath('1.2.3'));
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, '{ not json', 'utf-8');
+        expect(assuranceOverrideLimitation('1.2.3', dir)).toBeNull();
     });
 });
