@@ -97,6 +97,7 @@ evidence pointer, or `task check-claims` fails the build.
 | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
 | Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `check_skill_activation_claim` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero was published as a defect — a matchable declaration exists and nothing acted on it — and ADR-263 SUPERSEDES that reading in those words: the 12 are unvalidated metadata with no host contract to bind to, so nothing was owed and nothing failed; they are kept, not deleted, as the thing a future host contract would bind to. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. FRAMING, RECORDED 2026-09-07 SO A LATER REVIEW MEETS AN ANSWER RATHER THAN RE-DERIVING THE ARGUMENT: the surface is left exactly as it is and the zero is published with its reason. Two substantive alternatives were on the table and NEITHER was taken — building a host-side selection path for the population that declares a machine-matchable trigger key, or declaring the human-named remainder reference material by design. Each of those changes what the package claims to be for its consumers, which is an owner-reserved commitment under `decision-revisit-gate` — and on 2026-09-08 that commitment was made: ADR-263 LOCKS the second, in the corrected form "by observation" rather than "by design", and REJECTS the first, on the ground that there is no host contract to build against and that shipping a documented routing capability which still yields zero would convert an implementation cost into a credibility cost. So neither alternative is open any longer, and the sentence that said both were is corrected here rather than left standing. What ADR-263 did NOT do is still worth naming, and the boundary is narrower than a first reading suggests: no selection mechanism was built, and the numeric split above — 12 / 100 / 2 / 189 — is untouched. It DID reclassify the 12 semantically, from a population owed a selection path to unvalidated metadata with no host contract, which is the supersession recorded two sentences up; what it did not do is move a skill from one of the four counts into another — "by observation" is deliberately not "by design", because design intent is an ownership claim this repository cannot make about hosts it does not own. Its own falsifier, stated so it can fail: the reason for accepting the zero as-is is that a single-machine transcript store cannot separate an unbuilt selection path from an unused one, so the moment a second store — a consumer install, another host, a CI-visible corpus — becomes readable, the reason stops holding and the choice returns. <!-- count: dated --> | quant | `exec:check_skill_activation_claim -> 0` | ✅ |
 | 300 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+| Skills use `SKILL.md` with package-specific frontmatter keys (top-level keys such as `domain`, `model_tier`, `workspaces` and `packs`, defined and validated by this package's own schema rather than the Agent Skills specification's reference validator). | qual | `src/scripts/schemas/skill.schema.json#model_tier` | ✅ |
 | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation. | qual | `https://arxiv.org/abs/2303.11366 (2026-08-11)` | ✅ |
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with. | quant | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` | ✅ |
 | Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established, and `projection.mode: tiered` therefore stays opt-in. | quant | `agents/evidence/analysis/skill-tiering-matrix-arm.md#The question this arm cannot answer` | ✅ |
@@ -107,14 +108,14 @@ evidence pointer, or `task check-claims` fails the build.
 | Over the frozen ui-conformance fixture, the probe reports all four planted behavioral defects and raises zero findings for the one declared deviation, against a pre-registered screenshot arm that catches two of the same four and raises one. | quant | `tests/scripts/ui_conformance_probe.test.ts#finds four of four planted defects` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**61 backed claim(s)** — all evidence pointers resolve in CI.
+**62 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**18 of 61** backed claims carry `exec:` evidence —
+**18 of 62** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**43** rest on a pointer: CI checks that the artefact
+**44** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -160,6 +161,7 @@ given:
 | Scope de-duplication of the rule projection removes 38.0% of the median cold-start payload (87,677 of 230,556  | prose or contract artefact — no exit code carries the verdict |
 | On a deterministic multi-session recall corpus, the memory substrate produces a measured, placebo-controlled r | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
 | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation doe | external cite — CI does not fetch the network |
+| Skills use `SKILL.md` with package-specific frontmatter keys (top-level keys such as `domain`, `model_tier`, ` | prose or contract artefact — no exit code carries the verdict |
 | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context r | external cite — CI does not fetch the network |
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that st | prose or contract artefact — no exit code carries the verdict |
 | Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is | prose or contract artefact — no exit code carries the verdict |
@@ -356,7 +358,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (80, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 105 ledger entries · 61 backed · 37 unbacked inventory · 7 resolved-null.
+**Axis 2 — evidence form per public claim.** 106 ledger entries · 62 backed · 37 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -447,6 +449,7 @@ Undeclared rules (80, of which 9 kernel-denied) carry no row — an honest gap b
 | `shipped-artifacts-hidden-instruction-scanned` | qual | backed | — | `exec:lint_agent_security -> 0` |
 | `skill-activation-census-zero` | quant | backed | — | `exec:check_skill_activation_claim -> 0` |
 | `skill-count` | quant | backed | — | `exec:check_artefact_count_messaging -> 0` |
+| `skill-format-package-keys` | qual | backed | — | `src/scripts/schemas/skill.schema.json#model_tier` |
 | `skill-improvement-reflexion` | qual | backed | — | `https://arxiv.org/abs/2303.11366 (2026-08-11)` |
 | `skill-link-census` | quant | backed | — | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` |
 | `skill-tiering-h1-unmeasured` | quant | backed | — | `agents/evidence/analysis/skill-tiering-matrix-arm.md#The question this arm cannot answer` |
