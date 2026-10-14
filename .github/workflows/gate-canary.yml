@@ -79,3 +79,117 @@ jobs:
           path: ${{ steps.canary.outputs.ledger }}
           if-no-files-found: error
           retention-days: 90
+
+  # --------------------------------------------------------------------------
+  # The local-only gates whose verdict is NOT a property of the diff.
+  #
+  # Phase 2.3 of road-to-local-gates-wired-while-they-are-green. Thirteen of the
+  # 163 undeclared local-only gates either call `checkRatchet` — where a
+  # baseline unchanged for `STALE_AFTER_DAYS = 56` fails with no diff at all —
+  # or print an `as-of:` verdict line. One more, `audit_command_surface`, is
+  # green and takes 43.5 s, which is 48 % of the serial time of all 161
+  # measured gates put together.
+  #
+  # NONE OF THEM MAY BE A STEP OF A REQUIRED JOB, and that is the roadmap's
+  # decision D2 rather than a convenience: a gate that turns red because a
+  # fortnight passed would block every open pull request for a reason no
+  # author caused, which is the "trains people to ignore it" shape
+  # src/config/ci-local-parity.yml's own header argues against.
+  #
+  # A SECOND JOB, NOT STEPS IN THE CANARY JOB. `check_gate_coverage --canary`
+  # mutates the tree it runs in — it plants one declared violation per gate and
+  # deletes it in a `finally`. A gate running in the same job after it would be
+  # reading a tree with a plant in it, or a tree a failed `finally` left dirty.
+  # This job gets its own checkout.
+  #
+  # `check_council_pin_staleness` is here for the third reason the roadmap
+  # names: the coverage manifest marks it `enforced` and it appears in NO task
+  # and NO workflow, so nothing ran it at all. It reads three dated council
+  # pins against a 100-day cadence, which makes a scheduled caller the only
+  # correct kind.
+  #
+  # READ-ONLY, like its sibling job: nothing here commits or pushes, and none
+  # of it is a required check.
+  local-only-scheduled:
+    name: Local-only gates whose verdict reads the calendar
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # Full history: the ratchet readers resolve `origin/main` and walk
+          # history, and a shallow clone makes them exit non-zero for a reason
+          # unrelated to their subject.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      # `--quiet` IS NOT UNIVERSAL, and four gates here reject it with exit 2
+      # (`unrecognized arguments: --quiet`) rather than ignoring it:
+      # domain_soundness_status, lint_roadmap_later_disposition,
+      # skill_eval_coverage and lint_one_off_age. They are invoked bare. This
+      # was found by dispatching the workflow manually on the branch — nothing
+      # else would have: this file runs on `schedule` and `workflow_dispatch`
+      # only, so a pull request never exercises it and the error would have
+      # surfaced first on a nightly run nobody was watching.
+      - name: Ratchet-age readers
+        run: |
+          rc=0
+          ./scripts-run src/scripts/check_roadmap_trackable --quiet || rc=1
+          ./scripts-run src/scripts/domain_soundness_status || rc=1
+          ./scripts-run src/scripts/lint_artefact_frontmatter --quiet || rc=1
+          ./scripts-run src/scripts/lint_handoffs --quiet || rc=1
+          ./scripts-run src/scripts/lint_provenance_vocabulary --quiet || rc=1
+          ./scripts-run src/scripts/lint_roadmap_blockers --quiet || rc=1
+          ./scripts-run src/scripts/lint_roadmap_later_disposition || rc=1
+          ./scripts-run src/scripts/skill_eval_coverage || rc=1
+          exit "$rc"
+
+      - name: As-of verdict lines
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/check_knowledge_pages || rc=1
+          ./scripts-run src/scripts/check_reach_staleness --quiet || rc=1
+          ./scripts-run src/scripts/lint_hook_manifest --quiet || rc=1
+          ./scripts-run src/scripts/lint_one_off_age || rc=1
+          ./scripts-run src/scripts/lint_symptom_intake --quiet || rc=1
+          exit "$rc"
+
+      - name: The council pins, which had no caller at all
+        if: always()
+        run: ./scripts-run src/scripts/check_council_pin_staleness
+
+      # `audit_command_surface` IS NOT HERE, and the reason is worth the
+      # paragraph because an earlier revision of this job did run it.
+      #
+      # It is a GENERATOR, not a checker: `audit_command_surface.ts` writes
+      # `agents/reports/command-surface.json` and `.md` unconditionally at the
+      # end of its run (both tracked files), whatever flags it was given.
+      # `--check-new` does not suppress the write. An independent review caught
+      # it by running the exact argv this step used and watching two tracked
+      # files change.
+      #
+      # On a runner the mutation is discarded with the checkout, so the harm is
+      # not to CI. The harm is that the step did no work worth doing: on a
+      # scheduled run of the default branch `origin/main` and `HEAD` are the
+      # same commit, so `--check-new` has nothing to find, and what remained
+      # was a regeneration nobody reads and nobody commits. A step that mutates
+      # its tree to produce an answer it then discards is noise with a cost,
+      # and this job is the one whose sibling comment above demands a separate
+      # checkout precisely because tree mutation is contagious.
+      #
+      # It stays in the local-only backlog with its `slow` class recorded, which
+      # is what the evidence page already says about it. Wiring it needs a
+      # `--check`-shaped mode it does not have today.

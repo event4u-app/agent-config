@@ -249,22 +249,22 @@ const HELP =
     '\n' +
     'Examples:\n' +
     '  # Add single component\n' +
-    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button\n' +
+    '  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button\n' +
     '\n' +
     '  # Add multiple components\n' +
-    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button card dialog\n' +
+    '  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button card dialog\n' +
     '\n' +
     '  # Add all components\n' +
-    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add --all\n' +
+    '  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs --all\n' +
     '\n' +
     '  # Overwrite existing components\n' +
-    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button --overwrite\n' +
+    '  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button --overwrite\n' +
     '\n' +
     '  # Dry run (show what would be done)\n' +
-    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add button card --dry-run\n' +
+    '  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs button card --dry-run\n' +
     '\n' +
     '  # List installed components\n' +
-    '  ./scripts-run <skills-root>/react-shadcn-ui/scripts/shadcn_add --list\n' +
+    '  node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs --list\n' +
     '        \n';
 
 const USAGE =

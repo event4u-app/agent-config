@@ -17,8 +17,8 @@ install:
 # blade-ui
 
 > **Grounded stack guidance:** pull idiomatic Do/Don't + docs URLs from the
-> adopted stack corpus before improvising — `./scripts-run
-> <skills-root>/corpus-grounding/scripts/ground search --manifest
+> adopted stack corpus before improvising — `node
+> <skills-root>/corpus-grounding/scripts/ground.mjs search --manifest
 > <skills-root>/design-intelligence/data/manifest.json --stack laravel "<topic>"`
 > (the `laravel` stack file is Blade/UI-scoped, not general Laravel). See
 > [`design-intelligence`](../design-intelligence/SKILL.md).

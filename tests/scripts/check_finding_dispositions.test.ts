@@ -19,6 +19,8 @@ import {
     disposition_summary,
     disposition_tally,
     empty_ledger_problem,
+    unreviewed_ledger_problem,
+    OWNER_DIRECTIVES_DIR,
     isBlocking,
     MEDIUM_SECURITY_BLOCKS_AFTER,
     localTagHit,
@@ -672,5 +674,191 @@ describe('coverage label — partial coverage is printed, never enforced', () =>
             coverage: { chunks: 1, filesReviewed: 678, filesTotal: 678, unreviewed: [] },
         });
         expect(runGate(dir, '1.0.0').out).not.toContain('(partial)');
+    });
+});
+
+/**
+ * An empty ledger that says a review NEVER RAN is not a reviewed release.
+ *
+ * `empty_ledger_problem` closed the unexplained-empty half: a ledger now has to
+ * say why it is empty. It did not close the other half, because any non-empty
+ * reason satisfies it — including one whose own first words are "NOT REVIEWED".
+ * The 16.4.0 ledger this case reads is that file: `assurance: unreviewed`,
+ * `reviewers: []`, `findings: []`, and a reason recording three runs the
+ * provider refused with HTTP 400. The gate read the reason, found it non-empty
+ * and exited 0, so a release whose self-review produced nothing passed the cut
+ * on a reason string alone.
+ *
+ * Recorded red before anything changed, on the committed 16.4.0 ledger copied
+ * verbatim under a version this repository never tagged:
+ *
+ *     $ tsx src/scripts/check_finding_dispositions.ts --release 99.99.0 --dir <tmp>
+ *     scanned: 0
+ *     ✅  no recorded findings for 99.99.0 (ledger empty)
+ *     EXIT=0
+ *
+ * WHY THE DECISION IS PINNED ON A PURE FUNCTION, NOT ON THE CLI. The refusal is
+ * scoped to a version the released-vs-unreleased discriminator reads as
+ * `unreleased`, and that answer is offline only when the local tag list is
+ * COMPLETE — a full clone carrying tags. Neither place this suite runs is one:
+ * the `node-tests` job checks out at depth 1 with no tags, and a git worktree
+ * of a shallow clone reports `is-shallow-repository: true` even while 227 tags
+ * are visible. A CLI case for the red path would therefore reach for the
+ * network in both, and a case guarded on `tags_complete` would assert nothing
+ * in either — a test that is green because it ran no assertion is the failure
+ * mode this file already warns about twice. So the decision is injected and
+ * pinned in every direction here, exactly as `releaseStatus` above is, and the
+ * CLI is asserted on the branches that are offline by construction.
+ */
+describe('an unreviewed ledger at the cut', () => {
+    const SIXTEEN_FOUR_ZERO = JSON.parse(
+        fs.readFileSync(
+            path.join(_REPO_ROOT, 'agents/evidence/release-findings/16.4.0.json'),
+            'utf-8',
+        ),
+    ) as Ledger;
+    const noDirective = (): string | null => null;
+
+    it('unreviewed-ledger-at-the-cut: the committed 16.4.0 ledger is refused at an unreleased cut', () => {
+        expect(
+            unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '99.99.0', 'unreleased', noDirective),
+        ).not.toBeNull();
+    });
+
+    it('the shape it is about is really the shape the committed file carries', () => {
+        expect(SIXTEEN_FOUR_ZERO.assurance).toBe('unreviewed');
+        expect(SIXTEEN_FOUR_ZERO.findings).toHaveLength(0);
+        // The reason string is non-empty, so the older gate passed it: this is
+        // the half `empty_ledger_problem` was never able to see.
+        expect(empty_ledger_problem(SIXTEEN_FOUR_ZERO)).toBeNull();
+    });
+
+    it('names the review before the override, and never asks for a reason', () => {
+        const msg = unreviewed_ledger_problem(
+            SIXTEEN_FOUR_ZERO,
+            '99.99.0',
+            'unreleased',
+            noDirective,
+        )!;
+        expect(msg.indexOf('self_review_gate')).toBeLessThan(msg.indexOf('assurance_override'));
+        expect(msg.indexOf('--ingest')).toBeLessThan(msg.indexOf('assurance_override'));
+        expect(msg).not.toContain('no_findings_reason');
+    });
+
+    /** The four outcomes, one fixture each. */
+    it('a reviewed ledger passes — findings are what a review that ran leaves behind', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, findings: [finding({ ...COMPLETE })] },
+                '99.99.0',
+                'unreleased',
+                noDirective,
+            ),
+        ).toBeNull();
+    });
+
+    it("a shipped version's backfilled ledger passes — refusing it would red history", () => {
+        expect(
+            unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '16.4.0', 'released', noDirective),
+        ).toBeNull();
+    });
+
+    it('an override naming a committed directive that names the version passes', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/d.md` },
+                '99.99.0',
+                'unreleased',
+                () => 'the owner permits cutting 99.99.0 without a review',
+            ),
+        ).toBeNull();
+    });
+
+    it('an undeterminable status passes — a tagless clone cannot tell a backfill from a cut', () => {
+        expect(
+            unreviewed_ledger_problem(
+                SIXTEEN_FOUR_ZERO,
+                '99.99.0',
+                'undeterminable',
+                noDirective,
+            ),
+        ).toBeNull();
+    });
+
+    /** Three ways an override fails, so the escape hatch is not a free pass. */
+    it('an override outside the directives directory is refused', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: 'the owner said it was fine' },
+                '99.99.0',
+                'unreleased',
+                () => 'anything',
+            ),
+        ).toContain('never a sentence');
+    });
+
+    it('an override naming an uncommitted file is refused', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/gone.md` },
+                '99.99.0',
+                'unreleased',
+                noDirective,
+            ),
+        ).toContain('not committed');
+    });
+
+    it('an override whose directive names another version is refused', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/d.md` },
+                '99.99.0',
+                'unreleased',
+                () => 'the owner permits cutting 16.4.0 without a review',
+            ),
+        ).toContain('does not mention');
+    });
+
+    /**
+     * The CLI half, on the branches that are offline by construction: an
+     * override is read from the working tree and decided without any tag probe,
+     * so these cases assert the wiring the pure tests above cannot.
+     */
+    it('the CLI refuses an override that points at nothing, whatever the release status', () => {
+        const dir = ledgerDir(
+            { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/absent.md` },
+            '99.99.0',
+        );
+        const r = runGate(dir, '99.99.0');
+        expect(r.code, r.out).toBe(1);
+        expect(r.out).toContain('not committed');
+    });
+
+    it('the CLI reads a committed directive rather than merely checking the path shape', () => {
+        // The directive that IS committed, against a version it does not name.
+        // Reaching this message proves the file was opened and its text read;
+        // a check that stopped at the path prefix would have passed here.
+        const name = fs
+            .readdirSync(path.join(_REPO_ROOT, OWNER_DIRECTIVES_DIR))
+            .find((f) => f.endsWith('.md'))!;
+        const dir = ledgerDir(
+            { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/${name}` },
+            '99.99.0',
+        );
+        const r = runGate(dir, '99.99.0');
+        expect(r.code, r.out).toBe(1);
+        expect(r.out).toContain('does not mention');
+    });
+
+    it('the CLI leaves a ledger with findings alone — this branch never fires there', () => {
+        const dir = ledgerDir(
+            {
+                ...SIXTEEN_FOUR_ZERO,
+                assurance: 'unreviewed',
+                findings: [finding({ ...COMPLETE })],
+            },
+            '99.99.0',
+        );
+        expect(runGate(dir, '99.99.0').code).toBe(0);
     });
 });

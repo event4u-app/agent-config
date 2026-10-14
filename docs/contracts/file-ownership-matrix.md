@@ -93,7 +93,7 @@ The generator computes the transitive closure of `load_context` /
 `load_context_eager` edges **up to depth 2**. Any chain
 `R → A → B → C` where every hop is a `load_context*` edge **fails the
 build** with exit code 2. This duplicates the same nesting cap that
-Phase 0.2.4 will enforce in `scripts/check_always_budget.py` — two
+Phase 0.2.4 will enforce in `src/scripts/check_always_budget.ts` — two
 enforcement points, one invariant.
 
 ## Regeneration policy

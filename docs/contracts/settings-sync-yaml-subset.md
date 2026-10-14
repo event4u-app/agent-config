@@ -83,17 +83,22 @@ code 2** with a line-numbered message.
 - **Mixed indent inside a block** — every child of a parent must share
   the same indent.
 
-Pinned by `tests/test_sync_round_trip.py` (34 tests) — every
-not-supported feature has at least one fixture that asserts the
-`ValueError` message.
+Pinned by `tests/scripts/sync_yaml_rt.test.ts` — every not-supported
+feature has at least one fixture that asserts the `ValueError` message.
+No test count is given here: the previous wording named one ("34 tests")
+against a file that no longer existed, and a count in prose goes stale on
+the next test added.
 
 ## Test pinning
 
-- Verbatim round-trip: `tests/test_sync_round_trip.py::test_user_block_round_trip_is_idempotent`, `::test_three_level_idempotent`.
+- Verbatim round-trip: `tests/scripts/sync_yaml_rt.test.ts` ›
+  `round-trip — user-line preservation` (one case per fixture) and
+  `idempotency` (a second sync against the first output is a no-op).
 - Out-of-subset rejection: same file, fixtures under
   `tests/fixtures/sync_yaml_rt/` named `bad_*.yml`.
 - CLI exit code on malformed input:
-  `tests/test_sync_agent_settings.py::test_malformed_user_yaml_exits_2_with_message`.
+  `tests/scripts/sync_agent_settings.test.ts` ›
+  `malformed user yaml exits 2 with message`.
 
 Any parser change is gated on those tests staying green. New fixtures
 for new features land under `tests/fixtures/sync_yaml_rt/`.

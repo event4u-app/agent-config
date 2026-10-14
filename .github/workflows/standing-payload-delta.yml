@@ -383,3 +383,108 @@ jobs:
       - name: Drop the base-ref gate copy
         if: always()
         run: rm -rf .payload-gate-at-base
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — batch 1. Phase 2.1 of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # `check_ci_local_parity` reported 163 gates that `task ci` runs and no
+      # workflow does. The direction matters: a gate with no remote reach lets a
+      # real defect merge, which is how 16 stale index rows reached the trunk
+      # behind a local-only check-index.
+      #
+      # HERE, AND THE PLACEMENT IS THE POINT. The roadmap's non-goals say "No
+      # new required check. The steps join the job that is already required",
+      # and this repository has exactly two required contexts — this one and
+      # `Sync + Generate Tools Consistency` (read from the `main protection`
+      # ruleset, not assumed). The consistency workflow hosts the ratification
+      # gate, so any step added to it makes the whole diff ratification-gated.
+      # This job is the other one, it is not gated, and — unlike every
+      # alternative considered — it carries NO `paths:` filter, so these gates
+      # run on every pull request rather than on a path-matched subset.
+      #
+      # An earlier revision of this change put them in a new job on
+      # `rule-backstops.yml`. That job is not a required context, so a red there
+      # is visible and does not block a merge, which is a weaker thing than the
+      # roadmap asked for; and it inherits that file's `paths:` filter, which
+      # three of these gates' inputs did not match. An independent completion
+      # review found both. Steps in this job fix them together.
+      #
+      # TWENTY, and not the 119 the reading classes wirable. An independent
+      # two-seat council (2026-10-13, anthropic + openai, 2/2) read the
+      # 2026-08-13 standing decision in `docs/contracts/ci-green-floor.md` —
+      # which leaves "ten or twenty gates a change" open and declines the sweep
+      # — and converged that one pull request carrying all 119 is the sweep.
+      # The sample is spread across gate families and the full runtime band
+      # rather than taken fastest-first.
+      #
+      # EVERY GATE IN A STEP GETS A READING, which is why each block collects
+      # into `rc` instead of relying on `bash -e`. Under `-e` the first red ends
+      # the step and the gates after it never run, so a batch whose purpose is
+      # to learn WHICH gates survive remote conditions would report one name and
+      # hide three. The step still fails — `exit "$rc"` — it fails after
+      # measuring.
+      #
+      # `audit_command_surface` is deliberately absent although the reading
+      # classes it wirable: it writes two tracked files unconditionally,
+      # whatever flags it is given, so it is a generator rather than a checker.
+      - name: Drain 1a — pack dependencies, originality freshness, context paths, suppression hygiene
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_pack_dependencies || rc=1
+          ./scripts-run src/scripts/check_originality_freshness --quiet || rc=1
+          ./scripts-run src/scripts/check_context_paths || rc=1
+          ./scripts-run src/scripts/check_suppression_hygiene --quiet || rc=1
+          exit "$rc"
+
+      - name: Drain 1b — dispatcher, hook-injection bench, skill overlap, memory replay
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/runtime_dispatcher run --skill check-refs || rc=1
+          ./scripts-run src/scripts/bench_hook_injection || rc=1
+          ./scripts-run src/scripts/audit_skill_overlap --quiet --print-table --strict || rc=1
+          ./scripts-run src/scripts/memory_replay --check || rc=1
+          exit "$rc"
+
+      - name: Drain 1c — framework leakage, gate paths, quickstart smoke, router, pack YAML, augment budget
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_framework_leakage --quiet || rc=1
+          ./scripts-run src/scripts/check_gate_paths || rc=1
+          ./scripts-run src/scripts/smoke_quickstart || rc=1
+          ./scripts-run src/scripts/compile_router --check || rc=1
+          ./scripts-run src/scripts/validate_pack_yaml || rc=1
+          ./scripts-run src/scripts/measure_augment_budget --check || rc=1
+          exit "$rc"
+
+      # Phase 3.1 — three generated documents whose `--check` gate was red at
+      # the base because the document was stale. The documents are regenerated
+      # in this same change, which is what makes wiring them legitimate: no gate
+      # is wired while red. The `--check` variant, never the writer: the reading
+      # that produced this batch ran the writers once by accident and silently
+      # modified five tracked files.
+      - name: Drain 3.1 — generated documents are not stale
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/generate_ownership_matrix --check || rc=1
+          ./scripts-run src/scripts/generate_cookbook --check || rc=1
+          ./scripts-run src/scripts/generate_role_experiences_catalog --check || rc=1
+          exit "$rc"
+
+      # Phase 3.2 — three reds with no live owner, each fixed in this change.
+      # `check_trigger_eval_presence` is the correction to the roadmap's
+      # decision D5: D5 dropped its step on a reading that the gate exits 0, and
+      # at this branch base it exits 1, because two skills gained a trigger
+      # corpus without their grandfather entries being removed with it.
+      - name: Drain 3.2 — knowledge cards, subagent determinism, trigger-eval presence
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/check_knowledge_cards || rc=1
+          ./scripts-run src/scripts/lint_subagent_determinism || rc=1
+          ./scripts-run src/scripts/check_trigger_eval_presence || rc=1
+          exit "$rc"

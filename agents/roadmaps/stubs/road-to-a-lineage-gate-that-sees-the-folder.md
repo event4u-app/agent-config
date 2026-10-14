@@ -5,6 +5,11 @@ review_by: 2026-12-07
 
 # Stub: road to a lineage gate that sees the whole inbox folder
 
+> **Arrivals:** 2 — latest `inbox-2026-10-r` (2026-10-14): a consolidation declared
+> `parent_set: complete` via `supersedes_on_adoption:` (a spelling the gate does not parse)
+> while omitting a same-evening sibling whose name sits outside the `road-to-*` glob; the
+> gate reported no findings. Earlier: `inbox-2026-09-r`.
+
 > **Stub — not active work.** Found 2026-09-07 while landing the source-fidelity
 > change to [`/analyze:inbox`](../../../src/domains/analysis-workbench/analyze/inbox/command.md),
 > which cites `lint_consolidation_lineage` as the mechanism behind its Phase 2

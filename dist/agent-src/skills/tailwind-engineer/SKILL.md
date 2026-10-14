@@ -217,7 +217,12 @@ When `DESIGN.md` declares `## Taste Dials`, honour them: Variance → layout-fam
 
 ## Security constraints
 
-`scripts/tailwind_config_gen.ts` is the only shipped script.
+`scripts/tailwind_config_gen.ts` is the only shipped script, started as:
+
+```bash
+node <skills-root>/tailwind-engineer/scripts/tailwind_config_gen.mjs \
+  [--framework react|vue|svelte|nextjs] [--output PATH] [--validate-only]
+```
 
 - **What it may touch** — exactly one file: `--output PATH`, or
   `tailwind.config.ts` / `.js` in the current working directory when no

@@ -1,0 +1,19 @@
+/*
+ * Decoy: a login surface file that changes presentation only. Its path matches
+ * an account-surface predicate and it must still produce no finding.
+ */
+.login-card {
+  max-width: 24rem;
+  margin: 4rem auto;
+  padding: 2rem;
+  border-radius: 0.75rem;
+}
+
+.login-card__field + .login-card__field {
+  margin-top: 1rem;
+}
+
+.login-card__submit {
+  width: 100%;
+  font-weight: 600;
+}

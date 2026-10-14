@@ -36,15 +36,19 @@ blocks — it does not hand a half-filled doc to the next stage.
   finding recurs, a successful pattern is worth codifying.
   The existing `skill-improvement-trigger` rule signals the event.
 - **Input:** raw observation (PR link, log line, review comment).
-- **Output:** learning note at `agents/learnings/<date>-<slug>.md`
-  with frontmatter `source`, `evidence[]` (≥1 link), `stage: captured`.
-- **Guardrails:** nothing is written into `dist/agent-src/` at this stage.
-  Learnings live in the consumer repo until promoted.
+- **Output:** a signal appended to the intake stream
+  `agents/memory/intake/signals-<YYYY-MM>.jsonl` by `memory_signal`, carrying
+  its source, its evidence reference and its polarity. `learning_sidecar`
+  verdicts that stream — decay, corroboration at two distinct origins, dead
+  ends — into a gitignored overlay.
+- **Guardrails:** nothing is written into `dist/agent-src/` at this stage, and
+  the overlay is never auto-promoted. A single session can never mint a lesson;
+  the stream lives in the consumer repo until a human curates it onward.
 
 ### Stage 2 — Classify
 
 - **Trigger:** explicit invocation or pipeline progression.
-- **Input:** learning note from Stage 1.
+- **Input:** the signal, and the sidecar's verdict over it, from Stage 1.
 - **Output:** same file, frontmatter extended with:
   - `scope: project | package`
   - `type: rule | skill | command | guideline`
@@ -69,7 +73,7 @@ blocks — it does not hand a half-filled doc to the next stage.
 ### Stage 4 — Gate
 
 - **Trigger:** proposal doc committed or staged.
-- **Executor:** `scripts/check_proposal.ts`.
+- **Executor:** `./agent-config proposal:check`.
 - **Input:** proposal doc from Stage 3.
 - **Output:** verdict recorded in the proposal doc section 9
   (`pass | request changes | block`). Frontmatter `stage: gated`
@@ -103,15 +107,18 @@ blocks — it does not hand a half-filled doc to the next stage.
   > `road-to-self-modification-that-a-council-must-pass` build that binding,
   > and the clause returns with them. Naming it before it exists would state a
   > guarantee a reader could rely on and the gate would not keep.
-- **Executor:** `upstream-contribute` skill. Refuses invocation if
-  the proposal frontmatter is not `stage: gated`.
+- **Executor:** the `upstream-contribute` skill decides *whether*, and
+  `self-repair:release` — the one gated outward step — decides *what leaves*.
+  The skill refuses invocation if the proposal frontmatter is not
+  `stage: gated`.
 - **Input:** gated proposal doc.
-- **Output:** PR against `event4u/agent-config` carrying the
-  proposal doc as the PR body. Standard package CI runs.
+- **Output:** a pull request or an issue against `event4u-app/agent-config`
+  carrying the proposal doc as the body. Standard package CI runs.
   Frontmatter `stage: upstream` and `upstream_pr_url` set.
-- **Guardrails:** no `upstream-contribute` invocation ever edits
-  `.agent-src.uncondensed/` in the consumer repo. Writes happen
-  in the fork / PR branch of the package repo only.
+- **Guardrails:** the skill never pushes and never opens a pull request
+  itself, so there is one privacy floor and not two. No invocation edits any
+  installed tree in the consumer repo; writes happen in the package checkout's
+  branch only, and a consumer install reaches the issue step.
 
 ## Stage ownership
 
@@ -140,8 +147,10 @@ unreviewed upstream changes is not.
   need the evidence in one place.
 - **Do NOT** promote a learning with one piece of evidence. Two
   independent sources is the minimum; the gate enforces it.
-- **Do NOT** edit `.agent-src.uncondensed/` directly in a consumer
-  project "just to try it out". Drafts live in `agents/proposals/`.
+- **Do NOT** edit the installed tree directly in a consumer project
+  "just to try it out" — `.augment/` today, `.agent-src.uncondensed/`
+  in a legacy install. Both are managed; drafts live in
+  `agents/proposals/` and local changes in `agents/overrides/`.
 - **Do NOT** treat a `block` verdict as a personal rejection. The
   gate checks structural shape, not author intent.
 

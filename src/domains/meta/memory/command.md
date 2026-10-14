@@ -35,7 +35,7 @@ commands with a single entry point + sub-command dispatch.
 | `/memory mine-session` | `commands/memory/mine-session.md` | Mine the active session transcript for memory signals (preview-by-default) |
 | `/memory promote` | `commands/memory/promote.md` | Promote an intake signal to a curated memory entry |
 | `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
-| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Draft an upstream PR from the project's low-impact decision corpus (redactor-gated) |
+| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Preview which low-impact decisions would be worth upstreaming (redactor-gated, read-only) |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).

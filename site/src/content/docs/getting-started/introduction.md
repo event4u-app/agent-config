@@ -18,10 +18,10 @@ depth and the discipline.
 
 | Artifact | Count | What it is |
 |---|---|---|
-| **Skills** | 278 | On-demand expertise and executable procedures, matched to a task by intent |
-| **Rules** | 105 | Always-active behaviour constraints auto-loaded every conversation |
-| **Commands** | 190 | Slash-command workflow orchestrators (`/commit`, `/create-pr`, `/work`, …) |
-| **Guidelines** | 101 | Reference conventions read on demand |
+| **Skills** | 300 | On-demand expertise and executable procedures, matched to a task by intent |
+| **Rules** | 122 | Always-active behaviour constraints auto-loaded every conversation |
+| **Commands** | 205 | Slash-command workflow orchestrators (`/commit`, `/create-pr`, `/work`, …) |
+| **Guidelines** | 121 | Reference conventions read on demand |
 | **Personas** | 29 | Review lenses dispatched during code/design review |
 | **Advisors** | 5 | Specialist advisory lenses |
 

@@ -26,7 +26,7 @@
  * Node-only grounds; Phase 1.1 widens what is READ, never what is executed.
  */
 
-import { rankSkills, type RankableSkill } from '../../shared/skillRanking.js';
+import { DEFAULT_SUGGEST_LIMIT, rankSkills, type RankableSkill } from '../../shared/skillRanking.js';
 import type { ContentTree, ContentEntry } from './content.js';
 import { entriesOfKind } from './content.js';
 
@@ -183,14 +183,22 @@ export const LITE_TOOLS: readonly Record<string, unknown>[] = [
         description:
             'Rank skills against a free-form task description. Use when the ' +
             'skill you need is not in the catalogue the host delivered, so ' +
-            'asking by name is impossible and asking by task is not. Returns ' +
-            'names, scores and personas only — never bodies.',
+            'asking by name is impossible and asking by task is not. Each row ' +
+            "carries the skill's own description — its routing criteria, " +
+            'including any clause saying when to use something else. CHOOSE BY ' +
+            'READING THE ROWS, then open at most two bodies with read_skill. ' +
+            'Returns names, scores, personas and descriptions — never bodies.',
         inputSchema: {
             type: 'object',
             required: ['task'],
             properties: {
                 task: { type: 'string', description: 'The task to match skills against.' },
-                limit: { type: 'integer', minimum: 1, default: 5, description: 'Max results. Default 5.' },
+                limit: {
+                    type: 'integer',
+                    minimum: 1,
+                    default: DEFAULT_SUGGEST_LIMIT,
+                    description: `Max results. Default ${String(DEFAULT_SUGGEST_LIMIT)}.`,
+                },
             },
             additionalProperties: false,
         },
@@ -262,20 +270,30 @@ function tierState(tree: ContentTree): 'unknown' | 'tier-b-only' {
 
 /**
  * `suggest_skill_for_task`. Mirrors the kernel handler's envelope — `status`,
- * `suggestions[]` of `{skill, score, personas}` — so a consumer that learned the
- * shape on one server does not have to relearn it on the other. `tiers` is
- * Phase 3.3's field and reports `unknown` until a tier file is wired in.
+ * `suggestions[]` of `{skill, score, personas, description}` — so a consumer
+ * that learned the shape on one server does not have to relearn it on the
+ * other. `tiers` is Phase 3.3's field and reports `unknown` until a tier file
+ * is wired in.
+ *
+ * `description` rides with the row because a NAME is not a choosing criterion:
+ * a caller handed five names either guesses or opens five bodies. It is capped
+ * at 200 characters per skill by `skill.schema.json`, so the envelope grows by
+ * a bounded amount per row and no body is returned at any depth.
  */
 function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>): Record<string, unknown> {
     const task = typeof params.task === 'string' ? params.task.trim() : '';
     if (!task) return { status: 'error', error: 'params.task is required', suggestions: [] };
-    const rawLimit = typeof params.limit === 'number' ? Math.floor(params.limit) : 5;
+    const rawLimit =
+        typeof params.limit === 'number' ? Math.floor(params.limit) : DEFAULT_SUGGEST_LIMIT;
     const limit = Math.max(1, rawLimit);
     const skills = rankableSkills(tree);
     if (skills.length === 0) {
         return { status: 'no_catalogue', suggestions: [], tiers: 'unknown' };
     }
     const all = rankSkills(task, skills);
+    // Built from the same `skills` array that was ranked, so a row can never
+    // carry the description of a skill the ranker did not see.
+    const descriptionOf = new Map(skills.map((s) => [s.name, s.description]));
     const tiers = tierState(tree);
     const tierA = tree.tier_a;
     const filtered = tierA ? all.filter((r) => !tierA.has(r.name)) : all;
@@ -286,7 +304,12 @@ function suggestSkillForTask(tree: ContentTree, params: Record<string, unknown>)
         skills_indexed: skills.length,
         tiers,
         ...(tierA && filtered.length === 0 && all.length > 0 ? { tier_filter: 'bypassed-to-avoid-empty' } : {}),
-        suggestions: kept.slice(0, limit).map((r) => ({ skill: r.name, score: r.score, personas: r.personas })),
+        suggestions: kept.slice(0, limit).map((r) => ({
+            skill: r.name,
+            score: r.score,
+            personas: r.personas,
+            description: descriptionOf.get(r.name) ?? '',
+        })),
     };
 }
 

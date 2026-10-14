@@ -15,8 +15,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import * as census from '../../src/scripts/inbox_source_census.js';
 import {
     censusTopic,
     countAnchors,
@@ -156,5 +157,129 @@ describe('main — an empty scan root must fail, not certify coverage', () => {
 
     it('exits 0 on a populated root', () => {
         expect(main(['--root', path.join(TMP, 'topic'), '--json'])).toBe(0);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The walk itself. Everything above asserts what the census does with the
+// files it was handed; these assert WHICH files it is handed, which is the
+// half that was wrong: `censusTopic` read only the files directly in a topic
+// directory, so a nested folder of later-loop plans was never opened while the
+// closing line still said every anchor left the run carrying a ledger row.
+// ---------------------------------------------------------------------------
+
+function mkTopic(): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'census-nested-'));
+    // Eleven at the top level, each with its own stem.
+    const top = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa', 'lambda'];
+    for (const stem of top) {
+        fs.writeFileSync(path.join(dir, `${stem}.md`), `# ${stem}\n\n- a step\n`, 'utf-8');
+    }
+    // Three more a directory down, sharing a stem with three of the eleven.
+    // A loop-2 plan filed under its own folder is the shape that was missed.
+    const nested = path.join(dir, 'schleifen', 'v2');
+    fs.mkdirSync(nested, { recursive: true });
+    for (const stem of ['alpha', 'beta', 'gamma']) {
+        fs.writeFileSync(path.join(nested, `${stem}.md`), `# ${stem} loop 2\n\n- a step\n`, 'utf-8');
+    }
+    return dir;
+}
+
+describe('inbox_source_census — nested-topic-folder', () => {
+    let dir: string;
+    beforeEach(() => {
+        dir = mkTopic();
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('reads every text file under the topic, not only the top level', () => {
+        expect(census.censusTopic(dir, 't').fileCount).toBe(14);
+    });
+
+    it('groups a stem that appears at two directory levels into one revision set', () => {
+        const t = census.censusTopic(dir, 't');
+        const revisions = t.sets.filter((x) => x.isRevisionSet);
+        expect(revisions.map((x) => x.stem).sort()).toEqual(['alpha', 'beta', 'gamma']);
+        // Each member keeps its path relative to the topic, so a cross-level
+        // set is visible as one — two unrelated files that happen to share a
+        // stem at different depths group too, and a reader has to be able to
+        // see that from the output rather than infer it.
+        const alpha = revisions.find((x) => x.stem === 'alpha');
+        expect(alpha?.members.map((m) => m.file).sort()).toEqual(['alpha.md', 'schleifen/v2/alpha.md']);
+    });
+
+    it('positive control — the pre-repair walk sees eleven files and no revision set', () => {
+        // `recursive: false` IS the old reader: the non-recursive pass that
+        // `censusRoot` still uses for the round root.
+        //
+        // NOTE on the planned numbers: the step was written expecting a control
+        // of twelve files and zero sets. Those came from the real round folder,
+        // and a synthetic fixture cannot carry both — fourteen files with three
+        // cross-level stems means three of them are nested, so the blind walk
+        // sees eleven. The property is identical and the figure is the fixture's.
+        const old = census.censusTopic(dir, 't', false);
+        expect(old.fileCount).toBe(11);
+        expect(old.sets.filter((x) => x.isRevisionSet)).toEqual([]);
+    });
+
+    it('a round root still counts each subdirectory once', () => {
+        // The repair's own hazard: a recursive root pass plus a recursive
+        // per-topic pass would count the nested files twice.
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'census-root-'));
+        try {
+            fs.writeFileSync(path.join(root, 'readme.md'), '# r\n', 'utf-8');
+            fs.mkdirSync(path.join(root, 'topic', 'deep'), { recursive: true });
+            fs.writeFileSync(path.join(root, 'topic', 'one.md'), '# one\n', 'utf-8');
+            fs.writeFileSync(path.join(root, 'topic', 'deep', 'two.md'), '# two\n', 'utf-8');
+            const total = census.censusRoot(root).reduce((n, t) => n + t.fileCount, 0);
+            expect(total).toBe(3);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
+describe('inbox_source_census — uncounted-files-named', () => {
+    let dir: string;
+    beforeEach(() => {
+        dir = mkTopic();
+        fs.writeFileSync(path.join(dir, 'prototype.mjs'), 'export const x = 1;\n', 'utf-8');
+        fs.writeFileSync(path.join(dir, 'schleifen', 'v2', 'screenshot.png'), 'not-a-png', 'utf-8');
+    });
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('names every file it did not read, with its path', () => {
+        const t = census.censusTopic(dir, 't');
+        expect(t.uncounted).toEqual(['prototype.mjs', 'schleifen/v2/screenshot.png']);
+        // They are named, not counted: the file total is unchanged by them.
+        expect(t.fileCount).toBe(14);
+    });
+
+    it('a folder of only unreadable files is reported, not silently empty', () => {
+        const only = fs.mkdtempSync(path.join(os.tmpdir(), 'census-bin-'));
+        try {
+            fs.writeFileSync(path.join(only, 'a.mjs'), 'x\n', 'utf-8');
+            const t = census.censusTopic(only, 't');
+            expect(t.fileCount).toBe(0);
+            expect(t.uncounted).toEqual(['a.mjs']);
+        } finally {
+            fs.rmSync(only, { recursive: true, force: true });
+        }
+    });
+
+    it('a topic with nothing skipped reports an empty uncounted list', () => {
+        // The negative control: without it, an `uncounted` that always carried
+        // something would pass the two cases above.
+        const clean = fs.mkdtempSync(path.join(os.tmpdir(), 'census-clean-'));
+        try {
+            fs.writeFileSync(path.join(clean, 'a.md'), '# a\n', 'utf-8');
+            expect(census.censusTopic(clean, 't').uncounted).toEqual([]);
+        } finally {
+            fs.rmSync(clean, { recursive: true, force: true });
+        }
     });
 });

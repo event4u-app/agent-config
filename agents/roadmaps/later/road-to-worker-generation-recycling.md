@@ -5,7 +5,11 @@ status: later
 
 # Road to worker-generation recycling — a worker at its budget hands off instead of dying
 
-> **Arrivals:** 4 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 5 (at least) - latest `inbox-2026-10-r` (2026-10-14): two parallel plans
+> propose re-tasking a warm worker by the host's resume primitive in place of Phase 2's
+> kill-and-respawn; `road-to-a-cold-start-paid-once` blocker
+> `recycling-question-gets-its-answer` carries the posed question. Previous latest:
+> `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
@@ -37,6 +41,14 @@ status: later
 >
 > The count sets the venue, not the verdict: four arrivals say the parking
 > condition has not resolved itself, not that any of the four options is right.
+
+> **Owner answer (2026-10-14): option 4.** Phase 2 closes as an unmeasured null under
+> Phase 3.3's pre-authorised cheap null; the Phase 0-1 schema and capsule stay standing as
+> the handoff format. Superseded in form by Phase 3 of `road-to-a-cold-start-paid-once`:
+> re-task a warm worker at task boundaries and brief a successor from the capsule, a
+> primitive the host documents, instead of a mid-task respawn no host offers. Executing
+> the closure (cancelling Phase 2, recording the null, disposing of this file) is the next
+> step on this file, not part of recording the answer.
 
 > Today a worker that reaches its tier budget is killed by stop-loss and its
 > partial work returns as an envelope the orchestrator has to re-brief from.

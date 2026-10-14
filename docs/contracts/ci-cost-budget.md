@@ -71,9 +71,45 @@ about.)
 | `tests.yml` | `collector-lifecycle` | macOS only, no matrix | **~150 s measured locally, not yet in CI** | same as above |
 | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
 | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
+| `standing-payload-delta.yml` | `standing-payload-delta` **incl. local-only drain batch 1** | ubuntu, no matrix | **56–60 s with the drain, 21–27 s without (n=2 each)** | always-on, no `paths:` filter |
 | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
 | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
+
+**The local-only drain, and the delta measured where it is paid.** Step 2.1 of
+`road-to-local-gates-wired-while-they-are-green` asks for the duration beside
+the ceiling, so it is here rather than in a commit message. The twenty gates are
+**steps of an existing required job**, so the figure that matters is what they
+add to it — and the figure is CI's, not a developer's machine: the host job ran
+**21 s and 27 s** on the two branch runs before the steps landed and **56 s and
+60 s** on the two after. The drain costs roughly **+33 s**, and the job sits at
+about a fifth of the 300 s ceiling.
+
+**+33 s and not +11.5 s, and the gap is the point.** Summing the twenty gates'
+own measured runtimes gives 11.5 s; the remaining ~22 s is per-step process
+startup — five steps, each booting `tsx` afresh. An earlier revision of this
+paragraph published the 11.5 s as though it were the CI cost, which understated
+a required job's cost threefold. Both numbers are kept because the difference is
+the reusable lesson: a serial local sum is a floor for a step-chained job, never
+an estimate of it.
+
+They ran as a separate job first and measured 44 s, 49 s and 53 s there. That
+job is gone: it was not a required context, so a red in it was visible and
+merged past, and it inherited a `paths:` filter three of these gates' inputs did
+not match.
+
+**One number in this paragraph was wrong and is corrected rather than quietly
+replaced.** An earlier revision said "the twenty gates measured 35.6 s serially"
+and drew a 10-18 s runner overhead from it. **35.6 s is the serial time of all
+119 `wire`-class gates** in the reading this drain is taken from, not of the
+twenty wired here; summing those twenty from the same table gives 11.5 s. An
+independent completion review caught the substitution. A transplanted number in
+a contract document with a `revisit-if` clause feeds the next batch decision,
+which is why the correction is named instead of made silently.
+
+*Revisit-if:* a later batch takes the host job near the ceiling (2.2 names a
+second job of the same workflow as the overflow), or fifty main-branch runs
+accumulate and the real average sits outside this range by enough to matter.
 
 **`collector-lifecycle`, and why it is macOS-only and not free.** It runs the
 five process-level lifecycle properties plus the operator stop verb — six cases,

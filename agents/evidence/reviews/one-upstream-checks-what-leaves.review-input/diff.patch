@@ -1,0 +1,3225 @@
+diff --git a/.path-leak-allow b/.path-leak-allow
+index 6e4559c43292c5457f82d74d66c3573c39463172..3c4c2cb92c6c23dc66b01d22da32b99ef6372d6d 100644
+--- a/.path-leak-allow
++++ b/.path-leak-allow
+@@ -49,7 +49,10 @@ dist/agent-src/skills/screenshot-hygiene/SKILL.md:72
+ dist/agent-src/skills/screenshot-hygiene/SKILL.md:78
+ 
+ # The privacy floor enumerating the patterns it detects, backticked, on one line.
+-dist/agent-src/rules/low-impact-corpus-privacy-floor.md:46
++# Moved 46 -> 45 on 2026-10-14: the rule lost a line above this one when its
++# corrected paths were shrunk back inside the per-spawn payload ratchet. Same
++# line, same reason; a line-keyed pin follows the line it pins.
++dist/agent-src/rules/low-impact-corpus-privacy-floor.md:45
+ 
+ # ── Class 3: legitimately absolute ───────────────────────────────────────────
+ # Where the file actually is on a Homebrew install — a consumer edits this exact
+diff --git a/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json b/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
+index 467b7feb2a665eac6bc7f1565ec5f99443e3c7a1..04bd4e8b57bfbb52a90cbff766a1c6296bada518 100644
+--- a/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
++++ b/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
+@@ -18,25 +18,25 @@
+     "token_target": 500
+   },
+   "metrics": {
+-    "precision_at_k": 80.247,
+-    "recall_at_k": 62.141,
+-    "recall_loss_pp": 37.859,
++    "precision_at_k": 80.096,
++    "recall_at_k": 62.082,
++    "recall_loss_pp": 37.918,
+     "ceiling_met": false,
+     "recall_curve_pp": {
+-      "1": 41.874,
+-      "3": 55.641,
+-      "5": 62.141,
+-      "10": 70.554,
+-      "20": 77.82
++      "1": 42.007,
++      "3": 55.762,
++      "5": 62.082,
++      "10": 70.446,
++      "20": 77.695
+     },
+-    "false_activation_at_k": 15.779,
+-    "context_cost_tokens": 230.6,
++    "false_activation_at_k": 15.9,
++    "context_cost_tokens": 230.7,
+     "token_target_met": true,
+-    "benefit_unconditional": 62.141,
+-    "benefit_conditional_on_activation": 80.247,
+-    "adjudicated_deliveries": 405,
+-    "unadjudicated_deliveries": 4369,
+-    "tie_decided_cut_pp": 79.784
++    "benefit_unconditional": 62.082,
++    "benefit_conditional_on_activation": 80.096,
++    "adjudicated_deliveries": 417,
++    "unadjudicated_deliveries": 4501,
++    "tie_decided_cut_pp": 80.076
+   },
+   "set_compatibility": {
+     "shared_prompts": 10,
+@@ -105,7 +105,7 @@
+   "corpus": {
+     "partition": "train",
+     "holdout_sealed": true,
+-    "cases": 1030,
+-    "prompts": 1019
++    "cases": 1060,
++    "prompts": 1049
+   }
+ }
+diff --git a/agents/evidence/analysis/routing-body-signal-verdict.json b/agents/evidence/analysis/routing-body-signal-verdict.json
+index dca064f07b2f295f6d42c407964e15a2afc69461..964ffa5676e3a44a8bb74669e9790d181904c897 100644
+--- a/agents/evidence/analysis/routing-body-signal-verdict.json
++++ b/agents/evidence/analysis/routing-body-signal-verdict.json
+@@ -3,7 +3,7 @@
+   "step": "5.1",
+   "roadmap": "road-to-governed-harness-evolution",
+   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
+-  "measured_at": "2026-10-13",
++  "measured_at": "2026-10-14",
+   "proxy_to_real_fidelity": {
+     "value": null,
+     "status": "unmeasured-by-construction",
+@@ -11,14 +11,14 @@
+   },
+   "body_signal": {
+     "verdict": "harmful",
+-    "reason": "false activation +5.92 pp breaches the +2.0 pp guard",
++    "reason": "false activation +5.94 pp breaches the +2.0 pp guard",
+     "k": 5,
+-    "delta_recall_pp": 2.294,
+-    "delta_false_activation_pp": 5.917,
+-    "p_value": 0.3846,
++    "delta_recall_pp": 1.859,
++    "delta_false_activation_pp": 5.939,
++    "p_value": 0.4823,
+     "discordant_positive_pairs": {
+-      "gained": 86,
+-      "lost": 74
++      "gained": 87,
++      "lost": 77
+     },
+     "bars": {
+       "recall_gain_pp": 5,
+@@ -28,36 +28,36 @@
+     },
+     "arms": {
+       "description": {
+-        "positives": 523,
+-        "positiveHits": 325,
+-        "negatives": 507,
+-        "negativeHits": 80
++        "positives": 538,
++        "positiveHits": 334,
++        "negatives": 522,
++        "negativeHits": 83
+       },
+       "description+body": {
+-        "positives": 523,
+-        "positiveHits": 337,
+-        "negatives": 507,
+-        "negativeHits": 110
++        "positives": 538,
++        "positiveHits": 344,
++        "negatives": 522,
++        "negativeHits": 114
+       }
+     },
+     "recall_pp": {
+-      "description": 62.141,
+-      "description+body": 64.436
++      "description": 62.082,
++      "description+body": 63.941
+     },
+     "false_activation_pp": {
+-      "description": 15.779,
+-      "description+body": 21.696
++      "description": 15.9,
++      "description+body": 21.839
+     }
+   },
+   "corpus": {
+     "partition": "train",
+     "holdout_sealed": true,
+-    "train_corpora": 106,
++    "train_corpora": 109,
+     "legacy_shaped_corpora": [
+       "brand-asset-generation",
+       "estimate-ticket"
+     ],
+-    "cases": 1030,
++    "cases": 1060,
+     "catalogue_size": 300
+   }
+ }
+diff --git a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+index 15ef1befd6c4b29f12f6db895a2253277a811b7f..d98e23a376c9a454533afb33e7654b4282163d57 100644
+--- a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
++++ b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+@@ -23,7 +23,7 @@ beside it.
+ 
+ - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
+   and § Correction 2026-08-31 are about.
+-- **Now: 134 files, 28 holdout and 106 train.** That bullet read
++- **Now: 137 files, 28 holdout and 109 train.** That bullet read
+   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
+   when there had since been nine — it drifted 31 files behind the tree because
+   each growth after 2026-10-01 wrote its own section and left this line alone.
+@@ -31,7 +31,8 @@ beside it.
+   surviving in the bullet that exists to state the live figure. The growths are
+   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
+   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
+-  § Re-pin 2026-10-11, § Growth — 2026-10-12 and § Growth — 2026-10-14; the
++  § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14 and
++  § Growth — 2026-10-14b; the
+   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
+   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
+   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
+@@ -183,10 +184,57 @@ run as the LAST act before publishing this section, after the final edit to any
+ file in the set — the procedure the 2026-10-01 section prescribes after
+ shipping a stale pin for the third time in this file's life.
+ 
++## Growth — 2026-10-14b, three train corpora; the seal does not move
++
++```
++THREE ROWS ADDED, ALL TRAIN. THE SEALED SET STAYS AT 28.
++EVERY PREVIOUSLY PUBLISHED ROW IS BYTE-IDENTICAL — CHECKED AGAINST THE TREE, NOT ASSERTED.
++```
++
++**What changed.** `road-to-one-upstream-that-checks-what-leaves` steps 1.1 and
++1.2 rewrote `upstream-contribute` into a front on the `self-repair:release`
++ladder and repaired the dangling `agents/learnings/` path in
++`learning-to-rule-or-skill` and `context-authoring`. `check_routing_coverage`
++requires every touched skill to carry a corpus and none of the three had one.
++Each gained **10** labelled queries — 5 exemplars of which one is German, 3
++near-misses, 2 counterexamples; 30 cases in all. Ten rather than the eleven the
++2026-10-14 section above records, because these three skills are process skills
++with fewer distinct surfaces than the seven stack skills that section covers;
++the discipline floor is 3 positives and 2 near-misses and both numbers clear it
++with room.
++
++| Row | Partition | `sha256(name)[0:2]` | Bucket |
++|---|---|---|---|
++| `context-authoring` | train | `0xe0` | 224 ≥ 51 |
++| `learning-to-rule-or-skill` | train | `0xf8` | 248 ≥ 51 |
++| `upstream-contribute` | train | `0xa7` | 167 ≥ 51 |
++
++**The seal did not move, and that is a measurement rather than a preference.**
++All three buckets land far above the ceiling of 51, so the partition rule put
++every one of them in train. Nobody chose that: the rule is a hash of the
++directory name, recomputable by any reader without this file. The sealed set
++stays at 28 and no holdout result taken against the earlier set is voided.
++
++**What provably did NOT change, checked rather than asserted.** Re-running this
++file's own reproduce recipe over the tree and diffing every published row
++reports **exactly three rows absent** — the three above — **zero** hash
++mismatches and **zero** orphans over the 134 rows published before this change.
++No pre-existing corpus file was edited here, so this growth is pure addition.
++
++**The three grandfather entries went with it.** All three skills sat in
++`src/scripts/trigger_eval_grandfather.json`, and `check_trigger_eval_presence`
++reads a skill that carries a corpus AND a grandfather entry as a finding, not
++as belt and braces. The allowlist goes 166 -> 163, which is the direction its
++shrink-only ratchet allows.
++
++**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
++run as the LAST act before publishing this section, after the final edit to any
++file in the set.
++
+ ## The set hash
+ 
+ ```
+-SET-SHA256  365103553b29b93f44286609f7476d277aa210f29b73ed1aa4286e9b4e048a0e
++SET-SHA256  8446fbd4ff2401bbd7078317dc187f9ea8d6a36bd07a6b310348b862bdbb48d7
+ ```
+ 
+ Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
+@@ -573,6 +621,7 @@ open and which this file does not settle.
+ | `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
+ | `competitive-moat-analysis` | `e149d75967c3d407ba74512527934b77fb3ede128c1bbcdecdd88e3c51448b67` |
+ | `complexity-first-planning` | `7377795a8aca39c574ed4a1bc2074f7da451bf1ce7095bdb0ccdc50e60b9757b` |
++| `context-authoring` | `0c3412f197fb3b5210496e39bfe5dc286b1348651fa132c4ade4cb43617f05b7` |
+ | `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
+ | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
+ | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
+@@ -610,6 +659,7 @@ open and which this file does not settle.
+ | `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
+ | `judge-security-auditor` | `b1915f90c4e7648f8cca7de9e43c73eb08616382827d69ee359dd3fa33b5f72f` |
+ | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
++| `learning-to-rule-or-skill` | `954cea1f3b230004cff27ad4d138a442869ad6ad65281514edbb907340380240` |
+ | `learning-tutor` | `3facfb90fa1ee593cf779862bfc79f88f70a915dc9638dc4af6ef5bbf98d9fd7` |
+ | `legal-intake-triage` | `4b6afb88a3a7912ab8666d5e000172224e3e26f5940bbf09988e750a0d89b6fc` |
+ | `legal-practice-profile` | `be472d98368803e6b0f31652069f2ce01b802b97a3ec7976635a602667a6ba14` |
+@@ -649,6 +699,7 @@ open and which this file does not settle.
+ | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
+ | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
+ | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
++| `upstream-contribute` | `563a1ab0381b7a96f9a993381119403f81064426d7b3aaf17fbf81467534cdea` |
+ | `using-git-worktrees` | `66f8a8709d975f3c98103341469ea0af34b909ce1ca7042170690707a61878da` |
+ | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
+ | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
+diff --git a/agents/index.md b/agents/index.md
+index c3cf9ef0493a738bd37644263ffd1e56b0e4ea34..6ab418ee9592b3d2b5643deca74348d5410068ec 100644
+--- a/agents/index.md
++++ b/agents/index.md
+@@ -548,7 +548,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ | command | [`knowledge-list`](../src/domains/product-discovery/knowledge/list/command.md) | cluster: knowledge | List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction. |
+ | command | [`memory`](../src/domains/meta/memory/command.md) | cluster: memory | Memory orchestrator — routes to add, load, mine-session, promote, propose |
+ | command | [`memory-add`](../src/domains/meta/memory/add/command.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns) |
+-| command | [`memory-learn-low-impact`](../src/domains/meta/memory/learn-low-impact/command.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
++| command | [`memory-learn-low-impact`](../src/domains/meta/memory/learn-low-impact/command.md) | cluster: memory | Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing. |
+ | command | [`memory-load`](../src/domains/meta/memory/load/command.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
+ | command | [`memory-mine-session`](../src/domains/meta/memory/mine-session/command.md) | cluster: memory | Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-default, opt-in. Folds in /chat-history learn. |
+ | command | [`memory-promote`](../src/domains/meta/memory/promote/command.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
+diff --git a/agents/roadmaps/later/road-to-surface-consolidation.md b/agents/roadmaps/later/road-to-surface-consolidation.md
+index b0b80733c9b44dd266a947415775dca8629ba672..310c75812f849f61dcfa628a222daa50ce82a0c9 100644
+--- a/agents/roadmaps/later/road-to-surface-consolidation.md
++++ b/agents/roadmaps/later/road-to-surface-consolidation.md
+@@ -255,7 +255,10 @@ locked cluster contract disagree with what is actually on disk.
+ and the by-product finding must not be budgeted as if they had not.** Both
+ bullets are now false: `/roadmap` has **7** sub-commands on disk and its
+ `## Sub-commands` table lists **7**, `materialize` included; `/memory` has **6**
+-on disk and its table lists **6**, `learn-low-impact` included. They are left
++on disk and its table lists **6**, `learn-low-impact` included — and that row
++now describes a read-only preview, its `--apply` flag having been retired on
++2026-10-13 by `road-to-one-upstream-that-checks-what-leaves` step 1.3, so the
++sub-command stays on disk and in the table while sending nothing. They are left
+ above with this note rather than rewritten, so the finding stays auditable —
+ but the post-window sweep this block feeds would otherwise budget for two fixes
+ that no longer exist. **Scope of this correction, stated because it bounds
+diff --git a/agents/roadmaps/road-to-one-upstream-that-checks-what-leaves.md b/agents/roadmaps/road-to-one-upstream-that-checks-what-leaves.md
+index aafbef805913af694e64d940b1a3b3e1238caf62..b65bdbf4151b07d87e5cc3060d16ea5e55b56242 100644
+--- a/agents/roadmaps/road-to-one-upstream-that-checks-what-leaves.md
++++ b/agents/roadmaps/road-to-one-upstream-that-checks-what-leaves.md
+@@ -61,27 +61,68 @@ Nothing is sent without the person's word in that turn.
+ 
+ ## Phase 1 — Repair what sends people to nowhere (executable now)
+ 
+-- [ ] **1.1 `/upstream-contribute` becomes a thin front on the ladder (D1).** Its
++- [x] **1.1 `/upstream-contribute` becomes a thin front on the ladder (D1).** Its
+       command and skill drop the condensed-copy step, the `.augment/` targets, the
+       wrong `condense.sh` path, `composer update` and `git add .`, and hand the
+       finding to `self-repair:release --dry-run`. The command name stays as a
+       public contract.
+       verify: `grep -c 'self-repair:release' src/domains/meta/upstream-contribute/command.md` -> /[1-9]/
+-- [ ] **1.2 The pipeline document matches the tree.** `agents/learnings/` and the
++- [x] **1.2 The pipeline document matches the tree.** `agents/learnings/` and the
+       wrong organisation are replaced by the sidecar and `event4u-app`.
++      The sibling-search over the exact construct `agents/learnings/` found
++      **4 sites in 4 files** — the pipeline document plus
++      `src/agent-src/templates/agents/proposal.example.md`,
++      `src/skills/learning-to-rule-or-skill/SKILL.md` and
++      `src/skills/context-authoring/SKILL.md`; all four are closed, 0 remain.
++      Two further dangling paths in the same document were repaired with it:
++      `scripts/check_proposal.ts` (the verb is `./agent-config proposal:check`)
++      and the installed-tree prohibition, which named only the legacy
++      `.agent-src.uncondensed/`.
+       verify: `grep -c 'agents/learnings/' docs/guidelines/agent-infra/self-improvement-pipeline.md` -> /^0$/
+-- [ ] **1.3 The third way is retired (D2).** `learn-low-impact --apply` is
++- [x] **1.3 The third way is retired (D2).** `learn-low-impact --apply` is
+       removed with its documentation, the rule's locked-target line names the
+       corpus that exists, and the `/memory` row in
+-      `later/road-to-surface-consolidation` is updated.
++      `later/road-to-surface-consolidation` is updated. The seed literal now
++      lives in exactly one place — `PACKAGE_SEED_PATH` in
++      `src/scripts/ai_council/learn_low_impact_preview.ts` — which states that
++      the file is deliberately absent, so the preview diffs against an empty
++      baseline rather than against a path nobody can open. The rule keeps the
++      seed's `path_prefix` trigger: a seed reappearing then arrives already
++      under the floor instead of beneath it.
+       verify: `grep -c 'low-impact-decisions-seed' src/domains/meta/memory/learn-low-impact/command.md` -> /^0$/
+ - [ ] **1.4 The four threshold sites cite one table.** Each points at the
+       canonical evidence-threshold table in `docs/contracts/retro-v1.md`
+       instead of restating its own.
++      **Open for a named reason, re-executed 2026-10-14:**
++      `docs/contracts/retro-v1.md` still does not exist, and
++      `road-to-a-retro-the-merge-runs` now measures **35 open, 0 closed** —
++      the count rose since 2026-10-13 rather than falling, so the contract is
++      further away, not nearer. Writing the citation would create exactly the
++      dangling reference AC-1 forbids — this step would break the acceptance
++      criterion the rest of Phase 1 was closed to satisfy. It opens when that
++      contract lands.
+       verify: `grep -c 'retro-v1.md' src/skills/upstream-contribute/SKILL.md` -> /[1-9]/
+ 
+ ## Phase 2 — A floor over the whole payload
+ 
++> **Phase state, executed against the tree on 2026-10-14 rather than read off a
++> marker.** The prerequisite named under § Prerequisites is
++> `road-to-one-detector-and-the-senders-we-own` Phase 2, and that roadmap
++> measures **24 open, 0 closed** — its detector table does not exist. K5 of this
++> file forbids building a second scanner, so 2.2 has nothing to scan against.
++>
++> The sharper finding is about 2.1 and 2.3, and it was not visible from the
++> step text: **the release makes no commit at all.** `executeRelease`
++> (`src/scripts/self_repair_cli.ts:369`) READS the checkout's current branch
++> and refuses when it is `main` or detached; the fix is authored and committed
++> before the release is ever called. A grep for `isolated`, `ephemeral`,
++> `mktemp` and `tmpdir` across that file returns **zero** matches. So 2.1 is a
++> build — an isolated checkout, a synthesised commit, an object-graph walk —
++> not a widening of something present, and 2.3 ("the commit uses a noreply
++> identity") has no commit to set an identity on until 2.1 creates one. Both
++> are correctly sequenced behind it; neither is blocked on the detector table,
++> and that distinction is worth keeping for whoever takes this next.
++
+ - [ ] **2.1 The release builds a clean patch first.** In an isolated checkout of
+       this package, one commit on the package base; the gate walks every object
+       reachable from it that is not on the base, plus branch name, commit
+@@ -107,13 +148,49 @@ Nothing is sent without the person's word in that turn.
+ - [ ] **3.2 A mechanism fingerprint.** For records carrying `target` and
+       `principle`, the fingerprint hashes those instead of the evidence, so the
+       F5 pair clusters.
++      **Open for a named reason, executed 2026-10-14:** `DefectFinding` carries
++      `target?: string[]` (`src/scripts/_lib/self_repair.ts:112`) but the
++      string `principle` appears **zero** times in that file. The field is the
++      retro schema's, and that schema is step 0.3 of
++      `road-to-a-retro-the-merge-runs` (35 open, 0 closed). Hashing `target`
++      alone would cluster two different mechanisms found in the same file, so
++      the half-built version is worse than the evidence hash it replaces.
+       verify: `npx vitest run tests/scripts/self_repair.test.ts -t same-mechanism-same-fingerprint --reporter=verbose` -> /✓.*same-mechanism-same-fingerprint/
+ - [ ] **3.3 Draft, and a neutral branch.** `--draft` on every pull request; the
+       branch is `retro/<fingerprint[:8]>`.
++      **Half landed 2026-10-14, half sequenced.** F4 is closed: `prArgs` now
++      carries `--draft` before `--title`, on **both** rungs of the ladder — the
++      direct-push one and the fork one, which builds its own argv and would
++      otherwise have kept opening ready-for-review for exactly the contributor
++      who has no push rights. Three cases in
++      `tests/scripts/self_repair_release.test.ts` drive the real
++      `executeRelease` through a scripted runner, and all three were watched
++      red with the flag removed. One of them only became sensitive after that
++      probe: written as an index comparison alone it passed with the flag
++      ABSENT, because `indexOf` answers `-1` and `-1` is less than everything.
++      The branch half stays open because the release does not NAME a branch —
++      it reads the one already checked out (see the Phase 2 note above). It
++      closes with 2.1, which is where the commit it would name is created.
+       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t pr-is-draft --reporter=verbose` -> /✓.*pr-is-draft/
+ 
+ ## Phase 4 — Approval of exact bytes, and a route from consumers
+ 
++> **Phase state, executed 2026-10-14.** 4.1 and 4.3 both describe what the dry
++> run SHOWS, and the bytes they would show — the synthesised commit, its
++> identity, its branch — are 2.1's output. Until 2.1 exists the dry run has no
++> payload to render, so an approval bound to its digest would bind to nothing.
++>
++> **4.2's matrix is the one open item here with no code prerequisite, and it is
++> still not takeable by this lane.** It asks what a fork pull request exposes
++> that an issue does not — visible account, fork and repository linkage, branch
++> name, activity events, timestamps, notifications, retention, deletion — and
++> those are facts about a live forge, not about this tree. Writing them from
++> recollection is precisely the unverified structural claim the evidence
++> discipline forbids, and the only way to observe them is to open a real fork
++> pull request, which is the act the matrix exists to decide about. It needs a
++> session with explicit permission to take that observation, and D5's current
++> option (b) is what holds until then — consumers send issues.
++
+ - [ ] **4.1 The person approves what is sent.** `--dry-run` shows every byte;
+       the release accepts only an approval bound to the digest of those bytes
+       through `self_repair_class_b`, or through the self-modification roadmap's
+@@ -136,6 +213,14 @@ Nothing is sent without the person's word in that turn.
+ 
+ ## Phase 5 — The retro may offer, never send
+ 
++> **Phase state, executed 2026-10-14.** Both steps verify against
++> `tests/scripts/retro.test.ts`, and both the test file and every `retro*`
++> module under `src/scripts/` are absent — a glob for them matches nothing.
++> `road-to-a-retro-the-merge-runs` measures **35 open, 0 closed**. There is no
++> retro run to attach an offer to, so neither step is buildable here, and
++> building a stub to attach one to would create the second outward route K1
++> forbids.
++
+ - [ ] **5.1 At most one offer per run.** A retro run whose package record passes
+       the canonical threshold appends one release offer to its output; sending
+       still needs the person's word in that turn.
+diff --git a/dist/agent-src/commands/memory.md b/dist/agent-src/commands/memory.md
+index a2e2990fd1b0c8f5ba7e02017a32845e1b88b140..a69b90a9970776970d2a1c1e58f886eb19ac85e8 100644
+--- a/dist/agent-src/commands/memory.md
++++ b/dist/agent-src/commands/memory.md
+@@ -35,7 +35,7 @@ commands with a single entry point + sub-command dispatch.
+ | `/memory mine-session` | `commands/memory/mine-session.md` | Mine the active session transcript for memory signals (preview-by-default) |
+ | `/memory promote` | `commands/memory/promote.md` | Promote an intake signal to a curated memory entry |
+ | `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
+-| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Draft an upstream PR from the project's low-impact decision corpus (redactor-gated) |
++| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Preview which low-impact decisions would be worth upstreaming (redactor-gated, read-only) |
+ 
+ Sub-command names match the locked contract in
+ [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
+diff --git a/dist/agent-src/commands/memory/learn-low-impact.md b/dist/agent-src/commands/memory/learn-low-impact.md
+index 15c723d964e94b4ae6d46ea07690c8c6969b368e..43ca30c3263f402f11c94f05c715713b11b43637 100644
+--- a/dist/agent-src/commands/memory/learn-low-impact.md
++++ b/dist/agent-src/commands/memory/learn-low-impact.md
+@@ -5,9 +5,8 @@ pack: memory
+ visibility: internal
+ cluster: memory
+ sub: learn-low-impact
+-skills: [ai-council, upstream-contribute]
+-description: Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
+-argument-hint: "[--preview|--apply]"
++skills: [ai-council]
++description: Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing.
+ suggestion:
+   eligible: false
+   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
+@@ -19,28 +18,30 @@ packs:
+ 
+ # /memory learn-low-impact
+ 
+-Promote `## Validated` entries from
++Show which `## Validated` entries from
+ [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
+-into the upstream seed at
+-`.agent-src.uncondensed/data/low-impact-decisions-seed.md` via a DRAFT
+-PR against the agent-config package. **Validated entries only** — probation
+-entries never upstream, they're unconfirmed signal.
++would be worth upstreaming, and which the privacy floor refuses.
++**Validated entries only** — probation entries are unconfirmed signal and
++never appear here.
+ 
+-## Flags
++## This command opens nothing
+ 
+-| Flag | Default | Behaviour |
+-|---|---|---|
+-| `--preview` | **on** | Build the plan, run the redactor, render promoted / refused / already-seeded buckets + draft PR body. **No file write, no branch, no PR.** Default behaviour. |
+-| `--apply` | off | Mutually exclusive with `--preview`. Required to invoke `upstream-contribute` and open the draft PR. Refusals from the redactor still block. |
++```
++READ-ONLY. NO BRANCH, NO COMMIT, NO PUSH, NO PULL REQUEST, NO FILE WRITE.
++THE `--apply` FLAG WAS RETIRED: IT WROTE INTO A PACKAGE SEED FILE
++THAT DOES NOT EXIST, AND A SECOND WAY OUT WOULD BE A SECOND SET
++OF GUARANTEES. ONE WAY OUT IS `self-repair:release`.
++```
+ 
+-Iron Law: ``--apply`` never auto-fires on the first invocation. The
+-user always sees the preview block first and re-runs explicitly.
++The package ships no seed corpus today, so the already-seeded baseline is
++empty and every validated entry that clears the redactor shows as promotable.
++That is a true reading of the tree, not a backlog.
+ 
+ ## Iron Law — privacy floor runs TWICE
+ 
+ ```
+-THE REDACTOR RUNS AT INTAKE (WRITE GATE) AND AGAIN HERE (UPSTREAM GATE).
+-ANY VIOLATION → REFUSE THE PR. NO SILENT REWRITES.
++THE REDACTOR RUNS AT INTAKE (WRITE GATE) AND AGAIN HERE (REVIEW GATE).
++ANY VIOLATION → THE ENTRY IS REFUSED AND NAMED. NO SILENT REWRITES.
+ ```
+ 
+ See [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
+@@ -50,37 +51,43 @@ for the eight forbidden-content classes.
+ 
+ ### 1. Build the preview plan
+ 
+-Call
+-`scripts/ai_council/learn_low_impact_preview.ts::build_preview` with
+-the project-local corpus and the package seed:
+-
+-```python
+-from scripts.ai_council.learn_low_impact_preview import build_preview
+-plan = build_preview(
+-    corpus_path="agents/decisions/low-impact-decisions.md",
+-    seed_path=".agent-src.uncondensed/data/low-impact-decisions-seed.md",
+-    repo_slug="<owner>/<repo>",  # from `git remote get-url origin`
+-    repo_root="<absolute repo root>",
+-    private_domains=(),   # from .agent-settings.yml policy
+-    customer_names=(),    # from .agent-settings.yml policy
+-    sql_identifiers=(),   # from .agent-settings.yml policy
+-)
++Call `build_preview` from
++`src/scripts/ai_council/learn_low_impact_preview.ts` with the project-local
++corpus and the exported seed path:
++
++```ts
++import {
++    build_preview,
++    PACKAGE_SEED_PATH,
++} from '../../scripts/ai_council/learn_low_impact_preview.js';
++
++const plan = build_preview('agents/decisions/low-impact-decisions.md', PACKAGE_SEED_PATH, {
++    repoSlug: '<owner>/<repo>',   // from `git remote get-url origin`
++    repoRoot: '<absolute repo root>',
++    privateDomains: [],           // from .agent-settings.yml policy
++    customerNames: [],            // from .agent-settings.yml policy
++    sqlIdentifiers: [],           // from .agent-settings.yml policy
++});
+ ```
+ 
++`PACKAGE_SEED_PATH` is the one place that literal lives, so no caller
++restates it. The file it names is not in the tree, and that is not an error:
++the builder returns an empty already-seeded set, which is the current state
++of this package.
++
+ The builder runs all three contract checks in one pass:
+ 
+-1. Parses `## Validated` (strict mode — drift surfaces as
+-   `CorpusParseError`).
++1. Parses `## Validated` (strict mode — drift surfaces as a parse error).
+ 2. Diffs against the seed file — already-seeded entries land in
+-   `plan.already_seeded` and never upstream.
+-3. Re-runs `redact_low_impact_entry` on every candidate. Failures
+-   land in `plan.refused`.
++   `plan.already_seeded`.
++3. Re-runs `redact_low_impact_entry` on every candidate. Failures land in
++   `plan.refused`.
+ 
+ ### 2. Surface the preview block
+ 
+-Print `plan.render()` verbatim. Always. This is the user-facing
+-audit trail per `fast-path-marker-visibility` Iron Law — the host
+-agent MUST NOT swallow or paraphrase it.
++Print `plan.render()` verbatim. Always. This is the user-facing audit trail
++per the `fast-path-marker-visibility` Iron Law — the host agent MUST NOT
++swallow or paraphrase it.
+ 
+ ```
+ ## learn-low-impact preview — repo=<slug>
+@@ -92,57 +99,25 @@ seed: <path>
+ ### Already seeded (K) …
+ ```
+ 
+-### 3. Decide based on the flag
+-
+-- **`--preview` (default)** — stop here. If `plan.would_open_pr` is
+-  true, the rendered block ends with
+-  `> Re-run with \`--apply\` to open the draft PR via \`upstream-contribute\`.`
+-  Hand control back to the user.
+-- **`--apply`** — refuse when `plan.refused` is non-empty; surface
+-  the refusals and stop. Otherwise invoke
+-  [`upstream-contribute`](../skills/upstream-contribute/SKILL.md)
+-  with:
+-    - **target file:** `.agent-src.uncondensed/data/low-impact-decisions-seed.md`
+-    - **PR title:** `plan.render_pr_body()` first heading
+-    - **PR body:** `plan.render_pr_body()`
+-    - **patch:** `plan.render_diff()`
+-    - **draft:** `true` — never auto-merge; review is a human gate.
+-
+-### 4. Advance the local baseline (`--apply` path only)
+-
+-When the PR is opened (step 3 returns a PR URL + new commit SHA on
+-the package branch):
+-
+-```bash
+-# update the local pointer so subsequent runs are deltas
+-sed -i.bak -E "s|^last-upstreamed: .*|last-upstreamed: <new-sha>|" \
+-    agents/decisions/low-impact-decisions.md
+-rm agents/decisions/low-impact-decisions.md.bak
+-```
++### 3. Stop
+ 
+-### 5. Surface result (`--apply` path only)
+-
+-```
+-> Drafted PR <url>
+-> Entries upstreamed: N
+-> Provenance bumped: <old-sha> → <new-sha>
+-```
++Hand control back to the user. The block is the deliverable. Nothing in this
++command sends anything; if the package ever ships a seed corpus again, the
++`revisit if` on decision D2 of
++`road-to-one-upstream-that-checks-what-leaves` fires and the route is designed
++once, on the one ladder.
+ 
+ ## Halt conditions
+ 
+-- Redactor refuses (any class) — surface, stop. `--apply` is rejected.
+-- No candidates (`plan.has_work == False`) — exit 0 with the preview
+-  block; no PR even on `--apply`.
+-- `--preview` (default) — always stops before any side-effect.
+-- Package repo unavailable per `upstream-contribute § Step 4` — surface
+-  the access options, stop.
+-- User explicitly declines the PR option — exit 0, no PR.
++- Redactor refuses (any class) — surface the refusals in the block, stop.
++- No candidates (`plan.has_work` is false) — exit 0 with the preview block.
++- Corpus missing or drifted — surface the parse error, stop.
+ 
+ ## See also
+ 
+-- [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — PR
+-  machinery (branch, commit, gates).
+ - [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
+   — the project-local corpus.
+ - [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
+   — Iron Law.
++- [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — the one
++  front on the one outward step, for findings that are worth sending.
+diff --git a/dist/agent-src/commands/upstream-contribute.md b/dist/agent-src/commands/upstream-contribute.md
+index 79caf265704308b3f19aa09516a8bbd48b776a17..f2797a7249038916143029ca40c3f7bd1b1ac9aa 100644
+--- a/dist/agent-src/commands/upstream-contribute.md
++++ b/dist/agent-src/commands/upstream-contribute.md
+@@ -18,6 +18,17 @@ packs:
+ 
+ # /upstream-contribute
+ 
++This command is a **front on one outward step**, not a second way out. It
++decides *what* is worth contributing and hands the finding to
++`self-repair:release`, which owns the branch, the commit identity, the privacy
++floor over every byte that leaves, and the pull-request or issue route.
++
++```
++ONE WAY OUT. THIS COMMAND NEVER PUSHES, NEVER OPENS A PULL REQUEST,
++AND NEVER WRITES A SECOND COPY OF AN ARTIFACT.
++WHAT LEAVES THE MACHINE LEAVES THROUGH `self-repair:release`.
++```
++
+ ## Input
+ 
+ The user may provide:
+@@ -30,13 +41,15 @@ The user may provide:
+ 
+ ### 1. Identify what to contribute
+ 
+-If the user provided a file path → read it.
+-If not → check for recent overrides or new skills:
++If the user provided a file path, read it. If not, look for recent overrides
++or new project-local artifacts:
+ 
+ ```bash
+-ls agents/overrides/ 2>/dev/null
+-find .augment/skills -name 'SKILL.md' -newer .augment/rules -maxdepth 3 2>/dev/null
+-git diff --name-only HEAD~5 -- agents/overrides/ .augment/skills/ 2>/dev/null
++ls agents/overrides/
++```
++
++```bash
++git diff --name-only HEAD~5 -- agents/overrides/
+ ```
+ 
+ Ask the user to confirm what should be contributed:
+@@ -53,130 +66,86 @@ Ask the user to confirm what should be contributed:
+ 
+ ### 2. Check universality
+ 
+-Before proceeding, verify the content is package-worthy:
++This is a **worth-contributing** judgement, not a privacy check — the privacy
++floor over the bytes runs in step 4 and cannot be satisfied by a checkbox here.
+ 
+-- [ ] No project-specific references (domain names, local paths, FQDNs, project-specific classes)
+-- [ ] Benefits ALL consumers, not just this project
+-- [ ] Learning occurred 2+ times OR is clearly generalizable
++- [ ] Benefits every consumer, not only this project
++- [ ] The learning occurred twice or more, or is clearly generalizable
++- [ ] A named mechanism explains why the shipped default is wrong
+ 
+-If project-specific content is found, ask:
+-
+-```
+-> ⚠️ Found project-specific references: {examples}
+->
+-> 1. Remove them — make it universal
+-> 2. Cancel — keep as project-only override
+-```
++Below that bar, record the signal and leave the shipped default alone.
+ 
+-### 3. Determine contribution type and target path
++### 3. Determine contribution type and source path
+ 
+-| Type | Source target | Condensed target |
+-|---|---|---|
+-| **Skill** | `src/skills/{name}/SKILL.md` | `dist/agent-src/skills/{name}/SKILL.md` |
+-| **Rule** | `src/rules/{name}.md` | `dist/agent-src/rules/{name}.md` |
+-| **Command** | `src/domains/{domain}/{name}/command.md` | `dist/agent-src/commands/{name}.md` |
+-| **Guideline** | `docs/guidelines/{cat}/{name}.md` | _(not condensed; reference-only)_ |
++`src/` is the only place an artifact is authored. The projections under
++`dist/agent-src/` are regenerated by the package's own sync step; a
++contribution never writes a second, hand-condensed copy (ADR-201 copies `.md`
++verbatim).
+ 
+-### 4. Get access to the package repo
++| Type | Source path |
++|---|---|
++| **Skill** | `src/skills/{name}/SKILL.md` |
++| **Rule** | `src/rules/{name}.md` |
++| **Command** | `src/domains/{domain}/{name}/command.md` |
++| **Guideline** | `docs/guidelines/{category}/{name}.md` |
+ 
+-```
+-> I need to create files in the agent-config package repo.
+->
+-> 1. I have it cloned locally — I'll give you the path
+-> 2. Clone it for me into /tmp/agent-config-upstream
+-> 3. Just output the files — I'll handle it manually
+-```
++### 4. Hand the finding to the ladder
+ 
+-**Option 1:** User provides path → verify it's the right repo:
++Show the user what would leave the machine, before anything leaves it:
+ 
+ ```bash
+-cd {path} && git remote get-url origin
+-# Must contain event4u-app/agent-config
++./agent-config self-repair:release <fingerprint> --dry-run
+ ```
+ 
+-**Option 2:**
++The dry run prints the resolved route, the account that will appear on the
++pull request, and every byte of the title, body, branch name and diff. It
++touches no network. Read it with the user; a refusal from the privacy floor
++is final and the finding stays local.
++
++No record yet? Record the finding first, then release it:
+ 
+ ```bash
+-git clone git@github.com:event4u-app/agent-config.git /tmp/agent-config-upstream
+-cd /tmp/agent-config-upstream
++./agent-config self-repair:status
+ ```
+ 
+-**Option 3:** Skip to Step 7 (output files only).
+-
+-### 5. Create branch and write files
++### 5. Send, once, with the user's word in that turn
+ 
+ ```bash
+-cd {package-repo}
+-git checkout main && git pull
+-git checkout -b {type}/{name}  # e.g. feat/skills/php-container-discovery
++./agent-config self-repair:release <fingerprint>
+ ```
+ 
+-Write the **uncondensed version** (full, verbose, human-readable).
+-Write the **condensed version** (token-efficient, 40-60% shorter for skills; 1:1 for rules/commands).
++Running that command IS the user's word. It is a Hard-Floor action under
++`non-destructive-by-default`, so no standing instruction, autonomy setting or
++earlier approval substitutes for it.
+ 
+-Condensed version MUST preserve:
++The ladder chooses the vehicle: a pull request from a checkout of this
++package, an issue otherwise, and a local record when nothing may leave.
++Degrading never widens what leaves the machine, only the vehicle.
+ 
+-- All code blocks (byte-for-byte)
+-- YAML frontmatter (verbatim)
+-- All headings
+-- Validation rules, gotchas, "Do NOT" sections
++### 6. Quality gates (only in a checkout of this package)
+ 
+-Frontmatter must have `source: package`.
++Run the package's full CI pipeline and confirm it is green before the send.
++The `package-ci-checks` rule owns the entry point and names it; a consumer
++project has no such runner, which is why the command is not repeated here.
++Outside such a checkout the package CI runs these after the issue or pull
++request exists.
+ 
+-### 6. Run quality gates
++### 7. Remind about local override cleanup
+ 
+-```bash
+-./scripts-run src/scripts/skill_linter --all           # 0 FAIL required
+-./scripts-run src/scripts/check_condensation            # No 🔴 errors for this file
+-./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
+-bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
+ ```
+-
+-Fix any issues before continuing.
+-
+-### 7. Present result
+-
+-**If Option 1 or 2** (working in package repo):
+-
+-```
+-> ✅ Files created in {package-repo}:
+->
+-> - `src/{type}/{name}` (source)
+-> - `dist/agent-src/{type}/{name}` (condensed)
++> After the contribution is merged and you update the package here:
+ >
+-> Quality gates: {pass/fail summary}
++> 1. rm agents/overrides/{type}/{name}.md
++> 2. ./agent-config update   (moves the version pin; your package manager fetches it)
+ >
+-> 1. Commit and push — I'll create the PR
+-> 2. Commit only — I'll push later
+-> 3. Review the files first
++> The shared version then replaces your local override.
+ ```
+ 
+-**If Option 3** (manual):
+-
+-Show both file contents in copyable fenced blocks with full paths as headers.
+-
+-### 8. Create PR (if user chose Option 1 in Step 7)
+-
+-```bash
+-git add .
+-git commit -m "{type}({scope}): add {name}
++## Do NOT
+ 
+-{brief description of what it does and why it's universal}"
+-git push -u origin {branch}
+-```
+-
+-Create PR via GitHub API with the package's PR template.
+-Fill in all gates (Promotion, Quality, Universality, Completeness).
+-
+-### 9. Remind about local override cleanup
+-
+-```
+-> 📝 After the PR is merged and you update the package in this project:
+->
+-> ```bash
+-> rm agents/overrides/{type}/{name}.md
+-> composer update event4u/agent-config  # or: npm update
+-> ```
+->
+-> The shared version will then replace your local override.
+-```
++- Do NOT push, open a pull request, or open an issue by hand — that is the
++  ladder's job and the floor over the bytes runs there.
++- Do NOT write a hand-condensed second copy of an artifact.
++- Do NOT edit any generated projection; `src/` is the source of truth.
++- Do NOT stage with a bare `git add .` — name the paths.
++- Do NOT assume consent from an earlier contribution; the word is per turn.
+diff --git a/dist/agent-src/guidelines/agent-infra/self-improvement-pipeline.md b/dist/agent-src/guidelines/agent-infra/self-improvement-pipeline.md
+index 6c64c9df616ca9670ffdab32347bc2334deed37b..7e60f51412430191cfbb38a184084bedf576d553 100644
+--- a/dist/agent-src/guidelines/agent-infra/self-improvement-pipeline.md
++++ b/dist/agent-src/guidelines/agent-infra/self-improvement-pipeline.md
+@@ -36,15 +36,19 @@ blocks — it does not hand a half-filled doc to the next stage.
+   finding recurs, a successful pattern is worth codifying.
+   The existing `skill-improvement-trigger` rule signals the event.
+ - **Input:** raw observation (PR link, log line, review comment).
+-- **Output:** learning note at `agents/learnings/<date>-<slug>.md`
+-  with frontmatter `source`, `evidence[]` (≥1 link), `stage: captured`.
+-- **Guardrails:** nothing is written into `dist/agent-src/` at this stage.
+-  Learnings live in the consumer repo until promoted.
++- **Output:** a signal appended to the intake stream
++  `agents/memory/intake/signals-<YYYY-MM>.jsonl` by `memory_signal`, carrying
++  its source, its evidence reference and its polarity. `learning_sidecar`
++  verdicts that stream — decay, corroboration at two distinct origins, dead
++  ends — into a gitignored overlay.
++- **Guardrails:** nothing is written into `dist/agent-src/` at this stage, and
++  the overlay is never auto-promoted. A single session can never mint a lesson;
++  the stream lives in the consumer repo until a human curates it onward.
+ 
+ ### Stage 2 — Classify
+ 
+ - **Trigger:** explicit invocation or pipeline progression.
+-- **Input:** learning note from Stage 1.
++- **Input:** the signal, and the sidecar's verdict over it, from Stage 1.
+ - **Output:** same file, frontmatter extended with:
+   - `scope: project | package`
+   - `type: rule | skill | command | guideline`
+@@ -69,7 +73,7 @@ blocks — it does not hand a half-filled doc to the next stage.
+ ### Stage 4 — Gate
+ 
+ - **Trigger:** proposal doc committed or staged.
+-- **Executor:** `scripts/check_proposal.ts`.
++- **Executor:** `./agent-config proposal:check`.
+ - **Input:** proposal doc from Stage 3.
+ - **Output:** verdict recorded in the proposal doc section 9
+   (`pass | request changes | block`). Frontmatter `stage: gated`
+@@ -103,15 +107,18 @@ blocks — it does not hand a half-filled doc to the next stage.
+   > `road-to-self-modification-that-a-council-must-pass` build that binding,
+   > and the clause returns with them. Naming it before it exists would state a
+   > guarantee a reader could rely on and the gate would not keep.
+-- **Executor:** `upstream-contribute` skill. Refuses invocation if
+-  the proposal frontmatter is not `stage: gated`.
++- **Executor:** the `upstream-contribute` skill decides *whether*, and
++  `self-repair:release` — the one gated outward step — decides *what leaves*.
++  The skill refuses invocation if the proposal frontmatter is not
++  `stage: gated`.
+ - **Input:** gated proposal doc.
+-- **Output:** PR against `event4u/agent-config` carrying the
+-  proposal doc as the PR body. Standard package CI runs.
++- **Output:** a pull request or an issue against `event4u-app/agent-config`
++  carrying the proposal doc as the body. Standard package CI runs.
+   Frontmatter `stage: upstream` and `upstream_pr_url` set.
+-- **Guardrails:** no `upstream-contribute` invocation ever edits
+-  `.agent-src.uncondensed/` in the consumer repo. Writes happen
+-  in the fork / PR branch of the package repo only.
++- **Guardrails:** the skill never pushes and never opens a pull request
++  itself, so there is one privacy floor and not two. No invocation edits any
++  installed tree in the consumer repo; writes happen in the package checkout's
++  branch only, and a consumer install reaches the issue step.
+ 
+ ## Stage ownership
+ 
+@@ -140,8 +147,10 @@ unreviewed upstream changes is not.
+   need the evidence in one place.
+ - **Do NOT** promote a learning with one piece of evidence. Two
+   independent sources is the minimum; the gate enforces it.
+-- **Do NOT** edit `.agent-src.uncondensed/` directly in a consumer
+-  project "just to try it out". Drafts live in `agents/proposals/`.
++- **Do NOT** edit the installed tree directly in a consumer project
++  "just to try it out" — `.augment/` today, `.agent-src.uncondensed/`
++  in a legacy install. Both are managed; drafts live in
++  `agents/proposals/` and local changes in `agents/overrides/`.
+ - **Do NOT** treat a `block` verdict as a personal rejection. The
+   gate checks structural shape, not author intent.
+ 
+diff --git a/dist/agent-src/rules/low-impact-corpus-privacy-floor.md b/dist/agent-src/rules/low-impact-corpus-privacy-floor.md
+index e107ccb776269f98a5b28b0db91c1d33886a777d..6b05fa96c399f7b68f5a320c30baab14981d5166 100644
+--- a/dist/agent-src/rules/low-impact-corpus-privacy-floor.md
++++ b/dist/agent-src/rules/low-impact-corpus-privacy-floor.md
+@@ -25,13 +25,12 @@ NO SECRETS. NO EMAILS. NO PROJECT PATHS. NO CUSTOMER NAMES.
+ NO INTERNAL HOSTNAMES. NO MONEY. NO BUSINESS SQL. NO LONG CODE.
+ ```
+ 
+-The redactor lives in `scripts/ai_council/redact_low_impact_entry.ts`
+-and runs at **both** gates:
++The redactor — named under *See also* — runs at **both** gates:
+ 
+ 1. **Write gate** — every intake append to
+-   `agents/decisions/low-impact-decisions.md` (Phase 12 § Step 2).
+-2. **Upstream gate** — every `/memory learn-low-impact` PR draft,
+-   before the diff leaves the repo (Phase 12 § Step 5).
++   `agents/decisions/low-impact-decisions.md`.
++2. **Review gate** — every `/memory learn-low-impact` preview; a refused
++   entry is named, never promoted.
+ 
+ A failure at either gate refuses the operation, surfaces the
+ offending pattern, and asks the user to rephrase. The redactor never
+@@ -41,7 +40,7 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
+ 
+ | # | Class | Pattern source |
+ |---|---|---|
+-| 1 | Secrets | raw-key prefixes from `scripts/ai_council/config._RAW_KEY_PREFIXES` + inline `api_key:` shape |
++| 1 | Secrets | raw-key prefixes from `_RAW_KEY_PREFIXES` in `src/scripts/ai_council/config.ts` + inline `api_key:` shape |
+ | 2 | Emails | RFC-5322-ish |
+ | 3 | Project-rooted paths | `/Users/`, `/home/`, `/opt/`, `/private/`, drive letters, configured `repo_root` |
+ | 4 | Customer / tenant names | caller-supplied list; generic placeholders (`<customer>`, `<tenant>`, `<account>`, `<user>`) survive |
+@@ -52,16 +51,16 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
+ 
+ ## Locked target types
+ 
+-- `agents/decisions/low-impact-decisions.md` — project-local corpus.
+-- `data/low-impact-decisions-seed.md` (agent-config package) —
+-  upstream seed shipped with the package.
++- `agents/decisions/low-impact-decisions.md` — the project-local corpus.
++- `data/low-impact-decisions-seed.md` — the package seed, **not in the
++  tree**. Locked anyway, so a reappearing seed arrives under the floor.
+ 
+ ## When to invoke
+ 
+-- The host agent has just received a user intake trigger (see
+-  `scripts/ai_council/low_impact_intake.TRIGGER_PHRASES`).
+-- The host agent is about to write an entry to the corpus or to
+-  open a `/memory learn-low-impact` PR.
++- A user intake trigger arrived (`TRIGGER_PHRASES` in
++  `src/scripts/ai_council/low_impact_intake.ts`).
++- An entry is about to reach the corpus, or a
++  `/memory learn-low-impact` preview to render.
+ 
+ ## What to surface on refusal
+ 
+@@ -76,6 +75,6 @@ auto-rewrite.
+ 
+ ## See also
+ 
+-- `scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
+-- `scripts/ai_council/low_impact_intake.ts` — write-gate caller.
++- `src/scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
++- `src/scripts/ai_council/low_impact_intake.ts` — write-gate caller.
+ - `agents/decisions/low-impact-decisions.md` — corpus + Anti-Examples list.
+diff --git a/dist/agent-src/skills/context-authoring/SKILL.md b/dist/agent-src/skills/context-authoring/SKILL.md
+index 5cc1e3087dba577ec821ef7b2cd053238f95e054..0de5dbe0a1792115ad6cec6730105c2a009ae813 100644
+--- a/dist/agent-src/skills/context-authoring/SKILL.md
++++ b/dist/agent-src/skills/context-authoring/SKILL.md
+@@ -131,7 +131,7 @@ has to confirm or correct, not invent from scratch.
+    section either authored or explicitly marked `<!-- TBD: ... -->`.
+ 2. A short summary comment back to the user: which sections are complete,
+    which are `TBD`, and which downstream reviewer skills are now unblocked.
+-3. Optional: a proposal stub in `agents/learnings/` for any template gap
++3. Optional: a proposal stub in `agents/proposals/` for any template gap
+    the user hit (missing section, ambiguous field) — feeds the curated
+    self-improvement pipeline via `learning-to-rule-or-skill`.
+ 
+diff --git a/dist/agent-src/skills/context-authoring/evals/triggers.json b/dist/agent-src/skills/context-authoring/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..a03188b530b4de7ce3a18153aa380027891ca9de
+--- /dev/null
++++ b/dist/agent-src/skills/context-authoring/evals/triggers.json
+@@ -0,0 +1,72 @@
++{
++  "skill": "context-authoring",
++  "last_eval": "2026-10-14",
++  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.2 corrected this skill's proposal-stub path and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three entry points the skill's own 'When to use' names: a freshly scaffolded project whose agents/settings/contexts/ files are still template stubs, a user naming one of the five files directly, and a reviewer skill refusing to proceed because the file it reads is still a template — plus the architecture-change case that invalidates a filled file. Near-misses are the three neighbours the skill's own 'Do NOT use' list names, each sharing its vocabulary and belonging to somebody else: a roadmap or feature doc (agent-docs-writing), a context document outside the five templates (context-create), and the engineering-memory YAML files (/memory-add). Counterexamples guard the word 'context': an LLM context-window question and a request to summarise conversation context both say context and ask for no template to be filled.",
++  "queries": [
++    {
++      "id": "ca-e1",
++      "q": "the contexts folder is still all template stubs after the scaffold — walk me through filling them",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e2",
++      "q": "help me fill in the auth model context — roles, impersonation, the exceptions we know about",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e3",
++      "q": "authz-review says it cannot proceed because auth-model.md is still a template — fix that",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e4",
++      "q": "we moved to row-level tenancy last sprint, so tenant-boundaries.md is wrong now — update it",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e5",
++      "q": "lass uns die data-sensitivity Datei ausfüllen — welche Felder sind PII und was darf ins Log?",
++      "trigger": true,
++      "class": "exemplar",
++      "language": "de"
++    },
++    {
++      "id": "ca-n1",
++      "q": "write the feature doc for the new billing flow",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a regular doc, not one of the five knowledge-layer files → agent-docs-writing"
++    },
++    {
++      "id": "ca-n2",
++      "q": "I need a context document describing our queue topology — none of the five templates fit",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "says context and asks for a file, but outside the five templates → context-create"
++    },
++    {
++      "id": "ca-n3",
++      "q": "record the domain invariant that an invoice can never leave draft without a tax id",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "engineering-memory YAML rather than a context template → /memory-add"
++    },
++    {
++      "id": "ca-c1",
++      "q": "we keep blowing the model's context window on long sessions — what should we cut?",
++      "trigger": false,
++      "class": "counterexample"
++    },
++    {
++      "id": "ca-c2",
++      "q": "summarise the context of this conversation so I can paste it into a fresh chat",
++      "trigger": false,
++      "class": "counterexample",
++      "note": "says context, asks for a summary rather than a template walkthrough"
++    }
++  ]
++}
+diff --git a/dist/agent-src/skills/learning-to-rule-or-skill/SKILL.md b/dist/agent-src/skills/learning-to-rule-or-skill/SKILL.md
+index a6ccf9332db4fffdd00d4ad39216106be5fea2c6..f5f9ac087c7bedd40e4dd8e1181cd2e3ac9b34b9 100644
+--- a/dist/agent-src/skills/learning-to-rule-or-skill/SKILL.md
++++ b/dist/agent-src/skills/learning-to-rule-or-skill/SKILL.md
+@@ -231,8 +231,8 @@ Mandatory fields the draft MUST fill:
+ * `type` — `rule` | `skill` | `command` | `guideline`
+ * `scope` — `project` (stays in `agents/overrides/`) or `package`
+   (contributed upstream via `upstream-contribute`)
+-* `source_learning` — path to the `agents/learnings/<date>-<slug>.md`
+-  file this proposal was captured from
++* `source_learning` — the capturing intake signal, as
++  `agents/memory/intake/signals-<YYYY-MM>.jsonl#<id>`
+ * `evidence` — **at least two independent** references (PR, issue,
+   incident, review-comment, test-failure, **or audit-log line ids**
+   per [`audit-log-v1`](../../docs/contracts/audit-log-v1.md));
+diff --git a/dist/agent-src/skills/learning-to-rule-or-skill/evals/triggers.json b/dist/agent-src/skills/learning-to-rule-or-skill/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f1d5907dcb1ca0eb7315eeb925b9540286660b9d
+--- /dev/null
++++ b/dist/agent-src/skills/learning-to-rule-or-skill/evals/triggers.json
+@@ -0,0 +1,72 @@
++{
++  "skill": "learning-to-rule-or-skill",
++  "last_eval": "2026-10-14",
++  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.2 corrected this skill's source_learning path and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four intake shapes the skill's own 'When to use' names: a mistake that has recurred, a pattern worth reusing, the post-task reflection, and the rule-or-skill question itself — plus the audit-log pattern whose count already satisfies the repetition gate. Near-misses are three neighbours that all end in a written artefact and are somebody else's job: writing the skill once the kind is decided (skill-writing), recording an architectural choice (decision-record / ADR), and parking a durable cross-run lesson in memory (memory-consolidation). Counterexamples guard the word 'learning': a machine-learning feature question and a request for onboarding material both say learning and ask for no rule or skill.",
++  "queries": [
++    {
++      "id": "lrs-e1",
++      "q": "that's the third time this week we forgot to update the callers after a rename — make it stick",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e2",
++      "q": "this review checklist worked really well, capture it so we reuse it next time",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e3",
++      "q": "task is done — what did we learn here that's worth keeping?",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e4",
++      "q": "should this become a rule or a skill? it's a constraint but it needs a procedure too",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e5",
++      "q": "wir stolpern ständig über dasselbe Problem — mach daraus eine dauerhafte Regel",
++      "trigger": true,
++      "class": "exemplar",
++      "language": "de"
++    },
++    {
++      "id": "lrs-n1",
++      "q": "write the SKILL.md for the deploy-checklist skill we agreed on — frontmatter, triggers, procedure",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "the kind is already decided; this is the authoring step → skill-writing"
++    },
++    {
++      "id": "lrs-n2",
++      "q": "we chose Postgres over DynamoDB for the event store — write that down so nobody reopens it",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a durable decision with alternatives and a revisit-if → decision-record / ADR"
++    },
++    {
++      "id": "lrs-n3",
++      "q": "remember for future sessions that our staging DB resets every Sunday night",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a durable fact for the memory layer, not guidance to encode → memory-consolidation"
++    },
++    {
++      "id": "lrs-c1",
++      "q": "would a learning-to-rank model improve our search results page?",
++      "trigger": false,
++      "class": "counterexample"
++    },
++    {
++      "id": "lrs-c2",
++      "q": "put together a learning path for new backend hires — what should they read in week one?",
++      "trigger": false,
++      "class": "counterexample",
++      "note": "says learning, asks for onboarding material rather than a rule or skill"
++    }
++  ]
++}
+diff --git a/dist/agent-src/skills/upstream-contribute/SKILL.md b/dist/agent-src/skills/upstream-contribute/SKILL.md
+index 689ad4776c8d0484836e11a82df1fd4468a8e450..21e846255dfad765298844324744df6db4445306 100644
+--- a/dist/agent-src/skills/upstream-contribute/SKILL.md
++++ b/dist/agent-src/skills/upstream-contribute/SKILL.md
+@@ -36,18 +36,34 @@ Do NOT use when:
+ 
+ ## Goal
+ 
+-Contribute a learning, skill, rule, or fix from a consumer project back to the
+-shared `agent-config` package — with correct file placement, quality gates, and PR structure.
++Decide whether a learning, skill, rule, or fix from a consumer project is worth
++contributing back to the shared `agent-config` package — and hand the ones that
++are to the single outward step, which owns everything that leaves the machine.
++
++## One way out
++
++```
++THIS SKILL NEVER PUSHES, NEVER OPENS A PULL REQUEST, AND NEVER WRITES
++A SECOND, HAND-CONDENSED COPY OF AN ARTIFACT.
++EVERY BYTE THAT LEAVES — BRANCH NAME, COMMIT IDENTITY, COMMIT MESSAGE,
++DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`, WHICH SCANS IT.
++A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
++```
++
++`self-repair:release` carries the privacy floor, the may-not-modify deny list,
++the route ladder (pull request, then issue, then a local record) and the
++per-turn Hard-Floor confirmation. A checkbox in a skill carries none of them,
++which is why this skill asks a *worth it* question and nothing else.
+ 
+ ## Core principles
+ 
+-- **⛔ Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
++- **Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
+ - **Universality first** — the contribution must work for ALL consumers, not just one project
+ - **Generalize when possible** — project-specific content CAN become universal with adaptation
+ - **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
+-- **Complete pairs** — both uncondensed and condensed versions required
+-- **Quality verified** — must pass linter before PR creation
+-- **Local benefit immediately** — use override for instant project benefit while PR is pending
++- **One source** — an artifact is authored in `src/` only; projections are regenerated, never hand-written
++- **The floor is over the bytes** — a privacy judgement a human ticks is not a privacy check
++- **Local benefit immediately** — use override for instant project benefit while the contribution is pending
+ 
+ ## A repeated override is a signal, and a signal is not evidence
+ 
+@@ -102,30 +118,36 @@ GitHub: `https://github.com/event4u-app/agent-config`
+ 
+ **This step is NON-NEGOTIABLE. No exceptions.**
+ 
+-Before ANY upstream work (branch, files, PR), ask the user:
++Before ANY upstream work, ask the user:
+ 
+ ```
+-> 🔄 This [skill/rule/guideline] could improve the shared agent-config package.
++> This [skill/rule/guideline] could improve the shared agent-config package.
+ > [Brief explanation of what would be contributed and why it's valuable]
+ >
+-> 1. Yes — create an upstream PR
++> 1. Yes — hand it to the upstream step
+ > 2. No — keep it project-local only
+ ```
+ 
+-- **If user picks 2** → STOP. Do not mention upstream again for this item.
+-- **If user picks 1** → continue with the procedure below.
+-- **If `project.upstream_repo` is empty in `.agent-settings.yml`** → ask the user to configure it first.
++- **If user picks 2** — STOP. Do not mention upstream again for this item.
++- **If user picks 1** — continue with the procedure below.
+ - **NEVER skip this step**, even if the user previously agreed to other contributions.
+ 
++Consent here authorizes the *preparation*. The send is a separate, per-turn
++word in step 5 and this gate never substitutes for it.
++
+ ### 1. Determine contribution type
+ 
+-| Type | Source path | Condensed path |
+-|---|---|---|
+-| **New skill** | `src/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
+-| **New rule** | `src/rules/{name}.md` | `.augment/rules/{name}.md` |
+-| **New command** | `src/domains/{domain}/{name}/command.md` | `.augment/commands/{name}.md` |
+-| **New guideline** | `docs/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
+-| **Update to existing** | Same path as original | Same path as original |
++`src/` is the only place an artifact is authored. ADR-201 copies every `.md`
++verbatim into the projections, so there is no second version to write and no
++condensation ratio to hit.
++
++| Type | Source path |
++|---|---|
++| **New skill** | `src/skills/{name}/SKILL.md` |
++| **New rule** | `src/rules/{name}.md` |
++| **New command** | `src/domains/{domain}/{name}/command.md` |
++| **New guideline** | `docs/guidelines/{category}/{name}.md` |
++| **Update to existing** | Same path as original |
+ 
+ ### 2. Apply locally as override (immediate benefit)
+ 
+@@ -155,146 +177,105 @@ If the content is project-specific but could be made universal:
+ 3. **Show the user the diff** — original vs. generalized version
+ 4. **Get approval** — user must confirm the generalized version is correct
+ 
+-Example: A project-specific "import-csv" skill → generic "file-import" skill with configurable format.
+-
+-### 3. Prepare the upstream contribution
++Example: A project-specific "import-csv" skill becomes a generic "file-import"
++skill with a configurable format.
+ 
+-The agent needs access to the package repository. Ask the user:
++Generalizing is an editorial act and it is not the privacy floor. What the
++floor refuses in step 4 stays local; it is never rewritten into shape.
+ 
+-```
+-> The improvement should go to the shared agent-config package.
+-> I need to create a PR in `event4u-app/agent-config`.
+->
+-> 1. I have the package repo cloned locally — tell me the path
+-> 2. Clone it for me into a temp directory
+-> 3. I'll handle the PR manually — just give me the files
+-```
++### 3. Proposal gate — MANDATORY when a proposal doc exists
+ 
+-**Option 1:** User provides path → work directly in that repo.
+-
+-**Option 2:** Clone into temp directory:
+-
+-```bash
+-git clone git@github.com:event4u-app/agent-config.git /tmp/agent-config-upstream
+-cd /tmp/agent-config-upstream
+-```
+-
+-**Option 3:** Output the file contents as copyable blocks for the user.
+-
+-### 4. Create branch and files
++If the contribution originates from a proposal under `agents/proposals/`
++(produced by `learning-to-rule-or-skill` via the pipeline in
++[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md)),
++run the Stage-4 gate first:
+ 
+ ```bash
+-cd {package-repo-path}
+-git checkout main && git pull
+-git checkout -b feat/skills/{name}  # or fix/rules/{name}, etc.
++./agent-config proposal:check agents/proposals/{slug}.md
+ ```
+ 
+-Create both files:
+-
+-- **Source version** → `src/{type}/{name}` (full, verbose, human-readable)
+-- **Condensed version** → `.augment/{type}/{name}` (token-efficient, preserving all code blocks,
+-  headings, frontmatter, validation, gotchas)
+-
+-For skills, the condensed version should be 40-60% shorter than uncondensed.
+-For rules and commands, they are usually copied 1:1 (no condensation).
+-
+-### 5. Ensure file quality
+-
+-The files must:
++**Hard refusal rule:** if `./agent-config proposal:check` exits non-zero, STOP.
++Surface the findings to the user, ask them to fix the proposal (add evidence,
++remove TODO markers, complete required sections), then rerun.
+ 
+-- Have correct YAML frontmatter (`name`, `description`, `source: package`)
+-- NOT contain project-specific references (no domain names, local paths, FQDNs)
+-- Follow the skill/rule/command template structure
+-- Have exactly one trailing newline
++When no proposal doc exists (small fix, typo, pure bug-fix), skip this step and
++record the rationale in the finding.
+ 
+-### 6. Run quality gates (if working in the package repo)
++### 4. See every byte before any byte leaves
+ 
+ ```bash
+-./scripts-run src/scripts/skill_linter --all          # 0 FAIL required
+-./scripts-run src/scripts/check_condensation            # No errors for this file
+-./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
+-bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
++./agent-config self-repair:release <fingerprint> --dry-run
+ ```
+ 
+-If not in the package repo, note that these checks will run in CI after the PR is created.
++The dry run resolves the route, names the account that will appear on the pull
++request, and prints the title, body, branch name and diff in full. It touches
++no network.
+ 
+-### 6b. Proposal gate — MANDATORY when a proposal doc exists
++A refusal from the privacy floor is **final**: the finding stays local. There
++is no scrubbing pass, because a rewritten identifier is still a leaked one.
+ 
+-If the contribution originates from a proposal under `agents/proposals/`
+-(produced by `learning-to-rule-or-skill` via the pipeline in
+-[`self-improvement-pipeline`](../../guidelines/agent-infra/self-improvement-pipeline.md)),
+-run the Stage-4 gate before opening the PR:
++### 5. Send — one command, one turn, one word
+ 
+ ```bash
+-./agent-config proposal:check agents/proposals/{slug}.md
++./agent-config self-repair:release <fingerprint>
+ ```
+ 
+-**Hard refusal rule:** if `./agent-config proposal:check` exits non-zero, STOP —
+-do not create the branch, do not push, do not open the PR. Surface the
+-findings to the user, ask them to fix the proposal (add evidence,
+-remove TODO markers, complete required sections), then rerun.
+-
+-When no proposal doc exists (small fix, typo, pure bug-fix), skip this
+-step and document the rationale in the PR body under the Promotion
+-Gate.
+-
+-### 7. Commit and create PR
+-
+-Branch naming: `feat/skills/{name}`, `fix/rules/{name}`, `feat/commands/{name}`
+-
+-Commit message format:
+-
+-```
+-feat(skills): add {name} skill
+-fix(rules): improve {name} rule — {what changed}
+-feat(commands): add {name} command
+-```
++Running that command IS the user's word, and it is a Hard-Floor action under
++`non-destructive-by-default`. No autonomy setting, standing instruction or
++earlier consent substitutes for it.
+ 
+-PR title: Same as commit message.
++The ladder picks the vehicle: a pull request from a checkout of this package,
++an issue otherwise, a local record when nothing may leave. Degrading changes
++the vehicle, never what leaves.
+ 
+-PR body must use the package's PR template with these gates:
++### 6. Quality gates (only inside a checkout of this package)
+ 
+-- **Promotion Gate** — learning occurred 2+ times, improves correctness, prevents real failure
+-- **Quality Gate** — linter passes, tests pass
+-- **Universality Gate** — no project-specific assumptions, benefits all consumers
+-- **Completeness Gate** — both versions present, symlinks regenerated
++Run the package's full CI pipeline and confirm it is green before the send.
++[`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
++and names it; a consumer project has no such runner, which is why the command
++is not repeated here. Outside such a checkout, the package CI runs after the
++issue or pull request exists.
+ 
+-### 8. After merge — clean up override
++### 7. After merge — clean up override
+ 
+-Once the PR is merged and the package is updated in the project:
++Once the contribution is merged and the package is updated in the project:
+ 
+ ```bash
+-# In the consumer project
+ rm agents/overrides/{type}/{name}.md
+-composer update event4u/agent-config  # or npm update
+ ```
+ 
+-The shared version now replaces the local override.
++```bash
++./agent-config update
++```
++
++`update` moves the `agent_config_version` pin in `.agent-settings.yml`; the
++project's own package manager then fetches that version. The shared artifact
++replaces the local override.
+ 
+ ## Output format
+ 
+ 1. Summary of what is being contributed (type, name, why)
+-2. File contents for both uncondensed and condensed versions
+-3. If working in the package repo: branch name, commit message, PR title
+-4. If Option 3: copyable file blocks for the user to paste
+-5. Reminder to clean up local override after upstream merge
++2. The source path under `src/` that the contribution targets
++3. The dry-run output, verbatim — route, account, title, body, branch, diff
++4. The one command the user runs to send it, and nothing executed on their behalf
++5. Reminder to clean up the local override after the contribution merges
+ 
+ ## Gotcha
+ 
+ - Agent in consumer project doesn't know the package repo URL — this skill provides it
+-- Agent may try to edit `.augment/` in the consumer project — that's read-only (symlinked)
+-- Agent may forget the condensed version — both are mandatory
+-- Agent may include project-specific references in the skill — must be universal
+-- The `source` field in frontmatter must be `package`, not `project`
+-- Agent may not have git access to the package repo — Option 3 handles this gracefully
++- Agent may try to hand-edit a generated projection — `src/` is the source
++- Agent may try to write a second condensed copy — ADR-201 removed that step
++- Agent may include project-specific references — the floor in step 4 refuses them
++- Agent may not have git access to the package repo — the ladder degrades to an issue
++- A consumer install reaches the issue step, not the pull-request step
+ 
+ ## Do NOT
+ 
+ - **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
+-- **Do NOT open a PR if `./agent-config proposal:check` blocks** — fix the proposal first (step 6b)
+-- Do NOT edit `.augment/` in the consumer project — it's managed by the package
+-- Do NOT submit project-specific content without generalizing it first
+-- Do NOT skip the condensed version — both files are mandatory
+-- Do NOT forget to clean up the local override after upstream merge
+-- Do NOT bypass quality gates — they exist for a reason
++- **Do NOT open a contribution if `./agent-config proposal:check` blocks** — fix the proposal first (step 3)
++- Do NOT push, open a pull request, or open an issue by hand — the ladder owns the send
++- Do NOT edit a generated projection; author in `src/` and let the package's sync step regenerate
++- Do NOT write a hand-condensed second copy of an artifact
++- Do NOT stage with a bare `git add .` — name the paths
++- Do NOT rewrite what the privacy floor refused; a refused finding stays local
+ - Do NOT assume consent from a previous contribution — ask every time
+diff --git a/dist/agent-src/skills/upstream-contribute/evals/triggers.json b/dist/agent-src/skills/upstream-contribute/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..1bdcace55569d808fbb8904df612814549bb9d24
+--- /dev/null
++++ b/dist/agent-src/skills/upstream-contribute/evals/triggers.json
+@@ -0,0 +1,72 @@
++{
++  "skill": "upstream-contribute",
++  "last_eval": "2026-10-14",
++  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.1 rewrote this skill into a front on the self-repair:release ladder and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four sources the skill's own 'When to use' names: a locally written skill worth sharing, an improvement to a shipped rule, a bug found in a shared artefact, and a local override that should become the default — plus the generalisation case, where something project-specific is worth widening. Near-misses are three neighbours that share the contribution vocabulary and stop short of leaving the machine: deciding what the artefact even is (learning-to-rule-or-skill), deliberately keeping it local (override-management), and opening a pull request inside the consumer's own repository (git-workflow), which is not an upstream send at all. Counterexamples guard the word 'upstream': a git upstream-branch question and an upstream HTTP dependency both say upstream and have nothing to do with contributing back.",
++  "queries": [
++    {
++      "id": "uc-e1",
++      "q": "this skill we wrote locally would help every project — contribute it back to the shared package",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e2",
++      "q": "the shipped commit-policy rule is missing a case we hit twice — send the improvement upstream",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e3",
++      "q": "found a bug in the shared migration skill — how do I get the fix into agent-config?",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e4",
++      "q": "our override has outlived the default it replaced — make it the package default instead",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e5",
++      "q": "das sollten alle Projekte bekommen — trag die Verbesserung ins geteilte Paket zurück",
++      "trigger": true,
++      "class": "exemplar",
++      "language": "de"
++    },
++    {
++      "id": "uc-n1",
++      "q": "we keep hitting this — should it be a rule or a skill?",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "deciding the artefact's kind comes first and is a different skill → learning-to-rule-or-skill"
++    },
++    {
++      "id": "uc-n2",
++      "q": "this tweak is specific to how we do tenancy — keep it local and document why",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "an explicit decision NOT to upstream → override-management"
++    },
++    {
++      "id": "uc-n3",
++      "q": "open a pull request for this change on our own repo",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a pull request, but in the consumer's repository — nothing leaves toward the package → git-workflow"
++    },
++    {
++      "id": "uc-c1",
++      "q": "my branch has no upstream set, so git push keeps asking me for one",
++      "trigger": false,
++      "class": "counterexample"
++    },
++    {
++      "id": "uc-c2",
++      "q": "the upstream pricing API started returning 502s — add a retry with backoff",
++      "trigger": false,
++      "class": "counterexample",
++      "note": "says upstream about a third-party dependency, not about contributing back"
++    }
++  ]
++}
+diff --git a/dist/agent-src/templates/agents/proposal.example.md b/dist/agent-src/templates/agents/proposal.example.md
+index c13535111953b603f333c958d6f12dff9c8b3b81..9c20a4a140fe28bfd1e1107ed6f04487f7147e74 100644
+--- a/dist/agent-src/templates/agents/proposal.example.md
++++ b/dist/agent-src/templates/agents/proposal.example.md
+@@ -15,7 +15,7 @@ proposal_id: ""                    # stable kebab-case slug, unique per repo
+ type: ""                           # rule | skill | command | guideline
+ scope: ""                          # project | package
+ stage: proposed                    # captured | classified | proposed | gated | upstream
+-source_learning: ""                # agents/learnings/<date>-<slug>.md
++source_learning: ""                # agents/memory/intake/signals-<YYYY-MM>.jsonl#<signal id>
+ target_artifact: ""                # dist/agent-src/<type>/<name>.md (for upstream scope)
+                                    # or agents/overrides/<...> (for project scope)
+ author: ""                         # name or team slug
+diff --git a/docs/catalog.md b/docs/catalog.md
+index 624c6a76459f1e906e47c9588b12418a479db74e..81c09a48035ef0cf11a3306d2ebdf18a29513726 100644
+--- a/docs/catalog.md
++++ b/docs/catalog.md
+@@ -563,7 +563,7 @@ are excluded.
+ | command | [`knowledge-list`](../dist/agent-src/commands/knowledge/list.md) | cluster: knowledge | List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction. |
+ | command | [`memory`](../dist/agent-src/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, mine-session, promote, propose |
+ | command | [`memory-add`](../dist/agent-src/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns) |
+-| command | [`memory-learn-low-impact`](../dist/agent-src/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
++| command | [`memory-learn-low-impact`](../dist/agent-src/commands/memory/learn-low-impact.md) | cluster: memory | Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing. |
+ | command | [`memory-load`](../dist/agent-src/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
+ | command | [`memory-mine-session`](../dist/agent-src/commands/memory/mine-session.md) | cluster: memory | Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals\|proposals\|both]. Preview-default, opt-in. Folds in /chat-history learn. |
+ | command | [`memory-promote`](../dist/agent-src/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
+diff --git a/docs/command-flows.md b/docs/command-flows.md
+index 72675b1a84fa8324fe78a39869b4e2dd591aff7b..cb299ab94abc64eabaa7c79c459172772f512891 100644
+--- a/docs/command-flows.md
++++ b/docs/command-flows.md
+@@ -197,7 +197,7 @@ _The system/admin surface (NOT a flow): memory · analytics · governance · con
+ - `knowledge-list` — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to…
+ - `memory` — Memory orchestrator — routes to add, load, mine-session, promote, propose
+ - `memory-add` — Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, p…
+-- `memory-learn-low-impact` — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `-…
++- `memory-learn-low-impact` — Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes no…
+ - `memory-load` — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analys…
+ - `memory-mine-session` — Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode…
+ - `memory-promote` — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the ad…
+diff --git a/docs/contracts/command-clusters.md b/docs/contracts/command-clusters.md
+index ba41d31d801d8cd5520259d40105850bf72d5d80..e57e0c1509da6c82582976ddea362fbd19898416 100644
+--- a/docs/contracts/command-clusters.md
++++ b/docs/contracts/command-clusters.md
+@@ -32,7 +32,7 @@ column 1 of this table.
+ | `optimize` | 1 | `agents-dir` · `augmentignore` · `rtk` · `skills` · `project` · `prompt` · `deep` | `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` · former `/optimize agents` and `/optimize agents-md` moved to the `/agents` file-family cluster 2026-05-09; `/agents prepare/audit/cleanup` collapsed into the single `/optimize agents-dir` (flags or wizard) per the agent-doc consolidation; `project` (slug-neutral nest of `optimize-project`, pack move engineering-base → meta) + `prompt` (slug-neutral nest of `optimize-prompt`) added 2026-07-08 — the head now spans agent-layer / project-wide / prompt scopes with a disambiguating menu; `deep` (slug-neutral nest of `optimize-deep`) added 2026-08-02 — the autonomous deep-refactoring loop (subagent analysis → council → central + sub-roadmaps → PR → N refinement loops, default 3) |
+ | `feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` · `dev` | `feature-explore` · `feature-plan` · `feature-refactor` · `feature-roadmap` · `feature-dev` |
+ | `agents` | 2 | `init` · `optimize` · `audit` · `user` | AGENTS.md file family (high-frequency) — repurposed 2026-05-09: `init` (was `/copilot-agents init`) · `optimize` (merger of `/optimize agents-md` + `/copilot-agents optimize`) · `audit` (was `/optimize agents`, collapses old `audit` + `check` verbs); legacy folder ops (`prepare` / `cleanup` / folder-`audit`) moved to `/optimize agents-dir`; `user` sub-cluster added 2026-05-15 — manages the project-root `.agent-user.md` persona file (sub-sub-commands: `init` · `show` · `review` · `accept` · `update` · `delete`); `delete` added 2026-07-30 (road-to-global-user-memory Phase 4) — the tombstone-writing delete/revoke counterpart of `accept` for the global layer — per [`agent-user-schema`](agent-user-schema.md) |
+-| `memory` | 2 | `add` · `load` · `promote` · `propose` · `mine-session` · `learn-low-impact` | `memory-add` · `memory-full` · `memory-promote` · `propose-memory`; `mine-session` added 2026-05-10 — manual transcript-mining sub-command from an internal roadmap (local-only), opt-in via `--confirm-transcript-access` per invocation; `learn-low-impact` added 2026-05-15 — upstreams `## Validated` entries from `agents/decisions/low-impact-decisions.md` to the package seed via a DRAFT PR (re-runs the privacy-floor redactor as a second gate per `low-impact-corpus-privacy-floor`) |
++| `memory` | 2 | `add` · `load` · `promote` · `propose` · `mine-session` · `learn-low-impact` | `memory-add` · `memory-full` · `memory-promote` · `propose-memory`; `mine-session` added 2026-05-10 — manual transcript-mining sub-command from an internal roadmap (local-only), opt-in via `--confirm-transcript-access` per invocation; `learn-low-impact` added 2026-05-15 — previews which `## Validated` entries from `agents/decisions/low-impact-decisions.md` would be worth upstreaming, read-only since its `--apply` flag was retired 2026-10-13 (re-runs the privacy-floor redactor as a second gate per `low-impact-corpus-privacy-floor`) |
+ | `roadmap` | 2 | `create` · `ai-council` · `materialize` · `process-step` · `process-phase` · `process-full` · `next` · `triage-parked` · `resolve-blockers` | `roadmap-create` · `roadmap-execute` (replaced — autonomous, no per-step gate; `process-phase` is the default execution scope); `ai-council` added 2026-05-07 — wraps `/council default` with `--input-mode roadmap --depth deep`; `next` added 2026-08-06 — the only sub that **selects** across roadmaps (live remote screen + five-disqualifier feasibility pass + council on a genuine tie), then pins scope to `process-full` and carries the run to a review-ready PR. Bare-noun sibling alongside the bare-verb `create` / `materialize` and the `process-*` composites — the mixed shape is pre-existing in this cluster and the name is the operator's; `triage-parked` added 2026-10-03 — the only sub that reads `later/` and `skipped/`: verifies each parked roadmap against the current tree, executes its resume condition, then promotes, absorbs, archives or re-parks it. Moves and rewrites plans, never executes one; `resolve-blockers` added 2026-10-05 — executes every open blocker's `Resolved when`, closes what the tree settled, decides the rest council-first and asks the owner one question per turn. Decides and records, never executes the unblocked work |
+ | `module` | 2 | `create` · `explore` | `module-create` · `module-explore` |
+ | `tests` | 2 | `create` · `execute` · `e2e-plan` · `e2e-heal` | `tests-create` · `tests-execute`; `e2e-plan` / `e2e-heal` added 2026-07-08 — replace the flat `e2e-plan` / `e2e-heal` (slug reorders, `replaces:` aliases; composite sub-names per ADR-003 §2) |
+diff --git a/docs/guidelines/agent-infra/self-improvement-pipeline.md b/docs/guidelines/agent-infra/self-improvement-pipeline.md
+index ae03b4c9b4d523c944edcea98a826e9293c23fa6..987533c0487e3b68c0d0ca33d3c7f40e68ba9cdf 100644
+--- a/docs/guidelines/agent-infra/self-improvement-pipeline.md
++++ b/docs/guidelines/agent-infra/self-improvement-pipeline.md
+@@ -36,15 +36,19 @@ blocks — it does not hand a half-filled doc to the next stage.
+   finding recurs, a successful pattern is worth codifying.
+   The existing `skill-improvement-trigger` rule signals the event.
+ - **Input:** raw observation (PR link, log line, review comment).
+-- **Output:** learning note at `agents/learnings/<date>-<slug>.md`
+-  with frontmatter `source`, `evidence[]` (≥1 link), `stage: captured`.
+-- **Guardrails:** nothing is written into `dist/agent-src/` at this stage.
+-  Learnings live in the consumer repo until promoted.
++- **Output:** a signal appended to the intake stream
++  `agents/memory/intake/signals-<YYYY-MM>.jsonl` by `memory_signal`, carrying
++  its source, its evidence reference and its polarity. `learning_sidecar`
++  verdicts that stream — decay, corroboration at two distinct origins, dead
++  ends — into a gitignored overlay.
++- **Guardrails:** nothing is written into `dist/agent-src/` at this stage, and
++  the overlay is never auto-promoted. A single session can never mint a lesson;
++  the stream lives in the consumer repo until a human curates it onward.
+ 
+ ### Stage 2 — Classify
+ 
+ - **Trigger:** explicit invocation or pipeline progression.
+-- **Input:** learning note from Stage 1.
++- **Input:** the signal, and the sidecar's verdict over it, from Stage 1.
+ - **Output:** same file, frontmatter extended with:
+   - `scope: project | package`
+   - `type: rule | skill | command | guideline`
+@@ -69,7 +73,7 @@ blocks — it does not hand a half-filled doc to the next stage.
+ ### Stage 4 — Gate
+ 
+ - **Trigger:** proposal doc committed or staged.
+-- **Executor:** `scripts/check_proposal.ts`.
++- **Executor:** `./agent-config proposal:check`.
+ - **Input:** proposal doc from Stage 3.
+ - **Output:** verdict recorded in the proposal doc section 9
+   (`pass | request changes | block`). Frontmatter `stage: gated`
+@@ -103,15 +107,18 @@ blocks — it does not hand a half-filled doc to the next stage.
+   > `road-to-self-modification-that-a-council-must-pass` build that binding,
+   > and the clause returns with them. Naming it before it exists would state a
+   > guarantee a reader could rely on and the gate would not keep.
+-- **Executor:** `upstream-contribute` skill. Refuses invocation if
+-  the proposal frontmatter is not `stage: gated`.
++- **Executor:** the `upstream-contribute` skill decides *whether*, and
++  `self-repair:release` — the one gated outward step — decides *what leaves*.
++  The skill refuses invocation if the proposal frontmatter is not
++  `stage: gated`.
+ - **Input:** gated proposal doc.
+-- **Output:** PR against `event4u/agent-config` carrying the
+-  proposal doc as the PR body. Standard package CI runs.
++- **Output:** a pull request or an issue against `event4u-app/agent-config`
++  carrying the proposal doc as the body. Standard package CI runs.
+   Frontmatter `stage: upstream` and `upstream_pr_url` set.
+-- **Guardrails:** no `upstream-contribute` invocation ever edits
+-  `.agent-src.uncondensed/` in the consumer repo. Writes happen
+-  in the fork / PR branch of the package repo only.
++- **Guardrails:** the skill never pushes and never opens a pull request
++  itself, so there is one privacy floor and not two. No invocation edits any
++  installed tree in the consumer repo; writes happen in the package checkout's
++  branch only, and a consumer install reaches the issue step.
+ 
+ ## Stage ownership
+ 
+@@ -140,8 +147,10 @@ unreviewed upstream changes is not.
+   need the evidence in one place.
+ - **Do NOT** promote a learning with one piece of evidence. Two
+   independent sources is the minimum; the gate enforces it.
+-- **Do NOT** edit `.agent-src.uncondensed/` directly in a consumer
+-  project "just to try it out". Drafts live in `agents/proposals/`.
++- **Do NOT** edit the installed tree directly in a consumer project
++  "just to try it out" — `.augment/` today, `.agent-src.uncondensed/`
++  in a legacy install. Both are managed; drafts live in
++  `agents/proposals/` and local changes in `agents/overrides/`.
+ - **Do NOT** treat a `block` verdict as a personal rejection. The
+   gate checks structural shape, not author intent.
+ 
+diff --git a/src/agent-src/templates/agents/proposal.example.md b/src/agent-src/templates/agents/proposal.example.md
+index c13535111953b603f333c958d6f12dff9c8b3b81..9c20a4a140fe28bfd1e1107ed6f04487f7147e74 100644
+--- a/src/agent-src/templates/agents/proposal.example.md
++++ b/src/agent-src/templates/agents/proposal.example.md
+@@ -15,7 +15,7 @@ proposal_id: ""                    # stable kebab-case slug, unique per repo
+ type: ""                           # rule | skill | command | guideline
+ scope: ""                          # project | package
+ stage: proposed                    # captured | classified | proposed | gated | upstream
+-source_learning: ""                # agents/learnings/<date>-<slug>.md
++source_learning: ""                # agents/memory/intake/signals-<YYYY-MM>.jsonl#<signal id>
+ target_artifact: ""                # dist/agent-src/<type>/<name>.md (for upstream scope)
+                                    # or agents/overrides/<...> (for project scope)
+ author: ""                         # name or team slug
+diff --git a/src/config/routing-coverage-seed.json b/src/config/routing-coverage-seed.json
+index c058657b745f49e28dfa5dcc2b8b8a4e39993316..fcea12ebcd99fc142fbd1c2e5b2b602c0dea8e9f 100644
+--- a/src/config/routing-coverage-seed.json
++++ b/src/config/routing-coverage-seed.json
+@@ -10,11 +10,11 @@
+     },
+     "seed": {
+         "rules": 0.9626,
+-        "skills": 0.4467
++        "skills": 0.4567
+     },
+     "seed_provenance": {
+         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
+-        "skills": "134 of 300 skills carry evals/triggers.json on 2026-10-14; was 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
++        "skills": "137 of 300 skills carry evals/triggers.json on 2026-10-14; was 134 of 300 earlier that day, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
+     },
+     "history": [
+diff --git a/src/domains/meta/memory/command.md b/src/domains/meta/memory/command.md
+index 8c6f68df7947bf6d92e6cef7844ae270e7722488..ec3727892f0fb8ed82387b132585207ac1b5613f 100644
+--- a/src/domains/meta/memory/command.md
++++ b/src/domains/meta/memory/command.md
+@@ -35,7 +35,7 @@ commands with a single entry point + sub-command dispatch.
+ | `/memory mine-session` | `commands/memory/mine-session.md` | Mine the active session transcript for memory signals (preview-by-default) |
+ | `/memory promote` | `commands/memory/promote.md` | Promote an intake signal to a curated memory entry |
+ | `/memory propose` | `commands/memory/propose.md` | Append a provisional signal to the intake stream |
+-| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Draft an upstream PR from the project's low-impact decision corpus (redactor-gated) |
++| `/memory learn-low-impact` | `commands/memory/learn-low-impact.md` | Preview which low-impact decisions would be worth upstreaming (redactor-gated, read-only) |
+ 
+ Sub-command names match the locked contract in
+ [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+diff --git a/src/domains/meta/memory/learn-low-impact/command.md b/src/domains/meta/memory/learn-low-impact/command.md
+index 15c723d964e94b4ae6d46ea07690c8c6969b368e..43ca30c3263f402f11c94f05c715713b11b43637 100644
+--- a/src/domains/meta/memory/learn-low-impact/command.md
++++ b/src/domains/meta/memory/learn-low-impact/command.md
+@@ -5,9 +5,8 @@ pack: memory
+ visibility: internal
+ cluster: memory
+ sub: learn-low-impact
+-skills: [ai-council, upstream-contribute]
+-description: Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
+-argument-hint: "[--preview|--apply]"
++skills: [ai-council]
++description: Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing.
+ suggestion:
+   eligible: false
+   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
+@@ -19,28 +18,30 @@ packs:
+ 
+ # /memory learn-low-impact
+ 
+-Promote `## Validated` entries from
++Show which `## Validated` entries from
+ [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
+-into the upstream seed at
+-`.agent-src.uncondensed/data/low-impact-decisions-seed.md` via a DRAFT
+-PR against the agent-config package. **Validated entries only** — probation
+-entries never upstream, they're unconfirmed signal.
++would be worth upstreaming, and which the privacy floor refuses.
++**Validated entries only** — probation entries are unconfirmed signal and
++never appear here.
+ 
+-## Flags
++## This command opens nothing
+ 
+-| Flag | Default | Behaviour |
+-|---|---|---|
+-| `--preview` | **on** | Build the plan, run the redactor, render promoted / refused / already-seeded buckets + draft PR body. **No file write, no branch, no PR.** Default behaviour. |
+-| `--apply` | off | Mutually exclusive with `--preview`. Required to invoke `upstream-contribute` and open the draft PR. Refusals from the redactor still block. |
++```
++READ-ONLY. NO BRANCH, NO COMMIT, NO PUSH, NO PULL REQUEST, NO FILE WRITE.
++THE `--apply` FLAG WAS RETIRED: IT WROTE INTO A PACKAGE SEED FILE
++THAT DOES NOT EXIST, AND A SECOND WAY OUT WOULD BE A SECOND SET
++OF GUARANTEES. ONE WAY OUT IS `self-repair:release`.
++```
+ 
+-Iron Law: ``--apply`` never auto-fires on the first invocation. The
+-user always sees the preview block first and re-runs explicitly.
++The package ships no seed corpus today, so the already-seeded baseline is
++empty and every validated entry that clears the redactor shows as promotable.
++That is a true reading of the tree, not a backlog.
+ 
+ ## Iron Law — privacy floor runs TWICE
+ 
+ ```
+-THE REDACTOR RUNS AT INTAKE (WRITE GATE) AND AGAIN HERE (UPSTREAM GATE).
+-ANY VIOLATION → REFUSE THE PR. NO SILENT REWRITES.
++THE REDACTOR RUNS AT INTAKE (WRITE GATE) AND AGAIN HERE (REVIEW GATE).
++ANY VIOLATION → THE ENTRY IS REFUSED AND NAMED. NO SILENT REWRITES.
+ ```
+ 
+ See [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
+@@ -50,37 +51,43 @@ for the eight forbidden-content classes.
+ 
+ ### 1. Build the preview plan
+ 
+-Call
+-`scripts/ai_council/learn_low_impact_preview.ts::build_preview` with
+-the project-local corpus and the package seed:
+-
+-```python
+-from scripts.ai_council.learn_low_impact_preview import build_preview
+-plan = build_preview(
+-    corpus_path="agents/decisions/low-impact-decisions.md",
+-    seed_path=".agent-src.uncondensed/data/low-impact-decisions-seed.md",
+-    repo_slug="<owner>/<repo>",  # from `git remote get-url origin`
+-    repo_root="<absolute repo root>",
+-    private_domains=(),   # from .agent-settings.yml policy
+-    customer_names=(),    # from .agent-settings.yml policy
+-    sql_identifiers=(),   # from .agent-settings.yml policy
+-)
++Call `build_preview` from
++`src/scripts/ai_council/learn_low_impact_preview.ts` with the project-local
++corpus and the exported seed path:
++
++```ts
++import {
++    build_preview,
++    PACKAGE_SEED_PATH,
++} from '../../scripts/ai_council/learn_low_impact_preview.js';
++
++const plan = build_preview('agents/decisions/low-impact-decisions.md', PACKAGE_SEED_PATH, {
++    repoSlug: '<owner>/<repo>',   // from `git remote get-url origin`
++    repoRoot: '<absolute repo root>',
++    privateDomains: [],           // from .agent-settings.yml policy
++    customerNames: [],            // from .agent-settings.yml policy
++    sqlIdentifiers: [],           // from .agent-settings.yml policy
++});
+ ```
+ 
++`PACKAGE_SEED_PATH` is the one place that literal lives, so no caller
++restates it. The file it names is not in the tree, and that is not an error:
++the builder returns an empty already-seeded set, which is the current state
++of this package.
++
+ The builder runs all three contract checks in one pass:
+ 
+-1. Parses `## Validated` (strict mode — drift surfaces as
+-   `CorpusParseError`).
++1. Parses `## Validated` (strict mode — drift surfaces as a parse error).
+ 2. Diffs against the seed file — already-seeded entries land in
+-   `plan.already_seeded` and never upstream.
+-3. Re-runs `redact_low_impact_entry` on every candidate. Failures
+-   land in `plan.refused`.
++   `plan.already_seeded`.
++3. Re-runs `redact_low_impact_entry` on every candidate. Failures land in
++   `plan.refused`.
+ 
+ ### 2. Surface the preview block
+ 
+-Print `plan.render()` verbatim. Always. This is the user-facing
+-audit trail per `fast-path-marker-visibility` Iron Law — the host
+-agent MUST NOT swallow or paraphrase it.
++Print `plan.render()` verbatim. Always. This is the user-facing audit trail
++per the `fast-path-marker-visibility` Iron Law — the host agent MUST NOT
++swallow or paraphrase it.
+ 
+ ```
+ ## learn-low-impact preview — repo=<slug>
+@@ -92,57 +99,25 @@ seed: <path>
+ ### Already seeded (K) …
+ ```
+ 
+-### 3. Decide based on the flag
+-
+-- **`--preview` (default)** — stop here. If `plan.would_open_pr` is
+-  true, the rendered block ends with
+-  `> Re-run with \`--apply\` to open the draft PR via \`upstream-contribute\`.`
+-  Hand control back to the user.
+-- **`--apply`** — refuse when `plan.refused` is non-empty; surface
+-  the refusals and stop. Otherwise invoke
+-  [`upstream-contribute`](../skills/upstream-contribute/SKILL.md)
+-  with:
+-    - **target file:** `.agent-src.uncondensed/data/low-impact-decisions-seed.md`
+-    - **PR title:** `plan.render_pr_body()` first heading
+-    - **PR body:** `plan.render_pr_body()`
+-    - **patch:** `plan.render_diff()`
+-    - **draft:** `true` — never auto-merge; review is a human gate.
+-
+-### 4. Advance the local baseline (`--apply` path only)
+-
+-When the PR is opened (step 3 returns a PR URL + new commit SHA on
+-the package branch):
+-
+-```bash
+-# update the local pointer so subsequent runs are deltas
+-sed -i.bak -E "s|^last-upstreamed: .*|last-upstreamed: <new-sha>|" \
+-    agents/decisions/low-impact-decisions.md
+-rm agents/decisions/low-impact-decisions.md.bak
+-```
++### 3. Stop
+ 
+-### 5. Surface result (`--apply` path only)
+-
+-```
+-> Drafted PR <url>
+-> Entries upstreamed: N
+-> Provenance bumped: <old-sha> → <new-sha>
+-```
++Hand control back to the user. The block is the deliverable. Nothing in this
++command sends anything; if the package ever ships a seed corpus again, the
++`revisit if` on decision D2 of
++`road-to-one-upstream-that-checks-what-leaves` fires and the route is designed
++once, on the one ladder.
+ 
+ ## Halt conditions
+ 
+-- Redactor refuses (any class) — surface, stop. `--apply` is rejected.
+-- No candidates (`plan.has_work == False`) — exit 0 with the preview
+-  block; no PR even on `--apply`.
+-- `--preview` (default) — always stops before any side-effect.
+-- Package repo unavailable per `upstream-contribute § Step 4` — surface
+-  the access options, stop.
+-- User explicitly declines the PR option — exit 0, no PR.
++- Redactor refuses (any class) — surface the refusals in the block, stop.
++- No candidates (`plan.has_work` is false) — exit 0 with the preview block.
++- Corpus missing or drifted — surface the parse error, stop.
+ 
+ ## See also
+ 
+-- [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — PR
+-  machinery (branch, commit, gates).
+ - [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
+   — the project-local corpus.
+ - [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
+   — Iron Law.
++- [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — the one
++  front on the one outward step, for findings that are worth sending.
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index 8b36a5e536d8ae7ed364e349663df04f5da6b93b..3342b8c0edc7b8353893bac575da52f6efc53a65 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -98,8 +98,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 3649
+-  commands_tokens: 253430
+-  other_tokens: 1298
+-  rules_tokens: 63974
+-  total_tokens: 322351
++  commands_tokens: 253404
++  other_tokens: 1304
++  rules_tokens: 63966
++  total_tokens: 322323
+ trust_level_default: core
+diff --git a/src/domains/meta/upstream-contribute/command.md b/src/domains/meta/upstream-contribute/command.md
+index 79caf265704308b3f19aa09516a8bbd48b776a17..f2797a7249038916143029ca40c3f7bd1b1ac9aa 100644
+--- a/src/domains/meta/upstream-contribute/command.md
++++ b/src/domains/meta/upstream-contribute/command.md
+@@ -18,6 +18,17 @@ packs:
+ 
+ # /upstream-contribute
+ 
++This command is a **front on one outward step**, not a second way out. It
++decides *what* is worth contributing and hands the finding to
++`self-repair:release`, which owns the branch, the commit identity, the privacy
++floor over every byte that leaves, and the pull-request or issue route.
++
++```
++ONE WAY OUT. THIS COMMAND NEVER PUSHES, NEVER OPENS A PULL REQUEST,
++AND NEVER WRITES A SECOND COPY OF AN ARTIFACT.
++WHAT LEAVES THE MACHINE LEAVES THROUGH `self-repair:release`.
++```
++
+ ## Input
+ 
+ The user may provide:
+@@ -30,13 +41,15 @@ The user may provide:
+ 
+ ### 1. Identify what to contribute
+ 
+-If the user provided a file path → read it.
+-If not → check for recent overrides or new skills:
++If the user provided a file path, read it. If not, look for recent overrides
++or new project-local artifacts:
+ 
+ ```bash
+-ls agents/overrides/ 2>/dev/null
+-find .augment/skills -name 'SKILL.md' -newer .augment/rules -maxdepth 3 2>/dev/null
+-git diff --name-only HEAD~5 -- agents/overrides/ .augment/skills/ 2>/dev/null
++ls agents/overrides/
++```
++
++```bash
++git diff --name-only HEAD~5 -- agents/overrides/
+ ```
+ 
+ Ask the user to confirm what should be contributed:
+@@ -53,130 +66,86 @@ Ask the user to confirm what should be contributed:
+ 
+ ### 2. Check universality
+ 
+-Before proceeding, verify the content is package-worthy:
++This is a **worth-contributing** judgement, not a privacy check — the privacy
++floor over the bytes runs in step 4 and cannot be satisfied by a checkbox here.
+ 
+-- [ ] No project-specific references (domain names, local paths, FQDNs, project-specific classes)
+-- [ ] Benefits ALL consumers, not just this project
+-- [ ] Learning occurred 2+ times OR is clearly generalizable
++- [ ] Benefits every consumer, not only this project
++- [ ] The learning occurred twice or more, or is clearly generalizable
++- [ ] A named mechanism explains why the shipped default is wrong
+ 
+-If project-specific content is found, ask:
+-
+-```
+-> ⚠️ Found project-specific references: {examples}
+->
+-> 1. Remove them — make it universal
+-> 2. Cancel — keep as project-only override
+-```
++Below that bar, record the signal and leave the shipped default alone.
+ 
+-### 3. Determine contribution type and target path
++### 3. Determine contribution type and source path
+ 
+-| Type | Source target | Condensed target |
+-|---|---|---|
+-| **Skill** | `src/skills/{name}/SKILL.md` | `dist/agent-src/skills/{name}/SKILL.md` |
+-| **Rule** | `src/rules/{name}.md` | `dist/agent-src/rules/{name}.md` |
+-| **Command** | `src/domains/{domain}/{name}/command.md` | `dist/agent-src/commands/{name}.md` |
+-| **Guideline** | `docs/guidelines/{cat}/{name}.md` | _(not condensed; reference-only)_ |
++`src/` is the only place an artifact is authored. The projections under
++`dist/agent-src/` are regenerated by the package's own sync step; a
++contribution never writes a second, hand-condensed copy (ADR-201 copies `.md`
++verbatim).
+ 
+-### 4. Get access to the package repo
++| Type | Source path |
++|---|---|
++| **Skill** | `src/skills/{name}/SKILL.md` |
++| **Rule** | `src/rules/{name}.md` |
++| **Command** | `src/domains/{domain}/{name}/command.md` |
++| **Guideline** | `docs/guidelines/{category}/{name}.md` |
+ 
+-```
+-> I need to create files in the agent-config package repo.
+->
+-> 1. I have it cloned locally — I'll give you the path
+-> 2. Clone it for me into /tmp/agent-config-upstream
+-> 3. Just output the files — I'll handle it manually
+-```
++### 4. Hand the finding to the ladder
+ 
+-**Option 1:** User provides path → verify it's the right repo:
++Show the user what would leave the machine, before anything leaves it:
+ 
+ ```bash
+-cd {path} && git remote get-url origin
+-# Must contain event4u-app/agent-config
++./agent-config self-repair:release <fingerprint> --dry-run
+ ```
+ 
+-**Option 2:**
++The dry run prints the resolved route, the account that will appear on the
++pull request, and every byte of the title, body, branch name and diff. It
++touches no network. Read it with the user; a refusal from the privacy floor
++is final and the finding stays local.
++
++No record yet? Record the finding first, then release it:
+ 
+ ```bash
+-git clone git@github.com:event4u-app/agent-config.git /tmp/agent-config-upstream
+-cd /tmp/agent-config-upstream
++./agent-config self-repair:status
+ ```
+ 
+-**Option 3:** Skip to Step 7 (output files only).
+-
+-### 5. Create branch and write files
++### 5. Send, once, with the user's word in that turn
+ 
+ ```bash
+-cd {package-repo}
+-git checkout main && git pull
+-git checkout -b {type}/{name}  # e.g. feat/skills/php-container-discovery
++./agent-config self-repair:release <fingerprint>
+ ```
+ 
+-Write the **uncondensed version** (full, verbose, human-readable).
+-Write the **condensed version** (token-efficient, 40-60% shorter for skills; 1:1 for rules/commands).
++Running that command IS the user's word. It is a Hard-Floor action under
++`non-destructive-by-default`, so no standing instruction, autonomy setting or
++earlier approval substitutes for it.
+ 
+-Condensed version MUST preserve:
++The ladder chooses the vehicle: a pull request from a checkout of this
++package, an issue otherwise, and a local record when nothing may leave.
++Degrading never widens what leaves the machine, only the vehicle.
+ 
+-- All code blocks (byte-for-byte)
+-- YAML frontmatter (verbatim)
+-- All headings
+-- Validation rules, gotchas, "Do NOT" sections
++### 6. Quality gates (only in a checkout of this package)
+ 
+-Frontmatter must have `source: package`.
++Run the package's full CI pipeline and confirm it is green before the send.
++The `package-ci-checks` rule owns the entry point and names it; a consumer
++project has no such runner, which is why the command is not repeated here.
++Outside such a checkout the package CI runs these after the issue or pull
++request exists.
+ 
+-### 6. Run quality gates
++### 7. Remind about local override cleanup
+ 
+-```bash
+-./scripts-run src/scripts/skill_linter --all           # 0 FAIL required
+-./scripts-run src/scripts/check_condensation            # No 🔴 errors for this file
+-./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
+-bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
+ ```
+-
+-Fix any issues before continuing.
+-
+-### 7. Present result
+-
+-**If Option 1 or 2** (working in package repo):
+-
+-```
+-> ✅ Files created in {package-repo}:
+->
+-> - `src/{type}/{name}` (source)
+-> - `dist/agent-src/{type}/{name}` (condensed)
++> After the contribution is merged and you update the package here:
+ >
+-> Quality gates: {pass/fail summary}
++> 1. rm agents/overrides/{type}/{name}.md
++> 2. ./agent-config update   (moves the version pin; your package manager fetches it)
+ >
+-> 1. Commit and push — I'll create the PR
+-> 2. Commit only — I'll push later
+-> 3. Review the files first
++> The shared version then replaces your local override.
+ ```
+ 
+-**If Option 3** (manual):
+-
+-Show both file contents in copyable fenced blocks with full paths as headers.
+-
+-### 8. Create PR (if user chose Option 1 in Step 7)
+-
+-```bash
+-git add .
+-git commit -m "{type}({scope}): add {name}
++## Do NOT
+ 
+-{brief description of what it does and why it's universal}"
+-git push -u origin {branch}
+-```
+-
+-Create PR via GitHub API with the package's PR template.
+-Fill in all gates (Promotion, Quality, Universality, Completeness).
+-
+-### 9. Remind about local override cleanup
+-
+-```
+-> 📝 After the PR is merged and you update the package in this project:
+->
+-> ```bash
+-> rm agents/overrides/{type}/{name}.md
+-> composer update event4u/agent-config  # or: npm update
+-> ```
+->
+-> The shared version will then replace your local override.
+-```
++- Do NOT push, open a pull request, or open an issue by hand — that is the
++  ladder's job and the floor over the bytes runs there.
++- Do NOT write a hand-condensed second copy of an artifact.
++- Do NOT edit any generated projection; `src/` is the source of truth.
++- Do NOT stage with a bare `git add .` — name the paths.
++- Do NOT assume consent from an earlier contribution; the word is per turn.
+diff --git a/src/packs/core/pack.yaml b/src/packs/core/pack.yaml
+index a8d27e8c1070189c1a69d65def1367b37ad3890e..c9c51b760d688c21d1295932abb3bec54d7e0511 100644
+--- a/src/packs/core/pack.yaml
++++ b/src/packs/core/pack.yaml
+@@ -15,7 +15,7 @@ token_passport:
+   basis: chars/4
+   catalog_tokens: 0
+   commands_tokens: 0
+-  other_tokens: 51954
++  other_tokens: 51960
+   rules_tokens: 0
+-  total_tokens: 51954
++  total_tokens: 51960
+ trust_level_default: core
+diff --git a/src/packs/memory/README.md b/src/packs/memory/README.md
+index 49747619545b52a543091430e98058f1baa23205..a0ac485defaf8add170d8493d99d3bf0605fc5ef 100644
+--- a/src/packs/memory/README.md
++++ b/src/packs/memory/README.md
+@@ -13,7 +13,7 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
+ 
+ - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
+ - **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
+-- **`memory-learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
++- **`memory-learn-low-impact`** — Preview which validated low-impact entries would be worth upstreaming — read-only, opens nothing, writes nothing.
+ - **`memory-load`** — Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
+ - **`memory-mine-session`** — Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
+ - **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
+diff --git a/src/packs/memory/pack.yaml b/src/packs/memory/pack.yaml
+index d59067514cf453dfec912f17601f3c0b2fa46375..99dc457d57555da3c273b7a1594d3e37c57cab03 100644
+--- a/src/packs/memory/pack.yaml
++++ b/src/packs/memory/pack.yaml
+@@ -6,7 +6,6 @@ dependencies:
+   - ai-council
+   - file-editor
+   - memory-consolidation
+-  - upstream-contribute
+ description: Cross-session memory and chat-history capabilities for the maintainer
+   workspace.
+ id: memory
+@@ -21,8 +20,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 0
+-  commands_tokens: 10185
++  commands_tokens: 9920
+   other_tokens: 0
+   rules_tokens: 0
+-  total_tokens: 10185
++  total_tokens: 9920
+ trust_level_default: core
+diff --git a/src/rules/low-impact-corpus-privacy-floor.md b/src/rules/low-impact-corpus-privacy-floor.md
+index e107ccb776269f98a5b28b0db91c1d33886a777d..6b05fa96c399f7b68f5a320c30baab14981d5166 100644
+--- a/src/rules/low-impact-corpus-privacy-floor.md
++++ b/src/rules/low-impact-corpus-privacy-floor.md
+@@ -25,13 +25,12 @@ NO SECRETS. NO EMAILS. NO PROJECT PATHS. NO CUSTOMER NAMES.
+ NO INTERNAL HOSTNAMES. NO MONEY. NO BUSINESS SQL. NO LONG CODE.
+ ```
+ 
+-The redactor lives in `scripts/ai_council/redact_low_impact_entry.ts`
+-and runs at **both** gates:
++The redactor — named under *See also* — runs at **both** gates:
+ 
+ 1. **Write gate** — every intake append to
+-   `agents/decisions/low-impact-decisions.md` (Phase 12 § Step 2).
+-2. **Upstream gate** — every `/memory learn-low-impact` PR draft,
+-   before the diff leaves the repo (Phase 12 § Step 5).
++   `agents/decisions/low-impact-decisions.md`.
++2. **Review gate** — every `/memory learn-low-impact` preview; a refused
++   entry is named, never promoted.
+ 
+ A failure at either gate refuses the operation, surfaces the
+ offending pattern, and asks the user to rephrase. The redactor never
+@@ -41,7 +40,7 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
+ 
+ | # | Class | Pattern source |
+ |---|---|---|
+-| 1 | Secrets | raw-key prefixes from `scripts/ai_council/config._RAW_KEY_PREFIXES` + inline `api_key:` shape |
++| 1 | Secrets | raw-key prefixes from `_RAW_KEY_PREFIXES` in `src/scripts/ai_council/config.ts` + inline `api_key:` shape |
+ | 2 | Emails | RFC-5322-ish |
+ | 3 | Project-rooted paths | `/Users/`, `/home/`, `/opt/`, `/private/`, drive letters, configured `repo_root` |
+ | 4 | Customer / tenant names | caller-supplied list; generic placeholders (`<customer>`, `<tenant>`, `<account>`, `<user>`) survive |
+@@ -52,16 +51,16 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
+ 
+ ## Locked target types
+ 
+-- `agents/decisions/low-impact-decisions.md` — project-local corpus.
+-- `data/low-impact-decisions-seed.md` (agent-config package) —
+-  upstream seed shipped with the package.
++- `agents/decisions/low-impact-decisions.md` — the project-local corpus.
++- `data/low-impact-decisions-seed.md` — the package seed, **not in the
++  tree**. Locked anyway, so a reappearing seed arrives under the floor.
+ 
+ ## When to invoke
+ 
+-- The host agent has just received a user intake trigger (see
+-  `scripts/ai_council/low_impact_intake.TRIGGER_PHRASES`).
+-- The host agent is about to write an entry to the corpus or to
+-  open a `/memory learn-low-impact` PR.
++- A user intake trigger arrived (`TRIGGER_PHRASES` in
++  `src/scripts/ai_council/low_impact_intake.ts`).
++- An entry is about to reach the corpus, or a
++  `/memory learn-low-impact` preview to render.
+ 
+ ## What to surface on refusal
+ 
+@@ -76,6 +75,6 @@ auto-rewrite.
+ 
+ ## See also
+ 
+-- `scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
+-- `scripts/ai_council/low_impact_intake.ts` — write-gate caller.
++- `src/scripts/ai_council/redact_low_impact_entry.ts` — the redactor.
++- `src/scripts/ai_council/low_impact_intake.ts` — write-gate caller.
+ - `agents/decisions/low-impact-decisions.md` — corpus + Anti-Examples list.
+diff --git a/src/scripts/ai_council/learn_low_impact_preview.ts b/src/scripts/ai_council/learn_low_impact_preview.ts
+index cef78be06fec1cc4b392389b6b080e79d0bdc3e8..c46db173f93d58a6da427029272172a9ae886f65 100644
+--- a/src/scripts/ai_council/learn_low_impact_preview.ts
++++ b/src/scripts/ai_council/learn_low_impact_preview.ts
+@@ -4,19 +4,33 @@
+  * Ported from the retired Python `src/scripts/ai_council/learn_low_impact_preview.py`
+  * (ADR-200 — Python→TS migration, Phase 1).
+  *
+- * Default invocation is `--preview`: build a structured plan describing
+- * which Validated entries would be upstreamed to the package seed without
+- * opening a PR. `--apply` (handled by the agent, not this module) is the
+- * explicit opt-in that triggers the actual upstream-contribute PR flow.
++ * The command is read-only: it builds a structured plan describing which
++ * Validated entries would be worth upstreaming, and opens nothing. The
++ * `--apply` flag that once drove an upstream PR from here was retired on
++ * 2026-10-13 — it wrote into a package seed file that is not in the tree,
++ * and a second outward route would be a second set of guarantees. The one
++ * gated outward step is `self-repair:release`.
+  *
+  * The module is import-light by design — pure parsing + redaction + diff
+- * rendering. PR creation lives in the `upstream-contribute` skill;
+- * this module only hands the agent the material to surface.
++ * rendering. It hands the agent the material to surface and nothing else.
+  */
+ 
+ import * as fs from 'node:fs';
+ 
+ import { parse_corpus_strict } from './low_impact_corpus.js';
++
++/**
++ * The package-side seed the preview diffs against — the ONE place this
++ * literal lives, so a caller never restates it.
++ *
++ * The file is deliberately NOT in the tree: the package ships no seed
++ * corpus, `_readSeedPhrases` treats a missing seed as an empty set, and the
++ * preview therefore diffs against an empty baseline. The path is still
++ * named here, and locked by `low-impact-corpus-privacy-floor`, so that a
++ * seed reappearing arrives already under the privacy floor.
++ */
++export const PACKAGE_SEED_PATH = 'data/low-impact-decisions-seed.md';
++
+ import {
+     type RedactionViolation,
+     redact_low_impact_entry,
+@@ -162,7 +176,7 @@ export class LearnLowImpactPreview {
+     }
+ 
+     /**
+-     * Source-project-stripped diff that `--apply` would propose.
++     * Source-project-stripped diff the preview proposes for a reader.
+      *
+      * Emits unified-diff-style `+` lines for each promoted phrase under the
+      * seed file's `## Validated` section. The agent uses this as the
+@@ -187,7 +201,7 @@ export class LearnLowImpactPreview {
+         const bodyLines: string[] = [
+             `# ${title}`,
+             '',
+-            'Upstream from `/memory learn-low-impact --apply`.',
++            'Prepared from `/memory learn-low-impact`, which sends nothing.',
+             '',
+             '## Entries',
+             '',
+diff --git a/src/scripts/self_repair_cli.ts b/src/scripts/self_repair_cli.ts
+index 7b169a8e1bab18c2a30fb3cf14afd0d2fef7755c..b9dbe589d95523cf97b59dfaff6de042d80300ef 100644
+--- a/src/scripts/self_repair_cli.ts
++++ b/src/scripts/self_repair_cli.ts
+@@ -321,7 +321,24 @@ function tryPullRequest(
+         prHead = `${login}:${branch}`;
+     }
+ 
+-    const prArgs = ['pr', 'create', '--repo', repo, '--title', plan.title, '--body', plan.body];
++    // `--draft` on every rung, never only on the fork one. A draft is the
++    // weaker of the two states a pull request can arrive in: it asks for no
++    // review, notifies no code owner, and runs no required check until someone
++    // marks it ready. An upstream finding is a proposal from a machine the
++    // maintainer has not met, so the maintainer decides when it becomes a
++    // request. Opening ready-for-review is the stronger act and nothing here
++    // has the standing to take it.
++    const prArgs = [
++        'pr',
++        'create',
++        '--repo',
++        repo,
++        '--draft',
++        '--title',
++        plan.title,
++        '--body',
++        plan.body,
++    ];
+     if (prHead !== null) {
+         prArgs.push('--head', prHead);
+     }
+diff --git a/src/scripts/trigger_eval_grandfather.json b/src/scripts/trigger_eval_grandfather.json
+index 7fe0dd5bd4834f8fc9a98364acc2b94a2ec408f4..ac45b6b28d2f9d2ee87d205babe8588f41fe8b2b 100644
+--- a/src/scripts/trigger_eval_grandfather.json
++++ b/src/scripts/trigger_eval_grandfather.json
+@@ -21,7 +21,6 @@
+     "composer-packages",
+     "condense-memory",
+     "content-funnel-design",
+-    "context-authoring",
+     "context-document",
+     "contracts-cognition",
+     "copilot-agents-optimization",
+@@ -73,7 +72,6 @@
+     "laravel-validation",
+     "laravel-websocket",
+     "launch-readiness",
+-    "learning-to-rule-or-skill",
+     "lint-skills",
+     "livewire-architect",
+     "market-entry-analysis",
+@@ -164,7 +162,6 @@
+     "traefik",
+     "unit-economics-modeling",
+     "universal-project-analysis",
+-    "upstream-contribute",
+     "validate-feature-fit",
+     "verify-completion-evidence",
+     "video-director",
+diff --git a/src/skills/context-authoring/SKILL.md b/src/skills/context-authoring/SKILL.md
+index 5cc1e3087dba577ec821ef7b2cd053238f95e054..0de5dbe0a1792115ad6cec6730105c2a009ae813 100644
+--- a/src/skills/context-authoring/SKILL.md
++++ b/src/skills/context-authoring/SKILL.md
+@@ -131,7 +131,7 @@ has to confirm or correct, not invent from scratch.
+    section either authored or explicitly marked `<!-- TBD: ... -->`.
+ 2. A short summary comment back to the user: which sections are complete,
+    which are `TBD`, and which downstream reviewer skills are now unblocked.
+-3. Optional: a proposal stub in `agents/learnings/` for any template gap
++3. Optional: a proposal stub in `agents/proposals/` for any template gap
+    the user hit (missing section, ambiguous field) — feeds the curated
+    self-improvement pipeline via `learning-to-rule-or-skill`.
+ 
+diff --git a/src/skills/context-authoring/evals/triggers.json b/src/skills/context-authoring/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..a03188b530b4de7ce3a18153aa380027891ca9de
+--- /dev/null
++++ b/src/skills/context-authoring/evals/triggers.json
+@@ -0,0 +1,72 @@
++{
++  "skill": "context-authoring",
++  "last_eval": "2026-10-14",
++  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.2 corrected this skill's proposal-stub path and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three entry points the skill's own 'When to use' names: a freshly scaffolded project whose agents/settings/contexts/ files are still template stubs, a user naming one of the five files directly, and a reviewer skill refusing to proceed because the file it reads is still a template — plus the architecture-change case that invalidates a filled file. Near-misses are the three neighbours the skill's own 'Do NOT use' list names, each sharing its vocabulary and belonging to somebody else: a roadmap or feature doc (agent-docs-writing), a context document outside the five templates (context-create), and the engineering-memory YAML files (/memory-add). Counterexamples guard the word 'context': an LLM context-window question and a request to summarise conversation context both say context and ask for no template to be filled.",
++  "queries": [
++    {
++      "id": "ca-e1",
++      "q": "the contexts folder is still all template stubs after the scaffold — walk me through filling them",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e2",
++      "q": "help me fill in the auth model context — roles, impersonation, the exceptions we know about",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e3",
++      "q": "authz-review says it cannot proceed because auth-model.md is still a template — fix that",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e4",
++      "q": "we moved to row-level tenancy last sprint, so tenant-boundaries.md is wrong now — update it",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "ca-e5",
++      "q": "lass uns die data-sensitivity Datei ausfüllen — welche Felder sind PII und was darf ins Log?",
++      "trigger": true,
++      "class": "exemplar",
++      "language": "de"
++    },
++    {
++      "id": "ca-n1",
++      "q": "write the feature doc for the new billing flow",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a regular doc, not one of the five knowledge-layer files → agent-docs-writing"
++    },
++    {
++      "id": "ca-n2",
++      "q": "I need a context document describing our queue topology — none of the five templates fit",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "says context and asks for a file, but outside the five templates → context-create"
++    },
++    {
++      "id": "ca-n3",
++      "q": "record the domain invariant that an invoice can never leave draft without a tax id",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "engineering-memory YAML rather than a context template → /memory-add"
++    },
++    {
++      "id": "ca-c1",
++      "q": "we keep blowing the model's context window on long sessions — what should we cut?",
++      "trigger": false,
++      "class": "counterexample"
++    },
++    {
++      "id": "ca-c2",
++      "q": "summarise the context of this conversation so I can paste it into a fresh chat",
++      "trigger": false,
++      "class": "counterexample",
++      "note": "says context, asks for a summary rather than a template walkthrough"
++    }
++  ]
++}
+diff --git a/src/skills/learning-to-rule-or-skill/SKILL.md b/src/skills/learning-to-rule-or-skill/SKILL.md
+index 17311bf8644b19106c6760203387c3ff470d6ad4..3ed84aaf17aad7ba50c3e7df8abddc410d0be017 100644
+--- a/src/skills/learning-to-rule-or-skill/SKILL.md
++++ b/src/skills/learning-to-rule-or-skill/SKILL.md
+@@ -231,8 +231,8 @@ Mandatory fields the draft MUST fill:
+ * `type` — `rule` | `skill` | `command` | `guideline`
+ * `scope` — `project` (stays in `agents/overrides/`) or `package`
+   (contributed upstream via `upstream-contribute`)
+-* `source_learning` — path to the `agents/learnings/<date>-<slug>.md`
+-  file this proposal was captured from
++* `source_learning` — the capturing intake signal, as
++  `agents/memory/intake/signals-<YYYY-MM>.jsonl#<id>`
+ * `evidence` — **at least two independent** references (PR, issue,
+   incident, review-comment, test-failure, **or audit-log line ids**
+   per [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md));
+diff --git a/src/skills/learning-to-rule-or-skill/evals/triggers.json b/src/skills/learning-to-rule-or-skill/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..f1d5907dcb1ca0eb7315eeb925b9540286660b9d
+--- /dev/null
++++ b/src/skills/learning-to-rule-or-skill/evals/triggers.json
+@@ -0,0 +1,72 @@
++{
++  "skill": "learning-to-rule-or-skill",
++  "last_eval": "2026-10-14",
++  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.2 corrected this skill's source_learning path and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four intake shapes the skill's own 'When to use' names: a mistake that has recurred, a pattern worth reusing, the post-task reflection, and the rule-or-skill question itself — plus the audit-log pattern whose count already satisfies the repetition gate. Near-misses are three neighbours that all end in a written artefact and are somebody else's job: writing the skill once the kind is decided (skill-writing), recording an architectural choice (decision-record / ADR), and parking a durable cross-run lesson in memory (memory-consolidation). Counterexamples guard the word 'learning': a machine-learning feature question and a request for onboarding material both say learning and ask for no rule or skill.",
++  "queries": [
++    {
++      "id": "lrs-e1",
++      "q": "that's the third time this week we forgot to update the callers after a rename — make it stick",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e2",
++      "q": "this review checklist worked really well, capture it so we reuse it next time",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e3",
++      "q": "task is done — what did we learn here that's worth keeping?",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e4",
++      "q": "should this become a rule or a skill? it's a constraint but it needs a procedure too",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "lrs-e5",
++      "q": "wir stolpern ständig über dasselbe Problem — mach daraus eine dauerhafte Regel",
++      "trigger": true,
++      "class": "exemplar",
++      "language": "de"
++    },
++    {
++      "id": "lrs-n1",
++      "q": "write the SKILL.md for the deploy-checklist skill we agreed on — frontmatter, triggers, procedure",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "the kind is already decided; this is the authoring step → skill-writing"
++    },
++    {
++      "id": "lrs-n2",
++      "q": "we chose Postgres over DynamoDB for the event store — write that down so nobody reopens it",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a durable decision with alternatives and a revisit-if → decision-record / ADR"
++    },
++    {
++      "id": "lrs-n3",
++      "q": "remember for future sessions that our staging DB resets every Sunday night",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a durable fact for the memory layer, not guidance to encode → memory-consolidation"
++    },
++    {
++      "id": "lrs-c1",
++      "q": "would a learning-to-rank model improve our search results page?",
++      "trigger": false,
++      "class": "counterexample"
++    },
++    {
++      "id": "lrs-c2",
++      "q": "put together a learning path for new backend hires — what should they read in week one?",
++      "trigger": false,
++      "class": "counterexample",
++      "note": "says learning, asks for onboarding material rather than a rule or skill"
++    }
++  ]
++}
+diff --git a/src/skills/upstream-contribute/SKILL.md b/src/skills/upstream-contribute/SKILL.md
+index cb75ab252564c9932c223e6495fdf0ffb8aab4f7..f3de61339449f4458bb4cc901e4e1e05a2b77d9d 100644
+--- a/src/skills/upstream-contribute/SKILL.md
++++ b/src/skills/upstream-contribute/SKILL.md
+@@ -36,18 +36,34 @@ Do NOT use when:
+ 
+ ## Goal
+ 
+-Contribute a learning, skill, rule, or fix from a consumer project back to the
+-shared `agent-config` package — with correct file placement, quality gates, and PR structure.
++Decide whether a learning, skill, rule, or fix from a consumer project is worth
++contributing back to the shared `agent-config` package — and hand the ones that
++are to the single outward step, which owns everything that leaves the machine.
++
++## One way out
++
++```
++THIS SKILL NEVER PUSHES, NEVER OPENS A PULL REQUEST, AND NEVER WRITES
++A SECOND, HAND-CONDENSED COPY OF AN ARTIFACT.
++EVERY BYTE THAT LEAVES — BRANCH NAME, COMMIT IDENTITY, COMMIT MESSAGE,
++DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`, WHICH SCANS IT.
++A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
++```
++
++`self-repair:release` carries the privacy floor, the may-not-modify deny list,
++the route ladder (pull request, then issue, then a local record) and the
++per-turn Hard-Floor confirmation. A checkbox in a skill carries none of them,
++which is why this skill asks a *worth it* question and nothing else.
+ 
+ ## Core principles
+ 
+-- **⛔ Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
++- **Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
+ - **Universality first** — the contribution must work for ALL consumers, not just one project
+ - **Generalize when possible** — project-specific content CAN become universal with adaptation
+ - **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
+-- **Complete pairs** — both uncondensed and condensed versions required
+-- **Quality verified** — must pass linter before PR creation
+-- **Local benefit immediately** — use override for instant project benefit while PR is pending
++- **One source** — an artifact is authored in `src/` only; projections are regenerated, never hand-written
++- **The floor is over the bytes** — a privacy judgement a human ticks is not a privacy check
++- **Local benefit immediately** — use override for instant project benefit while the contribution is pending
+ 
+ ## A repeated override is a signal, and a signal is not evidence
+ 
+@@ -102,30 +118,36 @@ GitHub: `https://github.com/event4u-app/agent-config`
+ 
+ **This step is NON-NEGOTIABLE. No exceptions.**
+ 
+-Before ANY upstream work (branch, files, PR), ask the user:
++Before ANY upstream work, ask the user:
+ 
+ ```
+-> 🔄 This [skill/rule/guideline] could improve the shared agent-config package.
++> This [skill/rule/guideline] could improve the shared agent-config package.
+ > [Brief explanation of what would be contributed and why it's valuable]
+ >
+-> 1. Yes — create an upstream PR
++> 1. Yes — hand it to the upstream step
+ > 2. No — keep it project-local only
+ ```
+ 
+-- **If user picks 2** → STOP. Do not mention upstream again for this item.
+-- **If user picks 1** → continue with the procedure below.
+-- **If `project.upstream_repo` is empty in `.agent-settings.yml`** → ask the user to configure it first.
++- **If user picks 2** — STOP. Do not mention upstream again for this item.
++- **If user picks 1** — continue with the procedure below.
+ - **NEVER skip this step**, even if the user previously agreed to other contributions.
+ 
++Consent here authorizes the *preparation*. The send is a separate, per-turn
++word in step 5 and this gate never substitutes for it.
++
+ ### 1. Determine contribution type
+ 
+-| Type | Source path | Condensed path |
+-|---|---|---|
+-| **New skill** | `src/skills/{name}/SKILL.md` | `.augment/skills/{name}/SKILL.md` |
+-| **New rule** | `src/rules/{name}.md` | `.augment/rules/{name}.md` |
+-| **New command** | `src/domains/{domain}/{name}/command.md` | `.augment/commands/{name}.md` |
+-| **New guideline** | `docs/guidelines/{category}/{name}.md` | `.augment/guidelines/{category}/{name}.md` |
+-| **Update to existing** | Same path as original | Same path as original |
++`src/` is the only place an artifact is authored. ADR-201 copies every `.md`
++verbatim into the projections, so there is no second version to write and no
++condensation ratio to hit.
++
++| Type | Source path |
++|---|---|
++| **New skill** | `src/skills/{name}/SKILL.md` |
++| **New rule** | `src/rules/{name}.md` |
++| **New command** | `src/domains/{domain}/{name}/command.md` |
++| **New guideline** | `docs/guidelines/{category}/{name}.md` |
++| **Update to existing** | Same path as original |
+ 
+ ### 2. Apply locally as override (immediate benefit)
+ 
+@@ -155,146 +177,105 @@ If the content is project-specific but could be made universal:
+ 3. **Show the user the diff** — original vs. generalized version
+ 4. **Get approval** — user must confirm the generalized version is correct
+ 
+-Example: A project-specific "import-csv" skill → generic "file-import" skill with configurable format.
+-
+-### 3. Prepare the upstream contribution
++Example: A project-specific "import-csv" skill becomes a generic "file-import"
++skill with a configurable format.
+ 
+-The agent needs access to the package repository. Ask the user:
++Generalizing is an editorial act and it is not the privacy floor. What the
++floor refuses in step 4 stays local; it is never rewritten into shape.
+ 
+-```
+-> The improvement should go to the shared agent-config package.
+-> I need to create a PR in `event4u-app/agent-config`.
+->
+-> 1. I have the package repo cloned locally — tell me the path
+-> 2. Clone it for me into a temp directory
+-> 3. I'll handle the PR manually — just give me the files
+-```
++### 3. Proposal gate — MANDATORY when a proposal doc exists
+ 
+-**Option 1:** User provides path → work directly in that repo.
+-
+-**Option 2:** Clone into temp directory:
+-
+-```bash
+-git clone git@github.com:event4u-app/agent-config.git /tmp/agent-config-upstream
+-cd /tmp/agent-config-upstream
+-```
+-
+-**Option 3:** Output the file contents as copyable blocks for the user.
+-
+-### 4. Create branch and files
++If the contribution originates from a proposal under `agents/proposals/`
++(produced by `learning-to-rule-or-skill` via the pipeline in
++[`self-improvement-pipeline`](../../../docs/guidelines/agent-infra/self-improvement-pipeline.md)),
++run the Stage-4 gate first:
+ 
+ ```bash
+-cd {package-repo-path}
+-git checkout main && git pull
+-git checkout -b feat/skills/{name}  # or fix/rules/{name}, etc.
++./agent-config proposal:check agents/proposals/{slug}.md
+ ```
+ 
+-Create both files:
+-
+-- **Source version** → `src/{type}/{name}` (full, verbose, human-readable)
+-- **Condensed version** → `.augment/{type}/{name}` (token-efficient, preserving all code blocks,
+-  headings, frontmatter, validation, gotchas)
+-
+-For skills, the condensed version should be 40-60% shorter than uncondensed.
+-For rules and commands, they are usually copied 1:1 (no condensation).
+-
+-### 5. Ensure file quality
+-
+-The files must:
++**Hard refusal rule:** if `./agent-config proposal:check` exits non-zero, STOP.
++Surface the findings to the user, ask them to fix the proposal (add evidence,
++remove TODO markers, complete required sections), then rerun.
+ 
+-- Have correct YAML frontmatter (`name`, `description`, `source: package`)
+-- NOT contain project-specific references (no domain names, local paths, FQDNs)
+-- Follow the skill/rule/command template structure
+-- Have exactly one trailing newline
++When no proposal doc exists (small fix, typo, pure bug-fix), skip this step and
++record the rationale in the finding.
+ 
+-### 6. Run quality gates (if working in the package repo)
++### 4. See every byte before any byte leaves
+ 
+ ```bash
+-./scripts-run src/scripts/skill_linter --all          # 0 FAIL required
+-./scripts-run src/scripts/check_condensation            # No errors for this file
+-./scripts-run src/scripts/condense --generate-tools    # Regenerate symlinks
+-bash scripts/condense.sh --check                # dist/agent-src/ in sync with source
++./agent-config self-repair:release <fingerprint> --dry-run
+ ```
+ 
+-If not in the package repo, note that these checks will run in CI after the PR is created.
++The dry run resolves the route, names the account that will appear on the pull
++request, and prints the title, body, branch name and diff in full. It touches
++no network.
+ 
+-### 6b. Proposal gate — MANDATORY when a proposal doc exists
++A refusal from the privacy floor is **final**: the finding stays local. There
++is no scrubbing pass, because a rewritten identifier is still a leaked one.
+ 
+-If the contribution originates from a proposal under `agents/proposals/`
+-(produced by `learning-to-rule-or-skill` via the pipeline in
+-[`self-improvement-pipeline`](../../../docs/guidelines/agent-infra/self-improvement-pipeline.md)),
+-run the Stage-4 gate before opening the PR:
++### 5. Send — one command, one turn, one word
+ 
+ ```bash
+-./agent-config proposal:check agents/proposals/{slug}.md
++./agent-config self-repair:release <fingerprint>
+ ```
+ 
+-**Hard refusal rule:** if `./agent-config proposal:check` exits non-zero, STOP —
+-do not create the branch, do not push, do not open the PR. Surface the
+-findings to the user, ask them to fix the proposal (add evidence,
+-remove TODO markers, complete required sections), then rerun.
+-
+-When no proposal doc exists (small fix, typo, pure bug-fix), skip this
+-step and document the rationale in the PR body under the Promotion
+-Gate.
+-
+-### 7. Commit and create PR
+-
+-Branch naming: `feat/skills/{name}`, `fix/rules/{name}`, `feat/commands/{name}`
+-
+-Commit message format:
+-
+-```
+-feat(skills): add {name} skill
+-fix(rules): improve {name} rule — {what changed}
+-feat(commands): add {name} command
+-```
++Running that command IS the user's word, and it is a Hard-Floor action under
++`non-destructive-by-default`. No autonomy setting, standing instruction or
++earlier consent substitutes for it.
+ 
+-PR title: Same as commit message.
++The ladder picks the vehicle: a pull request from a checkout of this package,
++an issue otherwise, a local record when nothing may leave. Degrading changes
++the vehicle, never what leaves.
+ 
+-PR body must use the package's PR template with these gates:
++### 6. Quality gates (only inside a checkout of this package)
+ 
+-- **Promotion Gate** — learning occurred 2+ times, improves correctness, prevents real failure
+-- **Quality Gate** — linter passes, tests pass
+-- **Universality Gate** — no project-specific assumptions, benefits all consumers
+-- **Completeness Gate** — both versions present, symlinks regenerated
++Run the package's full CI pipeline and confirm it is green before the send.
++[`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
++and names it; a consumer project has no such runner, which is why the command
++is not repeated here. Outside such a checkout, the package CI runs after the
++issue or pull request exists.
+ 
+-### 8. After merge — clean up override
++### 7. After merge — clean up override
+ 
+-Once the PR is merged and the package is updated in the project:
++Once the contribution is merged and the package is updated in the project:
+ 
+ ```bash
+-# In the consumer project
+ rm agents/overrides/{type}/{name}.md
+-composer update event4u/agent-config  # or npm update
+ ```
+ 
+-The shared version now replaces the local override.
++```bash
++./agent-config update
++```
++
++`update` moves the `agent_config_version` pin in `.agent-settings.yml`; the
++project's own package manager then fetches that version. The shared artifact
++replaces the local override.
+ 
+ ## Output format
+ 
+ 1. Summary of what is being contributed (type, name, why)
+-2. File contents for both uncondensed and condensed versions
+-3. If working in the package repo: branch name, commit message, PR title
+-4. If Option 3: copyable file blocks for the user to paste
+-5. Reminder to clean up local override after upstream merge
++2. The source path under `src/` that the contribution targets
++3. The dry-run output, verbatim — route, account, title, body, branch, diff
++4. The one command the user runs to send it, and nothing executed on their behalf
++5. Reminder to clean up the local override after the contribution merges
+ 
+ ## Gotcha
+ 
+ - Agent in consumer project doesn't know the package repo URL — this skill provides it
+-- Agent may try to edit `.augment/` in the consumer project — that's read-only (symlinked)
+-- Agent may forget the condensed version — both are mandatory
+-- Agent may include project-specific references in the skill — must be universal
+-- The `source` field in frontmatter must be `package`, not `project`
+-- Agent may not have git access to the package repo — Option 3 handles this gracefully
++- Agent may try to hand-edit a generated projection — `src/` is the source
++- Agent may try to write a second condensed copy — ADR-201 removed that step
++- Agent may include project-specific references — the floor in step 4 refuses them
++- Agent may not have git access to the package repo — the ladder degrades to an issue
++- A consumer install reaches the issue step, not the pull-request step
+ 
+ ## Do NOT
+ 
+ - **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
+-- **Do NOT open a PR if `./agent-config proposal:check` blocks** — fix the proposal first (step 6b)
+-- Do NOT edit `.augment/` in the consumer project — it's managed by the package
+-- Do NOT submit project-specific content without generalizing it first
+-- Do NOT skip the condensed version — both files are mandatory
+-- Do NOT forget to clean up the local override after upstream merge
+-- Do NOT bypass quality gates — they exist for a reason
++- **Do NOT open a contribution if `./agent-config proposal:check` blocks** — fix the proposal first (step 3)
++- Do NOT push, open a pull request, or open an issue by hand — the ladder owns the send
++- Do NOT edit a generated projection; author in `src/` and let the package's sync step regenerate
++- Do NOT write a hand-condensed second copy of an artifact
++- Do NOT stage with a bare `git add .` — name the paths
++- Do NOT rewrite what the privacy floor refused; a refused finding stays local
+ - Do NOT assume consent from a previous contribution — ask every time
+diff --git a/src/skills/upstream-contribute/evals/triggers.json b/src/skills/upstream-contribute/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..1bdcace55569d808fbb8904df612814549bb9d24
+--- /dev/null
++++ b/src/skills/upstream-contribute/evals/triggers.json
+@@ -0,0 +1,72 @@
++{
++  "skill": "upstream-contribute",
++  "last_eval": "2026-10-14",
++  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.1 rewrote this skill into a front on the self-repair:release ladder and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four sources the skill's own 'When to use' names: a locally written skill worth sharing, an improvement to a shipped rule, a bug found in a shared artefact, and a local override that should become the default — plus the generalisation case, where something project-specific is worth widening. Near-misses are three neighbours that share the contribution vocabulary and stop short of leaving the machine: deciding what the artefact even is (learning-to-rule-or-skill), deliberately keeping it local (override-management), and opening a pull request inside the consumer's own repository (git-workflow), which is not an upstream send at all. Counterexamples guard the word 'upstream': a git upstream-branch question and an upstream HTTP dependency both say upstream and have nothing to do with contributing back.",
++  "queries": [
++    {
++      "id": "uc-e1",
++      "q": "this skill we wrote locally would help every project — contribute it back to the shared package",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e2",
++      "q": "the shipped commit-policy rule is missing a case we hit twice — send the improvement upstream",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e3",
++      "q": "found a bug in the shared migration skill — how do I get the fix into agent-config?",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e4",
++      "q": "our override has outlived the default it replaced — make it the package default instead",
++      "trigger": true,
++      "class": "exemplar"
++    },
++    {
++      "id": "uc-e5",
++      "q": "das sollten alle Projekte bekommen — trag die Verbesserung ins geteilte Paket zurück",
++      "trigger": true,
++      "class": "exemplar",
++      "language": "de"
++    },
++    {
++      "id": "uc-n1",
++      "q": "we keep hitting this — should it be a rule or a skill?",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "deciding the artefact's kind comes first and is a different skill → learning-to-rule-or-skill"
++    },
++    {
++      "id": "uc-n2",
++      "q": "this tweak is specific to how we do tenancy — keep it local and document why",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "an explicit decision NOT to upstream → override-management"
++    },
++    {
++      "id": "uc-n3",
++      "q": "open a pull request for this change on our own repo",
++      "trigger": false,
++      "class": "near-miss",
++      "note": "a pull request, but in the consumer's repository — nothing leaves toward the package → git-workflow"
++    },
++    {
++      "id": "uc-c1",
++      "q": "my branch has no upstream set, so git push keeps asking me for one",
++      "trigger": false,
++      "class": "counterexample"
++    },
++    {
++      "id": "uc-c2",
++      "q": "the upstream pricing API started returning 502s — add a retry with backoff",
++      "trigger": false,
++      "class": "counterexample",
++      "note": "says upstream about a third-party dependency, not about contributing back"
++    }
++  ]
++}
+diff --git a/tests/scripts/ai_council/learn_low_impact_preview.test.ts b/tests/scripts/ai_council/learn_low_impact_preview.test.ts
+index 8ee3430e815c39730a6fd9aa884d1ce8a1a3a8e7..4511f1729fd900522846589163365d2dfb9ea75e 100644
+--- a/tests/scripts/ai_council/learn_low_impact_preview.test.ts
++++ b/tests/scripts/ai_council/learn_low_impact_preview.test.ts
+@@ -4,9 +4,10 @@
+ // render. Covers the bucketing (promoted / refused / already-seeded), the
+ // provenance-SHA extraction, and the refused-entry `reason()` string that
+ // threads the redactor's violations through.
+-import { mkdtempSync, writeFileSync } from 'node:fs';
++import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+ import { tmpdir } from 'node:os';
+ import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
+ 
+ import { describe, expect, it } from 'vitest';
+ 
+@@ -14,9 +15,12 @@ import type {
+     RefusedEntry} from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
+ import {
+     LearnLowImpactPreview,
++    PACKAGE_SEED_PATH,
+     build_preview,
+ } from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
+ 
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
++
+ // A leaked path + an email → both refused by the redactor. Assembled from
+ // parts so this test file does not embed a literal home path / address that
+ // trips secret/path linters.
+@@ -133,4 +137,37 @@ describe('learn_low_impact_preview — bucketing + flags', () => {
+         const p = build_preview(tmpFile('c.md', corpus()), '/no/such/seed.md');
+         expect(p).toBeInstanceOf(LearnLowImpactPreview);
+     });
++
++    // The module docstring and `low-impact-corpus-privacy-floor` both rest on
++    // one claim about the tree: the package ships no seed corpus, so every
++    // preview diffs against an empty baseline. Asserting the claim rather than
++    // the sentence means shipping a seed reds this test instead of silently
++    // changing what every preview promotes.
++    it('the package seed named by PACKAGE_SEED_PATH is absent from the tree', () => {
++        expect(PACKAGE_SEED_PATH).toBe('data/low-impact-decisions-seed.md');
++        expect(existsSync(path.join(REPO_ROOT, PACKAGE_SEED_PATH))).toBe(false);
++    });
++
++    it('an absent package seed leaves every validated phrase unseeded', () => {
++        const p = build_preview(
++            tmpFile('absent-seed.md', corpus()),
++            path.join(REPO_ROOT, PACKAGE_SEED_PATH),
++        );
++        expect(p.already_seeded).toEqual([]);
++        expect(p.promoted.map((e) => e.phrase)).toContain('already seeded phrase');
++    });
++
++    // `--apply` was retired on 2026-10-13: the preview opens nothing, and the
++    // one gated outward step is `self-repair:release`. The rendered body is the
++    // text a person reads before deciding, so a body still advertising the
++    // retired flag would send them to a route that no longer exists.
++    it('the rendered body advertises no retired --apply route', () => {
++        const p = build_preview(tmpFile('body.md', corpus()), '/no/such/seed.md', {
++            repoSlug: 'acme/widgets',
++        });
++        const body = p.render_pr_body();
++        expect(body).not.toContain('--apply');
++        expect(body).toContain('/memory learn-low-impact');
++        expect(body).toContain('sends nothing');
++    });
+ });
+diff --git a/tests/scripts/routing_signal_measurement.test.ts b/tests/scripts/routing_signal_measurement.test.ts
+index a1043b22de953f12250671697bfcd701b793c03f..cf496e10c68337ce95a63e98571a7c9423ea8fcd 100644
+--- a/tests/scripts/routing_signal_measurement.test.ts
++++ b/tests/scripts/routing_signal_measurement.test.ts
+@@ -253,8 +253,18 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
+         // 0x04 = 4 and SEALS, moving the holdout 27 -> 28. Every comment above
+         // could say the seal was untouched; this one cannot, which is exactly
+         // the case the second line exists to catch rather than assume.
++        //
++        // 134 -> 137 on 2026-10-14: `road-to-one-upstream-that-checks-what-leaves`
++        // steps 1.1 and 1.2 rewrote `upstream-contribute` into a front on the
++        // release ladder and repaired a dangling path in
++        // `learning-to-rule-or-skill` and `context-authoring`, so all three owed
++        // a corpus. `context-authoring` (0xe0 = 224),
++        // `learning-to-rule-or-skill` (0xf8 = 248) and `upstream-contribute`
++        // (0xa7 = 167) are all above the ceiling and train, moving the train
++        // count 106 -> 109; the holdout is unchanged at 28, so the seal is
++        // untouched by this growth.
+         const all = corpusSkills(REPO);
+-        expect(all.length).toBe(134);
++        expect(all.length).toBe(137);
+         expect(all.filter((r) => r.partition === 'holdout').length).toBe(28);
+     });
+ });
+@@ -301,7 +311,11 @@ describe('5.1 — the measurement is non-vacuous', () => {
+         // NOT counted here; that it is absent from this number is the seal
+         // working, which is the same sentence the 2026-10-01 and 2026-10-02
+         // growths needed and the five entries between them did not.
+-        expect(new Set(cases.map((c) => c.skill)).size).toBe(106);
++        // 106 -> 109 on 2026-10-14: all three corpora the upstream-ladder
++        // roadmap added hash above the ceiling and train — `context-authoring`,
++        // `learning-to-rule-or-skill`, `upstream-contribute`. Nothing sealed,
++        // so this entry needs no absent-row sentence.
++        expect(new Set(cases.map((c) => c.skill)).size).toBe(109);
+     });
+ 
+     it('both legacy-shaped train corpora are read, not silently dropped', () => {
+diff --git a/tests/scripts/self_repair_release.test.ts b/tests/scripts/self_repair_release.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b3a0a90745896a9c4af4c607114de42b6506df46
+--- /dev/null
++++ b/tests/scripts/self_repair_release.test.ts
+@@ -0,0 +1,128 @@
++/**
++ * The egress ladder's outgoing `gh pr create`, scripted through the injectable
++ * runner (`ReleaseDeps.runner`) rather than shelled out.
++ *
++ * F4 of road-to-one-upstream-that-checks-what-leaves: `prArgs` carried no
++ * `--draft`, so every upstream finding arrived as a review request against a
++ * maintainer who had not asked for one. The flag is one argument and nothing
++ * watched it, which is how it was absent for the whole life of the ladder.
++ *
++ * Both rungs are asserted, not just the one the happy path takes. The ladder
++ * degrades upstream -> fork, and the fork rung builds its own argv with an
++ * extra `--head`; a fix applied to one rung and not the other would leave the
++ * fork route — the one a contributor without push rights actually uses —
++ * opening ready-for-review.
++ */
++import { describe, expect, it } from 'vitest';
++
++import type { DefectRecord } from '../../src/scripts/_lib/self_repair.js';
++import type {
++    Probe,
++    ReleaseDeps,
++    ReleasePlan,
++    RunResult,
++    Runner,
++} from '../../src/scripts/self_repair_cli.js';
++import { executeRelease } from '../../src/scripts/self_repair_cli.js';
++
++const OK: RunResult = { ok: true, out: '', timedOut: false };
++
++function record(): DefectRecord {
++    return {
++        fingerprint: 'abc123def4567890',
++        defect_class: 'other',
++        evidence: 'a sanitized span',
++        suggested_surface: 'src/rules/example.md',
++        first_seen: '2026-10-14T00:00:00.000Z',
++        last_seen: '2026-10-14T00:00:00.000Z',
++        occurrences: 1,
++        status: 'open',
++    } as unknown as DefectRecord;
++}
++
++function plan(pushVia: 'upstream' | 'fork'): ReleasePlan {
++    return {
++        route: 'pull-request',
++        pushVia,
++        blocked: null,
++        patch_denied: null,
++        title: 'a title',
++        body: 'a body',
++    };
++}
++
++function probe(canFork: boolean): Probe {
++    return {
++        agentConfigCheckout: '/some/checkout',
++        ghAuthenticated: true,
++        canPushUpstream: true,
++        canFork,
++    };
++}
++
++/**
++ * A runner that answers every command successfully and records the argv of
++ * each `gh pr create`. `git branch --show-current` has to answer a real branch
++ * name or the ladder refuses before it ever reaches the forge.
++ */
++function scriptedRunner(): { runner: Runner; prCalls: string[][] } {
++    const prCalls: string[][] = [];
++    const runner: Runner = (cmd, args) => {
++        if (cmd === 'git' && args[0] === 'branch') {
++            return { ok: true, out: 'retro/abc123de\n', timedOut: false };
++        }
++        if (cmd === 'gh' && args[0] === 'api') {
++            return { ok: true, out: 'some-login\n', timedOut: false };
++        }
++        if (cmd === 'gh' && args[0] === 'pr' && args[1] === 'create') {
++            prCalls.push([...args]);
++            return { ok: true, out: 'https://example.invalid/pr/1\n', timedOut: false };
++        }
++        return OK;
++    };
++    return { runner, prCalls };
++}
++
++function deps(runner: Runner): ReleaseDeps {
++    return { runner, now: () => '2026-10-14T00:00:00.000Z' };
++}
++
++describe('the upstream pull request is a draft', () => {
++    it('pr-is-draft — the direct-push rung passes --draft', () => {
++        const { runner, prCalls } = scriptedRunner();
++        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', deps(runner));
++
++        expect(out.published).toBe('pull-request');
++        expect(prCalls).toHaveLength(1);
++        expect(prCalls[0]).toContain('--draft');
++    });
++
++    it('pr-is-draft — the fork rung passes --draft too', () => {
++        const { runner, prCalls } = scriptedRunner();
++        const out = executeRelease(record(), plan('fork'), probe(true), 'o/r', deps(runner));
++
++        expect(out.published).toBe('pull-request');
++        expect(prCalls).toHaveLength(1);
++        expect(prCalls[0]).toContain('--draft');
++        // The fork rung is the one that adds --head; asserting it here is what
++        // makes this a test of the fork path rather than a second copy of the
++        // one above.
++        expect(prCalls[0]).toContain('--head');
++    });
++
++    it('--draft precedes the title, so no value is read as the flag', () => {
++        const { runner, prCalls } = scriptedRunner();
++        executeRelease(record(), plan('upstream'), probe(false), 'o/r', deps(runner));
++
++        const args = prCalls[0] as string[];
++        // The -1 guard is not decoration. Written as `indexOf('--draft') <
++        // indexOf('--title')` alone, this case passed with the flag REMOVED —
++        // absent is -1, and -1 is less than everything. The sensitivity probe
++        // that removes the flag caught it; without this line the case would
++        // have shipped as a third assertion that asserts nothing.
++        expect(args).toContain('--draft');
++        expect(args.indexOf('--draft')).toBeLessThan(args.indexOf('--title'));
++        expect(args[args.indexOf('--title') + 1]).toBe('a title');
++        expect(args[args.indexOf('--body') + 1]).toBe('a body');
++    });
++});

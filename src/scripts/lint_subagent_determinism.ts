@@ -37,9 +37,22 @@ function _listSubagents(dir: string): string[] {
     if (!fs.existsSync(dir)) {
         return [];
     }
+    // `_`-prefixed files are PARTIALS, never projected as agents.
+    //
+    // `src/subagents/_prompt-defense.md` says so in its own first line — it is
+    // a preamble composed into every projected subagent body at projection
+    // time — and two shipped readers already honour the convention:
+    // `build_discovery_manifest` and `condense` both skip a basename starting
+    // with `_`. This lint did not, so it demanded `subagent-v1` frontmatter
+    // from a markdown fragment that by contract has none, and reported "no
+    // parseable frontmatter" against a file that is correct as written.
+    //
+    // Skipping is the right repair rather than giving the partial frontmatter:
+    // the preamble is INJECTED into other bodies, so a `schema_version` in it
+    // would travel into every projected agent as stray text.
     return fs
         .readdirSync(dir)
-        .filter((f) => f.endsWith('.md'))
+        .filter((f) => f.endsWith('.md') && !f.startsWith('_'))
         .sort()
         .map((f) => path.join(dir, f));
 }

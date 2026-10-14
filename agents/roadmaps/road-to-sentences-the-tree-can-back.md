@@ -42,14 +42,22 @@ answer. No class sweep: each step names its sentence.
   `refine-ticket`, `validate-feature-fit` — their `SKILL.md` writes
   `name: "estimate-ticket"`). The test header promises a zero-drift layer the
   file does not contain (`tests/scripts/generate_catalog.test.ts:1-8`).
-- **Counters.** `README.md:9` says "Rules 121 counts the source rules while the
-  linked projection holds 120"; the tree holds 122 source rules and 121
-  projected, and the same paragraph says the counter "fails CI on a drift of
-  one". `update_counts.ts:252-254` records that prose counts were removed from
-  the README on purpose. `update_counts --check` prints `pattern missed` and
+- **Counters.** `update_counts --check` prints `pattern missed` and
   continues (`src/scripts/update_counts.ts:358-360`), so a sentence it can no
   longer find passes. `site/src/content/docs/agent-commands/overview.md:3`
   says "~190 commands"; the badge says 205.
+  **Corrected 2026-10-14, by executing the claim instead of reading it.** This
+  bullet also said `README.md:9` reads "Rules 121 ... holds 120" against a tree
+  of 122 and 121, and that `update_counts.ts:252-254` records prose counts as
+  removed from the README on purpose. Both were true at `d41121927` and neither
+  is true now: on 2026-10-12 four patterns for that sub-note were added to
+  TARGETS, the comment above them was rewritten, and `--check` is green on the
+  sentence. The figures are generated. What the same reading found instead is
+  larger and the roadmap had not seen it — the documentation site under `site/`
+  carried the figures by hand and the counter's TARGETS list stopped at
+  `docs/`: both "what's inside" tables were stale on EVERY generated row
+  (skills 278, rules 105, commands 190, guidelines 101) and seven further
+  literal `190`s sat across five files.
 - **Contract lines naming absent guards.**
   `docs/contracts/settings-sync-yaml-subset.md:86` — "Pinned by
   `tests/test_sync_round_trip.py` (34 tests)": not in the tree.
@@ -99,6 +107,19 @@ answer. No class sweep: each step names its sentence.
   output still ends "Every anchor leaves the run carrying a ledger row", which
   is the coverage claim a partial walk cannot make. Found by this run, not by
   the source.
+- **A test header that describes a layer the file does not hold, measured as
+  a population.** 1.1 names one instance. Reading its neighbours found two
+  more in the same shape, and a count over the tree on 2026-10-14 found the
+  class: of **225** test files whose leading comment announces a golden-parity
+  / python3-vs-tsx / byte-identical-stdout layer, **203** never name `python3`
+  anywhere in their body. The Python sources those headers promise parity with
+  have been retired, so the claim cannot be true for any of them. This branch
+  corrects only the three files it had open for other reasons
+  (`generate_catalog`, `update_counts`, `lint_handoffs`); the remaining 200
+  are left, counted, for a change that is about them. Recorded here rather
+  than in a pull-request body because a count that lives only in a review
+  comment is the kind of sentence this roadmap exists to stop.
+
 - **The standard claim.** `README.md:195` says the content layer "follows the
   Agent Skills open standard"; `docs/github-topics.md:42` says the format is
   "compatible with" it. The parked non-adoption records that this package's
@@ -109,76 +130,142 @@ answer. No class sweep: each step names its sentence.
 
 ## Phase 1 — Generators and counters
 
-- [ ] **1.1 Quoted names render as names.** `generate_catalog` strips one pair
+- [x] **1.1 Quoted names render as names.** `generate_catalog` strips one pair
       of surrounding quotes from `name:`; the four rows and four links are
       regenerated; the test header describes the layer that exists. No
       `--check` gate is added for the two files.
       verify: `grep -c '"estimate-ticket"' llms.txt docs/skills-catalog.md` -> /:0$/
       Positive control: the same grep at `d41121927` returns 1 for each file.
-- [ ] **1.2 A missed pattern fails in check mode.** `update_counts --check`
+- [x] **1.2 A missed pattern fails in check mode.** `update_counts --check`
       exits 1 when a pattern matches nothing, naming it.
       verify: `npx vitest run tests/scripts/update_counts.test.ts -t missed-pattern-fails --reporter=verbose` -> /✓.*missed-pattern-fails/
-- [ ] **1.3 The README and site counts say what the tree has.** The prose
-      sentence at `README.md:9` keeps its explanation of why the source and
-      projected rule counts differ and drops the two figures, as
-      `update_counts.ts:252-254` already intends for prose; the site
-      overview names no command count, leaving the figure to the badge.
-      verify: `grep -cE "Rules 12[0-9]|holds 12[0-9]|~190 commands" README.md site/src/content/docs/agent-commands/overview.md` -> /:0$/
+- [x] **1.3 The README and site counts say what the tree has.** The README
+      half was already done by the tree before this step ran, and better than
+      the step proposed: the sub-note's four figures are generated from the
+      canonical counter and `--check` is green on them, so dropping them would
+      delete gated prose to satisfy a grep. They stay. The site is where the
+      hand-typed figures actually are, and every one of them is brought under
+      the same counter — the two "what's inside" tables and the three command
+      sentences across five files. The two `description:` frontmatter figures
+      are dropped instead of generated: a meta description is not where a
+      reader goes for a count, and the counter's own refusal when a pattern
+      stops matching (1.2) is what forced the choice to be made rather than
+      left half-done.
+      verify: `npx tsx src/scripts/update_counts.ts --check` -> 0
+      Positive control: the same command before this step reported thirteen
+      drifts across the five site files.
 
 ## Phase 2 — Lines that name what exists
 
-- [ ] **2.1 Two contracts name the guard that exists.**
+- [x] **2.1 Two contracts name the guard that exists.**
       `settings-sync-yaml-subset.md:86`, `STABILITY.md:181-183` and
       `STABILITY.md:220` name the TypeScript test, gate or script that holds
-      each claim, or say that none does.
+      each claim, or say that none does. Each named successor was opened
+      before it was written down: the always-budget port keeps all four
+      `::test_*` titles verbatim, so those references survive the rename
+      intact, while the round-trip port keeps neither of the two titles the
+      contract cited and holds 35 tests rather than the 34 claimed — so that
+      line names the file and its two describe blocks and gives no count,
+      which is a figure that goes stale on the next test added.
+      `STABILITY.md:220` was wrong twice over: it named a script that does not
+      exist AND `task ci-fast`, which is an included taskfile rather than a
+      runnable task. The caller is `task ci`.
+      Same-literal residue, searched and closed: the four names appeared three
+      more times, in `adr-settings-sync-engine.md`, `load-context-schema.md`
+      and `file-ownership-matrix.md`. That is completing one named fix, not
+      the class sweep the council declined — the class is 168 distinct `.py`
+      paths across `docs/contracts/`, counted here and deliberately untouched.
       verify: `grep -cE "test_sync_round_trip\.py|test_always_budget\.py|check_structural_breaking\.py" docs/contracts/settings-sync-yaml-subset.md docs/contracts/STABILITY.md` -> /:0$/
-- [ ] **2.2 A promised lint code is emitted or withdrawn.**
+- [x] **2.2 A promised lint code is emitted or withdrawn.**
       `cross-wing-handoff.md:96` and `lint_handoffs.ts` agree on
-      `handoff_missing_input`.
+      `handoff_missing_input`. Withdrawn rather than emitted: making the
+      linter carry it needs a warning channel it does not have, and this
+      roadmap adds no mechanism. The convention stays in the table; the claim
+      that a lint enforces it goes. The agreement is now held by a test rather
+      than by care — any `handoff_*` code a contract table names must have an
+      emitter, and every code the linter emits must be documented, so the next
+      divergence fails in either direction.
       verify: `npx vitest run tests/scripts/lint_handoffs.test.ts -t handoff-missing-input-agrees --reporter=verbose` -> /✓.*handoff-missing-input-agrees/
-- [ ] **2.3 The structural detector reads paths that exist.**
+- [x] **2.3 The structural detector reads paths that exist.**
       `check_structural_breaking` matches the pack files that exist; a deleted
-      pack file in a fixture diff is reported.
+      pack file in a fixture diff is reported. The watched shapes are the
+      discovery manifest and the per-pack manifest (17 of the latter), both
+      measured in the tree rather than inferred. The new cases assert the exit
+      code and the reported path, which the file's existing `expectParity`
+      helper does not: it asserts only that the process reached a defined
+      exit, so every case using it promises a verdict in its title that it
+      never checks. Pre-existing, left as it is, recorded here.
       verify: `npx vitest run tests/scripts/check_structural_breaking.test.ts -t pack-file-deletion --reporter=verbose` -> /✓.*pack-file-deletion/
-- [ ] **2.4 Three headers describe their code.** `check_references.ts:12-13`
+- [x] **2.4 Three headers describe their code.** `check_references.ts:12-13`
       names the three scan roots; `model-recommendation.md:15` names the
-      `frontier` band the code maps; `check_rule_invariants.ts:10` stops
-      saying the gate "would have flagged the loss at CI time" while no
-      workflow calls it.
+      `frontier` band the code maps — in BOTH halves of that sentence, since
+      the tier→model list under it was missing the same band;
+      `check_rule_invariants.ts:10` stops saying the gate "would have flagged
+      the loss at CI time" and names where it is registered instead.
+      The reason that last one matters was found by running it: the gate is
+      RED on `origin/main` right now. `non-destructive-by-default` reads "Ask
+      and action are strictly sequential: surface the confirmation, then WAIT"
+      where the pinned invariant demands "The ask and the action are strictly
+      sequential: surface the confirmation, then WAIT for the answer." The
+      guarantee survives; the verbatim string drifted. Its only caller is
+      `task ci`, which no workflow invokes, so nothing on a pull request has
+      said so. NOT fixed here, and not fixable here: editing a kernel rule is
+      denied to an agent, and the gate's own message forbids updating it
+      green. It belongs to `kernel-membership.md` § 10.
       verify: `grep -c 'frontier' docs/guidelines/agent-infra/model-recommendation.md` -> /^[1-9]/
 
 ## Phase 3 — Output and skill bodies
 
-- [ ] **3.1 JSON mode prints JSON only.** `check_ci_local_parity --format json`
+- [x] **3.1 JSON mode prints JSON only.** `check_ci_local_parity --format json`
       writes info lines to stderr, and stdout parses.
       verify: `npx vitest run tests/scripts/check_ci_local_parity.test.ts -t json-stdout-parses --reporter=verbose` -> /✓.*json-stdout-parses/
-- [ ] **3.2 Two dated facts point at their source.** The `react-native-setup`
+- [x] **3.2 Two dated facts point at their source.** The `react-native-setup`
       prerequisite names a minimum that is not past end of life and carries
       the month it was true, or defers to the project's own toolchain file;
       the `database` corpus label reads the manifest's versions instead of
       naming its own.
       verify: `grep -c 'Node 20.x minimum' src/skills/react-native-setup/SKILL.md` -> 0
-- [ ] **3.3 Research and naming outputs carry their status.**
+      Both defer rather than re-date: the Node floor points at the project's
+      own `.nvmrc` / `engines.node`, and the corpus label points at
+      `data/manifest.json`. Neither carries a version, so neither can expire.
+      The untouched Xcode and Android floors are marked as still dating from
+      the baseline the heading used to claim — removing the heading without
+      saying so would have hidden their age rather than fixed it.
+- [x] **3.3 Research and naming outputs carry their status.**
       `market-entry-analysis` and `positioning-strategy` point at the sourcing
       rule `/research:deep` already states; the `brand` naming procedure says a
       trademark check is "to run" with its result and date, never "available"
       on a check nobody ran.
       verify: `grep -c 'research:deep' src/skills/market-entry-analysis/SKILL.md src/skills/positioning-strategy/SKILL.md` -> /:[1-9]/
-- [ ] **3.4 Two schema fields stop implying a reader.** The descriptions of
+- [x] **3.4 Two schema fields stop implying a reader.** The descriptions of
       `refresh_trigger` and `sunset_criterion` in `skill.schema.json` state
-      that no script evaluates them today.
+      that no script evaluates them today. Counted rather than copied: the
+      Context above says four skills carry them; the tree says **three**
+      (`error-handling-patterns`, `secrets-management`, `async-python-patterns`),
+      and zero set `external_source`. D3's "four skills carry them" evidence
+      is corrected to three; the decision it supports is unchanged, since the
+      argument was that a reader exists for the key, not how many.
       verify: `grep -c 'no script evaluates' src/scripts/schemas/skill.schema.json` -> /^[1-9]/
 
 ## Phase 4 — The census sees the whole folder
 
-- [ ] **4.1 Nested directories inside a topic are read.** `censusTopic` walks
+- [x] **4.1 Nested directories inside a topic are read.** `censusTopic` walks
       a topic folder recursively, and files sharing a stem across directory
       levels form one revision set. A fixture shaped like this round's folder —
       fourteen text files, three cross-level stems — reports fourteen files and
       three revision sets. Positive control: the same fixture against the
       current code reports twelve and zero.
       verify: `npx vitest run tests/scripts/inbox_source_census.test.ts -t nested-topic-folder --reporter=verbose` -> /✓.*nested-topic-folder/
-- [ ] **4.2 Non-text sources are named, not dropped.** Files the census does
+      The control reads **eleven**, not the twelve this step predicted. Those
+      twelve came from the real round folder and a synthetic fixture cannot
+      carry both figures: fourteen files with three cross-level stems means
+      three of them are nested, so the blind walk sees eleven. The property is
+      the one the step asked for; the number is the fixture's and is written
+      into the test beside the reason.
+      The repair's own hazard is covered rather than assumed — a recursive
+      topic walk under a recursive ROOT walk would count a nested file twice,
+      so the root pass stays non-recursive and a case asserts the total.
+- [x] **4.2 Non-text sources are named, not dropped.** Files the census does
       not read (a `.mjs` prototype, an image) are listed by name with
       "not counted", so the closing coverage line cannot read as complete.
       verify: `npx vitest run tests/scripts/inbox_source_census.test.ts -t uncounted-files-named --reporter=verbose` -> /✓.*uncounted-files-named/
@@ -202,17 +289,40 @@ answer. No class sweep: each step names its sentence.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The shipped `llms.txt` and the skills catalogue carry no quoted
-      skill name and no broken skill link.
-- [ ] AC-2 — The counter fails on a pattern it cannot find, and no prose count
-      in the README or the commands overview disagrees with the badges.
-- [ ] AC-3 — No contract line touched here names a test, script or lint code
+- [x] AC-1 — The shipped `llms.txt` and the skills catalogue carry no quoted
+      skill name and no broken skill link. Regenerating them also closed a
+      drift already on main that nothing gated: one absent skill and six
+      descriptions.
+- [x] AC-2 — The counter fails on a pattern it cannot find, and no prose count
+      in the README or the commands overview disagrees with the badges. Read
+      wider than written, because the reading found the defect elsewhere: every
+      artifact count on the documentation site is generated by the same counter
+      and `update_counts --check` is green over all of them.
+- [x] AC-3 — No contract line touched here names a test, script or lint code
       the tree does not have.
-- [ ] AC-4 — `check_ci_local_parity --format json` stdout parses.
-- [ ] AC-5 — The census reports every text file and every cross-level revision
+- [x] AC-4 — `check_ci_local_parity --format json` stdout parses.
+- [x] AC-5 — The census reports every text file and every cross-level revision
       set of a nested topic folder, and names what it did not count.
 - [ ] AC-6 — The README's skill-format sentence states the owner's chosen
       wording.
+
+## What closing the criteria turned up
+
+Three criteria closed with more behind them than their wording carries. The
+wording is deliberately left as it was reviewed — `lint_plan_risk_register`
+hashes the Acceptance Criteria body against the blob that introduced the
+current `reviewed:` stamp, and appending a sentence to a criterion is
+substantial by that definition while flipping its box is not. On a plan
+stamped today there is no later date to write, so the detail belongs here
+rather than inside the criteria.
+
+- **AC-3.** Each successor was opened before it was written down, which
+  changed three of the fixes from a rename into a rewrite.
+- **AC-4.** The human report is rerouted to stderr rather than dropped, and a
+  text-mode case pins that stdout still carries it there.
+- **AC-5.** The closing coverage line now carries a `not counted` figure, and
+  when it is above zero the run says in words that the anchor total is a floor
+  over what was read rather than a measure of the folder.
 
 ## Decisions
 
@@ -223,6 +333,7 @@ answer. No class sweep: each step names its sentence.
 | D3 | reversible-technical | agent | The two unread schema fields keep their place and lose the implication | Four skills carry them; removing them is a schema change with no reader to inform it | A second shipped time-bound line is shown wrong against a dated external fact, or a reader for the fields is proposed |
 | D4 | reversible-technical | evidence | The census repair is carried here | The defect was measured on this round's folder; the stub on the lineage gate owns a different tool | The census and the lineage gate are merged |
 | D5 | reversible-technical | agent | Dated facts in skill bodies stay a fix-on-sight class, not a mechanism | Only two lines are shown wrong; a prose lint for model and version names has false positives by construction (ADR-118) | Three stale facts of one class appear in two or more skills |
+| D7 | reversible-technical | evidence | The site figures are GATED, not deleted — reversing D6's "drop the prose figures" for the half that is still hand-typed | The README took the gate-rather-than-delete call on 2026-10-12 and `--check` is green on it; deleting the site's figures would leave nothing preventing the fourteenth | A site figure needs a basis the counter has no kind for |
 | D6 | deterministic | agent | Closure pass 2026-10-11: 1.3's open alternative is picked (drop the prose figures, keep the explanation); six `unfalsifiable-verify` listings are titles the steps add, asserted by a passing-title regex; the two `typed-op` hits are the word "merge" in a `relates` note naming a parked roadmap, not an operation this roadmap performs | `closure_scan` on this file before and after the edit | A step lands without the named test title |
 
 ## Blockers
@@ -237,12 +348,13 @@ answer. No class sweep: each step names its sentence.
 - **If you do nothing:** the README keeps a conformance claim the tree's own record says is false, and the next harvest round measures it again.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A missed-pattern failure reds main | implementation | Turning a warning into a failure can expose a pattern already missing today. | The round read stderr empty on its pin; 1.2 runs the check on the branch before it lands. | Phase 1 — Generators and counters |
+| 1 | A missed-pattern failure reds main | implementation | Turning a warning into a failure can expose a pattern already missing today. | CLEARED 2026-10-14 by running it: `update_counts --check` applied every pattern on the branch before the change landed, so no existing warning became a red. It then caught two patterns this run itself wrote, which is the gate working on its first real input. | Phase 1 — Generators and counters |
 | 2 | A contract line loses its only pointer | implementation | Removing an absent test's name can leave a claim with no stated guard. | 2.1 says "none does" rather than deleting the sentence. | Phase 2 — Lines that name what exists |
 | 3 | The recursive census over-groups | implementation | Files sharing a stem by accident across unrelated subfolders read as one revision set. | 4.1's fixture includes an unrelated same-stem pair at different depths and the test asserts the grouping it expects. | Phase 4 — The census sees the whole folder |
 | 4 | A dated-fact fix is itself stale by the next release | product | Naming a new minimum moves the problem a year. | 3.2 prefers deferring to the project's toolchain file over naming a version. | Phase 3 — Output and skill bodies |
 | 5 | A header edit on a gate script reads as a gate change | implementation | 2.4 and 2.3 touch `check_rule_invariants.ts` and `check_structural_breaking.ts`, which governance review treats as gate surface. | 2.4 is comment-only; 2.3 ships with its fixture test, and both go through whatever ratification the diff classifier asks for rather than around it. | Phase 2 — Lines that name what exists |
+| 6 | A site count reads wrong against the directory it describes | product | The site's "what's inside" tables now say Commands 205, and the linked command directory holds 60 at its top level. The README states that basis next to its badge; the site tables do not, so a reader can check the number against the wrong denominator and conclude it is stale. | Not mitigated here, and named rather than quietly absorbed: 1.3 brings the figures under the counter and does not add the basis sentence to the site, because that is a documentation-wording change this roadmap did not scope. The figures are now correct and generated either way. | Phase 1 — Generators and counters |

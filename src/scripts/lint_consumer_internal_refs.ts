@@ -31,18 +31,18 @@
  *
  * Scope: every `dist/agent-src/skills/<name>/SKILL.md` — the consumer projection
  * actually shipped in the npm package (mirrors the reviewer's own vantage
- * point: `npm i` + read the installed skills).
+ * point: `npm i` + read the installed skills) — plus, for the skill-script
+ * form alone, `references/*.md` beside it.
  *
- * Carve-outs:
+ * The twenty-skill `SCRIPTS_RUN_ALLOWLIST` this gate used to carry is GONE.
+ * It exempted the one form that most needed the finding: a line telling a
+ * consumer to type a wrapper the package does not ship. The skills now teach
+ * `node <skills-root>/<name>/scripts/<tool>.mjs`, which an install can start,
+ * so the exemption has nothing left to exempt.
+ *
+ * Carve-out:
  *   - Skill frontmatter `workspaces: [agent-config-maintainer]` (exclusive)
  *     — entirely exempt, per the mechanism above.
- *   - `SCRIPTS_RUN_ALLOWLIST` below — the `corpus-grounding` engine's own
- *     documented consumer-runtime CLI convention (`./scripts-run
- *     <skills-root>/<name>/scripts/<tool> …`, skill-bundled assets per
- *     `docs/contracts/skill-bundled-assets.md`) — the invoked PATH is real
- *     and reachable in every install; only the wrapper name is inherited
- *     from the maintainer dispatcher. Tracked as a separate, larger-scope
- *     naming-consistency item; out of scope for this lint's 17-skill sweep.
  *
  * Exit codes: 0 clean · 1 findings · 2 internal error.
  */
@@ -56,38 +56,6 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'skills');
-
-/**
- * Skills using `corpus-grounding`'s documented `./scripts-run
- * <skills-root>/<name>/scripts/<tool>` consumer-runtime CLI convention
- * (skill-bundled assets, `docs/contracts/skill-bundled-assets.md`) — the
- * path is real and reachable once installed; only the wrapper name drifted
- * from the contract's prescribed `node_modules/.bin/tsx` form. A single,
- * uniform, cross-skill convention — renaming it is a separate, larger-scope
- * follow-up, not one of this sweep's 17 leaky skills.
- */
-const SCRIPTS_RUN_ALLOWLIST = new Set([
-    'accessibility-auditor',
-    'api-design',
-    'api-endpoint',
-    'authz-review',
-    'blade-ui',
-    'brand',
-    'brand-identity',
-    'brand-strategy',
-    'brand-to-tokens',
-    'corpus-grounding',
-    'dashboard-design',
-    'database',
-    'design-intelligence',
-    'design-tokens',
-    'flux',
-    'livewire',
-    'react-shadcn-ui',
-    'sql-writing',
-    'threat-modeling',
-    'typography-system',
-]);
 
 interface PatternDef {
     readonly re: RegExp;
@@ -120,9 +88,72 @@ const PATTERNS: readonly PatternDef[] = [
     {
         re: /\.\/scripts-run\b/,
         label: 'invocation of the maintainer-only `./scripts-run` dispatcher (not in `package.json` `files`, never reaches a consumer install)',
-        allowlist: SCRIPTS_RUN_ALLOWLIST,
+    },
+    {
+        re: /node_modules\/\.bin\/tsx\b/,
+        label: 'invocation through `node_modules/.bin/tsx` (a devDependency binary; an install carries `node`, not a TypeScript loader)',
     },
 ];
+
+/**
+ * The skill-script form: `<runner> <skills-root>/<skill>/scripts/<tool>`.
+ *
+ * Checked apart from PATTERNS because the runner is not always on the line
+ * that carries the path — a wrapped command leaves it at the end of the line
+ * above, and a per-line regex reading only its own line reports every wrapped
+ * invocation in the tree.
+ *
+ * It is also the one form checked inside `references/`. A blanket widening
+ * would red on the reference files that name `./scripts-run src/scripts/…`,
+ * which is a different class — a maintainer script, invoked while working on
+ * this package — and this gate is not the place that decides those.
+ */
+const SKILL_SCRIPT_RE = /<skills-root>\/([A-Za-z0-9._-]+)\/scripts\/([A-Za-z0-9._-]+)/;
+const SKILL_SCRIPT_RUNNER = 'node';
+
+/** The last shell-ish token of a markdown fragment, decoration stripped. */
+function lastToken(fragment: string): string {
+    const cleaned = fragment.replace(/\\\s*$/, '').replace(/[`\s]+$/, '').trim();
+    if (cleaned === '') return '';
+    return (cleaned.split(/\s+/).pop() ?? '').replace(/^[`>*_(]+/, '').replace(/[`*_)]+$/, '');
+}
+
+/** The runner a taught line names: its own, or the one the line above ends with. */
+function runnerFor(lines: readonly string[], idx: number, col: number): string {
+    const before = (lines[idx] as string).slice(0, col);
+    const own = lastToken(before.replace(/^[\s>]*(?:[-*+]\s+|\d+\.\s+)?/, ''));
+    if (own !== '') return own;
+    if (idx === 0) return '';
+    const above = lines[idx - 1] as string;
+    if (/^\s*(?:```|~~~)/.test(above)) return '';
+    return lastToken(above);
+}
+
+/** Findings for taught skill-script lines that a node-only install cannot start. */
+export function scanSkillScriptForm(relPath: string, text: string): string[] {
+    const findings: string[] = [];
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length; i += 1) {
+        const m = SKILL_SCRIPT_RE.exec(lines[i] as string);
+        if (!m) continue;
+        const tool = m[2] as string;
+        const runner = runnerFor(lines, i, m.index);
+        if (runner !== SKILL_SCRIPT_RUNNER) {
+            findings.push(
+                `${relPath}:${i + 1}: skill-script line whose runner is ` +
+                    `${runner === '' ? 'absent' : `\`${runner}\``}, not \`node\` — ` +
+                    'an install carries the runtime and the bundle, nothing else',
+            );
+        }
+        if (!tool.endsWith('.mjs')) {
+            findings.push(
+                `${relPath}:${i + 1}: skill-script line naming \`${tool}\` — ` +
+                    'the shipped entry point is the `.mjs` beside the source',
+            );
+        }
+    }
+    return findings;
+}
 
 /** `workspaces:` frontmatter list of a skill file ([] when untagged). */
 function skillWorkspaces(skillPath: string): string[] {
@@ -191,6 +222,23 @@ export function main(): number {
         }
         const relPath = path.relative(REPO_ROOT, abs);
         findings.push(...scanText(name, relPath, text));
+        findings.push(...scanSkillScriptForm(relPath, text));
+
+        // `references/` is read for the skill-script form only — see the note
+        // above `SKILL_SCRIPT_RE` for why the other patterns stop at SKILL.md.
+        const refsDir = path.join(SKILLS_DIR, name, 'references');
+        if (!fs.existsSync(refsDir) || !fs.statSync(refsDir).isDirectory()) continue;
+        for (const ref of fs.readdirSync(refsDir).sort()) {
+            if (!ref.endsWith('.md')) continue;
+            const refAbs = path.join(refsDir, ref);
+            let refText: string;
+            try {
+                refText = fs.readFileSync(refAbs, 'utf-8');
+            } catch {
+                continue;
+            }
+            findings.push(...scanSkillScriptForm(path.relative(REPO_ROOT, refAbs), refText));
+        }
     }
 
     // Counted BEFORE the maintainer-exclusive skip, so an all-maintainer

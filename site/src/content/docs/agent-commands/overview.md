@@ -1,6 +1,6 @@
 ---
 title: Agent Commands Overview
-description: The in-agent /slash-command surface — how ~190 commands are namespaced and orchestrated, distinct from the terminal CLI.
+description: The in-agent /slash-command surface — how the commands are namespaced and orchestrated, distinct from the terminal CLI.
 ---
 
 > **In-agent commands, not terminal commands.** These are the `/slash` commands
@@ -8,7 +8,7 @@ description: The in-agent /slash-command surface — how ~190 commands are names
 > They are **not** run via the Taskfile or the `agent-config` binary — that is
 > the separate [terminal CLI](/agent-config/cli/overview/) surface.
 
-agent-config ships **190** agent commands — workflow orchestrators that compose
+agent-config ships **205** agent commands — workflow orchestrators that compose
 skills and governance gates into a repeatable flow.
 
 ## Namespacing
@@ -31,7 +31,7 @@ a menu. Standalone commands (no cluster) sit at the top level: `/work`,
 
 - Authored source: `src/agent-src/commands/`; shipped projection:
   [`dist/agent-src/commands/`](https://github.com/event4u-app/agent-config/tree/main/dist/agent-src/commands).
-- Authoritative index of all 190:
+- Authoritative index of all 205:
   [`docs/catalog.md`](https://github.com/event4u-app/agent-config/blob/main/docs/catalog.md)
   (also mirrored on the [Catalog](/agent-config/catalog/) page).
 

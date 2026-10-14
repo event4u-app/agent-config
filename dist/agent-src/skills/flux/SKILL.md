@@ -17,7 +17,7 @@ install:
 # flux
 
 > **Grounded stack guidance:** Tailwind-layer Do/Don't + docs URLs via
-> `./scripts-run <skills-root>/corpus-grounding/scripts/ground search
+> `node <skills-root>/corpus-grounding/scripts/ground.mjs search
 > --manifest <skills-root>/design-intelligence/data/manifest.json
 > --stack html-tailwind "<topic>"`. See
 > [`design-intelligence`](../design-intelligence/SKILL.md).

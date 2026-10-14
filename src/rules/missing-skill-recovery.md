@@ -50,8 +50,9 @@ NEVER REBUILD A CAPABILITY BECAUSE ITS SKILL WAS NOT DELIVERED.
 
 1. **Ask by task, not by name.** A name you cannot see is a name you cannot
    type; a task description always works. The `suggest_skill_for_task` MCP tool
-   ranks `SKILL.md` frontmatter over the source tree and returns names, scores
-   and personas — no bodies, so a wrong rank costs one read.
+   ranks `SKILL.md` frontmatter over the source tree and returns names, scores,
+   personas and each row's description — no bodies. Choose by reading them; a
+   wrong rank costs one read, not five.
 2. **Open the winner and check it yourself.** The ranker is deterministic
    keyword scoring, not judgement. A high score is a pointer, not a verdict.
 3. **Say which source answered.** "The catalogue had no entry, the ranker
@@ -61,15 +62,15 @@ NEVER REBUILD A CAPABILITY BECAUSE ITS SKILL WAS NOT DELIVERED.
    inventing one. A ranked empty list and an unreachable catalogue are
    different answers; the tool distinguishes them (`status: no_catalogue`) and
    so should you.
-5. **If the tool is not registered, say THAT — and proceed.** This rule may
-   never instruct a call it cannot verify is possible. The tool arrives with
-   this package's MCP server, which `agent-config install` registers for the
-   `claude-code` tool in the project's `.mcp.json`. No entry there, or the
-   server not started, and there is no tool to call: name the gap in one clause,
-   proceed without a skill, and — only if the missing catalogue entry actually
-   mattered — point at `agent-config mcp:check`, which reports whether
-   `.mcp.json` carries the entry. Never retry a call that is not wired, and
-   never report "no skill covers this" when what you learned is "no tool
+5. **The tool is one rung, not the path.** This rule may never instruct a call
+   it cannot verify is possible, so step 1 is a LADDER, each rung named:
+   `suggest_skill_for_task`, which `agent-config install` wires into
+   `.mcp.json`; then
+   `agent-config route:explain --skills "<task>"`, the same rows from a shell,
+   no server, package skills as a last root. An unreachable rung is NAMED and
+   dropped — never retried, never answered from memory. Both gone: say which
+   failed, proceed without a skill, and `agent-config mcp:check` says if it is
+   wired. Never report "no skill covers this" when you learned "no rung
    answered".
 
 ## When NOT to fire

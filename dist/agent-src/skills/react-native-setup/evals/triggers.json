@@ -1,0 +1,73 @@
+{
+  "skill": "react-native-setup",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-sentences-the-tree-can-back, whose step made this skill's Node floor defer to the project's own .nvmrc / engines.node rather than to a dated baseline, and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover five of the eight entry points the skill's own 'When to use' lists: first-time environment setup, an ANDROID_HOME / command-not-found path error, a CocoaPods install failure on Apple Silicon, a Metro or Watchman cache loop, and a New Architecture migration. Near-misses share the mobile and React vocabulary and belong elsewhere: Detox / Maestro device-test selection is the cross-link the skill itself names (mobile-e2e-strategy), a web React component is react-shadcn-ui, and pinning one toolchain for the whole team in a container is devcontainer. Counterexamples guard two homonyms in this skill's own trigger set: 'native' as a database's own operator, and 'expo' as a trade show.",
+  "queries": [
+    {
+      "id": "rns-e1",
+      "q": "fresh laptop, I need to get an Expo app building on both the iOS simulator and an Android emulator",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rns-e2",
+      "q": "the android build dies with SDK location not found and ANDROID_HOME is empty — where do I set it?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rns-e3",
+      "q": "pod install keeps failing with an FFI error on my M3 — ruby version mismatch?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rns-e4",
+      "q": "Metro reloads in a loop and fast refresh never picks up my edits — how do I clear the caches properly?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rns-e5",
+      "q": "wir wollen auf die New Architecture migrieren — Fabric und Turbo Modules, was muss ich am Podfile und an gradle.properties umstellen?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "rns-n1",
+      "q": "which device-test runner should we pick for the app — Detox, Appium or Maestro?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "runner selection, the cross-link this skill names → mobile-e2e-strategy"
+    },
+    {
+      "id": "rns-n2",
+      "q": "build the settings form as a React component with shadcn for our web dashboard",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "says React, means the web surface → react-shadcn-ui"
+    },
+    {
+      "id": "rns-n3",
+      "q": "pin the whole toolchain in a container so every new hire gets the same node and java",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "environment reproducibility via a container image → devcontainer"
+    },
+    {
+      "id": "rns-c1",
+      "q": "rewrite this to use a native Postgres jsonb operator instead of going through the ORM",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says native, means a database's own operator"
+    },
+    {
+      "id": "rns-c2",
+      "q": "we're exhibiting at an expo next month — design the booth banner and the handout",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says expo, means a trade show"
+    }
+  ]
+}

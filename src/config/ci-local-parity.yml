@@ -292,9 +292,40 @@ ci_only:
       comparison logic itself is covered hermetically by
       `tests/scripts/host_docs_digest.test.ts`.
 
+  # road-to-local-gates-wired-while-they-are-green step 2.3. Until this change
+  # `check_council_pin_staleness` appeared in NO task and NO workflow, while
+  # `src/config/gate-coverage.yml` marked it `enforced` — a gate nothing ran,
+  # recorded as enforced. Giving it the scheduled caller it needed is what made
+  # it visible to this checker from the CI side for the first time, which is
+  # the same way `check_roadmap_pre_commit` surfaced above.
+  #
+  # Declared rather than wired into `task ci`, and the reason is the one the
+  # 2026-08-13 decision asks for — structural, not convenience. Its verdict is a
+  # function of the DATE: it reads three dated council pins against a 100-day
+  # cadence, so on a calendar boundary it turns red with no diff at all. In
+  # `task ci` that is a local run going red for something no contributor
+  # caused, which trains people to ignore the aggregate. The same reasoning put
+  # the thirteen `calendar`-class gates on a schedule instead of a required job.
+  #
+  # This declaration does NOT move the local-only count: `ci_only:` is the
+  # other direction. The constraint against "growing the declaration list to
+  # move a number" is about `local_only:` below, and nothing here touches it.
+  #
+  # Reachable on demand: `./scripts-run src/scripts/check_council_pin_staleness`.
+  - id: check_council_pin_staleness
+    class: calendar-scoped
+    reason: >
+      Its verdict is a function of the date — three dated council pins against a
+      100-day cadence — so wiring it into `task ci` would turn a local run red on a
+      calendar boundary with no diff, the failure mode that trains contributors to
+      ignore the aggregate. It runs in the scheduled, non-required workflow instead,
+      where an age-based red is the signal rather than a blocker, and it stays
+      reachable on demand.
+
 # Gates a local chain runs that no workflow does — each needs a reason it is not
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
+
 local_only:
   - id: check_platform_anchor
     class: token-scope-unavailable

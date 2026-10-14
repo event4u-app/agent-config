@@ -363,6 +363,92 @@ describe('the ui-conformance shadow mount', () => {
         fs.rmSync(root, { recursive: true, force: true });
     });
 
+    it('page-signature-line: one more line when the artefact carries a handle-free reading', () => {
+        // Phase 4.1 of `road-to-a-structure-reading-without-handles`. The reading
+        // exists only where the reference collected no handle, which is every
+        // real handover in this tree — so this line is the one a real run would
+        // actually produce, and until now a real run produced no content at all.
+        const base = {
+            structure_gate: 'stopped',
+            findings: [],
+            dimensions: [
+                { dimension: 'structure', status: 'not_applicable', findings: null, reason: 'no data-probe-id' },
+            ],
+        };
+        const withField = conformanceVerdict(
+            withArtefact({
+                ...base,
+                page_signature: {
+                    status: 'read',
+                    scope: 'kinds, not nodes',
+                    widths: [
+                        { width: '1440', leaves: [{}], arrangement: [{}, {}], overflow: { reference: false, target: false } },
+                        { width: '768', leaves: [], arrangement: [], overflow: { reference: false, target: false } },
+                        { width: '375', leaves: [], arrangement: [{}], overflow: { reference: false, target: true } },
+                        { width: '320', leaves: [], arrangement: [], overflow: { reference: true, target: true } },
+                    ],
+                },
+            }),
+        );
+        const without = conformanceVerdict(withArtefact(base));
+
+        // Exactly ONE line more, and it is the signature line.
+        const added = withField.line.split('\n').filter((l) => !without.line.split('\n').includes(l));
+        expect(added).toHaveLength(1);
+        expect(added[0]).toMatch(/page signature/);
+
+        // The counts are per width, and the overflow is a pair rather than a
+        // change flag — a reader told "overflow changed" has to go and find out
+        // which way.
+        expect(added[0]).toMatch(/1440: 3 changed/);
+        expect(added[0]).toMatch(/768: 0 changed/);
+        expect(added[0]).toMatch(/375: 1 changed, overflow false\/true/);
+        expect(added[0]).toMatch(/320: 0 changed, overflow true\/true/);
+        // And it says what it is not, on the same line it says what it saw.
+        expect(added[0]).toMatch(/never nodes/);
+        expect(added[0]).toMatch(/not a finding/);
+
+        // THE HEADLINE AND THE VERDICT ARE BYTE-IDENTICAL. This is the half that
+        // makes the addition safe: a shadow reader that moved its own headline
+        // would change what every existing reader of this line sees.
+        const head = (v: { line: string }): string => v.line.split('\n')[0]!;
+        const tail = (v: { line: string }): string => v.line.split('\n').at(-1)!;
+        expect(head(withField)).toBe(head(without));
+        expect(tail(withField)).toBe(tail(without));
+        expect(tail(withField)).toMatch(/never enforced/);
+    });
+
+    it('page-signature-line: a withheld reading prints its reason, never a silent nothing', () => {
+        // The `not_available` branch. An artefact whose observation predates the
+        // width sweep has no reading, and the line says so rather than vanishing —
+        // the same contract `findings: null` carries one level up.
+        const v = conformanceVerdict(
+            withArtefact({
+                structure_gate: 'stopped',
+                findings: [],
+                dimensions: [{ dimension: 'structure', status: 'not_applicable', findings: null, reason: 'x' }],
+                page_signature: {
+                    status: 'not_available',
+                    scope: 'kinds, not nodes',
+                    reason: 'the reference carries no page signature',
+                    widths: [],
+                },
+            }),
+        );
+        expect(v.line).toMatch(/page signature: not available/);
+        expect(v.line).toMatch(/carries no page signature/);
+
+        // Sensitivity: an artefact with no field at all prints no such line.
+        const none_ = conformanceVerdict(
+            withArtefact({
+                structure_gate: 'passed',
+                findings: [],
+                dimensions: [{ dimension: 'structure', status: 'exercised', findings: 0 }],
+            }),
+        );
+        expect(none_.line).not.toMatch(/page signature/);
+    });
+
     it('appends the verdict to the render without reaching any decision', () => {
         // 5.2, first half: the block path stays unreachable. The verdict renders
         // alongside a P0 stop verdict and changes neither `blocked` nor anything

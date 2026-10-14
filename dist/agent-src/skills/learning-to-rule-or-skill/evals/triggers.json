@@ -1,0 +1,72 @@
+{
+  "skill": "learning-to-rule-or-skill",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.2 corrected this skill's source_learning path and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four intake shapes the skill's own 'When to use' names: a mistake that has recurred, a pattern worth reusing, the post-task reflection, and the rule-or-skill question itself — plus the audit-log pattern whose count already satisfies the repetition gate. Near-misses are three neighbours that all end in a written artefact and are somebody else's job: writing the skill once the kind is decided (skill-writing), recording an architectural choice (decision-record / ADR), and parking a durable cross-run lesson in memory (memory-consolidation). Counterexamples guard the word 'learning': a machine-learning feature question and a request for onboarding material both say learning and ask for no rule or skill.",
+  "queries": [
+    {
+      "id": "lrs-e1",
+      "q": "that's the third time this week we forgot to update the callers after a rename — make it stick",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lrs-e2",
+      "q": "this review checklist worked really well, capture it so we reuse it next time",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lrs-e3",
+      "q": "task is done — what did we learn here that's worth keeping?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lrs-e4",
+      "q": "should this become a rule or a skill? it's a constraint but it needs a procedure too",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lrs-e5",
+      "q": "wir stolpern ständig über dasselbe Problem — mach daraus eine dauerhafte Regel",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "lrs-n1",
+      "q": "write the SKILL.md for the deploy-checklist skill we agreed on — frontmatter, triggers, procedure",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the kind is already decided; this is the authoring step → skill-writing"
+    },
+    {
+      "id": "lrs-n2",
+      "q": "we chose Postgres over DynamoDB for the event store — write that down so nobody reopens it",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a durable decision with alternatives and a revisit-if → decision-record / ADR"
+    },
+    {
+      "id": "lrs-n3",
+      "q": "remember for future sessions that our staging DB resets every Sunday night",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a durable fact for the memory layer, not guidance to encode → memory-consolidation"
+    },
+    {
+      "id": "lrs-c1",
+      "q": "would a learning-to-rank model improve our search results page?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "lrs-c2",
+      "q": "put together a learning path for new backend hires — what should they read in week one?",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says learning, asks for onboarding material rather than a rule or skill"
+    }
+  ]
+}
