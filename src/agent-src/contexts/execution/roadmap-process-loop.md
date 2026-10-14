@@ -395,7 +395,7 @@ decided open-vs-blocked from the inline
 re-engaged the agent into it every stop fire until the stall rung fired. That
 concern was withdrawn on its own pre-registered kill date
 (`road-to-what-was-built-and-never-ran` Phase 4), so **no mechanism now changes
-its behaviour on this marker.** What survives is `lint_roadmap_blockers`, which
+its behavior on this marker.** What survives is `lint_roadmap_blockers`, which
 validates every marker — its id must resolve to a declared blocker, and an
 `asked: no` must carry a reason — and the reader of the roadmap, for whom an
 impossible step that looks open is the same lie it always was. The paragraph
