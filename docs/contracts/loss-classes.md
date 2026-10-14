@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Loss classes — names for what the tree already does
 
 > Owner: maintainer · Status: active · Landed by `road-to-runtime-context-floors`

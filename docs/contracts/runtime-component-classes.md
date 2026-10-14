@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Runtime component classes — every runtime component, labelled against ADR-124
 
 `road-to-experience-loop-broadening` step 0.1. Every runtime component in this

@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Skill-scout quarantine contract
 
 > **Status:** accepted · **Established by:** `road-to-governed-skill-scouting`

@@ -525,3 +525,16 @@ jobs:
         if: always()
         run: |
           ./scripts-run src/scripts/check_token_quality_golden
+
+      # Phase 3.2 — public links and contract stability. Ten contracts under
+      # `docs/contracts/` carried no `stability:` frontmatter, which
+      # docs/contracts/STABILITY.md requires of every file there. Each now
+      # declares `experimental`, the level that promises nothing: promotion
+      # to `beta` or `stable` is a separate, recorded act. None of the ten is
+      # linked from README, AGENTS.md or docs/architecture.md, which an
+      # experimental contract may not be. Default mode: beta-marker warnings
+      # stay warnings, as in `task ci`.
+      - name: Drain 3.2e — public links and contract stability frontmatter
+        if: always()
+        run: |
+          ./scripts-run src/scripts/check_public_links
