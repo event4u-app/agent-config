@@ -1,0 +1,25 @@
+# Findings: drain-svg-witness-provenance
+<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 4ca1ffd0114944e6e9a967772fa0ece91903474e4e27e7cf741d323ccb10a4a1 | diff: 16eeae8d456d6eb903b197ccf5e580411e35d4e4 | reviewer: r2-fresh-subagent-drain-svg-witness-provenance | prompt_hash: 45f626b1aec8ba8dd5d04c8019cbdf5f29b0d80f867a019fe9d5336c3ead6685 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-svg-witness-provenance"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-14 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 16eeae8d456d6eb903b197ccf5e580411e35d4e4
+  scope_hash: 4ca1ffd0114944e6e9a967772fa0ece91903474e4e27e7cf741d323ccb10a4a1
+  roadmap: agents/roadmaps/road-to-svg-witness-provenance.md
+  roadmap_hash: 17a174e0eb7f1de320f881b44898116674934d4cc68f0b20dc489ba490176e29
+  ac_hash: 611214a79d1c3780f9fa27745666e4c2f63b8f1e926851bdd57a7d187e40bf67
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-14T15:50:33Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | high | src/scripts/_lib/asset_render_record.ts:75 | `isPureRender` rejects `$(` but not a bare `$VAR`, and `observeAssetRender` resolves `--slug`/`--project-root`/target tokens literally (line 145). `ui:render a.svg --profile asset --slug $S` (S=real) renders into `render/real/`, exits 0, and the observer hashes and records whatever sits at the literal path `render/$S/manifest.json` — a manifest the agent pre-wrote there with the Write tool. The forged manifest is then unchanged since the record and discharges the obligation, contradicting AC-1 ("any route other than an observed successful render discharges nothing"). The record binds the manifest at the path the observer computed, not one the render is shown to have written. | open | |
+| 2 | medium | src/scripts/_lib/asset_render_record.ts:121 | The observer assumes the shell's working directory is `consumer_root` unless the command itself starts with `cd … &&`. A shell cwd carried over from an earlier Bash call (or the payload's own `cwd`, which is not read) makes the computed file/manifest paths point elsewhere: usually a false open, but when a stale or pre-placed manifest exists at the root-relative path it is recorded as this render's output. Same root cause as #1: no check (e.g. manifest `target`/`slug`/`generated_at` vs the call) that the hashed manifest is the one this render wrote. | open | |
+| 3 | medium | src/scripts/_lib/asset_render_record.ts:19 | The "WHAT IS STILL TRUSTED" block names only a PATH shim, but the record path trusts the recorder state file (`agents/state/verify-before-complete/…`, read via `readTurnRunState`) wholesale: an agent that writes a manifest plus a matching `asset_renders` entry into that file with the Write tool discharges the obligation, and the record path no longer consults `renderDirTampered`/edit detection at all. Either guard the state file as a write target or state this trust in the doc. | open | |
+| 4 | low | tests/scripts/svg_render_record.test.ts:114 | "every forged-manifest route stays open" passes `recorded = []`, so the finding is open regardless of the forge — the loop never exercises a forge against a recorded render and cannot fail for any of the listed routes; it pins only that a transcript render without a record discharges nothing. The forgery that matters (a forged manifest at the path a recorded render is resolved to, cf. #1/#2) is untested. | open | |
+| 5 | low | src/scripts/_lib/asset_render_record.ts:123 | Tokenisation is `split(/\s+/)` with end-quote stripping, so a quoted target or `--slug` value containing spaces is split into several tokens and the wrong path is resolved; a legitimate render of such a file is never recorded and its obligation stays open with a reason claiming no render was observed. | open | |
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->

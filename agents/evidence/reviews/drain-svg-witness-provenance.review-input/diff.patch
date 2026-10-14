@@ -1,0 +1,781 @@
+diff --git a/agents/roadmaps/road-to-svg-witness-provenance.md b/agents/roadmaps/road-to-svg-witness-provenance.md
+index 7baf2a4ac749febbacb012381a5b58a0ad4aad83..8f995d2943cca155125183f327758296693d0d48 100644
+--- a/agents/roadmaps/road-to-svg-witness-provenance.md
++++ b/agents/roadmaps/road-to-svg-witness-provenance.md
+@@ -54,13 +54,24 @@ resolved by its in-scope binding, not by a document-wide list.
+ 
+ ## Phase 1 — The render is observed, not inferred
+ 
+-- [ ] **1.1 Record successful asset renders from a `post_tool_use` concern.**
++- [x] **1.1 Record successful asset renders from a `post_tool_use` concern.**
+       For a Bash call that is a standalone `ui:render --profile asset` and exited
+       0, write `{file, file digest, manifest path, manifest digest}` to a hook
+       state file, keyed by session.
+       verify: a vitest case feeding the concern a successful and a failed render
+       payload records exactly one entry; the failed one records none.
+-- [ ] **1.2 Discharge only on a recorded render.** `readSvgObligations` accepts
++      Correction (2026-10-14, against the tree): "exited 0" alone would have
++      locked out every consumer without Playwright — `ui:render --profile asset`
++      exits 3 (`EXIT_RENDERER_ABSENT`) on that path, and its manifest is the
++      static witness the gate's `static-only` discharge reads. The recorder
++      therefore records exit 0 or 3; exit 1 records nothing. It is not a new
++      concern either: the existing `verify-before-complete` recorder already
++      sees every finished Bash call with its exit, so the record is an
++      `asset_renders` field in that state (turn-scoped), written by
++      `src/scripts/_lib/asset_render_record.ts`. "Standalone" is the positive
++      `isPureRender` shape, which fails closed, so a render chained to a write
++      records nothing. Done in `tests/scripts/svg_render_record.test.ts`.
++- [x] **1.2 Discharge only on a recorded render.** `readSvgObligations` accepts
+       a manifest only when its current bytes hash to a digest recorded in 1.1
+       for that file after the file's last edit. The command-pattern write
+       detection (`writesRenderDir`, `isPureRender` as a gate input) is removed.
+@@ -68,7 +79,14 @@ resolved by its in-scope binding, not by a document-wide list.
+       `tests/scripts/turn_end_gate_svg_render.test.ts` (tool write, redirect,
+       `cd`, interpreter, unlisted interpreter, script file) all stay open with
+       no pattern list; a real recorded render discharges.
+-- [ ] **1.3 State the host reach honestly.** Where `post_tool_use` is not bound
++      Correction (2026-10-14): `writesRenderDir` is not deleted. Step 1.3 keeps
++      the transcript rule as the fallback on hosts with no live recorder, and
++      removing its write detection there would only weaken those hosts. On the
++      record path neither it nor `isPureRender` is a gate input — the forged
++      routes above, plus an unlisted interpreter and variable indirection, are
++      pinned on that path in `tests/scripts/svg_render_record.test.ts`; the
++      existing transcript cases keep pinning the fallback.
++- [x] **1.3 State the host reach honestly.** Where `post_tool_use` is not bound
+       (`agent-config hooks:status`), the gate falls back to the transcript rule
+       and says so in its reason.
+       verify: a test with no recorded entry and a matching manifest reports the
+@@ -110,6 +128,12 @@ resolved by its in-scope binding, not by a document-wide list.
+ - [ ] AC-1 — A manifest written by any route other than an observed successful
+       render discharges no SVG obligation, and the gate contains no command
+       pattern list for write detection.
++      Note (2026-10-14): met on every host whose `post_tool_use` recorder is
++      live. As written it contradicts step 1.3, which keeps the transcript rule
++      — pattern list included — as the named fallback where no recorder runs;
++      the restatement "on a host whose recorder is live" is the reading this
++      roadmap's own steps support, and is left for the closing review to
++      confirm rather than ticked here.
+ - [ ] AC-2 — `svg-safety-active-content` is graded `inert` only for a file the
+       project demonstrably delivers through `<img>` or a CSS background.
+ - [ ] AC-3 — A namespace prefix is resolved by its in-scope binding in both the
+diff --git a/src/cli/commands/uiRender.ts b/src/cli/commands/uiRender.ts
+index 6c2c4f67784fec6cd1df23ab9ebbe3a740a43d22..96fc95301e9ff8d794975bf3f7af26d9d8c2390e 100644
+--- a/src/cli/commands/uiRender.ts
++++ b/src/cli/commands/uiRender.ts
+@@ -42,6 +42,7 @@ import type { chromium as Chromium } from '@playwright/test';
+ import { runAssetRender } from './uiRenderAsset.js';
+ import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
+ import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
++import { EXIT_RENDERER_ABSENT, RENDER_REL, renderSlug } from '../../scripts/_lib/asset_render_record.js';
+ import type { DeliveryMode } from '../../scripts/lint_svg_asset.js';
+ 
+ /** The three viewports E3.1 names. Widths are the contract, not a preference. */
+@@ -139,15 +140,10 @@ export interface RenderManifest {
+     static?: { errors: number; digest: string };
+ }
+ 
+-export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
+-
+-/**
+- * `--profile asset` with no renderer. Distinct from 1, which this command
+- * already uses for an internal error (a missing path, a URL handed to the
+- * asset profile), because a caller has to tell "nothing rendered" from
+- * "you called it wrong" — the first is a consumer's ordinary state.
+- */
+-export const EXIT_RENDERER_ABSENT = 3;
++// Where the manifest lands, the exit that means "no renderer" and the slug rule
++// live with the turn-end gate's render recorder, which must agree with this
++// command on all three to find the manifest a render left.
++export { RENDER_REL, EXIT_RENDERER_ABSENT, renderSlug as slugify };
+ 
+ /**
+  * The families whose ERROR means the file is broken, as opposed to improvable.
+@@ -224,17 +220,6 @@ export function staticWitness(
+     return { errors, digest };
+ }
+ 
+-export function slugify(target: string): string {
+-    return (
+-        target
+-            .replace(/^https?:\/\//, '')
+-            .replace(/[^a-z0-9]+/gi, '-')
+-            .replace(/^-+|-+$/g, '')
+-            .toLowerCase()
+-            .slice(0, 60) || 'render'
+-    );
+-}
+-
+ /** Colour-ish computed values, normalised. Used to build the palette snapshot. */
+ export function collectPalette(styleRecords: ReadonlyArray<Record<string, string>>): string[] {
+     const out = new Set<string>();
+@@ -285,7 +270,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
+         return 1;
+     }
+ 
+-    const slug = opts.slug ?? slugify(opts.target);
++    const slug = opts.slug ?? renderSlug(opts.target);
+     const outDir = path.join(projectRoot, RENDER_REL, slug);
+     const isAsset = opts.profile === 'asset';
+ 
+diff --git a/src/scripts/_lib/asset_render_record.ts b/src/scripts/_lib/asset_render_record.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..694bb81bcd57d2aa105849b68843b18202e20873
+--- /dev/null
++++ b/src/scripts/_lib/asset_render_record.ts
+@@ -0,0 +1,192 @@
++/**
++ * The asset render, as a `post_tool_use` hook SAW it finish.
++ *
++ * WHY A RECORD, AND NOT A BETTER READING OF THE TRANSCRIPT. The turn-end gate
++ * used to accept a digest-matching manifest when a render naming the file ran
++ * after the edit, and voided the manifests when a recognised write touched the
++ * render directory. "Recognised" was a command pattern list, so any write route
++ * the list did not know — an unlisted interpreter, a script file, indirection
++ * through a variable — forged a manifest unseen. A transcript cannot close that,
++ * because it never sees what a command did.
++ *
++ * A `post_tool_use` hook sees the finished call and its exit status. So this
++ * module records, at the moment a standalone asset render finished, which file
++ * it read and the exact bytes of the manifest it left. The gate then accepts a
++ * manifest only when its CURRENT bytes still hash to that recorded digest. A
++ * manifest written by any other route — before the render, after it, or instead
++ * of it — either has no record or no longer matches one, whatever the route was.
++ *
++ * WHAT IS STILL TRUSTED, stated rather than implied. The command must be a
++ * standalone render (`isPureRender`) — a positive shape that fails closed, not a
++ * list of forbidden writes — so a chained `&& echo > manifest.json` records
++ * nothing. What is not enforced is that the `agent-config` the shell resolved is
++ * this package's binary: a PATH shim that exits 0 and writes a manifest would be
++ * recorded as a render. That is a forgery of the tool itself rather than of its
++ * output, and no hook reading the tool's result could tell the two apart.
++ *
++ * Shared by the producer (`before_complete_hook.ts`) and the consumer
++ * (`hooks/svg_obligation.ts`), and by `ui:render` itself for the two facts the
++ * reader must agree with it on: where the manifest lands and which exit means
++ * "no renderer".
++ */
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { isAssetRenderCommand } from './verification_command.js';
++
++/** Where `ui:render` writes, relative to its project root. */
++export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
++
++/**
++ * `--profile asset` with no renderer. Distinct from 1, which `ui:render` uses
++ * for an internal error, because "nothing rendered here" is a consumer's
++ * ordinary state and its manifest still carries the static witness.
++ */
++export const EXIT_RENDERER_ABSENT = 3;
++
++/**
++ * The exits that leave a manifest describing the file. 1 is excluded: a render
++ * that ran and failed, or was called wrong, is evidence of nothing.
++ */
++const RECORDED_EXITS: ReadonlySet<number> = new Set([0, EXIT_RENDERER_ABSENT]);
++
++/** The output directory name `ui:render` derives from its target. */
++export function renderSlug(target: string): string {
++    return (
++        target
++            .replace(/^https?:\/\//, '')
++            .replace(/[^a-z0-9]+/gi, '-')
++            .replace(/^-+|-+$/g, '')
++            .toLowerCase()
++            .slice(0, 60) || 'render'
++    );
++}
++
++/**
++ * A render call standing alone — no second command chained to it and no
++ * redirect — so its text cannot also carry a write. A leading `cd <dir> &&`,
++ * piping its output to a read-only filter, and folding stderr into stdout are
++ * allowed.
++ */
++export function isPureRender(command: string): boolean {
++    if (!isAssetRenderCommand(command)) return false;
++    const [head, ...pipes] = command.replace(/^\s*cd\s+[^;&|<>`$\n]+&&\s*/, '').replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' ').split('|');
++    if (/[;&<>`\n]|\$\(/.test(head ?? '')) return false;
++    return pipes.every((p) => /^\s*(tail|head|grep|jq|cat|less|wc)\b[^;&<>`|]*$/.test(p) && !/\$\(/.test(p));
++}
++
++export interface AssetRenderRecord {
++    /** The rendered file, relative to the recorder's root, forward slashes. */
++    readonly file: string;
++    readonly file_digest: string;
++    /** The manifest the render left, relative to the recorder's root. */
++    readonly manifest: string;
++    /** sha256 of the manifest's bytes as the render left them. */
++    readonly manifest_digest: string;
++    readonly exit_code: number;
++}
++
++/** `ui:render` options that take a value, so their value is not the target. */
++const VALUE_OPTIONS = new Set([
++    '--project-root',
++    '--slug',
++    '--profile',
++    '--class',
++    '--delivery',
++    '--thresholds',
++    '--icon-set',
++    '--compare',
++    '--registration',
++]);
++
++const sha256 = (bytes: Buffer): string => crypto.createHash('sha256').update(bytes).digest('hex');
++const unquote = (t: string): string => t.replace(/^['"]|['"]$/g, '');
++const slashed = (p: string): string => p.split(path.sep).join('/');
++
++/**
++ * The render a finished Bash call performed, or `null`.
++ *
++ * Reproduces the CLI's own resolution — target against `--project-root` (else
++ * the call's working directory), slug from `--slug` (else the target) — so the
++ * manifest read is the one that render wrote, not one found by search.
++ */
++export function observeAssetRender(
++    root: string,
++    command: string,
++    exitCode: number | null,
++): AssetRenderRecord | null {
++    if (exitCode === null || !RECORDED_EXITS.has(exitCode) || !isPureRender(command)) return null;
++    const cd = /^\s*cd\s+([^;&|<>`$\n]+?)\s*&&/.exec(command);
++    const cwd = cd ? path.resolve(root, unquote(cd[1]!.trim())) : root;
++    const head = command.replace(/^\s*cd\s+[^;&|<>`$\n]+&&\s*/, '').split('|')[0] ?? '';
++    const tokens = head.trim().split(/\s+/).map(unquote);
++    const at = tokens.findIndex((t) => t === 'ui:render');
++    if (at === -1) return null;
++
++    const opts = new Map<string, string>();
++    let target: string | undefined;
++    for (let i = at + 1; i < tokens.length; i += 1) {
++        const t = tokens[i]!;
++        const eq = t.indexOf('=');
++        if (t.startsWith('--') && eq !== -1) {
++            opts.set(t.slice(0, eq), t.slice(eq + 1));
++        } else if (VALUE_OPTIONS.has(t)) {
++            opts.set(t, tokens[i + 1] ?? '');
++            i += 1;
++        } else if (!t.startsWith('-') && target === undefined) {
++            target = t;
++        }
++    }
++    if (target === undefined) return null;
++
++    const projectRoot = path.resolve(cwd, opts.get('--project-root') ?? '.');
++    const fileAbs = path.resolve(projectRoot, target);
++    const manifestAbs = path.join(projectRoot, RENDER_REL, opts.get('--slug') ?? renderSlug(target), 'manifest.json');
++    try {
++        return {
++            file: slashed(path.relative(root, fileAbs)),
++            file_digest: sha256(fs.readFileSync(fileAbs)),
++            manifest: slashed(path.relative(root, manifestAbs)),
++            manifest_digest: sha256(fs.readFileSync(manifestAbs)),
++            exit_code: exitCode,
++        };
++    } catch {
++        // No file or no manifest: the render left nothing to bind, so nothing
++        // is recorded — the same verdict as a render that never ran.
++        return null;
++    }
++}
++
++/** The well-formed records in a state value, dropping anything else. */
++export function readAssetRenderRecords(raw: readonly unknown[]): AssetRenderRecord[] {
++    return raw.filter((r): r is AssetRenderRecord => {
++        if (typeof r !== 'object' || r === null) return false;
++        const o = r as Record<string, unknown>;
++        return ['file', 'file_digest', 'manifest', 'manifest_digest'].every((k) => typeof o[k] === 'string');
++    });
++}
++
++/**
++ * The manifest a record vouches for, parsed, or a reason it no longer does.
++ *
++ * `changed` is the forgery case this module exists for: the manifest's bytes
++ * moved after the render the hook saw finish.
++ */
++export function recordedManifest(
++    root: string,
++    record: AssetRenderRecord,
++): { manifest: unknown } | { changed: true } | null {
++    let bytes: Buffer;
++    try {
++        bytes = fs.readFileSync(path.resolve(root, record.manifest));
++    } catch {
++        return null;
++    }
++    if (sha256(bytes) !== record.manifest_digest) return { changed: true };
++    try {
++        return { manifest: JSON.parse(bytes.toString('utf8')) as unknown };
++    } catch {
++        return null;
++    }
++}
+diff --git a/src/scripts/before_complete_hook.ts b/src/scripts/before_complete_hook.ts
+index b1267c7e42b19a3ad1fe1fa5bad1a7aafecda527..09e10e989fa5d00fbf6f70736650b54d0fea8970 100644
+--- a/src/scripts/before_complete_hook.ts
++++ b/src/scripts/before_complete_hook.ts
+@@ -67,6 +67,7 @@ import {
+ import { readHookStdin } from "./hooks/hook_stdin.js";
+ import { hookSectionValue } from "./_lib/hook_settings.js";
+ import { isVerificationCommand, mightBeVerification } from "./_lib/verification_command.js";
++import { observeAssetRender, type AssetRenderRecord } from "./_lib/asset_render_record.js";
+ import {
+   advisoryLine,
+   runTouchedFileQuality,
+@@ -187,6 +188,7 @@ function _empty_state(): StateDict {
+     // a reader must never have to distinguish "no runs yet" from "key absent".
+     verification_runs: [],
+     edits_this_turn: 0,
++    asset_renders: [],
+     // NOTE — `quality_runs` and `quality_files_source` are deliberately ABSENT
+     // here, against the convention `verification_runs` above follows.
+     //
+@@ -696,6 +698,9 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
+   // turn's edits, which is the freshness argument `verify-before-complete` makes.
+   state["verification_runs"] = [];
+   state["edits_this_turn"] = 0;
++  // Turn-scoped like its neighbours: a render from an earlier turn is not one
++  // this turn's hook saw, and the SVG obligation asks for exactly that.
++  state["asset_renders"] = [];
+   // TURN-scoped for the same reason as its neighbour: a quality verdict from
+   // the previous turn describes files this turn may already have changed, and a
+   // stale PASS is the direction that misleads. DELETED rather than emptied, so
+@@ -709,6 +714,19 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
+   return state;
+ }
+ 
++function _observe_asset_render(consumer_root: string, envelope: StateDict): AssetRenderRecord | null {
++  const raw = envelope["payload"];
++  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
++  const pl = raw as StateDict;
++  const [, cmd] = _extract_command(pl);
++  if (!cmd) return null;
++  try {
++    return observeAssetRender(consumer_root, cmd, _extract_exit_reading(pl, _is_failure_event(pl, envelope)).code);
++  } catch {
++    return null;
++  }
++}
++
+ function _asInt(v: unknown): number {
+   if (!v) {
+     return 0;
+@@ -732,6 +750,7 @@ function _update(
+   event: string,
+   envelope: StateDict,
+   quality: { runs: QualityRun[]; source: string } | null = null,
++  assetRender: AssetRenderRecord | null = null,
+ ): StateDict {
+   const session_id = (envelope["session_id"] || state["session_id"] || "") as string;
+   if (session_id && session_id !== state["session_id"]) {
+@@ -900,6 +919,12 @@ function _update(
+       // of its own red-then-green pair.
+       state["verification_runs"] = _cap_runs(runs);
+     }
++    // The finished asset render, observed rather than inferred — read by the
++    // turn-end gate's SVG obligation.
++    if (assetRender !== null) {
++      const renders = Array.isArray(state["asset_renders"]) ? (state["asset_renders"] as unknown[]) : [];
++      state["asset_renders"] = [...renders, assetRender].slice(-MAX_VERIFICATION_RUNS_PER_TURN);
++    }
+   } else if (event === "stop") {
+     state["last_stop_at"] = _now();
+     if (quality !== null) {
+@@ -975,6 +1000,9 @@ export function run(
+   const quality_mode = event === "stop" ? readTouchedFileQualityMode(consumer_root) : "off";
+   const quality =
+     quality_mode === "off" ? null : collectTouchedFileQuality(consumer_root, session_id);
++  // Hashed BEFORE the lock for the same reason as the quality pass: file reads
++  // stay out of the critical section.
++  const assetRender = event === "post_tool_use" ? _observe_asset_render(consumer_root, envelope) : null;
+ 
+   // LOAD → UPDATE → PUBLISH under ONE lock, not three separate steps.
+   //
+@@ -1006,7 +1034,7 @@ export function run(
+     // treats a missing counter as 0 and the `=== true` guards treat a missing
+     // flag as false, so every assertion would still pass while `schema_version`
+     // and an explicit `ci_last: null` vanished from a freshly created file.
+-    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality);
++    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality, assetRender);
+     return state;
+   });
+   if (outcome === "failed") {
+@@ -1115,6 +1143,8 @@ export function main(argv?: string[]): number {
+ export interface TurnRunState {
+   readonly runs: readonly unknown[];
+   readonly edits_this_turn: number;
++  /** Absent when the recorder that wrote the file predates the field. */
++  readonly asset_renders?: readonly unknown[];
+ }
+ 
+ /**
+@@ -1153,7 +1183,14 @@ export function readTurnRunState(
+         const edits = state['edits_this_turn'];
+         if (!Array.isArray(runs)) return null;
+         if (typeof edits !== 'number' || !Number.isFinite(edits) || edits < 1) return null;
+-        return { runs: runs as readonly unknown[], edits_this_turn: edits };
++        const renders = state['asset_renders'];
++        return {
++            runs: runs as readonly unknown[],
++            edits_this_turn: edits,
++            // Absent rather than empty when the writer predates the field, so
++            // the SVG obligation falls back instead of reading "no render".
++            ...(Array.isArray(renders) ? { asset_renders: renders as readonly unknown[] } : {}),
++        };
+     } catch {
+         // Absent, unreadable or malformed — the recorder said nothing, so the
+         // transcript answers. Never a refusal of its own.
+diff --git a/src/scripts/hooks/svg_obligation.ts b/src/scripts/hooks/svg_obligation.ts
+index 30e814f58a54fe35641345dd6047026b8ec085b4..b2e20dca7da994b7754e9c7e59b0b0adcda41c92 100644
+--- a/src/scripts/hooks/svg_obligation.ts
++++ b/src/scripts/hooks/svg_obligation.ts
+@@ -54,6 +54,15 @@
+  *         paragraph promised more than the code did (finding 2 of this
+  *         change's own completion review), and a gate whose documented
+  *         assurance outruns its implementation is quoted as written.
++ *
++ *         SUPERSEDED WHERE A RECORD EXISTS. On a host whose `post_tool_use`
++ *         recorder is live, the transcript reading above is not consulted at all: a manifest counts
++ *         only when its current bytes hash to the digest the hook recorded as
++ *         a standalone render of that file finished (`_lib/asset_render_record.ts`).
++ *         No write-route pattern list stands in for that observation, so a
++ *         manifest written by ANY other route discharges nothing. The paragraph
++ *         above remains the rule only where no record exists, and the refusal
++ *         says so.
+  *   (iv)  A deleted `.svg` opens no obligation — it has no current digest, so
+  *         there is nothing a render could be bound to.
+  *
+@@ -74,6 +83,13 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ 
+ import { isAssetRenderCommand } from '../_lib/verification_command.js';
++import {
++    RENDER_REL,
++    isPureRender,
++    readAssetRenderRecords,
++    recordedManifest,
++    type AssetRenderRecord,
++} from '../_lib/asset_render_record.js';
+ import type { ToolCall } from '../_lib/turn_end_transcript.js';
+ 
+ /**
+@@ -83,7 +99,7 @@ import type { ToolCall } from '../_lib/turn_end_transcript.js';
+  * Two copies of a command-shape regex is how the two detectors come to
+  * disagree about what a render is.
+  */
+-export { isAssetRenderCommand };
++export { isAssetRenderCommand, isPureRender, RENDER_REL };
+ 
+ /**
+  * Tools that WRITE. One copy, here rather than imported from the gate: the
+@@ -91,9 +107,6 @@ export { isAssetRenderCommand };
+  */
+ const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+ 
+-/** Where `ui:render` writes. One copy of the path, shared with the CLI by value. */
+-export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
+-
+ /**
+  * Paths whose `.svg` files are planted on purpose. Precision (ii).
+  *
+@@ -255,6 +268,43 @@ export interface SvgObligationInputs {
+      * none of them discharges anything (16.5.0 release review).
+      */
+     renderDirTampered?: boolean;
++    /**
++     * The renders the `post_tool_use` recorder saw finish this turn, or
++     * `null` where no recorder is live. An array — even an empty one — is the
++     * ONLY evidence read: the transcript fields above are then ignored.
++     */
++    recorded?: readonly AssetRenderRecord[] | null;
++}
++
++/** Appended to every refusal on a host with no live recorder. Pinned verbatim. */
++export const TRANSCRIPT_FALLBACK_REASON =
++    'transcript fallback: no `post_tool_use` render record exists for this turn on this host ' +
++    '(`agent-config hooks:status`), so the manifest was read under the transcript rule — ' +
++    'an omission check, not an attestation';
++
++/** The record-path verdict for one file. */
++function recordVerdict(
++    root: string,
++    abs: string,
++    digest: string,
++    records: readonly AssetRenderRecord[],
++): DischargeKind | string {
++    let changed = false;
++    for (const r of records) {
++        if (path.resolve(root, r.file) !== abs || r.file_digest !== digest) continue;
++        const read = recordedManifest(root, r);
++        if (read === null) continue;
++        if ('changed' in read) {
++            changed = true;
++            continue;
++        }
++        const kind = dischargeFor([read.manifest as AssetManifestish], digest);
++        if (kind !== null) return kind;
++    }
++    return changed
++        ? 'the manifest the observed render left has changed since, so it is no longer the record of that render'
++        : 'no successful `ui:render --profile asset` of these bytes was observed by the hook this turn with a ' +
++              'manifest that discharges them — a manifest written by any other route discharges nothing';
+ }
+ 
+ /**
+@@ -294,6 +344,13 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
+         }
+         const digest = crypto.createHash('sha256').update(bytes).digest('hex');
+ 
++        if (Array.isArray(inputs.recorded)) {
++            const verdict = recordVerdict(root, path.resolve(root, abs), digest, inputs.recorded);
++            if (verdict === 'verified' || verdict === 'static-only') discharged.push({ file: relPath, kind: verdict });
++            else open.push({ file: relPath, reason: verdict });
++            continue;
++        }
++
+         // (iii) The manifests are only consulted once a render was observed.
+         // Reading them first and then discarding the verdict would make the
+         // ordering look like a performance detail rather than the rule.
+@@ -365,19 +422,6 @@ export function renderNames(commands: readonly string[], relPath: string): boole
+     });
+ }
+ 
+-/**
+- * A render call standing alone — no second command chained to it and no
+- * redirect — so its text cannot also carry a write. A leading `cd <dir> &&`,
+- * piping its output to a read-only filter, and folding stderr into stdout are
+- * allowed.
+- */
+-export function isPureRender(command: string): boolean {
+-    if (!isAssetRenderCommand(command)) return false;
+-    const [head, ...pipes] = command.replace(/^\s*cd\s+[^;&|<>`$\n]+&&\s*/, '').replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' ').split('|');
+-    if (/[;&<>`\n]|\$\(/.test(head ?? '')) return false;
+-    return pipes.every((p) => /^\s*(tail|head|grep|jq|cat|less|wc)\b[^;&<>`|]*$/.test(p) && !/\$\(/.test(p));
+-}
+-
+ /**
+  * Does a shell command (other than a pure render) write somewhere a render
+  * manifest could live? Read by shape: a write operator, together with the
+@@ -430,6 +474,7 @@ function escapeRe(s: string): string {
+ export function openSvgObligation(
+     workspaceRoot: string,
+     toolCalls: readonly ToolCall[],
++    recordedRenders: readonly unknown[] | null = null,
+ ): { detector: 'verification'; evidence: string; reason: string; mode: 'transcript' } | null {
+     // Precision (iii). The render has to come AFTER the edit it describes, on
+     // both evidence paths — `toolCalls` is assembled for both, so one rule
+@@ -470,7 +515,11 @@ export function openSvgObligation(
+ 
+     let reading: SvgObligationReading;
+     try {
+-        reading = readSvgObligations(workspaceRoot, { edits, renderDirTampered });
++        reading = readSvgObligations(workspaceRoot, {
++            edits,
++            renderDirTampered,
++            recorded: recordedRenders === null ? null : readAssetRenderRecords(recordedRenders),
++        });
+     } catch {
+         // A gate that crashed on its own instrument is a new failure mode on a
+         // path meant to be inert. An unreadable render directory is no finding.
+@@ -492,6 +541,7 @@ export function openSvgObligation(
+         reason:
+             `this turn edited an .svg and no render describes it${more} — ${first.reason}. ` +
+             'A bare `ui:render --profile asset` that rendered nothing, and a test or lint run over other ' +
+-            'files, both discharge nothing: the gate reads the render, never the call.',
++            'files, both discharge nothing: the gate reads the render, never the call.' +
++            (recordedRenders === null ? ` (${TRANSCRIPT_FALLBACK_REASON})` : ''),
+     };
+ }
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index ebdfc18278e7e4226829d9718b64814c9663a901..1c2594ba5c49b138d02effd650a93e136d6ff41e 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -1282,7 +1282,7 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
+         // on a completion CLAIM, and a turn waiting on a subagent has not
+         // finished — so its closing is not the claim F is about. Same slot,
+         // opposite trigger, opposite treatment of `dispatchOpen`.
+-        openSvgObligation(workspaceRoot, toolCalls),
++        openSvgObligation(workspaceRoot, toolCalls, runState?.asset_renders ?? null),
+         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
+     ]) {
+         if (f) findings.push(f);
+diff --git a/tests/scripts/svg_render_record.test.ts b/tests/scripts/svg_render_record.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ee4b2cf2f12f5fe9284a02e1ba9591e253cb2a5
+--- /dev/null
++++ b/tests/scripts/svg_render_record.test.ts
+@@ -0,0 +1,169 @@
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { observeAssetRender } from '../../src/scripts/_lib/asset_render_record.js';
++import { readTurnRunState, run, statePathFor } from '../../src/scripts/before_complete_hook.js';
++import { TRANSCRIPT_FALLBACK_REASON, openSvgObligation } from '../../src/scripts/hooks/svg_obligation.js';
++import type { ToolCall } from '../../src/scripts/_lib/turn_end_transcript.js';
++
++/**
++ * `road-to-svg-witness-provenance` Phase 1 — the render is observed, not
++ * inferred. The forged-manifest routes below are the ones the transcript gate
++ * needed a pattern list for; on the record path every one of them stays open
++ * with no pattern list at all, because none of them is a render the hook saw.
++ */
++let root: string;
++
++const SVG =
++    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">\n' +
++    '  <title>A square</title>\n' +
++    '  <rect x="4" y="4" width="16" height="16" fill="#2563eb"/>\n' +
++    '</svg>\n';
++const digestOf = (text: string): string => crypto.createHash('sha256').update(text).digest('hex');
++const FILE = 'assets/logo.svg';
++const MANIFEST = 'agents/runtime/state/render/assets-logo-svg/manifest.json';
++const RENDER = `agent-config ui:render ${FILE} --profile asset`;
++const edit = (p: string): ToolCall => ({ name: 'Write', path: p });
++const bash = (command: string): ToolCall => ({ name: 'Bash', command });
++
++function write(rel: string, content: string): void {
++    fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
++    fs.writeFileSync(path.join(root, rel), content);
++}
++
++/** The manifest `ui:render` leaves for a verified render of the file. */
++function renderManifest(rel = MANIFEST): void {
++    write(rel, `${JSON.stringify({ profile: 'asset', verification: 'verified', asset: { digest: digestOf(SVG) } }, null, 2)}\n`);
++}
++
++/** Drive the real recorder with one host event. */
++function hook(event: string, payload: Record<string, unknown> = {}): void {
++    run(JSON.stringify({ event, session_id: 's1', payload }), { consumer_root: root });
++}
++const ok = (command: string) => ({ tool_name: 'Bash', tool_input: { command }, tool_response: { stdout: '', stderr: '', interrupted: false } });
++const failed = (command: string, code: number) => ({ tool_name: 'Bash', tool_input: { command }, tool_response: `Error: Exit code ${String(code)}\n` });
++
++beforeEach(() => {
++    root = fs.mkdtempSync(path.join(os.tmpdir(), 'svg-record-'));
++    write(FILE, SVG);
++});
++afterEach(() => {
++    fs.rmSync(root, { recursive: true, force: true });
++});
++
++describe('1.1 — the recorder writes a successful asset render, and only that', () => {
++    it('a successful render records exactly one entry; a failed one records none', () => {
++        renderManifest();
++        hook('user_prompt_submit');
++        hook('post_tool_use', { tool_name: 'Write', tool_input: { file_path: FILE } });
++        hook('post_tool_use', failed(RENDER, 1));
++        hook('post_tool_use', ok(RENDER));
++        const state = JSON.parse(fs.readFileSync(path.join(root, statePathFor('s1')), 'utf8')) as Record<string, unknown>;
++        expect(state['asset_renders']).toEqual([
++            {
++                file: FILE,
++                file_digest: digestOf(SVG),
++                manifest: MANIFEST,
++                manifest_digest: digestOf(fs.readFileSync(path.join(root, MANIFEST), 'utf8')),
++                exit_code: 0,
++            },
++        ]);
++        expect(readTurnRunState(root, 's1')?.asset_renders).toHaveLength(1);
++    });
++
++    it('records the renderer-absent exit, which still leaves a static witness', () => {
++        renderManifest();
++        expect(observeAssetRender(root, RENDER, 3)?.exit_code).toBe(3);
++        expect(observeAssetRender(root, RENDER, 1)).toBeNull();
++        expect(observeAssetRender(root, RENDER, null)).toBeNull();
++    });
++
++    it('a render chained to a write records nothing', () => {
++        renderManifest();
++        expect(observeAssetRender(root, `${RENDER} && echo '{}' > ${MANIFEST}`, 0)).toBeNull();
++        expect(observeAssetRender(root, `${RENDER}; cp forged.json ${MANIFEST}`, 0)).toBeNull();
++    });
++
++    it('follows the CLI: --slug, --project-root, a leading cd, no manifest', () => {
++        renderManifest('agents/runtime/state/render/custom/manifest.json');
++        expect(observeAssetRender(root, `${RENDER} --slug custom`, 0)?.manifest).toBe(
++            'agents/runtime/state/render/custom/manifest.json',
++        );
++        renderManifest('assets/agents/runtime/state/render/logo-svg/manifest.json');
++        expect(observeAssetRender(root, 'cd assets && agent-config ui:render logo.svg --profile asset', 0)?.manifest).toBe(
++            'assets/agents/runtime/state/render/logo-svg/manifest.json',
++        );
++        expect(observeAssetRender(root, 'agent-config ui:render logo.svg --project-root=assets --profile asset', 0)?.file).toBe(FILE);
++        // The render left no manifest at the slug it writes: nothing to bind.
++        expect(observeAssetRender(root, `${RENDER} --slug elsewhere`, 0)).toBeNull();
++    });
++});
++
++describe('1.2 — only a recorded render discharges', () => {
++    const recorded = (): unknown[] => [observeAssetRender(root, RENDER, 0)];
++
++    it('a real recorded render discharges', () => {
++        renderManifest();
++        expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], recorded())).toBeNull();
++    });
++
++    it('every forged-manifest route stays open with no pattern list', () => {
++        renderManifest();
++        for (const forge of [
++            edit(MANIFEST),
++            bash(`echo '{}' > ${MANIFEST}`),
++            bash(`cd agents/runtime/state && printf '{}' > render/assets-logo-svg/manifest.json`),
++            bash(`python3 -c "open('${MANIFEST}','w').write('{}')"`),
++            bash(`lua -e "io.open('${MANIFEST}','w')"`),
++            bash('./scripts/write_it.sh'),
++            bash('W=$M; $W'),
++        ]) {
++            // The forgery is followed by a render the transcript shows — the
++            // shape that used to need the write to be recognised. No render was
++            // recorded, so nothing discharges, whatever the route.
++            const finding = openSvgObligation(root, [edit(FILE), forge, bash(RENDER)], []);
++            expect(finding, JSON.stringify(forge)).not.toBeNull();
++            expect(finding?.reason).toContain('was observed by the hook');
++        }
++    });
++
++    it('a manifest rewritten after the recorded render discharges nothing', () => {
++        renderManifest();
++        const records = recorded();
++        write(MANIFEST, `${JSON.stringify({ profile: 'asset', verification: 'verified', asset: { digest: digestOf(SVG) }, x: 1 })}\n`);
++        const finding = openSvgObligation(root, [edit(FILE), bash(RENDER)], records);
++        expect(finding?.reason).toContain('has changed since');
++    });
++
++    it('a recorded render of earlier bytes discharges nothing', () => {
++        renderManifest();
++        const records = recorded();
++        write(FILE, SVG.replace('#2563eb', '#dc2626'));
++        expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], records)).not.toBeNull();
++    });
++});
++
++describe('1.3 — no record is a named fallback', () => {
++    it('reports the transcript fallback verbatim', () => {
++        renderManifest();
++        // No recorded entry, a matching manifest, and no render after the edit.
++        const finding = openSvgObligation(root, [edit(FILE)], null);
++        expect(finding?.reason).toContain(TRANSCRIPT_FALLBACK_REASON);
++        // And the record path never carries it.
++        expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], [])?.reason).not.toContain(TRANSCRIPT_FALLBACK_REASON);
++    });
++
++    it('a recorder that predates the field reads as no record', () => {
++        hook('user_prompt_submit');
++        hook('post_tool_use', { tool_name: 'Write', tool_input: { file_path: FILE } });
++        const p = path.join(root, statePathFor('s1'));
++        const state = JSON.parse(fs.readFileSync(p, 'utf8')) as Record<string, unknown>;
++        delete state['asset_renders'];
++        fs.writeFileSync(p, JSON.stringify(state));
++        expect(readTurnRunState(root, 's1')?.asset_renders).toBeUndefined();
++    });
++});
