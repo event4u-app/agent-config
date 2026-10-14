@@ -6,7 +6,6 @@ dependencies:
   - ai-council
   - file-editor
   - memory-consolidation
-  - upstream-contribute
 description: Cross-session memory and chat-history capabilities for the maintainer
   workspace.
 id: memory
@@ -21,8 +20,8 @@ surface_tier: core
 token_passport:
   basis: chars/4
   catalog_tokens: 0
-  commands_tokens: 10185
+  commands_tokens: 10052
   other_tokens: 0
   rules_tokens: 0
-  total_tokens: 10185
+  total_tokens: 10052
 trust_level_default: core

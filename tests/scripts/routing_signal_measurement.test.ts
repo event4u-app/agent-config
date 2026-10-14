@@ -253,8 +253,18 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 0x04 = 4 and SEALS, moving the holdout 27 -> 28. Every comment above
         // could say the seal was untouched; this one cannot, which is exactly
         // the case the second line exists to catch rather than assume.
+        //
+        // 134 -> 137 on 2026-10-14: `road-to-one-upstream-that-checks-what-leaves`
+        // steps 1.1 and 1.2 rewrote `upstream-contribute` into a front on the
+        // release ladder and repaired a dangling path in
+        // `learning-to-rule-or-skill` and `context-authoring`, so all three owed
+        // a corpus. `context-authoring` (0xe0 = 224),
+        // `learning-to-rule-or-skill` (0xf8 = 248) and `upstream-contribute`
+        // (0xa7 = 167) are all above the ceiling and train, moving the train
+        // count 106 -> 109; the holdout is unchanged at 28, so the seal is
+        // untouched by this growth.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(134);
+        expect(all.length).toBe(137);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(28);
     });
 });
@@ -301,7 +311,11 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // NOT counted here; that it is absent from this number is the seal
         // working, which is the same sentence the 2026-10-01 and 2026-10-02
         // growths needed and the five entries between them did not.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(106);
+        // 106 -> 109 on 2026-10-14: all three corpora the upstream-ladder
+        // roadmap added hash above the ceiling and train — `context-authoring`,
+        // `learning-to-rule-or-skill`, `upstream-contribute`. Nothing sealed,
+        // so this entry needs no absent-row sentence.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(109);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

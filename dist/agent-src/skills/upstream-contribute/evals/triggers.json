@@ -1,0 +1,72 @@
+{
+  "skill": "upstream-contribute",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.1 rewrote this skill into a front on the self-repair:release ladder and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four sources the skill's own 'When to use' names: a locally written skill worth sharing, an improvement to a shipped rule, a bug found in a shared artefact, and a local override that should become the default — plus the generalisation case, where something project-specific is worth widening. Near-misses are three neighbours that share the contribution vocabulary and stop short of leaving the machine: deciding what the artefact even is (learning-to-rule-or-skill), deliberately keeping it local (override-management), and opening a pull request inside the consumer's own repository (git-workflow), which is not an upstream send at all. Counterexamples guard the word 'upstream': a git upstream-branch question and an upstream HTTP dependency both say upstream and have nothing to do with contributing back.",
+  "queries": [
+    {
+      "id": "uc-e1",
+      "q": "this skill we wrote locally would help every project — contribute it back to the shared package",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "uc-e2",
+      "q": "the shipped commit-policy rule is missing a case we hit twice — send the improvement upstream",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "uc-e3",
+      "q": "found a bug in the shared migration skill — how do I get the fix into agent-config?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "uc-e4",
+      "q": "our override has outlived the default it replaced — make it the package default instead",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "uc-e5",
+      "q": "das sollten alle Projekte bekommen — trag die Verbesserung ins geteilte Paket zurück",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "uc-n1",
+      "q": "we keep hitting this — should it be a rule or a skill?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "deciding the artefact's kind comes first and is a different skill → learning-to-rule-or-skill"
+    },
+    {
+      "id": "uc-n2",
+      "q": "this tweak is specific to how we do tenancy — keep it local and document why",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "an explicit decision NOT to upstream → override-management"
+    },
+    {
+      "id": "uc-n3",
+      "q": "open a pull request for this change on our own repo",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a pull request, but in the consumer's repository — nothing leaves toward the package → git-workflow"
+    },
+    {
+      "id": "uc-c1",
+      "q": "my branch has no upstream set, so git push keeps asking me for one",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "uc-c2",
+      "q": "the upstream pricing API started returning 502s — add a retry with backoff",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says upstream about a third-party dependency, not about contributing back"
+    }
+  ]
+}
