@@ -126,8 +126,10 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         // fast path (src/cli/agent-config.ts).
         //
         // Hook-resilience fallback (road-to-opt-subagent-harvest P1.4):
-        // local binary → PATH fallback → SILENT exit 0 when neither exists
-        // (a hook must never error-spam the loop on an uninstalled repo).
+        // local binary → PATH fallback → exit 0 when neither exists (a hook
+        // must never error-spam the loop on an uninstalled repo). Silent on
+        // the settings carrier; the plugin carrier says so (see
+        // _no_dispatcher_notice).
         // The dispatcher's own exit code PROPAGATES when it runs — a
         // fail_closed concern (e.g. block-no-verify) still denies; only the
         // missing-binary case degrades open, which is the honest degrade
@@ -147,10 +149,35 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
             'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
             `exec node "$B" ${dispatchArgs}; fi; ` +
             'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
-            'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
+            `command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}exit 0; }; ` +
             `"$BIN" dispatch:hook ${dispatchArgs}`;
     }
     return matrix;
+}
+
+export const NO_DISPATCHER_STDERR =
+    'agent-config: no hook dispatcher reachable, so no agent-config hook runs in this session. ' +
+    'Hooks need the npm package where they can reach it: npm i -g @event4u/agent-config ' +
+    '(then npx -y @event4u/agent-config init)';
+
+export const NO_DISPATCHER_CONTEXT =
+    'agent-config hooks are NOT running in this session: the plugin found no dispatcher, so no ' +
+    'concern runs, the fail_closed guards block-no-verify, block-kernel-rule-writes and ' +
+    'block-plumbing-writes included.';
+
+/**
+ * The no-dispatcher branch, keyed on CLAUDE_PLUGIN_ROOT — set by the host for
+ * a plugin's hooks only (road-to-a-hook-carrier-that-is-never-silent 5.1, D5).
+ * The settings carrier runs the byte-same string, which the host's dedupe
+ * needs, and stays silent there: that carrier's branch belongs to Phase 3.
+ * One stderr line per event (exit 0, never blocking); the context line goes to
+ * stdout on SessionStart only, so a tool call is never followed by context.
+ * Both texts are single-quoted shell literals: no `'`, and no `;` either,
+ * because commandHead() splits on the last `;`.
+ */
+function _no_dispatcher_notice(native: string): string {
+    const context = native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : '';
+    return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
 }
 
 function _is_managed_group(group: unknown): boolean {
