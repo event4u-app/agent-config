@@ -162,7 +162,7 @@ with it and left alone.
       step a change can close. Order: the 105 by name, twenty a batch, a gate
       skipped only for a reason written in the evidence page's 2026-10-14
       step-2.2 section. 2.2 closes when the last batch does, and AC-2 with it.
-- [ ] **2.2a The first twenty.** `audit_mcp_tools` through
+- [x] **2.2a The first twenty.** `audit_mcp_tools` through
       `check_score_contract`, four skipped with their reasons; steps
       `Drain 2.2a-1` and `Drain 2.2a-2` of the host job. Open until the
       enforcing environment's reading lowers the baseline from 124 and the
@@ -227,6 +227,22 @@ with it and left alone.
       is in the evidence page's 2026-10-14 section. The parity baseline was
       NOT lowered with it: the local reading is 124 against 130, and this
       baseline moves only on the enforcing environment's reading.
+
+## Step 2.2a — closure record
+
+Closed 2026-10-14, on both readings the step named. The baseline: run
+38622341909, job `Sync + Generate Tools Consistency` (job 116053446442), step
+`CI <-> local gate parity`, at PR #2354's final head `b09ed6995`, printed
+`ci-parity:local-only: 104 violation(s), baseline 124` and asked for 104. The
+baseline in `src/config/gate-violation-baselines.json` is lowered 124 -> 104 on
+that reading; the local run on `origin/main` at `4b8ec8c1f` agrees at 104 and is
+corroboration only. Twenty gates left the set and nothing was declared:
+`local_only:` still holds seven entries. The duration: on the three
+`Standing Payload Delta` runs of #2354 the host job took 70 s, 74 s and 72 s and
+the two 2.2a steps together 9 s, 12 s and 12 s, recorded in
+`docs/contracts/ci-cost-budget.md` — about a quarter of the 300 s ceiling and
+below the ~240 s point at which the overflow job becomes due. The four gates
+2.2a skipped stay in the count for 2.2f.
 
 ## What this roadmap deliberately does not do
 

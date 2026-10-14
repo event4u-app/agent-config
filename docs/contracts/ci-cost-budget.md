@@ -71,7 +71,7 @@ about.)
 | `tests.yml` | `collector-lifecycle` | macOS only, no matrix | **~150 s measured locally, not yet in CI** | same as above |
 | `smoke-public-install.yml` | per-OS × Node leg | 3 OS × 2 Node = 6 jobs | 24–30 s ubuntu / 39–47 s macOS / **159–169 s windows** | install paths + setup.sh + templates |
 | `consistency.yml` | `Sync + Generate Tools Consistency` | ubuntu, single job | 75 s | always-on (PR / push) |
-| `standing-payload-delta.yml` | `standing-payload-delta` **incl. local-only drain batch 1** | ubuntu, no matrix | **56–60 s with the drain, 21–27 s without (n=2 each)** | always-on, no `paths:` filter |
+| `standing-payload-delta.yml` | `standing-payload-delta` **incl. local-only drain batches 1, 3.2 and 2.2a** | ubuntu, no matrix | **70–74 s with 2.2a (n=3), 56–60 s with batch 1 only, 21–27 s without (n=2 each)** | always-on, no `paths:` filter |
 | `smoke.yml` | `smoke-kernel` · `smoke-router` · `smoke-schema` · `smoke-skills` | ubuntu, 4 jobs | 20–23 s each | `scripts/schemas/**` |
 | `skill-lint.yml` | `skill-lint` · `skill-lint-strict` (+ `originality-gate`) | ubuntu, 3 jobs | 34 s · 23 s (strict + originality release-gated) | `dist/agent-src*/**`, schemas |
 | `release-guard.yml` | (single) | ubuntu | < 10 s | tag-trigger only |
@@ -106,6 +106,18 @@ twenty wired here; summing those twenty from the same table gives 11.5 s. An
 independent completion review caught the substitution. A transplanted number in
 a contract document with a `revisit-if` clause feeds the next batch decision,
 which is why the correction is named instead of made silently.
+
+**Batch 2.2a, read from CI.** The twenty gates of batch 2.2a run as two
+steps, `Drain 2.2a-1` and `Drain 2.2a-2`, of the same job. On the three
+`Standing Payload Delta` runs of PR #2354 (runs 38591551791, 38621321060 and
+38622341419, the last at its final head `b09ed6995`) the host job took **70 s,
+74 s and 72 s**, and the two 2.2a steps together took **9 s, 12 s and 12 s**.
+The job's growth from 56-60 s also includes the six step-3.2 drain steps of PR
+#2352, so the step times, not the job delta, are 2.2a's own cost. The job sits
+at about a quarter of the 300 s ceiling, well under the ~240 s point at which
+the roadmap moves the next batch into a second job. The workflow triggers on
+`pull_request` and `workflow_dispatch` only, so the merge commit `4b8ec8c1f` has
+no run of it and the pull-request runs are the reading.
 
 *Revisit-if:* a later batch takes the host job near the ceiling (2.2 names a
 second job of the same workflow as the overflow), or fifty main-branch runs
