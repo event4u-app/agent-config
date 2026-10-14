@@ -9,8 +9,11 @@
  * same scan scope and order, same example/allowlist/skip logic. No
  * behaviour changes — latent bugs are replicated.
  *
- * Scans .md files in dist/agent-src/ and agents/ for internal references
- * (file paths, skill names, rule names) and reports broken ones.
+ * Scans .md files in dist/agent-src/, agents/ and docs/guidelines/ for
+ * internal references (file paths, skill names, rule names) and reports
+ * broken ones. The third root is not decoration: this line named two while
+ * `SCAN_DIRS` below has held three, so a reader checking whether their
+ * guideline's links are covered read the wrong answer off the header.
  *
  * Exit codes: 0 = clean, 1 = broken refs found, 3 = internal error
  *

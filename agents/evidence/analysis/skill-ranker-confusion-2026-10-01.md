@@ -259,7 +259,17 @@ the number of distinct score values in a ranking from 6 to 14, and cuts
 tie-decided misses from 67 → 20 on tuning and 15 → 5 on sealed, while its whole
 top-1 lift is +5 rows and +1 row. So what `idf` buys is **granularity** — it
 breaks ties that integer rounding had collapsed — and not the re-ordering on term
-rarity the row claims. The row is left as written because it is the honest record
+rarity the row claims.
+
+> **The 67 and the 15 are a reading under the OLD token class, 2026-10-01.**
+> On 2026-10-13 `src/shared/skillRanking.ts` widened `[a-z][a-z0-9]+` to a
+> Unicode letter class, and the same measurement over the same 390 labelled
+> rows now gives **69 on tuning and 14 on sealed**. Two tuning rows crossed into
+> a tie block and one sealed row crossed out of one; nothing about the
+> comparison above changes, because the `idf` reading beside it was taken on the
+> same day under the same tokenizer. This page is not re-measured — it is the
+> dated record of that comparison. The LIVE figures are pinned, and re-derived
+> on every run, by `tests/scripts/skill_ranker_tie_metrics.test.ts`. The row is left as written because it is the honest record
 of the reasoning that produced the candidate; the correction belongs directly
 under it, because a reader deriving the next signal from the stated mechanism
 would derive it from the wrong cause. The real cause is the tie class in

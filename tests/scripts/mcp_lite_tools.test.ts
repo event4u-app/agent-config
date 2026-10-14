@@ -243,6 +243,19 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     // "registering it is free" can never be asserted again. The payload reading
     // is 70 tokens under its ceiling, which is the next tool's real headroom and
     // is worth knowing before anyone plans one.
+    //
+    // RE-MEASURED 2026-10-13 (`road-to-a-search-answer-a-model-can-choose-from`
+    // 1.1/1.2): descriptions 2,097 -> 2,138 and payload 4,830 -> 4,886, from two
+    // edits to ONE tool — `suggest_skill_for_task` now tells the caller to choose
+    // by reading the rows and open at most two bodies, and its `limit` default
+    // moved from 5 to 8 with a one-clause reason. The first draft of that prose
+    // put the payload at 4,926 and this assertion caught it; it was TRIMMED back
+    // under the ceiling rather than the ceiling being raised, because a band
+    // that moves whenever something crosses it is not a band.
+    //
+    // Headroom is now 14 tokens, not 70. Anyone planning the 27th tool should
+    // read that number as "trim first", and anyone widening a description here
+    // should expect this assertion to fire.
     it('has 26 allowlisted tools', () => {
         expect(names.length).toBe(26);
     });

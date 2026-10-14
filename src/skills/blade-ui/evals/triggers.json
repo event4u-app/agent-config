@@ -1,0 +1,77 @@
+{
+  "skill": "blade-ui",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which rewrote this skill's grounded stack-guidance invocation to the bundled `node <skills-root>/…/ground.mjs` form and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the surfaces its own When-to-use names — views, components, partials, layouts, forms, and view logic — on a project that is Blade without Livewire or Flux, which is the condition that makes this skill rather than its two siblings the answer. Near-misses are exactly the three boundaries the skill draws for itself: reactivity (livewire), a Flux primitive (flux), and the design brief it executes but never writes (fe-design, via directives/ui). Counterexamples guard two words rather than a neighbour — a saw blade and a database view.",
+  "queries": [
+    {
+      "id": "bu-e1",
+      "q": "create a Blade component for the invoice line-item row",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "bu-e2",
+      "q": "the same header markup is copy-pasted across six views — pull it into a layout and a partial",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "bu-e3",
+      "q": "this view does a foreach with the discount calculation inside it — move the view logic where it belongs",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "bu-e4",
+      "q": "build the settings page as plain Blade — the project has no Livewire",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "bu-e5",
+      "q": "add a @props-driven alert component we can reuse across the templates",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "bu-e6",
+      "q": "bau eine Blade-Komponente für die Rechnungsposition-Zeile",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "bu-n1",
+      "q": "this table should refresh when a filter changes, without a page reload",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "reactivity → livewire, which composes Blade internally"
+    },
+    {
+      "id": "bu-n2",
+      "q": "use the Flux modal primitive for the confirm dialog",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a Flux primitive → flux"
+    },
+    {
+      "id": "bu-n3",
+      "q": "the spacing and type scale on this page feel off — decide the layout and the states",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the design brief this skill executes but never writes → fe-design / directives/ui"
+    },
+    {
+      "id": "bu-c1",
+      "q": "our saw-blade supplier changed their SKU format — update the product import mapping",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "bu-c2",
+      "q": "add a database view for the reporting query so BI can read it",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

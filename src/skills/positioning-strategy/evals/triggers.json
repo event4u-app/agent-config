@@ -1,0 +1,73 @@
+{
+  "skill": "positioning-strategy",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-sentences-the-tree-can-back, which added this skill's Sourcing section — every segment, category and alternative claim now carries a cited source — and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three entry points the skill's own 'When to use' names: a contested or missing category sentence a downstream artefact is about to inherit, a team that can say what the product does but not who it is for or against what alternative, and a request for the opposable audit the skill's inversion model drives. Near-misses are the three handoffs the skill's own 'Do NOT use' line names: peer-versus-peer feature comparison (competitive-positioning), copy generation (messaging-architecture), and pricing-tier construction, which this skill explicitly hands off. Counterexamples guard the homonym in the skill's own name: CSS positioning and camera position both say position and ask for no market frame.",
+  "queries": [
+    {
+      "id": "ps-e1",
+      "q": "we can't agree what category we're in, and the launch page copy is due Friday — lock the frame first",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ps-e2",
+      "q": "everyone here can describe what the product does but nobody can say who it's for or what it replaces",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ps-e3",
+      "q": "run an opposable audit on our positioning claims — which of them could a competitor credibly argue the opposite of?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ps-e4",
+      "q": "what should we refuse to be? I want the non-goals written down before anyone writes a tagline",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ps-e5",
+      "q": "für wen sind wir eigentlich, und gegen welche Alternative — die Kategorie ist bei uns völlig unklar",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "ps-n1",
+      "q": "build me a feature-by-feature comparison table against the two tools we lose deals to",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "peer-versus-peer feature comparison → competitive-positioning"
+    },
+    {
+      "id": "ps-n2",
+      "q": "the frame is settled — now write the homepage headline and the three supporting lines",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "copy generation downstream of a locked frame → messaging-architecture"
+    },
+    {
+      "id": "ps-n3",
+      "q": "how should we cut the tiers — what goes in Pro versus Enterprise?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "pricing-tier construction, which this skill hands off by name"
+    },
+    {
+      "id": "ps-c1",
+      "q": "the tooltip is positioning itself off-screen on narrow viewports — fix the absolute positioning",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says positioning, means CSS layout"
+    },
+    {
+      "id": "ps-c2",
+      "q": "position the camera behind the subject for the next shot and keep the key light where it is",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says position, means a camera placement"
+    }
+  ]
+}

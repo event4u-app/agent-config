@@ -139,6 +139,13 @@ export interface Ledger {
     context_relation?: string;
     acceptance_status?: string;
     assurance?: string;
+    /**
+     * Repo-relative path to a committed owner directive that permits cutting
+     * this version although nothing reviewed it. A PATH rather than free text:
+     * free text is the reason string this field exists to stop being enough.
+     * See unreviewed_ledger_problem.
+     */
+    assurance_override?: string;
     reviewers?: string[];
     coverage?: unknown;
     /**
@@ -483,6 +490,94 @@ export function empty_ledger_problem(
 export type ReleaseStatus = 'released' | 'unreleased' | 'undeterminable';
 export type RemoteReleaseAnswer = 'released' | 'unreleased' | 'unavailable';
 
+/** Where an `assurance_override` may point. Nothing outside it is accepted. */
+export const OWNER_DIRECTIVES_DIR = 'agents/evidence/owner-directives';
+
+/**
+ * A review that never ran is not a review, and a reason string is not one either.
+ *
+ * `empty_ledger_problem` above forced an empty ledger to SAY why it is empty. It
+ * could not ask whether the answer was acceptable, because any non-empty reason
+ * satisfies it — so a ledger declaring `assurance: unreviewed` beside a reason
+ * whose own first words are "NOT REVIEWED" cleared the cut. That is the state
+ * 16.4.0 shipped in: three self-review runs refused by the provider, nothing
+ * reviewed, and a release tagged anyway on the strength of the paragraph saying
+ * so. The paragraph was honest; what was missing was anything that read it.
+ *
+ * Two bounds keep this from reddening work it has no business reddening.
+ *
+ * SCOPED TO AN UNRELEASED VERSION. Backfilled ledgers for versions that already
+ * shipped carry `unreviewed` by design — that is what a backfill IS — and a
+ * version-blind refusal would red history nobody can go back and re-review. An
+ * `undeterminable` status passes for the same reason read from the other side:
+ * a checkout that cannot say whether a version shipped cannot say the ledger is
+ * a backfill either, and refusing there would turn a tagless clone into a
+ * blocked release. The cut itself runs where tags are complete.
+ *
+ * THE OVERRIDE IS A PATH, NOT A SENTENCE. It names a committed file under
+ * {@link OWNER_DIRECTIVES_DIR} whose text names the version — so the escape
+ * hatch leaves an artifact somebody signed, which a free-text field does not.
+ * `readDirective` is injected so both halves of that check are decidable
+ * offline, the way every signal in `releaseStatus` is.
+ */
+export function unreviewed_ledger_problem(
+    ledger: Pick<Ledger, 'findings' | 'assurance' | 'assurance_override'>,
+    release: string,
+    status: ReleaseStatus,
+    readDirective: (relPath: string) => string | null,
+): string | null {
+    if (ledger.findings.length > 0) {
+        return null;
+    }
+    if ((ledger.assurance ?? '').trim() !== 'unreviewed') {
+        return null;
+    }
+    const override = (ledger.assurance_override ?? '').trim();
+    // Checked before the status, and deliberately: an override pointing at
+    // nothing is wrong on a released version too, and a reader who wrote one
+    // is owed the reason rather than a silent pass.
+    if (override !== '') {
+        if (!override.startsWith(`${OWNER_DIRECTIVES_DIR}/`)) {
+            return (
+                `\`assurance_override\` is \`${override}\`, which is not under `
+                + `${OWNER_DIRECTIVES_DIR}/. The override names a committed owner directive, `
+                + 'never a sentence — a sentence is the reason string this field replaces.'
+            );
+        }
+        const text = readDirective(override);
+        if (text === null) {
+            return (
+                `\`assurance_override\` names ${override}, which is not committed. `
+                + 'Commit the directive, or remove the override and get the ledger reviewed.'
+            );
+        }
+        if (!text.includes(release)) {
+            return (
+                `\`assurance_override\` names ${override}, whose text does not mention `
+                + `${release}. A directive permitting some other cut does not permit this one.`
+            );
+        }
+        return null;
+    }
+    if (status !== 'unreleased') {
+        return null;
+    }
+    return (
+        `the ledger declares \`assurance: unreviewed\` with no findings, so nothing reviewed `
+        + `${release} and this cut would ship a release that reviewed itself not at all.\n`
+        + '    Review it. The self-review gate resolves the local subscription CLI before any\n'
+        + '    metered key, so a review is usually one command away and needs no credit:\n'
+        + '        ./scripts-run src/scripts/self_review_gate --findings-out /tmp/findings.json\n'
+        + '    Then ingest what it reported:\n'
+        + '        ./scripts-run src/scripts/check_finding_dispositions --ingest '
+        + `/tmp/findings.json --release ${release}\n`
+        + '    If this cut must go out unreviewed, that is an owner decision and it leaves a\n'
+        + `    file: commit a directive under ${OWNER_DIRECTIVES_DIR}/ whose text names `
+        + `${release},\n`
+        + '    and set `assurance_override` to its path.'
+    );
+}
+
 /**
  * Pure core of the released-vs-unreleased discriminator. Every signal is
  * INJECTED, so both directions AND the degradation are testable offline. A
@@ -799,6 +894,30 @@ function main(argv: readonly string[]): number {
         if (emptyProblem !== null) {
             process.stderr.write(
                 `❌  ${path.relative(REPO_ROOT, ledgerPath)}: ${emptyProblem}\n`,
+            );
+            return 1;
+        }
+        // And an explained empty ledger must say something a reader can accept.
+        // The status is resolved ONLY on the branch that reads it — a ledger
+        // with findings, one that is not `unreviewed`, and one already carrying
+        // an override all skip the tag probe, so the ordinary cut stays exactly
+        // as cheap as it was.
+        const needsStatus =
+            ledger.findings.length === 0
+            && (ledger.assurance ?? '').trim() === 'unreviewed'
+            && (ledger.assurance_override ?? '').trim() === '';
+        const unreviewedProblem = unreviewed_ledger_problem(
+            ledger,
+            release,
+            needsStatus ? resolve_release_status(release) : 'undeterminable',
+            (rel) => {
+                const abs = path.join(REPO_ROOT, rel);
+                return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
+            },
+        );
+        if (unreviewedProblem !== null) {
+            process.stderr.write(
+                `❌  ${path.relative(REPO_ROOT, ledgerPath)}: ${unreviewedProblem}\n`,
             );
             return 1;
         }

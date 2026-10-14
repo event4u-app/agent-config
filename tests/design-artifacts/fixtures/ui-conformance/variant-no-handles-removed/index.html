@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — no handles, the removed element alone</title>
+<link rel="stylesheet" href="styles.css">
+<!-- D10 (single change: the removed element only) — Phase 1.2 of
+     `road-to-a-structure-reading-without-handles`. Byte-identical to
+     `reference-no-handles/` except that the `.badge` span is gone. This is D4 of
+     the original fixture, planted on its own and on a page that carries no
+     handle — which is the whole point: the structure dimension keys on
+     `data-probe-id`, so with no handle anywhere it has nothing to key on and
+     reports nothing. A removed element is the plainest thing a handover can
+     lose, and before this roadmap no reading of this file said so.
+
+     REGISTERED READING: one text leaf fewer at all four widths. The toolbar
+     also drops from two rendered children to one, so it stops being a container
+     the arrangement multiset counts at all — which is the masking limit the
+     fixture README registers: a second defect inside that container would be
+     hidden behind this one. -->
+<main class="card">
+  <header class="toolbar">
+    <h1 class="title">Conformance reference</h1>
+    <!-- D10 — the `.badge` span stood here and is REMOVED, planted alone. -->
+  </header>
+  <p class="body">
+    The reference implementation. Every planted defect in a sibling variant is a
+    deliberate removal from this file or its stylesheet.
+  </p>
+  <button class="action" aria-expanded="false">Toggle details</button>
+  <section class="panel" hidden>Details panel content.</section>
+</main>
+<script src="app.js"></script>

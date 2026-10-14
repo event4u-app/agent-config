@@ -5,6 +5,9 @@ status: later
 
 # Road to corpus knowledge skills — compile a document corpus into on-demand knowledge, and measure whether the compile earned its existence
 
+> **Arrivals:** 1 — latest `inbox-2026-10-q` (2026-10-14): working a 100+-page instruction
+> set step by step with a checklist and context anchors.
+
 > **Blocked until** the maintainer names the first two corpora (Phase 0.2) or
 > archives this plan as demand-not-shown. Parked rather than active because every
 > remaining open item is gated on that one decision — the two items that were

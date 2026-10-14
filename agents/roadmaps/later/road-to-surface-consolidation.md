@@ -255,7 +255,10 @@ locked cluster contract disagree with what is actually on disk.
 and the by-product finding must not be budgeted as if they had not.** Both
 bullets are now false: `/roadmap` has **7** sub-commands on disk and its
 `## Sub-commands` table lists **7**, `materialize` included; `/memory` has **6**
-on disk and its table lists **6**, `learn-low-impact` included. They are left
+on disk and its table lists **6**, `learn-low-impact` included — and that row
+now describes a read-only preview, its `--apply` flag having been retired on
+2026-10-13 by `road-to-one-upstream-that-checks-what-leaves` step 1.3, so the
+sub-command stays on disk and in the table while sending nothing. They are left
 above with this note rather than rewritten, so the finding stays auditable —
 but the post-window sweep this block feeds would otherwise budget for two fixes
 that no longer exist. **Scope of this correction, stated because it bounds

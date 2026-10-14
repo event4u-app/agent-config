@@ -113,6 +113,13 @@ export interface TopicCensus {
     decisionIds: string[];
     fileCount: number;
     anchorTotal: number;
+    /**
+     * Paths under this topic the census did NOT read, relative to the topic
+     * directory. A file the walk skipped is not a file that is not there, and
+     * the closing coverage line cannot be read as complete while this is
+     * non-empty.
+     */
+    uncounted: string[];
 }
 
 /**
@@ -195,13 +202,46 @@ function censusFile(abs: string, rel: string): FileCensus {
     };
 }
 
-/** Group one topic folder's files into source sets and count its anchors. */
-export function censusTopic(dir: string, topic: string): TopicCensus {
-    const names = fs
-        .readdirSync(dir, { withFileTypes: true })
-        .filter((d) => d.isFile() && TEXT_EXT.has(path.extname(d.name).toLowerCase()))
-        .map((d) => d.name)
-        .sort();
+/**
+ * Every path under `dir`, recursively, split into the text files the census
+ * reads and everything else. Both are relative to `dir` and sorted.
+ *
+ * The recursion is the repair. The previous reader took only the files
+ * DIRECTLY in a topic directory, so a nested folder of later-loop plans was
+ * invisible while the closing line still claimed every anchor left with a
+ * ledger row. Measured on the round that found it: twelve files reported
+ * against fourteen present, and zero revision sets against three.
+ */
+function collect(dir: string, recursive: boolean): { text: string[]; other: string[] } {
+    const text: string[] = [];
+    const other: string[] = [];
+    const walk = (abs: string, rel: string): void => {
+        for (const d of fs.readdirSync(abs, { withFileTypes: true })) {
+            const childRel = rel === '' ? d.name : `${rel}/${d.name}`;
+            if (d.isDirectory()) {
+                if (recursive) walk(path.join(abs, d.name), childRel);
+                continue;
+            }
+            if (!d.isFile()) continue;
+            if (TEXT_EXT.has(path.extname(d.name).toLowerCase())) text.push(childRel);
+            else other.push(childRel);
+        }
+    };
+    walk(dir, '');
+    text.sort();
+    other.sort();
+    return { text, other };
+}
+
+/**
+ * Group one topic folder's files into source sets and count its anchors.
+ *
+ * `recursive` is true for a topic, false for the round root — `censusRoot`
+ * treats each immediate subdirectory as its own topic, so a recursive root
+ * pass would count those files twice.
+ */
+export function censusTopic(dir: string, topic: string, recursive = true): TopicCensus {
+    const { text: names, other: uncounted } = collect(dir, recursive);
 
     const byStem = new Map<string, FileCensus[]>();
     const ids = new Set<string>();
@@ -209,7 +249,12 @@ export function censusTopic(dir: string, topic: string): TopicCensus {
         const abs = path.join(dir, name);
         const fc = censusFile(abs, name);
         for (const id of decisionIds(fs.readFileSync(abs, 'utf-8'))) ids.add(id);
-        const stem = stemOf(name);
+        // The stem comes from the BASENAME, so `plan.md` and `v2/plan.md` are
+        // one revision set across directory levels. That is the grouping this
+        // repair is for; it also means two unrelated files that happen to
+        // share a stem at different depths read as one set, which is why each
+        // member is printed with its path relative to the topic.
+        const stem = stemOf(path.basename(name));
         const bucket = byStem.get(stem);
         if (bucket) bucket.push(fc);
         else byStem.set(stem, [fc]);
@@ -228,6 +273,7 @@ export function censusTopic(dir: string, topic: string): TopicCensus {
         sets,
         decisionIds: [...ids].sort(),
         fileCount: names.length,
+        uncounted,
         anchorTotal: sets.reduce(
             (n, s) => n + s.members.reduce((m, f) => m + f.total, 0),
             0,
@@ -238,12 +284,12 @@ export function censusTopic(dir: string, topic: string): TopicCensus {
 /** Walk a round root: each immediate subdirectory is a topic, plus the root itself. */
 export function censusRoot(root: string): TopicCensus[] {
     const out: TopicCensus[] = [];
-    const rootLevel = censusTopic(root, '.');
-    if (rootLevel.fileCount > 0) out.push(rootLevel);
+    const rootLevel = censusTopic(root, '.', false);
+    if (rootLevel.fileCount > 0 || rootLevel.uncounted.length > 0) out.push(rootLevel);
     for (const d of fs.readdirSync(root, { withFileTypes: true })) {
         if (!d.isDirectory()) continue;
         const t = censusTopic(path.join(root, d.name), d.name);
-        if (t.fileCount > 0) out.push(t);
+        if (t.fileCount > 0 || t.uncounted.length > 0) out.push(t);
     }
     return out;
 }
@@ -252,6 +298,7 @@ function render(topics: TopicCensus[], write: (s: string) => unknown): void {
     let files = 0;
     let anchors = 0;
     let revisionSets = 0;
+    let uncounted = 0;
     for (const t of topics) {
         write(`\n## ${t.topic}\n`);
         for (const s of t.sets) {
@@ -268,13 +315,27 @@ function render(topics: TopicCensus[], write: (s: string) => unknown): void {
             if (s.isRevisionSet) revisionSets += 1;
         }
         if (t.decisionIds.length > 0) write(`  decision ids: ${t.decisionIds.join(' ')}\n`);
+        if (t.uncounted.length > 0) {
+            write(`  not counted (${String(t.uncounted.length)}): ${t.uncounted.join(', ')}\n`);
+        }
         files += t.fileCount;
         anchors += t.anchorTotal;
+        uncounted += t.uncounted.length;
     }
     write(
         `\ntopics ${String(topics.length)} · files ${String(files)} · ` +
-            `revision sets ${String(revisionSets)} · anchors ${String(anchors)}\n` +
-            'Every anchor leaves the run carrying a ledger row or named in one `no-demand` line.\n' +
+            `revision sets ${String(revisionSets)} · anchors ${String(anchors)} · ` +
+            `not counted ${String(uncounted)}\n`,
+    );
+    if (uncounted > 0) {
+        write(
+            `${String(uncounted)} file(s) are named above and were NOT read — the census reads ` +
+                `${[...TEXT_EXT].sort().join(' ')} only. The anchor total below is over what was ` +
+                'read, so it is a floor and not a measure of the folder.\n',
+        );
+    }
+    write(
+        'Every anchor leaves the run carrying a ledger row or named in one `no-demand` line.\n' +
             'Every revision set owes a consecutive-member diff (/analyze:inbox Phase 2b).\n',
     );
 }

@@ -105,7 +105,7 @@ directly under `contexts/` (see `contexts/model-recommendations.md`,
 
 A rule's combined count of `load_context:` + `load_context_eager:`
 top-level entries MUST be ≤ **3**. Enforced by
-`scripts/check_always_budget.py` (`MAX_CONTEXTS_PER_RULE`); see
+`src/scripts/check_always_budget.ts` (`MAX_CONTEXTS_PER_RULE`); see
 [`load-context-budget-model.md § Per-rule context-count cap (Q2)`](load-context-budget-model.md#per-rule-context-count-cap-q2--3-contexts-per-rule)
 for the locking contract.
 

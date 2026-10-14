@@ -1,13 +1,19 @@
 // Tests for src/scripts/update_counts.ts (py2ts Phase 5).
 //
-// Two layers:
-//   1. 1:1 port of tests/test_update_counts.py — apply_to_text substitutions /
-//      drift detection, count() against the real tree, the TARGETS regression
-//      guard, and the --check end-to-end on a clean tree.
-//   2. Golden parity on the REAL REPO: python3 --check and tsx --check produce
-//      byte-identical stdout/stderr/exit; tsx update mode leaves README /
-//      getting-started / architecture with ZERO drift (the repo is in-sync).
-//      Skipped when python3 is absent.
+// Scope, stated as what this file holds: apply_to_text substitutions and drift
+// detection, count() against the real tree, the README sub-note figures, the
+// unapplied-pattern contract, and the TARGETS regression guard.
+//
+// A second layer was described in this header and never written — a
+// python3-vs-tsx byte-identity run over stdout/stderr/exit plus a zero-drift
+// update-mode pass. Its section marker sat at the bottom of the file with
+// nothing under it, and the Python source has since been retired, so there is
+// nothing left to be parity with. The header says so rather than implying a
+// guard that is not here; the sibling header in generate_catalog.test.ts
+// carried the same claim and the catalogue drifted by a whole skill under it.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import * as uc from '../../src/scripts/update_counts.js';
@@ -189,6 +195,70 @@ describe('update_counts.apply_to_text — a kind with no count is refused', () =
     });
 });
 
+describe('update_counts — missed-pattern-fails', () => {
+    // A pattern that matches nothing used to warn on stderr and continue, so
+    // --check printed "All counts in sync" about a sentence it could not find.
+    // The figure that pattern owned was then ungenerated and ungated, and the
+    // only signal was a line in a stream nobody reads on a passing run.
+    function withTempTarget(body: string, patterns: Array<[string, string]>, fn: (root: string) => void) {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'uc-'));
+        try {
+            fs.writeFileSync(path.join(root, 'TARGET.md'), body, 'utf-8');
+            fn(root);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    }
+
+    it('--check exits 1 and names the pattern that applied to nothing', () => {
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        withTempTarget('this file mentions no count at all\n', [['(ships )(\\d+)( rules)', 'rules']], (root) => {
+            const code = uc.main(['--check'], {
+                root,
+                targets: [['TARGET.md', [['(ships )(\\d+)( rules)', 'rules']]]],
+            });
+            expect(code).toBe(1);
+            const written = err.mock.calls.map((c) => String(c[0])).join('');
+            expect(written).toContain('TARGET.md');
+            expect(written).toContain('pattern matched nothing');
+            expect(written).toContain('(ships )(\\d+)( rules)');
+            // The misleading half: it must NOT also claim the tree is in sync.
+            expect(out.mock.calls.map((c) => String(c[0])).join('')).not.toContain('All counts in sync');
+        });
+    });
+
+    it('--check exits 1 when a pattern names a kind that has no count', () => {
+        // The same silent-pass shape one branch over: the substitution is
+        // refused to avoid writing `undefined`, and the refusal then passed.
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        withTempTarget('ships 7 widgets\n', [], (root) => {
+            const code = uc.main(['--check'], {
+                root,
+                targets: [['TARGET.md', [['(ships )(\\d+)( widgets)', 'no_such_kind']]]],
+            });
+            expect(code).toBe(1);
+            expect(err.mock.calls.map((c) => String(c[0])).join('')).toContain('no count for this kind');
+        });
+    });
+
+    it('--check still passes when every pattern applies', () => {
+        // The negative control: without it the two tests above would pass on a
+        // main() that returned 1 unconditionally.
+        vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        withTempTarget(`ships ${uc.count('rules')} rules\n`, [], (root) => {
+            const code = uc.main(['--check'], {
+                root,
+                targets: [['TARGET.md', [['(ships )(\\d+)( rules)', 'rules']]]],
+            });
+            expect(code).toBe(0);
+            expect(out.mock.calls.map((c) => String(c[0])).join('')).toContain('All counts in sync');
+        });
+    });
+});
+
 describe('update_counts.TARGETS — regression guard', () => {
     it('stronger-skills baseline is not tracked', () => {
         const paths = uc.TARGETS.map(([rel]) => rel);
@@ -197,5 +267,4 @@ describe('update_counts.TARGETS — regression guard', () => {
     });
 });
 
-// --- Layer 2: golden parity on the REAL REPO -------------------------------
 

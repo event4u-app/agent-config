@@ -87,11 +87,11 @@ spacing, and it stays in shadow.
 
 ## Phase 1 — The expectation, registered before the code
 
-- [ ] **1.1 Today's answer is pinned.** A test asserts that a no-handles
+- [x] **1.1 Today's answer is pinned.** A test asserts that a no-handles
       reference yields only `not_applicable` rows and no structural reading at
       all — the control every later step flips or keeps.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t no-handles-control --reporter=verbose` -> /✓.*no-handles-control/
-- [ ] **1.2 The table is pre-registered.** The table above and the fixture
+- [x] **1.2 The table is pre-registered.** The table above and the fixture
       rows are added to the conformance fixture's README as the expectation,
       with the two limits and the two refuted prototypes and what refuted
       them. Three single-change variants — declared deviation only, missing
@@ -101,13 +101,13 @@ spacing, and it stays in shadow.
 
 ## Phase 2 — The capture records a signature
 
-- [ ] **2.1 A sweep that does not need a handle.** The capture resizes the
+- [x] **2.1 A sweep that does not need a handle.** The capture resizes the
       page to each of the four widths once, outside the per-handle loop, and
       records leaves by kind, the arrangement multiset and the overflow flag.
       It stores no coordinate and no size. An element with `display: none`,
       `visibility: hidden` or a zero box is not rendered.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t signature-captured-at-four-widths --reporter=verbose` -> /✓.*signature-captured-at-four-widths/
-- [ ] **2.2 An observation without a signature says so.** The committed
+- [x] **2.2 An observation without a signature says so.** The committed
       observation files are re-captured with the signature. A file that lacks
       it yields `not_available` for the reading, never "no change". Positive
       control: one fixture observation with the field deleted.
@@ -115,7 +115,7 @@ spacing, and it stays in shadow.
 
 ## Phase 3 — A field beside the five rows
 
-- [ ] **3.1 `page_signature` on the artefact, only without handles.** When the
+- [x] **3.1 `page_signature` on the artefact, only without handles.** When the
       reference collected no handles, the artefact carries a top-level
       `page_signature` with, per width, the changed leaf kinds, the changed
       arrangement keys and the overflow pair. The five dimension rows, the
@@ -123,25 +123,25 @@ spacing, and it stays in shadow.
       test passes untouched. With handles in the reference the field is
       absent.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t page-signature-field --reporter=verbose` -> /✓.*page-signature-field/
-- [ ] **3.2 Both controls and every registered row hold.** A test asserts each
+- [x] **3.2 Both controls and every registered row hold.** A test asserts each
       row of the pre-registered table, including the four that must be empty:
       the faithful port, the declared deviation, the renamed handle and the
       reference with handles.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t page-signature-table --reporter=verbose` -> /✓.*page-signature-table/
-- [ ] **3.3 The field states its scope.** It carries one fixed sentence: the
+- [x] **3.3 The field states its scope.** It carries one fixed sentence: the
       reading names kinds of leaf and of container, not nodes; it cannot be
       matched to a declared deviation and is not a finding.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t page-signature-scope-sentence --reporter=verbose` -> /✓.*page-signature-scope-sentence/
 
 ## Phase 4 — The shadow reader prints one more line
 
-- [ ] **4.1 One line, after the existing ones.** When `page_signature` is
+- [x] **4.1 One line, after the existing ones.** When `page_signature` is
       present the design-pass hook prints it on its own line — the count of
       changed classes per width and the overflow pair — below the lines it
       prints today. The headline and the verdict are byte-identical to
       today's for the same artefact without the field.
       verify: `npx vitest run tests/hooks/design_pass.test.ts -t page-signature-line --reporter=verbose` -> /✓.*page-signature-line/
-- [ ] **4.2 The probe's header describes the run that exists.** The sentence
+- [x] **4.2 The probe's header describes the run that exists.** The sentence
       that every real run "lands in the not-applicable branch" is followed by
       what such a run now reports and what it still cannot.
       verify: `npx vitest run tests/scripts/ui_conformance_probe.test.ts -t header-names-page-signature --reporter=verbose` -> /✓.*header-names-page-signature/
@@ -157,14 +157,14 @@ spacing, and it stays in shadow.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Without handles, the probe reports the removed element at all four
+- [x] AC-1 — Without handles, the probe reports the removed element at all four
       widths and the missing narrow-width rule at 375 and 320 only, each on
       its single-change variant.
-- [ ] AC-2 — It reports nothing for the faithful port, the declared deviation
+- [x] AC-2 — It reports nothing for the faithful port, the declared deviation
       and the renamed handle.
-- [ ] AC-3 — On the regenerated port it reports the lost controls and the
+- [x] AC-3 — On the regenerated port it reports the lost controls and the
       overflow at 375.
-- [ ] AC-4 — The artefact carries no aggregate for the reading, and the
+- [x] AC-4 — The artefact carries no aggregate for the reading, and the
       zero-nodes invariant test is unmodified and green.
 
 ## Decisions
@@ -176,6 +176,7 @@ spacing, and it stays in shadow.
 | D3 | reversible-technical | evidence | A top-level field, not a dimension row | The zero-nodes invariant test asserts every row not-applicable | The five dimensions gain a handle-free mode of their own |
 | D4 | reversible-technical | agent | Shadow only | Two fixtures are the whole evidence base, and a reading with no node scope cannot honour a declared deviation | The field has run on real handovers and its false-positive count is recorded |
 | D5 | reversible-technical | agent | Ready now, ranked after the three consumer-facing roadmaps of the same round | The round recommended taking it up with the next design-fidelity work; its scope is small and fully pre-registered | — |
+| D7 | reversible-technical | evidence | A control, a heading and a media element are one leaf each and are never descended into | The literal leaf reading makes `<button>Save</button>` a control and `<button><span>Save</span></button>` a text leaf in a container, so a span around a label — the commonest thing a faithful port does — reads as a lost control, which is the class D2 was decided against. Measured consequence: six of seven registered rows reproduce exactly and the seventh disagrees on one label only (`heading 5 to 4` where the table registered `text 6 to 5`), traceable to `<h1 class="wordmark">Led<em>ger</em></h1>` | A fixture lands that unwraps inline markup inside a heading or a control — the present one does not discriminate, since the faithful port keeps that markup verbatim — or a real handover produces a leaf-kind change only one of the two readings sees |
 | D6 | deterministic | agent | Closure pass 2026-10-11: nine `unfalsifiable-verify` listings are `-t` titles the steps add to `ui_conformance_probe.test.ts` and `design_pass.test.ts`; each verify asserts a passing test of that title | `closure_scan` on this file: 9 listings, 0 owner questions | A step lands without the named test title |
 
 ## Risk Register

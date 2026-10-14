@@ -94,7 +94,7 @@ corpus. Canon is a gap-filler, never an override of a registered brand value.
    product → style → color → landing → typography with decision rules):
 
    ```bash
-   ./scripts-run <skills-root>/corpus-grounding/scripts/ground ground \
+   node <skills-root>/corpus-grounding/scripts/ground.mjs ground \
      --manifest <skills-root>/design-intelligence/data/manifest.json \
      "<product type + mood + platform>" --json
    ```

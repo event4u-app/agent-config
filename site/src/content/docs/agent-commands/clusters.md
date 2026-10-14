@@ -1,10 +1,10 @@
 ---
 title: Command Clusters
-description: The agent-command clusters at a glance — counts and purpose. See the catalog for the full 190.
+description: The agent-command clusters at a glance — counts and purpose. See the catalog for the full list.
 ---
 
 Commands are organised into clusters (subcommand counts shown). This is an
-overview — the [full catalog](/agent-config/catalog/) lists all 190.
+overview — the [full catalog](/agent-config/catalog/) lists all 205.
 
 | Cluster | Subcmds | Purpose |
 |---|---|---|

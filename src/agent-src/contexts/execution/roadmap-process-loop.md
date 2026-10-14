@@ -386,14 +386,21 @@ fails a user-decision annotation carrying no `asked:` field, and one saying
 `asked: no` with no reason.
 
 **A step this screen judges externally impossible carries a `blocked-by:` marker
-on its own line.** The obligation is unchanged and its reason is unchanged: two
-mechanisms read blockedness from two different places and only one reads this
-section — `run-continuation`, the stop-slot concern that re-engages an autonomous
-run, decides open-vs-blocked from the inline
-`<!-- blocked-by: <id> [| asked: yes|no — <reason>] -->` marker and never parses
-`## Blockers`. Without the marker a step that IS impossible
-still counts as open work to the concern, which re-engages the agent into it
-every stop fire until the stall rung fires — the mechanism whose job is to detect
+on its own line.** The obligation is unchanged; its reason has CHANGED, and the
+change is recorded rather than smoothed over. It used to be a runtime one:
+`run-continuation`, the stop-slot concern that re-engaged an autonomous run,
+decided open-vs-blocked from the inline
+`<!-- blocked-by: <id> [| asked: yes|no — <reason>] -->` marker and never parsed
+`## Blockers`, so a missing marker made an impossible step read as open work and
+re-engaged the agent into it every stop fire until the stall rung fired. That
+concern was withdrawn on its own pre-registered kill date
+(`road-to-what-was-built-and-never-ran` Phase 4), so **no mechanism now changes
+its behavior on this marker.** What survives is `lint_roadmap_blockers`, which
+validates every marker — its id must resolve to a declared blocker, and an
+`asked: no` must carry a reason — and the reader of the roadmap, for whom an
+impossible step that looks open is the same lie it always was. The paragraph
+below describes what the withdrawn mechanism did, kept because a successor would
+inherit the same problem:
 a stall manufacturing one. **The residual is real and is not papered over:**
 nothing enforces the pairing, so a `## Blockers` entry authored without its
 marker is caught by review or not at all.
@@ -951,7 +958,8 @@ A COUNT IS NEVER A QUESTION — A BOUNDED LOOP'S BOUND TRIGGERS A STRATEGY CHANG
 AND THE ESCALATION LADDER, NEVER AN OWNER QUESTION (ADR-268 § 7).
 ```
 
-`blocked-by:` stays — it is how `run-continuation` reads blockedness — but a
+`blocked-by:` stays — it is how the withdrawn `run-continuation` read
+blockedness, and what `lint_roadmap_blockers` still validates — but a
 blocker entry is the record of a decision the agent **correctly did not own**;
 what it may point at narrows accordingly
 ([`decision-closure-execution`](decision-closure-execution.md)).

@@ -1,0 +1,78 @@
+{
+  "skill": "react-shadcn-ui",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which moved this skill's bundled shadcn installer to `node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs` and rewrote its grounded-guidance line, so it entered check_routing_coverage's touched-skill scope. Exemplars cover the three lanes its own When-to-use names — adding a primitive through the gated installer, restyling the generated components against the tokens, and the polish pass after a design review — reached both by naming shadcn and by the detection signals the skill itself lists (components.json, a components/ui folder). Near-misses are three neighbours that share component vocabulary and are somebody else's job: the same dialog on the Livewire stack (flux), the Tailwind token scale underneath (tailwind-engineer), and the inventory pass this skill requires but does not perform (existing-ui-audit). Counterexamples guard the assumption that every task in a React repo is a component task, and the letters UI with no code surface.",
+  "queries": [
+    {
+      "id": "rsu-e1",
+      "q": "add the shadcn Dialog and wire it into the settings page",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rsu-e2",
+      "q": "components/ui already has Button — restyle its variants to match our tokens",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rsu-e3",
+      "q": "build the data table on shadcn primitives with Tailwind classes",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rsu-e4",
+      "q": "this React project has a components.json — add the form primitives the signup flow needs",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rsu-e5",
+      "q": "the design review flagged the card spacing and the button variants — polish them",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "rsu-e6",
+      "q": "füg den shadcn-Dialog hinzu und häng ihn in die Einstellungsseite",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "rsu-n1",
+      "q": "use the Flux modal for the confirm step",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "same element, Livewire stack → flux"
+    },
+    {
+      "id": "rsu-n2",
+      "q": "our Tailwind spacing scale is inconsistent — fix the config and the tokens",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the layer underneath → tailwind-engineer / design-tokens"
+    },
+    {
+      "id": "rsu-n3",
+      "q": "before we add anything, inventory which components already exist",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the mandatory pre-step this skill requires and does not own → existing-ui-audit"
+    },
+    {
+      "id": "rsu-c1",
+      "q": "configure the CDN cache headers for the production build output",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "same React repo, no component surface — guards the stack-wide over-trigger"
+    },
+    {
+      "id": "rsu-c2",
+      "q": "draft the agenda for the UI team's retro on Thursday",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

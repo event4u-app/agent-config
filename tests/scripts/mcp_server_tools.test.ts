@@ -24,6 +24,8 @@ import {
     boot_log_line,
     to_mcp_tool_meta,
 } from '../../src/scripts/mcp_server/tools.js';
+import { suggestSkillForTask } from '../../src/scripts/mcp_server/suggest_skill.js';
+import { DEFAULT_SUGGEST_LIMIT } from '../../src/shared/skillRanking.js';
 
 const tmpDirs: string[] = [];
 afterEach(() => {
@@ -997,3 +999,78 @@ function sortKeys(v: unknown): unknown {
     }
     return v;
 }
+
+// The kernel server's search ANSWER. The lite dispatcher pins the same envelope
+// in `src/cli/mcp/dispatch.test.ts`; both are pinned because the two servers are
+// two implementations of one contract, and a consumer that learned the shape on
+// one must not have to relearn it on the other.
+describe('suggest_skill_for_task — the row a model chooses from', () => {
+    function catalogue(): string {
+        const root = tmp();
+        const write = (name: string, description: string, body: string): void => {
+            const dir = path.join(root, 'src', 'skills', name);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(
+                path.join(dir, 'SKILL.md'),
+                `---\nname: ${name}\ndescription: ${description}\n---\n\n${body}\n`,
+            );
+        };
+        write(
+            'merge-conflicts',
+            'Resolve merge conflicts; use git-workflow for rebase strategy.',
+            '# body nobody should have to read to choose',
+        );
+        write('git-workflow', 'Branching, rebase and merge strategy.', '# another body');
+        return root;
+    }
+
+    it('carries each row\'s own description, and no body', async () => {
+        const root = catalogue();
+        const out = await suggestSkillForTask({ task: 'resolve merge conflicts' }, root);
+        expect(out.status).toBe('ok');
+        const rows = out.suggestions as Record<string, unknown>[];
+        expect(rows.length).toBeGreaterThan(0);
+        // Looked up by NAME rather than read off row 0: the resolver also reads
+        // the user's own HOME catalogue, so a machine that has one would rank
+        // rows this fixture never wrote. The fixture's own row is the part that
+        // is a property of the code under test.
+        expect(rows.find((r) => r.skill === 'merge-conflicts')).toMatchObject({
+            skill: 'merge-conflicts',
+            description: 'Resolve merge conflicts; use git-workflow for rebase strategy.',
+        });
+        for (const row of rows) {
+            expect(Object.keys(row).sort()).toEqual(['description', 'personas', 'score', 'skill']);
+            expect(String(row.description)).not.toContain('body nobody should have to read');
+        }
+    });
+
+    it('a row\'s description is ITS own, never the top row\'s', async () => {
+        const root = catalogue();
+        const out = await suggestSkillForTask({ task: 'merge conflicts rebase strategy' }, root);
+        const rows = out.suggestions as { skill: string; description: string }[];
+        const byName = new Map(rows.map((r) => [r.skill, r.description]));
+        expect(byName.get('git-workflow')).toBe('Branching, rebase and merge strategy.');
+    });
+
+    it('the published default and the handler fallback are ONE number', async () => {
+        const schema = ALLOWLIST['suggest_skill_for_task']!.input_schema as {
+            properties: { limit: { default: number } };
+        };
+        expect(schema.properties.limit.default).toBe(DEFAULT_SUGGEST_LIMIT);
+        expect(DEFAULT_SUGGEST_LIMIT).toBe(8);
+        // Two numbers for one default is how a caller that omits the field gets
+        // a depth the tool never advertised.
+        const root = catalogue();
+        const out = await suggestSkillForTask({ task: 'merge conflicts' }, root);
+        expect((out.suggestions as unknown[]).length).toBeLessThanOrEqual(DEFAULT_SUGGEST_LIMIT);
+        expect((out.suggestions as unknown[]).length).toBeGreaterThan(0);
+        const one = await suggestSkillForTask({ task: 'merge conflicts', limit: 1 }, root);
+        expect((one.suggestions as unknown[]).length).toBe(1);
+    });
+
+    it('the tool definition tells the caller to read the rows and open at most two', () => {
+        const desc = ALLOWLIST['suggest_skill_for_task']!.description;
+        expect(desc).toMatch(/reading the rows/i);
+        expect(desc).toMatch(/at most two bodies/i);
+    });
+});

@@ -14,8 +14,8 @@ packs:
 
 > **Grounded corpus:** tuning decisions (indexes, keyset pagination,
 > N+1, trigram search, lock contention) ground via the
-> [`database`](../database/SKILL.md) corpus — `./scripts-run
-> <skills-root>/corpus-grounding/scripts/ground search
+> [`database`](../database/SKILL.md) corpus — `node
+> <skills-root>/corpus-grounding/scripts/ground.mjs search
 > --manifest <skills-root>/database/data/manifest.json "<symptom>"`.
 
 ## When to use

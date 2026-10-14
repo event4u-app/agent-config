@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — no handles, the declared deviation alone</title>
+<link rel="stylesheet" href="styles.css">
+<!-- D8 (single change: the declared deviation only) — Phase 1.2 of
+     `road-to-a-structure-reading-without-handles`. Markup byte-identical to
+     `reference-no-handles/index.html`; the only difference in the directory is
+     `.body { line-height }` at 28px rather than 24px — the same deviation
+     `variant-defects/` declares, planted on its own and on a page that carries
+     no handle.
+
+     REGISTERED READING: the page signature is unchanged at all four widths.
+     Nothing is added, nothing is removed and no container changes how it lays
+     its children out, so a reading that reports anything here has fired on a
+     change of SIZE — which is exactly what this reading is built not to see.
+     The three variants beside this one exist so that silence is a measurement
+     rather than an absence of input. -->
+<main class="card">
+  <header class="toolbar">
+    <h1 class="title">Conformance reference</h1>
+    <span class="badge">ready</span>
+  </header>
+  <p class="body">
+    The reference implementation. Every planted defect in a sibling variant is a
+    deliberate removal from this file or its stylesheet.
+  </p>
+  <button class="action" aria-expanded="false">Toggle details</button>
+  <section class="panel" hidden>Details panel content.</section>
+</main>
+<script src="app.js"></script>

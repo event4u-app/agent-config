@@ -38,7 +38,8 @@
  * Anything containing a space is a command: `cat file.md` still has to answer.
  *
  * The carve-out lives HERE and not in the parser. Widening `verify_clause.ts`
- * would change what `closure_scan` and the run-continuation hook see, and both
+ * would change what `closure_scan` sees (and what the withdrawn run-continuation
+ * hook saw), and both
  * were measured on the current grammar.
  *
  * THE ARROW IS NOT PARSED HERE AT ALL. This gate asks `parseVerifyClause`

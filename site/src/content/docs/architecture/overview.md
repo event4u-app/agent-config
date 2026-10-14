@@ -12,10 +12,10 @@ read.
 
 | Artifact | Count | Role |
 |---|---|---|
-| **Skills** | 278 | Intent-matched capabilities and executable procedures |
-| **Rules** | 105 | Always-active behaviour constraints, auto-loaded per conversation |
-| **Commands** | 190 | Slash-command orchestrators that compose skills + gates |
-| **Guidelines** | 101 | Reference conventions, read on demand |
+| **Skills** | 300 | Intent-matched capabilities and executable procedures |
+| **Rules** | 122 | Always-active behaviour constraints, auto-loaded per conversation |
+| **Commands** | 205 | Slash-command orchestrators that compose skills + gates |
+| **Guidelines** | 121 | Reference conventions, read on demand |
 | **Personas** | 29 (+5 advisors) | Review lenses dispatched during code/design review |
 
 Skills carry YAML frontmatter and follow the Agent Skills open standard. Rules

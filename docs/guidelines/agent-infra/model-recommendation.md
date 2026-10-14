@@ -12,13 +12,19 @@ double-ask, never front-load the question.
 
 ## Source of truth — the capability tier
 
-Each skill/command declares `model_tier: lite | medium | high | inherit`
-(ADR-035) — a band, not a model. `inherit` = "no opinion, keep the session
-model". The task→tier heuristics live in
+Each skill/command declares `model_tier: lite | medium | high | frontier |
+inherit` (ADR-035) — a band, not a model. `inherit` = "no opinion, keep the
+session model". The task→tier heuristics live in
 `contexts/model-recommendations.md` — cite them, don't restate. The **only**
 tier→model mapping the package maintains is the Claude generator's
-(`high→opus`, `medium→sonnet`, `lite→haiku`); every other agent resolves the
-band to its own line-up.
+(`frontier→fable`, `high→opus`, `medium→sonnet`, `lite→haiku`); every other
+agent resolves the band to its own line-up.
+
+`frontier` is named in both halves of that sentence because
+`TIER_TO_CLAUDE_MODEL` in `src/scripts/_lib/model_tier.ts` has mapped it since
+the fourth family landed. While this page listed three bands, a skill author
+reading the declarable set here could not declare a band the resolver already
+answered — the page was the narrower of the two, and it was the one being read.
 
 ## Surface-aware behaviour
 

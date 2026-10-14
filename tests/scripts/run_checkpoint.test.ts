@@ -439,7 +439,8 @@ describe('buildCheckpoint — head is resolved, not left null', () => {
         // roadmap it cannot find, so the assertion failed on a missing file
         // while claiming to be about HEAD resolution. Any completed roadmap
         // invalidates a hardcoded slug, and completing roadmaps is the normal
-        // case. Same defect the sibling in run_continuation.test.ts carried.
+        // case. Same defect the sibling in the withdrawn run_continuation.test.ts
+        // carried, before that suite went with its concern.
         const roadmapDir = path.join(REPO_ROOT, 'agents', 'roadmaps');
         const slug = fs
             .readdirSync(roadmapDir)

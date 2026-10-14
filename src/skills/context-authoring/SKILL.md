@@ -131,7 +131,7 @@ has to confirm or correct, not invent from scratch.
    section either authored or explicitly marked `<!-- TBD: ... -->`.
 2. A short summary comment back to the user: which sections are complete,
    which are `TBD`, and which downstream reviewer skills are now unblocked.
-3. Optional: a proposal stub in `agents/learnings/` for any template gap
+3. Optional: a proposal stub in `agents/proposals/` for any template gap
    the user hit (missing section, ambiguous field) — feeds the curated
    self-improvement pipeline via `learning-to-rule-or-skill`.
 

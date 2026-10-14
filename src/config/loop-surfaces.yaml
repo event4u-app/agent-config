@@ -30,25 +30,6 @@
 # DEFINED symbol, a `.md` target must be a token the file actually carries.
 # ---------------------------------------------------------------------------
 surfaces:
-  run_continuation_hook:
-    kind: code
-    bound_kind: code
-    cap: src/scripts/_lib/continuation_ladder.ts:MAX_ITERATIONS
-    no_progress: src/scripts/_lib/loop_guards.ts:stallSignal
-    success_stop: >-
-      continuation_ladder.ts:ladder returns 'complete' when openCount === 0 and
-      blockedCount === 0; run_continuation_hook.ts:main clears the run state.
-    checker: >-
-      run_continuation_hook.ts:scanOpenSteps re-scans the claimed roadmap every
-      fire. It never EXECUTES a step's verify line — it only prints it.
-    human_gate: >-
-      none. The nearest thing is printed prose in _continuationText; the
-      refusedThisTurn check defers to a quality gate, not to a person.
-    terminal_vocabulary: src/scripts/_lib/continuation_ladder.ts:TERMINAL_STATE_BY_ACTION
-    production_consumers:
-      - src/scripts/hooks/concern_registry.ts
-      - src/scripts/hook_manifest.yaml
-
   self_fix:
     kind: code
     bound_kind: code
@@ -153,19 +134,22 @@ instruments:
   rejectedTacticRepeat:
     file: src/scripts/_lib/loop_guards.ts
     role: >-
-      Identity-keyed repeat suppression for run_continuation_hook. Catches what
-      the numeric stall detector cannot see: the same rejected tactic retried
-      while the surrounding prose changes every time.
+      Identity-keyed repeat suppression, built for the withdrawn
+      run_continuation_hook. Catches what a numeric stall detector cannot see:
+      the same rejected tactic retried while the surrounding prose changes every
+      time.
     status: experimental
     expires: '2026-12-12'
     note: >-
-      Deliberately not wired. Its only consumer would be the continuation hook,
-      and giving that hook a new refusal rung before it has demonstrably engaged
-      more than once reverses the order the evidence supports (roadmap Risk 2).
-      The observation it is waiting on is parked in
-      agents/roadmaps/later/road-to-run-continuation-observation.md. The expiry
-      is the date that question comes back, not a date this decision is
-      considered settled.
+      Deliberately not wired, and its prospective consumer is now GONE. It was
+      the continuation hook, withdrawn on its own pre-registered kill date by
+      road-to-what-was-built-and-never-ran Phase 4 — so the original reason for
+      not wiring it (do not give that hook a new refusal rung before it has
+      demonstrably engaged more than once) has been overtaken rather than
+      satisfied. The expiry stands unchanged at the date the question comes
+      back; what comes back with it is now whether this instrument has any
+      consumer at all, which no roadmap owns and which this entry does not
+      decide.
 
   compareTriggers:
     file: src/scripts/_lib/capsule_trigger.ts

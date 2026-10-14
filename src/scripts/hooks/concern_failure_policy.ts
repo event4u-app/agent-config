@@ -95,12 +95,12 @@ export function _is_blocking(concern: JsonObject): boolean {
  * it is honoured, however slow it was.
  *
  * THE ONE-RETRY ESCAPE, AND WHY THE STOP SLOT NEEDS IT.
- * `turn-end-gate` and `run-continuation` are `severity: blocking` on `stop`,
- * and `tests/hooks/concern_severity.test.ts` records the hazard in as many
- * words: a turn-end gate that fails closed "does not degrade, it wedges the
- * session". Neither carries `skip_on_refusal_retry`, so without this clause a
- * DETERMINISTIC crash in either would refuse every Stop, indefinitely, with no
- * escape the user can reach.
+ * `turn-end-gate` is `severity: blocking` on `stop` (`run-continuation` was too,
+ * until it was withdrawn), and `tests/hooks/concern_severity.test.ts` records
+ * the hazard in as many words: a turn-end gate that fails closed "does not
+ * degrade, it wedges the session". It carries no `skip_on_refusal_retry`, so
+ * without this clause a DETERMINISTIC crash in it would refuse every Stop,
+ * indefinitely, with no escape the user can reach.
  *
  * So the promotion is spent ONCE. On the retry the host itself marks
  * (`stop_hook_active`, read by `_is_refusal_retry`) a crash falls back to

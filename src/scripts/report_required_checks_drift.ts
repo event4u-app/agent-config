@@ -11,9 +11,11 @@
  * `ENFORCED_CHECKS`.
  *
  * READ-ONLY. It writes nothing and changes nothing on the ruleset. It is run by
- * hand or on a schedule and is NOT wired as a required check — a network read
- * cannot sit on the path of every pull request, and the token it needs is a
- * repository-read token, not something each PR should depend on.
+ * hand and is NOT wired as a required check — a network read cannot sit on the
+ * path of every pull request, and the token it needs is a repository-read
+ * token, not something each PR should depend on. No workflow schedules it, and
+ * adding one is a separate decision rather than a gap this sentence may paper
+ * over by describing a cadence the tree does not have.
  *
  * Usage:
  *   ./scripts-run src/scripts/report_required_checks_drift

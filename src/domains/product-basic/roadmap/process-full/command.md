@@ -368,11 +368,15 @@ THE OTHER, AND ONLY TWO POSITIONS END A RUN: `merged` AND `open-green`.
 ladder → pushed | green) → target-sync-check → (moved → sync → tests → pushed |
 current) → delivery-ready → (grant → merged | no grant → open-green)`.
 
-`run_continuation_hook` reads the position the run RECORDED — it does not probe
+`run_continuation_hook` read the position the run RECORDED — it did not probe
 the forge, because a `gh` call on the stop path is the cost the premise rung
-already declined — and any position that is not an ending keeps the run engaged
-at zero open steps. Two bounds survive that hold, and one is deliberately lifted:
-the iteration and wall-clock caps still end it, while the **stall** rung is
+already declined — and any position that was not an ending kept the run engaged
+at zero open steps. **That concern was withdrawn on its own pre-registered kill
+date (`road-to-what-was-built-and-never-ran` Phase 4), so nothing re-engages a
+run automatically any more; the ladder below is the shape a successor inherits,
+not a mechanism running today.** Two bounds survived that held, and one was
+deliberately lifted: the iteration and wall-clock caps still ended it, while the
+**stall** rung was
 skipped, because during delivery the open-step count it measures cannot move and
 a metric that cannot move is not a stall signal. A run that recorded no position
 decides exactly as it did before.

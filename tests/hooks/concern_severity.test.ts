@@ -179,7 +179,6 @@ const BLOCKING_ALLOWLIST = new Set([
     // and this one is registered last, so a quality-gate refusal for this turn
     // is on disk before this concern reads it. Quality gates outrank
     // continuation, always.
-    'run-continuation',
 ]);
 
 interface Concern {

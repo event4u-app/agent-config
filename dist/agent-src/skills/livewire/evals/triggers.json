@@ -1,0 +1,78 @@
+{
+  "skill": "livewire",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which rewrote this skill's grounded stack-guidance invocation to the bundled `node <skills-root>/…/ground.mjs` form and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the four things its own description names — reactive state, events, lifecycle hooks, and the component/view separation — reached both by naming Livewire and by the symptom phrasing a user actually types, which is that something should change without a page reload. Near-misses are the two boundaries the skill draws for itself (a static Blade view → blade-ui, a Flux primitive → flux) plus the broadcasting infrastructure that shares its real-time vocabulary and is not a component at all. Counterexamples guard the assumption that every task in a Livewire project is a Livewire task, and the word wire as a protocol encoding.",
+  "queries": [
+    {
+      "id": "lw-e1",
+      "q": "build a Livewire component for the searchable user table with pagination",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lw-e2",
+      "q": "the list should update when the filter changes, without reloading the page",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lw-e3",
+      "q": "the query is sitting in the view — where does it belong, and which lifecycle hook loads it?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lw-e4",
+      "q": "this component re-renders on every keystroke — fix the wire:model binding",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lw-e5",
+      "q": "the notifications panel should react to an event dispatched from the other component",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lw-e6",
+      "q": "bau eine Livewire-Komponente für die durchsuchbare Nutzertabelle mit Pagination",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "lw-n1",
+      "q": "this page is static — a layout and two partials, nothing interactive",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "no reactivity → blade-ui"
+    },
+    {
+      "id": "lw-n2",
+      "q": "use the Flux modal primitive inside this view",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a Flux primitive → flux, which this skill composes"
+    },
+    {
+      "id": "lw-n3",
+      "q": "set up the Reverb server and the broadcasting config for real-time updates",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "shares real-time, asks for infrastructure → laravel-reverb"
+    },
+    {
+      "id": "lw-c1",
+      "q": "write the Eloquent scope that filters active subscriptions",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "same Laravel project, no UI surface — guards the stack-wide over-trigger"
+    },
+    {
+      "id": "lw-c2",
+      "q": "which wire format does the partner push us — protobuf or JSON?",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

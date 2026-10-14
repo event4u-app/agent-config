@@ -52,7 +52,9 @@ import { fileURLToPath } from 'node:url';
 
 import { wilsonInterval } from './_lib/capture_rate.js';
 import { fnv1a } from './_lib/fnv.js';
+import { corpusSkills, loadTrainCases } from './_lib/routing_corpus.js';
 import { rank } from './skill_tools/score_skill_relevance.js';
+import type { RankRow } from './skill_tools/score_skill_relevance.js';
 import type { RankOptions } from '../shared/skillRanking.js';
 
 export const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -535,6 +537,190 @@ export function rankOptionsFor(ranker: string): RankOptions {
     return RANKER_LABELS[ranker] as RankOptions;
 }
 
+/**
+ * The second corpus this script can read, and the only one it reads by SKILL
+ * rather than by hand-written label.
+ *
+ * It is deliberately NOT a fourth `CorpusName`. The three names above all feed
+ * `measureAccuracy`, which answers "is the owning skill in the top 1 or top 3"
+ * over prompts somebody labelled with an expected-skills list. The trigger
+ * corpus answers a different question — "how deep must the answer be returned
+ * before the owning skill is in it" — over cases whose ground truth is the
+ * directory the corpus file sits in. Folding it into `CorpusName` would have
+ * put a case into `promptsForCorpus`, `DENOMINATOR_NOTES` and the pack census
+ * that none of them can answer, so the argument is a union of two kinds and
+ * `main` branches on it once.
+ */
+export const TRIGGERS_TRAIN = 'triggers-train';
+export type CorpusArg = CorpusName | typeof TRIGGERS_TRAIN;
+
+/**
+ * The depths printed. 1 and 3 so the arm is comparable with the accuracy arm,
+ * 5 because that is the shipped default `limit` (`src/cli/mcp/dispatch.ts`),
+ * and 8, 10, 20 because the question this arm exists to answer is how much
+ * recall a deeper default would buy.
+ */
+export const RECALL_DEPTHS: readonly number[] = [1, 3, 5, 8, 10, 20];
+
+/** The key a depth is printed under. `recall@8` is quoted by the roadmap's verify line. */
+export function recallKey(depth: number): string {
+    return `recall@${depth}`;
+}
+
+export interface RecallPoint {
+    hits: number;
+    rate: number;
+    ci95: Interval;
+}
+
+export interface RecallSplit {
+    /** The denominator: positive cases in this split. */
+    positives: number;
+    /**
+     * Positives whose owning skill scores nothing at all.
+     *
+     * `rank()` drops every row that scores 0, so "absent from the ranked rows"
+     * and "shares no indexed term and no persona with the prompt" are the same
+     * state. These are the cases no DEPTH can reach — counted separately so a
+     * reader never reads the gap between `recall@20` and 1.0 as a ranking
+     * problem when part of it is a vocabulary problem.
+     */
+    zero_overlap: number;
+    recall: Record<string, RecallPoint>;
+}
+
+export interface NearMissArm {
+    cases: number;
+    first: number;
+    top3: number;
+    note: string;
+}
+
+export interface RecallReport {
+    schema: 1;
+    arm: 'recall-at-depth';
+    corpus: typeof TRIGGERS_TRAIN;
+    ranker: string;
+    commit: string;
+    skills_dir: string;
+    skills_indexed: number;
+    /** Train corpora read. The holdout ones are never opened — see `seal_note`. */
+    train_corpora: number;
+    cases_total: number;
+    positives: number;
+    negatives: number;
+    all: RecallSplit;
+    de: RecallSplit;
+    near_miss: NearMissArm;
+    seal_note: string;
+    denominator_note: string;
+}
+
+/**
+ * Where the owning skill sits in the ranked rows, 1-based, or `null` when it
+ * is not there at all.
+ *
+ * Computed ONCE per case and reused for every depth and for both splits. The
+ * alternative — one `rank()` call per depth — would read the catalogue from
+ * disk six times per prompt and could not be made to disagree with itself.
+ */
+export function depthOfOwner(rows: readonly RankRow[], skill: string): number | null {
+    for (let i = 0; i < rows.length; i += 1) {
+        if (rows[i]![0] === skill) return i + 1;
+    }
+    return null;
+}
+
+function splitOf(depths: readonly (number | null)[]): RecallSplit {
+    const n = depths.length;
+    const recall: Record<string, RecallPoint> = {};
+    for (const d of RECALL_DEPTHS) {
+        const hits = depths.filter((p) => p !== null && p <= d).length;
+        recall[recallKey(d)] = { hits, rate: n ? round3(hits / n) : 0, ci95: ci(hits, n) };
+    }
+    return { positives: n, zero_overlap: depths.filter((p) => p === null).length, recall };
+}
+
+/**
+ * Recall at depth over the TRAIN slice of the per-skill trigger corpus.
+ *
+ * Ground truth is the directory the case was read from, so there is no label to
+ * disagree with. The seal is inherited rather than re-implemented:
+ * `loadTrainCases` decides the partition from the directory NAME and skips a
+ * holdout path before any read, so this arm cannot open one even by mistake.
+ */
+export function measureRecallAtDepth(opts: {
+    ranker: string;
+    commit: string;
+    repo?: string;
+    skillsDir?: string;
+}): RecallReport {
+    const repo = opts.repo ?? REPO;
+    const skillsDir = opts.skillsDir ?? path.join(repo, 'src', 'skills');
+    const rankOpts = rankOptionsFor(opts.ranker);
+
+    const cases = loadTrainCases(repo);
+    const positives: (number | null)[] = [];
+    const dePositives: (number | null)[] = [];
+    let nearMissCases = 0;
+    let nearMissFirst = 0;
+    let nearMissTop3 = 0;
+
+    for (const c of cases) {
+        const at = depthOfOwner(rank(c.prompt, skillsDir, rankOpts), c.skill);
+        if (c.expect) {
+            positives.push(at);
+            if (c.language === 'de') dePositives.push(at);
+            continue;
+        }
+        if (c.caseClass === 'near-miss') {
+            nearMissCases++;
+            if (at === 1) nearMissFirst++;
+            if (at !== null && at <= 3) nearMissTop3++;
+        }
+    }
+
+    const skillsIndexed = fs.existsSync(skillsDir)
+        ? fs.readdirSync(skillsDir).filter((s) => fs.existsSync(path.join(skillsDir, s, 'SKILL.md'))).length
+        : 0;
+
+    return {
+        schema: 1,
+        arm: 'recall-at-depth',
+        corpus: TRIGGERS_TRAIN,
+        ranker: opts.ranker,
+        commit: opts.commit,
+        skills_dir: path.relative(repo, skillsDir),
+        skills_indexed: skillsIndexed,
+        train_corpora: corpusSkills(repo).filter((s) => s.partition === 'train').length,
+        cases_total: cases.length,
+        positives: positives.length,
+        negatives: cases.length - positives.length,
+        all: splitOf(positives),
+        de: splitOf(dePositives),
+        near_miss: {
+            cases: nearMissCases,
+            first: nearMissFirst,
+            top3: nearMissTop3,
+            note:
+                'Cases the corpus declares `class: near-miss`. Every one of them is a NEGATIVE ' +
+                '(`trigger: false`), so `first` and `top3` are false-positive counts, not hits — ' +
+                'lower is better, and they are printed beside recall so a depth change cannot be ' +
+                'read as free.',
+        },
+        seal_note:
+            'The sealed holdout corpora are never opened: `routing_corpus.loadTrainCases` decides ' +
+            'the partition from the skill DIRECTORY NAME and skips a holdout path before reading ' +
+            'any file. Filtering after the read would satisfy the letter of the freeze and not ' +
+            'the seal.',
+        denominator_note:
+            'Positive cases of the TRAIN slice of `src/skills/*/evals/triggers.json`. The owning ' +
+            'skill is the directory the case was read from, so no expected-skills label is ' +
+            'involved and none can be stale. `recall@k` is the share of positives whose owning ' +
+            'skill appears within the first k ranked rows.',
+    };
+}
+
 export function measure(opts: {
     ranker: string;
     commit: string;
@@ -588,13 +774,14 @@ export function measure(opts: {
     };
 }
 
-function parseCorpus(argv: readonly string[]): CorpusName {
+export function parseCorpus(argv: readonly string[]): CorpusArg {
     const i = argv.indexOf('--corpus');
     if (i === -1) return 'labelled';
     const raw = argv[i + 1];
+    if (raw === TRIGGERS_TRAIN) return TRIGGERS_TRAIN;
     if (!raw || !CORPUS_NAMES.includes(raw as CorpusName)) {
         throw new Error(
-            `measure_skill_ranker_baseline: --corpus expects one of ${CORPUS_NAMES.join(' | ')}, got ${raw ?? '(nothing)'}`,
+            `measure_skill_ranker_baseline: --corpus expects one of ${[...CORPUS_NAMES, TRIGGERS_TRAIN].join(' | ')}, got ${raw ?? '(nothing)'}`,
         );
     }
     return raw as CorpusName;
@@ -653,11 +840,11 @@ export function parseSlice(argv: readonly string[]): SliceName {
 }
 
 export function main(argv: readonly string[]): number {
-    let corpus: CorpusName;
+    let corpus: CorpusArg;
     let slice: SliceName;
     let ranker: string;
     let commit: string;
-    let out: RankerBaseline;
+    let out: RankerBaseline | RecallReport;
     try {
         corpus = parseCorpus(argv);
         slice = parseSlice(argv);
@@ -665,7 +852,16 @@ export function main(argv: readonly string[]): number {
         commit = parseFlagValue(argv, '--commit', 'unknown');
         // Inside the same guard as the two parsers above: an unknown --ranker is
         // the same class of mistake and now gets the same exit code.
-        out = measure({ ranker, commit, corpus, slice });
+        //
+        // `--slice` is PARSED on this branch and then unused, deliberately: the
+        // trigger corpus carries its own frozen train/holdout partition, so the
+        // accuracy arm's tuning/sealed division does not apply to it. Parsing it
+        // anyway keeps a malformed `--slice` an error here too rather than a
+        // value silently ignored only on this corpus.
+        out =
+            corpus === TRIGGERS_TRAIN
+                ? measureRecallAtDepth({ ranker, commit })
+                : measure({ ranker, commit, corpus, slice });
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);
         return 2;

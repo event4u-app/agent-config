@@ -6,7 +6,7 @@ entry_condition:
   what: >
     The tool-result byte census carries values written on at least two DISTINCT
     DATES. Checkable without judgement:
-    `jq -r .date agents/runtime/state/tool-result-census.jsonl | sort -u | wc -l`
+    `jq -r 'select(.raw_bytes != null) | .ts[0:10]' agents/runtime/state/tool-result-census.jsonl | sort -u | wc -l`
     reads 2 or more. One day's values are a reading of one tree, not a history,
     and a ratchet seeded on a single reading is a number invented at its own
     baseline — which is the exact ground the parent deferred on.
@@ -34,6 +34,11 @@ relates:
     note: "receives its 4.2 — a measured saving for the request-size caps; same evidence stream as 1.1 and 1.2, with a paired run on top"
 ---
 # Road to a byte bound and a public figure
+
+> **Arrivals:** 2 — latest `inbox-2026-10-p` (2026-10-14): the owner asks that the whole
+> resource-economy set be implemented; this file's ratchet and public figure are its W6.2/W7.
+> Earlier: `inbox-2026-09-ab` (2026-09-29). The wake check above was corrected the same day:
+> census lines carry `ts`, not `date`, so the old command could never count past 1.
 
 > **Source:** Phase 5 of `road-to-a-bytes-row-that-exists`, archived 2026-09-30.
 > Nothing here is new work; both items were written, reviewed and deliberately

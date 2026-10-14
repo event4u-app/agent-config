@@ -159,8 +159,12 @@ claiming it, and all three checks came back empty at HEAD:
 is not a precedent for reading a shipped violation back into compliance. The
 mechanism it covers is enforced on exactly one host — `claude`, tier 1 — and is
 advisory everywhere else (`docs/contracts/hook-architecture-v1.md:712-722`). Its
-unproven status is tracked separately and carries a dated kill criterion; see
-`agents/roadmaps/later/road-to-run-continuation-observation.md`.
+unproven status was tracked separately under a dated kill criterion, which
+fired: no qualifying run was recorded by 2026-10-11, and the concern was
+withdrawn on 2026-10-13 (`road-to-what-was-built-and-never-ran` Phase 4). The
+record moved with it, to
+`agents/roadmaps/archive/road-to-run-continuation-observation.md`, and the
+decision history this ADR carries is what the kill criterion kept.
 
 **Revisit this amendment if** a continuation or lowering-target mechanism becomes
 directly consumer-invocable, configurable as supported package behaviour, relied
