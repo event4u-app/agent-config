@@ -147,7 +147,7 @@
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
     "launch-readiness": 9519,
-    "learning-to-rule-or-skill": 16322,
+    "learning-to-rule-or-skill": 16321,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
     "legal-practice-profile": 12921,
@@ -291,7 +291,7 @@
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
     "universal-project-analysis": 5540,
-    "upstream-contribute": 11501,
+    "upstream-contribute": 11615,
     "using-git-worktrees": 11762,
     "validate-feature-fit": 4252,
     "verify-completion-evidence": 9612,
@@ -376,6 +376,12 @@
       "old": 8274,
       "new": 8283,
       "reason": "the taught line now carries a runner a node-only machine can start (`node <skills-root>/<skill>/scripts/<tool>.mjs`); the longer path IS the deliverable of road-to-skill-scripts-that-run-where-they-land, which measured 0 of 29 taught lines startable before it"
+    },
+    {
+      "skill": "upstream-contribute",
+      "old": 11501,
+      "new": 11615,
+      "reason": "an independent R2 review found this skill documenting a --dry-run that prints six things where the CLI prints three, and instructing the agent to reproduce all six verbatim — a fabricated pre-send check at the one Hard-Floor checkpoint before bytes leave the machine. The raise buys the correction: what is printed, what is NOT, that the missing three are steps 2.1 and 4.3's output, and that step 6's gates precede step 5's send. The additions were squeezed from 433 bytes over to 114 before raising; what remains is obligation rather than wording, so shrinking further would delete the correction instead of tightening it"
     }
   ]
 }
