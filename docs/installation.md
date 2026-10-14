@@ -453,6 +453,15 @@ is recorded in `~/.event4u/agent-config/skill-overrides.json`;
 since. To undo it by hand, delete the recorded keys under `skillOverrides` and
 the record file.
 
+These values sit on the **user** layer, and a project layer wins over it: a
+`skillOverrides` value in a project's `.claude/settings.json` overrode a
+user-layer value for the same skill when observed on Claude Code 2.1.299
+(`agents/evidence/analysis/host-skill-listing-override.md`; one skill, one value
+pair). So a project can set a skill differently without touching the install,
+and the installer's values do not reach a skill the project already sets.
+Whether a project's `skillOverrides` merges per skill or replaces the user's
+whole object was not observed.
+
 ### Copilot CLI
 
 ```bash
