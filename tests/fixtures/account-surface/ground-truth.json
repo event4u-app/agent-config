@@ -6,14 +6,9 @@
     "node": "node/unsafe and node/safe — a Node/TypeScript shape"
   },
   "pending_threat_rows": {
-    "$comment": "Threat cells this ground truth cites that threats.csv does not carry yet. They land with road-to-account-lifecycle-threat-rows step 2.2; until then EVERY cited cell is unresolvable, which is why Phase 2 of this roadmap may not land first. The exact cell wording is this roadmap's intent, not that roadmap's commitment — Phase 2 reconciles it against the merged rows and empties this list. A test asserts no cell here is already present, so the list cannot go stale silently: when step 2.2 merges, that test reds and names the reconciliation.",
+    "$comment": "Threat cells this ground truth cites that threats.csv does not carry yet. EMPTY since 2026-10-14 (road-to-account-surface-detector Phase 2): three cells landed reworded with road-to-account-lifecycle-threat-rows step 2.2 and are now cited by their landed wording; the fourth, `Persistent login and logout`, was the wrong row for a token in localStorage — its controls cover remember-me and logout, not script-readable storage — so that finding cites the dedicated `Authentication token in script-readable browser storage` row added in the same change (AI council 2026-10-14, 2/2). Two tests keep the list honest: no pending cell may be present verbatim, and none may be present under near-identical wording.",
     "source_roadmap": "road-to-account-lifecycle-threat-rows",
-    "cells": [
-      "Account enumeration through any observable difference",
-      "Reset beyond the token",
-      "Federated sign-in takeover",
-      "Persistent login and logout"
-    ]
+    "cells": []
   },
   "findings": [
     {
@@ -85,7 +80,7 @@
       "anchor": "$request->getHost()",
       "evidence": "violated",
       "remediation": "mechanical",
-      "threat_row": "Reset beyond the token",
+      "threat_row": "Password reset beyond the token",
       "why": "The link host comes from the request, so a forged Host header redirects the token. Cited against the pending dedicated row rather than the existing `Password-reset token abuse` row, whose controls cover token handling and say nothing about where the link host comes from."
     },
     {
@@ -97,7 +92,7 @@
       "anchor": "allowDangerousEmailAccountLinking: true",
       "evidence": "violated",
       "remediation": "policy",
-      "threat_row": "Federated sign-in takeover",
+      "threat_row": "Federated sign-in account takeover",
       "why": "Account linking on an address alone lets any provider asserting it take over the local account."
     },
     {
@@ -133,7 +128,7 @@
       "anchor": "localStorage.setItem('auth_token'",
       "evidence": "violated",
       "remediation": "migration",
-      "threat_row": "Persistent login and logout",
+      "threat_row": "Authentication token in script-readable browser storage",
       "why": "A session token in script-readable storage leaves with any injected script."
     },
     {
@@ -145,7 +140,7 @@
       "anchor": "No account with that email address.",
       "evidence": "suspected",
       "remediation": "policy",
-      "threat_row": "Account enumeration through any observable difference",
+      "threat_row": "Account enumeration through an observable difference",
       "why": "The response separates an unknown address from a wrong secret. Reported `suspected`: the string alone does not prove the route is public."
     },
     {
@@ -157,7 +152,7 @@
       "anchor": "That email is not registered.",
       "evidence": "suspected",
       "remediation": "policy",
-      "threat_row": "Account enumeration through any observable difference",
+      "threat_row": "Account enumeration through an observable difference",
       "why": "The response separates an unknown address from a wrong secret. Reported `suspected`: the string alone does not prove the route is public."
     }
   ],

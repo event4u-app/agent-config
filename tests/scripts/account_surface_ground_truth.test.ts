@@ -115,6 +115,30 @@ function parseThreatColumn(csv: string): Set<string> {
   return cells;
 }
 
+const NEAR_MATCH = 0.6;
+const STOPWORDS = new Set(["a", "an", "any", "the", "and", "or", "of", "by", "in", "on", "to"]);
+
+function contentWords(cell: string): Set<string> {
+  return new Set(
+    cell
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .filter((w) => w !== "" && !STOPWORDS.has(w)),
+  );
+}
+
+/** Share of the pending cell's content words that the candidate row also carries. */
+function wordOverlap(pending: string, candidate: string): number {
+  const mine = contentWords(pending);
+  const theirs = contentWords(candidate);
+  if (mine.size === 0) return 0;
+
+  let shared = 0;
+  for (const w of mine) if (theirs.has(w)) shared += 1;
+
+  return shared / mine.size;
+}
+
 function threatColumn(): Set<string> {
   return parseThreatColumn(
     readFileSync(
@@ -292,6 +316,36 @@ describe("account-surface ground truth", () => {
           `reconcile the cited wording; when this list empties, Phase 2 is unblocked`,
       ).toBe(false);
     }
+  });
+
+  it("holds no pending cell that a landed row carries under different wording", () => {
+    // The exact-match test above cannot see a row that landed reworded: four
+    // pending cells sat unreconciled after their rows merged as "Password reset
+    // beyond the token", "Federated sign-in account takeover" and so on.
+    const present = [...threatColumn()];
+
+    for (const cell of truth.pending_threat_rows.cells) {
+      const near = present.find((row) => wordOverlap(cell, row) >= NEAR_MATCH);
+
+      expect(
+        near,
+        `pending "${cell}" has landed as "${near}" — cite the landed cell and drop it from pending`,
+      ).toBeUndefined();
+    }
+  });
+
+  it("flags a reworded landing and ignores an unrelated row", () => {
+    // Sensitivity of the near-match, pinned on cells whose answer is known.
+    expect(wordOverlap("Reset beyond the token", "Password reset beyond the token")).toBe(1);
+    expect(
+      wordOverlap(
+        "Account enumeration through any observable difference",
+        "Account enumeration through an observable difference",
+      ),
+    ).toBeGreaterThanOrEqual(NEAR_MATCH);
+    expect(
+      wordOverlap("Session token in script-readable storage", "Password-reset token abuse"),
+    ).toBeLessThan(NEAR_MATCH);
   });
 
   it("names the roadmap the pending rows come from", () => {

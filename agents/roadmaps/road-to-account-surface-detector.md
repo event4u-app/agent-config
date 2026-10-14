@@ -73,17 +73,23 @@ reports `routes: empty`), so they are out of scope here.
 
 ## Phase 2 — The detector
 
-Still gated on the sibling roadmap, re-checked against the tree on 2026-10-13
-rather than read off this file: `src/skills/threat-modeling/data/threats.csv`
-carries three `authentication` rows (credential stuffing, session fixation,
-password-reset token abuse), and **none** of the seven Threat cells Phase 1's
-ground truth cites is among them. They arrive with
-`road-to-account-lifecycle-threat-rows` step 2.2, which is unmerged. Until then
-every finding would name a row that does not exist, so Phase 2 stays open; the
-pending cells are declared under `pending_threat_rows` in
-`tests/fixtures/account-surface/ground-truth.json` rather than assumed, and a
-corpus test reds the moment one of them appears in the CSV, naming the
-reconciliation. When that list empties, Phase 2 is unblocked.
+UNBLOCKED 2026-10-14, and the mechanism this section promised did not fire.
+The sibling's step 2.2 merged, but three of the four cells left pending had
+landed reworded (`Password reset beyond the token`, `Federated sign-in account
+takeover`, `Account enumeration through an observable difference`), so the
+exact-match corpus test this paragraph relied on stayed green with the list
+stale. Correction: a near-match test (`holds no pending cell that a landed row
+carries under different wording`) was added and seen red on those cells before
+they were reconciled. The fourth, `Persistent login and logout`, landed as
+`Persistent login and incomplete logout`, whose controls cover remember-me and
+logout and carry nothing against script-readable storage — citing it for the
+`token-in-localstorage` class would be the dangling-citation failure the
+paragraph below rejects. AI council 2026-10-14 (2/2, anthropic + openai, one
+round, $0 subscription-authed) chose a dedicated row: `Authentication token in
+script-readable browser storage` (CWE-922; controls separate an HttpOnly cookie,
+which page script cannot read, from an in-memory token, which only shortens the
+exposure), with a BM25 retrieval regression test so the new row cannot silently
+displace another under the four-result cap. `pending_threat_rows` is empty.
 
 The existing `Password-reset token abuse` row was considered for the
 `host-derived-reset` class and rejected on its content: its Required Controls
@@ -93,7 +99,7 @@ have resolved against today's CSV while pointing at a row carrying no control
 for the defect reported — the dangling-citation failure one level down — so
 that class cites the pending dedicated row instead.
 
-- [ ] **2.1 Write `src/scripts/check_account_surface.ts`.** A path predicate
+- [x] **2.1 Write `src/scripts/check_account_surface.ts`.** A path predicate
       first (route, controller, handler and config files whose names carry
       login, register, signup, password, reset, verify, session, oauth,
       callback, mfa, otp, passkey), then lexical classes inside it only:
@@ -114,7 +120,24 @@ that class cites the pending dedicated row instead.
       verify: the script's tests over the Phase 1 fixtures pass under a
       `vitest` filter, and a run over `src/` of this repository writes
       nothing and exits with a scanned-files count.
-- [ ] **2.2 Bind remediation classes to the existing ladder.** `mechanical`
+      DONE 2026-10-14: `tests/scripts/check_account_surface.test.ts` scores the
+      detector against `ground-truth.json` (every planted line found, nothing
+      unlisted, no twin or decoy flagged) and adds the threat-pass negatives —
+      no symlink followed out of the root, files above 256 KiB skipped and
+      reported, a planted value never echoed, no write or subprocess in the
+      source. The run over `src/` scans 30 files and writes nothing.
+      CORRECTION, from that run: the first draft keyed `secret-compare` on a
+      `verify` path segment and on `token` as a substring, and produced 36
+      false positives over this repository's own `src/` (`verify_physical_move`,
+      `release_verify`, `tokens_estimate`) while scoring perfectly on the
+      corpus. The class now matches secret names as whole identifier words and
+      takes only `otp`, `mfa`, `totp`, `2fa`, `signature` or `webhook` as a path
+      signal; the `src/` run reads 0 findings. The corpus could not see this —
+      recorded because it is the overfitting Risk 3 names, caught on code the
+      fixtures were not written for. Per the 2026-10-14 council, the
+      `token-in-localstorage` class also reports property assignment
+      (`localStorage['token'] = …`), not only `setItem`.
+- [x] **2.2 Bind remediation classes to the existing ladder.** `mechanical`
       means a fix that uses a primitive the project already has (its own
       safe-compare helper, its configured app URL) and invents no policy;
       `policy` and `migration` are never applied — they become the
@@ -124,16 +147,29 @@ that class cites the pending dedicated row instead.
       verify: every class in 2.1 has exactly one remediation value, and the
       fixtures for hash storage and token verification map to `migration`
       and `policy`.
+      DONE 2026-10-14: each class declares one remediation, exported as
+      `REMEDIATION_BY_CLASS`; a `mechanical` finding carries
+      `action: fix-now-candidate`, every other one `action: note-and-ask` with
+      a "leave it as is" option, and the tests assert both.
 
 ## Phase 3 — Measure, then let the existing callers use it
 
-- [ ] **3.1 Measure against the claim.** Run the detector over the frozen
+- [x] **3.1 Measure against the claim.** Run the detector over the frozen
       fixtures and record per-class recall and false positives in
       `account-surface-finds-planted`. A class below its bar stays
       `suspected`-only in the detector's own output.
       verify: the claim's evidence names the commit measured and one figure
       per class; its status is `backed` only if every class it keeps
       `violated` met the bar.
+      DONE 2026-10-14 at `2c72aac99`: every class recall 1.0 and 0/18 false
+      positives, recorded per class in the claim. Status deliberately LEFT
+      `unbacked` although every bar is met: the detector was written with the
+      corpus in view, there is no held-out set, and its first out-of-corpus run
+      (this package's `src/`) produced 36 false positives the corpus could not
+      show. Backing waits for a held-out corpus written without sight of the
+      detector. A council round on this choice ran over an hour without
+      returning and was stopped; keeping `unbacked` is the status quo the
+      verify line permits, so it needed no new authority.
 - [ ] **3.2 Wire it where web-launch readiness is already wired.** One step in
       `src/subagents/production-validator.md` and one sentence in
       `launch-readiness`'s AUTH area: run the detector on account-flow
