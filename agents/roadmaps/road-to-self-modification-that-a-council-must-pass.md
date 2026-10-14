@@ -188,8 +188,8 @@ So the branch was narrowed to the content binding alone — the `subject` digest
 over the gated content, and the gate refusing a record whose `subject` does not
 match — which is the piece both seats named as the smallest high-value change.
 
-**The narrowed change then went to six rounds of its own and was refused in
-all six** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+**The narrowed change then went to seven rounds of its own and was refused in
+all seven** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
 round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
 anthropic `ratified` with no pre-merge change named, openai `refused` on three
 defects in the refusal plumbing added to satisfy round 2. On the owner's
@@ -199,9 +199,12 @@ owner's decision and round 5 refused 2/2 on a new one: an intermediate path
 component that is a symlink is followed (step 2.6). The digest was then moved
 from the working tree to Git objects at a revision (decision D13) and round 6
 refused 2/2 on a new one: a mutable revision is resolved more than once in one
-gate run (step 2.7). The disposition is the owner's. **No seat, in any of the
-nine rounds across both shapes, disputed the design or the scope**; what is
-open is step 2.7, not the binding.
+gate run (step 2.7). That was fixed on the owner's route and round 7 was
+answered by one seat — anthropic refused on the CI path's changed-file list
+missing the old side of a rename, openai gave no verdict (a local `ENOBUFS`)
+(step 2.8). The disposition is the owner's. **No seat, in any of the ten rounds
+across both shapes, disputed the design or the scope**; what is open is step
+2.8, not the binding.
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -690,6 +693,23 @@ gaps again; the binding closes replay, and nothing else.
       runs with `--no-renames`, seen red first. The CI path, which takes its
       list from `gh pr view --json files`, is unchanged.
       verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+- [ ] **2.8 The CI path lists a renamed gated file by its old path.** The
+      workflow passes `gh pr view --json files` to the base revision's gate
+      under `--files`, so the `--no-renames` diff of step 2.7 does not reach
+      CI; if that list carries only a renamed file's destination, moving a
+      kernel rule to an ungated path leaves an empty gated set and passes.
+      Whether it does was not established. The workflow is a gated file, so
+      the change comes back to the modification review. Opened by round 7 on
+      2026-10-14, anthropic `refused`, openai no final verdict (`ENOBUFS`). In
+      anthropic's words: *"the **authoritative CI projection** can still miss
+      the old side of a rename, and no end-to-end test covers it. The
+      highest-leverage change: make CI derive paths through the same
+      `--no-renames` Git implementation—or verify inclusion and add CI
+      regression test—before merge."* **Deferred, with the reason**: the owner
+      authorised one round, merging only on 2/2; the next round is the owner's
+      call.
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
