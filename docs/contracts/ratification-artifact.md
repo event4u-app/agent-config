@@ -106,7 +106,9 @@ only under its new one. The CI path builds its list the same way: it passes
 --json files`, which names a rename by its destination only, so a gated file
 renamed away never reached the gate there. The CI step also sets
 `diff.renames=false` through `GIT_CONFIG_*`, which covers a base copy of the
-gate that predates `--no-renames` in its own diff. An option that takes a value — `--rev`,
+gate that predates `--no-renames` in its own diff;
+`tests/scripts/ci_changed_files_rename_compat.test.ts` reads those variables
+from the step and runs that older diff call under them. An option that takes a value — `--rev`,
 `--root`, `--base-ref`, `--policy-root` — and is given none is a refusal
 (exit 1), as in the subject CLI, never a fall-back to the default.
 
