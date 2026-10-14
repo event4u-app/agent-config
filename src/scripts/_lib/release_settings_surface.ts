@@ -2,7 +2,7 @@
  * The settings-surface reading a cut performs, and the file it reads it from.
  *
  * `docs/releases.md` § The stability surface names `.agent-settings.yml` keys
- * as a surface that changes only in a breaking release. The bump could not see
+ * as part of the public contract (`SETTINGS_REMOVAL_RULE`). The bump could not see
  * that surface at all: it reads commit SUBJECTS (`release.ts` `commits_since`
  * → `infer_bump`), so a key deleted under a `feat:` subject proposes a minor
  * and names nothing. Nothing else checked either — `lint_settings_classes`
@@ -39,8 +39,8 @@ import { settingsSchema } from '../../server/schemas/settings.js';
 import { computeSurfaceDelta, flattenSurface, type SettingsSurface, type SurfaceEntry } from '../../shared/settingsSurface.js';
 import { REPO_ROOT } from '../release_env.js';
 import { die } from '../release_publication.js';
-import { REMOVED_KEYS } from './settings_removed_keys.js';
-import { RENAMED_KEYS } from './settings_renamed_keys.js';
+import { MINOR_REMOVAL_PROOFS, REMOVED_KEYS } from './settings_removed_keys.js';
+import { RENAMED_KEYS, SETTINGS_REMOVAL_RULE } from './settings_renamed_keys.js';
 
 /**
  * Synchronous on purpose. `release.ts`'s `main` returns a number and is not
@@ -208,6 +208,55 @@ export function carriedLine(f: SettingsDeltaFindings): string | null {
         .join(', ')}`;
 }
 
+/** True when `target` raises the major component of `from`. */
+export function isMajorBump(from: string, target: string): boolean {
+    const major = (v: string): number => Number.parseInt(v.replace(/^v/, '').split('.')[0] ?? '', 10);
+    return major(target) > major(from);
+}
+
+/**
+ * Does a `<test file>::<it title>` proof name a test this tree contains?
+ * Presence of the file and of the title string is all a cut can check without
+ * running the suite; the test itself is what carries the claim.
+ */
+export function proofHolds(proof: string | undefined, root: string = REPO_ROOT): boolean {
+    if (proof === undefined) return false;
+    const sep = proof.indexOf('::');
+    if (sep <= 0) return false;
+    const file = path.join(root, proof.slice(0, sep));
+    const title = proof.slice(sep + 2).trim();
+    if (title === '' || !fs.existsSync(file)) return false;
+    return fs.readFileSync(file, 'utf8').includes(title);
+}
+
+/**
+ * The owner's answer to blocker `what-a-minor-may-remove`, option (c), applied
+ * at the cut: {@link SETTINGS_REMOVAL_RULE}. Below a major this refuses a
+ * carried removal or rename whose key has no proof that holds in
+ * `MINOR_REMOVAL_PROOFS`, and an alias dropped from `RENAMED_KEYS`. At a major
+ * it returns nothing — a carried removal is still reported by
+ * {@link carriedLine}, never silent.
+ */
+export function belowMajorRefusalLines(
+    released: ReleasedSurface,
+    live: ReleasedSurface,
+    f: SettingsDeltaFindings,
+    target: string,
+    proofs: ReadonlyMap<string, string> = MINOR_REMOVAL_PROOFS,
+    root: string = REPO_ROOT,
+): string[] {
+    if (isMajorBump(released.version, target)) return [];
+    const out: string[] = [];
+    const unproven = f.carried_removals.map((r) => r.key).filter((k) => !proofHolds(proofs.get(k), root));
+    if (unproven.length > 0) {
+        out.push(`removed or renamed below a major with no consumer-neutral proof: ${unproven.join(', ')}`);
+    }
+    const kept = new Set(live.renamedKeys.map(([from]) => from));
+    const dropped = released.renamedKeys.map(([from]) => from).filter((k) => !kept.has(k));
+    if (dropped.length > 0) out.push(`rename alias dropped below a major: ${dropped.join(', ')}`);
+    return out;
+}
+
 /**
  * The third assertion beside `assert_scheduled_deprecations_clear` and
  * `assert_major_migration_section`: refuse a cut whose settings surface moved
@@ -225,6 +274,7 @@ export function assert_settings_surface_delta(
         emit?: (version: string) => ReleasedSurface;
         read?: () => ReleasedSurface;
         write?: (line: string) => void;
+        proofs?: ReadonlyMap<string, string>;
     } = {},
 ): SettingsDeltaFindings | null {
     const write = opts.write ?? ((line: string): void => void process.stderr.write(line));
@@ -248,7 +298,10 @@ export function assert_settings_surface_delta(
     const carried = carriedLine(findings);
     if (carried !== null) write(`settings surface ${released.version} → ${target}: ${carried}\n`);
 
-    const lines = refusalLines(findings);
+    const lines = [
+        ...refusalLines(findings),
+        ...belowMajorRefusalLines(released, live, findings, target, opts.proofs ?? MINOR_REMOVAL_PROOFS),
+    ];
     if (lines.length === 0) return findings;
 
     write(`settings surface ${released.version} → ${target}:\n`);
@@ -263,7 +316,8 @@ export function assert_settings_surface_delta(
     die(
         `refusing the ${target} cut: the settings surface changed in a way no consumer is told ` +
             'about. Act on each line above — add the key to REMOVED_KEYS or RENAMED_KEYS, revert the ' +
-            'type or vocabulary change, or give the new key a default — then re-run.',
+            'type or vocabulary change, or give the new key a default; below a major, name the proving ' +
+            `test in MINOR_REMOVAL_PROOFS or cut a major — then re-run. ${SETTINGS_REMOVAL_RULE}`,
     );
     return findings;
 }

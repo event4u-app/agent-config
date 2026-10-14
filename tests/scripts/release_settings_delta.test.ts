@@ -19,7 +19,10 @@ import {
 } from '../../src/scripts/_lib/release_migration_gate.js';
 import {
     assert_settings_surface_delta,
+    belowMajorRefusalLines,
     classifySettingsDelta,
+    isMajorBump,
+    proofHolds,
     emitReleasedSurface,
     readReleasedSurface,
     refusalLines,
@@ -30,7 +33,12 @@ import {
 } from '../../src/scripts/_lib/release_settings_surface.js';
 import { infer_bump } from '../../src/scripts/release.js';
 import { REMOVED_KEYS } from '../../src/scripts/_lib/settings_removed_keys.js';
-import { RENAMED_KEYS } from '../../src/scripts/_lib/settings_renamed_keys.js';
+import {
+    _resetRenameWarnings,
+    applyRenamedKeys,
+    RENAMED_KEYS,
+    SETTINGS_REMOVAL_RULE,
+} from '../../src/scripts/_lib/settings_renamed_keys.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const HISTORY_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'settings_removal_history.json');
@@ -78,6 +86,9 @@ function plantRemoval(base: ReleasedSurface, key: string, version: string): Rele
     delete entries[key];
     return { ...base, version, entries };
 }
+
+/** A proof that holds: this file, naming a test title it contains. */
+const PROOF = 'tests/scripts/release_settings_delta.test.ts::tombstoned-removal';
 
 function capture(fn: (write: (line: string) => void) => void): string {
     const out: string[] = [];
@@ -397,17 +408,106 @@ describe('release settings delta — the assertion', () => {
         expect(refusal).toContain(key);
         expect(errLines.join('')).toContain('refusing the 16.6.0 cut');
 
-        // The same removal WITH a tombstone is not refused by this step.
+        // The same removal WITH a tombstone is not refused by 3.1. Below a
+        // major it also needs the consumer-neutral proof 3.3 asks for — see
+        // `tombstoned-removal` for the refusal without one.
         const annotated: ReleasedSurface = { ...live, removedKeys: [...live.removedKeys, key].sort() };
         capture((write) => {
             const f = assert_settings_surface_delta('16.6.0', {
                 emit: () => annotated,
                 read,
                 write,
+                proofs: new Map([[key, PROOF]]),
             });
             expect(f?.untombstoned_removals).toEqual([]);
             expect(f?.carried_removals.map((r) => r.key)).toContain(key);
         });
+    });
+
+    it('tombstoned-removal: below a major a carried removal needs a proof, at a major it does not', () => {
+        const base = readReleasedSurface();
+        const key = 'quality.local_auto_run';
+        const live = plantRemoval(base, key, '16.6.0');
+        const tombstoned: ReleasedSurface = { ...live, removedKeys: [...live.removedKeys, key].sort() };
+        const f = classifySettingsDelta(base, tombstoned);
+        expect(f.carried_removals.map((r) => r.key)).toEqual([key]);
+
+        expect(isMajorBump('16.5.0', '16.6.0')).toBe(false);
+        expect(isMajorBump('16.5.0', '17.0.0')).toBe(true);
+        expect(isMajorBump('16.5.0', '17.0.0-next.1')).toBe(true);
+
+        // Below a major, no proof: refused, and the key is named.
+        const none = belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map());
+        expect(none).toHaveLength(1);
+        expect(none[0]).toContain(key);
+        // A proof naming a test the tree does not contain is no proof.
+        expect(proofHolds('tests/scripts/consumer_matrix_settings_delta.test.ts::no such title anywhere')).toBe(false);
+        expect(proofHolds('tests/scripts/missing.test.ts::tombstoned-removal')).toBe(false);
+        expect(proofHolds('no-separator')).toBe(false);
+        expect(belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map([[key, 'x::y']]))).toHaveLength(1);
+        // A proof that holds licenses the minor.
+        expect(proofHolds(PROOF)).toBe(true);
+        expect(belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map([[key, PROOF]]))).toEqual([]);
+        // At a major the same removal needs nothing more than its tombstone.
+        expect(belowMajorRefusalLines(base, { ...tombstoned, version: '17.0.0' }, f, '17.0.0', new Map())).toEqual([]);
+
+        // A rename is a removal too: carried, and below a major it needs a proof.
+        const renamedTo = 'quality.local_auto_run_renamed';
+        const renamed: ReleasedSurface = {
+            ...live,
+            entries: { ...live.entries, [renamedTo]: { type: 'boolean', default: true } },
+            renamedKeys: [...live.renamedKeys, [key, renamedTo] as [string, string]],
+        };
+        const fr = classifySettingsDelta(base, renamed);
+        expect(fr.carried_removals).toEqual([{ key, via: 'renamed', to: renamedTo }]);
+        expect(belowMajorRefusalLines(base, renamed, fr, '16.6.0', new Map())[0]).toContain(key);
+
+        // Dropping an alias is the removal it postponed: refused below a major.
+        const alias = base.renamedKeys[0];
+        expect(alias).toBeDefined();
+        const aliasDropped: ReleasedSurface = { ...base, version: '16.6.0', renamedKeys: [] };
+        const fd = classifySettingsDelta(base, aliasDropped);
+        const dropLines = belowMajorRefusalLines(base, aliasDropped, fd, '16.6.0', new Map());
+        expect(dropLines.join('\n')).toContain(`rename alias dropped below a major: ${alias?.[0]}`);
+        expect(belowMajorRefusalLines(base, aliasDropped, fd, '17.0.0', new Map())).toEqual([]);
+
+        // Through the assertion: dry-run reports, a real minor cut refuses.
+        const preview = capture((write) => {
+            assert_settings_surface_delta('16.6.0', {
+                previewOnly: true,
+                emit: () => tombstoned,
+                read: () => base,
+                write,
+                proofs: new Map(),
+            });
+        });
+        expect(preview).toContain('no consumer-neutral proof');
+        expect(preview).toContain('WOULD BE REFUSED');
+        const origErr = process.stderr.write.bind(process.stderr);
+        const errLines: string[] = [];
+        (process.stderr as { write: unknown }).write = (chunk: string): boolean => {
+            errLines.push(String(chunk));
+            return true;
+        };
+        let refused = false;
+        try {
+            capture((write) => {
+                try {
+                    assert_settings_surface_delta('16.6.0', {
+                        emit: () => tombstoned,
+                        read: () => base,
+                        write,
+                        proofs: new Map(),
+                    });
+                } catch {
+                    refused = true;
+                }
+            });
+        } finally {
+            process.stderr.write = origErr;
+        }
+        expect(refused).toBe(true);
+        expect(errLines.join('')).toContain(SETTINGS_REMOVAL_RULE);
     });
 
     it('wired: the planner calls the assertion where it calls the other two', () => {
@@ -425,5 +525,71 @@ describe('release settings delta — the assertion', () => {
         expect(path.relative(REPO_ROOT, SETTINGS_SURFACE_FIXTURE).split(path.sep).join('/')).toBe(
             SETTINGS_SURFACE_FIXTURE_REL,
         );
+    });
+});
+
+/**
+ * The eight places the tree states when a settings key may be removed or
+ * renamed (blocker `what-a-minor-may-remove`, enumerated 2026-10-14). The
+ * sentence is written here as its own literal, so a reworded constant fails
+ * this test exactly as a reworded document does.
+ */
+const RULE =
+    'A settings key may be removed or renamed in a minor release only when no consumer project can ' +
+    'rely on it — default-neutral and derivable, proven by a named test; any other removal or rename ' +
+    "ships only in a major, and a renamed key's alias is dropped only in a major.";
+
+const RULE_LOCATIONS = [
+    'docs/releases.md',
+    'src/scripts/_lib/settings_renamed_keys.ts',
+    'src/scripts/_lib/settings_removed_keys.ts',
+    'BREAKING_CHANGES.md',
+    'CONTRIBUTING.md',
+    'docs/contracts/CHANGELOG-conventions.md',
+    'docs/decisions/ADR-037-cost-profile-untangle.md',
+] as const;
+
+/** Comment prefixes and line wrapping removed, so a wrapped sentence reads as one. */
+function prose(file: string): string {
+    return fs
+        .readFileSync(path.join(REPO_ROOT, file), 'utf8')
+        .replace(/^\s*(\*|\/\/)\s?/gm, '')
+        .replace(/\s+/g, ' ');
+}
+
+describe('release settings delta — one rule', () => {
+    it('three-sentences-agree: all eight locations state the owner rule in the same words', () => {
+        expect(SETTINGS_REMOVAL_RULE).toBe(RULE);
+        for (const file of RULE_LOCATIONS) {
+            expect(prose(file), file).toContain(RULE);
+            // The superseded retention sentences may not survive beside it.
+            expect(prose(file), file).not.toMatch(/one minor after it lands|works for one minor/);
+        }
+        // Location eight: the warning a consumer is actually shown.
+        _resetRenameWarnings();
+        const [oldKey] = [...RENAMED_KEYS.keys()];
+        expect(oldKey).toBeDefined();
+        const layer: Record<string, unknown> = {};
+        let cur = layer;
+        const parts = (oldKey as string).split('.');
+        for (const part of parts.slice(0, -1)) {
+            cur[part] = {};
+            cur = cur[part] as Record<string, unknown>;
+        }
+        cur[parts[parts.length - 1] as string] = true;
+        const seen: string[] = [];
+        const origErr = process.stderr.write.bind(process.stderr);
+        (process.stderr as { write: unknown }).write = (chunk: string): boolean => {
+            seen.push(String(chunk));
+            return true;
+        };
+        try {
+            applyRenamedKeys(layer);
+        } finally {
+            process.stderr.write = origErr;
+            _resetRenameWarnings();
+        }
+        expect(seen.join('')).toContain(RULE);
+        expect(seen.join('')).not.toContain('one minor');
     });
 });
