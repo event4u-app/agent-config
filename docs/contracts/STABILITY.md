@@ -178,13 +178,13 @@ for the contract and the transitional allowlist.
 
 | Constant | Value | Stability | Owner |
 |---|---|---|---|
-| Total always-rule budget | **49,000 chars** (extended) | `stable` | `tests/test_always_budget.py::test_always_rules_total_extended_within_tolerance` |
-| G3 tolerance band | **2 % overshoot** (≤ 49,980 chars) | `beta` | `scripts/check_always_budget.py` · `tests/test_always_budget.py` |
-| Warn threshold (CI) | **80 % (39,200 chars)** | `beta` | `scripts/check_always_budget.py` |
-| Fail threshold (CI) | **90 % (44,100 chars)** below 100 %; **> 102 %** above | `beta` | `scripts/check_always_budget.py` |
-| Per-rule cap | **6,000 chars** (extended) with transitional allowlist | `beta` | `tests/test_always_budget.py::test_no_unallowlisted_per_rule_breach` · `scripts/check_always_budget.py` |
-| Top-3 combined cap | **24,500 chars** (extended, 50 % of total) | `beta` | `tests/test_always_budget.py::test_top3_extended_under_cap` · `scripts/check_always_budget.py` |
-| `load_context:` nesting cap | **depth ≤ 2** | `beta` | `tests/test_always_budget.py::test_load_context_depth_within_cap` · `scripts/check_always_budget.py` |
+| Total always-rule budget | **49,000 chars** (extended) | `stable` | `tests/scripts/check_always_budget.test.ts::test_always_rules_total_extended_within_tolerance` |
+| G3 tolerance band | **2 % overshoot** (≤ 49,980 chars) | `beta` | `src/scripts/check_always_budget.ts` · `tests/scripts/check_always_budget.test.ts` |
+| Warn threshold (CI) | **80 % (39,200 chars)** | `beta` | `src/scripts/check_always_budget.ts` |
+| Fail threshold (CI) | **90 % (44,100 chars)** below 100 %; **> 102 %** above | `beta` | `src/scripts/check_always_budget.ts` |
+| Per-rule cap | **6,000 chars** (extended) with transitional allowlist | `beta` | `tests/scripts/check_always_budget.test.ts::test_no_unallowlisted_per_rule_breach` · `src/scripts/check_always_budget.ts` |
+| Top-3 combined cap | **24,500 chars** (extended, 50 % of total) | `beta` | `tests/scripts/check_always_budget.test.ts::test_top3_extended_under_cap` · `src/scripts/check_always_budget.ts` |
+| `load_context:` nesting cap | **depth ≤ 2** | `beta` | `tests/scripts/check_always_budget.test.ts::test_load_context_depth_within_cap` · `src/scripts/check_always_budget.ts` |
 
 **Promises a consumer can rely on:**
 
@@ -217,8 +217,8 @@ author discipline alone:
 1. **Commit-annotation layer (`release.ts`).** `infer_bump` reads the
    Conventional-Commits annotation (`<type>!:` bang or a
    `BREAKING CHANGE` line) and returns a major bump when present.
-2. **Structural layer (`check_structural_breaking.py`, run in
-   `task ci-fast`).** Independently of the commit message, the detector
+2. **Structural layer (`src/scripts/check_structural_breaking.ts`, called
+   by `task ci`).** Independently of the commit message, the detector
    inspects the diff against the trunk and FAILS when a structural break
    is present *without* an annotation — forcing the annotation to exist.
 

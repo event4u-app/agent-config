@@ -144,10 +144,24 @@ answer. No class sweep: each step names its sentence.
 
 ## Phase 2 — Lines that name what exists
 
-- [ ] **2.1 Two contracts name the guard that exists.**
+- [x] **2.1 Two contracts name the guard that exists.**
       `settings-sync-yaml-subset.md:86`, `STABILITY.md:181-183` and
       `STABILITY.md:220` name the TypeScript test, gate or script that holds
-      each claim, or say that none does.
+      each claim, or say that none does. Each named successor was opened
+      before it was written down: the always-budget port keeps all four
+      `::test_*` titles verbatim, so those references survive the rename
+      intact, while the round-trip port keeps neither of the two titles the
+      contract cited and holds 35 tests rather than the 34 claimed — so that
+      line names the file and its two describe blocks and gives no count,
+      which is a figure that goes stale on the next test added.
+      `STABILITY.md:220` was wrong twice over: it named a script that does not
+      exist AND `task ci-fast`, which is an included taskfile rather than a
+      runnable task. The caller is `task ci`.
+      Same-literal residue, searched and closed: the four names appeared three
+      more times, in `adr-settings-sync-engine.md`, `load-context-schema.md`
+      and `file-ownership-matrix.md`. That is completing one named fix, not
+      the class sweep the council declined — the class is 168 distinct `.py`
+      paths across `docs/contracts/`, counted here and deliberately untouched.
       verify: `grep -cE "test_sync_round_trip\.py|test_always_budget\.py|check_structural_breaking\.py" docs/contracts/settings-sync-yaml-subset.md docs/contracts/STABILITY.md` -> /:0$/
 - [ ] **2.2 A promised lint code is emitted or withdrawn.**
       `cross-wing-handoff.md:96` and `lint_handoffs.ts` agree on
