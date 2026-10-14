@@ -108,6 +108,11 @@ jobs:
       # a single maintainer would mute).
       - name: Commit the measurement record (nightly only)
         if: github.event_name == 'schedule'
+        # The job runs in a container, where the default shell is dash and
+        # `set -o pipefail` is an illegal option — the step died on its first
+        # line on every nightly. node:20-bullseye carries bash, and the step
+        # above already shells out to it.
+        shell: bash
         run: |
           set -euo pipefail
           record=agents/evidence/metrics/evaluator-measurements.json

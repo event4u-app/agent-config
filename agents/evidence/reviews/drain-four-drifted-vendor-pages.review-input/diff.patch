@@ -1,0 +1,1174 @@
+diff --git a/.github/workflows/host-docs-digest.yml b/.github/workflows/host-docs-digest.yml
+index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..4153c5e5be1ead6bc8ae12cffd8b8d0a8f559a9f 100644
+--- a/.github/workflows/host-docs-digest.yml
++++ b/.github/workflows/host-docs-digest.yml
+@@ -24,6 +24,16 @@ name: Host Docs Digest Watch
+ #
+ # So: red here means "go read a page", never "something is broken in this repo".
+ #
++# A RED ROUTES TO AN ISSUE, because a red alone reached nobody. GitHub mails a
++# scheduled failure only to whoever last edited the cron line, and the job went
++# red on main on 2026-10-05 and 2026-10-12 with no row re-established; the drift
++# surfaced only because an unrelated task ran the checker locally. A scheduled
++# red now opens one issue under a fixed title, or comments on it while it stays
++# open, so a recurrence lands on the same record. Closing the issue is the
++# acknowledgement. The issue is a route, not an owner: who triages it is not
++# decided here. Only a detected drift is routed, and `issues: write` sits on a
++# separate job that checks nothing out and runs no repository code.
++#
+ # Unreachable is not drift. `--strict-fetch` is deliberately NOT passed: a
+ # flaky vendor host or a runner with no egress establishes nothing about the
+ # page, and a watcher that cried wolf on every 503 would be muted within a
+@@ -53,13 +63,17 @@ on:
+ permissions:
+   contents: read
+ 
++# Keyed by trigger, so a manual dispatch never cancels the scheduled run whose
++# drift only a schedule routes.
+ concurrency:
+-  group: host-docs-digest
++  group: host-docs-digest-${{ github.event_name }}
+   cancel-in-progress: true
+ 
+ jobs:
+   digest-watch:
+     runs-on: ubuntu-latest
++    outputs:
++      drifted: ${{ steps.fetch.outputs.drifted }}
+     steps:
+       # No `ref: main`. Pinning the ref made the job untestable before it was
+       # relied on: a scheduled run already uses the default branch, while a
+@@ -96,5 +110,44 @@ jobs:
+       - name: Report the watch scope (offline, no egress)
+         run: ./scripts-run src/scripts/check_host_docs_digest
+ 
++      # `drifted` is set only when the checker's own verdict names a changed or
++      # GONE page, so a crash, a timeout or a broken runner stays an ordinary
++      # red and is never routed as "a page moved".
+       - name: Re-fetch each host docs page and compare (read-only)
+-        run: ./scripts-run src/scripts/check_host_docs_digest --fetch
++        id: fetch
++        shell: bash
++        run: |
++          set +e
++          ./scripts-run src/scripts/check_host_docs_digest --fetch 2>&1 | tee digest.log
++          rc=${PIPESTATUS[0]}
++          if [ "$rc" -ne 0 ] && grep -qE 'changed since the row was established|are GONE \(404/410\)' digest.log; then
++            echo "drifted=true" >> "$GITHUB_OUTPUT"
++          fi
++          exit "$rc"
++
++  # The issue grant lives on its own job, which checks nothing out and runs no
++  # repository code, so `npm ci` and the checker above never hold a write token.
++  # Scheduled runs only: a `workflow_dispatch` from a branch is someone already
++  # looking, and must not file against main's record.
++  route-drift:
++    needs: digest-watch
++    if: always() && needs.digest-watch.outputs.drifted == 'true' && github.event_name == 'schedule'
++    runs-on: ubuntu-latest
++    permissions:
++      issues: write
++    steps:
++      - name: Open or update the tracking issue
++        env:
++          GH_TOKEN: ${{ github.token }}
++          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
++        run: |
++          title="Host Docs Digest Watch is red: read the drifted vendor pages"
++          body="The scheduled run found drift: ${RUN_URL}
++
++          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward). A host_lowering.yaml row also needs the ratification artifact that table requires; a host_docs_pages.yaml row does not. Close this issue once the watch is green."
++          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${title}\" in:title" --json number,title --jq "map(select(.title == \"${title}\")) | .[0].number // empty")
++          if [ -n "$num" ]; then
++            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"
++          else
++            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
++          fi
+diff --git a/agents/evidence/ratifications/drain-four-drifted-vendor-pages.md b/agents/evidence/ratifications/drain-four-drifted-vendor-pages.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7ab410dc4241d74a3f8c2094d3eabb5b53cf66e4
+--- /dev/null
++++ b/agents/evidence/ratifications/drain-four-drifted-vendor-pages.md
+@@ -0,0 +1,393 @@
++---
++proposed_by: claude-code drain lane, road-to-re-establishing-four-drifted-vendor-pages (2026-10-14)
++implemented_by: claude-code drain lane, same session — see § Independence
++reviewed_by: ai-council 2026-10-14 (rounds 1-6) — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
++subject: 4c49b6d2fced7a5c82cba8ce52d9f69552aa0e3f57aeb08a0f7bc677c5ae18c7
++providers: [anthropic, openai]
++verdict: ratified
++seats:
++  anthropic: ratified
++  openai: ratified
++effective_after: merge
++---
++
++<!-- evidence-type: ratification -->
++
++# Ratification — `drain/four-drifted-vendor-pages`
++
++Named for the branch, because the gate reads this file on the first push,
++before a PR number exists.
++
++## What was proposed
++
++Re-establishing the lowering rows whose cited vendor pages moved, after reading
++each page on 2026-10-14. Gated surfaces:
++
++| Surface | Change |
++|---|---|
++| `src/scripts/hooks/host_lowering.yaml` | five rows (`claude`, `augment`, `cline`, `windsurf`, `codex`): `docs_at` → 2026-10-14, `docs_digest` → the sha256 of the body fetched that day, `expires` → 2027-10-14 (`claude` keeps its pre-policy 2027-09-06). Four comment passages re-tensed or extended so they stay true of the new dates (the header sentence, and the claude, augment and codex rows). No `block_exit`, `native`, `answered_at`, `fail_policy`, slot or shape changed. |
++| `src/scripts/hooks/host_lowering.json` | regenerated by `compile_hook_manifest --table host-lowering`; `table` differs only in those values, `body_fingerprint` unchanged across the comment commit |
++
++Not gated, reviewed alongside: `host_docs_pages.yaml` (the sibling page list,
++one row re-dated the same way), a comment string in
++`_lib/host_listing_model.ts`, the regenerated `dist/install/install.mjs`
++that embeds it, and `.github/workflows/host-docs-digest.yml` (a scheduled drift
++red now opens or updates one issue from a separate `issues: write` job; rounds
++5 and 6).
++
++## Why `ratified`
++
++Both seats used `ratified` in the final round. Round 1 both returned
++`confirmed-non-expanding`; the stronger label in the end came from the seats,
++not from this author, and the change itself arms nothing — every reading in the
++roadmap's findings table left each `block_exit` as committed.
++
++## Rounds
++
++Six council invocations, all 2026-10-14, subscription CLI, $0. Responses are
++runtime artefacts and are not cited by path.
++
++1. **Round 1 — both `confirmed-non-expanding`.** One non-blocking finding from
++   both seats: the augment comment still said "Established by a documentation
++   read on 2026-09-29" above `docs_at: 2026-10-14`.
++2. **Fix commit `daaac3f1d`.** The augment comment, and the parallel claude
++   sentence, now name the repeated read.
++3. **Round 2 — split.** anthropic `ratified`; openai `REQUEST_CHANGES` (outside
++   the vocabulary) because the regenerated JSON was claimed and not shown.
++   Answering that surfaced a real defect: `check_generator_sync` reported
++   `dist/install/install.mjs` stale over the `host_listing_model.ts` comment.
++   **Fix commit `74942ec4f`** regenerated it; the check is green.
++4. **Round 3 — split.** anthropic `ratified`; openai `non-convergent`: the round
++   summarised the JSON change instead of showing it.
++5. **Round 4 — both `ratified`.** The unabridged `git diff
++   55782c253..74942ec4f` over both gated files plus the bundle hunk. openai:
++   *"the patch is internally consistent and non-expanding"*.
++6. **A completion review of the whole branch** then found, among others, that
++   the codex row's comment asserted a "current 0.159.3" in the present tense,
++   and that the workflow change adding `issues: write` (not a gated surface —
++   `check_kernel_edit_ratified` reports nothing to ratify for it) had no recorded
++   review. **Fix commit `64a8c74cc`** re-tensed the codex comment.
++7. **Round 5 — split, on the workflow.** Over `74942ec4f..64a8c74cc` (the codex
++   comment, its JSON regeneration, and the workflow): both seats found the gated
++   delta comment-only, openai: *"the gated data edit is non-expanding"*.
++   anthropic `ratified`; openai **`refused`** the workflow: *"grants issue-write
++   authority to repository-controlled comparison steps and cannot distinguish
++   actual drift from execution failure"*.
++8. **Fix commit `fb179dbe1`.** The watch job holds no write grant and exposes an
++   explicit `drifted` output set only from the checker's own drift verdict; a
++   separate `route-drift` job with `issues: write`, no checkout and no repository
++   code files the issue.
++9. **Round 6 — both `ratified`**, over `64a8c74cc..fb179dbe1`. openai:
++   *"privilege separation, drift classification, trigger restriction, and shell
++   quoting are sound."* This round's diff touched no gated file, so the `seats:`
++   above are each seat's last verdict; for the gated content specifically, the
++   last word from both seats is round 5's non-expanding finding over the final
++   gated bytes, which `subject` pins.
++
++## Independence
++
++`proposed_by` and `implemented_by` are the same session; `reviewed_by` is the
++two-provider council, which differs from both. The council prompts below were
++written by that session, so the steering risk is named rather than assumed
++away: each asks for findings and a verdict from the closed vocabulary and states
++no expected outcome.
++
++## Prompts, verbatim
++
++Round 1's prompt is reproduced below up to its diff; the diff appended to it was
++`git diff 55782c253..9a980c530 -- src/scripts/hooks/host_lowering.yaml`. Round
++4's appended patch was `git diff 55782c253..74942ec4f --
++src/scripts/hooks/host_lowering.yaml src/scripts/hooks/host_lowering.json`
++followed by `git diff 55782c253..74942ec4f -U0 -- dist/install/install.mjs`.
++Round 5's: `git diff 74942ec4f..64a8c74cc -- src/scripts/hooks/host_lowering.yaml
++.github/workflows/host-docs-digest.yml`, then the same range over
++`host_lowering.json`. Round 6's: `git diff 64a8c74cc..fb179dbe1 --
++.github/workflows/host-docs-digest.yml`.
++
++### Round 1
++
++~~~markdown
++# Ratification review — a plumbing-table edit in event4u/agent-config
++
++You are an independent reviewer. The author of this change may not record its
++own ratification. Review the change below and return findings and a verdict.
++
++## Context
++
++`src/scripts/hooks/host_lowering.yaml` records, per AI-coding host, how this
++package lowers a hook verdict into the host's contract, and provenance for each
++row: `docs_url` (page the answers were read off), `docs_at` (day a human read
++it), `docs_digest` (sha256 of the body as last established), `expires`
++(review-by date; a lint refuses an expired row that carries a blocking binding).
++A weekly watcher re-fetches every `docs_url` and reds when the body hash
++changed; a changed hash is evidence the page moved, never a reading of what it
++says. Rows are re-established by hand after reading the page. The table is on a
++"plumbing" list whose edits require an independent ratification record.
++`host_lowering.json` is the compiled sibling, fingerprinted over the YAML text.
++
++Table policy (from the file header): rows established by a dated docs read carry
++`expires` = `docs_at` + 1 year; `claude` keeps a committed 2027-09-06 "because
++that value predates this policy". `block_exit: null` means "this package has not
++established a refusal on that slot", never "the host cannot refuse".
++
++## The change
++
++Five rows (claude, augment, cline, windsurf, codex) get `docs_at: 2026-10-14`,
++the `docs_digest` of the body fetched on 2026-10-14 (each matched the watcher's
++own printed hash that day), and `expires` moved from 2027-09-29 to 2027-10-14
++(claude's 2027-09-06 unchanged). No `block_exit`, `native`, `answered_at`,
++`fail_policy` or slot changed. One header comment sentence is re-tensed from
++"all nine carry docs_at 2026-09-29" to "all nine carried", because it would
++otherwise be false. The JSON sibling is regenerated.
++
++The author's per-page reading (2026-10-14):
++
++- claude: exit 2 documented as blocking PreToolUse, UserPromptSubmit, Stop,
++  SubagentStop, PreCompact; not PostToolUse/SessionStart/SessionEnd/SubagentStart.
++  Committed: block_exit 2 on stop, user_prompt_submit, pre_tool_use; null
++  elsewhere. pre_compact and subagent_stop stay null (not established by this
++  package; arming is an enforcement change outside a dating pass).
++- augment: "Exit code 2: Blocking error - Prevents tool execution (PreToolUse
++  only)", same five events. Row is null everywhere because the package's
++  trampoline exits 0 unconditionally (fail_policy: discard). Unchanged.
++- cline: page is still a one-line pointer to an SDK plugins page; body gained a
++  documentation-index header. Row's comment already records that the page names
++  none of the bound events. Unchanged.
++- windsurf: exit 2 blocks pre-hooks only (pre_user_prompt among them). Bound
++  events post_setup_worktree, pre_user_prompt, post_cascade_response all still
++  documented; all null in the row.
++- codex: twelve events and the exit 2 / decision:block contract still
++  documented. Row has `slots: {}` and a 2026-10-01 live probe that did not
++  reproduce the documented deny. Unchanged.
++
++Outside the gated table (not part of what you ratify, listed for completeness):
++the sibling page list `host_docs_pages.yaml` re-dated its one row the same way,
++and a comment string in `_lib/host_listing_model.ts` now dates a "≈8,000
++characters" illustration to the 2026-08-22 reading because the current page no
++longer prints it.
++
++## Question
++
++1. Does this diff expand any authority, arm any refusal, or change any
++   behaviour of the package beyond provenance dating? Name any line that does.
++2. Is any re-dated row inconsistent with the reading recorded for it, or with
++   the table's stated `expires` policy?
++3. Any other defect in the diff.
++
++Return your findings, then one final verdict from exactly this vocabulary:
++`ratified` · `confirmed-non-expanding` · `refused` · `non-convergent`.
++`confirmed-non-expanding` = you looked and found no authority expansion.
++
++## Diff of `host_lowering.yaml` (the JSON sibling is its compiled output)
++~~~
++
++### Round 2
++
++~~~markdown
++# Ratification review, round 2 — follow-up to a reviewed plumbing-table edit
++
++Round 1 reviewed a provenance-dating edit to `src/scripts/hooks/host_lowering.yaml`
++(five rows re-dated: `docs_at`, `docs_digest`, `expires`; no `block_exit`,
++`native`, `answered_at`, `fail_policy` or slot changed). Both seats returned
++`confirmed-non-expanding` and both raised one non-blocking finding: the augment
++row's comment still read "Established by a documentation read on 2026-09-29"
++above `docs_at: 2026-10-14`.
++
++The author then applied a follow-up commit, shown in full below. It also changes
++a parallel sentence in the claude row's comment. The compiled JSON sibling was
++regenerated because it fingerprints the YAML text.
++
++## Question
++
++1. Does the follow-up resolve the round-1 finding?
++2. Does it change anything other than comment text?
++3. Taking the round-1 diff and this follow-up together as the change to be
++   merged, any defect or authority expansion?
++
++Return findings, then one final verdict from exactly this vocabulary:
++`ratified` · `confirmed-non-expanding` · `refused` · `non-convergent`.
++
++## Follow-up diff
++
++```diff
++@@ -88,7 +88,8 @@ hosts:
++         # read was never dated, and the absence was the record. Both are filled
++         # now from sources this tree already carries — the 2026-09-06 live probe
++         # recorded in `host_semantics.ts` (Claude Code 2.1.263) and a fresh
++-        # documentation read on 2026-09-29. `expires` is deliberately unchanged.
+++        # documentation read on 2026-09-29, repeated 2026-10-14. `expires` is
+++        # deliberately unchanged.
++         #
++@@ -121,8 +122,8 @@ hosts:
++         timeout_default: null
++-        # Established by a documentation read on 2026-09-29, not by a live
++-        # probe — `probe_at` stays null and says so.
+++        # Established by a documentation read on 2026-09-29, repeated 2026-10-14, not
+++        # by a live probe — `probe_at` stays null and says so.
++         verified:
++           docs_at: 2026-10-14
++```
++~~~
++
++### Round 3
++
++~~~markdown
++# Ratification review, round 3 — the generated sibling, which round 2 could not see
++
++Round 2 reviewed a comment-only follow-up to a provenance-dating edit of
++`src/scripts/hooks/host_lowering.yaml`. One seat returned `ratified`. The other
++found the YAML edit correct and non-expanding but could not verify the merge set,
++because the regenerated compiled sibling `src/scripts/hooks/host_lowering.json`
++was claimed and not shown. This round supplies it.
++
++## What `host_lowering.json` is
++
++A single-line JSON file written by `compile_hook_manifest --table host-lowering`.
++It has a header `{"fingerprint":"<sha256 of the YAML TEXT>:<len>",
++"body_fingerprint":"<sha256 of the parsed TABLE>:<len>","table":{…}}`. A comment
++edit therefore moves `fingerprint` and must leave `body_fingerprint` and `table`
++untouched.
++
++## The diff of `host_lowering.json` across the follow-up commit
++
++- `fingerprint`: `728b3a29…f0bc8f:22234` → `22f18f62…214a69c:22286`
++- `body_fingerprint`: `e8dafe50…5683ae8:6376` → `e8dafe50…5683ae8:6376` (unchanged)
++- every byte after the header (the `table` object): byte-identical (`cmp` exit 0)
++
++Across the whole change (base → head), the `table` object differs only in the
++five rows' `docs_at`, `docs_digest` and `expires` values reviewed in round 1.
++
++## Regeneration evidence
++
++`check_generator_sync` (which re-runs the generator and compares) prints:
++`host-lowering-compiled: 1 source(s) changed, src/scripts/hooks/host_lowering.json
++matches a fresh run`. It also flagged a stale install bundle
++(`dist/install/install.mjs`) carrying the `_lib/host_listing_model.ts` comment
++string changed outside the gated table; that bundle was regenerated in its own
++commit and the check is now green over both artefacts. That bundle is not part of
++the gated set.
++
++## Question
++
++With the generated sibling now visible: is the combined change (round-1 dating
++edit + round-2 comment follow-up + this regenerated sibling) free of authority
++expansion and of defects? Return findings, then one final verdict from exactly:
++`ratified` · `confirmed-non-expanding` · `refused` · `non-convergent`.
++~~~
++
++### Round 4
++
++~~~markdown
++# Ratification review, round 4 — the complete gated patch
++
++Round 3's second seat returned `non-convergent` because the artifact summarised
++the change instead of showing it, and asked for the complete base-to-head patch
++with commit SHAs. This round supplies exactly that.
++
++- base: `55782c2533da8a2b4bb11659404615c31b504806` (merge-base with main)
++- head: `74942ec4f5332a0d151faf800e31972a8a179471`
++- commits: `9a980c530` (re-date five rows + regenerate JSON), `daaac3f1d`
++  (comment follow-up from round 1 + regenerate JSON), `74942ec4f` (install
++  bundle regeneration, outside the gated set)
++
++The gated set is `src/scripts/hooks/host_lowering.yaml` and its compiled sibling
++`src/scripts/hooks/host_lowering.json`. Below is `git diff base..head` over both,
++unabridged, followed by the one-line bundle hunk for completeness.
++
++## Question
++
++Over this complete patch: does any line expand authority, arm a refusal, or
++change package behaviour beyond provenance dating and comments? Is any re-dated
++row inconsistent with the table's `expires` policy (docs_at + 1 year; `claude`
++keeps a pre-policy 2027-09-06)? Any other defect? Return findings, then one final
++verdict from exactly: `ratified` · `confirmed-non-expanding` · `refused` ·
++`non-convergent`.
++
++## Gated patch (unabridged)
++~~~
++
++### Round 5
++
++~~~markdown
++# Ratification review, round 5 — two follow-ups after a completion review
++
++Rounds 1-4 reviewed a provenance-dating edit to `src/scripts/hooks/host_lowering.yaml`
++and its compiled sibling `host_lowering.json` up to commit `74942ec4f`; final
++verdict `ratified` from both seats. A later independent completion review of the
++whole branch then raised findings on two surfaces this round covers:
++
++- **The gated table again.** The codex row's comment still said, in the present
++  tense, "The installed build is 0.148.0 against a current 0.159.3, and the page
++  that was read describes the current one" after the row was re-dated to a
++  2026-10-14 read that did not check the version. Commit `64a8c74cc` re-tenses
++  it. The JSON sibling is regenerated.
++- **A workflow the ratification gate does not cover**, reviewed here so the one
++  write-grant change in the branch has a recorded second pair of eyes:
++  `.github/workflows/host-docs-digest.yml` gains `permissions: {contents: read,
++  issues: write}` on its one job (the workflow default stays `contents: read`)
++  and a step that, on a scheduled run whose `--fetch` comparison step failed,
++  opens one issue under a fixed title or comments on it while it stays open,
++  using `gh` with the job token. The design was chosen by the council in a
++  separate two-round disposition question; this round reviews the diff. Commit
++  `2d29e5cc7` narrowed the condition after the completion review found that
++  `failure()` alone also fired on a broken runner.
++
++Base `74942ec4f`, head `64a8c74cc8969612c4d903193490d8835688a2c2`. Both diffs
++below are unabridged.
++
++## Question
++
++1. Does the codex comment edit change anything but comment text, and is the
++   combined gated change still free of authority expansion?
++2. In the workflow diff: is the write grant scoped as narrowly as the step
++   needs; can any input reach the shell unquoted or as an expression; does the
++   condition fire on anything other than a scheduled comparison red; any other
++   defect?
++
++Return findings, then one final verdict from exactly: `ratified` ·
++`confirmed-non-expanding` · `refused` · `non-convergent`.
++
++## Diff — YAML and workflow (unabridged)
++~~~
++
++### Round 6
++
++~~~markdown
++# Ratification review, round 6 — the workflow, restructured after a refusal
++
++Round 5 covered two surfaces. On the gated table (`host_lowering.yaml` comment
++re-tense + regenerated JSON) both seats found no authority expansion. On
++`.github/workflows/host-docs-digest.yml` one seat refused, verbatim: *"the
++workflow grants issue-write authority to repository-controlled comparison steps
++and cannot distinguish actual drift from execution failure; the highest-leverage
++change is to emit an explicit drift result and route it from a separate
++least-privileged job."*
++
++Commit `fb179dbe1` (diff below, unabridged, against the round-5 head
++`64a8c74cc`) does that:
++
++- the watch job holds no write grant (the workflow default `contents: read`
++  applies) and exposes a job output `drifted`;
++- the `--fetch` step runs the checker with its exit code preserved and writes
++  `drifted=true` to `$GITHUB_OUTPUT` only when the checker exited non-zero AND
++  its own verdict line names a changed page (`changed since the row was
++  established`) or a dead one (`are GONE (404/410)`); those two strings are the
++  checker's only drift verdicts, an unreachable page does not fail the run
++  without `--strict-fetch`, which this job does not pass;
++- a new job `route-drift` (`needs: digest-watch`, `if: always() &&
++  needs.digest-watch.outputs.drifted == 'true' && github.event_name ==
++  'schedule'`) carries `permissions: issues: write` only, checks nothing out,
++  runs no repository code, and opens or comments on the fixed-title issue.
++
++## Question
++
++1. Does this resolve the round-5 refusal?
++2. Is the write grant now as narrow as the step needs; can any input reach the
++   shell unquoted or as an expression; does `route-drift` run on anything other
++   than a scheduled detected drift; any other defect?
++
++Return findings, then one final verdict from exactly: `ratified` ·
++`confirmed-non-expanding` · `refused` · `non-convergent`.
++
++## Diff (unabridged)
++~~~
+diff --git a/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..993fad005c4cc7598e378df0bc352238e120a575
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
+@@ -0,0 +1,165 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: phase-checkpoints
++estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It shipped `status: draft`, so it was excluded from the gated active_roadmaps count (flipped to `ready` only in the archival move); this exemption covers the growth half only."
++relates:
++  - slug: road-to-a-search-answer-a-model-can-choose-from
++    relation: extends
++    note: "That roadmap's 0.2 added the sibling page list and ran the watcher's fetch path to fill its digest. The same run surfaced the four drifted rows below, which belong to the LOWERING table and were out of its scope: re-establishing one is a plumbing edit carrying a ratification artifact. Split out rather than absorbed."
++---
++# Road to re-establishing four drifted vendor pages
++
++> **Source:** `check_host_docs_digest --fetch` run on 2026-10-13 at
++> `main@c107aaf0f`, while executing
++> `road-to-a-search-answer-a-model-can-choose-from` 0.2. Four rows of
++> `src/scripts/hooks/host_lowering.yaml` reported `changed`. The scheduled
++> `Host Docs Digest Watch` workflow has reported the same red on `main` on
++> 2026-10-05 and 2026-10-12 — two consecutive weeks with no row
++> re-established, which is what makes this a tracked item rather than a
++> notification that is already working.
++
++## Goal
++
++The four lowering rows whose cited pages moved are re-established by hand
++against the pages as they now read: `docs_at` on the day somebody read them,
++`docs_digest` on the body that reading hashed, and `expires` moved FORWARD
++again. The weekly watcher returns to green for a reason — the rows are current
++— and not because the watcher was narrowed. Whatever the re-read finds about
++each host's actual refusal contract is recorded as a finding, including
++"nothing changed that this tree depends on".
++
++## Context — the four rows, with their evidence
++
++Every pair below is the watcher's own output, verbatim, on 2026-10-13. `was`
++is the digest the committed row records; `now` is what the page hashes to.
++
++| host | page | was | now |
++|---|---|---|---|
++| `claude` | `code.claude.com/docs/en/hooks.md` | `9dd68316…fe88` | re-fetch to read |
++| `augment` | `docs.augmentcode.com/cli/hooks.md` | `e500823b…98fa` | `93f421dc…5378` |
++| `cline` | `docs.cline.bot/customization/hooks.md` | `ef875617…084b` | `73b6df1b…37c2` |
++| `windsurf` | `docs.devin.ai/desktop/cascade/hooks.md` | `460ffe7a…35a2` | `b9e0cd47…170d` |
++
++`cursor`, `gemini`, `copilot` and `codex` were unchanged in the same run;
++`cowork` cites no page. The digests are abbreviated here deliberately — a
++64-character hash copied by hand into prose is a hash nobody re-derives, and
++the authoritative pair is whatever the re-fetch prints on the day the row is
++re-established.
++
++**A changed digest is evidence the page MOVED, never a reading of what it now
++says.** That is the watcher's own contract and it is the reason this roadmap
++exists as a reading task rather than an update task: nothing here may adopt
++upstream text.
++
++**Correction, 2026-10-14 — it was six, not four.** The re-fetch on the day
++the rows were re-established (`main@55782c253`) reported two more pages moved
++since 2026-10-13: the `codex` lowering row
++(`developers.openai.com/codex/hooks.md`, `724881d8…c630` → `57166ef0…5f92`)
++and the sibling page row `claude-code-skills` in `host_docs_pages.yaml`
++(`code.claude.com/docs/en/skills.md`, `35fd2c11…602a` → `3f53e70c…4764`).
++AC-1 asks for `--fetch` to exit 0, which it cannot do with either left red,
++so both are read and re-established here under the same terms. The title
++keeps "four" because it names the item as it was opened.
++
++## Findings — the 2026-10-14 re-read
++
++Each body was fetched once on 2026-10-14 and its sha256 matched what
++`check_host_docs_digest --fetch` printed the same day. Every finding below is
++a reading, not an adoption: no `block_exit`, `native` or `answered_at` value
++was changed, because none of the six readings contradicts a committed one.
++
++| row | what the page says now about refusing | committed row | finding |
++|---|---|---|---|
++| `claude` | exit 2 blocks `PreToolUse`, `UserPromptSubmit`, `Stop`, `SubagentStop`, `PreCompact`; not `PostToolUse`, `SessionStart`, `SessionEnd`, `SubagentStart` | `block_exit: 2` on `stop`, `user_prompt_submit`, `pre_tool_use`; null elsewhere | No contradiction. The three committed 2s are still documented. `pre_compact` and `subagent_stop` are documented as blockable and stay null: null means this package has not established a refusal there, and arming them is an enforcement change, not a dating pass. All nine bound events are still documented. |
++| `augment` | "Exit code 2: Blocking error - Prevents tool execution (PreToolUse only)"; the same five events | `block_exit: null` everywhere, `fail_policy: discard` | Unchanged. The row's own finding (the host documents a refusal, the trampoline discards every verdict) still holds word for word. |
++| `cline` | the page is still a one-line pointer to the SDK plugins page; the body gained an index header | five slots bound to events the page does not name | Unchanged. The digest moved on a header, not on content; the row's comment about the missing event names still describes the page exactly. |
++| `windsurf` | exit 2 blocks the pre-hooks only, `pre_user_prompt` among them; post-hooks cannot block | `post_setup_worktree`, `pre_user_prompt`, `post_cascade_response`, all null | No contradiction. All three bound events are still documented. `pre_user_prompt` is documented as blockable and stays null for the same reason as claude's two. |
++| `codex` | the twelve events and the exit 2 + `decision: "block"` contract are still documented | `slots: {}`, the 2026-10-01 live probe that did not reproduce the deny | Unchanged. The page still describes the contract the probe failed to reproduce; the probe finding is the row's evidence and a docs read cannot overturn it. |
++| `pages/claude-code-skills` | budget at 1% of the context window, each entry capped at 1,536 characters, descriptions dropped least-invoked first, every name kept | the four numbers `_lib/host_listing_model.ts` reads off this page | The four modelled facts still hold. One citation did NOT: the page no longer prints the "≈8,000 characters on 200k" illustration the `budget-unit-is-chars` assumption quoted as present. That assumption's text and the file header now date the illustration to the 2026-08-22 reading instead of asserting it of the current page. The page also names two settings this tree does not model (`skillListingMaxDescChars`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`); neither changes a default the model uses. |
++
++**`expires` and `answered_at`.** Every re-dated row's `expires` moved forward
++to `docs_at` + 1 year, 2027-10-14, the table's stated policy — except
++`claude`, which keeps its committed 2027-09-06 because the table header
++records that value as predating the policy and it is still in the future;
++moving it would have been a second decision riding on a dating pass.
++`answered_at` stays 2026-09-29 on every slot: no slot's answer changed, so no
++slot was re-answered, and the generated enforcement table that prints that
++column stays byte-identical.
++
++**Ratification.** `agents/evidence/ratifications/drain-four-drifted-vendor-pages.md`,
++six council rounds on 2026-10-14 (anthropic + openai, CLI, $0), final
++`ratified` from both seats. Round 1 found a stale "read on 2026-09-29" comment
++above a re-dated row; answering round 2 surfaced a stale install bundle over the
++`host_listing_model.ts` string. Round 5 `refused` the first shape of the 1.3
++workflow change (a write token on the job that runs repository code, and no way
++to tell drift from a broken runner); round 6 ratified the separated
++`route-drift` job that answered it. Each fix landed in its own commit before
++the next round.
++
++## The two-week silence — a process gap
++
++**Process gap: the red had no route to anyone who acts.** GitHub mails a
++scheduled failure only to whoever last edited the cron line; the job writes
++nothing, and nothing an agent session reads lists scheduled-workflow outcomes.
++The council (2026-10-14, two rounds, anthropic + openai) agreed on that line and,
++in round 2, on the one change: a scheduled drift red in `host-docs-digest.yml`
++now opens one issue under a fixed title, or comments on it while it stays open.
++After ratification round 5 refused the first shape, the watch job holds only
++`contents: read` and sets an explicit `drifted` output; a separate `route-drift`
++job holds `issues: write`, checks nothing out and files the issue.
++`tests/scripts/host_docs_digest_workflow.test.ts` pins the route, the
++schedule-only and drift-only conditions, the job split and the no-`--write`
++bound; each guard was seen red before it held.
++
++Both seats named the same limit: an issue is a route, not an owner, and a route
++nobody reads is the same silence elsewhere. Who triages it is the maintainer's
++decision and is not taken here. The same gap is open on the other 13 scheduled
++workflows; that is recorded in `agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md`
++rather than special-cased file by file.
++
++## Phase 1 — Read the four pages and re-establish their rows
++
++- [x] **1.1 Re-read each of the four pages and record what changed about the
++      refusal contract.** For each host: what the page now says about blocking
++      a tool call, which exit code it names, and whether that contradicts the
++      row's committed `block_exit`. A row whose contract did NOT change is a
++      first-class outcome and is written down as one — the digest moved because
++      a vendor edited a page, which is usually not about this tree at all.
++      verify: `./scripts-run src/scripts/check_host_docs_digest --fetch` -> 0
++- [x] **1.2 Re-establish the four rows by hand, with the ratification artifact
++      the table requires.** `docs_at` to the day of the read, `docs_digest` to
++      the body that read hashed, `expires` moved FORWARD. Nothing moves
++      `expires` forward automatically, so a row left half-fixed stays red in
++      `lint_hook_manifest`. `host_lowering.yaml` is on `check_kernel_edit_ratified`'s
++      plumbing list: the edit carries a ratification artifact whose
++      `reviewed_by` differs from `proposed_by` and `implemented_by`.
++      verify: `./scripts-run src/scripts/compile_hook_manifest --table host-lowering` -> 0
++- [x] **1.3 Say whether the two-week silence was a process gap or a reading
++      gap.** The watcher fired correctly, weekly, twice. Either nobody was
++      looking at that job, or looking at it did not lead anywhere. Name which,
++      in one line, and change the one thing that makes the next occurrence
++      land — a pointer, an owner, or nothing with a stated reason.
++      verify: `npx vitest run tests/scripts/host_docs_digest_workflow.test.ts` -> 0
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The re-read adopts upstream text instead of reading it | product | A page is re-read under time pressure and its new wording is copied into the row's slots, turning a vendor's edit into this tree's claim without anybody deciding | 1.1 separates the READING from the row edit and requires a per-host finding first; the ratification artifact in 1.2 puts a second pair of eyes on whatever the reading concluded | Phase 1 — Read the four pages and re-establish their rows |
++| 2 | A row is half-fixed and stays red | implementation | `--fetch --write` pulls `expires` BACK on drift and nothing moves it forward; a run that writes and stops leaves the row stale and the gate red for a different reason than it started | 1.2 names all three fields explicitly and its verify recompiles the sibling, which is hashed over the YAML text and fails on a partial edit | Phase 1 — Read the four pages and re-establish their rows |
++| 3 | The digests move again before the rows land | implementation | Vendor pages are edited on their own schedule; a digest read today can be stale by the time the ratification artifact clears | The authoritative pair is whatever the re-fetch prints on the DAY the row is re-established, which is why the Context abbreviates its hashes instead of pinning them | Phase 1 — Read the four pages and re-establish their rows |
++
++## Acceptance Criteria
++
++- [x] AC-1 — `check_host_docs_digest --fetch` exits 0 over the committed
++      lowering table because all four rows carry a current digest and a
++      forward `expires`, not because any row was removed, narrowed or
++      exempted.
++- [x] AC-2 — Each of the four re-reads has a recorded finding, including the
++      rows where nothing this tree depends on changed, and no row's slots were
++      edited without one.
++- [x] AC-3 — The plumbing edit carries a ratification artifact whose
++      `reviewed_by` differs from both `proposed_by` and `implemented_by`.
+diff --git a/agents/roadmaps/road-to-re-establishing-four-drifted-vendor-pages.md b/agents/roadmaps/road-to-re-establishing-four-drifted-vendor-pages.md
+deleted file mode 100644
+index ec0c04c38a5a2a6ff5436a2c1375deac59281298..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-re-establishing-four-drifted-vendor-pages.md
++++ /dev/null
+@@ -1,99 +0,0 @@
+----
+-complexity: lightweight
+-status: draft
+-execution:
+-  mode: phase-checkpoints
+-estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It ships `status: draft`, so it is excluded from the gated active_roadmaps count; this exemption covers the growth half only."
+-relates:
+-  - slug: road-to-a-search-answer-a-model-can-choose-from
+-    relation: extends
+-    note: "That roadmap's 0.2 added the sibling page list and ran the watcher's fetch path to fill its digest. The same run surfaced the four drifted rows below, which belong to the LOWERING table and were out of its scope: re-establishing one is a plumbing edit carrying a ratification artifact. Split out rather than absorbed."
+----
+-# Road to re-establishing four drifted vendor pages
+-
+-> **Source:** `check_host_docs_digest --fetch` run on 2026-10-13 at
+-> `main@c107aaf0f`, while executing
+-> `road-to-a-search-answer-a-model-can-choose-from` 0.2. Four rows of
+-> `src/scripts/hooks/host_lowering.yaml` reported `changed`. The scheduled
+-> `Host Docs Digest Watch` workflow has reported the same red on `main` on
+-> 2026-10-05 and 2026-10-12 — two consecutive weeks with no row
+-> re-established, which is what makes this a tracked item rather than a
+-> notification that is already working.
+-
+-## Goal
+-
+-The four lowering rows whose cited pages moved are re-established by hand
+-against the pages as they now read: `docs_at` on the day somebody read them,
+-`docs_digest` on the body that reading hashed, and `expires` moved FORWARD
+-again. The weekly watcher returns to green for a reason — the rows are current
+-— and not because the watcher was narrowed. Whatever the re-read finds about
+-each host's actual refusal contract is recorded as a finding, including
+-"nothing changed that this tree depends on".
+-
+-## Context — the four rows, with their evidence
+-
+-Every pair below is the watcher's own output, verbatim, on 2026-10-13. `was`
+-is the digest the committed row records; `now` is what the page hashes to.
+-
+-| host | page | was | now |
+-|---|---|---|---|
+-| `claude` | `code.claude.com/docs/en/hooks.md` | `9dd68316…fe88` | re-fetch to read |
+-| `augment` | `docs.augmentcode.com/cli/hooks.md` | `e500823b…98fa` | `93f421dc…5378` |
+-| `cline` | `docs.cline.bot/customization/hooks.md` | `ef875617…084b` | `73b6df1b…37c2` |
+-| `windsurf` | `docs.devin.ai/desktop/cascade/hooks.md` | `460ffe7a…35a2` | `b9e0cd47…1170` |
+-
+-`cursor`, `gemini`, `copilot` and `codex` were unchanged in the same run;
+-`cowork` cites no page. The digests are abbreviated here deliberately — a
+-64-character hash copied by hand into prose is a hash nobody re-derives, and
+-the authoritative pair is whatever the re-fetch prints on the day the row is
+-re-established.
+-
+-**A changed digest is evidence the page MOVED, never a reading of what it now
+-says.** That is the watcher's own contract and it is the reason this roadmap
+-exists as a reading task rather than an update task: nothing here may adopt
+-upstream text.
+-
+-## Phase 1 — Read the four pages and re-establish their rows
+-
+-- [ ] **1.1 Re-read each of the four pages and record what changed about the
+-      refusal contract.** For each host: what the page now says about blocking
+-      a tool call, which exit code it names, and whether that contradicts the
+-      row's committed `block_exit`. A row whose contract did NOT change is a
+-      first-class outcome and is written down as one — the digest moved because
+-      a vendor edited a page, which is usually not about this tree at all.
+-      verify: `./scripts-run src/scripts/check_host_docs_digest --fetch` -> 0
+-- [ ] **1.2 Re-establish the four rows by hand, with the ratification artifact
+-      the table requires.** `docs_at` to the day of the read, `docs_digest` to
+-      the body that read hashed, `expires` moved FORWARD. Nothing moves
+-      `expires` forward automatically, so a row left half-fixed stays red in
+-      `lint_hook_manifest`. `host_lowering.yaml` is on `check_kernel_edit_ratified`'s
+-      plumbing list: the edit carries a ratification artifact whose
+-      `reviewed_by` differs from `proposed_by` and `implemented_by`.
+-      verify: `./scripts-run src/scripts/compile_hook_manifest --table host-lowering` -> 0
+-- [ ] **1.3 Say whether the two-week silence was a process gap or a reading
+-      gap.** The watcher fired correctly, weekly, twice. Either nobody was
+-      looking at that job, or looking at it did not lead anywhere. Name which,
+-      in one line, and change the one thing that makes the next occurrence
+-      land — a pointer, an owner, or nothing with a stated reason.
+-      verify: `grep -c 'Host Docs Digest Watch' .github/workflows/host-docs-digest.yml` -> /^[1-9]/
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The re-read adopts upstream text instead of reading it | product | A page is re-read under time pressure and its new wording is copied into the row's slots, turning a vendor's edit into this tree's claim without anybody deciding | 1.1 separates the READING from the row edit and requires a per-host finding first; the ratification artifact in 1.2 puts a second pair of eyes on whatever the reading concluded | Phase 1 — Read the four pages and re-establish their rows |
+-| 2 | A row is half-fixed and stays red | implementation | `--fetch --write` pulls `expires` BACK on drift and nothing moves it forward; a run that writes and stops leaves the row stale and the gate red for a different reason than it started | 1.2 names all three fields explicitly and its verify recompiles the sibling, which is hashed over the YAML text and fails on a partial edit | Phase 1 — Read the four pages and re-establish their rows |
+-| 3 | The digests move again before the rows land | implementation | Vendor pages are edited on their own schedule; a digest read today can be stale by the time the ratification artifact clears | The authoritative pair is whatever the re-fetch prints on the DAY the row is re-established, which is why the Context abbreviates its hashes instead of pinning them | Phase 1 — Read the four pages and re-establish their rows |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — `check_host_docs_digest --fetch` exits 0 over the committed
+-      lowering table because all four rows carry a current digest and a
+-      forward `expires`, not because any row was removed, narrowed or
+-      exempted.
+-- [ ] AC-2 — Each of the four re-reads has a recorded finding, including the
+-      rows where nothing this tree depends on changed, and no row's slots were
+-      edited without one.
+-- [ ] AC-3 — The plumbing edit carries a ratification artifact whose
+-      `reviewed_by` differs from both `proposed_by` and `implemented_by`.
+diff --git a/agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md b/agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ee7800ccd2afbd500b3f6f389a830f4504b15614
+--- /dev/null
++++ b/agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md
+@@ -0,0 +1,44 @@
++---
++complexity: lightweight
++review_by: 2026-12-14
++---
++
++# Stub: road to scheduled reds that reach someone
++
++> **Stub — not active work.** Opened as the disposition for a defect seen while
++> closing `road-to-re-establishing-four-drifted-vendor-pages` and wider than that
++> change. A line in a pull-request body is not a disposition, which is why this
++> file exists.
++
++## What was observed
++
++The Host Docs Digest Watch failed on `main` on 2026-10-05 and 2026-10-12 and
++nobody acted. The drift was found only because an unrelated task ran the same
++checker locally. GitHub mails a scheduled failure to whoever last edited the
++cron line and to nobody else, so the red had no route to anyone who would act:
++a process gap, not a reading gap. The AI council (2026-10-14, anthropic + openai,
++CLI, two rounds) agreed on that and on the fix for that one job, which shipped in
++the same change: a scheduled red opens or comments on one issue under a fixed
++title.
++
++The same gap is open on the other scheduled workflows. On 2026-10-14, 14 files
++under `.github/workflows/` carry `schedule:`; none but the digest watch writes
++anything when it fails, and none other grants `issues: write`. An active roadmap is
++moving more calendar-dependent gates onto scheduled callers, so the set grows.
++
++## What closing it needs
++
++1. Classify each scheduled workflow: does its red need a human or an agent to
++   act, or is it informational? The council named this as the first step — a
++   docs-drift red and a security-scan red are not the same weight.
++2. One shared route for the ones that need action, rather than a copy of the
++   digest watch's step in each file.
++3. A reader: something an agent or the maintainer reads at the start of a
++   session that lists open routing issues. An issue nobody reads is the same
++   silence in a different interface.
++4. Acknowledgement and stale-issue semantics, so a route does not become a pile.
++
++## Not decided here
++
++Who triages a routed issue. The digest watch's issue has no assignee because
++naming one is the maintainer's decision, not an automation's.
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index 7592ac77bb4eb7a8064c84c8920a0f43d07a31dd..206a08e9de2a6b1350e90f2856a8990bce1f4afa 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -11243,7 +11243,7 @@ var ASSUMPTIONS = [
+   {
+     id: "budget-unit-is-chars",
+     provenance: "upstream-prose",
+-    why: 'The docs give the budget as a fraction of the context window (tokens) and then illustrate it as "\u22488,000 characters on 200k", which only reconciles at 4 chars per token. That ratio is inferred from the illustration, never stated.'
++    why: 'The docs give the budget as a fraction of the context window (tokens); the 2026-08-22 read illustrated it as "\u22488,000 characters on 200k" (gone by 2026-10-14), which only reconciles at 4 chars per token. That ratio is inferred, never stated.'
+   },
+   {
+     id: "fill-order-is-invocation-frequency",
+diff --git a/src/scripts/_lib/host_listing_model.ts b/src/scripts/_lib/host_listing_model.ts
+index 913452b873b44f705d4a8d843929433ca85e5415..762a49b0b53aa6237ccb0bfb72754aaf8012db51 100644
+--- a/src/scripts/_lib/host_listing_model.ts
++++ b/src/scripts/_lib/host_listing_model.ts
+@@ -11,9 +11,11 @@
+  * returned zero hits before this file.
+  *
+  * THE MECHANISM, AS DOCUMENTED UPSTREAM (code.claude.com/docs/en/skills and
+- * anthropics/claude-code#64606, both read 2026-08-22). Claude Code lists every
+- * skill NAME, and keeps DESCRIPTIONS only up to a fraction of the context
+- * window — 1% by default, ≈8,000 characters on a 200k window — filling by
++ * anthropics/claude-code#64606, both read 2026-08-22; the page re-read on
++ * 2026-10-14 keeps the 1% and the 1,536 and no longer prints the ≈8,000
++ * illustration). Claude Code lists every skill NAME, and keeps DESCRIPTIONS
++ * only up to a fraction of the context window — 1% by default, which the
++ * 2026-08-22 page illustrated as ≈8,000 characters on a 200k window — filling by
+  * invocation frequency and capping each entry at 1,536 characters. The fraction
+  * is consumer-settable as `skillListingBudgetFraction`.
+  *
+@@ -83,7 +85,12 @@ export interface HostListingModelResult {
+     assumptions: readonly ModelAssumption[];
+ }
+ 
+-/** Documented Claude Code defaults, read 2026-08-22. Not measured in this repo. */
++/**
++ * Claude Code defaults, not measured in this repo. `fraction` and
++ * `perEntryCapChars` are documented (read 2026-08-22, re-read 2026-10-14).
++ * `charsPerToken` is inferred from an illustration the 2026-08-22 page printed
++ * and the 2026-10-14 page no longer does — see `budget-unit-is-chars`.
++ */
+ export const CLAUDE_CODE_LISTING_DEFAULTS = {
+     fraction: 0.01,
+     perEntryCapChars: 1536,
+@@ -96,9 +103,9 @@ const ASSUMPTIONS: readonly ModelAssumption[] = [
+         id: 'budget-unit-is-chars',
+         provenance: 'upstream-prose',
+         why:
+-            'The docs give the budget as a fraction of the context window (tokens) and then ' +
+-            'illustrate it as "≈8,000 characters on 200k", which only reconciles at 4 chars ' +
+-            'per token. That ratio is inferred from the illustration, never stated.',
++            'The docs give the budget as a fraction of the context window (tokens); the ' +
++            '2026-08-22 read illustrated it as "≈8,000 characters on 200k" (gone by 2026-10-14), ' +
++            'which only reconciles at 4 chars per token. That ratio is inferred, never stated.',
+     },
+     {
+         id: 'fill-order-is-invocation-frequency',
+diff --git a/src/scripts/_lib/source_shape.ts b/src/scripts/_lib/source_shape.ts
+index 4fcbaa5bcf52ef51165ddc75597b43b4284e602d..22b363ce5f99e994fb36163d8281f6dca78b734a 100644
+--- a/src/scripts/_lib/source_shape.ts
++++ b/src/scripts/_lib/source_shape.ts
+@@ -103,8 +103,13 @@ const SOURCE_HEADER_RE = /^\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*(\S.*)$/
+ /** A quoted inbox directory. Terminated by `/`, so a bare mention of the parent is not a hit. */
+ const TMP_QUOTE_RE = /agents\/tmp(?:\.old)?\/([A-Za-z0-9._-]+)\//g;
+ 
+-/** A GitHub repository URL, scheme-optional. */
+-const GITHUB_URL_RE = /(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
++/**
++ * A GitHub repository URL, scheme-optional. The lookbehind excuses only the
++ * documentation host, whose `docs.github.com/en/copilot` would otherwise read as
++ * owner `en`, repo `copilot`. Every other subdomain (`api.`, `gist.`,
++ * `codeload.`) still flags the line, as it did before.
++ */
++const GITHUB_URL_RE = /(?<!docs\.)(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
+ 
+ export interface SlugAllowlist {
+     /** GitHub owners whose repos may be named openly (own org, integrated tools). */
+diff --git a/src/scripts/hooks/host_docs_pages.yaml b/src/scripts/hooks/host_docs_pages.yaml
+index 992e20b3f7168afb58589b61fb9e730eeb4a4b70..fa0c62e625187bb5e328f19693d90d8968d90d0f 100644
+--- a/src/scripts/hooks/host_docs_pages.yaml
++++ b/src/scripts/hooks/host_docs_pages.yaml
+@@ -47,12 +47,14 @@
+ pages:
+   claude-code-skills:
+     docs_url: https://code.claude.com/docs/en/skills.md
+-    docs_at: 2026-08-22
+-    docs_digest: 35fd2c11f870fbe1497a53796de31b2a6b760645e724bda58894525356d4602a
+-    expires: 2027-08-22
++    docs_at: 2026-10-14
++    docs_digest: 3f53e70caebac7b7101bd57fd98d487c8be99611682f3f02677c2d2dbbc84764
++    expires: 2027-10-14
+     why: >-
+       The skill LISTING contract — that the host lists every skill name but
+       keeps descriptions only up to a fraction of the context window, filling by
+       invocation frequency and capping each entry. `src/scripts/_lib/host_listing_model.ts`
+-      models that mechanism and cites this page for every number in it; nothing
+-      else in this tree establishes any of them.
++      models that mechanism and cites this page for its numbers; nothing else
++      in this tree establishes any of them. As of the 2026-10-14 read the page
++      states the fraction and the per-entry cap; the chars-per-token ratio rests
++      on an illustration only the 2026-08-22 read carried.
+diff --git a/src/scripts/hooks/host_lowering.json b/src/scripts/hooks/host_lowering.json
+index c7f1cb73d52269c6d62195b9d118ef184f54a759..1c072ad26cfb323eefd995b3699af4e174ce5a29 100644
+--- a/src/scripts/hooks/host_lowering.json
++++ b/src/scripts/hooks/host_lowering.json
+@@ -1 +1 @@
+-{"fingerprint":"08575a71d81fd8a5ef9e4b400f4a38cb66c26e1dd701d98f3cdc0bdc9e4758b4:22235","body_fingerprint":"26a02a8e0fb2b6be6eb1def6ae8792c021425598bd672c850e6582726d96a6a5:6376","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":"9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88","probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":"e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":"7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":"ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":"460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":"06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.github.com/en/copilot/concepts/agents/hooks.md","docs_digest":"bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":"724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630","probe_at":"2026-10-01","host_version":"0.148.0","expires":"2027-09-29"},"slots":{}}}}}}}
+\ No newline at end of file
++{"fingerprint":"0402d3dad6571021524c0ca76eb80d358633598442cabcbde7eab80726d2196b:22297","body_fingerprint":"e8dafe5088a8570849f3115870b3ec1b75e91cd5d42fbfe150f317e435683ae8:6376","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":"0ccea55b53b6b616134028b857028cf3822b89958a9c4b23806287dddeefe954","probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":"93f421dccdd017099d87b12ffd7fe8f272d8adf750856ddfb200d9b55c695378","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":"7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":"73b6df1bf5e51589313ea3fcfdd50c0d505530234418adcdc9fe198af61837c2","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":"b9e0cd4772de9e7c4086ecf31bfcb456dc74c3b36516f52c2ff8ec1dd5c1170d","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":"06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.github.com/en/copilot/concepts/agents/hooks.md","docs_digest":"bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":"57166ef03e7059732dd90925d5c42dd4d187eb2625d66cc154d0fbd2edb65f92","probe_at":"2026-10-01","host_version":"0.148.0","expires":"2027-10-14"},"slots":{}}}}}}}
+\ No newline at end of file
+diff --git a/src/scripts/hooks/host_lowering.yaml b/src/scripts/hooks/host_lowering.yaml
+index 23126ae0c6d83920364c9f61b54fe110390f0988..4e0495830e26d9e1ace5debf1fa74a1a8b6b1812 100644
+--- a/src/scripts/hooks/host_lowering.yaml
++++ b/src/scripts/hooks/host_lowering.yaml
+@@ -50,8 +50,8 @@
+ #                    never silently updated. On drift the watcher leaves it
+ #                    alone and moves `expires` instead, so the field keeps
+ #                    naming the body someone actually read. It is NOT paired
+-#                    with `docs_at`, and the committed rows prove why: all nine
+-#                    carry `docs_at: 2026-09-29` while the eight digests were
++#                    with `docs_at`, and the first fill proved why: all nine
++#                    carried `docs_at: 2026-09-29` while the eight digests were
+ #                    taken 2026-10-01. The two answer different questions —
+ #                    `docs_at` when a human read the page for the row's ANSWERS,
+ #                    `docs_digest` which body the watcher is comparing against.
+@@ -88,15 +88,16 @@ hosts:
+         # read was never dated, and the absence was the record. Both are filled
+         # now from sources this tree already carries — the 2026-09-06 live probe
+         # recorded in `host_semantics.ts` (Claude Code 2.1.263) and a fresh
+-        # documentation read on 2026-09-29. `expires` is deliberately unchanged.
++        # documentation read on 2026-09-29, repeated 2026-10-14. `expires` is
++        # deliberately unchanged.
+         #
+         # The committed `docs_url` was `https://docs.claude.com/en/docs/claude-code/hooks`,
+         # which answers 301 and lands on the URL below. Recording the redirect
+         # target is what makes a digest reproducible.
+         verified:
+-          docs_at: 2026-09-29
++          docs_at: 2026-10-14
+           docs_url: https://code.claude.com/docs/en/hooks.md
+-          docs_digest: 9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88
++          docs_digest: 0ccea55b53b6b616134028b857028cf3822b89958a9c4b23806287dddeefe954
+           probe_at: 2026-09-06
+           host_version: 2.1.263
+           expires: 2027-09-06
+@@ -121,15 +122,15 @@ hosts:
+         fail_policy: discard
+         timeout_unit: unknown
+         timeout_default: null
+-        # Established by a documentation read on 2026-09-29, not by a live
+-        # probe — `probe_at` stays null and says so.
++        # Established by a documentation read on 2026-09-29, repeated 2026-10-14, not
++        # by a live probe — `probe_at` stays null and says so.
+         verified:
+-          docs_at: 2026-09-29
++          docs_at: 2026-10-14
+           docs_url: https://docs.augmentcode.com/cli/hooks.md
+-          docs_digest: e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa
++          docs_digest: 93f421dccdd017099d87b12ffd7fe8f272d8adf750856ddfb200d9b55c695378
+           probe_at: null
+           host_version: null
+-          expires: 2027-09-29
++          expires: 2027-10-14
+         # THE FINDING THIS ROW CARRIES. Augment's own documentation states that
+         # `PreToolUse` can block tool execution and shows `exit 2` doing it. The
+         # `block_exit: null` below is therefore NOT a claim that the host cannot
+@@ -187,12 +188,12 @@ hosts:
+         # piece of work, and inventing a citation for them here would be the
+         # defect this file was built to remove.
+         verified:
+-          docs_at: 2026-09-29
++          docs_at: 2026-10-14
+           docs_url: https://docs.cline.bot/customization/hooks.md
+-          docs_digest: ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b
++          docs_digest: 73b6df1bf5e51589313ea3fcfdd50c0d505530234418adcdc9fe198af61837c2
+           probe_at: null
+           host_version: null
+-          expires: 2027-09-29
++          expires: 2027-10-14
+         slots:
+           session_start:      { native: [TaskStart, TaskResume], block_exit: null, answered_at: 2026-09-29 }
+           session_end:        { native: TaskComplete,            block_exit: null, answered_at: 2026-09-29 }
+@@ -212,12 +213,12 @@ hosts:
+         # redirects to `docs.devin.ai`; the redirect target is recorded so the
+         # digest is reproducible.
+         verified:
+-          docs_at: 2026-09-29
++          docs_at: 2026-10-14
+           docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
+-          docs_digest: 460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2
++          docs_digest: b9e0cd4772de9e7c4086ecf31bfcb456dc74c3b36516f52c2ff8ec1dd5c1170d
+           probe_at: null
+           host_version: null
+-          expires: 2027-09-29
++          expires: 2027-10-14
+         slots:
+           session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-09-29 }
+           user_prompt_submit: { native: pre_user_prompt,       block_exit: null, answered_at: 2026-09-29 }
+@@ -380,8 +381,8 @@ hosts:
+         # refusal path on this host, which is exactly what a null means here. It
+         # does NOT establish that Codex cannot refuse — this file's header
+         # forbids that reading, and two unexcluded explanations remain. The
+-        # installed build is 0.148.0 against a current 0.159.3, and the page
+-        # that was read describes the current one; and the probe never
++        # installed build was 0.148.0 against a then-current 0.159.3, and the
++        # page read on 2026-09-29 described the current one; and the probe never
+         # distinguished "the hook fired and was ignored" from "the matcher never
+         # matched", because the instrumented re-run (a hook that records its own
+         # input before refusing) was refused by the harness this probe ran
+@@ -392,10 +393,10 @@ hosts:
+         # armed a refusal this tree cannot demonstrate. The row records the
+         # negative instead.
+         verified:
+-          docs_at: 2026-09-29
++          docs_at: 2026-10-14
+           docs_url: https://developers.openai.com/codex/hooks.md
+-          docs_digest: 724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630
++          docs_digest: 57166ef03e7059732dd90925d5c42dd4d187eb2625d66cc154d0fbd2edb65f92
+           probe_at: 2026-10-01
+           host_version: 0.148.0
+-          expires: 2027-09-29
++          expires: 2027-10-14
+         slots: {}
+diff --git a/tests/scripts/host_docs_digest_workflow.test.ts b/tests/scripts/host_docs_digest_workflow.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..d8320992a1f05f9588d4dda07e803068d86f092f
+--- /dev/null
++++ b/tests/scripts/host_docs_digest_workflow.test.ts
+@@ -0,0 +1,102 @@
++/**
++ * The Host Docs Digest Watch went red on main twice, a week apart, and nobody
++ * acted: a scheduled failure is mailed only to whoever last edited the cron
++ * line, so the red had no route to anyone who would read the page. These cases
++ * pin the route that now exists, and the bounds it must keep — the watch still
++ * never writes the table, the issue write grant lives on a job that runs no
++ * repository code, and only a detected drift (never a broken runner) is routed.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { describe, expect, it } from 'vitest';
++import { parse } from 'yaml';
++
++const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
++const WORKFLOW = path.join(ROOT, '.github', 'workflows', 'host-docs-digest.yml');
++
++interface Step { id?: string; name?: string; if?: string; run?: string; uses?: string }
++interface Job {
++    if?: string;
++    needs?: string | string[];
++    outputs?: Record<string, string>;
++    permissions?: Record<string, string>;
++    steps: Step[];
++}
++interface Workflow { permissions?: Record<string, string>; jobs: Record<string, Job> }
++
++const wf = parse(fs.readFileSync(WORKFLOW, 'utf-8')) as Workflow;
++const jobNamed = (name: string): Job => {
++    const found = wf.jobs[name];
++    if (!found) throw new Error(`host-docs-digest.yml has no \`${name}\` job`);
++    return found;
++};
++const watch = jobNamed('digest-watch');
++const route = jobNamed('route-drift');
++const fetchStep = (): Step | undefined => watch.steps.find((s) => (s.run ?? '').includes('check_host_docs_digest --fetch'));
++
++describe('host-docs-digest workflow routes a drift red to a tracked issue', () => {
++    it('opens or updates one issue', () => {
++        const run = route.steps.map((s) => s.run ?? '').join('\n');
++        expect(run).toMatch(/gh issue create/);
++        expect(run).toMatch(/gh issue comment/);
++    });
++
++    it('routes only scheduled runs, so a manual dispatch from a branch files nothing', () => {
++        expect(route.if ?? '').toMatch(/github\.event_name\s*==\s*'schedule'/);
++    });
++
++    it('routes only a detected drift, never a broken runner', () => {
++        const step = fetchStep();
++        expect(step?.id, 'the --fetch step needs an id').toBeTruthy();
++        expect(step?.run ?? '').toMatch(/changed since the row was established/);
++        expect(step?.run ?? '').toMatch(/GITHUB_OUTPUT/);
++        expect(watch.outputs?.drifted ?? '').toContain(`steps.${step?.id}.outputs.drifted`);
++        expect(route.needs).toEqual('digest-watch');
++        expect(route.if ?? '').toContain("needs.digest-watch.outputs.drifted == 'true'");
++    });
++
++    it('runs the route even though the watch job it depends on went red', () => {
++        // A drift exits non-zero, so without `always()` GitHub's implicit
++        // `success()` would skip the route on exactly the runs it exists for.
++        expect(route.if ?? '').toMatch(/^\s*always\(\)\s*&&/);
++    });
++
++    it('greps for verdict strings the checker actually prints', () => {
++        const checker = fs.readFileSync(path.join(ROOT, 'src', 'scripts', 'check_host_docs_digest.ts'), 'utf-8');
++        const run = fetchStep()?.run ?? '';
++        for (const [inWorkflow, inChecker] of [
++            ['changed since the row was established', 'changed since the row was established'],
++            ['are GONE \\(404/410\\)', 'are GONE (404/410)'],
++        ] as const) {
++            expect(run, `workflow greps for ${inChecker}`).toContain(inWorkflow);
++            expect(checker, `checker prints ${inChecker}`).toContain(inChecker);
++        }
++    });
++
++    it('a manual dispatch cannot cancel the scheduled run it would not replace', () => {
++        const raw = fs.readFileSync(WORKFLOW, 'utf-8');
++        const group = /concurrency:\s*\n\s*group:\s*(.+)/.exec(raw)?.[1] ?? '';
++        expect(group).toContain('github.event_name');
++    });
++
++    it('keeps the issue grant off every job that runs repository code', () => {
++        expect(wf.permissions).toEqual({ contents: 'read' });
++        expect(watch.permissions ?? wf.permissions).toEqual({ contents: 'read' });
++        expect(route.permissions).toEqual({ issues: 'write' });
++        for (const s of route.steps) {
++            expect(s.uses ?? '', 'the routing job checks nothing out').not.toMatch(/checkout/);
++            expect(s.run ?? '').not.toMatch(/scripts-run|npm /);
++        }
++    });
++
++    it('interpolates no expression into a shell body', () => {
++        for (const s of route.steps) expect(s.run ?? '').not.toMatch(/\$\{\{/);
++        expect(fetchStep()?.run ?? '').not.toMatch(/\$\{\{/);
++    });
++
++    it('still never writes the table', () => {
++        for (const s of watch.steps) expect(s.run ?? '').not.toMatch(/--write/);
++    });
++});
+diff --git a/tests/scripts/source_shape.test.ts b/tests/scripts/source_shape.test.ts
+index a5f2bba6765d10daaa463813e5cc4ab446008531..5de2a6a3d27fdda3f3f70bcf8e65a011fbbcecf6 100644
+--- a/tests/scripts/source_shape.test.ts
++++ b/tests/scripts/source_shape.test.ts
+@@ -82,6 +82,25 @@ describe('source_shape — what silences each class', () => {
+         expect(repoSlugHits('https://github.com/sponsors/someone')).toEqual([]);
+     });
+ 
++    // Assembled at run time so a review snapshot of this diff does not itself
++    // carry a literal un-allowlisted repository URL into the tracked tree.
++    const GH = ['github', 'com'].join('.');
++    const OWNER = 'some-unlisted-owner';
++
++    it('a subdomain of github.com is not a repo URL', () => {
++        // `docs.github.com/en/copilot/...` is a documentation path, not
++        // `<owner>/<repo>`; the bare host still fires right next to it.
++        expect(repoSlugHits('https://docs.github.com/en/copilot/concepts/agents/hooks.md')).toEqual([]);
++        expect(repoSlugHits('"docs_url":"https://docs.github.com/en/copilot/x"')).toEqual([]);
++        expect(repoSlugHits(`https://${GH}/${OWNER}/some-repo`).length).toBe(1);
++    });
++
++    it('only the documentation subdomain is excused; other subdomains still flag the line', () => {
++        expect(repoSlugHits(`https://api.${GH}/repos/${OWNER}/some-repo`).length).toBeGreaterThan(0);
++        expect(repoSlugHits(`https://gist.${GH}/${OWNER}/abc123`).length).toBeGreaterThan(0);
++        expect(repoSlugHits(`https://codeload.${GH}/${OWNER}/some-repo`).length).toBeGreaterThan(0);
++    });
++
+     it('a Source header pointing at a tmp directory is judged ONCE, by the directory name', () => {
+         // Otherwise one line would raise two ratchet counts and the two classes
+         // would move together, which makes the numbers unreadable.
