@@ -43,6 +43,10 @@
     "surfaces": [
       "surface",
       "login",
+      "register",
+      "signup",
+      "passkey",
+      "verify",
       "upload",
       "webhook",
       "tenant",
@@ -77,7 +81,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: MITRE ATT&CK + CWE + OWASP API Top 10 / ASVS 5.0",
-    "sha": "re-derived 2026-09-27 against ATT&CK v19.x and ASVS 5.0.0: every ATT&CK id cited in threats.csv's Source Refs column (T1110, T1563, T1105, T1090, T1499, T1552, T1552.001, T1190, T1078.004) resolves in the current Enterprise matrix and none is deprecated or revoked \u2014 threats.csv itself carries no ASVS identifiers, so there is nothing to remap there. SKILL.md's References section cited ASVS 4.0.3's V3/V4/V5 by the old numbering; updated to 5.0.0's V7 Session Management, V8 Authorization, and V1 Encoding and Sanitization + V2 Validation and Business Logic, per the standard's own 4.0\u21925.0 migration guide",
-    "last_checked": "2026-09-18"
+    "sha": "re-derived 2026-09-27 against ATT&CK v19.x and ASVS 5.0.0: every ATT&CK id cited in threats.csv's Source Refs column (T1110, T1563, T1105, T1090, T1499, T1552, T1552.001, T1190, T1078.004) resolves in the current Enterprise matrix and none is deprecated or revoked \u2014 threats.csv itself carries no ASVS identifiers, so there is nothing to remap there. SKILL.md's References section cited ASVS 4.0.3's V3/V4/V5 by the old numbering; updated to 5.0.0's V7 Session Management, V8 Authorization, and V1 Encoding and Sanitization + V2 Validation and Business Logic, per the standard's own 4.0\u21925.0 migration guide. EXTENDED 2026-10-13 with the account-lifecycle half of the authentication class: a second authentication surface row (account lifecycle, registration, credential change) and thirteen threat rows \u2014 account enumeration (CWE-204/203/208), unverified email ownership (CWE-287/640), password acceptance (CWE-521), password storage (CWE-916/759), unsafe secret comparison and home-made credential primitives (CWE-208/338), reset beyond the token (CWE-640/362), identity or credential change (CWE-620/778), MFA and its recovery path (CWE-308), persistent login and logout (CWE-613/539), federated sign-in takeover (CWE-287/352), self-contained token validation (CWE-347), login CSRF (CWE-352) and signup abuse as a policy row (CWE-799); the credential-stuffing row was amended in place for spraying and resend throttling rather than duplicated. These rows are the first in threats.csv to carry ASVS identifiers, and the chapters cited \u2014 V2 Validation and Business Logic, V6 Authentication, V7 Session Management, V9 Self-contained Tokens, V10 OAuth and OIDC, V11 Cryptography, V16 Security Logging and Error Handling \u2014 were read from the standard's own 5.0 chapter listing on 2026-10-13 rather than recalled. Per ADR-238 no row carries a length, attempt count, iteration count, work factor or algorithm preference order: every such value defers to ASVS 5.0 V6 and NIST SP 800-63B, named in SKILL.md's References",
+    "last_checked": "2026-10-13"
   }
 }

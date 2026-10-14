@@ -10,11 +10,8 @@
     "source_roadmap": "road-to-account-lifecycle-threat-rows",
     "cells": [
       "Account enumeration through any observable difference",
-      "Fast or home-made password storage",
-      "Unsafe secret comparison and home-made credential primitives",
       "Reset beyond the token",
       "Federated sign-in takeover",
-      "Self-contained token validation bypass",
       "Persistent login and logout"
     ]
   },

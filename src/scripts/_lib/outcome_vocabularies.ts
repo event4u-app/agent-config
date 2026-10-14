@@ -33,13 +33,14 @@
  * `partial`. So: separate vocabularies, one registry, mappings only where
  * execution actually crosses.
  *
- * **Mappings are not written for symmetry.** Two crossings exist, and both are
- * places where execution actually translates: `DispatchOutcome` -> phase in
- * `orchestration_record.ts`, and `LadderAction` -> run in
- * `continuation_ladder.ts` (added 2026-09-03 with the seventh run state, so the
- * state has a producer rather than being a word nothing emits). A total
- * phase<->step<->run mapping would be nine relations of which two are real, and
- * the seven invented ones would read as contract.
+ * **Mappings are not written for symmetry.** One crossing exists, a place where
+ * execution actually translates: `DispatchOutcome` -> phase in
+ * `orchestration_record.ts`. A second, `LadderAction` -> run in
+ * `continuation_ladder.ts`, was added 2026-09-03 with the seventh run state and
+ * removed 2026-10-14 by owner decision together with that module, whose only
+ * caller had been withdrawn on its own kill date. A total phase<->step<->run
+ * mapping would be nine relations of which one is real, and the eight invented
+ * ones would read as contract.
  *
  * `revisit-if`: a producer needs a value its vocabulary cannot express, or a
  * second real crossing appears, or producer analysis shows two of the three
@@ -56,9 +57,14 @@
  * ({@link readRunTerminalState}), a declared downgrade
  * ({@link RUN_TERMINAL_STATE_DOWNGRADE}) and the rollback trigger below.
  *
+ * **Its producer is gone.** The ladder rung that emitted `premise-invalidated`
+ * left the tree on 2026-10-14, so no code writes the value today; it stays in
+ * the vocabulary because documents and persisted records may still carry it, and
+ * the tolerant read below is what keeps an old record readable.
+ *
  * **Rollback trigger, stated rather than instrumented.** Withdraw
- * `premise-invalidated` — remove it from {@link RUN_TERMINAL_STATES} and let the
- * ladder rung report its declared downgrade `blocked` instead — on EITHER of:
+ * `premise-invalidated` — remove it from {@link RUN_TERMINAL_STATES} and let a
+ * reader apply its declared downgrade `blocked` instead — on EITHER of:
  * (1) any consumer is observed failing (a throw, a refused write, a dropped
  * record) on encountering the value, or (2) `readRunTerminalState` returns
  * `null` for a persisted value in normal operation, which would mean a writer
@@ -227,20 +233,6 @@ export const CROSS_DOMAIN_MAPPINGS = [
          * version 1.
          */
         semantics_version: 2,
-    },
-    {
-        source: 'LadderAction',
-        target: 'run',
-        at: 'src/scripts/_lib/continuation_ladder.ts',
-        fn: 'terminalStateFor',
-        /**
-         * Version 1, and the mapping is TOTAL over `LadderAction` by
-         * construction: `TERMINAL_STATE_BY_ACTION` is a `Record<LadderAction,
-         * RunTerminalState | null>`, so adding a rung without deciding its
-         * terminal state does not compile. `engage` maps to null because it is
-         * the one action that is not terminal.
-         */
-        semantics_version: 1,
     },
 ] as const;
 

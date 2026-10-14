@@ -143,7 +143,7 @@ Walk the dimensions below; mark **3–5 as HIGH** (most likely to occur × highe
 - **State** — missing prerequisites, invalid state transitions, idempotency/double-submit, duplicates and ordering.
 - **Collaborator failure** — timeout, 4xx/5xx, partial or malformed response, thrown exceptions, empty result sets.
 - **Concurrency & time** — races, retries, timezone/DST, clock skew (only when the surface touches them).
-- **Security surface** (authz / tenant / data access) — missing/expired credentials, not-owner, cross-tenant, privilege escalation, injection payload. On data-returning endpoints the three negative tests from `broken-access-control` (unauthenticated → 401, not-owner → 403/404, cross-tenant → 403/404) are the floor, not optional extras.
+- **Security surface** (authz / tenant / data access) — missing/expired credentials, not-owner, cross-tenant, privilege escalation, injection payload. On data-returning endpoints the three negative tests from `broken-access-control` (unauthenticated → 401, not-owner → 403/404, cross-tenant → 403/404) are the floor, not optional extras. On an **identity path** — login, sign-up, password reset, verification, a credential or email change — add the **equivalence case**: two security-equivalent identities, one known and one unknown, or one verified and one unverified, produce the same public outcome. Same status, same body category, same redirect, same cookies — not merely the same sentence, since a status code or a set cookie enumerates accounts just as well as an error message does. Name it like a test: `it answers a known and an unknown address identically`.
 
 ### 3. Case synthesis
 

@@ -23,6 +23,10 @@ function artifact(overrides: Record<string, string> = {}, providers = ['anthropi
         reviewed_by: 'openai/gpt-5',
         verdict: 'ratified',
         effective_after: 'merge',
+        // A real record carries the digest of the content it reviewed. The
+        // fixture carries one too, so these cases exercise the shape an author
+        // actually writes rather than the pre-binding shape no new record has.
+        subject: 'a'.repeat(64),
         ...overrides,
     };
     const lines = ['---'];

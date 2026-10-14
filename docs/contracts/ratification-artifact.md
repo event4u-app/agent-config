@@ -68,6 +68,100 @@ pruned, so nothing on a runner could check them. The body's review record and
 the committed prompt package remain the evidence a reader checks the seats
 against.
 
+## `subject:` — the digest of the content the record reviewed
+
+An eighth field, `subject:`, is a sha-256 hex digest over the **gated** files of
+the change **as they are in one commit**: their sorted paths, each hashed with
+its Git mode and its content, with a deleted gated file entered rather than
+skipped. `./scripts-run src/scripts/ratification_subject --files <f> … [--rev
+REV]` prints it together with the commit it read, and
+`check_kernel_edit_ratified [--rev REV]` recomputes it and refuses a record
+whose `subject` is absent (`subject-absent`), not a digest
+(`subject-malformed`) or a different one (`subject-mismatch`). Both default to
+`HEAD`.
+
+**The digest is read from Git objects, never from the working tree.** The
+revision is resolved to a commit, each gated path is looked up in that commit's
+tree (`git ls-tree`) and a blob's bytes come from the object store
+(`git cat-file`). The gate reads the **record** at the same commit. So an
+uncommitted edit — to a gated file or to the record — can neither pass nor fail
+the gate, and a symbolic link, FIFO or device on disk, at the path or at any
+ancestor directory, is not something the digest can observe. What the pre-push
+run compares is therefore the `HEAD` commit: the changed-file list is
+`git diff <base>...HEAD`, the content and the record are read from `HEAD`'s
+tree. In CI the gate reads the checkout's own `HEAD`. Commit first, then
+print the digest, and show the reviewers that same commit.
+
+**One run, one commit.** When the gate builds the changed-file list itself (no
+`--files`), it resolves `--rev` **once**, to a commit id, before anything else,
+and hands that id — never the name — to the diff, the digest and the record
+read. A `HEAD`, branch or tag that moves during the run therefore cannot pair
+one commit's file list with another commit's content or record. The diff runs
+through the same git invocation as the digest, with the repository-locating
+environment (`GIT_DIR` and its siblings) removed, so the list and the content
+come from the same repository, and with rename detection off, so a gated file
+moved to an ungated path is listed under its old path as a deletion rather than
+only under its new one. The CI path builds its list the same way: it passes
+`--base-ref <base commit id>` and no `--files`. It used to pass `gh pr view
+--json files`, which names a rename by its destination only, so a gated file
+renamed away never reached the gate there. The CI step also sets
+`diff.renames=false` through `GIT_CONFIG_*`, which covers a base copy of the
+gate that predates `--no-renames` in its own diff;
+`tests/scripts/ci_changed_files_rename_compat.test.ts` reads those variables
+from the step and runs that older diff call under them. An option that takes a value — `--rev`,
+`--root`, `--base-ref`, `--policy-root` — and is given none is a refusal
+(exit 1), as in the subject CLI, never a fall-back to the default.
+
+**The one exception: an empty gated set reads no commit.** When no changed path
+is gated, the digest is the digest of nothing and no record is owed, so neither
+`ratification_subject` nor the gate under `--files` resolves the revision, and
+an invalid `--rev` then passes rather than refusing. Without `--files` the gate
+still resolves it, because the diff needs a commit. The exception is
+deliberate: there is no content whose reading the revision could change.
+
+A gated path that is absent in the commit is a deletion. A gated path whose
+tree entry is a regular file (`100644`, `100755`) is hashed. **Every other entry
+is a refusal**, and the one that needs a decision is the symbolic link (mode
+`120000`): it is refused rather than hashed as its target string or followed,
+because its effective content lives at another path the gate's classifier does
+not see, so no digest of the link describes what a reviewer would approve. A
+directory or a submodule at a gated path is refused for the same reason. So is
+a revision that does not resolve to a commit, a `--root` that is not a
+repository's top level, a gated path that names nothing inside a tree (absolute,
+or with a `..` segment), and a git that cannot be started or fails — each a
+typed refusal (exit 1), never a fallback to reading the disk.
+
+| What it adds | Why the other seven did not |
+|---|---|
+| the record says WHAT it reviewed | the six required fields say only WHO; a gated file edited after its review still landed on that review's record |
+| a record is checked against the content it is read beside | the gate passed when **any** artifact in the diff validated, so a record written for one review carried a second change it never saw. It does not establish that a record covers one *logical* change: the digest is over the whole gated file set of the diff |
+
+Three properties of the digest, each chosen against an alternative that looks
+equivalent and is not:
+
+- **The path is hashed with the content**, so two gated files with identical
+  bytes do not collide and a rename moves the digest — a governance hook moved
+  to another gated path is a different change, not the same one. The **mode**
+  is hashed too, so flipping the executable bit is a change. Each entry is
+  `path NUL mode NUL sha256hex(content) LF`, unambiguous because NUL cannot
+  occur in a Git path and the other two slots are fixed-width.
+- **A deleted gated file is entered**, via a marker, rather than omitted.
+  Omitting it would make *this hook was removed* digest-identical to *this hook
+  was never gated*, which is the change a record most needs to be bound to.
+- **No base diff.** The digest is over the commit's tree as it stands, so it
+  reads the same on a branch and on the merged checkout CI judges — unless the base moved
+  a gated file the change also touches, and then the content that would land is
+  not the content that was reviewed, which is exactly what should move it. The
+  review-scope hash of `dispatch_r2_reviewer` was considered for this and
+  rejected: it is taken over diff text against a base, and this gate is handed a
+  file list and no base.
+
+Which files count as gated is decided by the gate's own classifier, and in CI
+that classifier is the **base revision's** — so a change that widens the gated
+set and edits a newly gated file is judged, and written, by one list. The 23
+records on the trunk carry no `subject` and are not migrated: the gate reads
+only the artifacts the diff names, so a landed record is never re-judged.
+
 `ratified` and `confirmed-non-expanding` let a diff land; `refused` and
 `non-convergent` do not. The second passing verdict exists because the gate
 demands an artifact for **every** kernel and governance-hook diff, a typo fix
@@ -621,15 +715,39 @@ no record at all; a record whose reviewer is its own author; a diff that
 weakens the judge and is then approved by the weakened judge; and a quorum rule
 that silently does not fire because the file it needed was somewhere else.
 
-At this pin — 2026-10-12 — **a record is not bound to the content it
-reviewed.** ADR-281 § Consequences states the gate binds each record to what it
-reviewed; that sentence describes the intended end state and not today's gate,
-which reads the artifact's shape and the diff's paths and never compares a
-digest. So a record written against one revision of a gated file still reads as
-valid after that file changes, and nothing here detects it. The binding is
-steps 2.1 and 2.2 of
-`road-to-self-modification-that-a-council-must-pass`; this paragraph is dated
-so a reader can tell whether it still describes the gate they are running.
+**The binding landed on 2026-10-12**, and this paragraph replaces the dated one
+that said it had not. A record now carries `subject`, and the gate recomputes
+that digest from the commit it is pointed at and refuses a record whose `subject`
+is absent or different — so ADR-281 § Consequences ("the gate binds each record
+to the content it reviewed") now describes the gate rather than an intended end
+state. Steps 2.1 and 2.2 of
+`road-to-self-modification-that-a-council-must-pass` are what closed it.
+
+**What the object-store read does NOT close.** Which paths are gated is still
+decided by the judging code and by an import closure it reads from the running
+checkout. In CI that code is the base revision's; locally it is the checkout's
+own, and a local edit to the judging code is outside what any digest answers.
+
+**What the binding does NOT close, said as plainly as the gap it replaces.**
+The digest is computed by the gate from the tree and typed into the record by
+whoever writes it, so a record still asserts rather than proves that a review
+happened over that content — § What a passing record does not prove is
+unchanged and is the paragraph that matters. An author who edits gated content
+and recomputes the digest produces a record the gate accepts, and nothing here
+detects that; the word for what the binding adds is **detects**, never
+*prevents*. What it detects is narrow and real: a gated file edited after its
+review, still carrying the digest of what the reviewers saw, and a record
+reused for a change whose content it does not match. A 2026-10-13 council
+review asked for this sentence in these words, because the paragraph it
+replaces claimed to make those two things impossible.
+
+**One consequence worth stating because it will be met before it is read.** The
+workflow runs the BASE revision's copy of the gate, so a change that is open
+when this lands is judged by the old gate and needs a `subject` only once its
+base carries the new one. The digest is also recomputed from the merged
+checkout, so a base that moves a gated file the change also touches moves the
+digest and reds the record — deliberately: the content that would land is then
+not the content that was reviewed. A base that moves anything else does not.
 
 ## What was NOT preserved from the mechanism this replaces
 

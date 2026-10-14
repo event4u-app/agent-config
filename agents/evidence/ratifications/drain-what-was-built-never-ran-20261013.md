@@ -376,3 +376,16 @@ steering and they are reproduced exactly.
 $0. Round 5 ran on the same two subscription CLI seats; the council reported
 `billable=0` and `TOTAL: $0.0000`. Quota after the run: anthropic 27/50,
 openai 27/50.
+
+## Owner decision, 2026-10-14 — the ladder is removed after all
+
+Appended after merge, not a rewrite of what was ratified. § What was adopted
+records `_lib/continuation_ladder.ts` among the artefacts kept on purpose. On
+2026-10-14 the owner decided to merge this change **and** remove that module in
+a follow-up PR, overruling the retention for that one file. The follow-up is
+branch `drain/remove-continuation-ladder-20261014`; it removes the module, the
+three `_lib/loop_guards.ts` functions only it called (`readUnavailableDependency`,
+`detectUnavailableDependency`, `matchesWholeLine`) and the fixture cases whose
+subject they were. ADR-118, the changelog entries, the 0.0 observation table and
+the event ledger stay kept exactly as recorded above — the owner's decision
+covers the ladder module and nothing else.

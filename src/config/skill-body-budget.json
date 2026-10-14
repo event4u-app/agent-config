@@ -251,7 +251,7 @@
     "screenshot-hygiene": 9081,
     "script-writing": 9324,
     "secrets-management": 12029,
-    "security": 5168,
+    "security": 6728,
     "security-audit": 9042,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
@@ -278,7 +278,7 @@
     "technical-specification": 7733,
     "terraform": 8893,
     "terragrunt": 5842,
-    "test-case-discovery": 12325,
+    "test-case-discovery": 12862,
     "test-driven-development": 16352,
     "test-performance": 6376,
     "testing-anti-patterns": 18233,
@@ -412,6 +412,18 @@
       "old": 11501,
       "new": 12171,
       "reason": "two independent R2 rounds found this skill promising guarantees the tree does not keep, and the raise buys exactly those corrections. Round 1: a --dry-run documented as printing six things where the CLI prints three, with the agent told to reproduce all six verbatim - a fabricated pre-send check at the one Hard-Floor checkpoint before bytes leave the machine. Round 2: the Iron Law guaranteed that branch name, commit identity, commit message and diff are SCANNED by the release, which scans the record text only and makes no commit at all; the quality gates were numbered after the send they must precede, with the `Do NOT bypass quality gates` line deleted in the same change; and `allowed_tools: [\"Bash(gh:*)\"]` granted exactly the second route the skill forbids. The additions were squeezed twice - 433 bytes over to 114 in round 1, 776 to 556 in round 2 - before each raise. What remains is obligation rather than wording: an unscanned byte a reader believes was scanned is the state this text exists to prevent, and shrinking further deletes the correction instead of tightening it"
+    },
+    {
+      "skill": "test-case-discovery",
+      "old": 12325,
+      "new": 12862,
+      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
+    },
+    {
+      "skill": "security",
+      "old": 5168,
+      "new": 6728,
+      "reason": "An account-flow block under Conventions: the lifecycle traced as one path, the public auth response as an observable contract, constant-time comparison with its length precondition, no fast hash and no invented primitive, fresh re-authentication on an identity change, and a pointer to the corpus rows rather than a restatement of them. No value in it; the numbers stay with the authority the block below already names. 3.2, plus the triggers block from 3.1."
     }
   ]
 }

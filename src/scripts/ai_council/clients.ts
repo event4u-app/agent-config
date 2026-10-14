@@ -1332,18 +1332,18 @@ export abstract class CliClient extends ExternalAIClient {
     }
 
     /**
-     * Transport seam (default impl). Mirror
-     * `subprocess.run(cmd, input=..., capture_output=True, text=True,
-     * timeout=..., check=False)`. Throws `SubprocessError` for the timeout /
-     * ENOENT / OSError branches so `ask()` can classify them exactly as the
-     * historical contract requires. Tests override this to inject canned output without
-     * spawning a process.
+     * Transport seam (default impl). Mirror `subprocess.run(cmd, input=..., capture_output=True, text=True,
+     * timeout=..., check=False)`. Throws `SubprocessError` for the timeout / ENOENT / OSError branches so
+     * `ask()` can classify them exactly as the historical contract requires. Tests override this to inject
+     * canned output without spawning a process.
      */
     protected _runSubprocess(cmd: string[], stdinPayload: string | null): SubprocessResult {
         const argv0 = cmd[0] ?? '';
         const spawnOpts: Parameters<typeof spawnSync>[2] = {
             encoding: 'utf-8',
             timeout: Math.round(this.timeout_seconds * 1000),
+            // Node's 1 MiB default ENOBUFS-kills a member CLI that logs beside its answer; API transport's ceiling.
+            maxBuffer: 64 * 1024 * 1024,
             // Neutral cwd, and this one is load-bearing rather than tidy.
             //
             // The spawn used to inherit the caller's directory, so a council

@@ -142,7 +142,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
       and refused on a real cut; the same removal with a tombstone is not
       refused by 3.1.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t control-flipped --reporter=verbose` -> /✓.*control-flipped/
-- [ ] <!-- blocked-by: what-a-minor-may-remove | asked: no — authored from inbox round inbox-2026-10-k, which had no owner turn on this question; it is carried by the blocker below for /roadmap:resolve-blockers --> **3.3 A tombstoned removal follows the owner's answer.** Under (a) the
+- [x] **3.3 A tombstoned removal follows the owner's answer.** Under (a) the
       assertion also refuses a tombstoned or renamed removal when the target is
       not a major; under (b) it lists it and lets the cut proceed.
       verify: `npx vitest run tests/scripts/release_settings_delta.test.ts -t tombstoned-removal --reporter=verbose` -> /✓.*tombstoned-removal/
@@ -157,7 +157,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 
 ## Phase 5 — Every sentence says one thing
 
-- [ ] <!-- blocked-by: what-a-minor-may-remove | asked: no — authored from inbox round inbox-2026-10-k, which had no owner turn on this question; it is carried by the blocker below for /roadmap:resolve-blockers --> **5.1 Every statement of the rule agrees.**
+- [x] **5.1 Every statement of the rule agrees.**
       The eight locations enumerated under the blocker state the rule the owner
       chose, in the same words — the four prose statements
       (`docs/releases.md` § The stability surface, `BREAKING_CHANGES.md:12-13`,
@@ -193,7 +193,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
       fixture marks it.
 - [x] AC-4 — The upgrade leg fails when the installer's delta and the release's
       delta disagree.
-- [ ] AC-5 — The release contract, the rename map and the tombstone map state
+- [x] AC-5 — The release contract, the rename map and the tombstone map state
       one rule.
 
 ## Decisions
@@ -208,12 +208,13 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 | D7 | contested-technical | council:settings-minor-removal-2026-10-13 | The owner, not the council and not the agent, picks (a) or (b). The council may advise and did; the blocker stays open and steps 3.3 and 5.1 stay open with it | Both seats, 2 of 2 present, quorum concluded, no billable spend (`anthropic` and `openai`, both subscription-authed). Independently reached owner-reserved: amending a published versioning promise is governance, not implementation. One seat: "A council can analyze and recommend. An agent can implement an owner decision. But amending the contract is governance." The other: "a council may recommend; an agent may implement only an explicit owner decision" | The owner delegates this class of contract amendment in writing |
 | D8 | reversible-technical | council:settings-minor-removal-2026-10-13 | The recommendation carried to the owner changes from (b) to (a); both readings are kept on the blocker so the owner sees the disagreement rather than only its outcome | Both seats chose (a) against this file's own (b). Their argument is one the file did not have: a tombstone reports breakage and does not prevent it, so membership in a runtime diagnostic map is not evidence of behavioural compatibility; and a contract amended to match its own violations is weaker than no published promise. `BREAKING_CHANGES.md:52` records 11.0.0 as a major for removing one key, which is the contract being honoured deliberately once | The owner picks (b), or behavioural-compatibility evidence for the 75 keys is produced |
 | D9 | reversible-technical | evidence | Step 5.1 asserts over every location in the tree that states the rule, not over the three it was written with. Enumerated 2026-10-14 by executing the search rather than reading the step: eight, of which five were unnamed. The owner's choice is untouched — this round records a third option the tree already carries, (c), and recommends none of the three | `BREAKING_CHANGES.md:4-8` nominates `CONTRIBUTING.md` § Versioning and `docs/contracts/CHANGELOG-conventions.md` as canonical and itself as "a discoverable index, not the policy"; 5.1 named neither canonical document. `CHANGELOG-conventions.md:416-418` qualifies the rule with "that consumer projects may rely on", which `docs/releases.md:33-34` does not, so the two are not one rule in two wordings. `ADR-037:102` states (a) and is live: `adr_cite_check` reports `accepted`, and its reopen trigger (b) is unfired — `cost_profile` is live in `LEGACY_RENAME_MAP` at `install.ts:332`. The single `RENAMED_KEYS` entry landed in 16.1.0 and survives at 16.5.0, four minors past its own one-minor retention | A ninth location appears, or the owner answers and the enumeration becomes the test's fixture |
+| D10 | product-owned | owner | Option (c) of blocker `what-a-minor-may-remove`, implemented: `SETTINGS_REMOVAL_RULE` (`src/scripts/_lib/settings_renamed_keys.ts`) is the one sentence; the eight locations repeat it verbatim and the consumer warning prints it. 3.3 under (c): below a major the cut refuses a carried removal or rename whose key has no holding `<test file>::<it title>` entry in `MINOR_REMOVAL_PROOFS` (`src/scripts/_lib/settings_removed_keys.ts`), and refuses a dropped `RENAMED_KEYS` alias; at a major it refuses neither. ADR-037 gains a dated amendment line rather than a rewrite | Owner answer in chat; `tests/scripts/release_settings_delta.test.ts` `tombstoned-removal` and `three-sentences-agree`, each seen red before green | The owner revisits the release contract |
 | D6 | deterministic | agent | Closure pass 2026-10-11: the four `typed-op` hits are the words "publish" and "push" in the frontmatter, a `relates` note and the non-goals — operations this roadmap explicitly does not perform; the one real owner question is the blocker below | `closure_scan` on this file: 4 typed-op listings, all in negated or descriptive prose | A step is added that publishes or pushes |
 
 ## Blockers
 
 ### blocker: what-a-minor-may-remove
-- **Status:** open — raised 2026-10-11 from inbox round `inbox-2026-10-k`, which carried no owner turn on this question. Put to the council 2026-10-13 (`council:settings-minor-removal-2026-10-13`, both seats, 2 of 2, concluded, no billable spend): **owner-reserved**, unanimously and independently. The council advised; it did not and may not settle it.
+- **Status:** resolved 2026-10-14 by the owner in chat, option (c): a settings key may leave in a minor only when no consumer project can rely on it — default-neutral and derivable, proven by a named test — and an alias is dropped only in a major; the key's own behaviour, not a tombstone, is the licence, which answers the council's circularity objection to (b) while keeping the qualifier the canonical `docs/contracts/CHANGELOG-conventions.md` already carried. Raised 2026-10-11 from inbox round `inbox-2026-10-k`; put to the council 2026-10-13 (`council:settings-minor-removal-2026-10-13`), which held it owner-reserved and advised (a).
 - **Owner:** owner — the release contract is a public commitment; the council may advise.
 - **Blocks:** steps 3.3 and 5.1, AC-5.
 - **What to do:** pick exactly one — (a) keep `docs/releases.md:29-34` as written: any removal or rename of a settings key ships only in a major, and `src/scripts/_lib/settings_renamed_keys.ts:10` is changed to say an alias is dropped only in a major; or (b) amend `docs/releases.md` to say a key may be removed or renamed in a minor when it leaves an entry in `REMOVED_KEYS` or `RENAMED_KEYS`, and that an alias is dropped only in a major; or (c) the qualified rule the canonical page already carries, stated in full below. Whichever is picked, all eight locations enumerated below take the chosen wording, and the alias-retention sentence becomes "only in a major" under all three.
@@ -224,14 +225,14 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
   |---|---|---|---|
   | 1 | `docs/releases.md:33-34` | `.agent-settings.yml` keys and semantics "only change in a **breaking release**" | yes |
   | 2 | `src/scripts/_lib/settings_renamed_keys.ts:10` | "An entry is dropped one minor after it lands." | yes |
-  | 3 | the comment above `REMOVED_KEYS` (`settings_removed_keys.ts:10-30`) | **nothing** — it carries no release-class sentence at all, so one of the three the step asked to agree has no position to agree from | yes, as a stater of the rule |
+  | 3 | the comment above `REMOVED_KEYS` (`src/scripts/_lib/settings_removed_keys.ts:10-30`) | **nothing** — it carries no release-class sentence at all, so one of the three the step asked to agree has no position to agree from | yes, as a stater of the rule |
   | 4 | `BREAKING_CHANGES.md:12-13` | settings keys "are part of its public contract"; a settings-key change "legitimately trips a Major" | no — added by `inbox-2026-10-m` |
   | 5 | `CONTRIBUTING.md:331-332` — **canonical** | Major triggers include "breaking changes to `.agent-settings.yml` keys"; Minor is "New `.agent-settings.yml` keys with safe defaults" | no |
   | 6 | `docs/contracts/CHANGELOG-conventions.md:398-418` — **canonical** | a change MUST appear under `### BREAKING CHANGES` **and** bump the major when it removes or renames "a key in `.agent-settings.yml` **that consumer projects may rely on**" | no |
   | 7 | `docs/decisions/ADR-037-cost-profile-untangle.md:102` | "Breaking change to a public settings key → next major" | no |
   | 8 | `src/scripts/_lib/settings_renamed_keys.ts:73` | the warning printed to the consumer: an old key "works for one minor; rename it in your .agent-settings.yml" | no |
 
-  Row 7 was evaluated before being cited, per `decision-revisit-gate`: `adr_cite_check ADR-037` reports `accepted`, trigger `indeterminate`, and its reopen trigger (b) — the `cost_profile` fallback leaving the loaders and `LEGACY_RENAME_MAP` — has **not** fired: the entry is live at `src/scripts/install.ts:332` and the fallback is read at `:4602`, `sync_agent_settings.ts:1035` and `_cli/explain_last/inputs.ts:120`. It is a live lock stating (a).
+  Row 7 was evaluated before being cited, per `decision-revisit-gate`: `adr_cite_check ADR-037` reports `accepted`, trigger `indeterminate`, and its reopen trigger (b) — the `cost_profile` fallback leaving the loaders and `LEGACY_RENAME_MAP` — has **not** fired: the entry is live at `src/scripts/install.ts:332` and the fallback is read at `:4602`, `src/scripts/sync_agent_settings.ts:1035` and `src/scripts/_cli/explain_last/inputs.ts:120`. It is a live lock stating (a).
 
   Row 8 is the only one of the eight a consumer ever sees. Rows 1 and 4-7 are read by maintainers; rows 2 and 3 by anyone opening the source. The sentence a consumer is actually shown says "one minor".
 - **A third reading the (a)/(b) menu does not contain.** Row 6 is not a loosely-worded version of row 1 — it is a materially different rule. Row 1 is unconditional ("these surfaces only change in a breaking release"); row 6 is **qualified** ("that consumer projects may rely on"), and row 6 is one of the two canonical sources. 16.4.0's own subject claims exactly that qualifier — "retire 46 **default-neutral derivable** settings keys" — so the release that triggered this blocker is, on the canonical page's wording, arguably compliant rather than in breach. That makes a third option available to the owner that neither (a) nor (b) states:
@@ -254,7 +255,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
     violations sets the precedent for the next ones. One seat added the sharpest form: under (b) the
     tombstone map would both authorise a removal and decide whether it is detected, which is circular.
   - **Both readings agree on one thing:** the alias-retention sentence at
-    `settings_renamed_keys.ts:10` changes under EITHER option, because dropping an alias IS the removal.
+    `src/scripts/_lib/settings_renamed_keys.ts:10` changes under EITHER option, because dropping an alias IS the removal.
     It cannot be deferred past whichever answer the owner picks.
   - **What the council's circularity objection does NOT reach:** step 3.1, as built, grants nothing. It
     refuses a removal carrying no entry in either map and reports a carried removal without refusing it;

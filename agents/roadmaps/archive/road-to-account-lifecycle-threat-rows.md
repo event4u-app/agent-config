@@ -122,7 +122,7 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
 
 ## Phase 2 — The rows the corpus does not have
 
-- [ ] **2.1 Give account flows their own surface row.** Add a second
+- [x] **2.1 Give account flows their own surface row.** Add a second
       `authentication` row to `surfaces.csv` — registration, email
       verification, account and credential change, MFA and recovery,
       federated sign-in — keyed on `register registration signup sign-up
@@ -133,7 +133,20 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       with webhook signature verification — probe it, drop it if it steals).
       verify: the five Context prompts return `authentication`, and one probe
       per existing class (nine) returns that class unchanged, before and after.
-- [ ] **2.2 Add the account-lifecycle threat rows.** All in class
+
+      **Closed 2026-10-13. Measured before and after on the same fourteen
+      prompts.** All five Context prompts now ground to `authentication`
+      (registration moved `file-upload` 0.201 → `authentication` 0.296; passkey
+      moved `General` 0.0 → `authentication`, though its `threats` domain still
+      returns nothing until 2.2 lands). All nine other classes returned their
+      own class before and after, with the identical score in every case.
+      `verify` was probed rather than assumed: with it in the keyword set,
+      "verify the webhook signature before processing the callback" stayed
+      `external-integration` (0.488 → 0.521) and "verify the uploaded file type
+      before storing it" stayed `file-upload` (0.262, unchanged), so it steals
+      nothing and is kept. `recovery` and `remember` were probed the same way
+      against `data-exposure` and `public-endpoint` and changed neither.
+- [x] **2.2 Add the account-lifecycle threat rows.** All in class
       `authentication`, existing seven columns, Source Refs as CWE plus the
       ASVS 5.0 chapter, every Negative Tests cell ending with the `Decided by:`
       literal the infrastructure rows use. One row each:
@@ -184,7 +197,54 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       four `threats` results, each original authentication row still returns
       for its own prompt, and the parameter grep over the added and amended
       rows prints nothing.
-- [ ] **2.3 Give the authentication reasoning row its decisions.** Fill the
+
+      **Closed 2026-10-13. Thirteen rows added, row 2 amended in place, measured
+      on sixteen frozen prompts — one per added row and one per original
+      authentication row.** Every one of the sixteen returns its own row at
+      **rank 1** of the top-four `threats` results, so the dilution risk the
+      register ranks first did not materialise: the three original rows still
+      win their own prompts against thirteen new neighbours. The parameter grep
+      over the whole file prints nothing.
+
+      Two measurements corrected the work rather than confirming it. The
+      retrieval tokenizer does no stemming (`bm25_search.ts:108` keeps tokens
+      longer than two characters and nothing else), so the enumeration row's
+      "addresses have accounts" never matched a prompt saying "email address",
+      and the federated row — which does say "email" and "account" — won both
+      that prompt and the identity-mutation one. The fix was to give the two
+      rows the singular vocabulary a developer actually types, not to reword
+      the prompts to fit the rows. And "among the top four" is not readable
+      from `ground`'s markdown, which renders only the single best row per
+      domain; the measurement that answers the step is
+      `ground search --domain threats --json`, and the frozen prompt list is
+      written out below rather than left in a script nobody re-runs.
+
+      The sixteen frozen prompts, each returning the named row at rank 1:
+      `Credential stuffing` — "rate limit the login endpoint against credential
+      stuffing and password spraying" · `Session fixation` — "rotate the session
+      id after login and invalidate sessions on password change" ·
+      `Password-reset token abuse` — "password reset token should be single use
+      and short lived" · `Account enumeration` — "the login response tells the
+      attacker whether the email address is registered" · `Unverified email
+      ownership` — "grant account access only after the email verification link
+      is confirmed" · `Password acceptance` — "what composition rules and
+      maximum length should the password field enforce" · `Fast or home-made
+      password storage` — "store the user password with a salted sha256 digest
+      in the users table" · `Unsafe secret comparison` — "compare the one-time
+      code with the stored value using string equality" · `Password reset beyond
+      the token` — "the password reset link is built from the Host header and
+      signs the user in" · `Identity or credential change` — "let the user
+      change their email address and mfa factor in account settings" · `MFA
+      enforced only in the interface` — "enforce the two factor challenge and
+      store the totp backup codes" · `Persistent login and incomplete logout` —
+      "remember me cookie and logout should end the server session" · `Federated
+      sign-in account takeover` — "link the Google OAuth account to an existing
+      user by matching the email claim" · `Self-contained token validation
+      bypass` — "validate the jwt issuer audience and signing algorithm on every
+      request" · `Login cross-site request forgery` — "protect the login form
+      against cross-site request forgery" · `Signup abuse` — "block disposable
+      email domains at signup to stop free tier abuse".
+- [x] **2.3 Give the authentication reasoning row its decisions.** Fill the
       empty Severity cell at `reasoning.csv:2` (every other class carries
       one) and add decision rules: `if_registration` verify-before-privilege;
       `if_federated_signin` identity-is-issuer-plus-subject;
@@ -195,14 +255,51 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       `if_provider_managed` verify-configuration-not-rebuild.
       verify: `./scripts-run src/skills/corpus-grounding/scripts/ground ground --manifest src/skills/threat-modeling/data/manifest.json "build user registration with email verification"` -> /authentication/
       — the new rules appear under its reasoning block, with no `no reasoning rule matched` gap.
-- [ ] **2.4 Record the re-derivation in the manifest.** Update
+
+      **Closed 2026-10-13, with one half re-screened against the tree and found
+      already settled.** The Severity cell at `reasoning.csv:2` was **never
+      empty**: `git show 1e9e4354a` — the commit that created the file — already
+      carries `HIGH` there, and all ten classes carry a severity today. The
+      roadmap's premise for that half came from the source transcript and was
+      wrong when it was written; nothing was changed for it.
+
+      The real half landed: the authentication row now carries ten decision
+      rules, the three original ones plus the seven this step names. The
+      registration prompt grounds to `authentication` (0.497), matches
+      `if_registration` → `verify-before-privilege`, and the evidence gap reads
+      "none — every planned domain returned a scored match".
+
+      Measured which of the seven fire, because a rule that cannot fire is
+      decoration: `if_registration`, `if_pepper` and `if_email_canonicalization`
+      fire on ordinary phrasing. `if_federated_signin`, `if_sensitive_mutation`
+      and `if_unknown_identity` need their exact words, and
+      `if_provider_managed` likewise — a developer writes "add login with Google
+      OAuth", not "federated signin". That is not a defect introduced here: the
+      matcher requires every underscore-separated token of the key to be a
+      substring of the query (`decision_engine.ts:353-357`), and eighteen of the
+      twenty keys already in the corpus are built the same way —
+      `if_mass_assignment_possible` and `if_reports_or_exports` are no more
+      reachable from a natural prompt. The second entrance is the `context`
+      argument, which sets a condition by name without the words. Keeping the
+      keys this step specifies therefore holds the corpus's own convention; a
+      unilateral rename would have made this one row the exception. Revisit if
+      the matcher ever gains a synonym layer.
+- [x] **2.4 Record the re-derivation in the manifest.** Update
       `manifest.json` `upstream.sha` to name the added rows and their
       authorities.
       verify: `./scripts-run src/scripts/check_corpus_staleness` -> 0
 
+      **Closed 2026-10-13.** `upstream.sha` now names the surface row, all
+      thirteen threat rows with their CWE ids, the amendment to the
+      credential-stuffing row, and the seven ASVS 5.0 chapters the rows cite —
+      with the note that those chapter numbers were read from the standard's own
+      5.0 chapter listing on the day, not recalled. `last_checked` moves to
+      2026-10-13. `check_corpus_staleness` exits 0 over six manifests and
+      forty-one CSVs.
+
 ## Phase 3 — Reach the rows from the skills a consumer asks through
 
-- [ ] **3.1 Give `security` its triggers and evals.** Add `triggers:` to
+- [x] **3.1 Give `security` its triggers and evals.** Add `triggers:` to
       `src/skills/security/SKILL.md` (login, registration, sign-up, password
       reset, email verification, MFA, passkey, OAuth or social login, session)
       and an `evals/triggers.json` with at least eight should-trigger and four
@@ -211,7 +308,52 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       today — becomes a should here. The `description:` field is not touched.
       verify: the trigger eval for `security` passes, and `authz-review`'s
       eval still passes unchanged.
-- [ ] **3.2 Add an account-flow block to `security`.** At most fifteen lines
+
+      **Closed 2026-10-13.** Ten triggers and a sixteen-case corpus: nine
+      exemplars, five near-misses that are this skill's own written "Do NOT use
+      when" routes plus request validation, and two counterexamples with no
+      security vocabulary. "add login with Google" is an exemplar here and stays
+      a should-not for `authz-review`, whose corpus is unchanged. `description:`
+      was not touched.
+
+      **What "the trigger eval passes" could and could not mean here.**
+      `skill_trigger_eval` against the live router needs a controlling terminal
+      and a paid key, and refuses under automation by design — so the live
+      number is not available to this run and is not claimed. What ran: the
+      harness on its mock router over both skills (security 14/14 at the time,
+      authz-review 6/6, unchanged), and the five deterministic gates that are
+      the actual CI contract — `lint_skill_trigger_corpus` (128 files,
+      case-class discipline held on the diff-touched file),
+      `lint_trigger_precision` (22 short keywords against a budget of 22),
+      `lint_skill_trigger_contradiction` (300 skills),
+      `check_trigger_eval_presence` and `check_routing_coverage` (skills
+      0.4233 → 0.4267, every touched skill carries a corpus).
+
+      **Two ratchets moved, and one of them was already red on `main`.**
+      `check_trigger_eval_presence` is shrink-only: a skill that gains a corpus
+      must leave the grandfather allowlist in the same change. `form-handler`
+      and `judge-security-auditor` gained theirs in this roadmap's own Phase 1
+      without that, so the gate has been failing on `main` since 2026-10-12.
+      All three entries are removed here (175 → 172) rather than adding a third
+      instance. The train-side routing-signal measurement was re-taken as the
+      seed file's convention requires: `security` hashes to 0x5d = 93, above the
+      holdout ceiling of 51, so it trains and the sealed 27 holdout rows are
+      byte-identical. Verdict unchanged in kind — still `harmful`, false
+      activation +7.02 pp against the +2.0 pp guard, delta-recall 3.71 → 4.234
+      pp, still under the 5.0 pp bar.
+
+      **The measurement was taken twice, and the first take was wrong.** It ran
+      after the corpus landed but before 3.2 added fifteen lines to the same
+      skill's **body** — and the body arm reads the body, so delta-recall sat at
+      3.831 pp until the re-take. `routing_signal_measurement.test.ts` caught it;
+      `trigger_corpus_holdout_pin.test.ts` could not, because the pin hashes the
+      corpus file and that file had not moved. The converse held in the same
+      run: the pin test caught the missing `security` row in the published
+      holdout artefact while the measurement test was green 19/19. Each gate is
+      blind to what the other sees, and running only the green one would have
+      shipped a stale pin. A train-side measurement is valid only once every
+      edit to a train skill — corpus and body alike — is already on disk.
+- [x] **3.2 Add an account-flow block to `security`.** At most fifteen lines
       under Conventions: public auth responses are an observable contract,
       not an error string; compare secrets with the library's constant-time
       primitive and respect its length precondition; never a fast hash, never
@@ -221,19 +363,51 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       rows and at the ADR-238 boundary block already in the file.
       verify: the parameter grep from 2.2 over the added lines returns
       nothing, and the skill linter passes.
-- [ ] **3.3 Add the equivalence case to `test-case-discovery`.** In the
+
+      **Closed 2026-10-13.** A fifteen-line block under Conventions, directly
+      above the ADR-238 boundary block it defers to: the lifecycle as one traced
+      path, the public auth response as an observable contract, constant-time
+      comparison with its length precondition, no fast hash and no invented
+      primitive, fresh re-authentication on an identity change, and a pointer at
+      the corpus rows rather than a restatement of them. The parameter grep over
+      the added lines prints nothing; `skill_linter` passes the file clean. The
+      body ceiling was raised 5168 → 6728 with its reason recorded in
+      `skill-body-budget.json` — a declared raise with a stated justification,
+      which is the mechanism that file exists for, not a threshold bent around a
+      red check.
+- [x] **3.3 Add the equivalence case to `test-case-discovery`.** In the
       procedure at `SKILL.md:150` (not the Iron Law fence above it): on an
       identity path, one case asserts that two security-equivalent identities
       — known and unknown, verified and unverified — produce the same public
       outcome. Name it like a test.
       verify: the procedure names the case, and `git diff` shows no change
       inside the skill's Iron Law fence.
-- [ ] **3.4 Give the review-routing example an account pattern.** One entry
+
+      **Closed 2026-10-13.** The case lands on the Security-surface dimension in
+      step 2, beside the three negative tests that are already the floor there,
+      and is named like a test: `it answers a known and an unknown address
+      identically`. It states what the roadmap's AC-3 asks for — same status,
+      same body category, same redirect, same cookies, not merely the same
+      sentence. `git diff -U0` reports exactly one hunk, at line 146; the Iron
+      Law fence occupies lines 31-38 and is untouched.
+- [x] **3.4 Give the review-routing example an account pattern.** One entry
       in `src/agent-src/templates/scripts/historical-bug-patterns.example.yml`
       for an auth response disclosing account existence, paths on auth
       controllers and routes, `required_test` the equivalence case from 3.3.
       verify: the template parses as YAML and `pr_review_routing.ts`'s own
       tests pass.
+
+      **Closed 2026-10-13.** `auth-response-discloses-account-existence`,
+      severity high, globbing the auth controller directory plus the
+      login / password / registration controller names and the auth route file
+      in two framework shapes; `required_test` is 3.3's equivalence case stated
+      in the same words. The entry carries **no** `references` list: the file's
+      header says every pattern must reference a real prior failure, and this
+      example template has no real incident behind it — three of the eight
+      existing entries omit the field for the same reason, so inventing an
+      incident id to fill it would have been the dishonest option, not the
+      complete one. The file parses (nine patterns) and
+      `templates_pr_review_routing.test.ts` passes 3/3.
 
 ## Decisions
 
@@ -315,20 +489,49 @@ in a one-line decline.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The five Context prompts ground to `authentication` and each
+All five measured 2026-10-13 at `971ae0ce6`.
+
+- [x] AC-1 — The five Context prompts ground to `authentication` and each
       returns at least one row added in 2.2 among its top four threats; the
       other nine surface classes ground as they did before.
-- [ ] AC-2 — `threats.csv` carries a populated row for every failure class
+      **Met, 5 of 5.** Registration → `Unverified email ownership`; the login
+      error message → `Account enumeration`; Google OAuth → `Federated sign-in
+      account takeover`; passkey → `Identity or credential change`; reset flow →
+      `Password reset beyond the token`. Each of the nine other classes returned
+      its own class on its own probe, before and after both the surface row and
+      the thirteen threat rows. Several confidence figures rose — the aggregate
+      is the weakest link across planned domains, and the `threats` domain now
+      scores where it used to return nothing — but no class moved.
+- [x] AC-2 — `threats.csv` carries a populated row for every failure class
       listed in 2.2, and no added or amended row carries a length, attempt
       count, iteration count, work factor or algorithm preference order.
-- [ ] AC-3 — The enumeration row's Negative Tests require known and unknown
+      **Met.** Sixteen `authentication` rows, thirty-three in the file; no row
+      has an empty cell in any of the seven columns; every row added or amended
+      here ends its Negative Tests with the `Decided by:` literal, and the two
+      rows that do not carry it are the two originals this roadmap did not
+      touch. The parameter grep over the whole file prints nothing.
+- [x] AC-3 — The enumeration row's Negative Tests require known and unknown
       identities to produce the same public outcome — status, body category,
       redirect, cookies — not only the same sentence (the source's own
       "never say the password for user X is wrong", stated as a test).
-- [ ] AC-4 — The storage row prohibits every general-purpose fast hash,
+      **Met**, in those four words, across login, reset request, sign-up and
+      verification resend, with the registered-address sign-up emitting a notice
+      to the owner and no distinguishing response.
+- [x] AC-4 — The storage row prohibits every general-purpose fast hash,
       SHA-2 included and salted or not, and states that a pepper, when used,
       lives outside the credential store and is never a literal; its absence
       is not a finding.
-- [ ] AC-5 — No file under `src/skills`, `src/rules` or `docs/guidelines`
+      **Met**, verbatim: "never a general-purpose hash - MD5, SHA-1 and every
+      SHA-2 included, salted or not", and "a pepper, where one is used, lives
+      outside the credential store with a rotation plan and is never a literal
+      in the tree - its absence is not a finding".
+- [x] AC-5 — No file under `src/skills`, `src/rules` or `docs/guidelines`
       presents an identity-field availability check as a default, keys the
       `auth` limiter on the IP alone, or cites ASVS 4.0.3 as current.
+      **Met.** Zero hits for `canonical exception`; the PHP `auth` limiter block
+      is keyed on the account and the source and says in its own comment why
+      IP-only fails in both directions; `4.0.3` survives in exactly two places,
+      both past-tense provenance records of the re-derivation rather than a
+      current citation — `threat-modeling/SKILL.md`, which 1.2's verify names as
+      the one permitted remainder, and the manifest's `upstream.sha` describing
+      the 2026-09-27 repin.

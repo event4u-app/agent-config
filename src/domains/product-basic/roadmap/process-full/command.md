@@ -373,27 +373,23 @@ the forge, because a `gh` call on the stop path is the cost the premise rung
 already declined — and any position that was not an ending kept the run engaged
 at zero open steps. **That concern was withdrawn on its own pre-registered kill
 date (`road-to-what-was-built-and-never-ran` Phase 4), so nothing re-engages a
-run automatically any more; the ladder below is the shape a successor inherits,
-not a mechanism running today.** Two bounds survived that held, and one was
-deliberately lifted: the iteration and wall-clock caps still ended it, while the
-**stall** rung was
-skipped, because during delivery the open-step count it measures cannot move and
-a metric that cannot move is not a stall signal. A run that recorded no position
-decides exactly as it did before.
+run automatically any more.** Its termination ladder, `_lib/continuation_ladder.ts`,
+was removed on 2026-10-14 by owner decision; what it encoded survives here as
+the shape a successor inherits, not as a mechanism in the tree. Two bounds held a
+delivery hold, and one was deliberately lifted: the iteration and wall-clock caps
+still ended it, while the **stall** rung was skipped, because during delivery the
+open-step count it measures cannot move and a metric that cannot move is not a
+stall signal.
 
 ```
-THE CONSUMER IS LIVE. NO PRODUCER SHIPS YET — NOTHING WRITES `delivery` INTO
-THE RUN-STATE FILE, SO ON EVERY RUN TODAY THE POSITION IS ABSENT AND THE HOLD
-DOES NOT FIRE. READ THE PARAGRAPH ABOVE AS THE CONTRACT, NOT AS BEHAVIOR YOU
-WILL OBSERVE.
+NO CODE HOLDS A RUN ON ITS DELIVERY POSITION. THE MACHINE ABOVE IS THE
+CONTRACT THE RUN CARRIES ITSELF, NOT BEHAVIOR YOU WILL OBSERVE.
 ```
 
 Said in a fence because the surrounding prose reads as a description of live
 behavior and an independent review of the change that introduced it read it
-exactly that way. The ladder, the round-trip and the ledger field are built,
-tested and correct for any recorded value; what is missing is the step that
-records one, and a run that wants the hold must write the position itself until
-that lands.
+exactly that way. The run that owes a delivery ending checks it itself before it
+reports `complete`; nothing in the tree reads a recorded position any more.
 
 **`open-green` is a success, not a shortfall.** A run with no merge grant is not
 supposed to merge; what it owes is an open PR whose CI is green **on the head CI

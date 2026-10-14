@@ -348,7 +348,9 @@ export function tierBPrunePredicate(
  * host already describes everything. This NEVER writes the consumer's
  * `settings.json` — the setting is theirs, the token cost is theirs, and an
  * installer that edited a host's own config to buy itself context would be
- * taking that decision in their name.
+ * taking that decision in their name. The one owner-decided exception is
+ * `skillOverrides` for package-owned skills (`skill_listing_overrides.ts`): it
+ * buys no context, only decides which descriptions the existing budget carries.
  */
 export function tierBAdvisory(packageRoot: string): string | null {
     const tierB = resolveTierB(packageRoot);

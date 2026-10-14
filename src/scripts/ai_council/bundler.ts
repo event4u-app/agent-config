@@ -159,6 +159,9 @@ export function bundle_diff(
     const proc = spawnSync('git', cmd, {
         cwd: cwd ?? undefined,
         encoding: 'utf-8',
+        // Above Node's 1 MiB default the spawn fails with an empty stderr; the
+        // size guard below has to see the diff to refuse it as BundleTooLarge.
+        maxBuffer: 64 * 1024 * 1024,
     });
     if (proc.error || proc.status !== 0) {
         const stderr = (proc.stderr ?? '').toString();
