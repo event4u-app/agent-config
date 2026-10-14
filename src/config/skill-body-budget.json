@@ -147,7 +147,7 @@
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
     "launch-readiness": 9519,
-    "learning-to-rule-or-skill": 16322,
+    "learning-to-rule-or-skill": 16321,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
     "legal-practice-profile": 12921,
@@ -291,7 +291,7 @@
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
     "universal-project-analysis": 5540,
-    "upstream-contribute": 11501,
+    "upstream-contribute": 12171,
     "using-git-worktrees": 11762,
     "validate-feature-fit": 4252,
     "verify-completion-evidence": 9612,
@@ -406,6 +406,12 @@
       "old": 9682,
       "new": 10016,
       "reason": "The Node floor points at the project .nvmrc / engines.node instead of naming a major whose end of life had already passed under a heading calling itself a 2025 baseline, and the untouched Xcode / Android floors are marked as still dating from it. road-to-sentences-the-tree-can-back 3.2."
+    },
+    {
+      "skill": "upstream-contribute",
+      "old": 11501,
+      "new": 12171,
+      "reason": "two independent R2 rounds found this skill promising guarantees the tree does not keep, and the raise buys exactly those corrections. Round 1: a --dry-run documented as printing six things where the CLI prints three, with the agent told to reproduce all six verbatim - a fabricated pre-send check at the one Hard-Floor checkpoint before bytes leave the machine. Round 2: the Iron Law guaranteed that branch name, commit identity, commit message and diff are SCANNED by the release, which scans the record text only and makes no commit at all; the quality gates were numbered after the send they must precede, with the `Do NOT bypass quality gates` line deleted in the same change; and `allowed_tools: [\"Bash(gh:*)\"]` granted exactly the second route the skill forbids. The additions were squeezed twice - 433 bytes over to 114 in round 1, 776 to 556 in round 2 - before each raise. What remains is obligation rather than wording: an unscanned byte a reader believes was scanned is the state this text exists to prevent, and shrinking further deletes the correction instead of tightening it"
     }
   ]
 }

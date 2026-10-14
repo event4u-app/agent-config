@@ -1,0 +1,72 @@
+{
+  "skill": "context-authoring",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-one-upstream-that-checks-what-leaves, whose step 1.2 corrected this skill's proposal-stub path and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three entry points the skill's own 'When to use' names: a freshly scaffolded project whose agents/settings/contexts/ files are still template stubs, a user naming one of the five files directly, and a reviewer skill refusing to proceed because the file it reads is still a template — plus the architecture-change case that invalidates a filled file. Near-misses are the three neighbours the skill's own 'Do NOT use' list names, each sharing its vocabulary and belonging to somebody else: a roadmap or feature doc (agent-docs-writing), a context document outside the five templates (context-create), and the engineering-memory YAML files (/memory-add). Counterexamples guard the word 'context': an LLM context-window question and a request to summarise conversation context both say context and ask for no template to be filled.",
+  "queries": [
+    {
+      "id": "ca-e1",
+      "q": "the contexts folder is still all template stubs after the scaffold — walk me through filling them",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ca-e2",
+      "q": "help me fill in the auth model context — roles, impersonation, the exceptions we know about",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ca-e3",
+      "q": "authz-review says it cannot proceed because auth-model.md is still a template — fix that",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ca-e4",
+      "q": "we moved to row-level tenancy last sprint, so tenant-boundaries.md is wrong now — update it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ca-e5",
+      "q": "lass uns die data-sensitivity Datei ausfüllen — welche Felder sind PII und was darf ins Log?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "ca-n1",
+      "q": "write the feature doc for the new billing flow",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a regular doc, not one of the five knowledge-layer files → agent-docs-writing"
+    },
+    {
+      "id": "ca-n2",
+      "q": "I need a context document describing our queue topology — none of the five templates fit",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "says context and asks for a file, but outside the five templates → context-create"
+    },
+    {
+      "id": "ca-n3",
+      "q": "record the domain invariant that an invoice can never leave draft without a tax id",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "engineering-memory YAML rather than a context template → /memory-add"
+    },
+    {
+      "id": "ca-c1",
+      "q": "we keep blowing the model's context window on long sessions — what should we cut?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "ca-c2",
+      "q": "summarise the context of this conversation so I can paste it into a fresh chat",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says context, asks for a summary rather than a template walkthrough"
+    }
+  ]
+}

@@ -19187,6 +19187,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/upstream-contribute/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/package-ci-checks.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/upstream-contribute/SKILL.md",
       "target": ".agent-src.uncondensed/skills/upstream-contribute/SKILL.md",
       "type": "WRITE",
       "via": "self",

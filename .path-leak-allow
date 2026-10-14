@@ -49,7 +49,10 @@ dist/agent-src/skills/screenshot-hygiene/SKILL.md:72
 dist/agent-src/skills/screenshot-hygiene/SKILL.md:78
 
 # The privacy floor enumerating the patterns it detects, backticked, on one line.
-dist/agent-src/rules/low-impact-corpus-privacy-floor.md:46
+# Moved 46 -> 45 on 2026-10-14: the rule lost a line above this one when its
+# corrected paths were shrunk back inside the per-spawn payload ratchet. Same
+# line, same reason; a line-keyed pin follows the line it pins.
+dist/agent-src/rules/low-impact-corpus-privacy-floor.md:45
 
 # ── Class 3: legitimately absolute ───────────────────────────────────────────
 # Where the file actually is on a Homebrew install — a consumer edits this exact

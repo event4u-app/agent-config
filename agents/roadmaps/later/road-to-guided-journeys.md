@@ -5,6 +5,9 @@ status: later
 
 # Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C)
 
+> **Arrivals:** 1 — latest `inbox-2026-10-q` (2026-10-14): flow-level conductor asked for
+> again; still held by the resume-when note and ADR-055's schema-v2 condition.
+
 > **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
 > roadmap was anchored on external adoption; that anchoring is struck by
 > [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)

@@ -321,7 +321,24 @@ function tryPullRequest(
         prHead = `${login}:${branch}`;
     }
 
-    const prArgs = ['pr', 'create', '--repo', repo, '--title', plan.title, '--body', plan.body];
+    // `--draft` on every rung, never only on the fork one. A draft is the
+    // weaker of the two states a pull request can arrive in: it asks for no
+    // review, notifies no code owner, and runs no required check until someone
+    // marks it ready. An upstream finding is a proposal from a machine the
+    // maintainer has not met, so the maintainer decides when it becomes a
+    // request. Opening ready-for-review is the stronger act and nothing here
+    // has the standing to take it.
+    const prArgs = [
+        'pr',
+        'create',
+        '--repo',
+        repo,
+        '--draft',
+        '--title',
+        plan.title,
+        '--body',
+        plan.body,
+    ];
     if (prHead !== null) {
         prArgs.push('--head', prHead);
     }
