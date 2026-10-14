@@ -5,7 +5,8 @@
 Produced by `road-to-a-search-answer-a-model-can-choose-from` 0.1, on
 2026-10-13. Four of the five columns that step asks for are established here;
 the fifth is named as NOT established, with the reason, rather than filled from
-the schema string.
+the schema string. The fifth was established on 2026-10-14 by a probe the owner
+ran against their own settings file — see "The fifth column, observed" below.
 
 ## What was pinned
 
@@ -159,6 +160,61 @@ was executed against the current build and returned **false**. The only
 route left to column five is still the owner-reserved write-then-restore,
 tracked as the open blocker `listing-override-write-is-owner-owned` in
 `agents/roadmaps/road-to-skills-that-arrive-when-called.md`.
+
+## The fifth column, observed 2026-10-14 — a project value beats a user value
+
+The owner took the owner-reserved route named above: a write-then-restore
+against their own `~/.claude/settings.json`, run by the owner, not by an agent.
+
+| | |
+|---|---|
+| Host | Claude Code |
+| Build | `2.1.299` (`claude --version`, printed by the probe) |
+| Date | 2026-10-14T13:55:21Z |
+| Run by | the owner, at their own terminal |
+| Session shape | `claude -p "/accessibility-auditor" --model haiku`, one turn per arm, from an empty scratch directory outside any checkout |
+
+**The probe, summarised.** The script itself lived in a temporary directory and
+is not durable, so its logic is described here instead of linked:
+
+1. Back up `~/.claude/settings.json` and record its SHA-256; install an exit
+   trap that restores the backup whatever happens.
+2. Set the user-layer value `skillOverrides["accessibility-auditor"] = "off"`.
+3. **Control arm** — in the empty scratch directory, with no project settings
+   file, run the slash command.
+4. **Test arm** — write a project `.claude/settings.json` into that directory
+   carrying `{"skillOverrides": {"accessibility-auditor": "name-only"}}`, and
+   run the same command.
+5. Restore from the backup and compare the SHA-256 against step 1.
+
+**Observed.**
+
+| arm | user layer | project layer | `/accessibility-auditor` |
+|---|---|---|---|
+| control | `off` | absent | **REFUSED** — `Skill "accessibility-auditor" is disabled via skillOverrides. Remove the override from your settings to run it.` |
+| test | `off` | `name-only` | **RAN** — the model answered as the skill (no UI code in the working directory, so it asked which surface to audit) |
+
+The restore was verified: the SHA-256 of the settings file was
+`16807aa947f8c66ba7328d608bbd484c4cd8db5afe589194d4a62c8b13198848` before and
+after, identical.
+
+**Reading.** On build `2.1.299`, a project-layer `skillOverrides` value
+overrides a user-layer value for the same skill. The control is what makes this
+a precedence reading rather than a no-op: it proves the user value was in force
+(`off` refused `/name`), and the only change between the arms is the project
+file.
+
+**What it does not establish, stated so it is not over-cited.**
+
+- **A different build.** The four columns above were observed on `2.1.296`; this
+  column on `2.1.299`. They are not one build-pinned row.
+- **n = 1.** One skill, one value pair (`off` under `name-only`), one invocation
+  path (`/name`). It does not show the model-listing side of the project value,
+  nor any other pair — `name-only` under `on`, for instance, is inferred from
+  "the project layer wins", not observed.
+- **Per key or per object.** Whether the project layer replaces the whole
+  `skillOverrides` object or merges per skill name is not distinguished: both
+  readings produce this result for a single key.
 
 ## A second observation, taken on the way
 
