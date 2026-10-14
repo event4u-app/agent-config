@@ -534,7 +534,7 @@ interface LocalBlockers {
  * `<roadmap-stem>#<id>` resolves against the in-scope target named — never
  * estate-wide, so an unrelated roadmap adding a same-named blocker cannot change
  * what an existing marker means. A target that is declared but resolved makes
- * the marker STALE: `run-continuation` treats every marker as blocked, so a
+ * the marker STALE: the withdrawn `run-continuation` treated every marker as blocked, so a
  * marker on a resolved blocker would hold a step nothing holds any more.
  * "Superseded" is not a state — the format has no replacement pointer, so a
  * moved blocker is a reference to update, reported here as missing.

@@ -1600,6 +1600,22 @@ tasks:
     desc: Enforce the roadmap ## Blockers contract — required fields present, blocked-by references resolve (templates/roadmaps.md rule 20)
     cmd: ./scripts-run src/scripts/lint_roadmap_blockers {{.QUIET_FLAG}}
 
+  lint-ticked-unmet-criteria:
+    silent: true
+    desc: >-
+      No acceptance criterion is ticked [x] over its own "NOT met". Takes no
+      flags — it is called bare here because that is the only argv it accepts,
+      and a {{.QUIET_FLAG}} would exit 2 on an unknown argument.
+    cmd: ./scripts-run src/scripts/lint_ticked_unmet_criteria
+
+  lint-blocker-citations:
+    silent: true
+    desc: >-
+      Every `### blocker:` citation resolves to a file and a line that exist.
+      Ratcheted against src/config/gate-violation-baselines.json; takes no
+      flags, same reason as the task above.
+    cmd: ./scripts-run src/scripts/lint_blocker_citations
+
   lint-release-holds:
     silent: true
     desc: >-

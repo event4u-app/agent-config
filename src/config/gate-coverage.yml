@@ -57,7 +57,7 @@
 # 354 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **113 rows are listed below**, so the manifest covers 113/354 = 31.9 % of the
+# **115 rows are listed below**, so the manifest covers 115/354 = 32.5 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
 #
@@ -3325,3 +3325,46 @@ gates:
       added a cross-pack link got no red check from anything. The step in
       consistency.yml runs it with this argv; `--self-test` proves the CLI still
       rejects an undeclared link, an unresolved pack and an empty corpus.
+
+  - id: lint_ticked_unmet_criteria
+    argv: []
+    min_scanned: 700
+    corpus: "every `*.md` under `agents/roadmaps/`, archive and `later/` included — 1072 on 2026-10-13. The floor is 700 because roadmaps are archived, not deleted, so the population only grows except when a sweep moves a tree; a resolver that stopped walking `archive/` would drop by hundreds at once. The count is files WALKED, not criteria read: a roadmap with no acceptance criteria is still inspected and still counted."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    canary:
+      class: "a ticked acceptance criterion whose own text says the phrase"
+      path: agents/roadmaps/canary-ticked-unmet.md
+      content: |
+        Canary roadmap planted by check_gate_coverage --canary.
+
+        Acceptance Criteria
+
+        - [x] AC-1 — One half lands. The other half is NOT met.
+    note: >-
+      road-to-what-was-built-and-never-ran 1.3. Until this row the lint ran
+      nowhere: no task and no workflow named it, so the four hits it carried on
+      the trunk had never red anything. A real canary is possible here because
+      this gate is not a ratchet — any hit exits 1 at any headroom, so one
+      planted criterion reddens it whatever else the tree contains.
+
+  - id: lint_blocker_citations
+    argv: []
+    min_scanned: 100
+    corpus: "every `*.md` under `agents/roadmaps/` that the blocker reader yields — 159 on 2026-10-13, i.e. the roadmap files carrying a `## Blockers` section rather than the whole tree. The floor is 100 because an unresolved blocker is parked rather than deleted and the set turns over slowly, while a reader that stopped recognising the section heading would collapse to single digits."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    no_canary_reason: >-
+      A create-only canary cannot discriminate on this gate, for the same reason
+      `lint_pack_boundaries` records: it is a ratchet, so it fails only when the
+      live violation count rises ABOVE the recorded baseline in
+      `src/config/gate-violation-baselines.json`. The reading on 2026-10-13 is 8
+      against a baseline of 10, so there are two of headroom and a single
+      planted citation reads green — the ledger would call a live gate dead. The
+      headroom is itself the open residue of the step that wired this gate: the
+      baseline may only be lowered on a reading from the enforcing environment,
+      which this row's author did not have, so it is left at 10 and the gap is
+      recorded rather than closed on a local number.
+    note: >-
+      road-to-what-was-built-and-never-ran 1.3. Same history as the row above —
+      written, tested, and named by no caller until this change.

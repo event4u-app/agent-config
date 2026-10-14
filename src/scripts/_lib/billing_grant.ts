@@ -15,7 +15,8 @@
  * produces: the git-guard grant expired after 30 minutes, so a drain outliving
  * its own grant re-asked mid-run — which is the interruption this whole
  * mechanism exists to remove. So the TTL here is the RUN, and `revoke` is
- * called from the path that already clears run-continuation state. A wall
+ * called from the path that cleared run-continuation state while that concern
+ * existed. A wall
  * clock appears only as a backstop for a run that died without cleaning up.
  *
  * Transport is an env var (`AC_BILLING_GRANT`) plus a file under
@@ -121,7 +122,8 @@ export function hasBillingGrant(
 /**
  * Remove the grant for `runId`. Safe to call when none exists.
  *
- * Called from `run_continuation_hook.clearRunState` — the one place a run is
+ * Called from `run_continuation_hook.clearRunState` until that concern was
+ * withdrawn (road-to-what-was-built-and-never-ran Phase 4); it was the one place a run was
  * declared over, and therefore the grant's real TTL. `clearRunState` is
  * exported for that reason: reaching it through the concern chain would mean
  * standing up the whole dispatch harness to assert one unlink.

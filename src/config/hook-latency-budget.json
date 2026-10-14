@@ -29,8 +29,7 @@
         "block-speaking-inbox-dir": 0.564,
         "block-config-weakening": 0.637,
         "evidence-independence": 0.956,
-        "turn-end-gate": 1.587,
-        "run-continuation": 1.232
+        "turn-end-gate": 1.587
     },
     "gate_remeasure": {
         "attempts": 1,
