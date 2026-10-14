@@ -333,6 +333,54 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
         'docs/command-flows.md',
         [['(\\*\\*)(\\d+)( commands\\*\\*)', 'commands_active']],
     ],
+    // The documentation site carried the same figures by hand and nothing read
+    // them. Measured 2026-10-14 against a tree of skills 300 / rules 122 /
+    // commands 205 / guidelines 121, the two "what's inside" tables were stale
+    // on EVERY generated row — 278 / 105 / 190 / 101 — and seven further
+    // literal `190`s sat across five files, while the README two directories up
+    // said one canonical counter re-derives the figures and fails CI on a drift
+    // of one. It did; its TARGETS list simply stopped at `docs/`. Gated rather
+    // than deleted, the same call the README sub-note took: the numbers answer
+    // a reader's question, and a generated number is a better answer than none.
+    [
+        'site/src/content/docs/architecture/overview.md',
+        [
+            ['(\\| \\*\\*Skills\\*\\* \\| )(\\d+)( \\|)', 'skills'],
+            ['(\\| \\*\\*Rules\\*\\* \\| )(\\d+)( \\|)', 'rules'],
+            ['(\\| \\*\\*Commands\\*\\* \\| )(\\d+)( \\|)', 'commands_active'],
+            ['(\\| \\*\\*Guidelines\\*\\* \\| )(\\d+)( \\|)', 'guidelines'],
+            ['(\\| \\*\\*Personas\\*\\* \\| )(\\d+)( \\()', 'personas'],
+        ],
+    ],
+    [
+        'site/src/content/docs/getting-started/introduction.md',
+        [
+            ['(\\| \\*\\*Skills\\*\\* \\| )(\\d+)( \\|)', 'skills'],
+            ['(\\| \\*\\*Rules\\*\\* \\| )(\\d+)( \\|)', 'rules'],
+            ['(\\| \\*\\*Commands\\*\\* \\| )(\\d+)( \\|)', 'commands_active'],
+            ['(\\| \\*\\*Guidelines\\*\\* \\| )(\\d+)( \\|)', 'guidelines'],
+            ['(\\| \\*\\*Personas\\*\\* \\| )(\\d+)( \\|)', 'personas'],
+        ],
+    ],
+    [
+        'site/src/content/docs/agent-commands/overview.md',
+        [
+            ['(ships \\*\\*)(\\d+)(\\*\\* agent commands)', 'commands_active'],
+            ['(index of all )(\\d+)(:)', 'commands_active'],
+        ],
+    ],
+    [
+        'site/src/content/docs/agent-commands/key-commands.md',
+        [['(exhaustive list of all )(\\d+)(, see)', 'commands_active']],
+    ],
+    [
+        'site/src/content/docs/agent-commands/clusters.md',
+        // The page's own `description:` frontmatter carried a second copy of
+        // the figure. A meta description is not where a reader goes for a
+        // count, so that one is dropped rather than generated; the body line
+        // that a reader does act on stays, and is generated.
+        [['(\\) lists all )(\\d+)(\\.)', 'commands_active']],
+    ],
     [
         'docs/getting-started-by-role.md',
         [
