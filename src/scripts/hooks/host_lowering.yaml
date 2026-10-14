@@ -50,8 +50,8 @@
 #                    never silently updated. On drift the watcher leaves it
 #                    alone and moves `expires` instead, so the field keeps
 #                    naming the body someone actually read. It is NOT paired
-#                    with `docs_at`, and the committed rows prove why: all nine
-#                    carry `docs_at: 2026-09-29` while the eight digests were
+#                    with `docs_at`, and the first fill proved why: all nine
+#                    carried `docs_at: 2026-09-29` while the eight digests were
 #                    taken 2026-10-01. The two answer different questions —
 #                    `docs_at` when a human read the page for the row's ANSWERS,
 #                    `docs_digest` which body the watcher is comparing against.
@@ -94,9 +94,9 @@ hosts:
         # which answers 301 and lands on the URL below. Recording the redirect
         # target is what makes a digest reproducible.
         verified:
-          docs_at: 2026-09-29
+          docs_at: 2026-10-14
           docs_url: https://code.claude.com/docs/en/hooks.md
-          docs_digest: 9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88
+          docs_digest: 0ccea55b53b6b616134028b857028cf3822b89958a9c4b23806287dddeefe954
           probe_at: 2026-09-06
           host_version: 2.1.263
           expires: 2027-09-06
@@ -124,12 +124,12 @@ hosts:
         # Established by a documentation read on 2026-09-29, not by a live
         # probe — `probe_at` stays null and says so.
         verified:
-          docs_at: 2026-09-29
+          docs_at: 2026-10-14
           docs_url: https://docs.augmentcode.com/cli/hooks.md
-          docs_digest: e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa
+          docs_digest: 93f421dccdd017099d87b12ffd7fe8f272d8adf750856ddfb200d9b55c695378
           probe_at: null
           host_version: null
-          expires: 2027-09-29
+          expires: 2027-10-14
         # THE FINDING THIS ROW CARRIES. Augment's own documentation states that
         # `PreToolUse` can block tool execution and shows `exit 2` doing it. The
         # `block_exit: null` below is therefore NOT a claim that the host cannot
@@ -187,12 +187,12 @@ hosts:
         # piece of work, and inventing a citation for them here would be the
         # defect this file was built to remove.
         verified:
-          docs_at: 2026-09-29
+          docs_at: 2026-10-14
           docs_url: https://docs.cline.bot/customization/hooks.md
-          docs_digest: ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b
+          docs_digest: 73b6df1bf5e51589313ea3fcfdd50c0d505530234418adcdc9fe198af61837c2
           probe_at: null
           host_version: null
-          expires: 2027-09-29
+          expires: 2027-10-14
         slots:
           session_start:      { native: [TaskStart, TaskResume], block_exit: null, answered_at: 2026-09-29 }
           session_end:        { native: TaskComplete,            block_exit: null, answered_at: 2026-09-29 }
@@ -212,12 +212,12 @@ hosts:
         # redirects to `docs.devin.ai`; the redirect target is recorded so the
         # digest is reproducible.
         verified:
-          docs_at: 2026-09-29
+          docs_at: 2026-10-14
           docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
-          docs_digest: 460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2
+          docs_digest: b9e0cd4772de9e7c4086ecf31bfcb456dc74c3b36516f52c2ff8ec1dd5c1170d
           probe_at: null
           host_version: null
-          expires: 2027-09-29
+          expires: 2027-10-14
         slots:
           session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-09-29 }
           user_prompt_submit: { native: pre_user_prompt,       block_exit: null, answered_at: 2026-09-29 }
@@ -392,10 +392,10 @@ hosts:
         # armed a refusal this tree cannot demonstrate. The row records the
         # negative instead.
         verified:
-          docs_at: 2026-09-29
+          docs_at: 2026-10-14
           docs_url: https://developers.openai.com/codex/hooks.md
-          docs_digest: 724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630
+          docs_digest: 57166ef03e7059732dd90925d5c42dd4d187eb2625d66cc154d0fbd2edb65f92
           probe_at: 2026-10-01
           host_version: 0.148.0
-          expires: 2027-09-29
+          expires: 2027-10-14
         slots: {}

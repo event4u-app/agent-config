@@ -47,9 +47,9 @@
 pages:
   claude-code-skills:
     docs_url: https://code.claude.com/docs/en/skills.md
-    docs_at: 2026-08-22
-    docs_digest: 35fd2c11f870fbe1497a53796de31b2a6b760645e724bda58894525356d4602a
-    expires: 2027-08-22
+    docs_at: 2026-10-14
+    docs_digest: 3f53e70caebac7b7101bd57fd98d487c8be99611682f3f02677c2d2dbbc84764
+    expires: 2027-10-14
     why: >-
       The skill LISTING contract — that the host lists every skill name but
       keeps descriptions only up to a fraction of the context window, filling by

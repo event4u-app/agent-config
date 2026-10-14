@@ -53,9 +53,44 @@ says.** That is the watcher's own contract and it is the reason this roadmap
 exists as a reading task rather than an update task: nothing here may adopt
 upstream text.
 
+**Correction, 2026-10-14 — it was six, not four.** The re-fetch on the day
+the rows were re-established (`main@55782c253`) reported two more pages moved
+since 2026-10-13: the `codex` lowering row
+(`developers.openai.com/codex/hooks.md`, `724881d8…c630` → `57166ef0…5f92`)
+and the sibling page row `claude-code-skills` in `host_docs_pages.yaml`
+(`code.claude.com/docs/en/skills.md`, `35fd2c11…602a` → `3f53e70c…4764`).
+AC-1 asks for `--fetch` to exit 0, which it cannot do with either left red,
+so both are read and re-established here under the same terms. The title
+keeps "four" because it names the item as it was opened.
+
+## Findings — the 2026-10-14 re-read
+
+Each body was fetched once on 2026-10-14 and its sha256 matched what
+`check_host_docs_digest --fetch` printed the same day. Every finding below is
+a reading, not an adoption: no `block_exit`, `native` or `answered_at` value
+was changed, because none of the six readings contradicts a committed one.
+
+| row | what the page says now about refusing | committed row | finding |
+|---|---|---|---|
+| `claude` | exit 2 blocks `PreToolUse`, `UserPromptSubmit`, `Stop`, `SubagentStop`, `PreCompact`; not `PostToolUse`, `SessionStart`, `SessionEnd`, `SubagentStart` | `block_exit: 2` on `stop`, `user_prompt_submit`, `pre_tool_use`; null elsewhere | No contradiction. The three committed 2s are still documented. `pre_compact` and `subagent_stop` are documented as blockable and stay null: null means this package has not established a refusal there, and arming them is an enforcement change, not a dating pass. All nine bound events are still documented. |
+| `augment` | "Exit code 2: Blocking error - Prevents tool execution (PreToolUse only)"; the same five events | `block_exit: null` everywhere, `fail_policy: discard` | Unchanged. The row's own finding (the host documents a refusal, the trampoline discards every verdict) still holds word for word. |
+| `cline` | the page is still a one-line pointer to the SDK plugins page; the body gained an index header | five slots bound to events the page does not name | Unchanged. The digest moved on a header, not on content; the row's comment about the missing event names still describes the page exactly. |
+| `windsurf` | exit 2 blocks the pre-hooks only, `pre_user_prompt` among them; post-hooks cannot block | `post_setup_worktree`, `pre_user_prompt`, `post_cascade_response`, all null | No contradiction. All three bound events are still documented. `pre_user_prompt` is documented as blockable and stays null for the same reason as claude's two. |
+| `codex` | the twelve events and the exit 2 + `decision: "block"` contract are still documented | `slots: {}`, the 2026-10-01 live probe that did not reproduce the deny | Unchanged. The page still describes the contract the probe failed to reproduce; the probe finding is the row's evidence and a docs read cannot overturn it. |
+| `pages/claude-code-skills` | budget at 1% of the context window, each entry capped at 1,536 characters, descriptions dropped least-invoked first, every name kept | the four numbers `_lib/host_listing_model.ts` reads off this page | The four modelled facts still hold. One citation did NOT: the page no longer prints the "≈8,000 characters on 200k" illustration the `budget-unit-is-chars` assumption quoted as present. That assumption's text and the file header now date the illustration to the 2026-08-22 reading instead of asserting it of the current page. The page also names two settings this tree does not model (`skillListingMaxDescChars`, `SLASH_COMMAND_TOOL_CHAR_BUDGET`); neither changes a default the model uses. |
+
+**`expires` and `answered_at`.** Every re-dated row's `expires` moved forward
+to `docs_at` + 1 year, 2027-10-14, the table's stated policy — except
+`claude`, which keeps its committed 2027-09-06 because the table header
+records that value as predating the policy and it is still in the future;
+moving it would have been a second decision riding on a dating pass.
+`answered_at` stays 2026-09-29 on every slot: no slot's answer changed, so no
+slot was re-answered, and the generated enforcement table that prints that
+column stays byte-identical.
+
 ## Phase 1 — Read the four pages and re-establish their rows
 
-- [ ] **1.1 Re-read each of the four pages and record what changed about the
+- [x] **1.1 Re-read each of the four pages and record what changed about the
       refusal contract.** For each host: what the page now says about blocking
       a tool call, which exit code it names, and whether that contradicts the
       row's committed `block_exit`. A row whose contract did NOT change is a

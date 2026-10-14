@@ -11,7 +11,9 @@
  * returned zero hits before this file.
  *
  * THE MECHANISM, AS DOCUMENTED UPSTREAM (code.claude.com/docs/en/skills and
- * anthropics/claude-code#64606, both read 2026-08-22). Claude Code lists every
+ * anthropics/claude-code#64606, both read 2026-08-22; the page re-read on
+ * 2026-10-14 keeps the 1% and the 1,536 and no longer prints the ≈8,000
+ * illustration, which survives here only as the 2026-08-22 reading). Claude Code lists every
  * skill NAME, and keeps DESCRIPTIONS only up to a fraction of the context
  * window — 1% by default, ≈8,000 characters on a 200k window — filling by
  * invocation frequency and capping each entry at 1,536 characters. The fraction
@@ -96,9 +98,9 @@ const ASSUMPTIONS: readonly ModelAssumption[] = [
         id: 'budget-unit-is-chars',
         provenance: 'upstream-prose',
         why:
-            'The docs give the budget as a fraction of the context window (tokens) and then ' +
-            'illustrate it as "≈8,000 characters on 200k", which only reconciles at 4 chars ' +
-            'per token. That ratio is inferred from the illustration, never stated.',
+            'The docs give the budget as a fraction of the context window (tokens); the ' +
+            '2026-08-22 read illustrated it as "≈8,000 characters on 200k" (gone by 2026-10-14), ' +
+            'which only reconciles at 4 chars per token. That ratio is inferred, never stated.',
     },
     {
         id: 'fill-order-is-invocation-frequency',
