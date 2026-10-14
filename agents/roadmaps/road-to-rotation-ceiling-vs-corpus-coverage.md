@@ -82,7 +82,7 @@ than left to be re-derived by the next person.
 
 ### blocker: owner-reserved-ceiling-raise
 
-- **Status:** open
+- **Status:** resolved 2026-10-14 by the repository owner — `MAX_WEEKLY_QUERIES` raised from 160 to 200
 - **Blocks:** 1.1
 - **Owner:** repository owner
 - **Resolved when:** the owner records a decision on `MAX_WEEKLY_QUERIES` —
@@ -102,10 +102,16 @@ than left to be re-derived by the next person.
   decides on rather than an invoice they discover", and it ships no `raised`
   list of the kind `skill-body-budget.json` has — so there is no declared
   agent-usable path. The council agreed, unprompted, in both rounds.
+- **Decision (owner, 2026-10-14):** raise to **200**. Options put to the owner
+  and rejected: **170** (the same question returns with the next suite that
+  lands in slot 3 or 10); **rebalancing the slots** (a design change that gives
+  up "a new suite moves no other suite"); **decoupling coverage from the paid
+  replay** (the largest of the three changes). 200 buys three further suites in
+  slot 3 and four in slot 10 before a slot reaches 20 and the question reopens.
 
 ## Phase 1 — Let the two ratchets coexist
 
-- [ ] **1.1 Record the owner's decision on the ceiling.** Whatever the owner
+- [x] **1.1 Record the owner's decision on the ceiling.** Whatever the owner
       decides — a new `MAX_WEEKLY_QUERIES`, or a direction to decouple without
       raising — write it into the docblock with its reason and its reopening
       condition, the way `skill-body-budget.json`'s `raised` list records a
@@ -114,7 +120,7 @@ than left to be re-derived by the next person.
       without recomputing it.
       verify: `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
       — and the docblock names both the value and who decided it.
-- [ ] **1.2 Decouple the suite count from the weekly bill, or state why not.**
+- [x] **1.2 Decouple the suite count from the weekly bill, or state why not.**
       A corpus exists so a routing claim is checkable; whether every corpus is
       replayed against a paid provider every ninety days is a separate policy
       choice that nothing has yet made deliberately. Options to weigh and
@@ -128,7 +134,11 @@ than left to be re-derived by the next person.
       verify: adding one corpus to the tree no longer changes the peak week, or
       the decision to accept that it does is written down with its cost per
       added suite.
-- [ ] **1.3 Fix the stale figure in the ceiling's docblock.** It reads "reds at
+      Closed 2026-10-14 by the owner's decision: decoupling was rejected as the
+      largest change, so monotonic spend growth is accepted knowingly. The cost
+      is stated in the docblock — `QUERIES_PER_SUITE` on the peak for a suite
+      landing in the busiest slot, nothing on the peak anywhere else.
+- [x] **1.3 Fix the stale figure in the ceiling's docblock.** It reads "reds at
       roughly 117 suites" while `main` passes at 127; the figure assumed an even
       hash spread the tree does not have. Replace it with the quantity a reader
       can act on — the busiest slot's occupancy and how many more suites fit in
@@ -147,11 +157,11 @@ than left to be re-derived by the next person.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
+- [x] AC-1 — `npx vitest run tests/scripts/trigger_eval_rotation.test.ts` -> 0
       over the live suite list, and the value it checks against carries a
       recorded owner decision rather than an agent's edit.
-- [ ] AC-2 — Adding one trigger corpus to the tree either leaves the peak week
+- [x] AC-2 — Adding one trigger corpus to the tree either leaves the peak week
       unchanged, or changes it by an amount the docblock states in advance — so
       the next author learns the cost before the gate tells them.
-- [ ] AC-3 — No figure in `MAX_WEEKLY_QUERIES`'s docblock is contradicted by
+- [x] AC-3 — No figure in `MAX_WEEKLY_QUERIES`'s docblock is contradicted by
       recomputing the peak from the live tree.
