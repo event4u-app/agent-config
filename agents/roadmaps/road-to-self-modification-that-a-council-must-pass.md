@@ -204,10 +204,9 @@ answered by one seat — anthropic refused on the CI path's changed-file list
 missing the old side of a rename, openai gave no verdict (a local `ENOBUFS`)
 (step 2.8), which was established and fixed on the same route; round 8 refused
 2/2 on that fix's evidence — the CI-path test runs the head gate, so the
-`GIT_CONFIG_*` override the base copy relies on is untested (step 2.9). The
-disposition is the owner's. **No seat, in any of the eleven rounds across both
-shapes, disputed the design or the scope**; what is open is step 2.9, not the
-binding.
+`GIT_CONFIG_*` override the base copy relies on is untested (step 2.9), which
+was fixed on the same route and re-presented as round 9. **No seat, in any of
+the eleven rounds across both shapes, disputed the design or the scope.**
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -731,7 +730,7 @@ gaps again; the binding closes replay, and nothing else.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_ci_path.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
-- [ ] **2.9 The base-copy rename override is tested, not checked by hand.**
+- [x] **2.9 The base-copy rename override is tested, not checked by hand.**
       The CI step's `diff.renames=false` (`GIT_CONFIG_*`) is what makes the
       base revision's gate — for this PR `origin/main`'s copy, whose diff runs
       with rename detection — list a gated file renamed away; it was verified
@@ -747,8 +746,23 @@ gaps again; the binding closes replay, and nothing else.
       contract reference (both); split the council CLI `maxBuffer` change out
       (openai; anthropic: not a blocker); the kernel-rule bundle step still
       reads the rename-blind `gh pr view` list (openai: pre-existing, a
-      follow-up risk). **Deferred, with the reason**: the owner authorised one
-      round, merging only on 2/2; the next round is the owner's call.
+      follow-up risk). On the owner's route of 2026-10-14 (fix, re-present,
+      merge only on 2/2) all four were done. The new case reads the step's
+      `GIT_CONFIG_*` values from the workflow and runs the older gate's diff
+      call (`git diff --name-only base...HEAD`, rename detection on) from a
+      Node process that inherits them, on a fixture renaming a kernel rule to
+      an ungated path: without the values only the destination is listed,
+      with them both paths. It was seen red with the key misspelled, the
+      value misspelled, the count at 0 and the key variable misnamed, each in
+      place and restored. `origin/main`'s own gate, run once by hand on the
+      same fixture, said "nothing to ratify" without the values and listed
+      the kernel rule with them. The bundle step now passes `--base-ref` and
+      the script diffs with `--no-renames` and exits 3 on an unreadable diff;
+      seen red against the `gh pr view` step, against the script without
+      `--no-renames`, and with the exit-3 path neutralised. The workflow
+      comment cites the contract instead of the round. The `maxBuffer` change
+      is reverted here by a new commit and ships on its own (PR 2348).
+      verify: `npx vitest run tests/scripts/ci_changed_files_rename_compat.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
