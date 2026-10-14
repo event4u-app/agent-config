@@ -6,9 +6,11 @@
  * Phase 4 / Wave 4c). The CLI contract is pinned — `--base-ref`
  * / `--label` / `--event-path` / `--files` flags, exit codes (0 pass,
  * 1 fail, 3 internal error), stdout/stderr split, byte-identical finding
- * messages, the same git-diff invocation, base-ref candidate order, and
- * PR-label parsing from the GitHub event JSON. No behaviour changes —
- * historical quirks preserved (consumers pin the exact behaviour).
+ * messages, base-ref candidate order, and PR-label parsing from the GitHub
+ * event JSON. Two deliberate departures, both because CI reads the changed
+ * files from git through this script: the diff runs with `--no-renames`, so a
+ * kernel rule renamed away is listed under its old path too, and a failed
+ * diff exits 3 instead of passing on an empty list.
  *
  * Fails when a single PR (or commit range) modifies more than one
  * kernel rule under `src/rules/`. Override via the
@@ -59,17 +61,15 @@ const DEFAULT_LABEL = 'bundled-always-rules-acknowledged';
 // src/scripts/check_kernel_rule_bundle.ts → two levels up is the repo root.
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-function _git_changed_files(base_ref: string): string[] {
+function _git_changed_files(base_ref: string): string[] | null {
     // Bounded read: a truncated diff would shrink the change set and let the
-    // bundle guard pass on files it never saw.
-    const res = runCountedProbe('git', ['diff', '--name-only', `${base_ref}...HEAD`]);
-    // Python uses check_output(stderr=STDOUT, text=True): on non-zero it raises
-    // CalledProcessError and the handler prints the combined output. spawnSync
-    // does not raise; mirror by checking status and combining stdout+stderr.
+    // bundle guard pass on files it never saw. Rename detection off: a rename
+    // reported under its destination alone hides the kernel rule it moved.
+    const res = runCountedProbe('git', ['diff', '--no-renames', '--name-only', `${base_ref}...HEAD`]);
     if (!res.ok) {
         const combined = `${res.stdout ?? ''}${res.stderr ?? ''}`;
         process.stderr.write(`❌  git diff failed: ${combined.trim()}\n`);
-        return [];
+        return null;
     }
     return (res.stdout ?? '').split('\n').filter((line) => line.trim() !== '');
 }
@@ -217,6 +217,10 @@ export function main(argv?: readonly string[]): number {
         args.files && args.files.length > 0
             ? args.files
             : _git_changed_files(_resolve_base_ref(args.base_ref));
+    if (files === null) {
+        // An unreadable change set is not an empty one.
+        return 3;
+    }
     const hits = _kernel_changes(files);
 
     if (hits.length <= 1) {

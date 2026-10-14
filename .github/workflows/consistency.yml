@@ -512,7 +512,7 @@ jobs:
       - name: Guard — no new legacy path under src/ (ADR-051)
         # PR-scoped: pull the diff via the GitHub API (gh) instead of
         # `git fetch <base>` — the shallow PR-merge checkout races with the
-        # auth extraheader (same failure the kernel-rule-bundle step sidesteps).
+        # auth extraheader (observed: "could not read Username for github.com").
         # NOTE: no --patch — that emits a per-commit format-patch series, so a
         # line added by one commit and fixed by a later commit in the same PR
         # would fail forever. The guard's contract is the NET diff of the PR.
@@ -614,8 +614,8 @@ jobs:
         # layer once enforced; exit 2 stays degraded-advisory either way.
         #
         # NO `git fetch origin main` HERE — that fetch races with the
-        # configured auth extraheader on some runners (this workflow documents
-        # it at the kernel-rule-bundle step), and swallowing the failure with
+        # configured auth extraheader on some runners (observed: "could not
+        # read Username for github.com"), and swallowing the failure with
         # `|| true` leaves `--base` unresolvable → exit 2 → "degraded
         # advisory, allowing", i.e. the layer the contract calls authoritative
         # silently never runs. The base sha is a parent of the merge commit and
@@ -882,30 +882,25 @@ jobs:
       - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
         # Override: PR label `bundled-always-rules-acknowledged`.
-        # actions/checkout@v7 uses a shallow PR-merge fetch, so `git fetch
-        # origin <base>` can race with the configured auth extraheader on
-        # some runners (observed: "could not read Username for github.com").
-        # Sidestep the fetch entirely by pulling the PR's changed-file list
-        # from the GitHub API via `gh pr view` and feeding it to the script
-        # through its `--files` override.
+        # The changed paths come from git, not from `gh pr view --json files`:
+        # that list names a rename by its destination only, so a kernel rule
+        # renamed away was not counted. The script diffs `base...HEAD` with
+        # `--no-renames` and exits 3 when the diff cannot be read. The job
+        # checks out with `fetch-depth: 0`, so the base commit is present and
+        # no `git fetch` (and no auth-extraheader race) is involved.
         if: github.event_name == 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
-          mapfile -t CHANGED < <(gh pr view "${{ github.event.pull_request.number }}" \
-            --json files --jq '.files[].path')
-          if [ "${#CHANGED[@]}" -eq 0 ]; then
-            echo "No changed files reported by gh pr view; nothing to gate."
-            exit 0
-          fi
-          ./scripts-run src/scripts/check_kernel_rule_bundle --files "${CHANGED[@]}"
+          ./scripts-run src/scripts/check_kernel_rule_bundle --base-ref "$BASE_SHA"
 
       # ADR-268 § 4. The changed paths come from git, NOT from `gh pr view
       # --json files`: that list names a rename by its destination only (no
       # previous path), so a kernel rule moved to an ungated name never reached
       # the gate (round 7, step 2.8). The job checks out with `fetch-depth: 0`,
       # so the base commit is already present and no `git fetch` is needed —
-      # the auth-extraheader race the step above sidesteps does not arise.
+      # the auth-extraheader race a `git fetch` hits on some runners does not
+      # arise.
       # `--base-ref` hands the gate the base commit id; the gate resolves HEAD
       # once and diffs `base...head` with `--no-renames`, so the list, the
       # digest and the record are one reading of one commit.
