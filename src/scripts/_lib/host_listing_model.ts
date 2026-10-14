@@ -85,7 +85,12 @@ export interface HostListingModelResult {
     assumptions: readonly ModelAssumption[];
 }
 
-/** Documented Claude Code defaults, read 2026-08-22. Not measured in this repo. */
+/**
+ * Claude Code defaults, not measured in this repo. `fraction` and
+ * `perEntryCapChars` are documented (read 2026-08-22, re-read 2026-10-14).
+ * `charsPerToken` is inferred from an illustration the 2026-08-22 page printed
+ * and the 2026-10-14 page no longer does — see `budget-unit-is-chars`.
+ */
 export const CLAUDE_CODE_LISTING_DEFAULTS = {
     fraction: 0.01,
     perEntryCapChars: 1536,

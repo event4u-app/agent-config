@@ -104,10 +104,12 @@ const SOURCE_HEADER_RE = /^\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*(\S.*)$/
 const TMP_QUOTE_RE = /agents\/tmp(?:\.old)?\/([A-Za-z0-9._-]+)\//g;
 
 /**
- * A GitHub repository URL, scheme-optional. The lookbehind keeps a subdomain
- * such as `docs.github.com/en/copilot` from reading as owner `en`, repo `copilot`.
+ * A GitHub repository URL, scheme-optional. The lookbehind excuses only the
+ * documentation host, whose `docs.github.com/en/copilot` would otherwise read as
+ * owner `en`, repo `copilot`. Every other subdomain (`api.`, `gist.`,
+ * `codeload.`) still flags the line, as it did before.
  */
-const GITHUB_URL_RE = /(?<![A-Za-z0-9.-])(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
+const GITHUB_URL_RE = /(?<!docs\.)(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
 
 export interface SlugAllowlist {
     /** GitHub owners whose repos may be named openly (own org, integrated tools). */

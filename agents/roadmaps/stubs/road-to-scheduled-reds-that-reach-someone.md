@@ -23,7 +23,7 @@ title.
 
 The same gap is open on the other scheduled workflows. On 2026-10-14, 14 files
 under `.github/workflows/` carry `schedule:`; none but the digest watch writes
-anything when it fails, and none grants `issues: write`. An active roadmap is
+anything when it fails, and none other grants `issues: write`. An active roadmap is
 moving more calendar-dependent gates onto scheduled callers, so the set grows.
 
 ## What closing it needs
