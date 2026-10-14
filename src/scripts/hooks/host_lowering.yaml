@@ -88,7 +88,8 @@ hosts:
         # read was never dated, and the absence was the record. Both are filled
         # now from sources this tree already carries — the 2026-09-06 live probe
         # recorded in `host_semantics.ts` (Claude Code 2.1.263) and a fresh
-        # documentation read on 2026-09-29. `expires` is deliberately unchanged.
+        # documentation read on 2026-09-29, repeated 2026-10-14. `expires` is
+        # deliberately unchanged.
         #
         # The committed `docs_url` was `https://docs.claude.com/en/docs/claude-code/hooks`,
         # which answers 301 and lands on the URL below. Recording the redirect
@@ -121,8 +122,8 @@ hosts:
         fail_policy: discard
         timeout_unit: unknown
         timeout_default: null
-        # Established by a documentation read on 2026-09-29, not by a live
-        # probe — `probe_at` stays null and says so.
+        # Established by a documentation read on 2026-09-29, repeated 2026-10-14, not
+        # by a live probe — `probe_at` stays null and says so.
         verified:
           docs_at: 2026-10-14
           docs_url: https://docs.augmentcode.com/cli/hooks.md
