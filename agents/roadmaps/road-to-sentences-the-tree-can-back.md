@@ -216,24 +216,35 @@ answer. No class sweep: each step names its sentence.
 
 ## Phase 3 — Output and skill bodies
 
-- [ ] **3.1 JSON mode prints JSON only.** `check_ci_local_parity --format json`
+- [x] **3.1 JSON mode prints JSON only.** `check_ci_local_parity --format json`
       writes info lines to stderr, and stdout parses.
       verify: `npx vitest run tests/scripts/check_ci_local_parity.test.ts -t json-stdout-parses --reporter=verbose` -> /✓.*json-stdout-parses/
-- [ ] **3.2 Two dated facts point at their source.** The `react-native-setup`
+- [x] **3.2 Two dated facts point at their source.** The `react-native-setup`
       prerequisite names a minimum that is not past end of life and carries
       the month it was true, or defers to the project's own toolchain file;
       the `database` corpus label reads the manifest's versions instead of
       naming its own.
       verify: `grep -c 'Node 20.x minimum' src/skills/react-native-setup/SKILL.md` -> 0
-- [ ] **3.3 Research and naming outputs carry their status.**
+      Both defer rather than re-date: the Node floor points at the project's
+      own `.nvmrc` / `engines.node`, and the corpus label points at
+      `data/manifest.json`. Neither carries a version, so neither can expire.
+      The untouched Xcode and Android floors are marked as still dating from
+      the baseline the heading used to claim — removing the heading without
+      saying so would have hidden their age rather than fixed it.
+- [x] **3.3 Research and naming outputs carry their status.**
       `market-entry-analysis` and `positioning-strategy` point at the sourcing
       rule `/research:deep` already states; the `brand` naming procedure says a
       trademark check is "to run" with its result and date, never "available"
       on a check nobody ran.
       verify: `grep -c 'research:deep' src/skills/market-entry-analysis/SKILL.md src/skills/positioning-strategy/SKILL.md` -> /:[1-9]/
-- [ ] **3.4 Two schema fields stop implying a reader.** The descriptions of
+- [x] **3.4 Two schema fields stop implying a reader.** The descriptions of
       `refresh_trigger` and `sunset_criterion` in `skill.schema.json` state
-      that no script evaluates them today.
+      that no script evaluates them today. Counted rather than copied: the
+      Context above says four skills carry them; the tree says **three**
+      (`error-handling-patterns`, `secrets-management`, `async-python-patterns`),
+      and zero set `external_source`. D3's "four skills carry them" evidence
+      is corrected to three; the decision it supports is unchanged, since the
+      argument was that a reader exists for the key, not how many.
       verify: `grep -c 'no script evaluates' src/scripts/schemas/skill.schema.json` -> /^[1-9]/
 
 ## Phase 4 — The census sees the whole folder
@@ -281,7 +292,9 @@ answer. No class sweep: each step names its sentence.
 - [x] AC-3 — No contract line touched here names a test, script or lint code
       the tree does not have. Each successor was opened before it was written
       down, which changed three of the fixes from a rename into a rewrite.
-- [ ] AC-4 — `check_ci_local_parity --format json` stdout parses.
+- [x] AC-4 — `check_ci_local_parity --format json` stdout parses. The human
+      report is rerouted to stderr rather than dropped, and a text-mode case
+      pins that stdout still carries it there.
 - [ ] AC-5 — The census reports every text file and every cross-level revision
       set of a nested topic folder, and names what it did not count.
 - [ ] AC-6 — The README's skill-format sentence states the owner's chosen

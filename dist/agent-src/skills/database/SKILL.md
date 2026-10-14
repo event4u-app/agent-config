@@ -20,8 +20,9 @@ packs:
 > <skills-root>/database/data/manifest.json "<symptom>"` returns root
 > cause, strategy, good-code sketch, anti-pattern, and the verification
 > probe (EXPLAIN expectation). Corpus:
-> [`data/query-tuning.csv`](data/query-tuning.csv) (PostgreSQL 16 /
-> MySQL 8-derived).
+> [`data/query-tuning.csv`](data/query-tuning.csv); its engine versions and
+> their date live in [`data/manifest.json`](data/manifest.json) `upstream`.
+> Repeating them here is how this line fell two majors behind.
 
 ## When to use
 

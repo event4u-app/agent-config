@@ -8,6 +8,7 @@
 // The counts move whenever a gate is added, and a test asserting "221" would fail
 // on the next unrelated gate while proving nothing about the relation it exists to
 // check.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -172,5 +173,41 @@ describe('a comment is not an invocation', () => {
         const local = new Set(report.local_gates);
         const missing = [...local].filter((g) => !report.ci_gates.includes(g));
         expect(missing.length, 'CI side still swallows the whole local closure').toBeGreaterThan(0);
+    });
+});
+
+// A machine-readable mode whose stdout is not machine-readable is the defect
+// this block pins. Measured 2026-10-14: `--format json` wrote the document and
+// then appended the human report to the SAME stream, so `JSON.parse` failed at
+// position 28 039 for anyone piping it.
+describe('check_ci_local_parity — json-stdout-parses', () => {
+    function run(args: string[]): { status: number | null; stdout: string; stderr: string } {
+        const r = spawnSync(
+            path.join(REPO, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
+            [path.join(REPO, 'src', 'scripts', 'check_ci_local_parity.ts'), ...args],
+            { cwd: REPO, encoding: 'utf8' },
+        );
+        return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    }
+
+    it('stdout under --format json is a single JSON document and nothing else', () => {
+        const r = run(['--format', 'json']);
+        const parsed = JSON.parse(r.stdout) as Record<string, unknown>;
+        expect(parsed['generated_by']).toBe('check_ci_local_parity');
+        // Guard the guard: a run that produced almost nothing would also parse.
+        expect(Object.keys(parsed).length).toBeGreaterThan(3);
+    });
+
+    it('the human report is still produced — on stderr', () => {
+        // Rerouting is the fix; dropping the narration would be a different,
+        // worse one, so the test asserts it survives rather than vanishes.
+        const r = run(['--format', 'json']);
+        expect(r.stderr).toContain('CI ↔ local parity:');
+        expect(r.stdout).not.toContain('CI ↔ local parity:');
+    });
+
+    it('text mode is unchanged — the report stays on stdout', () => {
+        const r = run([]);
+        expect(r.stdout).toContain('CI ↔ local parity:');
     });
 });

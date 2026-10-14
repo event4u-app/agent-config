@@ -51,10 +51,15 @@ Before installing or upgrading anything, inspect what's already there — modify
 6. **Validate** — app launches, fast refresh works, Metro bundler runs without warnings.
 7. **On failure** — apply the matching pattern from "Common setup issues" below.
 
-## Prerequisites (2025 baseline)
+## Prerequisites
 
 **Node.js**
-- Node 20.x minimum (Node 18 EOL April 2025); Node 22 LTS recommended.
+- The floor is the project's own file — `.nvmrc`, `.node-version`, or
+  `engines.node`. None: a release still in Active LTS or Maintenance, with
+  the date you read the schedule. A version named here instead expired
+  unnoticed once already, which is why it is no longer named here.
+- The Xcode and Android floors below are from the 2025 baseline this heading
+  used to claim, and were not re-checked with this bullet.
 - `node --version && npm --version`.
 - npm, yarn, pnpm, bun all supported. Corepack for yarn:
   `corepack enable && corepack prepare yarn@stable --activate`.
