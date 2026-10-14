@@ -7,9 +7,12 @@
  * `false` to the shipped default, which is the opposite of accepting the old
  * key — so the two maps stay separate even though both warn once.
  *
- * An entry is dropped one minor after it lands. The new key always wins when
- * one layer carries both: a reader who has already migrated is not overridden
- * by a stale line they forgot to delete.
+ * Release class: A settings key may be removed or renamed in a minor release
+ * only when no consumer project can rely on it — default-neutral and
+ * derivable, proven by a named test; any other removal or rename ships only in
+ * a major, and a renamed key's alias is dropped only in a major. The new key
+ * always wins when one layer carries both: a reader who has already migrated
+ * is not overridden by a stale line they forgot to delete.
  *
  * Its own module rather than more lines in `agent_settings.ts`, which sits
  * three lines under the 1500-line source ceiling — a sixty-line addition there
@@ -17,6 +20,17 @@
  */
 
 export type SettingsLayer = Record<string, unknown>;
+
+/**
+ * The release rule for removing or renaming a settings key, as the one string
+ * every statement of it repeats (blocker `what-a-minor-may-remove`, owner
+ * answer (c), 2026-10-14). Exported so the warning below prints it and the
+ * cut names it, rather than each carrying its own paraphrase.
+ */
+export const SETTINGS_REMOVAL_RULE =
+    'A settings key may be removed or renamed in a minor release only when no consumer project can ' +
+    'rely on it — default-neutral and derivable, proven by a named test; any other removal or rename ' +
+    "ships only in a major, and a renamed key's alias is dropped only in a major.";
 
 export const RENAMED_KEYS: ReadonlyMap<string, string> = new Map([
     ['planning.challenge_on_create', 'planning.closure_pass'],
@@ -69,8 +83,8 @@ export function applyRenamedKeys<T extends SettingsLayer>(layer: T): T {
         if (_warned.has(oldKey)) continue;
         _warned.add(oldKey);
         process.stderr.write(
-            `⚠️  settings: \`${oldKey}\` was renamed to \`${newKey}\`. The old key still ` +
-                `works for one minor; rename it in your .agent-settings.yml.\n`,
+            `⚠️  settings: \`${oldKey}\` was renamed to \`${newKey}\`; the old key still works. ` +
+                `${SETTINGS_REMOVAL_RULE} Rename it in your .agent-settings.yml.\n`,
         );
     }
     return layer;
