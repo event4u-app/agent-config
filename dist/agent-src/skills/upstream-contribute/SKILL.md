@@ -230,12 +230,11 @@ the vehicle, never what leaves.
 
 ### 6. Quality gates (only inside a checkout of this package)
 
-```bash
-task ci
-```
-
-Outside such a checkout, the package CI runs after the issue or pull request
-exists.
+Run the package's full CI pipeline and confirm it is green before the send.
+[`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
+and names it; a consumer project has no such runner, which is why the command
+is not repeated here. Outside such a checkout, the package CI runs after the
+issue or pull request exists.
 
 ### 7. After merge — clean up override
 
@@ -275,7 +274,7 @@ replaces the local override.
 - **Do NOT create any upstream artifact without explicit user consent** — this is the #1 rule
 - **Do NOT open a contribution if `./agent-config proposal:check` blocks** — fix the proposal first (step 3)
 - Do NOT push, open a pull request, or open an issue by hand — the ladder owns the send
-- Do NOT edit a generated projection; author in `src/` and let `task sync` regenerate
+- Do NOT edit a generated projection; author in `src/` and let the package's sync step regenerate
 - Do NOT write a hand-condensed second copy of an artifact
 - Do NOT stage with a bare `git add .` — name the paths
 - Do NOT rewrite what the privacy floor refused; a refused finding stays local
