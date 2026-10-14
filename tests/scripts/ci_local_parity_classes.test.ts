@@ -52,7 +52,7 @@ function runGate(script: string, args: string[]): { code: number; out: string } 
  */
 const DRAIN_BATCH_2_MARKER = "The local-only drain — batch 2";
 
-const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap"];
+const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden"];
 
 const REQUIRED_EXPERIENCE_FIELDS = [
   "id",

@@ -515,3 +515,13 @@ jobs:
         if: always()
         run: |
           ./scripts-run src/scripts/check_augment_description_cap
+
+      # Phase 3.2 — the token-quality golden set. Two of its six structural
+      # errors were corpus entries (a tag on the merged `brand-consistency`
+      # stub, a prompt exercising none of its rule's triggers); four were the
+      # checker reading a routed rule with no triggers as "never fires" when
+      # its layer delivers it on every turn. Both are fixed in this change.
+      - name: Drain 3.2d — token-quality golden set is structurally valid
+        if: always()
+        run: |
+          ./scripts-run src/scripts/check_token_quality_golden

@@ -193,6 +193,27 @@ describe("task_fires_rule (prompt↔trigger falsifiability)", () => {
     ).toBe(true);
     expect(task_fires_rule({ prompt: "go" }, "roadmap-rule", ROUTER_V2)).toBe(false);
   });
+
+  it("a routed rule with no triggers is delivered unconditionally, so it fires", () => {
+    // The 2026-08-20 council removed the path triggers of four maintainer rules
+    // (`no-roadmap-references`, `rule-type-governance`, `skill-quality`,
+    // `source-confidentiality`) so the PROJECT layer delivers them on every
+    // turn. The router still lists them, with `triggers: []`. Read as "nothing
+    // can match", no golden task could ever cover them — the opposite of what
+    // an unconditional delivery means.
+    const router = {
+      ...ROUTER_V2,
+      tier_1: [
+        ...ROUTER_V2.tier_1,
+        { id: "always-delivered", triggers: [], routes_to: [], workspaces: ["agent-config-maintainer"], packs: ["meta"] },
+      ],
+    };
+    expect(task_fires_rule({ prompt: "bake a cake" }, "always-delivered", router)).toBe(true);
+    // A rule the router does not list at all is NOT unconditional: it is unknown.
+    expect(task_fires_rule({ prompt: "bake a cake" }, "not-in-the-router", router)).toBe(false);
+    // And a rule WITH triggers still has to be exercised.
+    expect(task_fires_rule({ prompt: "bake a cake" }, "scope-control", router)).toBe(false);
+  });
 });
 
 describe("validate() with router — fires-check + no_fire", () => {
