@@ -5,6 +5,8 @@ import * as path from 'node:path';
 
 import {
     gatedFilesOf,
+    readGatedFile,
+    readGatedLink,
     subjectDigest,
     subjectOf,
     DELETED_MARKER,
@@ -45,6 +47,17 @@ const KERNEL = 'src/rules/commit-policy.md';
  * survive the next move of that boundary silently.
  */
 const UNGATED = 'docs/contracts/ratification-artifact.md';
+
+/**
+ * A path gated ONLY through the derived plumbing closure.
+ *
+ * It matches no kernel-rule, governance-hook or plumbing-source name rule and
+ * is not in the self set, so `classifyPaths(p, [])` returns it ungated and
+ * `classifyPaths(p, derived)` returns it as plumbing. That asymmetry is what
+ * makes it usable as evidence that a `derived` list actually reached the
+ * classifier — which a self-gated path cannot show.
+ */
+const DERIVED_ONLY = 'src/scripts/hooks/host_semantics.ts';
 
 describe('2.1 — the gated set, assembled from the gate’s own constants', () => {
     it('keeps a kernel rule and drops an ungated file', () => {
@@ -170,12 +183,28 @@ describe('a gated file that cannot be read is not a gated file that was deleted'
         }
     });
 
-    it('a genuinely absent gated file is still the deletion marker', () => {
+    it('a genuinely absent gated file is encoded AS the deletion marker', () => {
         // The polarity partner: failing closed on EACCES must not make ENOENT
         // throw too, or every ordinary deletion would red the gate.
+        //
+        // STRENGTHENED on a 2026-10-13 finding. This case used to assert only
+        // that nothing threw and that the constant contains the word
+        // "deleted" — neither of which says the absent file was entered with
+        // `DELETED_MARKER` rather than skipped, which is the property step 2.1
+        // actually claims. It is provable without reaching inside the hash: a
+        // tree whose gated file CONTAINS exactly those bytes must produce the
+        // same digest as a tree where the file is missing, because the loop
+        // hashes `Buffer.from(DELETED_MARKER)` in the absent case.
         const absent = tmpTree({ 'README.md': 'x\n' });
         expect(() => subjectDigest(absent, [KERNEL])).not.toThrow();
-        expect(DELETED_MARKER).toContain('deleted');
+
+        const literal = tmpTree({ [KERNEL]: DELETED_MARKER });
+        expect(subjectDigest(absent, [KERNEL])).toBe(subjectDigest(literal, [KERNEL]));
+
+        // And it is that marker specifically, not any placeholder: a file
+        // holding a different string digests differently.
+        const other = tmpTree({ [KERNEL]: '\u0000removed\u0000' });
+        expect(subjectDigest(absent, [KERNEL])).not.toBe(subjectDigest(other, [KERNEL]));
     });
 });
 
@@ -263,12 +292,21 @@ describe('the covered list and the digest come from one classification', () => {
         // The divergence the review found was the CLI classifying a second
         // time with a different `derived` input. There is one call now, and
         // this is what pins it: the list and the digest are one object.
-        const reading = expectedSubjectFor(
-            ['src/scripts/check_kernel_edit_ratified.ts', 'README.md'],
-            process.cwd(),
-        );
-        expect(reading.gatedFiles).toEqual(['src/scripts/check_kernel_edit_ratified.ts']);
+        //
+        // THE FIXTURE IS DERIVED-ONLY, on a 2026-10-13 finding. This case used
+        // to name the gate's own script, which is gated through the SELF set
+        // and would therefore stay green even if `derived` were dropped from
+        // the call again — the exact regression the case exists to catch.
+        // `host_semantics.ts` is in the plumbing closure and matches no
+        // name-based rule, so it is gated if and only if the derived list
+        // reached the classifier.
+        const reading = expectedSubjectFor([DERIVED_ONLY, 'README.md'], process.cwd());
+        expect(reading.gatedFiles).toEqual([DERIVED_ONLY]);
         expect(reading.digest).toMatch(/^[0-9a-f]{64}$/);
+
+        // The half that makes the fixture load-bearing: with no derived list
+        // the same path is not gated at all.
+        expect(gatedFilesOf([DERIVED_ONLY], [])).toEqual([]);
     });
 });
 
@@ -293,5 +331,109 @@ describe('the import cycle stays survivable, and a regression reds here', () => 
         expect([...mod.gatedFilesOf(['src/scripts/check_kernel_edit_ratified.ts'])]).toContain(
             'src/scripts/check_kernel_edit_ratified.ts',
         );
+    });
+});
+
+describe('a failure AFTER the stat is a refusal, not a raw Node error', () => {
+    /**
+     * Step 2.3, and the half round 2 of the 2026-10-13 review named:
+     *
+     * > "the `readFileSync(abs)` and `readlinkSync(abs)` calls ... are not
+     * > wrapped, so a permission change or I/O error after the stat escapes as
+     * > a raw Node error — exactly the TOCTOU window the fail-closed lstat was
+     * > meant to close."
+     *
+     * The `lstat` above decides which of three things a gated path is. Every
+     * one of those three branches then touches the filesystem a SECOND time,
+     * and until this change the second touch had no translation at all.
+     */
+    const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+
+    it.skipIf(asRoot)('an unreadable FILE whose stat succeeded is a typed refusal', () => {
+        // The file loses its mode, not the directory — so `lstat` succeeds
+        // (it reads the parent's entry) and the READ is what fails. That is
+        // the post-stat window, reached deterministically.
+        const root = tmpTree({ [KERNEL]: 'one\n' });
+        const abs = path.join(root, KERNEL);
+        fs.chmodSync(abs, 0o000);
+        try {
+            expect(() => fs.lstatSync(abs)).not.toThrow();
+            expect(() => subjectDigest(root, [KERNEL])).toThrow(GatedFileUnreadable);
+            // And it carries the errno rather than flattening it, so the
+            // refusal says WHICH filesystem fact stopped it.
+            try {
+                subjectDigest(root, [KERNEL]);
+                expect.unreachable('the digest must refuse an unreadable gated file');
+            } catch (err) {
+                expect(err).toBeInstanceOf(GatedFileUnreadable);
+                expect((err as GatedFileUnreadable).errno.code).toBe('EACCES');
+            }
+        } finally {
+            fs.chmodSync(abs, 0o644);
+        }
+    });
+
+    it('the happy path still returns the bytes — the wrapper swallows nothing', () => {
+        // Polarity for the two clauses above: a translation that also ate
+        // successful reads would make every case in this file green for the
+        // wrong reason.
+        const root = tmpTree({ [KERNEL]: 'one\n' });
+        expect(readGatedFile(KERNEL, path.join(root, KERNEL)).toString()).toBe('one\n');
+    });
+});
+
+describe('the symlink-swap question, answered by measurement', () => {
+    /**
+     * One seat of the 2026-10-13 round named a path-substitution race between
+     * the stat and the read and asked whether resisting it is inside this
+     * gate's threat model. These two cases are the answer, each measured
+     * rather than asserted in a comment.
+     *
+     * The race cannot be staged single-threaded, so what is measured is the
+     * MECHANISM each branch relies on — which is the only honest thing a
+     * deterministic suite can prove about a race, and strictly more than the
+     * comment it replaces.
+     */
+    it('a read refuses a symlink rather than following it — the O_NOFOLLOW half', () => {
+        // The dangerous direction: a path that `lstat` called a regular file
+        // and that is a SYMLINK by the time the read happens. A plain
+        // `readFileSync` dereferences and pulls bytes from outside the
+        // revision into the digest. `readGatedFile` opens with `O_NOFOLLOW`,
+        // so the swap becomes ELOOP and then a refusal.
+        const root = tmpTree({ 'outside.txt': 'bytes from elsewhere\n' });
+        const link = path.join(root, 'src/rules/linked.md');
+        fs.mkdirSync(path.dirname(link), { recursive: true });
+        fs.symlinkSync(path.join(root, 'outside.txt'), link);
+
+        expect(() => readGatedFile('src/rules/linked.md', link)).toThrow(GatedFileUnreadable);
+        // Specifically: it did NOT return the target's bytes. Asserting the
+        // throw alone would stay green if the refusal came from somewhere else.
+        let produced: string | null = null;
+        try {
+            produced = readGatedFile('src/rules/linked.md', link).toString();
+        } catch {
+            produced = null;
+        }
+        expect(produced).not.toBe('bytes from elsewhere\n');
+    });
+
+    it('a link replaced by a regular file is EINVAL, and EINVAL is a refusal', () => {
+        // The other direction, and the one the seat asked about by name: the
+        // path was a symlink at the stat, so the loop calls `readlinkSync` —
+        // and a swap to a regular file makes that call fail. It is a typed
+        // refusal now rather than a raw Node error out of `evaluate()`.
+        //
+        // A swap of the link's TARGET is not a leak at all: the digest records
+        // the target STRING and never dereferences it, so the worst such a
+        // swap can do is move the digest, which reds the gate. Both directions
+        // therefore fail closed.
+        const root = tmpTree({ [KERNEL]: 'one\n' });
+        expect(() => readGatedLink(KERNEL, path.join(root, KERNEL))).toThrow(GatedFileUnreadable);
+
+        // Polarity: on an actual link it returns the target string, so the
+        // clause above is not green because the helper always throws.
+        const link = path.join(root, 'src/rules/linked.md');
+        fs.symlinkSync('../../elsewhere', link);
+        expect(readGatedLink('src/rules/linked.md', link)).toBe('../../elsewhere');
     });
 });

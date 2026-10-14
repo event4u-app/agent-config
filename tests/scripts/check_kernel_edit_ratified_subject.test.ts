@@ -141,3 +141,70 @@ describe('records already on the trunk are not re-judged', () => {
         expect(r.lines.join('\n')).not.toContain('landed-long-ago');
     });
 });
+
+describe('2.3 — every failure of the subject computation leaves the gate as a refusal', () => {
+    /**
+     * Round 2 of the 2026-10-13 modification review refused the change over
+     * exactly this, and the seats' words are the specification:
+     *
+     * > "`GatedFileUnreadable` gets the full treatment (defined → thrown →
+     * > caught → structured refusal). `GatedPathEscapes` gets only the first
+     * > half (defined → thrown), then escapes. The subsequent-read failures
+     * > get zero coverage. A complete fix needs one catch boundary in
+     * > `evaluate()` that handles all three failure classes."
+     *
+     * These cases go through the REAL gate rather than the digest module,
+     * because the defect was not in the module: the module threw correctly
+     * and `evaluate()` let two of the three classes through as exceptions.
+     * A gate that advertises a refusal and crashes instead has no refusal.
+     */
+    const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+
+    it('a traversing gated path is a refusal, not an exception', () => {
+        // `KERNEL_RULE_PATH_RE` is unanchored, so this classifies as a kernel
+        // rule and the digest refuses to join it to a root. Before the fix
+        // that refusal left `evaluate()` as a `GatedPathEscapes`.
+        let r: ReturnType<typeof evaluate> | null = null;
+        expect(() => {
+            r = evaluate(['../../elsewhere/rules/commit-policy.md'], root, 2);
+        }).not.toThrow();
+        expect(r).not.toBeNull();
+        expect(r!.exitCode).toBe(1);
+        expect(r!.lines.join('\n')).toContain('would read outside the revision under review');
+    });
+
+    it.skipIf(asRoot)('a read that fails AFTER the stat is a refusal, not an exception', () => {
+        // The file loses its mode, so `lstat` succeeds and the read is what
+        // fails — the post-stat window the seats named. Before the fix this
+        // surfaced as a raw Node `EACCES` out of `evaluate()`.
+        const abs = path.join(root, KERNEL);
+        fs.chmodSync(abs, 0o000);
+        try {
+            let r: ReturnType<typeof evaluate> | null = null;
+            expect(() => {
+                r = evaluate([KERNEL], root, 2);
+            }).not.toThrow();
+            expect(r).not.toBeNull();
+            expect(r!.exitCode).toBe(1);
+            expect(r!.lines.join('\n')).toContain('could not be read');
+        } finally {
+            fs.chmodSync(abs, 0o644);
+        }
+    });
+
+    it('a refusal still closes the ledger rather than leaving targets unaccounted', () => {
+        // Polarity on the SHAPE of the refusal, not only its exit code: the
+        // early return runs `close(false)`, and `finalize()` throws on an
+        // unaccounted target. An exit code alone would stay green if the
+        // boundary returned before the ledger was closed.
+        const r = evaluate(['../../elsewhere/rules/commit-policy.md'], root, 2);
+        expect(r.lines.join('\n')).toMatch(/ledger: planned 1 .*failed 1/);
+    });
+
+    it('a readable gated file with its record still passes — the boundary is not a blanket red', () => {
+        // The last polarity partner: a catch that turned every run into a
+        // refusal would satisfy all three cases above.
+        const mine = record('mine.md', expectedSubjectFor([KERNEL], root).digest);
+        expect(evaluate([KERNEL, mine], root, 2).exitCode).toBe(0);
+    });
+});

@@ -27,6 +27,10 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { expectedSubjectFor } from './check_kernel_edit_ratified.js';
+import {
+    GatedFileUnreadable,
+    GatedPathEscapes,
+} from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -88,7 +92,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // list exists so nobody copies a confident-looking digest over no files;
     // a list that can disagree with its own digest emits exactly that false
     // reassurance instead of preventing it.
-    const { digest, gatedFiles: gated } = expectedSubjectFor(files, root);
+    //
+    // The SECOND caller of the subject computation, and it is caught here for
+    // the same reason the gate catches it: step 2.3's title says every failure
+    // of that computation is one structured refusal, and a caller that prints
+    // a Node stack trace instead is a place where that sentence is not true.
+    // The two classes are enumerated, never blanket-caught — a defect in this
+    // file stays a crash.
+    let digest: string;
+    let gated: readonly string[];
+    try {
+        ({ digest, gatedFiles: gated } = expectedSubjectFor(files, root));
+    } catch (err) {
+        if (!(err instanceof GatedFileUnreadable) && !(err instanceof GatedPathEscapes)) {
+            throw err;
+        }
+        process.stderr.write(`error: ${err.message}\n`);
+        return 1;
+    }
 
     if (quiet) {
         process.stdout.write(`${digest}\n`);

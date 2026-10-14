@@ -68,19 +68,17 @@ export const DELETED_MARKER = '\u0000deleted\u0000';
 export const SYMLINK_MARKER = '\u0000symlink\u0000';
 
 /**
- * Raised when a gated path exists but cannot be read.
+ * Raised when a gated path would resolve outside the tree under review.
  *
- * A 2026-10-13 council review refused the change over the shape this
- * replaces: every `lstat` failure became `null`, and `null` is the DELETION
- * marker — so a permission error, an I/O error or a transient filesystem
- * failure on a gated file produced the digest of a tree in which that file
- * had been removed. Both seats named it, and one named the consequence that
- * makes it more than untidy: anyone who can provoke such an error on a gated
- * path can force its real content out of the digest.
+ * THIS DOC BLOCK USED TO DESCRIBE A DIFFERENT CLASS. It carried
+ * {@link GatedFileUnreadable}'s `lstat` / ENOENT argument verbatim, which says
+ * nothing about path containment and is now where it belongs. A comment that
+ * describes the wrong mechanism is worse than none on a governance surface: it
+ * answers a reader's question with another class's reasoning, and the reader
+ * has no way to know.
  *
- * Only ENOENT and ENOTDIR mean ABSENT. Everything else is a checkout this
- * code cannot describe, and describing it anyway is the fail-open move a
- * previous round of this same review already refused once.
+ * The containment itself fails CLOSED rather than dropping the path —
+ * see {@link assertContained} for why that direction is the safe one.
  */
 export class GatedPathEscapes extends Error {
     constructor(readonly rel: string) {
@@ -118,6 +116,25 @@ function assertContained(rel: string): void {
     }
 }
 
+/**
+ * Raised when a gated path exists but cannot be read.
+ *
+ * A 2026-10-13 council review refused the change over the shape this
+ * replaces: every `lstat` failure became `null`, and `null` is the DELETION
+ * marker — so a permission error, an I/O error or a transient filesystem
+ * failure on a gated file produced the digest of a tree in which that file
+ * had been removed. Both seats named it, and one named the consequence that
+ * makes it more than untidy: anyone who can provoke such an error on a gated
+ * path can force its real content out of the digest.
+ *
+ * Only ENOENT and ENOTDIR mean ABSENT. Everything else is a checkout this
+ * code cannot describe, and describing it anyway is the fail-open move a
+ * previous round of this same review already refused once.
+ *
+ * Round 2 of the same review found the other half: this class was raised
+ * only from the `lstat`, and the reads AFTER it were unwrapped. Both reads
+ * now raise it too, through {@link readGatedFile} and {@link readGatedLink}.
+ */
 export class GatedFileUnreadable extends Error {
     constructor(
         readonly rel: string,
@@ -129,6 +146,106 @@ export class GatedFileUnreadable extends Error {
                 'could not read, because an unreadable file is not a deleted one',
         );
         this.name = 'GatedFileUnreadable';
+    }
+}
+
+/**
+ * An errno failure, or `null` for anything else.
+ *
+ * THE TRANSLATION IS NARROW ON PURPOSE. The blind peer-review stage of the
+ * 2026-10-13 round named the opposite shape as its own defect: a blanket
+ * `catch` around the read would "conceal programming defects as ordinary
+ * refusals", so a `TypeError` from a future edit of this loop would surface as
+ * "the tree could not be read" and nobody would look for the bug. Only a value
+ * carrying an errno `code` is a statement about the filesystem; everything else
+ * is rethrown and stays a crash.
+ */
+function asErrno(err: unknown): NodeJS.ErrnoException | null {
+    if (err instanceof Error && typeof (err as NodeJS.ErrnoException).code === 'string') {
+        return err as NodeJS.ErrnoException;
+    }
+    return null;
+}
+
+/**
+ * `O_NOFOLLOW`, or 0 where the platform has no such flag.
+ *
+ * Defined on Linux and macOS, which is where this gate runs — `consistency.yml`
+ * is `ubuntu-latest` and the suites are ubuntu plus macOS. The `0` fallback is
+ * honest rather than silent: on a platform without the flag the open below
+ * degrades to an ordinary one and {@link readGatedFile} loses the containment
+ * property its own case asserts. That is stated here because a reader
+ * otherwise has to infer it from a bitmask.
+ */
+const O_NOFOLLOW: number =
+    typeof fs.constants.O_NOFOLLOW === 'number' ? fs.constants.O_NOFOLLOW : 0;
+
+/**
+ * Read a gated path that {@link fs.lstatSync} has just called a regular file,
+ * WITHOUT following a symbolic link at its final component.
+ *
+ * THE SYMLINK-SWAP QUESTION, ANSWERED RATHER THAN ASSUMED. One seat of the
+ * 2026-10-13 round named a path-substitution race between the stat and the
+ * read and asked whether resisting it is inside this gate's threat model. It
+ * is, for exactly one direction and for a reason that is cheap to state: a
+ * path that is a regular file at `lstat` and a SYMLINK at the read is the only
+ * ordering in which out-of-revision CONTENT can enter the digest, because a
+ * plain `readFileSync` dereferences. `O_NOFOLLOW` makes that open fail with
+ * `ELOOP`, which becomes a refusal — so the race reds the gate instead of
+ * digesting a stranger's bytes.
+ *
+ * WHAT IS NOT CLOSED, SAID PLAINLY. Intermediate directory components are
+ * still resolved, so a symlinked parent directory committed into the tree
+ * redirects the read; that is a property of the checkout rather than a race,
+ * and it is visible in the revision. And an adversary with concurrent write
+ * access to the checkout during a gate run can edit the gated bytes BEFORE the
+ * stat, forge the record, or patch this file — no ordering of stat and read
+ * answers that, and claiming otherwise would be the false assurance this
+ * module exists to prevent.
+ *
+ * Exported because a comment claiming a containment property is not a control.
+ * Its case opens a symlink directly and expects the refusal; neutralising the
+ * flag turns that case red.
+ */
+export function readGatedFile(rel: string, abs: string): Buffer {
+    let fd: number | null = null;
+    try {
+        fd = fs.openSync(abs, fs.constants.O_RDONLY | O_NOFOLLOW);
+        return fs.readFileSync(fd);
+    } catch (err) {
+        const errno = asErrno(err);
+        if (errno === null) {
+            throw err;
+        }
+        throw new GatedFileUnreadable(rel, errno);
+    } finally {
+        if (fd !== null) {
+            fs.closeSync(fd);
+        }
+    }
+}
+
+/**
+ * Read the TARGET STRING of a gated path that `lstat` has just called a
+ * symbolic link.
+ *
+ * The other half of the swap answer, and the measurable one: a link replaced
+ * by a regular file between the stat and this call makes `readlinkSync` fail
+ * with `EINVAL`, which becomes a refusal rather than a raw Node error escaping
+ * `evaluate()`. A swap of the link's TARGET is not a leak at all — the digest
+ * records the target STRING and never dereferences it, so the worst a swap can
+ * do is move the digest, which reds the gate. Both directions therefore fail
+ * closed, and the case below proves the `EINVAL` one rather than asserting it.
+ */
+export function readGatedLink(rel: string, abs: string): string {
+    try {
+        return fs.readlinkSync(abs);
+    } catch (err) {
+        const errno = asErrno(err);
+        if (errno === null) {
+            throw err;
+        }
+        throw new GatedFileUnreadable(rel, errno);
     }
 }
 
@@ -245,9 +362,13 @@ export function subjectOf(
         if (stat === null) {
             content = Buffer.from(DELETED_MARKER);
         } else if (stat.isSymbolicLink()) {
-            content = Buffer.from(SYMLINK_MARKER + fs.readlinkSync(abs));
+            // Both reads are wrapped. Before the 2026-10-13 round they were
+            // not, and an I/O or permission failure AFTER the stat escaped as
+            // a raw Node error — the exact TOCTOU window the fail-closed
+            // `lstat` above was added to close, left open one line later.
+            content = Buffer.from(SYMLINK_MARKER + readGatedLink(rel, abs));
         } else {
-            content = fs.readFileSync(abs);
+            content = readGatedFile(rel, abs);
         }
         h.update(rel);
         h.update('\u0000');

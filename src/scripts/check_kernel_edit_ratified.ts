@@ -87,6 +87,7 @@ import {
 } from './_lib/ratification_artifact.js';
 import {
     GatedFileUnreadable,
+    GatedPathEscapes,
     subjectOf,
     type SubjectReading,
 } from './_lib/ratification_subject.js';
@@ -495,11 +496,27 @@ export function evaluate(
     try {
         expectedSubject = expectedSubjectFor(files, root).digest;
     } catch (err) {
-        // Fail closed, and before the "nothing to ratify" exit: a gated path
-        // this process could not read is a checkout the gate cannot describe,
-        // and a gate that cannot describe the content cannot say a record
-        // answers for it.
-        if (!(err instanceof GatedFileUnreadable)) {
+        // ONE boundary for EVERY failure of the subject computation, and the
+        // enumeration is the point. Round 2 of the 2026-10-13 modification
+        // review refused the change because this catch knew only one of the
+        // two error classes the same diff had introduced: "`GatedFileUnreadable`
+        // gets the full treatment (defined → thrown → caught → structured
+        // refusal). `GatedPathEscapes` gets only the first half (defined →
+        // thrown), then escapes." A gate that advertises a refusal and crashes
+        // instead has no refusal.
+        //
+        // Fail closed, and BEFORE the "nothing to ratify" exit: a gated path
+        // this process could not read, or one that points outside the
+        // revision, is a checkout the gate cannot describe, and a gate that
+        // cannot describe the content cannot say a record answers for it.
+        //
+        // NARROW AND TYPED, never a blanket catch. The blind peer-review stage
+        // of the same round named the alternative as its own defect — wrapping
+        // everything would "conceal programming defects as ordinary refusals",
+        // which is the fail-open shape round 1 already refused once. Anything
+        // that is not one of these two classes is a bug in this gate and stays
+        // a crash.
+        if (!(err instanceof GatedFileUnreadable) && !(err instanceof GatedPathEscapes)) {
             throw err;
         }
         lines.push(`❌  ${err.message}`);
