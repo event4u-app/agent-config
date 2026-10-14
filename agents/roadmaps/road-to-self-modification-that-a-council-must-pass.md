@@ -188,17 +188,20 @@ So the branch was narrowed to the content binding alone — the `subject` digest
 over the gated content, and the gate refusing a record whose `subject` does not
 match — which is the piece both seats named as the smallest high-value change.
 
-**The narrowed change then went to five rounds of its own and was refused in
-all five** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+**The narrowed change then went to six rounds of its own and was refused in
+all six** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
 round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
 anthropic `ratified` with no pre-merge change named, openai `refused` on three
 defects in the refusal plumbing added to satisfy round 2. On the owner's
 decision those three were fixed (step 2.4) and round 4 refused 2/2 on a new
 one: non-regular files read as regular (step 2.5). That was fixed on the
 owner's decision and round 5 refused 2/2 on a new one: an intermediate path
-component that is a symlink is followed (step 2.6). The disposition is the
-owner's. **No seat, in any of the eight rounds across both shapes, disputed the
-design or the scope**; what is open is step 2.6, not the binding.
+component that is a symlink is followed (step 2.6). The digest was then moved
+from the working tree to Git objects at a revision (decision D13) and round 6
+refused 2/2 on a new one: a mutable revision is resolved more than once in one
+gate run (step 2.7). The disposition is the owner's. **No seat, in any of the
+nine rounds across both shapes, disputed the design or the scope**; what is
+open is step 2.7, not the binding.
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -649,7 +652,35 @@ gaps again; the binding closes replay, and nothing else.
       `agents/evidence/reviews/ratification-subject-git-revision-test-removals.md`.
       Each new property was seen red against the working-tree reader before
       the change (16 of 17 cases), and the subdirectory, mode-`120000` and
-      `--rev` usage refusals again by neutralising them afterwards.
+      `--rev` usage refusals again by neutralising them afterwards. Round 6
+      accepted the object-store design and refused 2/2 on a new finding —
+      step 2.7.
+
+- [ ] **2.7 One gate run reads one commit.** `main()` passes the revision
+      NAME to `git diff --name-only <base>...<rev>` for the changed-file list
+      and then to `evaluate()`, which resolves it again for the content and the
+      record, so a `HEAD`, branch or tag that moves between the two calls
+      yields a file list from one commit and a digest and record from another
+      — contradicting the contract's "one commit". The fix: resolve `--rev`
+      once in `main()` to a commit id and pass that id to the diff, the digest,
+      the record read and the reported revision; refuse `--rev` without a value
+      in the gate as the subject CLI already does; run the diff through the
+      same git runner (environment scrubbing) as the subject; state in the
+      contract that an empty gated set reads no commit, so an invalid `--rev`
+      then passes. Case: the ref moves between the diff and the read, and the
+      gate still judges one commit. Opened by round 6 on 2026-10-14, refused
+      2/2 on it. In openai's words: *"the gate does not yet ensure that
+      changed-file discovery, hashing, and record reading use one immutable
+      commit; the highest-leverage pre-merge change is to resolve `--rev` once
+      before the diff and pass that OID through every subsequent operation,
+      with shared strict option parsing."* anthropic: *"Resolve `--rev`
+      exactly once in `main()` to an immutable commit OID [...] Pass that OID
+      through all operations."* Also raised, not stated as blocking: the
+      mutual import between the gate and the subject module (openai).
+      **Deferred, with the reason**: the owner authorised one round, merging
+      only on 2/2; a seventh round is the owner's call.
+      verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
 
