@@ -5,7 +5,11 @@ status: later
 
 # Road to worker-generation recycling — a worker at its budget hands off instead of dying
 
-> **Arrivals:** 4 (at least) - latest `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 5 (at least) - latest `inbox-2026-10-r` (2026-10-14): two parallel plans
+> propose re-tasking a warm worker by the host's resume primitive in place of Phase 2's
+> kill-and-respawn; `road-to-a-cold-start-paid-once` blocker
+> `recycling-question-gets-its-answer` carries the posed question. Previous latest:
+> `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
