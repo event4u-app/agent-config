@@ -109,7 +109,7 @@ answer. No class sweep: each step names its sentence.
 
 ## Phase 1 — Generators and counters
 
-- [ ] **1.1 Quoted names render as names.** `generate_catalog` strips one pair
+- [x] **1.1 Quoted names render as names.** `generate_catalog` strips one pair
       of surrounding quotes from `name:`; the four rows and four links are
       regenerated; the test header describes the layer that exists. No
       `--check` gate is added for the two files.

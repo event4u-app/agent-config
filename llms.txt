@@ -37,7 +37,7 @@ brand-strategy: Ground a brand strategy from the corpus — archetype, opposable
 brand-to-tokens: Turn a confirmed brand identity into a DTCG .tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates.
 bug-analyzer: Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs.
 build-buy-partner: Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'.
-canvas-design: Creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — on 'design a poster' or 'mach uns ein Visual'. Grounded by design-intelligence.
+canvas-design: Static visual art — posters, marketing visuals, brand assets, PDF/PNG pieces — on 'design a poster' or 'mach uns ein Visual'.
 character-consistency: Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
 check-refs: Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 churn-prevention: Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'.
@@ -90,7 +90,7 @@ editorial-calendar: When shaping cadence — evergreen / campaign / reactive spl
 eloquent: Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions.
 emit-tickets: Use when materialising a roadmap into a ticket bundle — 'turn this roadmap into tickets', 'materialise tickets', 'mach Tickets aus der Roadmap', 'emit tickets for this plan'.
 error-handling-patterns: Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized.
-"estimate-ticket": Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt.
+estimate-ticket: Estimate a Jira/Linear ticket — 'estimate PROJ-123', 'wie groß ist das?', 'should we split this?' — size + risk + split + uncertainty, sibling of /refine-ticket, close-prompt.
 evaluate-llm-feature: Black-box evaluation of a shipped LLM feature — adversarial probes for hallucination, prompt-injection, and cost-runaway vs stated expectations. Not RAG/embedding. Triggers 'review my chatbot'.
 existing-ui-audit: Use BEFORE writing or editing any non-trivial UI — inventories components, design tokens, shadcn primitives, and reusable patterns into state.ui_audit. Hard gate for fe-design.
 expansion-playbook: Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'.
@@ -117,12 +117,12 @@ hiring-loop-design: Use when shaping an engineering hiring loop — stages, take
 history-design: Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'.
 html-deck: Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests.
 humanizer: Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'.
-iconography: Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler.
+iconography: Resolve an icon request to an Iconify name and emit the stack's embedding. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler.
 image-analyser: Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'.
 image-creator: Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'.
 image-editing: Edit an existing image — inpaint, background swap, variation — via providers that support it. Use when editing/modifying/inpainting an image or making variations.
 image-generation: Generate an image from a brief — provider-agnostic blueprint then provider-specific translation, with ref-image/seed reuse for consistency. Use when generating/creating an image.
-image-provider-routing: Select the right image-generation provider from job shape — text-in-image to Ideogram, photoreal to Flux, vector/logo to Recraft, general to Gemini/GPT.
+image-provider-routing: Pick the image provider from job shape — text-in-image to Ideogram, photoreal to Flux, illustrative vector to Recraft, general to Gemini/GPT.
 incident-commander: Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'.
 jira-integration: Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking.
 jobs-events: Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling.
@@ -162,7 +162,7 @@ livewire: Use when the project's frontend stack is Livewire — dispatched by `d
 livewire-architect: Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'.
 llm-provider-knowledge: Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory.
 logging-monitoring: Use when establishing what observability a project actually has — the four Golden Signals, required signal to detected implementation to evidence, and SLI/SLO provenance.
-logo-generation: Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation.
+logo-generation: Generate a logo or brand mark — structured prompt, provider routing, and a true-vector path. Use for logo or brand mark generation.
 market-entry-analysis: Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'.
 markitdown: Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'.
 mcp: Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows.
@@ -232,8 +232,8 @@ readme-writing-package: Use when creating or rewriting a README for a reusable p
 reasoning-orchestrator: Use for multi-step / ambiguous / end-to-end work — refactor a whole module, drive a vague ticket to a verified result, plan+build+verify a migration; coordinates the reasoning chain across skills.
 receiving-code-review: When processing code review feedback (bot or human) before changing anything — triages, verifies and pushes back with technical reasoning — even when the user just says 'fix the comments'.
 recursive-verification: Use to run a depth-bounded self-correction loop (attempt → critic verdict → re-attempt) as a tunable test-time compute knob — a do-and-judge specialisation, default off, capability-gated.
-"refine-prompt": Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
-"refine-ticket": Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?'; rewritten ticket, risks, persona voices, close-prompt.
+refine-prompt: Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'.
+refine-ticket: Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?'; rewritten ticket, risks, persona voices, close-prompt.
 release-comms: Turn a shipped changelog into a release narrative — value-not-feature framing, audience-segmented surfaces. Triggers on 'announce the release', 'write changelog post'.
 repomix-packer: Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI.
 requesting-code-review: Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'.
@@ -273,6 +273,7 @@ standards-from-config: Use when you need this project's coding standards (line l
 storybook-workshop: Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying.
 subagent-orchestration: Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council).
 supply-chain-intake: Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned
+svg-authoring: Hand-author or edit an SVG — icon, mark, illustration, diagram, animation, raster-to-vector — checked and rendered.
 symfony-workflow: Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`.
 systematic-debugging: Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'.
 tailwind-engineer: Writing or reviewing Tailwind CSS — utility-first, design tokens, no inline-style drift, responsive variants, dark mode — 'style this' or 'mach das hübsch'. Pairs with react-shadcn-ui.
@@ -295,13 +296,13 @@ unit-economics-modeling: Use when modeling CAC, LTV, payback, contribution margi
 universal-project-analysis: Deep multi-pass codebase audit — orchestrates project-analysis-core plus the framework-specific project-analysis-*; explicit request only. Single-pass scan → project-analyzer.
 upstream-contribute: Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package.
 using-git-worktrees: When starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'.
-"validate-feature-fit": Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
+validate-feature-fit: Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit
 verify-completion-evidence: Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs.
 verify-repair-loop: Use to iterate a change until tests/quality checks pass — bounded run→revise→re-run gated by a numeric threshold, then a judge confirms. Triggers 'iterate to green', 'keep fixing until tests pass'.
 video-director: Use when a live-action beat becomes the 11-block cinematic prompt — lens, lighting, negatives. Triggers 'cinematic prompt', 'film-grade scene'. Animated → pixar-storyteller; 12-block → scene-expander.
 vision-articulation: Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'.
 voc-extract: Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'.
 voice-and-tone-design: Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'.
-wireframe: Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure.
+wireframe: Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis. Use when the user wants to sketch directions or explore structure.
 workspace-link: Use when a cross-workspace import will not resolve — cannot find module @org/*, TS2307 — to link the packages properly with the workspace: protocol instead of patching tsconfig paths.
 worktree-lifecycle: Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist.
