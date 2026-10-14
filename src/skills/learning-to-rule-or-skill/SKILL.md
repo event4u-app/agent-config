@@ -231,8 +231,8 @@ Mandatory fields the draft MUST fill:
 * `type` — `rule` | `skill` | `command` | `guideline`
 * `scope` — `project` (stays in `agents/overrides/`) or `package`
   (contributed upstream via `upstream-contribute`)
-* `source_learning` — the intake signal this proposal was captured
-  from, as `agents/memory/intake/signals-<YYYY-MM>.jsonl#<signal id>`
+* `source_learning` — the capturing intake signal, as
+  `agents/memory/intake/signals-<YYYY-MM>.jsonl#<id>`
 * `evidence` — **at least two independent** references (PR, issue,
   incident, review-comment, test-failure, **or audit-log line ids**
   per [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md));

@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 134 files, 28 holdout and 106 train.** That bullet read
+- **Now: 137 files, 28 holdout and 109 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -31,7 +31,8 @@ beside it.
   surviving in the bullet that exists to state the live figure. The growths are
   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
-  § Re-pin 2026-10-11, § Growth — 2026-10-12 and § Growth — 2026-10-14; the
+  § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14 and
+  § Growth — 2026-10-14b; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -183,10 +184,57 @@ run as the LAST act before publishing this section, after the final edit to any
 file in the set — the procedure the 2026-10-01 section prescribes after
 shipping a stale pin for the third time in this file's life.
 
+## Growth — 2026-10-14b, three train corpora; the seal does not move
+
+```
+THREE ROWS ADDED, ALL TRAIN. THE SEALED SET STAYS AT 28.
+EVERY PREVIOUSLY PUBLISHED ROW IS BYTE-IDENTICAL — CHECKED AGAINST THE TREE, NOT ASSERTED.
+```
+
+**What changed.** `road-to-one-upstream-that-checks-what-leaves` steps 1.1 and
+1.2 rewrote `upstream-contribute` into a front on the `self-repair:release`
+ladder and repaired the dangling `agents/learnings/` path in
+`learning-to-rule-or-skill` and `context-authoring`. `check_routing_coverage`
+requires every touched skill to carry a corpus and none of the three had one.
+Each gained **10** labelled queries — 5 exemplars of which one is German, 3
+near-misses, 2 counterexamples; 30 cases in all. Ten rather than the eleven the
+2026-10-14 section above records, because these three skills are process skills
+with fewer distinct surfaces than the seven stack skills that section covers;
+the discipline floor is 3 positives and 2 near-misses and both numbers clear it
+with room.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `context-authoring` | train | `0xe0` | 224 ≥ 51 |
+| `learning-to-rule-or-skill` | train | `0xf8` | 248 ≥ 51 |
+| `upstream-contribute` | train | `0xa7` | 167 ≥ 51 |
+
+**The seal did not move, and that is a measurement rather than a preference.**
+All three buckets land far above the ceiling of 51, so the partition rule put
+every one of them in train. Nobody chose that: the rule is a hash of the
+directory name, recomputable by any reader without this file. The sealed set
+stays at 28 and no holdout result taken against the earlier set is voided.
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe over the tree and diffing every published row
+reports **exactly three rows absent** — the three above — **zero** hash
+mismatches and **zero** orphans over the 134 rows published before this change.
+No pre-existing corpus file was edited here, so this growth is pure addition.
+
+**The three grandfather entries went with it.** All three skills sat in
+`src/scripts/trigger_eval_grandfather.json`, and `check_trigger_eval_presence`
+reads a skill that carries a corpus AND a grandfather entry as a finding, not
+as belt and braces. The allowlist goes 166 -> 163, which is the direction its
+shrink-only ratchet allows.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to any
+file in the set.
+
 ## The set hash
 
 ```
-SET-SHA256  365103553b29b93f44286609f7476d277aa210f29b73ed1aa4286e9b4e048a0e
+SET-SHA256  8446fbd4ff2401bbd7078317dc187f9ea8d6a36bd07a6b310348b862bdbb48d7
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -573,6 +621,7 @@ open and which this file does not settle.
 | `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
 | `competitive-moat-analysis` | `e149d75967c3d407ba74512527934b77fb3ede128c1bbcdecdd88e3c51448b67` |
 | `complexity-first-planning` | `7377795a8aca39c574ed4a1bc2074f7da451bf1ce7095bdb0ccdc50e60b9757b` |
+| `context-authoring` | `0c3412f197fb3b5210496e39bfe5dc286b1348651fa132c4ade4cb43617f05b7` |
 | `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
 | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
@@ -610,6 +659,7 @@ open and which this file does not settle.
 | `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
 | `judge-security-auditor` | `b1915f90c4e7648f8cca7de9e43c73eb08616382827d69ee359dd3fa33b5f72f` |
 | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
+| `learning-to-rule-or-skill` | `954cea1f3b230004cff27ad4d138a442869ad6ad65281514edbb907340380240` |
 | `learning-tutor` | `3facfb90fa1ee593cf779862bfc79f88f70a915dc9638dc4af6ef5bbf98d9fd7` |
 | `legal-intake-triage` | `4b6afb88a3a7912ab8666d5e000172224e3e26f5940bbf09988e750a0d89b6fc` |
 | `legal-practice-profile` | `be472d98368803e6b0f31652069f2ce01b802b97a3ec7976635a602667a6ba14` |
@@ -649,6 +699,7 @@ open and which this file does not settle.
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
+| `upstream-contribute` | `563a1ab0381b7a96f9a993381119403f81064426d7b3aaf17fbf81467534cdea` |
 | `using-git-worktrees` | `66f8a8709d975f3c98103341469ea0af34b909ce1ca7042170690707a61878da` |
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
 | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
