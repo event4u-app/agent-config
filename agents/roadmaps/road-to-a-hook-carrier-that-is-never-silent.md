@@ -180,13 +180,14 @@ plugin ships no dispatcher of its own (D4).
 | D4 | product-owned | owner | The plugin channel ships no dispatcher of its own: its no-dispatcher branch becomes visible and the marketplace text stops claiming working hooks (Phase 5); no release-asset archive, no resolution from the npm package at hook time | Owner answer 2026-10-14, option (c), after the AI council (anthropic + openai, 2/2, both (c), both owner-reserved because it withdraws a public statement); the channel is DEPRECATED as a content channel, and a dispatcher fetched at hook time would put network and latency where enforcement must be deterministic | material plugin-only usage is measured, or a self-contained integrity-verified carrier needs no network at hook time |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Guards start refusing on machines that never saw them | product | A consumer whose carrier was silent meets a `fail_closed` refusal for the first time after upgrade. | 4.1 names the concerns in the changelog; doctor prints the carrier state. | Phase 4 — Say what changes for machines that were silent |
 | 2 | Launch environments differ on one machine | implementation | A session launched where the carrier is dead meets a layer another session left thinned. | 2.1 removes the `PATH` dependency; 3.1 covers the remainder; 3.3 keeps demotion sticky. | Phase 2 — Absolute paths ahead of `PATH` |
 | 3 | Restore writes into a directory other sessions read | implementation | A full-layer restore lands while a second session is live. | 3.2 only adds owned files; probe 0.2 (c) measures pickup first. | Phase 3 — Silence only where it is free |
+| 4 | Plugin-only sessions start printing a line on every event | product | 5.1 makes a previously silent branch talk; a line per hook event would be noise on every tool call. | 5.1 prints on stderr only, and the context line fires once at session start; the test in 5.2 pins the shape. | Phase 5 — The plugin channel says what it carries |
 
 ## Acceptance Criteria
 
