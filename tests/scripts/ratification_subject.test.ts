@@ -4,6 +4,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import {
+    asErrno,
     gatedFilesOf,
     readGatedFile,
     readGatedLink,
@@ -435,5 +436,55 @@ describe('the symlink-swap question, answered by measurement', () => {
         const link = path.join(root, 'src/rules/linked.md');
         fs.symlinkSync('../../elsewhere', link);
         expect(readGatedLink('src/rules/linked.md', link)).toBe('../../elsewhere');
+    });
+});
+
+describe('only an OS failure is translated — a Node programming error stays a crash', () => {
+    /**
+     * Step 2.4, and round 3 of the 2026-10-13 review in the seat's words:
+     *
+     * > "Node programming errors such as `ERR_INVALID_ARG_TYPE` are typically
+     * > `TypeError` instances with string `code` properties. Consequently, the
+     * > stated guarantee that 'a `TypeError` from a future edit … stays a
+     * > crash' is false."
+     *
+     * Each case below provokes a REAL `ERR_INVALID_ARG_TYPE` from Node rather
+     * than constructing one, so it measures what Node actually attaches.
+     */
+    function thrownBy(fn: () => unknown): unknown {
+        try {
+            fn();
+        } catch (err) {
+            return err;
+        }
+        return expect.unreachable('expected a throw');
+    }
+
+    it('readGatedFile rethrows ERR_INVALID_ARG_TYPE unchanged', () => {
+        const err = thrownBy(() => readGatedFile(KERNEL, 42 as unknown as string));
+        expect(err).toBeInstanceOf(TypeError);
+        expect(err).not.toBeInstanceOf(GatedFileUnreadable);
+        expect((err as NodeJS.ErrnoException).code).toBe('ERR_INVALID_ARG_TYPE');
+    });
+
+    it('readGatedLink rethrows ERR_INVALID_ARG_TYPE unchanged', () => {
+        const err = thrownBy(() => readGatedLink(KERNEL, 42 as unknown as string));
+        expect(err).toBeInstanceOf(TypeError);
+        expect(err).not.toBeInstanceOf(GatedFileUnreadable);
+        expect((err as NodeJS.ErrnoException).code).toBe('ERR_INVALID_ARG_TYPE');
+    });
+
+    it('the discriminator: a real errno passes, a string code alone does not', () => {
+        const real = thrownBy(() => fs.readFileSync(path.join(os.tmpdir(), 'no-such-subj-file')));
+        expect(asErrno(real)?.code).toBe('ENOENT');
+
+        const programming = thrownBy(() => fs.readFileSync(42 as unknown as string, 7 as never));
+        expect((programming as NodeJS.ErrnoException).code).toMatch(/^ERR_/);
+        expect(asErrno(programming)).toBeNull();
+
+        // An errno-looking code with nothing the syscall path attaches is not
+        // evidence either — the check is the three properties, not the name.
+        expect(asErrno(Object.assign(new Error('x'), { code: 'EACCES' }))).toBeNull();
+        expect(asErrno({ code: 'EACCES', errno: -13, syscall: 'open' })).toBeNull();
     });
 });

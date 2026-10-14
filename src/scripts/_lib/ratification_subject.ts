@@ -156,15 +156,46 @@ export class GatedFileUnreadable extends Error {
  * 2026-10-13 round named the opposite shape as its own defect: a blanket
  * `catch` around the read would "conceal programming defects as ordinary
  * refusals", so a `TypeError` from a future edit of this loop would surface as
- * "the tree could not be read" and nobody would look for the bug. Only a value
- * carrying an errno `code` is a statement about the filesystem; everything else
- * is rethrown and stays a crash.
+ * "the tree could not be read" and nobody would look for the bug.
+ *
+ * A STRING `code` IS NOT THAT EVIDENCE, and round 3 of the same review refused
+ * the change for treating it as such: Node's own programming errors —
+ * `ERR_INVALID_ARG_TYPE` and the rest of the `ERR_*` family — are `TypeError`s
+ * with a string `code`, so the first version of this check translated exactly
+ * the defects it claimed to rethrow. An OS failure is told apart by what only
+ * the system-call path attaches: a numeric `errno` AND a string `syscall`, and
+ * a `code` outside the `ERR_` namespace. Anything missing one of the three is
+ * rethrown unchanged and stays a crash.
  */
-function asErrno(err: unknown): NodeJS.ErrnoException | null {
-    if (err instanceof Error && typeof (err as NodeJS.ErrnoException).code === 'string') {
-        return err as NodeJS.ErrnoException;
+export function asErrno(err: unknown): NodeJS.ErrnoException | null {
+    if (!(err instanceof Error)) {
+        return null;
+    }
+    const e = err as NodeJS.ErrnoException;
+    if (
+        typeof e.code === 'string' &&
+        !e.code.startsWith('ERR_') &&
+        typeof e.errno === 'number' &&
+        typeof e.syscall === 'string'
+    ) {
+        return e;
     }
     return null;
+}
+
+/**
+ * Translate a filesystem failure on `rel` into a refusal, or rethrow it.
+ *
+ * The one place the discriminator above is applied, so the `lstat`, the open,
+ * the read, the close and the readlink cannot drift into five readings of
+ * "is this a filesystem fact".
+ */
+function refuseOrRethrow(rel: string, err: unknown): never {
+    const errno = asErrno(err);
+    if (errno === null) {
+        throw err;
+    }
+    throw new GatedFileUnreadable(rel, errno);
 }
 
 /**
@@ -208,21 +239,37 @@ const O_NOFOLLOW: number =
  * flag turns that case red.
  */
 export function readGatedFile(rel: string, abs: string): Buffer {
-    let fd: number | null = null;
+    let fd: number;
     try {
         fd = fs.openSync(abs, fs.constants.O_RDONLY | O_NOFOLLOW);
-        return fs.readFileSync(fd);
     } catch (err) {
-        const errno = asErrno(err);
-        if (errno === null) {
-            throw err;
-        }
-        throw new GatedFileUnreadable(rel, errno);
-    } finally {
-        if (fd !== null) {
-            fs.closeSync(fd);
-        }
+        refuseOrRethrow(rel, err);
     }
+    // THE CLOSE IS INSIDE THE TRANSLATION, and on both paths. Round 3 of the
+    // 2026-10-13 review found it in a `finally`, outside the catch: a close
+    // failure escaped as a raw Node error, and because an exception thrown
+    // from `finally` replaces the pending one, it could also overwrite a read
+    // failure that had already been translated. So the read's failure is
+    // decided first and wins; a close failure after a failed read is dropped
+    // because a refusal is already on its way, and a close failure after a
+    // successful read is itself a refusal.
+    let bytes: Buffer;
+    try {
+        bytes = fs.readFileSync(fd);
+    } catch (err) {
+        try {
+            fs.closeSync(fd);
+        } catch {
+            // The primary failure is the one reported; see above.
+        }
+        refuseOrRethrow(rel, err);
+    }
+    try {
+        fs.closeSync(fd);
+    } catch (err) {
+        refuseOrRethrow(rel, err);
+    }
+    return bytes;
 }
 
 /**
@@ -241,11 +288,7 @@ export function readGatedLink(rel: string, abs: string): string {
     try {
         return fs.readlinkSync(abs);
     } catch (err) {
-        const errno = asErrno(err);
-        if (errno === null) {
-            throw err;
-        }
-        throw new GatedFileUnreadable(rel, errno);
+        refuseOrRethrow(rel, err);
     }
 }
 
@@ -346,17 +389,19 @@ export function subjectOf(
         try {
             stat = fs.lstatSync(abs);
         } catch (err) {
-            const code = (err as NodeJS.ErrnoException).code;
             // ABSENT is two codes and no more. ENOENT is the file not being
             // there; ENOTDIR is a parent component not being a directory,
             // which is the same statement about a path that does not resolve.
             // EACCES, EPERM, EIO, ELOOP and everything else say the file may
             // well be there and this process could not look — a different
-            // fact, and not one a deletion marker may stand in for.
+            // fact, and not one a deletion marker may stand in for. And a
+            // value that is not an OS failure at all is a defect here and is
+            // rethrown, through the same discriminator as the reads below.
+            const code = asErrno(err)?.code;
             if (code === 'ENOENT' || code === 'ENOTDIR') {
                 stat = null;
             } else {
-                throw new GatedFileUnreadable(rel, err as NodeJS.ErrnoException);
+                refuseOrRethrow(rel, err);
             }
         }
         if (stat === null) {
