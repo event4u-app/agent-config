@@ -82,6 +82,14 @@ describe('source_shape — what silences each class', () => {
         expect(repoSlugHits('https://github.com/sponsors/someone')).toEqual([]);
     });
 
+    it('a subdomain of github.com is not a repo URL', () => {
+        // `docs.github.com/en/copilot/...` is a documentation path, not
+        // `<owner>/<repo>`; the bare host still fires right next to it.
+        expect(repoSlugHits('https://docs.github.com/en/copilot/concepts/agents/hooks.md')).toEqual([]);
+        expect(repoSlugHits('"docs_url":"https://docs.github.com/en/copilot/x"')).toEqual([]);
+        expect(repoSlugHits('https://github.com/some-unlisted-owner/some-repo').length).toBe(1);
+    });
+
     it('a Source header pointing at a tmp directory is judged ONCE, by the directory name', () => {
         // Otherwise one line would raise two ratchet counts and the two classes
         // would move together, which makes the numbers unreadable.
