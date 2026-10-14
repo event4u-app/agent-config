@@ -63,8 +63,10 @@ on:
 permissions:
   contents: read
 
+# Keyed by trigger, so a manual dispatch never cancels the scheduled run whose
+# drift only a schedule routes.
 concurrency:
-  group: host-docs-digest
+  group: host-docs-digest-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:

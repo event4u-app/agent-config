@@ -57,6 +57,30 @@ describe('host-docs-digest workflow routes a drift red to a tracked issue', () =
         expect(route.if ?? '').toContain("needs.digest-watch.outputs.drifted == 'true'");
     });
 
+    it('runs the route even though the watch job it depends on went red', () => {
+        // A drift exits non-zero, so without `always()` GitHub's implicit
+        // `success()` would skip the route on exactly the runs it exists for.
+        expect(route.if ?? '').toMatch(/^\s*always\(\)\s*&&/);
+    });
+
+    it('greps for verdict strings the checker actually prints', () => {
+        const checker = fs.readFileSync(path.join(ROOT, 'src', 'scripts', 'check_host_docs_digest.ts'), 'utf-8');
+        const run = fetchStep()?.run ?? '';
+        for (const [inWorkflow, inChecker] of [
+            ['changed since the row was established', 'changed since the row was established'],
+            ['are GONE \\(404/410\\)', 'are GONE (404/410)'],
+        ] as const) {
+            expect(run, `workflow greps for ${inChecker}`).toContain(inWorkflow);
+            expect(checker, `checker prints ${inChecker}`).toContain(inChecker);
+        }
+    });
+
+    it('a manual dispatch cannot cancel the scheduled run it would not replace', () => {
+        const raw = fs.readFileSync(WORKFLOW, 'utf-8');
+        const group = /concurrency:\s*\n\s*group:\s*(.+)/.exec(raw)?.[1] ?? '';
+        expect(group).toContain('github.event_name');
+    });
+
     it('keeps the issue grant off every job that runs repository code', () => {
         expect(wf.permissions).toEqual({ contents: 'read' });
         expect(watch.permissions ?? wf.permissions).toEqual({ contents: 'read' });
