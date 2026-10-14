@@ -18,7 +18,8 @@ read.
 | **Guidelines** | 121 | Reference conventions, read on demand |
 | **Personas** | 29 (+5 advisors) | Review lenses dispatched during code/design review |
 
-Skills carry YAML frontmatter and follow the Agent Skills open standard. Rules
+Skills use the `SKILL.md` format with package-specific top-level frontmatter
+keys, validated against this package's own schema. Rules
 split into an always-on **kernel** and trigger-activated tiers — see
 [Kernel & Router](/agent-config/architecture/kernel-and-router/).
 

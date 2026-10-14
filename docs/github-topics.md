@@ -31,7 +31,7 @@ agentskills-standard
 | Topic | Why |
 |---|---|
 | `ai-coding` | Primary category — discovered via "AI coding assistant" searches |
-| `agent-skills` | Aligns with the [Agent Skills](https://agentskills.io) community spec |
+| `agent-skills` | Skills use the `SKILL.md` file format the [Agent Skills](https://agentskills.io) community spec describes, with package-specific frontmatter keys |
 | `agent-rules` | Complementary — rules govern behavior, skills provide expertise |
 | `governance` | Differentiates from prompt collections |
 | `orchestration` | Captures the core identity — a deterministic orchestration contract / state machine |
@@ -39,7 +39,7 @@ agentskills-standard
 | `nextjs`, `nodejs`, `typescript` | Parallel skill sets for JS/TS surfaces (project-analysis, UI directives) |
 | `devcontainer` | One of our 4 core concerns |
 | `augment-agent`, `claude-code`, `copilot` | Tool-specific discovery |
-| `agentskills-standard` | SKILL.md format is compatible with the agentskills.io spec |
+| `agentskills-standard` | Skills use the `SKILL.md` format with package-specific top-level frontmatter keys; they are validated against this package's own schema, not the agentskills.io reference validator |
 
 ## How to apply
 
