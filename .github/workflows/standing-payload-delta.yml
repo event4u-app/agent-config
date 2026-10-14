@@ -550,3 +550,59 @@ jobs:
         if: always()
         run: |
           ./scripts-run src/scripts/check_council_layout --quiet
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, first batch (2.2a) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Step 2.2 found 105 `wire`-class gates still without a caller. The
+      # council's bound is twenty a change, so the roadmap splits 2.2 into
+      # numbered batches and this is the first. Same job and the same reasons
+      # as batch 1: a required context with no `paths:` filter, and each step
+      # collects into `rc` so every gate gets a reading before the step fails.
+      #
+      # SELECTION, so the next batch can reproduce it: the remaining list in
+      # name order, skipping four for a recorded reason rather than wiring
+      # them — `check_hook_bundle_freshness` (its verdict depends on whether a
+      # self-hosted hook bundle is built, which differs between a checkout and
+      # CI), `check_quality_regression` (inert until an operator-run report
+      # exists, so wiring it arms a gate that can red unrelated pull requests
+      # the day that report lands), `check_release_trunk_sync` (reads branch
+      # state), `check_reply_consistency` (its task's `--scan-dir` names a
+      # directory the tree does not contain, so its green is vacuous). Each of the twenty exited 0 with this argv on the branch base
+      # and left `git status` clean. `audit_mcp_tools` runs with `--check`:
+      # without it, it rewrites its inventory.
+      #
+      # Two steps of ten rather than five of four: per-gate startup is the
+      # cost, and fewer steps keep the step list readable.
+      - name: Drain 2.2a-1 — MCP inventory, artefact location and counts, ci-strict superset, clusters, council config and references, generated headers
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/audit_mcp_tools --check --quiet || rc=1
+          ./scripts-run src/scripts/check_agent_artifact_location --quiet || rc=1
+          ./scripts-run src/scripts/check_artefact_count_messaging --quiet || rc=1
+          ./scripts-run src/scripts/check_ci_strict_superset --quiet || rc=1
+          ./scripts-run src/scripts/check_cluster_patterns || rc=1
+          ./scripts-run src/scripts/check_command_count_messaging --quiet || rc=1
+          ./scripts-run src/scripts/check_council_config_location --quiet || rc=1
+          ./scripts-run src/scripts/check_council_references --quiet || rc=1
+          ./scripts-run src/scripts/check_generated_artefact_headers --quiet || rc=1
+          ./scripts-run src/scripts/check_generator_output_coverage --quiet || rc=1
+          exit "$rc"
+
+      - name: Drain 2.2a-2 — gitignore, module-management neutrality, local settings, roadmap refs, one-offs, overlay cascade, catalog and role links, reach channels, score contract
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/check_gitignore_freshness --quiet || rc=1
+          ./scripts-run src/scripts/check_module_management_neutral || rc=1
+          ./scripts-run src/scripts/check_no_local_settings_committed || rc=1
+          ./scripts-run src/scripts/check_no_roadmap_refs || rc=1
+          ./scripts-run src/scripts/check_one_off_location --quiet || rc=1
+          ./scripts-run src/scripts/check_overlay_cascade_subdirs || rc=1
+          ./scripts-run src/scripts/check_public_catalog_links --quiet || rc=1
+          ./scripts-run src/scripts/check_reach_channels --quiet || rc=1
+          ./scripts-run src/scripts/check_role_doc_links --quiet || rc=1
+          ./scripts-run src/scripts/check_score_contract --quiet || rc=1
+          exit "$rc"
