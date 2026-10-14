@@ -196,9 +196,23 @@ export interface Reachability {
     unreachable: string[];
 }
 
-/** The script a target runs, as a repo-relative path, or `null`. */
+/**
+ * The script a target runs, as a repo-relative path, or `null`.
+ *
+ * COMMENT LINES ARE NOT COMMANDS. The block captured per target carries the
+ * target's comments as well as its `cmds:`, and a comment that merely NAMES a
+ * script is not the target running it. `ci-strict` is the worked example: it
+ * runs no script at all, and its comment says it is "Guarded by
+ * `check-ci-strict-superset` (src/scripts/check_ci_strict_superset.ts)". Once
+ * that guard was wired into a workflow, the prose made `ci-strict` read as
+ * script-invoked-by-a-workflow, so a meta-task that is deliberately unwired
+ * was reported as reachable and its exemption row as stale. Dropping comment
+ * lines before the match is what keeps a sentence about a script from
+ * counting as a call to it.
+ */
 export function scriptOf(d: TargetDef): string | null {
-    const m = d.cmds.join(' ').match(/src\/scripts\/[a-z0-9_/]+/);
+    const code = d.cmds.filter((line) => !/^\s*#/.test(line));
+    const m = code.join(' ').match(/src\/scripts\/[a-z0-9_/]+/);
     return m === null ? null : m[0];
 }
 

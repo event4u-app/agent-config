@@ -52,6 +52,12 @@ function runGate(script: string, args: string[]): { code: number; out: string } 
  */
 const DRAIN_BATCH_2_MARKER = "The local-only drain — batch 2";
 
+/**
+ * Where step 2.2's first batch begins. Deliberately not "… batch 2a": the
+ * marker above is a prefix of that string, and `indexOf` would find it first.
+ */
+const DRAIN_STEP_2_2_BATCH_A_MARKER = "The local-only drain — step 2.2, first batch";
+
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];
 
 const REQUIRED_EXPERIENCE_FIELDS = [
@@ -312,6 +318,53 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     for (const gate of expected) {
       expect(existsSync(path.join(repoRoot, "src", "scripts", `${gate}.ts`)), `${gate}.ts does not exist`).toBe(true);
     }
+  });
+
+  it("wires step 2.2's first batch, exactly, as steps of the same required job", () => {
+    // Step 2.2 found 105 `wire`-class gates still without a caller, which the
+    // council's bound of twenty a change cannot carry in one pull request, so
+    // the roadmap splits it into numbered batches. This is batch 2a. Same
+    // both-directions shape as the batch-1 case above, read from the workflow.
+    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+    const start = workflow.indexOf(DRAIN_STEP_2_2_BATCH_A_MARKER);
+    expect(start, "the batch-2a block is missing").toBeGreaterThan(0);
+    const job = workflow.slice(start);
+
+    const actual = new Set(
+      [...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
+    );
+    const expected = [
+      "audit_mcp_tools",
+      "check_agent_artifact_location",
+      "check_artefact_count_messaging",
+      "check_ci_strict_superset",
+      "check_cluster_patterns",
+      "check_command_count_messaging",
+      "check_council_config_location",
+      "check_council_references",
+      "check_generated_artefact_headers",
+      "check_generator_output_coverage",
+      "check_gitignore_freshness",
+      "check_module_management_neutral",
+      "check_no_local_settings_committed",
+      "check_no_roadmap_refs",
+      "check_one_off_location",
+      "check_overlay_cascade_subdirs",
+      "check_public_catalog_links",
+      "check_reach_channels",
+      "check_role_doc_links",
+      "check_score_contract",
+    ];
+
+    const missing = expected.filter((g) => !actual.has(g));
+    const extra = [...actual].filter((g) => !expected.includes(g)).sort();
+    expect(missing, "batch-2a gates with no caller in the drain job").toEqual([]);
+    expect(extra, "gates in batch 2a beyond the bounded batch").toEqual([]);
+    expect(actual.size, "the council bounded a batch at twenty").toBe(20);
+
+    // The one generator-shaped member must run its checking variant: without
+    // `--check` it rewrites its inventory file.
+    expect(job).toMatch(/src\/scripts\/audit_mcp_tools --check\b/);
   });
 
   it("lives in a REQUIRED context, and on a workflow with no paths filter", () => {
