@@ -166,7 +166,7 @@ function _is_managed_group(group: unknown): boolean {
     );
 }
 
-function _read_settings(settings_path: string): Record<string, unknown> {
+export function _read_settings(settings_path: string): Record<string, unknown> {
     if (!fs.existsSync(settings_path)) return {};
     const raw = fs.readFileSync(settings_path, 'utf8');
     if (raw.trim() === '') return {};
@@ -182,7 +182,7 @@ function _read_settings(settings_path: string): Record<string, unknown> {
     return parsed as Record<string, unknown>;
 }
 
-function _with_lock<T>(settings_path: string, fn: () => T): T {
+export function _with_lock<T>(settings_path: string, fn: () => T): T {
     const lockPath = settings_path + '.agent-config.lock';
     fs.mkdirSync(path.dirname(lockPath), { recursive: true });
     let fd: number;
