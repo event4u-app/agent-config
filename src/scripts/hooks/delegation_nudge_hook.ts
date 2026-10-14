@@ -403,11 +403,17 @@ export function buildNudgeLine(
   // Rung 1 (single bounded slice) carries no do-in-steps/do-in-parallel
   // mode of its own — `classification.mode` is `null` for that shape.
   const modeLabel = classification.mode ?? "single-slice";
+  // Advisory only, never a block: a leg's first call
+  // still writes or reads uncached a median of ~182k tokens.
+  const coldStart =
+    rung === 1
+      ? " A leg starts cold (~182k uncached tokens): a slice of one to three direct reads does not amortise it."
+      : "";
   return (
     `<delegation-nudge>${rungLabel}: dispatch ${modeLabel} ` +
     `(${sliceCount} ${unit}, ${tier} tier recommended). Consider dispatching via ` +
     `subagent-orchestration instead of doing every slice in-session — ` +
-    `${classification.reason}.</delegation-nudge>`
+    `${classification.reason}.${coldStart}</delegation-nudge>`
   );
 }
 

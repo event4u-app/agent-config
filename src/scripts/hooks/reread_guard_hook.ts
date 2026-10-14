@@ -116,7 +116,7 @@ export interface ReadRecord {
 }
 
 /**
- * Above this size the guard keeps mtime + size and says so (roadmap D3): the
+ * Above this size the guard keeps mtime + size and says so: the
  * hash is a full read of the file on the pre_tool_use path.
  */
 export const HASH_BOUND_BYTES = 2 * 1024 * 1024;

@@ -108,7 +108,7 @@ written review date (`src/config/recycle-threshold-budget.json`).
 - [x] **2.3 State the cost.** The PR states the hook bundle delta and the measured
       per-Read latency delta here, under *Cost Phase 2 added* (corrected from
       `src/config/hook-latency-budget.json`, see D10).
-      verify: `grep -c 'reread-guard content hash' agents/roadmaps/road-to-bytes-the-model-actually-receives.md` -> /^[1-9]/
+      verify: `grep -c 'reread-guard content hash' agents/roadmaps/archive/road-to-bytes-the-model-actually-receives.md` -> /^[1-9]/
       *Correction 2026-10-14: the budget file carries no per-change ledger — the
       one precedent (`724329fd4`) wrote its cost into its roadmap and the file
       together — and the file is now a hook-plumbing surface that
@@ -155,17 +155,20 @@ Measured 2026-10-14 on this branch, darwin, Apple silicon:
 
 ## Phase 4 — Does a spawn still cost a quarter million tokens?
 
-- [ ] **4.1 Re-take the cold-start reading.** Re-run the `downshift-vs-cache`
+- [x] **4.1 Re-take the cold-start reading.** Re-run the `downshift-vs-cache`
       method at the current tree: first-call cache-read share and median
       first-call uncached tokens per leg, dated, beside the 2026-08-16 figures.
       verify: `ls agents/evidence/analysis/ | grep -c subagent-cold-start` -> /^[1-9]/
-- [ ] **4.2 Decide the nudge on the new figure (D5).** If a leg still starts
+      *Done 2026-10-14: `agents/evidence/analysis/subagent-cold-start-2026-10-14.md`
+      — first-call cache-read share 9.8 % (was 2.8 %), median first-call
+      uncached 182,257 tokens (was 242,891).*
+- [x] **4.2 Decide the nudge on the new figure (D5).** If a leg still starts
       above 100,000 uncached tokens, the delegation nudge gains one advisory clause
       — a slice of one to three direct reads does not amortise a leg — and never a
       block. Otherwise the reading is recorded and the nudge is unchanged. Either
       outcome closes the step; the decision and the figure go into this file's
       `## Decisions` as row D7.
-      verify: `grep -c '^| D7 ' agents/roadmaps/road-to-bytes-the-model-actually-receives.md` -> /^1$/
+      verify: `grep -c '^| D7 ' agents/roadmaps/archive/road-to-bytes-the-model-actually-receives.md` -> /^1$/
 
 ## Disposition of every item of the source plans
 
@@ -227,6 +230,7 @@ owns it; "here" or "sibling" names this file or
 | D5 | reversible-technical | agent | the spawn nudge gains an advisory clause only if a re-taken cold start still exceeds 100,000 uncached tokens | the 2026-08-16 reading is 242,891; the threshold is under half of it and stated, not derived | a re-taken figure lands near the threshold |
 | D6 | reversible-technical | agent | one roadmap for measurement and package-owned traffic, one sibling for reduction | the reduction depends on another roadmap's ADR and probe; this file depends on nothing | the sibling's dependency closes before Phase 1 here starts |
 | D10 | reversible-technical | agent | Phase 2's cost is recorded in this file, not in `src/config/hook-latency-budget.json` | the budget file is ratification-gated plumbing and carries no per-change ledger; the delta is 0.03 ms at the p95 Read size and 741 B of bundle | a dispatcher change's cost is ever required in the budget file by a gate |
+| D7 | reversible-technical | agent | The re-taken cold start is 182,257 uncached tokens, above D5's 100,000, so the rung-1 (single-slice) delegation nudge gains one advisory clause: a leg starts cold and a slice of one to three direct reads does not amortise it. No block; multi-slice rungs unchanged | `agents/evidence/analysis/subagent-cold-start-2026-10-14.md`; `delegation_nudge_hook.ts` `buildNudgeLine`, test `single-slice-names-the-cold-start-cost` | a re-taken median falls below 100,000 tokens |
 | D9 | product-owned | owner | The built tarball stays ungated; size keeps being measured, and the 2026-08-04 release decision stands unreopened | Owner answer 2026-10-14 to the round's E7 residue (option 1); no consumer cost measured since that decision | a measured consumer cost from package size appears |
 | D8 | reversible-technical | agent | Verify lines of 1.2, 1.3, 2.1, 2.2 and 3.1 name test titles the step itself creates; each is seen red before its implementation, so the name filter matches a real test by the time the step closes (closure listing C1–C5, non-blocking by that script's own contract) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
 
@@ -251,12 +255,12 @@ owns it; "here" or "sibling" names this file or
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every byte figure recorded about a tool result names whether it counts
+- [x] AC-1 — Every byte figure recorded about a tool result names whether it counts
       the hook envelope or the model-visible content, and a model-visible figure per
       tool class exists for this repository's own sessions.
-- [ ] AC-2 — The repeated-read advisory never states "unchanged" for a file whose
+- [x] AC-2 — The repeated-read advisory never states "unchanged" for a file whose
       content differs from the earlier read, within the stated size bound.
-- [ ] AC-3 — The MCP entry this package writes resolves from a warm cache without a
+- [x] AC-3 — The MCP entry this package writes resolves from a warm cache without a
       registry request, and no command this package ships teaches a hand-written CI
       poll loop.
-- [ ] AC-4 — Every item of the two source plans has a disposition in this file.
+- [x] AC-4 — Every item of the two source plans has a disposition in this file.
