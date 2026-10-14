@@ -107,6 +107,19 @@ answer. No class sweep: each step names its sentence.
   output still ends "Every anchor leaves the run carrying a ledger row", which
   is the coverage claim a partial walk cannot make. Found by this run, not by
   the source.
+- **A test header that describes a layer the file does not hold, measured as
+  a population.** 1.1 names one instance. Reading its neighbours found two
+  more in the same shape, and a count over the tree on 2026-10-14 found the
+  class: of **225** test files whose leading comment announces a golden-parity
+  / python3-vs-tsx / byte-identical-stdout layer, **203** never name `python3`
+  anywhere in their body. The Python sources those headers promise parity with
+  have been retired, so the claim cannot be true for any of them. This branch
+  corrects only the three files it had open for other reasons
+  (`generate_catalog`, `update_counts`, `lint_handoffs`); the remaining 200
+  are left, counted, for a change that is about them. Recorded here rather
+  than in a pull-request body because a count that lives only in a review
+  comment is the kind of sentence this roadmap exists to stop.
+
 - **The standard claim.** `README.md:195` says the content layer "follows the
   Agent Skills open standard"; `docs/github-topics.md:42` says the format is
   "compatible with" it. The parked non-adoption records that this package's
@@ -163,9 +176,15 @@ answer. No class sweep: each step names its sentence.
       the class sweep the council declined — the class is 168 distinct `.py`
       paths across `docs/contracts/`, counted here and deliberately untouched.
       verify: `grep -cE "test_sync_round_trip\.py|test_always_budget\.py|check_structural_breaking\.py" docs/contracts/settings-sync-yaml-subset.md docs/contracts/STABILITY.md` -> /:0$/
-- [ ] **2.2 A promised lint code is emitted or withdrawn.**
+- [x] **2.2 A promised lint code is emitted or withdrawn.**
       `cross-wing-handoff.md:96` and `lint_handoffs.ts` agree on
-      `handoff_missing_input`.
+      `handoff_missing_input`. Withdrawn rather than emitted: making the
+      linter carry it needs a warning channel it does not have, and this
+      roadmap adds no mechanism. The convention stays in the table; the claim
+      that a lint enforces it goes. The agreement is now held by a test rather
+      than by care — any `handoff_*` code a contract table names must have an
+      emitter, and every code the linter emits must be documented, so the next
+      divergence fails in either direction.
       verify: `npx vitest run tests/scripts/lint_handoffs.test.ts -t handoff-missing-input-agrees --reporter=verbose` -> /✓.*handoff-missing-input-agrees/
 - [ ] **2.3 The structural detector reads paths that exist.**
       `check_structural_breaking` matches the pack files that exist; a deleted
