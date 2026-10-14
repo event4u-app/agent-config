@@ -20,7 +20,8 @@
  * Ungated paths are ignored, so `git diff --name-only <base>...HEAD` is the
  * intended input.
  *
- * Exit codes: 0 = digest printed · 2 = usage error.
+ * Exit codes: 0 = digest printed · 1 = refused, a gated path could not be read
+ * or resolves outside the tree (nothing on stdout) · 2 = usage error.
  */
 
 import * as path from 'node:path';
