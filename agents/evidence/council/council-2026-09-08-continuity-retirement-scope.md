@@ -6,6 +6,7 @@ commit: 8a3160242197c39b070e58d288a504a8d1c371fc
 ---
 
 <!-- evidence-type: analysis -->
+<!-- check-refs: skip --> <!-- verbatim council transcription: the paths it names were proposals, not artefacts; skipped since it left the unscanned evidence/analysis/ -->
 
 # Council record — scoping the continuity retirement for one PR (2026-09-08)
 

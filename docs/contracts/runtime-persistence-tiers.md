@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Runtime persistence tiers — T0 to T3
 
 Four tiers for runtime state, **named over surfaces that already exist**. This

@@ -126,7 +126,11 @@ export function task_fires_rule(
 ): boolean {
   const kernel = new Set(Array.isArray(router.kernel) ? (router.kernel as string[]) : []);
   if (kernel.has(ruleId)) return true;
-  const triggers = router_triggers(router).get(ruleId) ?? [];
+  const routed = router_triggers(router);
+  const triggers = routed.get(ruleId) ?? [];
+  // A routed rule with no trigger at all is delivered unconditionally by its
+  // layer (no `paths:` to scope it), so every prompt exercises it.
+  if (routed.has(ruleId) && triggers.length === 0) return true;
   const low = task.prompt.toLowerCase();
   const files = Array.isArray(task.context_files) ? task.context_files : [];
   const cmd = typeof task.command === 'string' ? task.command : '';

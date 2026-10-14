@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # The ratification artifact
 
 The record that makes ADR-268 § 4 falsifiable. Written by

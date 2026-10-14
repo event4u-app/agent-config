@@ -236,7 +236,7 @@ called a larger risk than feature absence.
 ## Phase 0 — Provenance and the one-resolver lock
 
 - [x] 0.1 Pin current council behaviour in
-  `agents/evidence/analysis/council-intelligence-baseline.md`: ladder council
+  `agents/evidence/council/council-intelligence-baseline.md`: ladder council
   rung, necessity gate, advisor wiring, round resolution, blind-review
   ordering, consensus semantics, anti-conformity and novelty gates, spend /
   overrun / daily gates, replay schema, low-impact path, current synthesis
@@ -255,14 +255,14 @@ called a larger risk than feature absence.
       `<!-- evidence-type: analysis -->` (`analysis` is a valid type —
       `src/scripts/lint_evidence_artifacts.ts:59-64`):
 
-      - `agents/evidence/analysis/council-intelligence-baseline.md` — 1,673
+      - `agents/evidence/council/council-intelligence-baseline.md` — 1,673
         lines, the twelve behaviours in the order 0.1 lists, plus a doc-vs-code
         section, a `## Not established` section, and the `_lib/` council surfaces
         and `auto_dispatch.ts` that 0.1's own list omitted. **340 lines carry a
         `path:line` citation; 19 items landed in `## Not established`** rather
         than being asserted — that section is the step's honesty surface, not a
         shortfall.
-      - `agents/evidence/analysis/council-surface-inventory-2026-08-29.md` —
+      - `agents/evidence/council/council-surface-inventory-2026-08-29.md` —
         **164 surfaces**, one per row, every row in exactly one of the eight
         fixed categories with no blank cell: `task-side routing` 48 ·
         `compatibility` 39 · `topology-depth` 27 · `replay-evidence` 18 ·
@@ -361,7 +361,7 @@ called a larger risk than feature absence.
       verify: the evidence file records the scan result **and** the commits
       read; blocked on `blocker: unlicensed-source-verbatim-scan`
       <!-- Executed 2026-08-30 under the blocker's option (c).
-      `agents/evidence/analysis/council-topology-verbatim-scan-2026-08-30.md`
+      `agents/evidence/council/council-topology-verbatim-scan-2026-08-30.md`
       records the corpus with per-file sha256, the FULL authoring history of
       each file (not a sample), the three mechanical checks and their zero
       results, and — first, because it governs everything after it — that

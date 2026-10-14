@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Porting external code, or asserting an externally-sourced claim — close the source, re-derive; borrows need a ledger entry + license check, harvested claims an id or an own-analysis label"
+description: "Porting external code or citing an outside claim — re-derive; borrows need ledger + license check, claims a harvest id or an own-analysis label"
 triggers:
   - keyword: "port this"
   - keyword: "adapt this"

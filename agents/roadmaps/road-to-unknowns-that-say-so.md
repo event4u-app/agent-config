@@ -248,7 +248,7 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       one step in `road-to-sentences-the-tree-can-back`, the H2 instruments one
       step in `road-to-what-was-built-and-never-ran`, the H3 census a note in
       `road-to-typed-grants-that-persist` — each edit names this file.
-      verify: `grep -l 'road-to-unknowns-that-say-so' agents/roadmaps/archive/road-to-sentences-the-tree-can-back.md agents/roadmaps/road-to-what-was-built-and-never-ran.md` -> /what-was-built/
+      verify: `grep -l 'road-to-unknowns-that-say-so' agents/roadmaps/archive/road-to-sentences-the-tree-can-back.md agents/roadmaps/archive/road-to-what-was-built-and-never-ran.md` -> /what-was-built/
 
 *Exit: 6.1–6.6 green; `ai_video_stitch_handoff.test.ts` unchanged and green.*
 

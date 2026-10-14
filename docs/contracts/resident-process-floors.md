@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Resident-process floors — observation-only, the daemon checklist, and the fail-closed ladder
 
 > Owner: maintainer · Status: active · Landed by `road-to-runtime-context-floors`

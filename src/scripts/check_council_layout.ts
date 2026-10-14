@@ -32,6 +32,12 @@ const CANONICAL_DIRS: readonly string[] = [
 ];
 // Top-level subdirectories exempt from the layout check.
 const EXEMPT_DIR_PREFIXES = ['audits', 'runtime'] as const;
+// Tracked evidence homes that may hold a council record deliberately kept as
+// evidence (AI council 2026-10-14, 2/2): a narrow allowlist, never the whole of
+// `evidence/`, because a retention class is not a placement licence.
+const EVIDENCE_COUNCIL_DIRS: readonly string[] = ['evidence/council', 'evidence/audits'];
+// A completion-review artefact is named after its branch slug.
+const REVIEW_FINDINGS_RE = /^evidence\/reviews\/council-[a-z0-9-]+\.findings\.md$/;
 // `council-` or `.council-` prefix (excludes `road-to-ai-council.md`).
 const COUNCIL_PREFIX_RE = /^\.?council-/;
 
@@ -136,6 +142,9 @@ function find_violations(root: string): string[] {
             continue;
         }
         if (EXEMPT_DIR_PREFIXES.some((d) => parts[0]!.startsWith(d))) {
+            continue;
+        }
+        if (EVIDENCE_COUNCIL_DIRS.some((d) => relPosix.startsWith(d + '/')) || REVIEW_FINDINGS_RE.test(relPosix)) {
             continue;
         }
         findings.push(

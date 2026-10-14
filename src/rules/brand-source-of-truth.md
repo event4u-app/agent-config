@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Consumer brand tokens + voice profile are the run's source of truth — the corpus fills gaps, never overrides; emitted values that trace to no token are flagged off-brand"
+description: "Consumer brand tokens + voice are the run's source of truth — the corpus fills gaps, never overrides; values tracing to no token are off-brand"
 triggers:
   - keyword: "brand"
   - keyword: "on-brand"

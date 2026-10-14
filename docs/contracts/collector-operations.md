@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Collector operations — stopping it, what it may cost, and which mode you are in
 
 The supervised telemetry collector is **default-off**. This page is for the

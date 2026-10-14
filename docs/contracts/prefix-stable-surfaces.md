@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Prefix-stable surfaces — the runtime half
 
 > Owner: maintainer · Status: active · Landed by `road-to-runtime-context-floors`
