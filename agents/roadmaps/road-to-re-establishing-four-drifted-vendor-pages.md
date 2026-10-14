@@ -88,6 +88,31 @@ moving it would have been a second decision riding on a dating pass.
 slot was re-answered, and the generated enforcement table that prints that
 column stays byte-identical.
 
+**Ratification.** `agents/evidence/ratifications/drain-four-drifted-vendor-pages.md`,
+four council rounds on 2026-10-14 (anthropic + openai, CLI, $0), final
+`ratified` from both seats. Round 1 found a stale "read on 2026-09-29" comment
+above a re-dated row; answering round 2 surfaced a stale install bundle over the
+`host_listing_model.ts` string. Both were fixed in their own commits before the
+final round.
+
+## The two-week silence — a process gap
+
+**Process gap: the red had no route to anyone who acts.** GitHub mails a
+scheduled failure only to whoever last edited the cron line; the job writes
+nothing, and nothing an agent session reads lists scheduled-workflow outcomes.
+The council (2026-10-14, two rounds, anthropic + openai) agreed on that line and,
+in round 2, on the one change: a scheduled red now opens one issue under a fixed
+title in `host-docs-digest.yml`, or comments on it while it stays open, with
+`issues: write` granted to that job only. `tests/scripts/host_docs_digest_workflow.test.ts`
+pins the route, the schedule-only condition, the job-scoped grant and the
+no-`--write` bound; it was seen red with the step absent.
+
+Both seats named the same limit: an issue is a route, not an owner, and a route
+nobody reads is the same silence elsewhere. Who triages it is the maintainer's
+decision and is not taken here. The same gap is open on the other 13 scheduled
+workflows; that is recorded in `agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md`
+rather than special-cased file by file.
+
 ## Phase 1 — Read the four pages and re-establish their rows
 
 - [x] **1.1 Re-read each of the four pages and record what changed about the
@@ -97,7 +122,7 @@ column stays byte-identical.
       first-class outcome and is written down as one — the digest moved because
       a vendor edited a page, which is usually not about this tree at all.
       verify: `./scripts-run src/scripts/check_host_docs_digest --fetch` -> 0
-- [ ] **1.2 Re-establish the four rows by hand, with the ratification artifact
+- [x] **1.2 Re-establish the four rows by hand, with the ratification artifact
       the table requires.** `docs_at` to the day of the read, `docs_digest` to
       the body that read hashed, `expires` moved FORWARD. Nothing moves
       `expires` forward automatically, so a row left half-fixed stays red in
@@ -105,7 +130,7 @@ column stays byte-identical.
       plumbing list: the edit carries a ratification artifact whose
       `reviewed_by` differs from `proposed_by` and `implemented_by`.
       verify: `./scripts-run src/scripts/compile_hook_manifest --table host-lowering` -> 0
-- [ ] **1.3 Say whether the two-week silence was a process gap or a reading
+- [x] **1.3 Say whether the two-week silence was a process gap or a reading
       gap.** The watcher fired correctly, weekly, twice. Either nobody was
       looking at that job, or looking at it did not lead anywhere. Name which,
       in one line, and change the one thing that makes the next occurrence
@@ -123,12 +148,12 @@ column stays byte-identical.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `check_host_docs_digest --fetch` exits 0 over the committed
+- [x] AC-1 — `check_host_docs_digest --fetch` exits 0 over the committed
       lowering table because all four rows carry a current digest and a
       forward `expires`, not because any row was removed, narrowed or
       exempted.
-- [ ] AC-2 — Each of the four re-reads has a recorded finding, including the
+- [x] AC-2 — Each of the four re-reads has a recorded finding, including the
       rows where nothing this tree depends on changed, and no row's slots were
       edited without one.
-- [ ] AC-3 — The plumbing edit carries a ratification artifact whose
+- [x] AC-3 — The plumbing edit carries a ratification artifact whose
       `reviewed_by` differs from both `proposed_by` and `implemented_by`.
