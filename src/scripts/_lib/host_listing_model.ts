@@ -11,9 +11,11 @@
  * returned zero hits before this file.
  *
  * THE MECHANISM, AS DOCUMENTED UPSTREAM (code.claude.com/docs/en/skills and
- * anthropics/claude-code#64606, both read 2026-08-22). Claude Code lists every
- * skill NAME, and keeps DESCRIPTIONS only up to a fraction of the context
- * window — 1% by default, ≈8,000 characters on a 200k window — filling by
+ * anthropics/claude-code#64606, both read 2026-08-22; the page re-read on
+ * 2026-10-14 keeps the 1% and the 1,536 and no longer prints the ≈8,000
+ * illustration). Claude Code lists every skill NAME, and keeps DESCRIPTIONS
+ * only up to a fraction of the context window — 1% by default, which the
+ * 2026-08-22 page illustrated as ≈8,000 characters on a 200k window — filling by
  * invocation frequency and capping each entry at 1,536 characters. The fraction
  * is consumer-settable as `skillListingBudgetFraction`.
  *
@@ -83,7 +85,12 @@ export interface HostListingModelResult {
     assumptions: readonly ModelAssumption[];
 }
 
-/** Documented Claude Code defaults, read 2026-08-22. Not measured in this repo. */
+/**
+ * Claude Code defaults, not measured in this repo. `fraction` and
+ * `perEntryCapChars` are documented (read 2026-08-22, re-read 2026-10-14).
+ * `charsPerToken` is inferred from an illustration the 2026-08-22 page printed
+ * and the 2026-10-14 page no longer does — see `budget-unit-is-chars`.
+ */
 export const CLAUDE_CODE_LISTING_DEFAULTS = {
     fraction: 0.01,
     perEntryCapChars: 1536,
@@ -96,9 +103,9 @@ const ASSUMPTIONS: readonly ModelAssumption[] = [
         id: 'budget-unit-is-chars',
         provenance: 'upstream-prose',
         why:
-            'The docs give the budget as a fraction of the context window (tokens) and then ' +
-            'illustrate it as "≈8,000 characters on 200k", which only reconciles at 4 chars ' +
-            'per token. That ratio is inferred from the illustration, never stated.',
+            'The docs give the budget as a fraction of the context window (tokens); the ' +
+            '2026-08-22 read illustrated it as "≈8,000 characters on 200k" (gone by 2026-10-14), ' +
+            'which only reconciles at 4 chars per token. That ratio is inferred, never stated.',
     },
     {
         id: 'fill-order-is-invocation-frequency',
