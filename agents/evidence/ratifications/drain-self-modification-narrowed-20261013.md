@@ -1031,7 +1031,7 @@ not in the artefact and are not reconstructed here.
 > and add CI regression test—before merge."
 
 > "If GitHub's file projection reports renamed files only by destination,
-> moving `src/rules/kernel-rule.md` to `src/guidelines/moved.md` would produce
+> moving `src/rules/kernel-rule.md` to `src/guidelines/moved.md` would produce <!-- ref-ignore -->
 > an empty gated set and pass without ratification—the exact bypass the local
 > rename test prevents."
 
@@ -1099,7 +1099,9 @@ the three variables set it printed both paths.
 
 Prompt committed verbatim as
 `agents/evidence/council/drain-self-modification-narrowed-20261013-r8.question.md`
-(40,414 bytes). Run once, CLI transport (`--prompt-mode pr --rounds 2`, no peer
+(40,414 bytes as sent; after the run a `<!-- ref-ignore -->` marker was
+appended to line 23, the two fixture paths in a quoted seat answer, so the
+reference checker does not read them as links — the wording is unchanged). Run once, CLI transport (`--prompt-mode pr --rounds 2`, no peer
 review, as round 7), both seats dispatched (`anthropic/claude-sonnet-4-5`,
 `openai/codex-default`). Before the run the council printed `cli-skip · openai
 · unavailable` from the cleared probe entry and `1/2 present`; after the run:

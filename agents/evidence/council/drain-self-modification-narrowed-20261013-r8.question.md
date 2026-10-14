@@ -20,7 +20,7 @@ review is commit `2f393127f`.
 > and add CI regression test—before merge."
 
 > anthropic: "If GitHub's file projection reports renamed files only by
-> destination, moving `src/rules/kernel-rule.md` to `src/guidelines/moved.md`
+> destination, moving `src/rules/kernel-rule.md` to `src/guidelines/moved.md` <!-- ref-ignore -->
 > would produce an empty gated set and pass without ratification—the exact
 > bypass the local rename test prevents."
 
