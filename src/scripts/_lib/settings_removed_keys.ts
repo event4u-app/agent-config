@@ -63,6 +63,13 @@ type SettingsDict = Record<string, unknown>;
  * default; what a consumer who had set a non-default value loses is named by
  * the reason.
  *
+ * Release class: A settings key may be removed or renamed in a minor release
+ * only when no consumer project can rely on it — default-neutral and
+ * derivable, proven by a named test; any other removal or rename ships only in
+ * a major, and a renamed key's alias is dropped only in a major. An entry here
+ * is what tells a consumer the key went; it is not the licence for a minor —
+ * {@link MINOR_REMOVAL_PROOFS} is, and the cut reads it.
+ *
  * Every reason string must name what decides INSTEAD, never just "removed".
  * Exported so `lint_settings_classes` can check the deletion side of the
  * surface: a reason that names no replacement, or an entry whose key is live in
@@ -138,6 +145,16 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['subagents.downshift', 'the model_tier each sub-task declares; downshift is always on'],
     ['ai_team.suppress_setup_hint', 'nothing: the one-line team-mode setup hint is always shown'],
 ]);
+
+/**
+ * Keys removed or renamed below a major, each mapped to the named test that
+ * proves no consumer project can rely on it, as `<test file>::<it title>`.
+ * The release cut (`release_settings_surface.ts`) refuses a non-major target
+ * whose carried removal has no entry here, or whose entry names a test the
+ * tree does not contain. Empty until a minor needs it: the keys removed before
+ * this map existed shipped under the rule as it was then written.
+ */
+export const MINOR_REMOVAL_PROOFS: ReadonlyMap<string, string> = new Map<string, string>();
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */
 const _warnedRemovedKeys = new Set<string>();
