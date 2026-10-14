@@ -507,3 +507,11 @@ jobs:
           ./scripts-run src/scripts/lint_readme_jargon --quiet || rc=1
           ./scripts-run src/scripts/lint_readme_serial_comma --quiet || rc=1
           exit "$rc"
+
+      # Phase 3.2 — the Augment description cap. Five auto-rule descriptions
+      # were over 150 characters; each was shortened at its source in this
+      # change, and the regenerated catalog and pack passports ride with it.
+      - name: Drain 3.2c — auto-rule description cap
+        if: always()
+        run: |
+          ./scripts-run src/scripts/check_augment_description_cap
