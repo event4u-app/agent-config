@@ -58,13 +58,13 @@ written review date (`src/config/recycle-threshold-budget.json`).
 
 ## Phase 1 — Count what reached the model
 
-- [ ] **1.1 Name the bytes the recorder counts.** `tool-raw-bytes` and
+- [x] **1.1 Name the bytes the recorder counts.** `tool-raw-bytes` and
       `tool-delivered-bytes` are re-described as the host's **hook envelope** in
       `metric-registry.yml` and in the recorder's header, with F1's ratio as the
       reason. No field is renamed — the census is append-only and F2 already shows
       what a schema change leaves behind. `corrected-from-reproduction`.
       verify: `grep -c 'hook envelope' src/config/metric-registry.yml src/scripts/hooks/tool_result_bytes_hook.ts` -> /:[1-9]/
-- [ ] **1.2 Measure model-visible bytes from the transcripts.** The transcript
+- [x] **1.2 Measure model-visible bytes from the transcripts.** The transcript
       reader gains a tool-result pass: user records' `tool_result` content bytes,
       joined to the assistant `tool_use` name by id, aggregated per tool. A new
       registry row `tool-model-visible-bytes`, `basis: measured`, names this reader
@@ -72,17 +72,23 @@ written review date (`src/config/recycle-threshold-budget.json`).
       fixture whose envelope carries an original file and asserts the
       model-visible count is the confirmation text only; seen red first.
       verify: `npx vitest run tests/scripts/cc_transcript.test.ts -t edit-envelope-is-not-model-visible --reporter=verbose` -> /✓.*edit-envelope-is-not-model-visible/
-- [ ] **1.3 Read both census shapes.** Whatever reads
+- [x] **1.3 Read both census shapes.** Whatever reads
       `tool-result-census.jsonl` treats a `{bytes}` line as `raw_bytes` with
       `delivered_bytes` unknown, never as equal.
       verify: `npx vitest run tests/scripts/tool_result_bytes_hook.test.ts -t legacy-bytes-line-is-raw-only --reporter=verbose` -> /✓.*legacy-bytes-line-is-raw-only/
-- [ ] **1.4 Record one dated distribution.** Per tool class: count, envelope
+      *Correction 2026-10-14: no census reader existed to extend, so the reader is
+      a new module, `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`),
+      kept out of the hook file so the post_tool_use bundle does not grow.*
+- [x] **1.4 Record one dated distribution.** Per tool class: count, envelope
       bytes, model-visible bytes, p50/p95, with image and text Reads as separate
       classes — from this repository's own sessions,
       under `agents/evidence/analysis/`, labelled machine-local. This is the
       before-figure the sibling roadmap and the placeholders roadmap's step 3.2
       compare against.
       verify: `ls agents/evidence/analysis/ | grep -c model-visible-bytes` -> /^[1-9]/
+      *Done 2026-10-14: `agents/evidence/analysis/model-visible-bytes-2026-10-14.md`,
+      83,031 results over 678 transcript files. The full corpus corrects F1's
+      12-session ratio: Edit 17.2x, Write 23.2x, Bash 1.58x.*
 
 *Exit: 1.1–1.4 done; `npx tsx src/scripts/lint_metric_consumers.ts` green with the new row.*
 
