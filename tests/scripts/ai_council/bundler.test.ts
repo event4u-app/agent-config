@@ -111,6 +111,14 @@ describe('bundler — git diff', () => {
         expect(ctx.text).toContain('def bar');
     });
 
+    it('a diff larger than the default spawn buffer is refused as BundleTooLarge', () => {
+        const repo = makeGitRepo();
+        writeFileSync(path.join(repo, 'big.txt'), 'line of text\n'.repeat(160_000), { encoding: 'utf-8' });
+        execFileSync('git', ['add', 'big.txt'], { cwd: repo });
+        execFileSync('git', ['commit', '-qm', 'big'], { cwd: repo });
+        expect(() => bundle_diff('HEAD~1', 'HEAD', { cwd: repo })).toThrow(BundleTooLarge);
+    });
+
     it('bundle_diff_with_context appends a Surrounding signatures section', () => {
         const repo = makeGitRepo();
         const ctx = bundle_diff_with_context('HEAD~1', 'HEAD', { cwd: repo });
