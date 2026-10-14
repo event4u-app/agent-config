@@ -42,6 +42,14 @@ status: later
 > The count sets the venue, not the verdict: four arrivals say the parking
 > condition has not resolved itself, not that any of the four options is right.
 
+> **Owner answer (2026-10-14): option 4.** Phase 2 closes as an unmeasured null under
+> Phase 3.3's pre-authorised cheap null; the Phase 0-1 schema and capsule stay standing as
+> the handoff format. Superseded in form by Phase 3 of `road-to-a-cold-start-paid-once`:
+> re-task a warm worker at task boundaries and brief a successor from the capsule, a
+> primitive the host documents, instead of a mid-task respawn no host offers. Executing
+> the closure (cancelling Phase 2, recording the null, disposing of this file) is the next
+> step on this file, not part of recording the answer.
+
 > Today a worker that reaches its tier budget is killed by stop-loss and its
 > partial work returns as an envelope the orchestrator has to re-brief from.
 > There is no handoff. This roadmap adds one: a structured `CHECKPOINT` capsule
