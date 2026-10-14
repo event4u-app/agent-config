@@ -34,6 +34,31 @@ retrieves the rest, and the census records a `delivered_bytes` smaller than
 become a reference to the first. Nothing is reduced by default for consumers;
 every reduction is measured against an outcome floor before it is armed.
 
+## Execution status — 2026-10-14, `main@90ed4e697`
+
+A `/roadmap:process-full` pass found no step executable yet and built nothing (D8).
+
+- **Phase 1 waits on the sibling's 1.4.** `road-to-bytes-the-model-actually-receives`
+  1.4 has no dated distribution on `main`; 1.1 picks classes from that
+  distribution and from nothing else, and 1.2's corpus needs the classes.
+- **Phase 2 waits on `road-to-placeholders-on-the-wire` 1.2 and 1.3.** 2.1 writes
+  "in the placeholders stage's observe mode" and 2.2 stores "the placeholder view
+  of the envelope"; neither the stage nor the view exists. A store with no caller
+  would pass 2.1–2.4's unit-test verify lines without showing any of their
+  observable behaviour.
+- **Unblock events:** sibling 1.4 accepted → run Phase 1. Placeholders 1.1's ADR
+  accepted and its 1.2/1.3 landed (stage, observe mode, two views) → build
+  Phase 2 through that stage.
+- **Contracts to settle before 2.1 is built** (named by the council, not decided
+  here): whether the handle is an opaque hash or a path; whether 2.4's range is
+  in lines or bytes, and which existing read path serves it; which detector
+  confidence (high only, or high and medium) refuses storage in 2.2; how an
+  expired handle is told from an unknown one without keeping sensitive metadata
+  past retention; concurrent write, read and cleanup.
+- **Correction to Risk 4's mitigation:** it says Phases 1 and 2 "need only the
+  sibling's Phase 1". Phase 2's own wording needs the placeholders stage too, so
+  only Phase 1 is unblocked by the sibling alone.
+
 ## Context — read at `main@9a943f30c`
 
 | # | Finding | Evidence |
@@ -126,6 +151,7 @@ every reduction is measured against an outcome floor before it is armed.
 | D3 | reversible-technical | agent | Net-win floor: a summary must be at most half the model-visible bytes of the original, else the original is delivered | below that the handle line and the head/tail eat the saving | the observe-mode readings show most results land just above the floor |
 | D4 | reversible-technical | agent | A reference rate followed by a full re-read above 30 % disarms 4.1 | a reference the model does not trust costs a turn and saves nothing | the rate sits near the bound |
 | D7 | reversible-technical | agent | Verify lines of 3.3 and 4.1 name test titles the step itself creates; each is seen red before its implementation (closure listing C1, C2) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
+| D8 | reversible-technical | council:tool-results-handle-scope-2026-10-14 (2/2 present, both seats chose this) | Phase 2's store is not built ahead of its caller; every step stays open until its dependency lands. Rejected: a standalone store module flipping 2.3/2.4 (a callerless store cannot show the integrated behaviour 2.1–2.4 describe, and it fixes handle, range and expiry contracts before the stage exists); spooling from the byte-recorder hook today (a writer outside the single stage, storing unselected classes) | `road-to-bytes-the-model-actually-receives` 1.4 and `road-to-placeholders-on-the-wire` 1.2/1.3 are unchecked on `main@90ed4e697` | either dependency lands, or the placeholders 1.1 ADR freezes the stage interface before the stage is built |
 | D5 | reversible-technical | agent | No consumer default is set here; arming stops at the maintainer workspace | a consumer-facing default for result rewriting is already an owner blocker in `road-to-placeholders-on-the-wire` (`default-mode-for-consumers`); a second one would split one decision | that blocker is answered |
 
 ## What this roadmap deliberately does not do

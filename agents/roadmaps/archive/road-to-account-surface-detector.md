@@ -170,7 +170,7 @@ that class cites the pending dedicated row instead.
       detector. A council round on this choice ran over an hour without
       returning and was stopped; keeping `unbacked` is the status quo the
       verify line permits, so it needed no new authority.
-- [ ] **3.2 Wire it where web-launch readiness is already wired.** One step in
+- [x] **3.2 Wire it where web-launch readiness is already wired.** One step in
       `src/subagents/production-validator.md` and one sentence in
       `launch-readiness`'s AUTH area: run the detector on account-flow
       changes, read `unknown` as unknown, and carry `violated` findings into
@@ -179,6 +179,17 @@ that class cites the pending dedicated row instead.
       verify: both files name the command and the unmeasured label, and
       `prelaunch_diagnostics.ts validate` accepts a report carrying one
       detector-sourced `AC-AUTH` finding.
+      DONE 2026-10-14: step 6 in `production-validator` (mirrored into its
+      wedge doc) and an AUTH bullet in `launch-readiness` § 2b, both naming
+      the command, `claim:account-surface-finds-planted` and the unmeasured
+      label. `check_account_surface.test.ts` asserts both files (seen red
+      first) and validates a report whose `AC-AUTH-001` is built from a real
+      `violated` finding over the frozen corpus. The skill body stayed inside
+      its budget by shortening, with no `raised` entry; touching it brought
+      the skill into `check_routing_coverage`, so it gained a train-side
+      corpus and every routing pin was re-taken. The claim stays `unbacked`:
+      backing waits on a held-out corpus written without sight of the
+      detector, which is recorded here and in the claim, not decided.
 
 ## Decisions
 
@@ -210,14 +221,22 @@ probes, no network, no LLM verdict as a finding. No new command or verb.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `account-surface-finds-planted` exists in `docs/CLAIMS.md`,
+- [x] AC-1 — `account-surface-finds-planted` exists in `docs/CLAIMS.md`,
       registered in a commit without detector code, and after Phase 3 carries
       one measured recall and false-positive figure per class.
-- [ ] AC-2 — The detector flags no decoy and no safe twin in the frozen set,
+      Evidence: registered by Phase 1.2; measured per class at `2c72aac99` (3.1).
+- [x] AC-2 — The detector flags no decoy and no safe twin in the frozen set,
       and every class it reports as `violated` met its pre-registered bar.
-- [ ] AC-3 — No finding is ever printed as a pass from the absence of a
+      Evidence: 0/18 false positives per class in the claim; test "stays
+      silent on every safe twin and every decoy".
+- [x] AC-3 — No finding is ever printed as a pass from the absence of a
       pattern; a run states the files scanned and the classes it could not
       decide.
-- [ ] AC-4 — No remediation class the detector emits can apply a hash
+      Evidence: test "states what it scanned and every class it cannot
+      decide"; both callers read an undecided class as unknown (3.2).
+- [x] AC-4 — No remediation class the detector emits can apply a hash
       migration, a threshold, a cookie mode or an MFA rollout without the
       note-and-ask step of `active-remediation`.
+      Evidence: hash and cookie-mode classes are `migration`, token and
+      linking classes `policy`, thresholds and MFA are undecided; test "routes
+      every non-mechanical finding to note-and-ask with a leave-it option".

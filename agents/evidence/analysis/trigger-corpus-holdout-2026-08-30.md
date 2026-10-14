@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 141 files, 31 holdout and 110 train.** That bullet read
+- **Now: 142 files, 31 holdout and 111 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -32,7 +32,8 @@ beside it.
   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
-  § Growth — 2026-10-14b, § Growth — 2026-10-14c and § Growth — 2026-10-14d; the
+  § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d and
+  § Growth — 2026-10-14e; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -394,10 +395,61 @@ rather than silently reconciled.
 run as the LAST act before publishing this section, after the final edit to any
 file in the set.
 
+## Growth — 2026-10-14e, one train corpus; the seal does not move
+
+```
+ONE ROW ADDED, TRAIN. THE SEALED SET STAYS AT 31 AND EVERY SEALED HASH IS
+BYTE-IDENTICAL. BOTH TRAIN-SIDE MEASUREMENTS ARE OWED AND WERE RE-TAKEN AFTER
+THE SKILL BODY EDIT WAS ON DISK.
+```
+
+**What changed.** `road-to-account-surface-detector` step 3.2 wired
+`check_account_surface` into `launch-readiness`'s AUTH area (and into the
+`production-validator` subagent, which carries no corpus). `check_routing_coverage`
+requires a corpus from every touched skill and this one had none. **10** labelled
+queries, the 2026-10-14b shape — 5 exemplars of which one is German (go/no-go,
+pre-merge checklist, rollout plan with rollback criteria, prelaunch diagnostic,
+ops handoff), 3 near-misses that are the skill's own "WHEN NOT" routes
+(`release-comms`, `finishing-a-development-branch`, `stakeholder-tradeoff`), and
+2 counterexamples guarding "launch" and "rollback" outside a release.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `launch-readiness` | train | `0x71` | 113 ≥ 51 |
+
+**The sealed set does not move.** 113 is above the ceiling of 51, so the holdout
+stays at **31** and the train set goes **110 -> 111**; the realised split is
+**31/142 = 21.83 %** against the rule's 19.9 % target. AC-6 still rests on the
+same 18 rows, 18 of 31.
+
+**Both train-side measurements were re-taken, after the body edit**, because the
+body arm reads the body (§ Growth — 2026-10-14d). `routing-body-signal-verdict.json`:
+verdict unchanged in kind, still `harmful` on the false-activation guard — false
+activation 5.86 -> **5.993 pp** against the +2.0 pp guard, delta-recall 2.194 ->
+**2.174 pp** (below the 5.0 pp bar), McNemar p **0.3933** (unmoved), train
+corpora 110 -> **111**, cases 1076 -> **1086**, catalogue 300.
+`delivery-set-measurement-2026-08-31.json`: precision@5 80.096 -> **80.332 %**,
+recall@5 61.06 -> **61.413 %**, recall loss 38.94 -> **38.587 pp** — the ceiling
+stays **BREACHED** — false activation@5 15.69 -> **15.543 %**, context cost
+**230.6** tokens against the 500 target, still **MET**. Neither verdict changes
+in kind.
+
+**What provably did NOT change.** No pre-existing corpus file was edited, so
+this growth is pure addition: `trigger_corpus_holdout_pin.test.ts` reproduces
+every published row and the set hash after the one row above was added.
+
+**One grandfather entry went with it.** `launch-readiness` was removed from
+`src/scripts/trigger_eval_grandfather.json`; `check_trigger_eval_presence` now
+reads 158 grandfathered, the shrink-only direction.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to any
+file in the set.
+
 ## The set hash
 
 ```
-SET-SHA256  6f69734a1d39b0aecd758c0d3b7ef17bc89404e8f4b37ca17a7b58964eb07a50
+SET-SHA256  6a2ba529f8f48066559ba087fa4fc93f906f3af39e091aa5d959dd37e088339a
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -827,6 +879,7 @@ open and which this file does not settle.
 | `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
 | `judge-security-auditor` | `b1915f90c4e7648f8cca7de9e43c73eb08616382827d69ee359dd3fa33b5f72f` |
 | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
+| `launch-readiness` | `6de2444a376a49d7ac29affc839a1cd8ef157cee0071b17ef64277b744debc34` |
 | `learning-to-rule-or-skill` | `954cea1f3b230004cff27ad4d138a442869ad6ad65281514edbb907340380240` |
 | `learning-tutor` | `3facfb90fa1ee593cf779862bfc79f88f70a915dc9638dc4af6ef5bbf98d9fd7` |
 | `legal-intake-triage` | `4b6afb88a3a7912ab8666d5e000172224e3e26f5940bbf09988e750a0d89b6fc` |
