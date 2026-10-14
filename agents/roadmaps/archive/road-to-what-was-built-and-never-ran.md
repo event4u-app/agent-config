@@ -212,9 +212,26 @@ the one the kill criterion named in advance, so this is the pre-registered test
 executed as written; it is not a test that excludes every way a qualifying run
 could have been missed.
 
+## AC-1 — the pull-request reading, taken 2026-10-14
+
+AC-1 was left open on one conjunct, "green on the pull request that wires
+them". That reading now exists and is recorded here rather than in the AC body,
+whose text the risk-register stamp of the same day freezes. The wiring landed
+as PR #2336, merged 2026-10-14 at head `9428ead96`. Its `Rule backstops` job
+(run 38530491287, job 115740937361) — the job `.github/workflows/rule-backstops.yml`
+puts both steps in — concluded `SUCCESS` and printed, verbatim:
+
+- `lint_ticked_unmet_criteria: 1077 roadmap file(s), no criterion ticked over "NOT met" (2 grandfathered by digest).`
+- `lint_blocker_citations: 24 citation(s) in 161 roadmap file(s). lint_blocker_citations: 8 violation(s), baseline 10 — ratchet is loose.`
+
+Both exit 0 on the enforcing runner, so the conjunct is met and AC-1 is ticked
+on that evidence. The `ratchet is loose` line names 8; the baseline was not
+lowered in this change and stays at 10 — a lowering is a separate one-line
+change on that same CI reading, and it is not a condition of AC-1.
+
 ## Acceptance Criteria
 
-- [ ] AC-1 — Both roadmap lints run in `ci-fast`, both are green on the
+- [x] AC-1 — Both roadmap lints run in `ci-fast`, both are green on the
       pull request that wires them, and a planted inline-code quotation is not
       a finding while a bare one is.
       **OPEN on one conjunct of three, and deliberately left open rather than

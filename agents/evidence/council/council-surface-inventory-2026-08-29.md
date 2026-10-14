@@ -314,7 +314,7 @@ of this file), not counted by hand:
 
 ```
 awk -F'|' '/^\| `/ && NF>4 {gsub(/^ +| +$/,"",$4); print $4}' \
-  agents/evidence/analysis/council-surface-inventory-2026-08-29.md \
+  agents/evidence/council/council-surface-inventory-2026-08-29.md \
   | sort | uniq -c | sort -rn
 ```
 

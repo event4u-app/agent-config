@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Evidence basis — what a number rests on
 
 > Owner: maintainer · Status: active · Landed by `road-to-delivered-cost-truth`

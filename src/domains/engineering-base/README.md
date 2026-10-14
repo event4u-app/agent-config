@@ -18,7 +18,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`active-remediation`** — Spotted an issue (security gap, missing test, bad code, duplication, stale idiom) — never ignore: small→fix inline, bigger→ask, many→follow-up PR
 - **`broken-access-control`** — Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)
 - **`code-comment-discipline`** — Writing/editing code — a comment states a WHY or constraint the code cannot show; never restate what names/types say; no signature-mirroring docblocks
-- **`code-provenance`** — Porting external code, or asserting an externally-sourced claim — close the source, re-derive; borrows need a ledger entry + license check, harvested claims an id or an own-analysis label
+- **`code-provenance`** — Porting external code or citing an outside claim — re-derive; borrows need ledger + license check, claims a harvest id or an own-analysis label
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
 - **`commit-policy`** — Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked
 - **`cross-source-consistency`** — Two sources disagree (ticket text vs mockup, spec silent on a needed behavior, spec vs code) → surface + ask before proceeding, never silently guess
@@ -28,7 +28,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
 - **`engineering-safety-floor`** — Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous
 - **`evaluator-independence`** — Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result
-- **`fix-what-you-see`** — Saw a red check or a real defect — fix it, whoever wrote it; if you cannot, ship a tracked follow-up roadmap in the same change. Ownership is never a disposition
+- **`fix-what-you-see`** — Saw a red check or a real defect — fix it, whoever wrote it, or ship a tracked follow-up roadmap in the same change. Ownership is never a disposition
 - **`git-history-discipline`** — Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn
 - **`improve-before-implement`** — Before features or architectural changes — validate against existing code, challenge weak requirements
 - **`lethal-trifecta-guard`** — Skill/command/tool mixing private-data access + untrusted content + external comms — break one leg before shipping

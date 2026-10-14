@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Retrieval read surfaces — where the sanitize floor is in scope
 
 The coverage list for `src/scripts/_lib/retrieval_sanitize.ts`.

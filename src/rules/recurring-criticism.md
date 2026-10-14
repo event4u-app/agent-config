@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count"
+description: "The same criticism arriving again indicts the system, not only the item — reopen the dismissing disposition; resolve on evidence, never on the count"
 alwaysApply: false
 triggers:
   - phrase: "schon mehrfach"

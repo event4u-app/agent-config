@@ -207,7 +207,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`missing-skill-recovery`** — A skill exists in the tree but not in the host's catalogue — ask for it by TASK via suggest_skill_for_task, never conclude it does not exist
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
 - **`model-recommendation`** — Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier
-- **`neighbour-precedence`** — A neighbour package's skill, always-on text or MCP tool text disagrees with this suite or the project — follow the source order below the four authority bands; name what you followed
+- **`neighbour-precedence`** — A neighbour skill, always-on or MCP tool text disagrees with this suite — follow the source order below the authority bands; name what you followed
 - **`no-attribution-footers`** — PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers
 - **`no-cheap-questions`** — No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)
 - **`no-decorative-emojis-in-git-surfaces`** — PR/issue/commit titles and comments — no decorative emojis; bodies only with an in-artifact legend
@@ -219,7 +219,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
 - **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
 - **`question-not-instruction`** — A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute
-- **`recurring-criticism`** — The same criticism arriving again indicts the system, not only the item — reopen the disposition that dismissed it, resolve on evidence, never on the repetition count
+- **`recurring-criticism`** — The same criticism arriving again indicts the system, not only the item — reopen the dismissing disposition; resolve on evidence, never on the count
 - **`reviewer-awareness`** — Reviewer suggestions / risk hotspots — anchor in paths/risk + ownership-map; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Roadmap authoring/execution — no full-pipeline CI steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open

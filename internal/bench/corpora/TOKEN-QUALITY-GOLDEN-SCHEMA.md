@@ -39,7 +39,10 @@ operator work. `label_status: stub` marks an unfilled task.
 router trigger the task provably exercises — keyword/phrase = case-insensitive
 substring of the prompt; intent = every alpha word (>2 chars) present
 (`trigger_coverage.ts` semantics); path_prefix/file_pattern match against
-`context_files:`; command against `command:`. Kernel rules always fire.
+`context_files:`; command against `command:`. Kernel rules always fire, and
+so does a routed rule whose trigger list is empty: it carries no `paths:`, so its
+layer delivers it unconditionally. A rule the router does not list is unknown,
+not unconditional.
 `no_fire: true` inverts the check (the rule must NOT fire). A violation is a
 structural error — nominal-only coverage cannot enter the corpus.
 
@@ -55,9 +58,10 @@ still fails the falsifiability check for `source-of-truth` unless the task also
 carries `context_files: ["dist/agent-src/rules/scope-control.md"]`.
 
 The sharp case is a rule whose trigger set is **path_prefix-only** — today
-`skill-quality` (`src/skills/`), `rule-type-governance` (`src/rules/`), and
-`source-of-truth` (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`). For
-those, a task without `context_files:` is **not constructible at all**; there is
+`source-of-truth` (`dist/agent-src/`, `.augment/`, `.claude/`, `.cursor/`).
+`skill-quality` and `rule-type-governance` were in this list until their path
+triggers were removed on 2026-08-20; they now fire on every prompt. For a
+path_prefix-only rule, a task without `context_files:` is **not constructible at all**; there is
 no prompt wording that can fire them. Author the `context_files:` entry first and
 let the prompt describe the intent.
 

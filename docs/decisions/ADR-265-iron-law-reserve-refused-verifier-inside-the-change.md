@@ -249,7 +249,7 @@ name the command and the date they were read.
 
 | Claim | Where |
 |---|---|
-| The council reached 2 of 2 and converged on Option 6 | `agents/evidence/analysis/council-2026-09-08-iron-law-reserve-store.md` — both seat verdicts verbatim, `quorum` 2 of 2 `concluded`, no seat error, `absent_members` empty |
+| The council reached 2 of 2 and converged on Option 6 | `agents/evidence/council/council-2026-09-08-iron-law-reserve-store.md` — both seat verdicts verbatim, `quorum` 2 of 2 `concluded`, no seat error, `absent_members` empty |
 | The single branch ruleset covers only the default branch and requires zero approving reviews | `gh api repos/:owner/:repo/rulesets` and `.../rulesets/17749383`, read 2026-09-08 — one ruleset, `ref_name.include: ["~DEFAULT_BRANCH"]`, `required_approving_review_count: 0`, `require_code_owner_review: false` |
 | CODEOWNERS exists and gates nothing today | `.github/CODEOWNERS` (1,935 bytes) against `require_code_owner_review: false` in the ruleset above; the file's own header already names branch-protection enablement as the missing repo-admin half |
 | The ceiling sentence and the two raises that broke it | `src/config/preamble-payload-budget.json:86` and `.ci_delivery.grace_ceiling_history` — 138,212 → 138,273 (2026-09-02), 138,273 → 138,490 (2026-09-08) |

@@ -365,3 +365,26 @@ is the finding that put that gate in the `machine` class.
 | 161 | `validate_flow_teams` | `validate-flow-teams` | `./scripts-run src/scripts/validate_flow_teams --quiet` | 0 | 0.27 | `wire` | — |
 | 162 | `validate_pack_yaml` | `validate-pack-yaml` | `./scripts-run src/scripts/validate_pack_yaml` | 0 | 0.26 | `wire` | ✅  29 pack.yaml manifest(s) valid (schema + references resolve). |
 | 163 | `validate_reach_prescriptions` | `check-reach-prescriptions` | `./scripts-run src/scripts/validate_reach_prescriptions --quiet` | 0 | 0.28 | `wire` | — |
+
+## 2026-10-14 — the six remaining unowned reds, fixed and wired (step 3.2)
+
+Read on branch `drain/local-gates-and-never-ran`, off `origin/main` at
+`7b236a00f` with `main` merged twice since. Each row was red at that base with
+the command shown, was fixed in its own commit, exited 0 afterwards with the
+same command, and became a step of `Standing payload delta + budget gate`
+behind the `The local-only drain — batch 2` marker. Batch 1's twenty are
+unchanged and still bounded by the batch-1 case.
+
+| Gate | Red at the base | Fix | Where the fix sits |
+|---|---|---|---|
+| `lint_readme_serial_comma` | 17 hits | each comma before a final "and" / "or" dropped, or the clause rejoined with a semicolon | the tree (`README.md`) |
+| `lint_readme_jargon` | 8 hits above the fold, limit 3 | two ADR link texts become what they name; "gate" and "drift" become plain words; one "projection" stays because `update_counts` reads that phrase | the tree (`README.md`); now 3 of 3 |
+| `check_augment_description_cap` | 5 auto-rule descriptions at 161-187 chars | each shortened at its source in `src/rules/`; projection, pack passports, `agents/index.md`, `docs/catalog.md` regenerated | the tree |
+| `check_token_quality_golden` | 6 structural errors, exit 2 | four were the checker reading a routed rule with `triggers: []` as never firing; two were corpus entries (a tag on the merged `brand-consistency` stub, a prompt exercising none of its rule's triggers) | the checker and the corpus |
+| `check_public_links` | 10 contracts with no `stability:` frontmatter | each declares `experimental`, the level that promises nothing; none is linked from a surface an experimental contract may not be | the tree (`docs/contracts/`) |
+| `check_council_layout` | 11 `council-*` files under `agents/evidence/` | a narrow allowlist of three tracked evidence homes (council 2026-10-14, 2/2); the seven analyses moved into `agents/evidence/council/` with their names | the checker and the tree |
+
+**What did not move.** The parity baseline stays at 130 although the branch
+reads 124 locally. The entry's own record says why: it moves on the enforcing
+environment's reading, and a local one was once wrong by exactly one. The
+lowering is a one-line change on the first CI reading of this branch.

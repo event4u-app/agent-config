@@ -180,7 +180,7 @@ with it and left alone.
       cookbook and the role-experiences catalogue are regenerated, and their
       three `--check` gates are wired in the same change.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t generated-docs-checks-wired --reporter=verbose` -> /✓.*generated-docs-checks-wired/
-- [ ] **3.2 One change per remaining gate.** For each of
+- [x] **3.2 One change per remaining gate.** For each of
       `check_public_links`, `check_augment_description_cap`,
       `check_token_quality_golden`, `lint_subagent_determinism`,
       `check_council_layout`, `lint_readme_jargon`,
@@ -188,6 +188,21 @@ with it and left alone.
       fixed in the tree and the gate is wired in that change. None reads a
       baseline, so fixing is the only move.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t unowned-gates-wired --reporter=verbose` -> /✓.*unowned-gates-wired/
+      <br>**Closed 2026-10-14.** `check_knowledge_cards` and
+      `lint_subagent_determinism` landed with batch 1; the other six landed in
+      one pull request as one commit each — fix, wiring step and a case in
+      `unowned-gates-wired` that was seen red before its step existed. All six
+      are steps of `Standing payload delta + budget gate`, behind a batch-2
+      marker. Two of the six were fixed by correcting the checker rather than
+      the tree, and say so: `check_token_quality_golden` read a routed rule
+      with no triggers as never firing, which is backwards for the four rules
+      the 2026-08-20 council made unconditional; `check_council_layout` gained
+      a narrow allowlist of three tracked evidence homes on a 2/2 council of
+      2026-10-14 (record under `agents/evidence/council/layout-allowlist-20261014.md`),
+      and the seven analyses it flagged moved into one of them. Per-gate detail
+      is in the evidence page's 2026-10-14 section. The parity baseline was
+      NOT lowered with it: the local reading is 124 against 130, and this
+      baseline moves only on the enforcing environment's reading.
 
 ## What this roadmap deliberately does not do
 
@@ -212,7 +227,7 @@ with it and left alone.
       parity baseline is lower by that count.
 - [x] AC-3 — No gate whose verdict depends on the date is a step of a
       required job, and `check_council_pin_staleness` has a scheduled caller.
-- [ ] AC-4 — The eleven reds with no live owner are green and wired.
+- [x] AC-4 — The eleven reds with no live owner are green and wired.
 - [x] AC-5 — The consistency job's recorded duration is under the ceiling the
       cost-budget page sets.
       <br>**Closed 2026-10-13 against the job the drain actually joined, which

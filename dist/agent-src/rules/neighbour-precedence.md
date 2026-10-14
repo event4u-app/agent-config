@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "A neighbour package's skill, always-on text or MCP tool text disagrees with this suite or the project — follow the source order below the four authority bands; name what you followed"
+description: "A neighbour skill, always-on or MCP tool text disagrees with this suite — follow the source order below the authority bands; name what you followed"
 triggers:
   - phrase: "neighbour skill"
   - phrase: "neighbor skill"

@@ -54,6 +54,17 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
   bundling its triggering question, raw responses, and synthesis
   alongside the audit's findings). The layout linter
   (`scripts/check_council_layout.ts`) skips this directory.
+- `agents/evidence/council/` — a council record deliberately kept as
+  evidence (a verbatim transcription, a synthesis, an analysis of the
+  council subsystem). The runtime dirs are pruned, so a record meant to
+  last lives here, tracked.
+- `agents/evidence/reviews/council-<branch-slug>.findings.md` — a
+  completion-review artefact, named after its branch by contract. Only
+  that shape; any other `council-*` file in `reviews/` is still a finding.
+
+Everywhere else under `agents/evidence/` stays forbidden: `tracked-durable`
+is a retention class, not a placement licence (AI council 2026-10-14,
+anthropic + openai, 2/2).
 
 `scripts/check_council_layout.ts` is the mechanical check for the
 output path convention — wire it into the package's CI pipeline so

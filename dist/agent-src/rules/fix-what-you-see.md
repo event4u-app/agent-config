@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Saw a red check or a real defect — fix it, whoever wrote it; if you cannot, ship a tracked follow-up roadmap in the same change. Ownership is never a disposition"
+description: "Saw a red check or a real defect — fix it, whoever wrote it, or ship a tracked follow-up roadmap in the same change. Ownership is never a disposition"
 # Due when a defect is OBSERVED, not on a clock: a turn that sees nothing owes
 # nothing; a turn that sees a red check owes a disposition.
 obligation_frequency: "per-event"

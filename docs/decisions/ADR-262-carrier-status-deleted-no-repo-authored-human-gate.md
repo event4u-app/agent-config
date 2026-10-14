@@ -25,7 +25,7 @@ evidence:
     - src/domains/product-basic/roadmap/next/command.md
     - agents/evidence/analysis/self-imposed-stop-gate-audit-2026-09-08.md
     - agents/evidence/analysis/carrier-assertion-migration-audit-2026-09-08.md
-    - agents/evidence/analysis/council-2026-09-08-carrier-status-redefinition.md
+    - agents/evidence/council/council-2026-09-08-carrier-status-redefinition.md
 review_trigger: >-
   Owner ruling on authority; council ruling on shape. Not reopened by a further
   argument that a roadmap deserves a status that stops an autonomous run — that
@@ -83,7 +83,7 @@ whether an autonomous run may act.
 
 Two seats (`anthropic/claude-sonnet-4-5`, `openai/codex-default`), deep tier,
 three rounds, convergent on A. Record:
-`agents/evidence/analysis/council-2026-09-08-carrier-status-redefinition.md`.
+`agents/evidence/council/council-2026-09-08-carrier-status-redefinition.md`.
 
 **The decisive reason is a type error, not a policy preference.** "This roadmap
 receives deferred work" is a property of a *graph edge* between two roadmaps.
@@ -166,7 +166,7 @@ written against.
 | Deleting the status loses no assertion | `agents/evidence/analysis/carrier-assertion-migration-audit-2026-09-08.md` — twelve assertions enumerated, ten migrated, two deleted with a stated reason |
 | The A5 branch was already redundant | `lint_carrier_integrity.ts:294-304` justifies itself with *"none of which is an OPEN step"*. Measured against the corpus: the two live carriers held 9 and 38 `- [ ]` open steps and zero `[~]`, so `:305-312` would have caught both |
 | The estate add-back existed only for flip-neutrality | `src/config/estate-count-budget.json:10` — *"flipping one roadmap's frontmatter to status: carrier measured active_roadmaps 3 -> 2 … any roadmap can be laundered out of the count by adding one word"* |
-| The council reached Option A on both seats | `agents/evidence/analysis/council-2026-09-08-carrier-status-redefinition.md` — full transcription of both seat responses, including seat 2's dissent on the discriminator, which this record adopts |
+| The council reached Option A on both seats | `agents/evidence/council/council-2026-09-08-carrier-status-redefinition.md` — full transcription of both seat responses, including seat 2's dissent on the discriminator, which this record adopts |
 | The maintainer overruled the prior ruling | The instruction of 2026-09-08, quoted in § Context. Owner-directed; `provenance.kind: human`, `decision_makers: [owner]` |
 
 **What this record does not establish.** It does not measure whether any agent
@@ -198,7 +198,7 @@ stated in the companion rule rather than closed here.
   wider audit commissioned with this decision.
 - `agents/evidence/analysis/carrier-assertion-migration-audit-2026-09-08.md` —
   the line-by-line proof that no assertion is lost.
-- `agents/evidence/analysis/council-2026-09-08-carrier-status-redefinition.md` —
+- `agents/evidence/council/council-2026-09-08-carrier-status-redefinition.md` —
   the council record, transcribed into the tree because
   `agents/runtime/council/responses/` is gitignored.
 - `src/rules/maintainer-intent-over-repo-rules.md` — the general rule.
