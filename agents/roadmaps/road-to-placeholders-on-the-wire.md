@@ -74,6 +74,47 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-14, `main@90ed4e697`
+
+A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
+
+- **Phase 1 waits on its `depends:` roadmap, which has not started.** No step of
+  `road-to-one-detector-and-the-senders-we-own` is checked: its contract
+  (`egress-placeholders-v1.md`, its 0.1), its rule table (2.1) and its token
+  grammar (3.1) do not exist. 1.1's ADR is to cite that contract, 1.2's
+  placeholder view writes tokens of that grammar, and 1.3 counts by that rule
+  table's classes. The only detector in the tree, `src/scripts/_lib/secret_detector.ts`,
+  covers the credential class and nothing of D5's identifier scope.
+- **Not built, by council verdict:** a provisional token shape behind one
+  constant, and a provisional identifier detector inside this roadmap. Persisted
+  tokens would make a provisional grammar a supported contract before the
+  sibling defines token scope, collision behaviour and resolution state.
+- **Correction to 1.2 and 1.3 — observe does not mutate.** 1.3 says observe
+  "replaces nothing"; 1.2 serves the placeholder view to every recording concern
+  without naming a mode. Read together they leave open whether local stores
+  receive tokens in `observe`. Both council seats answered no: `observe` detects
+  and counts only; the placeholder view is served from `protect` upward. Early
+  protection of local stores, if wanted, is a separately named control rather
+  than a reading of `observe`. Consequence for `road-to-tool-results-that-leave-a-handle`:
+  its 2.2 "stores the placeholder view", and that view exists only from `protect`.
+- **Correction to 1.2 — the execution view is granted, not declared.** "A
+  concern declares the view it needs" lets a misdeclared concern obtain resolved
+  values. The dispatcher hands out the execution view only to concerns on a
+  closed, centrally owned list (both seats), and the manifest lint checks the
+  declaration against that list.
+- **Unblock events:** the sibling's 0.1 contract states token identity, scope,
+  lifecycle and the owner of resolution state (which overlaps the
+  `identifier-table-at-rest` blocker below); its 2.1 rule table and 3.1 grammar
+  constant exist. Then 1.1 through 1.4 run in order.
+- **Preparation named and not taken:** `src/scripts/hooks/dispatch_hook.ts` is at
+  1,500 lines, the line `check_source_size_budget` starts counting above, so the
+  stage needs an extracted module rather than lines added there. No step owns
+  that extraction, and another active roadmap edits the dispatcher, so it waits
+  for 1.2 to own it. The hook bundle had 26,849 bytes below its ceiling at this
+  reading (1,523,151 of 1,550,000).
+- **Phase 0 does not depend on the sibling and was not taken in this pass**,
+  which was scoped to Phase 1. Its two probes are the next executable work.
+
 ## What this roadmap deliberately does not do
 
 | # | Not done | Why |
@@ -99,6 +140,7 @@ published claim is the measured result per class per state, a null included.
 | D6 | contested-technical | council:identifier-table-at-rest | How identifier values rest between hook processes | blocker `identifier-table-at-rest` | — |
 | D7 | product-owned | owner | Whether to build the request gateway | blocker `request-gateway-build` | — |
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | blocker `default-mode-for-consumers` | — |
+| D9 | reversible-technical | council:placeholders-phase1-scope-2026-10-14 (2/2 present, anthropic/claude-sonnet-4-5 and openai/codex-default) | Phase 1 is not built before its dependency; `observe` never mutates a view; the execution view comes from a closed dispatcher-owned list. Rejected: building the detector-independent half with a provisional token constant and credential-only counting (a persisted provisional grammar becomes a contract; credential-only counts give no identifier evidence); building a provisional detector and grammar here (duplicates the sibling's ownership). One seat would have landed 1.4's settings block now and the other would not; it was not taken, because the per-mode behaviour matrix it names is still unspecified | no step of `road-to-one-detector-and-the-senders-we-own` is checked on `main@90ed4e697` | the sibling's 0.1, 2.1 and 3.1 land, or the sibling is re-scoped so this roadmap owns the grammar |
 
 ## Phase 0 — Probes against the running host (no product code)
 
