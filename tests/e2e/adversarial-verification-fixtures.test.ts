@@ -26,18 +26,6 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
-    DELIVERY_ENDINGS,
-    DELIVERY_STATES,
-    HALT_ACTIONS,
-    MAX_ITERATIONS,
-    TERMINAL_STATE_BY_ACTION,
-    WALL_CLOCK_CAP_MS,
-    deliveryBlocksCompletion,
-    ladder,
-    terminalStateFor,
-    type LadderState,
-} from '../../src/scripts/_lib/continuation_ladder.js';
-import {
     cascadeBase,
     cascadeCurrent,
     hopsNeedingMerge,
@@ -192,110 +180,6 @@ describe('T3 — ten failed fixes produce strategy changes, never an owner ask',
             /allowlist-growth counter is a separate mechanism/,
         );
         expect(flat(RULE)).toMatch(/allowlist-growth counter below stays a \*\*separate\*\* mechanism|spends the whole fix-loop bound for that target at once/);
-    });
-});
-
-// provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
-describe('T7 / T8 — a run cannot end with red CI while its checkboxes read complete', () => {
-    const base = (over: Partial<LadderState> = {}): LadderState => ({
-        iterations: 1,
-        started_at: new Date().toISOString(),
-        history: [],
-        ...over,
-    });
-
-    it('T7 / T8 — the WHOLE delivery vocabulary partitions into ends and does-not-end', () => {
-        // Driven over `DELIVERY_STATES` rather than over a hand-picked subset,
-        // which the independent authorship pass of 2026-09-14 named as the
-        // group's central gap in both seats: an implementation that recognised
-        // only the five states the old loop listed passed it. Enumerating the
-        // whole vocabulary means a NEW state has to be classified deliberately,
-        // and a state silently reclassified from hold to ending reds here.
-        const ends: string[] = [];
-        const holds: string[] = [];
-        for (const pos of DELIVERY_STATES) {
-            const action = ladder(base(), 0, Date.now(), 0, undefined, null, false, pos);
-            (action === 'complete' ? ends : holds).push(pos);
-            expect(['complete', 'engage']).toContain(action);
-        }
-        expect(ends).toEqual(['merged', 'open-green']);
-        expect(holds).toEqual([
-            'working',
-            'local-green',
-            'pushed',
-            'pr-open',
-            'ci-pending',
-            'ci-red',
-            'target-sync-check',
-            'target-moved',
-            'delivery-ready',
-        ]);
-        // The partition covers the vocabulary with nothing left over.
-        expect(ends.length + holds.length).toBe(DELIVERY_STATES.length);
-        expect(DELIVERY_ENDINGS).toEqual(ends);
-    });
-
-    it('`deliveryBlocksCompletion` carries BOTH polarities, not just the hold', () => {
-        // The old group asserted the fail-open direction only. A predicate that
-        // returned `true` for every non-null state would have passed it.
-        for (const ending of DELIVERY_ENDINGS) expect(deliveryBlocksCompletion(ending)).toBe(false);
-        for (const pos of DELIVERY_STATES) {
-            expect(deliveryBlocksCompletion(pos)).toBe(!DELIVERY_ENDINGS.includes(pos));
-        }
-    });
-
-    it('an unrecorded delivery position decides exactly as before — fail-open', () => {
-        // The ladder runs on the Stop path where a `gh` probe is unaffordable, so
-        // an absent position means "this run does not report delivery", never
-        // "delivery is incomplete". Inventing the latter would hang every run
-        // that never adopted the field.
-        expect(deliveryBlocksCompletion(null)).toBe(false);
-        expect(deliveryBlocksCompletion(undefined)).toBe(false);
-        expect(ladder(base(), 0, Date.now(), 0)).toBe('complete');
-        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, null)).toBe('complete');
-    });
-
-    it('delivery never overrides `blocked` — blocked work is not undelivered work', () => {
-        expect(ladder(base(), 0, Date.now(), 2, undefined, null, false, 'ci-red')).toBe(
-            'blocked',
-        );
-    });
-
-    it('a delivery hold is still BOUNDED — iterations and the wall clock apply', () => {
-        expect(
-            ladder(
-                base({ iterations: MAX_ITERATIONS }),
-                0,
-                Date.now(),
-                0,
-                undefined,
-                null,
-                false,
-                'ci-red',
-            ),
-        ).toBe('halt-max-iterations');
-        const old = new Date(Date.now() - WALL_CLOCK_CAP_MS - 1000).toISOString();
-        expect(
-            ladder(base({ started_at: old }), 0, Date.now(), 0, undefined, null, false, 'ci-red'),
-        ).toBe('halt-wall-clock');
-    });
-
-    it('the stall rung is exempt during delivery — zero open cannot move', () => {
-        // Three consecutive zero-open readings is what a healthy CI-fix loop looks
-        // like. Tripping halt-stall on it is a stall manufactured by the stall
-        // detector; the caps above are what bound this loop instead.
-        const stalled = base({ iterations: 4, history: [0, 0, 0] });
-        expect(ladder(stalled, 0, Date.now(), 0, undefined, null, false, 'ci-red')).toBe('engage');
-        // …and the rung is NOT disabled generally: with steps still open, it fires.
-        expect(
-            ladder(base({ iterations: 4, history: [3, 3, 3] }), 3, Date.now(), 0),
-        ).toBe('halt-stall');
-    });
-
-    it('a halt already stamped still wins over a delivery hold', () => {
-        expect(
-            ladder(base({ halted: 'halt-stall' }), 0, Date.now(), 0, undefined, null, false, 'ci-red'),
-        ).toBe('halt-stall');
     });
 });
 
@@ -745,13 +629,6 @@ describe('Phase 4.2 — read the red before diagnosing it', () => {
 
 // provenance: level=L4 | critical=no | evidence=ac2-independent-test-authorship-2026-09-14
 describe('T1 — a normal feature runs independent-RED → implement → green, with zero asks', () => {
-    const base = (over: Partial<LadderState> = {}): LadderState => ({
-        iterations: 1,
-        started_at: new Date().toISOString(),
-        history: [],
-        ...over,
-    });
-
     it('a test-first diff produces no finding, and a code-only one DOES', () => {
         // Both polarities in one test, because the silent half alone is a
         // tautology: an implementation whose `findingFor` always returned null
@@ -801,44 +678,6 @@ describe('T1 — a normal feature runs independent-RED → implement → green, 
         expect(sameSessionTestFlag(null)).toBeNull();
     });
 
-    it('the happy path ends the run, and the rung vocabulary is pinned', () => {
-        // T1's load-bearing half. The run reaching a delivery ending must
-        // `complete`; and the ladder's WHOLE action vocabulary is enumerated, so
-        // a new rung has to be added deliberately here too. The regex alone was
-        // the weaker form the 2026-09-14 pass flagged — a rung named `escalate`
-        // or `await-input` would route to the owner and evade it.
-        expect(ladder(base(), 0, Date.now(), 0, undefined, null, false, 'merged')).toBe('complete');
-        expect(Object.keys(TERMINAL_STATE_BY_ACTION).sort()).toEqual([
-            'blocked',
-            'complete',
-            'engage',
-            'halt-dependency-unavailable',
-            'halt-max-iterations',
-            'halt-premise-invalidated',
-            'halt-stall',
-            'halt-wall-clock',
-        ]);
-        for (const action of Object.keys(TERMINAL_STATE_BY_ACTION)) {
-            expect(action).not.toMatch(/ask|question|confirm|owner|escalate|await|prompt/i);
-        }
-    });
-
-    it('each halt maps to its OWN terminal state, never to success', () => {
-        // `terminalStateFor(halt) !== null` passed against an implementation
-        // mapping every halt to `success` — the second tautology the 2026-09-14
-        // pass named. The exact map is the assertion; the two exhaustion rungs
-        // sharing one word is a decision, not an accident.
-        expect(terminalStateFor('halt-max-iterations')).toBe('exhausted');
-        expect(terminalStateFor('halt-wall-clock')).toBe('exhausted');
-        expect(terminalStateFor('halt-stall')).toBe('stagnated');
-        expect(terminalStateFor('halt-dependency-unavailable')).toBe('blocked');
-        expect(terminalStateFor('halt-premise-invalidated')).toBe('premise-invalidated');
-        expect(terminalStateFor('engage')).toBeNull();
-        for (const halt of HALT_ACTIONS) {
-            expect(terminalStateFor(halt)).not.toBeNull();
-            expect(terminalStateFor(halt)).not.toBe('success');
-        }
-    });
 });
 
 // provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
@@ -875,11 +714,10 @@ describe('T6 — a twelve-hour resume preserves the grant and every closed decis
         ...over,
     });
 
-    it('a gap THREE TIMES the run wall-clock cap still resumes', () => {
+    it('a twelve-hour gap still resumes — elapsed time alone is not an expiry', () => {
         // The plausible wrong implementation: expiring the mission record with
-        // the RUN's wall clock. `WALL_CLOCK_CAP_MS` bounds one run; a mission
-        // spans many, so twelve hours must not be an expiry on its own.
-        expect(TWELVE_HOURS_MS).toBeGreaterThan(WALL_CLOCK_CAP_MS * 2);
+        // a run's wall clock. A mission spans many runs, so twelve hours must
+        // not be an expiry on its own; only the grant's own `expires` is.
         expect(
             restore(
                 record(),
@@ -1137,42 +975,20 @@ describe('T10 — an over-ceiling API requirement produces a report and no ask',
 });
 
 /**
- * AC-7 — the whole file in one run.
+ * AC-7 — the mission half of the long run.
  *
- * Every fixture above pins one mechanism. This one pins the COMPOSITION, which
- * is where the roadmap's actual claim lives: that a run can cross more wall-clock
- * time than any single run is allowed to spend, and still reach `merged` without
- * spending one owner question on it.
- *
- * The two modules have to disagree about scope for that to work, and they do.
- * `continuation_ladder` bounds ONE run — 25 iterations, four hours — and a run
- * that hits either bound is `exhausted`, which is a budget word and not a
- * failure. `mission_record` carries the MISSION, which is longer than a run by
- * construction. Collapsing the two is the plausible wrong implementation in
- * either direction: a ladder that never halted would be the unbounded loop K1
- * killed, and a record that expired with the run's wall clock would make a
- * long run impossible and every resume an owner interrupt.
+ * This group pinned a COMPOSITION: `continuation_ladder` bounding one run and
+ * `mission_record` carrying the mission across runs. The ladder was removed on
+ * 2026-10-14 by owner decision, after the concern that called it was withdrawn
+ * on its own kill date, so its half of the composition left with its subject.
+ * What stays is the half whose code still exists: a mission record survives the
+ * phase boundary and the session end, one resume twelve hours later re-asks
+ * nothing, and the record is what buys that.
  */
 // provenance: level=L4 | critical=yes | evidence=ac2-independent-test-authorship-2026-09-14
-describe('AC-7 — a throttled four-phase long run ends merged, one resume, zero owner asks', () => {
+describe('AC-7 — one resume across a phase boundary, zero owner asks', () => {
     const HOUR = 60 * 60 * 1000;
     const t0 = Date.parse('2026-09-14T08:00:00.000Z');
-
-    /** Each phase's remaining open-step count, read at that phase's stop. */
-    const PHASES = [
-        { phase: 'Phase 1', openAfter: 3 },
-        { phase: 'Phase 2', openAfter: 2 },
-        { phase: 'Phase 3', openAfter: 1 },
-        { phase: 'Phase 4', openAfter: 0 },
-    ] as const;
-
-    const runA: LadderState = {
-        iterations: 4,
-        started_at: new Date(t0).toISOString(),
-        // Distinct counts: the open-step scan is moving, so the stall rung is
-        // not what this fixture is measuring.
-        history: [4, 3, 2],
-    };
 
     const record = (over: Partial<MissionRecord> = {}): MissionRecord => ({
         mission_id: 'ac7-long-run',
@@ -1197,26 +1013,6 @@ describe('AC-7 — a throttled four-phase long run ends merged, one resume, zero
         pending_reviews: [],
         owner_owned_residue: [],
         ...over,
-    });
-
-    it('phases 1 and 2 keep the first run engaged while steps remain', () => {
-        for (const { openAfter } of PHASES.slice(0, 2)) {
-            expect(ladder(runA, openAfter, t0 + HOUR, 0, undefined, null, false, 'pr-open')).toBe(
-                'engage',
-            );
-        }
-    });
-
-    it('the first run ends on its own wall clock — a budget word, not a failure', () => {
-        // The throttle. Five hours in, run A stops at `halt-wall-clock`. What
-        // matters is the WORD: `exhausted`, never `blocked` and never an ask.
-        // A run that reported `blocked` here would send a nameable continuation
-        // to the owner-owned rung, which is the count-to-an-ask move Phase 4.1
-        // removed wearing a different name.
-        const action = ladder(runA, 2, t0 + 5 * HOUR, 0, undefined, null, false, 'pr-open');
-        expect(action).toBe('halt-wall-clock');
-        expect(terminalStateFor(action)).toBe('exhausted');
-        expect(terminalStateFor(action)).not.toBe('blocked');
     });
 
     it('the record survives the phase boundary and the session end', () => {
@@ -1248,56 +1044,6 @@ describe('AC-7 — a throttled four-phase long run ends merged, one resume, zero
         for (const id of ['branch-base', 'delivery-target']) {
             expect(alreadyAnswered(amnesiac, id)).toBe(false);
         }
-    });
-
-    it('phases 3 and 4 run under a FRESH clock and reach merged', () => {
-        // Run B starts its own wall clock — that is what makes the mission
-        // longer than any run. The same elapsed instant that halted run A is
-        // ordinary mid-run time here.
-        const runB: LadderState = {
-            iterations: 2,
-            started_at: new Date(t0 + 12 * HOUR).toISOString(),
-            history: [2, 1],
-        };
-        expect(ladder(runB, 1, t0 + 13 * HOUR, 0, undefined, null, false, 'pr-open')).toBe('engage');
-        expect(ladder(runB, 0, t0 + 14 * HOUR, 0, undefined, null, false, 'merged')).toBe(
-            'complete',
-        );
-        expect(DELIVERY_ENDINGS).toContain('merged');
-    });
-
-    it('zero open steps with delivery NOT reached does not end the run', () => {
-        // The forbidden ending, restated inside the long run: four phases of
-        // flipped checkboxes over a red CI is the exact shape 8.1 forbids.
-        const runB: LadderState = {
-            iterations: 2,
-            started_at: new Date(t0 + 12 * HOUR).toISOString(),
-            history: [2, 1],
-        };
-        expect(ladder(runB, 0, t0 + 14 * HOUR, 0, undefined, null, false, 'ci-red')).toBe('engage');
-    });
-
-    it('the whole run spans more wall clock than any single run may spend', () => {
-        // The claim in one line, so a reader does not have to add the hours up.
-        expect(14 * HOUR).toBeGreaterThan(WALL_CLOCK_CAP_MS);
-        expect(PHASES).toHaveLength(4);
-        expect(PHASES[PHASES.length - 1]?.openAfter).toBe(0);
-    });
-
-    it('no action reachable anywhere in the run is an owner ask', () => {
-        // Collected over the run's own observed rungs plus the whole vocabulary,
-        // because the criterion is about the run AND about what the run could
-        // have produced. `MAX_ITERATIONS` is asserted so a future widening of the
-        // budget cannot silently turn the throttle off.
-        const observed: LadderAction[] = [
-            'engage',
-            'halt-wall-clock',
-            'complete',
-        ];
-        for (const action of [...observed, ...Object.keys(TERMINAL_STATE_BY_ACTION)]) {
-            expect(action).not.toMatch(/ask|question|confirm|owner/i);
-        }
-        expect(MAX_ITERATIONS).toBe(25);
     });
 });
 
