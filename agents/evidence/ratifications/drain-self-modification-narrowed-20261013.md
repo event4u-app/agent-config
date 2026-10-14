@@ -2,7 +2,7 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: 20a33577eec696391443290519505e08868ded0f3b619b48399504627c13832c
+subject: f6ac2f8c7d6820465b87618ec9adf6d880a3fca3cc90bd2af7ac3eb88b3c7805
 providers: [anthropic, openai]
 verdict: refused
 seats:
@@ -17,25 +17,27 @@ effective_after: merge
 
 The change: a ratification record carries `subject`, a sha-256 digest over the
 gated files of the change it reviewed, and `check_kernel_edit_ratified`
-recomputes that digest from the tree it is pointed at and refuses a record whose
-`subject` is absent, malformed or different. Steps 2.1 and 2.2 of
+recomputes that digest — since round 6, from Git objects at a commit — and
+refuses a record whose `subject` is absent, malformed or different. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass`.
 
-**Five rounds, five refusals. Round 5 (2026-10-14, after the owner directed
-that round 4's confirmed findings be fixed and the change reviewed again)
-confirmed round 4's FIFO finding fixed and refused 2/2 on a new one: the read
-follows a symbolic link in an INTERMEDIATE path component, so a gated path
-whose parent directory is a symlink is digested from content outside the
-revision, and the module's own comment claims it never follows a link. This
-record does not let the change land.**
+**Six rounds, six refusals. Round 6 (2026-10-14, after the owner directed
+that round 5's confirmed findings be fixed and the change reviewed again, and
+after the digest was moved from the working tree to Git objects at a revision)
+accepted the object-store design and refused 2/2 on a new finding: the gate
+resolves a mutable revision more than once in one run — `git diff
+<base>...HEAD` for the changed-file list, then `HEAD` again for the content and
+the record — so the two can name different commits, which contradicts the
+contract's "one commit" statement. This record does not let the change land.**
 
 **The header is bound to the tree as it stands now, not as rounds 1 and 2 read
 it, and that is the binding working rather than a record being rewritten.**
 `subject` moved from `6ce10afe…` to `1aff2b49…` when round 2's finding was
 fixed in a gated file, to `3317942a…` when a merge of `origin/main` brought
-a comment-only edit to `check_kernel_edit_ratified.ts`, and to `20a33577…` when
-round 4's fixes changed the catch and comments in that file; `seats:` carries
-round 5's conclusions. Rounds 1 and
+a comment-only edit to `check_kernel_edit_ratified.ts`, to `20a33577…` when
+round 4's fixes changed the catch and comments in that file, and to
+`f6ac2f8c…` when the gate learned `--rev` and the serialisation gained the
+mode; `seats:` carries round 6's conclusions. Rounds 1 and
 2 are kept verbatim below, headers and all; what the frontmatter asserts is
 what the CURRENT content was last reviewed as, which is the whole point of the
 field.
@@ -864,3 +866,107 @@ roadmap as step 2.6, in the seats' words. The branch is not pushed:
 `check_kernel_edit_ratified` refuses a `refused` record at the pre-push
 preflight, and the disposition is the owner's.
 
+
+---
+
+# Round 6 — 2026-10-14, the digest read from Git objects, and refused 2/2 on a new finding
+
+The owner's decision was again to fix the confirmed findings, re-present, and
+merge only on 2/2. Rounds 3, 4 and 5 had each refused the working-tree reader
+on a new filesystem defect, so instead of an ancestor walk the author took the
+alternative openai named in round 5: the subject is read from Git objects at an
+explicit revision (commits `a80f2ce87`, `1efd028cb`, `f6733aa37`, `50d20d11e`;
+roadmap step 2.6, decision D13). In short: the revision resolves to a commit,
+each gated path is looked up with `git ls-tree` and read with `git cat-file`,
+the gate reads the record at the same commit, a gated path committed as a
+symbolic link (mode `120000`) is refused, the entry hashes the mode, and git
+failures are typed refusals. The working-tree reader and the tests that drove
+it are removed; each removal is accounted for in
+`agents/evidence/reviews/ratification-subject-git-revision-test-removals.md`.
+
+Red-proof: the new revision suite was run against the round-5 reader before the
+change, 16 of 17 red on their assertions (the 17th was replaced, see the
+prompt); afterwards the subdirectory-root refusal (1 of 18), the regular-mode
+check (2 of 18), the programming-error case (1 of 18), the CLI `--rev` usage
+check (1 of 7), and four cases against the round-5 lib and CLI swapped back in
+were each seen red and restored from copies. After restoring, the 10
+ratification / kernel-edit suites pass (148 tests).
+
+Prompt committed verbatim beside the others as
+`agents/evidence/council/drain-self-modification-narrowed-20261013-r6.question.md`
+(49,653 bytes, under the 50 KB ceiling). It carries the gated files' diff
+against `origin/main`, `_lib/ratification_subject.ts` in full, and the CLI and
+contract diffs since round 5; it omits every test file, the roadmap, the
+removal account and this record, and says so. Run once, CLI transport
+(`--prompt-mode pr --rounds 2`, no peer review), both seats present
+(`anthropic/claude-sonnet-4-5`, `openai/codex-default`), nothing billed.
+
+**What the artefact keeps.** As in round 5, only the second-pass texts are
+persisted. Both quote a first-pass "Reviewer A" whose stance was `ratified`;
+the run's `blind_review_map` labels Response-A as anthropic. The first-pass
+texts are not in the artefact and are not reconstructed here. The verdicts
+below are the second-pass conclusions.
+
+## Seat: anthropic — `refused`
+
+> "**Stance: refused**"
+
+> "The implementation resolves `revision` independently for: 1. Changed-file
+> discovery (`git diff <base>...<revision>`) 2. Content hashing
+> (`resolveRevision(root, revision)`) 3. Record reading (same call). A mutable
+> revision (HEAD, branch, tag) may therefore identify **different commits**
+> during one run, violating the contract's repeated "one commit" claim and the
+> operational guarantee that diff, digest, and record agree."
+
+> "**Highest-leverage pre-merge change:** Resolve `--rev` exactly once in
+> `main()` to an immutable commit OID [...] Pass that OID through all
+> operations."
+
+Secondary: "Validate `--rev` has value in gate CLI (match standalone CLI)" and
+"Add test: moving HEAD between operations breaks without fix, passes with
+fix". It agrees that the "filesystem attack surface [is] eliminated by
+Git-objects approach", that the "symlink/FIFO/ancestor defects [are] resolved
+by construction", and that the "larger change [is] justified given three-round
+pattern of filesystem findings". On the excluded tests: "Not silent weakening.
+Trust the implementer, but note it's trust-based, not evidence-based from this
+review."
+
+## Seat: openai — `refused`
+
+> "REQUEST_CHANGES — Stance: refused — the gate does not yet ensure that
+> changed-file discovery, hashing, and record reading use one immutable commit;
+> the highest-leverage pre-merge change is to resolve `--rev` once before the
+> diff and pass that OID through every subsequent operation, with shared strict
+> option parsing."
+
+> "The object-store design is sound, but the implementation does not yet
+> guarantee the promised “one commit” boundary."
+
+It also asks that the empty-gated-set exception — no git call, so an invalid
+`--rev` passes when nothing is gated — be "stated explicitly in the contract",
+that `gitChangedFiles()` "share the same Git runner" as the subject's git calls
+rather than "maintaining two subtly different subprocess policies", and names
+the mutual import between the gate and the subject module as "additional
+permanent maintenance cost that extracting shared classification into a neutral
+module could remove". On tests: "No visible production assertion is weakened.
+[...] However, the omitted tests prevent independent confirmation that every
+removed filesystem assertion has an equivalent replacement".
+
+## Honest reading
+
+The finding is correct and the author missed it. `main()` passes the revision
+NAME to `git diff <base>...<rev>` and then to `evaluate()`, which resolves it
+again; the content and the record do share one resolution, but the
+changed-file list does not. On the `--files` path (CI) there is no diff and the
+split does not arise; on the pre-push path it does. The gate's `--rev` parsing
+also silently keeps `HEAD` when the value is missing, as its older `--root`
+and `--base-ref` do, while the subject CLI refuses — the inconsistency the
+seats name. No seat disputed the object-store design or the symlink refusal.
+
+## What was NOT done, and why
+
+The new finding was not fixed in this lane: the owner authorised one round,
+merging only on 2/2, and re-running round 6 with a different prompt would be
+verdict shopping. It is carried into the roadmap as step 2.7, in the seats'
+words. The branch is not pushed: `check_kernel_edit_ratified` refuses a
+`refused` record at the pre-push preflight, and the disposition is the owner's.
