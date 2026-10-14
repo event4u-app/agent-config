@@ -105,6 +105,7 @@ import * as catalogue from './_lib/skill_catalogue.js';
 import { isInteractiveSession, type SessionProbe } from '../shared/interactiveContext.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
+import { applyListingOverrides } from './_lib/skill_listing_overrides.js';
 import { hostBindings } from './hooks/host_lowering.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
 import { ruleFileArrives, type RuleScope } from '../install/rule_scope.js';
@@ -3072,11 +3073,8 @@ function _deploy_global_content(
         _emit_progress({ type: 'reaped', tool: tool_id, count: reaped.length });
         results[tool_id] = [written_total, skipped_total, 'deployed', written_paths];
 
-        // Single-surface model (road-to-claude-code-single-surface): the
-        // deterministic hook matrix registers directly in the user-scope
-        // settings file — the marketplace plugin is no longer required for
-        // hooks. Failure here must not sink the content deploy (hooks can
-        // be re-wired via `agent-config refresh --global` / doctor).
+        // The hook matrix registers in the user-scope settings file; failure must not sink the
+        // content deploy (re-wire via `agent-config refresh --global` / doctor).
         if (tool_id === 'claude-code') {
             try {
                 const manifest = path.join(package_root, 'src', 'scripts', 'hook_manifest.yaml');
@@ -3463,6 +3461,8 @@ function install_global(
             warn(`Scoped-projection prune failed — restoring full tree (${String(e)}).`);
         }
     }
+    // After every prune, so only skills still on disk are computed into the listing override.
+    if (deploy_results['claude-code']?.[2] === 'deployed') applyListingOverrides(expanduser(USER_SCOPE_PATHS['claude-code']!), state.QUIET ? () => undefined : info);
 
     const failed_tools = new Set<string>(
         Object.keys(deploy_results).filter(

@@ -167,7 +167,9 @@ as today.
       third attempt's refusal was a per-call classifier decision, not a closed
       route. The owner condition is also executed: blocker
       `listing-override-write-is-owner-owned` in
-      `road-to-skills-that-arrive-when-called.md` still reads `Status: open`.
+      `road-to-skills-that-arrive-when-called.md` read `Status: open` at that
+      attempt; it was resolved 2026-10-14 (option (a)), which authorises the
+      package's override write, not the write-then-restore probe this step needs.
       Recorded in the artifact's fourth-attempt section.
 - [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,

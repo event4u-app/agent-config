@@ -180,6 +180,16 @@ while all of them carried a description on disk
 A bare entry is a routing problem: the description is the only surface a model
 selects on. There are **two levers**, and this package applies neither for you.
 
+**One exception to "this package writes no host setting".** Owner-decided
+2026-10-14, a global Claude Code install writes `skillOverrides` for the skills
+it deployed: the set that fits the description budget keeps its description,
+every other package skill is set `name-only`, so which descriptions arrive is
+decided rather than left to the host's fill order. It is written only for
+package-owned skills, never over a value you set, has no settings key, and
+`agent-config uninstall` removes exactly what it wrote (see
+[installation](installation.md)). That is the whole exception; neither lever
+below is touched by it.
+
 ### Lever 1 — raise the host's budget (`skillListingBudgetFraction`)
 
 `skillListingBudgetFraction` is a **Claude Code setting**, not one of ours. Raising
@@ -187,7 +197,8 @@ it restores descriptions at a token price: delivering this catalogue's
 descriptions in full measures roughly **13,003 tokens** of standing context.
 Nothing in this package writes it — the setting is yours, the token cost is yours,
 and an installer that edited your host config to buy itself context would be
-taking that decision in your name.
+taking that decision in your name. (The `skillOverrides` exception above spends no
+context; it only decides which descriptions the existing budget carries.)
 
 Prefer this lever when you want every skill to stay natively selectable and can
 afford the context.
