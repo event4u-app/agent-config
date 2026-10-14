@@ -538,3 +538,15 @@ jobs:
         if: always()
         run: |
           ./scripts-run src/scripts/check_public_links
+
+      # Phase 3.2 — the council output-path convention. Eleven tracked files
+      # named `council-*` sat outside the paths the gate allowed. An AI council
+      # (2026-10-14, anthropic + openai, 2/2) chose a narrow allowlist over
+      # exempting all of `agents/evidence/`: `evidence/council/`,
+      # `evidence/audits/`, and the branch-keyed review name
+      # `evidence/reviews/council-<slug>.findings.md`. The seven analyses moved
+      # to `evidence/council/` with their names; the four reviews stay.
+      - name: Drain 3.2f — council output-path convention
+        if: always()
+        run: |
+          ./scripts-run src/scripts/check_council_layout --quiet

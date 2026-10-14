@@ -54,6 +54,30 @@ describe('check_council_layout — find_violations', () => {
         expect(mod.find_violations(tmp)).toEqual([]);
     });
 
+    it('three tracked evidence homes are allowed, and nothing else under evidence/', () => {
+        // AI council 2026-10-14 (anthropic + openai, 2/2): a narrow allowlist,
+        // not the whole of evidence/ — "tracked-durable" names a retention
+        // class, not a licence to place a council file anywhere in that tree.
+        write(path.join(tmp, 'evidence/council/council-2026-09-08-topic.md'));
+        write(path.join(tmp, 'evidence/audits/2026/council-x.md'));
+        // A completion-review artefact is named after its branch slug, so a
+        // branch called `council-…` produces this name by contract.
+        write(path.join(tmp, 'evidence/reviews/council-codex-transport.findings.md'));
+        expect(mod.find_violations(tmp)).toEqual([]);
+
+        // Near misses stay findings: the review exemption is the review
+        // naming shape, not the directory.
+        write(path.join(tmp, 'evidence/reviews/council-raw-response.json'));
+        write(path.join(tmp, 'evidence/analysis/council-y.md'));
+        write(path.join(tmp, 'evidence/notes/council-z.md'));
+        write(path.join(tmp, 'evidence/councils/council-w.md'));
+        const v = mod.find_violations(tmp);
+        expect(v).toHaveLength(4);
+        for (const bad of ['reviews/council-raw-response.json', 'analysis/council-y.md', 'notes/council-z.md', 'councils/council-w.md']) {
+            expect(v.some((line: string) => line.includes(bad)), bad).toBe(true);
+        }
+    });
+
     it('road-to-ai-council.md is not a council artefact (no council- prefix)', () => {
         expect(mod.is_council_artefact('road-to-ai-council.md')).toBe(false);
         expect(mod.is_council_artefact('council-x.md')).toBe(true);

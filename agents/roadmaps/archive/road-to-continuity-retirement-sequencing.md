@@ -42,7 +42,7 @@ The struck section also claimed a council record under
 unresolvable to any reviewer — a defect the release review flagged
 (`acc3a715b4e9`, `6f0cfd30a93c`). The council record for the decision that
 replaced it is transcribed into the tracked tree at
-`agents/evidence/analysis/council-2026-09-08-carrier-status-redefinition.md`.
+`agents/evidence/council/council-2026-09-08-carrier-status-redefinition.md`.
 
 **What survives from the struck section, because it was correct and measured:**
 the probe readings of 2026-09-07 — P1 FALSE, P2 PARTIAL, P3 FALSE, P4 FALSE —
