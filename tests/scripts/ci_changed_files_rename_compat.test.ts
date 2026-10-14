@@ -16,7 +16,7 @@ import { commitAll } from './ratification_git_fixture.js';
  * predates `--no-renames` runs a plain `git diff --name-only base...head`, and
  * only the step's `GIT_CONFIG_*` environment turns rename detection off for
  * it. So the first test takes those variables from the step itself and runs
- * exactly that legacy diff call under them. A misspelled key is ignored by
+ * that legacy diff call under them, from a Node process that inherits them. A misspelled key is ignored by
  * git, which leaves the old path missing; a misspelled value is a fatal git
  * error. Both fail here.
  *
@@ -96,9 +96,21 @@ function move(from: string, to: string): void {
 
 const BODY = 'a kernel rule long enough to be detected as renamed\n'.repeat(4);
 
-/** The diff call of a base gate that predates `--no-renames`. */
+/**
+ * The diff call of a base gate that predates `--no-renames`, made the way that
+ * gate makes it: a Node process spawning git with no `env` option, so git sees
+ * only what the step's environment handed down to the Node process.
+ */
+const LEGACY_GATE_DIFF = [
+    "const r = require('node:child_process').spawnSync('git',",
+    "  ['diff', '--name-only', `${process.argv[1]}...HEAD`], { cwd: process.cwd(), encoding: 'utf8' });",
+    'process.stdout.write(r.stdout ?? "");',
+    'process.stderr.write(r.stderr ?? "");',
+    'process.exit(r.status ?? 9);',
+].join('\n');
+
 function legacyDiff(base: string, env: NodeJS.ProcessEnv): { status: number | null; files: string[]; err: string } {
-    const res = spawnSync('git', ['diff', '--name-only', `${base}...HEAD`], { cwd: root, encoding: 'utf8', env });
+    const res = spawnSync(process.execPath, ['-e', LEGACY_GATE_DIFF, base], { cwd: root, encoding: 'utf8', env });
     return {
         status: res.status,
         files: res.stdout.split('\n').filter((l) => l !== ''),
