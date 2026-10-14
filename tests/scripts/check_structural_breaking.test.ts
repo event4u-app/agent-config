@@ -6,9 +6,17 @@
 // so REPO_ROOT === <tmp>, seeds an `origin/main` ref, then crafts commits to
 // exercise: no-diff no-op, clean diff, deleted artifact (violation), renamed
 // artifact (violation), schema change without x-schemaVersion bump (violation),
-// the breaking-annotation clear path, and the ci-override clear path. python3
-// and tsx run against the SAME repo state and must agree byte-for-byte on
-// stdout/stderr/exit. Skipped without python3 or git.
+// the breaking-annotation clear path, and the ci-override clear path.
+//
+// The header previously said "python3 and tsx run against the SAME repo state
+// and must agree byte-for-byte on stdout/stderr/exit. Skipped without python3
+// or git." The Python twin was deleted in the ADR-200 teardown, so there is
+// nothing to compare against, and `expectParity` below has since degraded to
+// asserting only that the process reached a defined exit — it checks NO exit
+// code and NO message. Every case using it therefore promises a verdict in its
+// title that it does not test. That is pre-existing and is left as it is; the
+// `pack-file-deletion` block at the bottom asserts the exit code and the
+// reported path directly rather than inheriting a hollow helper.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -226,5 +234,67 @@ describe('check_structural_breaking — golden parity (real repo)', () => {
     it('runs deterministically on the live repo diff', () => {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT], { cwd: REPO_ROOT, encoding: 'utf8' });
         expect(a.status, a.stderr).not.toBeNull();
+    });
+});
+
+// A gate that watches a path which has never existed watches nothing. The
+// artifact pattern carried `src/config/packs.yml`; this tree's pack surface is
+// `src/config/discovery/packs.yml` plus one `src/packs/<name>/pack.yaml` per
+// pack, and deleting any of those passed the detector in silence.
+//
+// These cases assert the exit code and the reported path. `expectParity` above
+// asserts neither, so reusing it here would reproduce the silence this block
+// exists to end.
+describe('check_structural_breaking — pack-file-deletion', () => {
+    let fx: { root: string; ts: string };
+    beforeEach(() => {
+        fx = fixtureRepo();
+    });
+    afterEach(() => {
+        fs.rmSync(fx.root, { recursive: true, force: true });
+    });
+
+    function run(args: string[] = []): { status: number | null; stdout: string; stderr: string } {
+        const r = spawnSync(TSX_BIN, [fx.ts, ...args], { cwd: fx.root, encoding: 'utf8' });
+        return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
+    }
+
+    function seedAndDelete(packPath: string, subject: string) {
+        write(fx.root, packPath, 'name: demo\n');
+        write(fx.root, 'README.md', 'base\n');
+        git(fx.root, 'add', '-A');
+        git(fx.root, 'commit', '-qm', 'base');
+        setOrigin(fx.root);
+        fs.rmSync(path.join(fx.root, packPath));
+        git(fx.root, 'add', '-A');
+        git(fx.root, 'commit', '-qm', subject);
+    }
+
+    it('a deleted discovery pack manifest is reported', () => {
+        seedAndDelete('src/config/discovery/packs.yml', 'chore: drop the discovery manifest');
+        const r = run();
+        expect(r.status, r.stdout + r.stderr).toBe(1);
+        expect(r.stdout + r.stderr).toContain('src/config/discovery/packs.yml');
+    });
+
+    it('a deleted per-pack manifest is reported', () => {
+        seedAndDelete('src/packs/demo/pack.yaml', 'chore: drop the demo pack');
+        const r = run();
+        expect(r.status, r.stdout + r.stderr).toBe(1);
+        expect(r.stdout + r.stderr).toContain('src/packs/demo/pack.yaml');
+    });
+
+    it('the same deletion with a breaking annotation is cleared', () => {
+        // The negative control. Without it both cases above would pass against
+        // a detector that returns 1 for every diff.
+        seedAndDelete('src/packs/demo/pack.yaml', 'feat!: drop the demo pack');
+        expect(run().status).toBe(0);
+    });
+
+    it('a file one directory off the watched pack shape is not reported', () => {
+        // The over-match control: `packs/[^/]+/pack.yaml` must not swallow a
+        // nested or differently named neighbour.
+        seedAndDelete('src/packs/demo/nested/pack.yaml', 'chore: drop a nested file');
+        expect(run().status).toBe(0);
     });
 });

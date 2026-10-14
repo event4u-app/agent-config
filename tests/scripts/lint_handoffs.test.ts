@@ -2,15 +2,26 @@
 //
 // Ports tests/test_lint_handoffs.py 1:1 (the `lint(skills_dir)` fixtures:
 // valid chains, cycle, dangling, tier-mismatch, cross-wing, non-senior skip,
-// mode-6 worktree chain) and adds a golden-parity layer that runs python3 vs
-// tsx on the REAL REPO, byte-identical stdout + stderr + exit (skipped
-// without python3).
+// mode-6 worktree chain), plus the contract-agreement check below.
+//
+// This header previously also announced "a golden-parity layer that runs
+// python3 vs tsx on the REAL REPO, byte-identical stdout + stderr + exit".
+// No such layer is in this file and the Python source has been retired. The
+// claim is not unique to this file: measured 2026-10-14, 203 of the 225 test
+// files whose header announces a parity layer never name python3 in their
+// body. Only the three this branch edited are corrected; the rest is recorded
+// in road-to-sentences-the-tree-can-back as a measured population.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { lint, main, type Violation } from '../../src/scripts/lint_handoffs.js';
+
+const _HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO = path.resolve(_HERE, '..', '..');
 
 
 
@@ -258,5 +269,57 @@ describe('lint_handoffs — CI-identical invocation', () => {
         const m = /^scanned: (\d+)$/m.exec(out.join(''));
         expect(m).not.toBeNull();
         expect(Number(m![1])).toBeGreaterThan(250);
+    });
+});
+
+describe('handoff-missing-input-agrees', () => {
+    // The contract's rule tables are where a skill author looks up a failure
+    // code. A code listed there that no emitter produces is worse than no
+    // code: it reads as a guard. `handoff_missing_input` sat in the optional
+    // table as "Warning today" and was never emitted by anything.
+    const CONTRACT = path.join(REPO, 'docs', 'contracts', 'cross-wing-handoff.md');
+
+    /** Codes the linter can actually put on a violation. */
+    function emittedCodes(): Set<string> {
+        const src = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'lint_handoffs.ts'), 'utf-8');
+        const out = new Set<string>();
+        for (const m of src.matchAll(/code:\s*'([a-z_]+)'/g)) out.add(m[1] as string);
+        return out;
+    }
+
+    /** `handoff_*` codes the contract presents inside a markdown table row. */
+    function contractCodes(): Set<string> {
+        const text = fs.readFileSync(CONTRACT, 'utf-8');
+        const out = new Set<string>();
+        for (const line of text.split('\n')) {
+            if (!line.trimStart().startsWith('|')) continue;
+            for (const m of line.matchAll(/`(handoff_[a-z_]+)`/g)) out.add(m[1] as string);
+        }
+        return out;
+    }
+
+    it('every handoff code a table names has an emitter in lint_handoffs', () => {
+        const emitted = emittedCodes();
+        // Guard the guard: a regex that matched nothing would make this pass
+        // against an empty set and prove nothing.
+        expect(emitted.size).toBeGreaterThanOrEqual(3);
+        const missing = [...contractCodes()].filter((c) => !emitted.has(c));
+        expect(missing, `contract names ${missing.join(', ')} but nothing emits it`).toEqual([]);
+    });
+
+    it('handoff_missing_input is named nowhere as a code', () => {
+        // The specific sentence this check was written for. It stays as a
+        // named case so a re-add is a test failure, not a silent return.
+        expect(contractCodes().has('handoff_missing_input')).toBe(false);
+        expect(emittedCodes().has('handoff_missing_input')).toBe(false);
+    });
+
+    it('the three codes the linter does emit are all documented', () => {
+        // The other direction: an emitter nobody documented is a failure a
+        // skill author meets at CI with no page to look it up on.
+        const documented = contractCodes();
+        for (const code of emittedCodes()) {
+            expect(documented.has(code), `lint_handoffs emits ${code}; no contract table names it`).toBe(true);
+        }
     });
 });

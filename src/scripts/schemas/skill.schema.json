@@ -199,12 +199,12 @@
     "refresh_trigger": {
       "type": "string",
       "minLength": 1,
-      "description": "Event that mandates a rewrite of this skill (e.g. upstream major rewrite, dispatch table reshape, SHA pin invalidation). Required when `external_source` is set."
+      "description": "Event that mandates a rewrite of this skill (e.g. upstream major rewrite, dispatch table reshape, SHA pin invalidation). Required when `external_source` is set - and no script evaluates it: measured 2026-10-14, zero skills set `external_source`, three carry this key, and nothing outside this schema names it. It records an author intent for a reader; it triggers nothing."
     },
     "sunset_criterion": {
       "type": "string",
       "minLength": 1,
-      "description": "Conditions under which the skill should be archived and replaced with a 50-line pointer (e.g. all referenced modules adopted as project-local guidelines, dispatch logic moved to a project-native router). Required when `external_source` is set."
+      "description": "Conditions under which the skill should be archived and replaced with a 50-line pointer (e.g. all referenced modules adopted as project-local guidelines, dispatch logic moved to a project-native router). Required when `external_source` is set - and no script evaluates it: see `refresh_trigger` above. It records an author intent for a reader; it triggers nothing."
     },
     "model_tier": {
       "type": "string",

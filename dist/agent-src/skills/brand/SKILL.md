@@ -82,6 +82,10 @@ Provenance: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 
 ## Do NOT
 
+- Do NOT report a trademark position from the corpus. `Trademark Risk` in
+  `data/naming-patterns.csv` rates the PATTERN, not the name on the table. A
+  candidate leaves with a check that was RUN — registry, date, result — or
+  with "not checked". The column alone reads as a clearance nobody performed.
 - Do NOT let the corpus author final brand copy or names — it supplies
   constraint sets and patterns; final strings are agent-written and
   human-confirmed.

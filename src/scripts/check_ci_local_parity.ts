@@ -349,6 +349,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     const r = analyse(REPO, mf);
 
+    // In `--format json` every other line goes to stderr: stdout carries the
+    // document and nothing else. Measured 2026-10-14 before this change —
+    // `JSON.parse` on stdout failed at position 28 039, because the narration
+    // below was appended to the document a caller was trying to read.
+    const say = (text: string): void => {
+        (wantJson ? process.stderr : process.stdout).write(text);
+    };
+
     if (wantJson) {
         process.stdout.write(`${JSON.stringify({ generated_by: 'check_ci_local_parity', ...r }, null, 2)}\n`);
     }
@@ -360,11 +368,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let failed = false;
     if (r.undeclared_ci_only.length > 0) {
         failed = true;
-        process.stdout.write(
+        say(
             `❌  ${String(r.undeclared_ci_only.length)} gate(s) run in CI but are unreachable locally:\n`,
         );
-        for (const g of r.undeclared_ci_only) process.stdout.write(`  - ${g}\n`);
-        process.stdout.write(
+        for (const g of r.undeclared_ci_only) say(`  - ${g}\n`);
+        say(
             "\n    Either wire it into the `task ci` chain, or declare it under `ci_only:` in\n" +
                 '    src/config/ci-local-parity.yml with the reason it cannot run locally.\n' +
                 '    Undeclared, it means a contributor discovers this failure only after pushing.\n',
@@ -387,30 +395,30 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     });
     if (!parity.ok) {
         failed = true;
-        process.stdout.write(`❌  ${parity.message}\n`);
-        for (const g of r.undeclared_local_only) process.stdout.write(`  - ${g}\n`);
-        process.stdout.write(
+        say(`❌  ${parity.message}\n`);
+        for (const g of r.undeclared_local_only) say(`  - ${g}\n`);
+        say(
             '\n    Prefer adding it to a workflow — this is the direction that let real defects\n' +
                 '    merge (16 stale index rows reached main behind a local-only check-index).\n' +
                 '    If remote enforcement is genuinely not wanted, declare it under `local_only:`.\n' +
                 '    Raising the baseline is a defect, not a fix.\n',
         );
     } else {
-        process.stdout.write(`ℹ️   ${parity.message}\n`);
+        say(`ℹ️   ${parity.message}\n`);
     }
     if (r.stale_declarations.length > 0) {
         failed = true;
-        process.stdout.write(
+        say(
             `❌  ${String(r.stale_declarations.length)} stale declaration(s) — now on BOTH sides, so the exemption is dead:\n`,
         );
-        for (const g of r.stale_declarations) process.stdout.write(`  - ${g}\n`);
+        for (const g of r.stale_declarations) say(`  - ${g}\n`);
     }
 
     // Round 7 § 3.2 — printed on EVERY path, pass or fail, because the number is
     // the deliverable. A green parity verdict above says the local MIRROR matches
     // CI; it says nothing about the pass a contributor is told to run, and reading
     // the green line as if it did is the implication this block removes.
-    process.stdout.write(
+    say(
         `ℹ️   preflight: ${String(r.preflight_gates.length)} gate(s) of the ${String(r.local_gates.length)} local ones; ` +
             `${String(r.ci_not_in_preflight.length)} CI-enforced gate(s) run NEITHER in \`task preflight\` NOR\n` +
             '    anywhere else the pre-push hook reaches — i.e. the set that can only fail after\n' +
@@ -418,10 +426,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             '    Report-only: the subset is deliberate (see the preflight docstring). A green\n' +
             '    preflight is therefore not a prediction that CI will be green.\n',
     );
-    for (const g of r.ci_not_in_preflight) process.stdout.write(`      · ${g}\n`);
+    for (const g of r.ci_not_in_preflight) say(`      · ${g}\n`);
 
     if (!failed) {
-        process.stdout.write(
+        say(
             `✅  CI ↔ local parity: ${String(r.ci_gates.length)} CI gate(s), ${String(r.local_gates.length)} local, ` +
                 `${String(mf.ci_only.length)} declared CI-only, ${String(mf.local_only.length)} declared local-only.\n`,
         );
