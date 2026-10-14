@@ -7,8 +7,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     classifyPaths,
     configuredProviderCount,
-    evaluate,
-    expectedSubjectFor,
     POLICY_PATH,
     ratificationArtifactsIn,
     READER_PATH,
@@ -16,7 +14,23 @@ import {
     SELF_PATH,
     WORKFLOW_PATH,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
+import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
+import { commitAll } from './ratification_git_fixture.js';
+
+/**
+ * The gate reads the gated content and the record at HEAD from Git objects,
+ * so a fixture is committed before it is judged.
+ */
+function evaluate(files: readonly string[], r: string, providers: number | null): gate.GateResult {
+    commitAll(r);
+    return gate.evaluate(files, r, providers);
+}
+
+function expectedSubjectFor(files: readonly string[], r: string): ReturnType<typeof gate.expectedSubjectFor> {
+    commitAll(r);
+    return gate.expectedSubjectFor(files, r);
+}
 
 /**
  * Fixture G15 and its polarity partner.
@@ -315,14 +329,14 @@ describe('evaluate — G15', () => {
         expect(r.lines.join('\n')).toContain('fails closed');
     });
 
-    it('refuses an artifact listed in the diff but absent from disk', () => {
+    it('refuses an artifact listed in the diff but absent from the revision', () => {
         const r = evaluate(
             ['src/rules/commit-policy.md', `${RATIFICATION_DIR}/ghost.md`],
             root,
             2,
         );
         expect(r.exitCode).toBe(1);
-        expect(r.lines.join('\n')).toContain('not readable on disk');
+        expect(r.lines.join('\n')).toContain('listed in the diff but absent at `HEAD`');
     });
 
     it('`confirmed-non-expanding` lets a diff land without calling it a ratification', () => {

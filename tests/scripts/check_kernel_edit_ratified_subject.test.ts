@@ -4,11 +4,27 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { evaluate, expectedSubjectFor } from '../../src/scripts/check_kernel_edit_ratified.js';
+import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import {
     RATIFICATION_DIR,
     readRatification,
 } from '../../src/scripts/_lib/ratification_artifact.js';
+import { commitAll } from './ratification_git_fixture.js';
+
+/**
+ * The gate reads the gated content AND the record at HEAD, from Git objects,
+ * so each case's fixture is committed before it is judged — these cases are
+ * about what a commit contains.
+ */
+function evaluate(files: readonly string[], r: string, providers: number | null): gate.GateResult {
+    commitAll(r);
+    return gate.evaluate(files, r, providers);
+}
+
+function expectedSubjectFor(files: readonly string[], r: string): ReturnType<typeof gate.expectedSubjectFor> {
+    commitAll(r);
+    return gate.expectedSubjectFor(files, r);
+}
 
 /**
  * Step 2.2 — each record answers for its OWN change.
@@ -157,9 +173,12 @@ describe('2.3 — every failure of the subject computation leaves the gate as a 
      * because the defect was not in the module: the module threw correctly
      * and `evaluate()` let two of the three classes through as exceptions.
      * A gate that advertises a refusal and crashes instead has no refusal.
+     *
+     * The working-tree reader those words were about has since been replaced
+     * by a read from Git objects, and `GatedFileUnreadable` with it; the one
+     * boundary they asked for is what these cases still pin, now over the
+     * git refusals as well (`ratification_subject_revision.test.ts`).
      */
-    const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
-
     it('a traversing gated path is a refusal, not an exception', () => {
         // `KERNEL_RULE_PATH_RE` is unanchored, so this classifies as a kernel
         // rule and the digest refuses to join it to a root. Before the fix
@@ -170,35 +189,18 @@ describe('2.3 — every failure of the subject computation leaves the gate as a 
         }).not.toThrow();
         expect(r).not.toBeNull();
         expect(r!.exitCode).toBe(1);
-        expect(r!.lines.join('\n')).toContain('would read outside the revision under review');
+        expect(r!.lines.join('\n')).toContain('names nothing inside the revision under review');
     });
 
-    it.skipIf(asRoot)('a read that fails AFTER the stat is a refusal, not an exception', () => {
-        // The file loses its mode, so `lstat` succeeds and the read is what
-        // fails — the post-stat window the seats named. Before the fix this
-        // surfaced as a raw Node `EACCES` out of `evaluate()`.
-        const abs = path.join(root, KERNEL);
-        fs.chmodSync(abs, 0o000);
-        try {
-            let r: ReturnType<typeof evaluate> | null = null;
-            expect(() => {
-                r = evaluate([KERNEL], root, 2);
-            }).not.toThrow();
-            expect(r).not.toBeNull();
-            expect(r!.exitCode).toBe(1);
-            expect(r!.lines.join('\n')).toContain('could not be read');
-        } finally {
-            fs.chmodSync(abs, 0o644);
-        }
-    });
-
-    it('a gated path that is not a file, link or absence is a refusal, not an exception', () => {
-        // Step 2.5: the third refusal class, through the real gate. The catch
-        // in `evaluate()` names the refusal base class, so a new subclass is
-        // handled without a new clause; this case is what proves it.
+    it('a gated path that is not a regular file or absence is a refusal, not an exception', () => {
+        // The catch in `evaluate()` names the refusal base class, so a new
+        // subclass is handled without a new clause; this case is what proves
+        // it. Git stores no empty directory, so the directory carries a file
+        // and the commit has a TREE entry at the gated path.
         const abs = path.join(root, KERNEL);
         fs.rmSync(abs);
         fs.mkdirSync(abs);
+        fs.writeFileSync(path.join(abs, 'inside.md'), 'x\n');
         let r: ReturnType<typeof evaluate> | null = null;
         expect(() => {
             r = evaluate([KERNEL], root, 2);

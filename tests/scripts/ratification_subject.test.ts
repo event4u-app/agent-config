@@ -3,22 +3,21 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { createHash } from 'node:crypto';
+
+import * as lib from '../../src/scripts/_lib/ratification_subject.js';
 import {
-    asErrno,
     assertContained,
     gatedFilesOf,
-    readGatedFile,
-    readGatedLink,
-    subjectDigest,
-    subjectOf,
     DELETED_MARKER,
-    GatedFileUnreadable,
+    DELETED_MODE,
     GatedPathEscapes,
 } from '../../src/scripts/_lib/ratification_subject.js';
 import {
     classifyPaths,
     expectedSubjectFor,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
+import { commitAll } from './ratification_git_fixture.js';
 
 function tmpTree(files: Readonly<Record<string, string>>): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-'));
@@ -27,7 +26,28 @@ function tmpTree(files: Readonly<Record<string, string>>): string {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, body);
     }
+    commitAll(root);
     return root;
+}
+
+/**
+ * The digest is read from Git objects at HEAD, so every edit a case makes to a
+ * fixture is committed before the digest is taken — these cases are about what
+ * a commit contains, and the working tree is covered by
+ * `ratification_subject_revision.test.ts`.
+ */
+function subjectDigest(root: string, files: readonly string[], derived?: readonly string[]): string {
+    commitAll(root);
+    return lib.subjectDigest(root, files, derived);
+}
+
+function subjectOf(
+    root: string,
+    files: readonly string[],
+    derived?: readonly string[],
+): lib.SubjectReading {
+    commitAll(root);
+    return lib.subjectOf(root, files, derived);
 }
 
 const KERNEL = 'src/rules/commit-policy.md';
@@ -146,67 +166,53 @@ describe('2.1 — the digest binds paths AND contents', () => {
     });
 });
 
-describe('a gated file that cannot be read is not a gated file that was deleted', () => {
+describe('a working-tree fault is not a property of the revision', () => {
     /**
-     * The defect this pins, named by both seats of the 2026-10-13 review.
-     *
-     * `catch { stat = null; }` turned EVERY `lstat` failure into the deletion
-     * marker, so a permission error on a gated path produced the digest of a
-     * tree in which that path had been removed — and anyone able to provoke
-     * such an error could force a gated file's real content out of the digest.
-     * It is the same fail-open shape a previous round of this review already
-     * refused once, in a different function.
-     *
-     * The parent directory is what loses its mode, not the file: `lstat` reads
-     * the parent's entry, so a mode-000 FILE still stats fine. Root ignores
-     * permission bits entirely, so the case skips there rather than passing
-     * vacuously.
+     * The defect earlier review rounds pinned here was a permission error on
+     * a gated path digested as a deletion. The content is now read from the
+     * object store, so a working-tree permission fault cannot reach it at
+     * all: the case below makes the gated file's directory unreadable after
+     * the commit and the digest is unchanged. Root ignores permission bits,
+     * so the case skips there rather than passing vacuously.
      */
     const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
 
-    it.skipIf(asRoot)('throws rather than hashing it as absent', () => {
+    it.skipIf(asRoot)('an unreadable directory on disk leaves the committed digest unchanged', () => {
         const root = tmpTree({ [KERNEL]: 'one\n' });
+        const reviewed = lib.subjectDigest(root, [KERNEL]);
         const dir = path.dirname(path.join(root, KERNEL));
-        const deletedDigest = subjectDigest(tmpTree({ 'README.md': 'x\n' }), [KERNEL]);
         fs.chmodSync(dir, 0o000);
         try {
-            expect(() => subjectDigest(root, [KERNEL])).toThrow(GatedFileUnreadable);
-            // And specifically NOT the deletion digest, which is the outcome
-            // the old shape produced silently.
-            let produced: string | null = null;
-            try {
-                produced = subjectDigest(root, [KERNEL]);
-            } catch {
-                produced = null;
-            }
-            expect(produced).not.toBe(deletedDigest);
+            expect(() => fs.readdirSync(dir)).toThrow();
+            expect(lib.subjectDigest(root, [KERNEL])).toBe(reviewed);
         } finally {
             fs.chmodSync(dir, 0o755);
         }
     });
 
     it('a genuinely absent gated file is encoded AS the deletion marker', () => {
-        // The polarity partner: failing closed on EACCES must not make ENOENT
-        // throw too, or every ordinary deletion would red the gate.
-        //
-        // STRENGTHENED on a 2026-10-13 finding. This case used to assert only
-        // that nothing threw and that the constant contains the word
-        // "deleted" — neither of which says the absent file was entered with
-        // `DELETED_MARKER` rather than skipped, which is the property step 2.1
-        // actually claims. It is provable without reaching inside the hash: a
-        // tree whose gated file CONTAINS exactly those bytes must produce the
-        // same digest as a tree where the file is missing, because the loop
-        // hashes `Buffer.from(DELETED_MARKER)` in the absent case.
+        // The entry an absent path contributes, computed by hand from the
+        // documented serialisation `path NUL mode NUL sha256hex(content) LF`.
+        // Equality with it proves the absent file was entered with
+        // `DELETED_MODE` and `DELETED_MARKER` rather than skipped.
         const absent = tmpTree({ 'README.md': 'x\n' });
-        expect(() => subjectDigest(absent, [KERNEL])).not.toThrow();
+        const entry = createHash('sha256').update(DELETED_MARKER).digest('hex');
+        const expected = createHash('sha256')
+            .update(`${KERNEL}\u0000${DELETED_MODE}\u0000${entry}\n`)
+            .digest('hex');
+        expect(subjectDigest(absent, [KERNEL])).toBe(expected);
 
+        // And a FILE whose bytes are the marker is not a deletion: the mode
+        // slot tells them apart, which the content slot alone could not.
         const literal = tmpTree({ [KERNEL]: DELETED_MARKER });
-        expect(subjectDigest(absent, [KERNEL])).toBe(subjectDigest(literal, [KERNEL]));
+        expect(subjectDigest(literal, [KERNEL])).not.toBe(expected);
+    });
 
-        // And it is that marker specifically, not any placeholder: a file
-        // holding a different string digests differently.
-        const other = tmpTree({ [KERNEL]: '\u0000removed\u0000' });
-        expect(subjectDigest(absent, [KERNEL])).not.toBe(subjectDigest(other, [KERNEL]));
+    it('a file with the same bytes and a different mode digests differently', () => {
+        const plain = tmpTree({ [KERNEL]: 'one\n' });
+        const before = subjectDigest(plain, [KERNEL]);
+        fs.chmodSync(path.join(plain, KERNEL), 0o755);
+        expect(subjectDigest(plain, [KERNEL])).not.toBe(before);
     });
 });
 
@@ -214,9 +220,9 @@ describe('the serialisation is unambiguous — a byte cannot move between path a
     /**
      * Framing, asked for by both seats of the 2026-10-13 review.
      *
-     * The encoding is `path NUL sha256hex(content) LF`. NUL cannot occur in a
-     * path on any supported filesystem and the content slot is a fixed 64 hex
-     * characters, so no (path, content) pair can be re-cut into another one.
+     * The encoding is `path NUL mode NUL sha256hex(content) LF`. NUL cannot
+     * occur in a Git path, the mode is six octal digits and the content slot
+     * is a fixed 64 hex characters, so no (path, content) pair can be re-cut into another one.
      * The two cases below demonstrate that on the shapes this gate can
      * actually be handed: the slugs are a CLOSED set of nine, so a
      * prefix-pair of gated paths cannot be constructed at all, and saying so
@@ -246,10 +252,10 @@ describe('a path the caller supplies cannot escape the tree', () => {
      * The gate's `KERNEL_RULE_PATH_RE` is `(?:^|\/)rules\/([a-z0-9-]+)\.md$`,
      * unanchored at the start, so `../../elsewhere/rules/commit-policy.md`
      * classifies as a kernel rule. Harmless while the gate read only names;
-     * not harmless once the content binding joins those names to a root and
-     * reads the bytes. The digest now refuses such a path instead of reading
-     * it, and refuses rather than dropping it, so its coverage never falls
-     * short of what the gate gated.
+     * not harmless once the content binding looks those names up — no tree
+     * entry can carry one, so it would be digested as a deletion. The digest
+     * refuses such a path, and refuses rather than dropping it, so its
+     * coverage never falls short of what the gate gated.
      */
     it('a traversing gated path is refused, not read', () => {
         expect(() => gatedFilesOf(['../../elsewhere/rules/commit-policy.md'])).toThrow(
@@ -358,159 +364,5 @@ describe('the import cycle stays survivable, and a regression reds here', () => 
         expect([...mod.gatedFilesOf(['src/scripts/check_kernel_edit_ratified.ts'])]).toContain(
             'src/scripts/check_kernel_edit_ratified.ts',
         );
-    });
-});
-
-describe('a failure AFTER the stat is a refusal, not a raw Node error', () => {
-    /**
-     * Step 2.3, and the half round 2 of the 2026-10-13 review named:
-     *
-     * > "the `readFileSync(abs)` and `readlinkSync(abs)` calls ... are not
-     * > wrapped, so a permission change or I/O error after the stat escapes as
-     * > a raw Node error — exactly the TOCTOU window the fail-closed lstat was
-     * > meant to close."
-     *
-     * The `lstat` above decides which of three things a gated path is. Every
-     * one of those three branches then touches the filesystem a SECOND time,
-     * and until this change the second touch had no translation at all.
-     */
-    const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
-
-    it.skipIf(asRoot)('an unreadable FILE whose stat succeeded is a typed refusal', () => {
-        // The file loses its mode, not the directory — so `lstat` succeeds
-        // (it reads the parent's entry) and the READ is what fails. That is
-        // the post-stat window, reached deterministically.
-        const root = tmpTree({ [KERNEL]: 'one\n' });
-        const abs = path.join(root, KERNEL);
-        fs.chmodSync(abs, 0o000);
-        try {
-            expect(() => fs.lstatSync(abs)).not.toThrow();
-            expect(() => subjectDigest(root, [KERNEL])).toThrow(GatedFileUnreadable);
-            // And it carries the errno rather than flattening it, so the
-            // refusal says WHICH filesystem fact stopped it.
-            try {
-                subjectDigest(root, [KERNEL]);
-                expect.unreachable('the digest must refuse an unreadable gated file');
-            } catch (err) {
-                expect(err).toBeInstanceOf(GatedFileUnreadable);
-                expect((err as GatedFileUnreadable).errno.code).toBe('EACCES');
-            }
-        } finally {
-            fs.chmodSync(abs, 0o644);
-        }
-    });
-
-    it('the happy path still returns the bytes — the wrapper swallows nothing', () => {
-        // Polarity for the two clauses above: a translation that also ate
-        // successful reads would make every case in this file green for the
-        // wrong reason.
-        const root = tmpTree({ [KERNEL]: 'one\n' });
-        expect(readGatedFile(KERNEL, path.join(root, KERNEL)).toString()).toBe('one\n');
-    });
-});
-
-describe('the symlink-swap question, answered by measurement', () => {
-    /**
-     * One seat of the 2026-10-13 round named a path-substitution race between
-     * the stat and the read and asked whether resisting it is inside this
-     * gate's threat model. These two cases are the answer, each measured
-     * rather than asserted in a comment.
-     *
-     * The race cannot be staged single-threaded, so what is measured is the
-     * MECHANISM each branch relies on — which is the only honest thing a
-     * deterministic suite can prove about a race, and strictly more than the
-     * comment it replaces.
-     */
-    it('a read refuses a symlink rather than following it — the O_NOFOLLOW half', () => {
-        // The dangerous direction: a path that `lstat` called a regular file
-        // and that is a SYMLINK by the time the read happens. A plain
-        // `readFileSync` dereferences and pulls bytes from outside the
-        // revision into the digest. `readGatedFile` opens with `O_NOFOLLOW`,
-        // so the swap becomes ELOOP and then a refusal.
-        const root = tmpTree({ 'outside.txt': 'bytes from elsewhere\n' });
-        const link = path.join(root, 'src/rules/linked.md');
-        fs.mkdirSync(path.dirname(link), { recursive: true });
-        fs.symlinkSync(path.join(root, 'outside.txt'), link);
-
-        expect(() => readGatedFile('src/rules/linked.md', link)).toThrow(GatedFileUnreadable);
-        // Specifically: it did NOT return the target's bytes. Asserting the
-        // throw alone would stay green if the refusal came from somewhere else.
-        let produced: string | null = null;
-        try {
-            produced = readGatedFile('src/rules/linked.md', link).toString();
-        } catch {
-            produced = null;
-        }
-        expect(produced).not.toBe('bytes from elsewhere\n');
-    });
-
-    it('a link replaced by a regular file is EINVAL, and EINVAL is a refusal', () => {
-        // The other direction, and the one the seat asked about by name: the
-        // path was a symlink at the stat, so the loop calls `readlinkSync` —
-        // and a swap to a regular file makes that call fail. It is a typed
-        // refusal now rather than a raw Node error out of `evaluate()`.
-        //
-        // A swap of the link's TARGET is not a leak at all: the digest records
-        // the target STRING and never dereferences it, so the worst such a
-        // swap can do is move the digest, which reds the gate. Both directions
-        // therefore fail closed.
-        const root = tmpTree({ [KERNEL]: 'one\n' });
-        expect(() => readGatedLink(KERNEL, path.join(root, KERNEL))).toThrow(GatedFileUnreadable);
-
-        // Polarity: on an actual link it returns the target string, so the
-        // clause above is not green because the helper always throws.
-        const link = path.join(root, 'src/rules/linked.md');
-        fs.symlinkSync('../../elsewhere', link);
-        expect(readGatedLink('src/rules/linked.md', link)).toBe('../../elsewhere');
-    });
-});
-
-describe('only an OS failure is translated — a Node programming error stays a crash', () => {
-    /**
-     * Step 2.4, and round 3 of the 2026-10-13 review in the seat's words:
-     *
-     * > "Node programming errors such as `ERR_INVALID_ARG_TYPE` are typically
-     * > `TypeError` instances with string `code` properties. Consequently, the
-     * > stated guarantee that 'a `TypeError` from a future edit … stays a
-     * > crash' is false."
-     *
-     * Each case below provokes a REAL `ERR_INVALID_ARG_TYPE` from Node rather
-     * than constructing one, so it measures what Node actually attaches.
-     */
-    function thrownBy(fn: () => unknown): unknown {
-        try {
-            fn();
-        } catch (err) {
-            return err;
-        }
-        return expect.unreachable('expected a throw');
-    }
-
-    it('readGatedFile rethrows ERR_INVALID_ARG_TYPE unchanged', () => {
-        const err = thrownBy(() => readGatedFile(KERNEL, 42 as unknown as string));
-        expect(err).toBeInstanceOf(TypeError);
-        expect(err).not.toBeInstanceOf(GatedFileUnreadable);
-        expect((err as NodeJS.ErrnoException).code).toBe('ERR_INVALID_ARG_TYPE');
-    });
-
-    it('readGatedLink rethrows ERR_INVALID_ARG_TYPE unchanged', () => {
-        const err = thrownBy(() => readGatedLink(KERNEL, 42 as unknown as string));
-        expect(err).toBeInstanceOf(TypeError);
-        expect(err).not.toBeInstanceOf(GatedFileUnreadable);
-        expect((err as NodeJS.ErrnoException).code).toBe('ERR_INVALID_ARG_TYPE');
-    });
-
-    it('the discriminator: a real errno passes, a string code alone does not', () => {
-        const real = thrownBy(() => fs.readFileSync(path.join(os.tmpdir(), 'no-such-subj-file')));
-        expect(asErrno(real)?.code).toBe('ENOENT');
-
-        const programming = thrownBy(() => fs.readFileSync(42 as unknown as string, 7 as never));
-        expect((programming as NodeJS.ErrnoException).code).toMatch(/^ERR_/);
-        expect(asErrno(programming)).toBeNull();
-
-        // An errno-looking code with nothing the syscall path attaches is not
-        // evidence either — the check is the three properties, not the name.
-        expect(asErrno(Object.assign(new Error('x'), { code: 'EACCES' }))).toBeNull();
-        expect(asErrno({ code: 'EACCES', errno: -13, syscall: 'open' })).toBeNull();
     });
 });

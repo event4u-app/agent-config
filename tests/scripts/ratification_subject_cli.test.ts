@@ -4,6 +4,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { main } from '../../src/scripts/ratification_subject.js';
+import { commitAll } from './ratification_git_fixture.js';
 
 /**
  * The CLI's refusal path, invoked directly. Step 2.4, round 3 of the
@@ -12,12 +13,11 @@ import { main } from '../../src/scripts/ratification_subject.js';
  * digest, and still lets an unrelated programming error through.
  */
 const KERNEL = 'src/rules/commit-policy.md';
-const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
-
 function tmpKernel(body: string): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-cli-'));
     fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
     fs.writeFileSync(path.join(root, KERNEL), body);
+    commitAll(root);
     return root;
 }
 
@@ -55,19 +55,19 @@ describe('ratification_subject main() — the refusal path', () => {
         expect(r.err).toBe('');
     });
 
-    it.skipIf(asRoot)('an unreadable gated file exits 1, on stderr, with no digest', () => {
+    it('the full output names the commit the digest was read from', () => {
         const root = tmpKernel('one\n');
-        const abs = path.join(root, KERNEL);
-        fs.chmodSync(abs, 0o000);
-        try {
-            const r = run(['--root', root, '--files', KERNEL]);
-            expect(r.code).toBe(1);
-            expect(r.out).toBe('');
-            expect(r.err).toContain('could not be read');
-            expect(r.err).toContain(KERNEL);
-        } finally {
-            fs.chmodSync(abs, 0o644);
-        }
+        const commit = commitAll(root);
+        const r = run(['--root', root, '--files', KERNEL]);
+        expect(r.code).toBe(0);
+        expect(r.out).toContain(`revision: ${commit}\n`);
+    });
+
+    it('--rev without a value is a usage error, not a silent HEAD', () => {
+        const root = tmpKernel('one\n');
+        const r = run(['--root', root, '--files', KERNEL, '--rev']);
+        expect(r.code).toBe(2);
+        expect(r.out).toBe('');
     });
 
     it('a gated path escaping the tree exits 1, on stderr, with no digest', () => {
@@ -83,6 +83,8 @@ describe('ratification_subject main() — the refusal path', () => {
         const abs = path.join(root, KERNEL);
         fs.rmSync(abs);
         fs.mkdirSync(abs);
+        fs.writeFileSync(path.join(abs, 'inside.md'), 'x\n');
+        commitAll(root);
         const r = run(['--root', root, '--files', KERNEL]);
         expect(r.code).toBe(1);
         expect(r.out).toBe('');

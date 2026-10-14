@@ -12,7 +12,7 @@
  * disagree with the gate exactly on the changes that widen the gated set, which
  * are the changes a record most needs to be right about.
  *
- * Usage: ratification_subject --files <path> [<path> …] [--root DIR] [--quiet]
+ * Usage: ratification_subject --files <path> [<path> …] [--root DIR] [--rev REV] [--quiet]
  *
  * `--files` takes the change's WHOLE changed-file list, not its gated subset:
  * which of them are gated is the gate's decision, not the caller's, and passing
@@ -20,19 +20,24 @@
  * Ungated paths are ignored, so `git diff --name-only <base>...HEAD` is the
  * intended input.
  *
+ * `--rev` names the commit the digest is taken at (default `HEAD`). The content
+ * is read from Git objects at that commit, never from the working tree, so the
+ * digest is of what is committed — commit first, then print the digest, and
+ * name the same commit the reviewers were shown.
+ *
  * `--quiet` prints the digest alone; over an empty gated set it also warns on
  * stderr that the digest covers nothing.
  *
- * Exit codes: 0 = digest printed · 1 = refused, a gated path could not be read,
- * resolves outside the tree, or is not an absent path, a symbolic link or a
- * regular file (nothing on stdout) · 2 = usage error.
+ * Exit codes: 0 = digest printed · 1 = refused: the revision does not resolve,
+ * git cannot run or read it, or a gated path escapes the tree or is not absent
+ * or a regular file in that commit (nothing on stdout) · 2 = usage error.
  */
 
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { expectedSubjectFor } from './check_kernel_edit_ratified.js';
-import { GatedSubjectRefusal } from './_lib/ratification_subject.js';
+import { DEFAULT_REVISION, GatedSubjectRefusal } from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -40,6 +45,7 @@ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const files: string[] = [];
     let root = REPO;
+    let revision = DEFAULT_REVISION;
     let collecting = false;
     let quiet = false;
 
@@ -64,6 +70,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             collecting = false;
             continue;
         }
+        if (a === '--rev') {
+            const value = argv[i + 1];
+            if (value === undefined || value.startsWith('--')) {
+                process.stderr.write('error: --rev takes a revision\n');
+                return 2;
+            }
+            revision = value;
+            i += 1;
+            collecting = false;
+            continue;
+        }
         if (a === '--quiet') {
             quiet = true;
             collecting = false;
@@ -82,7 +99,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     if (files.length === 0) {
         process.stderr.write(
-            'usage: ratification_subject --files <path> [<path> …] [--root DIR] [--quiet]\n' +
+            'usage: ratification_subject --files <path> [<path> …] [--root DIR] [--rev REV] ' +
+                '[--quiet]\n' +
                 '       pass the whole changed-file list; the gated subset is this gate’s decision\n',
         );
         return 2;
@@ -94,8 +112,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // file and stays a crash.
     let digest: string;
     let gated: readonly string[];
+    let commit: string | null;
     try {
-        ({ digest, gatedFiles: gated } = expectedSubjectFor(files, root));
+        ({ digest, gatedFiles: gated, revision: commit } = expectedSubjectFor(files, root, revision));
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
@@ -120,6 +139,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     process.stdout.write(`subject: ${digest}\n`);
+    process.stdout.write(
+        `revision: ${commit ?? '(none read — nothing in this change is gated)'}\n`,
+    );
     process.stdout.write(`\ngated files covered (${String(gated.length)}):\n`);
     if (gated.length === 0) {
         process.stdout.write(

@@ -4,9 +4,25 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { evaluate, expectedSubjectFor } from '../../src/scripts/check_kernel_edit_ratified.js';
+import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 import { gatedFilesOf } from '../../src/scripts/_lib/ratification_subject.js';
+import { commitAll } from './ratification_git_fixture.js';
+
+/**
+ * The gate reads content and record at HEAD from Git objects, so the fixture
+ * is committed before each judgement: "edited after the review" here means a
+ * later commit, which is what a push would carry.
+ */
+function evaluate(files: readonly string[], r: string, providers: number | null): gate.GateResult {
+    commitAll(r);
+    return gate.evaluate(files, r, providers);
+}
+
+function expectedSubjectFor(files: readonly string[], r: string): ReturnType<typeof gate.expectedSubjectFor> {
+    commitAll(r);
+    return gate.expectedSubjectFor(files, r);
+}
 
 /**
  * Step 2.1 — the record carries a digest of the gated content it reviewed.
@@ -219,55 +235,5 @@ describe('a change that widens the gated set is judged and written by one list',
         // bound to; if deletion were skipped this would stay green.
         fs.rmSync(path.join(root, NEW_HOOK));
         expect(evaluate([...files, rel], root, 2).exitCode).toBe(1);
-    });
-});
-
-describe('a gated path that is a symlink is hashed as the link', () => {
-    it('the digest follows the LINK, not what it currently points at', () => {
-        // `readFileSync` dereferences, so a gated path committed as a symlink
-        // was hashed as its target's bytes -- content that lives outside the
-        // reviewed revision and can differ between two clean checkouts of the
-        // same commit. Git stores a symlink as a blob holding its target
-        // string; that is what the digest now describes.
-        write('outside.txt', 'first\n');
-        fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
-        fs.symlinkSync(path.join(root, 'outside.txt'), path.join(root, KERNEL));
-
-        const before = expectedSubjectFor([KERNEL], root).digest;
-
-        // The target changes. The committed object did not, so the digest must
-        // not move -- this is the case that was broken.
-        write('outside.txt', 'second, and quite different\n');
-        expect(expectedSubjectFor([KERNEL], root).digest).toBe(before);
-
-        // Re-pointing the link IS a change to the committed object.
-        fs.unlinkSync(path.join(root, KERNEL));
-        write('elsewhere.txt', 'first\n');
-        fs.symlinkSync(path.join(root, 'elsewhere.txt'), path.join(root, KERNEL));
-        expect(expectedSubjectFor([KERNEL], root).digest).not.toBe(before);
-    });
-
-    it('a BROKEN link is a link, not a deletion', () => {
-        fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
-        fs.symlinkSync(path.join(root, 'never-existed.txt'), path.join(root, KERNEL));
-        const asBrokenLink = expectedSubjectFor([KERNEL], root).digest;
-
-        // `existsSync` reported a broken link as absent, which digested it as a
-        // removal -- the one change the record most needs to be bound to.
-        fs.unlinkSync(path.join(root, KERNEL));
-        const asDeleted = expectedSubjectFor([KERNEL], root).digest;
-
-        expect(asBrokenLink).not.toBe(asDeleted);
-    });
-
-    it('a regular file whose bytes equal a link target does not collide with it', () => {
-        fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
-        write('target.txt', 'x\n');
-        fs.symlinkSync(path.join(root, 'target.txt'), path.join(root, KERNEL));
-        const asLink = expectedSubjectFor([KERNEL], root).digest;
-
-        fs.unlinkSync(path.join(root, KERNEL));
-        write(KERNEL, 'x\n');
-        expect(expectedSubjectFor([KERNEL], root).digest).not.toBe(asLink);
     });
 });

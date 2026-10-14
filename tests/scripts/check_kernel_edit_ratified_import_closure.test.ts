@@ -18,10 +18,24 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     classifyPaths,
     closureArrivals,
-    evaluate,
-    expectedSubjectFor,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
+import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
+import { commitAll } from './ratification_git_fixture.js';
+
+/**
+ * The gate reads the gated content and the record at HEAD from Git objects,
+ * so a fixture is committed before it is judged.
+ */
+function evaluate(files: readonly string[], r: string, providers: number | null): gate.GateResult {
+    commitAll(r);
+    return gate.evaluate(files, r, providers);
+}
+
+function expectedSubjectFor(files: readonly string[], r: string): ReturnType<typeof gate.expectedSubjectFor> {
+    commitAll(r);
+    return gate.expectedSubjectFor(files, r);
+}
 
 const POLICY = 'src/scripts/hooks/concern_failure_policy.ts';
 const UNRELATED_CONCERN = 'src/scripts/hooks/chain_nudge_hook.ts';
