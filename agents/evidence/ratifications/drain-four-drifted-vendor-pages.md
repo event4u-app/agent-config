@@ -1,8 +1,8 @@
 ---
 proposed_by: claude-code drain lane, road-to-re-establishing-four-drifted-vendor-pages (2026-10-14)
 implemented_by: claude-code drain lane, same session — see § Independence
-reviewed_by: ai-council 2026-10-14 (rounds 1-4) — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
-subject: e16177b22fb82054d0900f253290b3024293966cde259e34f31e0b2d38cc57ff
+reviewed_by: ai-council 2026-10-14 (rounds 1-6) — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
+subject: 4c49b6d2fced7a5c82cba8ce52d9f69552aa0e3f57aeb08a0f7bc677c5ae18c7
 providers: [anthropic, openai]
 verdict: ratified
 seats:
@@ -30,8 +30,10 @@ each page on 2026-10-14. Gated surfaces:
 
 Not gated, reviewed alongside: `host_docs_pages.yaml` (the sibling page list,
 one row re-dated the same way), a comment string in
-`_lib/host_listing_model.ts`, and the regenerated `dist/install/install.mjs`
-that embeds it.
+`_lib/host_listing_model.ts`, the regenerated `dist/install/install.mjs`
+that embeds it, and `.github/workflows/host-docs-digest.yml` (a scheduled drift
+red now opens or updates one issue from a separate `issues: write` job; rounds
+5 and 6).
 
 ## Why `ratified`
 
@@ -42,7 +44,7 @@ roadmap's findings table left each `block_exit` as committed.
 
 ## Rounds
 
-Four council invocations, all 2026-10-14, subscription CLI, $0. Responses are
+Six council invocations, all 2026-10-14, subscription CLI, $0. Responses are
 runtime artefacts and are not cited by path.
 
 1. **Round 1 — both `confirmed-non-expanding`.** One non-blocking finding from
@@ -60,6 +62,27 @@ runtime artefacts and are not cited by path.
 5. **Round 4 — both `ratified`.** The unabridged `git diff
    55782c253..74942ec4f` over both gated files plus the bundle hunk. openai:
    *"the patch is internally consistent and non-expanding"*.
+6. **A completion review of the whole branch** then found, among others, that
+   the codex row's comment asserted a "current 0.159.3" in the present tense,
+   and that the workflow change adding `issues: write` (not a gated surface —
+   `check_kernel_edit_ratified` reports nothing to ratify for it) had no recorded
+   review. **Fix commit `64a8c74cc`** re-tensed the codex comment.
+7. **Round 5 — split, on the workflow.** Over `74942ec4f..64a8c74cc` (the codex
+   comment, its JSON regeneration, and the workflow): both seats found the gated
+   delta comment-only, openai: *"the gated data edit is non-expanding"*.
+   anthropic `ratified`; openai **`refused`** the workflow: *"grants issue-write
+   authority to repository-controlled comparison steps and cannot distinguish
+   actual drift from execution failure"*.
+8. **Fix commit `fb179dbe1`.** The watch job holds no write grant and exposes an
+   explicit `drifted` output set only from the checker's own drift verdict; a
+   separate `route-drift` job with `issues: write`, no checkout and no repository
+   code files the issue.
+9. **Round 6 — both `ratified`**, over `64a8c74cc..fb179dbe1`. openai:
+   *"privilege separation, drift classification, trigger restriction, and shell
+   quoting are sound."* This round's diff touched no gated file, so the `seats:`
+   above are each seat's last verdict; for the gated content specifically, the
+   last word from both seats is round 5's non-expanding finding over the final
+   gated bytes, which `subject` pins.
 
 ## Independence
 
@@ -76,6 +99,10 @@ Round 1's prompt is reproduced below up to its diff; the diff appended to it was
 4's appended patch was `git diff 55782c253..74942ec4f --
 src/scripts/hooks/host_lowering.yaml src/scripts/hooks/host_lowering.json`
 followed by `git diff 55782c253..74942ec4f -U0 -- dist/install/install.mjs`.
+Round 5's: `git diff 74942ec4f..64a8c74cc -- src/scripts/hooks/host_lowering.yaml
+.github/workflows/host-docs-digest.yml`, then the same range over
+`host_lowering.json`. Round 6's: `git diff 64a8c74cc..fb179dbe1 --
+.github/workflows/host-docs-digest.yml`.
 
 ### Round 1
 
@@ -277,4 +304,90 @@ verdict from exactly: `ratified` · `confirmed-non-expanding` · `refused` ·
 `non-convergent`.
 
 ## Gated patch (unabridged)
+~~~
+
+### Round 5
+
+~~~markdown
+# Ratification review, round 5 — two follow-ups after a completion review
+
+Rounds 1-4 reviewed a provenance-dating edit to `src/scripts/hooks/host_lowering.yaml`
+and its compiled sibling `host_lowering.json` up to commit `74942ec4f`; final
+verdict `ratified` from both seats. A later independent completion review of the
+whole branch then raised findings on two surfaces this round covers:
+
+- **The gated table again.** The codex row's comment still said, in the present
+  tense, "The installed build is 0.148.0 against a current 0.159.3, and the page
+  that was read describes the current one" after the row was re-dated to a
+  2026-10-14 read that did not check the version. Commit `64a8c74cc` re-tenses
+  it. The JSON sibling is regenerated.
+- **A workflow the ratification gate does not cover**, reviewed here so the one
+  write-grant change in the branch has a recorded second pair of eyes:
+  `.github/workflows/host-docs-digest.yml` gains `permissions: {contents: read,
+  issues: write}` on its one job (the workflow default stays `contents: read`)
+  and a step that, on a scheduled run whose `--fetch` comparison step failed,
+  opens one issue under a fixed title or comments on it while it stays open,
+  using `gh` with the job token. The design was chosen by the council in a
+  separate two-round disposition question; this round reviews the diff. Commit
+  `2d29e5cc7` narrowed the condition after the completion review found that
+  `failure()` alone also fired on a broken runner.
+
+Base `74942ec4f`, head `64a8c74cc8969612c4d903193490d8835688a2c2`. Both diffs
+below are unabridged.
+
+## Question
+
+1. Does the codex comment edit change anything but comment text, and is the
+   combined gated change still free of authority expansion?
+2. In the workflow diff: is the write grant scoped as narrowly as the step
+   needs; can any input reach the shell unquoted or as an expression; does the
+   condition fire on anything other than a scheduled comparison red; any other
+   defect?
+
+Return findings, then one final verdict from exactly: `ratified` ·
+`confirmed-non-expanding` · `refused` · `non-convergent`.
+
+## Diff — YAML and workflow (unabridged)
+~~~
+
+### Round 6
+
+~~~markdown
+# Ratification review, round 6 — the workflow, restructured after a refusal
+
+Round 5 covered two surfaces. On the gated table (`host_lowering.yaml` comment
+re-tense + regenerated JSON) both seats found no authority expansion. On
+`.github/workflows/host-docs-digest.yml` one seat refused, verbatim: *"the
+workflow grants issue-write authority to repository-controlled comparison steps
+and cannot distinguish actual drift from execution failure; the highest-leverage
+change is to emit an explicit drift result and route it from a separate
+least-privileged job."*
+
+Commit `fb179dbe1` (diff below, unabridged, against the round-5 head
+`64a8c74cc`) does that:
+
+- the watch job holds no write grant (the workflow default `contents: read`
+  applies) and exposes a job output `drifted`;
+- the `--fetch` step runs the checker with its exit code preserved and writes
+  `drifted=true` to `$GITHUB_OUTPUT` only when the checker exited non-zero AND
+  its own verdict line names a changed page (`changed since the row was
+  established`) or a dead one (`are GONE (404/410)`); those two strings are the
+  checker's only drift verdicts, an unreachable page does not fail the run
+  without `--strict-fetch`, which this job does not pass;
+- a new job `route-drift` (`needs: digest-watch`, `if: always() &&
+  needs.digest-watch.outputs.drifted == 'true' && github.event_name ==
+  'schedule'`) carries `permissions: issues: write` only, checks nothing out,
+  runs no repository code, and opens or comments on the fixed-title issue.
+
+## Question
+
+1. Does this resolve the round-5 refusal?
+2. Is the write grant now as narrow as the step needs; can any input reach the
+   shell unquoted or as an expression; does `route-drift` run on anything other
+   than a scheduled detected drift; any other defect?
+
+Return findings, then one final verdict from exactly: `ratified` ·
+`confirmed-non-expanding` · `refused` · `non-convergent`.
+
+## Diff (unabridged)
 ~~~
