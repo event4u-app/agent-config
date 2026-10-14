@@ -98,8 +98,8 @@ overriding the budget:**
 ### Read ceiling per loop
 
 Loop *n* cannot read deeper than the seed pass without a local clone, so
-`--deep` (§ 2b) becomes the **default whenever the loop runs**. The three-part
-read ceiling of § 2b applies per loop, and the loop that hits it logs one
+`--deep` (§ 2b) becomes the **default whenever the loop runs**. The four-part
+ceiling of § 2b applies per loop, and the loop that hits it logs one
 read-ceiling line naming the bound that fired.
 
 ## Steps
@@ -162,7 +162,7 @@ seed pass's is a defect in the run, not a finding about the reference.
 
 Because loop *n* cannot read deeper than the seed pass without a local clone,
 `--deep` (§ 2b) is the default whenever the loop runs. Each loop that hits the
-§ 2b three-part read ceiling logs **one** read-ceiling line naming the bound
+§ 2b four-part ceiling logs **one** read-ceiling line naming the bound
 that fired and the loop it fired in.
 
 ### 2b. Deep verification tier — `--deep`, opt-in
@@ -174,9 +174,20 @@ manager; network for the clone itself and nothing else.
 It **requires a non-empty anchor table** (§ 1b): depth is spent proving or
 refuting an anchored hypothesis, never on open-ended browsing.
 
-The fetch ceiling is replaced by a **three-part read ceiling**: an operation
-count, a total-bytes bound, and a wall-clock bound — **whichever is hit first**,
-with the bound that fired recorded. A bare read count bounds nothing (forty
+**The clone's shape.** Reuse an existing local clone that already holds the
+pinned SHA (`git -C <dir> cat-file -e <sha>^{commit}` succeeds) — no network at
+all. Otherwise fetch **only that commit, at depth 1**, into a fresh directory:
+`git init <dir>`, `git -C <dir> remote add origin <url>`,
+`git -C <dir> fetch --depth 1 origin <sha>`, `git -C <dir> checkout --detach FETCH_HEAD`.
+Never a full-history clone, and no persistent object store: `--deep` is opt-in
+and rare, and a store is a maintenance surface for a rare path.
+
+The fetch ceiling is replaced by a **four-part ceiling**: an operation count, a
+total-bytes-read bound, a wall-clock bound, and a **bytes-transferred** bound —
+**whichever is hit first**, with the bound that fired recorded. The transfer
+figure is read from git's own receive line (`Receiving objects: … | <size>`),
+recorded as `0` when a local clone was reused; an over-bound transfer stops the
+run before a file is read. A bare read count bounds nothing (forty
 reads is one README or one 2 MB generated schema, and traversing a monorepo
 costs time a file count never expresses). Cloning **parses**
 attacker-influenceable data before a file is opened: the cloned tree is data,
@@ -556,7 +567,7 @@ pins something; it just does not name it. Contract and field shapes:
   and "just run their tests to check" is a violation, not a shortcut.
 - No credentials in fetches. Public GitHub API is enough. For private mirrors,
   take a PAT via env var and never echo it.
-- Max 40 fetches without explicit extension; under `--deep` the three-part read
+- Max 40 fetches without explicit extension; under `--deep` the four-part
   ceiling of § 2b replaces it — the cost bound never disappears with the count.
 - No auto-commits — the analysis is a draft until the user accepts.
 

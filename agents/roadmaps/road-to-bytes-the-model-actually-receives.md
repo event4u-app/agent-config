@@ -132,17 +132,22 @@ Measured 2026-10-14 on this branch, darwin, Apple silicon:
 
 ## Phase 3 — The package's own recurring traffic
 
-- [ ] **3.1 The MCP entry prefers the local cache (D1).** `mcpBridgeEntry` writes
+- [x] **3.1 The MCP entry prefers the local cache (D1).** `mcpBridgeEntry` writes
       `npx --prefer-offline -y <pkg>@<version> mcp-server`; the documented shape in
       `docs/getting-started-local-stdio.md:21` matches it. With an exact version, a
       warm cache answers without a registry request; a cold cache still resolves.
       verify: `npx vitest run tests/scripts/mcp_bridge_pin.test.ts -t entry-prefers-offline --reporter=verbose` -> /✓.*entry-prefers-offline/
-- [ ] **3.2 The two commands wait with `ci_settle` (D2).** Both loops in F6 become
+      *Narrowed 2026-10-14: the flag is written only beside a pinned version.
+      With no readable version the spec stays unpinned, and `--prefer-offline`
+      there would serve a cached `latest` stale. The four snippets in
+      `docs/mcp-server.md` and the npx line of `docs/setup/mcp-client-config.md`
+      carry the same shape.*
+- [x] **3.2 The two commands wait with `ci_settle` (D2).** Both loops in F6 become
       one background `ci_settle <pr>` call through the path the git-workflow skill
       already names (`src/skills/git-workflow/SKILL.md:110`), keeping each
       command's surrounding prose on what to do with each exit code.
       verify: `grep -rl 'do sleep 45' src/domains | wc -l` -> /^\s*0$/
-- [ ] **3.3 The deep clone states its shape and its transfer (D4).** `--deep`
+- [x] **3.3 The deep clone states its shape and its transfer (D4).** `--deep`
       reuses an existing local clone that already holds the pinned SHA; otherwise
       it fetches only that commit at depth 1 into a fresh directory. The ceiling
       gains a fourth part, bytes transferred, read from git's own receive line.

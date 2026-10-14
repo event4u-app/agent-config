@@ -81,7 +81,9 @@ following the docs and running the installer land on the same server.
 Replace `<version>` with the release you installed (`npx @event4u/agent-config --version`).
 The pin is deliberate: unpinned, `npx -y @event4u/agent-config` resolves the `latest`
 dist-tag on every server start, so the server you run would be whatever the registry
-served most recently rather than the one you approved.
+served most recently rather than the one you approved. With the pin, `--prefer-offline`
+lets a warm npm cache start the server without a registry request — the cache can hold
+only that exact version — and a cold cache still resolves from the registry.
 
 
 ### Claude Desktop
@@ -94,7 +96,7 @@ or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
   "mcpServers": {
     "agent-config": {
       "command": "npx",
-      "args": ["-y", "@event4u/agent-config@<version>", "mcp-server"]
+      "args": ["--prefer-offline", "-y", "@event4u/agent-config@<version>", "mcp-server"]
     }
   }
 }
@@ -112,7 +114,7 @@ appear under the connector dropdown.
   "mcpServers": {
     "agent-config": {
       "command": "npx",
-      "args": ["-y", "@event4u/agent-config@<version>", "mcp-server"]
+      "args": ["--prefer-offline", "-y", "@event4u/agent-config@<version>", "mcp-server"]
     }
   }
 }
@@ -128,7 +130,7 @@ appear under the connector dropdown.
     "agent-config": {
       "command": {
         "path": "npx",
-        "args": ["-y", "@event4u/agent-config@<version>", "mcp-server"]
+        "args": ["--prefer-offline", "-y", "@event4u/agent-config@<version>", "mcp-server"]
       },
       "settings": {}
     }
@@ -144,7 +146,7 @@ appear under the connector dropdown.
 mcpServers:
   - name: agent-config
     command: npx
-    args: ["-y", "@event4u/agent-config@<version>", "mcp-server"]
+    args: ["--prefer-offline", "-y", "@event4u/agent-config@<version>", "mcp-server"]
 ```
 
 ## Smoke test

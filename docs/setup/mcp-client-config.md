@@ -265,7 +265,7 @@ npm install -g @event4u/agent-config   # provides the `agent-config` binary
 In every snippet below, `agent-config` is the globally-installed binary. If
 you prefer not to install globally, replace
 `"command": "agent-config", "args": ["mcp-server"]` with
-`"command": "npx", "args": ["-y", "@event4u/agent-config", "mcp-server"]`.
+`"command": "npx", "args": ["--prefer-offline", "-y", "@event4u/agent-config@<version>", "mcp-server"]` (pin the release you installed).
 
 ### Claude Desktop
 
