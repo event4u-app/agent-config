@@ -15,8 +15,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
+import type { DefectRecord } from '../../src/scripts/_lib/self_repair.js';
 import type {
-    DefectRecord,
     Probe,
     ReleaseDeps,
     ReleasePlan,
