@@ -1,0 +1,25 @@
+# Findings: drain-svg-witness-provenance
+<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 764d7d5f8866e4cc880e8e9d807c06cc9b6a9fa9330d079207907181123d8afc | diff: 000eaddd97a8cbb19b8048824bc3730393863204 | reviewer: r2-fresh-subagent-drain-svg-witness-provenance | prompt_hash: ff8cda1edc14ec9af4dfb8a89d4d168c5869850011d0fce6e6fd8bc4968fc5f7 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-svg-witness-provenance"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-14 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 000eaddd97a8cbb19b8048824bc3730393863204
+  scope_hash: 764d7d5f8866e4cc880e8e9d807c06cc9b6a9fa9330d079207907181123d8afc
+  roadmap: agents/roadmaps/road-to-svg-witness-provenance.md
+  roadmap_hash: 17a174e0eb7f1de320f881b44898116674934d4cc68f0b20dc489ba490176e29
+  ac_hash: 611214a79d1c3780f9fa27745666e4c2f63b8f1e926851bdd57a7d187e40bf67
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-14T15:54:30Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/scripts/hooks/svg_obligation.ts:347 | The record path is chosen whenever `asset_renders` is an array, i.e. whenever the recorder is live, but `observeAssetRender` records nothing when the exit reading is `null` (before_complete_hook.ts `_observe_asset_render`). On a host whose `post_tool_use` payload carries no readable exit status, every real render is unrecorded and every edited `.svg` stays open with "no successful render was observed" and no transcript fallback. The sibling detectors treat the same condition as an instrument gap (`readRunEvidence(...).instrumentGap` in turn_end_gate_hook.ts:753/902) rather than a refusal; this path has no equivalent, and the fallback reason claims the record is absent only "on a host with no live recorder". | fixed | e5a5bd5815d0297b8012cdd7a804d2dae1645bf1 — a render with no readable exit is recorded as an instrument gap and sends the gate to the transcript fallback; the fallback reason names both causes |
+| 2 | low | src/scripts/_lib/asset_render_record.ts:175 | The manifest is hashed when the render's `post_tool_use` hook runs, not when the render wrote it. A host that runs Bash calls in parallel lets a second call rewrite `manifest.json` (same `target`/`slug`, a computed `asset.digest`) between the render's exit and the hook's read, and the forged bytes become the recorded digest. The module header lists the PATH-shim and state-file trust gaps but not this one. | accepted-risk | e5a5bd5815d0297b8012cdd7a804d2dae1645bf1 states the window in the module header: it needs a concurrent write aimed at one specific render, and hashing inside the render would need the CLI to report its own digest |
+| 3 | low | tests/scripts/svg_render_record.test.ts:81 | The exit-3 (renderer-absent) path is pinned only by calling `observeAssetRender(root, RENDER, 3)` directly. No case drives the real recorder with a failure envelope (`failed(RENDER, 3)` / `PostToolUseFailure`), so the end-to-end claim from step 1.1, that a consumer without Playwright gets a recorded static witness, is not tested through `_extract_exit_reading` and `_is_failure_event`. | fixed | e5a5bd5815d0297b8012cdd7a804d2dae1645bf1 — "the real recorder records exit 3 from a failure envelope" drives run() with a PostToolUseFailure envelope |
+| 4 | low | tests/scripts/svg_render_record.test.ts:143 | The "forged routes stay open" loop passes an empty record list, so every iteration is open no matter what the forge call does: the forged command is never read on the record path. The loop pins that an empty record set discharges nothing. It does not pin the seven routes the roadmap step 1.2 verify line names. The comment admits this, but the roadmap correction still cites this test as pinning those routes. | fixed | e5a5bd5815d0297b8012cdd7a804d2dae1645bf1 — the roadmap correction now says what the record-path tests pin, and the loop is named for what it pins |
+| 5 | low | agents/roadmaps/road-to-svg-witness-provenance.md:128 | AC-1 as written ("the gate contains no command pattern list for write detection") is not met: `writesRenderDir` and the transcript fallback stay. The added note narrows the criterion to "on a host whose recorder is live" and defers it to the closing review. That is a scope change to an acceptance criterion and needs an explicit owner or council decision, not a reviewer's confirmation. | deferred | AC-1 is left unticked; whether to restate it to "on a host whose recorder is live" is a decision for the roadmap's closing review (council), not taken in this PR |
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->

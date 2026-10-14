@@ -1282,7 +1282,7 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
         // on a completion CLAIM, and a turn waiting on a subagent has not
         // finished — so its closing is not the claim F is about. Same slot,
         // opposite trigger, opposite treatment of `dispatchOpen`.
-        openSvgObligation(workspaceRoot, toolCalls),
+        openSvgObligation(workspaceRoot, toolCalls, runState?.asset_renders ?? null),
         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
     ]) {
         if (f) findings.push(f);

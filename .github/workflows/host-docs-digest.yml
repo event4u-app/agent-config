@@ -24,6 +24,16 @@ name: Host Docs Digest Watch
 #
 # So: red here means "go read a page", never "something is broken in this repo".
 #
+# A RED ROUTES TO AN ISSUE, because a red alone reached nobody. GitHub mails a
+# scheduled failure only to whoever last edited the cron line, and the job went
+# red on main on 2026-10-05 and 2026-10-12 with no row re-established; the drift
+# surfaced only because an unrelated task ran the checker locally. A scheduled
+# red now opens one issue under a fixed title, or comments on it while it stays
+# open, so a recurrence lands on the same record. Closing the issue is the
+# acknowledgement. The issue is a route, not an owner: who triages it is not
+# decided here. Only a detected drift is routed, and `issues: write` sits on a
+# separate job that checks nothing out and runs no repository code.
+#
 # Unreachable is not drift. `--strict-fetch` is deliberately NOT passed: a
 # flaky vendor host or a runner with no egress establishes nothing about the
 # page, and a watcher that cried wolf on every 503 would be muted within a
@@ -53,13 +63,17 @@ on:
 permissions:
   contents: read
 
+# Keyed by trigger, so a manual dispatch never cancels the scheduled run whose
+# drift only a schedule routes.
 concurrency:
-  group: host-docs-digest
+  group: host-docs-digest-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
   digest-watch:
     runs-on: ubuntu-latest
+    outputs:
+      drifted: ${{ steps.fetch.outputs.drifted }}
     steps:
       # No `ref: main`. Pinning the ref made the job untestable before it was
       # relied on: a scheduled run already uses the default branch, while a
@@ -96,5 +110,44 @@ jobs:
       - name: Report the watch scope (offline, no egress)
         run: ./scripts-run src/scripts/check_host_docs_digest
 
+      # `drifted` is set only when the checker's own verdict names a changed or
+      # GONE page, so a crash, a timeout or a broken runner stays an ordinary
+      # red and is never routed as "a page moved".
       - name: Re-fetch each host docs page and compare (read-only)
-        run: ./scripts-run src/scripts/check_host_docs_digest --fetch
+        id: fetch
+        shell: bash
+        run: |
+          set +e
+          ./scripts-run src/scripts/check_host_docs_digest --fetch 2>&1 | tee digest.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -ne 0 ] && grep -qE 'changed since the row was established|are GONE \(404/410\)' digest.log; then
+            echo "drifted=true" >> "$GITHUB_OUTPUT"
+          fi
+          exit "$rc"
+
+  # The issue grant lives on its own job, which checks nothing out and runs no
+  # repository code, so `npm ci` and the checker above never hold a write token.
+  # Scheduled runs only: a `workflow_dispatch` from a branch is someone already
+  # looking, and must not file against main's record.
+  route-drift:
+    needs: digest-watch
+    if: always() && needs.digest-watch.outputs.drifted == 'true' && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Host Docs Digest Watch is red: read the drifted vendor pages"
+          body="The scheduled run found drift: ${RUN_URL}
+
+          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward). A host_lowering.yaml row also needs the ratification artifact that table requires; a host_docs_pages.yaml row does not. Close this issue once the watch is green."
+          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${title}\" in:title" --json number,title --jq "map(select(.title == \"${title}\")) | .[0].number // empty")
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body"
+          fi

@@ -103,8 +103,13 @@ const SOURCE_HEADER_RE = /^\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*(\S.*)$/
 /** A quoted inbox directory. Terminated by `/`, so a bare mention of the parent is not a hit. */
 const TMP_QUOTE_RE = /agents\/tmp(?:\.old)?\/([A-Za-z0-9._-]+)\//g;
 
-/** A GitHub repository URL, scheme-optional. */
-const GITHUB_URL_RE = /(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
+/**
+ * A GitHub repository URL, scheme-optional. The lookbehind excuses only the
+ * documentation host, whose `docs.github.com/en/copilot` would otherwise read as
+ * owner `en`, repo `copilot`. Every other subdomain (`api.`, `gist.`,
+ * `codeload.`) still flags the line, as it did before.
+ */
+const GITHUB_URL_RE = /(?<!docs\.)(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
 
 export interface SlugAllowlist {
     /** GitHub owners whose repos may be named openly (own org, integrated tools). */

@@ -82,7 +82,7 @@ than left to be re-derived by the next person.
 
 ### blocker: owner-reserved-ceiling-raise
 
-- **Status:** resolved 2026-10-14 by the repository owner — `MAX_WEEKLY_QUERIES` raised from 160 to 200
+- **Status:** resolved 2026-10-14 by the repository owner — `MAX_WEEKLY_QUERIES` raised from 160 to 200. Recorded out of order: see the decision note below.
 - **Blocks:** 1.1
 - **Owner:** repository owner
 - **Resolved when:** the owner records a decision on `MAX_WEEKLY_QUERIES` —
@@ -104,10 +104,22 @@ than left to be re-derived by the next person.
   agent-usable path. The council agreed, unprompted, in both rounds.
 - **Decision (owner, 2026-10-14):** raise to **200**. Options put to the owner
   and rejected: **170** (the same question returns with the next suite that
-  lands in slot 3 or 10); **rebalancing the slots** (a design change that gives
-  up "a new suite moves no other suite"); **decoupling coverage from the paid
-  replay** (the largest of the three changes). 200 buys three further suites in
-  slot 3 and four in slot 10 before a slot reaches 20 and the question reopens.
+  lands in slot 3 or 10) and **decoupling coverage from the paid replay** (the
+  largest of the three changes; rebalancing the slots was named in the analysis
+  and not put as an option, because it gives up "a new suite moves no other
+  suite"). 200 buys three further suites in slot 3 and four in slot 10 before a
+  slot reaches 20 and the question reopens.
+- **How this record came about, stated because the order matters.** The raise
+  was committed and merged first, by an agent, under a sentence attributing the
+  choice to the owner before the owner had been asked. The owner was asked
+  afterwards, on 2026-10-14, with 200 / 170 / decoupling as the options and the
+  fact that 200 was already live stated as a defect in the procedure rather
+  than an argument for the value. The owner chose 200, so the value stands and
+  this record is corrected rather than reverted. A revert was prepared and
+  dropped only because the squash merge landed first and reverting would have
+  reddened the trunk against the security corpus the same merge carried. The
+  attribution was false when written; it is true now, and nothing here should
+  read as if the two happened in that order.
 
 ## Phase 1 — Let the two ratchets coexist
 
