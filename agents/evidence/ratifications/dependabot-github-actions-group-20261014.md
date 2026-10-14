@@ -1,8 +1,9 @@
 ---
 proposed_by: dependabot[bot]/github-actions-group-across-1-directory-2026-10-13
 implemented_by: claude-opus-5/worktree-agent-pr2318-2026-10-14
-reviewed_by: council/anthropic+openai-2026-10-14-dependabot-action-pins
+reviewed_by: council/anthropic+openai-2026-10-14-dependabot-action-pins-round2
 providers: [anthropic, openai]
+subject: 373d80debf54e017e9efae3cfdc5ad5c509d892a6ab466e1d3a0b2356cbae949
 verdict: confirmed-non-expanding
 seats:
   anthropic: confirmed-non-expanding
@@ -23,90 +24,67 @@ workflow files under `.github/workflows/`. Every changed line is a `uses:` pin.
 
 Two action pins move, everywhere they appear:
 
-- `actions/setup-node` — `8207627…` (v7.0.0) → `949feb2…` (v7.1.0)
-- `actions/upload-artifact` — `043fb46…` (v7.0.1) → `cf430e0…` (v7.0.2)
+- `actions/setup-node` v7.0.0 → v7.1.0
+  (`820762786026740c76f36085b0efc47a31fe5020` → `949feb2413d6458794dcd2491c4babbbce0c15c1`)
+- `actions/upload-artifact` v7.0.1 → v7.0.2
+  (`043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` → `cf430e030ddbb5b0abf93d22962f4752f3646cd9`)
 
-One of the 32 files is a gated surface: `.github/workflows/consistency.yml` is
-`WORKFLOW_PATH` in `src/scripts/check_kernel_edit_ratified.ts` — the workflow
-that invokes the ratification gate. Three hunks land there: the `Set up Node`
-step of the consistency job, and two `upload-artifact` steps (the
-attribution-shape report, and the `if: failure()` consistency artifacts). The
-gate classifies by path, so it fires on the file and cannot see that the edit is
-a pin bump; that judgement is what this record carries.
+The review was required because one of those 32 files is
+`.github/workflows/consistency.yml`, which `check_kernel_edit_ratified` treats
+as part of the ratification mechanism itself (`WORKFLOW_PATH`). Inside that
+file three lines change — one `setup-node` pin and two `upload-artifact` pins.
+No step, `if:` condition, `permissions:` block, `env:`, job, trigger or `run:`
+body changes, and no gate invocation is added, removed or reordered.
 
-Nothing else in the diff is gated. The gate's own ledger reads
-`planned 32 · out_of_scope 32` for the non-artifact paths.
+## Why this record replaces an earlier one
 
-## Verdict: `confirmed-non-expanding`
+A first round on this same bump returned `confirmed-non-expanding` from both
+seats, but carried no `subject:` digest. Between that round and this one, `main`
+merged PR #2325, which rebuilt the ratification mechanism underneath the branch
+— `check_kernel_edit_ratified.ts` +206 lines, `ratification_artifact.ts` +65,
+`consistency.yml` reformatted across 62 lines. Binding the old record to the new
+digest would have named content its reviewers never saw, which is the exact
+laundering the digest exists to prevent. The review was therefore run again on
+the current state rather than rebound. Both seats were told the earlier verdict
+and asked to reach their own; both called the re-run correct.
 
-No job name, step order, `if:` condition, `permissions:` block, trigger,
-`paths:` filter, secret, token scope, concurrency group, required-check context,
-ruleset or script invocation changes anywhere in the diff. The gate's function —
-what it checks, when it runs, whether it can fail — is unchanged; only the
-runtime environment its step executes in received a routine bump. `setup-node`
-prepares the environment that runs the gate rather than deciding it, and both
-`upload-artifact` steps run after the gate's verdict is already fixed.
+## How the split was resolved
 
-Both new digests were resolved against the upstream repositories before the
-review, and the command is recorded here so the next reader can repeat it rather
-than trust this file:
+Round 2 of the re-run was not a repetition. Round 1 split — one seat
+`confirmed-non-expanding`, one seat `non-convergent` — and the dissenting seat
+named one gap precisely: the SHAs were asserted, not verified, so nothing
+established that the pinned commits are the tags claimed or that the upstream
+delta is inert. The gap was closed against GitHub's API before round 2, and the
+evidence was put to both seats:
 
-```
-gh api repos/actions/setup-node/git/ref/tags/v7.1.0
-→ 949feb2413d6458794dcd2491c4babbbce0c15c1   (type: commit)
-gh api repos/actions/upload-artifact/git/ref/tags/v7.0.2
-→ cf430e030ddbb5b0abf93d22962f4752f3646cd9   (type: commit)
-```
+- `repos/actions/setup-node/git/ref/tags/v7.1.0` resolves to
+  `949feb2413d6458794dcd2491c4babbbce0c15c1`, a commit — the SHA in the diff.
+- `repos/actions/upload-artifact/git/ref/tags/v7.0.2` resolves to
+  `cf430e030ddbb5b0abf93d22962f4752f3646cd9`, a commit — the SHA in the diff.
+- `setup-node` v7.0.0→v7.1.0 is 22 commits over 31 files. The only change to the
+  action's declared interface is one input *description* string, adding
+  `mise.toml` to the examples for `node-version-file`. No input added or
+  removed, no default changed, `runs:` untouched.
+- `upload-artifact` v7.0.1→v7.0.2 is 4 commits over 7 files — three licence
+  manifests, `package.json`, `package-lock.json` and the two rebuilt `dist/`
+  bundles. `action.yml` is not in the changed set.
 
-## How the review ran, stated as it happened
+On that evidence both seats returned `confirmed-non-expanding`.
 
-Two rounds through the CLI seats, `--invocation agent`, $0.0000 metered (both
-seats subscription-authed; quota moved 4/50 → 6/50 on each).
+## What this record does NOT claim
 
-1. **Round 1** — `anthropic` answered `confirmed-non-expanding`. The `openai`
-   seat failed with `os_error: ENOBUFS`, a local spawn-buffer overflow rather
-   than a provider outage, and the run closed `1/2 present — DEGRADED`. The
-   failure was recorded in the gitignored probe file as `outcome: other`, which
-   would have skipped the seat on every later run.
-2. **Round 2** — the stale `openai` probe entry was cleared and the same
-   question re-asked with `--rounds 1`. Both seats answered;
-   `2/2 present, needed 1 — concluded`. Both returned
-   `confirmed-non-expanding`, independently and on different grounds.
+Behavioural equivalence of the rebuilt `dist/` bundles was not established, and
+was not claimed to either seat. Reading minified build output is not something
+any reviewer of an action bump here does, and the seats were asked to say
+plainly whether their verdict required it. Neither said it did; the dissenting
+seat of round 1 stated the conditions that would flip it instead — evidence that
+the new bundles alter the workspace or the gate's inputs, mask a gate failure,
+change uploaded evidence consumed as authoritative, obtain different credentials
+or permissions, or execute the new `mise.toml` path in this workflow. None of
+those is present in the diff, and none is asserted to be absent from the
+bundles by inspection.
 
-The seats did not merely concur. The `openai` seat volunteered the strongest
-counter-argument on the record and then resolved it rather than waving it
-through: *"a pinned-action update changes executable code running with the job's
-existing token and filesystem access, therefore 'only `uses:` lines changed' is
-not by itself sufficient evidence"*. What resolved it was the digest match
-against the immutable upstream releases plus the narrow scope of their published
-changes — `setup-node` v7.1.0 adds version-file support and validation/retry
-behaviour, `upload-artifact` v7.0.2 improves HTTP 429 retry handling. It named
-the one operational consequence it found and classified it rather than
-suppressing it: artifact-upload retries make diagnostic artifacts more reliably
-available, which changes retention reliability and not gate authority.
-
-Both seats named what would have moved them to `refused`, and the two lists
-agree: a digest that does not resolve to the stated upstream tag, a mutable tag
-or a fork, any new or widened `permissions`, credentials, cache scope, artifact
-paths or action inputs, a `continue-on-error` / conditional / ordering change,
-or the ratification step moved behind a non-firing trigger. None is present.
-
-## What this record does not establish
-
-The reviewers read the pins and the upstream release notes; neither diffed the
-upstream action source between the two versions. That is outside what a
-`confirmed-non-expanding` classification claims, and the `anthropic` seat said
-so in its own words. The claim here is that the diff moves no authority boundary
-in **this** repository — not that the upstream releases were audited line by
-line.
-
-## Residue — not this artifact's to close
-
-The `drift-check` job on this pull request is red for a reason that predates the
-branch and is untouched by it: the live GitHub repository "About" description
-still reads *"zero runtime daemon"* while `.github/about.yml` has read *"the
-counts in these badges"* since #1744 merged. `sync_github_metadata --strict`
-reports the delta on every run, and the same job has failed on every weekly
-scheduled run on `main` since at least 2026-09-14. Closing it is a repository
-settings write (the manually dispatched `sync-visibility.yml`), not a change to
-any branch, and it is an owner action.
+The verdict is `confirmed-non-expanding`, not `ratified`, and the distinction is
+the point: no authority moved. The vocabulary exists so that a mechanical
+dependency refresh is not made to wear the label of an approved authority
+expansion.
