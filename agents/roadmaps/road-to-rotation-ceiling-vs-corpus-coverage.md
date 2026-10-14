@@ -41,17 +41,27 @@ on a weekly cron (`.github/workflows/cross-model-canary.yml`,
 of twelve week-slots by an FNV-1a hash of its name at `QUERIES_PER_SUITE = 10`,
 and caps the busiest week at `MAX_WEEKLY_QUERIES = 160`.
 
-Measured on the tree 2026-10-13:
+Measured on the tree 2026-10-13 and RE-MEASURED 2026-10-14 after merging
+`origin/main`, which had meanwhile grown thirteen further corpora. The second
+reading is the live one; the first is kept beside it because the two agree on
+everything that matters and disagree on nothing the conflict rests on:
 
 | Tree | Suites | Busiest slot | Peak week |
 |---|---|---|---|
-| `main` | 127 | 16 suites | **160** — exactly at the ceiling |
-| `main` + one corpus hashing to slot 3 | 128 | 17 suites | **170** — over by 10 |
+| `main` @ 2026-10-13 | 127 | 16 suites | **160** — exactly at the ceiling |
+| `main` @ 2026-10-13 + `security` | 128 | 17 suites | **170** — over by 10 |
+| `main` @ 2026-10-14 | 140 | 16 suites | **160** — still exactly at the ceiling |
+| `main` @ 2026-10-14 + `security` | 141 | 17 suites | **170** — over by 10 |
 
-So `main` sits on the line, and the next corpus that lands in the busiest slot
-breaches it, whoever writes that PR. Each added suite costs
-`QUERIES_PER_SUITE` per ninety-day cycle whatever the schedule, so the collision
-is guaranteed rather than contingent.
+**Thirteen corpora landed on the trunk in a day and the peak did not move**,
+which is the sharpest statement of the problem available: the peak is set by the
+BUSIEST SLOT, not by the count, so growth is free until it is not. Slot 3 held
+16 of main's 140 and holds 16 of main's 140 again; `security` hashes to slot 3
+(FNV-1a, `0x…% 12 = 3`) and is the seventeenth. So `main` sits on the line, and
+the next corpus that lands in slot 3 or slot 10 — the two slots at 16 — breaches
+it, whoever writes that PR. Each added suite costs `QUERIES_PER_SUITE` per
+ninety-day cycle whatever the schedule, so the collision is guaranteed rather
+than contingent; what is contingent is only WHICH author meets it.
 
 Three repairs that look available are not:
 
@@ -79,6 +89,12 @@ than left to be re-derived by the next person.
   either a new value with a reason, or a direction to decouple instead of
   raising. Until then 1.1 cannot be written, because the value it would write
   is the thing being decided.
+- **What it costs while it stays open:** `Node Tests` shard 1/4 is RED on the
+  branch that carries the `security` corpus, on this one assertion and nothing
+  else — `tests/scripts/trigger_eval_rotation.test.ts` reads 170 against the
+  stated 160. That red is the tripwire doing its job, so it is not repaired by
+  an agent editing the number it exists to defend; it clears when 1.1 does.
+
 - **Why it is reserved:** the ceiling is a spend bound. `decision-revisit-gate`
   reserves "spend or liability above a delegated threshold" to the owner, and
   160 *is* the delegated threshold, so going above it is the reserved case by
