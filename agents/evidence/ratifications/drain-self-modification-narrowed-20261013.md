@@ -2,11 +2,11 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: 1aff2b49bc8802cd42273bfa07b0a035d89652ef86d8d97ca13078241492e972
+subject: 3317942a1a32508b0fb50aaa422f2c237e9c7c9a695ac9fb493a2ca92f35802f
 providers: [anthropic, openai]
 verdict: refused
 seats:
-  anthropic: ratified
+  anthropic: refused
   openai: refused
 effective_after: merge
 ---
@@ -21,17 +21,19 @@ recomputes that digest from the tree it is pointed at and refuses a record whose
 `subject` is absent, malformed or different. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass`.
 
-**Three rounds. Round 3 split — anthropic `ratified`, openai `refused` — and a
-refusing seat gives `refused` by the ordering both the shipped reader and step
-3.3 already had. This record does not let the change land, and it is the THIRD
-refusal of this narrowed change, which under the instruction this lane runs on
-makes the disposition the owner's, by `ratification-artifact.md` § The
-owner-permission-route.**
+**Four rounds, four refusals. Round 4 (2026-10-14, after the owner directed
+that round 3's three findings be fixed and the change reviewed again) refused
+2/2 on one new finding: a gated path that is neither absent, a symlink nor a
+regular file — a FIFO, socket, device or directory — is opened as a regular
+file, and a FIFO opened read-only can block the gate indefinitely. This record
+does not let the change land.**
 
 **The header is bound to the tree as it stands now, not as rounds 1 and 2 read
 it, and that is the binding working rather than a record being rewritten.**
 `subject` moved from `6ce10afe…` to `1aff2b49…` when round 2's finding was
-fixed in a gated file, and `seats:` carries round 3's conclusions. Rounds 1 and
+fixed in a gated file, and to `3317942a…` when a merge of `origin/main` brought
+a comment-only edit to `check_kernel_edit_ratified.ts`; `seats:` carries round
+4's conclusions. Rounds 1 and
 2 are kept verbatim below, headers and all; what the frontmatter asserts is
 what the CURRENT content was last reviewed as, which is the whole point of the
 field.
@@ -691,3 +693,78 @@ it was after round 2, and is stated so it does not have to be reconstructed:
 - So the owner's question is not *is the binding right* but *does this land now
   with three edge defects tracked, or does it wait for a fourth round that the
   agent is not permitted to call for itself.*
+
+
+---
+
+# Round 4 — 2026-10-14, round 3's three findings fixed, and refused 2/2 on a new one
+
+The owner's decision of 2026-10-14 was to fix round 3's three findings and run
+a fourth round, merging only if both seats ratify. The fixes:
+
+- **`asErrno()` admitted Node programming errors.** It now requires a string
+  `code` outside `ERR_`, a numeric `errno` and a string `syscall`; one helper,
+  `refuseOrRethrow`, applies it at the `lstat`, open, read, close and readlink.
+  The `lstat` catch had the same construct and was moved onto the same
+  discriminator. Red-proof: reverting the discriminator reds the three new
+  cases (3 of 27); reverting the `lstat` catch reds its mocked case.
+- **`closeSync()` outside the translation.** No `finally`: a close failure
+  after a successful read is a refusal; after a failed read it is discarded and
+  the read failure propagates. Red-proof: restoring the `finally` shape reds
+  both close cases (2 of 5, `ratification_subject_fs_faults.test.ts`).
+- **The CLI refusal path untested.** `ratification_subject_cli.test.ts` invokes
+  `main()`: exit 0 with a digest on a readable tree; exit 1, empty stdout, the
+  error on stderr for an unreadable file and for an escaping path; a mocked
+  `TypeError` propagates unchanged. Red-proof: removing the catch reds 2 of 4;
+  making it blanket reds the propagation case.
+
+Prompt committed verbatim beside this file as
+`drain-self-modification-narrowed-20261013-r4.question.md`. It was narrowed to
+the council's 50 KB bundle ceiling, and says what it omits:
+`_lib/ratification_artifact.ts`, the contract, and rounds 1–3's test changes.
+Both seats said the omission bounds their whole-PR conclusions.
+
+## Seat: anthropic — `refused`
+
+The response closes `REQUEST_CHANGES` and says "Cannot ratify when a blocking
+availability defect exists"; it carries no literal `Stance:` line, and
+`REQUEST_CHANGES` with an explicit refusal to ratify is recorded as `refused`.
+
+> "the three round-3 findings are correctly fixed, but treating every
+> non-symlink as a regular file leaves a FIFO able to hang the process
+> indefinitely; fix by requiring `stat.isFile()` before opening and add a
+> regression test for unsupported filesystem object kinds."
+
+Further points, not stated as blocking: the `O_NOFOLLOW` fallback should be an
+explicit refusal rather than a documented degradation; the digest describes
+the working tree, not the revision; `--quiet` prints a well-formed digest over
+an empty gated set with no warning; the `selfSetCache` TDZ fix has no case that
+shows the TDZ firing; the review-history docblocks are "the highest-leverage
+reduction".
+
+## Seat: openai — `refused`
+
+> "**Stance: refused — add a typed, tested refusal for unsupported filesystem
+> object kinds.**"
+
+> "the round-3 defects are fixed, but treating every non-symlink object as a
+> regular file can hang the governance gate; the highest-leverage pre-merge
+> change is to reject non-regular filesystem objects before opening them."
+
+It qualifies the severity — Git cannot store a FIFO, and an adversary who can
+write the checkout can also edit the gate, so it is "primarily a robustness and
+availability defect" — and holds it merge-blocking because the fix is small.
+New, not stated as blocking: `assertContained()` is POSIX-shaped, so
+backslash-separated `..` and UNC / rooted Windows paths are not refused; either
+reject both separator forms or restrict the CLI to POSIX. It also asks for the
+round-by-round history to move out of production docblocks.
+
+## What was NOT done, and why
+
+The new finding was not fixed in this lane. The owner authorised fixing round
+3's three findings and one further round; a fifth round is not the lane's to
+call, and re-running round 4 with a different prompt would be verdict
+shopping. The finding is carried into the roadmap as step 2.5, with the seats'
+words. `check_kernel_edit_ratified` stays red on this diff, so the branch
+cannot be pushed through the pre-push preflight or merged; the disposition is
+the owner's.

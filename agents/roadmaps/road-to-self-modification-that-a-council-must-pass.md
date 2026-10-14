@@ -188,14 +188,15 @@ So the branch was narrowed to the content binding alone — the `subject` digest
 over the gated content, and the gate refusing a record whose `subject` does not
 match — which is the piece both seats named as the smallest high-value change.
 
-**The narrowed change then went to three rounds of its own and was refused in
-all three** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+**The narrowed change then went to four rounds of its own and was refused in
+all four** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
 round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
 anthropic `ratified` with no pre-merge change named, openai `refused` on three
-defects in the refusal plumbing added to satisfy round 2. A refusing seat gives
-`refused`, so the disposition is now the owner's. **No seat, in any of the six
-rounds across both shapes, disputed the design or the scope**; what is open is
-step 2.4's three edges, not the binding.
+defects in the refusal plumbing added to satisfy round 2. On the owner's
+decision those three were fixed (step 2.4) and round 4 refused 2/2 on a new
+one: non-regular files read as regular (step 2.5). The disposition is the
+owner's. **No seat, in any of the seven rounds across both shapes, disputed the
+design or the scope**; what is open is step 2.5, not the binding.
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -511,7 +512,7 @@ gaps again; the binding closes replay, and nothing else.
       another marker reds 1 of 24 · making `gatedFilesOf` ignore `derived`
       reds 1 of 24. 33 tests across the two suites.
 
-- [ ] **2.4 The refusal plumbing's own edges are covered.** Three findings
+- [x] **2.4 The refusal plumbing's own edges are covered.** Three findings
       opened by round 3 of the modification review on 2026-10-13, all in the
       error-handling added to satisfy round 2 and none in the binding itself.
       `asErrno` admits any `Error` with a string `code`, which includes Node's
@@ -551,6 +552,38 @@ gaps again; the binding closes replay, and nothing else.
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
       The split is recorded as a split: anthropic answered `ratified` and named
       no pre-merge change at all; openai answered `refused` on the three above.
+
+      **Closed 2026-10-14, on the owner's decision to fix the three and run a
+      fourth round.** `asErrno` requires a string `code` outside `ERR_`, a
+      numeric `errno` and a string `syscall`, and one helper applies it at the
+      `lstat`, open, read, close and readlink — the `lstat` catch had the same
+      construct and moved with it. `readGatedFile` has no `finally`: the read
+      failure wins, and a close failure after a successful read is a refusal.
+      `ratification_subject_cli.test.ts` invokes `main()` for exit 0, both
+      refusal classes (exit 1, stderr, no digest) and an unrelated `TypeError`
+      propagating. Each case seen red by neutralising its mechanism: 3 of 27,
+      2 of 5, 1 of 5, 2 of 4, 1 of 4. Round 4 confirmed the three fixed and
+      refused 2/2 on a new finding — step 2.5.
+
+- [ ] **2.5 Only the three object kinds the digest describes are read.** After
+      the `lstat`, a gated path is absent, a symbolic link, or a regular file;
+      anything else — FIFO, socket, device, directory — is a typed refusal
+      raised BEFORE any `open`, handled by `evaluate()` and the CLI like the
+      other two classes, with a case proving a non-regular `Stats` is refused
+      without `openSync` being called. Opened by round 4 of the modification
+      review on 2026-10-14, refused 2/2 on it. In openai's words: *"treating
+      every non-symlink object as a regular file can hang the governance gate;
+      the highest-leverage pre-merge change is to reject non-regular filesystem
+      objects before opening them."* Raised in the same round and not stated as
+      blocking, for the same step or its successor: `assertContained()` does
+      not refuse backslash-separated `..` or UNC / rooted Windows paths (openai);
+      the `O_NOFOLLOW` fallback degrades instead of refusing, and `--quiet`
+      prints a digest over an empty gated set with no warning (anthropic); both
+      seats ask for the round history to leave the production docblocks.
+      **Not done in the lane that ran round 4**: the owner authorised the three
+      round-3 fixes and one round, and a fifth round is the owner's call.
+      verify: `npx vitest run tests/scripts/ratification_subject_fs_faults.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
 
