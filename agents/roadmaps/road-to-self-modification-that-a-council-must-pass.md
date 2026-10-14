@@ -188,8 +188,8 @@ So the branch was narrowed to the content binding alone — the `subject` digest
 over the gated content, and the gate refusing a record whose `subject` does not
 match — which is the piece both seats named as the smallest high-value change.
 
-**The narrowed change then went to seven rounds of its own and was refused in
-all seven** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+**The narrowed change then went to eight rounds of its own and was refused in
+all eight** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
 round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
 anthropic `ratified` with no pre-merge change named, openai `refused` on three
 defects in the refusal plumbing added to satisfy round 2. On the owner's
@@ -202,8 +202,12 @@ refused 2/2 on a new one: a mutable revision is resolved more than once in one
 gate run (step 2.7). That was fixed on the owner's route and round 7 was
 answered by one seat — anthropic refused on the CI path's changed-file list
 missing the old side of a rename, openai gave no verdict (a local `ENOBUFS`)
-(step 2.8), which was established and fixed on the same route. **No seat, in
-any of the ten rounds across both shapes, disputed the design or the scope.**
+(step 2.8), which was established and fixed on the same route; round 8 refused
+2/2 on that fix's evidence — the CI-path test runs the head gate, so the
+`GIT_CONFIG_*` override the base copy relies on is untested (step 2.9). The
+disposition is the owner's. **No seat, in any of the eleven rounds across both
+shapes, disputed the design or the scope**; what is open is step 2.9, not the
+binding.
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -725,6 +729,26 @@ gaps again; the binding closes replay, and nothing else.
       `--no-renames` neutralised in place, then restored. Not changed: the
       kernel-rule bundle step still reads the `gh pr view` list.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_ci_path.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+- [ ] **2.9 The base-copy rename override is tested, not checked by hand.**
+      The CI step's `diff.renames=false` (`GIT_CONFIG_*`) is what makes the
+      base revision's gate — for this PR `origin/main`'s copy, whose diff runs
+      with rename detection — list a gated file renamed away; it was verified
+      by hand only, and the step-2.8 test runs the head gate, which carries
+      `--no-renames` itself. Opened by round 8 on 2026-10-14, refused 2/2 on
+      it. In openai's words: *"before merge, add a stable regression that runs
+      legacy diff behavior with workflow-derived `GIT_CONFIG_*` values and
+      proves red without the override and green with it."* anthropic: *"The
+      test would remain **green** if: Environment variables were misspelled;
+      Git ignored them; Base gate didn't inherit them. [...] Add an automated
+      test verifying the environment-variable mechanism."* Also raised, not
+      stated as blocking: replace the round-specific workflow comment with a
+      contract reference (both); split the council CLI `maxBuffer` change out
+      (openai; anthropic: not a blocker); the kernel-rule bundle step still
+      reads the rename-blind `gh pr view` list (openai: pre-existing, a
+      follow-up risk). **Deferred, with the reason**: the owner authorised one
+      round, merging only on 2/2; the next round is the owner's call.
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
