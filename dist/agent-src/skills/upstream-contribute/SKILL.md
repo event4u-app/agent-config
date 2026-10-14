@@ -9,7 +9,7 @@ scope:
 execution:
   type: assisted
   handler: internal
-  allowed_tools: ["Bash(gh:*)"]
+  allowed_tools: []
 workspaces:
   - agent-config-maintainer
 packs:
@@ -46,14 +46,24 @@ are to the single outward step, which owns everything that leaves the machine.
 THIS SKILL NEVER PUSHES, NEVER OPENS A PULL REQUEST, AND NEVER WRITES
 A SECOND, HAND-CONDENSED COPY OF AN ARTIFACT.
 EVERY BYTE THAT LEAVES — BRANCH NAME, COMMIT IDENTITY, COMMIT MESSAGE,
-DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`, WHICH SCANS IT.
+DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`.
+TODAY THAT ROUTE SCANS THE RECORD TEXT ONLY. BRANCH NAME, COMMIT IDENTITY,
+COMMIT MESSAGE AND DIFF ARE UNSCANNED, AND SAYING SO IS THE POINT: AN
+UNSCANNED BYTE A READER BELIEVES WAS SCANNED IS THE WORSE STATE.
 A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 ```
 
-`self-repair:release` carries the privacy floor, the may-not-modify deny list,
-the route ladder (pull request, then issue, then a local record) and the
-per-turn Hard-Floor confirmation. A checkbox in a skill carries none of them,
-which is why this skill asks a *worth it* question and nothing else.
+`self-repair:release` carries the privacy floor over the record text, the
+may-not-modify deny list, the route ladder (pull request, then issue, then a
+local record) and the per-turn Hard-Floor confirmation. A checkbox in a skill
+carries none of them, which is why this skill asks a *worth it* question and
+nothing else.
+
+Widening that floor to the whole payload is Phase 2 of
+`road-to-one-upstream-that-checks-what-leaves` and is not built. The release
+pushes a branch the author already committed, so read that branch before the
+send: a company e-mail in a commit identity has nothing else standing in front
+of it.
 
 ## Core principles
 
@@ -62,7 +72,7 @@ which is why this skill asks a *worth it* question and nothing else.
 - **Generalize when possible** — project-specific content CAN become universal with adaptation
 - **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
 - **One source** — an artifact is authored in `src/` only; projections are regenerated, never hand-written
-- **The floor is over the bytes** — a privacy judgement a human ticks is not a privacy check
+- **The floor is a check, not a tick** — a privacy judgement a human ticks is not a privacy check, and today the check reaches the record text only
 - **Local benefit immediately** — use override for instant project benefit while the contribution is pending
 
 ## A repeated override is a signal, and a signal is not evidence
@@ -133,7 +143,7 @@ Before ANY upstream work, ask the user:
 - **NEVER skip this step**, even if the user previously agreed to other contributions.
 
 Consent here authorizes the *preparation*. The send is a separate, per-turn
-word in step 5 and this gate never substitutes for it.
+word in step 6 and this gate never substitutes for it.
 
 ### 1. Determine contribution type
 
@@ -218,11 +228,16 @@ the route, title and body with the user and say the rest is unshown.
 A refusal from the privacy floor is **final**: the finding stays local. There
 is no scrubbing pass, because a rewritten identifier is still a leaked one.
 
-### 5. Send — one command, one turn, one word
+### 5. Quality gates (only inside a checkout of this package)
 
-In a checkout of this package, step 6's quality gates run **before** this
-command. They are numbered last because they apply to only one of the two
-cases; the order is 6, then 5.
+Run the package's full CI pipeline and confirm it is green. This is numbered
+before the send because it runs before the send.
+[`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
+and names it; a consumer has no such runner, which is why the command is not
+repeated. Outside a checkout there is nothing to run first and the package CI
+runs after the issue or pull request exists.
+
+### 6. Send — one command, one turn, one word
 
 ```bash
 ./agent-config self-repair:release <fingerprint>
@@ -235,14 +250,6 @@ earlier consent substitutes for it.
 The ladder picks the vehicle: a pull request from a checkout of this package,
 an issue otherwise, a local record when nothing may leave. Degrading changes
 the vehicle, never what leaves.
-
-### 6. Quality gates (only inside a checkout of this package)
-
-Run the package's full CI pipeline and confirm it is green — before step 5,
-per the note there. [`package-ci-checks`](../../rules/package-ci-checks.md)
-owns the entry point and names it; a consumer has no such runner, which is
-why the command is not repeated. Outside a checkout the package CI runs after
-the issue or pull request exists.
 
 ### 7. After merge — clean up override
 
@@ -288,3 +295,5 @@ replaces the local override.
 - Do NOT stage with a bare `git add .` — name the paths
 - Do NOT rewrite what the privacy floor refused; a refused finding stays local
 - Do NOT assume consent from a previous contribution — ask every time
+- Do NOT bypass quality gates — they exist for a reason, and in a checkout of
+  this package they run BEFORE the send

@@ -21,7 +21,11 @@ packs:
 This command is a **front on one outward step**, not a second way out. It
 decides *what* is worth contributing and hands the finding to
 `self-repair:release`, which owns the branch, the commit identity, the privacy
-floor over every byte that leaves, and the pull-request or issue route.
+floor over the record text, and the pull-request or issue route. The floor does
+not yet reach the branch name, the commit identity, the commit message or the
+diff — Phase 2 of `road-to-one-upstream-that-checks-what-leaves` owes that, and
+until it lands the author is what stands between those bytes and a public
+forge.
 
 ```
 ONE WAY OUT. THIS COMMAND NEVER PUSHES, NEVER OPENS A PULL REQUEST,
@@ -67,7 +71,8 @@ Ask the user to confirm what should be contributed:
 ### 2. Check universality
 
 This is a **worth-contributing** judgement, not a privacy check — the privacy
-floor over the bytes runs in step 4 and cannot be satisfied by a checkbox here.
+floor over the record text runs in step 4 and cannot be satisfied by a checkbox
+here.
 
 - [ ] Benefits every consumer, not only this project
 - [ ] The learning occurred twice or more, or is clearly generalizable
@@ -118,12 +123,16 @@ rather than papered over, and it is the consumer-project case
 ./agent-config self-repair:status
 ```
 
-### 5. Send, once, with the user's word in that turn
+### 5. Quality gates (only in a checkout of this package)
 
-In a checkout of this package, step 6's quality gates run **before** this
-command, not after it. They are numbered last because they apply to one of
-the two cases and the send applies to both; the ordering is step 6, then
-step 5.
+Run the package's full CI pipeline and confirm it is green. This is numbered
+before the send because it runs before the send. The `package-ci-checks` rule
+owns the entry point and names it; a consumer project has no such runner,
+which is why the command is not repeated here. Outside such a checkout there
+is nothing to run first, and the package CI runs these after the issue or
+pull request exists.
+
+### 6. Send, once, with the user's word in that turn
 
 ```bash
 ./agent-config self-repair:release <fingerprint>
@@ -136,14 +145,6 @@ earlier approval substitutes for it.
 The ladder chooses the vehicle: a pull request from a checkout of this
 package, an issue otherwise, and a local record when nothing may leave.
 Degrading never widens what leaves the machine, only the vehicle.
-
-### 6. Quality gates (only in a checkout of this package)
-
-Run the package's full CI pipeline and confirm it is green — before step 5,
-per the note there. The `package-ci-checks` rule owns the entry point and
-names it; a consumer project has no such runner, which is why the command is
-not repeated here. Outside such a checkout there is nothing to run first, and
-the package CI runs these after the issue or pull request exists.
 
 ### 7. Remind about local override cleanup
 
@@ -159,7 +160,7 @@ the package CI runs these after the issue or pull request exists.
 ## Do NOT
 
 - Do NOT push, open a pull request, or open an issue by hand — that is the
-  ladder's job and the floor over the bytes runs there.
+  ladder's job, and the floor it does carry runs there.
 - Do NOT write a hand-condensed second copy of an artifact.
 - Do NOT edit any generated projection; `src/` is the source of truth.
 - Do NOT stage with a bare `git add .` — name the paths.

@@ -56,6 +56,8 @@ Call `build_preview` from
 corpus and the exported seed path:
 
 ```ts
+import * as path from 'node:path';
+
 import {
     build_preview,
     PACKAGE_SEED_PATH,
@@ -63,22 +65,27 @@ import {
 
 // Both paths are RELATIVE and must be resolved explicitly — the corpus
 // against the project root, the seed against the PACKAGE root. Passed bare
-// they resolve against cwd, where a consumer project that happens to carry
-// `data/low-impact-decisions-seed.md` would be read as the package seed and
-// silently mark its own entries `already_seeded`.
-const plan = build_preview(path.join(projectRoot, 'agents/decisions/low-impact-decisions.md'), path.join(packageRoot, PACKAGE_SEED_PATH), {
-    repoSlug: '<owner>/<repo>',   // from `git remote get-url origin`
-    repoRoot: '<absolute repo root>',
-    privateDomains: [],           // from .agent-settings.yml policy
-    customerNames: [],            // from .agent-settings.yml policy
-    sqlIdentifiers: [],           // from .agent-settings.yml policy
-});
+// they resolve against cwd, where a consumer project carrying a file at the
+// seed's own path would be read as the package seed and silently mark its
+// entries `already_seeded`.
+const plan = build_preview(
+    path.join(projectRoot, 'agents/decisions/low-impact-decisions.md'),
+    path.join(packageRoot, PACKAGE_SEED_PATH),
+    {
+        repoSlug: '<owner>/<repo>', // from `git remote get-url origin`
+        repoRoot: '<absolute repo root>',
+        privateDomains: [], // from .agent-settings.yml policy
+        customerNames: [], // from .agent-settings.yml policy
+        sqlIdentifiers: [], // from .agent-settings.yml policy
+    },
+);
 ```
 
-`PACKAGE_SEED_PATH` is the one place that literal lives, so no caller
-restates it. The file it names is not in the tree, and that is not an error:
-the builder returns an empty already-seeded set, which is the current state
-of this package.
+`PACKAGE_SEED_PATH` is the one place a CALLER reads that literal from, so no
+caller restates it; the privacy floor names the same path to lock it, which is
+a lock rather than a second source. The file it names is not in the tree, and
+that is not an error: the builder returns an empty already-seeded set, which
+is the current state of this package.
 
 The builder runs all three contract checks in one pass:
 

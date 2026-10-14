@@ -29,17 +29,22 @@ import { executeRelease } from '../../src/scripts/self_repair_cli.js';
 
 const OK: RunResult = { ok: true, out: '', timedOut: false };
 
+// Typed, not cast. An `as unknown as DefectRecord` would switch off exactly
+// the check that tells this fixture when the record shape moves under it —
+// a fixture that compiles against a type it does not satisfy is a fixture
+// that stops reporting drift.
 function record(): DefectRecord {
     return {
         fingerprint: 'abc123def4567890',
-        defect_class: 'other',
+        defect_class: 'user-reported',
+        source: 'user-reported',
         evidence: 'a sanitized span',
         suggested_surface: 'src/rules/example.md',
         first_seen: '2026-10-14T00:00:00.000Z',
         last_seen: '2026-10-14T00:00:00.000Z',
         occurrences: 1,
         status: 'open',
-    } as unknown as DefectRecord;
+    };
 }
 
 function plan(pushVia: 'upstream' | 'fork'): ReleasePlan {

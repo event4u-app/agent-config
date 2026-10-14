@@ -176,9 +176,12 @@ export class LearnLowImpactPreview {
             );
         } else if (this.promoted.length > 0) {
             lines.push(
-                '> This command sends nothing. Carrying an entry upstream is a' +
-                    ' separate, explicitly authorised step — see' +
-                    ' `upstream-contribute`.',
+                // Deliberately no onward pointer. The outward ladder releases
+                // a RECORDED defect and nothing here opens a record, so a
+                // corpus entry cannot ride it today; naming a route the
+                // reader cannot take is worse than naming none.
+                '> This command sends nothing. Promoting an entry upstream is' +
+                    ' a separate, explicitly authorised decision.',
             );
         }
         // Python: "\n".join(lines).rstrip() + "\n"
