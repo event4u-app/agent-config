@@ -54,13 +54,24 @@ resolved by its in-scope binding, not by a document-wide list.
 
 ## Phase 1 — The render is observed, not inferred
 
-- [ ] **1.1 Record successful asset renders from a `post_tool_use` concern.**
+- [x] **1.1 Record successful asset renders from a `post_tool_use` concern.**
       For a Bash call that is a standalone `ui:render --profile asset` and exited
       0, write `{file, file digest, manifest path, manifest digest}` to a hook
       state file, keyed by session.
       verify: a vitest case feeding the concern a successful and a failed render
       payload records exactly one entry; the failed one records none.
-- [ ] **1.2 Discharge only on a recorded render.** `readSvgObligations` accepts
+      Correction (2026-10-14, against the tree): "exited 0" alone would have
+      locked out every consumer without Playwright — `ui:render --profile asset`
+      exits 3 (`EXIT_RENDERER_ABSENT`) on that path, and its manifest is the
+      static witness the gate's `static-only` discharge reads. The recorder
+      therefore records exit 0 or 3; exit 1 records nothing. It is not a new
+      concern either: the existing `verify-before-complete` recorder already
+      sees every finished Bash call with its exit, so the record is an
+      `asset_renders` field in that state (turn-scoped), written by
+      `src/scripts/_lib/asset_render_record.ts`. "Standalone" is the positive
+      `isPureRender` shape, which fails closed, so a render chained to a write
+      records nothing. Done in `tests/scripts/svg_render_record.test.ts`.
+- [x] **1.2 Discharge only on a recorded render.** `readSvgObligations` accepts
       a manifest only when its current bytes hash to a digest recorded in 1.1
       for that file after the file's last edit. The command-pattern write
       detection (`writesRenderDir`, `isPureRender` as a gate input) is removed.
@@ -68,7 +79,18 @@ resolved by its in-scope binding, not by a document-wide list.
       `tests/scripts/turn_end_gate_svg_render.test.ts` (tool write, redirect,
       `cd`, interpreter, unlisted interpreter, script file) all stay open with
       no pattern list; a real recorded render discharges.
-- [ ] **1.3 State the host reach honestly.** Where `post_tool_use` is not bound
+      Correction (2026-10-14): `writesRenderDir` is not deleted. Step 1.3 keeps
+      the transcript rule as the fallback on hosts with no live recorder, and
+      removing its write detection there would only weaken those hosts. On the
+      record path neither it nor `isPureRender` is a gate input. On that path
+      a manifest discharges only through a recorded render, so the write
+      route of a forgery never needs recognising; what a recorded render could
+      be fooled by — a rewritten manifest, earlier bytes, an argument the shell
+      rewrites, a leftover manifest for another target — is pinned in
+      `tests/scripts/svg_render_record.test.ts`, and the existing transcript
+      cases keep pinning the fallback. A render whose exit the host does not
+      report is an instrument gap and sends the gate to the fallback.
+- [x] **1.3 State the host reach honestly.** Where `post_tool_use` is not bound
       (`agent-config hooks:status`), the gate falls back to the transcript rule
       and says so in its reason.
       verify: a test with no recorded entry and a matching manifest reports the
@@ -110,6 +132,12 @@ resolved by its in-scope binding, not by a document-wide list.
 - [ ] AC-1 — A manifest written by any route other than an observed successful
       render discharges no SVG obligation, and the gate contains no command
       pattern list for write detection.
+      Note (2026-10-14): met on every host whose `post_tool_use` recorder is
+      live. As written it contradicts step 1.3, which keeps the transcript rule
+      — pattern list included — as the named fallback where no recorder runs;
+      the restatement "on a host whose recorder is live" is the reading this
+      roadmap's own steps support, and is left for the closing review to
+      confirm rather than ticked here.
 - [ ] AC-2 — `svg-safety-active-content` is graded `inert` only for a file the
       project demonstrably delivers through `<img>` or a CSS background.
 - [ ] AC-3 — A namespace prefix is resolved by its in-scope binding in both the

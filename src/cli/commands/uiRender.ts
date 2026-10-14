@@ -42,6 +42,7 @@ import type { chromium as Chromium } from '@playwright/test';
 import { runAssetRender } from './uiRenderAsset.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
 import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
+import { EXIT_RENDERER_ABSENT, RENDER_REL, renderSlug } from '../../scripts/_lib/asset_render_record.js';
 import type { DeliveryMode } from '../../scripts/lint_svg_asset.js';
 
 /** The three viewports E3.1 names. Widths are the contract, not a preference. */
@@ -139,15 +140,10 @@ export interface RenderManifest {
     static?: { errors: number; digest: string };
 }
 
-export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
-
-/**
- * `--profile asset` with no renderer. Distinct from 1, which this command
- * already uses for an internal error (a missing path, a URL handed to the
- * asset profile), because a caller has to tell "nothing rendered" from
- * "you called it wrong" — the first is a consumer's ordinary state.
- */
-export const EXIT_RENDERER_ABSENT = 3;
+// Where the manifest lands, the exit that means "no renderer" and the slug rule
+// live with the turn-end gate's render recorder, which must agree with this
+// command on all three to find the manifest a render left.
+export { RENDER_REL, EXIT_RENDERER_ABSENT, renderSlug as slugify };
 
 /**
  * The families whose ERROR means the file is broken, as opposed to improvable.
@@ -224,17 +220,6 @@ export function staticWitness(
     return { errors, digest };
 }
 
-export function slugify(target: string): string {
-    return (
-        target
-            .replace(/^https?:\/\//, '')
-            .replace(/[^a-z0-9]+/gi, '-')
-            .replace(/^-+|-+$/g, '')
-            .toLowerCase()
-            .slice(0, 60) || 'render'
-    );
-}
-
 /** Colour-ish computed values, normalised. Used to build the palette snapshot. */
 export function collectPalette(styleRecords: ReadonlyArray<Record<string, string>>): string[] {
     const out = new Set<string>();
@@ -285,7 +270,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         return 1;
     }
 
-    const slug = opts.slug ?? slugify(opts.target);
+    const slug = opts.slug ?? renderSlug(opts.target);
     const outDir = path.join(projectRoot, RENDER_REL, slug);
     const isAsset = opts.profile === 'asset';
 
