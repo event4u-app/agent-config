@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 137 files, 28 holdout and 109 train.** That bullet read
+- **Now: 140 files, 31 holdout and 109 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -31,8 +31,8 @@ beside it.
   surviving in the bullet that exists to state the live figure. The growths are
   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
-  § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14 and
-  § Growth — 2026-10-14b; the
+  § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
+  § Growth — 2026-10-14b and § Growth — 2026-10-14c; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -231,10 +231,103 @@ shrink-only ratchet allows.
 run as the LAST act before publishing this section, after the final edit to any
 file in the set.
 
+## Growth — 2026-10-14c, three corpora, and ALL THREE SEAL
+
+```
+THREE ROWS ADDED, EVERY ONE OF THEM HOLDOUT. THE SEALED SET MOVES 28 -> 31.
+THE TRAIN SET DOES NOT MOVE. BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN ANYWAY
+AND CAME BACK BYTE-IDENTICAL — MEASURED, NOT ASSUMED FROM THE PARTITION.
+```
+
+**What changed.** `road-to-sentences-the-tree-can-back` made three dated or
+unsourced claims defer to their source: `market-entry-analysis` now requires a
+cited source on every market-size, growth-rate, price and competitor claim,
+`positioning-strategy` gained a Sourcing section covering segment, category and
+alternative claims, and `react-native-setup`'s Node floor reads the project's
+own `.nvmrc` / `engines.node` instead of a 2025 baseline that had already
+expired unnoticed. `check_routing_coverage` requires a corpus from every touched
+skill and none of the three had one. Each gained **10** labelled queries — 5
+exemplars of which one is German, 3 near-misses, 2 counterexamples; 30 cases in
+all, the same shape as the 2026-10-14b section above.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `market-entry-analysis` | holdout | `0x00` | 0 < 51 |
+| `positioning-strategy` | holdout | `0x04` | 4 < 51 |
+| `react-native-setup` | holdout | `0x21` | 33 < 51 |
+
+**Every section above could say the seal held or that one row moved it. This one
+says all three did.** The partition rule put each of them below the ceiling of
+51 and nobody chose that — the rule is a hash of the directory name,
+recomputable by any reader without this file. Three independent draws landing
+below 51 has probability `(51/256)^3` ≈ **0.79 %**, so this is the unlikely arm
+of a fair rule rather than a selection: the names were fixed by the skills long
+before this corpus existed. The sealed set moves **28 -> 31**, the train set
+stays at **109**, and the realised split is **31/140 = 22.14 %** against the
+rule's 19.9 % target — the widest it has stood.
+
+**`market-entry-analysis` draws `0x00`, which is the floor of the range.** No
+row can draw lower. That also corrects a claim one section above rather than
+quietly superseding it: § Growth — 2026-10-14 calls `dashboard-design`'s `0x04`
+"the LOWEST bucket any row in the freeze artefact has drawn", and that was
+already false when it was written — `analysis-autonomous-mode` and
+`judge-spec-compliance` sit at `0x02` and `worktree-lifecycle` at `0x03`, all
+three sealed before that date. The dated section is left as written under the
+carve-out below; the correction is recorded here instead of edited in there,
+because the carve-out freezes what a section claimed at its date and this one is
+a falsifiable claim rather than a count.
+
+**The ordering claim's scope moves with the seal.** AC-6's claim rests on 18
+rows and those 18 are unchanged, so it is now 18 of **31** rather than 18 of 28.
+A proposer evaluated against this holdout must either exclude the three rows
+above or state that it is using rows whose seal is younger than the evaluation —
+the same scoping the 2026-10-01 and 2026-10-14 growths established, for the same
+reason: a row authored today predates nothing.
+
+**Both train-side measurements were re-taken, and that was not owed.** § Growth
+2026-10-01 records that a holdout-only growth does not owe the train-side
+re-takes. They were run regardless, because "the partition says they cannot have
+moved" is a prediction and the point of a published pin is that it is measured:
+`measure_routing_signal --write` and `measure_delivery_sets --write` both
+rewrote their files and `diff` against the pre-run copies reports **zero bytes
+changed** in each. The verdict is unchanged in kind and in every input — still
+`harmful`, false activation +5.94 pp against the +2.0 pp guard, delta-recall
++1.86 pp against the 5.0 pp bar, McNemar p=0.4823, 109 train corpora, 1060
+cases, catalogue 300. `delivery-set-measurement` likewise: precision@5 80.10 %,
+recall@5 62.08 %, false activation@5 15.90 %. Reported as a measurement that
+agreed with the prediction, never as a step skipped because the prediction was
+confident.
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe over the tree and diffing every published row
+reports **exactly three rows absent** — the three above — **zero** hash
+mismatches and **zero** orphans over the 137 rows published before this change.
+No pre-existing corpus file was edited here, so this growth is pure addition.
+
+**One pre-existing gap closed in passing.** The `## Train` table carried 108
+rows against 109 train corpora in the tree: `database` was published on
+2026-10-06 only as a cell in the § Correction 2026-08-31 re-pin table — a row
+whose "Was (pre-edit, stale)" cell is missing, so it renders as two cells in a
+three-column table — and never reached the `## Train` table itself. Its hash
+there matches the tree exactly, so nothing was unpinned; what was missing was
+the reading surface, which is the same count-drift this file corrects in two
+places already. The row is added. `SET-SHA256` is computed over the tree rather
+than over these tables, so this moves no hash.
+
+**The three grandfather entries went with it.** All three skills sat in
+`src/scripts/trigger_eval_grandfather.json`, and `check_trigger_eval_presence`
+reads a skill that carries a corpus AND a grandfather entry as a finding, not as
+belt and braces. The allowlist goes 163 -> 160, the direction its shrink-only
+ratchet allows.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to any
+file in the set.
+
 ## The set hash
 
 ```
-SET-SHA256  8446fbd4ff2401bbd7078317dc187f9ea8d6a36bd07a6b310348b862bdbb48d7
+SET-SHA256  bb76aad936129e81c40c5be40e8d20abd08909797f5c8c0942fb19cb49e05215
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -456,11 +549,14 @@ open and which this file does not settle.
 | `judge-spec-compliance` | `6d7e5525d88e4c4b26c963103f43f7e95d997337ff3d624fea31a757363f653e` |
 | `license-compliance-borrow-check` | `2c23f14c168f6de1f99689e420e29b2b86bbd27e0fdfff68dcdf80b483aa2d0f` |
 | `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
+| `market-entry-analysis` | `9fb6ee850d5eb06e96439505bb5f47835edbc9a025cf97f2ad1a952337fea264` |
 | `merge-conflicts` | `61fbce06e0429a65e76532d51f3bafa3d27341b4c42943cc952cbc4dbc304189` |
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
+| `positioning-strategy` | `2b7dee4903969df4f5ed478fc7e98c9b6c80773c3f34fc7e0d7fc6019d208f0b` |
 | `quality-tools` | `d6dfc15a7258796dc586cb897d96e536d09cda6f276e95f6d8900bc79ace900f` |
+| `react-native-setup` | `1c62bd45cea7c9d4c2dc1202d12feff4b45e4794cfe88395a33115d7a01e401d` |
 | `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
@@ -626,6 +722,7 @@ open and which this file does not settle.
 | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
+| `database` | `07b320a1bcde1f8565aa1cae12d383b765fd1a9d0289703fccfa79f7486b5688` |
 | `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
 | `design-system-capture` | `afdefd4e0141ef85eb7277def08c84abf1bf4b9f30d7cbed32a4bc39039b23f6` |
 | `design-tokens` | `a39661a7b95f92c7f649d4a82b33c07be346053d4529ae7a6a9626609b30be40` |
