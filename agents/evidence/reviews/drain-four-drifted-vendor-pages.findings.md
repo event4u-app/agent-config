@@ -1,25 +1,24 @@
 # Findings: drain-four-drifted-vendor-pages
-<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 0ff81ac12ff76aace1aa02e04451b22e3087ccb408babf46280cef4b18be77b0 | diff: 25aee2a3c1764e03984243b74fd5c4762abc4608 | reviewer: r2-fresh-subagent-drain-four-drifted-vendor-pages | prompt_hash: 97ae7dd9eaa9d7353bc3b9607e95e2c478cea1eee36898124d9c9a8991824d7b -->
+<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 70e4edb878e4e518f19f5bc6c191007a12c84ab7d29bff73fdf92a041889a118 | diff: 06961545555c5f8d131914774d0742b36bc4de1b | reviewer: r2-fresh-subagent-drain-four-drifted-vendor-pages | prompt_hash: 2fd6212db4a48fba496d88c5baa9f4b0f36f7a7518b09207342ba041a872467a -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-four-drifted-vendor-pages"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-14 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 25aee2a3c1764e03984243b74fd5c4762abc4608
-  scope_hash: 0ff81ac12ff76aace1aa02e04451b22e3087ccb408babf46280cef4b18be77b0
+  diff_sha: 06961545555c5f8d131914774d0742b36bc4de1b
+  scope_hash: 70e4edb878e4e518f19f5bc6c191007a12c84ab7d29bff73fdf92a041889a118
   roadmap: agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
-  roadmap_hash: dacc3667c999420e894f063fab11896f537c391828a9f9918a932c6da56696a1
+  roadmap_hash: 7aade69d32bf0308f0d4aa0c43ab5574c5bb79430e13d9a15248ac626e0641b8
   ac_hash: 9177b5025bfc210404254faf14b8fcb1859646e899978dae0dde50367c93e065
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-10-14T15:12:29Z
+dispatched: 2026-10-14T15:15:40Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
-| 1 | medium | tests/scripts/host_docs_digest_workflow.test.ts:48 | The route-drift job only runs when digest-watch has FAILED (a drift exits non-zero), so its `if:` depends on the `always()` prefix: without it GitHub adds an implicit `success()` and the route never fires. No test pins `always()`. The test checks the `drifted` output and the `schedule` condition but would stay green if `always() &&` were dropped, which turns the route back into silence. | fixed | f4f667481 (test pins the leading always(); seen red with it removed) |
-| 2 | medium | .github/workflows/host-docs-digest.yml:121 | `drifted=true` comes from grepping two literal message fragments that `check_host_docs_digest.ts:864/872` prints. Nothing ties the two together. The test only checks that the workflow contains `changed since the row was established`; it never checks the checker's real output or the `GONE (404/410)` branch. If either message is reworded, a real drift exits red but is no longer routed, and no test turns red: the same silent failure this change exists to remove. | fixed | f4f667481 (test asserts both fragments in the workflow AND in the checker source; seen red with one removed) |
-| 3 | low | .github/workflows/host-docs-digest.yml:68 | `concurrency: cancel-in-progress: true` is shared by the schedule and `workflow_dispatch` triggers. A manual dispatch, for example from a branch, that starts while the Monday scheduled run is still going cancels it before `route-drift` can file, and the dispatched run never routes because it is not a schedule. That week's drift is then not routed. | fixed | f4f667481 (concurrency group keyed by github.event_name) |
-| 4 | low | agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md:6 | `estate_offset_exempt` still says "It ships `status: draft`, so it is excluded from the gated active_roadmaps count", but the archived roadmap's frontmatter (line 3) is `status: ready`. The exemption text now contradicts the file it describes. | fixed | f4f667481 |
-| 5 | low | agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md:43 | The windsurf `now` digest is abbreviated `b9e0cd47…1170`, but the committed digest ends in `…5c1170d` (host_lowering.yaml). Every other row abbreviates as first 8 + last 4 characters (`…5378`, `…37c2`, `…5f92`, `…4764`). Here the suffix is off by one character, so it does not match the hash a reader would compare it against. | fixed | f4f667481 |
+| 1 | low | agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md:92 | The archived roadmap's Ratification paragraph says "four council rounds ... final `ratified` from both seats" and names only the round-1 and round-2 fixes, but the ratification artifact it points to records six rounds, including the round-5 `refused` on the workflow and the `route-drift` restructure that answered it. The closing record undercounts the review and leaves out the one refusal. | open | |
+| 2 | low | agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md:138 | Step 1.3's `verify:` (`grep -c 'Host Docs Digest Watch' .github/workflows/host-docs-digest.yml` -> `/^[1-9]/`) is vacuous. It matches the pre-existing `name: Host Docs Digest Watch` on line 1, so it passed on the base before any routing change and proves nothing about the step it closes. The real evidence is `tests/scripts/host_docs_digest_workflow.test.ts`, which the verify does not run. | open | |
+| 3 | low | src/scripts/_lib/host_listing_model.ts:18 | The header is still titled "THE MECHANISM, AS DOCUMENTED UPSTREAM" and still states "1% by default, ≈8,000 characters on a 200k window" in the present tense. Three lines above, the new parenthetical says the current page no longer prints the ≈8,000 illustration, so the paragraph contradicts itself. The `budget-unit-is-chars` `why` string was re-dated correctly; this sentence was not. | open | |
+| 4 | low | .github/workflows/host-docs-digest.yml:147 | The routed issue body tells the reader to re-establish the row "with the ratification artifact host_lowering.yaml requires". The watch also covers `host_docs_pages.yaml` (this branch re-dated `claude-code-skills` there, and the ratification artifact lists it as not gated), so a drift only on a sibling page gets instructions that name the wrong table and an obligation that does not apply. | open | |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->

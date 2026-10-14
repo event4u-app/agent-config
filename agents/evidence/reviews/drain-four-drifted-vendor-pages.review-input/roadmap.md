@@ -5,7 +5,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It ships `status: draft`, so it is excluded from the gated active_roadmaps count; this exemption covers the growth half only."
+estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It shipped `status: draft`, so it was excluded from the gated active_roadmaps count (flipped to `ready` only in the archival move); this exemption covers the growth half only."
 relates:
   - slug: road-to-a-search-answer-a-model-can-choose-from
     relation: extends
@@ -42,7 +42,7 @@ is the digest the committed row records; `now` is what the page hashes to.
 | `claude` | `code.claude.com/docs/en/hooks.md` | `9dd68316…fe88` | re-fetch to read |
 | `augment` | `docs.augmentcode.com/cli/hooks.md` | `e500823b…98fa` | `93f421dc…5378` |
 | `cline` | `docs.cline.bot/customization/hooks.md` | `ef875617…084b` | `73b6df1b…37c2` |
-| `windsurf` | `docs.devin.ai/desktop/cascade/hooks.md` | `460ffe7a…35a2` | `b9e0cd47…1170` |
+| `windsurf` | `docs.devin.ai/desktop/cascade/hooks.md` | `460ffe7a…35a2` | `b9e0cd47…170d` |
 
 `cursor`, `gemini`, `copilot` and `codex` were unchanged in the same run;
 `cowork` cites no page. The digests are abbreviated here deliberately — a

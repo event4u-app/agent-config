@@ -1,5 +1,5 @@
 diff --git a/.github/workflows/host-docs-digest.yml b/.github/workflows/host-docs-digest.yml
-index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..9be23f8ac898a01d1cfb30a3e94fc419f4ae9602 100644
+index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..459a94d5338b2619e000c92879650a7ab4324fbc 100644
 --- a/.github/workflows/host-docs-digest.yml
 +++ b/.github/workflows/host-docs-digest.yml
 @@ -24,6 +24,16 @@ name: Host Docs Digest Watch
@@ -19,7 +19,17 @@ index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..9be23f8ac898a01d1cfb30a3e94fc419
  # Unreachable is not drift. `--strict-fetch` is deliberately NOT passed: a
  # flaky vendor host or a runner with no egress establishes nothing about the
  # page, and a watcher that cried wolf on every 503 would be muted within a
-@@ -60,6 +70,8 @@ concurrency:
+@@ -53,13 +63,17 @@ on:
+ permissions:
+   contents: read
+ 
++# Keyed by trigger, so a manual dispatch never cancels the scheduled run whose
++# drift only a schedule routes.
+ concurrency:
+-  group: host-docs-digest
++  group: host-docs-digest-${{ github.event_name }}
+   cancel-in-progress: true
+ 
  jobs:
    digest-watch:
      runs-on: ubuntu-latest
@@ -28,7 +38,7 @@ index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..9be23f8ac898a01d1cfb30a3e94fc419
      steps:
        # No `ref: main`. Pinning the ref made the job untestable before it was
        # relied on: a scheduled run already uses the default branch, while a
-@@ -96,5 +108,44 @@ jobs:
+@@ -96,5 +110,44 @@ jobs:
        - name: Report the watch scope (offline, no egress)
          run: ./scripts-run src/scripts/check_host_docs_digest
  
@@ -475,7 +485,7 @@ index 0000000000000000000000000000000000000000..5c9076c8b195497f9f2c19e673c340b5
 +~~~
 diff --git a/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..1b19c5f66f05166786350257ff873702a8ac4da7
+index 0000000000000000000000000000000000000000..53220dd5dbd453a3cbf65f5bc4fc082be2087f08
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
 @@ -0,0 +1,159 @@
@@ -484,7 +494,7 @@ index 0000000000000000000000000000000000000000..1b19c5f66f05166786350257ff873702
 +status: ready
 +execution:
 +  mode: phase-checkpoints
-+estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It ships `status: draft`, so it is excluded from the gated active_roadmaps count; this exemption covers the growth half only."
++estate_offset_exempt: "Carries a red that is already live on main and has nobody: the Host Docs Digest Watch has reported four drifted vendor pages on 2026-10-05 and 2026-10-12 with no row re-established. There is nothing to offset — no active roadmap owns host_lowering.yaml's provenance rows, and the alternative to this file is a PR-body line, which fix-what-you-see names as not a disposition. It shipped `status: draft`, so it was excluded from the gated active_roadmaps count (flipped to `ready` only in the archival move); this exemption covers the growth half only."
 +relates:
 +  - slug: road-to-a-search-answer-a-model-can-choose-from
 +    relation: extends
@@ -521,7 +531,7 @@ index 0000000000000000000000000000000000000000..1b19c5f66f05166786350257ff873702
 +| `claude` | `code.claude.com/docs/en/hooks.md` | `9dd68316…fe88` | re-fetch to read |
 +| `augment` | `docs.augmentcode.com/cli/hooks.md` | `e500823b…98fa` | `93f421dc…5378` |
 +| `cline` | `docs.cline.bot/customization/hooks.md` | `ef875617…084b` | `73b6df1b…37c2` |
-+| `windsurf` | `docs.devin.ai/desktop/cascade/hooks.md` | `460ffe7a…35a2` | `b9e0cd47…1170` |
++| `windsurf` | `docs.devin.ai/desktop/cascade/hooks.md` | `460ffe7a…35a2` | `b9e0cd47…170d` |
 +
 +`cursor`, `gemini`, `copilot` and `codex` were unchanged in the same run;
 +`cowork` cites no page. The digests are abbreviated here deliberately — a
@@ -975,10 +985,10 @@ index 23126ae0c6d83920364c9f61b54fe110390f0988..4e0495830e26d9e1ace5debf1fa74a1a
          slots: {}
 diff --git a/tests/scripts/host_docs_digest_workflow.test.ts b/tests/scripts/host_docs_digest_workflow.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c8ed66ea05e5cdf4600910eac9605c300f776e95
+index 0000000000000000000000000000000000000000..d8320992a1f05f9588d4dda07e803068d86f092f
 --- /dev/null
 +++ b/tests/scripts/host_docs_digest_workflow.test.ts
-@@ -0,0 +1,78 @@
+@@ -0,0 +1,102 @@
 +/**
 + * The Host Docs Digest Watch went red on main twice, a week apart, and nobody
 + * acted: a scheduled failure is mailed only to whoever last edited the cron
@@ -1036,6 +1046,30 @@ index 0000000000000000000000000000000000000000..c8ed66ea05e5cdf4600910eac9605c30
 +        expect(watch.outputs?.drifted ?? '').toContain(`steps.${step?.id}.outputs.drifted`);
 +        expect(route.needs).toEqual('digest-watch');
 +        expect(route.if ?? '').toContain("needs.digest-watch.outputs.drifted == 'true'");
++    });
++
++    it('runs the route even though the watch job it depends on went red', () => {
++        // A drift exits non-zero, so without `always()` GitHub's implicit
++        // `success()` would skip the route on exactly the runs it exists for.
++        expect(route.if ?? '').toMatch(/^\s*always\(\)\s*&&/);
++    });
++
++    it('greps for verdict strings the checker actually prints', () => {
++        const checker = fs.readFileSync(path.join(ROOT, 'src', 'scripts', 'check_host_docs_digest.ts'), 'utf-8');
++        const run = fetchStep()?.run ?? '';
++        for (const [inWorkflow, inChecker] of [
++            ['changed since the row was established', 'changed since the row was established'],
++            ['are GONE \\(404/410\\)', 'are GONE (404/410)'],
++        ] as const) {
++            expect(run, `workflow greps for ${inChecker}`).toContain(inWorkflow);
++            expect(checker, `checker prints ${inChecker}`).toContain(inChecker);
++        }
++    });
++
++    it('a manual dispatch cannot cancel the scheduled run it would not replace', () => {
++        const raw = fs.readFileSync(WORKFLOW, 'utf-8');
++        const group = /concurrency:\s*\n\s*group:\s*(.+)/.exec(raw)?.[1] ?? '';
++        expect(group).toContain('github.event_name');
 +    });
 +
 +    it('keeps the issue grant off every job that runs repository code', () => {
