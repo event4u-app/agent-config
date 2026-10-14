@@ -161,6 +161,14 @@ as today.
       unchanged for a human at this terminal and one smaller for an agent, which
       leaves the owner-reserved write-then-restore as the only route an agent
       could ever take. Recorded in the artifact's third-attempt section.
+      STILL OPEN after a fourth attempt, 2026-10-14, which DID reach the host:
+      `CLAUDE_CONFIG_DIR=<empty scratch dir> claude -p ...` on build `2.1.299`
+      returns `Not logged in`. The moving condition is executed and false; the
+      third attempt's refusal was a per-call classifier decision, not a closed
+      route. The owner condition is also executed: blocker
+      `listing-override-write-is-owner-owned` in
+      `road-to-skills-that-arrive-when-called.md` still reads `Status: open`.
+      Recorded in the artifact's fourth-attempt section.
 - [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in

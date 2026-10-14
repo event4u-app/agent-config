@@ -140,6 +140,26 @@ build `2.1.299`). The only route left to column five remains the one that was
 owner-reserved from the start — a write-then-restore against the owner's own
 `~/.claude/settings.json`, taken on the owner's say-so.
 
+### A fourth attempt, 2026-10-14 — the redirect reached build 2.1.299, and the login does not survive it
+
+The section above calls the permission-layer refusal a closed route for an
+agent. A later run on the same day was NOT refused: the redirect ran, so that
+refusal is a per-call classifier decision, not a standing fact about agents.
+What the run measured is the host, which is the part that matters:
+
+| | |
+|---|---|
+| Build | `2.1.299` (`claude --version`) |
+| Command | `CLAUDE_CONFIG_DIR=<empty scratch dir> claude -p "reply with the single word ok"`, run from inside that scratch dir |
+| Output | `Not logged in · Please run /login` |
+
+Build `2.1.299` detaches the login under the redirect exactly as `2.1.296`
+did. The closing condition "a host build whose login survives the redirect"
+was executed against the current build and returned **false**. The only
+route left to column five is still the owner-reserved write-then-restore,
+tracked as the open blocker `listing-override-write-is-owner-owned` in
+`agents/roadmaps/road-to-skills-that-arrive-when-called.md`.
+
 ## A second observation, taken on the way
 
 Asked to count its own listing, the baseline session reported **497 skill
