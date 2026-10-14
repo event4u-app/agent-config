@@ -99,4 +99,39 @@ describe('the gate-shape predicate', () => {
         );
         expect(scriptOf({ name: 'x', edges: [], cmds: ['cmd: echo hi'], file: 'f' })).toBeNull();
     });
+
+    it('reads commands only — a comment that NAMES a script is not a call to it', () => {
+        // Regression, 2026-10-14. The block captured per target carries its
+        // comments too, so a sentence about a script read as the target
+        // running it. `ci-strict` runs no script and says in a comment that it
+        // is "Guarded by `check-ci-strict-superset`
+        // (src/scripts/check_ci_strict_superset.ts)". The moment that guard
+        // was wired into a workflow, the prose made a deliberately unwired
+        // meta-task read as reachable and reported its exemption row as stale.
+        expect(
+            scriptOf({
+                name: 'ci-strict',
+                edges: ['ci'],
+                cmds: [
+                    '    # Guarded by `check-ci-strict-superset` (src/scripts/check_ci_strict_superset.ts),',
+                    '    # which asserts the single invariant that makes this work.',
+                    '    cmds:',
+                ],
+                file: 'f',
+            }),
+        ).toBeNull();
+
+        // The comment is ignored, never the command beside it.
+        expect(
+            scriptOf({
+                name: 'x',
+                edges: [],
+                cmds: [
+                    '    # see src/scripts/check_ci_strict_superset.ts for why',
+                    '    cmd: ./scripts-run src/scripts/lint_bar',
+                ],
+                file: 'f',
+            }),
+        ).toBe('src/scripts/lint_bar');
+    });
 });
