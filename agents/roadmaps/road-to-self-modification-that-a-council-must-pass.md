@@ -202,9 +202,8 @@ refused 2/2 on a new one: a mutable revision is resolved more than once in one
 gate run (step 2.7). That was fixed on the owner's route and round 7 was
 answered by one seat — anthropic refused on the CI path's changed-file list
 missing the old side of a rename, openai gave no verdict (a local `ENOBUFS`)
-(step 2.8). The disposition is the owner's. **No seat, in any of the ten rounds
-across both shapes, disputed the design or the scope**; what is open is step
-2.8, not the binding.
+(step 2.8), which was established and fixed on the same route. **No seat, in
+any of the ten rounds across both shapes, disputed the design or the scope.**
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -695,7 +694,7 @@ gaps again; the binding closes replay, and nothing else.
       verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
-- [ ] **2.8 The CI path lists a renamed gated file by its old path.** The
+- [x] **2.8 The CI path lists a renamed gated file by its old path.** The
       workflow passes `gh pr view --json files` to the base revision's gate
       under `--files`, so the `--no-renames` diff of step 2.7 does not reach
       CI; if that list carries only a renamed file's destination, moving a
@@ -707,9 +706,25 @@ gaps again; the binding closes replay, and nothing else.
       the old side of a rename, and no end-to-end test covers it. The
       highest-leverage change: make CI derive paths through the same
       `--no-renames` Git implementation—or verify inclusion and add CI
-      regression test—before merge."* **Deferred, with the reason**: the owner
-      authorised one round, merging only on 2/2; the next round is the owner's
-      call.
+      regression test—before merge."* On the owner's route of 2026-10-14
+      (fix, re-present, merge only on 2/2) it was established and fixed. The
+      fact: for PR 2344, `gh pr view --json files` lists the archived roadmap
+      only as `{"path":"agents/roadmaps/archive/…","changeType":"RENAMED"}` with
+      no previous path, while REST `pulls/2344/files` carries
+      `previous_filename` — so the list did miss the old side. The fix takes
+      the seat's first option: the step passes `--base-ref "$BASE_SHA"` and no
+      `--files`, so CI lists paths through `changedFilesBetween()` (base commit
+      id, `HEAD` resolved once, `--no-renames`); the job already checks out
+      with `fetch-depth: 0`, so no fetch is added. The step also sets
+      `diff.renames=false` through `GIT_CONFIG_*`, for a base copy of the gate
+      whose own diff predates `--no-renames` — the copy that judges this PR.
+      The case reads both gate invocations out of the workflow step and runs
+      them on a fixture that renames a kernel rule to an ungated path: red
+      against the `--files` step (the list held only the destination, the gate
+      said "nothing to ratify"), green after it, and red again with
+      `--no-renames` neutralised in place, then restored. Not changed: the
+      kernel-rule bundle step still reads the `gh pr view` list.
+      verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_ci_path.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
