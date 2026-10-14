@@ -63,16 +63,22 @@
  *   --root DIR        repo root the diff and artifacts are read from (testing)
  *   --rev REV         the commit the gated content and the artifacts are read
  *                     at (default HEAD) — Git objects, never the working tree,
- *                     so an uncommitted edit can neither pass nor fail the gate
+ *                     so an uncommitted edit can neither pass nor fail the gate.
+ *                     Without --files it is resolved ONCE to a commit id, and
+ *                     that id — not the name — feeds the diff, the digest and
+ *                     the record read, so a ref that moves mid-run cannot pair
+ *                     one commit's file list with another commit's content
  *   --policy-root DIR where the quorum policy is read from (testing); defaults
  *                     to THIS script's tree, so a base-revision run reads the
  *                     base's policy rather than one the candidate lowered
  *   --quiet           verdict line only
  *
+ * An option that takes a value and is given none is a refusal (exit 1), never
+ * a silent default.
+ *
  * Exit codes: 0 = pass (or nothing gated) · 1 = fail · 3 = internal error.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -91,7 +97,11 @@ import {
 import {
     DEFAULT_REVISION,
     GatedSubjectRefusal,
+    changedFilesBetween,
     fileAtRevision,
+    optionValue,
+    refExists,
+    resolveRevision,
     subjectOf,
     type SubjectReading,
 } from './_lib/ratification_subject.js';
@@ -370,27 +380,12 @@ export function configuredProviderCount(policyRoot: string): number | null {
     }
 }
 
-function gitChangedFiles(baseRef: string, root: string, revision: string): string[] | null {
-    const res = spawnSync('git', ['diff', '--name-only', `${baseRef}...${revision}`], {
-        cwd: root,
-        encoding: 'utf8',
-    });
-    if (res.status !== 0) {
-        return null;
-    }
-    return (res.stdout ?? '').split('\n').filter((l) => l.trim() !== '');
-}
-
 function resolveBaseRef(explicit: string | null, root: string): string {
     if (explicit !== null) {
         return explicit;
     }
     for (const candidate of ['origin/main', 'origin/master', 'main', 'master']) {
-        const res = spawnSync('git', ['rev-parse', '--verify', candidate], {
-            cwd: root,
-            stdio: ['ignore', 'ignore', 'ignore'],
-        });
-        if (res.status === 0) {
+        if (refExists(root, candidate)) {
             return candidate;
         }
     }
@@ -659,22 +654,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const files: string[] = [];
     let collectingFiles = false;
 
+    const valueOptions = new Set(['--base-ref', '--root', '--rev', '--policy-root']);
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i];
-        if (a === '--base-ref') {
-            baseRef = argv[i + 1] ?? null;
-            i += 1;
-            collectingFiles = false;
-        } else if (a === '--root') {
-            root = path.resolve(argv[i + 1] ?? root);
-            i += 1;
-            collectingFiles = false;
-        } else if (a === '--rev') {
-            revision = argv[i + 1] ?? revision;
-            i += 1;
-            collectingFiles = false;
-        } else if (a === '--policy-root') {
-            policyRoot = path.resolve(argv[i + 1] ?? policyRoot);
+        if (a !== undefined && valueOptions.has(a)) {
+            const value = optionValue(argv, i);
+            if (value === null) {
+                process.stderr.write(`❌  check_kernel_edit_ratified: ${a} takes a value\n`);
+                return 1;
+            }
+            if (a === '--base-ref') {
+                baseRef = value;
+            } else if (a === '--root') {
+                root = path.resolve(value);
+            } else if (a === '--rev') {
+                revision = value;
+            } else {
+                policyRoot = path.resolve(value);
+            }
             i += 1;
             collectingFiles = false;
         } else if (a === '--quiet') {
@@ -691,12 +688,30 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (files.length > 0) {
         changed = files;
     } else {
-        const fromGit = gitChangedFiles(resolveBaseRef(baseRef, root), root, revision);
-        if (fromGit === null) {
-            process.stderr.write('❌  check_kernel_edit_ratified: git diff failed\n');
+        // ONE resolution for the whole run. The diff, the digest and the
+        // record read all receive this id; passing the name to each would let
+        // a ref that moves between them yield a file list from one commit and
+        // a digest and record from another.
+        let commit: string;
+        try {
+            commit = resolveRevision(root, revision);
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
+            return 1;
+        }
+        try {
+            changed = changedFilesBetween(root, resolveBaseRef(baseRef, root), commit);
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
             return 3;
         }
-        changed = fromGit;
+        revision = commit;
     }
 
     const result = evaluate(changed, root, configuredProviderCount(policyRoot), revision);

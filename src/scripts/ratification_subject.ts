@@ -37,7 +37,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { expectedSubjectFor } from './check_kernel_edit_ratified.js';
-import { DEFAULT_REVISION, GatedSubjectRefusal } from './_lib/ratification_subject.js';
+import { DEFAULT_REVISION, GatedSubjectRefusal, optionValue } from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -60,8 +60,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             // output is copied into a governance record, "it quietly used the
             // current directory" is the wrong failure: the digest would be
             // taken over a tree the caller never named.
-            const value = argv[i + 1];
-            if (value === undefined || value.startsWith('--')) {
+            const value = optionValue(argv, i);
+            if (value === null) {
                 process.stderr.write('error: --root takes a directory\n');
                 return 2;
             }
@@ -71,8 +71,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             continue;
         }
         if (a === '--rev') {
-            const value = argv[i + 1];
-            if (value === undefined || value.startsWith('--')) {
+            const value = optionValue(argv, i);
+            if (value === null) {
                 process.stderr.write('error: --rev takes a revision\n');
                 return 2;
             }

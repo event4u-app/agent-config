@@ -285,6 +285,55 @@ export function resolveRevision(root: string, revision: string): string {
     return oid;
 }
 
+/**
+ * Whether `ref` names a commit in the repository at `root`, through the
+ * scrubbed runner — the gate's default-base probe, which must look in the same
+ * repository the diff and the digest read.
+ */
+export function refExists(root: string, ref: string): boolean {
+    return runGit(root, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], '').status === 0;
+}
+
+/**
+ * The paths changed between `base` and `commit`, through the same scrubbed
+ * runner as the subject, so an inherited `GIT_DIR` cannot point the list at a
+ * different repository from the one the digest reads.
+ *
+ * `commit` must already be a commit id from {@link resolveRevision}: the list,
+ * the digest and the record are only one reading of one commit if the name was
+ * resolved once, before any of them.
+ */
+export function changedFilesBetween(root: string, base: string, commit: string): string[] {
+    if (base === '' || base.startsWith('-')) {
+        throw new GitReadFailed(
+            '',
+            'diff',
+            `base ref \`${base}\` is empty or shaped like an option`,
+        );
+    }
+    const res = runGit(root, ['diff', '--name-only', '-z', `${base}...${commit}`], '');
+    if (res.status !== 0) {
+        throw new GitReadFailed('', 'diff', stderrOf(res));
+    }
+    return res.stdout
+        .toString('utf8')
+        .split('\u0000')
+        .filter((l) => l.trim() !== '');
+}
+
+/**
+ * The value following option `argv[i]`, or `null` when there is none — the end
+ * of the arguments, or another `--option` in its place.
+ *
+ * Shared by the gate and the subject CLI so the two refuse the same shapes: a
+ * `--rev` with no value used to fall back to `HEAD` in the gate while the CLI
+ * refused it.
+ */
+export function optionValue(argv: readonly string[], i: number): string | null {
+    const value = argv[i + 1];
+    return value === undefined || value.startsWith('--') ? null : value;
+}
+
 /** One entry of a commit's tree, as `git ls-tree` reports it. */
 interface TreeEntry {
     readonly mode: string;

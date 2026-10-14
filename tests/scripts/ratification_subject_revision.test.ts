@@ -4,7 +4,13 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { evaluate, expectedSubjectFor } from '../../src/scripts/check_kernel_edit_ratified.js';
+import { spawnSync } from 'node:child_process';
+
+import {
+    evaluate,
+    expectedSubjectFor,
+    main as gateMain,
+} from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 import {
     GatedPathUnsupported,
@@ -284,5 +290,122 @@ describe('git failures are typed refusals', () => {
         }
         expect(caught).toBeInstanceOf(TypeError);
         expect(caught).not.toBeInstanceOf(GatedSubjectRefusal);
+    });
+});
+
+/** Run the gate's `main()` with stdout and stderr captured. */
+function runGate(argv: readonly string[]): { code: number; out: string; err: string } {
+    let out = '';
+    let err = '';
+    const o = vi.spyOn(process.stdout, 'write').mockImplementation((c) => {
+        out += String(c);
+        return true;
+    });
+    const e = vi.spyOn(process.stderr, 'write').mockImplementation((c) => {
+        err += String(c);
+        return true;
+    });
+    try {
+        return { code: gateMain(argv), out, err };
+    } finally {
+        o.mockRestore();
+        e.mockRestore();
+    }
+}
+
+describe('one gate run reads one commit (step 2.7)', () => {
+    /**
+     * Round 6's finding: the changed-file list was taken from the revision
+     * NAME and the digest and record resolved the name again, so a ref that
+     * moved between the two paired one commit's list with another commit's
+     * content. A `git` wrapper on PATH advances the branch right after the
+     * first git call that names it — whichever call that is — so the case is
+     * red for every shape that resolves the name more than once.
+     */
+    it('a branch that moves after the first read does not change what the gate judges', () => {
+        const realGit = spawnSync('sh', ['-c', 'command -v git'], {
+            encoding: 'utf8',
+        }).stdout.trim();
+        write('README.md', 'base\n');
+        const base = commitAll(root);
+        write(KERNEL, 'reviewed\n');
+        const rel = path.join(RATIFICATION_DIR, 'r.md');
+        write(rel, recordText('0'.repeat(64), 'ratified'));
+        commitAll(root);
+        // The record answers for the reviewed commit's content.
+        write(rel, recordText(expectedSubjectFor([KERNEL, rel], root, 'HEAD').digest, 'ratified'));
+        const reviewed = commitAll(root);
+        write(KERNEL, 'edited after the review\n');
+        const later = commitAll(root);
+        spawnSync(realGit, ['-C', root, 'branch', 'feature', reviewed]);
+
+        const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-git-'));
+        const mark = path.join(bin, 'moved');
+        fs.writeFileSync(
+            path.join(bin, 'git'),
+            [
+                '#!/bin/sh',
+                '"$REAL_GIT" "$@"',
+                'status=$?',
+                'if [ ! -e "$MOVE_MARK" ]; then',
+                '  for a in "$@"; do',
+                '    case "$a" in',
+                '      feature|feature^*|*...feature)',
+                '        : > "$MOVE_MARK"',
+                '        "$REAL_GIT" -C "$MOVE_REPO" update-ref refs/heads/feature "$MOVE_TO"',
+                '        break;;',
+                '    esac',
+                '  done',
+                'fi',
+                'exit $status',
+                '',
+            ].join('\n'),
+            { mode: 0o755 },
+        );
+        vi.stubEnv('PATH', `${bin}${path.delimiter}${process.env.PATH ?? ''}`);
+        vi.stubEnv('REAL_GIT', realGit);
+        vi.stubEnv('MOVE_MARK', mark);
+        vi.stubEnv('MOVE_REPO', root);
+        vi.stubEnv('MOVE_TO', later);
+
+        try {
+            const r = runGate([
+                '--root',
+                root,
+                '--base-ref',
+                base,
+                '--rev',
+                'feature',
+                '--policy-root',
+                process.cwd(),
+            ]);
+            // The move happened mid-run, so the green below is not a run in
+            // which nothing moved.
+            expect(fs.existsSync(mark)).toBe(true);
+            const moved = spawnSync(realGit, ['-C', root, 'rev-parse', 'feature'], {
+                encoding: 'utf8',
+            });
+            expect(moved.stdout.trim()).toBe(later);
+            expect(r.out).toContain('ratified by');
+            expect(r.code).toBe(0);
+        } finally {
+            fs.rmSync(bin, { recursive: true, force: true });
+        }
+    });
+
+    it('`--rev` with no value is refused by the gate, not defaulted to HEAD', () => {
+        write(KERNEL, 'x\n');
+        commitAll(root);
+        const r = runGate(['--root', root, '--files', KERNEL, '--rev']);
+        expect(r.code).toBe(1);
+        expect(r.err).toContain('--rev takes a value');
+    });
+
+    it('`--rev` followed by another option is refused as having no value', () => {
+        write(KERNEL, 'x\n');
+        commitAll(root);
+        const r = runGate(['--root', root, '--rev', '--files', KERNEL]);
+        expect(r.code).toBe(1);
+        expect(r.err).toContain('--rev takes a value');
     });
 });
