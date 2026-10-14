@@ -897,7 +897,8 @@ jobs:
       # ADR-268 § 4. The changed paths come from git, NOT from `gh pr view
       # --json files`: that list names a rename by its destination only (no
       # previous path), so a kernel rule moved to an ungated name never reached
-      # the gate (round 7, step 2.8). The job checks out with `fetch-depth: 0`,
+      # the gate (docs/contracts/ratification-artifact.md § `subject:`). The
+      # job checks out with `fetch-depth: 0`,
       # so the base commit is already present and no `git fetch` is needed —
       # the auth-extraheader race a `git fetch` hits on some runners does not
       # arise.
