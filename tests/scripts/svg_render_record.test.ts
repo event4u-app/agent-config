@@ -36,8 +36,9 @@ function write(rel: string, content: string): void {
 }
 
 /** The manifest `ui:render` leaves for a verified render of the file. */
-function renderManifest(rel = MANIFEST): void {
-    write(rel, `${JSON.stringify({ profile: 'asset', verification: 'verified', asset: { digest: digestOf(SVG) } }, null, 2)}\n`);
+function renderManifest(rel = MANIFEST, target = FILE, slug = 'assets-logo-svg'): void {
+    const body = { target, slug, profile: 'asset', verification: 'verified', asset: { digest: digestOf(SVG) } };
+    write(rel, `${JSON.stringify(body, null, 2)}\n`);
 }
 
 /** Drive the real recorder with one host event. */
@@ -89,17 +90,40 @@ describe('1.1 — the recorder writes a successful asset render, and only that',
     });
 
     it('follows the CLI: --slug, --project-root, a leading cd, no manifest', () => {
-        renderManifest('agents/runtime/state/render/custom/manifest.json');
+        renderManifest('agents/runtime/state/render/custom/manifest.json', FILE, 'custom');
         expect(observeAssetRender(root, `${RENDER} --slug custom`, 0)?.manifest).toBe(
             'agents/runtime/state/render/custom/manifest.json',
         );
-        renderManifest('assets/agents/runtime/state/render/logo-svg/manifest.json');
+        renderManifest('assets/agents/runtime/state/render/logo-svg/manifest.json', 'logo.svg', 'logo-svg');
         expect(observeAssetRender(root, 'cd assets && agent-config ui:render logo.svg --profile asset', 0)?.manifest).toBe(
             'assets/agents/runtime/state/render/logo-svg/manifest.json',
         );
         expect(observeAssetRender(root, 'agent-config ui:render logo.svg --project-root=assets --profile asset', 0)?.file).toBe(FILE);
         // The render left no manifest at the slug it writes: nothing to bind.
         expect(observeAssetRender(root, `${RENDER} --slug elsewhere`, 0)).toBeNull();
+        // The host's own working directory, where it reports one.
+        expect(observeAssetRender(root, 'agent-config ui:render logo.svg --profile asset', 0, path.join(root, 'assets'))?.file).toBe(FILE);
+    });
+
+    it('an argument the shell could rewrite records nothing (review finding 1)', () => {
+        // `--slug $S` renders wherever S points, while the literal path holds a
+        // manifest the agent wrote beforehand. Binding that path would let the
+        // pre-written manifest discharge the obligation.
+        renderManifest('agents/runtime/state/render/$S/manifest.json', FILE, '$S');
+        expect(observeAssetRender(root, `${RENDER} --slug $S`, 0)).toBeNull();
+        for (const w of ['~/x.svg', 'assets/*.svg', 'assets/lo\\go.svg', '"assets/my logo.svg"']) {
+            expect(observeAssetRender(root, `agent-config ui:render ${w} --profile asset`, 0), w).toBeNull();
+        }
+        // Folding stderr into stdout is still a plain render.
+        renderManifest();
+        expect(observeAssetRender(root, `${RENDER} 2>&1 | tail -5`, 0)?.manifest).toBe(MANIFEST);
+    });
+
+    it('a manifest describing another target or slug is not this render\'s (review finding 2)', () => {
+        renderManifest(MANIFEST, 'assets/other.svg');
+        expect(observeAssetRender(root, RENDER, 0)).toBeNull();
+        renderManifest(MANIFEST, FILE, 'other-slug');
+        expect(observeAssetRender(root, RENDER, 0)).toBeNull();
     });
 });
 
@@ -111,7 +135,10 @@ describe('1.2 — only a recorded render discharges', () => {
         expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], recorded())).toBeNull();
     });
 
-    it('every forged-manifest route stays open with no pattern list', () => {
+    it('a transcript render with no record discharges nothing, whatever wrote the manifest', () => {
+        // Pins the record path's indifference to the write route: with no
+        // recorded render, no forgery shape needs recognising. The forgery a
+        // recorded render could be fooled by is pinned in 1.1 above.
         renderManifest();
         for (const forge of [
             edit(MANIFEST),

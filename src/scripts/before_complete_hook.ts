@@ -720,8 +720,14 @@ function _observe_asset_render(consumer_root: string, envelope: StateDict): Asse
   const pl = raw as StateDict;
   const [, cmd] = _extract_command(pl);
   if (!cmd) return null;
+  const cwd = pl["cwd"] ?? envelope["cwd"];
   try {
-    return observeAssetRender(consumer_root, cmd, _extract_exit_reading(pl, _is_failure_event(pl, envelope)).code);
+    return observeAssetRender(
+      consumer_root,
+      cmd,
+      _extract_exit_reading(pl, _is_failure_event(pl, envelope)).code,
+      typeof cwd === "string" && path.isAbsolute(cwd) ? cwd : consumer_root,
+    );
   } catch {
     return null;
   }
