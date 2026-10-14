@@ -154,6 +154,30 @@ with it and left alone.
       by Phase 3. A batch that would take the job past its ceiling goes into a
       second job of the same workflow.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
+      <br>**Split 2026-10-14, because the step as written is larger than the
+      bound it sits under.** At `144c0b20b` the parity checker lists 124
+      undeclared local-only gates, **105** of them `wire`-class with no caller —
+      five times the twenty a change the 2026-10-13 council set. "Twenty at a
+      time" already said so; the batches are now numbered so that each is a
+      step a change can close. Order: the 105 by name, twenty a batch, a gate
+      skipped only for a reason written in the evidence page's 2026-10-14
+      step-2.2 section. 2.2 closes when the last batch does, and AC-2 with it.
+- [ ] **2.2a The first twenty.** `audit_mcp_tools` through
+      `check_score_contract`, four skipped with their reasons; steps
+      `Drain 2.2a-1` and `Drain 2.2a-2` of the host job. Open until the
+      enforcing environment's reading lowers the baseline from 124 and the
+      host job's duration with the batch is recorded — neither can be taken
+      on this branch's local reading, which is 104.
+      verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t "first batch, exactly" --reporter=verbose` -> /✓.*first batch, exactly/
+- [ ] **2.2b–2.2e The next eighty, twenty a batch,** by the same rule, each
+      with its own exact-set case in `every-wire-class-gate-has-a-workflow-caller`.
+      Four of them are writer-shaped and get the `git status` check first:
+      `rebuild_hook_bundle`, `report_imperative_density`, both `second_brain_*`.
+      verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
+- [ ] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
+      if their reasons are resolved; a gate whose reason stands stays in the
+      backlog with it written down, never declared to move the number.
+      verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
 - [x] **2.3 Calendar gates get a scheduled caller, not a required one.** The
       `calendar`-class gates and `check_council_pin_staleness` run in the
       scheduled workflow that already runs the gate canary, which is not a

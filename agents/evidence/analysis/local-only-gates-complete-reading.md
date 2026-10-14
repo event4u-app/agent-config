@@ -388,3 +388,67 @@ unchanged and still bounded by the batch-1 case.
 reads 124 locally. The entry's own record says why: it moves on the enforcing
 environment's reading, and a local one was once wrong by exactly one. The
 lowering is a one-line change on the first CI reading of this branch.
+
+## 2026-10-14 — step 2.2, first batch (2.2a)
+
+Read on branch `drain/local-gates-batch-2`, off `origin/main` at `144c0b20b`.
+At that base `check_ci_local_parity --format json` lists **124** undeclared
+local-only gates: **105** classed `wire` above with no workflow caller yet, and
+19 in the other classes or red. 105 is more than five times the twenty a change
+the 2026-10-13 council bounded, so step 2.2 is split into numbered batches in the
+roadmap and this page records the first.
+
+**Selection rule, so the next batch reproduces it:** the 105 in name order,
+twenty at a time, skipping a gate only for a reason written here. Four inside
+this batch's window were skipped:
+
+| Gate | Why it is not in 2.2a |
+|---|---|
+| `check_hook_bundle_freshness` | `machine`-shaped: its verdict depends on whether a self-hosted `dist/hooks/dispatch.js` was built, which a checkout and CI answer differently |
+| `check_quality_regression` | inert until an operator-run `internal/bench/reports/quality-run.json` exists; wiring it arms a gate that can red unrelated pull requests the day that file lands |
+| `check_release_trunk_sync` | reads branch state |
+| `check_reply_consistency` | its task's `--scan-dir .agent-src.uncondensed` names a directory the tree does not contain, so its exit 0 is vacuous; wiring it needs its argument decided first |
+
+The twenty, each run with the argv its workflow step uses, on the branch base,
+serially. `git status --short` was empty afterwards, so none of them writes a
+tracked file (the risk register's rank-5 check). Serial sum 4.3 s.
+
+| Gate | Argv | Exit | Seconds |
+|---|---|---|---|
+| `audit_mcp_tools` | `--check --quiet` | 0 | 0.19 |
+| `check_agent_artifact_location` | `--quiet` | 0 | 0.36 |
+| `check_artefact_count_messaging` | `--quiet` | 0 | 0.25 |
+| `check_ci_strict_superset` | `--quiet` | 0 | 0.18 |
+| `check_cluster_patterns` | — | 0 | 0.21 |
+| `check_command_count_messaging` | `--quiet` | 0 | 0.21 |
+| `check_council_config_location` | `--quiet` | 0 | 0.20 |
+| `check_council_references` | `--quiet` | 0 | 0.29 |
+| `check_generated_artefact_headers` | `--quiet` | 0 | 0.19 |
+| `check_generator_output_coverage` | `--quiet` | 0 | 0.19 |
+| `check_gitignore_freshness` | `--quiet` | 0 | 0.20 |
+| `check_module_management_neutral` | — | 0 | 0.19 |
+| `check_no_local_settings_committed` | — | 0 | 0.20 |
+| `check_no_roadmap_refs` | — | 0 | 0.23 |
+| `check_one_off_location` | `--quiet` | 0 | 0.19 |
+| `check_overlay_cascade_subdirs` | — | 0 | 0.19 |
+| `check_public_catalog_links` | `--quiet` | 0 | 0.20 |
+| `check_reach_channels` | `--quiet` | 0 | 0.21 |
+| `check_role_doc_links` | `--quiet` | 0 | 0.19 |
+| `check_score_contract` | `--quiet` | 0 | 0.25 |
+
+Two reads inside the twenty were checked rather than assumed. `audit_mcp_tools`
+rewrites its inventory without `--check`, so the step passes `--check`, and a
+test pins it. `check_score_contract` asks `git merge-base --is-ancestor` about
+evidence SHAs, which a shallow clone would answer wrongly; the host job checks
+out with `fetch-depth: 0`.
+
+**Still a local reading.** `check_ci_local_parity` reads **104** on this branch,
+124 - 20. The baseline stays at 124 in this change, for the reason the entry
+records twice: it moves on the enforcing environment's reading. The host job's
+duration with the batch is likewise not recorded until CI has run it.
+
+**Left for 2.2b onward: 85 gates**, the 81 after this window in name order plus
+the four skipped above if their reasons are resolved. Four of the 81 are
+writer-shaped by name or by their first output line and need the `git status`
+check before anything else — `rebuild_hook_bundle`, `report_imperative_density`,
+and the two `second_brain_*` gates run `--dry-run`.
