@@ -23,7 +23,7 @@ triggers:
 > **Grounded corpus (Tier-1 consultation):** the threat corpus's
 > `authorization` + `tenancy` rows (IDOR, mass-assignment escalation,
 > unscoped queries, sealed job context — each with negative tests) come
-> from `./scripts-run <skills-root>/corpus-grounding/scripts/ground ground
+> from `node <skills-root>/corpus-grounding/scripts/ground.mjs ground
 > --manifest <skills-root>/threat-modeling/data/manifest.json "<the check
 > being reviewed>"`. Cite corpus rows in findings instead of restating from
 > memory; surface the evidence gap when the corpus has no row.

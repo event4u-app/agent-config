@@ -24,7 +24,7 @@ The `review`/`polish` steps gate on `state.ui_review.a11y`. Ground two
 finding classes instead of ad-hoc judgment:
 
 - **Chart-type findings** — the grounding CLI (`ground` via
-  ./scripts-run) — `…/ground search --manifest … --domain
+  node) — `…/ground.mjs search --manifest … --domain
   chart "<data shape>"` → `Accessibility Grade`, `A11y Fallback`,
   `Color Guidance` columns justify "wrong chart type / missing colorblind
   fallback" findings with a citable row.
@@ -38,7 +38,7 @@ finding classes instead of ad-hoc judgment:
 Per-framework Do/Don't corpora (16 stacks) ride the same manifest:
 
 ```bash
-./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --manifest <skills-root>/design-intelligence/data/manifest.json \
   --stack react "list rerender memo" [--filter "Severity=HIGH"]
 ```

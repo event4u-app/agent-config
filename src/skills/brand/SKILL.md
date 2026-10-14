@@ -55,7 +55,7 @@ Provenance: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 1. **Ground or search** (paths resolve skill-relative; works from any cwd):
 
    ```bash
-   ./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+   node <skills-root>/corpus-grounding/scripts/ground.mjs search \
      --manifest <skills-root>/brand/data/manifest.json \
      "<brand brief: sector + intent + audience>" \
      [--domain archetype|voice|naming|color|logo|messaging|typography] \

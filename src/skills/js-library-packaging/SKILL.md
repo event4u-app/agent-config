@@ -62,12 +62,13 @@ buildable-vs-source question has not been answered yet.
 
 ## Read the surface
 
-```
-check_package_surface <library-root> [<library-root> …]
+```bash
+node <skills-root>/js-library-packaging/scripts/check_package_surface.mjs \
+  <library-root> [<library-root> …]
 ```
 
-`scripts/check_package_surface.ts` beside this skill. Deterministic, JSON on stdout, no
-network and no subprocess. It reports:
+`scripts/check_package_surface.ts` beside this skill, shipped as the `.mjs` the line above
+names. Deterministic, JSON on stdout, no network and no subprocess. It reports:
 
 | Code | Severity | Why |
 |---|---|---|

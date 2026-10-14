@@ -60,7 +60,7 @@ degrades gracefully: with no brand layer, only stage 1 runs.
    "does this font exist?", and is deliberately separate from the **delivery**
    decision, "how does it get onto the page?" — see § Delivery below; conflating
    the two is what produced a single hard-wired hotlink); run
-   `./scripts-run <skills-root>/design-tokens/scripts/tokens validate --dir src/`
+   `node <skills-root>/design-tokens/scripts/tokens.mjs validate --dir src/`
    to confirm no hardcoded font-size or font-family values remain outside the
    token file; exit code 0 is the evidence.
 
@@ -78,7 +78,7 @@ style, not the other way around.
    evidence gap):
 
    ```bash
-   ./scripts-run <skills-root>/corpus-grounding/scripts/ground search \
+   node <skills-root>/corpus-grounding/scripts/ground.mjs search \
      --manifest <skills-root>/brand/data/manifest.json \
      "<archetype + sector>" --domain typography --json
    ```

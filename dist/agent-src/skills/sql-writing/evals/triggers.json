@@ -1,0 +1,78 @@
+{
+  "skill": "sql-writing",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which rewrote this skill's grounded-corpus invocation to the bundled `node <skills-root>/…/ground.mjs` form and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four surfaces its own description names — a query written by hand, a raw statement inside a migration, a seeder bulk-insert, and the parameterization defect — plus the symptom-first phrasing the description singles out: a pasted query and the question why it is slow. Near-misses are three neighbours that share database vocabulary and are somebody else's job: expressing the same read through the ORM (eloquent), deciding the shape of the tables (database), and the index/migration decision behind a slow query (database again, from the other side). Counterexamples guard the letters SQL: a licensing question and a training-deck section both say SQL and ask for no query.",
+  "queries": [
+    {
+      "id": "sw-e1",
+      "q": "why is this slow? SELECT * FROM orders o JOIN order_items i ON i.order_id = o.id WHERE o.created_at > ?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sw-e2",
+      "q": "write the raw SQL for the monthly revenue report — the query builder cannot express this window function",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sw-e3",
+      "q": "this DB::select drops $email straight into the string — fix it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sw-e4",
+      "q": "the migration needs a DB::statement for the generated column — write it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sw-e5",
+      "q": "write a seeder that bulk-inserts 50k demo rows with raw SQL instead of 50k model saves",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "sw-e6",
+      "q": "warum ist diese Query so langsam? SELECT * FROM orders JOIN order_items ON ...",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "sw-n1",
+      "q": "rewrite this join as an Eloquent relationship with eager loading",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "same read, through the ORM → eloquent"
+    },
+    {
+      "id": "sw-n2",
+      "q": "should orders and invoices be one table or two?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "schema design → database"
+    },
+    {
+      "id": "sw-n3",
+      "q": "which index would make this filter fast, and how do I add it?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "shares the slow-query symptom, asks a schema question → database"
+    },
+    {
+      "id": "sw-c1",
+      "q": "what does SQL Server licensing cost for an 8-core box?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "sw-c2",
+      "q": "write the SQL-injection section of the onboarding security deck",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says SQL and injection, asks for a document rather than a query"
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "skill": "api-endpoint",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which rewrote this skill's grounded-corpus invocation to the bundled `node <skills-root>/…/ground.mjs` form and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the one thing this skill owns — bringing a NEW endpoint into existence, stated either as a route to add or as a capability to expose — including the case where the stack is named, because naming the stack does not bypass this skill: detecting the stack and handing off to the carve-out IS its procedure. Near-misses are three neighbours that share endpoint vocabulary and answer a different question: the contract decision about an endpoint that already exists (api-design), restructuring a handler that already exists (code-refactoring), and testing one (api-testing). Counterexamples guard the word API itself — a key-issuance doc and a vendor-choice question both say API and ask for no handler.",
+  "queries": [
+    {
+      "id": "ae-e1",
+      "q": "add a POST /api/invoices endpoint that creates an invoice from the request body",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ae-e2",
+      "q": "we need a REST route that returns a paginated list of projects for the mobile app",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ae-e3",
+      "q": "expose this service method over HTTP so the frontend can call it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ae-e4",
+      "q": "build the webhook receiver Stripe will POST to, with signature verification",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "ae-e5",
+      "q": "this is a Laravel app — add the endpoint that archives a user, following our conventions",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "naming the stack does not skip this skill; the handoff to laravel-api-endpoint is its own step"
+    },
+    {
+      "id": "ae-e6",
+      "q": "leg einen POST-Endpunkt an, der aus dem Request-Body eine Rechnung erzeugt",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "ae-n1",
+      "q": "should the new field on /api/users be nested or flat, and does this need a v2?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "contract and versioning on an existing endpoint → api-design"
+    },
+    {
+      "id": "ae-n2",
+      "q": "the /api/orders handler is 300 lines — split the business logic out of it",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "modifying an existing endpoint → code-refactoring"
+    },
+    {
+      "id": "ae-n3",
+      "q": "write integration tests for the /api/invoices endpoint, including the 422 path",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "same endpoint, different job → api-testing"
+    },
+    {
+      "id": "ae-c1",
+      "q": "document in the README how a customer requests an API key for our public API",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "ae-c2",
+      "q": "which third-party API should we buy for address autocomplete?",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}
