@@ -151,6 +151,11 @@ rather than reporting zero violations — an unrun check and a clean check produ
 number and mean opposite things.
 
 **One finding is decidable without a browser**, and it ships beside this skill:
+
+```bash
+node <skills-root>/storybook-workshop/scripts/story_contrast_floor.mjs <story-file> […]
+```
+
 `scripts/story_contrast_floor.ts` computes the WCAG 2.1 contrast ratio between two colours a
 story *declares in its own args* and emits the same `(rule, selector, severity)` shape. It is
 **not axe** and not a substitute for § Validate — it sees no rendered page, so role, focus,

@@ -103,11 +103,17 @@ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 // in case a future change tracks them too — `git ls-files` on an untracked
 // directory returns nothing, so listing an as-yet-untracked root here is
 // always safe.
+// The last entry is a pathspec, not a directory: the skill-script bundles sit
+// one per skill under `src/skills/`, and naming that directory would pull in
+// every corpus and prose file beside them. `src/` rather than the projection
+// because the two are byte-identical by the condensation invariant, and this
+// is the copy whose author can fix it.
 const BUNDLE_ROOTS: readonly string[] = [
     'dist/install',
     'dist/hooks',
     'dist/mcp',
     'dist/cli-delegate',
+    'src/skills/*/scripts/*.mjs',
 ];
 
 /**

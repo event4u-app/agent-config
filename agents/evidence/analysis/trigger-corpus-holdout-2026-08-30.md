@@ -23,9 +23,19 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 103 files, 19 holdout and 84 train.** Three growths since — see
-  § Growth 2026-09-19, § Growth 2026-09-30 and § Growth 2026-10-01, the last of
-  which is the first on the **holdout** side and is scoped accordingly.
+- **Now: 134 files, 28 holdout and 106 train.** That bullet read
+  "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
+  when there had since been nine — it drifted 31 files behind the tree because
+  each growth after 2026-10-01 wrote its own section and left this line alone.
+  It is the same count-drift the two corrections below repair one field away,
+  surviving in the bullet that exists to state the live figure. The growths are
+  § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
+  the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
+  § Re-pin 2026-10-11, § Growth — 2026-10-12 and § Growth — 2026-10-14; the
+  2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
+  above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
+  keeps this bullet honest, and it did not: it asserts the rows and the set hash,
+  never the prose, so the drift above was invisible to every green run.
 
 Both are re-derivable from the reproduce recipe below; the second is the one the
 tables and the set hash describe.
@@ -88,10 +98,95 @@ over the whole merged tree by the recipe below rather than derived from the
 old value — the method every entry in this file records, and the one the four
 earlier stale-on-arrival pins were caused by not using. `rows` is 127.
 
+## Growth — 2026-10-14, six train corpora and the first sealed row since 2026-10-06
+
+```
+SEVEN ROWS ADDED: SIX TRAIN, ONE HOLDOUT. THE SEALED SET GROWS 27 -> 28.
+EVERY PREVIOUSLY SEALED ROW IS BYTE-IDENTICAL — CHECKED AGAINST THE TREE, NOT ASSERTED.
+THE ORDERING CLAIM IS SCOPED, NOT PRESERVED. THE 28TH ROW PREDATES NOTHING.
+```
+
+**What changed.** `road-to-skill-scripts-that-run-where-they-land` moved the
+taught invocation line in seven skill bodies to
+`node <skills-root>/…/<tool>.mjs`, and `check_routing_coverage` requires every
+touched skill to carry a corpus. None of the seven had one. Each gained **11**
+labelled queries — 6 exemplars of which one is German, 3 near-misses, 2
+counterexamples; 77 cases in all. Eleven rather than the ten every earlier
+growth records, because the German exemplar is an addition here rather than a
+substitution: `lint_skill_trigger_corpus` requires one, and the 2026-10-12
+section records both of its files omitting it in the first draft.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `api-endpoint` | train | `0x3b` | 59 ≥ 51 |
+| `blade-ui` | train | `0x78` | 120 ≥ 51 |
+| `dashboard-design` | **holdout** | `0x04` | 4 < 51 |
+| `flux` | train | `0xa2` | 162 ≥ 51 |
+| `livewire` | train | `0xd9` | 217 ≥ 51 |
+| `react-shadcn-ui` | train | `0x47` | 71 ≥ 51 |
+| `sql-writing` | train | `0xf0` | 240 ≥ 51 |
+
+**This one DOES touch the seal, and that is the half worth reading.** Every
+growth section since 2026-10-07 could open with "zero holdout rows changed".
+This one cannot. `sha256('dashboard-design')[0:2]` is `0x04` = **4**, the
+lowest bucket any row in this file has ever drawn and far below the ceiling of
+51, so the partition rule sealed it. Nobody chose that, and nobody could have:
+the rule is a hash of the directory name, recomputable by any reader without
+this file. It is worth saying plainly that the rule sealed the one corpus of
+the seven a lane optimising for a quiet diff would most have wanted in train —
+the same property the 2026-10-01 section noted when it first fired.
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe over the tree and diffing every published row
+reports **exactly seven rows absent** — the seven above — **zero** hash
+mismatches and **zero** orphans. So all 27 previously sealed rows and all 100
+previously published train rows reproduce byte-for-byte, no pre-existing corpus
+file was edited in this change, and no holdout result taken against the earlier
+set is voided. This growth is pure addition, which the 2026-10-11 re-pin was
+not: that one moved an existing train row's hash while moving no count, the
+case a reader counting files would miss.
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- the sealed set is 28, the corpus 134, and the realised split is 28/134 =
+  **20.9 %** against the rule's 19.9 % target — the closest it has sat to the
+  target since the freeze, having been 18.4 % when the holdout first grew;
+- `SET-SHA256` is RECOMPUTED over the whole tree by the recipe below rather
+  than derived from the old value, which is the method every entry in this file
+  records and the one the four earlier stale-on-arrival pins were caused by not
+  using. `rows` is 134.
+
+**The ordering claim is SCOPED, not preserved — and this is the honest half,
+restated because the set it is scoped to has not moved.** AC-6 claims the
+holdout partition's content hash predates the first commit of any proposer
+capability. That claim holds, unchanged, for the **18 rows sealed on
+2026-08-30**. It does not extend to the 10 rows sealed since — `dashboard-design`
+is the tenth, authored today, and it predates nothing. A future proposer
+evaluated against this holdout must either exclude the 10 younger rows or state
+that it is using rows whose seal is younger than the evaluation. The number to
+quote is 18, not 28, and the gap between them is now large enough that quoting
+the wrong one is a material misstatement rather than a rounding.
+
+**Both train-side published measurements are re-taken in the same change**, on
+the terms the 2026-10-04 entry set: six of the seven rows are train, so both
+move. `routing-body-signal-verdict.json` — verdict unchanged in kind, still
+`harmful` and still on the false-activation guard, but every input moved: false
+activation 7.128 -> 5.917 pp against the unchanged +2.0 pp guard, delta-recall
+4.517 -> 2.294 pp, McNemar p 0.07765 -> 0.3846, train corpora 100 -> 106, cases
+964 -> 1030. `delivery-set-measurement-2026-08-31.json` — precision@5 81.016 ->
+80.247 %, false activation 14.885 -> 15.779 %, adjudicated deliveries 374 ->
+405; the recall-loss ceiling stays BREACHED and the token target stays MET.
+`dashboard-design` is sealed and contributes to neither, which is the seal
+working rather than an omission.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to any
+file in the set — the procedure the 2026-10-01 section prescribes after
+shipping a stale pin for the third time in this file's life.
+
 ## The set hash
 
 ```
-SET-SHA256  b80202dd612ab2154e8edbcb3b67ed64aeeb2a78701a419397407a7f7ac8f73d
+SET-SHA256  365103553b29b93f44286609f7476d277aa210f29b73ed1aa4286e9b4e048a0e
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -305,6 +400,7 @@ open and which this file does not settle.
 | `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
 | `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
 | `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |
+| `dashboard-design` | `118088e410b5fe2bf03f9b4b5eacec86735cee3be56d4f2b201f841e86e9bdaf` |
 | `decision-record` | `5003c69b353baf1a6cd25b679d029f1988a83482cf2664f316d7c451d7a906d1` |
 | `fe-design` | `bfc10d1fce9264a9b9e6a542354b1f679dec12331a605c97c4615795a804cc3e` |
 | `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
@@ -460,8 +556,10 @@ open and which this file does not settle.
 | `alerting-doctrine` | `bded213edcbeeee6e3bf078e478ab4fdaa553855bdafda147813cf6198d8b8ba` |
 | `analysis-skill-router` | `df90b10374f26c8c267ff0bdecc5039d9cfb58e501ed000f02a70d4b3b8269fd` |
 | `api-design` | `c31fca74eb9330bf63341858f51b46a23fd56e48253eda0a12165892cac576c3` |
+| `api-endpoint` | `2f41577abd3fbc6b748e7bcb7991e31222276738e9bedeebddcb42daea5093be` |
 | `api-testing` | `599a7998d6cc58e71cbaf6c72154a334e0831e085516ee0fb345dbefd7ce1b88` |
 | `architecture-review-lens` | `0aea3490d1337d4d72688e35164191f510fbf0dbda3db2408585d18d0746aada` |
+| `blade-ui` | `4231ec1aed4180304c75e1b958a24703e9d9cf27d92a31c40c1bcbec92caf83a` |
 | `blameless-post-mortem` | `719dabb662d9937dabb178d097dc73e458c6b31210532b309896580aefd6c48c` |
 | `blast-radius-analyzer` | `353806c436295cd6e83c4e9e7ac0e4de61501e01cec65a9b0d57e2c183f9a391` |
 | `brand-asset-generation` | `ebbc94b7467f4240ec56d8b95ee2aae225540e8e51f665edfd7a9704be5dd731` |
@@ -492,6 +590,7 @@ open and which this file does not settle.
 | `existing-ui-audit` | `1cec11b0fc1696d5186a30c8a73fe3b10efa7ccb9a956d17a995e7415180a35e` |
 | `experiment-loop` | `7b64978277e8b29b2e58080914329d14274375f0195b59119cad7cede6ec55c0` |
 | `feature-planning` | `53747ead011ed29c480d407f66ff3803b43e585f390916ce0e5187340973142c` |
+| `flux` | `6af79f646de538883690b4ae485055191d08049df947dd7da4c949b7523dedf4` |
 | `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
 | `form-handler` | `5e88a2223f79b275411ba720155768414f4fe5bd99d8099a381ed9103e511805` |
 | `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
@@ -516,6 +615,7 @@ open and which this file does not settle.
 | `legal-practice-profile` | `be472d98368803e6b0f31652069f2ce01b802b97a3ec7976635a602667a6ba14` |
 | `license-compliance-audit` | `6ea08eade2a25c2f95c44a727084adbd4f4f2b073d9eae6e95bc169ab4cfdf93` |
 | `license-compliance-credits` | `d2838c7b4b722351d54ae91fd226a3314752a038769093f59b505a6e29d63bdf` |
+| `livewire` | `1f092537121622bdd4b78f0be1367cfa123e166516e162f0e45ecd7893a80ad1` |
 | `llm-provider-knowledge` | `9cfb3639dd7dee51520aebf2f180ce41ae752229b76716774468f6a9598461a1` |
 | `logging-monitoring` | `5e8406b3c814db3d1e100a1c817a9fce388afd40f4f3caa8230cd8f69e44f0f4` |
 | `markitdown` | `663ee4c4f9d5c707ff96208d1723d9817639fca7c00b346e43be2cb557610f6a` |
@@ -529,6 +629,7 @@ open and which this file does not settle.
 | `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
+| `react-shadcn-ui` | `c09d357232b10629dd11c552cac4513a0712c72de5f584ffc017a16935b428fb` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
@@ -539,6 +640,7 @@ open and which this file does not settle.
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
 | `source-discovery` | `e32a41fdd41414cc4734ebf440a253f592775046f603c9daeec6a28f1b05eee3` |
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
+| `sql-writing` | `3afe3f13210573d0e6f41be15836f3be0b3c01bc7db3a3625a35fb64e64356df` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
 | `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |

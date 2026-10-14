@@ -73,13 +73,13 @@ artifact-versus-brand pointer, per the council verdict on
 3. **Generate** CSS vars + Tailwind through the toolchain:
 
    ```bash
-   ./scripts-run <skills-root>/design-tokens/scripts/tokens generate \
+   node <skills-root>/design-tokens/scripts/tokens.mjs generate \
      --config .tokens.json -o assets/design-tokens.css
-   ./scripts-run <skills-root>/design-tokens/scripts/tokens generate \
+   node <skills-root>/design-tokens/scripts/tokens.mjs generate \
      --config .tokens.json --format tailwind
    ```
 
-4. **Validate** — `./scripts-run <skills-root>/design-tokens/scripts/tokens
+4. **Validate** — `node <skills-root>/design-tokens/scripts/tokens.mjs
    validate --dir src/` until clean (exit 0 is the evidence); convert
    hardcoded values to `var(--token)`.
 5. **Export the deck templates** — emit the locked-variable brand deck

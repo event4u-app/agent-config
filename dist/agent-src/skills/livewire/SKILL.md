@@ -17,7 +17,7 @@ install:
 # livewire
 
 > **Grounded stack guidance:** pull idiomatic Blade/UI Do/Don't + docs URLs
-> via `./scripts-run <skills-root>/corpus-grounding/scripts/ground search
+> via `node <skills-root>/corpus-grounding/scripts/ground.mjs search
 > --manifest <skills-root>/design-intelligence/data/manifest.json
 > --stack laravel "<topic>"` (UI-scoped corpus). See
 > [`design-intelligence`](../design-intelligence/SKILL.md).

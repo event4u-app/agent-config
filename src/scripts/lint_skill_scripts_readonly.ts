@@ -81,6 +81,17 @@ function loadAllowlist(): Set<string> {
     return new Set(entries.map((e) => e.path));
 }
 
+/**
+ * A `.mjs` a sibling `.ts` produced — `build:skill-scripts` emits one beside
+ * every entry point. It is the same code twice, so counting it would report
+ * each mutation primitive in a bundled entry point a second time and let a
+ * source file pass review while its own bundle fails it.
+ */
+function isProducedBundle(file: string): boolean {
+    if (path.extname(file) !== '.mjs') return false;
+    return fs.existsSync(file.replace(/\.mjs$/, '.ts'));
+}
+
 function* scriptFiles(root: string): Generator<string> {
     if (!fs.existsSync(root)) return;
     for (const skill of fs.readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
@@ -93,7 +104,7 @@ function* scriptFiles(root: string): Generator<string> {
             for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
                 const full = path.join(d, e.name);
                 if (e.isDirectory()) stack.push(full);
-                else if (SCRIPT_EXT.has(path.extname(e.name))) yield full;
+                else if (SCRIPT_EXT.has(path.extname(e.name)) && !isProducedBundle(full)) yield full;
             }
         }
     }
