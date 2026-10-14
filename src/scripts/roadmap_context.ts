@@ -750,8 +750,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // `road-to-wired-instruments` 2.1 — this probe is the only thing in the tree
     // that can OBSERVE the world (it costs a `gh` call), so it records what it
     // saw where a Stop-path concern can read it without spawning anything. The
-    // continuation ladder's premise rung is the consumer; the resume checkpoint
-    // is the other.
+    // resume checkpoint is the consumer; the continuation ladder's premise rung
+    // was the other until it was removed on 2026-10-14.
     //
     // Only a LIVE reading is recorded. Offline, `contextFingerprint` still
     // returns a digest — over a null base and an empty PR list — and that digest

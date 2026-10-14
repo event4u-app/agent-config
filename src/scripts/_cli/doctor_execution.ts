@@ -2,8 +2,7 @@
  * The `execution` block of `agent-config doctor --json`.
  *
  * `road-to-adversarial-verification-and-long-runs` Phase 0.3. Its own module
- * rather than a function inside `cmd_doctor.ts` for the reason
- * `_lib/continuation_ladder.ts` states for itself: `check_source_size_budget` is
+ * rather than a function inside `cmd_doctor.ts` because `check_source_size_budget` is
  * a shrink-only ratchet and `cmd_doctor.ts` sits far past the 1,500-line cap, so
  * every line added there is an added violation. A phase pays for its additions by
  * putting new code in a file under the cap rather than by raising a baseline.
