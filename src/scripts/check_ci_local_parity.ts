@@ -449,5 +449,5 @@ function _isCliEntry(): boolean {
 }
 
 if (_isCliEntry()) {
-    process.exit(main());
+    process.exitCode = main();
 }
