@@ -161,6 +161,43 @@ describe('learn_low_impact_preview — bucketing + flags', () => {
     // one gated outward step is `self-repair:release`. The rendered body is the
     // text a person reads before deciding, so a body still advertising the
     // retired flag would send them to a route that no longer exists.
+    // `render()` is the surface the command orders printed VERBATIM, so it is
+    // the one place a retired route actually reaches a person. The first
+    // version of this file guarded only `render_pr_body()` and the regression
+    // shipped green behind it — an independent review found the live
+    // `--apply` line still in `render()` one function above the one tested.
+    it('the printed preview block advertises no retired --apply route', () => {
+        // A CLEAN corpus, deliberately: the retired line sat in the
+        // promoted-and-nothing-refused branch, so a corpus carrying a refusal
+        // takes the other branch and never reaches it. The first draft of
+        // this case used the shared fixture, which does carry one, and passed
+        // for that reason rather than on the subject.
+        const clean = [
+            '## Validated',
+            '',
+            '<!-- intake-anchor: validated -->',
+            '',
+            '- "a clean validated phrase for the render branch"',
+            '',
+            '## On Probation',
+            '',
+            '<!-- intake-anchor: probation -->',
+            '',
+            '## Anti-Examples (Always Ask User)',
+            '',
+            '- "drop everything?"',
+            '',
+        ].join('\n');
+        const p = build_preview(tmpFile('render.md', clean), '/no/such/seed.md', {
+            repoSlug: 'acme/widgets',
+        });
+        expect(p.would_open_pr).toBe(true);
+
+        const block = p.render();
+        expect(block).not.toContain('--apply');
+        expect(block).toContain('sends nothing');
+    });
+
     it('the rendered body advertises no retired --apply route', () => {
         const p = build_preview(tmpFile('body.md', corpus()), '/no/such/seed.md', {
             repoSlug: 'acme/widgets',

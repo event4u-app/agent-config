@@ -7,11 +7,13 @@
  * maintainer who had not asked for one. The flag is one argument and nothing
  * watched it, which is how it was absent for the whole life of the ladder.
  *
- * Both rungs are asserted, not just the one the happy path takes. The ladder
- * degrades upstream -> fork, and the fork rung builds its own argv with an
- * extra `--head`; a fix applied to one rung and not the other would leave the
- * fork route — the one a contributor without push rights actually uses —
- * opening ready-for-review.
+ * Both rungs are asserted, not just the one the happy path takes. The two
+ * share one `prArgs` array today, so one `--draft` does cover both — but the
+ * fork rung reaches it down a different path (fork-ensure, whoami, a second
+ * remote, then an extra `--head`), and a later split of that array would be
+ * invisible to a test that only drove the direct-push rung. The fork route is
+ * the one a contributor without push rights actually takes, which is the one
+ * that must not quietly start opening ready-for-review.
  */
 import { describe, expect, it } from 'vitest';
 

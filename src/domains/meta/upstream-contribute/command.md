@@ -97,18 +97,33 @@ Show the user what would leave the machine, before anything leaves it:
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run prints the resolved route, the account that will appear on the
-pull request, and every byte of the title, body, branch name and diff. It
-touches no network. Read it with the user; a refusal from the privacy floor
-is final and the finding stays local.
+The dry run prints the resolved route and every byte of the title and body.
+It touches no network. Read it with the user; a refusal from the privacy
+floor is final and the finding stays local.
 
-No record yet? Record the finding first, then release it:
+**The account, the branch name and the diff are NOT printed.** They are the
+output of a payload builder that does not exist yet — steps 2.1 and 4.3 of
+`road-to-one-upstream-that-checks-what-leaves`. Say so; never reconstruct
+them, because a fabricated pre-send check is worse than a short one.
+
+**No record yet?** Then there is nothing to release, and no command here
+makes one. `self-repair:status` LISTS records; the dispatcher's whole verb
+set is `status`, `release` and `targets`. A record is opened by the
+self-repair hook when it observes the defect, so a learning that no record
+covers cannot ride this ladder today — that gap is real, it is named here
+rather than papered over, and it is the consumer-project case
+`road-to-one-upstream-that-checks-what-leaves` Phase 4 still owes a route.
 
 ```bash
 ./agent-config self-repair:status
 ```
 
 ### 5. Send, once, with the user's word in that turn
+
+In a checkout of this package, step 6's quality gates run **before** this
+command, not after it. They are numbered last because they apply to one of
+the two cases and the send applies to both; the ordering is step 6, then
+step 5.
 
 ```bash
 ./agent-config self-repair:release <fingerprint>
@@ -124,11 +139,11 @@ Degrading never widens what leaves the machine, only the vehicle.
 
 ### 6. Quality gates (only in a checkout of this package)
 
-Run the package's full CI pipeline and confirm it is green before the send.
-The `package-ci-checks` rule owns the entry point and names it; a consumer
-project has no such runner, which is why the command is not repeated here.
-Outside such a checkout the package CI runs these after the issue or pull
-request exists.
+Run the package's full CI pipeline and confirm it is green — before step 5,
+per the note there. The `package-ci-checks` rule owns the entry point and
+names it; a consumer project has no such runner, which is why the command is
+not repeated here. Outside such a checkout there is nothing to run first, and
+the package CI runs these after the issue or pull request exists.
 
 ### 7. Remind about local override cleanup
 

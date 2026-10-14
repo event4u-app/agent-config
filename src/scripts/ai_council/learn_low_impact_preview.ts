@@ -18,23 +18,28 @@
 import * as fs from 'node:fs';
 
 import { parse_corpus_strict } from './low_impact_corpus.js';
+import {
+    type RedactionViolation,
+    redact_low_impact_entry,
+} from './redact_low_impact_entry.js';
 
 /**
- * The package-side seed the preview diffs against — the ONE place this
- * literal lives, so a caller never restates it.
+ * The package-side seed the preview diffs against — the one place a CALLER
+ * reads this literal from, so no caller restates it. The privacy floor names
+ * the same path for its own purpose, which is a lock rather than a second
+ * source: the rule has to name what it locks.
  *
  * The file is deliberately NOT in the tree: the package ships no seed
  * corpus, `_readSeedPhrases` treats a missing seed as an empty set, and the
  * preview therefore diffs against an empty baseline. The path is still
  * named here, and locked by `low-impact-corpus-privacy-floor`, so that a
  * seed reappearing arrives already under the privacy floor.
+ *
+ * It is RELATIVE. A caller resolves it against the package root; resolving it
+ * against an arbitrary cwd would let a same-named file in a consumer project
+ * mark entries `already_seeded` and suppress them silently.
  */
 export const PACKAGE_SEED_PATH = 'data/low-impact-decisions-seed.md';
-
-import {
-    type RedactionViolation,
-    redact_low_impact_entry,
-} from './redact_low_impact_entry.js';
 
 // Python: re.compile(r"^last-upstreamed:\s*([0-9a-f]{6,40}|0+)\s*$",
 //                     re.IGNORECASE | re.MULTILINE)
@@ -71,10 +76,10 @@ export class RefusedEntry {
 }
 
 /**
- * Structured preview for `/memory learn-low-impact --preview`.
+ * Structured preview for `/memory learn-low-impact`.
  *
- * Consumed by the agent which renders the human-facing preview block,
- * then waits for explicit `--apply` before invoking `upstream-contribute`.
+ * Consumed by the agent which renders the human-facing preview block. The
+ * command ends there: it opens nothing and sends nothing.
  */
 export class LearnLowImpactPreview {
     readonly promoted: readonly PreviewEntry[];
@@ -111,10 +116,14 @@ export class LearnLowImpactPreview {
     }
 
     /**
-     * True when `--apply` would actually open a PR.
+     * True when the promoted set is both non-empty and wholly clean — the
+     * shape an upstream contribution would need. Nothing here acts on it;
+     * `render()` reads it to decide which closing line to print.
      *
-     * Iron Law: any redactor refusal blocks the PR — the author must
-     * rephrase or drop the offending entry locally and re-run.
+     * The name predates the retirement of `--apply` and is kept because it
+     * is the published accessor; what changed is that no caller opens
+     * anything. Iron Law, unchanged: any redactor refusal blocks promotion —
+     * the author rephrases or drops the offending entry locally and re-runs.
      */
     get would_open_pr(): boolean {
         return this.promoted.length > 0 && this.refused.length === 0;
@@ -167,7 +176,8 @@ export class LearnLowImpactPreview {
             );
         } else if (this.promoted.length > 0) {
             lines.push(
-                '> Re-run with `--apply` to open the draft PR via' +
+                '> This command sends nothing. Carrying an entry upstream is a' +
+                    ' separate, explicitly authorised step — see' +
                     ' `upstream-contribute`.',
             );
         }
@@ -179,8 +189,8 @@ export class LearnLowImpactPreview {
      * Source-project-stripped diff the preview proposes for a reader.
      *
      * Emits unified-diff-style `+` lines for each promoted phrase under the
-     * seed file's `## Validated` section. The agent uses this as the
-     * `upstream-contribute` patch body.
+     * seed file's `## Validated` section — material for a reader to judge,
+     * not a patch this command applies anywhere.
      */
     render_diff(): string {
         if (this.promoted.length === 0) {
@@ -237,9 +247,10 @@ function _rstrip(s: string): string {
 /**
  * Return the set of normalised phrases already in the seed file.
  *
- * Missing seed file is not an error — it returns an empty set so the
- * first-ever upstream PR can seed the whole corpus. Reuses the strict
- * parser so the seed itself is contract-validated.
+ * Missing seed file is not an error — it returns an empty set, which is the
+ * standing case rather than an edge one: the package ships no seed, so every
+ * preview diffs against an empty baseline (see `PACKAGE_SEED_PATH`). Reuses
+ * the strict parser so a seed that does appear is contract-validated.
  */
 function _readSeedPhrases(seedPath: string): Set<string> {
     if (!fs.existsSync(seedPath)) {

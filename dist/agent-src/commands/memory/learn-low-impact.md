@@ -61,7 +61,12 @@ import {
     PACKAGE_SEED_PATH,
 } from '../../scripts/ai_council/learn_low_impact_preview.js';
 
-const plan = build_preview('agents/decisions/low-impact-decisions.md', PACKAGE_SEED_PATH, {
+// Both paths are RELATIVE and must be resolved explicitly — the corpus
+// against the project root, the seed against the PACKAGE root. Passed bare
+// they resolve against cwd, where a consumer project that happens to carry
+// `data/low-impact-decisions-seed.md` would be read as the package seed and
+// silently mark its own entries `already_seeded`.
+const plan = build_preview(path.join(projectRoot, 'agents/decisions/low-impact-decisions.md'), path.join(packageRoot, PACKAGE_SEED_PATH), {
     repoSlug: '<owner>/<repo>',   // from `git remote get-url origin`
     repoRoot: '<absolute repo root>',
     privateDomains: [],           // from .agent-settings.yml policy

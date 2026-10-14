@@ -82,13 +82,19 @@ Nothing is sent without the person's word in that turn.
 - [x] **1.3 The third way is retired (D2).** `learn-low-impact --apply` is
       removed with its documentation, the rule's locked-target line names the
       corpus that exists, and the `/memory` row in
-      `later/road-to-surface-consolidation` is updated. The seed literal now
-      lives in exactly one place — `PACKAGE_SEED_PATH` in
+      `later/road-to-surface-consolidation` is updated. Callers now read the
+      seed literal from one place — `PACKAGE_SEED_PATH` in
       `src/scripts/ai_council/learn_low_impact_preview.ts` — which states that
       the file is deliberately absent, so the preview diffs against an empty
-      baseline rather than against a path nobody can open. The rule keeps the
-      seed's `path_prefix` trigger: a seed reappearing then arrives already
-      under the floor instead of beneath it.
+      baseline rather than against a path nobody can open. **Corrected
+      2026-10-14 after an independent review:** an earlier wording here said
+      the literal lives in exactly one place, and it does not. The privacy
+      floor names the same path twice, in its trigger block and in its locked
+      targets, and the pinning test names it once more. Those are a lock and
+      an assertion, not second sources — a rule has to name what it locks —
+      but "one place" was a false claim and is replaced by the true one. The
+      rule keeps the seed's `path_prefix` trigger: a seed reappearing then
+      arrives already under the floor instead of beneath it.
       verify: `grep -c 'low-impact-decisions-seed' src/domains/meta/memory/learn-low-impact/command.md` -> /^0$/
 - [ ] **1.4 The four threshold sites cite one table.** Each points at the
       canonical evidence-threshold table in `docs/contracts/retro-v1.md`

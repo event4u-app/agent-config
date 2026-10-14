@@ -207,14 +207,25 @@ record the rationale in the finding.
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run resolves the route, names the account that will appear on the pull
-request, and prints the title, body, branch name and diff in full. It touches
-no network.
+The dry run resolves the route and prints the title and body in full. It
+touches no network.
+
+**It does NOT yet print the account, the branch name or the diff, and this
+skill will not invent them.** Those three are the output of a payload builder
+that does not exist — steps 2.1 and 4.3 of
+`road-to-one-upstream-that-checks-what-leaves`. Until they land, the bytes a
+person can actually approve before the send are the route, the title and the
+body; read those with the user and say plainly that the rest is unshown.
 
 A refusal from the privacy floor is **final**: the finding stays local. There
 is no scrubbing pass, because a rewritten identifier is still a leaked one.
 
 ### 5. Send — one command, one turn, one word
+
+In a checkout of this package, step 6's quality gates run **before** this
+command, not after it. They are numbered last because they apply to one of
+the two cases and the send applies to both; the ordering is step 6, then
+step 5.
 
 ```bash
 ./agent-config self-repair:release <fingerprint>
@@ -230,11 +241,12 @@ the vehicle, never what leaves.
 
 ### 6. Quality gates (only inside a checkout of this package)
 
-Run the package's full CI pipeline and confirm it is green before the send.
-[`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
-and names it; a consumer project has no such runner, which is why the command
-is not repeated here. Outside such a checkout, the package CI runs after the
-issue or pull request exists.
+Run the package's full CI pipeline and confirm it is green — before step 5,
+per the note there. [`package-ci-checks`](../../rules/package-ci-checks.md)
+owns the entry point and names it; a consumer project has no such runner,
+which is why the command is not repeated here. Outside such a checkout there
+is nothing to run first, and the package CI runs after the issue or pull
+request exists.
 
 ### 7. After merge — clean up override
 
@@ -256,7 +268,9 @@ replaces the local override.
 
 1. Summary of what is being contributed (type, name, why)
 2. The source path under `src/` that the contribution targets
-3. The dry-run output, verbatim — route, account, title, body, branch, diff
+3. The dry-run output, verbatim — whatever it actually printed, and nothing
+   reconstructed. Today that is route, title and body; a field the command did
+   not print is reported as unshown, never filled in
 4. The one command the user runs to send it, and nothing executed on their behalf
 5. Reminder to clean up the local override after the contribution merges
 
