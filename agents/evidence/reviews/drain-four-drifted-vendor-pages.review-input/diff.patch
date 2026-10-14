@@ -1,5 +1,5 @@
 diff --git a/.github/workflows/host-docs-digest.yml b/.github/workflows/host-docs-digest.yml
-index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..459a94d5338b2619e000c92879650a7ab4324fbc 100644
+index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..4153c5e5be1ead6bc8ae12cffd8b8d0a8f559a9f 100644
 --- a/.github/workflows/host-docs-digest.yml
 +++ b/.github/workflows/host-docs-digest.yml
 @@ -24,6 +24,16 @@ name: Host Docs Digest Watch
@@ -77,7 +77,7 @@ index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..459a94d5338b2619e000c92879650a7a
 +          title="Host Docs Digest Watch is red: read the drifted vendor pages"
 +          body="The scheduled run found drift: ${RUN_URL}
 +
-+          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward), with the ratification artifact host_lowering.yaml requires. Close this issue once the watch is green."
++          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward). A host_lowering.yaml row also needs the ratification artifact that table requires; a host_docs_pages.yaml row does not. Close this issue once the watch is green."
 +          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${title}\" in:title" --json number,title --jq "map(select(.title == \"${title}\")) | .[0].number // empty")
 +          if [ -n "$num" ]; then
 +            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"
@@ -485,10 +485,10 @@ index 0000000000000000000000000000000000000000..5c9076c8b195497f9f2c19e673c340b5
 +~~~
 diff --git a/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..53220dd5dbd453a3cbf65f5bc4fc082be2087f08
+index 0000000000000000000000000000000000000000..5983186ad1b960a412fd449087d647db693e4f7a
 --- /dev/null
 +++ b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
-@@ -0,0 +1,159 @@
+@@ -0,0 +1,162 @@
 +---
 +complexity: lightweight
 +status: ready
@@ -580,11 +580,14 @@ index 0000000000000000000000000000000000000000..53220dd5dbd453a3cbf65f5bc4fc082b
 +column stays byte-identical.
 +
 +**Ratification.** `agents/evidence/ratifications/drain-four-drifted-vendor-pages.md`,
-+four council rounds on 2026-10-14 (anthropic + openai, CLI, $0), final
++six council rounds on 2026-10-14 (anthropic + openai, CLI, $0), final
 +`ratified` from both seats. Round 1 found a stale "read on 2026-09-29" comment
 +above a re-dated row; answering round 2 surfaced a stale install bundle over the
-+`host_listing_model.ts` string. Both were fixed in their own commits before the
-+final round.
++`host_listing_model.ts` string. Round 5 `refused` the first shape of the 1.3
++workflow change (a write token on the job that runs repository code, and no way
++to tell drift from a broken runner); round 6 ratified the separated
++`route-drift` job that answered it. Each fix landed in its own commit before
++the next round.
 +
 +## The two-week silence — a process gap
 +
@@ -626,7 +629,7 @@ index 0000000000000000000000000000000000000000..53220dd5dbd453a3cbf65f5bc4fc082b
 +      looking at that job, or looking at it did not lead anywhere. Name which,
 +      in one line, and change the one thing that makes the next occurrence
 +      land — a pointer, an owner, or nothing with a stated reason.
-+      verify: `grep -c 'Host Docs Digest Watch' .github/workflows/host-docs-digest.yml` -> /^[1-9]/
++      verify: `npx vitest run tests/scripts/host_docs_digest_workflow.test.ts` -> 0
 +
 +## Risk Register
 +<!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude/host -->
@@ -817,20 +820,24 @@ index 7592ac77bb4eb7a8064c84c8920a0f43d07a31dd..206a08e9de2a6b1350e90f2856a8990b
    {
      id: "fill-order-is-invocation-frequency",
 diff --git a/src/scripts/_lib/host_listing_model.ts b/src/scripts/_lib/host_listing_model.ts
-index 913452b873b44f705d4a8d843929433ca85e5415..847955fbced25105dcb94b888834c05ae04a4e7b 100644
+index 913452b873b44f705d4a8d843929433ca85e5415..170f6b970f296b9901c2e8d3a45e7a833a0dc4f8 100644
 --- a/src/scripts/_lib/host_listing_model.ts
 +++ b/src/scripts/_lib/host_listing_model.ts
-@@ -11,7 +11,9 @@
+@@ -11,9 +11,11 @@
   * returned zero hits before this file.
   *
   * THE MECHANISM, AS DOCUMENTED UPSTREAM (code.claude.com/docs/en/skills and
 - * anthropics/claude-code#64606, both read 2026-08-22). Claude Code lists every
+- * skill NAME, and keeps DESCRIPTIONS only up to a fraction of the context
+- * window — 1% by default, ≈8,000 characters on a 200k window — filling by
 + * anthropics/claude-code#64606, both read 2026-08-22; the page re-read on
 + * 2026-10-14 keeps the 1% and the 1,536 and no longer prints the ≈8,000
-+ * illustration, which survives here only as the 2026-08-22 reading). Claude Code lists every
-  * skill NAME, and keeps DESCRIPTIONS only up to a fraction of the context
-  * window — 1% by default, ≈8,000 characters on a 200k window — filling by
++ * illustration). Claude Code lists every skill NAME, and keeps DESCRIPTIONS
++ * only up to a fraction of the context window — 1% by default, which the
++ * 2026-08-22 page illustrated as ≈8,000 characters on a 200k window — filling by
   * invocation frequency and capping each entry at 1,536 characters. The fraction
+  * is consumer-settable as `skillListingBudgetFraction`.
+  *
 @@ -96,9 +98,9 @@ const ASSUMPTIONS: readonly ModelAssumption[] = [
          id: 'budget-unit-is-chars',
          provenance: 'upstream-prose',

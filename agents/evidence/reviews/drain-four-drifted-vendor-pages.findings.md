@@ -1,24 +1,22 @@
 # Findings: drain-four-drifted-vendor-pages
-<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 70e4edb878e4e518f19f5bc6c191007a12c84ab7d29bff73fdf92a041889a118 | diff: 06961545555c5f8d131914774d0742b36bc4de1b | reviewer: r2-fresh-subagent-drain-four-drifted-vendor-pages | prompt_hash: 2fd6212db4a48fba496d88c5baa9f4b0f36f7a7518b09207342ba041a872467a -->
+<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 5cf32133376fa652bf16a5bd8f78b9d47cdb4e1f40ce0d075053f7f4f5544cc1 | diff: e3791d87e926ecd657453f981ffebc26de87bac9 | reviewer: r2-fresh-subagent-drain-four-drifted-vendor-pages | prompt_hash: 5c422d779e7c4250a42233287773e1fec97f8dab27d8cd232e93d22a277031c9 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-four-drifted-vendor-pages"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-14 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 06961545555c5f8d131914774d0742b36bc4de1b
-  scope_hash: 70e4edb878e4e518f19f5bc6c191007a12c84ab7d29bff73fdf92a041889a118
+  diff_sha: e3791d87e926ecd657453f981ffebc26de87bac9
+  scope_hash: 5cf32133376fa652bf16a5bd8f78b9d47cdb4e1f40ce0d075053f7f4f5544cc1
   roadmap: agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
-  roadmap_hash: 7aade69d32bf0308f0d4aa0c43ab5574c5bb79430e13d9a15248ac626e0641b8
+  roadmap_hash: c653ff6bcf563337d8b24fff9290df8dc386584feb9cedeb8c4a130b38ab01df
   ac_hash: 9177b5025bfc210404254faf14b8fcb1859646e899978dae0dde50367c93e065
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-10-14T15:15:40Z
+dispatched: 2026-10-14T15:18:14Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
-| 1 | low | agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md:92 | The archived roadmap's Ratification paragraph says "four council rounds ... final `ratified` from both seats" and names only the round-1 and round-2 fixes, but the ratification artifact it points to records six rounds, including the round-5 `refused` on the workflow and the `route-drift` restructure that answered it. The closing record undercounts the review and leaves out the one refusal. | fixed | b151acad5 |
-| 2 | low | agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md:138 | Step 1.3's `verify:` (`grep -c 'Host Docs Digest Watch' .github/workflows/host-docs-digest.yml` -> `/^[1-9]/`) is vacuous. It matches the pre-existing `name: Host Docs Digest Watch` on line 1, so it passed on the base before any routing change and proves nothing about the step it closes. The real evidence is `tests/scripts/host_docs_digest_workflow.test.ts`, which the verify does not run. | fixed | b151acad5 |
-| 3 | low | src/scripts/_lib/host_listing_model.ts:18 | The header is still titled "THE MECHANISM, AS DOCUMENTED UPSTREAM" and still states "1% by default, ≈8,000 characters on a 200k window" in the present tense. Three lines above, the new parenthetical says the current page no longer prints the ≈8,000 illustration, so the paragraph contradicts itself. The `budget-unit-is-chars` `why` string was re-dated correctly; this sentence was not. | fixed | b151acad5 |
-| 4 | low | .github/workflows/host-docs-digest.yml:147 | The routed issue body tells the reader to re-establish the row "with the ratification artifact host_lowering.yaml requires". The watch also covers `host_docs_pages.yaml` (this branch re-dated `claude-code-skills` there, and the ratification artifact lists it as not gated), so a drift only on a sibling page gets instructions that name the wrong table and an obligation that does not apply. | fixed | b151acad5 |
+| 1 | low | src/scripts/hooks/host_lowering.yaml:103 | Step 1.2 and the Goal require every re-established row to have `expires` "moved FORWARD", and 1.2 is ticked `[x]`, but the `claude` row gets `docs_at: 2026-10-14` with `expires` left at 2027-09-06, i.e. not `docs_at` + 1 year as the table policy states for rows set by a dated docs read. The reason is given in the roadmap's Findings section ("predates the policy"), but the policy exception now sits on a row that was re-read under the policy, and the step's own text does not record the deviation. The rule is applied unevenly across the five re-dated rows. | open | |
+| 2 | low | agents/evidence/ratifications/drain-four-drifted-vendor-pages.md:47 | The `## Rounds` section says "Six council invocations" but numbers nine items, mixing fix commits and a completion review in with the rounds (item 5 = "Round 4", item 7 = "Round 5", item 9 = "Round 6"). A reader who cites "item N" or "round N" from this ratification record can land on the wrong entry. | open | |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
