@@ -11243,7 +11243,7 @@ var ASSUMPTIONS = [
   {
     id: "budget-unit-is-chars",
     provenance: "upstream-prose",
-    why: 'The docs give the budget as a fraction of the context window (tokens) and then illustrate it as "\u22488,000 characters on 200k", which only reconciles at 4 chars per token. That ratio is inferred from the illustration, never stated.'
+    why: 'The docs give the budget as a fraction of the context window (tokens); the 2026-08-22 read illustrated it as "\u22488,000 characters on 200k" (gone by 2026-10-14), which only reconciles at 4 chars per token. That ratio is inferred, never stated.'
   },
   {
     id: "fill-order-is-invocation-frequency",

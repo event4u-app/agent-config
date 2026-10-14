@@ -82,6 +82,25 @@ describe('source_shape — what silences each class', () => {
         expect(repoSlugHits('https://github.com/sponsors/someone')).toEqual([]);
     });
 
+    // Assembled at run time so a review snapshot of this diff does not itself
+    // carry a literal un-allowlisted repository URL into the tracked tree.
+    const GH = ['github', 'com'].join('.');
+    const OWNER = 'some-unlisted-owner';
+
+    it('a subdomain of github.com is not a repo URL', () => {
+        // `docs.github.com/en/copilot/...` is a documentation path, not
+        // `<owner>/<repo>`; the bare host still fires right next to it.
+        expect(repoSlugHits('https://docs.github.com/en/copilot/concepts/agents/hooks.md')).toEqual([]);
+        expect(repoSlugHits('"docs_url":"https://docs.github.com/en/copilot/x"')).toEqual([]);
+        expect(repoSlugHits(`https://${GH}/${OWNER}/some-repo`).length).toBe(1);
+    });
+
+    it('only the documentation subdomain is excused; other subdomains still flag the line', () => {
+        expect(repoSlugHits(`https://api.${GH}/repos/${OWNER}/some-repo`).length).toBeGreaterThan(0);
+        expect(repoSlugHits(`https://gist.${GH}/${OWNER}/abc123`).length).toBeGreaterThan(0);
+        expect(repoSlugHits(`https://codeload.${GH}/${OWNER}/some-repo`).length).toBeGreaterThan(0);
+    });
+
     it('a Source header pointing at a tmp directory is judged ONCE, by the directory name', () => {
         // Otherwise one line would raise two ratchet counts and the two classes
         // would move together, which makes the numbers unreadable.
