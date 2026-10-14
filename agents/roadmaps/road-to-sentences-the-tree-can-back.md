@@ -115,7 +115,7 @@ answer. No class sweep: each step names its sentence.
       `--check` gate is added for the two files.
       verify: `grep -c '"estimate-ticket"' llms.txt docs/skills-catalog.md` -> /:0$/
       Positive control: the same grep at `d41121927` returns 1 for each file.
-- [ ] **1.2 A missed pattern fails in check mode.** `update_counts --check`
+- [x] **1.2 A missed pattern fails in check mode.** `update_counts --check`
       exits 1 when a pattern matches nothing, naming it.
       verify: `npx vitest run tests/scripts/update_counts.test.ts -t missed-pattern-fails --reporter=verbose` -> /✓.*missed-pattern-fails/
 - [ ] **1.3 The README and site counts say what the tree has.** The prose

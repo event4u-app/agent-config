@@ -382,13 +382,24 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
     ],
 ];
 
-/** Return [new_text, drifts]. Each drift is [kind, old, new]. */
+/**
+ * Return [new_text, drifts, unapplied]. Each drift is [kind, old, new]; each
+ * unapplied entry is a pattern that produced NO substitution and the reason.
+ *
+ * A pattern that matches nothing used to warn on stderr and continue, so
+ * `--check` reported "All counts in sync" for a sentence it could no longer
+ * find — a figure that drifts after its pattern stops matching it is exactly
+ * the silent pass a counter exists to prevent. The caller decides what to do
+ * with the list; in check mode it is a failure.
+ */
 export function apply_to_text(
     text: string,
     patterns: ReadonlyArray<[string, string]>,
     counts: Record<string, number>,
-): [string, Array<[string, number, number]>] {
+): [string, Array<[string, number, number]>, Array<[string, string, string]>] {
     const drifts: Array<[string, number, number]> = [];
+    // [pattern, kind, reason]
+    const unapplied: Array<[string, string, string]> = [];
     let new_text = text;
     for (const [pattern, kind] of patterns) {
         // Python re.compile(pattern).finditer / .sub — global, non-overlapping.
@@ -396,6 +407,7 @@ export function apply_to_text(
         const matches = [...new_text.matchAll(reFind)];
         if (matches.length === 0) {
             process.stderr.write(`  ⚠️  pattern missed: /${pattern}/ (kind=${kind})\n`);
+            unapplied.push([pattern, kind, 'pattern matched nothing']);
             continue;
         }
         // A kind with no count is a BUG in TARGETS or KINDS, and writing it
@@ -410,6 +422,7 @@ export function apply_to_text(
                 `  ❌  no count for kind=${kind} (pattern /${pattern}/) — ` +
                     'add it to KINDS; refusing to write `undefined` into the target\n',
             );
+            unapplied.push([pattern, kind, 'no count for this kind']);
             continue;
         }
         for (const m of matches) {
@@ -423,7 +436,7 @@ export function apply_to_text(
             return `${g1}${next}${g3}`;
         });
     }
-    return [new_text, drifts];
+    return [new_text, drifts, unapplied];
 }
 
 export const KINDS = [
@@ -457,8 +470,19 @@ function parse_args(argv: readonly string[]): { check: boolean } {
     return args;
 }
 
-export function main(argv: readonly string[] = process.argv.slice(2)): number {
+/**
+ * `opts` exists so the check-mode contract can be tested against a fixture
+ * tree instead of the real one. A test that has to edit a tracked file to
+ * exercise a gate is a test that cannot run, so the seam is here rather than
+ * in the test.
+ */
+export function main(
+    argv: readonly string[] = process.argv.slice(2),
+    opts: { root?: string; targets?: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> } = {},
+): number {
     const args = parse_args(argv);
+    const root = opts.root ?? REPO_ROOT;
+    const targets = opts.targets ?? TARGETS;
 
     const counts: Record<string, number> = {};
     for (const k of KINDS) {
@@ -474,14 +498,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     let any_drift = false;
     let any_change = false;
-    for (const [rel, patterns] of TARGETS) {
-        const p = path.join(REPO_ROOT, rel);
+    let any_unapplied = false;
+    for (const [rel, patterns] of targets) {
+        const p = path.join(root, rel);
         if (!_exists(p)) {
             process.stderr.write(`❌  Missing target: ${rel}\n`);
             return 1;
         }
         const text = fs.readFileSync(p, 'utf-8');
-        const [new_text, drifts] = apply_to_text(text, patterns, counts);
+        const [new_text, drifts, unapplied] = apply_to_text(text, patterns, counts);
+        for (const [pattern, kind, reason] of unapplied) {
+            any_unapplied = true;
+            process.stderr.write(`  ❌  ${rel}: ${reason} — /${pattern}/ (kind=${kind})\n`);
+        }
         if (drifts.length > 0) {
             any_drift = true;
             for (const [kind, old, next] of drifts) {
@@ -495,6 +524,14 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
 
     if (args.check) {
+        if (any_unapplied) {
+            process.stderr.write(
+                '\n❌  A pattern applied to nothing (named above). The figure it owns is ' +
+                    'no longer generated, so a drift in it would pass unseen. Fix the pattern ' +
+                    'or drop it with the figure.\n',
+            );
+            return 1;
+        }
         if (any_drift) {
             process.stderr.write('\n❌  Stale counts detected. Run `task counts-update` to fix.\n');
             return 1;
