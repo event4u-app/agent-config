@@ -272,7 +272,7 @@ answer. No class sweep: each step names its sentence.
 
 ## Phase 5 — The standard, claimed as read
 
-- [ ] <!-- blocked-by: skill-standard-claim-wording | asked: no — authored from inbox round inbox-2026-10-k, which had no owner turn on this question; it is carried by the blocker below for /roadmap:resolve-blockers --> **5.1 The claim says what the reading shows.** `README.md:195` and
+- [x] **5.1 The claim says what the reading shows.** `README.md:195` and
       `docs/github-topics.md:42` take the wording the blocker resolves to.
       verify: `grep -c 'follows the \[Agent Skills open standard\]' README.md` -> 0
 
@@ -303,7 +303,7 @@ answer. No class sweep: each step names its sentence.
 - [x] AC-4 — `check_ci_local_parity --format json` stdout parses.
 - [x] AC-5 — The census reports every text file and every cross-level revision
       set of a nested topic folder, and names what it did not count.
-- [ ] AC-6 — The README's skill-format sentence states the owner's chosen
+- [x] AC-6 — The README's skill-format sentence states the owner's chosen
       wording.
 
 ## What closing the criteria turned up
@@ -324,6 +324,30 @@ rather than inside the criteria.
   when it is above zero the run says in words that the anchor total is a floor
   over what was read rather than a measure of the folder.
 
+## What resolving the standard claim changed
+
+Owner decision 2026-10-14, option (a), applied in one change rather than to the
+two lines the step named. Every published sentence that claimed conformance was
+brought into line, because leaving one would keep the claim the decision
+withdrew:
+
+- `README.md` (the content-layer paragraph) — carries the
+  `claim:skill-format-package-keys` marker.
+- `docs/github-topics.md` — the `agent-skills` and `agentskills-standard`
+  rationale rows. The topic slug itself is a repository label and is kept.
+- `docs/architecture.md` — the format paragraph under the host table.
+- `docs/contracts/package-self-orientation.md` — the projection paragraph.
+- `site/src/content/docs/architecture/overview.md` and
+  `site/src/content/docs/getting-started/introduction.md`.
+
+The measured reading is the one this tree can re-derive: the skill schema sets
+`additionalProperties: false` over 39 top-level keys and requires `source` and
+`domain`, and all 300 skills carry at least one top-level key outside the six
+the specification defines. The external validator's "0 of 299" from the
+harvest round is not restated as a claim, because this tree does not run that
+validator. The parked non-adoption roadmap is unchanged: its record already
+says these keys are package-specific, and this decision migrates nothing.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -334,12 +358,13 @@ rather than inside the criteria.
 | D4 | reversible-technical | evidence | The census repair is carried here | The defect was measured on this round's folder; the stub on the lineage gate owns a different tool | The census and the lineage gate are merged |
 | D5 | reversible-technical | agent | Dated facts in skill bodies stay a fix-on-sight class, not a mechanism | Only two lines are shown wrong; a prose lint for model and version names has false positives by construction (ADR-118) | Three stale facts of one class appear in two or more skills |
 | D7 | reversible-technical | evidence | The site figures are GATED, not deleted — reversing D6's "drop the prose figures" for the half that is still hand-typed | The README took the gate-rather-than-delete call on 2026-10-12 and `--check` is green on it; deleting the site's figures would leave nothing preventing the fourteenth | A site figure needs a basis the counter has no kind for |
+| D8 | product-owned | owner | Blocker `skill-standard-claim-wording` resolved as option (a): the public sentences stop claiming conformance and state the `SKILL.md` format with package-specific top-level keys; no frontmatter migration | Owner chat answer 2026-10-14; all 300 skills carry top-level keys outside the six the specification defines (`claim:skill-format-package-keys`) | The parked non-adoption in `agents/roadmaps/later/road-to-skill-ecosystem-capability-queue.md` is reopened and a migration ships |
 | D6 | deterministic | agent | Closure pass 2026-10-11: 1.3's open alternative is picked (drop the prose figures, keep the explanation); six `unfalsifiable-verify` listings are titles the steps add, asserted by a passing-title regex; the two `typed-op` hits are the word "merge" in a `relates` note naming a parked roadmap, not an operation this roadmap performs | `closure_scan` on this file before and after the edit | A step lands without the named test title |
 
 ## Blockers
 
 ### blocker: skill-standard-claim-wording
-- **Status:** open — raised 2026-10-11 from inbox round `inbox-2026-10-k`, which carried no owner turn on this question.
+- **Status:** resolved — owner 2026-10-14, option (a): the sentence was wrong, not the schema, so the README and `docs/github-topics.md` now say the suite uses the `SKILL.md` format with package-specific top-level keys, bound as `claim:skill-format-package-keys` in `docs/CLAIMS.md`. Raised 2026-10-11 from inbox round `inbox-2026-10-k`.
 - **Owner:** owner — what the README claims about conformance is a public claim; the council may advise.
 - **Blocks:** step 5.1, AC-6.
 - **What to do:** pick exactly one — (a) change `README.md:195` and `docs/github-topics.md:42` to say the suite uses the `SKILL.md` format with package-specific top-level keys, and add the measured reading as a claim; or (b) keep the sentence and migrate the frontmatter toward the reference validator, which reopens the parked non-adoption in `later/road-to-skill-ecosystem-capability-queue.md`.

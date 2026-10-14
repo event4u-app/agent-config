@@ -6,8 +6,8 @@ description: What agent-config is — a content + governance layer for AI coding
 **agent-config is a content + governance layer for AI coding agents** — a
 curated library of skills, rules, commands, guidelines and personas, distributed
 on npm as `@event4u/agent-config` and projected into each host tool's native
-config format. It follows the [Agent Skills](https://agentskills.io) open
-standard and compiles into **7+ host agents** (Claude Code, Cursor, Augment,
+config format. Skills use the `SKILL.md` format with package-specific
+top-level frontmatter keys, and the layer compiles into **7+ host agents** (Claude Code, Cursor, Augment,
 Cline, Windsurf, Gemini CLI, GitHub Copilot, and more).
 
 Think of it as a portable playbook and style guide those tools read — **not** a
