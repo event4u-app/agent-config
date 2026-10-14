@@ -292,8 +292,13 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // should-trigger for no skill in the tree. `security` (0x5d = 93) is
         // above the ceiling and trains, moving the train count 109 -> 110; the
         // holdout is unchanged at 31, so the seal is untouched by this growth.
+        //
+        // 141 -> 142 on 2026-10-14e: `road-to-account-surface-detector` 3.2
+        // wired the account-surface detector into `launch-readiness`, which
+        // carried no corpus. 0x71 = 113 is above the ceiling, so it trains
+        // (110 -> 111) and the holdout stays at 31.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(141);
+        expect(all.length).toBe(142);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(31);
     });
 });
@@ -346,7 +351,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // so this entry needs no absent-row sentence.
         // 109 -> 110 on 2026-10-14d: `security` (0x5d = 93) trains. See the
         // partition note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(110);
+        // 110 -> 111 on 2026-10-14e: `launch-readiness` (0x71 = 113) trains.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(111);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
