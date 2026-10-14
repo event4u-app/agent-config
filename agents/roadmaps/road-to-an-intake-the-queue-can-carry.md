@@ -178,7 +178,8 @@ files as there were findings without an owner.
   try the plugin root first, make the no-dispatcher branch visible (stderr and
   a non-blocking exit, one session-start context line), keep blocking opt-in
   only, and reword the marketplace sentence. Which source ships a dispatcher
-  inside the plugin is an owner decision (residue in the round report).
+  inside the plugin was decided by the owner on 2026-10-14: none — the plugin
+  stays dispatcher-less and says so. Landed as Phase 5 and D4 of that roadmap.
 - **H2 → `road-to-sentences-the-tree-can-back`, three one-sentence items.**
   `src/scripts/check_kernel_edit_ratified.ts:156-158` calls `hooks/hooks.json`
   a build output that exists "only inside an installed consumer tree", but it is
