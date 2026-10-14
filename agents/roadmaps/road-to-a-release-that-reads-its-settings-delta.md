@@ -224,14 +224,14 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
   |---|---|---|---|
   | 1 | `docs/releases.md:33-34` | `.agent-settings.yml` keys and semantics "only change in a **breaking release**" | yes |
   | 2 | `src/scripts/_lib/settings_renamed_keys.ts:10` | "An entry is dropped one minor after it lands." | yes |
-  | 3 | the comment above `REMOVED_KEYS` (`settings_removed_keys.ts:10-30`) | **nothing** — it carries no release-class sentence at all, so one of the three the step asked to agree has no position to agree from | yes, as a stater of the rule |
+  | 3 | the comment above `REMOVED_KEYS` (`src/scripts/_lib/settings_removed_keys.ts:10-30`) | **nothing** — it carries no release-class sentence at all, so one of the three the step asked to agree has no position to agree from | yes, as a stater of the rule |
   | 4 | `BREAKING_CHANGES.md:12-13` | settings keys "are part of its public contract"; a settings-key change "legitimately trips a Major" | no — added by `inbox-2026-10-m` |
   | 5 | `CONTRIBUTING.md:331-332` — **canonical** | Major triggers include "breaking changes to `.agent-settings.yml` keys"; Minor is "New `.agent-settings.yml` keys with safe defaults" | no |
   | 6 | `docs/contracts/CHANGELOG-conventions.md:398-418` — **canonical** | a change MUST appear under `### BREAKING CHANGES` **and** bump the major when it removes or renames "a key in `.agent-settings.yml` **that consumer projects may rely on**" | no |
   | 7 | `docs/decisions/ADR-037-cost-profile-untangle.md:102` | "Breaking change to a public settings key → next major" | no |
   | 8 | `src/scripts/_lib/settings_renamed_keys.ts:73` | the warning printed to the consumer: an old key "works for one minor; rename it in your .agent-settings.yml" | no |
 
-  Row 7 was evaluated before being cited, per `decision-revisit-gate`: `adr_cite_check ADR-037` reports `accepted`, trigger `indeterminate`, and its reopen trigger (b) — the `cost_profile` fallback leaving the loaders and `LEGACY_RENAME_MAP` — has **not** fired: the entry is live at `src/scripts/install.ts:332` and the fallback is read at `:4602`, `sync_agent_settings.ts:1035` and `_cli/explain_last/inputs.ts:120`. It is a live lock stating (a).
+  Row 7 was evaluated before being cited, per `decision-revisit-gate`: `adr_cite_check ADR-037` reports `accepted`, trigger `indeterminate`, and its reopen trigger (b) — the `cost_profile` fallback leaving the loaders and `LEGACY_RENAME_MAP` — has **not** fired: the entry is live at `src/scripts/install.ts:332` and the fallback is read at `:4602`, `src/scripts/sync_agent_settings.ts:1035` and `src/scripts/_cli/explain_last/inputs.ts:120`. It is a live lock stating (a).
 
   Row 8 is the only one of the eight a consumer ever sees. Rows 1 and 4-7 are read by maintainers; rows 2 and 3 by anyone opening the source. The sentence a consumer is actually shown says "one minor".
 - **A third reading the (a)/(b) menu does not contain.** Row 6 is not a loosely-worded version of row 1 — it is a materially different rule. Row 1 is unconditional ("these surfaces only change in a breaking release"); row 6 is **qualified** ("that consumer projects may rely on"), and row 6 is one of the two canonical sources. 16.4.0's own subject claims exactly that qualifier — "retire 46 **default-neutral derivable** settings keys" — so the release that triggered this blocker is, on the canonical page's wording, arguably compliant rather than in breach. That makes a third option available to the owner that neither (a) nor (b) states:
@@ -254,7 +254,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
     violations sets the precedent for the next ones. One seat added the sharpest form: under (b) the
     tombstone map would both authorise a removal and decide whether it is detected, which is circular.
   - **Both readings agree on one thing:** the alias-retention sentence at
-    `settings_renamed_keys.ts:10` changes under EITHER option, because dropping an alias IS the removal.
+    `src/scripts/_lib/settings_renamed_keys.ts:10` changes under EITHER option, because dropping an alias IS the removal.
     It cannot be deferred past whichever answer the owner picks.
   - **What the council's circularity objection does NOT reach:** step 3.1, as built, grants nothing. It
     refuses a removal carrying no entry in either map and reports a carried removal without refusing it;
