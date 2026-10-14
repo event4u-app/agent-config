@@ -6,9 +6,9 @@
 
 [![Skills](https://img.shields.io/badge/Skills-300-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-122-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-205-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-121-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/) <!-- claim:published-artifact-counts -->
 
-<sub>**How these are counted** — one canonical counter, `agent-config` → `update_counts --check`, re-derives all six from the tree and fails CI on a drift of one. Two bases are not what the linked directory shows, so they are stated here rather than left to be inferred: **Commands 205** counts every command file **recursively** (the linked directory holds 60 at its top level), and **Rules 122** counts the **source** rules while the linked projection holds 121 — one rule is dormant and is not projected. **Personas 29** excludes the directory README. Counts are of files and directories: none of them measures quality, activation, or adoption. <!-- claim:published-artifact-counts --></sub>
+<sub>**How these are counted** — one canonical counter, `agent-config` → `update_counts --check`, re-derives all six from the tree and fails CI when any of them is off by one. Two bases are not what the linked directory shows, so they are stated here rather than left to be inferred: **Commands 205** counts every command file **recursively** (the linked directory holds 60 at its top level) and **Rules 122** counts the **source** rules while the linked projection holds 121 — one rule is dormant and is not projected. **Personas 29** excludes the directory README. Counts are of files and directories: none of them measures quality, activation or adoption. <!-- claim:published-artifact-counts --></sub>
 
-**Try it in 30 seconds** — drop one read-only subagent into any repo and watch it gate "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
+**Try it in 30 seconds** — drop one read-only subagent into any repo and watch it check "done": `@production-validator check this branch is actually done`. No wizard, no lock-in, nothing else installed — the [30-second wedge ↓](#quickstart) is the whole first step. Start at the proof, not the catalog: **[event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/)**.
 
 ![The trust surface running green — every "verify it yourself" command from a real, CI-re-executed run](docs/media/proof-demo.gif)
 
@@ -16,7 +16,7 @@
 
 > **Choose your experience — developer · founder · content · agency · finance · ops. Add packs. Get a focused command set, not a 500-artefact dump.** Bring your own AI provider.
 
-**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more). **Resident processes are permitted only under the supervision contract ADR-249 establishes** — a policy this repository adopted on 2026-08-27, not a description of anything running today. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
+**A deep library of skills, commands and governed rules** — plus a capability router that loads the right skill on intent and multi-agent orchestration with consensus review. The whole layer is compiled into **20 host agents** — of 23 detected, 3 being export-only<!-- claim:host-agent-count --> (Claude Code, Cursor, Augment, Cline, Windsurf, Copilot, Gemini CLI, Codex, Continue, Zed, JetBrains, Aider and more). **Resident processes are permitted only under [the supervision policy](docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md) this repository adopted on 2026-08-27** — a rule, not a description of anything running today. Six role-shaped entry paths sit on top, so any host becomes a reliable team member — without locking you to a single model or vendor.
 
 ## Try it in 30 seconds
 
@@ -51,14 +51,14 @@ suite installs in one command — [Quickstart ↓](#quickstart).
 
 ### What's different
 
-Deep **and** disciplined, and honest about what it deliberately is not:
+Deep **and** disciplined and honest about what it deliberately is not:
 
 - **Depth that routes itself** — a capability router loads the right skill on intent, not a 500-artefact context dump.
-- **Governance on every host** — rules compiled into each tool's native format at projection time; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
+- **Governance on every host** — rules compiled into each tool's native format; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
 - **Surgical uninstall** — removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.<!-- claim:surgical-uninstall -->
 - **Pack-scoped install** — writes the active pack only, not a 500-artefact dump.
 
-**What it deliberately is *not*** — the core is a governance layer with optional, individually opt-in embedded engines (code intelligence, gated reach, the setup GUI, the bench lab — [ADR-124](docs/decisions/ADR-124-embedded-engine-doctrine.md)): **no mandatory or always-on daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** Engines are never mandatory, never default-on without measured lift, and terminate with the command that invoked them. The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
+**What it deliberately is *not*** — the core is a governance layer with optional, individually opt-in embedded engines (code intelligence, gated reach, the setup GUI, the bench lab — [the embedded-engine doctrine](docs/decisions/ADR-124-embedded-engine-doctrine.md)): **no mandatory or always-on daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** Engines are never mandatory, never default-on without measured lift and terminate with the command that invoked them. The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
 
 > **Where this comes from (honest provenance).** The skills, rules and personas
 > are distilled from real production work on TypeScript and PHP codebases. The
@@ -72,7 +72,7 @@ See exactly [what works on which host](docs/capability-matrix.md) or jump to [th
 
 `agent-config setup` writes `profile.id` to `.agent-settings.yml` and sends you
 to that profile's first screen. Each experience page carries the full detail —
-who it's for, first commands and skills, packs and flows, and what is
+who it's for, first commands and skills, packs and flows — and what is
 deliberately *not* loaded.
 
 | Profile | Audience | Experience page |
@@ -141,7 +141,7 @@ lists the end-to-end workflows (`/implement-ticket`, `/work`,
 Don't take the claims on trust — **verify them.** [`docs/proof.md`](docs/proof.md)
 is generated from source: a claim→evidence table (every public claim binds to a
 resolvable pointer or CI fails), honest-null benchmarks *including the runs where
-the package changed nothing*, and a "verify it yourself" block you run on a fresh
+the package changed nothing* and a "verify it yourself" block you run on a fresh
 checkout. It fails CI if it drifts from its sources — reproducibility is the
 proof. Read it at
 [event4u-app.github.io/agent-config/proof/](https://event4u-app.github.io/agent-config/proof/),
@@ -179,9 +179,9 @@ publishes it with its conditions, as evidence rather than as a promise.
 
 **The one command is [above ↑](#try-it-in-30-seconds).**
 
-**Headless / CI:** `init` skips the GUI on CI, a non-TTY, a headless host, or any CLI-mode flag, and runs the non-interactive installer instead. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Flags, the full opt-out set and `--dry-run`: [`docs/wizard.md`](docs/wizard.md) · [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
+**Headless / CI:** `init` skips the GUI on CI, a non-TTY, a headless host or any CLI-mode flag; it runs the non-interactive installer instead. The GUI and the CLI share one installer (`src/scripts/install.ts`), so both produce identical results. Flags, the full opt-out set and `--dry-run`: [`docs/wizard.md`](docs/wizard.md) · [`gui-wizard` § When the GUI is skipped](docs/contracts/gui-wizard.md#when-the-gui-is-skipped).
 
-**Pick specific AIs:** `--tools=claude-code,cursor,augment,…` (any subset). `--gui` forces the loopback-bound, CSRF-gated picker past the TTY and headless checks; it does **not** override `CI`, `AGENT_CONFIG_NO_UI` or a CLI-mode flag, and combining it with one of those exits non-zero rather than quietly running the CLI install.
+**Pick specific AIs:** `--tools=claude-code,cursor,augment,…` (any subset). `--gui` forces the loopback-bound, CSRF-gated picker past the TTY and headless checks; it does **not** override `CI`, `AGENT_CONFIG_NO_UI` or a CLI-mode flag; combining it with one of those exits non-zero rather than quietly running the CLI install.
 
 **Verify hook coverage:** `npx @event4u/agent-config hooks:status` (`--strict` for CI, `--format json` for tooling).
 
@@ -331,7 +331,7 @@ Organization-mode features (SSO, central policy, OAuth connectors, team-context)
 
 ## Harness expectations
 
-Three classes of install/runtime behaviour look like package bugs and are host-harness behaviour the package cannot control: sibling-plugin namespaces, deferred tools surfaced via `ToolSearch`, and cross-scope skill drift. Diagnostics and the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). When a skill appears twice, start with `task probe:skills`.
+Three classes of install/runtime behaviour look like package bugs and are host-harness behaviour the package cannot control: sibling-plugin namespaces, deferred tools surfaced via `ToolSearch` and cross-scope skill drift. Diagnostics and the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). When a skill appears twice, start with `task probe:skills`.
 
 ## Supported tools
 
@@ -407,7 +407,7 @@ in its own profile (`CLAUDE_CONFIG_DIR` per profile), so switching accounts
 never means logging out and back in. The two compose — **agent-switch isolates
 the accounts, agent-config governs what the agents do inside them**. When
 agent-config runs under an agent-switch profile it says so in the settings hub,
-warns before writes that would land in a shared (cross-profile) tree, and
+warns before writes that would land in a shared (cross-profile) tree and
 accepts a host-supplied config root so its own settings stay profile-scoped.
 
 → [How the two compose →](docs/guides/works-with-agent-switch.md)
@@ -440,7 +440,7 @@ Three domain-safety rules ([`domain-safety-pii`](src/rules/domain-safety-pii.md)
 
 ### Code provenance & license governance
 
-Every diff is checked against a **license policy derived from the target repo's own detected license** (precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class or unknown license, a missing transformation note, or a rename-only-phrased one — wired into `ci`/`ci-strict`. `license-compliance-audit` runs a similarity scan on demand, invoked by a human and never by a pipeline. This is provenance-governed borrow discipline with an audited trail — not a copy detector.
+Every diff is checked against a **license policy derived from the target repo's own detected license** (precedence-ordered; sources disagree → escalate, never guess) and a **strict linter over our borrow ledger** ([`provenance/borrows.jsonl`](provenance/) → [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md)) that fails a deny-class or unknown license, a missing transformation note or a rename-only-phrased one — wired into `ci`/`ci-strict`. `license-compliance-audit` runs a similarity scan on demand, invoked by a human and never by a pipeline. This is provenance-governed borrow discipline with an audited trail — not a copy detector.
 
 <!-- provenance-scope-box -->
 #### Scope & limits
@@ -468,7 +468,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 - **Verify with real execution** — no "should work"
 - **Challenge to improve** — agents are thought partners, not yes-machines
 - **Strict by design** — quality over flexibility
-- **Governed runtime** — resident processes require supervision, scoped writes, and a stop control
+- **Governed runtime** — resident processes require supervision, scoped writes and a stop control
 
 ---
 
@@ -498,7 +498,7 @@ For "why didn't rule/hook X fire?" questions: `agent-config routing:doctor`
 — a read-only, live diagnosis that reports every session-start gate as
 ACTIVE/INACTIVE with the concern's own reason (e.g.
 `session-canary: ACTIVE for "Alex"` vs `INACTIVE — no name on any settings
-layer`), the platform's concern chain, host hook registration, and router +
+layer`), the platform's concern chain, host hook registration and router +
 projection freshness. Deeper hook internals (fail-open/closed posture, last
 dispatcher feedback per concern): `agent-config hooks:doctor`.
 
@@ -523,7 +523,7 @@ task dev:setup        # boot the onboarding wizard against the working tree
 
 **Invoking the CLI from a source checkout:** `./agent-config <command>` (the maintainer shim at the repo root → `scripts/agent-config` → `dist/cli/agent-config.js`). `npx @event4u/agent-config` doesn't resolve in the source repo without a prior `npm link`, since there's no `node_modules/.bin/agent-config` symlink — use `./agent-config` instead. Build the TS binary with `npm run build:cli` if `dist/cli/agent-config.js` is missing.
 
-→ Full project structure and commands: [**docs/development.md**](docs/development.md) · [CONTRIBUTING.md](CONTRIBUTING.md). Stack: **TypeScript** throughout — CLI, UI, and the build / lint scripts. MCP registry payloads render under `dist/mcp/` ([submission checklist](docs/distribution/mcp-submission-checklist.md)).
+→ Full project structure and commands: [**docs/development.md**](docs/development.md) · [CONTRIBUTING.md](CONTRIBUTING.md). Stack: **TypeScript** throughout — CLI, UI and the build / lint scripts. MCP registry payloads render under `dist/mcp/` ([submission checklist](docs/distribution/mcp-submission-checklist.md)).
 
 ---
 
@@ -549,7 +549,7 @@ path reopens it (see `agents/roadmaps/` — road-to-credible-install Phase 3).
 
 ## Funding
 
-The package is free, MIT, and stays that way — no paid tier, no dual
+The package is free, MIT and stays that way — no paid tier, no dual
 licensing. If it saves you time and you want to chip in, the GitHub Sponsor
 button at the top of the repo is the whole mechanism. If you would rather not,
 use it anyway; nothing here is gated on it.

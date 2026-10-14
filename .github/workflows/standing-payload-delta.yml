@@ -488,3 +488,22 @@ jobs:
           ./scripts-run src/scripts/lint_subagent_determinism || rc=1
           ./scripts-run src/scripts/check_trigger_eval_presence || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — batch 2, and the rest of Phase 3.2 of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Same job and the same reasons as batch 1 above: it is a required
+      # context, it carries no `paths:` filter, and each step collects into
+      # `rc` so every gate in it gets a reading before the step fails.
+      #
+      # Phase 3.2 — reds with no live owner, each wired in the change that
+      # fixed its findings. Both README lints read only `README.md`, the public
+      # claim surface, and neither reads a baseline, so the fix is the prose.
+      - name: Drain 3.2b — README jargon density, README serial comma
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_readme_jargon --quiet || rc=1
+          ./scripts-run src/scripts/lint_readme_serial_comma --quiet || rc=1
+          exit "$rc"

@@ -46,6 +46,14 @@ function runGate(script: string, args: string[]): { code: number; out: string } 
   }
 }
 
+/**
+ * Where batch 1 ends. Every step after this marker belongs to a later change,
+ * so the batch-1 case bounds its slice here instead of at the end of the file.
+ */
+const DRAIN_BATCH_2_MARKER = "The local-only drain — batch 2";
+
+const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma"];
+
 const REQUIRED_EXPERIENCE_FIELDS = [
   "id",
   "scope",
@@ -154,6 +162,21 @@ describe("unowned-gates-wired", () => {
 
     expect(runGate("lint_subagent_determinism", []).code).toBe(0);
   });
+
+  it("wires each remaining unowned gate in the required job, after its findings were fixed", () => {
+    // Step 3.2's list, minus the two batch 1 already carried
+    // (`check_knowledge_cards`, `lint_subagent_determinism`). A gate is added
+    // here in the same change that fixes its findings and wires it — never
+    // before, because a gate wired while red blocks every pull request.
+    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+    const rest = workflow.slice(workflow.indexOf(DRAIN_BATCH_2_MARKER));
+    expect(workflow.indexOf(DRAIN_BATCH_2_MARKER), "the batch-2 block is missing").toBeGreaterThan(0);
+
+    for (const gate of UNOWNED_WIRED_IN_PHASE_3_2) {
+      const re = new RegExp(`^\\s*\\./scripts-run src/scripts/${gate}\\b`, "m");
+      expect(re.test(rest), `${gate} has no caller in the required job`).toBe(true);
+    }
+  });
 });
 
 describe("baseline-at-most-143", () => {
@@ -240,7 +263,9 @@ describe("generated-docs-checks-wired", () => {
 describe("every-wire-class-gate-has-a-workflow-caller", () => {
   it("wires exactly the batch the council bounded, and every one of them is reachable", () => {
     const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
-    const job = workflow.slice(workflow.indexOf("The local-only drain — batch 1"));
+    const start = workflow.indexOf("The local-only drain — batch 1");
+    const end = workflow.indexOf(DRAIN_BATCH_2_MARKER);
+    const job = workflow.slice(start, end > start ? end : undefined);
 
     // READ FROM THE WORKFLOW, never from a literal this file also writes. An
     // earlier version of this case asserted `expect(wired).toHaveLength(20)`
