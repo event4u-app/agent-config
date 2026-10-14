@@ -176,7 +176,7 @@ export class LearnLowImpactPreview {
     }
 
     /**
-     * Source-project-stripped diff that `--apply` would propose.
+     * Source-project-stripped diff the preview proposes for a reader.
      *
      * Emits unified-diff-style `+` lines for each promoted phrase under the
      * seed file's `## Validated` section. The agent uses this as the

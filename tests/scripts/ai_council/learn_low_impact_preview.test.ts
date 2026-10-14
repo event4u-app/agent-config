@@ -4,9 +4,10 @@
 // render. Covers the bucketing (promoted / refused / already-seeded), the
 // provenance-SHA extraction, and the refused-entry `reason()` string that
 // threads the redactor's violations through.
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -14,8 +15,11 @@ import type {
     RefusedEntry} from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
 import {
     LearnLowImpactPreview,
+    PACKAGE_SEED_PATH,
     build_preview,
 } from '../../../src/scripts/ai_council/learn_low_impact_preview.js';
+
+const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 
 // A leaked path + an email → both refused by the redactor. Assembled from
 // parts so this test file does not embed a literal home path / address that
@@ -132,5 +136,38 @@ describe('learn_low_impact_preview — bucketing + flags', () => {
     it('build_preview returns a LearnLowImpactPreview', () => {
         const p = build_preview(tmpFile('c.md', corpus()), '/no/such/seed.md');
         expect(p).toBeInstanceOf(LearnLowImpactPreview);
+    });
+
+    // The module docstring and `low-impact-corpus-privacy-floor` both rest on
+    // one claim about the tree: the package ships no seed corpus, so every
+    // preview diffs against an empty baseline. Asserting the claim rather than
+    // the sentence means shipping a seed reds this test instead of silently
+    // changing what every preview promotes.
+    it('the package seed named by PACKAGE_SEED_PATH is absent from the tree', () => {
+        expect(PACKAGE_SEED_PATH).toBe('data/low-impact-decisions-seed.md');
+        expect(existsSync(path.join(REPO_ROOT, PACKAGE_SEED_PATH))).toBe(false);
+    });
+
+    it('an absent package seed leaves every validated phrase unseeded', () => {
+        const p = build_preview(
+            tmpFile('absent-seed.md', corpus()),
+            path.join(REPO_ROOT, PACKAGE_SEED_PATH),
+        );
+        expect(p.already_seeded).toEqual([]);
+        expect(p.promoted.map((e) => e.phrase)).toContain('already seeded phrase');
+    });
+
+    // `--apply` was retired on 2026-10-13: the preview opens nothing, and the
+    // one gated outward step is `self-repair:release`. The rendered body is the
+    // text a person reads before deciding, so a body still advertising the
+    // retired flag would send them to a route that no longer exists.
+    it('the rendered body advertises no retired --apply route', () => {
+        const p = build_preview(tmpFile('body.md', corpus()), '/no/such/seed.md', {
+            repoSlug: 'acme/widgets',
+        });
+        const body = p.render_pr_body();
+        expect(body).not.toContain('--apply');
+        expect(body).toContain('/memory learn-low-impact');
+        expect(body).toContain('sends nothing');
     });
 });
