@@ -20,7 +20,9 @@ interface Job { permissions?: Record<string, string>; steps: Step[] }
 interface Workflow { permissions?: Record<string, string>; jobs: Record<string, Job> }
 
 const wf = parse(fs.readFileSync(WORKFLOW, 'utf-8')) as Workflow;
-const job = wf.jobs['digest-watch'];
+const found = wf.jobs['digest-watch'];
+if (!found) throw new Error('host-docs-digest.yml has no `digest-watch` job');
+const job: Job = found;
 const routeStep = (): Step | undefined => job.steps.find((s) => (s.run ?? '').includes('gh issue'));
 
 describe('host-docs-digest workflow routes a red to a tracked issue', () => {
