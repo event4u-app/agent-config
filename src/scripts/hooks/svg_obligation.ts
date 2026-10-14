@@ -54,6 +54,15 @@
  *         paragraph promised more than the code did (finding 2 of this
  *         change's own completion review), and a gate whose documented
  *         assurance outruns its implementation is quoted as written.
+ *
+ *         SUPERSEDED WHERE A RECORD EXISTS. On a host whose `post_tool_use`
+ *         recorder is live, the transcript reading above is not consulted at all: a manifest counts
+ *         only when its current bytes hash to the digest the hook recorded as
+ *         a standalone render of that file finished (`_lib/asset_render_record.ts`).
+ *         No write-route pattern list stands in for that observation, so a
+ *         manifest written by ANY other route discharges nothing. The paragraph
+ *         above remains the rule only where no record exists, and the refusal
+ *         says so.
  *   (iv)  A deleted `.svg` opens no obligation — it has no current digest, so
  *         there is nothing a render could be bound to.
  *
@@ -74,6 +83,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { isAssetRenderCommand } from '../_lib/verification_command.js';
+import {
+    RENDER_REL,
+    isPureRender,
+    readAssetRenderRecords,
+    recordedManifest,
+    type AssetRenderRecord,
+} from '../_lib/asset_render_record.js';
 import type { ToolCall } from '../_lib/turn_end_transcript.js';
 
 /**
@@ -83,16 +99,13 @@ import type { ToolCall } from '../_lib/turn_end_transcript.js';
  * Two copies of a command-shape regex is how the two detectors come to
  * disagree about what a render is.
  */
-export { isAssetRenderCommand };
+export { isAssetRenderCommand, isPureRender, RENDER_REL };
 
 /**
  * Tools that WRITE. One copy, here rather than imported from the gate: the
  * gate imports this module, so the dependency runs one way.
  */
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
-
-/** Where `ui:render` writes. One copy of the path, shared with the CLI by value. */
-export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
 
 /**
  * Paths whose `.svg` files are planted on purpose. Precision (ii).
@@ -255,6 +268,43 @@ export interface SvgObligationInputs {
      * none of them discharges anything (16.5.0 release review).
      */
     renderDirTampered?: boolean;
+    /**
+     * The renders the `post_tool_use` recorder saw finish this turn, or
+     * `null` where no recorder is live. An array — even an empty one — is the
+     * ONLY evidence read: the transcript fields above are then ignored.
+     */
+    recorded?: readonly AssetRenderRecord[] | null;
+}
+
+/** Appended to every refusal on a host with no live recorder. Pinned verbatim. */
+export const TRANSCRIPT_FALLBACK_REASON =
+    'transcript fallback: no `post_tool_use` render record exists for this turn on this host ' +
+    '(`agent-config hooks:status`), so the manifest was read under the transcript rule — ' +
+    'an omission check, not an attestation';
+
+/** The record-path verdict for one file. */
+function recordVerdict(
+    root: string,
+    abs: string,
+    digest: string,
+    records: readonly AssetRenderRecord[],
+): DischargeKind | string {
+    let changed = false;
+    for (const r of records) {
+        if (path.resolve(root, r.file) !== abs || r.file_digest !== digest) continue;
+        const read = recordedManifest(root, r);
+        if (read === null) continue;
+        if ('changed' in read) {
+            changed = true;
+            continue;
+        }
+        const kind = dischargeFor([read.manifest as AssetManifestish], digest);
+        if (kind !== null) return kind;
+    }
+    return changed
+        ? 'the manifest the observed render left has changed since, so it is no longer the record of that render'
+        : 'no successful `ui:render --profile asset` of these bytes was observed by the hook this turn with a ' +
+              'manifest that discharges them — a manifest written by any other route discharges nothing';
 }
 
 /**
@@ -293,6 +343,13 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
             continue;
         }
         const digest = crypto.createHash('sha256').update(bytes).digest('hex');
+
+        if (Array.isArray(inputs.recorded)) {
+            const verdict = recordVerdict(root, path.resolve(root, abs), digest, inputs.recorded);
+            if (verdict === 'verified' || verdict === 'static-only') discharged.push({ file: relPath, kind: verdict });
+            else open.push({ file: relPath, reason: verdict });
+            continue;
+        }
 
         // (iii) The manifests are only consulted once a render was observed.
         // Reading them first and then discarding the verdict would make the
@@ -366,19 +423,6 @@ export function renderNames(commands: readonly string[], relPath: string): boole
 }
 
 /**
- * A render call standing alone — no second command chained to it and no
- * redirect — so its text cannot also carry a write. A leading `cd <dir> &&`,
- * piping its output to a read-only filter, and folding stderr into stdout are
- * allowed.
- */
-export function isPureRender(command: string): boolean {
-    if (!isAssetRenderCommand(command)) return false;
-    const [head, ...pipes] = command.replace(/^\s*cd\s+[^;&|<>`$\n]+&&\s*/, '').replace(/\s\d?>&\d\b/g, ' ').replace(/\s2>\s*\/dev\/null\b/g, ' ').split('|');
-    if (/[;&<>`\n]|\$\(/.test(head ?? '')) return false;
-    return pipes.every((p) => /^\s*(tail|head|grep|jq|cat|less|wc)\b[^;&<>`|]*$/.test(p) && !/\$\(/.test(p));
-}
-
-/**
  * Does a shell command (other than a pure render) write somewhere a render
  * manifest could live? Read by shape: a write operator, together with the
  * render directory, a `render/` path or a `manifest.json` — so `cd` into the
@@ -430,6 +474,7 @@ function escapeRe(s: string): string {
 export function openSvgObligation(
     workspaceRoot: string,
     toolCalls: readonly ToolCall[],
+    recordedRenders: readonly unknown[] | null = null,
 ): { detector: 'verification'; evidence: string; reason: string; mode: 'transcript' } | null {
     // Precision (iii). The render has to come AFTER the edit it describes, on
     // both evidence paths — `toolCalls` is assembled for both, so one rule
@@ -470,7 +515,11 @@ export function openSvgObligation(
 
     let reading: SvgObligationReading;
     try {
-        reading = readSvgObligations(workspaceRoot, { edits, renderDirTampered });
+        reading = readSvgObligations(workspaceRoot, {
+            edits,
+            renderDirTampered,
+            recorded: recordedRenders === null ? null : readAssetRenderRecords(recordedRenders),
+        });
     } catch {
         // A gate that crashed on its own instrument is a new failure mode on a
         // path meant to be inert. An unreadable render directory is no finding.
@@ -492,6 +541,7 @@ export function openSvgObligation(
         reason:
             `this turn edited an .svg and no render describes it${more} — ${first.reason}. ` +
             'A bare `ui:render --profile asset` that rendered nothing, and a test or lint run over other ' +
-            'files, both discharge nothing: the gate reads the render, never the call.',
+            'files, both discharge nothing: the gate reads the render, never the call.' +
+            (recordedRenders === null ? ` (${TRANSCRIPT_FALLBACK_REASON})` : ''),
     };
 }

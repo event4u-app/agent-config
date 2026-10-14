@@ -67,6 +67,7 @@ import {
 import { readHookStdin } from "./hooks/hook_stdin.js";
 import { hookSectionValue } from "./_lib/hook_settings.js";
 import { isVerificationCommand, mightBeVerification } from "./_lib/verification_command.js";
+import { observeAssetRender, type AssetRenderRecord } from "./_lib/asset_render_record.js";
 import {
   advisoryLine,
   runTouchedFileQuality,
@@ -187,6 +188,7 @@ function _empty_state(): StateDict {
     // a reader must never have to distinguish "no runs yet" from "key absent".
     verification_runs: [],
     edits_this_turn: 0,
+    asset_renders: [],
     // NOTE — `quality_runs` and `quality_files_source` are deliberately ABSENT
     // here, against the convention `verification_runs` above follows.
     //
@@ -696,6 +698,9 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
   // turn's edits, which is the freshness argument `verify-before-complete` makes.
   state["verification_runs"] = [];
   state["edits_this_turn"] = 0;
+  // Turn-scoped like its neighbours: a render from an earlier turn is not one
+  // this turn's hook saw, and the SVG obligation asks for exactly that.
+  state["asset_renders"] = [];
   // TURN-scoped for the same reason as its neighbour: a quality verdict from
   // the previous turn describes files this turn may already have changed, and a
   // stale PASS is the direction that misleads. DELETED rather than emptied, so
@@ -707,6 +712,19 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
   state["ci_saw_pending"] = false;
   state["nonevidence_this_turn"] = 0;
   return state;
+}
+
+function _observe_asset_render(consumer_root: string, envelope: StateDict): AssetRenderRecord | null {
+  const raw = envelope["payload"];
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
+  const pl = raw as StateDict;
+  const [, cmd] = _extract_command(pl);
+  if (!cmd) return null;
+  try {
+    return observeAssetRender(consumer_root, cmd, _extract_exit_reading(pl, _is_failure_event(pl, envelope)).code);
+  } catch {
+    return null;
+  }
 }
 
 function _asInt(v: unknown): number {
@@ -732,6 +750,7 @@ function _update(
   event: string,
   envelope: StateDict,
   quality: { runs: QualityRun[]; source: string } | null = null,
+  assetRender: AssetRenderRecord | null = null,
 ): StateDict {
   const session_id = (envelope["session_id"] || state["session_id"] || "") as string;
   if (session_id && session_id !== state["session_id"]) {
@@ -900,6 +919,12 @@ function _update(
       // of its own red-then-green pair.
       state["verification_runs"] = _cap_runs(runs);
     }
+    // The finished asset render, observed rather than inferred — read by the
+    // turn-end gate's SVG obligation.
+    if (assetRender !== null) {
+      const renders = Array.isArray(state["asset_renders"]) ? (state["asset_renders"] as unknown[]) : [];
+      state["asset_renders"] = [...renders, assetRender].slice(-MAX_VERIFICATION_RUNS_PER_TURN);
+    }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();
     if (quality !== null) {
@@ -975,6 +1000,9 @@ export function run(
   const quality_mode = event === "stop" ? readTouchedFileQualityMode(consumer_root) : "off";
   const quality =
     quality_mode === "off" ? null : collectTouchedFileQuality(consumer_root, session_id);
+  // Hashed BEFORE the lock for the same reason as the quality pass: file reads
+  // stay out of the critical section.
+  const assetRender = event === "post_tool_use" ? _observe_asset_render(consumer_root, envelope) : null;
 
   // LOAD → UPDATE → PUBLISH under ONE lock, not three separate steps.
   //
@@ -1006,7 +1034,7 @@ export function run(
     // treats a missing counter as 0 and the `=== true` guards treat a missing
     // flag as false, so every assertion would still pass while `schema_version`
     // and an explicit `ci_last: null` vanished from a freshly created file.
-    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality);
+    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality, assetRender);
     return state;
   });
   if (outcome === "failed") {
@@ -1115,6 +1143,8 @@ export function main(argv?: string[]): number {
 export interface TurnRunState {
   readonly runs: readonly unknown[];
   readonly edits_this_turn: number;
+  /** Absent when the recorder that wrote the file predates the field. */
+  readonly asset_renders?: readonly unknown[];
 }
 
 /**
@@ -1153,7 +1183,14 @@ export function readTurnRunState(
         const edits = state['edits_this_turn'];
         if (!Array.isArray(runs)) return null;
         if (typeof edits !== 'number' || !Number.isFinite(edits) || edits < 1) return null;
-        return { runs: runs as readonly unknown[], edits_this_turn: edits };
+        const renders = state['asset_renders'];
+        return {
+            runs: runs as readonly unknown[],
+            edits_this_turn: edits,
+            // Absent rather than empty when the writer predates the field, so
+            // the SVG obligation falls back instead of reading "no render".
+            ...(Array.isArray(renders) ? { asset_renders: renders as readonly unknown[] } : {}),
+        };
     } catch {
         // Absent, unreadable or malformed — the recorder said nothing, so the
         // transcript answers. Never a refusal of its own.
