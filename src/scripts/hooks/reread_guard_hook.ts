@@ -6,7 +6,8 @@
  * Two signals, one session-scoped read ledger:
  *
  *   6.1 A full-file `Read` of a path that was ALREADY fully read this session
- *       AND is unchanged since (mtime + size compare against the ledger) gets
+ *       AND whose content is unchanged since (sha256 compare against the
+ *       ledger; above HASH_BOUND_BYTES, mtime + size, said so in the line) gets
  *       one advisory line naming the earlier read and the ranged-read
  *       alternative. A ranged read (any `offset`/`limit` in the tool input)
  *       is already the cheap form and never fires — nor is it recorded as a
@@ -21,8 +22,8 @@
  * `<workspace_root>/agents/runtime/state/reread-guard/<sha256(session)>.json`
  * (gitignored — `agents/runtime/` is blanket-ignored), keyed by session id
  * the same way `end_review_nudge_hook.deriveSessionKey` does (hashed, never
- * raw). Per path it stores `{mtime, size, ts}` for reads, a `ts` for the last
- * own write, and a per-path fired flag — NO field can hold file content, by
+ * raw). Per path it stores `{mtime, size, ts, sha256?}` for reads, a `ts` for the last
+ * own write, and a per-path fired flag — numbers and a digest; NO field can hold file content, by
  * construction (same PII/content-exclusion-by-construction discipline as the
  * telemetry schemas).
  *
@@ -105,11 +106,35 @@ export function isExemptPath(filePath: string): boolean {
     return EXEMPT_PATH_PATTERNS.some((re) => re.test(normalized));
 }
 
-/** Per-path read record — NUMBERS ONLY (mtime ms, byte size, epoch-ms ts). */
+/** Per-path read record — numbers and a digest, never content. */
 export interface ReadRecord {
     mtime: number;
     size: number;
     ts: number;
+    /** sha256 of the file; absent above {@link HASH_BOUND_BYTES}. */
+    sha256?: string;
+}
+
+/**
+ * Above this size the guard keeps mtime + size and says so (roadmap D3): the
+ * hash is a full read of the file on the pre_tool_use path.
+ */
+export const HASH_BOUND_BYTES = 2 * 1024 * 1024;
+
+/** sha256 of a file at or under the bound; `undefined` above it or on error. */
+export function contentDigest(absPath: string, size: number): string | undefined {
+    if (size > HASH_BOUND_BYTES) return undefined;
+    try {
+        return crypto.createHash('sha256').update(fs.readFileSync(absPath)).digest('hex');
+    } catch {
+        return undefined;
+    }
+}
+
+/** Same content when both reads carry a digest; else the stat pair decides. */
+export function isUnchanged(prior: ReadRecord, mtime: number, size: number, sha256: string | undefined): boolean {
+    if (prior.sha256 !== undefined && sha256 !== undefined) return prior.sha256 === sha256;
+    return prior.mtime === mtime && prior.size === size;
 }
 
 /** The session ledger — paths as keys, numbers as values, no content field. */
@@ -183,11 +208,12 @@ export function isRangedRead(toolInput: JsonObject): boolean {
 }
 
 /** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
-export function buildDuplicateReadLine(relPath: string, earlierTs: number): string {
+export function buildDuplicateReadLine(relPath: string, earlierTs: number, byContent = true): string {
     const when = new Date(earlierTs).toISOString();
+    const basis = byContent ? 'unchanged content (same sha256)' : 'unchanged since (same mtime+size; over the 2 MB hash bound)';
     return (
-        `re-read guard: ${relPath} was already fully read this session (${when}) and is ` +
-        `unchanged since (same mtime+size) — the content is still in context; if you only ` +
+        `re-read guard: ${relPath} was already fully read this session (${when}) with ` +
+        `${basis} — the content is still in context; if you only ` +
         `need part of it, a ranged Read (offset/limit) pays for the range, not the file.`
     );
 }
@@ -252,6 +278,7 @@ export function main(): number {
             return EXIT_ALLOW; // unreadable/missing target — nothing to compare
         }
 
+        const sha256 = contentDigest(absPath, size);
         const prior = ledger.reads[key];
         const ownWrite = ledger.writes[key];
         const alreadyFired = ledger.fired[key] === true;
@@ -259,13 +286,13 @@ export function main(): number {
         let advisory: string | null = null;
         if (!alreadyFired && ownWrite !== undefined) {
             advisory = buildPostEditReadLine(key); // 6.2 wins when both hold
-        } else if (!alreadyFired && prior !== undefined && prior.mtime === mtime && prior.size === size) {
-            advisory = buildDuplicateReadLine(key, prior.ts);
+        } else if (!alreadyFired && prior !== undefined && isUnchanged(prior, mtime, size, sha256)) {
+            advisory = buildDuplicateReadLine(key, prior.ts, prior.sha256 !== undefined && sha256 !== undefined);
         }
 
         // Record the read that is about to happen (numbers only), consume the
         // one-shot own-write marker, and latch the per-path fire flag.
-        ledger.reads[key] = { mtime, size, ts: Date.now() };
+        ledger.reads[key] = sha256 === undefined ? { mtime, size, ts: Date.now() } : { mtime, size, ts: Date.now(), sha256 };
         if (ownWrite !== undefined) delete ledger.writes[key];
         if (advisory !== null) ledger.fired[key] = true;
         writeLedger(workspaceRoot, sessionKey, ledger);

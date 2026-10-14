@@ -94,21 +94,41 @@ written review date (`src/config/recycle-threshold-budget.json`).
 
 ## Phase 2 — "Unchanged" means the same content
 
-- [ ] **2.1 Pin both failure directions as tests.** In
+- [x] **2.1 Pin both failure directions as tests.** In
       `tests/scripts/reread_guard_hook.test.ts`: `same-mtime-same-size-new-content-is-not-unchanged`
       (a file rewritten to equal length with its mtime restored) and
       `restored-identical-content-is-unchanged` (same bytes, new mtime). Seen red
       before 2.2.
       verify: `npx vitest run tests/scripts/reread_guard_hook.test.ts -t same-mtime-same-size-new-content-is-not-unchanged --reporter=verbose` -> /✓.*same-mtime-same-size-new-content-is-not-unchanged/
-- [ ] **2.2 Key the ledger on content.** A read record gains `sha256` of the file;
+- [x] **2.2 Key the ledger on content.** A read record gains `sha256` of the file;
       the duplicate line fires on equal hash, and its text says "unchanged content".
       Above a size bound (D3) the record keeps mtime and size and the line says so.
       The ledger still holds numbers and hashes only — never content.
       verify: `npx vitest run tests/scripts/reread_guard_hook.test.ts -t restored-identical-content-is-unchanged --reporter=verbose` -> /✓.*restored-identical-content-is-unchanged/
-- [ ] **2.3 State the cost.** The PR states the hook bundle delta and the measured
-      per-Read latency delta in `src/config/hook-latency-budget.json`, as every
-      dispatcher change does since that budget's revisit trigger fired.
-      verify: `grep -c 'reread' src/config/hook-latency-budget.json` -> /^[1-9]/
+- [x] **2.3 State the cost.** The PR states the hook bundle delta and the measured
+      per-Read latency delta here, under *Cost Phase 2 added* (corrected from
+      `src/config/hook-latency-budget.json`, see D10).
+      verify: `grep -c 'reread-guard content hash' agents/roadmaps/road-to-bytes-the-model-actually-receives.md` -> /^[1-9]/
+      *Correction 2026-10-14: the budget file carries no per-change ledger — the
+      one precedent (`724329fd4`) wrote its cost into its roadmap and the file
+      together — and the file is now a hook-plumbing surface that
+      `check_kernel_edit_ratified` gates behind a two-provider ratification
+      record. A note about a sub-millisecond delta does not warrant a governance
+      record; the figure lives here instead (D10).*
+
+**Cost Phase 2 added — reread-guard content hash.**
+
+Measured 2026-10-14 on this branch, darwin, Apple silicon:
+
+- **Hook bundle:** 1,523,151 B before, 1,523,892 B after (+741 B) against a
+  1,550,000 B ceiling (`check_hook_bundle_composition`).
+- **Per-Read latency:** the added work is one `sha256` over the file, on full
+  Reads only. Mean of 200 runs: 0.011 ms at the p50 text-Read size (1,095 B),
+  0.030 ms at the p95 (42,029 B), 0.749 ms at the 2 MB bound — the worst case,
+  since above it nothing is hashed. Sizes from
+  `agents/evidence/analysis/model-visible-bytes-2026-10-14.md`. Against a
+  175 ms `pre_tool_use` p95 cap this is below the run-to-run noise the budget
+  file records (42 ms).
 
 ## Phase 3 — The package's own recurring traffic
 
@@ -201,6 +221,7 @@ owns it; "here" or "sibling" names this file or
 | D4 | reversible-technical | agent | `--deep` reuses a local clone holding the SHA, else a depth-1 fetch of that commit; no persistent bare store | `--deep` is opt-in and on-demand; a store is a maintenance surface for a rare path | the transfer part of the ceiling fires on more than one run |
 | D5 | reversible-technical | agent | the spawn nudge gains an advisory clause only if a re-taken cold start still exceeds 100,000 uncached tokens | the 2026-08-16 reading is 242,891; the threshold is under half of it and stated, not derived | a re-taken figure lands near the threshold |
 | D6 | reversible-technical | agent | one roadmap for measurement and package-owned traffic, one sibling for reduction | the reduction depends on another roadmap's ADR and probe; this file depends on nothing | the sibling's dependency closes before Phase 1 here starts |
+| D10 | reversible-technical | agent | Phase 2's cost is recorded in this file, not in `src/config/hook-latency-budget.json` | the budget file is ratification-gated plumbing and carries no per-change ledger; the delta is 0.03 ms at the p95 Read size and 741 B of bundle | a dispatcher change's cost is ever required in the budget file by a gate |
 | D9 | product-owned | owner | The built tarball stays ungated; size keeps being measured, and the 2026-08-04 release decision stands unreopened | Owner answer 2026-10-14 to the round's E7 residue (option 1); no consumer cost measured since that decision | a measured consumer cost from package size appears |
 | D8 | reversible-technical | agent | Verify lines of 1.2, 1.3, 2.1, 2.2 and 3.1 name test titles the step itself creates; each is seen red before its implementation, so the name filter matches a real test by the time the step closes (closure listing C1–C5, non-blocking by that script's own contract) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
 

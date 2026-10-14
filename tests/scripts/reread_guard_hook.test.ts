@@ -15,6 +15,7 @@
  * All fixtures live under `os.tmpdir()` — no tracked file is ever written.
  */
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -24,9 +25,12 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     buildDuplicateReadLine,
     buildPostEditReadLine,
+    contentDigest,
     deriveSessionKey,
+    HASH_BOUND_BYTES,
     isExemptPath,
     isRangedRead,
+    isUnchanged,
     ledgerFile,
 } from '../../src/scripts/hooks/reread_guard_hook.js';
 
@@ -114,6 +118,22 @@ describe('advisory lines', () => {
     });
 });
 
+describe('content key and its size bound (D3)', () => {
+    it('compares digests when both reads carry one, whatever the stat pair says', () => {
+        expect(isUnchanged({ mtime: 1, size: 5, ts: 0, sha256: 'a' }, 1, 5, 'b')).toBe(false);
+        expect(isUnchanged({ mtime: 1, size: 5, ts: 0, sha256: 'a' }, 2, 5, 'a')).toBe(true);
+    });
+    it('falls back to mtime + size when either read is over the bound', () => {
+        expect(isUnchanged({ mtime: 1, size: 5, ts: 0 }, 1, 5, undefined)).toBe(true);
+        expect(isUnchanged({ mtime: 1, size: 5, ts: 0, sha256: 'a' }, 2, 5, undefined)).toBe(false);
+    });
+    it('hashes nothing above the bound, and the line says which basis it used', () => {
+        expect(contentDigest('/nonexistent-is-not-read', HASH_BOUND_BYTES + 1)).toBeUndefined();
+        expect(buildDuplicateReadLine('a.ts', 0, true)).toContain('unchanged content');
+        expect(buildDuplicateReadLine('a.ts', 0, false)).toContain('2 MB hash bound');
+    });
+});
+
 // ── E2E sequences through the ledger ────────────────────────────────────
 
 describe('reread_guard_hook E2E', () => {
@@ -140,6 +160,37 @@ describe('reread_guard_hook E2E', () => {
         const second = run(readEvent(root, abs), root);
         expect(second.status).toBe(0);
         expect(second.stdout.trim()).toBe('');
+    });
+
+    it('same-mtime-same-size-new-content-is-not-unchanged', () => {
+        // An equal-length rewrite with its mtime restored: stat says unchanged,
+        // the content is not, so the advisory must stay silent.
+        const { root, abs } = makeWorkspace();
+        // A whole-second mtime, so restoring it is exact on every filesystem.
+        const pinned = new Date(Math.floor(Date.now() / 1000) * 1000 - 60_000);
+        fs.utimesSync(abs, pinned, pinned);
+        const before = fs.statSync(abs);
+        expect(run(readEvent(root, abs), root).status).toBe(0);
+        fs.writeFileSync(abs, 'export const y = 9;\n');
+        fs.utimesSync(abs, pinned, pinned);
+        const after = fs.statSync(abs);
+        expect(after.size).toBe(before.size);
+        expect(after.mtimeMs).toBe(before.mtimeMs);
+        const second = run(readEvent(root, abs), root);
+        expect(second.status).toBe(0);
+        expect(second.stdout.trim()).toBe('');
+    });
+
+    it('restored-identical-content-is-unchanged', () => {
+        // Same bytes with a new mtime (a checkout restoring the file): the
+        // content the session read is still the content on disk.
+        const { root, abs } = makeWorkspace();
+        expect(run(readEvent(root, abs), root).status).toBe(0);
+        fs.writeFileSync(abs, fs.readFileSync(abs));
+        fs.utimesSync(abs, new Date(), new Date(Date.now() + 5000));
+        const second = run(readEvent(root, abs), root);
+        expect(second.status).toBe(2);
+        expect(JSON.parse(second.stdout).additional_context).toContain('unchanged content');
     });
 
     it('6.1: silent on a ranged read even when the path was already fully read', () => {
@@ -194,15 +245,16 @@ describe('reread_guard_hook E2E', () => {
         expect(run(readEvent(root, other), root).status).toBe(2); // path B fires independently
     });
 
-    it('the ledger stores paths and numbers only — no content field, no string values', () => {
+    it('the ledger stores paths, numbers and a sha256 digest only — no content field', () => {
         const { root, abs } = makeWorkspace();
         expect(run(readEvent(root, abs), root).status).toBe(0);
         const key = deriveSessionKey({ session_id: 'sess-1' }, {});
         const ledger = JSON.parse(fs.readFileSync(ledgerFile(root, key), 'utf8'));
         expect(Object.keys(ledger).sort()).toEqual(['fired', 'reads', 'writes']);
         for (const rec of Object.values(ledger.reads) as Array<Record<string, unknown>>) {
-            expect(Object.keys(rec).sort()).toEqual(['mtime', 'size', 'ts']);
-            for (const v of Object.values(rec)) expect(typeof v).toBe('number');
+            expect(Object.keys(rec).sort()).toEqual(['mtime', 'sha256', 'size', 'ts']);
+            expect(rec['sha256']).toBe(createHash('sha256').update(fs.readFileSync(abs)).digest('hex'));
+            for (const [k, v] of Object.entries(rec)) if (k !== 'sha256') expect(typeof v).toBe('number');
         }
         for (const v of Object.values(ledger.writes)) expect(typeof v).toBe('number');
         expect(JSON.stringify(ledger)).not.toContain('export const'); // never the file body
