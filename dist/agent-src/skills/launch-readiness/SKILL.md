@@ -76,8 +76,8 @@ report per [`docs/contracts/prelaunch-diagnostics.md`](../../docs/contracts/prel
 - **Coverage backbone** — diagnose exactly the fixed area vocabulary
   (`prelaunch-areas.yml`): auth · migrations · secrets · observability ·
   rollback · agent-governance. No ad-hoc areas.
-- **AUTH from the detector** — on account-flow changes run
-  `check_account_surface.ts <repo-root>` (same `src/scripts/` path as below):
+- **AUTH** — on account-flow changes run
+  `npx tsx node_modules/@event4u/agent-config/src/scripts/check_account_surface.ts <repo-root>`:
   `violated` → an `AC-AUTH-NNN` id, an undecided class stays `unknown`; the
   output is unmeasured while `claim:account-surface-finds-planted` is unbacked.
 - **Every area gets one state:** `pass` (cited evidence REQUIRED) ·
