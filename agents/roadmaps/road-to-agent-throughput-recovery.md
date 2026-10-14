@@ -1,7 +1,7 @@
 ---
 complexity: lightweight
 status: draft
-estate_offset_exempt: "Draft added for owner review; it counts +0 active until promoted, and promotion is the moment a disposal or growth claim is owed."
+estate_offset_exempt: "Draft added for owner review; it counts +0 active until promoted. Rejected instead: merging into road-to-an-installed-layer-that-is-thinned (it owns only the global rule layer, one of six measured causes) or road-to-a-cold-start-paid-once (it owns worker spawning, not lane waiting, decision asks or gate misfires); archiving or parking a neighbour, because no active roadmap covers run throughput and none is finished."
 execution:
   mode: phase-checkpoints
 depends: [road-to-an-installed-layer-that-is-thinned]
