@@ -5,7 +5,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { observeAssetRender } from '../../src/scripts/_lib/asset_render_record.js';
+import { observeAssetRender as observeRaw, type AssetRenderRecord } from '../../src/scripts/_lib/asset_render_record.js';
 import { readTurnRunState, run, statePathFor } from '../../src/scripts/before_complete_hook.js';
 import { TRANSCRIPT_FALLBACK_REASON, openSvgObligation } from '../../src/scripts/hooks/svg_obligation.js';
 import type { ToolCall } from '../../src/scripts/_lib/turn_end_transcript.js';
@@ -17,6 +17,10 @@ import type { ToolCall } from '../../src/scripts/_lib/turn_end_transcript.js';
  * with no pattern list at all, because none of them is a render the hook saw.
  */
 let root: string;
+
+/** The record shape, for cases whose exit is readable — the gap case calls `observeRaw`. */
+const observeAssetRender = (...a: Parameters<typeof observeRaw>): AssetRenderRecord | null =>
+    observeRaw(...a) as AssetRenderRecord | null;
 
 const SVG =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">\n' +
@@ -80,7 +84,25 @@ describe('1.1 — the recorder writes a successful asset render, and only that',
         renderManifest();
         expect(observeAssetRender(root, RENDER, 3)?.exit_code).toBe(3);
         expect(observeAssetRender(root, RENDER, 1)).toBeNull();
-        expect(observeAssetRender(root, RENDER, null)).toBeNull();
+        // No readable exit is an instrument gap, recorded as such, never a render.
+        expect(observeRaw(root, RENDER, null)).toEqual({ instrument_gap: true, command: RENDER });
+    });
+
+    it('the real recorder records exit 3 from a failure envelope', () => {
+        renderManifest();
+        hook('user_prompt_submit');
+        hook('post_tool_use', { tool_name: 'Write', tool_input: { file_path: FILE } });
+        run(
+            JSON.stringify({
+                event: 'post_tool_use',
+                session_id: 's1',
+                native_event: 'PostToolUseFailure',
+                payload: { hook_event_name: 'PostToolUseFailure', tool_name: 'Bash', tool_input: { command: RENDER }, error: 'Exit code 3\nno renderer' },
+            }),
+            { consumer_root: root },
+        );
+        const renders = readTurnRunState(root, 's1')?.asset_renders as AssetRenderRecord[] | undefined;
+        expect(renders?.map((r) => r.exit_code)).toEqual([3]);
     });
 
     it('a render chained to a write records nothing', () => {
@@ -182,6 +204,15 @@ describe('1.3 — no record is a named fallback', () => {
         expect(finding?.reason).toContain(TRANSCRIPT_FALLBACK_REASON);
         // And the record path never carries it.
         expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], [])?.reason).not.toContain(TRANSCRIPT_FALLBACK_REASON);
+    });
+
+    it('a render with no readable exit sends the gate back to the transcript rule', () => {
+        // Review round 2, finding 1: a live recorder on a host that reports no
+        // exit status would otherwise refuse every edited .svg forever.
+        renderManifest();
+        const gap = [observeRaw(root, RENDER, null)];
+        expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], gap)).toBeNull();
+        expect(openSvgObligation(root, [edit(FILE)], gap)?.reason).toContain(TRANSCRIPT_FALLBACK_REASON);
     });
 
     it('a recorder that predates the field reads as no record', () => {

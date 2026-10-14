@@ -34,6 +34,11 @@
  * plain word the shell cannot expand — no `$`, `~`, glob, escape or embedded
  * space — and the manifest must name the same target and slug; anything else
  * records nothing, which leaves the obligation open rather than discharged.
+ * One window stays open: the manifest is hashed when the render's
+ * `post_tool_use` event fires, not at the instant the render wrote it, so on a
+ * host that runs Bash calls in parallel a second call could rewrite the file in
+ * between and have its bytes recorded. That needs a concurrent write aimed at
+ * the moment of one specific render, and is stated rather than closed.
  * The working directory comes from the host's `cwd` where the payload carries
  * one (finding 2).
  *
@@ -100,6 +105,21 @@ export interface AssetRenderRecord {
     readonly exit_code: number;
 }
 
+/**
+ * A render the hook saw finish without a readable exit status. Not evidence
+ * either way: its presence sends the gate back to the transcript rule, the
+ * same instrument-gap reading the turn-end gate's other detectors apply.
+ */
+export interface AssetRenderGap {
+    readonly instrument_gap: true;
+    readonly command: string;
+}
+
+/** Does a state value carry a render the host reported no exit for? */
+export function hasInstrumentGap(raw: readonly unknown[]): boolean {
+    return raw.some((r) => typeof r === 'object' && r !== null && (r as Record<string, unknown>)['instrument_gap'] === true);
+}
+
 /** `ui:render` options that take a value, so their value is not the target. */
 const VALUE_OPTIONS = new Set([
     '--project-root',
@@ -133,8 +153,10 @@ export function observeAssetRender(
     command: string,
     exitCode: number | null,
     shellCwd: string = root,
-): AssetRenderRecord | null {
-    if (exitCode === null || !RECORDED_EXITS.has(exitCode) || !isPureRender(command)) return null;
+): AssetRenderRecord | AssetRenderGap | null {
+    if (!isPureRender(command)) return null;
+    if (exitCode === null) return { instrument_gap: true, command: command.slice(0, 512) };
+    if (!RECORDED_EXITS.has(exitCode)) return null;
     const cd = /^\s*cd\s+([^;&|<>`$\n]+?)\s*&&/.exec(command);
     if (cd && !PLAIN_WORD.test(cd[1]!.trim())) return null;
     const cwd = path.resolve(shellCwd, cd ? unquote(cd[1]!.trim()) : '.');

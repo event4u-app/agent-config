@@ -67,7 +67,7 @@ import {
 import { readHookStdin } from "./hooks/hook_stdin.js";
 import { hookSectionValue } from "./_lib/hook_settings.js";
 import { isVerificationCommand, mightBeVerification } from "./_lib/verification_command.js";
-import { observeAssetRender, type AssetRenderRecord } from "./_lib/asset_render_record.js";
+import { observeAssetRender, type AssetRenderGap, type AssetRenderRecord } from "./_lib/asset_render_record.js";
 import {
   advisoryLine,
   runTouchedFileQuality,
@@ -714,7 +714,10 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
   return state;
 }
 
-function _observe_asset_render(consumer_root: string, envelope: StateDict): AssetRenderRecord | null {
+function _observe_asset_render(
+  consumer_root: string,
+  envelope: StateDict,
+): AssetRenderRecord | AssetRenderGap | null {
   const raw = envelope["payload"];
   if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return null;
   const pl = raw as StateDict;
@@ -756,7 +759,7 @@ function _update(
   event: string,
   envelope: StateDict,
   quality: { runs: QualityRun[]; source: string } | null = null,
-  assetRender: AssetRenderRecord | null = null,
+  assetRender: AssetRenderRecord | AssetRenderGap | null = null,
 ): StateDict {
   const session_id = (envelope["session_id"] || state["session_id"] || "") as string;
   if (session_id && session_id !== state["session_id"]) {

@@ -82,10 +82,14 @@ resolved by its in-scope binding, not by a document-wide list.
       Correction (2026-10-14): `writesRenderDir` is not deleted. Step 1.3 keeps
       the transcript rule as the fallback on hosts with no live recorder, and
       removing its write detection there would only weaken those hosts. On the
-      record path neither it nor `isPureRender` is a gate input — the forged
-      routes above, plus an unlisted interpreter and variable indirection, are
-      pinned on that path in `tests/scripts/svg_render_record.test.ts`; the
-      existing transcript cases keep pinning the fallback.
+      record path neither it nor `isPureRender` is a gate input. On that path
+      a manifest discharges only through a recorded render, so the write
+      route of a forgery never needs recognising; what a recorded render could
+      be fooled by — a rewritten manifest, earlier bytes, an argument the shell
+      rewrites, a leftover manifest for another target — is pinned in
+      `tests/scripts/svg_render_record.test.ts`, and the existing transcript
+      cases keep pinning the fallback. A render whose exit the host does not
+      report is an instrument gap and sends the gate to the fallback.
 - [x] **1.3 State the host reach honestly.** Where `post_tool_use` is not bound
       (`agent-config hooks:status`), the gate falls back to the transcript rule
       and says so in its reason.
