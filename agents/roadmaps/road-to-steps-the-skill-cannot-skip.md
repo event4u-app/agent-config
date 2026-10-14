@@ -275,10 +275,11 @@ plans this round carried; no external source is cited for them.
       cursor; the corpus, metrics and rules below are frozen before the first
       run.
       verify: `ls agents/evidence/preregistration/ | grep -c procedure-cursor` -> /^1$/
-- [ ] **6.2 Corpus.** At least ten tasks per pilot on which arm A demonstrably
-      fails today — the same condition the skill-DAG lock sets for its own
-      reopen, so both decisions speak one language.
-      verify: `grep -cE '^- \*\*task-' agents/evidence/preregistration/procedure-cursor.md` -> /^([3-9][0-9]|[1-9][0-9]{2,})$/
+- [ ] **6.2 Corpus.** Exactly ten tasks per pilot (30 in all) on which arm A
+      demonstrably fails today — the same condition the skill-DAG lock sets for
+      its own reopen, so both decisions speak one language. A fixed count, not a
+      floor: the workload is the spend ceiling's input (D13).
+      verify: `grep -cE '^- \*\*task-' agents/evidence/preregistration/procedure-cursor.md` -> /^30$/
 - [ ] **6.3 Metrics.** Primary: exits met and task success. Secondary: API
       rounds against `src/config/turnaround-budget.json`, tokens, wall time,
       steps skipped without a reason (target 0 in arm C) and the cursor entry
@@ -287,8 +288,13 @@ plans this round carried; no external source is cited for them.
 - [ ] **6.4 Instrument.** The host's plugin-eval command with a baseline arm and
       a tool-order grader, three runs per case, under the evaluator-independence
       rule; the tasks invoke the skill explicitly, so the unmeasured activation
-      rate does not confound the result.
-      verify: `grep -c 'runs_per_case: 3' agents/evidence/preregistration/procedure-cursor.md` -> /^1$/
+      rate does not confound the result. The pre-registration also freezes a
+      pinned model and settings, the failure and retry handling (no unplanned
+      reruns), a token maximum and a monetary maximum for the whole
+      3 × 3 × 30 workload, and the aggregation rule with its confidence
+      treatment, so a nominal 20 % is not read off three noisy runs. No run
+      starts until the owner has authorised that stated monetary maximum (D13).
+      verify: `grep -cE '^(runs_per_case: 3|model_pin:|retry_policy:|max_tokens:|max_cost_usd:|aggregation:)' agents/evidence/preregistration/procedure-cursor.md` -> /^6$/
 - [ ] **6.5 Decide by the pre-registered rule.** B beats A by the bar and C ≈ B →
       ship the split, cursor stays opt-in. C beats B by the bar → the cursor
       default for procedure skills is put to the council with the result. Neither
@@ -325,6 +331,7 @@ plans this round carried; no external source is cited for them.
 | D6 | reversible-technical | evidence | A new stem, not a waking of `later/road-to-guided-journeys` | That plan is the flow level; ADR-055:57-59 and :71 keep flows a suggestion list until a schema-v2 decision | the flow level is reopened under ADR-055 |
 | D7 | reversible-technical | agent | Pilots: `existing-ui-audit`, `design-review`, `memory-consolidation` | All three sit at 398–400 lines with numbered phases or steps | a pilot's steps turn out to be > 50 % `judgement` (F3) |
 | D8 | reversible-technical | agent | Bar for Phase 6: ≥ 20 % task success and added rounds ≤ step count | 20 % is the skill-DAG lock's own reopen figure; a step costs at least one round | the corpus is too small for 20 % to be distinguishable from noise |
+| D13 | spend-exhaustion | council:inbox-2026-10-pqr-residue | Phase 6's spend is not authorised as first written; the full three-arm design stays, rewritten as a fixed 3 × 3 × 30 workload with pinned model, retry policy, token and monetary maxima and an aggregation rule, and is put to the owner for authorisation of that stated maximum before any run. Arms A+B alone are declined: they cannot isolate the cursor | AI council 2026-10-14, anthropic + openai, 2/2, $0.00, both (c) on the open-ended version, both reject (b); not owner-reserved for refusing (`agents/runtime/council/responses/inbox-2026-10-pqr-residue`, local) | a delegated spend threshold is recorded and the stated maximum falls under it |
 | D9 | reversible-technical | evidence | The stale `existing-ui-audit` link is deleted, not "fixed" by moving sections out | `skill_linter.ts:98`; `b3cc0ada6` | the linter stops requiring `Output format` or `Gotcha` in the body |
 | D10 | reversible-technical | evidence | The canon contradiction named in Context is this file's work, not an open question | Phase 2.1 replaces `skill-writing:104` and `:126-129` with one statement; the closure scan's `contradictory` hit is that finding | — |
 | D11 | reversible-technical | evidence | Closure-scan `typed-op` hits on the word "merge" are slug text, not an operation | Both hits are the slug `road-to-a-retro-the-merge-runs`; this file merges nothing | — |
