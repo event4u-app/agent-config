@@ -2,7 +2,7 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: 3317942a1a32508b0fb50aaa422f2c237e9c7c9a695ac9fb493a2ca92f35802f
+subject: 20a33577eec696391443290519505e08868ded0f3b619b48399504627c13832c
 providers: [anthropic, openai]
 verdict: refused
 seats:
@@ -21,19 +21,21 @@ recomputes that digest from the tree it is pointed at and refuses a record whose
 `subject` is absent, malformed or different. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass`.
 
-**Four rounds, four refusals. Round 4 (2026-10-14, after the owner directed
-that round 3's three findings be fixed and the change reviewed again) refused
-2/2 on one new finding: a gated path that is neither absent, a symlink nor a
-regular file — a FIFO, socket, device or directory — is opened as a regular
-file, and a FIFO opened read-only can block the gate indefinitely. This record
-does not let the change land.**
+**Five rounds, five refusals. Round 5 (2026-10-14, after the owner directed
+that round 4's confirmed findings be fixed and the change reviewed again)
+confirmed round 4's FIFO finding fixed and refused 2/2 on a new one: the read
+follows a symbolic link in an INTERMEDIATE path component, so a gated path
+whose parent directory is a symlink is digested from content outside the
+revision, and the module's own comment claims it never follows a link. This
+record does not let the change land.**
 
 **The header is bound to the tree as it stands now, not as rounds 1 and 2 read
 it, and that is the binding working rather than a record being rewritten.**
 `subject` moved from `6ce10afe…` to `1aff2b49…` when round 2's finding was
-fixed in a gated file, and to `3317942a…` when a merge of `origin/main` brought
-a comment-only edit to `check_kernel_edit_ratified.ts`; `seats:` carries round
-4's conclusions. Rounds 1 and
+fixed in a gated file, to `3317942a…` when a merge of `origin/main` brought
+a comment-only edit to `check_kernel_edit_ratified.ts`, and to `20a33577…` when
+round 4's fixes changed the catch and comments in that file; `seats:` carries
+round 5's conclusions. Rounds 1 and
 2 are kept verbatim below, headers and all; what the frontmatter asserts is
 what the CURRENT content was last reviewed as, which is the whole point of the
 field.
@@ -768,3 +770,97 @@ shopping. The finding is carried into the roadmap as step 2.5, with the seats'
 words. `check_kernel_edit_ratified` stays red on this diff, so the branch
 cannot be pushed through the pre-push preflight or merged; the disposition is
 the owner's.
+
+
+---
+
+# Round 5 — 2026-10-14, round 4's findings fixed, and refused 2/2 on a new one
+
+The owner's decision of 2026-10-14 was to fix round 4's confirmed findings,
+re-present, and merge only if both seats ratify. The fixes (commit `d7e34efdd`,
+roadmap step 2.5):
+
+- **Non-regular gated paths.** After the `lstat`, only an absent path, a link
+  or a regular file is handled; anything else is a `GatedPathUnsupported`
+  raised before any `open`. The open adds `O_NONBLOCK` and an `fstat`, so an
+  object swapped in after the stat is refused without blocking. All three
+  refusal classes extend `GatedSubjectRefusal`, which `evaluate()` and the CLI
+  catch as one class.
+- **Non-blocking notes, all four done.** A missing `O_NOFOLLOW` or `O_NONBLOCK`
+  is a refusal; `--quiet` over an empty gated set warns on stderr;
+  `assertContained()` refuses backslash `..` and UNC / rooted /
+  drive-qualified paths on its own input (through `gatedFilesOf` those were
+  already refused by the backslash normalisation); the round history left the
+  three production files' comments.
+
+Red-proof, each mechanism neutralised in place and restored from a copy: kind
+check 5 of 16 red, `fstat` check 2 of 16, `O_NONBLOCK` 1 (the flags case, run
+alone), missing-flag refusal 2 of 16, containment 1 of 29, `evaluate()` catch
+1 of 10, CLI catch 1 of 6, `--quiet` warning 1 of 6. After restoring, the 10
+ratification / kernel-edit suites pass (155 tests).
+
+Prompt committed verbatim beside the others as
+`drain-self-modification-narrowed-20261013-r5.question.md` (49,228 bytes, under
+the 50 KB ceiling). It omits `_lib/ratification_artifact.ts`, the contract,
+rounds 1–4's test changes, the roadmap and the evidence files, and says so.
+Run once, CLI transport (`--prompt-mode pr --rounds 2`, no peer review), both
+seats present, nothing billed.
+
+**What the artefact keeps.** Only the second-pass texts are persisted. Both
+quote a first-pass "Reviewer A" whose stance was `ratified`; the run's
+`blind_review_map` labels Response-A as anthropic. The first-pass texts are not
+in the artefact and are not reconstructed here. The verdicts below are the
+second-pass conclusions, which is what the run concluded with.
+
+## Seat: anthropic — `refused`
+
+> "**REFUSED** — the change touches a governance surface and claims a
+> containment property it does not deliver."
+
+> "the highest-leverage pre-merge change: refuse paths where any parent
+> component is a symbolic link. Walk from root to leaf, `lstat` each parent,
+> throw `GatedPathEscapes` if any `isSymbolicLink()`. Add the regression test
+> Reviewer B specifies: gated child deleted, parent replaced with symlink to
+> attack content; assert refusal. Correct the comment claiming symlinks are
+> never dereferenced."
+
+It confirms round 4's finding addressed: "The three-layer refusal (kind before
+open, `O_NONBLOCK` at open, kind after open) is appropriate. Round-4's shared
+finding is addressed." And it names the comment this round introduced as the
+contradiction: the module header's "What it never does is follow a symbolic
+link" is "**false**. Intermediate components are dereferenced."
+
+## Seat: openai — `refused`
+
+> "**REQUEST_CHANGES** — the digest can bind content reached through an
+> intermediate symlink rather than the reviewed Git path; the
+> highest-leverage pre-merge change is to hash an explicit Git revision, or at
+> minimum refuse every symlinked ancestor and add the regression test above."
+
+> "**Stance: refused**"
+
+Its required test: "Construct a tree in which a gated child was changed or
+deleted, replace one of its parent directories with a symlink to a separate
+directory containing a regular file at the remaining suffix, then assert that
+subject computation refuses before hashing it." It also judges the new tests
+"meaningful and appear additive", and states that question 3 cannot be cleared
+for the whole PR because the parser, earlier tests, the workflow and most of
+the contract were outside the bundle.
+
+## Honest reading
+
+The finding is correct. The module already said intermediate components are
+resolved; what this round added is a header sentence — "What it never does is
+follow a symbolic link" — written while moving the history out of the
+comments, which states the stronger property the code does not have. Both
+seats read that sentence back to the change.
+
+## What was NOT done, and why
+
+The new finding was not fixed in this lane: the owner authorised the round-4
+fixes and one round, merging only on a 2/2 ratification, and re-running round 5
+with a different prompt would be verdict shopping. It is carried into the
+roadmap as step 2.6, in the seats' words. The branch is not pushed:
+`check_kernel_edit_ratified` refuses a `refused` record at the pre-push
+preflight, and the disposition is the owner's.
+
