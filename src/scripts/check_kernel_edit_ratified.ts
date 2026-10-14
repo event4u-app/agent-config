@@ -59,7 +59,9 @@
  *
  * Inputs:
  *   --base-ref REF    git ref to diff against (default: origin/main, then main)
- *   --files F [F …]   override the changed-file list (testing and CI)
+ *   --files F [F …]   override the changed-file list (testing); CI derives
+ *                     the list from git with --base-ref, because a hosted
+ *                     PR file list names a rename by its destination only
  *   --root DIR        repo root the diff and artifacts are read from (testing)
  *   --rev REV         the commit the gated content and the artifacts are read
  *                     at (default HEAD) — Git objects, never the working tree,
