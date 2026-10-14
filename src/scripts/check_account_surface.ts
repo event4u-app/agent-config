@@ -25,6 +25,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+
 export type Evidence = 'violated' | 'suspected' | 'unknown' | 'not-applicable';
 export type Remediation = 'mechanical' | 'policy' | 'migration' | 'informational';
 
@@ -271,8 +273,25 @@ function main(argv: string[]): number {
         for (const u of report.undecided) process.stdout.write(`  undecided ${u.class}: ${u.reason}\n`);
         process.stdout.write(`${report.scanned_files} account-surface file(s) scanned, ${report.findings.length} finding(s); absence of a finding is not a pass\n`);
     }
-    if (report.scanned_files === 0) {
-        process.stderr.write('check_account_surface: no account-surface file matched the path predicate — nothing was decided\n');
+    // A warning here used to sit beside `return 0`: a gate whose predicate
+    // matched nothing reported "no findings" and passed, which is the shape
+    // `assertScanned` exists to refuse — an absence of findings over an empty
+    // corpus is not a reading. The deletion test applies: if the account
+    // surface moved or the predicate stopped matching, the reason "no findings"
+    // would still print and still be false, so no `allowEmpty` is written here.
+    try {
+        assertScanned({
+            gate: 'check_account_surface',
+            scanned: report.scanned_files,
+            units: 'account-surface file(s)',
+            roots: [path.relative(root, root) || '.'],
+        });
+    } catch (exc) {
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 1;
+        }
+        throw exc;
     }
     return 0;
 }
