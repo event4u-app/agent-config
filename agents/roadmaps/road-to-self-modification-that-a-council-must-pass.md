@@ -205,7 +205,9 @@ missing the old side of a rename, openai gave no verdict (a local `ENOBUFS`)
 (step 2.8), which was established and fixed on the same route; round 8 refused
 2/2 on that fix's evidence — the CI-path test runs the head gate, so the
 `GIT_CONFIG_*` override the base copy relies on is untested (step 2.9), which
-was fixed on the same route and re-presented as round 9. **No seat, in any of
+was fixed on the same route; round 9 answered in favour 2/2 (anthropic
+`APPROVE`, recorded `ratified`; openai `confirmed-non-expanding`), which is
+advisory under the ratification ladder — the merge is the owner's. **No seat, in any of
 the eleven rounds across both shapes, disputed the design or the scope.**
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
