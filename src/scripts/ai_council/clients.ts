@@ -1344,11 +1344,6 @@ export abstract class CliClient extends ExternalAIClient {
         const spawnOpts: Parameters<typeof spawnSync>[2] = {
             encoding: 'utf-8',
             timeout: Math.round(this.timeout_seconds * 1000),
-            // Node's default is 1 MiB, and a member CLI that prints its working
-            // log next to the answer exceeds it: the spawn then dies with
-            // ENOBUFS and the probe record skips the seat on every later run.
-            // Same ceiling as the API transport.
-            maxBuffer: 64 * 1024 * 1024,
             // Neutral cwd, and this one is load-bearing rather than tidy.
             //
             // The spawn used to inherit the caller's directory, so a council
