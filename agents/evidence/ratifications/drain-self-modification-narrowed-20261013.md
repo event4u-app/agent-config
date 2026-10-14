@@ -2,12 +2,12 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: f6ac2f8c7d6820465b87618ec9adf6d880a3fca3cc90bd2af7ac3eb88b3c7805
-providers: [anthropic, openai]
+subject: 6eea14ee9ab10fccf6ddfaeda6d57e545ebecc779617fcfe688ea028611bcff3
+providers: [anthropic]
 verdict: refused
 seats:
   anthropic: refused
-  openai: refused
+  openai: no-final-verdict
 effective_after: merge
 ---
 
@@ -21,14 +21,15 @@ recomputes that digest — since round 6, from Git objects at a commit — and
 refuses a record whose `subject` is absent, malformed or different. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass`.
 
-**Six rounds, six refusals. Round 6 (2026-10-14, after the owner directed
-that round 5's confirmed findings be fixed and the change reviewed again, and
-after the digest was moved from the working tree to Git objects at a revision)
-accepted the object-store design and refused 2/2 on a new finding: the gate
-resolves a mutable revision more than once in one run — `git diff
-<base>...HEAD` for the changed-file list, then `HEAD` again for the content and
-the record — so the two can name different commits, which contradicts the
-contract's "one commit" statement. This record does not let the change land.**
+**Seven rounds, seven refusals. Round 7 (2026-10-14, after round 6's finding
+was fixed — the gate resolves `--rev` once and passes the commit id to the
+diff, the digest and the record read) was answered by one seat: anthropic
+refused, on the CI path's changed-file list, which comes from `gh pr view
+--json files` and may report a renamed gated file only under its destination;
+openai gave no final verdict (`os_error: ENOBUFS`, a local spawn-buffer
+overflow). Round 6 had accepted the object-store design and refused 2/2 on the
+gate resolving a mutable revision more than once in one run. This record does
+not let the change land.**
 
 **The header is bound to the tree as it stands now, not as rounds 1 and 2 read
 it, and that is the binding working rather than a record being rewritten.**
@@ -37,7 +38,8 @@ fixed in a gated file, to `3317942a…` when a merge of `origin/main` brought
 a comment-only edit to `check_kernel_edit_ratified.ts`, to `20a33577…` when
 round 4's fixes changed the catch and comments in that file, and to
 `f6ac2f8c…` when the gate learned `--rev` and the serialisation gained the
-mode; `seats:` carries round 6's conclusions. Rounds 1 and
+mode, and to `6eea14ee…` when the gate resolved `--rev` once (step 2.7);
+`seats:` carries round 7's conclusions. Rounds 1 and
 2 are kept verbatim below, headers and all; what the frontmatter asserts is
 what the CURRENT content was last reviewed as, which is the whole point of the
 field.
@@ -970,3 +972,96 @@ merging only on 2/2, and re-running round 6 with a different prompt would be
 verdict shopping. It is carried into the roadmap as step 2.7, in the seats'
 words. The branch is not pushed: `check_kernel_edit_ratified` refuses a
 `refused` record at the pre-push preflight, and the disposition is the owner's.
+
+
+---
+
+# Round 7 — 2026-10-14, one gate run reads one commit, and refused by the one seat that answered
+
+The owner's route was again to fix the confirmed findings, re-present, and
+merge only on 2/2. Round 6's shared finding was fixed as roadmap step 2.7
+(commits `4d8b8e2b2`, `1448d3b02`, `419f076bd`, `0e207508b`, `820a4eda1`):
+`main()` resolves `--rev` once to a commit id and passes that id to the diff,
+the digest and the record read; the diff (`changedFilesBetween`) and the
+default-base probe (`refExists`) run through the subject's scrubbed git runner;
+`optionValue` is shared with the subject CLI, so a valueless `--rev`, `--root`,
+`--base-ref` or `--policy-root` is refused (exit 1); the contract states the
+one-commit rule and the empty-gated-set exception. Writing the new diff call
+the author also found, and fixed, that rename detection listed a gated file
+moved to an ungated path only under its destination on the pre-push path
+(`--no-renames`). The mutual import was left as it stands.
+
+Red-proof: with the fix neutralised in place (the diff given the revision
+NAME, the gate's valueless-option refusal replaced by `continue`), 3 of 21
+cases red — the moving-ref case on the subject mismatch, and both valueless
+`--rev` shapes; restored from a scratch copy, 21 of 21 green. The rename case
+was red before `--no-renames` (`scanned: 1`, "nothing to ratify", exit 0) and
+green after. The moving-ref case uses a `git` wrapper on `PATH` that advances
+the branch right after the first git call naming it, and asserts the move
+happened. After the changes the 10 ratification / kernel-edit suites pass (152
+tests).
+
+Prompt committed verbatim beside the others as
+`agents/evidence/council/drain-self-modification-narrowed-20261013-r7.question.md`
+(39,947 bytes). It carries the gated files' diff against the merge base,
+`main()` in full, and the lib, CLI, contract and revision-suite diffs since
+round 6; it omits the rest of the lib, CLI and contract, every other test file,
+the workflow, the roadmap, the removal account, this record and earlier
+prompts, and says so. Run once, CLI transport (`--prompt-mode pr --rounds 2`,
+no peer review, as round 6), both seats dispatched
+(`anthropic/claude-sonnet-4-5`, `openai/codex-default`), nothing billed. The
+quorum line after the run: `1/2 present, needed 1 — concluded. ⚠️ DEGRADED — 1
+member(s) did not answer; this is not convergence.`
+
+**What the artefact keeps.** Only the second-pass texts are persisted. The
+anthropic text quotes a "Reviewer A" and a "Reviewer B"; the run's
+`blind_review_map` lists only Response-A (anthropic). The first-pass texts are
+not in the artefact and are not reconstructed here.
+
+## Seat: anthropic — `refused`
+
+> "**REQUEST_CHANGES**"
+
+> "The local race and rename fixes are credible and well-tested. But the
+> **authoritative CI projection** can still miss the old side of a rename, and
+> no end-to-end test covers it. The highest-leverage change: make CI derive
+> paths through the same `--no-renames` Git implementation—or verify inclusion
+> and add CI regression test—before merge."
+
+> "If GitHub's file projection reports renamed files only by destination,
+> moving `src/rules/kernel-rule.md` to `src/guidelines/moved.md` would produce
+> an empty gated set and pass without ratification—the exact bypass the local
+> rename test prevents."
+
+On the questions: "Weakening: None. 22 tests, all new seen red, no changed
+assertions." "Alternate path: Yes—CI via `gh pr view --json files` bypasses
+`changedFilesBetween()` entirely." On the mutual import: "coupling debt, not a
+blocker". On the contract's statement that the CI path is unchanged: "A
+governance gate whose documented guarantee excludes its production projection
+is not production-ready."
+
+## Seat: openai — `no-final-verdict`
+
+The seat did not answer: the artefact records `os_error: ENOBUFS`, a local
+spawn-buffer overflow, and no text. The probe record then marked the seat
+`other`, which skips it on every later run until the entry is removed.
+
+## Honest reading
+
+The anthropic finding names a path this round deliberately did not touch and
+the prompt said so: the CI step passes `gh pr view --json files` to the base
+revision's gate under `--files`, so `--no-renames` does not reach it. Whether
+that list carries a renamed file's old path was not established by the author
+and is not established by the seat, which states it conditionally. The
+workflow is itself a gated file (`WORKFLOW_PATH`), so changing it — for
+example to let the base gate build the list from Git with `--base-ref`, as the
+seat prefers — is a gated change and comes back to this review. No seat
+disputed the one-commit fix or the object-store design.
+
+## What was NOT done, and why
+
+The run was not repeated to obtain openai's verdict: one run was authorised,
+and with anthropic `refused` no second answer could make it 2/2. The new
+finding is carried into the roadmap as step 2.8, in the seat's words. The
+branch is not pushed: `check_kernel_edit_ratified` refuses a `refused` record
+at the pre-push preflight, and the disposition is the owner's.
