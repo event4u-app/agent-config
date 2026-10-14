@@ -339,9 +339,12 @@ are documented in
 | **Gemini CLI** | ✅ | — | — | — | install.sh (symlink → AGENTS.md) |
 | **Claude.ai Web / Skills API** | — | ✅ | — | — | `task build-cloud-bundles-all` → `dist/cloud/<skill>.zip` |
 
-Skills use a `SKILL.md` format with YAML frontmatter, compatible with the
-[Agent Skills](https://agentskills.io) community spec and with Claude Code's
-Agent Skills specification. Cloud bundles produced by
+Skills use the `SKILL.md` format with YAML frontmatter that carries
+package-specific top-level keys (`domain`, `model_tier`, `workspaces`, `packs`
+and more). They are validated against this package's own schema
+(`src/scripts/schemas/skill.schema.json`), not against the reference validator
+of the [Agent Skills](https://agentskills.io) community spec, which rejects
+those keys. Cloud bundles produced by
 `scripts/build_cloud_bundle.py` follow the same format with cloud-side
 adjustments (description budget, sandbox note, package-internal path-swap).
 

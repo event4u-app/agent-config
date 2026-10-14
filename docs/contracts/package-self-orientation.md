@@ -150,8 +150,9 @@ Eligibility + scoring + hardening:
 
 `task generate-tools` projects `dist/agent-src/` into Augment Code, Claude
 Code (Agent Skills standard), Cursor, Cline, Windsurf, Gemini CLI,
-and Claude.ai cloud bundles. Skills follow
-[agentskills.io](https://agentskills.io); commands are converted to
+and Claude.ai cloud bundles. Skills use the `SKILL.md` format of
+[agentskills.io](https://agentskills.io) with package-specific top-level
+frontmatter keys, validated against this package's own schema; commands are converted to
 Claude Code Skills with `disable-model-invocation: true`. Per-tool
 layout + cloud-bundle pipeline:
 [`docs/architecture.md`](../architecture.md#cloud-bundle-pipeline).

@@ -192,7 +192,7 @@ Migrating from v1.x? `npx @event4u/agent-config migrate` — [`docs/migration/v1
 ---
 ## What `agent-config` is — and what it isn't
 
-A **content layer** — skills, rules, commands, guidelines, personas — distributed via npm and projected into every supported AI tool's native config format. It follows the [Agent Skills open standard](https://agentskills.io).
+A **content layer** — skills, rules, commands, guidelines, personas — distributed via npm and projected into every supported AI tool's native config format. Skills use the `SKILL.md` format with package-specific top-level frontmatter keys (`domain`, `model_tier`, `workspaces`, `packs` and more), validated against this package's own schema rather than the reference validator of the [Agent Skills](https://agentskills.io) specification.<!-- claim:skill-format-package-keys -->
 
 It is **not** an agent runtime. The agent loop, the LLM dispatcher and tool orchestration stay with the host tool (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI, Copilot). Think of it as a playbook and style guide for those tools — not a replacement.
 
