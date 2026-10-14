@@ -46,15 +46,20 @@ files for exactly this reason.
 measurement, and no figure in it is a result. The measured figures live in the
 claim entry and arrive in Phase 3.
 
-**Every** Threat cell cited in `ground-truth.json` is pending: none of the
-seven is in `src/skills/threat-modeling/data/threats.csv` yet. They arrive with
-`road-to-account-lifecycle-threat-rows` step 2.2 and are listed under
-`pending_threat_rows` with that dependency named.
+Every Threat cell cited in `ground-truth.json` now resolves in
+`src/skills/threat-modeling/data/threats.csv`. At freeze time all seven were
+pending. Three landed verbatim with `road-to-account-lifecycle-threat-rows`
+step 2.2; Phase 2 reconciled the other four on 2026-10-14. Three of those had
+landed reworded and are now cited by their landed wording. The fourth, `Persistent login and logout`, turned out to be the wrong
+row for a token in `localStorage`: its controls cover remember-me and logout and
+carry nothing against script-readable storage, so that finding cites the
+dedicated `Authentication token in script-readable browser storage` row added in
+the same change.
 
-The list cannot go stale unnoticed. A corpus test asserts that no pending cell
-is already present, so the moment step 2.2 merges, that test reds and names the
-reconciliation it wants — removing the cell and checking the cited wording
-against the row as merged. When the list empties, Phase 2 is unblocked.
+The list cannot go stale unnoticed. One corpus test asserts that no pending
+cell is present verbatim; a second asserts that none is present under
+near-identical wording, which is the case that let the four cells above sit
+unreconciled after their rows had merged.
 
 ## Planted values
 
