@@ -2,12 +2,12 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: 6eea14ee9ab10fccf6ddfaeda6d57e545ebecc779617fcfe688ea028611bcff3
-providers: [anthropic]
+subject: 4174f49a0b16ed8a4d55fec7c4892149f5e2f802e5cab6c8c4a0d8299d0e997e
+providers: [anthropic, openai]
 verdict: refused
 seats:
   anthropic: refused
-  openai: no-final-verdict
+  openai: refused
 effective_after: merge
 ---
 
@@ -38,8 +38,9 @@ fixed in a gated file, to `3317942a…` when a merge of `origin/main` brought
 a comment-only edit to `check_kernel_edit_ratified.ts`, to `20a33577…` when
 round 4's fixes changed the catch and comments in that file, and to
 `f6ac2f8c…` when the gate learned `--rev` and the serialisation gained the
-mode, and to `6eea14ee…` when the gate resolved `--rev` once (step 2.7);
-`seats:` carries round 7's conclusions. Rounds 1 and
+mode, to `6eea14ee…` when the gate resolved `--rev` once (step 2.7), and to
+`4174f49a…` when the workflow joined the gated set and the gate's usage
+comment changed (step 2.8); `seats:` carries round 8's conclusions. Rounds 1 and
 2 are kept verbatim below, headers and all; what the frontmatter asserts is
 what the CURRENT content was last reviewed as, which is the whole point of the
 field.
@@ -1063,5 +1064,99 @@ disputed the one-commit fix or the object-store design.
 The run was not repeated to obtain openai's verdict: one run was authorised,
 and with anthropic `refused` no second answer could make it 2/2. The new
 finding is carried into the roadmap as step 2.8, in the seat's words. The
+branch is not pushed: `check_kernel_edit_ratified` refuses a `refused` record
+at the pre-push preflight, and the disposition is the owner's.
+
+# Round 8 — 2026-10-14, CI lists paths through the gate's own diff, and refused 2/2 on its test
+
+Round 7's finding was established before it was fixed. For PR 2344, which moves
+a roadmap into `archive/`, `gh pr view --json files` lists the file once, as
+`{"additions":5,"changeType":"RENAMED","deletions":4,"path":"agents/roadmaps/archive/…"}`
+— no previous path — while REST `pulls/2344/files` carries `previous_filename`.
+The list the workflow passed under `--files` did miss the old side of a rename.
+
+Fixed on the owner's route of 2026-10-14 (fix, re-present, merge only on 2/2),
+taking the seat's first option: the ratification step passes
+`--base-ref "$BASE_SHA"` and no `--files`, so CI lists paths through
+`changedFilesBetween()` (`HEAD` resolved once, `--no-renames`); the job already
+checks out with `fetch-depth: 0`. The step also sets `diff.renames=false`
+through `GIT_CONFIG_*` for a base copy whose own diff predates `--no-renames` —
+the `origin/main` copy that judges this PR. Contract and the gate's usage
+comment updated. Separately, the council CLI member spawn got
+`maxBuffer: 64 MiB` (Node's 1 MiB default had produced round 7's `ENOBUFS`),
+and the openai seat's stale probe entry was removed.
+
+Red-proof: `check_kernel_edit_ratified_ci_path.test.ts` reads both gate
+invocations out of the workflow step and runs them on a fixture that renames a
+kernel rule to an ungated path. Red against the `--files` step (`scanned: 1`,
+"nothing to ratify"), green after the switch, red again with `--no-renames`
+removed in place, green restored from a scratch copy. The spawn-buffer test was
+red before `maxBuffer` and green after. 11 ratification / kernel-edit suites
+pass (153 tests). The environment override was checked by hand only: in a
+one-rename fixture, plain `git diff --name-only` printed the destination, with
+the three variables set it printed both paths.
+
+Prompt committed verbatim as
+`agents/evidence/council/drain-self-modification-narrowed-20261013-r8.question.md`
+(40,414 bytes). Run once, CLI transport (`--prompt-mode pr --rounds 2`, no peer
+review, as round 7), both seats dispatched (`anthropic/claude-sonnet-4-5`,
+`openai/codex-default`). Before the run the council printed `cli-skip · openai
+· unavailable` from the cleared probe entry and `1/2 present`; after the run:
+`2/2 present, needed 1 — concluded.` Both seats answered; no re-run.
+
+## Seat: anthropic — `refused`
+
+> "**REQUEST_CHANGES**"
+
+> "The rename fix is **technically sound** and the `subject` binding is **good
+> hardening**. But the CI-path test doesn't exercise what the workflow
+> description claims: \"Judging with the BASE revision's gate\" via
+> environment compatibility."
+
+> "The test would remain **green** if: Environment variables were misspelled;
+> Git ignored them; Base gate didn't inherit them. That's the decisive
+> production path, untested."
+
+> "**Single highest-leverage change before merge**: Add an automated test
+> verifying the environment-variable mechanism."
+
+Also: the council buffer change is unrelated but "small, isolated, tested,
+beneficial", not a blocker; the workflow comment's "round 7, step 2.8"
+reference "will age poorly. Should point to ADR or contract instead."
+
+## Seat: openai — `refused`
+
+> "REQUEST_CHANGES — the implementation is credible, but the test does not
+> cover the base-revision compatibility mechanism that authoritatively judges
+> this PR; before merge, add a stable regression that runs legacy diff
+> behavior with workflow-derived `GIT_CONFIG_*` values and proves red without
+> the override and green with it."
+
+> "Stance: refused — highest leverage is testing the actual legacy-base
+> compatibility path; split Delta 5 if it is not required for this review."
+
+Also: permanently loading the real merge-base gate would make the suite
+history-dependent, so "a stable regression should execute a checked-in
+legacy-gate fixture, or test the old diff operation under environment values
+parsed from the workflow"; the kernel-rule bundle step's use of the same
+GitHub list is "pre-existing, non-blocking for this diff" but "a credible
+follow-up risk"; the round-specific workflow comment should be replaced by a
+contract/ADR reference.
+
+## Honest reading
+
+Both seats accept the rename fix itself and refuse on its evidence: the new
+test runs the HEAD gate, which carries `--no-renames`, so it says nothing about
+the `GIT_CONFIG_*` override on which the BASE copy judging this PR depends —
+the override was verified by hand, not by a test. That is accurate. Neither
+seat disputed the design, the scope of the binding, or the one-commit fix.
+
+## What was NOT done, and why
+
+One run was authorised and it produced two verdicts, so it was not repeated.
+The finding — a regression test that runs a rename-detecting diff under the
+workflow-derived `GIT_CONFIG_*` values, red without them — is carried into the
+roadmap as step 2.9 in the seats' words, with the two smaller asks (the
+round-specific workflow comment; splitting the council buffer change). The
 branch is not pushed: `check_kernel_edit_ratified` refuses a `refused` record
 at the pre-push preflight, and the disposition is the owner's.
