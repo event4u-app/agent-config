@@ -89,11 +89,14 @@ slot was re-answered, and the generated enforcement table that prints that
 column stays byte-identical.
 
 **Ratification.** `agents/evidence/ratifications/drain-four-drifted-vendor-pages.md`,
-four council rounds on 2026-10-14 (anthropic + openai, CLI, $0), final
+six council rounds on 2026-10-14 (anthropic + openai, CLI, $0), final
 `ratified` from both seats. Round 1 found a stale "read on 2026-09-29" comment
 above a re-dated row; answering round 2 surfaced a stale install bundle over the
-`host_listing_model.ts` string. Both were fixed in their own commits before the
-final round.
+`host_listing_model.ts` string. Round 5 `refused` the first shape of the 1.3
+workflow change (a write token on the job that runs repository code, and no way
+to tell drift from a broken runner); round 6 ratified the separated
+`route-drift` job that answered it. Each fix landed in its own commit before
+the next round.
 
 ## The two-week silence — a process gap
 
@@ -135,7 +138,7 @@ rather than special-cased file by file.
       looking at that job, or looking at it did not lead anywhere. Name which,
       in one line, and change the one thing that makes the next occurrence
       land — a pointer, an owner, or nothing with a stated reason.
-      verify: `grep -c 'Host Docs Digest Watch' .github/workflows/host-docs-digest.yml` -> /^[1-9]/
+      verify: `npx vitest run tests/scripts/host_docs_digest_workflow.test.ts` -> 0
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude/host -->

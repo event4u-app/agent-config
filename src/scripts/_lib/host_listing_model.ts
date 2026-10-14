@@ -13,9 +13,9 @@
  * THE MECHANISM, AS DOCUMENTED UPSTREAM (code.claude.com/docs/en/skills and
  * anthropics/claude-code#64606, both read 2026-08-22; the page re-read on
  * 2026-10-14 keeps the 1% and the 1,536 and no longer prints the ≈8,000
- * illustration, which survives here only as the 2026-08-22 reading). Claude Code lists every
- * skill NAME, and keeps DESCRIPTIONS only up to a fraction of the context
- * window — 1% by default, ≈8,000 characters on a 200k window — filling by
+ * illustration). Claude Code lists every skill NAME, and keeps DESCRIPTIONS
+ * only up to a fraction of the context window — 1% by default, which the
+ * 2026-08-22 page illustrated as ≈8,000 characters on a 200k window — filling by
  * invocation frequency and capping each entry at 1,536 characters. The fraction
  * is consumer-settable as `skillListingBudgetFraction`.
  *
