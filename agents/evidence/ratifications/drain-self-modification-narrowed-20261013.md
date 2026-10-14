@@ -2,11 +2,11 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: 6ce10afe22220f18d2865fb9cd8e2254413f7f8205385bfcf20ef6f87de275ed
+subject: 1aff2b49bc8802cd42273bfa07b0a035d89652ef86d8d97ca13078241492e972
 providers: [anthropic, openai]
 verdict: refused
 seats:
-  anthropic: refused
+  anthropic: ratified
   openai: refused
 effective_after: merge
 ---
@@ -21,10 +21,20 @@ recomputes that digest from the tree it is pointed at and refuses a record whose
 `subject` is absent, malformed or different. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass`.
 
-**Both seats refused, twice. This record does not let the change land, and it
-is the second refusal of this narrowed change — which under the instruction
-this lane runs on makes the disposition the owner's, by
-`ratification-artifact.md` § The owner-permission-route.**
+**Three rounds. Round 3 split — anthropic `ratified`, openai `refused` — and a
+refusing seat gives `refused` by the ordering both the shipped reader and step
+3.3 already had. This record does not let the change land, and it is the THIRD
+refusal of this narrowed change, which under the instruction this lane runs on
+makes the disposition the owner's, by `ratification-artifact.md` § The
+owner-permission-route.**
+
+**The header is bound to the tree as it stands now, not as rounds 1 and 2 read
+it, and that is the binding working rather than a record being rewritten.**
+`subject` moved from `6ce10afe…` to `1aff2b49…` when round 2's finding was
+fixed in a gated file, and `seats:` carries round 3's conclusions. Rounds 1 and
+2 are kept verbatim below, headers and all; what the frontmatter asserts is
+what the CURRENT content was last reviewed as, which is the whole point of the
+field.
 
 Derived, not typed: `providers`, `verdict` and `seats:` follow
 `deriveRatificationHeader` from the seat conclusions below; `subject` is the
@@ -564,3 +574,120 @@ design is accepted by both seats in both rounds — "the core design is sound",
 "the overall scope remains appropriately narrow" — and what stands between it
 and a passing record is one error boundary in `evaluate()` plus the end-to-end
 test that proves the gate returns `exitCode 1` rather than a stack trace.
+
+
+---
+
+# Round 3 — 2026-10-13, the round-2 defect fixed, and refused on three new ones
+
+Round 2's finding was repaired: one typed boundary in `evaluate()` catching
+both `GatedFileUnreadable` and `GatedPathEscapes`, both post-`lstat` reads
+wrapped, `O_NOFOLLOW` on the gated read, the two weak test cases strengthened,
+and the `expectedSubjectFor` type-break finding measured away (`git show
+origin/main:… | grep -c expectedSubjectFor` prints 0 — the function never
+shipped). Prompt committed verbatim beside this file as
+`drain-self-modification-narrowed-20261013-r3.question.md`.
+
+The round was a split, and the split is recorded as a split rather than
+flattened into a number.
+
+## Seat: anthropic — `ratified`
+
+> **Stance: ratified**
+>
+> Round 2's dealbreaker fixed completely — both error classes caught at one
+> boundary, both post-stat reads wrapped with typed translation, CLI honors
+> same contract. Three smaller findings addressed with measurements. Symlink
+> swap question answered: all three race outcomes shown to fail closed via
+> `O_NOFOLLOW` + measured refusals.
+>
+> **Highest-leverage change before merge**: None. The change is minimal for
+> what it accomplishes, addresses all findings with measurements, and documents
+> its limits honestly. Ship it.
+
+It also named the error enumeration as the right shape — "a future third error
+class won't get silently converted — stays a crash until the catch is updated"
+— and the Windows `O_NOFOLLOW` fallback as honestly documented.
+
+## Seat: openai — `refused`
+
+> **Stance: refused** — the intended fail-closed design is sound, but its
+> supposedly narrow error discriminator demonstrably admits Node programming
+> errors and the close path still escapes the model.
+
+Three findings, quoted rather than summarised because two of them are
+demonstrably right and the lane does not get to soften them:
+
+**High — `asErrno()` does not implement the distinction it documents.**
+
+> "That does not establish that the error is an OS errno. Node programming
+> errors such as `ERR_INVALID_ARG_TYPE` are typically `TypeError` instances
+> with string `code` properties. Consequently, the stated guarantee that 'a
+> `TypeError` from a future edit … stays a crash' is false: many such errors
+> will become `GatedFileUnreadable`, concealing defects as ordinary refusals."
+
+**This is correct and the lane concedes it without argument.** It is the same
+fail-open shape round 1 was refused for, in a new place: the narrowness claim
+in the header and the commit message is an overclaim, and the claim is the
+thing that was reviewed. The seat names the repair — require numeric `errno`
+plus `syscall`, or distinguish `ERR_*` from errno codes, with a regression
+test that an `ERR_INVALID_ARG_TYPE`-shaped error is rethrown unchanged.
+
+**Medium — `closeSync()` is outside the translation.**
+
+> "An `EIO`, `EINTR`, or similar close failure therefore escapes as a raw Node
+> error. It can also replace a successfully translated read error because an
+> exception from `finally` overrides the pending exception. This contradicts
+> both 'every failure of the subject computation is one structured refusal' and
+> the claim that post-stat filesystem operations are covered."
+
+Also correct. The `finally` block was written as cleanup and is a second
+uncovered path, including one that can mask a primary failure.
+
+**Medium — the CLI refusal path has no direct coverage.** Correct: the lane
+flagged the CLI catch as an addition the finding did not ask for and invited
+the seats to strike it; the seat's answer is that it should carry its own tests
+or be split out.
+
+It also corrected one of anthropic's statements: the permission cases use
+`skipIf(asRoot)`, so "no tests skipped" is not accurate, though the conditional
+skip itself is reasonable and weakens no existing judge.
+
+## What was NOT done, and why
+
+**Nothing was fixed in response to round 3.** The instruction this lane runs on
+bounds the narrowed change at a third refusal, and the bound is the point: a
+fourth round decided on the agent's own judgement that the next one would pass
+is exactly the judgement the bound removes. Two of the three findings are
+correct on their face, which makes fixing them tempting and makes the bound
+more load-bearing, not less — the editor of a governance surface judging when
+its own reviewers have asked enough is the failure this whole mechanism exists
+to prevent.
+
+The findings are **not lost**: they are the content of the next step, with the
+seats' words, exactly as round 2's finding became step 2.3.
+
+## What happens next
+
+`check_kernel_edit_ratified` is red on this diff, and that is the mechanism
+working: an agent changed the surface that governs it, two independent
+providers reviewed the change across five rounds in total, and it does not land
+on the agent's say-so.
+
+Under § When the user decides this is condition 1 — a refused review — so the
+route is `ratification-artifact.md` § The owner-permission-route: the owner's
+own recorded act on the forge, preceded by an ask. The ask is now narrower than
+it was after round 2, and is stated so it does not have to be reconstructed:
+
+- **The design is not in dispute.** Both seats, all three rounds, said the core
+  design is sound and the scope appropriately narrow. Question 7 came back
+  "no smaller change would do" every time.
+- **One seat holds it ready to ship.** Anthropic's round-3 answer names no
+  pre-merge change at all.
+- **The other names three defects in the error model's edges** — the `asErrno`
+  discriminator, `closeSync` outside the boundary, and the untested CLI path.
+  None touches the binding itself; all three are in the refusal plumbing added
+  to satisfy round 2.
+- So the owner's question is not *is the binding right* but *does this land now
+  with three edge defects tracked, or does it wait for a fourth round that the
+  agent is not permitted to call for itself.*

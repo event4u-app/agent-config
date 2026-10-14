@@ -187,6 +187,15 @@ rounds.
 So the branch was narrowed to the content binding alone — the `subject` digest
 over the gated content, and the gate refusing a record whose `subject` does not
 match — which is the piece both seats named as the smallest high-value change.
+
+**The narrowed change then went to three rounds of its own and was refused in
+all three** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
+anthropic `ratified` with no pre-merge change named, openai `refused` on three
+defects in the refusal plumbing added to satisfy round 2. A refusing seat gives
+`refused`, so the disposition is now the owner's. **No seat, in any of the six
+rounds across both shapes, disputed the design or the scope**; what is open is
+step 2.4's three edges, not the binding.
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -395,7 +404,7 @@ gaps again; the binding closes replay, and nothing else.
       unparseable artifact on disk but absent from the changed-file list leaves the
       diff green. 5 tests.
 
-- [ ] **2.3 Every failure of the subject computation is one structured
+- [x] **2.3 Every failure of the subject computation is one structured
       refusal.** The gate catches `GatedFileUnreadable`, `GatedPathEscapes` and
       a post-`lstat` read failure at ONE boundary around `expectedSubjectFor`
       and returns `exitCode 1` with a named line, rather than letting any of
@@ -437,6 +446,111 @@ gaps again; the binding closes replay, and nothing else.
       if `derived` were dropped again, and needs a derived-only file; and
       `expectedSubjectFor` changing from `string` to `SubjectReading` is a type
       break for any caller outside this tree.
+
+      **Closed 2026-10-13.** One boundary in `evaluate()` now enumerates BOTH
+      error classes and returns `exitCode 1` with a named line; the two
+      post-`lstat` reads are wrapped and translate an errno failure into
+      `GatedFileUnreadable`. The translation is narrow in the way the blind
+      peer-review stage asked for: `asErrno` admits only a value carrying an
+      errno `code`, so a `TypeError` from a future edit of that loop stays a
+      crash rather than surfacing as "the tree could not be read", and the
+      catch enumerates two classes rather than catching everything. The CLI
+      caller carries the same two-class catch, so the step's own title is true
+      of both callers of the computation rather than of one.
+
+      **The symlink-swap question, answered rather than assumed — and the
+      answer has two halves.** A path that is a regular file at the `lstat`
+      and a SYMLINK at the read is the only ordering in which out-of-revision
+      CONTENT can enter the digest, because `readFileSync` dereferences;
+      `readGatedFile` opens with `O_NOFOLLOW`, so that swap is `ELOOP` and
+      then a refusal. The direction the seat named by name — a link whose
+      TARGET is swapped between classification and read — is not a leak at
+      all: the digest records the target STRING and never dereferences it, so
+      the worst such a swap can do is move the digest, which reds the gate. A
+      link replaced by a regular file makes `readlinkSync` fail with `EINVAL`,
+      also a refusal. Three of three race outcomes fail closed.
+      **What is NOT closed, recorded rather than left to be found:**
+      intermediate directory components are still resolved, so a symlinked
+      parent committed into the tree redirects the read — a property of the
+      checkout, visible in the revision, not a race. And an adversary with
+      concurrent write access to the checkout during a gate run can edit the
+      gated bytes BEFORE the stat, forge the record, or patch the gate; no
+      ordering of stat and read answers that, and claiming otherwise would be
+      the false assurance this module exists to prevent. `O_NOFOLLOW` is
+      undefined on Windows and falls back to `0` there; this gate runs on
+      `ubuntu-latest` and its suites on ubuntu and macOS, so the fallback is
+      stated in the header rather than silently losing the property.
+
+      **The three further findings, each disposed of:**
+      · **The ENOENT polarity case** asserted only that nothing threw and that
+      the constant contains the word "deleted" — neither says the absent file
+      was entered WITH `DELETED_MARKER`. It now compares the absent tree's
+      digest against a tree whose gated file holds exactly those bytes, and
+      against one holding a different marker. Seen red by encoding the absent
+      branch with another marker; the two old assertions stay green under that
+      same neutralisation, which is the finding.
+      · **The one-classification case** used the gate's own script, gated
+      through the SELF set whether or not `derived` reaches the classifier. It
+      now uses `src/scripts/hooks/host_semantics.ts`, gated only through the
+      derived closure, plus the direct assertion that an empty derived list
+      un-gates it. Measured counterfactual rather than asserted: with
+      `gatedFilesOf` ignoring `derived`, the new fixture reds and the old
+      self-gated one stays green.
+      · **The `expectedSubjectFor` type break** is not one, and the
+      measurement is one command: `git show origin/main:src/scripts/check_kernel_edit_ratified.ts
+      | grep -c expectedSubjectFor` prints 0. The function is new on this
+      branch and has never shipped, so both shapes have only ever existed
+      inside this unmerged change and no caller outside the tree can exist to
+      break. Every in-tree caller moved with it. No code change; recorded so
+      the next reader does not re-derive it.
+
+      **Every case was seen red before the fix, by neutralising its
+      mechanism:** dropping `GatedPathEscapes` from the catch reds 2 of 9 and
+      leaves 7 green · unwrapping the two post-stat reads reds 2 of 33 ·
+      dropping `O_NOFOLLOW` reds 1 of 24 · encoding an absent file with
+      another marker reds 1 of 24 · making `gatedFilesOf` ignore `derived`
+      reds 1 of 24. 33 tests across the two suites.
+
+- [ ] **2.4 The refusal plumbing's own edges are covered.** Three findings
+      opened by round 3 of the modification review on 2026-10-13, all in the
+      error-handling added to satisfy round 2 and none in the binding itself.
+      `asErrno` admits any `Error` with a string `code`, which includes Node's
+      own `ERR_*` programming errors — so the narrowness the header claims is
+      not the narrowness the code has; the discriminator requires OS-error
+      evidence (numeric `errno` plus `syscall`, or an explicit `ERR_*` split)
+      and a case proving an `ERR_INVALID_ARG_TYPE`-shaped error is rethrown
+      unchanged. `fs.closeSync(fd)` runs in a `finally` outside the catch, so a
+      close failure escapes raw AND can replace an already-translated read
+      failure, because an exception from `finally` overrides the pending one.
+      The CLI's new refusal path has no direct case: `main()` is never
+      invoked, so nothing proves it returns 1, writes to stderr, emits no
+      digest, and still propagates an unrelated programming error.
+      verify: `npx vitest run tests/scripts/ratification_subject.test.ts tests/scripts/ratification_subject_cli.test.ts` -> 0
+
+      **In the seats' words, because two of the three are demonstrably right
+      and the roadmap does not get to soften them:** *"That does not establish
+      that the error is an OS errno. Node programming errors such as
+      `ERR_INVALID_ARG_TYPE` are typically `TypeError` instances with string
+      `code` properties. Consequently, the stated guarantee that 'a `TypeError`
+      from a future edit … stays a crash' is false: many such errors will
+      become `GatedFileUnreadable`, concealing defects as ordinary refusals."*
+      And: *"An `EIO`, `EINTR`, or similar close failure therefore escapes as a
+      raw Node error. It can also replace a successfully translated read error
+      because an exception from `finally` overrides the pending exception."*
+
+      **Not fixed in the change that was reviewed, and this time the reason is
+      the bound rather than the digest.** Round 3 is the third refusal of the
+      narrowed change, and the instruction this lane runs on stops there: the
+      disposition is the owner's, by `ratification-artifact.md` § The
+      owner-permission-route. A fourth round called on the agent's own judgement
+      that the next one would pass is the judgement that bound removes — and
+      the editor of a governance surface deciding when its own reviewers have
+      asked enough is the failure this mechanism exists to prevent. The same
+      digest argument of 2.3 still applies on top: `evaluate()` and the module
+      are read by a record now bound to `1aff2b49…`.
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+      The split is recorded as a split: anthropic answered `ratified` and named
+      no pre-merge change at all; openai answered `refused` on the three above.
 
 ## Phase 3 — The council reviews a modification as one
 
