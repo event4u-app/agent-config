@@ -154,13 +154,22 @@ that class cites the pending dedicated row instead.
 
 ## Phase 3 — Measure, then let the existing callers use it
 
-- [ ] **3.1 Measure against the claim.** Run the detector over the frozen
+- [x] **3.1 Measure against the claim.** Run the detector over the frozen
       fixtures and record per-class recall and false positives in
       `account-surface-finds-planted`. A class below its bar stays
       `suspected`-only in the detector's own output.
       verify: the claim's evidence names the commit measured and one figure
       per class; its status is `backed` only if every class it keeps
       `violated` met the bar.
+      DONE 2026-10-14 at `2c72aac99`: every class recall 1.0 and 0/18 false
+      positives, recorded per class in the claim. Status deliberately LEFT
+      `unbacked` although every bar is met: the detector was written with the
+      corpus in view, there is no held-out set, and its first out-of-corpus run
+      (this package's `src/`) produced 36 false positives the corpus could not
+      show. Backing waits for a held-out corpus written without sight of the
+      detector. A council round on this choice ran over an hour without
+      returning and was stopped; keeping `unbacked` is the status quo the
+      verify line permits, so it needed no new authority.
 - [ ] **3.2 Wire it where web-launch readiness is already wired.** One step in
       `src/subagents/production-validator.md` and one sentence in
       `launch-readiness`'s AUTH area: run the detector on account-flow
