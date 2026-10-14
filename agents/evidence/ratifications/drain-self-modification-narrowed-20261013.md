@@ -2,12 +2,12 @@
 proposed_by: claude/drain-self-modification-council-20261012
 implemented_by: claude/drain-self-modification-council-20261012
 reviewed_by: ai-council
-subject: 4174f49a0b16ed8a4d55fec7c4892149f5e2f802e5cab6c8c4a0d8299d0e997e
+subject: 659b9eeed23124a739c0f500e88e73b919f0be78f09566a50e1ba4b9e17eab00
 providers: [anthropic, openai]
-verdict: refused
+verdict: ratified
 seats:
-  anthropic: refused
-  openai: refused
+  anthropic: ratified
+  openai: confirmed-non-expanding
 effective_after: merge
 ---
 
@@ -21,15 +21,13 @@ recomputes that digest — since round 6, from Git objects at a commit — and
 refuses a record whose `subject` is absent, malformed or different. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass`.
 
-**Seven rounds, seven refusals. Round 7 (2026-10-14, after round 6's finding
-was fixed — the gate resolves `--rev` once and passes the commit id to the
-diff, the digest and the record read) was answered by one seat: anthropic
-refused, on the CI path's changed-file list, which comes from `gh pr view
---json files` and may report a renamed gated file only under its destination;
-openai gave no final verdict (`os_error: ENOBUFS`, a local spawn-buffer
-overflow). Round 6 had accepted the object-store design and refused 2/2 on the
-gate resolving a mutable revision more than once in one run. This record does
-not let the change land.**
+**Nine rounds. Rounds 1 to 8 refused; round 9 (2026-10-14, after round 8's
+finding was fixed — the base-copy `GIT_CONFIG_*` override is now under test,
+and the kernel-rule bundle step reads its list from git with `--no-renames`)
+was answered by both seats in favour: anthropic `APPROVE` (recorded as
+`ratified`), openai `confirmed-non-expanding`. Under the contract's ratification
+ladder a favourable council verdict recommends passage and stays advisory; the
+merge decision is the owner's.**
 
 **The header is bound to the tree as it stands now, not as rounds 1 and 2 read
 it, and that is the binding working rather than a record being rewritten.**
@@ -40,7 +38,10 @@ round 4's fixes changed the catch and comments in that file, and to
 `f6ac2f8c…` when the gate learned `--rev` and the serialisation gained the
 mode, to `6eea14ee…` when the gate resolved `--rev` once (step 2.7), and to
 `4174f49a…` when the workflow joined the gated set and the gate's usage
-comment changed (step 2.8); `seats:` carries round 8's conclusions. Rounds 1 and
+comment changed (step 2.8), and to `659b9eee…` when the bundle step and the
+ratification step's comment changed in the workflow (step 2.9) — the merge of
+`origin/main` after round 9 left it unchanged; `seats:` carries round 9's
+conclusions. Rounds 1 and
 2 are kept verbatim below, headers and all; what the frontmatter asserts is
 what the CURRENT content was last reviewed as, which is the whole point of the
 field.
@@ -1160,3 +1161,103 @@ roadmap as step 2.9 in the seats' words, with the two smaller asks (the
 round-specific workflow comment; splitting the council buffer change). The
 branch is not pushed: `check_kernel_edit_ratified` refuses a `refused` record
 at the pre-push preflight, and the disposition is the owner's.
+
+# Round 9 — 2026-10-14, the base-copy override under test, answered in favour 2/2
+
+Round 8's finding was fixed on the owner's route of 2026-10-14 (fix,
+re-present, merge only on 2/2). `tests/scripts/ci_changed_files_rename_compat.test.ts`
+reads the ratification step's `GIT_CONFIG_*` values out of the workflow and
+runs the diff call of a base gate that predates `--no-renames` from a Node
+process that inherits them, on a fixture renaming a kernel rule to an ungated
+path: without the values only the destination is listed, with them both
+paths. The kernel-rule bundle step passes `--base-ref` instead of the
+`gh pr view` list; its script diffs with `--no-renames` and exits 3 on an
+unreadable diff. The workflow comment cites the contract instead of the
+round. The council CLI `maxBuffer` commit is reverted here by a new commit and
+proposed separately (PR 2348).
+
+Red-proof, each neutralised in place and restored from a scratch copy: the
+legacy-diff case went red with the key misspelled (`diff.renmes`), the value
+misspelled (`flase`, a fatal git error), `GIT_CONFIG_COUNT: '0'` and the key
+variable misnamed (`GIT_CONFIG_KEY0`); the bundle case went red against the
+`gh pr view` step and again with `--no-renames` removed from the script; the
+exit-3 case went red with `return 0`. Once by hand, not in the suite,
+`origin/main`'s own gate (`b75aaeb39`) on a one-rename fixture said "nothing to
+ratify" (exit 0) without the values and listed the kernel rule (exit 1, no
+artifact) with them. 11 ratification / kernel-edit suites, the bundle suite and
+the new suite pass, run one at a time.
+
+Prompt committed verbatim as
+`agents/evidence/council/drain-self-modification-narrowed-20261013-r9.question.md`
+(50,100 bytes). Run once, CLI transport, same settings as round 8
+(`--prompt-mode pr --rounds 2`, no peer review), both seats dispatched
+(`anthropic/claude-sonnet-4-5`, `openai/codex-default`). Because the
+`maxBuffer` fix is no longer on this branch, the review tool was run from a
+detached local checkout of round 8's commit (`89ef9bfc8`), which carries it;
+the prompt reviewed this branch at `c2e96c418`. After the run: `2/2 present,
+needed 1 — concluded.` Both seats answered; no re-run. Nothing billed.
+
+## Seat: anthropic — `ratified`
+
+> "**APPROVE** — The change closes two real bypass paths (rename escape and
+> record reuse) with mutually reinforcing fixes. Test coverage is
+> comprehensive and validates actual workflow invocation. Gate is strictly
+> stronger: requires `subject` match, reads from commits not working tree,
+> uses `--no-renames` to see both rename sides. No weakening of existing
+> controls. Minor shipping risks (actionlint, test brittleness, omitted helper
+> verification) are acceptable - the first should be caught in CI, the latter
+> two are low-severity. [...] No merge-blocking defects found."
+
+> "**This is the mechanism that authoritatively judges this PR, and it is now
+> under test.**"
+
+> "**Single highest-leverage change before merge** — **Require a green full CI
+> run including `actionlint` before merge.**"
+
+The seat closed with `APPROVE` and named none of the four stance words.
+`APPROVE` with "No merge-blocking defects found" is recorded as `ratified`,
+the plain approval, as earlier rounds recorded `REQUEST_CHANGES` as
+`refused`; it is not upgraded to a classification the seat did not make. Also
+named: test brittleness to workflow-step renames ("fails loudly rather than
+silently passing"), that `_lib/ratification_subject.ts` was not in the bundle
+("Moderate uncertainty about bounds. Likely sound [...] but unverifiable from
+supplied diff"), and no performance measurement of the digest ("Minor").
+
+## Seat: openai — `confirmed-non-expanding`
+
+> "**APPROVE** — no merge-blocking defect is visible, the prior
+> compatibility-test gap is closed, and the change fails closed; the
+> highest-leverage pre-merge action is to obtain a green authoritative CI run
+> including `actionlint`."
+
+> "**Stance: confirmed-non-expanding** — this changes a governance surface
+> while narrowing author authority and granting no new authority."
+
+> "The deleted council test accompanies the exact feature revert. This is
+> disclosed and leaves no net council change against `origin/main`; it is not
+> silent test weakening."
+
+> "Returning exit 3 when the bundle diff is unreadable correctly converts a
+> fail-open path into a refusal."
+
+Also: "Reviewer A overstates several facts that the supplied evidence cannot
+establish"; the omitted `_lib/ratification_subject.ts` "contains the decisive
+revision and path-validation implementation, so option-injection resistance,
+containment, and object-type checks cannot be independently confirmed here";
+"Coverage & confidence: [...] Confidence: moderate-high."
+
+## Honest reading
+
+Both seats answer round 8's finding as closed and name no merge-blocking
+defect. Both name the same pre-merge action — a green CI run including
+`actionlint`, which was not run locally — and both bound their reading by the
+helper module left out of the bundle, which was last shown in full in round 7.
+One seat's verdict is mapped from `APPROVE` rather than given as a stance word;
+that mapping is this record's, stated above.
+
+## What was NOT done, and why
+
+The run was not repeated: one run was authorised and both seats answered.
+`actionlint` was not run locally; CI runs it on changed workflow files. Under
+the contract's ladder this favourable record recommends passage and does not
+approve it; the merge is the owner's, on the owner's stated condition of 2/2.
