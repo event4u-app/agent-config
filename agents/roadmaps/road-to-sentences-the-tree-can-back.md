@@ -249,14 +249,23 @@ answer. No class sweep: each step names its sentence.
 
 ## Phase 4 — The census sees the whole folder
 
-- [ ] **4.1 Nested directories inside a topic are read.** `censusTopic` walks
+- [x] **4.1 Nested directories inside a topic are read.** `censusTopic` walks
       a topic folder recursively, and files sharing a stem across directory
       levels form one revision set. A fixture shaped like this round's folder —
       fourteen text files, three cross-level stems — reports fourteen files and
       three revision sets. Positive control: the same fixture against the
       current code reports twelve and zero.
       verify: `npx vitest run tests/scripts/inbox_source_census.test.ts -t nested-topic-folder --reporter=verbose` -> /✓.*nested-topic-folder/
-- [ ] **4.2 Non-text sources are named, not dropped.** Files the census does
+      The control reads **eleven**, not the twelve this step predicted. Those
+      twelve came from the real round folder and a synthetic fixture cannot
+      carry both figures: fourteen files with three cross-level stems means
+      three of them are nested, so the blind walk sees eleven. The property is
+      the one the step asked for; the number is the fixture's and is written
+      into the test beside the reason.
+      The repair's own hazard is covered rather than assumed — a recursive
+      topic walk under a recursive ROOT walk would count a nested file twice,
+      so the root pass stays non-recursive and a case asserts the total.
+- [x] **4.2 Non-text sources are named, not dropped.** Files the census does
       not read (a `.mjs` prototype, an image) are listed by name with
       "not counted", so the closing coverage line cannot read as complete.
       verify: `npx vitest run tests/scripts/inbox_source_census.test.ts -t uncounted-files-named --reporter=verbose` -> /✓.*uncounted-files-named/
@@ -295,8 +304,11 @@ answer. No class sweep: each step names its sentence.
 - [x] AC-4 — `check_ci_local_parity --format json` stdout parses. The human
       report is rerouted to stderr rather than dropped, and a text-mode case
       pins that stdout still carries it there.
-- [ ] AC-5 — The census reports every text file and every cross-level revision
-      set of a nested topic folder, and names what it did not count.
+- [x] AC-5 — The census reports every text file and every cross-level revision
+      set of a nested topic folder, and names what it did not count. The
+      closing coverage line now carries a `not counted` figure, and when it is
+      above zero the run says in words that the anchor total is a floor over
+      what was read rather than a measure of the folder.
 - [ ] AC-6 — The README's skill-format sentence states the owner's chosen
       wording.
 
