@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **591**
-- Edges (incl. self-WRITE): **2273**
+- Edges (incl. self-WRITE): **2274**
 
 ## READ_ONLY edges
 
@@ -1660,6 +1660,7 @@
 | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncondensed/skills/runway-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md` | `.agent-src.uncondensed/skills/scenario-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/universal-project-analysis/SKILL.md` | `.agent-src.uncondensed/skills/analysis-skill-router/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/upstream-contribute/SKILL.md` | `.agent-src.uncondensed/rules/package-ci-checks.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/docker/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncondensed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
