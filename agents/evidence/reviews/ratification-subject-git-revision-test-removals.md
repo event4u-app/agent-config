@@ -1,6 +1,6 @@
 # Test removals: the ratification subject moves to Git objects
 
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-14 -->
+<!-- evidence-type: analysis -->
 
 **Who wrote this, and what it is not.** This is the implementer's own account
 of the tests removed when the ratification subject stopped reading the working
