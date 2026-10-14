@@ -496,6 +496,17 @@ engages and leaves the event behind.
       per-run reading, which is a decision about what was being measured
       and not a re-measurement.
 
+      **Resolved 2026-10-13 by withdrawal of the subject, not by either of
+      the two closings above.** The concern this criterion measures was
+      withdrawn on its own pre-registered kill date, so no further window can
+      produce a re-engagement count and the re-wording decision has nothing
+      left to re-word. `road-to-what-was-built-and-never-ran` Phase 4 is where
+      the item went: 4.1 read `interruption_report` one last time and recorded
+      that no qualifying run exists, 4.2 removed the mechanism, 4.3 archived
+      this file. The annotation records that destination; it does not claim the
+      receiver satisfied the measurement, because nothing did.
+      <!-- deferred-resolution: carried-to=road-to-what-was-built-and-never-ran -->
+
 ## Blockers
 
 ### blocker: three-phase-contract-run
