@@ -231,3 +231,44 @@ describe("scope and safety", () => {
     expect(result.scanned_files).toBeGreaterThan(0);
   });
 });
+
+describe("check_account_surface — wired into its callers (step 3.2)", () => {
+  const callers = [
+    path.join(repoRoot, "src", "subagents", "production-validator.md"),
+    path.join(repoRoot, "src", "skills", "launch-readiness", "SKILL.md"),
+  ];
+
+  it.each(callers)("%s names the command and labels the output unmeasured", (file) => {
+    const body = readFileSync(file, "utf8");
+
+    expect(body).toContain("check_account_surface");
+    expect(body).toMatch(/unmeasured/i);
+    expect(body).toContain("account-surface-finds-planted");
+  });
+
+  it("a detector-sourced violated finding validates as an AC-AUTH prelaunch finding", async () => {
+    const { load_areas, validate_report } = await import("../../src/scripts/prelaunch_diagnostics.js");
+    const hit = scanAccountSurface(corpus).findings.find((f) => f.evidence === "violated");
+    expect(hit).toBeDefined();
+    if (hit === undefined) return;
+
+    const report = {
+      schema_version: "prelaunch-report-v1" as const,
+      project: "demo",
+      run_at: "2026-10-14T00:00:00Z",
+      areas: { auth: { state: "finding" as const } },
+      findings: [
+        {
+          id: "AC-AUTH-001",
+          area: "auth",
+          severity: "P1" as const,
+          title: `${hit.class} (check_account_surface, unmeasured)`,
+          evidence: `${hit.file}:${hit.line}`,
+          status: "open" as const,
+        },
+      ],
+    };
+
+    expect(validate_report(report, load_areas())).toEqual([]);
+  });
+});
