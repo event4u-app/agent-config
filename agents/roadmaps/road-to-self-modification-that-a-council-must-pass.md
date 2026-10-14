@@ -584,8 +584,11 @@ gaps again; the binding closes replay, and nothing else.
       seats ask for the round history to leave the production docblocks.
       **Not done in the lane that ran round 4**: the owner authorised the three
       round-3 fixes and one round, and a fifth round is the owner's call.
-      verify: `npx vitest run tests/scripts/ratification_subject_fs_faults.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+      (The verify was re-pointed by step 2.6: the file it named tested the
+      working-tree reader 2.6 replaced, and the refusal of every entry that is
+      not absent or a regular file is pinned by the revision suite now.)
 
       **Closed 2026-10-14, on the owner's decision to fix round 4's confirmed
       findings and run a fifth round.** After the `lstat`, `subjectOf()` reads
@@ -606,7 +609,7 @@ gaps again; the binding closes replay, and nothing else.
       6, `--quiet` warning 1 of 6. Nothing from round 4 deferred. Round 5
       confirmed the finding fixed and refused 2/2 on a new one — step 2.6.
 
-- [ ] **2.6 No gated path is read through a symlinked ancestor.** `O_NOFOLLOW`
+- [x] **2.6 No gated path is read through a symlinked ancestor.** `O_NOFOLLOW`
       guards only the final component; `lstat` and `open` resolve every parent,
       so a gated path whose parent directory is a symlink — committed, or in a
       dirty tree — is digested from content outside the revision, and two
@@ -623,11 +626,30 @@ gaps again; the binding closes replay, and nothing else.
       highest-leverage pre-merge change is to hash an explicit Git revision, or
       at minimum refuse every symlinked ancestor and add the regression test
       above."* anthropic: *"Correct the comment claiming symlinks are never
-      dereferenced."* **Deferred, with the reason**: the owner authorised the
-      round-4 fixes and one round, merging only on 2/2; a sixth round is the
-      owner's call.
-      verify: `npx vitest run tests/scripts/ratification_subject_fs_faults.test.ts` -> 0
+      dereferenced."*
+      verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+      **Closed 2026-10-14 by a strategy shift, decision D13.** Rounds 3, 4 and 5
+      each refused the working-tree reader on a new filesystem defect, so a
+      fourth per-class patch was not converging. The subject is now read from
+      Git objects at an explicit revision (`--rev`, default `HEAD`): the
+      revision resolves to a commit, each gated path is looked up with
+      `git ls-tree` and its bytes come from `git cat-file`. The gate reads the
+      record at the same commit. Symlinks, FIFOs, devices, permission faults
+      and races on the filesystem are therefore outside what the digest can
+      observe, not refused one by one. A gated path committed as a symbolic
+      link (mode `120000`) is refused, as are a directory or submodule entry,
+      an unresolvable revision, a `--root` that is not a repository top level
+      and a git that cannot run — all typed refusals, exit 1. The entry now
+      hashes the mode as well, so the executable bit is part of the subject.
+      The working-tree reader (`readGatedFile`, `readGatedLink`, `asErrno`,
+      the `O_NOFOLLOW`/`O_NONBLOCK` flags) is deleted with the suite that
+      tested it; the removals are accounted for in
+      `agents/evidence/reviews/ratification-subject-git-revision-test-removals.md`.
+      Each new property was seen red against the working-tree reader before
+      the change (16 of 17 cases), and the subdirectory, mode-`120000` and
+      `--rev` usage refusals again by neutralising them afterwards.
 
 ## Phase 3 — The council reviews a modification as one
 
@@ -1218,6 +1240,7 @@ gaps again; the binding closes replay, and nothing else.
 | D10 | product-owned | owner | the directive's reading is (a): the council is the lowest passing rung for the gated surface and for changes the learning lanes originate, with the verdict rule and escalation conditions as drafted in step 1.1; commissioned work keeps its present speed | owner answer 2026-10-06 to blocker `self-modification-directive-reading-confirmed`, options (a) / (b) wider at 22 in 49 commits / (c) gated surface only | the review load on the gated surface or the learning lanes changes materially, or the owner widens the reading |
 | D11 | product-owned | owner | the owner's route past a recorded council non-convergence is (b), the owner's own recorded bypass on the forge — preceded by an ask: on non-convergence, or on the red check it causes, the agent tells the owner at once and asks in-session with options; a yes is then given as the forge act, never as a chat answer, because a chat answer reaches the tree only as text an agent wrote and ADR-268 § 4 forbids an agent ratifying its own increase in power. The contract's two sentences ruling a bypass out are amended for recorded non-convergence only | owner answer 2026-10-06 to blocker `owner-permission-route`: "the user should be informed beforehand or on a failed CI run and be able to instruct the agent locally when it asks — otherwise option 1, if it cannot be done differently"; option (a) needs a place only a person writes, which does not exist at the pin | a place only a person writes exists (the gate-preauth stub's answer), at which point (a) becomes the route that needs no forge act |
 | D12 | reversible-technical | council:drain-self-modification-20261012 | Land the content binding alone; stage governed-surface expansion, proposal validation, the record writer, the escalation shape and the Iron Law as their own changes | The modification review of 2026-10-12 refused the bundled branch 2/2 and both seats answered `smaller-change` with "landing the binding first would close replay risk while letting the broader self-governance design be evaluated with a smaller blast radius"; the bundled diff was 177 KB against a 51 KB council bundle ceiling, so no seat saw the whole of it | A later council reviews the staged concerns together and asks for them as one change |
+| D13 | reversible-technical | council:drain-self-modification-narrowed-20261013 (round 5) | The ratification subject is read from Git objects at an explicit revision, never from the working tree; a gated path committed as a symbolic link is refused rather than hashed as its target string | Rounds 3, 4 and 5 each refused the working-tree reader on a new filesystem defect (errno handling, non-regular files, a symlinked ancestor); both round-5 seats named hashing an explicit Git revision as the stronger fix | A gated surface legitimately needs to be a symbolic link, or the gate must judge content that is deliberately left uncommitted |
 
 ## Kill register
 
