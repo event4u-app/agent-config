@@ -188,15 +188,17 @@ So the branch was narrowed to the content binding alone — the `subject` digest
 over the gated content, and the gate refusing a record whose `subject` does not
 match — which is the piece both seats named as the smallest high-value change.
 
-**The narrowed change then went to four rounds of its own and was refused in
-all four** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+**The narrowed change then went to five rounds of its own and was refused in
+all five** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
 round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
 anthropic `ratified` with no pre-merge change named, openai `refused` on three
 defects in the refusal plumbing added to satisfy round 2. On the owner's
 decision those three were fixed (step 2.4) and round 4 refused 2/2 on a new
-one: non-regular files read as regular (step 2.5). The disposition is the
-owner's. **No seat, in any of the seven rounds across both shapes, disputed the
-design or the scope**; what is open is step 2.5, not the binding.
+one: non-regular files read as regular (step 2.5). That was fixed on the
+owner's decision and round 5 refused 2/2 on a new one: an intermediate path
+component that is a symlink is followed (step 2.6). The disposition is the
+owner's. **No seat, in any of the eight rounds across both shapes, disputed the
+design or the scope**; what is open is step 2.6, not the binding.
 Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
 worked example and its Iron Law (6.2), the record writer (3.4) and the
 escalation shape (5.2) were reverted to `origin/main` and are **open steps
@@ -565,7 +567,7 @@ gaps again; the binding closes replay, and nothing else.
       2 of 5, 1 of 5, 2 of 4, 1 of 4. Round 4 confirmed the three fixed and
       refused 2/2 on a new finding — step 2.5.
 
-- [ ] **2.5 Only the three object kinds the digest describes are read.** After
+- [x] **2.5 Only the three object kinds the digest describes are read.** After
       the `lstat`, a gated path is absent, a symbolic link, or a regular file;
       anything else — FIFO, socket, device, directory — is a typed refusal
       raised BEFORE any `open`, handled by `evaluate()` and the CLI like the
@@ -582,6 +584,48 @@ gaps again; the binding closes replay, and nothing else.
       seats ask for the round history to leave the production docblocks.
       **Not done in the lane that ran round 4**: the owner authorised the three
       round-3 fixes and one round, and a fifth round is the owner's call.
+      verify: `npx vitest run tests/scripts/ratification_subject_fs_faults.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+      **Closed 2026-10-14, on the owner's decision to fix round 4's confirmed
+      findings and run a fifth round.** After the `lstat`, `subjectOf()` reads
+      an absent path, a link or a regular file and throws `GatedPathUnsupported`
+      for anything else before any `open`; `readGatedFile()` opens with
+      `O_NOFOLLOW | O_NONBLOCK` and refuses a non-regular `fstat`, so an object
+      swapped in after the stat cannot block it. The three refusal classes share
+      `GatedSubjectRefusal`, which `evaluate()` and the CLI catch as one class.
+      All four non-blocking notes were small and in scope and are done in the
+      same change: a missing `O_NOFOLLOW` or `O_NONBLOCK` is a refusal,
+      `--quiet` over an empty gated set warns on stderr, `assertContained()`
+      refuses backslash `..` and UNC / rooted / drive-qualified paths on its own
+      input, and the round history left the production comments for this
+      roadmap and the record. Each case seen red by neutralising its mechanism:
+      kind check 5 of 16, `fstat` check 2 of 16, `O_NONBLOCK` 1 (flags case, run
+      alone because the direct-FIFO case would block), missing-flag refusal
+      2 of 16, containment 1 of 29, `evaluate()` catch 1 of 10, CLI catch 1 of
+      6, `--quiet` warning 1 of 6. Nothing from round 4 deferred. Round 5
+      confirmed the finding fixed and refused 2/2 on a new one — step 2.6.
+
+- [ ] **2.6 No gated path is read through a symlinked ancestor.** `O_NOFOLLOW`
+      guards only the final component; `lstat` and `open` resolve every parent,
+      so a gated path whose parent directory is a symlink — committed, or in a
+      dirty tree — is digested from content outside the revision, and two
+      clean checkouts of one commit can disagree. The fix: walk the components
+      between the root and the gated path, `lstat` each, and refuse with a typed
+      refusal if any is a symbolic link (or hash Git blobs at an explicit
+      revision, which both seats call the stronger shape); correct the module
+      header, which says the digest never follows a link. Case: a gated child
+      deleted or changed, its parent replaced by a symlink to a directory with a
+      regular file at the remaining suffix; the subject computation refuses
+      before hashing. Opened by round 5 on 2026-10-14, refused 2/2 on it. In
+      openai's words: *"the digest can bind content reached through an
+      intermediate symlink rather than the reviewed Git path; the
+      highest-leverage pre-merge change is to hash an explicit Git revision, or
+      at minimum refuse every symlinked ancestor and add the regression test
+      above."* anthropic: *"Correct the comment claiming symlinks are never
+      dereferenced."* **Deferred, with the reason**: the owner authorised the
+      round-4 fixes and one round, merging only on 2/2; a sixth round is the
+      owner's call.
       verify: `npx vitest run tests/scripts/ratification_subject_fs_faults.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
