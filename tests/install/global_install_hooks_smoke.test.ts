@@ -72,6 +72,20 @@ describe('golden smoke — fresh global install is single-surface complete', () 
             expect(JSON.stringify(hooks[ev])).toContain(MANAGED_SIGNATURE);
         }
 
+        // Listing override: only projected skills, only `name-only`, and recorded for uninstall.
+        const overrides = (settings as Record<string, unknown>)['skillOverrides'] as Record<string, string>;
+        const deployed = new Set(fs.readdirSync(path.join(home, '.claude', 'skills')));
+        expect(Object.keys(overrides).length).toBeGreaterThan(0);
+        expect(Object.keys(overrides).length).toBeLessThan(deployed.size);
+        for (const [name, value] of Object.entries(overrides)) {
+            expect(deployed.has(name), `${name} is not a projected skill`).toBe(true);
+            expect(value).toBe('name-only');
+        }
+        const record = path.join(home, '.event4u', 'agent-config', 'skill-overrides.json');
+        expect(Object.keys(JSON.parse(fs.readFileSync(record, 'utf8')).entries).sort()).toEqual(
+            Object.keys(overrides).sort(),
+        );
+
         // Shim invariant (road-to-install-path-convergence Phase 1): a direct
         // `claude plugin install` NEXT TO this projection cannot recreate the
         // duplicate content surface — the marketplace plugin lists exactly one

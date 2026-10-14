@@ -443,6 +443,16 @@ Hooks keep firing after removal (they live in `settings.json`, not the
 plugin); `agent-config doctor` verifies via the `hook-wiring` check and
 flags a leftover plugin as `claude-plugin: duplicate surface`.
 
+The same global install also writes Claude Code's `skillOverrides` for the
+skills it deployed: the set that fits the host's description budget keeps its
+description, every other package skill is set `name-only` — still listed, still
+invocable by name and by `/name`. There is no setting for it. A key you already
+set is never overwritten (the installer reports it), and what the package wrote
+is recorded in `~/.event4u/agent-config/skill-overrides.json`;
+`agent-config uninstall` removes exactly those keys, keeping any you changed
+since. To undo it by hand, delete the recorded keys under `skillOverrides` and
+the record file.
+
 ### Copilot CLI
 
 ```bash

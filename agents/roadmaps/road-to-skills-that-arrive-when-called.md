@@ -15,7 +15,7 @@ relates:
     note: "Added in the same change. Phase 4 sources materialised skills from its staged payload (1.1), never from a package-manager cache."
   - slug: road-to-skill-menu-economy
     relation: extends
-    note: "Later. Owns the listing axis and the posed owner question on the host's listing override; this file adds the lifecycle axis — when a skill is present, how long it stays, whether its body leaves residue — and step 4.7 waits on that question."
+    note: "Later. Owns the listing axis and the posed owner question on the host's listing override; this file adds the lifecycle axis — when a skill is present, how long it stays, whether its body leaves residue — and step 4.7 carried the owner's answer to that question, option (a), on 2026-10-14."
   - slug: road-to-a-setup-that-decides-itself
     relation: extends
     note: "Added in the same change. Its step 4.7 removes `projection.mode` only after this file's completeness blocker is answered."
@@ -216,12 +216,25 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   completeness answer makes presence optional and Phase 5 reads no harm; until
   then it keeps the full install.
   verify: decision test for each completeness answer.
-- [ ] <!-- blocked-by: listing-override-write-is-owner-owned | asked: yes — 2026-10-12, inbox-2026-10-n reply --> **4.7 Computed visibility on the first host.** The resident set keeps
+- [x] **4.7 Computed visibility on the first host.** The resident set keeps
   descriptions; the rest go `name-only`, still listed and invocable — computed,
   never a key; only for skills the package owns; never over a user value; removed
   exactly on uninstall.
+  Done 2026-10-14 under the owner's option (a). `src/scripts/_lib/skill_listing_overrides.ts`:
+  the resident set is `modelListingBudget` over the skills the global deploy
+  inventory records for `claude-code` and that survived every prune, so the
+  installer calls it after the scoped / tiered prune, not inside the deploy loop.
+  Ownership is a value, not a signature, so it is recorded in
+  `~/.event4u/agent-config/skill-overrides.json`; an entry stays ours only while
+  the file holds exactly the recorded value. The phase gate's 0.2 (a)–(b) probes
+  materialisation and does not bear on this step; the `name-only` behaviour it
+  relies on is the four-of-five-column reading recorded under the search
+  roadmap's 0.1. A hermetic global install into a scratch `HOME` wrote 184
+  `name-only` entries, a re-run left the file byte-identical, and uninstall
+  removed all 184 and kept a foreign `skillOverrides` key.
   verify: merge fixture with a pre-existing user value; uninstall removes exactly
   what was written.
+  verify: `npx vitest run tests/install/skill_listing_overrides.test.ts` -> 0
 
 ## Phase 5 — Read the effect once
 
@@ -259,7 +272,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ### blocker: listing-override-write-is-owner-owned
 
-- **Status:** open — the fourth arrival of the question `road-to-skill-menu-economy` already poses (its owner question, 3 arrivals before this round); raised here 2026-10-12 by round inbox-2026-10-n against the 2026-10-12 directive that nobody configures the setup
+- **Status:** resolved — owner decision 2026-10-14 (chat answer "1"), option (a): the package writes the listing override for skills it owns into the user-global host settings, never over a user value, removes it on uninstall, with no settings key. The owner lowered the recorded never-write commitment for this one exception, because the advisory route hands the user exactly the configuration the 2026-10-12 directive removes. The never-write statements now name it (`src/scripts/_lib/mcp_bridge.ts` § tierBAdvisory, `docs/mcp-server.md` § When the host lists a skill without its description); the same answer is recorded at the owner question in `road-to-skill-menu-economy`; step 4.7 is done. First raised as the fourth arrival of the question `road-to-skill-menu-economy` already poses, 2026-10-12, round inbox-2026-10-n
 - **Owner:** owner — `src/scripts/_lib/mcp_bridge.ts:348-351` and `docs/mcp-server.md:184-187` state the package never writes a consumer's host settings, a recorded commitment only the owner may lower
 - **Class:** 3
 - **Ownership:** product-owned
@@ -277,6 +290,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 | D2 | reversible-technical | agent | Only report skills may fork | A forked run sees no conversation and leaves nothing for later turns | the 3.2 pilot shows a standing skill losing nothing when forked |
 | D3 | reversible-technical | agent | Materialisation runs on the second host first | That host omits skills over budget; on the first host the listing override does the same job with no file churn | 0.2 shows the first host cannot pick up a written skill at all |
 | D4 | product-owned | owner | Land as a new file rather than un-park `road-to-skill-menu-economy` | Operator instruction of 2026-10-12 to land this round's roadmaps; the menu file stays parked on its own condition | the menu file's condition (iii) closes |
+| D5 | product-owned | owner | Option (a) on `listing-override-write-is-owner-owned`: write `skillOverrides` for package-owned skills into the user-global host settings, never over a user value, removed on uninstall, no settings key — an owner lowering of the recorded never-write commitment | Owner chat answer "1", 2026-10-14; the advisory option hands the user the configuration the 2026-10-12 directive removes | a host build changes what `name-only` does, or a consumer reports a value of theirs touched |
 
 ## Kill register
 
