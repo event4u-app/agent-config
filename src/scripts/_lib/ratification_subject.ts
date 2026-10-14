@@ -311,7 +311,10 @@ export function changedFilesBetween(root: string, base: string, commit: string):
             `base ref \`${base}\` is empty or shaped like an option`,
         );
     }
-    const res = runGit(root, ['diff', '--name-only', '-z', `${base}...${commit}`], '');
+    // `--no-renames`: rename detection reports only the destination, so a
+    // gated file moved to an ungated path would vanish from the list.
+    const args = ['diff', '--no-renames', '--name-only', '-z', `${base}...${commit}`];
+    const res = runGit(root, args, '');
     if (res.status !== 0) {
         throw new GitReadFailed('', 'diff', stderrOf(res));
     }

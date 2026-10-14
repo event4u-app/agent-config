@@ -393,6 +393,19 @@ describe('one gate run reads one commit (step 2.7)', () => {
         }
     });
 
+    it('a gated file renamed away is listed under its old path, so the gate still sees it', () => {
+        // Rename detection would report only the destination, which is not
+        // gated, and the removal of the kernel rule would pass unratified.
+        write('README.md', 'base\n');
+        write(KERNEL, 'a kernel rule long enough to be detected as renamed\n'.repeat(4));
+        const base = commitAll(root);
+        fs.renameSync(path.join(root, KERNEL), path.join(root, 'src/moved.md'));
+        commitAll(root);
+        const r = runGate(['--root', root, '--base-ref', base, '--policy-root', process.cwd()]);
+        expect(r.out).toContain(KERNEL);
+        expect(r.code).toBe(1);
+    });
+
     it('`--rev` with no value is refused by the gate, not defaulted to HEAD', () => {
         write(KERNEL, 'x\n');
         commitAll(root);
