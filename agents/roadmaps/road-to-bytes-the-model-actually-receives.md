@@ -165,7 +165,7 @@ owns it; "here" or "sibling" names this file or
 | W3.2 / Ph8.2 `--prefer-offline` on the MCP entry | here | 3.1 |
 | Ph8.1 start the installed runtime directly | declined | breaks the documented `npx` path for projects without a local install; 3.1 removes the registry request on a warm cache without that cost (D1) |
 | W3.3 update check joins the profile | declined | one registry request a day after a CLI subcommand (`check_update_banner.ts`), no profile to join (W3.1) |
-| W3.4 / Ph8.3 one runtime, gate the built tarball (E7) | owner decision | reverses the recorded 2026-08-04 release decision not to gate unpacked size (`src/config/pack-size-budget.json` `_comment`) |
+| W3.4 / Ph8.3 one runtime, gate the built tarball (E7) | declined (owner, 2026-10-14) | would reverse the recorded 2026-08-04 release decision not to gate unpacked size (`src/config/pack-size-budget.json` `_comment`); the owner kept it — keep measuring, no gate — since no consumer cost has been measured since; D9 |
 | W3.5 package-manager rule line | declined | a standing rule line is paid on every spawn and no repeated-reinstall incident is recorded |
 | W4.1 / Ph4.1–4.2 HTTP validator cache, ETag/304 | declined | see W0.5: no repeated consumer-side download to save |
 | W4.2 / Ph7 clone planner, persistent object store | here, narrowed | 3.3; a persistent bare store is declined — `--deep` runs on demand and rarely |
@@ -195,6 +195,7 @@ owns it; "here" or "sibling" names this file or
 | D4 | reversible-technical | agent | `--deep` reuses a local clone holding the SHA, else a depth-1 fetch of that commit; no persistent bare store | `--deep` is opt-in and on-demand; a store is a maintenance surface for a rare path | the transfer part of the ceiling fires on more than one run |
 | D5 | reversible-technical | agent | the spawn nudge gains an advisory clause only if a re-taken cold start still exceeds 100,000 uncached tokens | the 2026-08-16 reading is 242,891; the threshold is under half of it and stated, not derived | a re-taken figure lands near the threshold |
 | D6 | reversible-technical | agent | one roadmap for measurement and package-owned traffic, one sibling for reduction | the reduction depends on another roadmap's ADR and probe; this file depends on nothing | the sibling's dependency closes before Phase 1 here starts |
+| D9 | product-owned | owner | The built tarball stays ungated; size keeps being measured, and the 2026-08-04 release decision stands unreopened | Owner answer 2026-10-14 to the round's E7 residue (option 1); no consumer cost measured since that decision | a measured consumer cost from package size appears |
 | D8 | reversible-technical | agent | Verify lines of 1.2, 1.3, 2.1, 2.2 and 3.1 name test titles the step itself creates; each is seen red before its implementation, so the name filter matches a real test by the time the step closes (closure listing C1–C5, non-blocking by that script's own contract) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
 
 ## What this roadmap deliberately does not do

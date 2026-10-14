@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-r verified at 9a943f30c that every subagent leg starts cold (median first-call written-or-uncached 242,891 tokens, agents/evidence/analysis/downshift-vs-cache.md:51) while the tree carries zero references to the host's resume primitive, rate-limit events or concurrency cap (grep over src, docs and agents/roadmaps for SendMessage, StopFailure, rate_limits, CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS returns nothing). No active roadmap owns spawn economics. Parking costs more because the owner asked for this to stop rate-limit refusals now; merging into later/road-to-worker-generation-recycling would wake a parked file whose Phase 2 waits on a primitive that does not exist and whose own posed owner question this plan only hands an answer to; merging into road-to-an-installed-layer-that-is-thinned would mix how many times a payload is paid with how big it is, which that file explicitly does not own."
-estate_growth_exempt: "+2 open_blockers: `recycling-question-gets-its-answer` and `third-writable-host-env-row`. Each is an owner-reserved decision this round could not close — answering a parked roadmap's posed owner question (five arrivals), and adding a third row to an allow table whose two-row shape the owner decided on 2026-09-30. Each blocks exactly one step; every other step runs without them."
+estate_growth_exempt: "+0 open_blockers: both owner-reserved blockers this round raised were answered by the owner on 2026-10-14 — `recycling-question-gets-its-answer` (option d, D11) and `third-writable-host-env-row` (option a, D12)."
 relates:
   - slug: road-to-worker-generation-recycling
     relation: extends
@@ -249,7 +249,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
-- [ ] <!-- blocked-by: third-writable-host-env-row | asked: yes — 2026-10-14, inbox-2026-10-r owner residue --> **4.1 Lower
+- [ ] **4.1 Lower
       `subagents.max_parallel` into `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`** as a
       third `WRITABLE_HOST_ENV` row. It bounds how many run at once, never
       whether a call happens, so the table's invariant (`host_env_write.ts:20-21`)
@@ -324,7 +324,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 - [ ] **6.3 Correct D3** in the recycling roadmap's Context, citing the
       per-spawn reading.
       verify: `grep -c 'per-spawn-standing-2026-10' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
-- [ ] <!-- blocked-by: recycling-question-gets-its-answer | asked: yes — 2026-10-14, inbox-2026-10-r owner residue --> **6.4 Record the
+- [x] **6.4 Record the
       owner's answer** to the recycling roadmap's posed question on that file,
       with this plan's Phase 3 as the evidence the answer reads.
       verify: `grep -c 'road-to-a-cold-start-paid-once' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
@@ -337,7 +337,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 ## Blockers
 
 ### blocker: recycling-question-gets-its-answer
-- **Status:** open — raised 2026-10-14 by round inbox-2026-10-r, the fifth arrival of the subject on `later/road-to-worker-generation-recycling.md`
+- **Status:** resolved — owner chose (d) on 2026-10-14; written under the posed question in `later/road-to-worker-generation-recycling.md`; recorded as D11
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.4 only
@@ -348,7 +348,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 - **Resolved when:** the chosen option is written under that file's posed question and this entry's Status reads resolved.
 
 ### blocker: third-writable-host-env-row
-- **Status:** open — raised 2026-10-14 by round inbox-2026-10-r
+- **Status:** resolved — owner chose (a) on 2026-10-14: the third row is approved; step 4.1 writes the ADR addendum next to the 2026-09-30 decision and adds the row; recorded as D12
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 4.1 only; 4.2 waits on 4.1
@@ -368,9 +368,11 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 | D4 | reversible-technical | agent | The status-line wrapper is opt-in, offered once, never installed over a user's line; admission works from the `StopFailure` marker alone | The status line is the user's single slot | 1.9 finds the marker absent and the status line present |
 | D5 | reversible-technical | agent | Five-hour window threshold pre-registered at 80 %, revisited after the first `rate-limit-stops-per-drain` verdict | Reversible, read only by a shadow verdict until 3.6 | the verdict is null |
 | D6 | reversible-technical | agent | The non-inferiority margin is pre-registered in 6.1 before 3.6, never chosen after the data | `concern-activation-policy.md` § Deriving a threshold | — |
-| D7 | spend-exhaustion | agent | `cache_ttl` ships unset (host default) on both workers; a one-hour TTL is an owner question, recorded in this round's owner residue, not a step | A one-hour write is priced higher and is spend; nothing here may take it unasked | the owner answers it |
+| D7 | spend-exhaustion | owner | `cache_ttl` ships unset (host default) on both workers. Owner answer 2026-10-14, option (b): `ac-worker` alone moves to a one-hour TTL once Phase 1's reading shows the gaps between re-tasks of the same worker falling mostly between 5 and 60 minutes; never before, never on the other worker | A one-hour write is priced higher and is spend; the host ignores the setting on usage credits, so the saving exists only on the metered path the reading must name | Phase 1's gap distribution does not fall in 5–60 minutes, or the host changes its TTL pricing |
 | D8 | reversible-technical | agent | Own file rather than a fold | No active roadmap owns spawn economics; the nearest owner is parked on a missing primitive | an active owner appears |
 | D10 | deterministic | evidence | Twelve `verify:` filters (1.1, 2.1–2.5, 3.3, 4.3–4.5, 5.2, 5.3) name test titles that do not exist yet in existing files; each step writes its own titled test, and its `-> /✓.*title/` expectation fails on a run where the filter skipped everything | `closure_scan` 2026-10-14 listed them as `unfalsifiable-verify` because the titles are absent today | a step lands without its titled test |
+| D11 | product-owned | owner | The recycling roadmap's Phase 2 closes as an unmeasured null, superseded in form by this plan's Phase 3; its Phase 0-1 capsule stays the handoff format | Owner answer 2026-10-14 to blocker `recycling-question-gets-its-answer` (option d); five arrivals without the Phase 1 sample filling | a host ships a mid-task respawn primitive |
+| D12 | product-owned | owner | `WRITABLE_HOST_ENV` gains a third row writing `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` from `subagents.max_parallel`, via an ADR addendum next to the 2026-09-30 decision (step 4.1) | Owner answer 2026-10-14 to blocker `third-writable-host-env-row` (option a); the row bounds concurrency, never whether a call happens; the guard saw ≥ 8 open dispatches in 96 of 325 records | the host stops honouring the variable, or a resume path is shown to bypass it |
 | D9 | reversible-technical | evidence | The 429 split ships as a rule change with its council ratification artefact (4.4); flipping the guard ships with a ratification artefact under the four conditions (3.6) | Both change council-decided or consumer-visible behaviour | — |
 
 ## What this roadmap deliberately does not do
