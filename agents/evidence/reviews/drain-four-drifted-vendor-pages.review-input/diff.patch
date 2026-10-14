@@ -1,8 +1,8 @@
 diff --git a/.github/workflows/host-docs-digest.yml b/.github/workflows/host-docs-digest.yml
-index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..66ab454032e0927c22b77f73baafb9837a5f7f6d 100644
+index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..9be23f8ac898a01d1cfb30a3e94fc419f4ae9602 100644
 --- a/.github/workflows/host-docs-digest.yml
 +++ b/.github/workflows/host-docs-digest.yml
-@@ -24,6 +24,15 @@ name: Host Docs Digest Watch
+@@ -24,6 +24,16 @@ name: Host Docs Digest Watch
  #
  # So: red here means "go read a page", never "something is broken in this repo".
  #
@@ -13,38 +13,61 @@ index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..66ab454032e0927c22b77f73baafb983
 +# red now opens one issue under a fixed title, or comments on it while it stays
 +# open, so a recurrence lands on the same record. Closing the issue is the
 +# acknowledgement. The issue is a route, not an owner: who triages it is not
-+# decided here. The write grant is `issues: write` on this one job.
++# decided here. Only a detected drift is routed, and `issues: write` sits on a
++# separate job that checks nothing out and runs no repository code.
 +#
  # Unreachable is not drift. `--strict-fetch` is deliberately NOT passed: a
  # flaky vendor host or a runner with no egress establishes nothing about the
  # page, and a watcher that cried wolf on every 503 would be muted within a
-@@ -60,6 +69,9 @@ concurrency:
+@@ -60,6 +70,8 @@ concurrency:
  jobs:
    digest-watch:
      runs-on: ubuntu-latest
-+    permissions:
-+      contents: read
-+      issues: write
++    outputs:
++      drifted: ${{ steps.fetch.outputs.drifted }}
      steps:
        # No `ref: main`. Pinning the ref made the job untestable before it was
        # relied on: a scheduled run already uses the default branch, while a
-@@ -98,3 +110,22 @@ jobs:
+@@ -96,5 +108,44 @@ jobs:
+       - name: Report the watch scope (offline, no egress)
+         run: ./scripts-run src/scripts/check_host_docs_digest
  
++      # `drifted` is set only when the checker's own verdict names a changed or
++      # GONE page, so a crash, a timeout or a broken runner stays an ordinary
++      # red and is never routed as "a page moved".
        - name: Re-fetch each host docs page and compare (read-only)
-         run: ./scripts-run src/scripts/check_host_docs_digest --fetch
+-        run: ./scripts-run src/scripts/check_host_docs_digest --fetch
++        id: fetch
++        shell: bash
++        run: |
++          set +e
++          ./scripts-run src/scripts/check_host_docs_digest --fetch 2>&1 | tee digest.log
++          rc=${PIPESTATUS[0]}
++          if [ "$rc" -ne 0 ] && grep -qE 'changed since the row was established|are GONE \(404/410\)' digest.log; then
++            echo "drifted=true" >> "$GITHUB_OUTPUT"
++          fi
++          exit "$rc"
 +
-+      # Scheduled runs only: a `workflow_dispatch` from a branch is someone
-+      # already looking, and must not file against main's record.
-+      - name: Route the red to the tracking issue
-+        if: failure() && github.event_name == 'schedule'
++  # The issue grant lives on its own job, which checks nothing out and runs no
++  # repository code, so `npm ci` and the checker above never hold a write token.
++  # Scheduled runs only: a `workflow_dispatch` from a branch is someone already
++  # looking, and must not file against main's record.
++  route-drift:
++    needs: digest-watch
++    if: always() && needs.digest-watch.outputs.drifted == 'true' && github.event_name == 'schedule'
++    runs-on: ubuntu-latest
++    permissions:
++      issues: write
++    steps:
++      - name: Open or update the tracking issue
 +        env:
 +          GH_TOKEN: ${{ github.token }}
 +          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 +        run: |
 +          title="Host Docs Digest Watch is red: read the drifted vendor pages"
-+          body="The scheduled run failed: ${RUN_URL}
++          body="The scheduled run found drift: ${RUN_URL}
 +
-+          A changed digest means a cited page moved. Read each page the log lists as changed, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward), with the ratification artifact host_lowering.yaml requires. Close this issue once the watch is green."
++          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward), with the ratification artifact host_lowering.yaml requires. Close this issue once the watch is green."
 +          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${title}\" in:title" --json number,title --jq "map(select(.title == \"${title}\")) | .[0].number // empty")
 +          if [ -n "$num" ]; then
 +            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"
@@ -53,15 +76,15 @@ index dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4..66ab454032e0927c22b77f73baafb983
 +          fi
 diff --git a/agents/evidence/ratifications/drain-four-drifted-vendor-pages.md b/agents/evidence/ratifications/drain-four-drifted-vendor-pages.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..fbb83ba8d206ac25423148771a8122dc5da80a6c
+index 0000000000000000000000000000000000000000..5c9076c8b195497f9f2c19e673c340b57240d72b
 --- /dev/null
 +++ b/agents/evidence/ratifications/drain-four-drifted-vendor-pages.md
-@@ -0,0 +1,280 @@
+@@ -0,0 +1,393 @@
 +---
 +proposed_by: claude-code drain lane, road-to-re-establishing-four-drifted-vendor-pages (2026-10-14)
 +implemented_by: claude-code drain lane, same session — see § Independence
-+reviewed_by: ai-council 2026-10-14 (rounds 1-4) — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
-+subject: e16177b22fb82054d0900f253290b3024293966cde259e34f31e0b2d38cc57ff
++reviewed_by: ai-council 2026-10-14 (rounds 1-6) — anthropic/claude-sonnet-4-5 (cli) + openai/codex-default (cli)
++subject: 4c49b6d2fced7a5c82cba8ce52d9f69552aa0e3f57aeb08a0f7bc677c5ae18c7
 +providers: [anthropic, openai]
 +verdict: ratified
 +seats:
@@ -89,8 +112,10 @@ index 0000000000000000000000000000000000000000..fbb83ba8d206ac25423148771a8122dc
 +
 +Not gated, reviewed alongside: `host_docs_pages.yaml` (the sibling page list,
 +one row re-dated the same way), a comment string in
-+`_lib/host_listing_model.ts`, and the regenerated `dist/install/install.mjs`
-+that embeds it.
++`_lib/host_listing_model.ts`, the regenerated `dist/install/install.mjs`
++that embeds it, and `.github/workflows/host-docs-digest.yml` (a scheduled drift
++red now opens or updates one issue from a separate `issues: write` job; rounds
++5 and 6).
 +
 +## Why `ratified`
 +
@@ -101,7 +126,7 @@ index 0000000000000000000000000000000000000000..fbb83ba8d206ac25423148771a8122dc
 +
 +## Rounds
 +
-+Four council invocations, all 2026-10-14, subscription CLI, $0. Responses are
++Six council invocations, all 2026-10-14, subscription CLI, $0. Responses are
 +runtime artefacts and are not cited by path.
 +
 +1. **Round 1 — both `confirmed-non-expanding`.** One non-blocking finding from
@@ -119,6 +144,27 @@ index 0000000000000000000000000000000000000000..fbb83ba8d206ac25423148771a8122dc
 +5. **Round 4 — both `ratified`.** The unabridged `git diff
 +   55782c253..74942ec4f` over both gated files plus the bundle hunk. openai:
 +   *"the patch is internally consistent and non-expanding"*.
++6. **A completion review of the whole branch** then found, among others, that
++   the codex row's comment asserted a "current 0.159.3" in the present tense,
++   and that the workflow change adding `issues: write` (not a gated surface —
++   `check_kernel_edit_ratified` reports nothing to ratify for it) had no recorded
++   review. **Fix commit `64a8c74cc`** re-tensed the codex comment.
++7. **Round 5 — split, on the workflow.** Over `74942ec4f..64a8c74cc` (the codex
++   comment, its JSON regeneration, and the workflow): both seats found the gated
++   delta comment-only, openai: *"the gated data edit is non-expanding"*.
++   anthropic `ratified`; openai **`refused`** the workflow: *"grants issue-write
++   authority to repository-controlled comparison steps and cannot distinguish
++   actual drift from execution failure"*.
++8. **Fix commit `fb179dbe1`.** The watch job holds no write grant and exposes an
++   explicit `drifted` output set only from the checker's own drift verdict; a
++   separate `route-drift` job with `issues: write`, no checkout and no repository
++   code files the issue.
++9. **Round 6 — both `ratified`**, over `64a8c74cc..fb179dbe1`. openai:
++   *"privilege separation, drift classification, trigger restriction, and shell
++   quoting are sound."* This round's diff touched no gated file, so the `seats:`
++   above are each seat's last verdict; for the gated content specifically, the
++   last word from both seats is round 5's non-expanding finding over the final
++   gated bytes, which `subject` pins.
 +
 +## Independence
 +
@@ -135,6 +181,10 @@ index 0000000000000000000000000000000000000000..fbb83ba8d206ac25423148771a8122dc
 +4's appended patch was `git diff 55782c253..74942ec4f --
 +src/scripts/hooks/host_lowering.yaml src/scripts/hooks/host_lowering.json`
 +followed by `git diff 55782c253..74942ec4f -U0 -- dist/install/install.mjs`.
++Round 5's: `git diff 74942ec4f..64a8c74cc -- src/scripts/hooks/host_lowering.yaml
++.github/workflows/host-docs-digest.yml`, then the same range over
++`host_lowering.json`. Round 6's: `git diff 64a8c74cc..fb179dbe1 --
++.github/workflows/host-docs-digest.yml`.
 +
 +### Round 1
 +
@@ -336,6 +386,92 @@ index 0000000000000000000000000000000000000000..fbb83ba8d206ac25423148771a8122dc
 +`non-convergent`.
 +
 +## Gated patch (unabridged)
++~~~
++
++### Round 5
++
++~~~markdown
++# Ratification review, round 5 — two follow-ups after a completion review
++
++Rounds 1-4 reviewed a provenance-dating edit to `src/scripts/hooks/host_lowering.yaml`
++and its compiled sibling `host_lowering.json` up to commit `74942ec4f`; final
++verdict `ratified` from both seats. A later independent completion review of the
++whole branch then raised findings on two surfaces this round covers:
++
++- **The gated table again.** The codex row's comment still said, in the present
++  tense, "The installed build is 0.148.0 against a current 0.159.3, and the page
++  that was read describes the current one" after the row was re-dated to a
++  2026-10-14 read that did not check the version. Commit `64a8c74cc` re-tenses
++  it. The JSON sibling is regenerated.
++- **A workflow the ratification gate does not cover**, reviewed here so the one
++  write-grant change in the branch has a recorded second pair of eyes:
++  `.github/workflows/host-docs-digest.yml` gains `permissions: {contents: read,
++  issues: write}` on its one job (the workflow default stays `contents: read`)
++  and a step that, on a scheduled run whose `--fetch` comparison step failed,
++  opens one issue under a fixed title or comments on it while it stays open,
++  using `gh` with the job token. The design was chosen by the council in a
++  separate two-round disposition question; this round reviews the diff. Commit
++  `2d29e5cc7` narrowed the condition after the completion review found that
++  `failure()` alone also fired on a broken runner.
++
++Base `74942ec4f`, head `64a8c74cc8969612c4d903193490d8835688a2c2`. Both diffs
++below are unabridged.
++
++## Question
++
++1. Does the codex comment edit change anything but comment text, and is the
++   combined gated change still free of authority expansion?
++2. In the workflow diff: is the write grant scoped as narrowly as the step
++   needs; can any input reach the shell unquoted or as an expression; does the
++   condition fire on anything other than a scheduled comparison red; any other
++   defect?
++
++Return findings, then one final verdict from exactly: `ratified` ·
++`confirmed-non-expanding` · `refused` · `non-convergent`.
++
++## Diff — YAML and workflow (unabridged)
++~~~
++
++### Round 6
++
++~~~markdown
++# Ratification review, round 6 — the workflow, restructured after a refusal
++
++Round 5 covered two surfaces. On the gated table (`host_lowering.yaml` comment
++re-tense + regenerated JSON) both seats found no authority expansion. On
++`.github/workflows/host-docs-digest.yml` one seat refused, verbatim: *"the
++workflow grants issue-write authority to repository-controlled comparison steps
++and cannot distinguish actual drift from execution failure; the highest-leverage
++change is to emit an explicit drift result and route it from a separate
++least-privileged job."*
++
++Commit `fb179dbe1` (diff below, unabridged, against the round-5 head
++`64a8c74cc`) does that:
++
++- the watch job holds no write grant (the workflow default `contents: read`
++  applies) and exposes a job output `drifted`;
++- the `--fetch` step runs the checker with its exit code preserved and writes
++  `drifted=true` to `$GITHUB_OUTPUT` only when the checker exited non-zero AND
++  its own verdict line names a changed page (`changed since the row was
++  established`) or a dead one (`are GONE (404/410)`); those two strings are the
++  checker's only drift verdicts, an unreachable page does not fail the run
++  without `--strict-fetch`, which this job does not pass;
++- a new job `route-drift` (`needs: digest-watch`, `if: always() &&
++  needs.digest-watch.outputs.drifted == 'true' && github.event_name ==
++  'schedule'`) carries `permissions: issues: write` only, checks nothing out,
++  runs no repository code, and opens or comments on the fixed-title issue.
++
++## Question
++
++1. Does this resolve the round-5 refusal?
++2. Is the write grant now as narrow as the step needs; can any input reach the
++   shell unquoted or as an expression; does `route-drift` run on anything other
++   than a scheduled detected drift; any other defect?
++
++Return findings, then one final verdict from exactly: `ratified` ·
++`confirmed-non-expanding` · `refused` · `non-convergent`.
++
++## Diff (unabridged)
 +~~~
 diff --git a/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md b/agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
 new file mode 100644
@@ -716,16 +852,16 @@ index 992e20b3f7168afb58589b61fb9e730eeb4a4b70..dc4402588974a4e4d57d20d0ade813b0
        The skill LISTING contract — that the host lists every skill name but
        keeps descriptions only up to a fraction of the context window, filling by
 diff --git a/src/scripts/hooks/host_lowering.json b/src/scripts/hooks/host_lowering.json
-index c7f1cb73d52269c6d62195b9d118ef184f54a759..4c28d7a9f0af99f1cb78e9705f23518c65e0c127 100644
+index c7f1cb73d52269c6d62195b9d118ef184f54a759..1c072ad26cfb323eefd995b3699af4e174ce5a29 100644
 --- a/src/scripts/hooks/host_lowering.json
 +++ b/src/scripts/hooks/host_lowering.json
 @@ -1 +1 @@
 -{"fingerprint":"08575a71d81fd8a5ef9e4b400f4a38cb66c26e1dd701d98f3cdc0bdc9e4758b4:22235","body_fingerprint":"26a02a8e0fb2b6be6eb1def6ae8792c021425598bd672c850e6582726d96a6a5:6376","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":"9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88","probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":"e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":"7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":"ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":"460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":"06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.github.com/en/copilot/concepts/agents/hooks.md","docs_digest":"bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":"724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630","probe_at":"2026-10-01","host_version":"0.148.0","expires":"2027-09-29"},"slots":{}}}}}}}
 \ No newline at end of file
-+{"fingerprint":"22f18f6283f2558a0bd936ce523a07bd44bc336d942167d012f8849e3214a69c:22286","body_fingerprint":"e8dafe5088a8570849f3115870b3ec1b75e91cd5d42fbfe150f317e435683ae8:6376","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":"0ccea55b53b6b616134028b857028cf3822b89958a9c4b23806287dddeefe954","probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":"93f421dccdd017099d87b12ffd7fe8f272d8adf750856ddfb200d9b55c695378","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":"7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":"73b6df1bf5e51589313ea3fcfdd50c0d505530234418adcdc9fe198af61837c2","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":"b9e0cd4772de9e7c4086ecf31bfcb456dc74c3b36516f52c2ff8ec1dd5c1170d","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":"06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.github.com/en/copilot/concepts/agents/hooks.md","docs_digest":"bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":"57166ef03e7059732dd90925d5c42dd4d187eb2625d66cc154d0fbd2edb65f92","probe_at":"2026-10-01","host_version":"0.148.0","expires":"2027-10-14"},"slots":{}}}}}}}
++{"fingerprint":"0402d3dad6571021524c0ca76eb80d358633598442cabcbde7eab80726d2196b:22297","body_fingerprint":"e8dafe5088a8570849f3115870b3ec1b75e91cd5d42fbfe150f317e435683ae8:6376","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":"0ccea55b53b6b616134028b857028cf3822b89958a9c4b23806287dddeefe954","probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":"93f421dccdd017099d87b12ffd7fe8f272d8adf750856ddfb200d9b55c695378","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":"7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":"73b6df1bf5e51589313ea3fcfdd50c0d505530234418adcdc9fe198af61837c2","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":"b9e0cd4772de9e7c4086ecf31bfcb456dc74c3b36516f52c2ff8ec1dd5c1170d","probe_at":null,"host_version":null,"expires":"2027-10-14"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":"06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.github.com/en/copilot/concepts/agents/hooks.md","docs_digest":"bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-10-14","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":"57166ef03e7059732dd90925d5c42dd4d187eb2625d66cc154d0fbd2edb65f92","probe_at":"2026-10-01","host_version":"0.148.0","expires":"2027-10-14"},"slots":{}}}}}}}
 \ No newline at end of file
 diff --git a/src/scripts/hooks/host_lowering.yaml b/src/scripts/hooks/host_lowering.yaml
-index 23126ae0c6d83920364c9f61b54fe110390f0988..db9ef316b873f1b18f785a7606d2eb327588e449 100644
+index 23126ae0c6d83920364c9f61b54fe110390f0988..4e0495830e26d9e1ace5debf1fa74a1a8b6b1812 100644
 --- a/src/scripts/hooks/host_lowering.yaml
 +++ b/src/scripts/hooks/host_lowering.yaml
 @@ -50,8 +50,8 @@
@@ -812,6 +948,17 @@ index 23126ae0c6d83920364c9f61b54fe110390f0988..db9ef316b873f1b18f785a7606d2eb32
          slots:
            session_start:      { native: post_setup_worktree,   block_exit: null, answered_at: 2026-09-29 }
            user_prompt_submit: { native: pre_user_prompt,       block_exit: null, answered_at: 2026-09-29 }
+@@ -380,8 +381,8 @@ hosts:
+         # refusal path on this host, which is exactly what a null means here. It
+         # does NOT establish that Codex cannot refuse — this file's header
+         # forbids that reading, and two unexcluded explanations remain. The
+-        # installed build is 0.148.0 against a current 0.159.3, and the page
+-        # that was read describes the current one; and the probe never
++        # installed build was 0.148.0 against a then-current 0.159.3, and the
++        # page read on 2026-09-29 described the current one; and the probe never
+         # distinguished "the hook fired and was ignored" from "the matcher never
+         # matched", because the instrumented re-run (a hook that records its own
+         # input before refusing) was refused by the harness this probe ran
 @@ -392,10 +393,10 @@ hosts:
          # armed a refusal this tree cannot demonstrate. The row records the
          # negative instead.
@@ -828,16 +975,17 @@ index 23126ae0c6d83920364c9f61b54fe110390f0988..db9ef316b873f1b18f785a7606d2eb32
          slots: {}
 diff --git a/tests/scripts/host_docs_digest_workflow.test.ts b/tests/scripts/host_docs_digest_workflow.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..e37616737044a42e63912dadb9c050f77f7d85bf
+index 0000000000000000000000000000000000000000..c8ed66ea05e5cdf4600910eac9605c300f776e95
 --- /dev/null
 +++ b/tests/scripts/host_docs_digest_workflow.test.ts
-@@ -0,0 +1,53 @@
+@@ -0,0 +1,78 @@
 +/**
 + * The Host Docs Digest Watch went red on main twice, a week apart, and nobody
 + * acted: a scheduled failure is mailed only to whoever last edited the cron
 + * line, so the red had no route to anyone who would read the page. These cases
 + * pin the route that now exists, and the bounds it must keep — the watch still
-+ * never writes the table, and the write grant stays on the one job.
++ * never writes the table, the issue write grant lives on a job that runs no
++ * repository code, and only a detected drift (never a broken runner) is routed.
 + */
 +import * as fs from 'node:fs';
 +import * as path from 'node:path';
@@ -849,39 +997,63 @@ index 0000000000000000000000000000000000000000..e37616737044a42e63912dadb9c050f7
 +const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 +const WORKFLOW = path.join(ROOT, '.github', 'workflows', 'host-docs-digest.yml');
 +
-+interface Step { name?: string; if?: string; run?: string; env?: Record<string, string> }
-+interface Job { permissions?: Record<string, string>; steps: Step[] }
++interface Step { id?: string; name?: string; if?: string; run?: string; uses?: string }
++interface Job {
++    if?: string;
++    needs?: string | string[];
++    outputs?: Record<string, string>;
++    permissions?: Record<string, string>;
++    steps: Step[];
++}
 +interface Workflow { permissions?: Record<string, string>; jobs: Record<string, Job> }
 +
 +const wf = parse(fs.readFileSync(WORKFLOW, 'utf-8')) as Workflow;
-+const found = wf.jobs['digest-watch'];
-+if (!found) throw new Error('host-docs-digest.yml has no `digest-watch` job');
-+const job: Job = found;
-+const routeStep = (): Step | undefined => job.steps.find((s) => (s.run ?? '').includes('gh issue'));
++const jobNamed = (name: string): Job => {
++    const found = wf.jobs[name];
++    if (!found) throw new Error(`host-docs-digest.yml has no \`${name}\` job`);
++    return found;
++};
++const watch = jobNamed('digest-watch');
++const route = jobNamed('route-drift');
++const fetchStep = (): Step | undefined => watch.steps.find((s) => (s.run ?? '').includes('check_host_docs_digest --fetch'));
 +
-+describe('host-docs-digest workflow routes a red to a tracked issue', () => {
-+    it('has a step that opens or updates an issue on failure', () => {
-+        const step = routeStep();
-+        expect(step, 'no step runs `gh issue`').toBeDefined();
-+        expect(step?.if ?? '').toMatch(/failure\(\)/);
-+        expect(step?.run ?? '').toMatch(/gh issue create/);
-+        expect(step?.run ?? '').toMatch(/gh issue comment/);
++describe('host-docs-digest workflow routes a drift red to a tracked issue', () => {
++    it('opens or updates one issue', () => {
++        const run = route.steps.map((s) => s.run ?? '').join('\n');
++        expect(run).toMatch(/gh issue create/);
++        expect(run).toMatch(/gh issue comment/);
 +    });
 +
 +    it('routes only scheduled runs, so a manual dispatch from a branch files nothing', () => {
-+        expect(routeStep()?.if ?? '').toMatch(/github\.event_name\s*==\s*'schedule'/);
++        expect(route.if ?? '').toMatch(/github\.event_name\s*==\s*'schedule'/);
 +    });
 +
-+    it('grants issues: write on the one job and keeps the workflow default read-only', () => {
++    it('routes only a detected drift, never a broken runner', () => {
++        const step = fetchStep();
++        expect(step?.id, 'the --fetch step needs an id').toBeTruthy();
++        expect(step?.run ?? '').toMatch(/changed since the row was established/);
++        expect(step?.run ?? '').toMatch(/GITHUB_OUTPUT/);
++        expect(watch.outputs?.drifted ?? '').toContain(`steps.${step?.id}.outputs.drifted`);
++        expect(route.needs).toEqual('digest-watch');
++        expect(route.if ?? '').toContain("needs.digest-watch.outputs.drifted == 'true'");
++    });
++
++    it('keeps the issue grant off every job that runs repository code', () => {
 +        expect(wf.permissions).toEqual({ contents: 'read' });
-+        expect(job.permissions).toEqual({ contents: 'read', issues: 'write' });
++        expect(watch.permissions ?? wf.permissions).toEqual({ contents: 'read' });
++        expect(route.permissions).toEqual({ issues: 'write' });
++        for (const s of route.steps) {
++            expect(s.uses ?? '', 'the routing job checks nothing out').not.toMatch(/checkout/);
++            expect(s.run ?? '').not.toMatch(/scripts-run|npm /);
++        }
 +    });
 +
-+    it('interpolates no expression into the shell body', () => {
-+        expect(routeStep()?.run ?? '').not.toMatch(/\$\{\{/);
++    it('interpolates no expression into a shell body', () => {
++        for (const s of route.steps) expect(s.run ?? '').not.toMatch(/\$\{\{/);
++        expect(fetchStep()?.run ?? '').not.toMatch(/\$\{\{/);
 +    });
 +
 +    it('still never writes the table', () => {
-+        for (const s of job.steps) expect(s.run ?? '').not.toMatch(/--write/);
++        for (const s of watch.steps) expect(s.run ?? '').not.toMatch(/--write/);
 +    });
 +});
