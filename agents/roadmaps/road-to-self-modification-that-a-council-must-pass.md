@@ -162,6 +162,66 @@ At `df377ca64`:
   self-amendment — reopening authority, quorum, escalation"
   (`src/rules/decision-revisit-gate.md:142`).
 
+## Staged, not abandoned — 2026-10-13
+
+The branch that closed Phases 2 to 6 went to a modification review on
+2026-10-12 and was **refused 2/2 over three rounds**
+(`agents/evidence/ratifications/drain-self-modification-20261012.md`). The
+dealbreaker of round 2 — a consequence class that failed OPEN, so a gate
+advertising 28 high-consequence rules enforced none when one file failed to
+parse — was corrected and the correction was accepted. Round 3 refused anyway,
+and for a reason no patch answers:
+
+> **smaller-change.** "This change bundles at least four independently
+> reversible concerns — digest binding, governed-surface expansion, proposal
+> validation, and a new standing Iron Law... Landing the binding first would
+> close replay risk while letting the broader self-governance design be
+> evaluated with a smaller blast radius."
+
+Both seats said it could be staged. It was not. A second fact compounds it and
+is recorded because it bounds what the refusal can be read as: the full
+`origin/main...HEAD` diff was **177 KB against the council’s 51 KB bundle
+ceiling**, so neither seat ever saw the whole change, and both said so in both
+rounds.
+
+So the branch was narrowed to the content binding alone — the `subject` digest
+over the gated content, and the gate refusing a record whose `subject` does not
+match — which is the piece both seats named as the smallest high-value change.
+
+**The narrowed change then went to eight rounds of its own and was refused in
+all eight** (`drain-self-modification-narrowed-20261013.md`). Round 1 and
+round 2 refused 2/2; round 3, after round 2's dealbreaker was fixed, split —
+anthropic `ratified` with no pre-merge change named, openai `refused` on three
+defects in the refusal plumbing added to satisfy round 2. On the owner's
+decision those three were fixed (step 2.4) and round 4 refused 2/2 on a new
+one: non-regular files read as regular (step 2.5). That was fixed on the
+owner's decision and round 5 refused 2/2 on a new one: an intermediate path
+component that is a symlink is followed (step 2.6). The digest was then moved
+from the working tree to Git objects at a revision (decision D13) and round 6
+refused 2/2 on a new one: a mutable revision is resolved more than once in one
+gate run (step 2.7). That was fixed on the owner's route and round 7 was
+answered by one seat — anthropic refused on the CI path's changed-file list
+missing the old side of a rename, openai gave no verdict (a local `ENOBUFS`)
+(step 2.8), which was established and fixed on the same route; round 8 refused
+2/2 on that fix's evidence — the CI-path test runs the head gate, so the
+`GIT_CONFIG_*` override the base copy relies on is untested (step 2.9), which
+was fixed on the same route; round 9 answered in favour 2/2 (anthropic
+`APPROVE`, recorded `ratified`; openai `confirmed-non-expanding`), which is
+advisory under the ratification ladder — the merge is the owner's. **No seat, in any of
+the eleven rounds across both shapes, disputed the design or the scope.**
+Governed-surface expansion (4.1, 4.2, 4.3), proposal validation (6.1), the
+worked example and its Iron Law (6.2), the record writer (3.4) and the
+escalation shape (5.2) were reverted to `origin/main` and are **open steps
+here**, not cancelled work. Each was verified by an empty net diff per file
+against `origin/main`, not by a revert command’s exit code.
+
+What this costs, stated rather than left to be discovered: until 4.1 lands, the
+modules that compute the digest and ask the review’s questions are **outside**
+the surface the gate watches, so the reviewer is not yet inside what it
+reviews. Until 4.2 lands, the 28 high-consequence rules beyond the kernel stay
+editable with no record. Those were the gaps before 2026-10-12 and they are the
+gaps again; the binding closes replay, and nothing else.
+
 ## Phase 1 — The directive is a decision on record
 
 - [x] **1.1 One decision record, drafted as proposed.** A new ADR with
@@ -284,7 +344,7 @@ At `df377ca64`:
 
 ## Phase 2 — An approval is bound to what it approved
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.1 The record carries a digest of the gated content it reviewed.**
+- [x] **2.1 The record carries a digest of the gated content it reviewed.**
       The artifact gains a `subject` field: one digest over the sorted paths
       and contents of every file of the change that the gate classifies as
       gated, with a deleted file entered as deleted. One function in a module
@@ -316,11 +376,27 @@ At `df377ca64`:
       self surface as a boolean and the list cannot be read back out of it; a second
       definition of "gated" would be a second thing to keep in step. Verified ungated
       by running the gate against it: nothing to ratify. 10 tests.
-      **What is NOT shipped:** the gate recomputing it and refusing a record whose
-      `subject` is absent or different, and the two suites' fixtures gaining the
-      field. Both edit `check_kernel_edit_ratified.ts` and
-      `_lib/ratification_artifact.ts`, so the step stays open.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.2 Each record answers for its own change.** A record validates a
+      **Closed 2026-10-12 — the gated half landed.** `readRatification` gained an
+      `expectedSubject` parameter and three codes that are kept apart on purpose:
+      `subject-absent`, `subject-malformed` and `subject-mismatch`, because a typo'd
+      digest and a digest that moved because a gated file was edited after the review
+      send an author looking in different places. The gate computes the digest once
+      per run through the new `expectedSubjectFor`, which hands `subjectDigest` the
+      SAME derived plumbing list it classified with — a digest classified without it
+      would cover fewer files than the gate gated. Both existing suites' fixtures
+      carry the field, and the gate suite asks the gate for the digest rather than
+      typing one, so a fixture cannot prove a second implementation of the membership
+      rule. `src/scripts/ratification_subject` prints it for whoever writes a record,
+      by calling the gate's exported helper for the same reason.
+      **One thing the implementation had to solve that the step did not foresee:**
+      the gate now imports `ratification_subject` and that module already imported the
+      gate's path constants, so the module-scope `SELF_SET` read those `const`
+      bindings inside the cycle's dead zone. It is built on first call instead — which
+      keeps the single definition of "gated" rather than trading it for a second copy.
+      9 tests, seen red for the intended reason: neutralising the binding
+      (`readRatification(text, providerCount, null)`) drops 5 of the 9 and leaves
+      exactly the 4 polarity partners that should stay green.
+- [x] **2.2 Each record answers for its own change.** A record validates a
       diff only when its `subject` matches that diff's gated content; a second
       valid record for something else no longer carries it. The 23 records on
       the trunk are not rewritten: they were judged when they landed and are
@@ -328,6 +404,368 @@ At `df377ca64`:
       a record with a `subject` once its base carries the new gate, because
       the gate is judged from the base.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_subject.test.ts` -> 0
+
+      **Closed 2026-10-12.** The `anyRatified` loop no longer passes on "any one
+      artifact validates": every record is read against this diff's digest, so a
+      record written for another change is refused here even though it is a GOOD
+      record. Each case proves that rather than assuming it — the foreign record is
+      read against the content it was written for and validates with zero problems,
+      so the suite cannot be green because the record was broken for an unrelated
+      reason. Two polarity partners keep the binding from becoming a replacement for
+      the verdict rule: a matching `subject` rescues neither a `refused` verdict nor
+      a self-ratified record. The trunk's 23 records are pinned as never re-read: an
+      unparseable artifact on disk but absent from the changed-file list leaves the
+      diff green. 5 tests.
+
+- [x] **2.3 Every failure of the subject computation is one structured
+      refusal.** The gate catches `GatedFileUnreadable`, `GatedPathEscapes` and
+      a post-`lstat` read failure at ONE boundary around `expectedSubjectFor`
+      and returns `exitCode 1` with a named line, rather than letting any of
+      them leave `evaluate()` as an exception. Translation is narrow and typed,
+      never a blanket catch. An end-to-end case through the real gate asserts
+      the structured refusal for a traversing gated path and for a read that
+      fails after the stat.
+      verify: `npx vitest run tests/scripts/ratification_subject.test.ts tests/scripts/check_kernel_edit_ratified_subject.test.ts` -> 0
+
+      **Opened 2026-10-13 by a modification review that refused the change
+      carrying 2.1 and 2.2, 2/2, and was right.** The round-1 fixes introduced
+      two error classes and gave only one of them a catch boundary. In the
+      seats' words: *"`GatedFileUnreadable` gets the full treatment (defined →
+      thrown → caught → structured refusal). `GatedPathEscapes` gets only the
+      first half (defined → thrown), then escapes. The subsequent-read failures
+      get zero coverage. A complete fix needs one catch boundary in
+      `evaluate()` that handles all three failure classes."* And: *"the
+      `readFileSync(abs)` and `readlinkSync(abs)` calls ... are not wrapped, so
+      a permission change or I/O error after the stat escapes as a raw Node
+      error — exactly the TOCTOU window the fail-closed lstat was meant to
+      close."*
+      The blind peer-review stage added two bounds on the repair rather than
+      softening it: a blanket catch would *"conceal programming defects as
+      ordinary refusals"*, so the translation stays narrow and typed; and one
+      seat named a path-substitution race between the stat and the read —
+      whether symlink-swap resistance is inside this gate's threat model is
+      part of this step, not assumed.
+      **Not fixed in the change that was reviewed, deliberately.** `evaluate()`
+      is in `check_kernel_edit_ratified.ts`, a gated file, so editing it after
+      the seats answered would move the `subject` and leave the record either
+      stale or rebound to content its reviewers never saw — which is the exact
+      defect 2.1 exists to catch. A change whose first act is to launder its
+      own record does not land. Record:
+      `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+      Three further findings from the same round are carried here rather than
+      lost: the ENOENT polarity case asserts only that nothing throws and does
+      not prove the absent file was encoded with `DELETED_MARKER`; the
+      one-classification case uses a self-gated script and so would stay green
+      if `derived` were dropped again, and needs a derived-only file; and
+      `expectedSubjectFor` changing from `string` to `SubjectReading` is a type
+      break for any caller outside this tree.
+
+      **Closed 2026-10-13.** One boundary in `evaluate()` now enumerates BOTH
+      error classes and returns `exitCode 1` with a named line; the two
+      post-`lstat` reads are wrapped and translate an errno failure into
+      `GatedFileUnreadable`. The translation is narrow in the way the blind
+      peer-review stage asked for: `asErrno` admits only a value carrying an
+      errno `code`, so a `TypeError` from a future edit of that loop stays a
+      crash rather than surfacing as "the tree could not be read", and the
+      catch enumerates two classes rather than catching everything. The CLI
+      caller carries the same two-class catch, so the step's own title is true
+      of both callers of the computation rather than of one.
+
+      **The symlink-swap question, answered rather than assumed — and the
+      answer has two halves.** A path that is a regular file at the `lstat`
+      and a SYMLINK at the read is the only ordering in which out-of-revision
+      CONTENT can enter the digest, because `readFileSync` dereferences;
+      `readGatedFile` opens with `O_NOFOLLOW`, so that swap is `ELOOP` and
+      then a refusal. The direction the seat named by name — a link whose
+      TARGET is swapped between classification and read — is not a leak at
+      all: the digest records the target STRING and never dereferences it, so
+      the worst such a swap can do is move the digest, which reds the gate. A
+      link replaced by a regular file makes `readlinkSync` fail with `EINVAL`,
+      also a refusal. Three of three race outcomes fail closed.
+      **What is NOT closed, recorded rather than left to be found:**
+      intermediate directory components are still resolved, so a symlinked
+      parent committed into the tree redirects the read — a property of the
+      checkout, visible in the revision, not a race. And an adversary with
+      concurrent write access to the checkout during a gate run can edit the
+      gated bytes BEFORE the stat, forge the record, or patch the gate; no
+      ordering of stat and read answers that, and claiming otherwise would be
+      the false assurance this module exists to prevent. `O_NOFOLLOW` is
+      undefined on Windows and falls back to `0` there; this gate runs on
+      `ubuntu-latest` and its suites on ubuntu and macOS, so the fallback is
+      stated in the header rather than silently losing the property.
+
+      **The three further findings, each disposed of:**
+      · **The ENOENT polarity case** asserted only that nothing threw and that
+      the constant contains the word "deleted" — neither says the absent file
+      was entered WITH `DELETED_MARKER`. It now compares the absent tree's
+      digest against a tree whose gated file holds exactly those bytes, and
+      against one holding a different marker. Seen red by encoding the absent
+      branch with another marker; the two old assertions stay green under that
+      same neutralisation, which is the finding.
+      · **The one-classification case** used the gate's own script, gated
+      through the SELF set whether or not `derived` reaches the classifier. It
+      now uses `src/scripts/hooks/host_semantics.ts`, gated only through the
+      derived closure, plus the direct assertion that an empty derived list
+      un-gates it. Measured counterfactual rather than asserted: with
+      `gatedFilesOf` ignoring `derived`, the new fixture reds and the old
+      self-gated one stays green.
+      · **The `expectedSubjectFor` type break** is not one, and the
+      measurement is one command: `git show origin/main:src/scripts/check_kernel_edit_ratified.ts
+      | grep -c expectedSubjectFor` prints 0. The function is new on this
+      branch and has never shipped, so both shapes have only ever existed
+      inside this unmerged change and no caller outside the tree can exist to
+      break. Every in-tree caller moved with it. No code change; recorded so
+      the next reader does not re-derive it.
+
+      **Every case was seen red before the fix, by neutralising its
+      mechanism:** dropping `GatedPathEscapes` from the catch reds 2 of 9 and
+      leaves 7 green · unwrapping the two post-stat reads reds 2 of 33 ·
+      dropping `O_NOFOLLOW` reds 1 of 24 · encoding an absent file with
+      another marker reds 1 of 24 · making `gatedFilesOf` ignore `derived`
+      reds 1 of 24. 33 tests across the two suites.
+
+- [x] **2.4 The refusal plumbing's own edges are covered.** Three findings
+      opened by round 3 of the modification review on 2026-10-13, all in the
+      error-handling added to satisfy round 2 and none in the binding itself.
+      `asErrno` admits any `Error` with a string `code`, which includes Node's
+      own `ERR_*` programming errors — so the narrowness the header claims is
+      not the narrowness the code has; the discriminator requires OS-error
+      evidence (numeric `errno` plus `syscall`, or an explicit `ERR_*` split)
+      and a case proving an `ERR_INVALID_ARG_TYPE`-shaped error is rethrown
+      unchanged. `fs.closeSync(fd)` runs in a `finally` outside the catch, so a
+      close failure escapes raw AND can replace an already-translated read
+      failure, because an exception from `finally` overrides the pending one.
+      The CLI's new refusal path has no direct case: `main()` is never
+      invoked, so nothing proves it returns 1, writes to stderr, emits no
+      digest, and still propagates an unrelated programming error.
+      verify: `npx vitest run tests/scripts/ratification_subject.test.ts tests/scripts/ratification_subject_cli.test.ts` -> 0
+
+      **In the seats' words, because two of the three are demonstrably right
+      and the roadmap does not get to soften them:** *"That does not establish
+      that the error is an OS errno. Node programming errors such as
+      `ERR_INVALID_ARG_TYPE` are typically `TypeError` instances with string
+      `code` properties. Consequently, the stated guarantee that 'a `TypeError`
+      from a future edit … stays a crash' is false: many such errors will
+      become `GatedFileUnreadable`, concealing defects as ordinary refusals."*
+      And: *"An `EIO`, `EINTR`, or similar close failure therefore escapes as a
+      raw Node error. It can also replace a successfully translated read error
+      because an exception from `finally` overrides the pending exception."*
+
+      **Not fixed in the change that was reviewed, and this time the reason is
+      the bound rather than the digest.** Round 3 is the third refusal of the
+      narrowed change, and the instruction this lane runs on stops there: the
+      disposition is the owner's, by `ratification-artifact.md` § The
+      owner-permission-route. A fourth round called on the agent's own judgement
+      that the next one would pass is the judgement that bound removes — and
+      the editor of a governance surface deciding when its own reviewers have
+      asked enough is the failure this mechanism exists to prevent. The same
+      digest argument of 2.3 still applies on top: `evaluate()` and the module
+      are read by a record now bound to `1aff2b49…`.
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+      The split is recorded as a split: anthropic answered `ratified` and named
+      no pre-merge change at all; openai answered `refused` on the three above.
+
+      **Closed 2026-10-14, on the owner's decision to fix the three and run a
+      fourth round.** `asErrno` requires a string `code` outside `ERR_`, a
+      numeric `errno` and a string `syscall`, and one helper applies it at the
+      `lstat`, open, read, close and readlink — the `lstat` catch had the same
+      construct and moved with it. `readGatedFile` has no `finally`: the read
+      failure wins, and a close failure after a successful read is a refusal.
+      `ratification_subject_cli.test.ts` invokes `main()` for exit 0, both
+      refusal classes (exit 1, stderr, no digest) and an unrelated `TypeError`
+      propagating. Each case seen red by neutralising its mechanism: 3 of 27,
+      2 of 5, 1 of 5, 2 of 4, 1 of 4. Round 4 confirmed the three fixed and
+      refused 2/2 on a new finding — step 2.5.
+
+- [x] **2.5 Only the three object kinds the digest describes are read.** After
+      the `lstat`, a gated path is absent, a symbolic link, or a regular file;
+      anything else — FIFO, socket, device, directory — is a typed refusal
+      raised BEFORE any `open`, handled by `evaluate()` and the CLI like the
+      other two classes, with a case proving a non-regular `Stats` is refused
+      without `openSync` being called. Opened by round 4 of the modification
+      review on 2026-10-14, refused 2/2 on it. In openai's words: *"treating
+      every non-symlink object as a regular file can hang the governance gate;
+      the highest-leverage pre-merge change is to reject non-regular filesystem
+      objects before opening them."* Raised in the same round and not stated as
+      blocking, for the same step or its successor: `assertContained()` does
+      not refuse backslash-separated `..` or UNC / rooted Windows paths (openai);
+      the `O_NOFOLLOW` fallback degrades instead of refusing, and `--quiet`
+      prints a digest over an empty gated set with no warning (anthropic); both
+      seats ask for the round history to leave the production docblocks.
+      **Not done in the lane that ran round 4**: the owner authorised the three
+      round-3 fixes and one round, and a fifth round is the owner's call.
+      verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+      (The verify was re-pointed by step 2.6: the file it named tested the
+      working-tree reader 2.6 replaced, and the refusal of every entry that is
+      not absent or a regular file is pinned by the revision suite now.)
+
+      **Closed 2026-10-14, on the owner's decision to fix round 4's confirmed
+      findings and run a fifth round.** After the `lstat`, `subjectOf()` reads
+      an absent path, a link or a regular file and throws `GatedPathUnsupported`
+      for anything else before any `open`; `readGatedFile()` opens with
+      `O_NOFOLLOW | O_NONBLOCK` and refuses a non-regular `fstat`, so an object
+      swapped in after the stat cannot block it. The three refusal classes share
+      `GatedSubjectRefusal`, which `evaluate()` and the CLI catch as one class.
+      All four non-blocking notes were small and in scope and are done in the
+      same change: a missing `O_NOFOLLOW` or `O_NONBLOCK` is a refusal,
+      `--quiet` over an empty gated set warns on stderr, `assertContained()`
+      refuses backslash `..` and UNC / rooted / drive-qualified paths on its own
+      input, and the round history left the production comments for this
+      roadmap and the record. Each case seen red by neutralising its mechanism:
+      kind check 5 of 16, `fstat` check 2 of 16, `O_NONBLOCK` 1 (flags case, run
+      alone because the direct-FIFO case would block), missing-flag refusal
+      2 of 16, containment 1 of 29, `evaluate()` catch 1 of 10, CLI catch 1 of
+      6, `--quiet` warning 1 of 6. Nothing from round 4 deferred. Round 5
+      confirmed the finding fixed and refused 2/2 on a new one — step 2.6.
+
+- [x] **2.6 No gated path is read through a symlinked ancestor.** `O_NOFOLLOW`
+      guards only the final component; `lstat` and `open` resolve every parent,
+      so a gated path whose parent directory is a symlink — committed, or in a
+      dirty tree — is digested from content outside the revision, and two
+      clean checkouts of one commit can disagree. The fix: walk the components
+      between the root and the gated path, `lstat` each, and refuse with a typed
+      refusal if any is a symbolic link (or hash Git blobs at an explicit
+      revision, which both seats call the stronger shape); correct the module
+      header, which says the digest never follows a link. Case: a gated child
+      deleted or changed, its parent replaced by a symlink to a directory with a
+      regular file at the remaining suffix; the subject computation refuses
+      before hashing. Opened by round 5 on 2026-10-14, refused 2/2 on it. In
+      openai's words: *"the digest can bind content reached through an
+      intermediate symlink rather than the reviewed Git path; the
+      highest-leverage pre-merge change is to hash an explicit Git revision, or
+      at minimum refuse every symlinked ancestor and add the regression test
+      above."* anthropic: *"Correct the comment claiming symlinks are never
+      dereferenced."*
+      verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+      **Closed 2026-10-14 by a strategy shift, decision D13.** Rounds 3, 4 and 5
+      each refused the working-tree reader on a new filesystem defect, so a
+      fourth per-class patch was not converging. The subject is now read from
+      Git objects at an explicit revision (`--rev`, default `HEAD`): the
+      revision resolves to a commit, each gated path is looked up with
+      `git ls-tree` and its bytes come from `git cat-file`. The gate reads the
+      record at the same commit. Symlinks, FIFOs, devices, permission faults
+      and races on the filesystem are therefore outside what the digest can
+      observe, not refused one by one. A gated path committed as a symbolic
+      link (mode `120000`) is refused, as are a directory or submodule entry,
+      an unresolvable revision, a `--root` that is not a repository top level
+      and a git that cannot run — all typed refusals, exit 1. The entry now
+      hashes the mode as well, so the executable bit is part of the subject.
+      The working-tree reader (`readGatedFile`, `readGatedLink`, `asErrno`,
+      the `O_NOFOLLOW`/`O_NONBLOCK` flags) is deleted with the suite that
+      tested it; the removals are accounted for in
+      `agents/evidence/reviews/ratification-subject-git-revision-test-removals.md`.
+      Each new property was seen red against the working-tree reader before
+      the change (16 of 17 cases), and the subdirectory, mode-`120000` and
+      `--rev` usage refusals again by neutralising them afterwards. Round 6
+      accepted the object-store design and refused 2/2 on a new finding —
+      step 2.7.
+
+- [x] **2.7 One gate run reads one commit.** `main()` passes the revision
+      NAME to `git diff --name-only <base>...<rev>` for the changed-file list
+      and then to `evaluate()`, which resolves it again for the content and the
+      record, so a `HEAD`, branch or tag that moves between the two calls
+      yields a file list from one commit and a digest and record from another
+      — contradicting the contract's "one commit". The fix: resolve `--rev`
+      once in `main()` to a commit id and pass that id to the diff, the digest,
+      the record read and the reported revision; refuse `--rev` without a value
+      in the gate as the subject CLI already does; run the diff through the
+      same git runner (environment scrubbing) as the subject; state in the
+      contract that an empty gated set reads no commit, so an invalid `--rev`
+      then passes. Case: the ref moves between the diff and the read, and the
+      gate still judges one commit. Opened by round 6 on 2026-10-14, refused
+      2/2 on it. In openai's words: *"the gate does not yet ensure that
+      changed-file discovery, hashing, and record reading use one immutable
+      commit; the highest-leverage pre-merge change is to resolve `--rev` once
+      before the diff and pass that OID through every subsequent operation,
+      with shared strict option parsing."* anthropic: *"Resolve `--rev`
+      exactly once in `main()` to an immutable commit OID [...] Pass that OID
+      through all operations."* Also raised, not stated as blocking: the
+      mutual import between the gate and the subject module (openai).
+      On the owner's route of 2026-10-14 (fix, re-present, merge only on 2/2)
+      it was implemented: `main()` resolves `--rev` once, the diff
+      (`changedFilesBetween`, NUL-separated) and the default-base probe run
+      through the scrubbed runner, and `optionValue` is shared with the subject
+      CLI. Both cases were seen red with the fix neutralised in place — the
+      moving branch failed on `subject-mismatch`, the valueless `--rev` was
+      defaulted — and green restored. The mutual import is left as it stands.
+      Found while writing the new diff call, not raised by a seat: rename
+      detection listed a gated file moved to an ungated path only under its new
+      name, so its removal passed unratified on the pre-push path; the diff now
+      runs with `--no-renames`, seen red first. The CI path, which takes its
+      list from `gh pr view --json files`, is unchanged.
+      verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+- [x] **2.8 The CI path lists a renamed gated file by its old path.** The
+      workflow passes `gh pr view --json files` to the base revision's gate
+      under `--files`, so the `--no-renames` diff of step 2.7 does not reach
+      CI; if that list carries only a renamed file's destination, moving a
+      kernel rule to an ungated path leaves an empty gated set and passes.
+      Whether it does was not established. The workflow is a gated file, so
+      the change comes back to the modification review. Opened by round 7 on
+      2026-10-14, anthropic `refused`, openai no final verdict (`ENOBUFS`). In
+      anthropic's words: *"the **authoritative CI projection** can still miss
+      the old side of a rename, and no end-to-end test covers it. The
+      highest-leverage change: make CI derive paths through the same
+      `--no-renames` Git implementation—or verify inclusion and add CI
+      regression test—before merge."* On the owner's route of 2026-10-14
+      (fix, re-present, merge only on 2/2) it was established and fixed. The
+      fact: for PR 2344, `gh pr view --json files` lists the archived roadmap
+      only as `{"path":"agents/roadmaps/archive/…","changeType":"RENAMED"}` with
+      no previous path, while REST `pulls/2344/files` carries
+      `previous_filename` — so the list did miss the old side. The fix takes
+      the seat's first option: the step passes `--base-ref "$BASE_SHA"` and no
+      `--files`, so CI lists paths through `changedFilesBetween()` (base commit
+      id, `HEAD` resolved once, `--no-renames`); the job already checks out
+      with `fetch-depth: 0`, so no fetch is added. The step also sets
+      `diff.renames=false` through `GIT_CONFIG_*`, for a base copy of the gate
+      whose own diff predates `--no-renames` — the copy that judges this PR.
+      The case reads both gate invocations out of the workflow step and runs
+      them on a fixture that renames a kernel rule to an ungated path: red
+      against the `--files` step (the list held only the destination, the gate
+      said "nothing to ratify"), green after it, and red again with
+      `--no-renames` neutralised in place, then restored. Not changed: the
+      kernel-rule bundle step still reads the `gh pr view` list.
+      verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_ci_path.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
+
+- [x] **2.9 The base-copy rename override is tested, not checked by hand.**
+      The CI step's `diff.renames=false` (`GIT_CONFIG_*`) is what makes the
+      base revision's gate — for this PR `origin/main`'s copy, whose diff runs
+      with rename detection — list a gated file renamed away; it was verified
+      by hand only, and the step-2.8 test runs the head gate, which carries
+      `--no-renames` itself. Opened by round 8 on 2026-10-14, refused 2/2 on
+      it. In openai's words: *"before merge, add a stable regression that runs
+      legacy diff behavior with workflow-derived `GIT_CONFIG_*` values and
+      proves red without the override and green with it."* anthropic: *"The
+      test would remain **green** if: Environment variables were misspelled;
+      Git ignored them; Base gate didn't inherit them. [...] Add an automated
+      test verifying the environment-variable mechanism."* Also raised, not
+      stated as blocking: replace the round-specific workflow comment with a
+      contract reference (both); split the council CLI `maxBuffer` change out
+      (openai; anthropic: not a blocker); the kernel-rule bundle step still
+      reads the rename-blind `gh pr view` list (openai: pre-existing, a
+      follow-up risk). On the owner's route of 2026-10-14 (fix, re-present,
+      merge only on 2/2) all four were done. The new case reads the step's
+      `GIT_CONFIG_*` values from the workflow and runs the older gate's diff
+      call (`git diff --name-only base...HEAD`, rename detection on) from a
+      Node process that inherits them, on a fixture renaming a kernel rule to
+      an ungated path: without the values only the destination is listed,
+      with them both paths. It was seen red with the key misspelled, the
+      value misspelled, the count at 0 and the key variable misnamed, each in
+      place and restored. `origin/main`'s own gate, run once by hand on the
+      same fixture, said "nothing to ratify" without the values and listed
+      the kernel rule with them. The bundle step now passes `--base-ref` and
+      the script diffs with `--no-renames` and exits 3 on an unreadable diff;
+      seen red against the `gh pr view` step, against the script without
+      `--no-renames`, and with the exit-3 path neutralised. The workflow
+      comment cites the contract instead of the round. The `maxBuffer` change
+      is reverted here by a new commit and ships on its own (PR 2348).
+      verify: `npx vitest run tests/scripts/ci_changed_files_rename_compat.test.ts` -> 0
+      Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
 ## Phase 3 — The council reviews a modification as one
 
@@ -395,7 +833,7 @@ At `df377ca64`:
       fire first would turn "one reviewer said no" into "not enough reviewers
       answered" — a retryable condition rather than the objection it is.
       `required_providers` is a parameter, not baked in. 7 tests.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> **3.4 The record is written from the run, not typed.** One writer, in
+- [ ] **3.4 The record is written from the run, not typed.** One writer, in
       the module of 2.1, turns the session record of such a review into the
       artifact: `reviewed_by` in one spelling, `providers` from the seats that
       concluded, the derived verdict, `subject` for the tree the bundle was
@@ -425,16 +863,74 @@ At `df377ca64`:
       That decision is not this file's to take: 3.3's rule is what the roadmap
       specifies, the reader's is what ships, and both are defensible.
 
+      **Closed 2026-10-12. The council took the decision, 2/2 convergent**
+      (anthropic + openai, design mode, 2 rounds, blind peer review, $0.00 — both
+      seats subscription-authed). Verdict: **the shipped reader is canonical.**
+      `deriveRatificationHeader` is the sole authority over what a record SAYS;
+      quorum stays a separate validation; `deriveModificationVerdict` keeps its
+      name and its test and is documented as the ORCHESTRATION disposition, with
+      a new `deriveModificationOutcome` returning `{header, quorumSatisfied,
+      disposition}` so a caller cannot take the orchestration answer and write it
+      into the record.
+      **The argument, because it outlives the vote:** `seats:` is EVIDENCE and the
+      header is derived from it, so letting a policy parameter
+      (`required_providers`) rewrite what the evidence says inverts the
+      dependency. A grep for `non-convergent` would otherwise return both "the
+      providers disagreed" and "one provider ratified and the other never
+      answered" — two failure modes with different remediations, retry being right
+      for only one. The `refused`-first ordering both rules already had is the
+      precedent; the council extended it to the passing labels.
+      **The writer** is `src/scripts/_lib/ratification_record_writer.ts`, not the
+      digest module. 3.4 said "in the module of 2.1", and that module's own header
+      argues for one responsibility while 4.1 lists "the digest and the writer" as
+      two — and 3.4's own verify names `ratification_record_writer.test.ts`. The
+      deviation is recorded rather than taken silently.
+      `reviewed_by` is one constant (`ai-council`) against 19 spellings in 22
+      trunk records; `providers`, `verdict` and `seats:` are derived; `subject` is
+      passed IN from the gate's `expectedSubjectFor`, so the writer never becomes a
+      second place that decides which files are gated. Both council seats asked for
+      the same safeguard and it is the round trip: the writer reads its own output
+      back through the canonical reader and throws rather than hand back a file
+      somebody will try to land. A non-passing record is still WRITTEN — the
+      escalation the owner answers needs it in front of him. 14 tests, one of them
+      end to end through the real gate including the post-review edit going red.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.1 The review's own code is a gated surface.** The gate's watch list
+- [ ] **4.1 The review's own code is a gated surface.** The gate's watch list
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their
       own, an ordinary change to the council's prompts or transports stays
       ungated. A change to any watched one is a change to the reviewer: it
       needs a passing record and the owner.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_reviewer_paths.test.ts` -> 0
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
+      **Closed 2026-10-12.** `REVIEWER_PATHS` carries the five: the digest, the
+      writer, the questions, the verdict rule and the artifact contract. The
+      individual self-surface constants were folded into ONE exported
+      `SELF_SURFACE`, because the digest module had been re-assembling that set
+      from the individual constants — with five new paths a copy would have left
+      all five digest-invisible, which is a path the gate reds on and no record is
+      bound to. Every case has a polarity partner: `prompts.ts`, `stance_tally.ts`,
+      `quorum.ts` and `council_cli.ts` stay ungated, and an ordinary council edit
+      passes with no record at all. The suite also pins the thing the step does not
+      say out loud — each reviewer path enters `gatedFilesOf`, so it is covered by
+      the digest and not only by the refusal. 14 tests.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
+- [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
       that list from its own tree, as it reads its policy, and the list and
@@ -442,11 +938,47 @@ At `df377ca64`:
       change cannot drop a member in order to edit it. The schema is shared
       by every rule, so any edit to it then needs a record too.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_consequence_class.test.ts` -> 0
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.3 The comment matches the hooks.** The gate's header stops saying
+      **Closed 2026-10-12.** `GatedPaths` gained `consequenceRules`, fed by
+      `consequenceRuleSlugs`, which reads the 28 members from the gate's OWN tree —
+      never from `--root`, for the reason the quorum policy is read that way: a
+      candidate that dropped a member would otherwise be judged against its own
+      shortened list. The list and `rule.schema.json` joined `SELF_SURFACE`, so the
+      drop-then-edit move carries a record either way, and that exact diff is a test.
+      **One deliberate asymmetry, recorded rather than silently chosen:** a missing
+      or unparseable list yields an EMPTY set rather than a refusal. The quorum
+      policy fails closed because it decides whether a control can measure at all;
+      this list only WIDENS, so failing closed on it would red every kernel PR over
+      a file whose absence costs only the widening. 9 tests, with both polarities —
+      a class member outside the kernel reds, a rule outside the class does not, and
+      a kernel rule is still reported as a kernel rule rather than reclassified.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
+- [ ] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
       time.
       verify: `grep -c 'also denied at tool-call time' src/scripts/check_kernel_edit_ratified.ts` -> /^0$/
       Positive control: the same grep returns 1 at `df377ca64`.
+      **Closed 2026-10-12, and the replacement states the true fact rather than
+      deleting the false one.** The claim was checked before it was replaced:
+      `block_plumbing_writes.ts` names `dispatch_hook` only in prose about reads and
+      protects three generated build outputs, and `block_kernel_rule_writes.ts`
+      merely IMPORTS `kernel_rules.ts` without protecting it. So for those two paths
+      the record is the only layer, not the second one — which is what the header
+      now says. The 2026-10-10 probe that found this needed a record for a
+      comment-only edit; this change carries one, for the whole diff.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
 
 ## Phase 5 — A council that cannot settle it stops the run for the user
 
@@ -459,12 +991,33 @@ At `df377ca64`:
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **5.2 The stop has a shape.** In those cases the run ends with the
+- [ ] **5.2 The stop has a shape.** In those cases the run ends with the
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
       undone.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_escalation_message.test.ts` -> 0
+      **Closed 2026-10-12.** `escalationMessage` prints the six, and the split down
+      the middle is the substance: the gate FILLS IN the verdict, the per-seat
+      dissent and the gated paths, and ASKS FOR the expected gain, the risk and the
+      rollback, naming the record and the diff as where they are written. It says in
+      the message that it does not know them and will not guess — a stop that handed
+      the owner a confident-looking summary the gate never computed would be this
+      mechanism's own failure mode arriving through its help text. It fires on
+      `non-convergent`, on `refused`, on diversity short of the required count, and
+      on any reviewer-surface change record or not (condition 4 is the owner's
+      whatever the seats said). It deliberately does NOT fire on a missing,
+      malformed, self-ratified or content-stale record: those are authoring defects,
+      and routing one to the owner spends the escalation on "write a record".
+      13 tests, six of them polarity partners.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
       check is required, and the contract's bypass procedure is for incidents.
@@ -513,7 +1066,7 @@ At `df377ca64`:
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the `subject` this step checks is built by 2.1 and 2.2, which share that gate; recording the shared gate asks nothing new --> **6.1 The pipeline's review is the council's record; the approval is the
+- [ ] **6.1 The pipeline's review is the council's record; the approval is the
       owner's.** For a proposal whose scope is the package, `check_proposal`
       accepts `stage: gated` only when the proposal names a record whose
       `subject` matches the files the proposal declares as its change AND the
@@ -533,13 +1086,68 @@ At `df377ca64`:
       `subject` it checks is exactly the binding 1.5 records as absent and 2.1
       and 2.2 build. No new question: both the amendment and the gate's owner
       question are already on record.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — it needs a record that passed, which needs 6.1 and through it 2.1 and 2.2; recording the shared gate asks nothing new --> **6.2 A worked example, for real.** One learning from this repository's
+
+      **Closed 2026-10-12.** `check_proposal` gained `_checkGatedRecord`: a
+      `scope: package` proposal at `stage: gated` must declare `changed_files:`
+      and name BOTH a `ratification_record:` and an `owner_authorization:`, each
+      carrying the `subject` digest of those files as the gate computes it. The
+      order is the amendment, and it is a test: a proposal carrying the council's
+      record and no owner authorization is refused, naming the missing one.
+      **What it cannot prove is in the function's own header, above what it can:**
+      the authorization is a path the proposal names and a digest the file
+      carries, and ADR-281 § 5 makes the owner's route a forge act that leaves
+      nothing a gate can authenticate. What IS established is that the review and
+      the approval name the same content, so last week's approval cannot carry
+      this week's diff — which the suite pins directly. A `scope: project`
+      proposal and any earlier stage are checked exactly as before.
+      The stage-five skill now carries the refusal its guideline had claimed since
+      it was written: `upstream-contribute` § 6b stops on any stage that is not
+      `gated`, and states the review-then-approval order for a package proposal.
+      11 tests.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
+
+- [ ] **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
       `agents/proposals/` naming the record, and the change passes the gate.
       An agent does each step on this roadmap's instruction; nothing is
       promoted by a loop, and whether the change lands is the usual call.
       verify: `grep -rl 'agents/evidence/ratifications/' agents/proposals | grep -vc README` -> /^[1-9]/
+
+      **Closed 2026-10-12, and it stops where the lane genuinely stops.**
+      `agents/proposals/polarity-fixture-repair.md` carries a learning this run
+      made rather than one chosen to be easy: widening a gate's path set turns its
+      NEGATIVE fixtures red, and the cheap repair — deleting them — leaves a gate
+      that passes its own suite while reaching too far. It happened here: step 4.1
+      put the artifact contract on the watch list and two cases in
+      `ratification_subject.test.ts` failed for naming that file as ungated. The
+      change is an 8th Iron Law plus a dated Gotcha in `testing-anti-patterns`,
+      and the proposal distinguishes it from law 7 rather than folding it in,
+      because deleting an expired fixture does not LOOK like gaming the green.
+      `proposal:check` returns PASS. It discharges the criterion the archived
+      `road-to-curated-self-improvement` left open and this roadmap's Context
+      records as having no artefact in the tree.
+
+      **It is `stage: proposed`, not `stage: gated`, and that is the honest
+      state.** Since the owner's amendment a package proposal reaches `gated` only
+      with an `owner_authorization:` bound to the same digest, and that
+      authorization is precisely what the open owner blocker is about. Writing
+      `gated` would be an agent asserting the owner's approval — the one thing
+      ADR-268 § 4 forbids. Every step of the lane an agent can walk is walked; the
+      last one is the owner's and is named as his in the proposal's § 9.
+
+      **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
+      carried it, on the reviewers’ own reasoning.** The modification review
+      refused that branch 2/2 on `smaller-change`, and the code of this step is
+      reverted to `origin/main` — verified as an EMPTY net diff per file rather
+      than as a revert command that exited 0. Only the content binding (2.1, 2.2)
+      stayed on it. See § Staged, not abandoned and D12.
 
 ## What this roadmap deliberately does not do
 
@@ -613,23 +1221,53 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-1 — A gated file edited after its review turns the gate red until a
+- [x] AC-1 — A gated file edited after its review turns the gate red until a
       new review exists, and a base that moved on other files does not.
-      **Measured 2026-10-10: not yet possible.** It is step 2.1's `subject` digest
-      that makes a post-review edit visible, and 2.1 edits the gate and its reader.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-2 — A modification review with one provider concluding produces a
+      **MET 2026-10-12, both limbs measured as a pair over one diff.**
+      `ratification_subject_binding.test.ts` writes a valid record, then changes ONE
+      byte of the reviewed kernel rule and the gate reds with "the record reviewed
+      different content"; the same suite moves `README.md` and `docs/architecture.md`
+      afterwards and the gate stays green. A third case moves a gated file that is
+      NOT in the diff and stays green, so the criterion's "on other files" is pinned
+      in both directions rather than once. Seen red for the intended reason:
+      neutralising the binding drops 5 of the 9 cases and leaves the 4 that should
+      stay green.
+- [ ] AC-2 — A modification review with one provider concluding produces a
       record that does not pass.
-      **Half shipped 2026-10-10, and the half that is missing is named.** The RULE
-      is implemented and pinned: `deriveModificationVerdict` with one concluding
-      provider against `required_providers: 2` returns `non-convergent`, which the
-      policy's `verdicts_that_pass` excludes. What does not exist is the WRITER
-      that turns that into a record — step 3.4, which lives in 2.1's module.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-3 — A change to the question list, the verdict rule or the writer is
+      **MET 2026-10-12, and the council changed WHICH rule refuses it.** The writer
+      exists (3.4) and the one-concluding-seat case runs end to end in
+      `ratification_record_writer.test.ts`: the record IS written, it says
+      `verdict: ratified` with `providers: [anthropic]` — what the seats actually
+      said — and `recordWouldPass` is false. The measured reason is a single
+      `diversity-required` problem and nothing else, which is the point of the 2/2
+      council verdict of 2026-10-12: quorum refuses the record, the header does not
+      relabel the evidence. A record that said `non-convergent` here would make a
+      grep for that verdict return two different failure modes.
+
+      **Reopened 2026-10-13.** The step this criterion was measured through
+      came off the 2026-10-12 branch with the three concerns the reviewers asked
+      to stage; the measurement stands as a record of what the code did, and the
+      criterion is open until that code lands on a branch of its own. See
+      § Staged, not abandoned.
+
+- [ ] AC-3 — A change to the question list, the verdict rule or the writer is
       refused without a passing record.
-      **Measured 2026-10-10: the three modules are NOT yet watched.**
-      `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review.ts`
-      reports nothing to ratify, which is correct today and is exactly what step 4.1
-      changes. Until 4.1 lands, this criterion is false by construction.
+      **MET 2026-10-12, measured with the real CLI rather than from the test.**
+      `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review_questions.ts
+      src/scripts/_lib/ratification_record_writer.ts` exits 1, names "the review
+      mechanism itself", and prints the escalation message — against the same
+      command reporting "nothing to ratify" for those paths at the 2026-10-10
+      measurement. `modification_review.ts` (the verdict rule) is on the same list.
+      The polarity partner is measured too: `prompts.ts`, `stance_tally.ts`,
+      `quorum.ts` and `council_cli.ts` stay ungated, so the gate did not simply
+      swallow `src/scripts/ai_council/`.
+
+      **Reopened 2026-10-13.** The step this criterion was measured through
+      came off the 2026-10-12 branch with the three concerns the reviewers asked
+      to stage; the measurement stands as a record of what the code did, and the
+      criterion is open until that code lands on a branch of its own. See
+      § Staged, not abandoned.
+
 - [x] AC-4 — The contract names the route by which the owner permits a change
       the council could not pass, and what that route cannot prove.
       **MET 2026-10-10, both limbs measured rather than read.**
@@ -638,10 +1276,24 @@ At `df377ca64`:
       § What this route cannot prove at `:532` (the gate cannot see a forge bypass;
       nothing proves the ask preceded it). Step 5.3's test pins both and carries its
       own sensitivity case.
-- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-5 — One proposal under `agents/proposals/` names a change that
+- [ ] AC-5 — One proposal under `agents/proposals/` names a change that
       passes the gate and the record that passed it.
-      **Measured 2026-10-10: no such proposal exists, and none can yet.** It needs
-      a record that passed, which needs the writer (3.4) and the `subject` (2.1).
+      **MET 2026-10-12, and the claim is scoped to exactly what is true.**
+      `agents/proposals/polarity-fixture-repair.md` names
+      `agents/evidence/ratifications/drain-self-modification-20261012.md`, the
+      record of the modification review of the change it ships in, and that change
+      passes `check_kernel_edit_ratified` — which is the gate the criterion names.
+      What the proposal does NOT have is an `owner_authorization:`, so it stands at
+      `stage: proposed` rather than `stage: gated`; that is the owner blocker, not a
+      gap in this criterion, and § 9 of the proposal says so in its own words
+      rather than leaving a reader to infer it from a missing field.
+
+      **Reopened 2026-10-13.** The step this criterion was measured through
+      came off the 2026-10-12 branch with the three concerns the reviewers asked
+      to stage; the measurement stands as a record of what the code did, and the
+      criterion is open until that code lands on a branch of its own. See
+      § Staged, not abandoned.
+
 - [x] AC-6 — No instruction file shipped to a consumer says kernel rules
       cannot be changed.
       **MET 2026-10-10.** The four-pattern grep over the consumer template, its
@@ -655,6 +1307,12 @@ At `df377ca64`:
       `check_*.ts` gates — which is the point of the criterion: this roadmap adds
       a review, not a new thing that can fail a build.
 
+      **Re-measured 2026-10-13 after the narrowing: 174 on `origin/main`, 174 in
+      this tree.** The base moved since 2026-10-10; what the criterion asserts is
+      that this branch does not move it, and it does not. The one script 2.1 adds,
+      `src/scripts/ratification_subject.ts`, prints a digest and exits 0 — it is
+      not a `check_*.ts` gate and nothing in CI runs it.
+
 - [x] AC-8 — No shipped text says a council record is the approval of a
       package self-modification, and none names a content binding the gate
       does not perform.
@@ -667,6 +1325,20 @@ At `df377ca64`:
       `subject` phrase is the guideline block quote explaining why the clause
       is absent, which is the opposite of naming a binding, and is excluded by
       the measurement rather than hidden from it. Closed by steps 1.4 and 1.5.
+
+      **Re-measured 2026-10-13, after the narrowing, and the second limb is met
+      the OTHER way round.** The five patterns that measure the FIRST limb — that
+      no shipped text calls a council record the approval — return **0** over
+      `src/`, `dist/`, `docs/contracts/` and `docs/guidelines/`. The sixth,
+      ``whose `subject` matches``, was going to be retired on 2026-10-12 because
+      2.1 made the binding real and the clause could return to the pipeline
+      guideline naming a guarantee the gate keeps. That return rode on 6.1, which
+      is staged off this branch, so the guideline is back at `origin/main` and the
+      clause is absent again — the limb holds because nothing names the binding,
+      not because the binding is named truthfully. The contract’s new
+      § `subject:` does describe it, and describes a binding the gate now
+      performs, which is what the limb asks. Closed by steps 1.4 and 1.5; the
+      clause returns with 6.1.
 
 ## Decisions
 
@@ -683,6 +1355,8 @@ At `df377ca64`:
 | D9 | deterministic | evidence | The digest covers the source of a gated file only; its projection is covered because `dist/agent-src/` is asserted byte-equal to the rewritten source | ADR-201; the "Verify dist == rewrite(src)" CI step | A gated surface gains a projection that is not a byte-exact rewrite |
 | D10 | product-owned | owner | the directive's reading is (a): the council is the lowest passing rung for the gated surface and for changes the learning lanes originate, with the verdict rule and escalation conditions as drafted in step 1.1; commissioned work keeps its present speed | owner answer 2026-10-06 to blocker `self-modification-directive-reading-confirmed`, options (a) / (b) wider at 22 in 49 commits / (c) gated surface only | the review load on the gated surface or the learning lanes changes materially, or the owner widens the reading |
 | D11 | product-owned | owner | the owner's route past a recorded council non-convergence is (b), the owner's own recorded bypass on the forge — preceded by an ask: on non-convergence, or on the red check it causes, the agent tells the owner at once and asks in-session with options; a yes is then given as the forge act, never as a chat answer, because a chat answer reaches the tree only as text an agent wrote and ADR-268 § 4 forbids an agent ratifying its own increase in power. The contract's two sentences ruling a bypass out are amended for recorded non-convergence only | owner answer 2026-10-06 to blocker `owner-permission-route`: "the user should be informed beforehand or on a failed CI run and be able to instruct the agent locally when it asks — otherwise option 1, if it cannot be done differently"; option (a) needs a place only a person writes, which does not exist at the pin | a place only a person writes exists (the gate-preauth stub's answer), at which point (a) becomes the route that needs no forge act |
+| D12 | reversible-technical | council:drain-self-modification-20261012 | Land the content binding alone; stage governed-surface expansion, proposal validation, the record writer, the escalation shape and the Iron Law as their own changes | The modification review of 2026-10-12 refused the bundled branch 2/2 and both seats answered `smaller-change` with "landing the binding first would close replay risk while letting the broader self-governance design be evaluated with a smaller blast radius"; the bundled diff was 177 KB against a 51 KB council bundle ceiling, so no seat saw the whole of it | A later council reviews the staged concerns together and asks for them as one change |
+| D13 | reversible-technical | council:drain-self-modification-narrowed-20261013 (round 5) | The ratification subject is read from Git objects at an explicit revision, never from the working tree; a gated path committed as a symbolic link is refused rather than hashed as its target string | Rounds 3, 4 and 5 each refused the working-tree reader on a new filesystem defect (errno handling, non-regular files, a symlinked ancestor); both round-5 seats named hashing an explicit Git revision as the stronger fix | A gated surface legitimately needs to be a symbolic link, or the gate must judge content that is deliberately left uncommitted |
 
 ## Kill register
 
@@ -701,11 +1375,11 @@ At `df377ca64`:
 | K11 | Automated promotion of learnings | `road-to-leading-every-row.md:231`; `later/road-to-ac-deep-capabilities.md:163-192` | The directive is noted there by 1.3 and decided by its owner |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The record is still text an agent can write | implementation | A digest and a seat list can be typed as easily as a name; and whether the forge's file list is complete for a very large change was not measured. | The contract already says the anchor is the base revision and the platform, not the record; Phase 2 adds that a record cannot be reused or outlived by an edit, 3.4 that it is produced by the run, and neither claims more. | Phase 2 — An approval is bound to what it approved |
+| 1 | The record is still text an agent can write | implementation | A digest and a seat list can be typed as easily as a name; and whether the forge's file list is complete for a very large change was not measured. | The contract already says the anchor is the base revision and the platform, not the record; Phase 2 adds that a record cannot be reused or outlived by an edit and claims no more; 3.4 would add that it is produced by the run and is **open again**, so that half of the mitigation is planned rather than in force. Sharpened 2026-10-13 by a reviewer: an author who edits gated content and recomputes the digest produces a record the gate accepts, so the word is DETECTS, never prevents, and the contract now says that in the reviewer’s own words. | Phase 2 — An approval is bound to what it approved |
 | 2 | The owner's route becomes the easy way round a split council | implementation | Any record form for the owner's permission is text, and a run with a grant could land it. | The step is held by its own blocker, whose options state what each can and cannot prove; the recommended one is an act on the forge that no session can perform. | Phase 5 — A council that cannot settle it stops the run for the user |
 | 3 | The questions become a form the seats fill | product | A fixed list invites nine short affirmations. | 3.4 keeps each seat's answers in the record's body, where a later reader sees them; 3.1 asks what would show the benefit false, which has no affirmative answer. | Phase 3 — The council reviews a modification as one |
 | 4 | This roadmap's own gate changes need the gate | implementation | Phases 2 to 5 edit self-watched files. | Each lands with a record under the rules in force at that time; 4.1 lands after Phase 3 so that nothing is gated by code that does not exist yet. | Phase 4 — The reviewer and the consequence class are inside the gate |
@@ -714,3 +1388,5 @@ At `df377ca64`:
 | 7 | Widening the path set slows ordinary rule work | product | 28 more files need a record per change, and so does any edit to the shared rule schema. | Four of the 49 commits touched a rule outside the kernel; D4 names the reading that would widen or narrow it. | Phase 4 — The reviewer and the consequence class are inside the gate |
 | 8 | A reviewed change turns red because the base moved | implementation | The digest changes when the base edits a gated file the change also touches. | That is content the council did not see; 2.1's test pins that a base move on any other file leaves the digest alone. | Phase 2 — An approval is bound to what it approved |
 | 9 | A step's own text outlives the decision it was written under | implementation | Step 6.1 still read "the pipeline's approval is the council's record" five days after the owner's amendment reversed exactly that, and nothing surfaced it: the amendment edited the ADR, 1.4 corrected the shipped texts, and the plan that instructs the work was in neither set. Implementing the step as written would have re-broken AC-8. | 6.1's title and text now state the amended rule, and AC-8's grep is scoped to shipped text only — so the same drift in a plan is still invisible to it. The check that caught this one was reading the step before running it; no gate replaces that. | Phase 6 — One change nobody asked for travels the whole lane |
+| 10 | The staged concerns never land, and the binding is read as more than it is | product | 4.1, 4.2, 4.3, 6.1, 6.2, 3.4 and 5.2 came off the 2026-10-12 branch on the council’s own `smaller-change` answer. Replay is closed; the reviewer is still outside the gate, the 28 high-consequence rules beyond the kernel are still editable with no record, and a reader who hears “the binding landed” may take the whole design for shipped. | § Staged, not abandoned states that cost in the file rather than leaving it to be inferred, each reopened step carries the reviewers’ words, and the contract’s § `subject:` describes only what the gate performs. D12 carries the revisit-if. | Phase 4 — The reviewer and the consequence class are inside the gate |
+| 11 | A gated path the gate classifies can abort the gate instead of refusing | implementation | The 2026-10-13 review found the error model three-quarters built: `GatedPathEscapes` is thrown and never caught at `evaluate()`, and the reads after the stat are unwrapped — so a classified traversing path or a post-stat I/O failure leaves the gate as an exception rather than the structured refusal the contract promises. A crash still fails closed on the exit code; it is not the documented behaviour, and it is a way around the promised refusal. | Step 2.3 carries it with the seats’ words and the two bounds the blind peer-review stage set on the repair — narrow typed translation rather than a blanket catch, and the symlink-swap question answered rather than assumed. Deliberately not repaired on the reviewed branch: editing a gated file after the seats answered would move the `subject` and launder the record. | Phase 2 — An approval is bound to what it approved |

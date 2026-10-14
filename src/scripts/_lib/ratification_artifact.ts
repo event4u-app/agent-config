@@ -84,6 +84,18 @@ export interface RatificationArtifact {
     verdict: RatificationVerdict;
     /** `merge`, or an ISO-8601 instant. Never a bare "later". */
     effective_after: string;
+    /**
+     * The digest of the gated content this record reviewed, or `null` on a
+     * record that carries none.
+     *
+     * Not in {@link RATIFICATION_FIELDS}: those six are required of every
+     * record, and the 23 records on the trunk predate this field. What makes
+     * it required in practice is the CALLER — `check_kernel_edit_ratified`
+     * passes an expected digest on every run, and a record with no `subject`
+     * then fails `subject-absent`. A record is only ever read as part of the
+     * diff it ships in, so nothing on the trunk is re-judged.
+     */
+    subject: string | null;
 }
 
 export interface RatificationProblem {
@@ -103,7 +115,10 @@ export interface RatificationProblem {
         | 'unknown-seat-verdict'
         | 'seat-dissent'
         | 'providers-exceed-seats'
-        | 'header-not-derived';
+        | 'header-not-derived'
+        | 'subject-absent'
+        | 'subject-malformed'
+        | 'subject-mismatch';
     message: string;
 }
 
@@ -322,6 +337,16 @@ export interface RatificationReading {
     problems: RatificationProblem[];
 }
 
+/**
+ * A `subject` digest: the lower-case hex sha-256 `subjectDigest` produces.
+ *
+ * Shape is checked apart from equality on purpose. A typo'd digest and a
+ * digest that moved because a gated file was edited after the review are
+ * different failures, and a reader that reported both as "mismatch" would
+ * send an author looking for an edit that never happened.
+ */
+export const SUBJECT_RE = /^[0-9a-f]{64}$/u;
+
 /** `merge`, or an ISO-8601 instant with a timezone. */
 const EFFECTIVE_AFTER_RE =
     /^(merge|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2}))$/;
@@ -364,10 +389,18 @@ export function readProviders(fm: AdrFrontmatter): string[] {
  * Pass `null` when it could not be established — the diversity rule then does
  * not fire, and the caller says so, because an unmeasured count is not
  * evidence that diversity was unavailable.
+ *
+ * `expectedSubject` is the digest of the gated content the record is being
+ * read against, recomputed from the tree by the caller. Pass `null` to read a
+ * record's shape without binding it to any content — which is what a reader
+ * that is not judging a diff does. Pass a digest and the record must carry
+ * `subject`, and carry that one: a record whose `subject` is absent or
+ * different did not review this content, whatever its verdict says.
  */
 export function readRatification(
     text: string,
     configuredProviders: number | null,
+    expectedSubject: string | null = null,
 ): RatificationReading {
     const problems: RatificationProblem[] = [];
     const fm = readAdrFrontmatter(text);
@@ -427,6 +460,35 @@ export function readRatification(
 
     problems.push(...seatProblems(readSeats(fm, text), providers, verdict));
 
+    // The content binding. Shape first, then equality, so a malformed digest is
+    // never reported as content that moved.
+    const subject = scalarOf(fm, 'subject');
+    if (subject !== null && !SUBJECT_RE.test(subject)) {
+        problems.push({
+            code: 'subject-malformed',
+            message:
+                `subject \`${subject}\` is not a sha-256 hex digest (${String(SUBJECT_RE)}) — ` +
+                'print it with `ratification_subject`',
+        });
+    } else if (expectedSubject !== null) {
+        if (subject === null) {
+            problems.push({
+                code: 'subject-absent',
+                message:
+                    'missing `subject:` — a record names who reviewed; without a digest it does not ' +
+                    `name WHAT, so the gated content may have changed since. Expected \`${expectedSubject}\``,
+            });
+        } else if (subject !== expectedSubject) {
+            problems.push({
+                code: 'subject-mismatch',
+                message:
+                    `subject \`${subject}\` is not the digest of this diff's gated content ` +
+                    `(\`${expectedSubject}\`) — the record reviewed different content, so it does not ` +
+                    'answer for this change',
+            });
+        }
+    }
+
     // Diversity, against the REQUIRED count.
     //
     // Round 1 refused the previous shape: the count came from the user-global
@@ -465,6 +527,7 @@ export function readRatification(
             providers,
             verdict: verdict as RatificationVerdict,
             effective_after: effective as string,
+            subject,
         },
         problems: [],
     };

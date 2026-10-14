@@ -59,17 +59,28 @@
  *
  * Inputs:
  *   --base-ref REF    git ref to diff against (default: origin/main, then main)
- *   --files F [F …]   override the changed-file list (testing and CI)
+ *   --files F [F …]   override the changed-file list (testing); CI derives
+ *                     the list from git with --base-ref, because a hosted
+ *                     PR file list names a rename by its destination only
  *   --root DIR        repo root the diff and artifacts are read from (testing)
+ *   --rev REV         the commit the gated content and the artifacts are read
+ *                     at (default HEAD) — Git objects, never the working tree,
+ *                     so an uncommitted edit can neither pass nor fail the gate.
+ *                     Without --files it is resolved ONCE to a commit id, and
+ *                     that id — not the name — feeds the diff, the digest and
+ *                     the record read, so a ref that moves mid-run cannot pair
+ *                     one commit's file list with another commit's content
  *   --policy-root DIR where the quorum policy is read from (testing); defaults
  *                     to THIS script's tree, so a base-revision run reads the
  *                     base's policy rather than one the candidate lowered
  *   --quiet           verdict line only
  *
+ * An option that takes a value and is given none is a refusal (exit 1), never
+ * a silent default.
+ *
  * Exit codes: 0 = pass (or nothing gated) · 1 = fail · 3 = internal error.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -85,6 +96,17 @@ import {
     readRequiredProviders,
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
+import {
+    DEFAULT_REVISION,
+    GatedSubjectRefusal,
+    changedFilesBetween,
+    fileAtRevision,
+    optionValue,
+    refExists,
+    resolveRevision,
+    subjectOf,
+    type SubjectReading,
+} from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -360,31 +382,57 @@ export function configuredProviderCount(policyRoot: string): number | null {
     }
 }
 
-function gitChangedFiles(baseRef: string, root: string): string[] | null {
-    const res = spawnSync('git', ['diff', '--name-only', `${baseRef}...HEAD`], {
-        cwd: root,
-        encoding: 'utf8',
-    });
-    if (res.status !== 0) {
-        return null;
-    }
-    return (res.stdout ?? '').split('\n').filter((l) => l.trim() !== '');
-}
-
 function resolveBaseRef(explicit: string | null, root: string): string {
     if (explicit !== null) {
         return explicit;
     }
     for (const candidate of ['origin/main', 'origin/master', 'main', 'master']) {
-        const res = spawnSync('git', ['rev-parse', '--verify', candidate], {
-            cwd: root,
-            stdio: ['ignore', 'ignore', 'ignore'],
-        });
-        if (res.status === 0) {
+        if (refExists(root, candidate)) {
             return candidate;
         }
     }
     return 'HEAD~1';
+}
+
+/**
+ * The plumbing closure this gate classifies with: the union of the list read
+ * from the tree under review and from this script's own tree, so a module
+ * present on either side is watched.
+ */
+function derivedFor(root: string): readonly string[] {
+    return [...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)])];
+}
+
+/**
+ * The `subject` digest a record must carry to answer for this diff, AND the
+ * gated files it covers — from one classification, never two.
+ *
+ * Exported so that whoever WRITES a record asks the gate for the digest rather
+ * than recomputing it from a second reading of the membership rule. A writer
+ * that derived its own list would be the second definition of "gated" that
+ * `ratification_subject`'s header exists to prevent — and it would fail only
+ * for the diffs where the two lists disagree, which are exactly the diffs that
+ * widen the gated set.
+ *
+ * RETURNS BOTH HALVES so that the coverage list printed beside a digest is the
+ * list that digest was taken over: a list classified separately, with a
+ * different `derived` input, could disagree with it — the false reassurance
+ * that list exists to prevent.
+ *
+ * The content is read at `revision` from Git objects, so the digest a writer
+ * prints and the digest this gate checks agree exactly when both name the
+ * same commit — the one the reviewers were shown.
+ *
+ * THROWS a {@link GatedSubjectRefusal} when the revision does not resolve, git
+ * cannot run, or a gated path escapes the tree or is not absent or a regular
+ * file in that commit. Callers turn that into a refusal; none may continue.
+ */
+export function expectedSubjectFor(
+    files: readonly string[],
+    root: string,
+    revision: string = DEFAULT_REVISION,
+): SubjectReading {
+    return subjectOf(root, files, derivedFor(root), revision);
 }
 
 export interface GateResult {
@@ -398,14 +446,14 @@ export function evaluate(
     files: readonly string[],
     root: string,
     providerCount: number | null,
+    revision: string = DEFAULT_REVISION,
 ): GateResult {
     const lines: string[] = [];
     // The union of the closure read from the tree under review and from this
     // script's own tree: under CI the gate code is the base revision's and
     // `root` is the head, so a module present on either side is watched.
-    const gated = classifyPaths(files, [
-        ...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)]),
-    ]);
+    const derived = derivedFor(root);
+    const gated = classifyPaths(files, derived);
     const scanned = files.length;
 
     // Every changed path is a planned target: the gate's denominator is the
@@ -447,6 +495,44 @@ export function evaluate(
                 `failed ${tally.failed} · out_of_scope ${tally.out_of_scope}`,
         );
     };
+
+    /**
+     * The digest of this diff's gated content, recomputed from the tree rather
+     * than read from the record.
+     *
+     * WHICH FILES COUNT IS DECIDED BY THIS CODE, AND IN CI THIS CODE IS THE BASE
+     * REVISION'S. The workflow runs the base's copy of this gate with `--root
+     * <head>`, so the membership rule a candidate is judged by is one the
+     * candidate did not write — and the same holds for the digest, which uses
+     * this module's `classifyPaths` and the derived list computed just above.
+     * A change that widens the gated set is therefore judged, and written, by
+     * the same list.
+     */
+    let expectedSubject: string;
+    let commit: string | null;
+    try {
+        ({ digest: expectedSubject, revision: commit } = expectedSubjectFor(files, root, revision));
+    } catch (err) {
+        // ONE boundary for EVERY failure of the subject computation: each is
+        // a subclass of `GatedSubjectRefusal`, so a gate that advertises a
+        // refusal cannot crash on one of its own refusal classes instead.
+        //
+        // Fail closed, and BEFORE the "nothing to ratify" exit: a revision
+        // that does not resolve, a git that cannot run, a gated path outside
+        // the tree or one that is not absent or a regular file in the commit
+        // is content the gate cannot describe, and a gate that cannot
+        // describe the content cannot say a record answers for it.
+        //
+        // NARROW AND TYPED, never a blanket catch: wrapping everything would
+        // report a defect in this gate as a property of the checkout. Anything
+        // that is not a refusal is a bug here and stays a crash.
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
+        }
+        lines.push(`❌  ${err.message}`);
+        close(false);
+        return { exitCode: 1, lines, scanned };
+    }
 
     if (!requiresRatification(gated)) {
         lines.push(
@@ -492,22 +578,33 @@ export function evaluate(
     let anyRatified = false;
     const failures: string[] = [];
     for (const rel of artifacts) {
-        const abs = path.join(root, rel);
+        // The record is read at the same commit as the content it answers
+        // for: a record rewritten in the working tree and never committed is
+        // not what a push or a merge would land.
         let text: string;
         try {
-            text = fs.readFileSync(abs, 'utf8');
-        } catch {
-            failures.push(`${rel}: listed in the diff but not readable on disk`);
+            const bytes = commit === null ? null : fileAtRevision(root, commit, rel);
+            if (bytes === null) {
+                failures.push(`${rel}: listed in the diff but absent at \`${revision}\``);
+                continue;
+            }
+            text = bytes.toString('utf8');
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+            failures.push(`${rel}: ${err.message}`);
             continue;
         }
-        const reading = readRatification(text, providerCount);
+        const reading = readRatification(text, providerCount, expectedSubject);
         if (isRatified(reading)) {
             anyRatified = true;
             lines.push('');
             lines.push(
                 `✅  ${rel} — ratified by ${reading.artifact?.reviewed_by} ` +
                     `(providers: ${reading.artifact?.providers.join(', ')}; ` +
-                    `effective after ${reading.artifact?.effective_after})`,
+                    `effective after ${reading.artifact?.effective_after}; ` +
+                    `subject ${String(reading.artifact?.subject).slice(0, 12)}…)`,
             );
             continue;
         }
@@ -543,6 +640,7 @@ export function evaluate(
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let baseRef: string | null = null;
+    let revision = DEFAULT_REVISION;
     let root = REPO;
     // The policy is read relative to THIS SCRIPT's tree, never to `--root`.
     //
@@ -558,18 +656,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const files: string[] = [];
     let collectingFiles = false;
 
+    const valueOptions = new Set(['--base-ref', '--root', '--rev', '--policy-root']);
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i];
-        if (a === '--base-ref') {
-            baseRef = argv[i + 1] ?? null;
-            i += 1;
-            collectingFiles = false;
-        } else if (a === '--root') {
-            root = path.resolve(argv[i + 1] ?? root);
-            i += 1;
-            collectingFiles = false;
-        } else if (a === '--policy-root') {
-            policyRoot = path.resolve(argv[i + 1] ?? policyRoot);
+        if (a !== undefined && valueOptions.has(a)) {
+            const value = optionValue(argv, i);
+            if (value === null) {
+                process.stderr.write(`❌  check_kernel_edit_ratified: ${a} takes a value\n`);
+                return 1;
+            }
+            if (a === '--base-ref') {
+                baseRef = value;
+            } else if (a === '--root') {
+                root = path.resolve(value);
+            } else if (a === '--rev') {
+                revision = value;
+            } else {
+                policyRoot = path.resolve(value);
+            }
             i += 1;
             collectingFiles = false;
         } else if (a === '--quiet') {
@@ -586,15 +690,33 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (files.length > 0) {
         changed = files;
     } else {
-        const fromGit = gitChangedFiles(resolveBaseRef(baseRef, root), root);
-        if (fromGit === null) {
-            process.stderr.write('❌  check_kernel_edit_ratified: git diff failed\n');
+        // ONE resolution for the whole run. The diff, the digest and the
+        // record read all receive this id; passing the name to each would let
+        // a ref that moves between them yield a file list from one commit and
+        // a digest and record from another.
+        let commit: string;
+        try {
+            commit = resolveRevision(root, revision);
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
+            return 1;
+        }
+        try {
+            changed = changedFilesBetween(root, resolveBaseRef(baseRef, root), commit);
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
             return 3;
         }
-        changed = fromGit;
+        revision = commit;
     }
 
-    const result = evaluate(changed, root, configuredProviderCount(policyRoot));
+    const result = evaluate(changed, root, configuredProviderCount(policyRoot), revision);
 
     // OUTSIDE the quiet guard: CI passes --quiet, and a coverage guard that
     // sees no count reports the gate silent.
