@@ -71,20 +71,38 @@ against.
 ## `subject:` — the digest of the content the record reviewed
 
 An eighth field, `subject:`, is a sha-256 hex digest over the **gated** files of
-the change: their sorted paths, each hashed alongside its content, with a
-deleted gated file entered rather than skipped. `./scripts-run
-src/scripts/ratification_subject --files <f> …` prints it, and
-`check_kernel_edit_ratified` recomputes it from the tree it is pointed at and
-refuses a record whose `subject` is absent (`subject-absent`), not a digest
-(`subject-malformed`) or a different one (`subject-mismatch`). A gated path it
-cannot read, or one that would resolve outside the tree, is a refusal too —
-an unreadable file is not a deleted one, and a digest that described either as
-the other would be the fail-open shape this mechanism exists to refuse. So is a
-gated path that is not absent, a symbolic link or a regular file — a FIFO,
-socket, device or directory is refused before it is opened, because opening a
-FIFO can block the gate — and a platform that cannot open without following a
-link (`O_NOFOLLOW`) or without blocking (`O_NONBLOCK`) refuses rather than
-reading with less protection.
+the change **as they are in one commit**: their sorted paths, each hashed with
+its Git mode and its content, with a deleted gated file entered rather than
+skipped. `./scripts-run src/scripts/ratification_subject --files <f> … [--rev
+REV]` prints it together with the commit it read, and
+`check_kernel_edit_ratified [--rev REV]` recomputes it and refuses a record
+whose `subject` is absent (`subject-absent`), not a digest
+(`subject-malformed`) or a different one (`subject-mismatch`). Both default to
+`HEAD`.
+
+**The digest is read from Git objects, never from the working tree.** The
+revision is resolved to a commit, each gated path is looked up in that commit's
+tree (`git ls-tree`) and a blob's bytes come from the object store
+(`git cat-file`). The gate reads the **record** at the same commit. So an
+uncommitted edit — to a gated file or to the record — can neither pass nor fail
+the gate, and a symbolic link, FIFO or device on disk, at the path or at any
+ancestor directory, is not something the digest can observe. What the pre-push
+run compares is therefore the `HEAD` commit: the changed-file list is
+`git diff <base>...HEAD`, the content and the record are read from `HEAD`'s
+tree. In CI the gate reads the checkout's own `HEAD`. Commit first, then
+print the digest, and show the reviewers that same commit.
+
+A gated path that is absent in the commit is a deletion. A gated path whose
+tree entry is a regular file (`100644`, `100755`) is hashed. **Every other entry
+is a refusal**, and the one that needs a decision is the symbolic link (mode
+`120000`): it is refused rather than hashed as its target string or followed,
+because its effective content lives at another path the gate's classifier does
+not see, so no digest of the link describes what a reviewer would approve. A
+directory or a submodule at a gated path is refused for the same reason. So is
+a revision that does not resolve to a commit, a `--root` that is not a
+repository's top level, a gated path that names nothing inside a tree (absolute,
+or with a `..` segment), and a git that cannot be started or fails — each a
+typed refusal (exit 1), never a fallback to reading the disk.
 
 | What it adds | Why the other seven did not |
 |---|---|
@@ -96,12 +114,15 @@ equivalent and is not:
 
 - **The path is hashed with the content**, so two gated files with identical
   bytes do not collide and a rename moves the digest — a governance hook moved
-  to another gated path is a different change, not the same one.
+  to another gated path is a different change, not the same one. The **mode**
+  is hashed too, so flipping the executable bit is a change. Each entry is
+  `path NUL mode NUL sha256hex(content) LF`, unambiguous because NUL cannot
+  occur in a Git path and the other two slots are fixed-width.
 - **A deleted gated file is entered**, via a marker, rather than omitted.
   Omitting it would make *this hook was removed* digest-identical to *this hook
   was never gated*, which is the change a record most needs to be bound to.
-- **No base diff.** The digest is over the tree as it stands, so it reads the
-  same on a branch and on the merged checkout CI judges — unless the base moved
+- **No base diff.** The digest is over the commit's tree as it stands, so it
+  reads the same on a branch and on the merged checkout CI judges — unless the base moved
   a gated file the change also touches, and then the content that would land is
   not the content that was reviewed, which is exactly what should move it. The
   review-scope hash of `dispatch_r2_reviewer` was considered for this and
@@ -669,11 +690,16 @@ that silently does not fire because the file it needed was somewhere else.
 
 **The binding landed on 2026-10-12**, and this paragraph replaces the dated one
 that said it had not. A record now carries `subject`, and the gate recomputes
-that digest from the tree it is pointed at and refuses a record whose `subject`
+that digest from the commit it is pointed at and refuses a record whose `subject`
 is absent or different — so ADR-281 § Consequences ("the gate binds each record
 to the content it reviewed") now describes the gate rather than an intended end
 state. Steps 2.1 and 2.2 of
 `road-to-self-modification-that-a-council-must-pass` are what closed it.
+
+**What the object-store read does NOT close.** Which paths are gated is still
+decided by the judging code and by an import closure it reads from the running
+checkout. In CI that code is the base revision's; locally it is the checkout's
+own, and a local edit to the judging code is outside what any digest answers.
 
 **What the binding does NOT close, said as plainly as the gap it replaces.**
 The digest is computed by the gate from the tree and typed into the record by
