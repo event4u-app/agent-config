@@ -30,25 +30,6 @@
 # DEFINED symbol, a `.md` target must be a token the file actually carries.
 # ---------------------------------------------------------------------------
 surfaces:
-  run_continuation_hook:
-    kind: code
-    bound_kind: code
-    cap: src/scripts/_lib/continuation_ladder.ts:MAX_ITERATIONS
-    no_progress: src/scripts/_lib/loop_guards.ts:stallSignal
-    success_stop: >-
-      continuation_ladder.ts:ladder returns 'complete' when openCount === 0 and
-      blockedCount === 0; run_continuation_hook.ts:main clears the run state.
-    checker: >-
-      run_continuation_hook.ts:scanOpenSteps re-scans the claimed roadmap every
-      fire. It never EXECUTES a step's verify line — it only prints it.
-    human_gate: >-
-      none. The nearest thing is printed prose in _continuationText; the
-      refusedThisTurn check defers to a quality gate, not to a person.
-    terminal_vocabulary: src/scripts/_lib/continuation_ladder.ts:TERMINAL_STATE_BY_ACTION
-    production_consumers:
-      - src/scripts/hooks/concern_registry.ts
-      - src/scripts/hook_manifest.yaml
-
   self_fix:
     kind: code
     bound_kind: code
@@ -112,11 +93,19 @@ surfaces:
     production_consumers:
       - src/domains/meta/README.md
 
+  # bound_kind was `code` until 2026-10-14, pointing at MAX_ITERATIONS and
+  # STALL_WINDOW in _lib/continuation_ladder.ts. The only caller of that ladder,
+  # the run-continuation concern, was withdrawn on its own kill date, so the code
+  # bound had already stopped bounding anything; the owner then decided to
+  # remove the module. What bounds the loop now is prose: a roadmap's finite
+  # step list closes it (`count_open`), and a failure that repeats with budget
+  # left ends it as `stagnated` — both stated in the command. Reported, never
+  # red, which is the honest weight of a bound nothing executes.
   roadmap_process_loop:
     kind: prose
-    bound_kind: code
-    cap: src/scripts/_lib/continuation_ladder.ts:MAX_ITERATIONS
-    no_progress: src/scripts/_lib/continuation_ladder.ts:STALL_WINDOW
+    bound_kind: prose
+    cap: src/domains/product-basic/roadmap/process-full/command.md:count_open
+    no_progress: src/domains/product-basic/roadmap/process-full/command.md:stagnated
     success_stop: >-
       count_open == 0 with the PR open. `blocked` is never presented as
       completion and no checkbox is flipped to reach it.
@@ -153,19 +142,22 @@ instruments:
   rejectedTacticRepeat:
     file: src/scripts/_lib/loop_guards.ts
     role: >-
-      Identity-keyed repeat suppression for run_continuation_hook. Catches what
-      the numeric stall detector cannot see: the same rejected tactic retried
-      while the surrounding prose changes every time.
+      Identity-keyed repeat suppression, built for the withdrawn
+      run_continuation_hook. Catches what a numeric stall detector cannot see:
+      the same rejected tactic retried while the surrounding prose changes every
+      time.
     status: experimental
     expires: '2026-12-12'
     note: >-
-      Deliberately not wired. Its only consumer would be the continuation hook,
-      and giving that hook a new refusal rung before it has demonstrably engaged
-      more than once reverses the order the evidence supports (roadmap Risk 2).
-      The observation it is waiting on is parked in
-      agents/roadmaps/later/road-to-run-continuation-observation.md. The expiry
-      is the date that question comes back, not a date this decision is
-      considered settled.
+      Deliberately not wired, and its prospective consumer is now GONE. It was
+      the continuation hook, withdrawn on its own pre-registered kill date by
+      road-to-what-was-built-and-never-ran Phase 4 — so the original reason for
+      not wiring it (do not give that hook a new refusal rung before it has
+      demonstrably engaged more than once) has been overtaken rather than
+      satisfied. The expiry stands unchanged at the date the question comes
+      back; what comes back with it is now whether this instrument has any
+      consumer at all, which no roadmap owns and which this entry does not
+      decide.
 
   compareTriggers:
     file: src/scripts/_lib/capsule_trigger.ts
@@ -189,17 +181,10 @@ instruments:
     note: Same input gap as compareTriggers — it consumes that function's output.
 
   # --- Live instruments, declared so the axis is shown NOT over-firing. ---
-  # All three are called only from inside their own declaring file. A predicate
-  # that counted importers alone would report every one of them dead; that is
-  # the false-positive class the occurrence criterion exists to remove.
-  detectUnavailableDependency:
-    file: src/scripts/_lib/loop_guards.ts
-    role: Scans a transcript tail for an unavailable-dependency signal.
-
-  DEPENDENCY_SCAN_BYTES:
-    file: src/scripts/_lib/loop_guards.ts
-    role: How much of a transcript tail the dependency scan reads.
-
+  # Called only from inside its own declaring file. A predicate that counted
+  # importers alone would report it dead; that is the false-positive class the
+  # occurrence criterion exists to remove. Two siblings, detectUnavailableDependency
+  # and DEPENDENCY_SCAN_BYTES, left on 2026-10-14 with the ladder that called them.
   StallSignal:
     file: src/scripts/_lib/loop_guards.ts
     role: The shape stallSignal returns — level plus the window it was read over.
@@ -209,7 +194,3 @@ instruments:
   stallSignal:
     file: src/scripts/_lib/loop_guards.ts
     role: Numeric non-advance detector — the open-step count over a window.
-
-  terminalStateFor:
-    file: src/scripts/_lib/continuation_ladder.ts
-    role: Maps a ladder action onto its RunTerminalState.

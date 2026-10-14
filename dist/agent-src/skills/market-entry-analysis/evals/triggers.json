@@ -1,0 +1,73 @@
+{
+  "skill": "market-entry-analysis",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-sentences-the-tree-can-back, whose step made this skill's market-size, growth-rate, price and competitor claims defer to a cited source — which brought the skill into check_routing_coverage's touched-skill scope. Exemplars cover the three entry points the skill's own 'When to use' names: a new market on the table across each of the three axes the Step 0 framing separates (geo, segment, vertical), a saturating market looking for the next growth window, and a regulatory shift that reopens the entry case. Near-misses are the three neighbours the skill's own 'Do NOT use' line names, each sharing its vocabulary and owned by somebody else: a capability gap to close by building or buying (build-buy-partner), a peer-versus-peer narrative (competitive-positioning, which this skill composes rather than replaces), and per-customer economics inside a market already entered (unit-economics-modeling). Counterexamples guard two homonyms this skill's own trigger words carry: 'entry' as a program entry point, and 'market data' as an exchange feed.",
+  "queries": [
+    {
+      "id": "mea-e1",
+      "q": "we're US-only today and the board wants EU — should we enter, and where would we start?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "mea-e2",
+      "q": "we've sold SMB for three years and want to move upmarket — which segment first, SMB to mid-market or straight to enterprise?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "mea-e3",
+      "q": "our core market is saturating — which adjacent vertical actually unlocks the next growth window?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "mea-e4",
+      "q": "the new medical-device regulation just changed what we'd have to ship in healthcare — does that kill the entry case or make it?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "mea-e5",
+      "q": "lohnt sich der Markteintritt in APAC, und mit welchem Brückenkopf fangen wir an?",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "mea-n1",
+      "q": "we lack a billing engine for the new region — do we build it, buy it, or partner?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a capability gap inside the entry, not the entry decision → build-buy-partner"
+    },
+    {
+      "id": "mea-n2",
+      "q": "how do we tell the story against the two incumbents who already own that segment?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "peer-versus-peer narrative; this skill composes it but does not own it → competitive-positioning"
+    },
+    {
+      "id": "mea-n3",
+      "q": "what's our payback period per customer in the market we opened last year?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "economics inside a market already entered → unit-economics-modeling"
+    },
+    {
+      "id": "mea-c1",
+      "q": "the CLI entry point is still src/index.ts — move it to bin/ and update the package manifest",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says entry, means a program entry point"
+    },
+    {
+      "id": "mea-c2",
+      "q": "our market data feed from the exchange lags about forty seconds — where's the backpressure?",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "says market, means an exchange price feed"
+    }
+  ]
+}

@@ -140,10 +140,14 @@ describe('the journal is bound in the dispatch path (1.4)', () => {
         expect(names).not.toContain(CONCERN);
     });
 
-    it('run-continuation still ends the claude stop chain', () => {
+    it('journal-record still ends the claude stop chain', () => {
+        // It was second-from-last until `run-continuation` was withdrawn
+        // (road-to-what-was-built-and-never-ran Phase 4). What this case is
+        // about is the POSITION, not which concern happens to hold it: a
+        // concern that records what a turn did must run after the concerns
+        // that decide it.
         const names = _resolve_concerns(manifest, 'claude', 'stop').map((c) => c.name);
-        expect(names[names.length - 1]).toBe('run-continuation');
-        expect(names).toContain(CONCERN);
+        expect(names[names.length - 1]).toBe(CONCERN);
     });
 });
 

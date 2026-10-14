@@ -160,18 +160,20 @@ function _floatStr(n: number): string {
 
 // ── detection ────────────────────────────────────────────────────────────
 
-/** Escape a string for use as a literal inside a RegExp (Python re.escape). */
+/**
+ * Escape a string for use as a literal inside a `u`-flag RegExp.
+ *
+ * Python's `re.escape` escapes every non-word character, and under `u` that
+ * is not a wider net but a broken one: `\ `, `\#` and `\-` are not identity
+ * escapes there, so a keyword carrying a space, a hash or a dash makes the
+ * whole pattern fail to COMPILE rather than fail to match — and the caller
+ * loses every keyword in the manifest, not one.
+ *
+ * Escaping the syntax characters alone is what `re.escape` meant: every
+ * other character is already literal, so nothing matches differently.
+ */
 function _reEscape(s: string): string {
-    // Python re.escape escapes all non-alphanumeric, non-underscore chars.
-    let out = '';
-    for (const ch of s) {
-        if (/[A-Za-z0-9_]/u.test(ch)) {
-            out += ch;
-        } else {
-            out += `\\${ch}`;
-        }
-    }
-    return out;
+    return s.replace(/[\\^$.*+?()[\]{}|/]/gu, '\\$&');
 }
 
 /** Keyword-vote routing of a query onto one of the manifest's domains. */

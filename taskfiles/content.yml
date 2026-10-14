@@ -365,6 +365,11 @@ tasks:
     desc: Fail if a check_/lint_ gate script reads the wall clock instead of routing through _lib/as_of.ts
     cmd: ./scripts-run src/scripts/lint_deterministic_time {{.QUIET_FLAG}}
 
+  check-permission-deny-syntax:
+    silent: true
+    desc: Fail if a host permission deny-rule pin is stale or renders a rule outside its recorded grammar
+    cmd: ./scripts-run src/scripts/check_permission_deny_syntax
+
   check-pack-conformance-fixture:
     silent: true
     desc: Run the pack-conformance fixture harness (conformant fixture + one seeded twin per fixture-provable gate)

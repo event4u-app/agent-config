@@ -2,7 +2,7 @@
  * A double trigger is one event, not two outcomes.
  *
  * Hosts fire the same slot more than once for a single logical event —
- * `run_continuation_hook.ts` documents the same quirk on `stop` and dedupes it
+ * `run_continuation_hook.ts` documented the same quirk on `stop` and deduped it
  * with an ordinal + open-count + short-window key. The consequence here is
  * arithmetic rather than cosmetic: if a duplicate fire writes a second outcome
  * record, every per-asset rate computed over the stream is inflated by exactly

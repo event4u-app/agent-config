@@ -30,12 +30,16 @@ execution:
 # react-shadcn-ui
 
 > **Grounded stack guidance:** pull idiomatic Do/Don't + docs URLs via
-> `./scripts-run <skills-root>/corpus-grounding/scripts/ground search
+> `node <skills-root>/corpus-grounding/scripts/ground.mjs search
 > --manifest <skills-root>/design-intelligence/data/manifest.json
 > --stack shadcn "<topic>"` (also `--stack react`, `--stack nextjs`). See
 > [`design-intelligence`](../design-intelligence/SKILL.md).
 
 ## Component installer — `scripts/shadcn_add.ts` (gated, assisted)
+
+```bash
+node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs [--list] [--dry-run] [<component> …]
+```
 
 Bundled installer (Apache-2.0-derived, see header + `design-intelligence/ATTRIBUTION.md`)
 wraps `npx shadcn@latest add <components>` — **the only subprocess+network

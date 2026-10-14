@@ -38,6 +38,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // _lib package layout shifts; the TS twins always exist, so a static import is
 // byte-faithful for behaviour (the only observable effect is the --global path).
 import { asOf } from './_lib/as_of.js';
+import { REQUIRED_CARD_FIELDS } from './_lib/experience_card.js';
 import * as _kg from './_lib/knowledge_global.js';
 import * as _kgr from './_lib/knowledge_global_redaction.js';
 import { assertScanned } from './_lib/scan_scope.js';
@@ -201,13 +202,92 @@ function _check_card(
     }
 
     const lines = _splitlines(text);
+    const fm = _parse_frontmatter(text);
 
-    // C1 — size
-    if (lines.length > 150) {
+    // C1 — size. Scoped to the external arm with its five siblings: the README
+    // puts C1 in the C1–C6 band it calls "this variant's invariants", and says
+    // of that band that it is "not part of the `experience` variant at all".
+    // Running it on both arms while the comment below says the band is the
+    // external arm's was a contradiction between the code and its own note.
+    if ((fm['kind'] ?? 'external') !== 'experience' && lines.length > 150) {
         errors.push(`${rel}:${lines.length} — C1: card exceeds 150 lines (${lines.length})`);
     }
 
-    const fm = _parse_frontmatter(text);
+    // The directory is a TAGGED UNION, and C1–C6 belong to ONE arm of it.
+    //
+    // `agents/knowledge/README.md` records the AI council of 2026-08-30
+    // (anthropic + openai, 2/2) deciding the shape: `kind: external` cards
+    // cache expensive remote structural evidence and carry an authoritative
+    // pointer, a trust tier and a pinned source_version — "Checks C1–C6 in
+    // check_knowledge_cards are this variant's invariants". `kind: experience`
+    // cards are mined from this repository's own audit stream, have no remote
+    // source to point at, and the council was explicit that the external
+    // variant's checks "are not part of the `experience` variant at all".
+    //
+    // The port that produced this file froze the retired implementation's
+    // behaviour deliberately, and that implementation predates the union. So
+    // it ran C2 and C4 over an experience card and demanded `links.authoritative`,
+    // `trust` and `type: anti-hallucination` — three fields the experience
+    // contract does not define. One committed card reported three violations
+    // for having exactly the shape its own contract prescribes.
+    //
+    // Dispatching on `kind` rather than skipping: the experience arm is now
+    // checked against `REQUIRED_CARD_FIELDS` from `_lib/experience_card.ts`,
+    // which is the contract the council named. Skipping outright would have
+    // traded a wrong check for no check — nothing else walks this directory
+    // for the experience arm.
+    // Presence, not a non-empty scalar — and the count below is corrected from
+    // an earlier comment that said "four" while naming five, which an
+    // independent review caught. FIVE of the ten required fields can carry
+    // their value on the FOLLOWING lines rather than on the key's own line:
+    // the block lists `trigger_context`, `contradictions` and `supersedes`,
+    // and the block scalars `strategy` and `falsifier`. The tiny scalar-only
+    // parser above reads such a key as the empty string.
+    //
+    // The number is a CEILING on the risk, not a claim that all five bite
+    // today: a card writing `strategy: one short line` parses truthy, so only
+    // the ones actually written as blocks would. Asking for a truthy value
+    // would report a declared `trigger_context:` with three entries under it as
+    // missing — a reading of the parser, not of the card — and the set of
+    // fields that bite would then depend on how each card happened to be
+    // formatted, which is the worst property a required-field check can have.
+    const kind = fm['kind'] ?? 'external';
+    if (kind === 'experience') {
+        const block = FRONTMATTER_RE.exec(text)?.[1] ?? '';
+        const declared = new Set(
+            _splitlines(block)
+                .filter((l) => l.length > 0 && l[0] !== ' ' && l[0] !== '\t' && l.includes(':'))
+                .map((l) => l.slice(0, l.indexOf(':')).trim()),
+        );
+        for (const field of REQUIRED_CARD_FIELDS) {
+            if (!declared.has(field)) {
+                errors.push(`${rel}:0 — E1: experience card missing required '${field}' field`);
+            }
+        }
+
+        // ADR-100's G1–G5 ARE NOT PART OF THE UNION, and returning without them
+        // was a real hole rather than a tidiness point. They ask whether a card
+        // may be in the GLOBAL store — tier, sensitivity, the promotion audit
+        // trail, and G3's confidential-pattern scan — which is an orthogonal
+        // axis to which arm the card belongs to. `agents/knowledge/README.md`
+        // scopes C1–C6 to `kind: external` and says nothing of the G band,
+        // because the G band is about the store.
+        //
+        // Measured before the repair, at --global on a fixture: an experience
+        // card carrying `ops@…` and `build-07.internal` exited 0 and reported
+        // nothing, while the byte-identical card as `kind: external` reported
+        // G3 on the email and G1/G4 on the missing tier and sensitivity. The
+        // promotion path reaches this: `knowledge_global_cli promote` does not
+        // filter on `kind`.
+        //
+        // Scope of the loss, stated rather than overclaimed: promotion still
+        // redacts at write time, so what the early return killed was the
+        // STANDING AUDIT over an already-promoted store, not the write gate.
+        if (global_mode) {
+            errors.push(..._check_global_card(rel, text, fm));
+        }
+        return errors;
+    }
 
     // C4 — trust tagging
     if (!fm['trust']) {

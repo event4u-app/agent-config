@@ -7,6 +7,17 @@ workspaces:
   - engineering
 packs:
   - engineering-base
+triggers:
+  - phrase: "password reset"
+  - phrase: "email verification"
+  - phrase: "sign up"
+  - phrase: "social login"
+  - keyword: "login"
+  - keyword: "registration"
+  - keyword: "session"
+  - keyword: "mfa"
+  - keyword: "passkey"
+  - keyword: "oauth"
 ---
 
 # security
@@ -61,6 +72,29 @@ Focus on: attack surface, trusting user input, authorization gaps.
 
 → For PHP / Laravel specifics (auth helpers, mass assignment, Blade escaping, CSRF middleware): see guideline `docs/guidelines/php/security.md`.
 → For other stacks, follow the framework's hardening guide and the carve-outs above.
+
+### Account flows — the whole lifecycle, not just the login
+
+Sign-up, verification, reset, credential and email change, MFA, federated
+sign-in and logout are one surface. Before judging any of them, trace the path:
+input → identity lookup → verification → secret handling → state change →
+session → response.
+
+- A public auth response is an **observable contract**, not an error string:
+  status, body category, redirect and cookies must not differ between a known
+  and an unknown identity, and the verifier path runs for both.
+- Compare every secret with the library's constant-time primitive, and respect
+  that primitive's length precondition. Never a general-purpose fast hash for a
+  password. Never an invented token, one-time code or salt scheme.
+- Changing an identity — address, phone, password, factor, passkey, recovery
+  codes, a linked provider — needs fresh re-authentication and a notice on the
+  channel that was already verified.
+
+Ground the specifics before enumerating from memory: the account-lifecycle
+failure classes, their required controls and their negative tests live in
+[`threat-modeling`](../threat-modeling/SKILL.md)'s corpus under the
+`authentication` surface class. Every numeric value in them defers to the
+external authority named in the block below.
 
 ### Crypto, password storage, certificates — route, do not guess
 

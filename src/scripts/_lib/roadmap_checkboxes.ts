@@ -2,7 +2,7 @@
  * The checkbox vocabulary and the phase-span rule, in one place.
  *
  * R2 review, findings 11 and 15. Two scanners on the autonomous-run path —
- * `run_checkpoint.countRoadmap` and `run_continuation_hook.scanOpenSteps` —
+ * `run_checkpoint.countRoadmap` and the withdrawn `run_continuation_hook.scanOpenSteps` —
  * each carried their own narrower regex and each scanned the WHOLE file, while
  * both docblocks claimed the dashboard's vocabulary. Two consequences, and
  * they pull in opposite directions:

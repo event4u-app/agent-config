@@ -183,6 +183,21 @@ export const PARTIAL_COVERAGE: readonly string[] = [];
  */
 export type TriggerState = 'none' | 'indeterminate' | 'fired' | 'not-fired' | 'dated-unparsed';
 
+/** One record's `supersedes:` naming another, with the scope it declares. */
+export interface ScopedSuccessor {
+    /** The naming record, e.g. `ADR-281`. */
+    adr: string;
+    /** Its path, relative to the repo root. */
+    file: string;
+    /**
+     * The first sentence of its `supersedes_scope`, verbatim, or a marker when
+     * the field is absent. The first sentence is what a citer needs to decide
+     * whether the clause they are about to cite is the narrowed one; the whole
+     * field is in the successor and is one `adr_cite_check` away.
+     */
+    scope: string;
+}
+
 export interface CiteResult {
     ref: string;
     resolved: boolean;
@@ -200,6 +215,18 @@ export interface CiteResult {
     amendment_blocks: string[];
     /** Other ADR files whose text names this one. */
     referenced_by: string[];
+    /**
+     * Records whose own `supersedes:` names this one, with the first sentence
+     * of their `supersedes_scope`.
+     *
+     * A scoped supersession is one-sided in the frontmatter: the successor
+     * declares it, the record it narrows carries nothing. Reading a successor
+     * only from `superseded_by` therefore reports a record as fully LIVE while
+     * one of its clauses has been replaced — which is what a citer would act
+     * on. The verdict stays LIVE because the rest of the record does bind; what
+     * changes is that the narrowed clause is now visible.
+     */
+    scoped_successors: ScopedSuccessor[];
     /** `provenance.kind` — who decided. Absent when the record carries no axis. */
     provenance_kind?: string;
     /** `provenance.agentic_mode` — descriptive shape of an agentic decision. */
@@ -531,8 +558,41 @@ export function trigger_state(fm: Record<string, string>, asOfDate?: Date): Trig
     return 'indeterminate';
 }
 
+/**
+ * The first sentence of a `supersedes_scope`, including its full stop.
+ *
+ * The YAML folds to one line, so a sentence boundary is a `.`/`!`/`?` followed
+ * by whitespace or the end. An abbreviation inside the scope would split it
+ * early; that is a shorter quotation of a field the reader can open in full,
+ * not a wrong verdict, so it is accepted rather than guessed around.
+ */
+export function first_sentence(text: string): string {
+    const trimmed = text.trim();
+    const m = /^[\s\S]*?[.!?](?=\s|$)/u.exec(trimmed);
+    return (m === null ? trimmed : m[0]).trim();
+}
+
+/** `ADR-281` from `docs/decisions/ADR-281-council-confirmed-self-modification.md`. */
+function successor_id(file: string, fm: Record<string, string>): string {
+    const base = path.basename(file);
+    const m = /^(ADR-(?:[A-Za-z]+-)?\d+)/u.exec(base);
+    if (m !== null) return m[1] as string;
+    const n = fm['adr'];
+    return n !== undefined && n !== '' ? `ADR-${n.padStart(3, '0')}` : base;
+}
+
 /** The one-line answer to "may I cite this as a reason not to act?". */
 export function verdict_for(r: Omit<CiteResult, 'verdict'>): string {
+    const base = _verdict_base(r);
+    if (!r.resolved || r.scoped_successors.length === 0) return base;
+    const names = r.scoped_successors.map((x) => x.adr).join(', ');
+    return (
+        `${base} PARTLY SUPERSEDED IN SCOPE by ${names} — one clause of this record has been ` +
+        'replaced in scope and the rest stands. Read the scope line before citing the clause it names.'
+    );
+}
+
+function _verdict_base(r: Omit<CiteResult, 'verdict'>): string {
     if (!r.resolved) return 'UNRESOLVED — no ADR file carries this number on a scanned surface.';
     const status = (r.status ?? '').toLowerCase();
     // `rejected` is deliberately NOT in this set. On an ADR it means "the
@@ -599,6 +659,7 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
                 trigger_state: 'none',
                 amendment_blocks: [],
                 referenced_by: [],
+                scoped_successors: [],
             };
             return { ...empty, verdict: verdict_for(empty) };
         }
@@ -621,6 +682,7 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
                 trigger_state: 'none',
                 amendment_blocks: [],
                 referenced_by: [],
+                scoped_successors: [],
             };
             return { ...empty, verdict: verdict_for(empty) };
         }
@@ -662,6 +724,32 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
             .filter((f) => f !== match && cited.test(contents.get(f) ?? ''))
             .map((f) => path.relative(repo_root, f));
 
+        // A supersession in scope is declared by the SUCCESSOR and nowhere
+        // else: `supersedes:` plus `supersedes_scope:` on the newer record,
+        // with the older one's `superseded_by` still `—` because the record as
+        // a whole is alive. Reading only the older record therefore reports a
+        // narrowed clause as untouched. This scan is the other direction.
+        const scoped_successors = files
+            .filter((f) => f !== match)
+            .flatMap((f): ScopedSuccessor[] => {
+                const otherFm = parse_frontmatter(contents.get(f) ?? '') ?? {};
+                const declared = otherFm['supersedes'];
+                if (declared === undefined || declared === '' || declared === '—') return [];
+                if (!cited.test(declared)) return [];
+                const scopeRaw = otherFm['supersedes_scope'];
+                return [
+                    {
+                        adr: successor_id(f, otherFm),
+                        file: path.relative(repo_root, f),
+                        scope:
+                            scopeRaw === undefined || scopeRaw.trim() === ''
+                                ? '— (successor declares no `supersedes_scope`; read the successor in full)'
+                                : first_sentence(scopeRaw),
+                    },
+                ];
+            })
+            .sort((a, b) => a.adr.localeCompare(b.adr));
+
         const partial: Omit<CiteResult, 'verdict'> = {
             ref: id,
             resolved: true,
@@ -679,6 +767,7 @@ export function cite_check(refs: string[], repo_root: string = REPO_ROOT): CiteR
             ...(fm['amended_by'] !== undefined ? { amended_by: fm['amended_by'] } : {}),
             amendment_blocks: amendment_blocks(body),
             referenced_by,
+            scoped_successors,
             ...(provenance?.kind !== undefined && provenance.kind !== null
                 ? { provenance_kind: provenance.kind }
                 : {}),
@@ -728,6 +817,10 @@ function render(results: CiteResult[]): string {
             lines.push(`  amendments       ${String(r.amendment_blocks.length)}: ${r.amendment_blocks.join(' · ')}`);
         if (r.referenced_by.length > 0)
             lines.push(`  referenced by    ${String(r.referenced_by.length)} other ADR(s): ${r.referenced_by.join(', ')}`);
+        for (const sc of r.scoped_successors) {
+            lines.push(`  superseded in scope by   ${sc.adr}  ·  ${sc.file}`);
+            lines.push(`    scope          ${sc.scope}`);
+        }
 
         // The two descriptive axes. Printed for every resolved record, absent
         // or not: "the axis is missing" is itself the thing a citer needs to

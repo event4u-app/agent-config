@@ -15,7 +15,7 @@ token_passport:
   basis: chars/4
   catalog_tokens: 0
   commands_tokens: 0
-  other_tokens: 51954
+  other_tokens: 51960
   rules_tokens: 0
-  total_tokens: 51954
+  total_tokens: 51960
 trust_level_default: core

@@ -25,7 +25,7 @@ execution:
 > Token *authoring* skill: the 3-layer DTCG model
 > (**primitive → semantic → component**) with light/dark theming, a
 > TypeScript toolchain (`scripts/tokens.ts` — generate / validate /
-> embed, run via ./scripts-run), and a starter template. Selection of
+> embed, run via node), and a starter template. Selection of
 > *which* token values fit the product comes grounded from
 > [`design-intelligence`](../design-intelligence/SKILL.md) (WCAG-adjusted
 > color sets, typography pairings); this skill turns the selection into a
@@ -66,17 +66,17 @@ under `dark.semantic.*` overriding the same semantic names (emitted as a
 
 ```bash
 # tokens.json → CSS variables (primitives + semantic + components + .dark)
-./scripts-run <skills-root>/design-tokens/scripts/tokens generate \
+node <skills-root>/design-tokens/scripts/tokens.mjs generate \
   --config tokens.json -o assets/design-tokens.css
 
 # tokens.json → Tailwind theme.extend.colors snippet
-./scripts-run …/tokens generate --config tokens.json --format tailwind
+node …/tokens.mjs generate --config tokens.json --format tailwind
 
 # token-discipline lint: hardcoded hex/rgb/px/rem outside token files
-./scripts-run …/tokens validate --dir src/ [--json]
+node …/tokens.mjs validate --dir src/ [--json]
 
 # embeddable inline CSS for standalone HTML artifacts
-./scripts-run …/tokens embed --tokens assets/design-tokens.css --minimal --style
+node …/tokens.mjs embed --tokens assets/design-tokens.css --minimal --style
 ```
 
 `validate --json` emits findings with `"kind": "token_violation"` — the

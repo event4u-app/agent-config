@@ -10592,6 +10592,7 @@ var DEFAULT_CATALOGUE_ROOTS = [
   ...PROJECT_CATALOGUE_ROOTS,
   `~/${HOST_CATALOGUE_ROOT}`
 ];
+var PACKAGE_FALLBACK_CATALOGUE_ROOT = path15.join("dist", "agent-src", "skills");
 var OBSERVATION_LOG = path15.join(
   "agents",
   "evidence",

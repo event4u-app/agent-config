@@ -305,6 +305,42 @@ function set_marketplace_version(p: string, version: string): void {
 }
 
 /**
+ * Rewrite the project-settings template's version pin.
+ *
+ * Here rather than in `release.ts` for the reason this module's header already
+ * gives for its two manifest-version siblings: that file is 211 lines over the
+ * 1,500-line source-size ratchet, so every line in it is charged and every line
+ * here is free. Moved in the change that added the settings-surface assertion,
+ * which needed the room — extraction, not a baseline bump.
+ *
+ * The exit is INLINED rather than calling `die`: `release_publication.ts`
+ * imports from this module, so reaching back for it would be a cycle.
+ */
+function set_template_pin(p: string, version: string): void {
+    // Rewrite the single `agent_config_version:` line in place, preserving the
+    // rest of the YAML byte-for-byte. Quoted value to match the existing pin
+    // style and check_template_pin_drift's tolerant parse.
+    const text = fs.readFileSync(p, 'utf-8');
+    const lines = text.split('\n');
+    let found = false;
+    for (let i = 0; i < lines.length; i += 1) {
+        if (/^\s*agent_config_version\s*:/.test(lines[i]!)) {
+            lines[i] = lines[i]!.replace(
+                /^(\s*agent_config_version\s*:\s*).*/,
+                `$1"${version}"`,
+            );
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        process.stderr.write(`error: set_template_pin: no \`agent_config_version:\` line in ${p}\n`);
+        throw new SystemExitError(2);
+    }
+    fs.writeFileSync(p, lines.join('\n'), 'utf-8');
+}
+
+/**
  * Mirror of Python `str.splitlines()` — split on CR/LF/CRLF and drop a single
  * trailing empty element.
  *
@@ -339,6 +375,7 @@ export {
     jsonDumpsIndent,
     set_augment_manifest_version,
     set_marketplace_version,
+    set_template_pin,
     pyLen,
     pySlice,
     reEscape,

@@ -179,3 +179,68 @@ describe('decision_engine — ground (async) on a real fixture', () => {
         expect(Array.isArray(grounded.evidence_gap)).toBe(true);
     });
 });
+
+// Every shipped corpus, searched without --domain.
+//
+// The first example `corpus-grounding` documents is `search` WITHOUT
+// `--domain`, which routes through `detect_domain` and therefore compiles one
+// `u`-flag RegExp per keyword in every manifest's `detect` block. Two of the
+// six shipped manifests carry a keyword whose escaped form is not a valid
+// `u`-flag escape, so the documented example cannot return rows there.
+//
+// `every-manifest-control` records that reading; `every-manifest` is the
+// obligation. Both run the same sweep so a regression in either direction is
+// visible from one place.
+
+const SHIPPED_MANIFESTS = [
+    'accessibility-auditor',
+    'api-design',
+    'brand',
+    'database',
+    'design-intelligence',
+    'threat-modeling',
+] as const;
+
+/** `search` with no `--domain` on one shipped corpus → exit code + stderr. */
+function searchShippedCorpus(skill: string): { status: number; stderr: string } {
+    const manifest = path.join(REPO_ROOT, 'src', 'skills', skill, 'data', 'manifest.json');
+    expect(fs.existsSync(manifest), `${skill}: manifest must exist`).toBe(true);
+    const r = run(TSX_BIN, [TS, 'search', '--manifest', manifest, 'dashboard layout']);
+    return { status: r.status ?? -1, stderr: r.stderr };
+}
+
+describe('ground search without --domain, across every shipped corpus', () => {
+    it('every-manifest: all six shipped corpora return rows', () => {
+        const failures: string[] = [];
+        for (const skill of SHIPPED_MANIFESTS) {
+            const { status, stderr } = searchShippedCorpus(skill);
+            if (status !== 0) failures.push(`${skill}: exit ${status} — ${stderr.trim().split('\n')[0]}`);
+        }
+        expect(failures, `corpora that cannot run the documented example:\n${failures.join('\n')}`).toEqual([]);
+    }, 120_000);
+
+    it('keyword escaping survives the characters that used to break compilation', () => {
+        // A space, a hash and a dash: a `u`-flag pattern rejects an identity
+        // escape on each, and one rejected keyword took the whole manifest
+        // down with it rather than merely failing to match.
+        const hostile = {
+            detect: { a: ['brand personality'], b: ['#'], c: ['end-to-end'] },
+            domains: { a: {}, b: {}, c: {} },
+        };
+        expect(() => de.detect_domain(hostile as never, 'anything at all')).not.toThrow();
+        expect(de.detect_domain(hostile as never, 'brand personality matters')).toBe('a');
+        expect(de.detect_domain(hostile as never, 'end-to-end coverage')).toBe('c');
+
+        // A syntax character stays escaped, so it is matched as a literal and
+        // not compiled as a wildcard. `default_domain` carries the no-hit
+        // case, so the wildcard reading is distinguishable from a fallback
+        // rather than hiding inside it.
+        const syntax = {
+            detect: { x: ['a.b'] },
+            domains: { x: {}, nohit: {} },
+            default_domain: 'nohit',
+        };
+        expect(de.detect_domain(syntax as never, 'a.b here')).toBe('x');
+        expect(de.detect_domain(syntax as never, 'axb here')).toBe('nohit');
+    });
+});

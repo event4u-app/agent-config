@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI conformance fixture — no handles, the wrapped side of the boxless pair</title>
+<link rel="stylesheet" href="styles.css">
+<!-- D11 (the wrapped side) — added by `road-to-a-structure-reading-without-handles`.
+     Byte-identical to `reference-boxless/index.html` except that the two buttons
+     sit inside a `display: contents` wrapper, and the stylesheet is a
+     byte-identical copy.
+
+     A `display: contents` element generates no box: its children participate in
+     `main`'s layout exactly as if the wrapper were not written, so this page and
+     its sibling are pixel-identical at every width. It is an ordinary technique
+     on a faithful port — a component boundary that must not become a layout box.
+
+     REGISTERED READING: nothing, at every width. A reading that reports a
+     difference here is reporting a markup technique as a design loss, which is
+     the class the whole shape was chosen to be silent on. -->
+<main>
+  <div class="contents">
+    <button>One</button>
+    <button>Two</button>
+  </div>
+  <p>Visible paragraph.</p>
+  <!-- D11c — byte-identical to the sibling's. A boxless wrapper carrying only
+       text renders that text; the census must count it. -->
+  <div class="contents">Inline run inside a boxless wrapper.</div>
+  <!-- D11d — byte-identical to the sibling's. One rendered run, counted once. -->
+  <p><span class="contents">One run, counted once.</span></p>
+  <div class="box"><span class="gone">hidden words that do not render</span></div>
+</main>

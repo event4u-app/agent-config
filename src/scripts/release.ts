@@ -140,6 +140,7 @@ import {
     assert_scheduled_deprecations_clear,
 } from './_lib/release_migration_gate.js';
 import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { assert_settings_surface_delta, writeReleasedSurface } from './_lib/release_settings_surface.js';
 
 // `__doc__.splitlines()[0]` in `_parse_args` — the argparse description. Kept
 // as a referenceable constant so the first docstring line is preserved exactly.
@@ -168,6 +169,7 @@ import {
     SystemExitError,
     set_augment_manifest_version,
     set_marketplace_version,
+    set_template_pin,
     _rstrip,
     _splitlines,
 } from './release_env.js';
@@ -302,9 +304,9 @@ export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
  * same shared classifier — so a degraded run surfaces as the gate's ordinary
  * "fill the head" message instead of a crash mid-release.
  */
-function _derive_head_prefill(prev: string | null): Record<string, string> {
+function _derive_head_prefill(prev: string | null, version?: string): Record<string, string> {
     try {
-        return derive_head_prefill(prev, 'HEAD', REPO_ROOT);
+        return derive_head_prefill(prev, 'HEAD', REPO_ROOT, version);
     } catch (err) {
         process.stderr.write(
             `warning: could not derive release-head highlights (${(err as Error).message}); ` +
@@ -674,29 +676,6 @@ function set_lockfile_version(p: string, version: string): void {
     fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
 }
 
-function set_template_pin(p: string, version: string): void {
-    // Rewrite the single `agent_config_version:` line in place, preserving the
-    // rest of the YAML byte-for-byte. Quoted value to match the existing pin
-    // style and check_template_pin_drift's tolerant parse.
-    const text = fs.readFileSync(p, 'utf-8');
-    const lines = text.split('\n');
-    let found = false;
-    for (let i = 0; i < lines.length; i += 1) {
-        if (/^\s*agent_config_version\s*:/.test(lines[i]!)) {
-            lines[i] = lines[i]!.replace(
-                /^(\s*agent_config_version\s*:\s*).*/,
-                `$1"${version}"`,
-            );
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        die(`set_template_pin: no \`agent_config_version:\` line in ${p}`);
-    }
-    fs.writeFileSync(p, lines.join('\n'), 'utf-8');
-}
-
 // ─── preflight ────────────────────────────────────────────────────────────────
 
 /**
@@ -974,6 +953,7 @@ function execute(
             set_augment_manifest_version(AUGMENT_PLUGIN_JSON, plan.target);
             set_augment_manifest_version(AUGMENT_MARKETPLACE_JSON, plan.target);
             set_template_pin(PROJECT_TEMPLATE, plan.target);
+            writeReleasedSurface(plan.target);
             prepend_changelog(CHANGELOG, plan.changelog_entry);
         }
 
@@ -1583,10 +1563,11 @@ function main(argv: readonly string[] | null = null): number {
     // 120-commit span, paid 3-4× per release. Not the ~25 ms of the line above.
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
-        head: _derive_head_prefill(prev),
+        head: _derive_head_prefill(prev, target),
         mix: measure_mix_obligation(target, prev),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });
+    assert_settings_surface_delta(target, { previewOnly: args.dry_run });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
     // The drift test measures the era AFTER this release's section is

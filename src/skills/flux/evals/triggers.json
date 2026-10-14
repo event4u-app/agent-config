@@ -1,0 +1,78 @@
+{
+  "skill": "flux",
+  "last_eval": "2026-10-13",
+  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which rewrote this skill's grounded Tailwind-layer invocation to the bundled `node <skills-root>/…/ground.mjs` form and so brought it into check_routing_coverage's touched-skill scope. Exemplars are the primitive-library surface its own When-to-use names — forms, modals, dropdowns, toasts, slots and variants — on a project that actually depends on livewire/flux, which is the condition that selects this skill over its two siblings. Near-misses are the three boundaries the skill draws for itself: component state and actions (livewire), a raw Blade partial with no Flux in the project (blade-ui), and the same dialog on the React stack (react-shadcn-ui). Counterexamples guard the word flux where it is not this package at all — the Flux architecture pattern in a Redux codebase, and magnetic flux in a datasheet.",
+  "queries": [
+    {
+      "id": "fx-e1",
+      "q": "build the user-invite modal with Flux",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fx-e2",
+      "q": "which Flux variant should the destructive confirm button use?",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fx-e3",
+      "q": "replace this hand-rolled dropdown with the Flux primitive",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fx-e4",
+      "q": "the project depends on livewire/flux — compose the settings form from its field primitives",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fx-e5",
+      "q": "fill the Flux table's trailing slot with a row actions column",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "fx-e6",
+      "q": "bau das Einladen-Modal mit den Flux-Primitiven",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "fx-n1",
+      "q": "wire the save action and the loading state behind this form",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "component logic and state → livewire"
+    },
+    {
+      "id": "fx-n2",
+      "q": "this is a plain Blade partial and the project has no Flux — build it",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "raw Blade without Flux → blade-ui"
+    },
+    {
+      "id": "fx-n3",
+      "q": "use the shadcn Dialog for the confirm step",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "same element, React stack → react-shadcn-ui"
+    },
+    {
+      "id": "fx-c1",
+      "q": "our Redux store still uses a Flux-style dispatcher — migrate it to Zustand",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "Flux the architecture pattern, not the Livewire package"
+    },
+    {
+      "id": "fx-c2",
+      "q": "the coil datasheet gives magnetic flux in webers — add the unit to the spec table",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

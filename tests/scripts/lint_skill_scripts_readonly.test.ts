@@ -74,4 +74,31 @@ describe('CLI contract — must-fail fixture tree + real repo', () => {
         const r = spawnSync(TSX, [SCRIPT, '--quiet'], { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
         expect(r.status).toBe(0);
     });
+
+    it('bundles-not-double-counted: a .mjs its own .ts produced is read once', () => {
+        const d = path.join(work, 'bundled-skill', 'scripts');
+        fs.mkdirSync(d, { recursive: true });
+        const ungated = 'import fs from "node:fs";\nfs.writeFileSync("out.txt", "x");\n';
+
+        // The source alone: one finding, named by its own path.
+        fs.writeFileSync(path.join(d, 'gen.ts'), ungated);
+        const sourceOnly = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
+        expect(sourceOnly.status).toBe(1);
+        expect(sourceOnly.stderr).toContain('1 ungated write');
+
+        // Its bundle beside it: still one finding, still the source's. Without
+        // the skip this reads 2, and the second names a file nobody edits.
+        fs.writeFileSync(path.join(d, 'gen.mjs'), ungated);
+        const withBundle = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
+        expect(withBundle.status).toBe(1);
+        expect(withBundle.stderr).toContain('1 ungated write');
+        expect(withBundle.stderr).not.toContain('gen.mjs');
+
+        // A .mjs with no .ts beside it is somebody's hand-written script and
+        // is still read — the skip is keyed to production, not to extension.
+        fs.writeFileSync(path.join(d, 'standalone.mjs'), ungated);
+        const standalone = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
+        expect(standalone.stderr).toContain('2 ungated write');
+        expect(standalone.stderr).toContain('standalone.mjs');
+    });
 });

@@ -205,8 +205,71 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
     return { verdict: triggers.length > 0 ? 'needs-council' : 'routine', triggers };
 }
 
-/** Parse `git diff --name-status` output. Throws on a line it cannot read. */
+/**
+ * Parse `git diff --name-status` output, NUL-separated or tab-separated.
+ *
+ * The NUL form is what this file asks git for, and the reason is a fail-OPEN
+ * defect rather than tidiness. Without `-z`, git applies `core.quotePath` and
+ * prints a path with a non-ASCII byte as a C-quoted string —
+ * `".github/workflows/ci-\303\266.yml"`, leading double quote included. Every
+ * trigger regex here anchors at the start of the path, so the quote character
+ * shifted the whole path out of every pattern and a range adding ONLY a CI
+ * workflow classified `routine`. An attacker-shaped path is not needed: one
+ * umlaut in a filename was enough, and the verdict it produced was the
+ * permissive one.
+ *
+ * The tab form is still accepted, because a caller that already holds
+ * non-`-z` output should not get a silent misparse. The discriminator is
+ * sound in both directions: non-`-z` output never contains a NUL byte, and
+ * `-z` output never quotes, so a path carrying a literal tab is read correctly
+ * exactly when it arrives NUL-separated.
+ *
+ * Throws on a record it cannot read — a skipped record is a path the
+ * classifier did not see, which is the same fail-open shape again.
+ */
 export function parseNameStatus(text: string): ChangeEntry[] {
+    return text.includes('\0') ? parseNulRecords(text) : parseTabLines(text);
+}
+
+const STATUS_FIELD_RE = /^[AMDRCTU][0-9]*$/u;
+
+function parseNulRecords(text: string): ChangeEntry[] {
+    const fields = text.split('\0');
+    while (fields.length > 0 && fields[fields.length - 1] === '') {
+        fields.pop();
+    }
+    const out: ChangeEntry[] = [];
+    let i = 0;
+    while (i < fields.length) {
+        const field = fields[i] ?? '';
+        i += 1;
+        if (!STATUS_FIELD_RE.test(field)) {
+            throw new Error(`unreadable name-status record: ${JSON.stringify(field)}`);
+        }
+        const status = field.charAt(0);
+        const want = status === 'R' || status === 'C' ? 2 : 1;
+        if (i + want > fields.length) {
+            throw new Error(`name-status record ${JSON.stringify(field)} is missing ${String(want)} path field(s)`);
+        }
+        const first = fields[i] ?? '';
+        if (first === '') {
+            throw new Error(`name-status record ${JSON.stringify(field)} carries an empty path`);
+        }
+        if (want === 2) {
+            const second = fields[i + 1] ?? '';
+            if (second === '') {
+                throw new Error(`name-status record ${JSON.stringify(field)} carries an empty path`);
+            }
+            out.push({ status, oldPath: first, path: second });
+        } else {
+            out.push({ status, path: first });
+        }
+        i += want;
+    }
+    return out;
+}
+
+function parseTabLines(text: string): ChangeEntry[] {
     const out: ChangeEntry[] = [];
     for (const line of text.split('\n')) {
         if (line.trim() === '') {
@@ -236,16 +299,49 @@ interface Resolved {
     head: string;
 }
 
-function resolvePr(root: string, pr: string): Resolved | null {
-    const v = spawnSync('gh', ['pr', 'view', pr, '--json', 'baseRefName,headRefOid'], { cwd: root, encoding: 'utf8' });
-    if (v.status !== 0) {
+/** The two external commands `resolvePr` runs, injectable so a test can fail one. */
+export interface ResolveDeps {
+    gh: (root: string, args: string[]) => { ok: boolean; out: string };
+    git: (root: string, args: string[]) => { ok: boolean; out: string };
+}
+
+const REAL_DEPS: ResolveDeps = {
+    gh: (root, args) => {
+        const r = spawnSync('gh', args, { cwd: root, encoding: 'utf8' });
+        return { ok: r.status === 0, out: r.stdout ?? '' };
+    },
+    git,
+};
+
+/**
+ * Resolve a PR number to the base and head this classifier diffs.
+ *
+ * The fetch result is READ. It used to be discarded, and discarding it is a
+ * fail-open path with no error anywhere: an offline runner, a revoked token or
+ * a deleted base branch leaves `origin/<base>` at whatever the local clone last
+ * saw, the diff then succeeds against that stale ref, and the verdict is
+ * computed over a range nobody asked for — reported as a verdict rather than as
+ * a failure. A failed fetch now returns null, which `classifyTarget` turns into
+ * `needs-council` with the `diff-unreadable` trigger.
+ */
+export function resolvePr(root: string, pr: string, deps: ResolveDeps = REAL_DEPS): Resolved | null {
+    const v = deps.gh(root, ['pr', 'view', pr, '--json', 'baseRefName,headRefOid']);
+    if (!v.ok) {
         return null;
     }
-    const meta = JSON.parse(v.stdout) as { baseRefName?: string; headRefOid?: string };
+    let meta: { baseRefName?: string; headRefOid?: string };
+    try {
+        meta = JSON.parse(v.out) as { baseRefName?: string; headRefOid?: string };
+    } catch {
+        return null;
+    }
     if (meta.baseRefName === undefined || meta.headRefOid === undefined) {
         return null;
     }
-    git(root, ['fetch', '-q', 'origin', meta.baseRefName, `pull/${pr}/head`]);
+    const fetched = deps.git(root, ['fetch', '-q', 'origin', meta.baseRefName, `pull/${pr}/head`]);
+    if (!fetched.ok) {
+        return null;
+    }
     return { base: `origin/${meta.baseRefName}`, head: meta.headRefOid };
 }
 
@@ -263,7 +359,7 @@ export function classifyTarget(root: string, target: { pr?: string | undefined; 
     if (resolved === null) {
         return failClosed('could not resolve base and head');
     }
-    const diff = git(root, ['diff', '--name-status', '-M', `${resolved.base}...${resolved.head}`]);
+    const diff = git(root, ['diff', '--name-status', '-M', '-z', `${resolved.base}...${resolved.head}`]);
     if (!diff.ok) {
         return failClosed(`git diff ${resolved.base}...${resolved.head} failed`);
     }

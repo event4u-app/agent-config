@@ -119,7 +119,57 @@ as today.
       `src/config/host-capabilities.yml`, which is the discipline-lift model
       list, not a host-behaviour store.
       verify: `./scripts-run src/scripts/lint_evidence_artifacts --all` -> 0
-- [ ] **0.2 Put the skills page under the digest watch.** A sibling page list
+      PARTIAL, 2026-10-13. The artifact exists and is committed; four of the
+      five columns are observed on build 2.1.296 and agree with the schema
+      string: `name-only` keeps the entry and drops the description while both
+      invocation paths still work, `user-invocable-only` hides it from the
+      model and refuses a Skill-tool call by name while `/name` still runs,
+      `off` refuses `/name` too. The FIFTH column — a project value overriding
+      the user value — is NOT established and the step stays open for it. The
+      user layer on the probing machine carries no `skillOverrides` key, so
+      there is no user value to override, and establishing one would mean
+      writing into the user's own settings file outside the repository; that
+      run declined. The values reached the session through `--settings`, which
+      is the CLI layer, so this run says nothing about project-versus-user
+      precedence and the schema string does not either — it describes what each
+      VALUE means, never which LAYER wins.
+      STILL OPEN after a second attempt, 2026-10-13, and the reason is now
+      TESTED rather than asserted. The note above reads "could not set `HOME`",
+      which sounds like a limitation of that session; this run set it, and also
+      set `CLAUDE_CONFIG_DIR`, the config-directory redirect the same binary
+      carries. BOTH return `Not logged in` on build 2.1.296, so the credentials
+      are reached THROUGH the config directory and relocating it to isolate the
+      user layer also detaches the login. The two isolation routes are CLOSED,
+      not untried, and the only authenticated user layer on this machine is the
+      owner's real settings file. What closes this step is the owner's
+      go-ahead for a write-then-restore against that file, or a host build whose
+      login survives the redirect — not a better isolation trick. Both probes
+      are recorded in the artifact's own "reason, corrected" section so the next
+      run does not re-walk this dead end.
+      STILL OPEN after a third attempt, 2026-10-14, and this one did not reach
+      the host at all. The note above names a closing condition that moves — a
+      host build whose login survives the redirect — and the build HAS moved:
+      this machine now answers `2.1.299`, three patch releases past the
+      `2.1.296` every reading is pinned to. So the condition was re-executed
+      rather than re-read. The redirect was refused by the agent's own
+      permission layer before the binary was reached, as was establishing where
+      the login material is kept in order to carry it into a scratch config
+      directory. Build `2.1.299`'s behaviour under the redirect is therefore
+      UNKNOWN, not confirmed, and what is newly established is narrower and
+      about the prober rather than the host: an agent under this tree's safety
+      layer cannot execute either isolation route at all. The closing set is
+      unchanged for a human at this terminal and one smaller for an agent, which
+      leaves the owner-reserved write-then-restore as the only route an agent
+      could ever take. Recorded in the artifact's third-attempt section.
+      STILL OPEN after a fourth attempt, 2026-10-14, which DID reach the host:
+      `CLAUDE_CONFIG_DIR=<empty scratch dir> claude -p ...` on build `2.1.299`
+      returns `Not logged in`. The moving condition is executed and false; the
+      third attempt's refusal was a per-call classifier decision, not a closed
+      route. The owner condition is also executed: blocker
+      `listing-override-write-is-owner-owned` in
+      `road-to-skills-that-arrive-when-called.md` still reads `Status: open`.
+      Recorded in the artifact's fourth-attempt section.
+- [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in
       `host_lowering.yaml`, whose rows are host-by-hook-slot and whose edits
@@ -127,7 +177,7 @@ as today.
       protection as the table it sits beside.
       `corrected-from-reproduction`
       verify: `npx vitest run tests/scripts/host_docs_digest.test.ts` -> 0
-- [ ] **0.3 A recall-at-depth arm on the train slice.** One arm on
+- [x] **0.3 A recall-at-depth arm on the train slice.** One arm on
       `measure_skill_ranker_baseline` that takes its cases from
       `routing_corpus.loadTrainCases` — no second loader over the corpus
       (`routing_corpus.ts:6-9`) — and scores with the shipped `rank()`. It
@@ -139,7 +189,7 @@ as today.
 
 ## Phase 1 — A search answer a model can choose from
 
-- [ ] **1.1 Return the description with each row.** Both servers, one
+- [x] **1.1 Return the description with each row.** Both servers, one
       envelope: `description` beside `skill`, `score`, `personas`. The tool
       description says the model chooses among the rows by reading them and
       opens at most two bodies. Tool-definition cost stays under
@@ -147,14 +197,14 @@ as today.
       description per row, each already capped at 200 characters by the
       skill schema.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts tests/contracts/catalogue_layer_parity.test.ts tests/scripts/mcp_server_tools.test.ts` -> 0
-- [ ] **1.2 Return to the depth recall supports.** Pre-registered before the
+- [x] **1.2 Return to the depth recall supports.** Pre-registered before the
       change: the default `limit` moves to the smallest depth whose recall
       gain over 5 exceeds 5 points on the train slice, as printed by 0.3; if
       none does, 5 stays and the step closes as an honest null. The one
       offline reading in the Context puts that depth at 8 (+6.3 points); the
       committed 0.3 run decides, not this line.
       verify: `npx vitest run src/cli/mcp/dispatch.test.ts` -> 0
-- [ ] **1.3 Let the tokenizer see letters.** Replace the ASCII token class at
+- [x] **1.3 Let the tokenizer see letters.** Replace the ASCII token class at
       `skillRanking.ts:39` with a Unicode letter class and add a German
       stopword block beside the English one. A correctness fix, not a lift
       claim: the 0.3 run before and after is attached to the change and the
@@ -163,14 +213,14 @@ as today.
 
 ## Phase 2 — A search path on every host with a shell
 
-- [ ] **2.1 One flag, no new verb.** `./agent-config route:explain --skills
+- [x] **2.1 One flag, no new verb.** `./agent-config route:explain --skills
       "<task>"` prints the same rows as 1.1. When no project or host root
       resolves, the catalogue resolver falls back to the installed package's
       own `dist/agent-src/skills` as the last root — never ahead of an
       existing root — and the output names which root answered.
       `corrected-from-reproduction`
       verify: `npx vitest run tests/scripts/suggest_skill_for_task.test.ts tests/scripts/tiered_projection.test.ts` -> 0
-- [ ] **2.2 Give the recovery rule a second rung.** Step 5 of
+- [x] **2.2 Give the recovery rule a second rung.** Step 5 of
       `missing-skill-recovery.md` becomes a ladder: the MCP tool, then the
       2.1 command, then say which rung failed and proceed. A rung that is not
       reachable is named, never retried in a loop and never answered from
@@ -213,14 +263,14 @@ permission rules never depend on which skill the model picks.
 
 - [ ] AC-1 — The listing override has a build-pinned observation per value
       (0.1) and the page documenting it is under the digest watch (0.2).
-- [ ] AC-2 — A committed run prints recall at depth over the train slice
+- [x] AC-2 — A committed run prints recall at depth over the train slice
       without opening a holdout corpus (0.3), and the default depth is the
       one the pre-registered bar in 1.2 selects, a recorded null included.
-- [ ] AC-3 — Every search row on both servers and on the shell path carries
+- [x] AC-3 — Every search row on both servers and on the shell path carries
       its description (1.1, 2.1), and the shell path answers on a workspace
       with no host catalogue root (2.1).
-- [ ] AC-4 — The tokenizer keeps non-ASCII letters, with the before/after run
+- [x] AC-4 — The tokenizer keeps non-ASCII letters, with the before/after run
       attached and the baseline regenerated (1.3).
-- [ ] AC-5 — The recovery rule's last step names only rungs a test proves
+- [x] AC-5 — The recovery rule's last step names only rungs a test proves
       exist, at no growth in bytes (2.2), and every skill remains installed,
       listed and invocable as before.

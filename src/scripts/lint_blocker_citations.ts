@@ -21,13 +21,20 @@
  * `lint_blocker_citations`): line numbers drift, so a miss already in the tree
  * is drift rather than a new defect, and the count may only fall.
  *
+ * Usage:
+ *   ./scripts-run src/scripts/lint_blocker_citations
+ *   ./scripts-run src/scripts/lint_blocker_citations --root <repo>
+ *   ./scripts-run src/scripts/lint_blocker_citations --self-test
+ *
  * Exit codes: 0 within the ratchet · 1 above it · 2 usage error.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { checkRatchet } from './_lib/gate_baseline.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 type MissKind = 'missing-file' | 'beyond-end';
@@ -133,11 +140,108 @@ function scanTree(root: string): { misses: Miss[]; scanned: number; citations: n
 
 const _DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
+/**
+ * Five fixtures over a temporary tree, driven through the real CLI.
+ *
+ * Each fixture carries its own baselines file pinned at 0, so the ratchet is
+ * out of the way and a single planted miss has to redden. That is the one thing
+ * the repository's own run cannot show: on the real tree this gate sits two
+ * below its baseline, so a planted citation reads green there — which is why
+ * this gate's `gate-coverage.yml` row carries `no_canary_reason` and leans on
+ * exactly these cases instead.
+ */
+function selfTest(): number {
+    const repoRoot = _DEFAULT_ROOT;
+    const rel = 'src/scripts/lint_blocker_citations.ts';
+    const BASELINE = JSON.stringify({
+        gates: {
+            lint_blocker_citations: {
+                count: 0,
+                landed: '2026-10-13',
+                falsifier: 'self-test fixture — pinned at zero so one planted miss must redden',
+                note: 'Self-test fixture baseline. Not a tree reading.',
+            },
+        },
+    });
+
+    const over = (blockers: string, extra?: { file: string; body: string }): (() => number) => (): number => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'blocker-cites-self-'));
+        try {
+            const roadmaps = path.join(dir, 'agents', 'roadmaps');
+            fs.mkdirSync(roadmaps, { recursive: true });
+            fs.mkdirSync(path.join(dir, 'src', 'config'), { recursive: true });
+            fs.writeFileSync(path.join(dir, 'src', 'config', 'gate-violation-baselines.json'), BASELINE);
+            if (extra !== undefined) {
+                const abs = path.join(dir, extra.file);
+                fs.mkdirSync(path.dirname(abs), { recursive: true });
+                fs.writeFileSync(abs, extra.body);
+            }
+            fs.writeFileSync(path.join(roadmaps, 'road-to-fixture.md'), blockers);
+            return runGateCli(repoRoot, rel, ['--root', dir], repoRoot);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    };
+
+    const THREE_LINES = 'one\ntwo\nthree\n';
+
+    return runSelfTest({
+        gate: 'lint_blocker_citations',
+        minCases: 5,
+        minRejectCases: 2,
+        cases: [
+            {
+                name: 'a citation whose file does not exist is rejected',
+                expect: 'reject',
+                run: over('## Blockers\n\nResolved when `src/scripts/nope.ts:12` says so.\n'),
+            },
+            {
+                name: 'a citation past the end of an existing file is rejected',
+                expect: 'reject',
+                run: over('## Blockers\n\nResolved when `src/scripts/real.ts:99` says so.\n', {
+                    file: 'src/scripts/real.ts',
+                    body: THREE_LINES,
+                }),
+            },
+            {
+                name: 'a citation inside an existing file is accepted',
+                expect: 'accept',
+                run: over('## Blockers\n\nResolved when `src/scripts/real.ts:2` says so.\n', {
+                    file: 'src/scripts/real.ts',
+                    body: THREE_LINES,
+                }),
+            },
+            {
+                name: 'a bare `:12` with no path is not a citation and is accepted',
+                expect: 'accept',
+                run: over('## Blockers\n\nResolved when the block at :12 says so.\n'),
+            },
+            {
+                name: 'the same dead citation OUTSIDE the Blockers section is accepted',
+                expect: 'accept',
+                run: over('## Context\n\nSee `src/scripts/nope.ts:12`.\n\n## Goal\n\nNothing.\n'),
+            },
+            {
+                name: 'a roadmap tree with no Blockers section at all is accepted',
+                expect: 'accept',
+                run: over('# Road to nothing\n\nNo blockers here.\n'),
+            },
+        ],
+    });
+}
+
 function main(argv: string[] = process.argv.slice(2)): number {
     let root = _DEFAULT_ROOT;
     let baselineRoot = _DEFAULT_ROOT;
     for (let i = 0; i < argv.length; i += 1) {
         const arg = argv[i];
+        if (arg === '--self-test') {
+            if (process.env['GATE_SELF_TEST_CHILD'] === '1') {
+                process.stderr.write('lint_blocker_citations: --self-test does not recurse\n');
+                return 2;
+            }
+            return selfTest();
+        }
         if (arg === '--root') {
             const v = argv[i + 1];
             if (v === undefined) {

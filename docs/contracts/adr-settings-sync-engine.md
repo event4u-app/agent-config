@@ -122,7 +122,7 @@ of the following holds:
   § Sync rules — the contract this engine implements.
 - [`scripts/sync_yaml_rt.py`](../../src/scripts/sync_yaml_rt.ts) module
   docstring — the supported YAML subset, listed exhaustively.
-- `tests/test_sync_round_trip.py` — verbatim, scalar-guard, healer,
+- `tests/scripts/sync_yaml_rt.test.ts` — verbatim, scalar-guard, healer,
   CRLF, and synthetic-header pinning.
 - `tests/scripts/sync_agent_settings.test.ts` — CLI integration, profile
   override, malformed-input exit code.

@@ -1,0 +1,688 @@
+{
+  "version": "16.5.0",
+  "entries": {
+    "agent_config_version": {
+      "type": "string",
+      "default": ""
+    },
+    "ai_team.allow_delegate": {
+      "type": "boolean",
+      "default": false
+    },
+    "ai_team.max_calls_per_day": {
+      "type": "integer",
+      "default": 50
+    },
+    "ai_team.model": {
+      "type": "string",
+      "default": "auto"
+    },
+    "ai_team.review_gate.managed": {
+      "type": "boolean",
+      "default": false
+    },
+    "ai_team.review_gate.max_consecutive_blocks": {
+      "type": "integer",
+      "default": 3
+    },
+    "augment.rules_use_symlinks": {
+      "type": "boolean",
+      "default": false
+    },
+    "chat_history.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "chat_history.frequency": {
+      "type": "string",
+      "default": "per_turn",
+      "enum": [
+        "per_turn",
+        "per_phase",
+        "per_tool"
+      ]
+    },
+    "chat_history.text_limits.agent": {
+      "type": "integer",
+      "default": 5000
+    },
+    "chat_history.text_limits.phase": {
+      "type": "integer",
+      "default": 200
+    },
+    "chat_history.text_limits.tool": {
+      "type": "integer",
+      "default": 200
+    },
+    "chat_history.text_limits.user": {
+      "type": "integer",
+      "default": 0
+    },
+    "code_graph.consumer_index_paths": {
+      "type": "array",
+      "default": []
+    },
+    "code_style.docblocks": {
+      "type": "string",
+      "default": "minimal",
+      "enum": [
+        "minimal",
+        "full"
+      ]
+    },
+    "commands.create_pr.detail_level": {
+      "type": "string",
+      "default": "min",
+      "enum": [
+        "min",
+        "med",
+        "max"
+      ]
+    },
+    "commands.create_pr.preview_description": {
+      "type": "boolean",
+      "default": false
+    },
+    "commands.create_pr.screenshots": {
+      "type": "boolean",
+      "default": false
+    },
+    "commands.suggestion.blocklist": {
+      "type": "array",
+      "default": []
+    },
+    "continuity.auto_record": {
+      "type": "string",
+      "default": "on",
+      "enum": [
+        "on",
+        "off"
+      ]
+    },
+    "continuity.run_checkpoints": {
+      "type": "string",
+      "default": "on",
+      "enum": [
+        "on",
+        "off"
+      ]
+    },
+    "cost.budgets.daily": {
+      "type": "number",
+      "default": 0
+    },
+    "cost.budgets.monthly": {
+      "type": "number",
+      "default": 0
+    },
+    "cost.budgets.per_tier.cheap": {
+      "type": "unknown",
+      "default": null
+    },
+    "cost.budgets.per_tier.medium": {
+      "type": "unknown",
+      "default": null
+    },
+    "cost.budgets.per_tier.strong": {
+      "type": "unknown",
+      "default": null
+    },
+    "cost.budgets.weekly": {
+      "type": "number",
+      "default": 0
+    },
+    "cost.enforcement": {
+      "type": "string",
+      "default": "advisory",
+      "enum": [
+        "advisory",
+        "hard-stop"
+      ]
+    },
+    "decision_engine.ask_timeout_seconds": {
+      "type": "integer",
+      "default": 30
+    },
+    "decision_engine.block_on_risk": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "decision_engine.min_confidence": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "decision_engine.on_block": {
+      "type": "string",
+      "default": "stop",
+      "enum": [
+        "stop",
+        "ask",
+        "warn"
+      ]
+    },
+    "decision_engine.require_memory_hits": {
+      "type": "boolean",
+      "default": false
+    },
+    "delivery.merge": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "on-green"
+      ]
+    },
+    "delivery.pr_topology": {
+      "type": "string",
+      "default": "single",
+      "enum": [
+        "single",
+        "stacked"
+      ]
+    },
+    "delivery.wait_for_ci": {
+      "type": "boolean",
+      "default": true
+    },
+    "design.approximation.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "design.approximation.tolerance.color": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "default": null
+    },
+    "design.approximation.tolerance.length": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "default": null
+    },
+    "design.fidelity_mode": {
+      "type": "string",
+      "default": "strict",
+      "enum": [
+        "strict",
+        "structural",
+        "hard-floor"
+      ]
+    },
+    "discipline_profile": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "off",
+        "essential",
+        "full"
+      ]
+    },
+    "eloquent.access_style": {
+      "type": "string",
+      "default": "getters_setters",
+      "enum": [
+        "getters_setters",
+        "get_attribute",
+        "magic_properties"
+      ]
+    },
+    "emergency.orchestration_halt": {
+      "type": "boolean",
+      "default": false
+    },
+    "emergency.orchestration_halt_justification": {
+      "type": "string",
+      "default": ""
+    },
+    "execution.escalation": {
+      "type": "array",
+      "default": [
+        "independent",
+        "council",
+        "team",
+        "owner_owned_check"
+      ]
+    },
+    "execution.fix_loop_max": {
+      "type": "integer",
+      "default": 10
+    },
+    "git.branch_pattern": {
+      "type": "string",
+      "default": "{type}/{slug}"
+    },
+    "git.commit_format": {
+      "type": "string",
+      "default": "ticket-scope",
+      "enum": [
+        "ticket-scope",
+        "ticket-conventional"
+      ]
+    },
+    "git.update_strategy": {
+      "type": "string",
+      "default": "merge",
+      "enum": [
+        "merge",
+        "rebase"
+      ]
+    },
+    "github.pr_reply_method": {
+      "type": "string",
+      "default": "create_review_comment",
+      "enum": [
+        "replies_endpoint",
+        "create_review_comment",
+        "auto"
+      ]
+    },
+    "hooks.code_graph.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.concern_budget.tier1_concerns": {
+      "type": "array",
+      "default": []
+    },
+    "hooks.design_pass.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.design_slop.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.injection_scan.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.rtk_wrap.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.runtime_journal.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.suggestion_capture.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.ui_route_nudge.enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "hooks.verify_before_complete.touched_file_quality": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "shadow",
+        "warn"
+      ]
+    },
+    "host_environment.request_size_caps.bash_max_output_length": {
+      "type": "unknown",
+      "default": null
+    },
+    "host_environment.request_size_caps.max_mcp_output_tokens": {
+      "type": "unknown",
+      "default": null
+    },
+    "knowledge.global_sharing.allowed_tiers": {
+      "type": "array",
+      "default": [
+        "public"
+      ]
+    },
+    "knowledge.global_sharing.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "lean_projection.hosts": {
+      "type": "array",
+      "default": [
+        "claude-code"
+      ]
+    },
+    "lean_projection.mode": {
+      "type": "string",
+      "default": "eager-all",
+      "enum": [
+        "eager-all",
+        "thin",
+        "delivery"
+      ]
+    },
+    "legal_review_prep.acknowledged": {
+      "type": "boolean",
+      "default": false
+    },
+    "legal_review_prep.require_council": {
+      "type": "boolean",
+      "default": true
+    },
+    "memory.learn_on_session_end": {
+      "type": "boolean",
+      "default": false
+    },
+    "memory.redact_patterns": {
+      "type": "array",
+      "default": []
+    },
+    "memory.session_index": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "on",
+        "off"
+      ]
+    },
+    "model.auto_switch": {
+      "type": "string",
+      "default": "suggest",
+      "enum": [
+        "auto",
+        "suggest",
+        "off"
+      ]
+    },
+    "onboarding.onboarded": {
+      "type": "boolean",
+      "default": false
+    },
+    "personal.autonomy": {
+      "type": "string",
+      "default": "auto",
+      "enum": [
+        "on",
+        "off",
+        "auto"
+      ]
+    },
+    "personal.canary_name": {
+      "type": "string",
+      "default": ""
+    },
+    "personal.ide": {
+      "type": "string",
+      "default": ""
+    },
+    "personal.open_edited_files": {
+      "type": "boolean",
+      "default": false
+    },
+    "personal.pr_progress_comments": {
+      "type": "boolean",
+      "default": false
+    },
+    "personal.rtk_installed": {
+      "type": "boolean",
+      "default": false
+    },
+    "personal.user_type": {
+      "type": "string",
+      "default": "",
+      "enum": [
+        "",
+        "consultant",
+        "creator",
+        "developer",
+        "finance",
+        "founder",
+        "gtm",
+        "ops"
+      ]
+    },
+    "planning.closure_pass": {
+      "type": "boolean",
+      "default": true
+    },
+    "planning.completion_review": {
+      "type": "boolean",
+      "default": true
+    },
+    "planning.risk_review": {
+      "type": "boolean",
+      "default": true
+    },
+    "profile.id": {
+      "type": "string",
+      "default": "developer",
+      "enum": [
+        "developer",
+        "content_creator",
+        "founder",
+        "agency",
+        "finance",
+        "ops"
+      ]
+    },
+    "project.audience": {
+      "type": "string",
+      "default": "public",
+      "enum": [
+        "self",
+        "internal",
+        "client",
+        "public"
+      ]
+    },
+    "project.improvement_pr_branch_prefix": {
+      "type": "string",
+      "default": "improve/agent-"
+    },
+    "project.upstream_repo": {
+      "type": "string",
+      "default": ""
+    },
+    "projection.mode": {
+      "type": "string",
+      "default": "legacy-all",
+      "enum": [
+        "legacy-all",
+        "scoped"
+      ]
+    },
+    "projection.rule_packs": {
+      "type": "unknown",
+      "default": []
+    },
+    "projection.rule_workspaces": {
+      "type": "array",
+      "default": []
+    },
+    "quality.local_auto_run": {
+      "type": "boolean",
+      "default": false
+    },
+    "quality.local_auto_run_in_mission": {
+      "type": "boolean",
+      "default": true
+    },
+    "reasoning.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "roadmap.gate_budget.max_cost_per_rolling_7d_usd": {
+      "type": "unknown",
+      "default": null
+    },
+    "roadmap.gate_budget.max_cost_per_run_usd": {
+      "type": "unknown",
+      "default": null
+    },
+    "roadmap.horizon_weeks": {
+      "type": "integer",
+      "default": 0
+    },
+    "roadmap.quality_cadence": {
+      "type": "string",
+      "default": "per_phase",
+      "enum": [
+        "end_of_roadmap",
+        "per_phase",
+        "per_step"
+      ]
+    },
+    "rule_loading_tier": {
+      "type": "string",
+      "default": "balanced",
+      "enum": [
+        "minimal",
+        "balanced",
+        "full",
+        "custom"
+      ]
+    },
+    "screenshots.data_bearing_gate": {
+      "type": "string",
+      "default": "on",
+      "enum": [
+        "on",
+        "off"
+      ]
+    },
+    "screenshots.forbid_terminal_capture": {
+      "type": "boolean",
+      "default": true
+    },
+    "screenshots.identity_allowlist": {
+      "type": "array",
+      "default": []
+    },
+    "subagents.adversarial_council": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "ask",
+        "on"
+      ]
+    },
+    "subagents.implementer_model": {
+      "type": "string",
+      "default": ""
+    },
+    "subagents.judge_model": {
+      "type": "string",
+      "default": ""
+    },
+    "subagents.max_parallel": {
+      "type": "integer",
+      "default": 3
+    },
+    "subagents.model_ceiling": {
+      "type": "string",
+      "default": ""
+    },
+    "subagents.model_map.high": {
+      "type": "string",
+      "default": ""
+    },
+    "subagents.model_map.lite": {
+      "type": "string",
+      "default": ""
+    },
+    "subagents.model_map.medium": {
+      "type": "string",
+      "default": ""
+    },
+    "subagents.quota_arbitrage": {
+      "type": "boolean",
+      "default": true
+    },
+    "update_check.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "verbosity.offer_council_in_delivery": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "removedKeys": [
+    "ai_team.enabled",
+    "ai_team.suppress_setup_hint",
+    "chat_history.max_size_kb",
+    "chat_history.on_overflow",
+    "commands.auto_detect",
+    "commands.create_pr.api_examples",
+    "commands.create_pr.api_paths",
+    "commands.create_pr.ui_paths",
+    "commands.suggestion.confidence_floor",
+    "commands.suggestion.cooldown_seconds",
+    "commands.suggestion.enabled",
+    "commands.suggestion.max_options",
+    "consistency.cross_source",
+    "decision_engine.on_block_fallback",
+    "decision_engine.surface_traces",
+    "explain.enable_last",
+    "hooks.concern_budget.hard_fail",
+    "hooks.concern_budget.max_per_event",
+    "hooks.turn_end_gate.enabled",
+    "hooks.turn_end_gate.language",
+    "hooks.turn_end_gate.promissory",
+    "hooks.turn_end_gate.verification",
+    "knowledge.global_sharing.auto_promote_threshold",
+    "knowledge.global_sharing.freshness.hypothesis_after_days",
+    "knowledge.global_sharing.freshness.stale_after_days",
+    "knowledge.global_sharing.redaction.enabled",
+    "knowledge.global_sharing.redaction.halt_on_trigger",
+    "legal_review_prep.consented_at",
+    "memory.cadence",
+    "memory.review_threshold",
+    "personal.minimal_output",
+    "personal.play_by_play",
+    "personal.pr_comment_bot_icon",
+    "pipelines.skill_improvement",
+    "project.pr_template",
+    "quality.wait_for_remote_ci",
+    "reasoning.auto_gate",
+    "reasoning.components.complexity_first",
+    "reasoning.components.decision_ledger",
+    "reasoning.components.grounding",
+    "reasoning.components.intent",
+    "reasoning.components.notes_first",
+    "reasoning.components.orchestrator",
+    "reasoning.components.prediction_tracking",
+    "reasoning.components.uncertainty_budget",
+    "reasoning.components.verifier_default",
+    "roadmap.dashboard_regen_cadence",
+    "roadmap.skip_pre_run_gate",
+    "subagents.auto",
+    "subagents.budget_routing",
+    "subagents.downshift",
+    "subagents.enabled",
+    "subagents.host_capabilities",
+    "telegraph.speak",
+    "telegraph.speak_scope",
+    "tokens.rich_skills",
+    "verbosity.intent_announcements",
+    "verbosity.post_action_reports",
+    "verbosity.preview_artifacts",
+    "verbosity.routine_confirmations",
+    "worktrees.mode"
+  ],
+  "renamedKeys": [
+    [
+      "planning.challenge_on_create",
+      "planning.closure_pass"
+    ]
+  ]
+}

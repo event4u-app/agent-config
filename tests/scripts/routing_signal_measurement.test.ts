@@ -105,7 +105,28 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 25 -> 27 on 2026-10-06 (third growth of the day): the git.*
         // convention-settings branch touched `conventional-commits-writing`
         // (0x2f = 47) and `merge-conflicts` (0x25 = 37); both seal.
-        expect(sealed.length).toBe(27);
+        //
+        // 27 -> 28 on 2026-10-14: road-to-skill-scripts-that-run-where-they-land
+        // moved the taught runner line in seven skill bodies, and every touched
+        // skill owes a corpus. Six of the seven train; `dashboard-design` is
+        // 0x04 = 4, the LOWEST bucket any row in the freeze artefact has drawn,
+        // and seals. This is the first sealed row since 2026-10-06 and the first
+        // since the ordering claim was last restated, so the claim's scope is
+        // now 18 of 28 rather than 18 of 27, which the freeze artefact's growth
+        // entry for that date states in full.
+        //
+        // 28 -> 31 on 2026-10-14c: `road-to-sentences-the-tree-can-back` made
+        // three dated or unsourced claims defer to their source, and every
+        // touched skill owes a corpus. ALL THREE SEAL, which no earlier growth
+        // records: `market-entry-analysis` is 0x00 = 0, `positioning-strategy`
+        // 0x04 = 4 and `react-native-setup` 0x21 = 33, each below the ceiling
+        // of 51. Three draws under the ceiling has probability (51/256)^3 ~
+        // 0.79 %, so this is the unlikely arm of a fair rule rather than a
+        // choice — the directory names predate the corpus. 0x00 is the floor
+        // of the range: no row can draw lower. The claim's scope moves to
+        // 18 of 31, and the train count does NOT move, which is why the
+        // second line below holds at 109 while this one rises by three.
+        expect(sealed.length).toBe(31);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -232,9 +253,48 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // one each. Both are above the ceiling and train, moving the train
         // count 98 -> 100; the holdout is unchanged at 27, so the seal is
         // untouched by this growth too.
+        //
+        // 127 -> 134 on 2026-10-14: `road-to-skill-scripts-that-run-where-they-land`
+        // moved the taught invocation line to `node <skills-root>/…/<tool>.mjs`
+        // in seven skill bodies, and every touched skill owes a corpus. THE
+        // SECOND LINE BELOW IS THE ONE THAT MATTERS HERE, and for the first
+        // time since 2026-10-06 it moves: `api-endpoint` (0x3b = 59),
+        // `blade-ui` (0x78 = 120), `flux` (0xa2 = 162), `livewire` (0xd9 =
+        // 217), `react-shadcn-ui` (0x47 = 71) and `sql-writing` (0xf0 = 240)
+        // train, moving the train count 100 -> 106; `dashboard-design` is
+        // 0x04 = 4 and SEALS, moving the holdout 27 -> 28. Every comment above
+        // could say the seal was untouched; this one cannot, which is exactly
+        // the case the second line exists to catch rather than assume.
+        //
+        // 134 -> 137 on 2026-10-14: `road-to-one-upstream-that-checks-what-leaves`
+        // steps 1.1 and 1.2 rewrote `upstream-contribute` into a front on the
+        // release ladder and repaired a dangling path in
+        // `learning-to-rule-or-skill` and `context-authoring`, so all three owed
+        // a corpus. `context-authoring` (0xe0 = 224),
+        // `learning-to-rule-or-skill` (0xf8 = 248) and `upstream-contribute`
+        // (0xa7 = 167) are all above the ceiling and train, moving the train
+        // count 106 -> 109; the holdout is unchanged at 28, so the seal is
+        // untouched by this growth.
+        //
+        // 137 -> 140 on 2026-10-14c: `road-to-sentences-the-tree-can-back`
+        // touched `market-entry-analysis`, `positioning-strategy` and
+        // `react-native-setup`, none of which carried a corpus. THE SECOND
+        // LINE BELOW IS THE ONE THAT MOVES HERE, and for the first time it
+        // takes the whole growth: 0x00 = 0, 0x04 = 4 and 0x21 = 33 are all
+        // below the ceiling of 51, so the holdout goes 28 -> 31 and the train
+        // count stays at 109. Every comment above could point at a train
+        // number that rose; this one cannot, so the first line rises only
+        // because the corpus did.
+        //
+        // 140 -> 141 on 2026-10-14d: `road-to-account-lifecycle-threat-rows`
+        // Phase 3 gave `security` the triggers block and the trigger corpus it
+        // had never had — the step exists because "add login with Google" was a
+        // should-trigger for no skill in the tree. `security` (0x5d = 93) is
+        // above the ceiling and trains, moving the train count 109 -> 110; the
+        // holdout is unchanged at 31, so the seal is untouched by this growth.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(127);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
+        expect(all.length).toBe(141);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(31);
     });
 });
 
@@ -273,7 +333,20 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 98 -> 100 on 2026-10-12: `form-handler` (0x5d = 93) and
         // `judge-security-auditor` (0xc8 = 200) both train. See the partition
         // note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(100);
+        // 100 -> 106 on 2026-10-14: six of the seven corpora the runner-line
+        // roadmap added hash above the ceiling and train — `api-endpoint`,
+        // `blade-ui`, `flux`, `livewire`, `react-shadcn-ui`, `sql-writing`.
+        // The seventh, `dashboard-design` (0x04 = 4), sealed and is deliberately
+        // NOT counted here; that it is absent from this number is the seal
+        // working, which is the same sentence the 2026-10-01 and 2026-10-02
+        // growths needed and the five entries between them did not.
+        // 106 -> 109 on 2026-10-14: all three corpora the upstream-ladder
+        // roadmap added hash above the ceiling and train — `context-authoring`,
+        // `learning-to-rule-or-skill`, `upstream-contribute`. Nothing sealed,
+        // so this entry needs no absent-row sentence.
+        // 109 -> 110 on 2026-10-14d: `security` (0x5d = 93) trains. See the
+        // partition note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(110);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

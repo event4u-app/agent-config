@@ -1,0 +1,75 @@
+{
+  "variant": "design",
+  "source": "tests/design-artifacts/fixtures/design.html",
+  "nodes": [],
+  "signature": {
+    "320": {
+      "leaves": {
+        "control": 5,
+        "heading": 5,
+        "media": 0,
+        "text": 5,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1,
+        "5:column": 1,
+        "2:column": 4,
+        "3:column": 1,
+        "2:row": 2
+      },
+      "overflow": true
+    },
+    "375": {
+      "leaves": {
+        "control": 5,
+        "heading": 5,
+        "media": 0,
+        "text": 5,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1,
+        "5:column": 1,
+        "2:column": 4,
+        "3:column": 1,
+        "2:row": 2
+      },
+      "overflow": false
+    },
+    "768": {
+      "leaves": {
+        "control": 5,
+        "heading": 5,
+        "media": 0,
+        "text": 5,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1,
+        "5:column": 1,
+        "2:row": 3,
+        "3:row": 1,
+        "2:column": 3
+      },
+      "overflow": false
+    },
+    "1440": {
+      "leaves": {
+        "control": 5,
+        "heading": 5,
+        "media": 0,
+        "text": 5,
+        "empty": 1
+      },
+      "arrangement": {
+        "4:column": 1,
+        "5:column": 1,
+        "2:row": 3,
+        "3:row": 1,
+        "2:column": 3
+      },
+      "overflow": false
+    }
+  }
+}

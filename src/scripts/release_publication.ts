@@ -488,15 +488,25 @@ export function measure_mix_obligation(
         const to_sha = _resolve_commit(toRef, cwd);
         const reading = measureRange(from_sha, to_sha, loadTaxonomy(), version, cwd);
         const o = reading.response_obligation;
+        // Every bucket the commit view holds, not the two that happened to be
+        // on the obligation. `mixed` was the largest bucket of 16.3.0..16.4.0
+        // — 41 against governance 42 and consumer 1 — and the line named
+        // neither it nor maintenance, so the published figure described under
+        // half the span while reading like the whole of it.
+        const mixed = reading.commit_view.mixed ?? 0;
+        const maintenance = reading.commit_view.maintenance ?? 0;
         return {
             level:
                 `governance-only ${String(o.governance_only)} vs consumer-only ` +
-                `${String(o.consumer_only)} (taxonomy ${reading.taxonomy_version}; ` +
+                `${String(o.consumer_only)} (mixed ${String(mixed)}, ` +
+                `maintenance ${String(maintenance)}; taxonomy ${reading.taxonomy_version}; ` +
                 `range ${from_sha.slice(0, 12)}..${to_sha.slice(0, 12)})`,
             from_sha,
             to_sha,
             governance_only: o.governance_only,
             consumer_only: o.consumer_only,
+            mixed,
+            maintenance,
         };
     } catch (err) {
         // Printed rather than swallowed. Nothing refuses over the reading any

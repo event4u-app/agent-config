@@ -816,6 +816,12 @@ before the record is signed.
       Sensitivity proven rather than assumed: with `deliveryBlocksCompletion` neutralised to
       `return false`, 3 of the 23 fixtures go red; restored, 23/23 green. The 110 pre-existing
       run-continuation tests are unchanged. -->
+      <!-- owner decision 2026-10-14: `_lib/continuation_ladder.ts` is REMOVED, overruling the
+      retention the run-continuation withdrawal recorded. Its only caller had already been
+      withdrawn on its own kill date, so nothing held a run on its delivery position before the
+      removal either; `T7`/`T8` left with their subject. The states above survive as the
+      contract `process-full` states in prose. Whether this item stays closed on prose alone is
+      the owner's to settle when the roadmap wakes. -->
 - [x] **8.2 One page for the owner's review.** The end-of-run PR body carries: the delivery
       target reached, decisions taken and by whom, open owner-owned residue, the scope delta,
       the spend, and the fix-loop epochs.
@@ -1178,6 +1184,10 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       `restore`'s ledger-revocation branch reds exactly `T6`'s withdrawn-grant case, and
       turning `<=` into `<` in `routeCouncil` reds exactly `T10`'s at-the-ceiling case — one
       test each, no collateral, so neither is passing for an unrelated reason. -->
+      <!-- owner decision 2026-10-14: `continuation_ladder` was removed. `T7`, `T8` and the two
+      ladder cases of `T1` left with their subject; `T1`'s test-delta and same-session cases
+      remain, and `T6` keeps its resume assertion without the `WALL_CLOCK_CAP_MS` comparison,
+      since no run cap exists to compare against. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 - [x] AC-2 — independent test provenance is recorded per test, and critical tests are at L3 or
       L4 wherever two providers are configured.
@@ -1661,6 +1671,11 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       no decisions closes nothing, which is what makes the resume load-bearing rather than
       decorative. Neutralising the ladder's wall-clock branch reds this fixture's halt case
       (plus one pre-existing T7/T8 case that pins the same branch) and nothing else. -->
+      <!-- owner decision 2026-10-14: `continuation_ladder` was removed, so the run half of this
+      composition left with its subject. The `AC-7` describe keeps the mission half — the record
+      survives the boundary, one resume twelve hours later re-asks nothing, and a record without
+      decisions closes nothing. The claim that a run is bounded while the mission is not is no
+      longer exercised by any code; reopening this criterion is the owner's call. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 > **2026-10-06 note (road-to-modules-that-something-calls.md Phase 2.3).** Seven
