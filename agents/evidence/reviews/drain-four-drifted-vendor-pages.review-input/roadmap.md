@@ -106,11 +106,14 @@ the next round.
 scheduled failure only to whoever last edited the cron line; the job writes
 nothing, and nothing an agent session reads lists scheduled-workflow outcomes.
 The council (2026-10-14, two rounds, anthropic + openai) agreed on that line and,
-in round 2, on the one change: a scheduled red now opens one issue under a fixed
-title in `host-docs-digest.yml`, or comments on it while it stays open, with
-`issues: write` granted to that job only. `tests/scripts/host_docs_digest_workflow.test.ts`
-pins the route, the schedule-only condition, the job-scoped grant and the
-no-`--write` bound; it was seen red with the step absent.
+in round 2, on the one change: a scheduled drift red in `host-docs-digest.yml`
+now opens one issue under a fixed title, or comments on it while it stays open.
+After ratification round 5 refused the first shape, the watch job holds only
+`contents: read` and sets an explicit `drifted` output; a separate `route-drift`
+job holds `issues: write`, checks nothing out and files the issue.
+`tests/scripts/host_docs_digest_workflow.test.ts` pins the route, the
+schedule-only and drift-only conditions, the job split and the no-`--write`
+bound; each guard was seen red before it held.
 
 Both seats named the same limit: an issue is a route, not an owner, and a route
 nobody reads is the same silence elsewhere. Who triages it is the maintainer's
