@@ -998,7 +998,7 @@ function _isCliEntry(): boolean {
 }
 
 if (_isCliEntry() || process.argv[1] === _HERE) {
-    process.exit(main());
+    process.exitCode = main();
 }
 
 export {

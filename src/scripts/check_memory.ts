@@ -895,7 +895,7 @@ function _isCliEntry(): boolean {
 const _isMain =
     _isCliEntry();
 if (_isMain) {
-    process.exit(main());
+    process.exitCode = main();
 }
 
 export { main };
