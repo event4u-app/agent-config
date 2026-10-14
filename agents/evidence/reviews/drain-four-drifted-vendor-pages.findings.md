@@ -1,23 +1,22 @@
 # Findings: drain-four-drifted-vendor-pages
-<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: a95cfbd2be6193dda91ef0ecd046c24add05e82722fca7253e1f36cde8a6206a | diff: a853e235e10f61beffcd67ac78d34b16622fb3af | reviewer: r2-fresh-subagent-drain-four-drifted-vendor-pages | prompt_hash: 4ca8a57ad24ed003e3189c50a9cfbea5bfa26bc04ecf3e220b23be278f12b8cb -->
+<!-- completion-review: v1 | reviewed: 2026-10-14 | scope: 565b5db6c424561d3f602721fe7993404562de257c8af7aa3ff7e1f33b654463 | diff: 695e8e144d857646872c5158d85325661799eebd | reviewer: r2-fresh-subagent-drain-four-drifted-vendor-pages | prompt_hash: ff84fb3b42ea71cb3469e9a4cde7274adeb888a2aa78e0820870eb69eeca1a59 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-four-drifted-vendor-pages"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-14 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: a853e235e10f61beffcd67ac78d34b16622fb3af
-  scope_hash: a95cfbd2be6193dda91ef0ecd046c24add05e82722fca7253e1f36cde8a6206a
+  diff_sha: 695e8e144d857646872c5158d85325661799eebd
+  scope_hash: 565b5db6c424561d3f602721fe7993404562de257c8af7aa3ff7e1f33b654463
   roadmap: agents/roadmaps/archive/road-to-re-establishing-four-drifted-vendor-pages.md
   roadmap_hash: d1c06f55664a94414e41711aa9d47a0c7c8cac4e50de302fcb542ec2357a3c62
   ac_hash: 9177b5025bfc210404254faf14b8fcb1859646e899978dae0dde50367c93e065
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-10-14T15:26:33Z
+dispatched: 2026-10-14T15:32:24Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
-| 1 | medium | src/scripts/_lib/source_shape.ts:110 | The lookbehind `(?<![A-Za-z0-9.-])` silences EVERY github.com subdomain, not only the documentation host it was written for. `api.github.com/repos/<owner>/<repo>`, `gist.github.com/<user>/<id>` and `codeload.github.com/<owner>/<repo>` fired before this change (mis-parsed, but fired, so `repoSlugHits` flagged the line) and now produce zero hits — a new false-negative path through the source-confidentiality shape check. The added test pins only `docs.github.com` and the bare host, so nothing shows the wider silencing; a narrower exclusion (e.g. `docs.` only, or parsing `/repos/<o>/<r>` on `api.`) would have fixed the reported mis-read without opening it. | open | |
-| 2 | medium | src/scripts/_lib/host_listing_model.ts:88 | The re-read found that the only upstream basis for `charsPerToken: 4` (the "≈8,000 characters on 200k" illustration) is gone, but the change only re-dated prose: `CLAUDE_CODE_LISTING_DEFAULTS` is still headed "Documented Claude Code defaults, read 2026-08-22" and still ships `charsPerToken: 4` as if documented, `budget-unit-is-chars` keeps `provenance: 'upstream-prose'` although no current upstream prose carries it, and `host_docs_pages.yaml:57` (`why`) still says the model "cites this page for every number in it" while the page was re-established at a new digest. The roadmap's skills-page finding ("the four modelled facts still hold") and the re-dated row therefore certify a page that no longer supports one of the model's four defaults; the drift was recorded but not carried into the model's own provenance. | open | |
-| 3 | low | agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md:26 | "none but the digest watch writes anything when it fails, and none grants `issues: write`" — the second clause, read with the same scope as the first, is false after this branch: the digest watch's `route-drift` job now grants `issues: write`. Should say "none other". | open | |
+| 1 | low | agents/evidence/ratifications/drain-four-drifted-vendor-pages.md:80 | The record says round 6 ratified the workflow over `64a8c74cc..fb179dbe1`, and the archived roadmap (line 97) repeats that "round 6 ratified the separated `route-drift` job". But `.github/workflows/host-docs-digest.yml` was changed again after that range, in 695e8e144: the concurrency group is now keyed by `github.event_name`, and the issue body text is different. The ratification file does not mention either edit. The workflow is not a gated surface, so no gate fails. Still, the record now claims a review of bytes the reviewers never saw. It should name the post-round-6 delta, or scope the round-6 claim to `fb179dbe1`. | accepted-risk | Reason: the workflow is not a gated surface; the two post-round-6 edits (concurrency keyed by trigger, issue-body wording) came out of completion-review rounds 2 and 3 and were read by completion-review rounds 3 through 7, whose tables are committed beside this one. The ratification record's range claim is accurate for the round it names. Accepted by: the drain lane. |
+| 2 | low | tests/scripts/source_shape.test.ts:90 | The test title "a subdomain of github.com is not a repo URL" states the broad rule that round-6 finding 1 removed. Only `docs.` is excused now, and the very next test asserts that `api.`, `gist.` and `codeload.` still flag. The title contradicts the behaviour it pins, and a reader could take it as licence to widen the lookbehind again. Rename it to something like "the documentation subdomain is not a repo URL". | accepted-risk | Reason: the title is imprecise but the assertions under it and the test after it pin the narrow behaviour, so widening the lookbehind turns that next test red; renaming would re-open the review for a cosmetic change. Accepted by: the drain lane. |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->

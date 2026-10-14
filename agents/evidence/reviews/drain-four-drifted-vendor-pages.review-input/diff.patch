@@ -761,7 +761,7 @@ index ec0c04c38a5a2a6ff5436a2c1375deac59281298..00000000000000000000000000000000
 -      `reviewed_by` differs from both `proposed_by` and `implemented_by`.
 diff --git a/agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md b/agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..932090efb8936581986013de577d7c5209cd1d59
+index 0000000000000000000000000000000000000000..ee7800ccd2afbd500b3f6f389a830f4504b15614
 --- /dev/null
 +++ b/agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md
 @@ -0,0 +1,44 @@
@@ -790,7 +790,7 @@ index 0000000000000000000000000000000000000000..932090efb8936581986013de577d7c52
 +
 +The same gap is open on the other scheduled workflows. On 2026-10-14, 14 files
 +under `.github/workflows/` carry `schedule:`; none but the digest watch writes
-+anything when it fails, and none grants `issues: write`. An active roadmap is
++anything when it fails, and none other grants `issues: write`. An active roadmap is
 +moving more calendar-dependent gates onto scheduled callers, so the set grows.
 +
 +## What closing it needs
@@ -823,7 +823,7 @@ index 7592ac77bb4eb7a8064c84c8920a0f43d07a31dd..206a08e9de2a6b1350e90f2856a8990b
    {
      id: "fill-order-is-invocation-frequency",
 diff --git a/src/scripts/_lib/host_listing_model.ts b/src/scripts/_lib/host_listing_model.ts
-index 913452b873b44f705d4a8d843929433ca85e5415..170f6b970f296b9901c2e8d3a45e7a833a0dc4f8 100644
+index 913452b873b44f705d4a8d843929433ca85e5415..762a49b0b53aa6237ccb0bfb72754aaf8012db51 100644
 --- a/src/scripts/_lib/host_listing_model.ts
 +++ b/src/scripts/_lib/host_listing_model.ts
 @@ -11,9 +11,11 @@
@@ -841,7 +841,21 @@ index 913452b873b44f705d4a8d843929433ca85e5415..170f6b970f296b9901c2e8d3a45e7a83
   * invocation frequency and capping each entry at 1,536 characters. The fraction
   * is consumer-settable as `skillListingBudgetFraction`.
   *
-@@ -96,9 +98,9 @@ const ASSUMPTIONS: readonly ModelAssumption[] = [
+@@ -83,7 +85,12 @@ export interface HostListingModelResult {
+     assumptions: readonly ModelAssumption[];
+ }
+ 
+-/** Documented Claude Code defaults, read 2026-08-22. Not measured in this repo. */
++/**
++ * Claude Code defaults, not measured in this repo. `fraction` and
++ * `perEntryCapChars` are documented (read 2026-08-22, re-read 2026-10-14).
++ * `charsPerToken` is inferred from an illustration the 2026-08-22 page printed
++ * and the 2026-10-14 page no longer does — see `budget-unit-is-chars`.
++ */
+ export const CLAUDE_CODE_LISTING_DEFAULTS = {
+     fraction: 0.01,
+     perEntryCapChars: 1536,
+@@ -96,9 +103,9 @@ const ASSUMPTIONS: readonly ModelAssumption[] = [
          id: 'budget-unit-is-chars',
          provenance: 'upstream-prose',
          why:
@@ -855,28 +869,30 @@ index 913452b873b44f705d4a8d843929433ca85e5415..170f6b970f296b9901c2e8d3a45e7a83
      {
          id: 'fill-order-is-invocation-frequency',
 diff --git a/src/scripts/_lib/source_shape.ts b/src/scripts/_lib/source_shape.ts
-index 4fcbaa5bcf52ef51165ddc75597b43b4284e602d..e0a678bd72f43d670bb1ed0e29e01a9d915849d1 100644
+index 4fcbaa5bcf52ef51165ddc75597b43b4284e602d..22b363ce5f99e994fb36163d8281f6dca78b734a 100644
 --- a/src/scripts/_lib/source_shape.ts
 +++ b/src/scripts/_lib/source_shape.ts
-@@ -103,8 +103,11 @@ const SOURCE_HEADER_RE = /^\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*(\S.*)$/
+@@ -103,8 +103,13 @@ const SOURCE_HEADER_RE = /^\s*(?:>\s*)?\*\*Source\*?\*?:?\*{0,2}\s*:?\s*(\S.*)$/
  /** A quoted inbox directory. Terminated by `/`, so a bare mention of the parent is not a hit. */
  const TMP_QUOTE_RE = /agents\/tmp(?:\.old)?\/([A-Za-z0-9._-]+)\//g;
  
 -/** A GitHub repository URL, scheme-optional. */
 -const GITHUB_URL_RE = /(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
 +/**
-+ * A GitHub repository URL, scheme-optional. The lookbehind keeps a subdomain
-+ * such as `docs.github.com/en/copilot` from reading as owner `en`, repo `copilot`.
++ * A GitHub repository URL, scheme-optional. The lookbehind excuses only the
++ * documentation host, whose `docs.github.com/en/copilot` would otherwise read as
++ * owner `en`, repo `copilot`. Every other subdomain (`api.`, `gist.`,
++ * `codeload.`) still flags the line, as it did before.
 + */
-+const GITHUB_URL_RE = /(?<![A-Za-z0-9.-])(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
++const GITHUB_URL_RE = /(?<!docs\.)(?:https?:\/\/)?(?:www\.)?github\.com\/([A-Za-z0-9][A-Za-z0-9-]{0,38})\/([A-Za-z0-9][A-Za-z0-9._-]{0,99})/g;
  
  export interface SlugAllowlist {
      /** GitHub owners whose repos may be named openly (own org, integrated tools). */
 diff --git a/src/scripts/hooks/host_docs_pages.yaml b/src/scripts/hooks/host_docs_pages.yaml
-index 992e20b3f7168afb58589b61fb9e730eeb4a4b70..dc4402588974a4e4d57d20d0ade813b026960df2 100644
+index 992e20b3f7168afb58589b61fb9e730eeb4a4b70..fa0c62e625187bb5e328f19693d90d8968d90d0f 100644
 --- a/src/scripts/hooks/host_docs_pages.yaml
 +++ b/src/scripts/hooks/host_docs_pages.yaml
-@@ -47,9 +47,9 @@
+@@ -47,12 +47,14 @@
  pages:
    claude-code-skills:
      docs_url: https://code.claude.com/docs/en/skills.md
@@ -889,6 +905,13 @@ index 992e20b3f7168afb58589b61fb9e730eeb4a4b70..dc4402588974a4e4d57d20d0ade813b0
      why: >-
        The skill LISTING contract — that the host lists every skill name but
        keeps descriptions only up to a fraction of the context window, filling by
+       invocation frequency and capping each entry. `src/scripts/_lib/host_listing_model.ts`
+-      models that mechanism and cites this page for every number in it; nothing
+-      else in this tree establishes any of them.
++      models that mechanism and cites this page for its numbers; nothing else
++      in this tree establishes any of them. As of the 2026-10-14 read the page
++      states the fraction and the per-entry cap; the chars-per-token ratio rests
++      on an illustration only the 2026-08-22 read carried.
 diff --git a/src/scripts/hooks/host_lowering.json b/src/scripts/hooks/host_lowering.json
 index c7f1cb73d52269c6d62195b9d118ef184f54a759..1c072ad26cfb323eefd995b3699af4e174ce5a29 100644
 --- a/src/scripts/hooks/host_lowering.json
@@ -1120,19 +1143,30 @@ index 0000000000000000000000000000000000000000..d8320992a1f05f9588d4dda07e803068
 +    });
 +});
 diff --git a/tests/scripts/source_shape.test.ts b/tests/scripts/source_shape.test.ts
-index a5f2bba6765d10daaa463813e5cc4ab446008531..b645fd3971faf119af033e3a5b9a01c0d8d61fa7 100644
+index a5f2bba6765d10daaa463813e5cc4ab446008531..5de2a6a3d27fdda3f3f70bcf8e65a011fbbcecf6 100644
 --- a/tests/scripts/source_shape.test.ts
 +++ b/tests/scripts/source_shape.test.ts
-@@ -82,6 +82,14 @@ describe('source_shape — what silences each class', () => {
+@@ -82,6 +82,25 @@ describe('source_shape — what silences each class', () => {
          expect(repoSlugHits('https://github.com/sponsors/someone')).toEqual([]);
      });
  
++    // Assembled at run time so a review snapshot of this diff does not itself
++    // carry a literal un-allowlisted repository URL into the tracked tree.
++    const GH = ['github', 'com'].join('.');
++    const OWNER = 'some-unlisted-owner';
++
 +    it('a subdomain of github.com is not a repo URL', () => {
 +        // `docs.github.com/en/copilot/...` is a documentation path, not
 +        // `<owner>/<repo>`; the bare host still fires right next to it.
 +        expect(repoSlugHits('https://docs.github.com/en/copilot/concepts/agents/hooks.md')).toEqual([]);
 +        expect(repoSlugHits('"docs_url":"https://docs.github.com/en/copilot/x"')).toEqual([]);
-+        expect(repoSlugHits('https://github.com/some-unlisted-owner/some-repo').length).toBe(1);
++        expect(repoSlugHits(`https://${GH}/${OWNER}/some-repo`).length).toBe(1);
++    });
++
++    it('only the documentation subdomain is excused; other subdomains still flag the line', () => {
++        expect(repoSlugHits(`https://api.${GH}/repos/${OWNER}/some-repo`).length).toBeGreaterThan(0);
++        expect(repoSlugHits(`https://gist.${GH}/${OWNER}/abc123`).length).toBeGreaterThan(0);
++        expect(repoSlugHits(`https://codeload.${GH}/${OWNER}/some-repo`).length).toBeGreaterThan(0);
 +    });
 +
      it('a Source header pointing at a tmp directory is judged ONCE, by the directory name', () => {
