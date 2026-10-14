@@ -1,6 +1,11 @@
 /**
  * The run-continuation termination ladder — the pure decision, on its own.
  *
+ * The concern that called this was withdrawn on its own pre-registered kill
+ * date (road-to-what-was-built-and-never-ran Phase 4). This module is kept: it is the decision the
+ * withdrawal did NOT test, it is reached from an end-to-end fixture, and a
+ * successor would start here rather than from nothing.
+ *
  * Extracted from `hooks/run_continuation_hook.ts` by `road-to-wired-instruments`
  * Phase 2, for two reasons and one constraint. The reasons: the ladder is a pure
  * function over a state record and three numbers, and it is the surface Phase 2
@@ -294,7 +299,7 @@ export function ladder(
     // progress is definitionally zero: the checkboxes are all flipped and the
     // remaining work is a CI red or a moved target. Applying it here would halt
     // a healthy delivery loop on its third turn — a stall manufactured by the
-    // stall detector, which is exactly the failure `run_continuation_hook`'s own
+    // stall detector, which is exactly the failure the withdrawn `run_continuation_hook`'s own
     // header warns about in the abstract and the one this file's mechanics call
     // "a metric that stops moving because the MEASUREMENT broke". The iteration
     // and wall-clock caps above still bound the loop; only this rung is skipped.

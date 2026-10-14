@@ -5,7 +5,7 @@
  * primitives the stop-event loop needs and did not have, each closing a failure
  * that is invisible while it happens.
  *
- * Extracted rather than added to `run_continuation_hook.ts`: that file is 1,504
+ * Extracted rather than added to `run_continuation_hook.ts`: that file was 1,504
  * lines and `check_source_size_budget` charges every line above 1,500, so the
  * same code there would cost a budget it does not cost here. The seam also makes
  * all three testable without a host payload.

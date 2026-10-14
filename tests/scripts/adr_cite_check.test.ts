@@ -19,6 +19,7 @@ import {
     corpus_survey,
     cited_refs,
     normalise_ref,
+    first_sentence,
     parse_frontmatter,
     trigger_state,
     unresolved_basis_refs,
@@ -182,7 +183,85 @@ beforeAll(() => {
         ].join('\n'),
     );
 
-    write('docs/decisions/INDEX.md', '# Index\n\nADR-001 ADR-020 ADR-028 ADR-035 ADR-232\n');
+    write(
+        'docs/decisions/ADR-310-scoped-target.md',
+        [
+            '---',
+            'adr: 310',
+            'status: accepted',
+            'date: 2026-09-01',
+            'decision: scoped-target',
+            'superseded_by: —',
+            'review_trigger: >-',
+            '  Reopen if the rejected mechanism is proposed again.',
+            '---',
+            '',
+            '## Decision',
+            '',
+            'Rejection 2: no loop commits without human approval.',
+            '',
+        ].join('\n'),
+    );
+
+    write(
+        'docs/decisions/ADR-311-scoped-successor.md',
+        [
+            '---',
+            'adr: 311',
+            'status: accepted',
+            'date: 2026-10-01',
+            'decision: scoped-successor',
+            'supersedes: ADR-310',
+            'supersedes_scope: >-',
+            '  Rejection 2 of ADR-310 only, which becomes a council record rather than',
+            '  a human approval. Nothing else in that record. Every other rejection stands.',
+            'review_trigger: >-',
+            '  Reopen if the council stops being reachable.',
+            '---',
+            '',
+            '## Decision',
+            '',
+            'Body.',
+            '',
+        ].join('\n'),
+    );
+
+    write(
+        'docs/decisions/ADR-312-scope-less-successor.md',
+        [
+            '---',
+            'adr: 312',
+            'status: accepted',
+            'date: 2026-10-02',
+            'decision: scope-less-successor',
+            'supersedes: ADR-310',
+            'review_trigger: >-',
+            '  Reopen if the scope is ever written down.',
+            '---',
+            '',
+            'Body with no supersedes_scope.',
+            '',
+        ].join('\n'),
+    );
+
+    write(
+        'docs/decisions/ADR-031-near-miss.md',
+        [
+            '---',
+            'adr: 31',
+            'status: accepted',
+            'date: 2026-04-01',
+            'decision: near-miss',
+            'review_trigger: >-',
+            '  Reopen if the numbering scheme changes.',
+            '---',
+            '',
+            'A record whose number is a prefix of ADR-310 and ADR-311.',
+            '',
+        ].join('\n'),
+    );
+
+    write('docs/decisions/INDEX.md', '# Index\n\nADR-001 ADR-020 ADR-028 ADR-031 ADR-035 ADR-232 ADR-310 ADR-311 ADR-312\n');
 });
 
 afterAll(() => {
@@ -254,6 +333,66 @@ describe('amendment_blocks', () => {
 
     it('finds nothing in an unamended body', () => {
         expect(amendment_blocks('## Context\n\nplain text\n')).toEqual([]);
+    });
+});
+
+describe('scoped-successor — a supersession in scope reaches the record it names', () => {
+    it('scoped-successor is printed with the naming ADR and the scope, and the verdict stays LIVE', () => {
+        const [r] = cite_check(['ADR-310'], root);
+        expect(r?.resolved).toBe(true);
+        expect(r?.scoped_successors[0]).toEqual({
+            adr: 'ADR-311',
+            file: 'docs/decisions/ADR-311-scoped-successor.md',
+            scope:
+                'Rejection 2 of ADR-310 only, which becomes a council record rather than ' +
+                'a human approval.',
+        });
+        // A scoped supersession narrows one clause; it does not kill the record,
+        // so the verdict must not read as a dead lock.
+        expect(r?.verdict).toContain('LIVE');
+        expect(r?.verdict).not.toContain('NOT A LIVE LOCK');
+    });
+
+    it('scoped-successor is absent on a record no `supersedes:` names', () => {
+        const [r] = cite_check(['ADR-035'], root);
+        expect(r?.scoped_successors).toEqual([]);
+    });
+
+    it('scoped-successor does not fire on a PARTIAL ADR-number match', () => {
+        // `ADR-310` must not be read as a successor of `ADR-31`, nor `ADR-3100`
+        // of `ADR-310`. The back-reference regex is word-bounded; this pins it
+        // on the `supersedes:` path too, where a loose match would attach a
+        // scope note to a record nobody narrowed.
+        const [r] = cite_check(['ADR-031'], root);
+        expect(r?.scoped_successors).toEqual([]);
+    });
+
+    it('scoped-successor reports EVERY record whose supersedes names this one', () => {
+        const [r] = cite_check(['ADR-310'], root);
+        expect(r?.scoped_successors.map((x) => x.adr)).toEqual(['ADR-311', 'ADR-312']);
+    });
+
+    it('scoped-successor says so when the successor declares no scope', () => {
+        const [r] = cite_check(['ADR-310'], root);
+        const bare = r?.scoped_successors.find((x) => x.adr === 'ADR-312');
+        expect(bare?.scope).toContain('declares no `supersedes_scope`');
+    });
+
+    it('first_sentence takes the first sentence and leaves the rest', () => {
+        expect(first_sentence('One. Two. Three.')).toBe('One.');
+        expect(first_sentence('  Only one sentence, no stop')).toBe('Only one sentence, no stop');
+        expect(first_sentence('Ends with a question? And more.')).toBe('Ends with a question?');
+    });
+
+    it('scoped-successor is printed by the real binary over the real tree for ADR-118', () => {
+        const res = spawnSync(
+            path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
+            [path.join(REPO_ROOT, 'src/scripts/adr_cite_check.ts'), 'ADR-118'],
+            { cwd: REPO_ROOT, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 },
+        );
+        const out = `${res.stdout ?? ''}${res.stderr ?? ''}`;
+        expect(out).toMatch(/superseded in scope by\s+ADR-281/u);
+        expect(out).toContain('LIVE');
     });
 });
 
