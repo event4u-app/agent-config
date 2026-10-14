@@ -10,7 +10,9 @@ entry_condition:
     deterministically — the attempt and its verbatim refusal are recorded at the
     criterion. AC-6 needs the blocker `daemon-host-kill-switch` decided: either
     `destructive: manual-only` on a host with no process-level stop, or no
-    autonomous mode there at all.
+    autonomous mode there at all. Three further items — 8.1, AC-1 and AC-7 — were
+    reopened to `[ ]` on 2026-10-14 after the continuation ladder they exercised was
+    removed; they are work for the wake, not part of the wake condition.
   when: >-
     whenever a maintainer takes the kernel edit through the override exception
     registry and records the kill-switch fallback in `docs/enforcement-by-host.md`.
@@ -792,7 +794,7 @@ before the record is signed.
 
 ## Phase 8 — A delivery state machine
 
-- [x] **8.1 States, and one forbidden ending.** `working → local-green → pushed → pr-open →
+- [ ] **8.1 States, and one forbidden ending.** `working → local-green → pushed → pr-open →
       ci-pending → (red → ladder → pushed | green) → target-sync-check → (moved → sync → tests
       → pushed | current) → delivery-ready → (grant → merged | no grant → open-green)`.
       `run_continuation_hook.ts` treats a PR below its delivery target as work remaining, so a
@@ -822,6 +824,14 @@ before the record is signed.
       removal either; `T7`/`T8` left with their subject. The states above survive as the
       contract `process-full` states in prose. Whether this item stays closed on prose alone is
       the owner's to settle when the roadmap wakes. -->
+      <!-- reopened 2026-10-14 by council (anthropic + openai, 2/2, 2 rounds, $0.00; record:
+      `agents/evidence/council/parked-ladder-criteria-20261014.md`). Restored to `[ ]` with its
+      text and verify line unchanged: the verify names `T7`/`T8`, which no longer exist, and a
+      repository grep at `4a379af12` finds `deliveryBlocksCompletion`, `DELIVERY_STATES` and
+      `DELIVERY_ENDINGS` only in comments. The roadmap stays parked; its wake condition is
+      unrelated. Re-closing needs executable enforcement of the delivery states again;
+      accepting the prose contract as sufficient, rewording the verify, or cancelling the
+      step is the owner's, not the council's. -->
 - [x] **8.2 One page for the owner's review.** The end-of-run PR body carries: the delivery
       target reached, decisions taken and by whom, open owner-owned residue, the scope delta,
       the spend, and the fix-loop epochs.
@@ -904,6 +914,12 @@ before the record is signed.
       It reports EVERY blocker, because the artefact is a checklist a human completes and
       handing them one item at a time turns four passes into four round trips. -->
       <!-- verify: npm run test:ts -- tests/scripts/mission_continuity.test.ts -->
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | council:2026-10-14, 2/2 present | 8.1, AC-1 and AC-7 restored from `[x]` to `[ ]` with their text and verify lines unchanged; the roadmap stays parked under its existing entry condition | `agents/evidence/council/parked-ladder-criteria-20261014.md`; `_lib/continuation_ladder.ts` removed by #2343, `T7`/`T8` and the ladder cases deleted with it | another executable mechanism is shown to enforce the delivery states (8.1) or a per-run bound (AC-7), or the owner rules that the prose contract suffices, narrows a criterion, or cancels it |
 
 ## Kill register
 
@@ -1164,7 +1180,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
 
 ## Acceptance Criteria
 
-- [x] AC-1 — `T1`-`T10`, `G8` and `G9` exist under `tests/e2e/` and are green.
+- [ ] AC-1 — `T1`-`T10`, `G8` and `G9` exist under `tests/e2e/` and are green.
       <!-- closed 2026-09-14. `tests/e2e/adversarial-verification-fixtures.test.ts`, 74 green.
       `T2`-`T5`, `T7`, `T8`, `G8` and `G9` landed with their phases on 2026-09-13; the four
       this criterion was still waiting on — `T1`, `T6`, `T9`, `T10` — landed here over the
@@ -1188,6 +1204,10 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       ladder cases of `T1` left with their subject; `T1`'s test-delta and same-session cases
       remain, and `T6` keeps its resume assertion without the `WALL_CLOCK_CAP_MS` comparison,
       since no run cap exists to compare against. -->
+      <!-- reopened 2026-10-14 by council (anthropic + openai, 2/2; record:
+      `agents/evidence/council/parked-ladder-criteria-20261014.md`). Restored to `[ ]` with its
+      text unchanged: it literally requires `T1`-`T10`, and `T7`/`T8` no longer exist. Changing
+      the fixture inventory it names is owner-reserved. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 - [x] AC-2 — independent test provenance is recorded per test, and critical tests are at L3 or
       L4 wherever two providers are configured.
@@ -1646,7 +1666,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       owner's name. The blocker's own recommendation is `manual-only`; it is not this run's to
       accept. -->
       <!-- verify: ./scripts-run src/scripts/check_enforcement_matrix --quiet -->
-- [x] AC-7 — a throttled four-phase long-run fixture ends merged, with one continuity resume
+- [ ] AC-7 — a throttled four-phase long-run fixture ends merged, with one continuity resume
       and zero owner asks.
       <!-- closed 2026-09-14 as the `AC-7` describe in
       `tests/e2e/adversarial-verification-fixtures.test.ts`. Every other fixture in that file
@@ -1676,6 +1696,13 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       survives the boundary, one resume twelve hours later re-asks nothing, and a record without
       decisions closes nothing. The claim that a run is bounded while the mission is not is no
       longer exercised by any code; reopening this criterion is the owner's call. -->
+      <!-- reopened 2026-10-14 by council (anthropic + openai, 2/2; record:
+      `agents/evidence/council/parked-ladder-criteria-20261014.md`). Both seats held that
+      restoring `[ ]` keeps the criterion alive and is council-decidable, so the reopening is
+      done here rather than left for the wake; the note above predates that ruling. Text
+      unchanged, both halves kept: the mission-record half is still exercised, the bounded-run
+      half is not, since no run bound exists in code. Narrowing AC-7 to the mission half is
+      owner-reserved. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
 
 > **2026-10-06 note (road-to-modules-that-something-calls.md Phase 2.3).** Seven
