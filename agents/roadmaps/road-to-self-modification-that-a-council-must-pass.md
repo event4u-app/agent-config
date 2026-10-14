@@ -656,7 +656,7 @@ gaps again; the binding closes replay, and nothing else.
       accepted the object-store design and refused 2/2 on a new finding —
       step 2.7.
 
-- [ ] **2.7 One gate run reads one commit.** `main()` passes the revision
+- [x] **2.7 One gate run reads one commit.** `main()` passes the revision
       NAME to `git diff --name-only <base>...<rev>` for the changed-file list
       and then to `evaluate()`, which resolves it again for the content and the
       record, so a `HEAD`, branch or tag that moves between the two calls
@@ -677,8 +677,18 @@ gaps again; the binding closes replay, and nothing else.
       exactly once in `main()` to an immutable commit OID [...] Pass that OID
       through all operations."* Also raised, not stated as blocking: the
       mutual import between the gate and the subject module (openai).
-      **Deferred, with the reason**: the owner authorised one round, merging
-      only on 2/2; a seventh round is the owner's call.
+      On the owner's route of 2026-10-14 (fix, re-present, merge only on 2/2)
+      it was implemented: `main()` resolves `--rev` once, the diff
+      (`changedFilesBetween`, NUL-separated) and the default-base probe run
+      through the scrubbed runner, and `optionValue` is shared with the subject
+      CLI. Both cases were seen red with the fix neutralised in place — the
+      moving branch failed on `subject-mismatch`, the valueless `--rev` was
+      defaulted — and green restored. The mutual import is left as it stands.
+      Found while writing the new diff call, not raised by a seat: rename
+      detection listed a gated file moved to an ungated path only under its new
+      name, so its removal passed unratified on the pre-push path; the diff now
+      runs with `--no-renames`, seen red first. The CI path, which takes its
+      list from `gh pr view --json files`, is unchanged.
       verify: `npx vitest run tests/scripts/ratification_subject_revision.test.ts` -> 0
       Record: `agents/evidence/ratifications/drain-self-modification-narrowed-20261013.md`.
 
