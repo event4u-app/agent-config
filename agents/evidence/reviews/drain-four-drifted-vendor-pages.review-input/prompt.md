@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head e3791d87e926ecd657453f981ffebc26de87bac9, review
-  artefacts excluded), scope hash `5cf32133376fa652bf16a5bd8f78b9d47cdb4e1f40ce0d075053f7f4f5544cc1`
+- diff: `diff.patch` — the review scope (branch head e69d14bf7bcf1118e5e0a06f7f81ebe7104e00a9, review
+  artefacts excluded), scope hash `26e6e408ead31074a7df385c5e7ebcb5bd80831534032905914ba7970c1fd450`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -34,10 +34,12 @@ Changed files:
 - agents/roadmaps/stubs/road-to-scheduled-reds-that-reach-someone.md
 - dist/install/install.mjs
 - src/scripts/_lib/host_listing_model.ts
+- src/scripts/_lib/source_shape.ts
 - src/scripts/hooks/host_docs_pages.yaml
 - src/scripts/hooks/host_lowering.json
 - src/scripts/hooks/host_lowering.yaml
 - tests/scripts/host_docs_digest_workflow.test.ts
+- tests/scripts/source_shape.test.ts
 
 ## Output format (contract §2.2)
 
@@ -59,7 +61,7 @@ Fill the findings table in `drain-four-drifted-vendor-pages.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 5cf32133376fa652bf16a5bd8f78b9d47cdb4e1f40ce0d075053f7f4f5544cc1, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 26e6e408ead31074a7df385c5e7ebcb5bd80831534032905914ba7970c1fd450, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
