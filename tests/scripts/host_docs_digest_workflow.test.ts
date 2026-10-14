@@ -38,6 +38,15 @@ describe('host-docs-digest workflow routes a red to a tracked issue', () => {
         expect(routeStep()?.if ?? '').toMatch(/github\.event_name\s*==\s*'schedule'/);
     });
 
+    it('routes only a red from the comparison itself, never a broken runner', () => {
+        const fetchIdx = job.steps.findIndex((s) => (s.run ?? '').includes('check_host_docs_digest --fetch'));
+        const fetch = job.steps[fetchIdx] as Step & { id?: string };
+        expect(fetch?.id, 'the --fetch step needs an id to be referenced').toBeTruthy();
+        const step = routeStep();
+        expect(job.steps.indexOf(step as Step)).toBeGreaterThan(fetchIdx);
+        expect(step?.if ?? '').toContain(`steps.${fetch.id}.outcome == 'failure'`);
+    });
+
     it('grants issues: write on the one job and keeps the workflow default read-only', () => {
         expect(wf.permissions).toEqual({ contents: 'read' });
         expect(job.permissions).toEqual({ contents: 'read', issues: 'write' });

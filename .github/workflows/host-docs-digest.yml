@@ -109,12 +109,15 @@ jobs:
         run: ./scripts-run src/scripts/check_host_docs_digest
 
       - name: Re-fetch each host docs page and compare (read-only)
+        id: fetch
         run: ./scripts-run src/scripts/check_host_docs_digest --fetch
 
       # Scheduled runs only: a `workflow_dispatch` from a branch is someone
-      # already looking, and must not file against main's record.
+      # already looking, and must not file against main's record. And only a
+      # red from the comparison: a broken runner skips `fetch`, and filing
+      # "a page moved" for it is the drift-vs-runner confusion noted above.
       - name: Route the red to the tracking issue
-        if: failure() && github.event_name == 'schedule'
+        if: failure() && steps.fetch.outcome == 'failure' && github.event_name == 'schedule'
         env:
           GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -122,7 +125,7 @@ jobs:
           title="Host Docs Digest Watch is red: read the drifted vendor pages"
           body="The scheduled run failed: ${RUN_URL}
 
-          A changed digest means a cited page moved. Read each page the log lists as changed, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward), with the ratification artifact host_lowering.yaml requires. Close this issue once the watch is green."
+          A changed digest means a cited page moved; a GONE line means the citation is dead. Read each page the log lists as changed, record what it now says about refusing a tool call, and re-establish the row by hand (docs_at, docs_digest, expires forward), with the ratification artifact host_lowering.yaml requires. Close this issue once the watch is green."
           num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${title}\" in:title" --json number,title --jq "map(select(.title == \"${title}\")) | .[0].number // empty")
           if [ -n "$num" ]; then
             gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"
