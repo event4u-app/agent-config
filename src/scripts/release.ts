@@ -304,9 +304,9 @@ export { RELEASE_HEAD_CAP_LINES } from './_lib/release_material.js';
  * same shared classifier — so a degraded run surfaces as the gate's ordinary
  * "fill the head" message instead of a crash mid-release.
  */
-function _derive_head_prefill(prev: string | null): Record<string, string> {
+function _derive_head_prefill(prev: string | null, version?: string): Record<string, string> {
     try {
-        return derive_head_prefill(prev, 'HEAD', REPO_ROOT);
+        return derive_head_prefill(prev, 'HEAD', REPO_ROOT, version);
     } catch (err) {
         process.stderr.write(
             `warning: could not derive release-head highlights (${(err as Error).message}); ` +
@@ -1563,7 +1563,7 @@ function main(argv: readonly string[] | null = null): number {
     // 120-commit span, paid 3-4× per release. Not the ~25 ms of the line above.
     const [full, body] = render_changelog_entry(target, prev, commits, today, {
         test_trend_line,
-        head: _derive_head_prefill(prev),
+        head: _derive_head_prefill(prev, target),
         mix: measure_mix_obligation(target, prev),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });

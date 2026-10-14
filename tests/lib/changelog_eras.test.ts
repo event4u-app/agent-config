@@ -130,6 +130,150 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
         ).toBe(false);
     });
 
+    /**
+     * The guard above watches for ONE shape — a `### N.Y.Z at a glance` block —
+     * because that is the shape the 6.0.0 fossil had. Twenty ordinary `- **`
+     * entries then accumulated underneath it unseen, the oldest staged since
+     * 9.7.0 and the newest shipped in 16.4.0, and the gate stayed green the
+     * whole time. A guard keyed to the shape of the last fossil cannot see the
+     * next one.
+     *
+     * So this asks the question the section's own name asks, of git rather than
+     * of the text: for each `- **` entry under `[Unreleased]`, find the oldest
+     * commit that introduced its headline into CHANGELOG.md, and fail if the
+     * newest release tag already contains that commit. An entry whose commit
+     * shipped is not unreleased, whatever it is filed under.
+     *
+     * Degrades rather than guesses. A checkout with no tags, or one where git
+     * cannot answer, asserts nothing here — the release gates read tags with
+     * their own completeness checks, and a test that invented an answer from an
+     * incomplete tag list would red every shallow CI job over history it cannot
+     * see.
+     */
+    it('unreleased-holds-only-unreleased', () => {
+        const entries = eras.unreleased_entry_headlines(eras.read_changelog_lines());
+        const newest = eras.newest_release_tag(ROOT);
+        if (newest === null) {
+            // Non-vacuous even here: the parser must still find the section.
+            expect(Array.isArray(entries)).toBe(true);
+            return;
+        }
+        const shipped = entries.filter(
+            (h) => eras.entry_is_contained_in_tag(h, newest, ROOT) === true,
+        );
+        expect(
+            shipped,
+            `${shipped.length} entr(y/ies) under \`## [Unreleased]\` were introduced by a commit ` +
+                `that ${newest} already contains, so they have shipped. Move them to the dated ` +
+                'release section they belong to, or drain them to docs/archive/ the way ' +
+                'CHANGELOG-unreleased-drain-2026-10.md did.',
+        ).toEqual([]);
+    });
+
+    it('is sensitive — an entry the newest tag contains IS detected', () => {
+        // The drain's own newest entry, whose commit 16.4.0 contains. Asserted
+        // against the same predicate the case above uses, so a predicate that
+        // started answering `false` for everything cannot leave both green.
+        const newest = eras.newest_release_tag(ROOT);
+        if (newest === null) return;
+        expect(
+            eras.entry_is_contained_in_tag(
+                '**46 settings keys are retired; an install that never changed them sees no',
+                newest,
+                ROOT,
+            ),
+        ).toBe(true);
+    });
+
+    it('is sensitive the other way — a headline no commit ever wrote is not shipped', () => {
+        const newest = eras.newest_release_tag(ROOT);
+        if (newest === null) return;
+        expect(
+            eras.entry_is_contained_in_tag(
+                '**a headline that has never appeared in this changelog, 7f3a9c**',
+                newest,
+                ROOT,
+            ),
+        ).toBe(false);
+    });
+
+    /**
+     * The guard over a CHANGELOG that still carries one drained entry, so what
+     * is pinned is the whole path — parse the section, ask git, refuse — and
+     * not only the predicate the two cases above exercise. A guard proven on
+     * its predicate alone could still be reading the wrong region of the file.
+     */
+    it('a fixture staging one already-shipped entry is refused', () => {
+        const newest = eras.newest_release_tag(ROOT);
+        if (newest === null) return;
+        const saved = path.join(ROOT, 'CHANGELOG.md');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'unreleased-fixture-'));
+        const fixture = path.join(dir, 'CHANGELOG.md');
+        fs.writeFileSync(
+            fixture,
+            [
+                '# Changelog',
+                '',
+                '## [Unreleased]',
+                '',
+                '### Changed',
+                '',
+                '- **46 settings keys are retired; an install that never changed them sees no',
+                '  difference.** The drained entry, staged again.',
+                '',
+                '# Era: 16.5.x — current',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        try {
+            eras._set_changelog_path(fixture);
+            const staged = eras.unreleased_entry_headlines(eras.read_changelog_lines());
+            expect(staged).toHaveLength(1);
+            expect(
+                staged.filter((h) => eras.entry_is_contained_in_tag(h, newest, ROOT) === true),
+            ).toHaveLength(1);
+        } finally {
+            eras._set_changelog_path(saved);
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
+    it('the same fixture with a genuinely new entry passes', () => {
+        const newest = eras.newest_release_tag(ROOT);
+        if (newest === null) return;
+        const saved = path.join(ROOT, 'CHANGELOG.md');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'unreleased-fixture-ok-'));
+        const fixture = path.join(dir, 'CHANGELOG.md');
+        fs.writeFileSync(
+            fixture,
+            [
+                '# Changelog',
+                '',
+                '## [Unreleased]',
+                '',
+                '### Changed',
+                '',
+                '- **an entry no commit has ever carried, 4d1e77** — genuinely unreleased.',
+                '',
+                '# Era: 16.5.x — current',
+                '',
+            ].join('\n'),
+            'utf-8',
+        );
+        try {
+            eras._set_changelog_path(fixture);
+            const staged = eras.unreleased_entry_headlines(eras.read_changelog_lines());
+            expect(staged).toHaveLength(1);
+            expect(
+                staged.filter((h) => eras.entry_is_contained_in_tag(h, newest, ROOT) === true),
+            ).toEqual([]);
+        } finally {
+            eras._set_changelog_path(saved);
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
     it('test_conventions_doc_linked_from_changelog', () => {
         const lines = eras.read_changelog_lines();
         const header = lines.slice(0, 30).join('\n');
