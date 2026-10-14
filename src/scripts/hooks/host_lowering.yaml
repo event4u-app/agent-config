@@ -381,8 +381,8 @@ hosts:
         # refusal path on this host, which is exactly what a null means here. It
         # does NOT establish that Codex cannot refuse — this file's header
         # forbids that reading, and two unexcluded explanations remain. The
-        # installed build is 0.148.0 against a current 0.159.3, and the page
-        # that was read describes the current one; and the probe never
+        # installed build was 0.148.0 against a then-current 0.159.3, and the
+        # page read on 2026-09-29 described the current one; and the probe never
         # distinguished "the hook fired and was ignored" from "the matcher never
         # matched", because the instrumented re-run (a hook that records its own
         # input before refusing) was refused by the harness this probe ran
