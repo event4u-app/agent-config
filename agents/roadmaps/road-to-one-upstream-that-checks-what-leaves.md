@@ -93,15 +93,35 @@ Nothing is sent without the person's word in that turn.
 - [ ] **1.4 The four threshold sites cite one table.** Each points at the
       canonical evidence-threshold table in `docs/contracts/retro-v1.md`
       instead of restating its own.
-      **Open for a named reason, 2026-10-13:** executed against the tree,
-      `docs/contracts/retro-v1.md` does not exist. It is step 0.3 of
-      `road-to-a-retro-the-merge-runs`, whose 24 steps are all open. Writing
-      the citation now would create exactly the dangling reference AC-1
-      forbids — this step would break the acceptance criterion the rest of
-      Phase 1 was closed to satisfy. It opens when that contract lands.
+      **Open for a named reason, re-executed 2026-10-14:**
+      `docs/contracts/retro-v1.md` still does not exist, and
+      `road-to-a-retro-the-merge-runs` now measures **35 open, 0 closed** —
+      the count rose since 2026-10-13 rather than falling, so the contract is
+      further away, not nearer. Writing the citation would create exactly the
+      dangling reference AC-1 forbids — this step would break the acceptance
+      criterion the rest of Phase 1 was closed to satisfy. It opens when that
+      contract lands.
       verify: `grep -c 'retro-v1.md' src/skills/upstream-contribute/SKILL.md` -> /[1-9]/
 
 ## Phase 2 — A floor over the whole payload
+
+> **Phase state, executed against the tree on 2026-10-14 rather than read off a
+> marker.** The prerequisite named under § Prerequisites is
+> `road-to-one-detector-and-the-senders-we-own` Phase 2, and that roadmap
+> measures **24 open, 0 closed** — its detector table does not exist. K5 of this
+> file forbids building a second scanner, so 2.2 has nothing to scan against.
+>
+> The sharper finding is about 2.1 and 2.3, and it was not visible from the
+> step text: **the release makes no commit at all.** `executeRelease`
+> (`src/scripts/self_repair_cli.ts:369`) READS the checkout's current branch
+> and refuses when it is `main` or detached; the fix is authored and committed
+> before the release is ever called. A grep for `isolated`, `ephemeral`,
+> `mktemp` and `tmpdir` across that file returns **zero** matches. So 2.1 is a
+> build — an isolated checkout, a synthesised commit, an object-graph walk —
+> not a widening of something present, and 2.3 ("the commit uses a noreply
+> identity") has no commit to set an identity on until 2.1 creates one. Both
+> are correctly sequenced behind it; neither is blocked on the detector table,
+> and that distinction is worth keeping for whoever takes this next.
 
 - [ ] **2.1 The release builds a clean patch first.** In an isolated checkout of
       this package, one commit on the package base; the gate walks every object
@@ -128,12 +148,48 @@ Nothing is sent without the person's word in that turn.
 - [ ] **3.2 A mechanism fingerprint.** For records carrying `target` and
       `principle`, the fingerprint hashes those instead of the evidence, so the
       F5 pair clusters.
+      **Open for a named reason, executed 2026-10-14:** `DefectFinding` carries
+      `target?: string[]` (`src/scripts/_lib/self_repair.ts:112`) but the
+      string `principle` appears **zero** times in that file. The field is the
+      retro schema's, and that schema is step 0.3 of
+      `road-to-a-retro-the-merge-runs` (35 open, 0 closed). Hashing `target`
+      alone would cluster two different mechanisms found in the same file, so
+      the half-built version is worse than the evidence hash it replaces.
       verify: `npx vitest run tests/scripts/self_repair.test.ts -t same-mechanism-same-fingerprint --reporter=verbose` -> /✓.*same-mechanism-same-fingerprint/
 - [ ] **3.3 Draft, and a neutral branch.** `--draft` on every pull request; the
       branch is `retro/<fingerprint[:8]>`.
+      **Half landed 2026-10-14, half sequenced.** F4 is closed: `prArgs` now
+      carries `--draft` before `--title`, on **both** rungs of the ladder — the
+      direct-push one and the fork one, which builds its own argv and would
+      otherwise have kept opening ready-for-review for exactly the contributor
+      who has no push rights. Three cases in
+      `tests/scripts/self_repair_release.test.ts` drive the real
+      `executeRelease` through a scripted runner, and all three were watched
+      red with the flag removed. One of them only became sensitive after that
+      probe: written as an index comparison alone it passed with the flag
+      ABSENT, because `indexOf` answers `-1` and `-1` is less than everything.
+      The branch half stays open because the release does not NAME a branch —
+      it reads the one already checked out (see the Phase 2 note above). It
+      closes with 2.1, which is where the commit it would name is created.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t pr-is-draft --reporter=verbose` -> /✓.*pr-is-draft/
 
 ## Phase 4 — Approval of exact bytes, and a route from consumers
+
+> **Phase state, executed 2026-10-14.** 4.1 and 4.3 both describe what the dry
+> run SHOWS, and the bytes they would show — the synthesised commit, its
+> identity, its branch — are 2.1's output. Until 2.1 exists the dry run has no
+> payload to render, so an approval bound to its digest would bind to nothing.
+>
+> **4.2's matrix is the one open item here with no code prerequisite, and it is
+> still not takeable by this lane.** It asks what a fork pull request exposes
+> that an issue does not — visible account, fork and repository linkage, branch
+> name, activity events, timestamps, notifications, retention, deletion — and
+> those are facts about a live forge, not about this tree. Writing them from
+> recollection is precisely the unverified structural claim the evidence
+> discipline forbids, and the only way to observe them is to open a real fork
+> pull request, which is the act the matrix exists to decide about. It needs a
+> session with explicit permission to take that observation, and D5's current
+> option (b) is what holds until then — consumers send issues.
 
 - [ ] **4.1 The person approves what is sent.** `--dry-run` shows every byte;
       the release accepts only an approval bound to the digest of those bytes
@@ -156,6 +212,14 @@ Nothing is sent without the person's word in that turn.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t dry-run-names-the-account --reporter=verbose` -> /✓.*dry-run-names-the-account/
 
 ## Phase 5 — The retro may offer, never send
+
+> **Phase state, executed 2026-10-14.** Both steps verify against
+> `tests/scripts/retro.test.ts`, and both the test file and every `retro*`
+> module under `src/scripts/` are absent — a glob for them matches nothing.
+> `road-to-a-retro-the-merge-runs` measures **35 open, 0 closed**. There is no
+> retro run to attach an offer to, so neither step is buildable here, and
+> building a stub to attach one to would create the second outward route K1
+> forbids.
 
 - [ ] **5.1 At most one offer per run.** A retro run whose package record passes
       the canonical threshold appends one release offer to its output; sending
