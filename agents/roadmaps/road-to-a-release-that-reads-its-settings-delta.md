@@ -263,7 +263,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 - **If you do nothing:** 3.1 still stops an untombstoned removal; the contract page keeps promising a rule the last nine minors broke; the rename map keeps a retention rule that contradicts both and that its own single entry has outlived by four minors; and the two canonical documents keep stating the rule in two materially different ways, one unconditional and one qualified, with the consumer-facing warning stating a third thing again.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -271,6 +271,7 @@ cut all follow it. The upgrade leg asserts the delta it was written to assert.
 | 2 | A rename reads as a removal plus an addition | implementation | The surface drops the old leaf and gains the new one. | 2.1 emits both tombstone maps; 3.1 treats a removed key present in either as carried; the 1.2 fixture includes the one rename in the history. | Phase 3 — The cut answers the delta |
 | 3 | Type and vocabulary history cannot be replayed | implementation | Old tags carry a template, not a schema, so the fixture pins key presence only. | 3.1's type and vocabulary branches are tested with planted changes, not history. | Phase 1 — The control reading |
 | 4 | The owner answer arrives late | product | 3.3 and 5.1 wait. | Phases 1, 2, 4 and steps 3.1–3.2 do not depend on it and close the silent case under either answer. | Phase 3 — The cut answers the delta |
+| 5 | The answer is larger to land than 5.1 assumed | implementation | The 2026-10-14 enumeration found eight locations where the rule is stated, not three. Two are the documents `BREAKING_CHANGES.md` nominates as canonical, one is an accepted ADR whose amendment routes through `decision-revisit-gate` rather than a doc edit, and one is a string printed to consumers. A step written for three edits would land the answer in three places and leave five contradicting it. | The blocker carries the enumerated table as the edit surface, and 5.1 now asserts over it; D9 records the count and its revisit condition. | Phase 5 — Every sentence says one thing |
 
 ## Provenance
 
