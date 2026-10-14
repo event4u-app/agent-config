@@ -101,8 +101,12 @@ through the same git invocation as the digest, with the repository-locating
 environment (`GIT_DIR` and its siblings) removed, so the list and the content
 come from the same repository, and with rename detection off, so a gated file
 moved to an ungated path is listed under its old path as a deletion rather than
-only under its new one. The CI path takes its list from `gh pr view --json
-files` instead and is not changed by this. An option that takes a value — `--rev`,
+only under its new one. The CI path builds its list the same way: it passes
+`--base-ref <base commit id>` and no `--files`. It used to pass `gh pr view
+--json files`, which names a rename by its destination only, so a gated file
+renamed away never reached the gate there. The CI step also sets
+`diff.renames=false` through `GIT_CONFIG_*`, which covers a base copy of the
+gate that predates `--no-renames` in its own diff. An option that takes a value — `--rev`,
 `--root`, `--base-ref`, `--policy-root` — and is given none is a refusal
 (exit 1), as in the subject CLI, never a fall-back to the default.
 
