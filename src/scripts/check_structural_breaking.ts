@@ -45,7 +45,13 @@ const ARTIFACT_RE = new RegExp(
         '|rules/[^/]+\\.md' +
         '|domains/[^/]+/[^/]+/command\\.md' +
         '|scripts/schemas/[^/]+\\.schema\\.json' +
-        '|config/packs\\.yml' +
+        // `config/packs.yml` stood here and matched nothing: no such file has
+        // existed in this tree. The pack surface is the discovery manifest plus
+        // one `pack.yaml` per pack (17 of them at 2026-10-14), and deleting any
+        // of those is the structural break this gate is for — it simply could
+        // not see them.
+        '|config/discovery/packs\\.yml' +
+        '|packs/[^/]+/pack\\.yaml' +
         ')$',
 );
 const SCHEMA_RE = /^src\/scripts\/schemas\/[^/]+\.schema\.json$/;

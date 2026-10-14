@@ -7,7 +7,15 @@
  * re-landed as #847 (13f244c9b — non-destructive "Irreversible external action"
  * row + "Never act while asking" clause) and #849 (2c46e7f3b — direct-answers
  * "no duration estimates" + "never cite the rule"). This checker's invariant set
- * covers those exact strings — it would have flagged the loss at CI time.
+ * covers those exact strings — so a run of it would have caught the loss.
+ *
+ * WHERE it runs, stated because the line above used to say "at CI time" and
+ * that is not where this is registered: the only caller is `task ci`, and no
+ * workflow under `.github/workflows/` invokes `task ci` — three steps in
+ * `consistency.yml` say so in as many words, which is why they re-register
+ * their own gates there. It is also not in `task preflight`. So the loss would
+ * have been caught by someone running the full local chain, and by nothing on
+ * the pull request.
  *
  * Loads `tests/golden/invariants.json` and verifies that every invariant
  * string (whitespace-normalised: runs of whitespace collapse to a single
