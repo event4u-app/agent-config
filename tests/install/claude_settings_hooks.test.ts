@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     CorruptSettingsError,
     MANAGED_SIGNATURE,
+    NO_DISPATCHER_CONTEXT,
+    NO_DISPATCHER_STDERR,
     build_claude_hook_matrix,
     ensure_managed_hooks,
     remove_managed_hooks,
@@ -27,7 +29,9 @@ function expectedCommand(acEvent: string, native: string): string {
         'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
         `exec node "$B" ${args}; fi; ` +
         'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
-        'command -v "$BIN" >/dev/null 2>&1 || exit 0; ' +
+        `command -v "$BIN" >/dev/null 2>&1 || { [ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${
+            native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : ''
+        } }; exit 0; }; ` +
         `"$BIN" dispatch:hook ${args}`
     );
 }

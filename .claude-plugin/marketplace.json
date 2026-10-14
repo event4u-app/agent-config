@@ -5,7 +5,7 @@
     "email": "dev@event4u.app"
   },
   "metadata": {
-    "description": "Bootstrap shim for the event4u agent-config suite. This plugin ships ONLY the dispatcher hooks plus one install-pointer skill — ALL content (skills, rules, commands) is installed via `npx -y @event4u/agent-config init`, which writes the file projection AND registers the same hooks in ~/.claude/settings.json. DEPRECATED as a content channel; kept so the marketplace listing stays discoverable and existing installs keep working hooks.",
+    "description": "Bootstrap shim for the event4u agent-config suite. This plugin ships ONLY the dispatcher hooks plus one install-pointer skill — ALL content (skills, rules, commands) is installed via `npx -y @event4u/agent-config init`, which writes the file projection AND registers the same hooks in ~/.claude/settings.json. DEPRECATED as a content channel; kept so the marketplace listing stays discoverable. Its hooks run only alongside an npm install of the package (project-local or `npm i -g`): on a plugin-only install no dispatcher is reachable, no hook runs, and each hook says so on stderr.",
     "version": "16.5.0",
     "keywords": [
       "agent-config",
