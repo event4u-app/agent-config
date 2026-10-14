@@ -28,6 +28,14 @@ execution:
 > in its settings schema (read statically), and
 > `road-to-a-search-answer-a-model-can-choose-from` step 0.1 records its behaviour in a
 > session — offered here as a catalogue observation against a named build.
+>
+> **Offered 2026-10-14** (not an arrival, not an un-park): that step closed. Its
+> artifact `agents/evidence/analysis/host-skill-listing-override.md` now records
+> all five columns — four on build 2.1.296, the fifth (a project-layer
+> `skillOverrides` value overrides a user-layer one, n = 1) on build 2.1.299 from
+> an owner-run probe. It is a listing-override observation, not a catalogue
+> profile and not a retained-set quality figure, so `b-host-catalogue-build-pin`
+> stays open.
 
 ## Goal
 

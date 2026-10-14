@@ -105,7 +105,7 @@ as today.
 
 ## Phase 0 — Read the contract, watch its page, measure the right slice
 
-- [ ] **0.1 Observe the listing override on a pinned host build.** From an
+- [x] **0.1 Observe the listing override on a pinned host build.** From an
       empty directory outside any checkout, with a scratch `HOME`, set
       `name-only` for one package skill and `user-invocable-only` for a
       second, and record per value: listed by name or not; description
@@ -171,6 +171,16 @@ as today.
       attempt; it was resolved 2026-10-14 (option (a)), which authorises the
       package's override write, not the write-then-restore probe this step needs.
       Recorded in the artifact's fourth-attempt section.
+      CLOSED 2026-10-14 by an owner-run probe — the owner took the
+      owner-reserved write-then-restore on their own user settings file
+      themselves. On build `2.1.299`: user layer `off` alone refused
+      `/accessibility-auditor` (control); adding a project-layer `name-only`
+      for the same skill let it run (test); the settings file's SHA-256 was
+      identical before and after. A project value overrides a user value. Not
+      one build-pinned row with the other four columns (those are `2.1.296`),
+      and n = 1 — one skill, one value pair, the `/name` path only; recorded in
+      the artifact's fifth-column section with those limits. Offered to
+      `later/road-to-host-catalogue-contract.md` as a note on its Arrivals line.
 - [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in
@@ -236,7 +246,7 @@ as today.
 |---|---|---|---|---|---|
 | A1 | reversible-technical | evidence | The search path is its own roadmap; the listing policy stays on the parked menu-economy file | 1.1, 1.3 and 2.x help whether or not any description is ever dropped from the listing, and the menu-economy goal is the catalogue bucket, not the search answer | the owner folds both into one file on the menu-economy question |
 | A2 | reversible-technical | evidence | The shell path is a flag on `route:explain`, not a new verb | the parked menu-economy kill register forbids a new top-level CLI verb; the ranker already exists as a script | `route:explain`'s single-purpose contract is pinned by a test that refuses a second mode |
-| A3 | reversible-technical | evidence | This roadmap writes no host setting, `skillOverrides` included | `src/scripts/_lib/mcp_bridge.ts:348-351` and `docs/mcp-server.md:184-187`: the package never edits a consumer's host settings; an earlier consumed round proposed the same write and killed it on that ground | the owner answers the posed question on `later/road-to-skill-menu-economy.md` in favour of a write |
+| A3 | reversible-technical | evidence | This roadmap writes no host setting, `skillOverrides` included | `src/scripts/_lib/mcp_bridge.ts:348-351` and `docs/mcp-server.md:184-187`: the package never edits a consumer's host settings; an earlier consumed round proposed the same write and killed it on that ground | the owner answers the posed question on `later/road-to-skill-menu-economy.md` in favour of a write — FIRED 2026-10-14 (owner option (a); the write shipped in #2346 under another roadmap); re-read: this roadmap still writes no host setting, so the decision stands |
 | A4 | reversible-technical | evidence | No step reads the sealed trigger holdout | `routing_corpus.ts:11-16` seals by refusal; the supplied 602-prompt figures read it | the holdout freeze artefact is superseded |
 | A5 | reversible-technical | evidence | The skill-route hook keeps its pointer-only payload; descriptions go into the tool result, not the hook | the hook bundle has almost no byte headroom and the tool result is paid only when called | the hook budget is raised for another reason |
 | A6 | reversible-technical | evidence | The registered-host sentence in the recovery rule is not a defect and is not offered to a truth carrier | `mcpRegistrationTargets` returns an empty list on today's capability axis, so `claude-code` is the only effective registration | the axis reports `reads_project_mcp_config` true for any host |
@@ -263,7 +273,7 @@ permission rules never depend on which skill the model picks.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The listing override has a build-pinned observation per value
+- [x] AC-1 — The listing override has a build-pinned observation per value
       (0.1) and the page documenting it is under the digest watch (0.2).
 - [x] AC-2 — A committed run prints recall at depth over the train slice
       without opening a holdout corpus (0.3), and the default depth is the
