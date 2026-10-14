@@ -104,6 +104,19 @@ implementation under the test actually exists and ran against a real system.
         calibration, and a host-neutral binding waits on build-directory
         discovery existing at all. -->
 
+6. **When the diff touches account-flow code** (login, registration, password
+   reset, session, OAuth callback, MFA), run the account-surface audit over the
+   repository root:
+
+   ```bash
+   npx tsx node_modules/@event4u/agent-config/src/scripts/check_account_surface.ts <repo-root>
+   ```
+
+   Its output is **unmeasured** while `claim:account-surface-finds-planted` is
+   unbacked: report a `violated` finding with its `file:line` and threat row,
+   a `suspected` one as a `note`, and an `undecided` class as unknown — never as
+   a pass. Exit 1 means it found no account-surface file to read, not a defect.
+
 ## What you do NOT do
 
 - You do not judge whether the tests are well-designed or the coverage is

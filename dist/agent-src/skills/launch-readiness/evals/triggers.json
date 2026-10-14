@@ -1,0 +1,71 @@
+{
+  "skill": "launch-readiness",
+  "last_eval": "2026-10-14",
+  "description": "5 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-14 under road-to-account-surface-detector step 3.2, which wired the account-surface detector into this skill's AUTH area and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four outputs the skill's own Output section names — the go/no-go decision, the pre-merge checklist, the rollout plan with rollback criteria, the ops handoff — plus the prelaunch diagnostic report. Near-misses are the three neighbours its 'WHEN NOT to use' routes to: the public comms text (release-comms), a routine internal merge (finishing-a-development-branch), and a stakeholder conflict over the rollout (stakeholder-tradeoff). Counterexamples guard the words 'launch' and 'rollback' outside a release: starting a local dev server and reverting a database migration in development.",
+  "queries": [
+    {
+      "id": "lr-e1",
+      "q": "are we ready to ship this release to production? give me a go or no-go",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lr-e2",
+      "q": "write the pre-merge launch checklist for the v3 release PR",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lr-e3",
+      "q": "draft the rollout plan and rollback criteria for the new billing flag",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lr-e4",
+      "q": "run a prelaunch diagnostic across auth, secrets and rollback before we go live",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "id": "lr-e5",
+      "q": "sind wir launch-ready für das Release morgen? mach mir den Ops-Handoff",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "id": "lr-n1",
+      "q": "write the release notes and the announcement post for v3",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "the comms text itself, not the decision to ship → release-comms"
+    },
+    {
+      "id": "lr-n2",
+      "q": "this internal refactor branch is done — merge it and clean up",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a routine merge that crosses no release boundary → finishing-a-development-branch"
+    },
+    {
+      "id": "lr-n3",
+      "q": "sales wants the feature live Friday and support wants two more weeks — who wins?",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "a stakeholder conflict over the rollout is settled first → stakeholder-tradeoff"
+    },
+    {
+      "id": "lr-c1",
+      "q": "how do I launch the local dev server on a different port?",
+      "trigger": false,
+      "class": "counterexample"
+    },
+    {
+      "id": "lr-c2",
+      "q": "roll back the last migration on my local database",
+      "trigger": false,
+      "class": "counterexample"
+    }
+  ]
+}

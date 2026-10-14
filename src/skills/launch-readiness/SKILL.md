@@ -57,7 +57,7 @@ release-shaped; route to `finishing-a-development-branch`.
 
 Walk the diff with the following gates:
 
-- Tests green on the integration suite (cite the run).
+- Integration suite green (cite the run).
 - Quality gates green (static analysis / linters / type-checks).
 - Migrations are reversible OR the irreversibility is explicit.
 - Feature flag / kill switch named, default off unless intended.
@@ -65,8 +65,7 @@ Walk the diff with the following gates:
   [`release-comms`](../release-comms/SKILL.md) for the prose).
 - Rollback path tested at least mentally; named in step 4.
 
-Cells without evidence block the launch — surface, do not
-hand-wave.
+Cells without evidence block the launch.
 
 ### 2b. Epistemics block — the diagnostic report (contract-backed)
 
@@ -77,6 +76,10 @@ report per [`docs/contracts/prelaunch-diagnostics.md`](../../../docs/contracts/p
 - **Coverage backbone** — diagnose exactly the fixed area vocabulary
   (`prelaunch-areas.yml`): auth · migrations · secrets · observability ·
   rollback · agent-governance. No ad-hoc areas.
+- **AUTH** — on account-flow changes run
+  `npx tsx node_modules/@event4u/agent-config/src/scripts/check_account_surface.ts <repo-root>`:
+  `violated` → an `AC-AUTH-NNN` id, an undecided class stays `unknown`; the
+  output is unmeasured while `claim:account-surface-finds-planted` is unbacked.
 - **Every area gets one state:** `pass` (cited evidence REQUIRED) ·
   `finding` (IDs listed) · `unknown` (the honest default — **absence of
   findings is Unknown, never an automatic Pass**) · `not-applicable`
@@ -128,10 +131,9 @@ caused this in six hours?"* If you cannot, the trip wire is wrong.
 
 ### 4b. Post-deploy verification fragments (manual checks, not an auto-canary)
 
-Right after deploy, the on-call runs these quick checks by hand. They are
-**checklist items, not an automated canary loop** — a real canary is a runtime
-and out of scope here; these are cheap "did the deploy silently break a thing
-that doesn't page" probes. Include only the ones that apply to the stack:
+Right after deploy, the on-call runs these by hand — cheap "did the deploy
+silently break a thing that doesn't page" probes, **not a canary** (a runtime,
+out of scope). Include only the ones that apply to the stack:
 
 - **SSE / streaming heartbeat** — if the app serves Server-Sent Events or a
   long-lived stream, confirm a connection stays open and emits a heartbeat past
@@ -145,8 +147,7 @@ that doesn't page" probes. Include only the ones that apply to the stack:
   the pre-deploy baseline; a regression beyond the agreed delta is a trip wire
   even when no error fires.
 
-Each fragment is a one-shot check with a pass/fail an on-call can eyeball; failures
-feed the § 4 trip wires. Do not build a standing canary service for them.
+Each is a one-shot pass/fail check; failures feed the § 4 trip wires.
 
 ### 5. Ops handoff
 
@@ -157,9 +158,9 @@ feed the § 4 trip wires. Do not build a standing canary service for them.
 
 ### 6. Hand back
 
-Hand the artefact below to whoever requested the launch decision;
-route comms to [`release-comms`](../release-comms/SKILL.md) and
-post-launch metrics tracking to the team's monitoring stack.
+Hand the artefact to the requester; comms go to
+[`release-comms`](../release-comms/SKILL.md), post-launch metrics to the
+team's monitoring stack.
 
 ## Related Skills
 
@@ -202,8 +203,7 @@ post-launch metrics tracking to the team's monitoring stack.
 
 ## Gotcha
 
-- A checklist with all green and no citations is theatre; every
-  green needs an artefact.
+- All green with no citations is theatre; every green needs an artefact.
 - A trip wire without a decision window is unactionable — *"if
   errors spike"* is not a trigger; *"5xx > 2% for 10 min"* is.
 - Irreversible steps without written sign-off are the most common
@@ -216,5 +216,4 @@ post-launch metrics tracking to the team's monitoring stack.
   output block, citable.
 - Do NOT let any stage own itself — every stage names a role from
   the **team** spine slot.
-- Do NOT hand the artefact to a receiver who has not signed off on
-  ops handoff.
+- Do NOT hand off to a receiver who has not signed off.
