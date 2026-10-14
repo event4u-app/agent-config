@@ -168,7 +168,7 @@ plugin ships no dispatcher of its own (D4).
   `.claude-plugin/skills/install-agent-config/SKILL.md` say hooks run only
   alongside an npm install, and no longer claim that existing installs keep
   working hooks; both are edited at their generator source in `condense.ts`.
-  verify: `grep -c 'keep working hooks' .claude-plugin/marketplace.json .claude-plugin/skills/install-agent-config/SKILL.md` prints 0 for both.
+  verify: `cat .claude-plugin/marketplace.json .claude-plugin/skills/install-agent-config/SKILL.md | grep -c 'keep working hooks'` -> /^0$/
 
 ## Decisions
 
