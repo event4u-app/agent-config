@@ -105,6 +105,41 @@ settings file, or a host build whose credentials survive a `CLAUDE_CONFIG_DIR`
 move. Until one of those exists, the column stays open and the step stays open
 with it.
 
+### A third attempt, 2026-10-14 — the build moved, and the probe is now refused one layer earlier
+
+The sentence above names two things that would close the step, and one of them
+is a moving target: *a host build whose credentials survive a
+`CLAUDE_CONFIG_DIR` move*. That build number has since moved. This machine now
+answers `2.1.299` to `claude --version`, three patch releases past the
+`2.1.296` every reading above is pinned to. So the condition was worth
+re-executing rather than re-reading, and it was re-executed.
+
+**It did not get as far as the host.** Both routes an agent would take are
+refused by the agent's own permission layer before the binary is reached:
+
+| route attempted | refused by | stated reason |
+|---|---|---|
+| `env CLAUDE_CONFIG_DIR=<scratch> claude -p …` | Claude Code auto-mode classifier | `Credential Exploration` |
+| reading where the credentials live, to carry them into a scratch config dir | Claude Code auto-mode classifier | `Credential Exploration` |
+
+This is a finding about the PROBE, not about the host, and the distinction is
+the whole value of recording it. Nothing here says build `2.1.299` behaves like
+`2.1.296`; the redirect was never executed against it, so its behaviour is
+**unknown**, not confirmed. What is now established is that an agent working
+under this tree's own safety layer cannot establish it either — the
+classifier reads a config-directory redirect as credential handling and
+declines, which is the correct call for a probe that would relocate an
+authenticated session's config.
+
+**So the closing set shrinks by one for an agent, and is unchanged for a
+human.** A human at this terminal can still run the redirect and see what
+`2.1.299` does. An agent cannot, and a fourth run should not spend a round
+rediscovering that: the two isolation routes are closed at the host (recorded
+above, build `2.1.296`) AND closed at the permission layer (recorded here,
+build `2.1.299`). The only route left to column five remains the one that was
+owner-reserved from the start — a write-then-restore against the owner's own
+`~/.claude/settings.json`, taken on the owner's say-so.
+
 ## A second observation, taken on the way
 
 Asked to count its own listing, the baseline session reported **497 skill

@@ -146,6 +146,21 @@ as today.
       login survives the redirect — not a better isolation trick. Both probes
       are recorded in the artifact's own "reason, corrected" section so the next
       run does not re-walk this dead end.
+      STILL OPEN after a third attempt, 2026-10-14, and this one did not reach
+      the host at all. The note above names a closing condition that moves — a
+      host build whose login survives the redirect — and the build HAS moved:
+      this machine now answers `2.1.299`, three patch releases past the
+      `2.1.296` every reading is pinned to. So the condition was re-executed
+      rather than re-read. The redirect was refused by the agent's own
+      permission layer before the binary was reached, as was establishing where
+      the login material is kept in order to carry it into a scratch config
+      directory. Build `2.1.299`'s behaviour under the redirect is therefore
+      UNKNOWN, not confirmed, and what is newly established is narrower and
+      about the prober rather than the host: an agent under this tree's safety
+      layer cannot execute either isolation route at all. The closing set is
+      unchanged for a human at this terminal and one smaller for an agent, which
+      leaves the owner-reserved write-then-restore as the only route an agent
+      could ever take. Recorded in the artifact's third-attempt section.
 - [x] **0.2 Put the skills page under the digest watch.** A sibling page list
       read by `check_host_docs_digest`, carrying `docs_url`, `docs_at`,
       `docs_digest` and `expires` like every hook row — not a new surface in
