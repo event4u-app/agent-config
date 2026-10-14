@@ -260,12 +260,13 @@ answer. No class sweep: each step names its sentence.
 - **If you do nothing:** the README keeps a conformance claim the tree's own record says is false, and the next harvest round measures it again.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A missed-pattern failure reds main | implementation | Turning a warning into a failure can expose a pattern already missing today. | The round read stderr empty on its pin; 1.2 runs the check on the branch before it lands. | Phase 1 — Generators and counters |
+| 1 | A missed-pattern failure reds main | implementation | Turning a warning into a failure can expose a pattern already missing today. | CLEARED 2026-10-14 by running it: `update_counts --check` applied every pattern on the branch before the change landed, so no existing warning became a red. It then caught two patterns this run itself wrote, which is the gate working on its first real input. | Phase 1 — Generators and counters |
 | 2 | A contract line loses its only pointer | implementation | Removing an absent test's name can leave a claim with no stated guard. | 2.1 says "none does" rather than deleting the sentence. | Phase 2 — Lines that name what exists |
 | 3 | The recursive census over-groups | implementation | Files sharing a stem by accident across unrelated subfolders read as one revision set. | 4.1's fixture includes an unrelated same-stem pair at different depths and the test asserts the grouping it expects. | Phase 4 — The census sees the whole folder |
 | 4 | A dated-fact fix is itself stale by the next release | product | Naming a new minimum moves the problem a year. | 3.2 prefers deferring to the project's toolchain file over naming a version. | Phase 3 — Output and skill bodies |
 | 5 | A header edit on a gate script reads as a gate change | implementation | 2.4 and 2.3 touch `check_rule_invariants.ts` and `check_structural_breaking.ts`, which governance review treats as gate surface. | 2.4 is comment-only; 2.3 ships with its fixture test, and both go through whatever ratification the diff classifier asks for rather than around it. | Phase 2 — Lines that name what exists |
+| 6 | A site count reads wrong against the directory it describes | product | The site's "what's inside" tables now say Commands 205, and the linked command directory holds 60 at its top level. The README states that basis next to its badge; the site tables do not, so a reader can check the number against the wrong denominator and conclude it is stale. | Not mitigated here, and named rather than quietly absorbed: 1.3 brings the figures under the counter and does not add the basis sentence to the site, because that is a documentation-wording change this roadmap did not scope. The figures are now correct and generated either way. | Phase 1 — Generators and counters |
