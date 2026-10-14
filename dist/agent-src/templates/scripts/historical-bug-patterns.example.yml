@@ -9,7 +9,7 @@
 # `paths` globs. Routing severity is the max of matched pattern severities.
 
 version: 1
-updated: 2026-04-21
+updated: 2026-10-13
 
 patterns:
   - id: n-plus-one-tenant-listing
@@ -75,6 +75,18 @@ patterns:
       - "app/Http/Controllers/**Webhook*.php"
       - "app/api/**webhook**"
     required_test: "negative test: unsigned payload returns 401"
+
+  - id: auth-response-discloses-account-existence
+    label: "Auth response answers differently for a known and an unknown account"
+    severity: high
+    paths:
+      - "app/Http/Controllers/Auth/**"
+      - "app/Http/Controllers/**Login*.php"
+      - "app/Http/Controllers/**Password*.php"
+      - "app/Http/Controllers/**Registration*.php"
+      - "routes/auth.php"
+      - "src/Controller/Security/**"
+    required_test: "equivalence case: a known and an unknown address produce the same status, body category, redirect and cookies"
 
   - id: migration-no-rollback
     label: "Migration with destructive up() and empty down()"

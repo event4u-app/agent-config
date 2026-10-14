@@ -285,8 +285,15 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // count stays at 109. Every comment above could point at a train
         // number that rose; this one cannot, so the first line rises only
         // because the corpus did.
+        //
+        // 140 -> 141 on 2026-10-14d: `road-to-account-lifecycle-threat-rows`
+        // Phase 3 gave `security` the triggers block and the trigger corpus it
+        // had never had — the step exists because "add login with Google" was a
+        // should-trigger for no skill in the tree. `security` (0x5d = 93) is
+        // above the ceiling and trains, moving the train count 109 -> 110; the
+        // holdout is unchanged at 31, so the seal is untouched by this growth.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(140);
+        expect(all.length).toBe(141);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(31);
     });
 });
@@ -337,7 +344,9 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // roadmap added hash above the ceiling and train — `context-authoring`,
         // `learning-to-rule-or-skill`, `upstream-contribute`. Nothing sealed,
         // so this entry needs no absent-row sentence.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(109);
+        // 109 -> 110 on 2026-10-14d: `security` (0x5d = 93) trains. See the
+        // partition note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(110);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

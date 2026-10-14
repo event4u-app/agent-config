@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 140 files, 31 holdout and 109 train.** That bullet read
+- **Now: 141 files, 31 holdout and 110 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -32,7 +32,7 @@ beside it.
   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
-  § Growth — 2026-10-14b and § Growth — 2026-10-14c; the
+  § Growth — 2026-10-14b, § Growth — 2026-10-14c and § Growth — 2026-10-14d; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -324,10 +324,80 @@ ratchet allows.
 run as the LAST act before publishing this section, after the final edit to any
 file in the set.
 
+## Growth — 2026-10-14d, one train corpus; the seal does not move
+
+```
+ONE ROW ADDED, TRAIN. THE SEALED SET STAYS AT 31 AND EVERY SEALED HASH IS
+BYTE-IDENTICAL. BOTH TRAIN-SIDE MEASUREMENTS ARE OWED HERE AND WERE RE-TAKEN —
+AFTER THE MERGE, NOT BEFORE IT, BECAUSE THE TRUNK HAD MOVED SIX CORPORA AHEAD.
+```
+
+**What changed.** `road-to-account-lifecycle-threat-rows` Phase 3 gave `security`
+the `triggers:` block and the trigger corpus it had never carried. The step is
+not a gate's remedy: it exists because "add login with Google" was a
+should-NOT for `authz-review` and a should-trigger for no skill in the tree, so
+the thirteen account-lifecycle rows that roadmap adds to the threat corpus had
+no skill a consumer would reach them through. **16** labelled queries — nine
+exemplars covering sign-up, verification, reset, password storage, MFA,
+passkey, session rotation, logout and the Google-login query itself, five
+near-misses that are this skill's own four written "Do NOT use when" routes plus
+request validation, and two counterexamples carrying no security vocabulary at
+all.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `security` | train | `0x5d` | 93 ≥ 51 |
+
+**The sealed set does not move.** 93 is above the ceiling of 51, so the holdout
+stays at **31** and the train set goes **109 -> 110**; the realised split is
+**31/141 = 21.99 %** against the rule's 19.9 % target. The ordering claim is
+untouched: AC-6 still rests on the same 18 rows, now 18 of 31.
+
+**The figures here were taken AFTER merging `origin/main`, and the branch's own
+earlier take is not preserved beside them.** The branch measured this growth as
+127 -> 128 of 300 while the trunk had since reached 140, so the earlier numbers
+describe a tree that no longer exists — a superseded take rather than an
+instructive one. What the earlier take recorded and is kept: it had to be run
+twice, because the first run landed after the corpus but before Phase 3.2 added
+fifteen lines to the same skill's **body**, and the body arm reads the body. A
+train-side measurement is valid only when every edit to a train skill — corpus
+and body alike — is already on disk, and after a merge that includes the merge.
+
+**Both train-side measurements were re-taken, and both moved**, as a train
+growth should make them. `routing-body-signal-verdict.json`: verdict unchanged
+in kind, still `harmful` and still on the false-activation guard — false
+activation 5.94 -> **5.86 pp** against the unchanged +2.0 pp guard, delta-recall
+1.85 -> **2.194 pp** (still below the 5.0 pp bar), McNemar p 0.4823 ->
+**0.3933**, train corpora 109 -> **110**, cases 1060 -> **1076**, catalogue
+unchanged at 300. `delivery-set-measurement-2026-08-31.json`: precision@5
+**80.096 %** (unmoved), recall@5 62.082 -> **61.06 %**, recall loss 37.918 ->
+**38.94 pp** — the ceiling stays **BREACHED** — false activation@5 **15.69 %**,
+context cost **230.5** tokens against the 500 target, still **MET**. Neither
+verdict changes in kind.
+
+**What provably did NOT change, checked rather than asserted.** Re-running this
+file's own reproduce recipe over the tree and diffing every published row
+reports **exactly one row absent** — `security` — **zero** hash mismatches and
+**zero** orphans over the 140 rows published before this change. No pre-existing
+corpus file was edited here, so this growth is pure addition.
+
+**One grandfather entry went with it, not three.** The branch's own earlier note
+claimed `security`, `form-handler` and `judge-security-auditor` were removed
+from `src/scripts/trigger_eval_grandfather.json` together. By the time this
+merge ran, `drain/local-gates-wired-20261013` had already removed the latter two
+on the trunk — the correction § Growth — 2026-10-12 records — so only `security`
+was left to remove and the merge kept exactly that one. A removal counted twice
+is the same class of error as a count left behind, and it is recorded here
+rather than silently reconciled.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to any
+file in the set.
+
 ## The set hash
 
 ```
-SET-SHA256  bb76aad936129e81c40c5be40e8d20abd08909797f5c8c0942fb19cb49e05215
+SET-SHA256  6f69734a1d39b0aecd758c0d3b7ef17bc89404e8f4b37ca17a7b58964eb07a50
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -410,6 +480,7 @@ today — `git diff 34318f7f..HEAD` over the three paths is empty:
 | `database` | `07b320a1bcde1f8565aa1cae12d383b765fd1a9d0289703fccfa79f7486b5688` |
 | `threat-modeling` | `0cc498c5…` | `6bdb1d3b…` |
 | `markitdown` | `ccaac56a…` | `663ee4c4…` |
+| `security` | `e5957997cd09e5fbad202c57ccf86650c666c3211f1d620bf65fedd0f3108e0a` |
 | `security-audit` | `8005676c…` | `27ccbdcd…` |
 
 **The ordering claim is re-verified, not assumed to survive.** AC-6 asserts the

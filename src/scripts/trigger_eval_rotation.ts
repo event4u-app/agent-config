@@ -82,7 +82,22 @@ export const QUERIES_PER_SUITE = 10;
  * **Set from measurement, and the arithmetic is the point.** At 102 suites a
  * full pass costs ~1020 queries; spread over a 12-week cycle that is ~85 a week
  * on average and 140 in the busiest week (hash spread, measured 2026-09-30).
- * 160 leaves headroom for that unevenness and reds at roughly 117 suites.
+ * 160 left headroom for that unevenness. The estimate that it "reds at roughly
+ * 117 suites" assumed an even spread the hash did not produce — the tree passed
+ * at 140 — and is kept here as the 2026-09-30 reasoning, not as a live figure.
+ *
+ * **Raised to 200 by the repository owner on 2026-10-14.** Measured that day:
+ * 140 suites on `main`, ~117 queries a week on average, and a peak of exactly
+ * 160 because FNV-1a puts 16 suites in each of slots 3 and 10. The `security`
+ * corpus hashes into slot 3 and made it 17, a peak of 170. The peak is set by
+ * the busiest slot, not by the suite count, so growth is free until a suite
+ * lands in a full slot. 200 was chosen over 170 because 170 would bring the same
+ * decision back with the next suite in slot 3 or 10. At 200 every slot holds 20
+ * suites: slot 3 (17) has room for 3 more, slot 10 (16) for 4. Each suite added
+ * to the busiest slot costs `QUERIES_PER_SUITE` on the peak; anywhere else it
+ * costs nothing on the peak. Rejected that day: rebalancing the slots (gives up
+ * "a new suite moves no other") and decoupling coverage from the paid replay
+ * (the largest change). Reopen when a slot reaches 20 suites.
  *
  * The number nobody can lower by tuning: a 90-day window over N suites costs
  * `N × QUERIES_PER_SUITE` every 90 days, whatever the schedule. The scheme this
@@ -90,7 +105,7 @@ export const QUERIES_PER_SUITE = 10;
  * over 102 suites is a 21-week cycle, which misses the 90-day window by 57 days.
  * Cheapness was the symptom of the defect, not a property worth preserving.
  */
-export const MAX_WEEKLY_QUERIES = 160;
+export const MAX_WEEKLY_QUERIES = 200;
 
 /**
  * FNV-1a over the suite id. Any stable hash works; what matters is that a
