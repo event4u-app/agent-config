@@ -92,6 +92,24 @@ run compares is therefore the `HEAD` commit: the changed-file list is
 tree. In CI the gate reads the checkout's own `HEAD`. Commit first, then
 print the digest, and show the reviewers that same commit.
 
+**One run, one commit.** When the gate builds the changed-file list itself (no
+`--files`), it resolves `--rev` **once**, to a commit id, before anything else,
+and hands that id — never the name — to the diff, the digest and the record
+read. A `HEAD`, branch or tag that moves during the run therefore cannot pair
+one commit's file list with another commit's content or record. The diff runs
+through the same git invocation as the digest, with the repository-locating
+environment (`GIT_DIR` and its siblings) removed, so the list and the content
+come from the same repository. An option that takes a value — `--rev`,
+`--root`, `--base-ref`, `--policy-root` — and is given none is a refusal
+(exit 1), as in the subject CLI, never a fall-back to the default.
+
+**The one exception: an empty gated set reads no commit.** When no changed path
+is gated, the digest is the digest of nothing and no record is owed, so neither
+`ratification_subject` nor the gate under `--files` resolves the revision, and
+an invalid `--rev` then passes rather than refusing. Without `--files` the gate
+still resolves it, because the diff needs a commit. The exception is
+deliberate: there is no content whose reading the revision could change.
+
 A gated path that is absent in the commit is a deletion. A gated path whose
 tree entry is a regular file (`100644`, `100755`) is hashed. **Every other entry
 is a refusal**, and the one that needs a decision is the symbolic link (mode
