@@ -22,11 +22,13 @@
  *     runs them all and prints one ✅/❌ line per scenario.
  *
  * The drill never touches git, gh, npm, or the filesystem outside reading
- * package.json (execute()'s own resume-mode bump-skip probe).
+ * package.json (execute()'s own resume-mode bump-skip probe); step 2's bump
+ * writes land in memory (`_install_step_2_overlay`).
  */
 
 import * as fs from 'node:fs';
 import * as os from 'node:os';
+import { createRequire, syncBuiltinESMExports } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -52,7 +54,7 @@ import {
 } from './release_env.js';
 
 /**
- * The files step 2 mutates on disk, snapshotted around every scenario.
+ * The files step 2 mutates on disk, diverted into memory for every scenario.
  *
  * The FakeWorld intercepts COMMANDS, not `fs` writes, and step 2's bump is
  * seven direct writes. Every scenario before 2026-09-03 passed `--resume` with
@@ -61,10 +63,17 @@ import {
  * reached the writing arm. The first `resume: false` scenario appended twelve
  * `## 14.15.0` headings to the REAL `CHANGELOG.md`.
  *
- * Snapshot-and-restore rather than a writer seam: a seam means threading an
- * injection point through seven call sites in `release.ts`, which sits past the
- * 1500-line cap where every line is charged. This is contained to the runner
- * and covers any future scenario without further thought.
+ * Snapshot-and-restore fixed the end state and not the window: `writeFileSync`
+ * truncates before it writes, so every other vitest worker could read these
+ * files empty or bumped mid-scenario. CI run 38555715168 (job 115824218308)
+ * failed to collect an unrelated suite on `package.json: File is empty`, 160 ms
+ * before this drill finished in the same shard. So the writes never reach the
+ * disk: reads and writes of exactly these paths go to an in-memory overlay.
+ *
+ * Patched on the CJS `fs` object and pushed to the ESM namespace with
+ * `syncBuiltinESMExports`, rather than through a writer seam: a seam means
+ * threading an injection point through seven call sites in `release.ts`, which
+ * sits past the 1500-line cap where every line is charged.
  */
 const _MUTATED_BY_STEP_2: readonly string[] = [
     CHANGELOG,
@@ -76,22 +85,40 @@ const _MUTATED_BY_STEP_2: readonly string[] = [
     PROJECT_TEMPLATE,
 ];
 
-function _snapshot_step_2_files(): Map<string, string> {
-    const snap = new Map<string, string>();
-    for (const f of _MUTATED_BY_STEP_2) {
-        if (fs.existsSync(f)) {
-            snap.set(f, fs.readFileSync(f, 'utf-8'));
-        }
-    }
-    return snap;
-}
+const _fs_cjs = createRequire(import.meta.url)('node:fs') as typeof fs;
 
-function _restore_step_2_files(snap: ReadonlyMap<string, string>): void {
-    for (const [f, content] of snap) {
-        if (fs.readFileSync(f, 'utf-8') !== content) {
-            fs.writeFileSync(f, content);
-        }
-    }
+/** Divert step 2's reads and writes of `_MUTATED_BY_STEP_2` into memory; returns the uninstaller. */
+function _install_step_2_overlay(): () => void {
+    const watched = new Set(_MUTATED_BY_STEP_2.map((f) => path.resolve(f)));
+    const overlay = new Map<string, string>();
+    const real_read = _fs_cjs.readFileSync;
+    const real_write = _fs_cjs.writeFileSync;
+    const watched_key = (p: unknown): string | null => {
+        if (typeof p !== 'string' && !(p instanceof URL)) return null;
+        const abs = path.resolve(p instanceof URL ? fileURLToPath(p) : p);
+        return watched.has(abs) ? abs : null;
+    };
+    _fs_cjs.readFileSync = ((p: fs.PathOrFileDescriptor, opts?: unknown) => {
+        const k = watched_key(p);
+        const body = k === null ? undefined : overlay.get(k);
+        if (body === undefined) return real_read(p, opts as fs.ObjectEncodingOptions);
+        const enc = typeof opts === 'string' ? opts : (opts as { encoding?: unknown } | undefined)?.encoding;
+        return enc ? body : Buffer.from(body, 'utf-8');
+    }) as typeof fs.readFileSync;
+    _fs_cjs.writeFileSync = ((p: fs.PathOrFileDescriptor, data: string | NodeJS.ArrayBufferView, opts?: fs.WriteFileOptions) => {
+        const k = watched_key(p);
+        if (k === null) return real_write(p, data, opts);
+        overlay.set(
+            k,
+            typeof data === 'string' ? data : Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString('utf-8'),
+        );
+    }) as typeof fs.writeFileSync;
+    syncBuiltinESMExports();
+    return () => {
+        _fs_cjs.readFileSync = real_read;
+        _fs_cjs.writeFileSync = real_write;
+        syncBuiltinESMExports();
+    };
 }
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -1343,7 +1370,7 @@ function run_scenario(name: string): ScenarioOutcome {
         captured.push(String(s));
         return true;
     };
-    const tree_snapshot = _snapshot_step_2_files();
+    const remove_overlay = _install_step_2_overlay();
     _set_exec_override((args) => world.exec(args));
     // The working-tree read, faked for the same reason the command layer is.
     // Without this the drill's step 9 reads the repository's real CHANGELOG.md.
@@ -1365,7 +1392,7 @@ function run_scenario(name: string): ScenarioOutcome {
         _set_changelog_reader(null);
         process.stdout.write = orig_out;
         process.stderr.write = orig_err;
-        _restore_step_2_files(tree_snapshot);
+        remove_overlay();
     }
 
     const failures: string[] = [];
