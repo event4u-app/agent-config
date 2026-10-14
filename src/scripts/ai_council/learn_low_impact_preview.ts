@@ -171,7 +171,7 @@ export class LearnLowImpactPreview {
         }
         if (this.refused.length > 0) {
             lines.push(
-                '> Refusals block the PR. Rephrase the entries locally' +
+                '> Refusals block promotion. Rephrase the entries locally' +
                     ' (or drop them) and re-run.',
             );
         } else if (this.promoted.length > 0) {

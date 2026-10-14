@@ -112,8 +112,8 @@ output of a payload builder that does not exist yet — steps 2.1 and 4.3 of
 them, because a fabricated pre-send check is worse than a short one.
 
 **No record yet?** Then there is nothing to release, and no command here
-makes one. `self-repair:status` LISTS records; the dispatcher's whole verb
-set is `status`, `release` and `targets`. A record is opened by the
+makes one. `self-repair:status` LISTS records, and it plus `self-repair:release`
+are the only two verbs `./agent-config` routes. A record is opened by the
 self-repair hook when it observes the defect, so a learning that no record
 covers cannot ride this ladder today — that gap is real, it is named here
 rather than papered over, and it is the consumer-project case

@@ -9,7 +9,7 @@ scope:
 execution:
   type: assisted
   handler: internal
-  allowed_tools: []
+  allowed_tools: ["Bash(./agent-config:*)"]
 workspaces:
   - agent-config-maintainer
 packs:
@@ -55,15 +55,15 @@ A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 
 `self-repair:release` carries the privacy floor over the record text, the
 may-not-modify deny list, the route ladder (pull request, then issue, then a
-local record) and the per-turn Hard-Floor confirmation. A checkbox in a skill
+local record). The per-turn Hard-Floor word is the person's: `releaseCmd` has
+no prompt, and invoking it IS the confirmation. A checkbox in a skill
 carries none of them, which is why this skill asks a *worth it* question and
 nothing else.
 
 Widening that floor to the whole payload is Phase 2 of
 `road-to-one-upstream-that-checks-what-leaves` and is not built. The release
-pushes a branch the author already committed, so read that branch before the
-send: a company e-mail in a commit identity has nothing else standing in front
-of it.
+pushes a branch the author committed, so read it before the send: a company
+e-mail in a commit identity has nothing else in front of it.
 
 ## Core principles
 
@@ -230,12 +230,11 @@ is no scrubbing pass, because a rewritten identifier is still a leaked one.
 
 ### 5. Quality gates (only inside a checkout of this package)
 
-Run the package's full CI pipeline and confirm it is green. This is numbered
-before the send because it runs before the send.
+Run the package's full CI pipeline and confirm it is green. Numbered before
+the send because it runs before the send.
 [`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
-and names it; a consumer has no such runner, which is why the command is not
-repeated. Outside a checkout there is nothing to run first and the package CI
-runs after the issue or pull request exists.
+and names it; a consumer has no such runner, so the command is not repeated.
+Outside a checkout the package CI runs after the issue or pull request exists.
 
 ### 6. Send — one command, one turn, one word
 
@@ -295,5 +294,5 @@ replaces the local override.
 - Do NOT stage with a bare `git add .` — name the paths
 - Do NOT rewrite what the privacy floor refused; a refused finding stays local
 - Do NOT assume consent from a previous contribution — ask every time
-- Do NOT bypass quality gates — they exist for a reason, and in a checkout of
-  this package they run BEFORE the send
+- Do NOT bypass quality gates — in a checkout of this package they run BEFORE
+  the send

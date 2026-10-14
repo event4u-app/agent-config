@@ -198,6 +198,20 @@ describe('learn_low_impact_preview — bucketing + flags', () => {
         expect(block).toContain('sends nothing');
     });
 
+    // The OTHER branch of the same closing switch, and the one a privacy
+    // refusal actually reaches. The case above needs a clean corpus to reach
+    // the promoted branch, which left this one uncovered — and uncovered is
+    // where the stale "blocks the PR" wording survived two rounds.
+    it('the refusal branch names no PR either', () => {
+        const p = build_preview(tmpFile('refused.md', corpus()), '/no/such/seed.md');
+        expect(p.refused.length).toBeGreaterThan(0);
+
+        const block = p.render();
+        expect(block).toContain('Refusals block promotion');
+        expect(block).not.toContain('block the PR');
+        expect(block).not.toContain('--apply');
+    });
+
     it('the rendered body advertises no retired --apply route', () => {
         const p = build_preview(tmpFile('body.md', corpus()), '/no/such/seed.md', {
             repoSlug: 'acme/widgets',

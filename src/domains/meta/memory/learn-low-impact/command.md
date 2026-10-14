@@ -61,7 +61,7 @@ import * as path from 'node:path';
 import {
     build_preview,
     PACKAGE_SEED_PATH,
-} from '../../scripts/ai_council/learn_low_impact_preview.js';
+} from 'src/scripts/ai_council/learn_low_impact_preview.js';
 
 // Both paths are RELATIVE and must be resolved explicitly — the corpus
 // against the project root, the seed against the PACKAGE root. Passed bare

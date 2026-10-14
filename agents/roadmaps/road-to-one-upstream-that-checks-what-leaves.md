@@ -166,9 +166,10 @@ Nothing is sent without the person's word in that turn.
       branch is `retro/<fingerprint[:8]>`.
       **Half landed 2026-10-14, half sequenced.** F4 is closed: `prArgs` now
       carries `--draft` before `--title`, on **both** rungs of the ladder — the
-      direct-push one and the fork one, which builds its own argv and would
-      otherwise have kept opening ready-for-review for exactly the contributor
-      who has no push rights. Three cases in
+      direct-push one and the fork one. The two share one `prArgs` array, so
+      one flag does cover both — but the fork rung reaches it down a different
+      path and appends its own `--head`, and a later split of that array would
+      be invisible to a test that only drove the direct-push rung. Three cases in
       `tests/scripts/self_repair_release.test.ts` drive the real
       `executeRelease` through a scripted runner, and all three were watched
       red with the flag removed. One of them only became sensitive after that
