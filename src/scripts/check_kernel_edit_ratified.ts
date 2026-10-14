@@ -86,8 +86,7 @@ import {
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
 import {
-    GatedFileUnreadable,
-    GatedPathEscapes,
+    GatedSubjectRefusal,
     subjectOf,
     type SubjectReading,
 } from './_lib/ratification_subject.js';
@@ -413,14 +412,14 @@ function derivedFor(root: string): readonly string[] {
  * for the diffs where the two lists disagree, which are exactly the diffs that
  * widen the gated set.
  *
- * RETURNS BOTH HALVES because a 2026-10-13 council review found the CLI
- * printing a coverage list it had classified separately, with a different
- * `derived` input, beside a digest classified here. A list that can disagree
- * with the digest it is printed next to is the exact false reassurance that
- * list exists to prevent, so there is now one call and one answer.
+ * RETURNS BOTH HALVES so that the coverage list printed beside a digest is the
+ * list that digest was taken over: a list classified separately, with a
+ * different `derived` input, could disagree with it — the false reassurance
+ * that list exists to prevent.
  *
- * THROWS {@link GatedFileUnreadable} when a gated path exists and cannot be
- * read. Callers turn that into a refusal; none of them may continue.
+ * THROWS a {@link GatedSubjectRefusal} when a gated path cannot be described —
+ * unreadable, escaping the tree, or not an absent path, link or regular file.
+ * Callers turn that into a refusal; none of them may continue.
  */
 export function expectedSubjectFor(files: readonly string[], root: string): SubjectReading {
     return subjectOf(root, files, derivedFor(root));
@@ -502,27 +501,20 @@ export function evaluate(
     try {
         expectedSubject = expectedSubjectFor(files, root).digest;
     } catch (err) {
-        // ONE boundary for EVERY failure of the subject computation, and the
-        // enumeration is the point. Round 2 of the 2026-10-13 modification
-        // review refused the change because this catch knew only one of the
-        // two error classes the same diff had introduced: "`GatedFileUnreadable`
-        // gets the full treatment (defined → thrown → caught → structured
-        // refusal). `GatedPathEscapes` gets only the first half (defined →
-        // thrown), then escapes." A gate that advertises a refusal and crashes
-        // instead has no refusal.
+        // ONE boundary for EVERY failure of the subject computation: each is
+        // a subclass of `GatedSubjectRefusal`, so a gate that advertises a
+        // refusal cannot crash on one of its own refusal classes instead.
         //
         // Fail closed, and BEFORE the "nothing to ratify" exit: a gated path
-        // this process could not read, or one that points outside the
-        // revision, is a checkout the gate cannot describe, and a gate that
-        // cannot describe the content cannot say a record answers for it.
+        // this process could not read, one that points outside the revision,
+        // or one that is not a file, link or absence is a checkout the gate
+        // cannot describe, and a gate that cannot describe the content cannot
+        // say a record answers for it.
         //
-        // NARROW AND TYPED, never a blanket catch. The blind peer-review stage
-        // of the same round named the alternative as its own defect — wrapping
-        // everything would "conceal programming defects as ordinary refusals",
-        // which is the fail-open shape round 1 already refused once. Anything
-        // that is not one of these two classes is a bug in this gate and stays
-        // a crash.
-        if (!(err instanceof GatedFileUnreadable) && !(err instanceof GatedPathEscapes)) {
+        // NARROW AND TYPED, never a blanket catch: wrapping everything would
+        // report a defect in this gate as a property of the checkout. Anything
+        // that is not a refusal is a bug here and stays a crash.
+        if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
         }
         lines.push(`❌  ${err.message}`);

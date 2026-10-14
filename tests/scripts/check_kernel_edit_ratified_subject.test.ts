@@ -192,6 +192,22 @@ describe('2.3 — every failure of the subject computation leaves the gate as a 
         }
     });
 
+    it('a gated path that is not a file, link or absence is a refusal, not an exception', () => {
+        // Step 2.5: the third refusal class, through the real gate. The catch
+        // in `evaluate()` names the refusal base class, so a new subclass is
+        // handled without a new clause; this case is what proves it.
+        const abs = path.join(root, KERNEL);
+        fs.rmSync(abs);
+        fs.mkdirSync(abs);
+        let r: ReturnType<typeof evaluate> | null = null;
+        expect(() => {
+            r = evaluate([KERNEL], root, 2);
+        }).not.toThrow();
+        expect(r).not.toBeNull();
+        expect(r!.exitCode).toBe(1);
+        expect(r!.lines.join('\n')).toContain('is a directory');
+    });
+
     it('a refusal still closes the ledger rather than leaving targets unaccounted', () => {
         // Polarity on the SHAPE of the refusal, not only its exit code: the
         // early return runs `close(false)`, and `finalize()` throws on an

@@ -78,6 +78,25 @@ describe('ratification_subject main() — the refusal path', () => {
         expect(r.err).toMatch(/^error: /);
     });
 
+    it('a gated path that is a directory exits 1, on stderr, with no digest', () => {
+        const root = tmpKernel('one\n');
+        const abs = path.join(root, KERNEL);
+        fs.rmSync(abs);
+        fs.mkdirSync(abs);
+        const r = run(['--root', root, '--files', KERNEL]);
+        expect(r.code).toBe(1);
+        expect(r.out).toBe('');
+        expect(r.err).toContain('is a directory');
+    });
+
+    it('--quiet over an empty gated set warns on stderr and still prints the digest', () => {
+        const root = tmpKernel('one\n');
+        const r = run(['--quiet', '--root', root, '--files', 'README.md']);
+        expect(r.code).toBe(0);
+        expect(r.out).toMatch(/^[0-9a-f]{64}\n$/);
+        expect(r.err).toContain('covers nothing');
+    });
+
     it('an unrelated programming error propagates instead of becoming a refusal', async () => {
         const programming = new TypeError('a defect in the subject computation');
         vi.resetModules();

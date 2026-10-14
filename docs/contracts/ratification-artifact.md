@@ -79,7 +79,12 @@ refuses a record whose `subject` is absent (`subject-absent`), not a digest
 (`subject-malformed`) or a different one (`subject-mismatch`). A gated path it
 cannot read, or one that would resolve outside the tree, is a refusal too —
 an unreadable file is not a deleted one, and a digest that described either as
-the other would be the fail-open shape this mechanism exists to refuse.
+the other would be the fail-open shape this mechanism exists to refuse. So is a
+gated path that is not absent, a symbolic link or a regular file — a FIFO,
+socket, device or directory is refused before it is opened, because opening a
+FIFO can block the gate — and a platform that cannot open without following a
+link (`O_NOFOLLOW`) or without blocking (`O_NONBLOCK`) refuses rather than
+reading with less protection.
 
 | What it adds | Why the other seven did not |
 |---|---|

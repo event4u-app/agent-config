@@ -12,7 +12,7 @@
  * disagree with the gate exactly on the changes that widen the gated set, which
  * are the changes a record most needs to be right about.
  *
- * Usage: ratification_subject --files <path> [<path> …] [--root DIR]
+ * Usage: ratification_subject --files <path> [<path> …] [--root DIR] [--quiet]
  *
  * `--files` takes the change's WHOLE changed-file list, not its gated subset:
  * which of them are gated is the gate's decision, not the caller's, and passing
@@ -20,18 +20,19 @@
  * Ungated paths are ignored, so `git diff --name-only <base>...HEAD` is the
  * intended input.
  *
- * Exit codes: 0 = digest printed · 1 = refused, a gated path could not be read
- * or resolves outside the tree (nothing on stdout) · 2 = usage error.
+ * `--quiet` prints the digest alone; over an empty gated set it also warns on
+ * stderr that the digest covers nothing.
+ *
+ * Exit codes: 0 = digest printed · 1 = refused, a gated path could not be read,
+ * resolves outside the tree, or is not an absent path, a symbolic link or a
+ * regular file (nothing on stdout) · 2 = usage error.
  */
 
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { expectedSubjectFor } from './check_kernel_edit_ratified.js';
-import {
-    GatedFileUnreadable,
-    GatedPathEscapes,
-} from './_lib/ratification_subject.js';
+import { GatedSubjectRefusal } from './_lib/ratification_subject.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
@@ -81,46 +82,43 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     if (files.length === 0) {
         process.stderr.write(
-            'usage: ratification_subject --files <path> [<path> …] [--root DIR]\n' +
+            'usage: ratification_subject --files <path> [<path> …] [--root DIR] [--quiet]\n' +
                 '       pass the whole changed-file list; the gated subset is this gate’s decision\n',
         );
         return 2;
     }
 
-    // ONE call for both halves. A 2026-10-13 council review found this
-    // function printing `gatedFilesOf(files)` — a second classification, with a
-    // different `derived` input — beside a digest classified by the gate. The
-    // list exists so nobody copies a confident-looking digest over no files;
-    // a list that can disagree with its own digest emits exactly that false
-    // reassurance instead of preventing it.
-    //
-    // The SECOND caller of the subject computation, and it is caught here for
-    // the same reason the gate catches it: step 2.3's title says every failure
-    // of that computation is one structured refusal, and a caller that prints
-    // a Node stack trace instead is a place where that sentence is not true.
-    // The two classes are enumerated, never blanket-caught — a defect in this
-    // file stays a crash.
+    // ONE call for both halves, so the printed list is the list the digest
+    // covers. Every refusal of the subject computation is one class and is
+    // caught here as it is in the gate; anything else is a defect in this
+    // file and stays a crash.
     let digest: string;
     let gated: readonly string[];
     try {
         ({ digest, gatedFiles: gated } = expectedSubjectFor(files, root));
     } catch (err) {
-        if (!(err instanceof GatedFileUnreadable) && !(err instanceof GatedPathEscapes)) {
+        if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
         }
         process.stderr.write(`error: ${err.message}\n`);
         return 1;
     }
 
+    // A digest over an empty list is a well-formed 64 hex characters and says
+    // nothing, so a caller who mistyped a path would otherwise copy a
+    // confident-looking answer about no files at all. The full output lists
+    // the coverage; `--quiet` drops the list, so it says so on stderr instead.
     if (quiet) {
+        if (gated.length === 0) {
+            process.stderr.write(
+                'warning: no gated file in this change — this digest covers nothing, ' +
+                    'and no record is owed\n',
+            );
+        }
         process.stdout.write(`${digest}\n`);
         return 0;
     }
 
-    // The gated list is printed with the digest on purpose: a digest over an
-    // empty list is a well-formed 64 hex characters and says nothing, so a
-    // caller who mistyped a path would otherwise copy a confident-looking
-    // answer about no files at all.
     process.stdout.write(`subject: ${digest}\n`);
     process.stdout.write(`\ngated files covered (${String(gated.length)}):\n`);
     if (gated.length === 0) {

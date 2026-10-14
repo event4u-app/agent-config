@@ -22,13 +22,17 @@
  * not the content that was reviewed, which is precisely what should move it.
  *
  * WHAT IT READS, AND WHAT IT THEREFORE DOES NOT PROVE. It reads the WORKING
- * TREE, not Git objects. A reviewer of this mechanism asked for revision-based
- * hashing instead; that remains the stronger shape and is not what ships here,
- * so against a dirty tree the digest describes the dirty bytes. What the same
- * review DID change is the symlink case below — a dereferenced link made the
- * digest depend on content outside the revision entirely, which is a different
- * and worse defect than depending on an uncommitted edit, because no amount of
- * cleanliness in the checkout removes it.
+ * TREE, not Git objects, so against a dirty tree the digest describes the
+ * dirty bytes; revision-based hashing is the stronger shape and is not what
+ * ships here. What it never does is follow a symbolic link: a dereferenced
+ * link would make the digest depend on content outside the revision entirely,
+ * which no amount of cleanliness in the checkout removes.
+ *
+ * WHAT IT READS AT ALL. A gated path is absent, a symbolic link, or a regular
+ * file — the three object kinds Git can store and this digest can describe.
+ * Anything else is refused before it is opened. The history of how each of
+ * these properties was arrived at is in the ratification record
+ * `drain-self-modification-narrowed-20261013.md`, not here.
  */
 
 import { createHash } from 'node:crypto';
@@ -57,32 +61,43 @@ export const DELETED_MARKER = '\u0000deleted\u0000';
  * Prefixes the target of a gated path that is a SYMLINK, so the digest records
  * the link rather than whatever it currently points at.
  *
- * A council review of this mechanism found the gap: `readFileSync`
- * dereferences, so a gated path committed as a symlink was hashed as its
- * target's bytes — which live outside the reviewed revision and can differ
- * between two clean checkouts of the same commit. Git stores a symlink as a
- * blob containing its target string, and that is what is hashed here, so the
- * digest describes the committed object. A broken link is a link, not a
- * deletion, and is recorded as one.
+ * Git stores a symlink as a blob containing its target string, and that is
+ * what is hashed here, so the digest describes the committed object rather
+ * than bytes that live outside the revision and can differ between two clean
+ * checkouts of the same commit. A broken link is a link, not a deletion, and is
+ * recorded as one.
  */
 export const SYMLINK_MARKER = '\u0000symlink\u0000';
 
 /**
+ * Every way the subject computation declines to describe a tree.
+ *
+ * The callers — the gate's `evaluate()` and the CLI — catch THIS class and
+ * nothing broader, so a new refusal is one subclass rather than an edit to
+ * every catch, and an error that is not a refusal (a defect in this code)
+ * still escapes as a crash instead of being reported as a property of the
+ * checkout.
+ */
+export class GatedSubjectRefusal extends Error {
+    constructor(
+        readonly rel: string,
+        message: string,
+    ) {
+        super(message);
+        this.name = 'GatedSubjectRefusal';
+    }
+}
+
+/**
  * Raised when a gated path would resolve outside the tree under review.
  *
- * THIS DOC BLOCK USED TO DESCRIBE A DIFFERENT CLASS. It carried
- * {@link GatedFileUnreadable}'s `lstat` / ENOENT argument verbatim, which says
- * nothing about path containment and is now where it belongs. A comment that
- * describes the wrong mechanism is worse than none on a governance surface: it
- * answers a reader's question with another class's reasoning, and the reader
- * has no way to know.
- *
- * The containment itself fails CLOSED rather than dropping the path —
- * see {@link assertContained} for why that direction is the safe one.
+ * Fails CLOSED rather than dropping the path — see {@link assertContained}
+ * for why that direction is the safe one.
  */
-export class GatedPathEscapes extends Error {
-    constructor(readonly rel: string) {
+export class GatedPathEscapes extends GatedSubjectRefusal {
+    constructor(rel: string) {
         super(
+            rel,
             `gated path \`${rel}\` is absolute or contains a \`..\` segment, so joining it to ` +
                 'the tree root would read outside the revision under review — the digest refuses ' +
                 'rather than describing content that is not in the change',
@@ -92,55 +107,20 @@ export class GatedPathEscapes extends Error {
 }
 
 /**
- * Refuse a gated path that would read outside `root`.
- *
- * FOUND BY THE TEST THAT PINS IT, on a 2026-10-13 council question: the gate's
- * `KERNEL_RULE_PATH_RE` is `(?:^|\/)rules\/([a-z0-9-]+)\.md$`, which is NOT
- * anchored at the start, so `../../elsewhere/rules/commit-policy.md` classifies
- * as a kernel rule. That was harmless while the gate only read path NAMES. It
- * stopped being harmless the moment this module began joining those names to a
- * root and reading the bytes, which is what the content binding does — so the
- * containment belongs here, with the read, and it FAILS CLOSED rather than
- * dropping the path: dropping it would make the digest cover less than the gate
- * gated, which is the divergence the same review refused elsewhere.
- *
- * Tightening the gate's own regex is a change to the gate's classification and
- * therefore a separate, gated concern. This bound holds whatever that regex
- * does.
- */
-const ESCAPING_SEGMENT = /(?:^|\/)\.\.(?:\/|$)/u;
-
-function assertContained(rel: string): void {
-    if (rel.startsWith('/') || /^[A-Za-z]:[\\/]/u.test(rel) || ESCAPING_SEGMENT.test(rel)) {
-        throw new GatedPathEscapes(rel);
-    }
-}
-
-/**
  * Raised when a gated path exists but cannot be read.
  *
- * A 2026-10-13 council review refused the change over the shape this
- * replaces: every `lstat` failure became `null`, and `null` is the DELETION
- * marker — so a permission error, an I/O error or a transient filesystem
- * failure on a gated file produced the digest of a tree in which that file
- * had been removed. Both seats named it, and one named the consequence that
- * makes it more than untidy: anyone who can provoke such an error on a gated
- * path can force its real content out of the digest.
- *
- * Only ENOENT and ENOTDIR mean ABSENT. Everything else is a checkout this
- * code cannot describe, and describing it anyway is the fail-open move a
- * previous round of this same review already refused once.
- *
- * Round 2 of the same review found the other half: this class was raised
- * only from the `lstat`, and the reads AFTER it were unwrapped. Both reads
- * now raise it too, through {@link readGatedFile} and {@link readGatedLink}.
+ * Only ENOENT and ENOTDIR mean ABSENT. Every other failure says the file may
+ * well be there and this process could not look, and representing that with
+ * the deletion marker would let anyone who can provoke such an error on a
+ * gated path force its real content out of the digest.
  */
-export class GatedFileUnreadable extends Error {
+export class GatedFileUnreadable extends GatedSubjectRefusal {
     constructor(
-        readonly rel: string,
+        rel: string,
         readonly errno: NodeJS.ErrnoException,
     ) {
         super(
+            rel,
             `gated path \`${rel}\` exists but could not be read ` +
                 `(${errno.code ?? errno.message}) — the digest refuses to describe a tree it ` +
                 'could not read, because an unreadable file is not a deleted one',
@@ -150,22 +130,70 @@ export class GatedFileUnreadable extends Error {
 }
 
 /**
+ * Raised when a gated path is an object the digest does not describe, or when
+ * this platform cannot read it without following a link.
+ *
+ * Refused BEFORE any `open`: opening a FIFO read-only blocks until a writer
+ * appears, so a gate that opened first and checked second could hang instead
+ * of answering. Git cannot commit a FIFO, socket, device or directory at a
+ * file path, so meeting one means the checkout is not a revision this digest
+ * can stand for.
+ */
+export class GatedPathUnsupported extends GatedSubjectRefusal {
+    constructor(
+        rel: string,
+        readonly kind: string,
+        why: string,
+    ) {
+        super(rel, `gated path \`${rel}\` ${why} — the digest refuses rather than reading it`);
+        this.name = 'GatedPathUnsupported';
+    }
+}
+
+/**
+ * `..` as a whole segment, under either separator. The CLI and the gate
+ * normalise `\` to `/` before classifying, but this bound is checked on the
+ * string it is given so that it holds for any caller.
+ */
+const ESCAPING_SEGMENT = /(?:^|[\\/])\.\.(?:[\\/]|$)/u;
+
+/**
+ * POSIX-absolute, UNC (`\\server\share`, `//server/share`), rooted (`\x`) and
+ * drive-qualified (`C:\x`, `C:x`) paths — every shape `path.join` would not
+ * keep under the root on one platform or another.
+ */
+const ABSOLUTE_SHAPE = /^(?:[\\/]|[A-Za-z]:)/u;
+
+/**
+ * Refuse a gated path that would read outside `root`.
+ *
+ * The gate's `KERNEL_RULE_PATH_RE` is not anchored at the start, so a path
+ * such as `../../elsewhere/rules/commit-policy.md` classifies as a kernel rule.
+ * That was harmless while the gate only read path NAMES; it stops being
+ * harmless once those names are joined to a root and read, so the containment
+ * belongs here, with the read. It FAILS CLOSED rather than dropping the path:
+ * dropping it would make the digest cover less than the gate gated.
+ *
+ * Tightening the gate's own regex is a change to the gate's classification and
+ * therefore a separate, gated concern. This bound holds whatever that regex
+ * does.
+ */
+export function assertContained(rel: string): void {
+    if (ABSOLUTE_SHAPE.test(rel) || ESCAPING_SEGMENT.test(rel)) {
+        throw new GatedPathEscapes(rel);
+    }
+}
+
+/**
  * An errno failure, or `null` for anything else.
  *
- * THE TRANSLATION IS NARROW ON PURPOSE. The blind peer-review stage of the
- * 2026-10-13 round named the opposite shape as its own defect: a blanket
- * `catch` around the read would "conceal programming defects as ordinary
- * refusals", so a `TypeError` from a future edit of this loop would surface as
- * "the tree could not be read" and nobody would look for the bug.
- *
- * A STRING `code` IS NOT THAT EVIDENCE, and round 3 of the same review refused
- * the change for treating it as such: Node's own programming errors —
- * `ERR_INVALID_ARG_TYPE` and the rest of the `ERR_*` family — are `TypeError`s
- * with a string `code`, so the first version of this check translated exactly
- * the defects it claimed to rethrow. An OS failure is told apart by what only
- * the system-call path attaches: a numeric `errno` AND a string `syscall`, and
- * a `code` outside the `ERR_` namespace. Anything missing one of the three is
- * rethrown unchanged and stays a crash.
+ * Deliberately narrow: a blanket translation would report a defect in this
+ * code as "the tree could not be read" and nobody would look for the bug. A
+ * string `code` alone is not OS evidence, because Node's own programming
+ * errors (`ERR_INVALID_ARG_TYPE` and the rest of the `ERR_*` family) carry one.
+ * An OS failure is told apart by what only the system-call path attaches: a
+ * numeric `errno`, a string `syscall`, and a `code` outside `ERR_`. Anything
+ * missing one of the three is rethrown unchanged and stays a crash.
  */
 export function asErrno(err: unknown): NodeJS.ErrnoException | null {
     if (!(err instanceof Error)) {
@@ -187,8 +215,8 @@ export function asErrno(err: unknown): NodeJS.ErrnoException | null {
  * Translate a filesystem failure on `rel` into a refusal, or rethrow it.
  *
  * The one place the discriminator above is applied, so the `lstat`, the open,
- * the read, the close and the readlink cannot drift into five readings of
- * "is this a filesystem fact".
+ * the `fstat`, the read, the close and the readlink cannot drift into six
+ * readings of "is this a filesystem fact".
  */
 function refuseOrRethrow(rel: string, err: unknown): never {
     const errno = asErrno(err);
@@ -198,32 +226,65 @@ function refuseOrRethrow(rel: string, err: unknown): never {
     throw new GatedFileUnreadable(rel, errno);
 }
 
+/** What a non-regular, non-link `Stats` is, for the refusal message. */
+function kindOf(stat: fs.Stats): string {
+    if (stat.isDirectory()) return 'directory';
+    if (stat.isFIFO()) return 'FIFO';
+    if (stat.isSocket()) return 'socket';
+    if (stat.isCharacterDevice()) return 'character device';
+    if (stat.isBlockDevice()) return 'block device';
+    return 'unknown object';
+}
+
+function refuseKind(rel: string, stat: fs.Stats): never {
+    const kind = kindOf(stat);
+    throw new GatedPathUnsupported(
+        rel,
+        kind,
+        `is a ${kind}, not an absent path, a symbolic link or a regular file`,
+    );
+}
+
 /**
- * `O_NOFOLLOW`, or 0 where the platform has no such flag.
+ * The open flags for a gated read, or a refusal where the platform lacks one.
  *
- * Defined on Linux and macOS, which is where this gate runs — `consistency.yml`
- * is `ubuntu-latest` and the suites are ubuntu plus macOS. The `0` fallback is
- * honest rather than silent: on a platform without the flag the open below
- * degrades to an ordinary one and {@link readGatedFile} loses the containment
- * property its own case asserts. That is stated here because a reader
- * otherwise has to infer it from a bitmask.
+ * `O_NOFOLLOW` is what keeps a path that became a symlink after the `lstat`
+ * from pulling out-of-revision content into the digest; without it the open
+ * dereferences, so its absence is a refusal rather than a quiet degradation.
+ * `O_NONBLOCK` is what keeps a path that became a FIFO after the `lstat` from
+ * blocking the open; the `fstat` that follows then refuses it. Read at call
+ * time rather than module scope so that both are checked on every read.
  */
-const O_NOFOLLOW: number =
-    typeof fs.constants.O_NOFOLLOW === 'number' ? fs.constants.O_NOFOLLOW : 0;
+function gatedOpenFlags(rel: string): number {
+    const { O_NOFOLLOW, O_NONBLOCK, O_RDONLY } = fs.constants;
+    if (typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
+        throw new GatedPathUnsupported(
+            rel,
+            'platform',
+            'cannot be read on this platform without following a symbolic link or blocking ' +
+                'on a FIFO, because `O_NOFOLLOW` or `O_NONBLOCK` is unavailable',
+        );
+    }
+    return O_RDONLY | O_NOFOLLOW | O_NONBLOCK;
+}
+
+function closeQuietly(fd: number): void {
+    try {
+        fs.closeSync(fd);
+    } catch {
+        // A refusal is already on its way; that is the failure reported.
+    }
+}
 
 /**
  * Read a gated path that {@link fs.lstatSync} has just called a regular file,
- * WITHOUT following a symbolic link at its final component.
+ * WITHOUT following a symbolic link at its final component and without
+ * blocking on an object that was swapped in after the stat.
  *
- * THE SYMLINK-SWAP QUESTION, ANSWERED RATHER THAN ASSUMED. One seat of the
- * 2026-10-13 round named a path-substitution race between the stat and the
- * read and asked whether resisting it is inside this gate's threat model. It
- * is, for exactly one direction and for a reason that is cheap to state: a
- * path that is a regular file at `lstat` and a SYMLINK at the read is the only
- * ordering in which out-of-revision CONTENT can enter the digest, because a
- * plain `readFileSync` dereferences. `O_NOFOLLOW` makes that open fail with
- * `ELOOP`, which becomes a refusal — so the race reds the gate instead of
- * digesting a stranger's bytes.
+ * A path that is a regular file at `lstat` and a SYMLINK at the open is the
+ * only ordering in which out-of-revision CONTENT can enter the digest, and
+ * `O_NOFOLLOW` turns it into `ELOOP`, a refusal. A path swapped to a FIFO,
+ * device or directory opens without blocking and is refused by the `fstat`.
  *
  * WHAT IS NOT CLOSED, SAID PLAINLY. Intermediate directory components are
  * still resolved, so a symlinked parent directory committed into the tree
@@ -231,37 +292,36 @@ const O_NOFOLLOW: number =
  * and it is visible in the revision. And an adversary with concurrent write
  * access to the checkout during a gate run can edit the gated bytes BEFORE the
  * stat, forge the record, or patch this file — no ordering of stat and read
- * answers that, and claiming otherwise would be the false assurance this
- * module exists to prevent.
+ * answers that.
  *
- * Exported because a comment claiming a containment property is not a control.
- * Its case opens a symlink directly and expects the refusal; neutralising the
- * flag turns that case red.
+ * The close is inside the translation on every path: the read's failure is
+ * decided first and wins, a close failure after a failed read is dropped, and
+ * a close failure after a successful read is itself a refusal.
  */
 export function readGatedFile(rel: string, abs: string): Buffer {
+    const flags = gatedOpenFlags(rel);
     let fd: number;
     try {
-        fd = fs.openSync(abs, fs.constants.O_RDONLY | O_NOFOLLOW);
+        fd = fs.openSync(abs, flags);
     } catch (err) {
         refuseOrRethrow(rel, err);
     }
-    // THE CLOSE IS INSIDE THE TRANSLATION, and on both paths. Round 3 of the
-    // 2026-10-13 review found it in a `finally`, outside the catch: a close
-    // failure escaped as a raw Node error, and because an exception thrown
-    // from `finally` replaces the pending one, it could also overwrite a read
-    // failure that had already been translated. So the read's failure is
-    // decided first and wins; a close failure after a failed read is dropped
-    // because a refusal is already on its way, and a close failure after a
-    // successful read is itself a refusal.
+    let stat: fs.Stats;
+    try {
+        stat = fs.fstatSync(fd);
+    } catch (err) {
+        closeQuietly(fd);
+        refuseOrRethrow(rel, err);
+    }
+    if (!stat.isFile()) {
+        closeQuietly(fd);
+        refuseKind(rel, stat);
+    }
     let bytes: Buffer;
     try {
         bytes = fs.readFileSync(fd);
     } catch (err) {
-        try {
-            fs.closeSync(fd);
-        } catch {
-            // The primary failure is the one reported; see above.
-        }
+        closeQuietly(fd);
         refuseOrRethrow(rel, err);
     }
     try {
@@ -276,13 +336,11 @@ export function readGatedFile(rel: string, abs: string): Buffer {
  * Read the TARGET STRING of a gated path that `lstat` has just called a
  * symbolic link.
  *
- * The other half of the swap answer, and the measurable one: a link replaced
- * by a regular file between the stat and this call makes `readlinkSync` fail
- * with `EINVAL`, which becomes a refusal rather than a raw Node error escaping
- * `evaluate()`. A swap of the link's TARGET is not a leak at all — the digest
- * records the target STRING and never dereferences it, so the worst a swap can
- * do is move the digest, which reds the gate. Both directions therefore fail
- * closed, and the case below proves the `EINVAL` one rather than asserting it.
+ * A link replaced by a regular file between the stat and this call makes
+ * `readlinkSync` fail with `EINVAL`, which becomes a refusal. A swap of the
+ * link's TARGET is not a leak at all — the digest records the target STRING
+ * and never dereferences it, so the worst a swap can do is move the digest,
+ * which reds the gate.
  */
 export function readGatedLink(rel: string, abs: string): string {
     try {
@@ -295,13 +353,11 @@ export function readGatedLink(rel: string, abs: string): string {
 /**
  * The self surface, by the gate's own constants rather than a copy of them.
  *
- * READ ON FIRST CALL, NOT AT MODULE SCOPE, and the reason is the import cycle
- * the binding introduced. The gate now imports {@link subjectDigest} and this
- * module imports the gate's path constants, so whichever of the two Node
- * evaluates second sees the other half-evaluated; a module-scope
- * `new Set([SELF_PATH, …])` reads those `const` bindings inside the window and
- * throws on the temporal dead zone. Deferring to call time moves the read past
- * both modules' evaluation, where the live bindings are initialised.
+ * READ ON FIRST CALL, NOT AT MODULE SCOPE, because of the import cycle: the
+ * gate imports {@link subjectOf} and this module imports the gate's path
+ * constants, so whichever of the two Node evaluates second sees the other
+ * half-evaluated, and a module-scope `new Set([SELF_PATH, …])` would throw on
+ * the temporal dead zone.
  */
 let selfSetCache: ReadonlySet<string> | null = null;
 
@@ -350,6 +406,26 @@ export interface SubjectReading {
 }
 
 /**
+ * The `lstat` of a gated path, or `null` when it is ABSENT.
+ *
+ * ABSENT is two codes and no more. ENOENT is the file not being there; ENOTDIR
+ * is a parent component not being a directory, which is the same statement
+ * about a path that does not resolve. Everything else says the file may be
+ * there and this process could not look.
+ */
+function lstatGated(rel: string, abs: string): fs.Stats | null {
+    try {
+        return fs.lstatSync(abs);
+    } catch (err) {
+        const code = asErrno(err)?.code;
+        if (code === 'ENOENT' || code === 'ENOTDIR') {
+            return null;
+        }
+        refuseOrRethrow(rel, err);
+    }
+}
+
+/**
  * One digest over the sorted paths AND contents of the gated files, read from
  * `root`, together with the list it covers.
  *
@@ -361,16 +437,11 @@ export interface SubjectReading {
  * unambiguous and no crafted path can reproduce another file's framing.
  *
  * `derived` is the plumbing closure the caller already computed, passed through
- * to {@link gatedFilesOf} unchanged. The gate HAS that list and classifies with
- * it; a digest that classified without it would cover fewer files than the gate
- * gated, so a record could be bound to a subset of what was reviewed. One list,
- * handed down, rather than two computed independently.
+ * to {@link gatedFilesOf} unchanged: a digest that classified without it would
+ * cover fewer files than the gate gated. It returns the list with the digest
+ * so that no caller re-derives the coverage from a second classification.
  *
- * RETURNS THE LIST RATHER THAN LETTING A CALLER RE-DERIVE IT. The 2026-10-13
- * review found the CLI printing `gatedFilesOf(files)` while the digest came
- * from `gatedFilesOf(files, derivedFor(root))` — two classifications with
- * different inputs, so the coverage a human copied alongside a digest could
- * disagree with what that digest actually covered. One call, one answer.
+ * THROWS a {@link GatedSubjectRefusal} for every tree it declines to describe.
  */
 export function subjectOf(
     root: string,
@@ -382,38 +453,19 @@ export function subjectOf(
     for (const rel of gatedFiles) {
         const abs = path.join(root, rel);
         // `lstat` rather than `existsSync`: the latter follows the link and
-        // reports a broken symlink as absent, which would digest a link as a
-        // deletion. One stat, and the three cases are told apart by it.
+        // reports a broken symlink as absent. One stat tells the three
+        // describable kinds apart, and everything else is refused here,
+        // before any open.
+        const stat = lstatGated(rel, abs);
         let content: Buffer;
-        let stat: fs.Stats | null = null;
-        try {
-            stat = fs.lstatSync(abs);
-        } catch (err) {
-            // ABSENT is two codes and no more. ENOENT is the file not being
-            // there; ENOTDIR is a parent component not being a directory,
-            // which is the same statement about a path that does not resolve.
-            // EACCES, EPERM, EIO, ELOOP and everything else say the file may
-            // well be there and this process could not look — a different
-            // fact, and not one a deletion marker may stand in for. And a
-            // value that is not an OS failure at all is a defect here and is
-            // rethrown, through the same discriminator as the reads below.
-            const code = asErrno(err)?.code;
-            if (code === 'ENOENT' || code === 'ENOTDIR') {
-                stat = null;
-            } else {
-                refuseOrRethrow(rel, err);
-            }
-        }
         if (stat === null) {
             content = Buffer.from(DELETED_MARKER);
         } else if (stat.isSymbolicLink()) {
-            // Both reads are wrapped. Before the 2026-10-13 round they were
-            // not, and an I/O or permission failure AFTER the stat escaped as
-            // a raw Node error — the exact TOCTOU window the fail-closed
-            // `lstat` above was added to close, left open one line later.
             content = Buffer.from(SYMLINK_MARKER + readGatedLink(rel, abs));
-        } else {
+        } else if (stat.isFile()) {
             content = readGatedFile(rel, abs);
+        } else {
+            refuseKind(rel, stat);
         }
         h.update(rel);
         h.update('\u0000');

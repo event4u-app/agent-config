@@ -5,6 +5,7 @@ import * as path from 'node:path';
 
 import {
     asErrno,
+    assertContained,
     gatedFilesOf,
     readGatedFile,
     readGatedLink,
@@ -260,6 +261,31 @@ describe('a path the caller supplies cannot escape the tree', () => {
         expect(() => gatedFilesOf(['src/rules/../rules/commit-policy.md'])).toThrow(
             GatedPathEscapes,
         );
+    });
+
+    it('the bound holds on its own input, under either separator and any absolute shape', () => {
+        // `gatedFilesOf` normalises backslashes to `/` before this check, so through it
+        // a backslash `..` is already caught; these cases call the bound
+        // directly so that it is the bound, not the normalisation, that holds.
+        for (const rel of [
+            '..\\..\\elsewhere\\rules\\commit-policy.md',
+            'src\\rules\\..\\..\\x.md',
+            '\\\\server\\share\\rules\\commit-policy.md',
+            '//server/share/rules/commit-policy.md',
+            '\\rules\\commit-policy.md',
+            'C:\\rules\\commit-policy.md',
+            'C:rules/commit-policy.md',
+        ]) {
+            expect(() => assertContained(rel), rel).toThrow(GatedPathEscapes);
+        }
+    });
+
+    it('the bound does not refuse a name that merely contains dots or a colon later on', () => {
+        // Polarity: a bound that refused every `.` or `:` would satisfy the
+        // case above and red ordinary paths.
+        for (const rel of [KERNEL, 'src/rules/..md', 'src/rules/a..b.md', 'src/x:y/rules/a.md']) {
+            expect(() => assertContained(rel), rel).not.toThrow();
+        }
     });
 
     it('a path that is not gated at all is simply dropped, not refused', () => {
