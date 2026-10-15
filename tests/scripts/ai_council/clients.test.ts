@@ -2190,10 +2190,10 @@ describe('clients — served-model attribution', () => {
 // CLI already generated against the metered API, and the run pays twice with
 // no ceiling set.
 describe('a timeout stays a timeout, and a parse failure is not replayed', () => {
-    class ProbeCli extends CliClient {
-        static override name = 'probe';
-        static override default_binary = 'probe';
-    }
+    // A real CLI client, not a probe subclass: the classifier's lists are
+    // static and inherited, so testing the shipped class is both simpler and
+    // closer to what a seat actually runs.
+    const ProbeCli = AnthropicCliClient;
 
     it('timeout-with-login-substring-is-timeout', () => {
         // The F1 string. `login` appears inside it, and the auth list carries a
