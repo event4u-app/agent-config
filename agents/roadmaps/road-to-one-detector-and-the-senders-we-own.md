@@ -185,6 +185,14 @@ read cannot leak through any later bug.
       widens them before any replacement reads them. Bounding changed two quantifiers
       that had no practical reach (`\s*` → `\s{0,16}` around `=`, value caps of
       1,024 / 8,192 characters).
+      **Superseded by the PR #2366 council review (2026-10-15):** quantifiers are
+      unbounded again wherever linear, with a per-rule `linearity` argument;
+      `jwt` and `db-connection-uri` start once per character run with an atomic
+      prefix, so the parity suite against the pre-move pack has no exceptions. Each
+      rule now declares its replacement span separately from its detection span:
+      `pem-private-key` replaces through its END marker and refuses the text when
+      that cannot be proven, so 3.3 inherits replacement-grade spans rather than
+      having to widen them.
 - [ ] **2.2 Move every site of F2 onto it** without changing what each site does
       with a hit — the council low-impact redactor still refuses, the explain
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
