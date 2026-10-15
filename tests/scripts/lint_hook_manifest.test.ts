@@ -259,7 +259,7 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     );
 
   /** Run the linter and return its exit code with everything it wrote. */
-  function run(body: string): { code: number; text: string } {
+  function run(body: string, name = "session-canary"): { code: number; text: string } {
     const chunks: string[] = [];
     const realErr = process.stderr.write.bind(process.stderr);
     const realOut = process.stdout.write.bind(process.stdout);
@@ -270,7 +270,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     process.stderr.write = sink as typeof process.stderr.write;
     process.stdout.write = sink as typeof process.stdout.write;
     try {
-      return { code: lint(fixtureManifest(withConcern(body)), false), text: chunks.join("") };
+      const manifest = withConcern(body).replaceAll("session-canary", name);
+      return { code: lint(fixtureManifest(manifest), false), text: chunks.join("") };
     } finally {
       process.stderr.write = realErr;
       process.stdout.write = realOut;
@@ -309,7 +310,9 @@ describe("effect: — the census's field (Phase 2.2)", () => {
   });
 
   it("accepts a blocking concern declared as permission", () => {
-    const r = run("    severity: blocking\n    effect: permission\n");
+    // A blocking concern must also hold an execution-view grant, so the fixture
+    // takes a granted name; the script is irrelevant to the effect check.
+    const r = run("    severity: blocking\n    effect: permission\n", "block-no-verify");
     expect(r.code).toBe(0);
   });
 
@@ -381,5 +384,17 @@ describe("rewrite-concern-refused — no concern may produce a rewrite (ADR-285)
     const r = run(VALID);
     expect(r.code).toBe(0);
     expect(r.text).not.toMatch(/rewrite-concern-refused/);
+  });
+
+  it("execution-view-not-granted: a concern requesting the execution view off the closed list is refused", () => {
+    const r = run(withConcern("    payload_view: execution\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.session-canary: execution-view-not-granted/);
+  });
+
+  it("execution-view-not-granted: a blocking concern missing from the closed list is refused", () => {
+    const r = run(VALID.replace("    fail_closed: false\n    effect: context\n", "    fail_closed: false\n    severity: blocking\n    effect: permission\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.session-canary: execution-view-not-granted/);
   });
 });

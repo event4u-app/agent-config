@@ -37,6 +37,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { EXIT_USAGE } from './exit_codes.js';
+import {
+  countEnvelope,
+  readEgressMode,
+  type EgressCount,
+  type EgressMode,
+  type EgressRefusal,
+} from "./egress_stage.js";
+import type { JsonObject } from "./payload_stub.js";
 
 // src/scripts/hooks/replay_hook.ts → parents[3] is the repo root.
 const REPO_ROOT = path.resolve(
@@ -208,6 +216,8 @@ export function main(argv?: string[]): number {
     return 2;
   }
 
+  const egress = _egressPreview(decoded);
+
   const env = { ...process.env };
   env[REPLAY_ENV_VAR] = "1";
 
@@ -253,6 +263,7 @@ export function main(argv?: string[]): number {
       dispatcher_stdout: (proc.stdout || "").trim(),
       dispatcher_stderr: (proc.stderr || "").trim(),
       replay_mode: true,
+      egress,
     };
     process.stdout.write(_py_json_dumps(summary, 2) + "\n");
   } else {
@@ -267,8 +278,31 @@ export function main(argv?: string[]): number {
         `payload=${path.basename(payload_path)} rc=${returncode} ` +
         `(AGENT_CONFIG_REPLAY=1, no writes)\n`,
     );
+    const found = egress.counts.map((c) => `${c.field}:${c.type}×${c.count}`).join(" ") || "nothing";
+    process.stderr.write(
+      `replay_hook: egress mode=${egress.mode} action=${egress.action} found=${found}` +
+        (egress.refused.length > 0 ? ` refused=${egress.refused.map((x) => x.rule).join(",")}` : "") +
+        "\n",
+    );
   }
   return returncode;
+}
+
+/**
+ * What the egress stage would do with this payload under the workspace's
+ * mode: counts and refusals by type, never a value. Pure — no state written.
+ */
+function _egressPreview(decoded: unknown): {
+  mode: EgressMode;
+  action: "none" | "count" | "replace";
+  counts: readonly EgressCount[];
+  refused: readonly EgressRefusal[];
+} {
+  const mode = readEgressMode(process.cwd());
+  const isObj = decoded !== null && typeof decoded === "object" && !Array.isArray(decoded);
+  const counted = isObj ? countEnvelope({ payload: decoded as JsonObject }) : { counts: [], refused: [] };
+  const action = mode === "off" ? "none" : mode === "observe" ? "count" : "replace";
+  return { mode, action, counts: counted.counts, refused: counted.refused };
 }
 
 // Python json.dumps(summary, indent=2) byte-for-byte (ensure_ascii=True).

@@ -36,6 +36,7 @@ import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import { asOf } from "./_lib/as_of.js";
 import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
+import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
 
 // src/scripts/lint_hook_manifest.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(
@@ -874,6 +875,42 @@ function _check_no_concern_rewrites(manifest: YamlObject, errors: string[]): voi
   }
 }
 
+/**
+ * The execution view is granted by the dispatcher's closed list, never
+ * requested. Refused: a concern declaring `payload_view: execution` off the
+ * list, a blocking concern the list omits (it would be served tokens instead
+ * of the value it guards), and a listed concern that is not blocking.
+ */
+function _check_execution_view_grants(manifest: YamlObject, errors: string[]): void {
+  const concernsRaw = manifest["concerns"];
+  if (!isObject(concernsRaw)) return;
+  for (const [name, spec] of Object.entries(concernsRaw)) {
+    if (!isObject(spec)) continue;
+    const view = spec["payload_view"];
+    const granted = EXECUTION_VIEW_GRANTS.has(name);
+    const blocking = spec["severity"] === "blocking";
+    if (view !== undefined && view !== "execution" && view !== "placeholder") {
+      errors.push(`concerns.${name}: 'payload_view' must be execution or placeholder, got ${JSON.stringify(view)}`);
+    } else if (view === "execution" && !granted) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — declares 'payload_view: execution' but is not on ` +
+          `EXECUTION_VIEW_GRANTS in src/scripts/hooks/egress_stage.ts; a declaration grants nothing`,
+      );
+    }
+    if (blocking && !granted) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — severity: blocking but missing from ` +
+          `EXECUTION_VIEW_GRANTS; under protect it would be served placeholder tokens instead of the values it guards`,
+      );
+    } else if (granted && !blocking) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — on EXECUTION_VIEW_GRANTS but not severity: blocking; ` +
+          `the execution view is for concerns that decide whether a call runs`,
+      );
+    }
+  }
+}
+
 export function lint(
   manifestPath: string,
   strict: boolean,
@@ -907,6 +944,7 @@ export function lint(
   const bound = _check_platforms(manifest, concernNames, errors, warnings);
   _check_guard_payload_bodies(manifest, errors);
   _check_no_concern_rewrites(manifest, errors);
+  _check_execution_view_grants(manifest, errors);
   _check_roles(manifest, concernNames, errors);
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);

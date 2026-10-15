@@ -56,6 +56,7 @@ import { emitFor, type PermissionDecision, type Severity } from "./host_semantic
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
+import { egressViewFor, runEgressStage } from "./egress_stage.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
@@ -1276,12 +1277,9 @@ export function main(argv?: string[]): number {
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
-  // Payload opt-in (step 2.1). There are at most FOUR distinct envelope shapes
-  // per dispatch (keep neither / input / result / both), so they are memoised
-  // by keep-set: concerns sharing a declaration share one clone, and building
-  // one per concern would re-pay the allocation the stub exists to avoid.
-  // `present` is the set of body classes this event actually carries — empty on
-  // every non-tool event, which is why those pay nothing at all.
+  // The egress stage (ADR-285) builds the placeholder view before any concern
+  // runs; `egressViewFor` decides which concern gets which view.
+  const egress = runEgressStage(envelope);
   // Payload opt-in (step 2.1). One planner owns the whole decision — which
   // classes are present, which any concern loses, the single measurement pass,
   // and the at-most-four envelope shapes — so the loop below reads a shape
@@ -1293,12 +1291,13 @@ export function main(argv?: string[]): number {
   const shapes = planPayloadShapes(
     envelope,
     keep_by_concern.map(([, keep]) => keep),
+    egress.placeholder,
   );
   for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
-    const concern_envelope = shapes.shapeFor(keep_classes);
+    const concern_envelope = shapes.shapeFor(keep_classes, egressViewFor(String(concern["name"])));
     const stubs_served = shapes.stubsFor(keep_classes);
     // What was actually SERVED, not what was declared. Recording the
     // declaration made the record wrong in both directions on a body-less

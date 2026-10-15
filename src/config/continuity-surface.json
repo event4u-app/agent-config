@@ -408,6 +408,13 @@
             "reason": "Last test-run red state. No production code currently writes or reads it — only this module's own unit test exercises the store; the registry row for this instrument (assurance-capability-registry.json, test-red-evidence) was corrected to degraded on 2026-10-06 for the same reason."
         },
         {
+            "id": "egress-observations.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/hooks/egress_stage.ts",
+            "reason": "Egress-stage counts by field, class and type, one fixed-field line per scanned dispatch. Measurement output, written only while `egress.placeholders.mode` is not `off`; it holds no value and is read by no successor session."
+        },
+        {
             "id": "tool-result-census.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

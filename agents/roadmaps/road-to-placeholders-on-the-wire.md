@@ -170,7 +170,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       and records what would reopen it.
       verify: `npx vitest run tests/scripts/lint_hook_manifest.test.ts -t rewrite-concern-refused --reporter=verbose` -> /✓.*rewrite-concern-refused/
       — and `hook-architecture-v1.md` no longer calls the rewrite half open.
-- [ ] **1.2 Two views of one envelope, built by the payload-shape planner (D2).**
+- [x] **1.2 Two views of one envelope, built by the payload-shape planner (D2).**
       The **placeholder view** — values replaced in the prompt, `tool_input` and
       `tool_response` — is what every recording and advisory concern receives,
       so local stores inherit tokens without a scrubber. The **execution view**
