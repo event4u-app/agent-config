@@ -149,7 +149,7 @@ real-person profiles at `agents/reference/ghostwriter/` and promise "gitignored
 by default" (`ghostwriter-schema.md:24,328`). The ignore block covers
 `/agents/ghostwriter/*.md` (`gitignore-block.txt:102-104`); the lint scans
 `agents/ghostwriter` (`lint_ghostwriter_source.ts:313`). Reproduced:
-`git check-ignore agents/reference/ghostwriter/x.md` exits 1. Two findings the
+`git check-ignore agents/reference/ghostwriter/x.md` exits 1. Two findings the <!-- ref-ignore -->
 source did not have (`corrected-from-reproduction`): `agents-layout.md:90`
 classifies `reference/` — `ghostwriter/` named — as **tracked-durable**, so the
 layout contract contradicts the schema's promise; and the archived
@@ -484,7 +484,7 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 | E3 | reversible-technical | evidence | The starter emits 2025.10 objects; the reader keeps accepting strings. | 2025.10 is the first stable format; string values are legacy-valid | the specification drops string compatibility |
 | E4 | reversible-technical | evidence | Three "X, not Y" attributes; `brand-strategy`'s 3-5 traits defer to the slot. | `voice-and-tone-design/SKILL.md:161` already forbids a fourth; both plans recommend three | a consumer brand needs a fourth attribute and the tone matrix cannot carry it |
 | E5 | reversible-technical | evidence | Match modes `word|substring`, no stemming; German inflection documented as a known miss (7.2). | the parked design rejects regex for explainability; no German corpus exists yet | a German negative corpus shows substring misses above the 5.3 bar |
-| E6 | reversible-technical | evidence | The slot is the first machine-read spine slot, limited to the Phase 5 fields, through the 4.1 ADR. Fallback if the ADR is declined: the same frontmatter at `agents/settings/brand/voice.md`, cited by the slot. | spine is the established "read once, cite the slot" mechanism (46 skills); slots have no schema today (`context-spine.md:9`) | the ADR review rejects a machine-read slot |
+| E6 | reversible-technical | evidence | The slot is the first machine-read spine slot, limited to the Phase 5 fields, through the 4.1 ADR. Fallback if the ADR is declined: the same frontmatter at `agents/settings/brand/voice.md`, cited by the slot. | spine is the established "read once, cite the slot" mechanism (46 skills); slots have no schema today (`context-spine.md:9`) | the ADR review rejects a machine-read slot | <!-- ref-ignore -->
 | E7 | reversible-technical | evidence | Claims live in the slot as `claims[]` with per-entry `expires` — reference records, not a ledger service. Satisfies the deep-dive's "only after two consumers" condition: 5.4 has four. | 5.4 readers; NG-5 forbids a third store | a claim needs locale or channel scope |
 | E8 | reversible-technical | evidence | Pre-registered before measuring: 6.3 runs 30 brand-copy fixture prompts across the six 6.1 readers, bar ≥ 95 % slot reads, 0 slot reads on unrelated prompts; 5.3 ceiling ≤ 0.1 hits per 10k words on the committed corpus list. Tuned only before the first run. | numbers from the deep-dive revision; the master left them open | the first run shows the fixtures do not route to the readers |
 | E9 | reversible-technical | evidence | State vocabulary is the contract's `greenfield | mixed | branded`, with `invalid` and `shadowed` as qualifiers, not new states. | `brand-token-consumption.md:39-48`; one vocabulary, no second | a fixture needs a state the qualifiers cannot express |
