@@ -25,16 +25,17 @@ A run still in progress has no verdict to fix. Do NOT read a partial run and
 start guessing — and do NOT end the turn reporting "CI is running".
 
 ```bash
-until [ "$(gh pr checks <n> --json state \
-    --jq '[.[] | select(.state=="IN_PROGRESS" or .state=="QUEUED" or .state=="PENDING")] | length')" = "0" ]
-do sleep 45; done
+npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <n>
 ```
 
-Run that in the BACKGROUND so the turn resumes when the verdict lands; a
-foreground sleep-poll chain is blocked and per-minute re-polling is the tool
-loop `token-efficiency` forbids. If the waiter exits because `gh` itself failed
-(network down), it has observed nothing — say so rather than treating it as a
-pass.
+`ci_settle` is the one waiter for this condition — never a hand-written
+`gh pr checks` loop. Run it in the BACKGROUND so the turn resumes when the
+verdict lands, and do not pipe it: its LAST output line is the verdict and its
+exit code carries it. Exit 0 is settled green for the named head; exit 1 is
+settled with at least one failed check — go to step 1; exit 2 is NOT a verdict
+(did not settle within its budget, `gh` could not be read, or the PR is merged,
+closed or head-diverged) — it has observed nothing, so say so and re-run or
+report, never treat it as a pass.
 
 Note `gh run view --log-failed` returns *"run is still in progress; logs will be
 available when it is complete"* until the WHOLE run finishes, which is the other

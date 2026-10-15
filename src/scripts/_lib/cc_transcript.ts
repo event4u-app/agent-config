@@ -470,3 +470,144 @@ export function aggregateByBucket(records: readonly TranscriptRecord[]): Record<
 
     return buckets;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Tool results — what reached the model, per tool class                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One tool class's model-visible bytes, beside the host's hook envelope.
+ *
+ * The two are different populations and are never added together. The
+ * model-visible figure is the `tool_result` block the model received; the
+ * envelope is the transcript's `toolUseResult` — the same object the host hands
+ * a post_tool_use hook, which for Edit and Write carries the whole original
+ * file the model never sees.
+ */
+export interface ToolResultClass {
+    tool: string;
+    count: number;
+    model_visible_bytes: number;
+    /** Sum over results that carried an envelope; `null` when none did. */
+    envelope_bytes: number | null;
+    /** Results with no `toolUseResult` — not zero, not measured. */
+    envelope_missing: number;
+    /** One model-visible byte count per result, for percentiles. */
+    model_visible_samples: number[];
+}
+
+export interface ToolResultScan {
+    classes: Record<string, ToolResultClass>;
+    /** Distinct tool results counted, after dedup by `tool_use_id`. */
+    results: number;
+}
+
+interface RawBlock {
+    type?: unknown;
+    id?: unknown;
+    name?: unknown;
+    tool_use_id?: unknown;
+    content?: unknown;
+    text?: unknown;
+    source?: { data?: unknown };
+}
+
+function blocksOf(raw: { message?: { content?: unknown } }): RawBlock[] {
+    const c = raw.message?.content;
+    return Array.isArray(c) ? (c.filter((b) => typeof b === 'object' && b !== null) as RawBlock[]) : [];
+}
+
+/** Model-visible bytes of one `tool_result` block, and whether it carried an image. */
+function modelVisibleBytes(block: RawBlock): { bytes: number; image: boolean } {
+    const c = block.content;
+    if (typeof c === 'string') return { bytes: Buffer.byteLength(c, 'utf8'), image: false };
+    let bytes = 0;
+    let image = false;
+    if (Array.isArray(c)) {
+        for (const item of c as RawBlock[]) {
+            if (typeof item !== 'object' || item === null) continue;
+            if (typeof item.text === 'string') bytes += Buffer.byteLength(item.text, 'utf8');
+            if (item.type === 'image' && typeof item.source?.data === 'string') {
+                image = true;
+                bytes += item.source.data.length;
+            }
+        }
+    }
+    return { bytes, image };
+}
+
+function readLines(file: string): string[] {
+    try {
+        return fs.readFileSync(file, 'utf-8').split('\n');
+    } catch {
+        return [];
+    }
+}
+
+/**
+ * Model-visible tool-result bytes per tool class, joined to the tool name by
+ * `tool_use_id`. Two passes over the file set — names first, results second —
+ * so a result whose `tool_use` sits in another file still joins. A result whose
+ * id joins nothing is counted under `unknown`, never dropped and never guessed.
+ * A Read that returned an image is its own class, `Read:image`: encoded image
+ * data dwarfs every text class and would otherwise hide them.
+ */
+export function scanToolResults(opts: ScanOptions = {}): ToolResultScan {
+    const files = listTranscriptFiles(opts);
+    const names = new Map<string, string>();
+    for (const file of files) {
+        for (const line of readLines(file)) {
+            if (!line.includes('"tool_use"')) continue;
+            const raw = parseLine(line);
+            if (!raw || raw.type !== 'assistant') continue;
+            for (const b of blocksOf(raw)) {
+                if (b.type === 'tool_use' && typeof b.id === 'string' && typeof b.name === 'string') names.set(b.id, b.name);
+            }
+        }
+    }
+
+    const classes: Record<string, ToolResultClass> = {};
+    const seen = new Set<string>();
+    for (const file of files) {
+        for (const line of readLines(file)) {
+            if (!line.includes('"tool_result"')) continue;
+            const raw = parseLine(line) as (RawAssistantRecord & { toolUseResult?: unknown }) | null;
+            if (!raw || raw.type !== 'user') continue;
+            const blocks = blocksOf(raw).filter((b) => b.type === 'tool_result' && typeof b.tool_use_id === 'string');
+            for (const block of blocks) {
+                const id = block.tool_use_id as string;
+                if (seen.has(id)) continue;
+                seen.add(id);
+                const { bytes, image } = modelVisibleBytes(block);
+                const name = names.get(id) ?? 'unknown';
+                const tool = image ? `${name}:image` : name;
+                const cls = (classes[tool] ??= {
+                    tool,
+                    count: 0,
+                    model_visible_bytes: 0,
+                    envelope_bytes: null,
+                    envelope_missing: 0,
+                    model_visible_samples: [],
+                });
+                cls.count += 1;
+                cls.model_visible_bytes += bytes;
+                cls.model_visible_samples.push(bytes);
+                // One envelope per record: attributed only when the record holds one result.
+                const env = blocks.length === 1 ? raw.toolUseResult : undefined;
+                if (env === undefined || env === null) {
+                    cls.envelope_missing += 1;
+                } else {
+                    let envBytes: number | null = null;
+                    try {
+                        envBytes = Buffer.byteLength(typeof env === 'string' ? env : JSON.stringify(env), 'utf8');
+                    } catch {
+                        envBytes = null;
+                    }
+                    if (envBytes === null) cls.envelope_missing += 1;
+                    else cls.envelope_bytes = (cls.envelope_bytes ?? 0) + envBytes;
+                }
+            }
+        }
+    }
+    return { classes, results: seen.size };
+}

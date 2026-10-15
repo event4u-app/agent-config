@@ -47,9 +47,16 @@
  * identical while the cost came back. The `RESULT_KEYS` literals below are the
  * key NAMES this concern looks under, not a read of the body.
  *
- * TWO COUNTS, ONE OF THEM REDUNDANT TODAY. `raw_bytes` is what
- * the host handed the dispatcher; `delivered_bytes` is what reached the
- * model. Today they are EQUAL BY CONSTRUCTION, and the construction is
+ * TWO COUNTS, ONE OF THEM REDUNDANT TODAY. Both count the host's HOOK
+ * ENVELOPE — the serialised `tool_response` the host hands a post_tool_use
+ * hook — and NOT what reached the model. The two differ by tool: for Edit and
+ * Write the hook envelope carries the whole original file while the model
+ * receives a short confirmation (measured over 12 local transcripts: 19.5x;
+ * Bash 1.44x; Read within 0.1 %). The model-visible figure is a separate
+ * metric, `tool-model-visible-bytes`, read from transcripts. `raw_bytes` is
+ * the hook envelope the host handed the dispatcher; `delivered_bytes` is the
+ * hook envelope after any rewrite a concern could apply on its way back.
+ * Today they are EQUAL BY CONSTRUCTION, and the construction is
  * checkable: nothing under `src/` or `docs/` emits the host's result-rewrite
  * field, so no concern can rewrite a tool result on its way past. That
  * absence is a grep, and the grep lives in this concern's test rather than
@@ -196,10 +203,11 @@ function censusFile(consumerRoot: string): string {
 export interface CensusLine {
     ts: string;
     tool: string | null;
-    /** UTF-8 bytes the host handed the dispatcher. `null` ⇒ unmeasurable. */
+    /** UTF-8 bytes of the hook envelope the host handed the dispatcher. `null` ⇒ unmeasurable. */
     raw_bytes: number | null;
     /**
-     * UTF-8 bytes that reached the model.
+     * UTF-8 bytes of the hook envelope after any rewrite — NOT what reached
+     * the model (see the header; that figure is `tool-model-visible-bytes`).
      *
      * Equal to {@link CensusLine.raw_bytes} by construction today — nothing in
      * this tree rewrites a tool result. It is recorded anyway so that a later

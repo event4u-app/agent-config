@@ -49,15 +49,23 @@ export const MCP_PACKAGE_NAME = '@event4u/agent-config';
  * A version that cannot be read is left unpinned rather than guessed: an
  * invented specifier would fail to resolve at server start, which is a worse
  * failure than the drift it was meant to close.
+ *
+ * A pinned spec also carries `--prefer-offline`: the cache can hold only that
+ * exact version, so a warm cache answers the server start without a registry
+ * request, and a cold one still resolves. An unpinned spec does not, because
+ * a cached `latest` would be served stale.
  */
 export function mcpBridgeEntry(packageRoot: string): Record<string, unknown> {
     const version = readPackageVersion(packageRoot);
-    const spec = version === null ? MCP_PACKAGE_NAME : `${MCP_PACKAGE_NAME}@${version}`;
+    const args =
+        version === null
+            ? ['-y', MCP_PACKAGE_NAME, 'mcp-server']
+            : ['--prefer-offline', '-y', `${MCP_PACKAGE_NAME}@${version}`, 'mcp-server'];
     return {
         mcpServers: {
             [MCP_SERVER_KEY]: {
                 command: 'npx',
-                args: ['-y', spec, 'mcp-server'],
+                args,
             },
         },
     };

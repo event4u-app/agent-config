@@ -21,6 +21,7 @@ import {
     resolveConsumerRoot,
     resolvesMaintainerWorkspace,
 } from '../../src/scripts/hooks/tool_result_bytes_hook.js';
+import { readCensusLine } from '../../src/scripts/_lib/tool_result_census.js';
 
 let tmp: string;
 
@@ -272,5 +273,25 @@ describe('the recorder is default-off outside the maintainer workspace', () => {
         processEnvelope(envelope({ tool_name: 'Read', tool_response: 'abcd' }), consumer);
         expect(readCensus(consumer)).toHaveLength(1);
         fs.rmSync(consumer, { recursive: true, force: true });
+    });
+});
+
+describe('the census reader reads both line shapes the file holds', () => {
+    it('legacy-bytes-line-is-raw-only', () => {
+        // A line written before the two-field schema carries `bytes` alone. It
+        // counted the same envelope as `raw_bytes`; nothing says what was
+        // delivered, so delivered is unknown, never equal.
+        const legacy = readCensusLine(JSON.stringify({ ts: '2026-09-01T00:00:00.000Z', tool: 'Edit', bytes: 4096 }));
+        expect(legacy).toEqual({ ts: '2026-09-01T00:00:00.000Z', tool: 'Edit', raw_bytes: 4096, delivered_bytes: null, shape: 'legacy' });
+        const current = readCensusLine(
+            JSON.stringify({ ts: '2026-10-01T00:00:00.000Z', tool: 'Bash', raw_bytes: 10, delivered_bytes: 10, measurable: true }),
+        );
+        expect(current).toEqual({ ts: '2026-10-01T00:00:00.000Z', tool: 'Bash', raw_bytes: 10, delivered_bytes: 10, shape: 'two-field' });
+    });
+
+    it('returns null for a line that is not a census record', () => {
+        expect(readCensusLine('')).toBeNull();
+        expect(readCensusLine('{not json')).toBeNull();
+        expect(readCensusLine(JSON.stringify({ ts: 'x', tool: 'Read' }))).toBeNull();
     });
 });

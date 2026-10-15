@@ -23,6 +23,7 @@ import {
     listTranscriptFiles,
     measureBytesPerToken,
     measureContentBytes,
+    scanToolResults,
     scanTranscripts,
     weightedInputUnits,
     type TranscriptRecord,
@@ -391,5 +392,87 @@ describe('derivedBytes - a derived figure can never be read as a counted one', (
         const fat = derivedBytes(100, measureBytesPerToken([rec(10, 200)]));
         expect(thin?.bytes).not.toBe(fat?.bytes);
         expect(fat?.bytes).toBe((thin?.bytes ?? 0) * 10);
+    });
+});
+
+describe('scanToolResults - the model-visible bytes of a tool result, per tool class', () => {
+    // An Edit whose hook envelope carries the whole original file, while the
+    // model receives only the confirmation line. Every expected figure is
+    // computed from these constants, never copied from a run.
+    const ORIGINAL_FILE = 'const x = 1;\n'.repeat(400);
+    const CONFIRMATION = 'The file /repo/a.ts has been updated successfully.';
+    const EDIT_ENVELOPE = { filePath: '/repo/a.ts', oldString: 'x', newString: 'y', originalFile: ORIGINAL_FILE };
+    const BASH_OUT = 'line one\nline two';
+    const IMAGE_DATA = 'iVBORw0KGgo'.repeat(30);
+
+    function writeToolFixture(root: string): string {
+        const projectDir = path.join(root, 'proj');
+        appendJsonl(path.join(projectDir, 's.jsonl'), [
+            {
+                type: 'assistant',
+                message: {
+                    id: 'm1',
+                    content: [
+                        { type: 'tool_use', id: 'tu_edit', name: 'Edit', input: {} },
+                        { type: 'tool_use', id: 'tu_bash', name: 'Bash', input: {} },
+                        { type: 'tool_use', id: 'tu_img', name: 'Read', input: {} },
+                    ],
+                },
+            },
+            {
+                type: 'user',
+                message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_edit', content: CONFIRMATION }] },
+                toolUseResult: EDIT_ENVELOPE,
+            },
+            {
+                type: 'user',
+                message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_bash', content: [{ type: 'text', text: BASH_OUT }] }] },
+                toolUseResult: { stdout: BASH_OUT, stderr: '' },
+            },
+            {
+                type: 'user',
+                message: {
+                    role: 'user',
+                    content: [{ type: 'tool_result', tool_use_id: 'tu_img', content: [{ type: 'image', source: { type: 'base64', data: IMAGE_DATA } }] }],
+                },
+            },
+            // An orphan: its tool_use is in no file. Counted as unknown, never dropped, never guessed.
+            {
+                type: 'user',
+                message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_orphan', content: 'orphan' }] },
+            },
+        ]);
+        // The Edit result replayed into a second file must not be counted twice.
+        appendJsonl(path.join(projectDir, 's', 'subagents', 'agent-r.jsonl'), [
+            {
+                type: 'user',
+                message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_edit', content: CONFIRMATION }] },
+                toolUseResult: EDIT_ENVELOPE,
+            },
+        ]);
+        return projectDir;
+    }
+
+    it('edit-envelope-is-not-model-visible', () => {
+        const root = mkTmp();
+        const projectDir = writeToolFixture(root);
+        const scan = scanToolResults({ root, projectDir });
+        const edit = scan.classes['Edit'];
+        expect(edit?.count).toBe(1);
+        expect(edit?.model_visible_bytes).toBe(Buffer.byteLength(CONFIRMATION, 'utf8'));
+        expect(edit?.envelope_bytes).toBe(Buffer.byteLength(JSON.stringify(EDIT_ENVELOPE), 'utf8'));
+        expect(edit?.envelope_bytes ?? 0).toBeGreaterThan((edit?.model_visible_bytes ?? 0) * 10);
+    });
+
+    it('counts text blocks, separates image Reads, and keeps orphans in their own class', () => {
+        const root = mkTmp();
+        const projectDir = writeToolFixture(root);
+        const scan = scanToolResults({ root, projectDir });
+        expect(scan.classes['Bash']?.model_visible_bytes).toBe(Buffer.byteLength(BASH_OUT, 'utf8'));
+        expect(scan.classes['Read:image']?.model_visible_bytes).toBe(IMAGE_DATA.length);
+        expect(scan.classes['Read:image']?.envelope_bytes).toBeNull();
+        expect(scan.classes['Read']).toBeUndefined();
+        expect(scan.classes['unknown']?.count).toBe(1);
+        expect(scan.results).toBe(4);
     });
 });

@@ -58,13 +58,13 @@ written review date (`src/config/recycle-threshold-budget.json`).
 
 ## Phase 1 — Count what reached the model
 
-- [ ] **1.1 Name the bytes the recorder counts.** `tool-raw-bytes` and
+- [x] **1.1 Name the bytes the recorder counts.** `tool-raw-bytes` and
       `tool-delivered-bytes` are re-described as the host's **hook envelope** in
       `metric-registry.yml` and in the recorder's header, with F1's ratio as the
       reason. No field is renamed — the census is append-only and F2 already shows
       what a schema change leaves behind. `corrected-from-reproduction`.
       verify: `grep -c 'hook envelope' src/config/metric-registry.yml src/scripts/hooks/tool_result_bytes_hook.ts` -> /:[1-9]/
-- [ ] **1.2 Measure model-visible bytes from the transcripts.** The transcript
+- [x] **1.2 Measure model-visible bytes from the transcripts.** The transcript
       reader gains a tool-result pass: user records' `tool_result` content bytes,
       joined to the assistant `tool_use` name by id, aggregated per tool. A new
       registry row `tool-model-visible-bytes`, `basis: measured`, names this reader
@@ -72,51 +72,82 @@ written review date (`src/config/recycle-threshold-budget.json`).
       fixture whose envelope carries an original file and asserts the
       model-visible count is the confirmation text only; seen red first.
       verify: `npx vitest run tests/scripts/cc_transcript.test.ts -t edit-envelope-is-not-model-visible --reporter=verbose` -> /✓.*edit-envelope-is-not-model-visible/
-- [ ] **1.3 Read both census shapes.** Whatever reads
+- [x] **1.3 Read both census shapes.** Whatever reads
       `tool-result-census.jsonl` treats a `{bytes}` line as `raw_bytes` with
       `delivered_bytes` unknown, never as equal.
       verify: `npx vitest run tests/scripts/tool_result_bytes_hook.test.ts -t legacy-bytes-line-is-raw-only --reporter=verbose` -> /✓.*legacy-bytes-line-is-raw-only/
-- [ ] **1.4 Record one dated distribution.** Per tool class: count, envelope
+      *Correction 2026-10-14: no census reader existed to extend, so the reader is
+      a new module, `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`),
+      kept out of the hook file so the post_tool_use bundle does not grow.*
+- [x] **1.4 Record one dated distribution.** Per tool class: count, envelope
       bytes, model-visible bytes, p50/p95, with image and text Reads as separate
       classes — from this repository's own sessions,
       under `agents/evidence/analysis/`, labelled machine-local. This is the
       before-figure the sibling roadmap and the placeholders roadmap's step 3.2
       compare against.
       verify: `ls agents/evidence/analysis/ | grep -c model-visible-bytes` -> /^[1-9]/
+      *Done 2026-10-14: `agents/evidence/analysis/model-visible-bytes-2026-10-14.md`,
+      83,031 results over 678 transcript files. The full corpus corrects F1's
+      12-session ratio: Edit 17.2x, Write 23.2x, Bash 1.58x.*
 
 *Exit: 1.1–1.4 done; `npx tsx src/scripts/lint_metric_consumers.ts` green with the new row.*
 
 ## Phase 2 — "Unchanged" means the same content
 
-- [ ] **2.1 Pin both failure directions as tests.** In
+- [x] **2.1 Pin both failure directions as tests.** In
       `tests/scripts/reread_guard_hook.test.ts`: `same-mtime-same-size-new-content-is-not-unchanged`
       (a file rewritten to equal length with its mtime restored) and
       `restored-identical-content-is-unchanged` (same bytes, new mtime). Seen red
       before 2.2.
       verify: `npx vitest run tests/scripts/reread_guard_hook.test.ts -t same-mtime-same-size-new-content-is-not-unchanged --reporter=verbose` -> /✓.*same-mtime-same-size-new-content-is-not-unchanged/
-- [ ] **2.2 Key the ledger on content.** A read record gains `sha256` of the file;
+- [x] **2.2 Key the ledger on content.** A read record gains `sha256` of the file;
       the duplicate line fires on equal hash, and its text says "unchanged content".
       Above a size bound (D3) the record keeps mtime and size and the line says so.
       The ledger still holds numbers and hashes only — never content.
       verify: `npx vitest run tests/scripts/reread_guard_hook.test.ts -t restored-identical-content-is-unchanged --reporter=verbose` -> /✓.*restored-identical-content-is-unchanged/
-- [ ] **2.3 State the cost.** The PR states the hook bundle delta and the measured
-      per-Read latency delta in `src/config/hook-latency-budget.json`, as every
-      dispatcher change does since that budget's revisit trigger fired.
-      verify: `grep -c 'reread' src/config/hook-latency-budget.json` -> /^[1-9]/
+- [x] **2.3 State the cost.** The PR states the hook bundle delta and the measured
+      per-Read latency delta here, under *Cost Phase 2 added* (corrected from
+      `src/config/hook-latency-budget.json`, see D10).
+      verify: `grep -c 'reread-guard content hash' agents/roadmaps/archive/road-to-bytes-the-model-actually-receives.md` -> /^[1-9]/
+      *Correction 2026-10-14: the budget file carries no per-change ledger — the
+      one precedent (`724329fd4`) wrote its cost into its roadmap and the file
+      together — and the file is now a hook-plumbing surface that
+      `check_kernel_edit_ratified` gates behind a two-provider ratification
+      record. A note about a sub-millisecond delta does not warrant a governance
+      record; the figure lives here instead (D10).*
+
+**Cost Phase 2 added — reread-guard content hash.**
+
+Measured 2026-10-14 on this branch, darwin, Apple silicon:
+
+- **Hook bundle:** 1,523,151 B before, 1,523,892 B after (+741 B) against a
+  1,550,000 B ceiling (`check_hook_bundle_composition`).
+- **Per-Read latency:** the added work is one `sha256` over the file, on full
+  Reads only. Mean of 200 runs: 0.011 ms at the p50 text-Read size (1,095 B),
+  0.030 ms at the p95 (42,029 B), 0.749 ms at the 2 MB bound — the worst case,
+  since above it nothing is hashed. Sizes from
+  `agents/evidence/analysis/model-visible-bytes-2026-10-14.md`. Against a
+  175 ms `pre_tool_use` p95 cap this is below the run-to-run noise the budget
+  file records (42 ms).
 
 ## Phase 3 — The package's own recurring traffic
 
-- [ ] **3.1 The MCP entry prefers the local cache (D1).** `mcpBridgeEntry` writes
+- [x] **3.1 The MCP entry prefers the local cache (D1).** `mcpBridgeEntry` writes
       `npx --prefer-offline -y <pkg>@<version> mcp-server`; the documented shape in
       `docs/getting-started-local-stdio.md:21` matches it. With an exact version, a
       warm cache answers without a registry request; a cold cache still resolves.
       verify: `npx vitest run tests/scripts/mcp_bridge_pin.test.ts -t entry-prefers-offline --reporter=verbose` -> /✓.*entry-prefers-offline/
-- [ ] **3.2 The two commands wait with `ci_settle` (D2).** Both loops in F6 become
+      *Narrowed 2026-10-14: the flag is written only beside a pinned version.
+      With no readable version the spec stays unpinned, and `--prefer-offline`
+      there would serve a cached `latest` stale. The four snippets in
+      `docs/mcp-server.md` and the npx line of `docs/setup/mcp-client-config.md`
+      carry the same shape.*
+- [x] **3.2 The two commands wait with `ci_settle` (D2).** Both loops in F6 become
       one background `ci_settle <pr>` call through the path the git-workflow skill
       already names (`src/skills/git-workflow/SKILL.md:110`), keeping each
       command's surrounding prose on what to do with each exit code.
       verify: `grep -rl 'do sleep 45' src/domains | wc -l` -> /^\s*0$/
-- [ ] **3.3 The deep clone states its shape and its transfer (D4).** `--deep`
+- [x] **3.3 The deep clone states its shape and its transfer (D4).** `--deep`
       reuses an existing local clone that already holds the pinned SHA; otherwise
       it fetches only that commit at depth 1 into a fresh directory. The ceiling
       gains a fourth part, bytes transferred, read from git's own receive line.
@@ -124,17 +155,20 @@ written review date (`src/config/recycle-threshold-budget.json`).
 
 ## Phase 4 — Does a spawn still cost a quarter million tokens?
 
-- [ ] **4.1 Re-take the cold-start reading.** Re-run the `downshift-vs-cache`
+- [x] **4.1 Re-take the cold-start reading.** Re-run the `downshift-vs-cache`
       method at the current tree: first-call cache-read share and median
       first-call uncached tokens per leg, dated, beside the 2026-08-16 figures.
       verify: `ls agents/evidence/analysis/ | grep -c subagent-cold-start` -> /^[1-9]/
-- [ ] **4.2 Decide the nudge on the new figure (D5).** If a leg still starts
+      *Done 2026-10-14: `agents/evidence/analysis/subagent-cold-start-2026-10-14.md`
+      — first-call cache-read share 9.8 % (was 2.8 %), median first-call
+      uncached 182,257 tokens (was 242,891).*
+- [x] **4.2 Decide the nudge on the new figure (D5).** If a leg still starts
       above 100,000 uncached tokens, the delegation nudge gains one advisory clause
       — a slice of one to three direct reads does not amortise a leg — and never a
       block. Otherwise the reading is recorded and the nudge is unchanged. Either
       outcome closes the step; the decision and the figure go into this file's
       `## Decisions` as row D7.
-      verify: `grep -c '^| D7 ' agents/roadmaps/road-to-bytes-the-model-actually-receives.md` -> /^1$/
+      verify: `grep -c '^| D7 ' agents/roadmaps/archive/road-to-bytes-the-model-actually-receives.md` -> /^1$/
 
 ## Disposition of every item of the source plans
 
@@ -195,6 +229,8 @@ owns it; "here" or "sibling" names this file or
 | D4 | reversible-technical | agent | `--deep` reuses a local clone holding the SHA, else a depth-1 fetch of that commit; no persistent bare store | `--deep` is opt-in and on-demand; a store is a maintenance surface for a rare path | the transfer part of the ceiling fires on more than one run |
 | D5 | reversible-technical | agent | the spawn nudge gains an advisory clause only if a re-taken cold start still exceeds 100,000 uncached tokens | the 2026-08-16 reading is 242,891; the threshold is under half of it and stated, not derived | a re-taken figure lands near the threshold |
 | D6 | reversible-technical | agent | one roadmap for measurement and package-owned traffic, one sibling for reduction | the reduction depends on another roadmap's ADR and probe; this file depends on nothing | the sibling's dependency closes before Phase 1 here starts |
+| D10 | reversible-technical | agent | Phase 2's cost is recorded in this file, not in `src/config/hook-latency-budget.json` | the budget file is ratification-gated plumbing and carries no per-change ledger; the delta is 0.03 ms at the p95 Read size and 741 B of bundle | a dispatcher change's cost is ever required in the budget file by a gate |
+| D7 | reversible-technical | agent | The re-taken cold start is 182,257 uncached tokens, above D5's 100,000, so the rung-1 (single-slice) delegation nudge gains one advisory clause: a leg starts cold and a slice of one to three direct reads does not amortise it. No block; multi-slice rungs unchanged | `agents/evidence/analysis/subagent-cold-start-2026-10-14.md`; `delegation_nudge_hook.ts` `buildNudgeLine`, test `single-slice-names-the-cold-start-cost` | a re-taken median falls below 100,000 tokens |
 | D9 | product-owned | owner | The built tarball stays ungated; size keeps being measured, and the 2026-08-04 release decision stands unreopened | Owner answer 2026-10-14 to the round's E7 residue (option 1); no consumer cost measured since that decision | a measured consumer cost from package size appears |
 | D8 | reversible-technical | agent | Verify lines of 1.2, 1.3, 2.1, 2.2 and 3.1 name test titles the step itself creates; each is seen red before its implementation, so the name filter matches a real test by the time the step closes (closure listing C1–C5, non-blocking by that script's own contract) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
 
@@ -219,12 +255,12 @@ owns it; "here" or "sibling" names this file or
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every byte figure recorded about a tool result names whether it counts
+- [x] AC-1 — Every byte figure recorded about a tool result names whether it counts
       the hook envelope or the model-visible content, and a model-visible figure per
       tool class exists for this repository's own sessions.
-- [ ] AC-2 — The repeated-read advisory never states "unchanged" for a file whose
+- [x] AC-2 — The repeated-read advisory never states "unchanged" for a file whose
       content differs from the earlier read, within the stated size bound.
-- [ ] AC-3 — The MCP entry this package writes resolves from a warm cache without a
+- [x] AC-3 — The MCP entry this package writes resolves from a warm cache without a
       registry request, and no command this package ships teaches a hand-written CI
       poll loop.
-- [ ] AC-4 — Every item of the two source plans has a disposition in this file.
+- [x] AC-4 — Every item of the two source plans has a disposition in this file.

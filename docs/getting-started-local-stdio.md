@@ -18,7 +18,7 @@ agent-config --version    # confirms the binary is on your PATH
 ```
 
 No global install? Every config below also works with
-`"command": "npx", "args": ["-y", "@event4u/agent-config", "mcp-server"]`.
+`"command": "npx", "args": ["--prefer-offline", "-y", "@event4u/agent-config@<version>", "mcp-server"]` — pin the version you installed; with a pin, `--prefer-offline` lets a warm npm cache start the server without a registry request.
 
 ## 2. Point your client at it
 

@@ -283,6 +283,28 @@ describe("buildNudgeLine", () => {
     expect(line).toContain("rung-1: dispatch single-slice (1 slice, lite tier recommended)");
   });
 
+  it("single-slice-names-the-cold-start-cost", () => {
+    // A leg starts cold (road-to-bytes-the-model-actually-receives 4.2, D5): a
+    // single slice of a few direct reads does not amortise it. Advisory text
+    // only — the line still recommends nothing stronger than "consider".
+    const line = buildNudgeLine(
+      1,
+      { delegable: true, action: "dispatch", mode: null, reason: "single bounded read-heavy slice" },
+      1,
+      "lite",
+    );
+    expect(line).toContain("starts cold");
+    expect(line).toContain("one to three direct reads");
+    expect(line.endsWith("</delegation-nudge>")).toBe(true);
+    const multi = buildNudgeLine(
+      2,
+      { delegable: true, action: "dispatch", mode: "do-in-parallel", reason: "independent slices (6)" },
+      6,
+      "lite",
+    );
+    expect(multi).not.toContain("starts cold");
+  });
+
   it("an unresolved rung renders as rung-? (unreachable in production, kept total for direct callers)", () => {
     const line = buildNudgeLine(
       null,
