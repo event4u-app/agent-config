@@ -26,7 +26,7 @@ const GATE = section(MERGE, '## 9a. Danger gate');
 
 describe('§ 9a classes a PR from the base revision', () => {
     it('materialises the manifest base in a worktree and runs that copy with --root on the head', () => {
-        expect(GATE).toContain('git worktree add -q --detach "$BASE_DIR" "<manifest-base_sha>"');
+        expect(GATE).toContain('git worktree add -q --detach "$BASE_DIR" "$BASE"');
         expect(GATE).toContain('"$BASE_DIR/src/scripts/classify_merge_risk.ts"');
         expect(GATE).toContain('--root "$PWD"');
     });
@@ -36,8 +36,8 @@ describe('§ 9a classes a PR from the base revision', () => {
     });
 
     it('a base it cannot use is needs-owner, never a skip and never a fall-back', () => {
-        expect(GATE).toContain('echo "verdict: needs-owner (base-unavailable');
-        expect(GATE).toMatch(/never a skipped gate and never a fall-back to\s+the head's copy/u);
+        expect(GATE).toContain('VERDICT="verdict: needs-owner (base-unavailable');
+        expect(GATE).toMatch(/never a\s+skipped gate and never a fall-back to the head's copy/u);
     });
 });
 

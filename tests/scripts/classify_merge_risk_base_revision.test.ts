@@ -57,6 +57,37 @@ function attack(branch: string, file: string, edit: (src: string) => string): st
     return git(clone, 'rev-parse', 'HEAD');
 }
 
+/** The danger gate's shell block, exactly as the merge command ships it. */
+function gateBlock(): string {
+    const cmd = fs.readFileSync(path.join(REPO, 'src/domains/git/pr/merge/command.md'), 'utf8');
+    const start = cmd.indexOf('## 9a. Danger gate');
+    const m = /```bash\n([\s\S]*?)```/u.exec(cmd.slice(start));
+    if (start < 0 || m === null) throw new Error('the danger gate block is not where the command keeps it');
+    return m[1] ?? '';
+}
+
+/** Run the shipped block for `baseSha...headSha` inside the clone. */
+function runGate(baseSha: string, headSha: string): { lines: string[]; code: number | null } {
+    const script = gateBlock().replaceAll('<manifest-base_sha>', baseSha).replaceAll('<manifest-head-sha>', headSha);
+    const r = spawnSync('bash', ['-c', script], { cwd: clone, encoding: 'utf8' });
+    return { lines: (r.stdout ?? '').trim().split('\n'), code: r.status };
+}
+
+/** A commit on a fresh branch from `from`, writing each file as given (null deletes it). */
+function commitOn(branch: string, from: string, files: Record<string, string | null>): string {
+    git(clone, 'checkout', '-q', '-b', branch, from);
+    for (const [f, body] of Object.entries(files)) {
+        const p = path.join(clone, f);
+        if (body === null) fs.rmSync(p);
+        else fs.writeFileSync(p, body);
+    }
+    git(clone, 'add', '-A', '--', ...Object.keys(files));
+    git(clone, 'commit', '-q', '-m', branch);
+    return git(clone, 'rev-parse', 'HEAD');
+}
+
+const worktreeCount = (): number => git(clone, 'worktree', 'list').split('\n').length;
+
 beforeAll(() => {
     // realpath: on macOS the tmpdir is a symlink, and the classifier's main guard compares real paths.
     work = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cmr-base-')));
@@ -71,6 +102,8 @@ beforeAll(() => {
     git(clone, 'commit', '-q', '--allow-empty', '-m', 'base: the classifier under review');
     base = git(clone, 'rev-parse', 'HEAD');
     git(clone, 'worktree', 'add', '-q', '--detach', path.join(work, 'base'), base);
+    // The shipped block runs the checkout's tsx; the clone borrows this repository's.
+    fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(clone, 'node_modules'));
 }, 60_000);
 
 afterAll(() => {
@@ -98,5 +131,61 @@ describe('the code that classes a change is not the change’s own', () => {
         );
         expect(verdictFrom(clone, head)).toBe('verdict: routine');
         expect(verdictFrom(path.join(work, 'base'), head)).toMatch(/^verdict: needs-owner/u);
+    }, 60_000);
+});
+
+describe('the shipped block fails to needs-owner on every anomaly', () => {
+    it('a routine head is routine, exits 0 and leaves no worktree behind', () => {
+        const before = worktreeCount();
+        const head = commitOn('docs-only', base, { 'docs/installation.md': 'changed\n' });
+        const r = runGate(base, head);
+        expect(r.lines[r.lines.length - 1]).toBe('verdict: routine');
+        expect(r.code).toBe(0);
+        expect(worktreeCount()).toBe(before);
+    }, 60_000);
+
+    it('the downgrade attack run through the block is needs-owner and exits non-zero', () => {
+        const head = attack('downgrade-via-block', CLASSIFIER, (s) =>
+            s.replace(
+                'export function verdictOf(triggers: readonly Trigger[]): Verdict {',
+                "export function verdictOf(triggers: readonly Trigger[]): Verdict {\n    if (triggers.length >= 0) return 'routine';",
+            ),
+        );
+        const r = runGate(base, head);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(/u);
+        expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it('a base classifier that crashes is classifier-unusable', () => {
+        const crashing = commitOn('base-crashes', base, { [CLASSIFIER]: 'process.exit(3);\n' });
+        const head = commitOn('head-on-crashing', crashing, { 'docs/installation.md': 'x\n' });
+        const r = runGate(crashing, head);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable: exit 3/u);
+        expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it('a base classifier that exits 0 with a malformed last line is classifier-unusable', () => {
+        const lying = commitOn('base-lies', base, { [CLASSIFIER]: "console.log('verdict: routine-ish');\n" });
+        const head = commitOn('head-on-lying', lying, { 'docs/installation.md': 'y\n' });
+        const r = runGate(lying, head);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable: exit 0/u);
+    }, 60_000);
+
+    it('a base without the classifier is base-unavailable, never the head copy', () => {
+        const bare = commitOn('base-without-classifier', base, { [CLASSIFIER]: null });
+        const head = commitOn('head-restores-classifier', bare, {
+            [CLASSIFIER]: fs.readFileSync(path.join(REPO, CLASSIFIER), 'utf8'),
+        });
+        const r = runGate(bare, head);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(base-unavailable/u);
+        expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it('a head that changes the manifest tsx was installed from is runtime-unverified', () => {
+        const pkg = fs.readFileSync(path.join(clone, 'package.json'), 'utf8');
+        const head = commitOn('head-changes-package', base, { 'package.json': pkg.replace('{', '{\n  "x": 1,') });
+        const r = runGate(base, head);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(runtime-unverified/u);
+        expect(r.code).not.toBe(0);
     }, 60_000);
 });

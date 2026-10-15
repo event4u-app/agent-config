@@ -236,7 +236,13 @@ triggers, which is D-1 and D-3.*
       base copy reads both revisions itself (1.1). Bootstrap: the trunk's copy
       has no `needs-owner`, so it classes the change that introduces it
       `needs-council` — sound exactly once, as the ratification gate's own
-      bootstrap branch records.
+      bootstrap branch records. After the council review
+      (`agents/evidence/council/danger-gate-review.md`): the block validates
+      that exit status and last line agree on one verdict, removes its worktree
+      on every path, resolves its temp directory to a real path, and hands a
+      head that tracks `node_modules` or changes the dependency manifest over
+      as `runtime-unverified`, since `tsx` is the checkout's. The tests run the
+      block as shipped.
       verify: `grep -c 'base_sha' src/domains/git/pr/merge/command.md` -> /^[3-9]/
 - [x] **2.2 The property has a test, including the downgrade attack.** A
       fixture repository whose head deletes the `governance-surface` trigger

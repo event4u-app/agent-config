@@ -117,10 +117,24 @@ describe('precedence of the three verdicts', () => {
         expect(r.triggers.map((t) => t.id)).toEqual(['ci-workflow', 'council-surface']);
     });
 
-    it('every owner trigger id is one the classifier can emit', () => {
-        const src = fs.readFileSync(path.resolve(__dirname, '../../src/scripts/classify_merge_risk.ts'), 'utf8');
-        for (const id of OWNER_TRIGGERS) {
-            expect(src).toContain(`'${id}'`);
+    it('every owner trigger fires on a path of its own and alone makes the verdict needs-owner', () => {
+        const witness: Record<string, string> = {
+            'governance-surface': 'src/rules/non-destructive-by-default.md',
+            'merge-authority-surface': 'src/scripts/classify_merge_risk.ts',
+            'reviewer-trust-chain': 'src/scripts/_lib/ratification_subject.ts',
+            'council-surface': 'src/scripts/council_cli.ts',
+            'ratification-contract': 'docs/contracts/ratification-artifact.md',
+            'owner-reserved-decision': 'docs/decisions/ADR-281-x.md',
+        };
+        expect(Object.keys(witness).sort()).toEqual([...OWNER_TRIGGERS].sort());
+        for (const [id, p] of Object.entries(witness)) {
+            const r = classifyChanges([mod(p)], {
+                dirExistsInHead: () => true,
+                decisionPolicy: () => 'owner',
+                consequenceMembers: new Set(),
+            });
+            expect(r.triggers.map((t) => t.id)).toEqual([id]);
+            expect(r.verdict).toBe('needs-owner');
         }
     });
 });

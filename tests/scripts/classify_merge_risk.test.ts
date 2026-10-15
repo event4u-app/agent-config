@@ -12,6 +12,7 @@ import {
     DELETION_THRESHOLD,
     main,
     parseNameStatus,
+    readSide,
     reopenPolicyOf,
     resolvePr,
     unionMembers,
@@ -241,6 +242,22 @@ describe('frontmatter reading — both sides, failing closed', () => {
         expect(reopenPolicyOf('# no frontmatter\n')).toBeNull();
     });
 
+    it('reads every YAML spelling of owner as owner, and any unrecognised value as owner', () => {
+        for (const line of [
+            'reopen_policy: owner # governance reservation',
+            "reopen_policy: 'owner'",
+            'Reopen_Policy: OWNER',
+            'reopen_policy:',
+            'reopen_policy: |',
+            'reopen_policy: !!str owner',
+            'reopen_policy: typo-owner',
+        ]) {
+            expect(reopenPolicyOf(`---\nid: ADR-1\n${line}\n---\n`), line).toBe('owner');
+        }
+        expect(reopenPolicyOf('---\nreopen_policy: directional\nreopen_policy: owner\n---\n')).toBe('owner');
+        expect(reopenPolicyOf('---\nreopen_policy: unclassified # not yet\n---\n')).toBe('unclassified');
+    });
+
     it('owner at base OR at head fires; a side that exists and cannot be read fires', () => {
         const owner = '---\nreopen_policy: owner\n---\n';
         const other = '---\nreopen_policy: directional\n---\n';
@@ -257,7 +274,18 @@ describe('frontmatter reading — both sides, failing closed', () => {
         expect([...(unionMembers([a, b]) ?? [])].sort()).toEqual(['session-canary', 'tool-safety']);
         expect(unionMembers([a, 'not json'])).toBeNull();
         expect(unionMembers([undefined, undefined])).toBeNull();
-        expect(consequenceMembersOf('{"members": []}')).toEqual(new Set());
+        expect(consequenceMembersOf('{"members": {}}')).toEqual(new Set());
+        expect(consequenceMembersOf('{"members": []}')).toBeNull();
+        expect(consequenceMembersOf('{"members": null}')).toBeNull();
+    });
+
+    it('a failed read is null, never absence; an empty listing is absence', () => {
+        const run = (listOk: boolean, listOut: string, showOk: boolean) => (args: string[]) =>
+            args[0] === 'ls-tree' ? { ok: listOk, out: listOut } : { ok: showOk, out: 'text' };
+        expect(readSide(run(false, '', true), 'r', 'p')).toBeNull();
+        expect(readSide(run(true, '', true), 'r', 'p')).toBeUndefined();
+        expect(readSide(run(true, '100644 blob abc\tp\n', false), 'r', 'p')).toBeNull();
+        expect(readSide(run(true, '100644 blob abc\tp\n', true), 'r', 'p')).toBe('text');
     });
 
     it('a real range reads the head frontmatter of an added owner-reserved ADR', () => {

@@ -479,15 +479,28 @@ Once required checks are green on the manifest head and the PR is mergeable,
 classify it with the **base revision's** classifier, never the head's:
 
 ```bash
-BASE_DIR="$(mktemp -d)/classifier-base"
-if git cat-file -e "<manifest-base_sha>:src/scripts/classify_merge_risk.ts" \
-   && git worktree add -q --detach "$BASE_DIR" "<manifest-base_sha>"; then
-  node_modules/.bin/tsx "$BASE_DIR/src/scripts/classify_merge_risk.ts" \
-    --range "<manifest-base_sha>...<manifest-head-sha>" --root "$PWD"
-  git worktree remove --force "$BASE_DIR"
-else
-  echo "verdict: needs-owner (base-unavailable: no classifier or no worktree at <manifest-base_sha>)"
+BASE="<manifest-base_sha>"
+HEAD_SHA="<manifest-head-sha>"
+GATE_TMP="$(cd "$(mktemp -d)" && pwd -P)"
+BASE_DIR="$GATE_TMP/classifier-base"
+trap 'git worktree remove --force "$BASE_DIR" 2>/dev/null; rm -rf "$GATE_TMP"' EXIT
+VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
+if [ -n "$(git ls-files -- node_modules | head -n 1)" ] \
+   || ! git diff --quiet "$BASE...$HEAD_SHA" -- package.json package-lock.json npm-shrinkwrap.json .npmrc; then
+  VERDICT="verdict: needs-owner (runtime-unverified: the head tracks node_modules or changes the manifest tsx was installed from)"
+elif git cat-file -e "$BASE:src/scripts/classify_merge_risk.ts" \
+     && git worktree add -q --detach "$BASE_DIR" "$BASE"; then
+  OUT="$(node_modules/.bin/tsx "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
+  CODE=$?
+  LAST="$(printf '%s\n' "$OUT" | tail -n 1)"
+  case "$CODE:$LAST" in
+    "0:verdict: routine" | "1:verdict: needs-council ("* | "2:verdict: needs-owner ("*) VERDICT="$LAST" ;;
+    *) VERDICT="verdict: needs-owner (classifier-unusable: exit $CODE, last line '$LAST')" ;;
+  esac
+  printf '%s\n' "$OUT" | sed '$d'
 fi
+echo "$VERDICT"
+[ "$VERDICT" = "verdict: routine" ]
 ```
 
 **Why the base.** § 2 checked the PR out, so the tree's own copy of the
@@ -495,12 +508,23 @@ classifier — and of `check_kernel_edit_ratified`, whose `classifyPaths` it
 reads — is the head's: a PR could rewrite the code that classes it and call
 itself `routine`. The ratification gate's workflow step records the same defect
 and runs the base copy for the same reason. The base copy is run directly with
-the head's `tsx`, not through `./scripts-run`, whose dispatcher is the head's
+the checkout's `tsx`, not through `./scripts-run`, whose dispatcher is the head's
 code too; the consequence-class list and each ADR's `reopen_policy` are read
-from both revisions by the base copy itself. A base without the classifier, a
-worktree that cannot be made, or a last line that is not a verdict is
-**`needs-owner`** and says why — never a skipped gate and never a fall-back to
-the head's copy.
+from both revisions by the base copy itself.
+
+**What it fails to.** Every anomaly is **`needs-owner`** and says why — never a
+skipped gate and never a fall-back to the head's copy: a base without the
+classifier or a worktree that cannot be made; an exit status and last line that
+do not agree on one of the three verdicts (a crash, empty or malformed output);
+and a runtime the head could have supplied. `tsx` comes from the checkout's
+`node_modules`, so a head that tracks `node_modules` or changes the dependency
+manifest it was installed from could forge the verdict; such a PR is handed over
+unclassified. The block prints the verdict last and exits 0 only on `routine`,
+and the `trap` removes the worktree and its temporary directory on every path.
+The temporary directory is resolved to its real path: the classifier's entry
+guard compares real paths, and on a host whose temp directory is a symlink an
+unresolved path makes it print nothing — which the block would correctly, but
+uselessly, hand over as `classifier-unusable`.
 
 The last line is the verdict; each trigger names the rule it comes from. An
 unreadable diff is `needs-council` — the gate fails closed.

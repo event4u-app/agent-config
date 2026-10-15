@@ -167,16 +167,43 @@ const MERGE_RULE_CARRIER_RE =
 const CONSUMER_TEMPLATE_RE = /(?:^|\/)agent-src\/templates\/AGENTS\.md$/;
 
 const DECISION_RECORD_RE = /^docs\/decisions\/ADR-[^/]+\.md$/;
+// Any-prefix like the ratification gate's own rule pattern: every projection
+// root (`dist/agent-src/`, `.claude/`, `.augment/`, …) must match, and a fixture
+// that also matches errs toward a review, never toward `routine`.
 const RULE_FILE_RE = /(?:^|\/)rules\/([a-z0-9-]+)\.md$/;
 
-/** The reopen policy one side of an ADR declares; `null` when it has no readable frontmatter. */
+/** The two `reopen_policy` values that do not reserve a record to the owner. */
+const NON_OWNER_POLICIES: ReadonlySet<string> = new Set(['directional', 'unclassified']);
+
+/**
+ * The reopen policy one side of an ADR declares: `'absent'` when the field is
+ * missing, `null` when there is no readable frontmatter.
+ *
+ * Read by hand, not through a YAML library: the base copy runs from a detached
+ * worktree with no `node_modules` of its own, so it may import only `node:`
+ * built-ins. The reading therefore fails toward the owner wherever YAML could
+ * mean something this parser does not see: every occurrence of the key is read
+ * (a duplicate cannot hide an `owner`), a trailing comment and quotes are
+ * stripped, and any value that is not one of the two non-owner policies —
+ * empty, a block scalar, a tag, a typo — reads as `'owner'`.
+ */
 export function reopenPolicyOf(text: string): string | null {
     const fm = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text);
     if (fm === null) {
         return null;
     }
-    const m = /^reopen_policy:\s*["']?([a-z-]+)["']?\s*$/m.exec(fm[1] ?? '');
-    return m === null ? 'absent' : (m[1] ?? 'absent');
+    const values = [...(fm[1] ?? '').matchAll(/^\s*["']?reopen_policy["']?\s*:(.*)$/gim)].map((m) =>
+        (m[1] ?? '')
+            .replace(/\s+#.*$/u, '')
+            .trim()
+            .replace(/^(["'])(.*)\1$/u, '$2')
+            .trim()
+            .toLowerCase(),
+    );
+    if (values.length === 0) {
+        return 'absent';
+    }
+    return values.every((v) => NON_OWNER_POLICIES.has(v)) ? (values[0] ?? 'absent') : 'owner';
 }
 
 /**
@@ -206,7 +233,9 @@ export function combinePolicy(sides: readonly (string | null | undefined)[]): De
 export function consequenceMembersOf(text: string): Set<string> | null {
     try {
         const raw = JSON.parse(text) as { members?: unknown };
-        return raw.members !== null && typeof raw.members === 'object' ? new Set(Object.keys(raw.members)) : null;
+        return raw.members !== null && typeof raw.members === 'object' && !Array.isArray(raw.members)
+            ? new Set(Object.keys(raw.members))
+            : null;
     } catch {
         return null;
     }
@@ -519,6 +548,28 @@ function failClosed(reason: string): Classification {
 }
 
 /**
+ * One file at one revision: its text, `undefined` when the revision has no such
+ * path, `null` when the read failed. `ls-tree` tells absence (exit 0, no output)
+ * from a failed read (non-zero), which `cat-file -e` does not — and a failed
+ * read taken for absence would skip the side that carries an `owner`.
+ */
+export function readSide(
+    run: (args: string[]) => { ok: boolean; out: string },
+    rev: string,
+    p: string,
+): string | null | undefined {
+    const listed = run(['ls-tree', rev, '--', p]);
+    if (!listed.ok) {
+        return null;
+    }
+    if (listed.out.trim() === '') {
+        return undefined;
+    }
+    const shown = run(['show', `${rev}:${p}`]);
+    return shown.ok ? shown.out : null;
+}
+
+/**
  * The consequence class across both sides: the union, so a head can add a
  * member but never remove one. A side that exists and does not read, or no side
  * at all, is `null` — every rule file then counts.
@@ -558,13 +609,7 @@ export function classifyTarget(root: string, target: { pr?: string | undefined; 
         return failClosed((e as Error).message);
     }
     const exists = (rev: string, p: string): boolean => git(root, ['cat-file', '-e', `${rev}:${p}`]).ok;
-    const side = (rev: string, p: string): string | null | undefined => {
-        if (!exists(rev, p)) {
-            return undefined;
-        }
-        const r = git(root, ['show', `${rev}:${p}`]);
-        return r.ok ? r.out : null;
-    };
+    const side = (rev: string, p: string): string | null | undefined => readSide((args) => git(root, args), rev, p);
     return classifyChanges(entries, {
         dirExistsInHead: (dir) => exists(resolved.head, dir),
         decisionPolicy: (p) => combinePolicy([side(resolved.base, p), side(resolved.head, p)]),
