@@ -84,6 +84,18 @@ whose `subject` is absent (`subject-absent`), not a digest
 (`subject-malformed`) or a different one (`subject-mismatch`). Both default to
 `HEAD`.
 
+**The local run and the CI run classify the same gated set.** Which files are
+gated includes every module that newly enters the hook dispatcher's import
+closure, so the base side of the change has to be read. CI runs the base
+revision's copy of the gate with `--root <head>`, whose own tree is the base. A
+run whose `--root` is the gate's own checkout — pre-push, `task ci`, the subject
+CLI — reads the base side from Git objects at `--base-ref` (default
+`origin/main`, then `origin/master`, `main`, `master`, `HEAD~1`), so both print
+and check one digest. Give `ratification_subject` the same `--base-ref` as the
+gate; a base that does not resolve is a refusal. Until PR #2371 surfaced it, the
+local run compared the head with itself, saw no arrivals and refused the record
+CI required.
+
 **The digest is read from Git objects, never from the working tree.** The
 revision is resolved to a commit, each gated path is looked up in that commit's
 tree (`git ls-tree`) and a blob's bytes come from the object store

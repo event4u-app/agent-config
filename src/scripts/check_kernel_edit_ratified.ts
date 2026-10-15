@@ -86,7 +86,11 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
-import { dispatchImportClosure, verdictModules } from './_lib/dispatch_import_closure.js';
+import {
+    dispatchImportClosure,
+    verdictModules,
+    type ClosureTree,
+} from './_lib/dispatch_import_closure.js';
 import { is_kernel_rule } from './_lib/kernel_rules.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import {
@@ -105,6 +109,7 @@ import {
     refExists,
     resolveRevision,
     subjectOf,
+    treeAtRevision,
     type SubjectReading,
 } from './_lib/ratification_subject.js';
 
@@ -265,12 +270,12 @@ export function derivedPlumbing(root: string = REPO): readonly string[] {
  * strips the names that classed it, so declassifying one is itself a gated
  * edit of it.
  *
- * Meaningful only where the two trees differ — in CI, where the gate's code is
- * the base revision's and `root` is the head. A local run with `root` equal to
- * the gate's own tree sees no arrivals, and says nothing it cannot measure.
+ * `baseRoot` is the base side: a checkout (in CI, the gate's own tree is the
+ * base revision's) or a commit's objects (a local run, see `derivedFor`). A
+ * checkout equal to `root` is the same tree on both sides and has no arrivals.
  */
-export function closureArrivals(root: string, baseRoot: string = REPO): string[] {
-    if (path.resolve(root) === path.resolve(baseRoot)) {
+export function closureArrivals(root: string, baseRoot: string | ClosureTree = REPO): string[] {
+    if (typeof baseRoot === 'string' && path.resolve(root) === path.resolve(baseRoot)) {
         return [];
     }
     const base = new Set(dispatchImportClosure(baseRoot).map((e) => e.path));
@@ -395,12 +400,30 @@ function resolveBaseRef(explicit: string | null, root: string): string {
 }
 
 /**
- * The plumbing closure this gate classifies with: the union of the list read
- * from the tree under review and from this script's own tree, so a module
- * present on either side is watched.
+ * The plumbing closure this gate classifies with: the base side's verdict
+ * modules, the head side's, and every module arriving in the closure — so a
+ * module present on either side is watched.
+ *
+ * Which tree is the base depends on where the gate runs. In CI the workflow
+ * runs the BASE revision's copy with `--root <head>`, so this script's own tree
+ * is the base. A local run (pre-push, `task ci`) executes the head's copy, whose
+ * own tree is `root` itself: compared with itself it saw no arrivals, digested
+ * fewer files than CI, and refused the record CI requires (PR #2371). So when
+ * `root` is this script's tree, the base side is read from Git objects at
+ * `baseRef` — resolved the same way as the diff's base, the commit CI's base
+ * checkout is — and both runs classify one gated set.
+ *
+ * THROWS a {@link GatedSubjectRefusal} when that base does not resolve.
  */
-function derivedFor(root: string): readonly string[] {
-    return [...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)])];
+function derivedFor(root: string, baseRef: string | null): readonly string[] {
+    if (path.resolve(root) !== REPO) {
+        return [...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)])];
+    }
+    const base = treeAtRevision(root, resolveRevision(root, resolveBaseRef(baseRef, root)));
+    const baseVerdicts = dispatchImportClosure(base)
+        .filter((e) => e.class === 'verdict')
+        .map((e) => e.path);
+    return [...new Set([...baseVerdicts, ...derivedPlumbing(root), ...closureArrivals(root, base)])];
 }
 
 /**
@@ -431,8 +454,9 @@ export function expectedSubjectFor(
     files: readonly string[],
     root: string,
     revision: string = DEFAULT_REVISION,
+    baseRef: string | null = null,
 ): SubjectReading {
-    return subjectOf(root, files, derivedFor(root), revision);
+    return subjectOf(root, files, derivedFor(root, baseRef), revision);
 }
 
 export interface GateResult {
@@ -447,13 +471,9 @@ export function evaluate(
     root: string,
     providerCount: number | null,
     revision: string = DEFAULT_REVISION,
+    baseRef: string | null = null,
 ): GateResult {
     const lines: string[] = [];
-    // The union of the closure read from the tree under review and from this
-    // script's own tree: under CI the gate code is the base revision's and
-    // `root` is the head, so a module present on either side is watched.
-    const derived = derivedFor(root);
-    const gated = classifyPaths(files, derived);
     const scanned = files.length;
 
     // Every changed path is a planned target: the gate's denominator is the
@@ -461,6 +481,25 @@ export function evaluate(
     // counting rather than a silence.
     const ledger = new GateLedger('check_kernel_edit_ratified');
     ledger.plan(files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => f !== ''));
+
+    // Computed once and handed to the digest below, so the classification and
+    // the digest cannot read two different base sides.
+    let derived: readonly string[];
+    try {
+        derived = derivedFor(root, baseRef);
+    } catch (err) {
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
+        }
+        lines.push(`❌  ${err.message}`);
+        for (const target of ledger.unaccountedTargets()) {
+            ledger.fail(target, 'the base side of the dispatcher closure could not be read');
+        }
+        const tally = ledger.finalize();
+        lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
+        return { exitCode: 1, lines, scanned };
+    }
+    const gated = classifyPaths(files, derived);
     const gatedSet = new Set<string>([
         ...gated.kernelRules,
         ...gated.governanceHooks,
@@ -511,7 +550,7 @@ export function evaluate(
     let expectedSubject: string;
     let commit: string | null;
     try {
-        ({ digest: expectedSubject, revision: commit } = expectedSubjectFor(files, root, revision));
+        ({ digest: expectedSubject, revision: commit } = subjectOf(root, files, derived, revision));
     } catch (err) {
         // ONE boundary for EVERY failure of the subject computation: each is
         // a subclass of `GatedSubjectRefusal`, so a gate that advertises a
@@ -716,7 +755,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         revision = commit;
     }
 
-    const result = evaluate(changed, root, configuredProviderCount(policyRoot), revision);
+    const result = evaluate(changed, root, configuredProviderCount(policyRoot), revision, baseRef);
 
     // OUTSIDE the quiet guard: CI passes --quiet, and a coverage guard that
     // sees no count reports the gate silent.
