@@ -46,6 +46,8 @@ import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
     BYPASS_RECORD_DIR,
+    BYPASS_RECORD_LIMIT,
+    BYPASS_RECORD_MAX_BYTES,
     checkAnchorIdentity,
     evaluateAnchor,
     evaluateBypassRecords,
@@ -173,23 +175,32 @@ export function touchesPolicy(files: readonly string[]): boolean {
 export function readBypassRecords(root: string): BypassRecordInput[] {
     let names: string[];
     try {
+        if (!fs.lstatSync(path.join(root, BYPASS_RECORD_DIR)).isDirectory()) {
+            return [{ path: BYPASS_RECORD_DIR, text: null }];
+        }
         names = fs.readdirSync(path.join(root, BYPASS_RECORD_DIR));
     } catch (err) {
         // No directory means no bypass was ever recorded. Any other failure is
         // a directory that exists and cannot be read, which shows nothing closed.
         return (err as NodeJS.ErrnoException).code === 'ENOENT' ? [] : [{ path: BYPASS_RECORD_DIR, text: null }];
     }
-    return names
-        .filter((n) => n.endsWith('.md'))
-        .sort()
-        .map((n) => {
-            const rel = `${BYPASS_RECORD_DIR}/${n}`;
-            try {
-                return { path: rel, text: fs.readFileSync(path.join(root, rel), 'utf8') };
-            } catch {
+    const records = names.filter((n) => n.endsWith('.md')).sort();
+    if (records.length > BYPASS_RECORD_LIMIT) {
+        return [{ path: `${BYPASS_RECORD_DIR} (${String(records.length)} records, above ${String(BYPASS_RECORD_LIMIT)})`, text: null }];
+    }
+    return records.map((n) => {
+        const rel = `${BYPASS_RECORD_DIR}/${n}`;
+        try {
+            // A symbolic link or an oversized file is not a record this reader trusts.
+            const st = fs.lstatSync(path.join(root, rel));
+            if (!st.isFile() || st.size > BYPASS_RECORD_MAX_BYTES) {
                 return { path: rel, text: null };
             }
-        });
+            return { path: rel, text: fs.readFileSync(path.join(root, rel), 'utf8') };
+        } catch {
+            return { path: rel, text: null };
+        }
+    });
 }
 
 /**
@@ -203,10 +214,19 @@ export function removedBypassRecords(changed: readonly string[], root: string): 
         .map((f) => ({ code: 'bypass-record-removed' as const, path: f, message: `${f} is deleted by this diff` }));
 }
 
-/** A `council_review` path names a committed evidence file inside the checkout. */
-function reviewExists(root: string, rel: string): boolean {
+/**
+ * A `council_review` path names a regular file committed at `HEAD` inside the
+ * evidence tree — read from the commit's tree, never the working tree, so
+ * a directory, an untracked file or a symbolic link does not count.
+ */
+export function reviewCommitted(root: string, rel: string): boolean {
     const norm = path.posix.normalize(rel);
-    return norm.startsWith('agents/evidence/') && !norm.includes('..') && fs.existsSync(path.join(root, norm));
+    if (norm !== rel || !norm.startsWith('agents/evidence/') || norm.endsWith('/') || norm.split('/').includes('..')) {
+        return false;
+    }
+    const r = spawnSync('git', ['-C', root, 'ls-tree', 'HEAD', '--', norm], { encoding: 'utf8' });
+    const entry = /^(\d{6}) blob [0-9a-f]+\t(.+)$/u.exec((r.stdout ?? '').trim());
+    return r.status === 0 && entry !== null && entry[2] === norm && (entry[1] === '100644' || entry[1] === '100755');
 }
 
 export interface AnchorGateResult {
@@ -422,7 +442,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
 
     const result = evaluateGate(changed, policyText, source, repo);
     const open = [
-        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel) => reviewExists(root, rel)),
+        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel) => reviewCommitted(root, rel)),
         ...removedBypassRecords(changed, root),
     ];
     if (open.length > 0) {

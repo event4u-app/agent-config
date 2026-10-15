@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -5,7 +6,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BYPASS_RECORD_DIR, bypassInstant, evaluateBypassRecords } from '../../src/scripts/_lib/platform_anchor.js';
-import { main, type AnchorSource } from '../../src/scripts/check_platform_anchor.js';
+import { main, reviewCommitted, type AnchorSource } from '../../src/scripts/check_platform_anchor.js';
 
 /**
  * A bypass of the ratification gate is the owner's route, and its record is
@@ -100,6 +101,23 @@ describe('evaluateBypassRecords — a record that cannot show it closed fails cl
         expect(codes(record({ council_review: 'x' }))).toEqual(['bypass-record-malformed']);
     });
 
+    it('`pending` is accepted only for restored_at and council_review', () => {
+        expect(codes(record({ reason: 'pending' }))).toEqual(['bypass-record-malformed']);
+        expect(codes(record({ ruleset_version_after: 'pending' }))).toEqual(['bypass-record-malformed']);
+    });
+
+    it('restore_by more than seven days after the bypass', () => {
+        expect(codes(record({ restore_by: '2026-10-17T09:00:01Z', restored_at: 'pending', council_review: 'pending' }))).toEqual([
+            'bypass-record-malformed',
+        ]);
+        expect(one(record({ restore_by: '2026-10-17T09:00:00Z', restored_at: 'pending', council_review: 'pending' }))).toEqual([]);
+    });
+
+    it('a control character in a value does not reach the finding', () => {
+        const f = one(record({ council_review: 'x\u001b[2Jy' }));
+        expect(f[0]?.message).not.toMatch(/\p{Cc}/u);
+    });
+
     it('a record that could not be read', () => {
         expect(codes(null)).toEqual(['bypass-record-unreadable']);
     });
@@ -137,14 +155,54 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         expect(run()).toBe(1);
     });
 
-    it('passes once that record is closed and its review exists', () => {
+    const git = (...args: string[]): void => {
+        const r = spawnSync('git', ['-C', root, ...args], {
+            encoding: 'utf8',
+            env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' },
+        });
+        if (r.status !== 0) throw new Error(r.stderr);
+    };
+    const commitAll = (): void => {
+        git('add', '-A');
+        git('-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-m', 'x');
+    };
+
+    it('passes once that record is closed and its review is committed', () => {
+        git('init', '-q');
         put(`${BYPASS_RECORD_DIR}/closed.md`, record());
         put(REVIEW, '# review\n');
+        commitAll();
         expect(run()).toBe(0);
     });
 
     it('fails when the closed record names a review that is not there', () => {
         put(`${BYPASS_RECORD_DIR}/closed.md`, record());
+        expect(run()).toBe(1);
+    });
+
+    it('a review that is untracked, a directory or a symbolic link does not count', () => {
+        git('init', '-q');
+        put('agents/evidence/seed.md', 'x\n');
+        commitAll();
+        put(REVIEW, '# review\n');
+        expect(reviewCommitted(root, REVIEW)).toBe(false);
+        expect(reviewCommitted(root, 'agents/evidence/council/')).toBe(false);
+        expect(reviewCommitted(root, 'agents/evidence/council')).toBe(false);
+        fs.rmSync(path.join(root, REVIEW));
+        fs.symlinkSync('/etc/hosts', path.join(root, REVIEW));
+        commitAll();
+        expect(reviewCommitted(root, REVIEW)).toBe(false);
+        expect(reviewCommitted(root, 'agents/evidence/seed.md')).toBe(true);
+        expect(reviewCommitted(root, 'agents/evidence/../evidence/seed.md')).toBe(false);
+    });
+
+    it('a record that is a symbolic link, or oversized, is read as unreadable', () => {
+        put('elsewhere.md', record({ restored_at: 'pending', council_review: 'pending', restore_by: '2026-10-16T00:00:00Z' }));
+        fs.mkdirSync(path.join(root, BYPASS_RECORD_DIR), { recursive: true });
+        fs.symlinkSync(path.join(root, 'elsewhere.md'), path.join(root, BYPASS_RECORD_DIR, 'link.md'));
+        expect(run()).toBe(1);
+        fs.rmSync(path.join(root, BYPASS_RECORD_DIR, 'link.md'));
+        put(`${BYPASS_RECORD_DIR}/big.md`, record({ restored_at: 'pending', council_review: 'pending', restore_by: '2026-10-16T00:00:00Z' }) + 'x'.repeat(70_000));
         expect(run()).toBe(1);
     });
 

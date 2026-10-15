@@ -383,12 +383,15 @@ All nine fields are required; only `restored_at` and `council_review` may read
 the literal `pending`. `check_platform_anchor` reads every record on every run
 and fails while one is at or past `restore_by` with `restored_at: pending`, or
 restored with `council_review: pending` seven days on. It fails closed on a
-record that cannot show it closed: a missing, repeated or unknown field, no
-marker, an instant that is not a real calendar instant with a timezone,
-`restore_by` or `restored_at` before `time`, `restored_at` in the future, a
-`council_review` that names no committed file under `agents/evidence/`, a
-record or a record directory that cannot be read, and a record the diff
-deletes.
+record that cannot show it closed: a missing, repeated or unknown field, a
+`pending` anywhere but the two open fields, no marker, an instant that is not a
+real calendar instant with a timezone, `restore_by` before `time` or more than
+seven days after it, `restored_at` before `time` or in the future, a
+`council_review` that names anything but a regular file committed at `HEAD`
+under `agents/evidence/` (an untracked file, a directory and a symbolic link do
+not count), a record or a record directory that cannot be read, a record that
+is a symbolic link or larger than 64 KiB, more than 200 records, and a record
+the diff deletes.
 
 **What that check does not establish.** The records are files in the branch it
 runs on, so a branch can rewrite one to look closed; the check reads them, it

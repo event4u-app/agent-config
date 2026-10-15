@@ -1064,6 +1064,24 @@ export const BYPASS_RECORD_MARKER = '<!-- evidence-type: bypass-record -->';
 /** A review of a restored bypass is overdue this long after `restored_at`. */
 export const BYPASS_REVIEW_DAYS = 7;
 
+/**
+ * `restore_by` may lie at most this long after the bypass. Without a ceiling a
+ * record could set it years ahead and stay open, quietly, for good.
+ */
+export const BYPASS_MAX_OPEN_DAYS = 7;
+
+/** More records than this, or a record larger than this, is read as unreadable. */
+export const BYPASS_RECORD_LIMIT = 200;
+export const BYPASS_RECORD_MAX_BYTES = 64 * 1024;
+
+const DAY_MS = 86_400_000;
+
+/** A value as it may appear inside a one-line finding: no control characters, bounded. */
+function shown(value: string): string {
+    const flat = value.replace(/\p{Cc}/gu, ' ');
+    return flat.length > 120 ? `${flat.slice(0, 117)}...` : flat;
+}
+
 /** The nine fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
 export const BYPASS_RECORD_FIELDS = [
     'reason',
@@ -1186,7 +1204,9 @@ export function evaluateBypassRecords(
             malformed(p, f);
             continue;
         }
-        const missing = BYPASS_RECORD_FIELDS.filter((k) => (f.get(k) ?? '') === '');
+        const missing = BYPASS_RECORD_FIELDS.filter(
+            (k) => (f.get(k) ?? '') === '' || (f.get(k) === 'pending' && k !== 'restored_at' && k !== 'council_review'),
+        );
         const unknown = [...f.keys()].filter((k) => !(BYPASS_RECORD_FIELDS as readonly string[]).includes(k));
         if (missing.length > 0 || unknown.length > 0) {
             malformed(
@@ -1208,12 +1228,12 @@ export function evaluateBypassRecords(
               ? '`commit` is not a full 40-hex revision'
               : time === null || restoreBy === null || (restored === null && restoredRaw !== 'pending')
                 ? 'an instant is not ISO-8601 with a timezone, or names a date the calendar does not have'
-                : restoreBy < time
-                  ? '`restore_by` is before the bypass'
+                : restoreBy < time || restoreBy - time > BYPASS_MAX_OPEN_DAYS * DAY_MS
+                  ? `\`restore_by\` is before the bypass or more than ${String(BYPASS_MAX_OPEN_DAYS)} days after it`
                   : restored !== null && (restored < time || restored > t)
                     ? '`restored_at` is before the bypass or in the future'
                     : review !== 'pending' && !reviewExists(review)
-                      ? `\`council_review\` names \`${review}\`, which is not a committed file`
+                      ? `\`council_review\` names \`${shown(review)}\`, which is not a committed regular file`
                       : null;
         if (problem !== null || time === null || restoreBy === null) {
             malformed(p, problem ?? 'unreadable instant');
@@ -1224,12 +1244,12 @@ export function evaluateBypassRecords(
                 findings.push({
                     code: 'bypass-not-restored',
                     path: p,
-                    message: `${p}: the bypass is at or past \`restore_by\` ${String(f.get('restore_by'))} and records no \`restored_at\``,
+                    message: `${p}: the bypass is at or past \`restore_by\` ${shown(String(f.get('restore_by')))} and records no \`restored_at\``,
                 });
             }
             continue;
         }
-        if (review === 'pending' && t >= restored + BYPASS_REVIEW_DAYS * 86_400_000) {
+        if (review === 'pending' && t >= restored + BYPASS_REVIEW_DAYS * DAY_MS) {
             findings.push({
                 code: 'bypass-unreviewed',
                 path: p,
