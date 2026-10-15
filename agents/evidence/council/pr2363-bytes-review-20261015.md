@@ -1,6 +1,6 @@
 <!-- evidence-type: analysis -->
 
-# PR #2363 review: two council rounds, both REQUEST_CHANGES
+# PR #2363 review: three council rounds, all REQUEST_CHANGES
 
 AI council, 2026-10-15. anthropic/claude-sonnet-4-5 + openai/codex-default,
 2/2 present in each round, `--prompt-mode pr --rounds 2`, `$0.00` (both seats
@@ -11,7 +11,11 @@ verbatim beside this file:
   `origin/main` at head `04d0864fa`;
 - round 2: `pr2363-bytes-review-r2-20261015.question.md`, the follow-up diff
   `04d0864fa..b9664ac3a` minus generated projections, pack token sums, the
-  archived roadmap's notes and the round-1 prompt.
+  archived roadmap's notes and the round-1 prompt;
+- round 3: `pr2367-bytes-review-r3-20261015.question.md`, PR #2367 at head
+  `939427f6c` against `origin/main`, omitting pack token sums, three small test
+  files, the evidence files, the roadmap notes, the council record, the budget
+  files and `dist/` (the prompt names the omissions).
 
 PR #2363 was squash-merged (`26dd1905e`, 2026-10-15 05:33 UTC) before the
 follow-up commits existed, so they are not on the PR. They sit on the local
@@ -62,5 +66,32 @@ openai, closing line:
 | The `ci:settle` tests run the source tree, not a packed install | both | low | **open** — the manual packed-install check is recorded in the round-2 prompt; no automated regression test was added |
 | The cold-start test's exact-number match is brittle | anthropic | low | **not taken** — openai dropped it: "Requiring the evidence source to contain the exact measured value is the purpose of this test." |
 
-The round-2 fixes were not put to a third round: the instruction was one
-re-presentation. They are therefore unreviewed by the council.
+The round-2 fixes went to the council as round 3, on PR #2367.
+
+## Round 3 — REQUEST_CHANGES, 2/2
+
+Both seats confirmed the round-2 fixes. anthropic on the TOCTOU read: "The
+`contentDigest` bounded read with `grew-during-read` detection is **solid**";
+on the digest union it "correctly prevents" a legacy ledger, a growth-raced read
+or a failed read from asserting unchanged. openai listed both as dropped false
+positives. Both raised the same two blockers.
+
+anthropic, stance line:
+
+> **Highest-leverage change:** Add packaging smoke test + fix emitted command path.
+
+openai, closing line:
+
+> **REQUEST_CHANGES — the central consumer-install promise is neither reliably
+> fulfilled nor tested against the shipped package.**
+
+| Finding | Seats | Severity | Disposition |
+|---|---|---|---|
+| The emitted `agent-config ci:settle <pr>` is not on PATH for a project-local install (`node_modules/.bin`) | both | high | `2df8bfa11` — every emitter names `npm exec --no -- agent-config ci:settle`; measured on a stripped PATH, offline: the bare form exits 127 on a local install, the npm exec form reaches the binary locally and globally |
+| No test exercises the packed artifact | both | high | `b3a251eff` — release install harness § consumer-ci-settle runs the line the packed `/fix ci` prints, from a `--omit=dev` local install and a global one; red (127) on a tarball packed from `939427f6c`, green on `2df8bfa11` |
+| The `--deep` transfer gate is best-effort without that being decided | anthropic | medium | `e3a41d547` — best-effort stated as a decision, with the reason |
+| The three-part ceiling reads as stopping a fetch in flight; "the cost bound never disappears" | openai | medium | `e3a41d547` — the bounds are checked between operations; the clone fetch is bounded only by the size gate |
+| Unsupported content members are counted but their types are not logged | anthropic | medium | **not taken** — openai: "Logging each type is an enhancement, not a correctness requirement." The evidence file now says the count does not record the type |
+| The bounded-read test's fixture is exactly bound + 1, so it cannot catch a regression to a whole-file read that reports the same state | openai | medium | **open** — anthropic disagreed: the fixed `HASH_BOUND_BYTES + 1` buffer "**cannot** read more". No test change in this round |
+| `ci_settle.ts` decides to run by its filename | anthropic | medium | **not taken** — the basename guard is correct (openai lists it as a false positive); removing the auto-run would break the in-repo `scripts-run` path |
+| The PR bundles changes with different rollback boundaries | both | medium (anthropic: "Not a blocker, but real.") | **not taken** — the PR is the follow-up to one review; each finding is its own commit |
