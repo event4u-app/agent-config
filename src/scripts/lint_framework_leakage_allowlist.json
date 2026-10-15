@@ -156,11 +156,6 @@
       "file": "src/skills/prompt-engineering-image/SKILL.md",
       "anchor": "- `node_modules/@event4u/agent-config/src/scripts/ai-image/a",
       "reason": "npm install-location path of THIS package's own image-adapter scripts (node_modules/@event4u/agent-config/...) — the factual consumer path after the consumer-internal-ref decoupling (road-to-credible-install Phase 4), not a JS-stack mandate."
-    },
-    {
-      "file": "src/skills/git-workflow/SKILL.md",
-      "anchor": "`npm exec --no -- agent-config ci:settle <pr>`",
-      "reason": "Invocation of THIS package's own npm-distributed CLI, which is installed through npm whatever the consumer's stack. `npm exec --no` is the one form that reaches a project-local and a global install alike (council round 3 on PR #2367; proven by tests/test_release_install_e2e.sh § consumer-ci-settle) — not a JS-stack mandate on the consumer project."
     }
   ]
 }

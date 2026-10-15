@@ -27,8 +27,10 @@ const EMITTERS = [
     'src/domains/engineering-base/fix/ci/command.md',
     'src/domains/git/pr/create/command.md',
     'src/domains/product-basic/roadmap/process-full/command.md',
-    'src/skills/git-workflow/SKILL.md',
 ];
+// A generic skill may not name an npm invocation (lint_framework_leakage), so the
+// git-workflow skill points at /fix ci instead of emitting the line itself.
+const POINTERS = ['src/skills/git-workflow/SKILL.md'];
 
 function countUsage(stderr: string): number {
     return stderr.split('usage: ci_settle').length - 1;
@@ -58,6 +60,11 @@ describe('ci:settle verb', () => {
             const uses = text.split('ci:settle').length - 1;
             expect(uses, rel).toBeGreaterThan(0);
             expect(text.split(CI_SETTLE_INVOCATION).length - 1, rel).toBe(uses);
+        }
+        for (const rel of POINTERS) {
+            const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+            expect(text, rel).not.toContain('ci:settle');
+            expect(text, rel).toContain('`/fix ci` § 0');
         }
     });
 });

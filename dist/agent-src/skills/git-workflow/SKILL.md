@@ -106,8 +106,8 @@ Work complete. What would you like to do?
    own loop. A stale push is refused, so skipping this buys the refusal.
 3. `git push -u origin "<branch>"` (a rendered name is always quoted) — after a rebase of a pushed branch, `--force-with-lease` per `references/branch-update.md`.
 4. `gh pr create` using PR template.
-5. **Settle it** — the turn is not over at step 4:
-   `npm exec --no -- agent-config ci:settle <pr>`
+5. **Settle it** — the turn is not over at step 4: run the CI waiter exactly as
+   `/fix ci` § 0 prints it, with the PR number; its last output line is the verdict.
 
 ## A push closes its own loop
 
