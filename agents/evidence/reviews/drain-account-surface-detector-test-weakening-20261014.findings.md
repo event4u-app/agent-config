@@ -64,3 +64,50 @@ column. So the fixture is checked more strictly than before, not less.
 Residual, named rather than smoothed away: the gate cannot tell prose from an
 assertion in a JSON fixture under `tests/`. That is a precision limit of the
 pattern, recorded here, not fixed in this PR.
+
+## 4. Addendum 2026-10-15 — the three reworded cells, checked independently
+
+§ 2 names its own gap plainly: *"The reclassification of the three reworded
+cells was the implementer's. No independent reviewer looked at it."* This
+section closes that, after the fact — the PR had already merged as
+`6aa338fd4` when it was written, so nothing here gated anything. It is a
+record, not a clearance.
+
+Each wording the fixture now cites was grepped against the live catalogue and
+against the fixture itself, at `main` after the merge. Not read off the
+implementer's comment, which is what § 2 says nobody had done:
+
+| Wording cited | `threats.csv` | `ground-truth.json` |
+|---|---:|---:|
+| `Account enumeration through an observable difference` | 1 | 2 |
+| `Password reset beyond the token` | 1 | 1 |
+| `Federated sign-in account takeover` | 1 | 1 |
+| `Authentication token in script-readable browser storage` | 1 | 2 |
+| `Persistent login and incomplete logout` | 1 | 0 |
+
+All three reworded cells resolve, and the row the fourth finding moved AWAY
+from still exists and is simply no longer cited — the repointing left no
+dangling reference in either direction. The mechanical near-match test § 2
+describes is therefore confirmed by an independent read of the same two files,
+not only by its own green run.
+
+**The repointing was put to the repository owner and confirmed on 2026-10-14.**
+A second council round, run on the broader question (is the whole fixture
+change legitimate or a weakening) rather than § 2's narrow one, did NOT
+converge: one seat called it legitimate — no stated finding disappeared,
+provisional references were replaced by exact ones — and the other objected
+that the fourth cell was not reworded but replaced by a row created in the same
+change, which it called "redefining the taxonomy to make the test pass". Both
+seats, independently, named the same item for a human. The owner confirmed it.
+The split is recorded here because § 2's "2/2 seats" answers a narrower
+question and should not be read as agreement on the wider one.
+
+**One defect this check turned up, in prose only.** § 2's table and the
+fixture's own `$comment` call the row `Persistent login and logout`. The
+catalogue says `Persistent login and incomplete logout`; the short form matches
+nothing. No finding cites it — it appears only in explanatory text — so no
+citation is unresolvable. Worth correcting when that comment is next touched.
+
+**What would reopen this:** a second finding repointed onto a row added in its
+own change without an independent verdict. One repointing is a correction; a
+habit of them is the taxonomy bending to the tests.
