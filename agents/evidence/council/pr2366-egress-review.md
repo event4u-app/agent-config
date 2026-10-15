@@ -2,7 +2,7 @@
 
 # Council review of PR #2366 — egress rule table, placeholder tokens, secret detector refactor
 
-Four rounds, 2026-10-15, with two seats configured (`anthropic/claude-sonnet-4-5`,
+Six rounds, 2026-10-15, with two seats configured (`anthropic/claude-sonnet-4-5`,
 `openai/codex-default`, CLI transport, `--prompt-mode pr --rounds 2`). Prompts,
 committed verbatim before each run:
 `agents/evidence/council/pr2366-egress-review-20261015.question.md` (round 1) and
@@ -109,4 +109,38 @@ resolved, and both asked for changes:
 | R4-5 | low (openai) | no tests at the grammar boundaries | added — 2- and 16-character types, a digit after the first letter, 999,999; 17 characters and a leading digit refused | tests (they pass on the current code; they guard drift) |
 | R4-6 | low (both) | `matchesFromStart` is misleadingly named | renamed `testWholeValue` | — |
 
-**The round-4 fixes have not been re-reviewed by the council.**
+The round-4 fixes were reviewed in round 5.
+
+## Round 5 — verdicts
+
+Prompt: `agents/evidence/council/pr2366-egress-review-r5-20261015.question.md`
+(sent by the coordinating session). Quorum 1 of 2.
+
+| Seat | Stance |
+|---|---|
+| anthropic/claude-sonnet-4-5 | **No verdict — degraded.** The seat exited with an error (`exit_1`) and an empty text; recorded as absent, not as agreement. |
+| openai/codex-default | "REQUEST_CHANGES — the replacement path can send private-key material in plaintext and the scanner introduces trivial coverage bypasses; highest-leverage change: separate detection spans from full replacement spans and gate every rule with end-to-end tests proving no planted credential bytes survive." |
+
+## Round 5 — strategy shift and dispositions
+
+Each of five rounds had found new defects, so the response changed shape
+rather than patching rule by rule: detection span (what the scanner reports) and
+replacement span (every byte that must not leave) are now separate concepts with
+a declared policy per rule, a rule that cannot prove its replacement span makes
+the replacer refuse the whole text, and an end-to-end suite asserts on what
+actually leaves.
+
+| # | Severity | Finding | Disposition | Red-proof |
+|---|---|---|---|---|
+| R5-1 | critical | `pem-private-key` replaced the header only; the key body left in plaintext | fixed — each rule declares `replacement`: the detection span, or a `through` function proving the end; PEM replaces through its END marker (one sticky scan to the nearest key marker); no provable end → `EgressRefusedError`, never a partial replacement | end-to-end PEM cases and both fail-closed cases red before; red again with the PEM policy set back to the detection span |
+| R5-2 | high | parity of detection was treated as safety of replacement | fixed — `egress_replacement_e2e.test.ts`: every credential rule has a fixture (multi-line key, key inside a JSON string, glued JWT, 33-character scheme, multi-kilobyte values) and no planted sensitive byte may survive; a meta-test fails if a credential rule has no fixture | red on PEM, glued JWT, long scheme and fail-closed before the fixes |
+| R5-3 | high | one base64url character before a JWT hid it (documented ceiling) | fixed — one attempt per character run with an atomic prefix up to the first `eyJ`; no ceiling | parity cases red once the ceiling was removed, green after |
+| R5-4 | medium | a 33-character undotted scheme hid a connection URI | fixed — same construction up to the first word-boundary letter; no ceiling | as R5-3 |
+| R5-5 | medium | the 24-bit tag had no enforced guess budget | fixed — 64 failed resolutions per scope, then nothing resolves; credential lookups spend nothing; spelling unchanged | two tests red before |
+
+`DETECTION_CEILINGS` is now empty, and the contract ceiling section says none.
+
+## Round 6
+
+Prompt: `agents/evidence/council/pr2366-egress-review-r6-20261015.question.md`.
+Verdicts are recorded below once the run returns.
