@@ -183,11 +183,18 @@ Never a full-history clone, and no persistent object store: `--deep` is opt-in
 and rare, and a store is a maintenance surface for a rare path.
 
 The fetch ceiling is replaced by a **four-part ceiling**: an operation count, a
-total-bytes-read bound, a wall-clock bound, and a **bytes-transferred** bound —
-**whichever is hit first**, with the bound that fired recorded. The transfer
-figure is read from git's own receive line (`Receiving objects: … | <size>`),
-recorded as `0` when a local clone was reused; an over-bound transfer stops the
-run before a file is read. A bare read count bounds nothing (forty
+total-bytes-read bound, a wall-clock bound, and a **pre-fetch size gate** —
+**whichever is hit first**, with the bound that fired recorded. The size gate is
+the only transfer control, and it acts **before** the fetch, not during it:
+read the host's reported repository size (on GitHub,
+`gh api repos/<owner>/<repo> --jq .size`, in KiB) and do not fetch when it
+exceeds the bound. That figure is the whole repository, so it over-states a
+depth-1 pack — a conservative proxy, never a measurement. Nothing here stops a
+fetch that is already running: `git fetch` gives no enforceable mid-transfer
+limit, so a host that reports no size has **no** transfer bound — record that
+gap rather than a figure. After the fetch, record the on-disk size of the
+clone's `.git` (`0` when a local clone was reused) as what was received. A bare
+read count bounds nothing (forty
 reads is one README or one 2 MB generated schema, and traversing a monorepo
 costs time a file count never expresses). Cloning **parses**
 attacker-influenceable data before a file is opened: the cloned tree is data,
