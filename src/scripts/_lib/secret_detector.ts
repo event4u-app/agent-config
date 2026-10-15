@@ -169,7 +169,7 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
                     }
                     continue;
                 }
-                const valueStart = m.index + m[0].indexOf(value);
+                const valueStart = rule.valueGroup !== undefined ? (m.indices?.[rule.valueGroup]?.[0] ?? m.index) : m.index;
                 const confidence: SecretFinding['confidence'] = isPlaceholderValue(value, pathHint)
                     ? 'low'
                     : 'high';

@@ -19,7 +19,7 @@ export interface EgressRule {
     readonly pattern: RegExp;
     /** Why the pattern runs in linear time on any input; required, reviewed with the pattern. */
     readonly linearity: string;
-    /** Capture group holding the value; the whole match when absent. */
+    /** Capture group holding the value; the whole match when absent. A rule that sets it MUST carry the d flag. */
     readonly valueGroup?: number;
     readonly validator?: (value: string) => boolean;
     /** The rule fires only when `words` matches within `window` chars of the value. */
@@ -155,7 +155,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         type: 'SECRET',
         class: 'credential',
         pattern:
-            /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/gi,
+            /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
         valueGroup: 1,
         validator: looksLikeSecretValue,
         linearity:
@@ -219,8 +219,10 @@ export function findSpans(text: string, rules: readonly EgressRule[] = EGRESS_RU
             }
             const value = r.valueGroup !== undefined ? m[r.valueGroup] : m[0];
             if (value === undefined || value.length === 0) continue;
-            const offset = r.valueGroup !== undefined ? m[0].indexOf(value) : 0;
-            const start = m.index + offset;
+            const start = r.valueGroup !== undefined ? (m.indices?.[r.valueGroup]?.[0] ?? -1) : m.index;
+            if (start < 0) {
+                throw new Error(`egress rule ${r.rule}: a valueGroup rule needs the d flag for capture offsets`);
+            }
             const end = start + value.length;
             if (r.exclusions?.some((x) => matchesFromStart(x, value))) continue;
             if (r.context) {

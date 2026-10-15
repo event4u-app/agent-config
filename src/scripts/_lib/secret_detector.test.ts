@@ -106,3 +106,11 @@ describe('scanText — masking', () => {
         expect(masked.includes(raw)).toBe(false);
     });
 });
+
+describe('column of a captured value', () => {
+    it('points at the capture, not an earlier copy of it inside the keyword', () => {
+        // The captured value repeats the keyword, so it also occurs at offset 0 of the match.
+        const findings = scanText('AuthToken=AuthToken=AuthToken=');
+        expect(findings.map((f) => [f.rule, f.column])).toEqual([['generic-assignment', 11]]);
+    });
+});

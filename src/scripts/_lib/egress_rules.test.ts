@@ -40,6 +40,12 @@ describe('rule table shape', () => {
         }
     });
 
+    it('every rule with a value group carries the d flag, so offsets come from the engine', () => {
+        for (const r of EGRESS_RULES.filter((x) => x.valueGroup !== undefined)) {
+            expect(r.pattern.flags).toContain('d');
+        }
+    });
+
     it('rule ids are unique', () => {
         const ids = EGRESS_RULES.map((r) => r.rule);
         expect(new Set(ids).size).toBe(ids.length);
