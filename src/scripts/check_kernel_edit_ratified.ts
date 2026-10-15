@@ -141,6 +141,7 @@ export const CLOSURE_READER_PATH = 'src/scripts/_lib/dispatch_import_closure.ts'
  * which computes the digest, joins in a separate change: one that gates it and
  * edits it at once is digested over different files by the base revision's
  * gate and by its own, so no single record answers for both. The writer CLIs
+ * `src/scripts/ratification_subject.ts` and `src/scripts/ratification_header.ts`
  * and the contract stay outside by owner decision (2026-10-15): the gate does
  * not import them, recomputes the digest and reads only the record.
  */
