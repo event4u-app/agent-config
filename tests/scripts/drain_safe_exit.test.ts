@@ -18,9 +18,9 @@ const REPO = path.resolve(import.meta.dirname, '..', '..');
 const TSX = path.join(REPO, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const HARNESS = path.join(REPO, 'tests', 'scripts', 'fixtures', 'stalled_stdout_harness.ts');
 
-function stdoutOf(args: string[]): string {
+function run(args: string[]): { stdout: string; status: number | null } {
     const r = spawnSync(TSX, args, { cwd: REPO, encoding: 'utf8', maxBuffer: 64 << 20 });
-    return r.stdout ?? '';
+    return { stdout: r.stdout ?? '', status: r.status };
 }
 
 // The gates whose report exceeds a socketpair's capacity (8 KiB on macOS).
@@ -30,10 +30,13 @@ describe('large-output gates exit without discarding queued stdout', () => {
     for (const gate of GATES) {
         it(`${gate} delivers its whole report to a reader that lags`, () => {
             const script = path.join(REPO, 'src', 'scripts', gate);
-            const direct = stdoutOf([script]);
+            const direct = run([script]);
             // Guard the guard: a gate printing nothing would pass the equality below.
-            expect(direct.length).toBeGreaterThan(8192);
-            expect(stdoutOf([HARNESS, script])).toBe(direct);
+            expect(direct.stdout.length).toBeGreaterThan(8192);
+            const lagged = run([HARNESS, script]);
+            // A harness that crashes truncates too; the status tells that apart from a gate loss.
+            expect(lagged.status).toBe(direct.status);
+            expect(lagged.stdout).toBe(direct.stdout);
         }, 120_000);
     }
 });
