@@ -117,6 +117,8 @@ describe("classifyBlockingCall — 1.1", () => {
   it("reads the packaged waiter verb as a CI wait", () => {
     expect(classifyBlockingCall("Bash", { command: "agent-config ci:settle 12" })).toBe("ci-wait");
     expect(classifyBlockingCall("Bash", { command: "cd ../a; ./agent-config ci:settle 12 --timeout-min 28" })).toBe("ci-wait");
+    expect(classifyBlockingCall("Bash", { command: "npm exec --no -- agent-config ci:settle 12" })).toBe("ci-wait");
+    expect(classifyBlockingCall("Bash", { command: "cd ../a; npx --no-install agent-config ci:settle 12" })).toBe("ci-wait");
   });
 
   // 2.2: the first reading's unknown share was mostly these, so they got rows.

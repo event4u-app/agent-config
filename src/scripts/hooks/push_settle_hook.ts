@@ -171,13 +171,21 @@ export function resolvePr(
   }
 }
 
+/**
+ * How a consumer reaches the waiter. A project-local install puts the binary in
+ * `node_modules/.bin`, which is not on an ordinary shell's PATH; `npm exec --no`
+ * resolves that, a global install and the package's own checkout alike, and
+ * `--no` refuses to fetch an unrelated registry package named `agent-config`.
+ */
+export const CI_SETTLE_INVOCATION = "npm exec --no -- agent-config ci:settle";
+
 /** The reminder text. Split out so the test can read it without a `gh` on PATH. */
 export function buildReminder(branch: string, pr: number | null): { reason: string; additional_context: string } {
   const settle =
     pr === null
       ? `gh pr view ${branch} --json number -q .number   # then:\n` +
-        `agent-config ci:settle <that number>`
-      : `agent-config ci:settle ${pr}`;
+        `${CI_SETTLE_INVOCATION} <that number>`
+      : `${CI_SETTLE_INVOCATION} ${pr}`;
   const subject = pr === null ? `branch ${branch}` : `PR #${pr} (${branch})`;
   const reason =
     `Pushed ${subject} — the turn is not finished until its CI has settled green ` +

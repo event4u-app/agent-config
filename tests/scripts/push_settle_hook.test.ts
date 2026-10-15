@@ -14,7 +14,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { buildReminder, pushedBranch, resolvePr } from "../../src/scripts/hooks/push_settle_hook";
+import { buildReminder, CI_SETTLE_INVOCATION, pushedBranch, resolvePr } from "../../src/scripts/hooks/push_settle_hook";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..");
 const TS_SCRIPT = path.join(REPO_ROOT, "src", "scripts", "hooks", "push_settle_hook.ts");
@@ -59,7 +59,7 @@ describe("push_settle_hook — the fire path", () => {
     // `reason` reaches stderr only and is capped; the instruction must ride
     // additional_context, which is what surfaces back to the model.
     expect(out.reason.length).toBeLessThanOrEqual(200);
-    expect(out.additional_context).toContain("agent-config ci:settle");
+    expect(out.additional_context).toContain(`${CI_SETTLE_INVOCATION} `);
     expect(out.additional_context).toContain("verify-before-complete");
   });
 
@@ -147,10 +147,10 @@ describe("push_settle_hook — units", () => {
   });
 
   it("names the literal ci:settle command once the PR is known, and the two-step when it is not", () => {
-    expect(buildReminder("feat/x", 1234).additional_context).toContain("agent-config ci:settle 1234");
+    expect(buildReminder("feat/x", 1234).additional_context).toContain(`${CI_SETTLE_INVOCATION} 1234`);
     const unknown = buildReminder("feat/x", null).additional_context;
     expect(unknown).toContain("gh pr view feat/x");
-    expect(unknown).toContain("agent-config ci:settle <that number>");
+    expect(unknown).toContain(`${CI_SETTLE_INVOCATION} <that number>`);
     expect(unknown).not.toMatch(/ci:settle \d/); // never invents a number it did not read
   });
 
