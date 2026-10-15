@@ -81,16 +81,19 @@ export function looksLikeSecretValue(value: string): boolean {
     return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
 }
 
-// The nearest key marker after the header decides: the matching END ends the
-// block; another BEGIN first, or no marker at all, means the extent is unproven.
-// One sticky scan from the header to the nearest marker keeps this linear even
-// over many headers.
-const KEY_MARKER = /-----(BEGIN|END) [A-Z ]*PRIVATE KEY-----/g;
+// The nearest key marker after the header decides: an END carrying the same
+// label as the header ends the block; another BEGIN, an END with a different
+// label, or no marker at all means the extent is unproven. One sticky scan from
+// the header to the nearest marker keeps this linear even over many headers.
+const KEY_MARKER = /-----(BEGIN|END) ([A-Z ]*)PRIVATE KEY-----/g;
+const BEGIN_LABEL = /^-----BEGIN ([A-Z ]*)PRIVATE KEY-----/;
 
 export function pemBlockEnd(text: string, span: SpanBounds): number | null {
+    const label = BEGIN_LABEL.exec(text.slice(span.start, span.end))?.[1];
+    if (label === undefined) return null;
     KEY_MARKER.lastIndex = span.end;
     const m = KEY_MARKER.exec(text);
-    if (m === null || m[1] !== 'END') return null;
+    if (m === null || m[1] !== 'END' || m[2] !== label) return null;
     return m.index + m[0].length;
 }
 

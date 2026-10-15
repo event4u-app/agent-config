@@ -52,19 +52,21 @@ must not leave. They are declared separately, per rule, in the table's
   the connection URI's scheme-to-`@` authority, an assigned value);
 - a `through` function — the secret extends past the detection span and the
   function proves where it ends. `pem-private-key` detects on the header and
-  replaces through the matching `-----END … PRIVATE KEY-----`.
+  replaces through the `-----END … PRIVATE KEY-----` that carries the same label.
 
 **A rule that cannot prove its replacement span fails closed.** When `through`
-returns no end — a private-key header with no matching end marker, or another
-header first — the replacer refuses the whole text (`EgressRefusedError`,
+returns no end — a private-key header with no end marker, an end marker
+with a different label, or another header first — the replacer refuses the whole text (`EgressRefusedError`,
 naming the rule and carrying no byte of the text). It never replaces part of a
 secret and lets the rest leave. Overlapping replacement spans merge, and the
 merged span takes the more sensitive class.
 
 An end-to-end suite plants a credential for every rule — a multi-line key, a
 JWT glued to a word, a connection URI with a long scheme, values thousands of
-characters long — runs the full replacement path, and asserts that no planted
-sensitive byte sequence survives.
+characters long — runs the full replacement path, and asserts that the output
+is exactly the bytes before the secret, one token, and the bytes after it: every
+byte of the replacement span is gone and none outside it changed. Each fixture
+also checks that the rule it is filed under is the one that detects it.
 
 ## Refuse or replace (D4)
 
