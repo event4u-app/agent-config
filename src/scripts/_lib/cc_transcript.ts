@@ -517,7 +517,7 @@ interface RawBlock {
     tool_use_id?: unknown;
     content?: unknown;
     text?: unknown;
-    source?: { data?: unknown };
+    source?: { type?: unknown; data?: unknown };
 }
 
 function blocksOf(raw: { message?: { content?: unknown } }): RawBlock[] {
@@ -541,7 +541,7 @@ function payloadOf(block: RawBlock): Payload {
         const m = typeof item === 'object' && item !== null ? (item as RawBlock) : null;
         if (m !== null && m.type === 'text' && typeof m.text === 'string') {
             out.bytes += Buffer.byteLength(m.text, 'utf8');
-        } else if (m !== null && m.type === 'image' && typeof m.source?.data === 'string') {
+        } else if (m !== null && m.type === 'image' && m.source?.type === 'base64' && typeof m.source.data === 'string') {
             out.image = true;
             out.bytes += m.source.data.length;
         } else {

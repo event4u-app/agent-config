@@ -527,13 +527,15 @@ describe('scanToolResults - the payload bytes of a tool result, per tool class',
             const scan = scanOne({
                 content: [
                     { type: 'document', source: { type: 'base64', data: 'JVBERi0xLjQ=' } },
+                    { type: 'image', source: { type: 'url', data: 'https://example.com/x.png' } },
                     { type: 'text', text: 'ok' },
                     'a bare string member',
                 ],
             });
             const cls = scan.classes['Bash'];
             expect(cls?.payload_bytes).toBe(2);
-            expect(cls?.unsupported_members).toBe(2);
+            expect(cls?.unsupported_members).toBe(3);
+            expect(scan.classes['Bash:image']).toBeUndefined();
         });
     });
 });

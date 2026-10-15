@@ -23,8 +23,9 @@ step 3.2 of `road-to-placeholders-on-the-wire` compare a reduction against.
   with the reader as it stood at `main@90ed4e697`, which counted the same
   payload with two differences: a content member carrying a `text` string was
   counted whatever its `type`, and a member of any other kind was skipped
-  without a count. The current reader counts text only from `type: text` members
-  and counts the rest in `unsupported_members`; that count was not taken for
+  without a count. The current reader counts text from `type: text` members and
+  data from `type: image` members with a `base64` source, and counts every other
+  member in `unsupported_members`; that count was not taken for
   this reading, so how many members it skipped is unknown, not zero.
 - **Hook-envelope bytes** — the transcript's `toolUseResult`, serialised. It is
   the object the host hands a post_tool_use hook, so it is what the census in
