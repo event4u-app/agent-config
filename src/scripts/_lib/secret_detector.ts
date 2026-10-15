@@ -21,7 +21,7 @@
 // returned so callers can choose), and the masked preview never reproduces the
 // full secret.
 
-import { EGRESS_RULES, shannonEntropy } from './egress_rules.js';
+import { EGRESS_RULES, type EgressRule, evaluateMatch, shannonEntropy } from './egress_rules.js';
 
 /** One detected secret. Never carries the raw value — see `masked`. */
 export interface SecretFinding {
@@ -36,6 +36,8 @@ export interface SecretFinding {
 /** Options for a scan. `path` lets `.example` / `.sample` files demote hits. */
 export interface ScanOptions {
     path?: string;
+    /** Rule rows to scan with; defaults to the table's credential rows. */
+    rules?: readonly EgressRule[];
 }
 
 // ---------------------------------------------------------------------
@@ -150,26 +152,21 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
         const covered: Array<[number, number]> = [];
 
         // Layer 1 — regex rule pack (HIGH, demoted to LOW for placeholders).
-        for (const rule of RULES) {
+        for (const rule of opts.rules ?? RULES) {
             rule.pattern.lastIndex = 0;
             let m: RegExpExecArray | null;
             while ((m = rule.pattern.exec(line)) !== null) {
-                const value = rule.valueGroup !== undefined ? m[rule.valueGroup] : m[0];
-                if (value === undefined) {
+                // Every field of the row — capture offsets, exclusions, context,
+                // validator — is applied by the table, the same way for both readers.
+                const c = evaluateMatch(rule, line, m);
+                if (c === null) {
                     if (m.index === rule.pattern.lastIndex) {
                         rule.pattern.lastIndex += 1;
                     }
                     continue;
                 }
-                // A rule's validator gates the value: a low-entropy word after
-                // `secret:`/`token:` is not a credential.
-                if (rule.validator !== undefined && !rule.validator(value)) {
-                    if (m.index === rule.pattern.lastIndex) {
-                        rule.pattern.lastIndex += 1;
-                    }
-                    continue;
-                }
-                const valueStart = rule.valueGroup !== undefined ? (m.indices?.[rule.valueGroup]?.[0] ?? m.index) : m.index;
+                const valueStart = c.start;
+                const value = line.slice(c.start, c.end);
                 const confidence: SecretFinding['confidence'] = isPlaceholderValue(value, pathHint)
                     ? 'low'
                     : 'high';

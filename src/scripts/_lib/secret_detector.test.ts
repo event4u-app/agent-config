@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import type { EgressRule } from './egress_rules.js';
 import { scanText, type SecretFinding } from './secret_detector.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -112,5 +113,36 @@ describe('column of a captured value', () => {
         // The captured value repeats the keyword, so it also occurs at offset 0 of the match.
         const findings = scanText('AuthToken=AuthToken=AuthToken=');
         expect(findings.map((f) => [f.rule, f.column])).toEqual([['generic-assignment', 11]]);
+    });
+});
+
+describe('the scanner applies every field of a table row', () => {
+    // A credential row that uses the fields no shipped credential row uses yet.
+    const row: EgressRule = {
+        rule: 'test-pin',
+        type: 'SECRET',
+        class: 'credential',
+        pattern: /\b\d{6}\b/g,
+        context: { words: /\bpin\b/i, window: 12 },
+        exclusions: [/^000000$/],
+        linearity: 'Fixed six-digit run between word boundaries.',
+    };
+
+    it('reports a value with its context word nearby', () => {
+        expect(scanText('pin 482915', { rules: [row] }).map((f) => f.rule)).toEqual(['test-pin']);
+    });
+
+    it('drops a value without its context word', () => {
+        expect(scanText('order 482915', { rules: [row] })).toEqual([]);
+    });
+
+    it('drops an excluded value', () => {
+        expect(scanText('pin 000000', { rules: [row] })).toEqual([]);
+    });
+
+    it('refuses a value-group row without the d flag instead of guessing the column', () => {
+        const { context: _context, ...rest } = row;
+        const noD: EgressRule = { ...rest, pattern: /pin (\d{6})/g, valueGroup: 1 };
+        expect(() => scanText('pin 482915', { rules: [noD] })).toThrow(/d flag/);
     });
 });

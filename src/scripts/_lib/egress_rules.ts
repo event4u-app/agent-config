@@ -206,6 +206,37 @@ function matchesFromStart(re: RegExp, value: string): boolean {
     return re.test(value);
 }
 
+/**
+ * Applies every field of a row to one regex match: value extraction from the
+ * engine's capture offsets, exclusions, the context window and the validator.
+ * The single place both readers of the table evaluate a candidate.
+ */
+export function evaluateMatch(
+    r: EgressRule,
+    text: string,
+    m: RegExpExecArray,
+): { start: number; end: number; validated: boolean } | null {
+    const value = r.valueGroup !== undefined ? m[r.valueGroup] : m[0];
+    if (value === undefined || value.length === 0) return null;
+    const start = r.valueGroup !== undefined ? (m.indices?.[r.valueGroup]?.[0] ?? -1) : m.index;
+    if (start < 0) {
+        throw new Error(`egress rule ${r.rule}: a valueGroup rule needs the d flag for capture offsets`);
+    }
+    const end = start + value.length;
+    if (r.exclusions?.some((x) => matchesFromStart(x, value))) return null;
+    if (r.context) {
+        const lo = Math.max(0, start - r.context.window);
+        const hi = Math.min(text.length, end + r.context.window);
+        const around = text.slice(lo, start) + ' ' + text.slice(end, hi);
+        r.context.words.lastIndex = 0;
+        if (!r.context.words.test(around)) return null;
+    }
+    if (r.validator) {
+        return r.validator(value) ? { start, end, validated: true } : null;
+    }
+    return { start, end, validated: false };
+}
+
 /** Candidate spans per rule, before overlap resolution. */
 export function findSpans(text: string, rules: readonly EgressRule[] = EGRESS_RULES): EgressSpan[] {
     const out: EgressSpan[] = [];
@@ -217,26 +248,9 @@ export function findSpans(text: string, rules: readonly EgressRule[] = EGRESS_RU
                 r.pattern.lastIndex += 1;
                 continue;
             }
-            const value = r.valueGroup !== undefined ? m[r.valueGroup] : m[0];
-            if (value === undefined || value.length === 0) continue;
-            const start = r.valueGroup !== undefined ? (m.indices?.[r.valueGroup]?.[0] ?? -1) : m.index;
-            if (start < 0) {
-                throw new Error(`egress rule ${r.rule}: a valueGroup rule needs the d flag for capture offsets`);
-            }
-            const end = start + value.length;
-            if (r.exclusions?.some((x) => matchesFromStart(x, value))) continue;
-            if (r.context) {
-                const lo = Math.max(0, start - r.context.window);
-                const hi = Math.min(text.length, end + r.context.window);
-                const around = text.slice(lo, start) + ' ' + text.slice(end, hi);
-                r.context.words.lastIndex = 0;
-                if (!r.context.words.test(around)) continue;
-            }
-            let validated = false;
-            if (r.validator) {
-                if (!r.validator(value)) continue;
-                validated = true;
-            }
+            const c = evaluateMatch(r, text, m);
+            if (c === null) continue;
+            const { start, end, validated } = c;
             out.push({
                 rule: r.rule,
                 type: r.type,
