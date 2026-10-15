@@ -333,7 +333,9 @@ describe('the covered list and the digest come from one classification', () => {
         // `host_semantics.ts` is in the plumbing closure and matches no
         // name-based rule, so it is gated if and only if the derived list
         // reached the classifier.
-        const reading = expectedSubjectFor([DERIVED_ONLY, 'README.md'], process.cwd());
+        // An explicit base: this checkout is the gate's own tree, whose base
+        // side is read at a ref, and a shallow CI clone carries no `origin/main`.
+        const reading = expectedSubjectFor([DERIVED_ONLY, 'README.md'], process.cwd(), 'HEAD', 'HEAD');
         expect(reading.gatedFiles).toEqual([DERIVED_ONLY]);
         expect(reading.digest).toMatch(/^[0-9a-f]{64}$/);
 
