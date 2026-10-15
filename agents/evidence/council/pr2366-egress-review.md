@@ -140,7 +140,27 @@ actually leaves.
 
 `DETECTION_CEILINGS` is now empty, and the contract ceiling section says none.
 
-## Round 6
+## Round 6 — verdicts
 
-Prompt: `agents/evidence/council/pr2366-egress-review-r6-20261015.question.md`.
-Verdicts are recorded below once the run returns.
+Prompt: `agents/evidence/council/pr2366-egress-review-r6-20261015.question.md`
+(diff at `01f295811`, omissions named). The CLI reported one seat absent before
+the run and both present after it; both returned a verdict, so no re-run was
+needed. Both judged round-5 findings 3–5 resolved and both asked for changes:
+
+| Seat | Stance |
+|---|---|
+| anthropic/claude-sonnet-4-5 | "REQUEST_CHANGES" — "The PEM label-mismatch defect (Reviewer B) is a secret-disclosure path that contradicts the contract's fail-closed promise. The e2e test gaps (Reviewer A) undermine the whole point of having an e2e suite." |
+| openai/codex-default | "REQUEST_CHANGES — a mismatched PEM end label can truncate the replacement span and leak remaining private-key bytes; the single highest-leverage change is to require exact BEGIN/END label equality, fail closed on any intervening marker, and add an exact-boundary end-to-end regression test." |
+
+## Round 6 — findings and dispositions
+
+| # | Severity | Finding | Disposition | Red-proof |
+|---|---|---|---|---|
+| R6-1 | critical / high | `pemBlockEnd` accepted the nearest END of any label, so an earlier END with another label cut the block short | fixed — the nearest marker must be an END with the header's own label; anything else refuses the text | mismatched-label test red before |
+| R6-2 | high (both) | the end-to-end suite checked that chosen substrings were absent, which a partial replacement of a long value also satisfies | fixed — each fixture is split into before / replacement span / after and the output must equal before + one token + after; this also covers the URI username | red with the PEM extent shortened by its END marker, which the old assertion accepted |
+| R6-3 | medium (openai) | fixture coverage was self-declared | fixed — each fixture asserts its named rule detects it at the secret's start | — |
+| R6-4 | medium (anthropic) / dropped (openai) | PEM header regex claimed quadratic | not a defect — openai traced it as linear (one label run per header, the dash excluded from the class); the restart-heavy `pem-label` timing input agrees | — |
+| R6-5 | low (anthropic) | the generic-assignment value gate skips secrets under 16 characters | not changed — it is the pre-move gate, kept for parity; the floor is part of the frozen reference | — |
+| R6-6 | advisory (anthropic) | 999,999 tokens per type | not changed — the refusal is a throw, not silent | — |
+
+**The round-6 fixes have not been re-reviewed by the council.**
