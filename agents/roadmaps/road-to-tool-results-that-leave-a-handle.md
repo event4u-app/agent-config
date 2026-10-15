@@ -59,6 +59,16 @@ A `/roadmap:process-full` pass found no step executable yet and built nothing (D
   sibling's Phase 1". Phase 2's own wording needs the placeholders stage too, so
   only Phase 1 is unblocked by the sibling alone.
 
+**Update 2026-10-15.** The sibling's 1.4 landed; 1.1 ran and selected no class
+(D6). The large model-visible results here are file-content reads, and the
+results with failure lines are small, so the summary this file plans — every
+failure line, head, tail, handle — has no class to apply to. 1.2 is deferred,
+not cancelled. **Owner question:** continue with a redesign (a criterion stated
+before a fresh window is read, possibly a content profile beside the execution
+profile — both seats raised it), or close this roadmap on the D6 null. Either is
+a scope decision this file cannot take for itself; Phases 2–4 stay as written
+until it is answered.
+
 ## Context — read at `main@9a943f30c`
 
 | # | Finding | Evidence |
@@ -71,7 +81,7 @@ A `/roadmap:process-full` pass found no step executable yet and built nothing (D
 
 ## Phase 1 — Choose what is worth reducing, from the distribution
 
-- [ ] **1.1 Pick the classes from the sibling's 1.4, not from the source plans.**
+- [x] **1.1 Pick the classes from the sibling's 1.4, not from the source plans.**
       A class enters scope when its model-visible p95 exceeds a stated byte
       threshold (D1) and its results have a failure-line structure the summary can
       keep. The selection, with the figures, goes into this file's `## Decisions`
@@ -79,7 +89,7 @@ A `/roadmap:process-full` pass found no step executable yet and built nothing (D
       `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`), so a legacy
       `{bytes}` line counts as envelope bytes with delivered bytes unknown.
       verify: `grep -c '^| D6 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
-- [ ] **1.2 Freeze a golden corpus before any reducer exists.** Twenty recorded
+- [~] **1.2 Freeze a golden corpus before any reducer exists.** *Deferred 2026-10-15: D6 selected no class, so there is no class to record twenty outputs for; it waits on the owner question in Execution status.* Twenty recorded
       outputs per selected class, each with its known failure lines and exit code,
       under `tests/fixtures/tool-output-corpus/`. Recall on this corpus is what
       every later phase is held to.
@@ -152,6 +162,7 @@ A `/roadmap:process-full` pass found no step executable yet and built nothing (D
 | D2 | reversible-technical | agent | Spool retention is 7 days and 500 MB, whichever comes first | the same order as the council runtime retention (`ai_council.session_retention_days` default 7); a handle older than a week is rarely followed | a handle is followed after expiry in the 4.2 readings |
 | D3 | reversible-technical | agent | Net-win floor: a summary must be at most half the model-visible bytes of the original, else the original is delivered | below that the handle line and the head/tail eat the saving | the observe-mode readings show most results land just above the floor |
 | D4 | reversible-technical | agent | A reference rate followed by a full re-read above 30 % disarms 4.1 | a reference the model does not trust costs a turn and saves nothing | the rate sits near the bound |
+| D6 | reversible-technical | council:tool-results-d6-selection-2026-10-15 (2/2 present, both seats chose this) | The selection is empty: no class meets D1 and the failure-line condition of 1.1 together. Bash has the structure but its p95 is 6,282 B, under 8 KB; text Read (p95 42,029 B) and image Read (p95 621,520 B, K7) are above it with no exit code or failure line; Edit and Write are K3; every other class has p95 at most 2,784 B. D1 is not revised to admit Bash: a threshold lowered, a tail-mass criterion, or Bash cut into command families after reading these figures would be a fit, and the families above 8 KB are file-content reads (`sed`, `cat`, `git diff`). D1's revisit-if did not fire as written (two classes are above 8 KB) — it should have read "no eligible class" | `agents/evidence/analysis/model-visible-bytes-2026-10-14.md` (83,031 results); `report_reducible_classes` on 2026-10-15 reads `selected: none` and the census through `readCensusLine` (142,709 legacy lines, 71,700 two-field, 0 unreadable, delivered unknown on 143,462). Supplementary, not part of the dated distribution: 2,599 Bash results above 8,192 B carry 37.4 MB (36.7 % of Bash bytes), and 13 of them carry `is_error` or an `Exit code` line | the owner answers how this roadmap continues (see Execution status), or a fresh window under a criterion stated before it is read selects a class |
 | D7 | reversible-technical | agent | Verify lines of 3.3 and 4.1 name test titles the step itself creates; each is seen red before its implementation (closure listing C1, C2) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
 | D8 | reversible-technical | council:tool-results-handle-scope-2026-10-14 (2/2 present, both seats chose this) | Phase 2's store is not built ahead of its caller; every step stays open until its dependency lands. Rejected: a standalone store module flipping 2.3/2.4 (a callerless store cannot show the integrated behaviour 2.1–2.4 describe, and it fixes handle, range and expiry contracts before the stage exists); spooling from the byte-recorder hook today (a writer outside the single stage, storing unselected classes) | `road-to-bytes-the-model-actually-receives` 1.4 and `road-to-placeholders-on-the-wire` 1.2/1.3 are unchecked on `main@90ed4e697` | either dependency lands, or the placeholders 1.1 ADR freezes the stage interface before the stage is built |
 | D5 | reversible-technical | agent | No consumer default is set here; arming stops at the maintainer workspace | a consumer-facing default for result rewriting is already an owner blocker in `road-to-placeholders-on-the-wire` (`default-mode-for-consumers`); a second one would split one decision | that blocker is answered |
