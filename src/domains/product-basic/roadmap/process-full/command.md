@@ -201,6 +201,7 @@ THIS COMMAND MERGES ONLY ON AN EXPLICIT OWNER AUTO-MERGE INSTRUCTION:
 WITHOUT ONE, THE RUN ENDS AT MERGEABLE-AND-OPEN, AND SAYS SO.
 A `needs-council` PR MERGES ONLY ON TWO CONVERGENT CLEARING SEATS;
 DANGEROUS, SPLIT, DEGRADED OR UNAVAILABLE → THE OWNER DECIDES.
+A `needs-owner` PR IS NEVER SENT FOR CLEARANCE — THE OWNER DECIDES.
 ```
 
 The owner settled the half of
@@ -213,7 +214,10 @@ requires for the production-branch merge of a **routine** PR. Delivery runs
 `/pr:merge <N> --merge`, whose § 9a danger gate (`classify_merge_risk`) decides:
 `routine` → squash-merge bound to the observed head; `needs-council` → a neutral
 council review, merge only when both seats say *not dangerous, owner review
-unnecessary*, otherwise hand the PR back with the seats' reasons.
+unnecessary*, otherwise hand the PR back with the seats' reasons; `needs-owner`
+(the gated surface, the reviewer's trust chain, or an owner-reserved ADR) →
+no council, hand it back
+with its triggers. § 9a runs the base revision's classifier, never the head's.
 
 ADR-268 § 3's object-bound `prod_merge` grant stays a separate, unchanged path.
 A standing autonomy directive or momentum is **neither**. Deploy, release and

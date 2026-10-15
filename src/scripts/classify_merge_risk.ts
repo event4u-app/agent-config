@@ -3,10 +3,18 @@
  * classify_merge_risk — ADR-282's danger gate in front of an authorized
  * auto-merge.
  *
- * Says `routine` or `needs-council` for a diff, plus the triggers that fired.
- * `routine` merges on the owner's auto-merge instruction with no review;
- * `needs-council` sends the diff to the AI council first. The classifier is
- * advisory to that flow and grants nothing on its own.
+ * Says `routine`, `needs-council` or `needs-owner` for a diff, plus the
+ * triggers that fired. `routine` merges on the owner's auto-merge instruction
+ * with no review; `needs-council` sends the diff to the AI council first;
+ * `needs-owner` is never sent for clearance and goes to the owner. The
+ * classifier is advisory to that flow and grants nothing on its own.
+ *
+ * WHY A THIRD VERDICT. ADR-281 § Amendment makes a favourable council verdict on
+ * the gated surface advisory until an authenticated owner authorisation is bound
+ * to the same digest, and reserves the reviewer's trust chain to the owner. An
+ * auto-merge sentence is neither authenticated nor bound to a digest, so a
+ * council clearance of those paths would merge on something the record says
+ * cannot authorise it. OWNER_TRIGGERS names which triggers that is.
  *
  * Every trigger is lifted from a rule that already exists, never invented here:
  *
@@ -23,13 +31,20 @@
  *   - Its own surface — this file and the two commands that call it — for the
  *     reason the ratification gate watches itself: a routine-class PR must not
  *     be able to loosen the gate that classed it.
+ *   - Governance read from lists that already exist: an ADR whose frontmatter
+ *     at base or head declares `reopen_policy: owner`, and a rule whose id is a
+ *     member of `src/config/rule-consequence-class.json`.
+ *   - The reviewer and the carriers of the merge rule, each named with the
+ *     record that makes it one (ADR-281 `:101-106`, ADR-282).
  *
  * Prose files (`.md`, `.mdx`, `.txt`, `.rst`) are exempt from the security,
  * infra and migration token checks: a skill ABOUT secrets is not a secret
  * surface. They stay subject to deletion, governance and self-surface checks.
  *
  * Fails closed: a diff that cannot be read is `needs-council`, never `routine`,
- * and never an internal-error exit a caller might read as "nothing found".
+ * and never an internal-error exit a caller might read as "nothing found". A
+ * decision record whose frontmatter cannot be read fires its trigger, and an
+ * unreadable consequence-class list makes every rule file a member.
  *
  * Inputs (one of):
  *   <pr-number>           PR mode: base and head read via `gh`, head fetched
@@ -38,14 +53,15 @@
  *   --root DIR            repository to read (default: cwd)
  *   --json                one JSON object instead of text
  *
- * Exit codes: 0 = routine · 1 = needs-council (including fail-closed).
+ * Exit codes: 0 = routine · 1 = needs-council (including fail-closed) · 2 = needs-owner.
  * The LAST output line is the verdict.
  */
 
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { CLASS_CONFIG_REL, readConsequenceClass } from './_lib/rule_consequence_class.js';
 import { classifyPaths, requiresRatification } from './check_kernel_edit_ratified.js';
 
 export const DELETION_THRESHOLD = 5;
@@ -62,15 +78,41 @@ export interface Trigger {
     paths: string[];
 }
 
+export type Verdict = 'routine' | 'needs-council' | 'needs-owner';
+
 export interface Classification {
-    verdict: 'routine' | 'needs-council';
+    verdict: Verdict;
     triggers: Trigger[];
 }
+
+/** What an ADR's frontmatter says about who may reopen it, across base and head. */
+export type DecisionPolicy = 'owner' | 'other' | 'unreadable';
 
 export interface ClassifyOptions {
     /** Does `dir` still exist in the head tree? Decides a removed directory. */
     dirExistsInHead: (dir: string) => boolean;
+    /** Reopen policy of a decision record. Absent → every record reads `unreadable`. */
+    decisionPolicy?: (p: string) => DecisionPolicy;
+    /**
+     * Rule ids of the consequence class. Absent → this checkout's list; `null`
+     * → the list could not be read, so every rule file counts as a member.
+     */
+    consequenceMembers?: ReadonlySet<string> | null;
 }
+
+/**
+ * Triggers that hand a PR to the owner instead of the council. An ADR with
+ * `reopen_policy: owner` is among them because that field reserves its reopening
+ * to the owner: a council clearing an edit to it would be the council reopening it.
+ */
+export const OWNER_TRIGGERS: ReadonlySet<string> = new Set([
+    'governance-surface',
+    'merge-authority-surface',
+    'reviewer-trust-chain',
+    'council-surface',
+    'ratification-contract',
+    'owner-reserved-decision',
+]);
 
 const PROSE_EXT = new Set(['.md', '.mdx', '.txt', '.rst']);
 
@@ -98,6 +140,87 @@ const DEPLOY_TOKENS = new Set(['deploy', 'deployment', 'deployments', 'release',
 
 const SELF_SURFACE_RE =
     /(?:^|\/)(?:scripts\/classify_merge_risk\.ts|domains\/git\/pr\/merge\/command\.md|domains\/product-basic\/roadmap\/process-full\/command\.md)$|^docs\/decisions\/ADR-282-[^/]+\.md$/;
+
+/** The record § 9a's council prompt cites for its dangerous-action predicates. */
+const PREDICATE_RECORD = 'agents/evidence/council/authority-routing-20261007.md';
+
+const RATIFICATION_CONTRACT = 'docs/contracts/ratification-artifact.md';
+
+/**
+ * The reviewer's trust chain beyond the gate's own files: what the classifier
+ * imports, the list it reads, the subject binding the ratification review signs,
+ * and the predicates the council is asked about.
+ */
+const TRUST_CHAIN_PATHS: ReadonlySet<string> = new Set([
+    'src/scripts/_lib/rule_consequence_class.ts',
+    CLASS_CONFIG_REL,
+    'src/scripts/_lib/ratification_subject.ts',
+    PREDICATE_RECORD,
+]);
+
+const COUNCIL_SURFACE_RE =
+    /^src\/scripts\/ai_council\/|^src\/scripts\/(?:_lib\/)?council_[^/]+\.ts$|(?:^|\/)skills\/ai-council\/|(?:^|\/)rules\/(?:council-availability|evaluator-independence)\.md$/;
+
+const MERGE_RULE_CARRIER_RE =
+    /(?:^|\/)contexts\/execution\/(?:roadmap-execution-contract|roadmap-process-loop)\.md$|^src\/scripts\/refusal_envelope\.ts$/;
+
+const CONSUMER_TEMPLATE_RE = /(?:^|\/)agent-src\/templates\/AGENTS\.md$/;
+
+const DECISION_RECORD_RE = /^docs\/decisions\/ADR-[^/]+\.md$/;
+const RULE_FILE_RE = /(?:^|\/)rules\/([a-z0-9-]+)\.md$/;
+
+/** The reopen policy one side of an ADR declares; `null` when it has no readable frontmatter. */
+export function reopenPolicyOf(text: string): string | null {
+    const fm = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text);
+    if (fm === null) {
+        return null;
+    }
+    const m = /^reopen_policy:\s*["']?([a-z-]+)["']?\s*$/m.exec(fm[1] ?? '');
+    return m === null ? 'absent' : (m[1] ?? 'absent');
+}
+
+/**
+ * Combine the two sides of an ADR. `undefined` is a side where the file does not
+ * exist and is skipped; `null` is a side that exists but could not be read, and
+ * fires — a failed read is never taken for a non-owner policy.
+ */
+export function combinePolicy(sides: readonly (string | null | undefined)[]): DecisionPolicy {
+    let seen = false;
+    for (const side of sides) {
+        if (side === undefined) {
+            continue;
+        }
+        seen = true;
+        const policy = side === null ? null : reopenPolicyOf(side);
+        if (policy === null) {
+            return 'unreadable';
+        }
+        if (policy === 'owner') {
+            return 'owner';
+        }
+    }
+    return seen ? 'other' : 'unreadable';
+}
+
+/** Member ids of the consequence-class JSON text; `null` when it does not parse. */
+export function consequenceMembersOf(text: string): Set<string> | null {
+    try {
+        const raw = JSON.parse(text) as { members?: unknown };
+        return raw.members !== null && typeof raw.members === 'object' ? new Set(Object.keys(raw.members)) : null;
+    } catch {
+        return null;
+    }
+}
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+function localConsequenceMembers(): Set<string> | null {
+    try {
+        return new Set(Object.keys(readConsequenceClass(REPO_ROOT).members));
+    } catch {
+        return null;
+    }
+}
 
 /** Lower-cased word tokens of a path: split on separators and camelCase. */
 function tokens(p: string): string[] {
@@ -201,8 +324,49 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
         );
     }
     add('merge-authority-surface', 'ADR-282 — the danger gate and the commands that call it', all.filter((p) => SELF_SURFACE_RE.test(p)));
+    add(
+        'reviewer-trust-chain',
+        "ADR-281 :101-106 — the reviewer's trust chain: the gate's imports and list, the subject binding, the council's predicates",
+        all.filter((p) => TRUST_CHAIN_PATHS.has(p)),
+    );
+    add('ratification-contract', 'ADR-281 — the ratification contract', all.filter((p) => p === RATIFICATION_CONTRACT));
+    add(
+        'council-surface',
+        'ADR-281 :101-106 — the council that reviews: ai_council, council modules, the ai-council skill, council-availability, evaluator-independence',
+        all.filter((p) => COUNCIL_SURFACE_RE.test(p)),
+    );
 
-    return { verdict: triggers.length > 0 ? 'needs-council' : 'routine', triggers };
+    const policyOf = opts.decisionPolicy ?? ((): DecisionPolicy => 'unreadable');
+    add(
+        'owner-reserved-decision',
+        'decision-revisit-gate — an ADR declaring reopen_policy: owner at base or head, or with unreadable frontmatter',
+        all.filter((p) => DECISION_RECORD_RE.test(p) && policyOf(p) !== 'other'),
+    );
+    const members = opts.consequenceMembers === undefined ? localConsequenceMembers() : opts.consequenceMembers;
+    add(
+        'consequence-class-rule',
+        'rule-consequence-class.json — a rule in the high-consequence class; an unreadable list counts every rule',
+        all.filter((p) => {
+            const m = RULE_FILE_RE.exec(p);
+            return m !== null && (members === null || members.has(m[1] ?? ''));
+        }),
+    );
+    add(
+        'merge-rule-carrier',
+        'ADR-282 — a carrier of the merge rule: the two execution contexts, the refusal envelope, the predicate record',
+        all.filter((p) => MERGE_RULE_CARRIER_RE.test(p) || p === PREDICATE_RECORD),
+    );
+    add('consumer-template', 'ADR-281 — the consumer AGENTS.md template', all.filter((p) => CONSUMER_TEMPLATE_RE.test(p)));
+
+    return { verdict: verdictOf(triggers), triggers };
+}
+
+/** `needs-owner` above `needs-council` above `routine`. */
+export function verdictOf(triggers: readonly Trigger[]): Verdict {
+    if (triggers.some((t) => OWNER_TRIGGERS.has(t.id))) {
+        return 'needs-owner';
+    }
+    return triggers.length > 0 ? 'needs-council' : 'routine';
 }
 
 /**
@@ -354,6 +518,30 @@ function failClosed(reason: string): Classification {
     return { verdict: 'needs-council', triggers: [{ id: 'diff-unreadable', rule: 'fail closed — ADR-282', paths: [reason] }] };
 }
 
+/**
+ * The consequence class across both sides: the union, so a head can add a
+ * member but never remove one. A side that exists and does not read, or no side
+ * at all, is `null` — every rule file then counts.
+ */
+export function unionMembers(sides: readonly (string | null | undefined)[]): Set<string> | null {
+    const out = new Set<string>();
+    let seen = false;
+    for (const side of sides) {
+        if (side === undefined) {
+            continue;
+        }
+        const read = side === null ? null : consequenceMembersOf(side);
+        if (read === null) {
+            return null;
+        }
+        seen = true;
+        for (const id of read) {
+            out.add(id);
+        }
+    }
+    return seen ? out : null;
+}
+
 export function classifyTarget(root: string, target: { pr?: string | undefined; range?: string | undefined }): Classification {
     const resolved = target.pr !== undefined ? resolvePr(root, target.pr) : resolveRange(target.range ?? '');
     if (resolved === null) {
@@ -369,8 +557,18 @@ export function classifyTarget(root: string, target: { pr?: string | undefined; 
     } catch (e) {
         return failClosed((e as Error).message);
     }
+    const exists = (rev: string, p: string): boolean => git(root, ['cat-file', '-e', `${rev}:${p}`]).ok;
+    const side = (rev: string, p: string): string | null | undefined => {
+        if (!exists(rev, p)) {
+            return undefined;
+        }
+        const r = git(root, ['show', `${rev}:${p}`]);
+        return r.ok ? r.out : null;
+    };
     return classifyChanges(entries, {
-        dirExistsInHead: (dir) => git(root, ['cat-file', '-e', `${resolved.head}:${dir}`]).ok,
+        dirExistsInHead: (dir) => exists(resolved.head, dir),
+        decisionPolicy: (p) => combinePolicy([side(resolved.base, p), side(resolved.head, p)]),
+        consequenceMembers: unionMembers([side(resolved.base, CLASS_CONFIG_REL), side(resolved.head, CLASS_CONFIG_REL)]),
     });
 }
 
@@ -405,10 +603,10 @@ export function main(argv: readonly string[] = process.argv.slice(2), write: (l:
         write(
             result.verdict === 'routine'
                 ? 'verdict: routine'
-                : `verdict: needs-council (${result.triggers.length} trigger(s): ${result.triggers.map((t) => t.id).join(', ')})`,
+                : `verdict: ${result.verdict} (${result.triggers.length} trigger(s): ${result.triggers.map((t) => t.id).join(', ')})`,
         );
     }
-    return result.verdict === 'routine' ? 0 : 1;
+    return result.verdict === 'routine' ? 0 : result.verdict === 'needs-council' ? 1 : 2;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

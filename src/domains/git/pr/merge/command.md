@@ -38,6 +38,7 @@ HARD-FLOOR ACTION. `--no-merge` STILL STOPS BEFORE § 9.
 ADR-282: AN OWNER AUTO-MERGE INSTRUCTION (`--merge`, OR THE OWNER'S OWN WORDS IN
 THE SESSION) IS THE SAME CONFIRMATION FOR A `routine` PR. A `needs-council` PR
 MERGES ONLY ON TWO CONVERGENT CLEARING SEATS (§ 9a) — OTHERWISE THE OWNER DECIDES.
+A `needs-owner` PR IS NEVER SENT FOR CLEARANCE AND NEVER MERGES ON THIS COMMAND.
 ```
 
 **The invocation is the authorization, and nothing else is.** `pr-merge` is
@@ -474,16 +475,46 @@ HUMAN DECISION. STOP, EMIT THE MERGE SHAs AND THE REASON, HAND OVER.
 
 ## 9a. Danger gate — before every merge (ADR-282)
 
-Once required checks are green on the manifest head and the PR is mergeable:
+Once required checks are green on the manifest head and the PR is mergeable,
+classify it with the **base revision's** classifier, never the head's:
 
 ```bash
-./scripts-run src/scripts/classify_merge_risk <N>
+BASE_DIR="$(mktemp -d)/classifier-base"
+if git cat-file -e "<manifest-base_sha>:src/scripts/classify_merge_risk.ts" \
+   && git worktree add -q --detach "$BASE_DIR" "<manifest-base_sha>"; then
+  node_modules/.bin/tsx "$BASE_DIR/src/scripts/classify_merge_risk.ts" \
+    --range "<manifest-base_sha>...<manifest-head-sha>" --root "$PWD"
+  git worktree remove --force "$BASE_DIR"
+else
+  echo "verdict: needs-owner (base-unavailable: no classifier or no worktree at <manifest-base_sha>)"
+fi
 ```
+
+**Why the base.** § 2 checked the PR out, so the tree's own copy of the
+classifier — and of `check_kernel_edit_ratified`, whose `classifyPaths` it
+reads — is the head's: a PR could rewrite the code that classes it and call
+itself `routine`. The ratification gate's workflow step records the same defect
+and runs the base copy for the same reason. The base copy is run directly with
+the head's `tsx`, not through `./scripts-run`, whose dispatcher is the head's
+code too; the consequence-class list and each ADR's `reopen_policy` are read
+from both revisions by the base copy itself. A base without the classifier, a
+worktree that cannot be made, or a last line that is not a verdict is
+**`needs-owner`** and says why — never a skipped gate and never a fall-back to
+the head's copy.
 
 The last line is the verdict; each trigger names the rule it comes from. An
 unreadable diff is `needs-council` — the gate fails closed.
 
 - **`routine`** → merge in § 9. No review step.
+- **`needs-owner`** → the gated surface or the reviewer's trust chain (the
+  classifier and its imports, the commands that call it, ADR-282, the council,
+  the ratification contract, the subject binding, the predicate record), or an
+  ADR whose `reopen_policy: owner` reserves its reopening to the owner. It is
+  **never sent for clearance**: under ADR-281 § Amendment a favourable council
+  verdict on that surface is advisory until an authenticated owner
+  authorisation is bound to the digest, and an auto-merge sentence is neither.
+  Do not merge; record the PR `unauthorized` and hand it to the owner with its
+  triggers.
 - **`needs-council`** → the AI council reviews the diff with a **neutral**
   prompt (scope, diff, the triggers, two questions: *does any of the six
   dangerous-action predicates of the authority-routing council record

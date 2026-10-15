@@ -37,14 +37,14 @@ one decision-ready block, never as a stream of questions.
 
 ## Prerequisites
 
-- [ ] Read `docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md`
+- [x] Read `docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md`
       and `agents/evidence/owner-directives/2026-10-07-round-7a2e1c.md`. They
       are the owner's ruling this roadmap builds on and does not reopen.
       verify: `test -f agents/evidence/owner-directives/2026-10-07-round-7a2e1c.md` -> 0
-- [ ] Read `docs/decisions/ADR-281-council-confirmed-self-modification.md`
+- [x] Read `docs/decisions/ADR-281-council-confirmed-self-modification.md`
       § Amendment (`:216-231`). It is the later owner act Phase 1 applies.
       verify: `grep -c 'advisory until authenticated owner' docs/decisions/ADR-281-council-confirmed-self-modification.md` -> /^[1-9]/
-- [ ] Re-read `src/scripts/classify_merge_risk.ts` and § 9a of
+- [x] Re-read `src/scripts/classify_merge_risk.ts` and § 9a of
       `src/domains/git/pr/merge/command.md` at execution time. The line numbers
       below are the pin's, not the day's.
       verify: `grep -c 'SELF_SURFACE_RE' src/scripts/classify_merge_risk.ts` -> /^[1-9]/
@@ -147,7 +147,7 @@ The replay script is not committed; step 5.1 commits the reader.
 
 ## Phase 1 — The gate sees what governs, and hands it to the owner
 
-- [ ] **1.1 Six triggers join, two of them read from lists that already
+- [x] **1.1 Six triggers join, two of them read from lists that already
       exist.** In `classifyChanges`:
       a file under `docs/decisions/` whose frontmatter at base or at head
       declares `reopen_policy: owner` (28 records at the pin), which replaces
@@ -167,7 +167,16 @@ The replay script is not committed; step 5.1 commits the reader.
       frontmatter that cannot be read fires the trigger.
       verify: `./scripts-run src/scripts/classify_merge_risk --range f76e83e47^..f76e83e47` -> /needs-(council|owner)/
       Positive control: the same command at `d41121927` prints `verdict: routine`.
-- [ ] **1.2 The gated surface and the reviewer go to the owner, not to the
+      `corrected-from-reproduction` (2026-10-15, at `085ec41ff`): 26 records
+      declare `reopen_policy: owner`, not 28. Seven trigger ids, not six: the
+      reviewer's trust chain of 1.2 is its own `reviewer-trust-chain`, and it
+      also carries `src/config/rule-consequence-class.json`, the list the
+      classifier now reads — editing it changes a classification as surely as
+      editing the code. Only `docs/decisions/ADR-*.md` is read for a policy;
+      `INDEX.md` and the sweep notes carry no frontmatter and would otherwise
+      fire on every regeneration. The consequence class is the union of both
+      sides, so a head can add a member but never drop one.
+- [x] **1.2 The gated surface and the reviewer go to the owner, not to the
       council.** A third verdict, `needs-owner`, exit 2, above
       `needs-council`. It fires on the existing `governance-surface` trigger —
       the amended ADR-281 makes a council clearance of that surface advisory
@@ -182,13 +191,24 @@ The replay script is not committed; step 5.1 commits the reader.
       `corrected-from-reproduction`: the supplied plan sent only the reviewer
       to the owner and left the gated surface on the council path; the
       amendment it predates closes that path.
+      `corrected-from-reproduction` (2026-10-15): `owner-reserved-decision` is
+      also `needs-owner`, not `needs-council`. AC-1 requires the amendment
+      `f76e83e47` to print `needs-owner`, which the step list as written could
+      not produce, and `reopen_policy: owner` reserves the reopening to the
+      owner — a council clearing an edit to such a record would be the council
+      reopening it. An unreadable frontmatter therefore also reaches the owner.
       verify: `npx vitest run tests/scripts/classify_merge_risk_needs_owner.test.ts` -> 0
-- [ ] **1.3 Every new trigger has a test that was red first, and the trunk's
+- [x] **1.3 Every new trigger has a test that was red first, and the trunk's
       own misses are fixtures.** One case per trigger of 1.1, one per member
       class of 1.2, the precedence of the three verdicts, and a replay of four
       recorded commits: `82a131feb` and `bbe5b73be` print `needs-owner`,
       `edd18fea6` (#2256) prints `needs-owner`, and a documentation-only commit
       prints `routine`.
+      Done 2026-10-15: the documentation-only fixture is `7b236a00f`. The four
+      replays read the repository's own history and skip, by name, on a
+      shallow clone; every path they exercise is also a hand-written case.
+      Seen red: 34 of 74 cases failed with the new triggers and the third
+      verdict neutralised in place.
       verify: `npx vitest run tests/scripts/classify_merge_risk.test.ts` -> 0
 
 *Exit: 1.1 to 1.3 are green. This change edits the gate, so the pin's gate
@@ -198,7 +218,7 @@ triggers, which is D-1 and D-3.*
 
 ## Phase 2 — The code that classes a change is not the change's own
 
-- [ ] **2.1 § 9a runs the base revision's classifier.** The command
+- [x] **2.1 § 9a runs the base revision's classifier.** The command
       materialises the manifest's `base_sha` in a detached worktree and runs
       that copy with `--root` on the head, as the ratification gate's workflow
       step does (`.github/workflows/consistency.yml:920-949`). The
@@ -206,25 +226,52 @@ triggers, which is D-1 and D-3.*
       read from the same base tree. A base without the classifier, or a
       worktree that cannot be made, is `needs-owner` and says why; it is never
       a skipped gate and never a fall back to the head's copy.
+      `corrected-from-reproduction` (2026-10-15): the base copy runs in range
+      mode on the manifest's `base_sha...head-sha`, not on the PR number, so it
+      judges exactly the heads § 1 recorded; and it runs through the head's
+      `node_modules/.bin/tsx` directly, not `./scripts-run`, because that
+      dispatcher (`src/scripts/run.ts`) is the head's code too and could swap
+      the script it runs. A last line that is not a verdict is also
+      `needs-owner`. The base list and frontmatter need no separate read: the
+      base copy reads both revisions itself (1.1). Bootstrap: the trunk's copy
+      has no `needs-owner`, so it classes the change that introduces it
+      `needs-council` — sound exactly once, as the ratification gate's own
+      bootstrap branch records.
       verify: `grep -c 'base_sha' src/domains/git/pr/merge/command.md` -> /^[3-9]/
-- [ ] **2.2 The property has a test, including the downgrade attack.** A
+- [x] **2.2 The property has a test, including the downgrade attack.** A
       fixture repository whose head deletes the `governance-surface` trigger
       from the classifier: the head's copy prints `routine`, the base's copy
       run with `--root` on the head prints `needs-owner`. A second fixture
       whose head narrows `classifyPaths` so a kernel rule falls out of the
       gated set prints `needs-owner` from the base.
+      Done 2026-10-15: the fixture is a `--shared` clone of this repository
+      whose base commit carries the working tree's classifier, so the real
+      import closure judges. Both halves are asserted — the head copy prints
+      `routine`, which proves each fixture is a real attack. Seen red with the
+      base run pointed at the head copy.
       verify: `npx vitest run tests/scripts/classify_merge_risk_base_revision.test.ts` -> 0
-- [ ] **2.3 The command's evals cover it.**
+- [x] **2.3 The command's evals cover it.**
       `src/agent-src/commands/evals/git-pr-merge.json` gains three cases: a
       pull request that edits the classifier is classed from the base and
       handed over; a `needs-owner` pull request is never sent to the council;
       a `routine` one merges with no review, as before.
-      verify: `grep -c 'needs-owner' src/agent-src/commands/evals/git-pr-merge.json` -> /^[2-9]/
+      `corrected-from-reproduction` (2026-10-15): `git-pr-merge.json` is a
+      routing eval — each case is a prompt and the command it should reach —
+      and cannot express any of the three behaviours. They are pinned instead
+      as text over the command's danger gate and the process-full Iron Law,
+      seen red against the trunk's command text (4 of 5; the `routine` row is
+      unchanged by design).
+      verify: `npx vitest run tests/scripts/pr_merge_danger_gate_command.test.ts` -> 0
 
 *Exit: 2.1 to 2.3 are green. Rollback: revert the command change; § 9a runs
 the tree's copy again, which is D-2.*
 
 ## Phase 3 — A clearance names the head it cleared, and a hand-off is one block
+
+> **Status, 2026-10-15** — Phases 1 and 2 and step 5.2 shipped in one pull
+> request; Phases 3, 4 and step 5.1 remain open. Phase 4 edits
+> `check_platform_anchor`, which the ratification gate watches, so it needs its
+> own ratification record; 5.1 tallies the clearance records Phase 3 creates.
 
 - [ ] **3.1 One writer and one reader for a clearance, read from the council's
       own session record.** `src/scripts/merge_clearance.ts` writes
@@ -316,7 +363,7 @@ revert; the record loses its fields and the reader its check.*
       prompt or a reply. A re-run at the same pin and timestamp is
       byte-identical. It is a reader and exits 0.
       verify: `npx vitest run tests/scripts/report_merge_gate_load.test.ts` -> 0
-- [ ] **5.2 The neighbours are told.** One dated note in
+- [x] **5.2 The neighbours are told.** One dated note in
       `road-to-self-modification-that-a-council-must-pass` beside its Phase 4,
       and one in `road-to-authority-routing-mechanism` beside its Phase 3, each
       naming this roadmap and what it changed for that file's reader.
@@ -382,10 +429,10 @@ notes; nothing reads them.*
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The trunk's classifier classes the changes that landed ADR-281,
+- [x] AC-1 — The trunk's classifier classes the changes that landed ADR-281,
       its amendment and the modification-review modules as `needs-owner`, and
       a documentation-only change as `routine`.
-- [ ] AC-2 — A pull request that edits the classifier is classed by the base
+- [x] AC-2 — A pull request that edits the classifier is classed by the base
       revision's copy.
 - [ ] AC-3 — No `needs-council` pull request merges without a clearance record
       for the head that merges, and no gated-surface pull request merges on a
