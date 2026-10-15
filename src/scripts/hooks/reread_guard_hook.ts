@@ -7,7 +7,8 @@
  *
  *   6.1 A full-file `Read` of a path that was ALREADY fully read this session
  *       AND whose content is unchanged since (sha256 compare against the
- *       ledger; above HASH_BOUND_BYTES, mtime + size, said so in the line) gets
+ *       ledger; above HASH_BOUND_BYTES, mtime + size, said so in the line; a
+ *       file under the bound without both digests never fires) gets
  *       one advisory line naming the earlier read and the ranged-read
  *       alternative. A ranged read (any `offset`/`limit` in the tool input)
  *       is already the cheap form and never fires — nor is it recorded as a
@@ -111,7 +112,7 @@ export interface ReadRecord {
     mtime: number;
     size: number;
     ts: number;
-    /** sha256 of the file; absent above {@link HASH_BOUND_BYTES}. */
+    /** sha256 of the file; absent above {@link HASH_BOUND_BYTES}, on a read failure, or in a legacy entry. */
     sha256?: string;
 }
 
@@ -121,20 +122,57 @@ export interface ReadRecord {
  */
 export const HASH_BOUND_BYTES = 2 * 1024 * 1024;
 
-/** sha256 of a file at or under the bound; `undefined` above it or on error. */
-export function contentDigest(absPath: string, size: number): string | undefined {
-    if (size > HASH_BOUND_BYTES) return undefined;
+/**
+ * What the content key could say about one read. `over-bound` and `unreadable`
+ * are different answers: only the first licenses the stat fallback.
+ */
+export type Digest = { kind: 'sha256'; value: string } | { kind: 'over-bound' } | { kind: 'unreadable' };
+
+/**
+ * sha256 of a file at or under the bound. The stat `size` skips the read when it
+ * is already over; the read itself stops at `HASH_BOUND_BYTES + 1`, because the
+ * file can grow between the stat and the read.
+ */
+export function contentDigest(absPath: string, size: number): Digest {
+    if (size > HASH_BOUND_BYTES) return { kind: 'over-bound' };
+    let fd: number | undefined;
     try {
-        return crypto.createHash('sha256').update(fs.readFileSync(absPath)).digest('hex');
+        fd = fs.openSync(absPath, 'r');
+        const buf = Buffer.allocUnsafe(HASH_BOUND_BYTES + 1);
+        let filled = 0;
+        while (filled < buf.length) {
+            const n = fs.readSync(fd, buf, filled, buf.length - filled, null);
+            if (n === 0) break;
+            filled += n;
+        }
+        if (filled > HASH_BOUND_BYTES) return { kind: 'over-bound' };
+        return { kind: 'sha256', value: crypto.createHash('sha256').update(buf.subarray(0, filled)).digest('hex') };
     } catch {
-        return undefined;
+        return { kind: 'unreadable' };
+    } finally {
+        if (fd !== undefined) {
+            try {
+                fs.closeSync(fd);
+            } catch {
+                // closing a descriptor we opened cannot change the answer
+            }
+        }
     }
 }
 
-/** Same content when both reads carry a digest; else the stat pair decides. */
-export function isUnchanged(prior: ReadRecord, mtime: number, size: number, sha256: string | undefined): boolean {
-    if (prior.sha256 !== undefined && sha256 !== undefined) return prior.sha256 === sha256;
-    return prior.mtime === mtime && prior.size === size;
+/** The basis on which a read was found unchanged. */
+export type CompareBasis = 'content' | 'stat-over-bound';
+
+/**
+ * The basis on which the file is unchanged since `prior`, or `null` when that
+ * cannot be asserted. Content equality needs both digests; the stat pair
+ * decides only for a file over the bound. A hash-eligible file missing either
+ * digest — a legacy ledger entry, a read that failed — is never called unchanged.
+ */
+export function compareRead(prior: ReadRecord, mtime: number, size: number, digest: Digest): CompareBasis | null {
+    if (digest.kind === 'over-bound') return prior.mtime === mtime && prior.size === size ? 'stat-over-bound' : null;
+    if (digest.kind === 'sha256' && prior.sha256 !== undefined) return prior.sha256 === digest.value ? 'content' : null;
+    return null;
 }
 
 /** The session ledger — paths as keys, numbers as values, no content field. */
@@ -208,9 +246,10 @@ export function isRangedRead(toolInput: JsonObject): boolean {
 }
 
 /** 6.1 advisory — duplicate full read of an unchanged, already-read path. */
-export function buildDuplicateReadLine(relPath: string, earlierTs: number, byContent = true): string {
+export function buildDuplicateReadLine(relPath: string, earlierTs: number, compared: CompareBasis): string {
     const when = new Date(earlierTs).toISOString();
-    const basis = byContent ? 'unchanged content (same sha256)' : 'unchanged since (same mtime+size; over the 2 MB hash bound)';
+    const basis =
+        compared === 'content' ? 'unchanged content (same sha256)' : 'unchanged since (same mtime+size; over the 2 MB hash bound)';
     return (
         `re-read guard: ${relPath} was already fully read this session (${when}) with ` +
         `${basis} — the content is still in context; if you only ` +
@@ -278,21 +317,23 @@ export function main(): number {
             return EXIT_ALLOW; // unreadable/missing target — nothing to compare
         }
 
-        const sha256 = contentDigest(absPath, size);
+        const digest = contentDigest(absPath, size);
         const prior = ledger.reads[key];
         const ownWrite = ledger.writes[key];
         const alreadyFired = ledger.fired[key] === true;
 
         let advisory: string | null = null;
+        const compared = prior === undefined ? null : compareRead(prior, mtime, size, digest);
         if (!alreadyFired && ownWrite !== undefined) {
             advisory = buildPostEditReadLine(key); // 6.2 wins when both hold
-        } else if (!alreadyFired && prior !== undefined && isUnchanged(prior, mtime, size, sha256)) {
-            advisory = buildDuplicateReadLine(key, prior.ts, prior.sha256 !== undefined && sha256 !== undefined);
+        } else if (!alreadyFired && prior !== undefined && compared !== null) {
+            advisory = buildDuplicateReadLine(key, prior.ts, compared);
         }
 
         // Record the read that is about to happen (numbers only), consume the
         // one-shot own-write marker, and latch the per-path fire flag.
-        ledger.reads[key] = sha256 === undefined ? { mtime, size, ts: Date.now() } : { mtime, size, ts: Date.now(), sha256 };
+        ledger.reads[key] =
+            digest.kind === 'sha256' ? { mtime, size, ts: Date.now(), sha256: digest.value } : { mtime, size, ts: Date.now() };
         if (ownWrite !== undefined) delete ledger.writes[key];
         if (advisory !== null) ledger.fired[key] = true;
         writeLedger(workspaceRoot, sessionKey, ledger);
