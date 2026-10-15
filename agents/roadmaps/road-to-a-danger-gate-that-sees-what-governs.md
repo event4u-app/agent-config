@@ -240,9 +240,17 @@ triggers, which is D-1 and D-3.*
       (`agents/evidence/council/danger-gate-review.md`): the block validates
       that exit status and last line agree on one verdict, removes its worktree
       on every path, resolves its temp directory to a real path, and hands a
-      head that tracks `node_modules` or changes the dependency manifest over
-      as `runtime-unverified`, since `tsx` is the checkout's. The tests run the
-      block as shipped.
+      head that tracks `node_modules` over as `runtime-unverified`. The tests
+      run the block as shipped. Owner decision 2026-10-15 (D11): a changed
+      dependency manifest is `needs-council`, not `needs-owner`; the base copy
+      now runs first on `node --experimental-strip-types` with no
+      `node_modules`, falling back to the checkout's `tsx` only where that
+      cannot run, and a manifest change in that fallback trusts no answer
+      below `needs-owner`. That needed `_lib/ratification_subject.ts` free of
+      parameter properties, which type stripping cannot carry. The bootstrap
+      is unchanged: the trunk's copy still classes this change `needs-council`
+      (its own closure cannot be stripped, so it runs on `tsx`), the copy it
+      introduces classes it `needs-owner`.
       verify: `grep -c 'base_sha' src/domains/git/pr/merge/command.md` -> /^[3-9]/
 - [x] **2.2 The property has a test, including the downgrade attack.** A
       fixture repository whose head deletes the `governance-surface` trigger
@@ -409,6 +417,7 @@ notes; nothing reads them.*
 | D8 | reversible-technical | agent | The bypass route is kept and given a closing and the owner's evidence fields, not withdrawn | the owner chose it (ADR-281 § 5; decision D11 of `road-to-self-modification-that-a-council-must-pass`; D3 of `road-to-authority-routing-mechanism`) | the owner withdraws the route |
 | D9 | reversible-technical | agent | No forge label and no workflow step; the gate stays in § 9a | ADR-282 placed it there (`:62-64`); ADR-254 removed the enforcing hook | another host needs the classification without the command |
 | D10 | deterministic | evidence | Closure scan at authoring: its 28 owner-question hits are the word "merge" in a plan about the merge gate; no step performs a merge, a push or a ruleset change. The one act that is the owner's is how each phase lands — every Exit line names it, because each phase edits the gate, the merge command or a ratification-watched file | `./scripts-run src/scripts/closure_scan` on this file, 2026-10-11; the Exit lines of Phases 1 to 4 | a step is added that merges, pushes or changes the ruleset itself |
+| D11 | product-owned | owner | A change to a dependency manifest or lockfile is `needs-council` (trigger `dependency-manifest`), never `needs-owner` on that ground alone; the base copy runs on a package-free runtime where Node strips types, and only where it cannot does a manifest change fall back to the checkout's `tsx`, trusted for nothing below `needs-owner`. Residual: on a Node without type stripping, a head that installed its own `tsx` can turn a gated change paired with a dependency bump from `needs-owner` into `needs-council (runtime-uncertain)` — never into `routine` | owner chat answer "2" on PR #2375, 2026-10-15, relayed by the run's coordinator; the merge command's danger gate § Residual risk | the owner reopens it, or a CI or host Node without type stripping becomes where merges run |
 
 ## Kill register
 
