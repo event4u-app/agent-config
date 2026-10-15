@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { DETECTION_CEILINGS, EGRESS_RULES } from './egress_rules.js';
+import { DETECTION_CEILINGS, EGRESS_RULES, findSpans } from './egress_rules.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CONTRACT = path.resolve(HERE, '..', '..', '..', 'docs', 'contracts', 'egress-placeholders-v1.md');
@@ -84,7 +84,7 @@ const CASES: Readonly<Record<string, string>> = {
 type Span = readonly [number, number];
 
 function matches(regex: RegExp, valueGroup: number | undefined, text: string): Span[] {
-    const re = new RegExp(regex.source, regex.flags);
+    const re = new RegExp(regex.source, regex.flags.includes('d') ? regex.flags : `${regex.flags}d`);
     const out: Span[] = [];
     let m: RegExpExecArray | null;
     while ((m = re.exec(text)) !== null) {
@@ -94,13 +94,30 @@ function matches(regex: RegExp, valueGroup: number | undefined, text: string): S
         }
         const v = valueGroup !== undefined ? m[valueGroup] : m[0];
         if (v === undefined) continue;
-        const start = m.index + (valueGroup !== undefined ? m[0].indexOf(v) : 0);
+        const start = valueGroup !== undefined ? (m.indices?.[valueGroup]?.[0] ?? m.index) : m.index;
         out.push([start, start + v.length]);
     }
     return out;
 }
 
 const key = (s: Span): string => `${s[0]}-${s[1]}`;
+
+// The pre-move generic-assignment value gate, frozen alongside the patterns.
+function oldShannon(value: string): number {
+    const freq = new Map<string, number>();
+    for (const ch of value) freq.set(ch, (freq.get(ch) ?? 0) + 1);
+    let e = 0;
+    for (const c of freq.values()) e -= (c / value.length) * Math.log2(c / value.length);
+    return e;
+}
+function oldLooksLikeSecretValue(value: string): boolean {
+    if (value.length < 16 || /[()$`{}<>[\];,]|->|=>|\.\w/.test(value)) return false;
+    if (!/[0-9]/.test(value) && !(/[a-z]/.test(value) && /[A-Z]/.test(value))) return false;
+    return oldShannon(value) >= 3.3;
+}
+const OLD_VALIDATORS: Readonly<Record<string, (v: string) => boolean>> = {
+    'generic-assignment': oldLooksLikeSecretValue,
+};
 
 describe('old-versus-new parity of the credential rows', () => {
     it('the frozen reference covers exactly the credential rows of the table', () => {
@@ -120,6 +137,19 @@ describe('old-versus-new parity of the credential rows', () => {
                 if (ceilings.has(`${rule.rule}|${id}`)) {
                     // A documented ceiling must actually lose this case, or it is stale.
                     expect(before.length > 0 && before.some((s) => !after.includes(s))).toBe(true);
+                } else {
+                    expect(after).toEqual(before);
+                }
+            });
+
+            it(`${rule.rule} on ${id} through the policy path`, () => {
+                const gate = OLD_VALIDATORS[rule.rule];
+                const before = matches(old.regex, old.valueGroup, text)
+                    .filter((s) => gate === undefined || gate(text.slice(s[0], s[1])))
+                    .map(key);
+                const after = findSpans(text, [rule]).map((s) => key([s.start, s.end]));
+                if (ceilings.has(`${rule.rule}|${id}`)) {
+                    expect(after.length <= before.length).toBe(true);
                 } else {
                     expect(after).toEqual(before);
                 }
