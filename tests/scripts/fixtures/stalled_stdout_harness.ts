@@ -3,16 +3,22 @@
 // what libuv does once a pipe or socketpair is full (EAGAIN → write queue), and
 // it is the state in which `process.exit()` discards whatever is still queued.
 //
+// The delayed chunk goes out through the stream's own write, never `fs.writeSync(1)`:
+// once `process.stdout` exists, libuv has put fd 1 in O_NONBLOCK, so a raw write
+// to a full socketpair throws EAGAIN inside the timer and the harness dies with
+// the tail undelivered (Linux CI, 2026-10-15: 169 of 213 lines). That loss was the
+// harness's, not the gate's. The stream queues on EAGAIN and a natural exit drains
+// the queue, so the only way left to lose output is the gate cutting the loop short.
+//
 // Usage: tsx stalled_stdout_harness.ts <script.ts> [args...]
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 const target = path.resolve(process.argv[2] ?? '');
+const deliver = process.stdout.write.bind(process.stdout) as (chunk: string | Uint8Array) => boolean;
 
 process.stdout.write = ((chunk: string | Uint8Array): boolean => {
-    const text = typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8');
-    setTimeout(() => fs.writeSync(1, text), 20);
+    setTimeout(() => deliver(chunk), 20);
     return false;
 }) as typeof process.stdout.write;
 
