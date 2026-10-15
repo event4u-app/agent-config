@@ -50,7 +50,15 @@ SERVER_PID=""
 # --- helpers -------------------------------------------------------------
 
 ok() { echo "  ✅  $1"; }
+SECTIONS=(fresh-global-install no-silent-gui-postinstall upgrade-from-9.7.0 gui-server-ping
+    reach-doctor secret-gate-smoke consumer-ci-settle clean-uninstall)
+SECTIONS_RUN=()
 want() { [[ -z "${RELEASE_E2E_ONLY:-}" || ",$RELEASE_E2E_ONLY," == *",$1,"* ]]; }
+run_section() {
+    want "$1" || return 0
+    "$2"
+    SECTIONS_RUN+=("$1")
+}
 group_start() { echo "::group::$1"; echo "  🧪  $1"; }
 group_end() { echo "::endgroup::"; }
 die() {
@@ -134,6 +142,14 @@ export EVENT4U_CONFIG_HOME="$TMP_ROOT/event4u-home"
 
 echo "  🧪  release install E2E gate"
 echo ""
+
+if [[ -n "${RELEASE_E2E_ONLY:-}" ]]; then
+    IFS=, read -ra requested <<<"$RELEASE_E2E_ONLY"
+    [[ ${#requested[@]} -gt 0 ]] || die "RELEASE_E2E_ONLY names no section"
+    for name in "${requested[@]}"; do
+        [[ " ${SECTIONS[*]} " == *" $name "* ]] || die "RELEASE_E2E_ONLY: unknown section '$name' (known: ${SECTIONS[*]})"
+    done
+fi
 
 RELEASE_TARBALL_PATH="$(resolve_release_tarball)"
 [[ -f "$RELEASE_TARBALL_PATH" ]] || die "resolved release tarball not found: $RELEASE_TARBALL_PATH"
@@ -430,14 +446,19 @@ section_consumer_ci_settle() {
 
 # --- run ---------------------------------------------------------------------
 
-want fresh-global-install && section_fresh_global_install
-want no-silent-gui-postinstall && section_no_silent_gui_postinstall
-want upgrade-from-9.7.0 && section_upgrade_from_9_7_0
-want gui-server-ping && section_gui_server_ping
-want reach-doctor && section_reach_doctor
-want secret-gate-smoke && section_secret_gate_smoke
-want consumer-ci-settle && section_consumer_ci_settle
-want clean-uninstall && section_clean_uninstall
+run_section fresh-global-install section_fresh_global_install
+run_section no-silent-gui-postinstall section_no_silent_gui_postinstall
+run_section upgrade-from-9.7.0 section_upgrade_from_9_7_0
+run_section gui-server-ping section_gui_server_ping
+run_section reach-doctor section_reach_doctor
+run_section secret-gate-smoke section_secret_gate_smoke
+run_section consumer-ci-settle section_consumer_ci_settle
+run_section clean-uninstall section_clean_uninstall
 
+[[ ${#SECTIONS_RUN[@]} -gt 0 ]] || die "no section ran"
 echo ""
-echo "✅  release install E2E gate: all sections passed"
+if [[ ${#SECTIONS_RUN[@]} -eq ${#SECTIONS[@]} ]]; then
+    echo "✅  release install E2E gate: all sections passed"
+else
+    echo "✅  release install E2E gate: ${#SECTIONS_RUN[@]} of ${#SECTIONS[@]} section(s) selected and passed: ${SECTIONS_RUN[*]}"
+fi
