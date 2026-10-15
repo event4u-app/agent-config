@@ -112,7 +112,7 @@ beforeAll(() => {
     git(work, 'clone', '-q', '--shared', REPO, clone);
     git(clone, 'config', 'user.email', 't@example.com');
     git(clone, 'config', 'user.name', 'T');
-    for (const f of [CLASSIFIER, GATED_READER, 'src/scripts/_lib/rule_consequence_class.ts']) {
+    for (const f of [CLASSIFIER, GATED_READER, 'src/scripts/_lib/rule_consequence_class.ts', 'src/scripts/_lib/ratification_subject.ts']) {
         fs.copyFileSync(path.join(REPO, f), path.join(clone, f));
     }
     git(clone, 'add', '-A');
@@ -190,16 +190,6 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         expect(fs.existsSync(made)).toBe(false);
     }, 60_000);
 
-    it.each(['yarn.lock', '.yarnrc.yml', 'pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'package-lock.json', '.npmrc'])(
-        'a head that changes %s is runtime-unverified',
-        (file) => {
-            const head = commitOn(`head-changes-${file.replace(/[^a-z]/gu, '-')}-manifest`, base, { [file]: `changed by the head\n` });
-            const r = runGate(base, head);
-            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(runtime-unverified/u);
-            expect(r.code).not.toBe(0);
-        },
-        60_000,
-    );
 
     it('a failing git ls-files is runtime-unverified, never read as "nothing tracked"', () => {
         const head = commitOn('docs-only-shim', base, { 'docs/installation.md': 'shim\n' });
@@ -245,7 +235,7 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         const crashing = commitOn('base-crashes', base, { [CLASSIFIER]: 'process.exit(3);\n' });
         const head = commitOn('head-on-crashing', crashing, { 'docs/installation.md': 'x\n' });
         const r = runGate(crashing, head);
-        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable: exit 3/u);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable/u);
         expect(r.code).not.toBe(0);
     }, 60_000);
 
@@ -253,7 +243,7 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         const lying = commitOn('base-lies', base, { [CLASSIFIER]: "console.log('verdict: routine-ish');\n" });
         const head = commitOn('head-on-lying', lying, { 'docs/installation.md': 'y\n' });
         const r = runGate(lying, head);
-        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable: exit 0/u);
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable/u);
         expect(r.code).not.toBe(0);
     }, 60_000);
 
@@ -266,12 +256,104 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(base-unavailable/u);
         expect(r.code).not.toBe(0);
     }, 60_000);
+});
 
-    it('a head that changes the manifest tsx was installed from is runtime-unverified', () => {
-        const pkg = fs.readFileSync(path.join(clone, 'package.json'), 'utf8');
-        const head = commitOn('head-changes-package', base, { 'package.json': pkg.replace('{', '{\n  "x": 1,') });
-        const r = runGate(base, head);
-        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(runtime-unverified/u);
+/** Does this host's node run TypeScript without any package? Decides which branch the block takes. */
+const STRIP_TYPES =
+    spawnSync('node', ['--experimental-strip-types', '--no-warnings', '-e', ''], { encoding: 'utf8' }).status === 0;
+
+/** A `node` on PATH that refuses type stripping, so the block must fall back to the checkout's runtime. */
+function nodeShimWithoutStripTypes(): string {
+    const dir = path.join(work, 'node-shim');
+    fs.mkdirSync(dir, { recursive: true });
+    const real = spawnSync('sh', ['-c', 'command -v node'], { encoding: 'utf8' }).stdout.trim();
+    fs.writeFileSync(
+        path.join(dir, 'node'),
+        `#!/bin/sh\nfor a in "$@"; do [ "$a" = "--experimental-strip-types" ] && exit 9; done\nexec "${real}" "$@"\n`,
+        { mode: 0o755 },
+    );
+    return dir;
+}
+
+/** Swap the checkout's runtime for one that always answers routine — a head-installed tsx. */
+function withPoisonedRuntime<T>(run: () => T): T {
+    const nm = path.join(clone, 'node_modules');
+    fs.unlinkSync(nm);
+    fs.mkdirSync(path.join(nm, '.bin'), { recursive: true });
+    fs.writeFileSync(path.join(nm, '.bin', 'tsx'), '#!/bin/sh\necho "verdict: routine"\n', { mode: 0o755 });
+    try {
+        return run();
+    } finally {
+        fs.rmSync(nm, { recursive: true, force: true });
+        fs.symlinkSync(path.join(REPO, 'node_modules'), nm);
+    }
+}
+
+describe('a dependency manifest goes to the council, and still cannot reach routine (owner decision 2026-10-15)', () => {
+    const bumped = (n: number): string =>
+        fs.readFileSync(path.join(REPO, 'package.json'), 'utf8').replace('{', `{\n  "x-bump": ${String(n)},`);
+
+    it('a PR that only bumps a dependency is needs-council', () => {
+        const r = runGate(base, commitOn('dep-bump-only', base, { 'package.json': bumped(1) }));
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(/u);
         expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it.each(['yarn.lock', '.yarnrc.yml', 'pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'package-lock.json', '.npmrc'])(
+        'a head that changes only %s is needs-council',
+        (file) => {
+            const head = commitOn(`head-changes-${file.replace(/[^a-z]/gu, '-')}-manifest`, base, {
+                [file]: `changed by the head\n`,
+            });
+            const r = runGate(base, head);
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(/u);
+            expect(r.code).not.toBe(0);
+        },
+        60_000,
+    );
+
+    it('a manifest change with a downgrade attack on the classifier still reaches the owner', () => {
+        attack('dep-bump-with-downgrade', CLASSIFIER, (s) =>
+            s.replace(
+                'export function verdictOf(triggers: readonly Trigger[]): Verdict {',
+                "export function verdictOf(triggers: readonly Trigger[]): Verdict {\n    if (triggers.length >= 0) return 'routine';",
+            ),
+        );
+        fs.writeFileSync(path.join(clone, 'package.json'), bumped(2));
+        git(clone, 'commit', '-q', '-am', 'and a dependency bump');
+        const r = runGate(base, git(clone, 'rev-parse', 'HEAD'));
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(/u);
+    }, 60_000);
+
+    it('a head-installed runtime cannot answer routine for a manifest change', () => {
+        const head = commitOn('dep-bump-poisoned-runtime', base, { 'package.json': bumped(3) });
+        const r = withPoisonedRuntime(() => runGate(base, head));
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(/u);
+        expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it.skipIf(!STRIP_TYPES)(
+        'where node strips types the base copy needs no node_modules, so a poisoned one cannot hide a gated change',
+        () => {
+            const head = commitOn('dep-bump-and-kernel-rule', base, {
+                'package.json': bumped(4),
+                [KERNEL_RULE]: `${fs.readFileSync(path.join(clone, KERNEL_RULE), 'utf8')}\n`,
+            });
+            const r = withPoisonedRuntime(() => runGate(base, head));
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(/u);
+        },
+        60_000,
+    );
+
+    it('without type stripping a manifest change is runtime-uncertain, and a gated change still reaches the owner', () => {
+        const PATH = `${nodeShimWithoutStripTypes()}:${process.env['PATH'] ?? ''}`;
+        const only = runGate(base, commitOn('dep-bump-uncertain', base, { 'package.json': bumped(5) }), { PATH });
+        expect(only.lines[only.lines.length - 1]).toMatch(/^verdict: needs-council \(runtime-uncertain/u);
+        const gated = commitOn('dep-bump-and-kernel-rule-uncertain', base, {
+            'package.json': bumped(6),
+            [KERNEL_RULE]: `${fs.readFileSync(path.join(clone, KERNEL_RULE), 'utf8')}\n`,
+        });
+        const r = runGate(base, gated, { PATH });
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(/u);
     }, 60_000);
 });

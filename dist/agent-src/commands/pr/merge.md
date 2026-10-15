@@ -481,6 +481,15 @@ classify it with the **base revision's** classifier, never the head's:
 ```bash
 BASE="<manifest-base_sha>"
 HEAD_SHA="<manifest-head-sha>"
+MANIFESTS="package.json package-lock.json npm-shrinkwrap.json .npmrc yarn.lock .yarnrc.yml pnpm-lock.yaml bun.lock bun.lockb"
+run_base() {
+  OUT="$("$@" "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
+  CODE=$?
+  case "$CODE:$(printf '%s\n' "$OUT" | tail -n 1)" in
+    "0:verdict: routine" | "1:verdict: needs-council ("* | "2:verdict: needs-owner ("*) printf '%s\n' "$OUT" ;;
+    *) return 1 ;;
+  esac
+}
 VERDICT="verdict: needs-owner (temp-dir-unavailable: no private temporary directory)"
 if GATE_TMP="$(mktemp -d)" && [ -n "$GATE_TMP" ] && [ -d "$GATE_TMP" ]; then
   BASE_DIR="$GATE_TMP/classifier-base"
@@ -488,20 +497,41 @@ if GATE_TMP="$(mktemp -d)" && [ -n "$GATE_TMP" ] && [ -d "$GATE_TMP" ]; then
   if REAL_TMP="$(cd "$GATE_TMP" && pwd -P)" && [ -n "$REAL_TMP" ]; then
     BASE_DIR="$REAL_TMP/classifier-base"
     VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
-    if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ] \
-       || ! git diff --quiet "$BASE...$HEAD_SHA" -- package.json package-lock.json npm-shrinkwrap.json \
-            .npmrc yarn.lock .yarnrc.yml pnpm-lock.yaml bun.lock bun.lockb; then
-      VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked, or the head changes the manifest tsx was installed from)"
+    git diff --quiet "$BASE...$HEAD_SHA" -- $MANIFESTS
+    DEPS=$?
+    if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ]; then
+      VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked)"
+    elif [ "$DEPS" -gt 1 ]; then
+      VERDICT="verdict: needs-owner (manifest-unreadable: git diff exited $DEPS)"
     elif git cat-file -e "$BASE:src/scripts/classify_merge_risk.ts" \
          && git worktree add -q --detach "$BASE_DIR" "$BASE"; then
-      OUT="$(node_modules/.bin/tsx "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
-      CODE=$?
-      LAST="$(printf '%s\n' "$OUT" | tail -n 1)"
-      case "$CODE:$LAST" in
-        "0:verdict: routine" | "1:verdict: needs-council ("* | "2:verdict: needs-owner ("*) VERDICT="$LAST" ;;
-        *) VERDICT="verdict: needs-owner (classifier-unusable: exit $CODE, last line '$LAST')" ;;
-      esac
-      printf '%s\n' "$OUT" | sed '$d'
+      cat > "$REAL_TMP/loader.mjs" <<'LOADER'
+export async function resolve(specifier, context, next) {
+  try { return await next(specifier, context); } catch (error) {
+    if (/^\.{1,2}\//.test(specifier) && specifier.endsWith('.js')) return next(`${specifier.slice(0, -3)}.ts`, context);
+    throw error;
+  }
+}
+LOADER
+      printf '%s\n' "import { register } from 'node:module';" "register('./loader.mjs', import.meta.url);" > "$REAL_TMP/register.mjs"
+      if RUN="$(run_base node --experimental-strip-types --no-warnings --import "$REAL_TMP/register.mjs")"; then
+        :
+      elif [ "$DEPS" -eq 0 ] && RUN="$(run_base node_modules/.bin/tsx)"; then
+        :
+      elif [ "$DEPS" -eq 1 ]; then
+        RUN="$(run_base node_modules/.bin/tsx)"
+        case "$(printf '%s\n' "$RUN" | tail -n 1)" in
+          "verdict: needs-owner ("*) ;;
+          *) RUN="verdict: needs-council (runtime-uncertain: no package-free runtime, and the head changes the manifest the checkout's runtime came from)" ;;
+        esac
+      else
+        RUN="verdict: needs-owner (classifier-unusable: no valid verdict under either runtime)"
+      fi
+      printf '%s\n' "$RUN" | sed '$d'
+      VERDICT="$(printf '%s\n' "$RUN" | tail -n 1)"
+      if [ "$DEPS" -eq 1 ] && [ "$VERDICT" = "verdict: routine" ]; then
+        VERDICT="verdict: needs-council (dependency-manifest: the head changes a dependency manifest)"
+      fi
     fi
   fi
 fi
@@ -513,32 +543,50 @@ echo "$VERDICT"
 classifier — and of `check_kernel_edit_ratified`, whose `classifyPaths` it
 reads — is the head's: a PR could rewrite the code that classes it and call
 itself `routine`. The ratification gate's workflow step records the same defect
-and runs the base copy for the same reason. The base copy is run directly with
-the checkout's `tsx`, not through `./scripts-run`, whose dispatcher is the head's
-code too; the consequence-class list and each ADR's `reopen_policy` are read
-from both revisions by the base copy itself.
+and runs the base copy for the same reason. The consequence-class list and each
+ADR's `reopen_policy` are read from both revisions by the base copy itself.
 
-**What it fails to.** Every anomaly is **`needs-owner`** and says why — never a
-skipped gate and never a fall-back to the head's copy: a base without the
-classifier or a worktree that cannot be made; an exit status and last line that
-do not agree on one of the three verdicts (a crash, empty or malformed output);
-and a runtime the head could have supplied. `tsx` comes from the checkout's
-`node_modules`, so a head that tracks `node_modules` or changes the dependency
-manifest it was installed from could forge the verdict; such a PR is handed over
-unclassified. The boundary this assumes, stated rather than checked: the
-checkout's `node_modules` was installed from the base's manifest, never by this
-run from a PR head — a run that installed dependencies from a head before this
-block has already handed that head the runtime. A private temporary directory
-that cannot be made is `needs-owner` before any path is derived from it. The
-`trap` is installed right after two checks on the new directory, so it removes
-the worktree and the directory on every path after them, a `cd` that fails
-included; an interruption inside those two checks can leave an empty directory
-behind, never a classification. The block prints the verdict last and exits 0
-only on `routine`.
-The temporary directory is resolved to its real path: the classifier's entry
-guard compares real paths, and on a host whose temp directory is a symlink an
-unresolved path makes it print nothing — which the block would correctly, but
-uselessly, hand over as `classifier-unusable`.
+**Which runtime.** The base copy's import closure uses only `node:` built-ins,
+so it is first run by `node` itself — `--experimental-strip-types` and a
+resolver hook the block writes into its own temporary directory — which depends
+on no `node_modules` at all, the head's or anyone's. Only when that cannot run
+(a Node without type stripping, or a base whose closure uses syntax stripping
+cannot carry) does the block fall back to the checkout's `tsx`, never through
+`./scripts-run`, whose dispatcher is the head's code.
+
+**Dependency manifests go to the council (owner decision, 2026-10-15).** A head
+that changes `package.json` or a lockfile is never `routine` — the classifier's
+`dependency-manifest` trigger, and a floor in the block for a base copy that
+predates it, make it `needs-council` — and never `needs-owner` on that ground
+alone. Where the package-free run worked, its verdict stands as for any PR.
+Where it could not run, the checkout's `tsx` may be one the head's manifest
+installed, so its answer is not trusted downward: a `needs-owner` from it is
+kept, anything else becomes `needs-council (runtime-uncertain)`.
+
+**What it fails to.** Every other anomaly is **`needs-owner`** and says why —
+never a skipped gate and never a fall-back to the head's copy: a private
+temporary directory that cannot be made (no path is derived before it exists),
+a base without the classifier or a worktree that cannot be made, a
+`node_modules` that is tracked or cannot be listed, a manifest diff that cannot
+be read, and an exit status and last line that do not agree on one of the three
+verdicts under either runtime. The `trap` is installed right after two checks on
+the new directory, so it removes the worktree and the directory on every path
+after them, a `cd` that fails included; an interruption inside those two checks
+can leave an empty directory behind, never a classification. The block prints
+the verdict last and exits 0 only on `routine`. The temporary directory is
+resolved to its real path: the classifier's entry guard compares real paths,
+and on a host whose temp directory is a symlink an unresolved path makes it
+print nothing.
+
+**Residual risk, stated.** On a host whose Node cannot strip types, a PR that
+changes a dependency manifest is classified by the checkout's `tsx`. If this run
+installed that runtime from the head, the head chooses the classifier's answer:
+it cannot reach `routine` (the floor holds), but by printing a lower verdict it
+can turn the `needs-owner` an honest runtime would report into
+`needs-council (runtime-uncertain)`. So there, a gated change paired with a
+dependency bump can reach the council instead of the owner. Where Node
+strips types (22.6 and later) this does not arise, and no run of this command
+installs dependencies from a head.
 
 The last line is the verdict; each trigger names the rule it comes from. An
 unreadable diff is `needs-council` — the gate fails closed.
