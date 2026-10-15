@@ -3,8 +3,8 @@
 // identifier pattern is defined here and nowhere else; consumers decide policy
 // (refuse, replace, report), this module only detects.
 //
-// Pure: no import, no I/O, no network. Every quantifier is bounded so no rule
-// can backtrack quadratically on a hostile input; the test suite enforces both.
+// Pure: no import, no I/O, no network. Every rule states why it is linear on a
+// hostile input; the parity test pins what the move from secret_detector kept.
 
 export type EgressClass = 'credential' | 'identifier';
 
@@ -15,8 +15,10 @@ export interface EgressRule {
     readonly class: EgressClass;
     /** Finding kind reported by the commit-time scanner; defaults to `rule`. */
     readonly kind?: string;
-    /** MUST carry the global flag and bounded quantifiers only. */
+    /** MUST carry the global flag. */
     readonly pattern: RegExp;
+    /** Why the pattern runs in linear time on any input; required, reviewed with the pattern. */
+    readonly linearity: string;
     /** Capture group holding the value; the whole match when absent. */
     readonly valueGroup?: number;
     readonly validator?: (value: string) => boolean;
@@ -67,86 +69,97 @@ export function looksLikeSecretValue(value: string): boolean {
     return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
 }
 
-// Upper bounds are generous on purpose: a span cut short by its bound would
-// leave the rest of the value in plaintext after a replacement.
+const PREFIX_RUN =
+    'Starts only where the literal prefix occurs; the single class after it either reaches its minimum and consumes the whole run (the global scan resumes past it) or fails within the minimum, so each character is read a bounded number of times.';
+const FIXED_RUN =
+    'Fixed-length class after a literal prefix: every attempt reads at most the prefix plus the fixed count.';
+
+// Quantifiers are unbounded where the pattern is linear without a bound, so a
+// long value is matched whole and no suffix survives a replacement. Each rule
+// states why it is linear; a bound remains only where the unbounded form was
+// quadratic, and what that bound loses is published in DETECTION_CEILINGS.
 export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'anthropic-api-key',
         type: 'APIKEY',
         class: 'credential',
         kind: 'anthropic-api-key',
-        pattern: /sk-ant-[A-Za-z0-9_-]{20,1024}/g,
+        pattern: /sk-ant-[A-Za-z0-9_-]{20,}/g,
+        linearity: PREFIX_RUN,
     },
     {
         rule: 'anthropic-project-key',
         type: 'APIKEY',
         class: 'credential',
         kind: 'anthropic-api-key',
-        pattern: /sk-proj-[A-Za-z0-9_-]{20,1024}/g,
+        pattern: /sk-proj-[A-Za-z0-9_-]{20,}/g,
+        linearity: PREFIX_RUN,
     },
-    {
-        rule: 'aws-access-key',
-        type: 'APIKEY',
-        class: 'credential',
-        pattern: /AKIA[0-9A-Z]{16}/g,
-    },
+    { rule: 'aws-access-key', type: 'APIKEY', class: 'credential', pattern: /AKIA[0-9A-Z]{16}/g, linearity: FIXED_RUN },
     {
         rule: 'google-api-key',
         type: 'APIKEY',
         class: 'credential',
         pattern: /AIza[0-9A-Za-z_-]{35}/g,
+        linearity: FIXED_RUN,
     },
-    {
-        rule: 'github-pat',
-        type: 'TOKEN',
-        class: 'credential',
-        pattern: /ghp_[0-9A-Za-z]{36}/g,
-    },
+    { rule: 'github-pat', type: 'TOKEN', class: 'credential', pattern: /ghp_[0-9A-Za-z]{36}/g, linearity: FIXED_RUN },
     {
         rule: 'github-fine-grained-pat',
         type: 'TOKEN',
         class: 'credential',
         kind: 'github-pat',
-        pattern: /github_pat_[0-9A-Za-z_]{22,1024}/g,
+        pattern: /github_pat_[0-9A-Za-z_]{22,}/g,
+        linearity: PREFIX_RUN,
     },
     {
         rule: 'jwt',
         type: 'TOKEN',
         class: 'credential',
-        pattern: /eyJ[A-Za-z0-9_-]{10,8192}\.[A-Za-z0-9_-]{10,8192}\.[A-Za-z0-9_-]{10,8192}/g,
+        pattern: /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
+        linearity:
+            'The lookbehind admits a start only where a segment run begins, so no attempt starts inside a run another attempt already read; an attempt spans at most three dot-separated runs, so each character is read by at most three attempts. Without the lookbehind every inner eyJ restarted a scan of the same run, which is quadratic.',
     },
     {
         rule: 'stripe-secret-key',
         type: 'APIKEY',
         class: 'credential',
-        pattern: /sk_(?:live|test)_[0-9A-Za-z]{16,1024}/g,
+        pattern: /sk_(?:live|test)_[0-9A-Za-z]{16,}/g,
+        linearity: PREFIX_RUN,
     },
     {
         rule: 'slack-token',
         type: 'TOKEN',
         class: 'credential',
-        pattern: /xox[baprs]-[0-9A-Za-z-]{10,1024}/g,
+        pattern: /xox[baprs]-[0-9A-Za-z-]{10,}/g,
+        linearity: PREFIX_RUN,
     },
     {
         rule: 'pem-private-key',
         type: 'PRIVATEKEY',
         class: 'credential',
-        pattern: /-----BEGIN [A-Z ]{0,64}PRIVATE KEY-----/g,
+        pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
+        linearity:
+            'Starts only at the literal header; the label class excludes the dash, so label runs of different headers are disjoint, and backtracking over one run tries the fixed 16-character suffix at each position: linear with a constant factor of 16.',
     },
     {
         rule: 'db-connection-uri',
         type: 'DBURI',
         class: 'credential',
-        pattern: /\b[a-z][a-z0-9+.-]{0,31}:\/\/[^\s:/@]{1,256}:[^\s:/@]{1,256}@/g,
+        pattern: /\b[a-z][a-z0-9+.-]{0,31}:\/\/[^\s:/@]+:[^\s:/@]+@/g,
+        linearity:
+            'The scheme is bounded to 32 characters, so at most 32 starts reach any one ://; the userinfo classes exclude : and /, so a userinfo run belongs to exactly one :// and is read at most 32 times per side. Unbounded, the scheme let every inner word boundary of a dotted run restart the scan, which is quadratic.',
     },
     {
         rule: 'generic-assignment',
         type: 'SECRET',
         class: 'credential',
         pattern:
-            /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s{0,16}[:=]\s{0,16}['"]?([^'"\s]{8,1024})['"]?/gi,
+            /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/gi,
         valueGroup: 1,
         validator: looksLikeSecretValue,
+        linearity:
+            'Starts only at a keyword; the whitespace runs end at the first non-space and the value run at the first quote or space, and a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops at the first character after the whitespace.',
     },
 ];
 
@@ -274,3 +287,26 @@ export function replaceSpans(
     }
     return out;
 }
+
+/** A case the pre-move rule pack detected and this table deliberately does not. */
+export interface DetectionCeiling {
+    readonly rule: string;
+    readonly ceiling: string;
+    /** Case ids in egress_rules_parity.test.ts that demonstrate the loss. */
+    readonly cases: readonly string[];
+}
+
+export const DETECTION_CEILINGS: readonly DetectionCeiling[] = [
+    {
+        rule: 'jwt',
+        ceiling:
+            'A JWT glued to a preceding base64url character (letter, digit, _ or -) is not detected; the pre-move pattern matched from the inner eyJ. The lookbehind is what makes the rule linear.',
+        cases: ['jwt-glued-word'],
+    },
+    {
+        rule: 'db-connection-uri',
+        ceiling:
+            'A scheme longer than 32 characters with no inner word boundary is not detected, and a dotted scheme longer than 32 characters is matched from a later boundary, so the span starts inside the scheme; the userinfo, which holds the secret, is covered either way.',
+        cases: ['uri-scheme-33', 'uri-scheme-dotted-40'],
+    },
+];

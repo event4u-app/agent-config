@@ -45,9 +45,12 @@ describe('rule table shape', () => {
         expect(new Set(ids).size).toBe(ids.length);
     });
 
-    it('no rule carries an unbounded quantifier', () => {
-        const offenders = EGRESS_RULES.filter((r) => findUnboundedQuantifier(r.pattern) !== null).map((r) => r.rule);
-        expect(offenders).toEqual([]);
+    it('every rule states why it is linear, and every unbounded rule says so explicitly', () => {
+        for (const r of EGRESS_RULES) {
+            expect(r.linearity.length).toBeGreaterThan(40);
+        }
+        const unbounded = EGRESS_RULES.filter((r) => findUnboundedQuantifier(r.pattern) !== null);
+        expect(unbounded.length).toBeGreaterThan(0);
     });
 
     it('the quantifier check refuses unbounded forms and accepts bounded ones', () => {
@@ -65,23 +68,51 @@ describe('rule table shape', () => {
     });
 });
 
-describe('no rule backtracks on a pathological input', () => {
-    const N = 60_000;
-    const inputs: Record<string, string> = {
-        letters: 'a'.repeat(N),
-        schemeish: 'ab+'.repeat(N / 3),
-        colons: 'a:'.repeat(N / 2),
-        jwtish: `eyJ${'a'.repeat(N)}`,
-        assignment: `password${' '.repeat(N)}`,
-        dashes: 'xoxb-'.repeat(N / 5),
-    };
-    for (const [name, input] of Object.entries(inputs)) {
+// Timing is a smoke check, not the proof: each rule's `linearity` field carries
+// the argument. The restart-heavy inputs are the shapes that made the pre-move
+// jwt and db-connection-uri patterns quadratic; the calibration test shows they
+// are adversarial for those patterns, so a green reading here is not vacuous.
+const RESTART_HEAVY: Record<string, string> = {
+    letters: 'a'.repeat(60_000),
+    'dotted-scheme': `${'a.'.repeat(15_000)}://u`,
+    'scheme-per-userinfo': `${'a.'.repeat(16)}://${'u'.repeat(1_000)}`.repeat(30),
+    colons: 'a:'.repeat(30_000),
+    'inner-eyJ': 'eyJ'.repeat(20_000),
+    'long-jwt-segment': `eyJ${'a'.repeat(60_000)}`,
+    'assignment-spaces': `password${' '.repeat(60_000)}`,
+    'repeated-prefix': 'sk-ant-'.repeat(8_000),
+    'pem-label': `-----BEGIN ${'A '.repeat(30_000)}`,
+    'slack-dashes': 'xoxb-'.repeat(12_000),
+};
+
+function elapsed(fn: () => void): number {
+    const t0 = performance.now();
+    fn();
+    return performance.now() - t0;
+}
+
+describe('restart-heavy inputs', () => {
+    for (const [name, input] of Object.entries(RESTART_HEAVY)) {
         it(`completes in bounded time on ${name}`, () => {
-            const t0 = performance.now();
-            detect(input);
-            expect(performance.now() - t0).toBeLessThan(1_500);
+            expect(elapsed(() => detect(input))).toBeLessThan(1_500);
         });
     }
+
+    it('calibration: the pre-move jwt and db-connection-uri patterns are slow on them', () => {
+        const scan = (re: RegExp, text: string): void => {
+            const g = new RegExp(re.source, re.flags);
+            while (g.exec(text) !== null);
+        };
+        const jwtOld = /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g;
+        const uriOld = /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:[^\s:/@]+@/g;
+        const rule = (id: string): RegExp => EGRESS_RULES.find((r) => r.rule === id)?.pattern ?? /$^/g;
+        const inner = RESTART_HEAVY['inner-eyJ'] as string;
+        const dotted = RESTART_HEAVY['dotted-scheme'] as string;
+        expect(elapsed(() => scan(jwtOld, inner))).toBeGreaterThan(10 * elapsed(() => scan(rule('jwt'), inner)) + 20);
+        expect(elapsed(() => scan(uriOld, dotted))).toBeGreaterThan(
+            10 * elapsed(() => scan(rule('db-connection-uri'), dotted)) + 20,
+        );
+    });
 });
 
 describe('spans', () => {
