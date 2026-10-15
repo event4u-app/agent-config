@@ -11,6 +11,7 @@ import {
     main,
     readRecordOnce,
     reviewCommitted,
+    reviewReader,
     type AnchorSource,
 } from '../../src/scripts/check_platform_anchor.js';
 
@@ -233,6 +234,24 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         put(`${BYPASS_RECORD_DIR}/closed.md`, record());
         commitAll();
         expect(run()).toBe(1);
+    });
+
+    it('the review budget is checked before each read and counted in bytes', () => {
+        git('init', '-q');
+        const s = 'a'.repeat(64);
+        put('agents/evidence/council/r1.md', `${s}\n${'x'.repeat(535)}`);
+        put('agents/evidence/council/r2.md', `${s}\n${'x'.repeat(535)}`);
+        put('agents/evidence/council/r3.md', `${s}\n${'ä'.repeat(300)}`);
+        commitAll();
+        const index = committedEvidence(root);
+        const reader = reviewReader(root, index, { perReview: 1000, total: 1100, reads: 20 });
+        expect(reader('agents/evidence/council/r1.md', s, 0)).toBe(true);
+        expect(reader('agents/evidence/council/r2.md', s, 0)).toBe(false);
+        expect(reviewReader(root, index, { perReview: 1000, total: 1200, reads: 20 })('agents/evidence/council/r1.md', s, 0)).toBe(true);
+        expect(reviewReader(root, index, { perReview: 600, total: 600, reads: 20 })('agents/evidence/council/r1.md', s, 0)).toBe(true);
+        expect(reviewReader(root, index, { perReview: 599, total: 1200, reads: 20 })('agents/evidence/council/r1.md', s, 0)).toBe(false);
+        expect(reviewReader(root, index, { perReview: 664, total: 1200, reads: 20 })('agents/evidence/council/r3.md', s, 0)).toBe(false);
+        expect(reviewReader(root, index, { perReview: 665, total: 1200, reads: 20 })('agents/evidence/council/r3.md', s, 0)).toBe(true);
     });
 
     it('fails when the committed review cites a different subject', () => {

@@ -171,7 +171,8 @@ export function touchesPolicy(files: readonly string[]): boolean {
 /**
  * The bypass records in the checkout. Read on every run, gated diff or not: an
  * open bypass is a fact about the repository, not about the change under test.
- * A directory that cannot be read is no records, never a failure of the gate.
+ * A missing directory is no records; one that exists and cannot be listed is
+ * returned as an unreadable record, which fails the gate.
  */
 export function readBypassRecords(root: string): BypassRecordInput[] {
     const names: string[] = [];
@@ -290,24 +291,32 @@ export function removedBypassRecords(root: string, baseRef: string): BypassFindi
 export function reviewReader(
     root: string,
     index: ReadonlySet<string>,
+    budget: { perReview: number; total: number; reads: number } = {
+        perReview: REVIEW_MAX_BYTES,
+        total: REVIEW_TOTAL_BYTES,
+        reads: REVIEW_READ_LIMIT,
+    },
 ): (rel: string, subject: string, restoredAtMs: number) => boolean {
     const cache = new Map<string, { text: string; addedAtMs: number } | null>();
     let bytes = 0;
     const read = (rel: string): { text: string; addedAtMs: number } | null => {
-        if (cache.size >= REVIEW_READ_LIMIT || bytes >= REVIEW_TOTAL_BYTES) {
+        // The allowance is computed before the read and caps it, so the total
+        // can reach the budget and never pass it; bytes are counted as bytes.
+        const allowance = Math.min(budget.perReview, budget.total - bytes);
+        if (cache.size >= budget.reads || allowance <= 0) {
             return null;
         }
-        const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { encoding: 'utf8', maxBuffer: REVIEW_MAX_BYTES });
+        const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { maxBuffer: allowance });
         // The commit that first added the file: a review written before the
         // restore was committed before it, whatever its text says.
         const added = spawnSync('git', ['-C', root, 'log', '--diff-filter=A', '--format=%ct', '--', rel], { encoding: 'utf8' });
         const times = (added.stdout ?? '').trim().split('\n').filter((l) => /^\d+$/u.test(l));
         const first = times.length > 0 ? Number(times[times.length - 1]) * 1000 : NaN;
-        if (shown.status !== 0 || typeof shown.stdout !== 'string' || added.status !== 0 || Number.isNaN(first)) {
+        if (shown.status !== 0 || !Buffer.isBuffer(shown.stdout) || shown.stdout.length > allowance || added.status !== 0 || Number.isNaN(first)) {
             return null;
         }
         bytes += shown.stdout.length;
-        return { text: shown.stdout, addedAtMs: first };
+        return { text: shown.stdout.toString('utf8'), addedAtMs: first };
     };
     return (rel, subject, restoredAtMs) => {
         // A council review lives with the council's records — never in the bypass
