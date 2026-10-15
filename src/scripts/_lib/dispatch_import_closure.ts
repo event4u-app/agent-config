@@ -80,13 +80,31 @@ export function relativeSpecifiers(source: string): string[] {
     return out;
 }
 
-/** Resolve a `.js` specifier from `fromRel` to the `.ts` source on disk. */
-function resolveSpecifier(root: string, fromRel: string, spec: string): string | null {
+/**
+ * Where a walk reads module sources: a checkout on disk, or a commit's objects.
+ * `read` returns `null` when no regular file sits at the repo-relative path.
+ */
+export interface ClosureTree {
+    read(rel: string): string | null;
+}
+
+/** The checkout under `root`, read through the filesystem. */
+export function checkoutTree(root: string): ClosureTree {
+    return {
+        read(rel: string): string | null {
+            const abs = path.join(root, rel);
+            return fs.existsSync(abs) && fs.statSync(abs).isFile() ? fs.readFileSync(abs, 'utf8') : null;
+        },
+    };
+}
+
+/** Resolve a `.js` specifier from `fromRel` to the `.ts` source in `tree`. */
+function resolveSpecifier(tree: ClosureTree, fromRel: string, spec: string): string | null {
     const base = path.posix.join(path.posix.dirname(fromRel), spec);
     const candidates = [base.replace(/\.js$/, '.ts'), base, `${base}.ts`, `${base}/index.ts`];
     for (const c of candidates) {
         const norm = path.posix.normalize(c);
-        if (fs.existsSync(path.join(root, norm)) && fs.statSync(path.join(root, norm)).isFile()) {
+        if (tree.read(norm) !== null) {
             return norm;
         }
     }
@@ -110,13 +128,26 @@ export function classifySource(source: string): Exclude<ModuleClass, 'concern'> 
 }
 
 /**
- * Walk the closure from the dispatcher under `root`. Returns `[]` when the
- * dispatcher is absent, so a fixture tree without one yields an empty set
- * rather than an error. The dispatcher itself is not in the result — it is
- * already watched by name.
+ * Walk the closure from the dispatcher under `root`, a checkout path or a
+ * {@link ClosureTree}. Returns `[]` when the dispatcher is absent, so a fixture
+ * tree without one yields an empty set rather than an error. The dispatcher
+ * itself is not in the result — it is already watched by name.
  */
-export function dispatchImportClosure(root: string, entry: string = DISPATCHER_PATH): ClosureEntry[] {
-    if (!fs.existsSync(path.join(root, entry))) {
+export function dispatchImportClosure(
+    root: string | ClosureTree,
+    entry: string = DISPATCHER_PATH,
+): ClosureEntry[] {
+    // Each path is read at most once per walk, so the source a module was
+    // resolved by is the source it is classified and walked from.
+    const backing = typeof root === 'string' ? checkoutTree(root) : root;
+    const memo = new Map<string, string | null>();
+    const tree: ClosureTree = {
+        read(rel: string): string | null {
+            if (!memo.has(rel)) memo.set(rel, backing.read(rel));
+            return memo.get(rel) ?? null;
+        },
+    };
+    if (tree.read(entry) === null) {
         return [];
     }
     const seen = new Map<string, ModuleClass>();
@@ -128,13 +159,13 @@ export function dispatchImportClosure(root: string, entry: string = DISPATCHER_P
             continue;
         }
         visited.add(rel);
-        const source = fs.readFileSync(path.join(root, rel), 'utf8');
+        const source = tree.read(rel) ?? '';
         if (rel !== entry) {
             seen.set(rel, classifySource(source));
         }
         const isRegistry = rel === CONCERN_REGISTRY_PATH;
         for (const spec of relativeSpecifiers(source)) {
-            const target = resolveSpecifier(root, rel, spec);
+            const target = resolveSpecifier(tree, rel, spec);
             if (target === null || target === entry) {
                 continue;
             }

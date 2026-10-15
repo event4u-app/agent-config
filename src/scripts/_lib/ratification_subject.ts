@@ -427,6 +427,41 @@ export function fileAtRevision(root: string, commit: string, rel: string): Buffe
 }
 
 /**
+ * The regular files of `commit` as a source the dispatcher-closure walk reads,
+ * so a run can read the BASE side of a change from Git objects instead of from
+ * a second checkout. One `ls-tree` lists the tree; each blob is read on demand
+ * and kept. A path that is absent or is not a regular file reads as `null`.
+ */
+export function treeAtRevision(root: string, commit: string): { read(rel: string): string | null } {
+    const res = runGit(root, ['ls-tree', '-r', '-z', '--full-tree', commit], '');
+    if (res.status !== 0) {
+        throw new GitReadFailed('', 'ls-tree', stderrOf(res));
+    }
+    const blobs = new Map<string, string>();
+    for (const record of res.stdout.toString('utf8').split('\u0000')) {
+        const tab = record.indexOf('\t');
+        if (tab < 0) continue;
+        const [mode, type, oid] = record.slice(0, tab).split(' ');
+        if (type === 'blob' && mode !== undefined && REGULAR_MODES.has(mode) && oid !== undefined) {
+            blobs.set(record.slice(tab + 1), oid);
+        }
+    }
+    const read = new Map<string, string>();
+    return {
+        read(rel: string): string | null {
+            const oid = blobs.get(rel);
+            if (oid === undefined) return null;
+            let text = read.get(rel);
+            if (text === undefined) {
+                text = blobBytes(root, oid, rel).toString('utf8');
+                read.set(rel, text);
+            }
+            return text;
+        },
+    };
+}
+
+/**
  * The self surface, by the gate's own constants rather than a copy of them.
  *
  * READ ON FIRST CALL, NOT AT MODULE SCOPE, because of the import cycle: the

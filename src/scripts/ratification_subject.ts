@@ -12,7 +12,12 @@
  * disagree with the gate exactly on the changes that widen the gated set, which
  * are the changes a record most needs to be right about.
  *
- * Usage: ratification_subject --files <path> [<path> …] [--root DIR] [--rev REV] [--quiet]
+ * Usage: ratification_subject --files <path> [<path> …] [--root DIR] [--rev REV]
+ *        [--base-ref REF] [--quiet]
+ *
+ * `--base-ref` names the base the gate's local run reads the dispatcher closure
+ * from (default: the gate's own default, `origin/main` first). It matters only
+ * when `--root` is this checkout; pass the same ref the gate is given.
  *
  * `--files` takes the change's WHOLE changed-file list, not its gated subset:
  * which of them are gated is the gate's decision, not the caller's, and passing
@@ -46,6 +51,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const files: string[] = [];
     let root = REPO;
     let revision = DEFAULT_REVISION;
+    let baseRef: string | null = null;
     let collecting = false;
     let quiet = false;
 
@@ -81,6 +87,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             collecting = false;
             continue;
         }
+        if (a === '--base-ref') {
+            const value = optionValue(argv, i);
+            if (value === null) {
+                process.stderr.write('error: --base-ref takes a revision\n');
+                return 2;
+            }
+            baseRef = value;
+            i += 1;
+            collecting = false;
+            continue;
+        }
         if (a === '--quiet') {
             quiet = true;
             collecting = false;
@@ -100,7 +117,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     if (files.length === 0) {
         process.stderr.write(
             'usage: ratification_subject --files <path> [<path> …] [--root DIR] [--rev REV] ' +
-                '[--quiet]\n' +
+                '[--base-ref REF] [--quiet]\n' +
                 '       pass the whole changed-file list; the gated subset is this gate’s decision\n',
         );
         return 2;
@@ -114,7 +131,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let gated: readonly string[];
     let commit: string | null;
     try {
-        ({ digest, gatedFiles: gated, revision: commit } = expectedSubjectFor(files, root, revision));
+        ({ digest, gatedFiles: gated, revision: commit } = expectedSubjectFor(files, root, revision, baseRef));
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
