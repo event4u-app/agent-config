@@ -140,5 +140,8 @@ export class TokenScope {
 export function replaceValues(text: string, scope: TokenScope): string {
     const owned = parseTokens(text).filter((t) => scope.owns(text.slice(t.start, t.end)));
     const spans = detect(text).filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
-    return replaceSpans(text, spans, (s) => scope.mint(s.type, s.class, text.slice(s.start, s.end)));
+    // Mint in text order first: replaceSpans substitutes right to left, and minting
+    // inside its callback would number the last value 1.
+    const tokens = spans.map((s) => scope.mint(s.type, s.class, text.slice(s.start, s.end)));
+    return replaceSpans(text, spans, (_s, i) => tokens[i] as string);
 }

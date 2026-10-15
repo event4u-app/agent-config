@@ -66,6 +66,14 @@ describe('grammar', () => {
         expect(/(?<!\\)[+*]|\{\d+,\}/.test(TOKEN_PATTERN.source.replace(/\[[^\]]*\]/g, ''))).toBe(false);
     });
 
+    it('formatToken and the recogniser agree at the grammar boundaries', () => {
+        for (const type of ['AB', 'A1', 'ABCDEFGHIJKLMNOP']) {
+            expect(parseTokens(formatToken({ type, number: 999_999, fingerprint: 'abcdef' }))).toHaveLength(1);
+        }
+        expect(() => formatToken({ type: 'ABCDEFGHIJKLMNOPQ', number: 1, fingerprint: 'abcdef' })).toThrow(/grammar/);
+        expect(() => formatToken({ type: '1A', number: 1, fingerprint: 'abcdef' })).toThrow(/grammar/);
+    });
+
     it('formatToken refuses parts the recogniser would not parse', () => {
         expect(() => formatToken({ type: 'A', number: 1, fingerprint: 'abcdef' })).toThrow(/grammar/);
         expect(() => formatToken({ type: 'EMAIL', number: 0, fingerprint: 'abcdef' })).toThrow(/grammar/);
@@ -201,6 +209,13 @@ describe('TokenScope', () => {
 });
 
 describe('replaceValues', () => {
+    it('numbers values of one type in the order they appear in the text', () => {
+        const first = `sk-ant-${mixed(40)}`;
+        const second = `sk-ant-${mixed(41)}`;
+        const toks = parseTokens(replaceValues(`a ${first} b ${second} c`, new TokenScope()));
+        expect(toks.map((t) => t.number)).toEqual([1, 2]);
+    });
+
     it('replaces the captured value, not an earlier copy of it in the keyword', () => {
         // The captured value repeats the keyword, so it also occurs at offset 0 of the match.
         const text = 'AuthToken=AuthToken=AuthToken=';
