@@ -104,8 +104,11 @@ A token stands for one value inside one **issuing scope**. It carries four parts
   number alone, never guessed. This holds with high probability, not with
   certainty: the fingerprint is 24 bits, so one invented or foreign token whose
   type and number match a token the scope issued resolves with probability
-  2^-24 (about 6 in 100 million), and k such guesses against one issued token
-  with probability about k·2^-24. What a successful guess returns is an
+  2^-24 (about 6 in 100 million). The guess budget is enforced, not assumed:
+  after 64 failed resolutions a scope resolves nothing at all, genuine tokens
+  included, so the chance that guessing ever resolves a value is at most
+  64·2^-24 (about 4 in a million) per scope. Resolving a credential token is
+  not a failed guess and spends no budget. What a successful guess returns is an
   identifier value to the local process that holds the scope — never a
   credential, which no scope stores.
 - **Owner of resolution state.** The process that minted the token. No other

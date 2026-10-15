@@ -14,6 +14,12 @@ export const TOKEN_PATTERN = /__([A-Z][A-Z0-9]{1,15})_([1-9][0-9]{0,5})_([0-9a-f
 
 const TOKEN_TYPE = /^[A-Z][A-Z0-9]{1,15}$/;
 const MAX_TOKEN_NUMBER = 999_999;
+/**
+ * Unknown tokens a scope answers before it stops resolving anything. With a
+ * 24-bit fingerprint this bounds the chance that guessing ever resolves a value
+ * to at most 64 × 2^-24 (about 4 in a million) per scope.
+ */
+export const MAX_FAILED_RESOLUTIONS = 64;
 
 export interface TokenParts {
     readonly type: string;
@@ -76,6 +82,7 @@ export class TokenScope {
     private readonly byDigest = new Map<string, Entry>();
     private readonly byToken = new Map<string, Entry>();
     private readonly counters = new Map<string, number>();
+    private failedResolutions = 0;
     /** Keyed digest of the canonical value alone → its class, whatever type it was minted under. */
     private readonly classByValue = new Map<string, EgressClass>();
 
@@ -122,7 +129,13 @@ export class TokenScope {
 
     /** The identifier value a token stands for, or null: unknown, forged, foreign or credential. */
     resolve(token: string): string | null {
-        return this.byToken.get(token)?.value ?? null;
+        if (this.failedResolutions >= MAX_FAILED_RESOLUTIONS) return null;
+        const entry = this.byToken.get(token);
+        if (entry === undefined) {
+            this.failedResolutions += 1;
+            return null;
+        }
+        return entry.value;
     }
 
     /** What the scope holds, without any value. */

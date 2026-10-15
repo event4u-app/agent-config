@@ -11,7 +11,15 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { detect, findSpans } from './egress_rules.js';
-import { formatToken, parseTokens, replaceValues, TOKEN_FP_LENGTH, TOKEN_PATTERN, TokenScope } from './egress_token.js';
+import {
+    formatToken,
+    MAX_FAILED_RESOLUTIONS,
+    parseTokens,
+    replaceValues,
+    TOKEN_FP_LENGTH,
+    TOKEN_PATTERN,
+    TokenScope,
+} from './egress_token.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.resolve(HERE, '..', '..');
@@ -170,6 +178,26 @@ describe('TokenScope', () => {
             fingerprint: '000000' === p?.fingerprint ? '000001' : '000000',
         });
         expect(scope.resolve(forged)).toBeNull();
+    });
+
+    it('stops resolving once the failed-resolution budget is spent', () => {
+        const scope = new TokenScope();
+        const tok = scope.mint('EMAIL', 'identifier', 'one@corp.test');
+        for (let i = 0; i < MAX_FAILED_RESOLUTIONS - 1; i++) {
+            expect(scope.resolve(formatToken({ type: 'EMAIL', number: 1, fingerprint: 'ffffff' }))).toBeNull();
+        }
+        expect(scope.resolve(tok) === 'one@corp.test').toBe(true);
+        expect(scope.resolve(formatToken({ type: 'EMAIL', number: 1, fingerprint: 'fffffe' }))).toBeNull();
+        // Budget spent: even a genuine token no longer resolves.
+        expect(scope.resolve(tok)).toBeNull();
+    });
+
+    it('a credential token is not a failed guess and spends no budget', () => {
+        const scope = new TokenScope();
+        const cred = scope.mint('APIKEY', 'credential', KEY);
+        const tok = scope.mint('EMAIL', 'identifier', 'one@corp.test');
+        for (let i = 0; i < MAX_FAILED_RESOLUTIONS * 2; i++) scope.resolve(cred);
+        expect(scope.resolve(tok) === 'one@corp.test').toBe(true);
     });
 
     it('a token minted under another scope key does not resolve', () => {
