@@ -61,6 +61,20 @@ The placeholder grammar is one constant, chosen by a pre-registered measurement,
 and the contract states what each of four published states — `asserted`,
 `replaced`, `gated`, `uncovered` — proves.
 
+## Execution status — 2026-10-15
+
+One lane took the three steps `road-to-placeholders-on-the-wire` Phase 1 waits
+on (its D9) and what they depend on: 0.1, 0.2, 0.3, 2.1 and 3.1. Everything else
+is open.
+
+- **For the sibling:** the contract states token identity, scope, lifecycle and
+  the owner of resolution state, and leaves at-rest storage to its
+  `identifier-table-at-rest` blocker; the rule table exists; the grammar is
+  `__TYPE_n_fp__`. **The identifier class has no rows yet** — validated identifier
+  rules are 2.3 — so counting by class today yields credential evidence only.
+- **Next in order:** 0.4 (sender census), then 2.2 (which now carries the
+  single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
+
 ## What this roadmap deliberately does not do
 
 | # | Not done | Why |
