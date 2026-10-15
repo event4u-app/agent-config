@@ -201,7 +201,7 @@ const CLASS_RANK: Readonly<Record<EgressClass, number>> = {
 };
 
 /** A global or sticky regex keeps lastIndex between calls; reset it so every call tests the whole value. */
-function matchesFromStart(re: RegExp, value: string): boolean {
+function testWholeValue(re: RegExp, value: string): boolean {
     re.lastIndex = 0;
     return re.test(value);
 }
@@ -223,7 +223,7 @@ export function evaluateMatch(
         throw new Error(`egress rule ${r.rule}: a valueGroup rule needs the d flag for capture offsets`);
     }
     const end = start + value.length;
-    if (r.exclusions?.some((x) => matchesFromStart(x, value))) return null;
+    if (r.exclusions?.some((x) => testWholeValue(x, value))) return null;
     if (r.context) {
         const lo = Math.max(0, start - r.context.window);
         const hi = Math.min(text.length, end + r.context.window);

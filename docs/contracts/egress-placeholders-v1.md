@@ -57,12 +57,14 @@ A token stands for one value inside one **issuing scope**. It carries four parts
 | Part | Meaning |
 |---|---|
 | type | the rule type that found the value (`EMAIL`, `IBAN`, …) |
-| number | per type, in first-seen order within the scope; what a human reads |
+| number | per type, in the order values first appear in the text within the scope, from 1 to 999,999 (a scope refuses a further value of that type); what a human reads |
 | fingerprint | a truncated keyed digest over type and canonical value, under a key drawn at random per scope and **never sent and never persisted** |
 | variant | optional; distinguishes two spellings of one entity (a spaced and a compact IBAN) so a restore reproduces each spelling byte for byte |
 
-- **Identity.** Two occurrences of one canonical value in one scope get one
-  number and one fingerprint. Two different values get two numbers. One
+- **Identity.** A token stands for one **(type, canonical value)** pair. Two
+  occurrences of one pair in one scope get one number and one fingerprint; two
+  different values of one type get two numbers; one value matched under two
+  types gets two tokens, one per type. One
   canonical value has one class for the life of the scope, **whatever type it is
   minted under**: minting it again under the other class is refused, so a value
   first seen as a credential can never become restorable, and the reverse cannot
@@ -92,7 +94,7 @@ A token stands for one value inside one **issuing scope**. It carries four parts
   the grammar's spelling is one constant, and no second spelling exists under
   `src/`.
 - **Spelling: `__TYPE_n_fp__`** — e.g. `__IBAN_1_495cff__`: type `[A-Z][A-Z0-9]{1,15}` (an upper-case
-  letter, then 1–15 upper-case letters or digits), number from 1, fingerprint six lower-case hex digits. Chosen
+  letter, then 1–15 upper-case letters or digits), number 1–999,999, fingerprint six lower-case hex digits. Chosen
   by the model-fidelity bar pre-registered in
   `internal/bench/egress-placeholders-PREREG.md` (endpoint d) among spellings that
   survive an unquoted shell word, YAML, JSON and an anchored regex; reading in
@@ -148,6 +150,12 @@ no longer loses anything.
 |---|---|---|
 | `jwt` | a JWT glued to a preceding letter, digit, `_` or `-` (the old pattern matched from the inner `eyJ`) | a lookbehind admits a start only where a segment run begins; without it every inner `eyJ` restarted the same scan |
 | `db-connection-uri` | a scheme over 32 characters with no inner word boundary; a dotted scheme over 32 characters is matched from a later boundary, so the span starts inside the scheme while the userinfo is still covered | the scheme bound caps the restarts that reach one `://` |
+
+**Line scope.** The commit-time scanner evaluates each line on its own, as it
+did before the move; `detect()` and the replacement read the whole text. The
+replacement therefore sees at least what the scanner sees, and more — an
+assignment split across lines (`password =` then the value on the next line)
+is replaced but not reported at commit time. A test pins both directions.
 
 Every other rule states in its `linearity` field why it runs in linear time
 without a bound, and matches a value of any length whole, so a replacement never
