@@ -1076,11 +1076,17 @@ export const BYPASS_RECORD_MAX_BYTES = 64 * 1024;
 
 const DAY_MS = 86_400_000;
 
-/** A value as it may appear inside a one-line finding: no control characters, bounded. */
-function shown(value: string): string {
-    const flat = value.replace(/\p{Cc}/gu, ' ');
-    return flat.length > 120 ? `${flat.slice(0, 117)}...` : flat;
+/**
+ * A value or a path as it may appear inside a one-line finding: no control,
+ * format, line- or paragraph-separator character, and bounded, so a record's
+ * content or name cannot forge a second line of output.
+ */
+export function printable(value: string): string {
+    const flat = value.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu, ' ');
+    return flat.length > 200 ? `${flat.slice(0, 197)}...` : flat;
 }
+
+const shown = printable;
 
 /** The nine fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
 export const BYPASS_RECORD_FIELDS = [
@@ -1158,7 +1164,7 @@ function bypassFields(text: string): Map<string, string> | string {
     for (const line of text.slice(4, end).split('\n')) {
         const m = /^([a-z_]+):[ \t]*(.*)$/u.exec(line);
         if (m === null) {
-            return `unreadable frontmatter line \`${line}\` — one \`key: value\` per line, nothing else`;
+            return `unreadable frontmatter line \`${printable(line)}\` — one \`key: value\` per line, nothing else`;
         }
         const key = m[1] as string;
         if (fields.has(key)) {
@@ -1194,7 +1200,8 @@ export function evaluateBypassRecords(
     const malformed = (p: string, why: string): void => {
         findings.push({ code: 'bypass-record-malformed', path: p, message: `${p} is not a readable bypass record — ${why}` });
     };
-    for (const { path: p, text } of records) {
+    for (const { path: rawPath, text } of records) {
+        const p = printable(rawPath);
         if (text === null) {
             findings.push({ code: 'bypass-record-unreadable', path: p, message: `${p} could not be read` });
             continue;

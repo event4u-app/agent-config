@@ -391,7 +391,10 @@ seven days after it, `restored_at` before `time` or in the future, a
 under `agents/evidence/` (an untracked file, a directory and a symbolic link do
 not count), a record or a record directory that cannot be read, a record that
 is a symbolic link or larger than 64 KiB, more than 200 records, and a record
-the diff deletes.
+the diff deletes. Each record is opened once without following a link, and
+checked and read through that one descriptor; the committed reviews are read
+from one `HEAD` tree listing per run; a record's name and values reach a finding
+with control and line-separator characters replaced.
 
 **What that check does not establish.** The records are files in the branch it
 runs on, so a branch can rewrite one to look closed; the check reads them, it

@@ -118,6 +118,16 @@ describe('evaluateBypassRecords — a record that cannot show it closed fails cl
         expect(f[0]?.message).not.toMatch(/\p{Cc}/u);
     });
 
+    it('a record name cannot forge a second line of output, nor can a separator in a value', () => {
+        const f = evaluateBypassRecords(
+            [{ path: `${BYPASS_RECORD_DIR}/x\n✅ fake.md`, text: record({ council_review: 'a\u2028b\u2029c' }) }],
+            NOW,
+            () => false,
+        );
+        expect(f[0]?.message).not.toMatch(new RegExp('[\\n\\u2028\\u2029]', 'u'));
+        expect(f[0]?.path).not.toMatch(/\n/u);
+    });
+
     it('a record that could not be read', () => {
         expect(codes(null)).toEqual(['bypass-record-unreadable']);
     });

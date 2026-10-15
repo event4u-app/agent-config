@@ -51,6 +51,7 @@ import {
     checkAnchorIdentity,
     evaluateAnchor,
     evaluateBypassRecords,
+    printable,
     type BypassFinding,
     type BypassRecordInput,
     readAnchorPolicy,
@@ -188,19 +189,36 @@ export function readBypassRecords(root: string): BypassRecordInput[] {
     if (records.length > BYPASS_RECORD_LIMIT) {
         return [{ path: `${BYPASS_RECORD_DIR} (${String(records.length)} records, above ${String(BYPASS_RECORD_LIMIT)})`, text: null }];
     }
-    return records.map((n) => {
-        const rel = `${BYPASS_RECORD_DIR}/${n}`;
-        try {
-            // A symbolic link or an oversized file is not a record this reader trusts.
-            const st = fs.lstatSync(path.join(root, rel));
-            if (!st.isFile() || st.size > BYPASS_RECORD_MAX_BYTES) {
-                return { path: rel, text: null };
-            }
-            return { path: rel, text: fs.readFileSync(path.join(root, rel), 'utf8') };
-        } catch {
-            return { path: rel, text: null };
+    return records.map((n) => ({ path: `${BYPASS_RECORD_DIR}/${n}`, text: readRecordOnce(path.join(root, BYPASS_RECORD_DIR, n)) }));
+}
+
+/**
+ * One record, opened once without following a symbolic link, checked and read
+ * through that same descriptor with a byte ceiling — so the object checked is
+ * the object read, and a replacement between the two cannot slip in.
+ */
+function readRecordOnce(file: string): string | null {
+    let fd: number | null = null;
+    try {
+        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+        const st = fs.fstatSync(fd);
+        if (!st.isFile() || st.size > BYPASS_RECORD_MAX_BYTES) {
+            return null;
         }
-    });
+        const buf = Buffer.alloc(BYPASS_RECORD_MAX_BYTES + 1);
+        let total = 0;
+        for (;;) {
+            const read = fs.readSync(fd, buf, total, buf.length - total, null);
+            if (read === 0) break;
+            total += read;
+            if (total > BYPASS_RECORD_MAX_BYTES) return null;
+        }
+        return buf.subarray(0, total).toString('utf8');
+    } catch {
+        return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
+    }
 }
 
 /**
@@ -211,7 +229,7 @@ export function removedBypassRecords(changed: readonly string[], root: string): 
     return changed
         .map((f) => f.replace(/\\/g, '/').trim())
         .filter((f) => f.startsWith(`${BYPASS_RECORD_DIR}/`) && f.endsWith('.md') && !fs.existsSync(path.join(root, f)))
-        .map((f) => ({ code: 'bypass-record-removed' as const, path: f, message: `${f} is deleted by this diff` }));
+        .map((f) => ({ code: 'bypass-record-removed' as const, path: printable(f), message: `${printable(f)} is deleted by this diff` }));
 }
 
 /**
@@ -219,14 +237,35 @@ export function removedBypassRecords(changed: readonly string[], root: string): 
  * evidence tree — read from the commit's tree, never the working tree, so
  * a directory, an untracked file or a symbolic link does not count.
  */
-export function reviewCommitted(root: string, rel: string): boolean {
+export function reviewCommitted(root: string, rel: string, index: ReadonlySet<string> = committedEvidence(root)): boolean {
     const norm = path.posix.normalize(rel);
     if (norm !== rel || !norm.startsWith('agents/evidence/') || norm.endsWith('/') || norm.split('/').includes('..')) {
         return false;
     }
-    const r = spawnSync('git', ['-C', root, 'ls-tree', 'HEAD', '--', norm], { encoding: 'utf8' });
-    const entry = /^(\d{6}) blob [0-9a-f]+\t(.+)$/u.exec((r.stdout ?? '').trim());
-    return r.status === 0 && entry !== null && entry[2] === norm && (entry[1] === '100644' || entry[1] === '100755');
+    return index.has(norm);
+}
+
+/**
+ * Every regular file committed at `HEAD` in the evidence tree, read once
+ * per run from one tree snapshot. A tree that cannot be read is an empty set,
+ * so every non-pending review then fails closed.
+ */
+export function committedEvidence(root: string): Set<string> {
+    const r = spawnSync('git', ['-C', root, 'ls-tree', '-r', '-z', 'HEAD', '--', 'agents/evidence/'], {
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    const out = new Set<string>();
+    if (r.status !== 0 || typeof r.stdout !== 'string') {
+        return out;
+    }
+    for (const entry of r.stdout.split('\0')) {
+        const m = /^(100644|100755) blob [0-9a-f]+\t(.+)$/su.exec(entry);
+        if (m !== null) {
+            out.add(m[2] as string);
+        }
+    }
+    return out;
 }
 
 export interface AnchorGateResult {
@@ -441,8 +480,9 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
     }
 
     const result = evaluateGate(changed, policyText, source, repo);
+    const evidenceIndex = committedEvidence(root);
     const open = [
-        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel) => reviewCommitted(root, rel)),
+        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel) => reviewCommitted(root, rel, evidenceIndex)),
         ...removedBypassRecords(changed, root),
     ];
     if (open.length > 0) {
