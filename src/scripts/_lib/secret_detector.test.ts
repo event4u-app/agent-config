@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
+import { detect, type EgressRule } from './egress_rules.js';
 import { scanText, type SecretFinding } from './secret_detector.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -104,5 +105,74 @@ describe('scanText — masking', () => {
         const masked = (hit as SecretFinding).masked;
         expect(masked).not.toBe(raw);
         expect(masked.includes(raw)).toBe(false);
+    });
+});
+
+describe('column of a captured value', () => {
+    it('points at the capture, not an earlier copy of it inside the keyword', () => {
+        // The captured value repeats the keyword, so it also occurs at offset 0 of the match.
+        const findings = scanText('AuthToken=AuthToken=AuthToken=');
+        expect(findings.map((f) => [f.rule, f.column])).toEqual([['generic-assignment', 11]]);
+    });
+});
+
+describe('the scanner applies every field of a table row', () => {
+    // A credential row that uses the fields no shipped credential row uses yet.
+    const row: EgressRule = {
+        rule: 'test-pin',
+        type: 'SECRET',
+        class: 'credential',
+        pattern: /\b\d{6}\b/g,
+        context: { words: /\bpin\b/i, window: 12 },
+        exclusions: [/^000000$/],
+        linearity: 'Fixed six-digit run between word boundaries.',
+        replacement: 'detection',
+    };
+
+    it('reports a value with its context word nearby', () => {
+        expect(scanText('pin 482915', { rules: [row] }).map((f) => f.rule)).toEqual(['test-pin']);
+    });
+
+    it('drops a value without its context word', () => {
+        expect(scanText('order 482915', { rules: [row] })).toEqual([]);
+    });
+
+    it('drops an excluded value', () => {
+        expect(scanText('pin 000000', { rules: [row] })).toEqual([]);
+    });
+
+    it('refuses a value-group row without the d flag instead of guessing the column', () => {
+        const { context: _context, ...rest } = row;
+        const noD: EgressRule = { ...rest, pattern: /pin (\d{6})/g, valueGroup: 1 };
+        expect(() => scanText('pin 482915', { rules: [noD] })).toThrow(/d flag/);
+    });
+});
+
+describe('the scanner and the replacer on multi-line text', () => {
+    const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
+    const run = (n: number): string => ALNUM.repeat(Math.ceil(n / ALNUM.length)).slice(0, n);
+    const text = [
+        `token: sk-ant-${run(40)}`,
+        `password =`,
+        `${run(24)}`,
+        `url = postgres://u:${run(12)}@db`,
+        `api_key = "${run(24)}"`,
+    ].join('\n');
+
+    it('every scanner finding is also a replacer span: the scanner never sees more', () => {
+        const lineStarts = [0];
+        for (let i = 0; i < text.length; i++) if (text[i] === '\n') lineStarts.push(i + 1);
+        const spans = detect(text);
+        for (const f of scanText(text)) {
+            if (f.confidence !== 'high' || f.rule === 'entropy') continue;
+            const at = (lineStarts[f.line - 1] as number) + f.column - 1;
+            expect(spans.some((s) => s.start === at)).toBe(true);
+        }
+    });
+
+    it('the replacer sees a value the line-scoped scanner cannot: an assignment split across lines', () => {
+        const split = `password =\n${run(24)}`;
+        expect(detect(split).some((s) => s.rule === 'generic-assignment')).toBe(true);
+        expect(scanText(split).some((f) => f.rule === 'generic-assignment')).toBe(false);
     });
 });
