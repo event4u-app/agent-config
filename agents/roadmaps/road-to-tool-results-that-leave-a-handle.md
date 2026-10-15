@@ -89,7 +89,7 @@ until it is answered.
       `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`), so a legacy
       `{bytes}` line counts as envelope bytes with delivered bytes unknown.
       verify: `grep -c '^| D6 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
-- [ ] **1.2 Freeze a golden corpus before any reducer exists.** Twenty recorded
+- [~] **1.2 Freeze a golden corpus before any reducer exists.** *Deferred 2026-10-15: D6 selected no class, so there is no class to record twenty outputs for; it waits on the owner question in Execution status.* Twenty recorded
       outputs per selected class, each with its known failure lines and exit code,
       under `tests/fixtures/tool-output-corpus/`. Recall on this corpus is what
       every later phase is held to.
