@@ -1249,6 +1249,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_INSTALLED_TOOLS` | harness | Path override for the installed-tools manifest | `_lib/installed_tools.ts:46` |
 | `AGENT_CONFIG_LEGACY_ANCHOR` | maintainer | Opts a settings read back onto the legacy anchor | `_lib/agent_settings.ts:449` |
 | `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
+| `AGENT_CONFIG_NO_EGRESS_STAGE` | maintainer | Turns the egress stage off whatever `egress.placeholders.mode` says: no detection, no count record, no placeholder view. Every egress channel then publishes `uncovered`, never a stale `replaced` (`docs/contracts/egress-placeholders-v1.md` § Settings) | `hooks/egress_stage.ts:28` |
 | `AGENT_CONFIG_NO_EVENTS_LOG` | maintainer | Short-circuits council / team event-log appends to a no-op | `_lib/env_kill_switch.ts` names it; the readers are `ai_council/events_log.ts:109` and `ai_team/review_gate.ts:56`, both outside the two directories the unit covers |
 | `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
 | `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
