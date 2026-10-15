@@ -215,7 +215,7 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
     it('without O_NOFOLLOW no record is trusted, and a link is never followed with it', () => {
         put('plain.md', 'x\n');
         expect(readRecordOnce(path.join(root, 'plain.md'))).toBe('x\n');
-        expect(readRecordOnce(path.join(root, 'plain.md'), null)).toBeNull();
+        expect(readRecordOnce(path.join(root, 'plain.md'), false)).toBeNull();
         fs.symlinkSync(path.join(root, 'plain.md'), path.join(root, 'link.md'));
         expect(readRecordOnce(path.join(root, 'link.md'))).toBeNull();
     });

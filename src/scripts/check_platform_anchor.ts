@@ -197,9 +197,11 @@ export function readBypassRecords(root: string): BypassRecordInput[] {
  * through that same descriptor with a byte ceiling — so the object checked is
  * the object read, and a replacement between the two cannot slip in.
  */
-export function readRecordOnce(file: string, noFollow: number | null = fs.constants.O_NOFOLLOW ?? null): string | null {
+export function readRecordOnce(file: string, platformNoFollow: boolean = fs.constants.O_NOFOLLOW !== undefined): string | null {
     // Without O_NOFOLLOW the open would follow a link, so no record is trusted.
-    if (noFollow === null) {
+    // The flag itself is never a parameter: a caller can only say it is missing.
+    const noFollow = fs.constants.O_NOFOLLOW;
+    if (!platformNoFollow || noFollow === undefined) {
         return null;
     }
     let fd: number | null = null;

@@ -401,8 +401,11 @@ runs on, so a branch can rewrite one to look closed; the check reads them, it
 does not verify them against the forge, which needs the `administration`
 permission no workflow token carries. And it is what the rest of the anchor is
 — **local and voluntarily invoked** — so an open bypass reds the next run that
-someone chooses to make, not the forge. It makes a forgotten closing visible;
-it does not make a dishonest one impossible.
+someone chooses to make, not the forge. Whoever can write the checkout while
+the check runs — swap the record directory, rewrite a record in place — is
+outside what it defends; on a platform without `O_NOFOLLOW` it reads no record
+at all and fails. It makes a forgotten closing visible; it does not make a
+dishonest one impossible.
 
 ### The measurement this section was written from
 
