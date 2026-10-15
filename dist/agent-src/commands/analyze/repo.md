@@ -184,8 +184,12 @@ and rare, and a store is a maintenance surface for a rare path.
 
 The fetch ceiling is replaced by a **three-part ceiling** — an operation count,
 a total-bytes-read bound and a wall-clock bound, **whichever is hit first**, with
-the bound that fired recorded — plus a **best-effort pre-fetch size gate**, which
-is not a ceiling and does not bound the transfer. Before fetching, read the
+the bound that fired recorded. The three are checked **between** operations: they
+stop the next one, never one already in flight. Add to them a **best-effort
+pre-fetch size gate**, which is not a ceiling and does not bound the transfer —
+best-effort **by decision**: `--deep` is opt-in and rare, and a hard transfer
+limit would need a byte-counting wrapper around `git`, which this command does
+not carry. Before fetching, read the
 host's reported repository size (on GitHub,
 `gh api repos/<owner>/<repo> --jq .size`, in KiB) and do not fetch when it
 exceeds the gate. That figure is the whole repository at the moment of the
@@ -575,7 +579,8 @@ pins something; it just does not name it. Contract and field shapes:
 - No credentials in fetches. Public GitHub API is enough. For private mirrors,
   take a PAT via env var and never echo it.
 - Max 40 fetches without explicit extension; under `--deep` the three-part
-  ceiling of § 2b replaces it — the cost bound never disappears with the count.
+  ceiling of § 2b replaces it, checked between operations — the clone fetch
+  itself is bounded only by the best-effort size gate, by decision.
 - No auto-commits — the analysis is a draft until the user accepts.
 
 ## When **not** to use
