@@ -118,7 +118,7 @@ verdict). Every loop is capped, every run leaves a `run.json` the retro reads.
       numeric cap in the door's `limits:` block, no run-until-condition; no
       `docs/contracts/` loop contract (D10). Alternatives: keep the optimize
       cluster; one monolithic `/analyze`.
-      verify: `./scripts-run src/scripts/check_adr_frontmatter` exits 0 and one
+      verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0 — and one
       new file under `docs/decisions/` reads `status: accepted` and names all
       four doors.
 - [ ] **1.3 The context file.** `src/agent-src/contexts/execution/analysis-loop.md`,
@@ -135,7 +135,7 @@ verdict). Every loop is capped, every run leaves a `run.json` the retro reads.
       `pin`, `consolidates:` — the key `lint_consolidation_lineage` reads;
       sections Findings vs tree · Kills · Decisions · Steps with `verify:` · Loop
       log; source names only in an `*.annex.md`).
-      verify: `./scripts-run src/scripts/check_references` exits 0 and each of the
+      verify: `./scripts-run src/scripts/check_references` -> 0 — and each of the
       four door files links the context file.
 - [ ] **1.4 Pre-register before any code.** In the ADR of 1.2: the metric per
       door, always a count of decidable items — source door: rows anchored on
@@ -147,7 +147,7 @@ verdict). Every loop is capped, every run leaves a `run.json` the retro reads.
       least ten frozen inputs (this round's `agents/tmp.old/inbox-2026-10-s/`
       among them), and the falsification rule: a default whose stage moves the
       metric by zero on more than half of the first ten runs is lowered.
-      verify: `grep -c 'falsification' docs/decisions/ADR-*analysis-family*.md`
+      verify: `grep -c 'falsification' docs/decisions/ADR-*analysis-family*.md` -> /[1-9]/
       ≥ 1 and the ADR names a metric for each of the four doors.
 
 **Exit:** ADR accepted, council record present, context file linked. **Rollback:**
@@ -174,7 +174,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       `corrected-from-reproduction`: with `agents/roadmaps/` in the module the
       walk returns the module *as the project*, so the outer walk is needed in
       both module cases, not only the unmarked one.
-      verify: `npx vitest run tests/scripts/analysis_target.test.ts` covers root,
+      verify: `npx vitest run tests/scripts/analysis_target.test.ts` -> 0 — covers root,
       subdir, module with and without its own `agents/roadmaps/`, `--scope`
       outside the root, submodule, symlink escape, detached HEAD, no git and no
       AC install — seen red with the outer walk removed.
@@ -187,7 +187,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       + base SHA); a token budget whose cap ends in `handed-back`;
       `schema_version` on every artifact, unknown major refused. State under the
       gitignored `agents/runtime/analysis/<round-id>/` (no continuity row).
-      verify: `npx vitest run tests/scripts/analysis_run.test.ts` resumes a run
+      verify: `npx vitest run tests/scripts/analysis_run.test.ts` -> 0 — resumes a run
       killed in `emitted` without re-emitting, reports a moved head on resume,
       refuses an illegal transition, and stops at the budget cap in
       `handed-back`.
@@ -204,7 +204,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       changed conclusion is `no-external-signal` and does not count. All three
       lenses always run; loops 4–5 (`--loops`, cap 5) run only while the previous
       loop added a top-tier item; the summary prints the real count.
-      verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` rejects a
+      verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0 — rejects a
       loop without top-tier evidence, never stops before the three lenses ran,
       and stops loop 4 after a plateaued loop 3.
 - [ ] **2.4 The analyst class (directive c).** Reads the scope (the web once
@@ -356,7 +356,7 @@ today's analysis-only behaviour.
       local clone (pinned SHA, never executed) — each yielding one `SourceRef`
       (identity, kind, license, pin, digest, tier). Unsupported kinds fail with a
       diagnostic naming blocker `source-fetch-authorization`.
-      verify: `npx vitest run tests/scripts/source_adapters.test.ts` pins each
+      verify: `npx vitest run tests/scripts/source_adapters.test.ts` -> 0 — pins each
       local kind, refuses an archive with a `../` entry, and fails a URL argument
       with the blocker's name.
 - [~] **4.2b Network sources and the research step.** Repositories at depth 1 to
@@ -447,7 +447,7 @@ file; `council:pr` is unchanged.
       the analysis-workbench and meta READMEs, `pack.yaml`, the evals, both
       limits tests, and every skill or rule naming `analyze-repo` or
       `optimize-deep`.
-      verify: `./scripts-run src/scripts/check_references` exits 0, and
+      verify: `./scripts-run src/scripts/check_references` -> 0 — and
       `grep -rn 'optimize:deep' src docs | grep -v replaces` returns only alias
       lines.
 - [ ] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
@@ -462,7 +462,7 @@ file; `council:pr` is unchanged.
       vs cancelled steps of the run's archived roadmaps) per run, source and
       analyst. Offering `analyze:and-optimize --scope=<area>` at three
       recurrences on one area stays off by default.
-      verify: `grep -c 'analysis-run' agents/roadmaps/road-to-a-retro-the-merge-runs.md`
+      verify: `grep -c 'analysis-run' agents/roadmaps/road-to-a-retro-the-merge-runs.md` -> /[1-9]/
       ≥ 1 and the added step names `run.json`.
 - [ ] **6.5 Observation slots.** Offer the first two source-door runs on this
       repository as the observation runs of `reference-loop-upgrade-value`, with

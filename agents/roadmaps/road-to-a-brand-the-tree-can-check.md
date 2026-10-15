@@ -224,17 +224,17 @@ irreversible-external-action row of `non-destructive-by-default`).
       routing evals keep the dotted phrasing as a user utterance and gain the
       plain one; generated catalogues regenerate; ADR-061 gets no edit. The
       "Recorded, not resolved" section is deleted. 0.1 goes green.
-      verify: `rg -n '\.tokens\.json' src/skills src/domains docs/contracts --glob '!**/evals/**' | rg -v 'NEVER|nothing reads|near-miss'` -> no output
+      verify: `rg -n '\.tokens\.json' src/skills src/domains docs/contracts --glob '!**/evals/**' | rg -v 'NEVER|nothing reads|near-miss'` -> 1 (no output)
 - [ ] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
       instead of declaring its own.
       verify: `rg -c 'export const BRAND_TOKEN_PATHS' src` -> 1 file
 - [ ] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
       § Iron Law 2; the rule gains `enforced_by: instruction-only`, and
       "Validation gate" reads "checklist" until Phase 5 names its checker.
-      verify: `rg -n 'brand-consistency' src/skills src/domains docs/contracts/brand-token-consumption.md --glob '!**/evals/**' --glob '!**/README.md'` -> no match
+      verify: `rg -n 'brand-consistency' src/skills src/domains docs/contracts/brand-token-consumption.md --glob '!**/evals/**' --glob '!**/README.md'` -> 1 (no match)
 - [ ] **1.5 `/brand:voice` says what it makes today.** "Three attributes, tone
       matrix, consistency review"; the lexicon line returns with 4.3.
-      verify: `rg -n 'do/don.t lexicon' src/domains/brand` -> no match
+      verify: `rg -n 'do/don.t lexicon' src/domains/brand` -> 1 (no match)
 
 ## Phase 2 — `brand:status` tells the state
 
@@ -325,7 +325,7 @@ irreversible-external-action row of `non-destructive-by-default`).
 - [ ] **5.0 The parked spike, as written.** Its pre-registered Phase 0 decides
       only the user-schema half (5.5); the brand and ghostwriter halves stand on
       D5 (a declared check with no runner).
-      verify: `test -f agents/evidence/analysis/voice-lexicon-spike.md` -> exit 0
+      verify: `test -f agents/evidence/analysis/voice-lexicon-spike.md` -> 0
 - [ ] **5.1 `check_voice_lexicon.ts`.** Escaped literal matcher (word or
       substring, case-insensitive) on the detector's exemption and location core
       (`stripExempt`, `scanHiddenUnicode`, line/column, `MAX_SCAN_CHARS`).
@@ -360,7 +360,7 @@ irreversible-external-action row of `non-destructive-by-default`).
 - [ ] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
       `later/road-to-voice-negative-lexicon.md` moves to `archive/` with a
       pointer to this file.
-      verify: `test -f agents/roadmaps/archive/road-to-voice-negative-lexicon.md` -> exit 0
+      verify: `test -f agents/roadmaps/archive/road-to-voice-negative-lexicon.md` -> 0
 
 ## Phase 6 — Readers, producers, and a carrier only if measured
 
@@ -378,7 +378,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       prompts routed to the 6.1 readers with the slot present; read rate from the
       audit log's Read events on the slot path. At or above the bar → no carrier,
       honest null recorded.
-      verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> exit 0
+      verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> 0
 - [ ] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
       concern `brand-voice-card` registered in `src/config/hook-token-budget.json`
       at the measured card size (three attributes, `avoid` terms, one sample);

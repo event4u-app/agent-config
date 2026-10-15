@@ -241,7 +241,8 @@ the Acceptance Criteria held.
       `cherry-pick` it is unrelated. Long `--no-verify` stays blocked on every
       subcommand (it bypasses `pre-push` and `pre-merge-commit` too).
       *corrected-from-reproduction*
-      verify: `git commit -n`, `git commit -nm x`, `git am -n` and every
+      verify: `npx vitest run tests/scripts/hooks/block_no_verify.test.ts` -> 0 —
+      `git commit -n`, `git commit -nm x`, `git am -n` and every
       `--no-verify` form stay blocked; `git grep -n`, `git grep -nE`,
       `git log -n 5`, `git branch -n`, `git push -n` pass; neutralising the fix
       turns the blocked set green in `tests/scripts/hooks/block_no_verify.test.ts`.
