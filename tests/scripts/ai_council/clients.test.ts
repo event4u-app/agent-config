@@ -2182,8 +2182,6 @@ describe('clients — served-model attribution', () => {
     });
 });
 
-// ── Phase 1 of road-to-unknowns-that-say-so ────────────────────────────────
-//
 // A CLI failure that is NOT a no-double-charge class must never become one.
 // `auth_rejected` and `cli_unsupported` are both fallback-eligible, so a
 // misclassification does not merely mislabel a row — it replays a prompt the

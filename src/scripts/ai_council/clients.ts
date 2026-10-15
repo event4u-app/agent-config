@@ -1218,14 +1218,7 @@ export abstract class CliClient extends ExternalAIClient {
         'unauthorized',
         'auth failed',
         'auth_error',
-        // NOT a bare `login`. It matched any sentence containing the word —
-        // "timed out waiting for login" among them — and `auth_rejected` is
-        // fallback-eligible, so a timeout became a replay of a prompt the CLI
-        // had already generated. These three are the phrasings the bare token
-        // was written for, each one a real provider-CLI line.
-        'not logged in',
-        'please log in',
-        'login required',
+        'not logged in', 'please log in', 'login required',
         'session expired',
         'invalid credentials',
     ];
@@ -1622,15 +1615,9 @@ export abstract class CliClient extends ExternalAIClient {
         return response;
     }
 
+    /** Fallback-INELIGIBLE classes first: a bare `login` once read a timeout as auth. */
     static _classify_stderr(stderr: string, returncode: number): string {
         const haystack = stderr.toLowerCase();
-        // ORDER IS THE CONTRACT, not a detail. A stderr line can match several
-        // lists at once, and the classes are not equal in consequence: a
-        // `timeout` is never fallback-eligible, while `auth_expired` and the
-        // quota classes can be. So the ineligible class is tested FIRST and an
-        // ambiguity resolves to it — the cost of a mislabelled timeout is a
-        // lost seat, the cost of a mislabelled auth failure is the same prompt
-        // paid for twice.
         if (this._TIMEOUT_PATTERNS.some((p) => haystack.includes(p))) {
             return 'timeout';
         }
