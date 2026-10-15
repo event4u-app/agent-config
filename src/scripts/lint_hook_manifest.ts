@@ -908,6 +908,13 @@ function _check_execution_view_grants(manifest: YamlObject, errors: string[]): v
           `the execution view is for concerns that decide whether a call runs`,
       );
     }
+    if (granted && spec["script"] !== EXECUTION_VIEW_GRANTS.get(name)) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — the grant is bound to ` +
+          `${String(EXECUTION_VIEW_GRANTS.get(name))}, but the manifest runs ${JSON.stringify(spec["script"])}; ` +
+          `the dispatcher will serve it the placeholder view`,
+      );
+    }
   }
 }
 

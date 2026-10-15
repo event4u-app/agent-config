@@ -75,9 +75,23 @@ describe("mode resolution", () => {
     for (const m of ["off", "observe", "protect", "strict"] as const) {
       expect(resolveEgressMode({ egress: { placeholders: { mode: m } } })).toBe(m);
     }
-    for (const bad of [undefined, {}, { egress: { placeholders: { mode: "PROTECT" } } }, { egress: "on" }]) {
-      expect(resolveEgressMode(bad)).toBe("off");
+    for (const absent of [undefined, {}, { egress: "on" }, { egress: { placeholders: { mode: false } } }]) {
+      expect(resolveEgressMode(absent)).toBe("off");
     }
+    // Present but not a mode: someone asked for the stage, so the safer reading.
+    for (const typo of ["PROTECT", "protec", true, 1]) {
+      expect(resolveEgressMode({ egress: { placeholders: { mode: typo } } })).toBe("protect");
+    }
+  });
+
+  it("reads every spelling of the key, and a broken naming layer is protect, not off", () => {
+    const file = path.join(tmp, ".agent-settings.yml");
+    fs.writeFileSync(file, "{egress: {placeholders: {mode: observe}}}\n");
+    expect(readEgressMode(tmp)).toBe("observe");
+    fs.writeFileSync(file, "egress:\n  placeholders:\n    mode: off\n");
+    expect(readEgressMode(tmp)).toBe("off");
+    fs.writeFileSync(file, "egress:\n  placeholders:\n    mode: [observe\n");
+    expect(readEgressMode(tmp)).toBe("protect");
   });
 
   it("reads the project layer, and a comment naming egress is not a key", () => {
@@ -135,8 +149,56 @@ describe("protect builds the placeholder view; the received envelope is untouche
     const r = runEgressStage(env, fixed("protect"));
     const keep = new Set(["input"] as const);
     const plan = planPayloadShapes(env, [keep], r.placeholder);
-    expect(holds(plan.shapeFor(keep, egressViewFor("chat-history")))).toBe(false);
-    expect(holds(plan.shapeFor(keep, egressViewFor("block-no-verify")))).toBe(true);
+    const recorder = { name: "chat-history", script: "src/scripts/chat_history.ts" };
+    const guard = { name: "block-no-verify", script: "src/scripts/hooks/block_no_verify.ts" };
+    expect(holds(plan.shapeFor(keep, egressViewFor(recorder)))).toBe(false);
+    expect(holds(plan.shapeFor(keep, egressViewFor(guard)))).toBe(true);
+  });
+
+  it("counts and replaces every value, in every field, not only the first", () => {
+    const second = ["ghp", ALNUM.slice(1, 36) + ALNUM.slice(0, 1)].join("_");
+    const env = envelope({
+      tool_name: "Bash",
+      tool_input: { command: `a ${PLANTED} b ${second}` },
+      tool_response: `out ${PLANTED}`,
+    });
+    const r = runEgressStage(env, fixed("protect"));
+    expect(r.counts).toStrictEqual([
+      { field: "input", class: "credential", type: "TOKEN", count: 2 },
+      { field: "result", class: "credential", type: "TOKEN", count: 1 },
+    ]);
+    const text = JSON.stringify(r.placeholder);
+    expect(holds(r.placeholder) || text.includes(second)).toBe(false);
+    expect(parseTokens(text).length).toBe(3);
+  });
+
+  it("a token minted in one dispatch is not the token of the next", () => {
+    const first = JSON.stringify(buildPlaceholderEnvelope(toolCall()));
+    const second = JSON.stringify(buildPlaceholderEnvelope(toolCall()));
+    expect(parseTokens(first)[0]?.fingerprint).not.toBe(parseTokens(second)[0]?.fingerprint);
+  });
+
+  it("an unexpected failure withholds every body and is recorded, never served raw", () => {
+    const hostile = new Proxy({} as JsonObject, {
+      ownKeys: () => {
+        throw new Error("boom");
+      },
+    });
+    const env = envelope({ tool_name: "Bash", tool_input: hostile, tool_response: `out ${PLANTED}` });
+    const r = runEgressStage(env, fixed("protect"));
+    const payload = r.placeholder?.["payload"] as JsonObject;
+    expect((payload["tool_response"] as JsonObject)[WITHHELD_MARKER]).toBe(true);
+    expect((payload["tool_input"] as JsonObject)[WITHHELD_MARKER]).toBe(true);
+    expect(r.refused.map((x) => x.rule)).toStrictEqual(["stage-error", "stage-error"]);
+    expect(fs.readFileSync(path.join(tmp, OBSERVATION_FILE), "utf8").includes("stage-error")).toBe(true);
+  });
+
+  it("a mode reader that throws resolves to protect, not off", () => {
+    const r = runEgressStage(toolCall(), () => {
+      throw new Error("unreadable");
+    });
+    expect(r.mode).toBe("protect");
+    expect(holds(r.placeholder)).toBe(false);
   });
 
   it("withholds a field whose secret has no provable extent, never partly replaced", () => {
@@ -150,10 +212,14 @@ describe("protect builds the placeholder view; the received envelope is untouche
 });
 
 describe("the execution view is granted, never requested", () => {
-  it("only names on the closed list get the execution view", () => {
-    for (const name of EXECUTION_VIEW_GRANTS) expect(egressViewFor(name)).toBe("execution");
+  it("only a listed name running its listed script gets the execution view", () => {
+    for (const [name, script] of EXECUTION_VIEW_GRANTS) {
+      expect(egressViewFor({ name, script })).toBe("execution");
+      // The same name bound to another script — a manifest borrowing a guard's name.
+      expect(egressViewFor({ name, script: REPORT_VIEW })).toBe("placeholder");
+    }
     for (const name of ["chat-history", "journal-record", "tool-result-bytes", "rtk-wrap"]) {
-      expect(egressViewFor(name)).toBe("placeholder");
+      expect(egressViewFor({ name, script: "src/scripts/chat_history.ts" })).toBe("placeholder");
     }
   });
 });
@@ -204,6 +270,7 @@ describe("end to end through the dispatcher", () => {
       "concerns:",
       ...concern("block-no-verify", REPORT_VIEW, true),
       ...concern("recorder", REPORT_VIEW, false),
+      ...concern("rewriter", "tests/hooks/fixtures/concern_names_rewrite_field.ts", false),
       "  chat-history:",
       "    script: src/scripts/chat_history.ts",
       "    args: [hook-dispatch]",
@@ -212,14 +279,14 @@ describe("end to end through the dispatcher", () => {
       "    effect: telemetry",
       "platforms:",
       "  claude:",
-      "    pre_tool_use: [block-no-verify, recorder]",
+      "    pre_tool_use: [block-no-verify, recorder, rewriter]",
       "    user_prompt_submit: [chat-history, block-no-verify, recorder]",
       "",
     ];
     fs.writeFileSync(target, lines.join("\n"), "utf8");
   }
 
-  function dispatch(ws: string, mode: EgressMode, event: string, native: string, payload: JsonObject): void {
+  function dispatch(ws: string, mode: EgressMode, event: string, native: string, payload: JsonObject): string {
     fs.writeFileSync(
       path.join(ws, ".agent-settings.yml"),
       `egress:\n  placeholders:\n    mode: ${mode}\nchat_history:\n  enabled: true\n  frequency: per_turn\n`,
@@ -235,6 +302,7 @@ describe("end to end through the dispatcher", () => {
       { cwd: ws, input: JSON.stringify(payload), encoding: "utf8", env },
     );
     expect(r.status).toBe(0);
+    return r.stdout;
   }
 
   function saw(ws: string, sid: string, concern: string): { sawPlanted: boolean; sawToken: boolean } {
@@ -243,14 +311,17 @@ describe("end to end through the dispatcher", () => {
     return JSON.parse(entry.reason) as { sawPlanted: boolean; sawToken: boolean };
   }
 
-  it("protect: the guard sees the value, the recorder and chat history see only a token", () => {
+  it("protect: the recorder, chat history and a script borrowing a guard's name see only a token", () => {
     const ws = path.join(tmp, "ws");
     fs.mkdirSync(ws, { recursive: true });
     dispatch(ws, "protect", "user_prompt_submit", "UserPromptSubmit", {
       session_id: "egress-e2e",
       prompt: `deploy with ${PLANTED} please`,
     });
-    expect(saw(ws, "egress-e2e", "block-no-verify")).toStrictEqual({ sawPlanted: true, sawToken: false });
+    // The manifest binds `block-no-verify` to the reporting fixture, not to the
+    // guard's own script, so the grant does not apply. The real pair is covered
+    // by the planner test above; no shipped guard reports what it was served.
+    expect(saw(ws, "egress-e2e", "block-no-verify")).toStrictEqual({ sawPlanted: false, sawToken: true });
     expect(saw(ws, "egress-e2e", "recorder")).toStrictEqual({ sawPlanted: false, sawToken: true });
     const history = fs.readFileSync(path.join(ws, "agents", "runtime", ".agent-chat-history"), "utf8");
     expect(history.includes(PLANTED)).toBe(false);
@@ -269,5 +340,16 @@ describe("end to end through the dispatcher", () => {
     const record = fs.readFileSync(path.join(ws, OBSERVATION_FILE), "utf8");
     expect(record.includes(PLANTED)).toBe(false);
     expect(record.includes('"type":"TOKEN"')).toBe(true);
+  });
+
+  it("a rewrite field in a concern reply never reaches the host (ADR-285)", () => {
+    const ws = path.join(tmp, "ws-rewrite");
+    fs.mkdirSync(ws, { recursive: true });
+    const stdout = dispatch(ws, "protect", "pre_tool_use", "PreToolUse", {
+      session_id: "egress-rewrite",
+      tool_name: "Bash",
+      tool_input: { command: "ls" },
+    });
+    expect(stdout.includes("updatedInput")).toBe(false);
   });
 });

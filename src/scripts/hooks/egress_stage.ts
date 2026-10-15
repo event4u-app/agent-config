@@ -14,6 +14,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import { parse as parseYaml } from "yaml";
+
 import { _resolve_cascade_paths, load_agent_settings } from "../_lib/agent_settings.js";
 import { detect, EGRESS_RULES, type EgressClass } from "../_lib/egress_rules.js";
 import { EgressRefusedError, replaceValues, TokenScope } from "../_lib/egress_token.js";
@@ -28,27 +30,31 @@ export type EgressMode = (typeof EGRESS_MODES)[number];
 export const EGRESS_STAGE_KILL_SWITCH = "AGENT_CONFIG_NO_EGRESS_STAGE";
 
 /**
- * The concerns that receive the execution view: every concern that decides
- * whether a call may run. A guard served the placeholder view would match a
- * token instead of the value it exists to stop, so `lint_hook_manifest` fails
- * when a blocking concern is missing here and when a name here is not a
- * blocking concern. Owned by the dispatcher; a concern cannot add itself.
+ * The concerns that receive the execution view — every concern that decides
+ * whether a call may run — each bound to the one script it may run. A guard
+ * served the placeholder view would match a token instead of the value it
+ * exists to stop, so `lint_hook_manifest` fails when a blocking concern is
+ * missing here, when a name here is not a blocking concern, and when the
+ * manifest binds a listed name to another script. The binding to the script is
+ * what stops a manifest entry from borrowing a guard's name to read raw values.
  */
-export const EXECUTION_VIEW_GRANTS: ReadonlySet<string> = new Set([
-  "block-config-weakening",
-  "block-kernel-rule-writes",
-  "block-no-verify",
-  "block-plumbing-writes",
-  "block-speaking-inbox-dir",
-  "evidence-independence",
-  "one-question-per-ask",
-  "turn-end-gate",
+export const EXECUTION_VIEW_GRANTS: ReadonlyMap<string, string> = new Map([
+  ["block-config-weakening", "src/scripts/hooks/block_config_weakening.ts"],
+  ["block-kernel-rule-writes", "src/scripts/hooks/block_kernel_rule_writes.ts"],
+  ["block-no-verify", "src/scripts/hooks/block_no_verify.ts"],
+  ["block-plumbing-writes", "src/scripts/hooks/block_plumbing_writes.ts"],
+  ["block-speaking-inbox-dir", "src/scripts/hooks/block_speaking_inbox_dir.ts"],
+  ["evidence-independence", "src/scripts/hooks/evidence_independence.ts"],
+  ["one-question-per-ask", "src/scripts/hooks/one_question_per_ask_hook.ts"],
+  ["turn-end-gate", "src/scripts/hooks/turn_end_gate_hook.ts"],
 ]);
 
 export type EnvelopeView = "execution" | "placeholder";
 
-export function egressViewFor(concern: string): EnvelopeView {
-  return EXECUTION_VIEW_GRANTS.has(concern) ? "execution" : "placeholder";
+/** Execution only for a listed name running its listed script; everything else gets the placeholder view. */
+export function egressViewFor(concern: JsonObject): EnvelopeView {
+  const script = EXECUTION_VIEW_GRANTS.get(String(concern["name"]));
+  return script !== undefined && concern["script"] === script ? "execution" : "placeholder";
 }
 
 export type EgressField = "prompt" | "input" | "result";
@@ -89,41 +95,71 @@ function isObject(v: unknown): v is JsonObject {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-/** Unknown, missing or misspelled resolves to `off`: the shipped behaviour. */
+/**
+ * An absent mode is `off`, the shipped default. A mode that is present but not
+ * one of the four is `protect`: someone asked for the stage, and guessing the
+ * least protective reading of a typo would serve raw values in their name.
+ */
 export function resolveEgressMode(settings: unknown): EgressMode {
   if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "off";
   const egress = isObject(settings) ? settings["egress"] : undefined;
   const placeholders = isObject(egress) ? egress["placeholders"] : undefined;
   const mode = isObject(placeholders) ? placeholders["mode"] : undefined;
-  return (EGRESS_MODES as readonly unknown[]).includes(mode) ? (mode as EgressMode) : "off";
+  // YAML 1.1 reads a bare `off` as false, which is the user writing `off`.
+  if (mode === undefined || mode === null || mode === false) return "off";
+  return (EGRESS_MODES as readonly unknown[]).includes(mode) ? (mode as EgressMode) : "protect";
 }
 
-const EGRESS_KEY_LINE = /^["']?egress["']?\s*:/m;
+/** Any spelling of the key — block, flow or quoted — contains the word. */
+const EGRESS_WORD = /\begress\b/;
 
 /**
  * Every project settings layer the cascade would read; the user-global layer
- * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer opens a
- * top-level `egress:` key the shipped default holds, and the full cascade —
- * whose template parse measured about 25 ms cold — is skipped on every call.
+ * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer contains
+ * the word at all the shipped default holds, and the full cascade — whose
+ * template parse measured about 25 ms cold — is skipped. A layer that names it
+ * anywhere, even in a comment, pays the full parse. `broken` means a naming
+ * layer does not parse; the cascade would read it as empty and fall to `off`.
  */
-function anyLayerNamesEgress(workspaceRoot: string): boolean {
+function egressLayers(workspaceRoot: string): "none" | "named" | "broken" {
+  let named = false;
   for (const p of _resolve_cascade_paths(workspaceRoot, null)) {
+    let text: string;
     try {
-      if (EGRESS_KEY_LINE.test(fs.readFileSync(p, "utf8"))) return true;
+      text = fs.readFileSync(p, "utf8");
     } catch {
-      // absent layer
+      continue; // absent layer
+    }
+    if (!EGRESS_WORD.test(text)) continue;
+    named = true;
+    try {
+      parseYaml(text, { version: "1.1" });
+    } catch {
+      return "broken";
     }
   }
-  return false;
+  return named ? "named" : "none";
 }
 
+/**
+ * A layer that names `egress` but cannot be read or parsed resolves to
+ * `protect`, never `off`: a broken file must not switch configured protection
+ * off in silence. The count record carries the mode, so the fallback is visible.
+ */
 export function readEgressMode(workspaceRoot: string): EgressMode {
   if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "off";
+  let layers: "none" | "named" | "broken";
   try {
-    if (!anyLayerNamesEgress(workspaceRoot)) return "off";
+    layers = egressLayers(workspaceRoot);
+  } catch {
+    return "protect";
+  }
+  if (layers === "none") return "off";
+  if (layers === "broken") return "protect";
+  try {
     return resolveEgressMode(load_agent_settings({ cwd: workspaceRoot }));
   } catch {
-    return "off";
+    return "protect";
   }
 }
 
@@ -202,8 +238,9 @@ export function buildPlaceholderEnvelope(envelope: JsonObject, scope: TokenScope
       try {
         next[k] = replaceDeep(payload[k] as JsonValue, scope);
       } catch (exc) {
-        const rule = exc instanceof EgressRefusedError ? exc.rule : "unknown";
-        next[k] = { [WITHHELD_MARKER]: true, rule };
+        // Anything but a refusal is a defect, and withholds every body upstream.
+        if (!(exc instanceof EgressRefusedError)) throw exc;
+        next[k] = { [WITHHELD_MARKER]: true, rule: exc.rule };
       }
     }
   }
@@ -276,7 +313,12 @@ export function runEgressStage(
   const payload = payloadOf(envelope);
   if (payload === null || !FIELDS.some((f) => presentKeys(payload, f).length > 0)) return none;
   const workspaceRoot = String(envelope["workspace_root"] || process.cwd());
-  const mode = readMode(workspaceRoot);
+  let mode: EgressMode;
+  try {
+    mode = readMode(workspaceRoot);
+  } catch {
+    mode = "protect";
+  }
   if (mode === "off") return none;
   let result: EgressStageResult;
   try {
@@ -284,12 +326,17 @@ export function runEgressStage(
     const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope);
     result = { mode, placeholder, ...counted };
   } catch {
-    if (mode === "observe") return { ...none, mode };
-    const withheld: JsonObject = { ...payload };
-    for (const f of FIELDS) {
-      for (const k of presentKeys(payload, f)) withheld[k] = { [WITHHELD_MARKER]: true, rule: "unknown" };
+    const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);
+    const refused = scanned.map((field) => ({ field, rule: "stage-error" }));
+    if (mode === "observe") {
+      result = { ...none, mode, scanned, refused };
+    } else {
+      const withheld: JsonObject = { ...payload };
+      for (const f of scanned) {
+        for (const k of presentKeys(payload, f)) withheld[k] = { [WITHHELD_MARKER]: true, rule: "stage-error" };
+      }
+      result = { ...none, mode, scanned, refused, placeholder: { ...envelope, payload: withheld } };
     }
-    return { ...none, mode, placeholder: { ...envelope, payload: withheld } };
   }
   recordObservation(workspaceRoot, observationLine(envelope, result));
   return result;

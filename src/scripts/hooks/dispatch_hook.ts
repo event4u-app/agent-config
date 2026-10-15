@@ -1297,7 +1297,7 @@ export function main(argv?: string[]): number {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
-    const concern_envelope = shapes.shapeFor(keep_classes, egressViewFor(String(concern["name"])));
+    const concern_envelope = shapes.shapeFor(keep_classes, egressViewFor(concern));
     const stubs_served = shapes.stubsFor(keep_classes);
     // What was actually SERVED, not what was declared. Recording the
     // declaration made the record wrong in both directions on a body-less

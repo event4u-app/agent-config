@@ -259,7 +259,7 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     );
 
   /** Run the linter and return its exit code with everything it wrote. */
-  function run(body: string, name = "session-canary"): { code: number; text: string } {
+  function run(body: string, name = "session-canary", script?: string): { code: number; text: string } {
     const chunks: string[] = [];
     const realErr = process.stderr.write.bind(process.stderr);
     const realOut = process.stdout.write.bind(process.stdout);
@@ -270,7 +270,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     process.stderr.write = sink as typeof process.stderr.write;
     process.stdout.write = sink as typeof process.stdout.write;
     try {
-      const manifest = withConcern(body).replaceAll("session-canary", name);
+      let manifest = withConcern(body).replaceAll("session-canary", name);
+      if (script !== undefined) manifest = manifest.replace("src/scripts/session_canary_hook.ts", script);
       return { code: lint(fixtureManifest(manifest), false), text: chunks.join("") };
     } finally {
       process.stderr.write = realErr;
@@ -310,9 +311,9 @@ describe("effect: — the census's field (Phase 2.2)", () => {
   });
 
   it("accepts a blocking concern declared as permission", () => {
-    // A blocking concern must also hold an execution-view grant, so the fixture
-    // takes a granted name; the script is irrelevant to the effect check.
-    const r = run("    severity: blocking\n    effect: permission\n", "block-no-verify");
+    // A blocking concern must also hold an execution-view grant, which binds a
+    // name to its script, so the fixture takes a granted pair.
+    const r = run("    severity: blocking\n    effect: permission\n", "block-no-verify", "src/scripts/hooks/block_no_verify.ts");
     expect(r.code).toBe(0);
   });
 
@@ -390,6 +391,16 @@ describe("rewrite-concern-refused — no concern may produce a rewrite (ADR-285)
     const r = run(withConcern("    payload_view: execution\n"));
     expect(r.code).toBe(1);
     expect(r.text).toMatch(/concerns\.session-canary: execution-view-not-granted/);
+  });
+
+  it("execution-view-not-granted: a granted name bound to another script is refused", () => {
+    const borrowed = VALID.replace(
+      "    fail_closed: false\n    effect: context\n",
+      "    fail_closed: false\n    severity: blocking\n    effect: permission\n",
+    ).replaceAll("session-canary", "block-no-verify");
+    const r = run(borrowed);
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.block-no-verify: execution-view-not-granted — the grant is bound to/);
   });
 
   it("execution-view-not-granted: a blocking concern missing from the closed list is refused", () => {

@@ -200,17 +200,27 @@ of one envelope through the payload-shape planner:
 
 - the **execution view** — the envelope as the host sent it. It goes only to
   the concerns on `EXECUTION_VIEW_GRANTS`, a closed list the dispatcher owns:
-  every concern that decides whether a call may run. A concern cannot request
-  it; `lint_hook_manifest` refuses a `payload_view: execution` declaration off
-  the list, a blocking concern missing from it, and a listed concern that is not
-  blocking. Until a session table exists there are no tokens to resolve, so the
+  every concern that decides whether a call may run, each bound to the one
+  script it runs. A manifest entry that borrows a listed name for another script
+  gets the placeholder view. A concern cannot request the grant;
+  `lint_hook_manifest` refuses a `payload_view: execution` declaration off the
+  list, a blocking concern missing from it, a listed concern that is not
+  blocking, and a listed name bound to another script. Until a session table exists there are no tokens to resolve, so the
   execution view is the received envelope unchanged.
 - the **placeholder view** — every detected value replaced by its token. It goes
   to every other concern, so a local store written by a recording concern
   (chat history, journals, ledgers) inherits tokens without a scrubber of its
   own. A key whose secret has no provable extent is withheld whole (an object
   carrying `_agent_config_egress_withheld` and the rule id), never partly
-  replaced; an unexpected failure of the stage withholds every body.
+  replaced; any other failure of the stage withholds every body and is
+  recorded as a `stage-error` refusal.
+
+**A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
+from a concern reply (`decision`, `reason`, `additional_context`, `context` and
+the permission verdict) and builds the host emission from those alone, so a
+rewrite field in a reply reaches no host; a test drives a concern that returns
+one through the dispatcher and asserts the emission carries none. The lint rule
+`rewrite-concern-refused` is the authoring-time half and reads source text only.
 
 The token scope is one dispatch: a token in a local store cannot be resolved
 later, which is the intended state until the `identifier-table-at-rest` decision
@@ -228,7 +238,11 @@ it is. Each is a residue of the view, not a covered surface.
 Replacement paths are switched by `egress.placeholders.mode`. The shipped
 default is `off`; whether any class is replaced by default for consumers is an
 owner decision (`default-mode-for-consumers`). The key is read from the project
-layers of the settings cascade only.
+layers of the settings cascade only; a layer that does not contain the word
+`egress` skips the full cascade read. Resolution fails toward protection: an
+absent mode (or a bare YAML `off`) is `off`, a present value that is not one of
+the four is `protect`, and a layer that names `egress` but does not parse, or a
+read that fails, is `protect` — never a silent `off`.
 
 | Mode | Detects and counts | Placeholder view to concerns | Rewrite sent to the host |
 |---|---|---|---|
