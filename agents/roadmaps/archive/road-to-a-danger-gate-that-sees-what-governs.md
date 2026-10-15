@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: archived
 execution:
   mode: phase-checkpoints
 relates:
@@ -283,9 +283,11 @@ the tree's copy again, which is D-2.*
 ## Phase 3 — A clearance names the head it cleared, and a hand-off is one block
 
 > **Status, 2026-10-15** — Phases 1 and 2 and step 5.2 shipped in one pull
-> request; Phases 3, 4 and step 5.1 remain open. Phase 4 edits
-> `check_platform_anchor`, which the ratification gate watches, so it needs its
-> own ratification record; 5.1 tallies the clearance records Phase 3 creates.
+> request; Phases 3, 4 and step 5.1 shipped in a second, branch
+> `drain/danger-gate-governs-20261015`. Phase 4 edits `check_platform_anchor`,
+> which the ratification gate watches; its record is
+> `agents/evidence/ratifications/drain-danger-gate-governs-20261015.md`, after a
+> ten-round council review that ended confirmed-non-expanding from both seats.
 
 - [x] **3.1 One writer and one reader for a clearance, read from the council's
       own session record.** `src/scripts/merge_clearance.ts` writes
@@ -488,14 +490,27 @@ notes; nothing reads them.*
       a documentation-only change as `routine`.
 - [x] AC-2 — A pull request that edits the classifier is classed by the base
       revision's copy.
-- [ ] AC-3 — No `needs-council` pull request merges without a clearance record
+- [x] AC-3 — No `needs-council` pull request merges without a clearance record
       for the head that merges, and no gated-surface pull request merges on a
       clearance at all.
-- [ ] AC-4 — Every hand-off of a drain reaches the owner as one block at the
+      Evidence: § 9 runs `merge_clearance --check <N> --head <manifest-head>`
+      before `gh pr merge` (pinned in `pr_merge_danger_gate_command.test.ts`);
+      the check's three attack fixtures in `merge_clearance.test.ts`; the
+      gated surface is `needs-owner` and the writer refuses that verdict.
+- [x] AC-4 — Every hand-off of a drain reaches the owner as one block at the
       end of the run, and no `routine` pull request gained a review step.
-- [ ] AC-5 — A committed bypass record carries the owner's evidence fields and
+      Evidence: § 9 "Held for you" and the unchanged `routine` row, both
+      pinned in `pr_merge_danger_gate_command.test.ts`.
+- [x] AC-5 — A committed bypass record carries the owner's evidence fields and
       a closing date, and an overdue one reds `check_platform_anchor`.
-- [ ] AC-6 — The owner's hand-offs are a committed number with its command,
+      Evidence: § The bypass record in the contract; 35 cases in
+      `check_platform_anchor_open_bypass.test.ts`. No bypass record exists
+      yet, so the property is shown on fixtures, not on a real record.
+- [x] AC-6 — The owner's hand-offs are a committed number with its command,
       its pin and its timestamp.
-- [ ] AC-7 — No hook and no workflow was added or changed, and no step,
+      Evidence: `agents/evidence/analysis/merge-gate-load-2026-10.md`, pin
+      `a10aa16a1`, window from `2026-09-07T00:00:00+02:00`, 103 `needs-owner`.
+- [x] AC-7 — No hook and no workflow was added or changed, and no step,
       blocker field or decision in another roadmap was edited.
+      Evidence: `git diff --name-only origin/main...HEAD` lists no file under
+      `.github/` or any `hooks/` path, and one roadmap — this one.
