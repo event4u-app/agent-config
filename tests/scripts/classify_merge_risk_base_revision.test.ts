@@ -67,10 +67,27 @@ function gateBlock(): string {
 }
 
 /** Run the shipped block for `baseSha...headSha` inside the clone. */
-function runGate(baseSha: string, headSha: string): { lines: string[]; code: number | null } {
+function runGate(
+    baseSha: string,
+    headSha: string,
+    env: Record<string, string> = {},
+): { lines: string[]; code: number | null } {
     const script = gateBlock().replaceAll('<manifest-base_sha>', baseSha).replaceAll('<manifest-head-sha>', headSha);
-    const r = spawnSync('bash', ['-c', script], { cwd: clone, encoding: 'utf8' });
+    const r = spawnSync('bash', ['-c', script], { cwd: clone, encoding: 'utf8', env: { ...process.env, ...env } });
     return { lines: (r.stdout ?? '').trim().split('\n'), code: r.status };
+}
+
+/** A `git` on PATH that fails `ls-files` and passes every other subcommand through. */
+function gitShimFailingLsFiles(): string {
+    const dir = path.join(work, 'shim');
+    fs.mkdirSync(dir, { recursive: true });
+    const real = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
+    fs.writeFileSync(
+        path.join(dir, 'git'),
+        `#!/bin/sh\nif [ "$1" = "ls-files" ]; then exit 1; fi\nexec "${real}" "$@"\n`,
+        { mode: 0o755 },
+    );
+    return dir;
 }
 
 /** A commit on a fresh branch from `from`, writing each file as given (null deletes it). */
@@ -135,13 +152,55 @@ describe('the code that classes a change is not the change’s own', () => {
 });
 
 describe('the shipped block fails to needs-owner on every anomaly', () => {
-    it('a routine head is routine, exits 0 and leaves no worktree behind', () => {
+    it('a routine head is routine, exits 0 and leaves no worktree and no temp directory behind', () => {
         const before = worktreeCount();
+        const tmp = path.join(work, 'gate-tmp');
+        fs.mkdirSync(tmp);
         const head = commitOn('docs-only', base, { 'docs/installation.md': 'changed\n' });
-        const r = runGate(base, head);
+        const r = runGate(base, head, { TMPDIR: tmp });
         expect(r.lines[r.lines.length - 1]).toBe('verdict: routine');
         expect(r.code).toBe(0);
         expect(worktreeCount()).toBe(before);
+        // tsx keeps its own compile cache under TMPDIR; only the gate's directory must be gone.
+        expect(fs.readdirSync(tmp).filter((e) => !e.startsWith('tsx-'))).toEqual([]);
+    }, 60_000);
+
+    it('a temporary directory that cannot be made is needs-owner before any path is derived', () => {
+        const head = commitOn('docs-only-no-tmp', base, { 'docs/installation.md': 'no tmp\n' });
+        const shim = path.join(work, 'mktemp-shim');
+        fs.mkdirSync(shim, { recursive: true });
+        fs.writeFileSync(path.join(shim, 'mktemp'), '#!/bin/sh\nexit 1\n', { mode: 0o755 });
+        const r = runGate(base, head, { PATH: `${shim}:${process.env['PATH'] ?? ''}` });
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(temp-dir-unavailable/u);
+        expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it('a failing git ls-files is runtime-unverified, never read as "nothing tracked"', () => {
+        const head = commitOn('docs-only-shim', base, { 'docs/installation.md': 'shim\n' });
+        const r = runGate(base, head, { PATH: `${gitShimFailingLsFiles()}:${process.env['PATH'] ?? ''}` });
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(runtime-unverified/u);
+        expect(r.code).not.toBe(0);
+    }, 60_000);
+
+    it('a head that tracks node_modules is runtime-unverified', () => {
+        git(clone, 'checkout', '-q', '-b', 'tracks-node-modules', base);
+        fs.unlinkSync(path.join(clone, 'node_modules'));
+        fs.mkdirSync(path.join(clone, 'node_modules', '.bin'), { recursive: true });
+        fs.writeFileSync(path.join(clone, 'node_modules', '.bin', 'tsx'), '#!/bin/sh\necho "verdict: routine"\n', {
+            mode: 0o755,
+        });
+        git(clone, 'add', '-f', '--', 'node_modules');
+        git(clone, 'commit', '-q', '-m', 'tracks node_modules');
+        const head = git(clone, 'rev-parse', 'HEAD');
+        try {
+            const r = runGate(base, head);
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(runtime-unverified/u);
+            expect(r.code).not.toBe(0);
+        } finally {
+            git(clone, 'checkout', '-q', '--detach', base);
+            fs.rmSync(path.join(clone, 'node_modules'), { recursive: true, force: true });
+            fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(clone, 'node_modules'));
+        }
     }, 60_000);
 
     it('the downgrade attack run through the block is needs-owner and exits non-zero', () => {
@@ -169,6 +228,7 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         const head = commitOn('head-on-lying', lying, { 'docs/installation.md': 'y\n' });
         const r = runGate(lying, head);
         expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable: exit 0/u);
+        expect(r.code).not.toBe(0);
     }, 60_000);
 
     it('a base without the classifier is base-unavailable, never the head copy', () => {

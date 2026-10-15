@@ -255,6 +255,31 @@ describe('frontmatter reading — both sides, failing closed', () => {
             expect(reopenPolicyOf(`---\nid: ADR-1\n${line}\n---\n`), line).toBe('owner');
         }
         expect(reopenPolicyOf('---\nreopen_policy: directional\nreopen_policy: owner\n---\n')).toBe('owner');
+        expect(reopenPolicyOf('---\nreopen_policy: *policy\n---\n')).toBe('owner');
+    });
+
+    it('reads owner for YAML outside the subset it parses, wherever owner could hide there', () => {
+        for (const fm of [
+            '{reopen_policy: owner}',
+            '? reopen_policy\n: owner',
+            '"reopen_policy": directional',
+            '"reopen\\u005fpolicy": owner',
+            'base: &b\n  reopen_policy: owner\n<<: *b',
+            'id: ADR-1\nnotes: {reopen_policy: owner}',
+        ]) {
+            expect(reopenPolicyOf(`---\n${fm}\n---\n`), fm).toBe('owner');
+        }
+    });
+
+    it('reads every committed ADR as the policy it declares — the subset does not over-fire', () => {
+        const dir = path.resolve(__dirname, '..', '..', 'docs', 'decisions');
+        const adrs = fs.readdirSync(dir).filter((f) => /^ADR-.*\.md$/u.test(f));
+        expect(adrs.length).toBeGreaterThan(40);
+        for (const f of adrs) {
+            const text = fs.readFileSync(path.join(dir, f), 'utf8');
+            const declared = /^reopen_policy:\s*(\S+)/mu.exec(text)?.[1] ?? 'absent';
+            expect(reopenPolicyOf(text), f).toBe(declared);
+        }
         expect(reopenPolicyOf('---\nreopen_policy: unclassified # not yet\n---\n')).toBe('unclassified');
     });
 

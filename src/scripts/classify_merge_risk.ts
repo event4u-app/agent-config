@@ -175,31 +175,60 @@ const RULE_FILE_RE = /(?:^|\/)rules\/([a-z0-9-]+)\.md$/;
 /** The two `reopen_policy` values that do not reserve a record to the owner. */
 const NON_OWNER_POLICIES: ReadonlySet<string> = new Set(['directional', 'unclassified']);
 
+/** A scalar value as YAML would print it plainly: comment, quotes and case removed. */
+function plainScalar(raw: string): string {
+    return raw
+        .replace(/\s+#.*$/u, '')
+        .trim()
+        .replace(/^(["'])(.*)\1$/u, '$2')
+        .trim()
+        .toLowerCase();
+}
+
 /**
  * The reopen policy one side of an ADR declares: `'absent'` when the field is
  * missing, `null` when there is no readable frontmatter.
  *
  * Read by hand, not through a YAML library: the base copy runs from a detached
  * worktree with no `node_modules` of its own, so it may import only `node:`
- * built-ins. The reading therefore fails toward the owner wherever YAML could
- * mean something this parser does not see: every occurrence of the key is read
- * (a duplicate cannot hide an `owner`), a trailing comment and quotes are
- * stripped, and any value that is not one of the two non-owner policies —
- * empty, a block scalar, a tag, a typo — reads as `'owner'`.
+ * built-ins. So the reader accepts one subset — top-level lines `key: value`
+ * with an unquoted key, and indented or `- ` lines beneath them — and reads
+ * `'owner'` for anything outside it, because outside it YAML could say `owner`
+ * where this parser cannot see it: a flow mapping, an explicit `?` key, a quoted
+ * or escaped key, a merge key, or the word `reopen_policy` anywhere the subset
+ * did not read it. Inside the subset every occurrence counts (a duplicate cannot
+ * hide an `owner`), and any value other than the two non-owner policies — empty,
+ * a block scalar, a tag, an alias, a typo — reads as `'owner'` too.
  */
 export function reopenPolicyOf(text: string): string | null {
     const fm = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text);
     if (fm === null) {
         return null;
     }
-    const values = [...(fm[1] ?? '').matchAll(/^\s*["']?reopen_policy["']?\s*:(.*)$/gim)].map((m) =>
-        (m[1] ?? '')
-            .replace(/\s+#.*$/u, '')
-            .trim()
-            .replace(/^(["'])(.*)\1$/u, '$2')
-            .trim()
-            .toLowerCase(),
-    );
+    const body = fm[1] ?? '';
+    const values: string[] = [];
+    let outsideSubset = /<<\s*:/u.test(body);
+    for (const line of body.split(/\r?\n/u)) {
+        if (line.trim() === '' || /^\s*#/u.test(line)) {
+            continue;
+        }
+        if (/^\s/u.test(line) || line.startsWith('- ')) {
+            const child = /^\s*(?:-\s+)?reopen_policy\s*:(.*)$/iu.exec(line);
+            if (child !== null) {
+                values.push(plainScalar(child[1] ?? ''));
+            }
+            continue;
+        }
+        const top = /^([A-Za-z0-9_-]+)\s*:(.*)$/u.exec(line);
+        if (top === null) {
+            outsideSubset = true;
+        } else if ((top[1] ?? '').toLowerCase() === 'reopen_policy') {
+            values.push(plainScalar(top[2] ?? ''));
+        }
+    }
+    if (outsideSubset || (values.length === 0 && /reopen_policy/iu.test(body))) {
+        return 'owner';
+    }
     if (values.length === 0) {
         return 'absent';
     }
