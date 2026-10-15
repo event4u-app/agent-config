@@ -318,7 +318,12 @@ describe('mid-flight fallback — failure classification', () => {
         ['auth_expired', 'auth_rejected'],
         ['unauthorized', 'auth_rejected'],
         ['cli_unsupported', 'cli_unsupported'],
-        ['parse_failed', 'cli_unsupported'],
+        // Was `cli_unsupported`, which is fallback-eligible. A parse failure
+        // happens AFTER generation — the member answered and no parser could
+        // read it — so replaying it on the metered API pays for the same
+        // prompt twice. `other` is ineligible, which is the point
+        // (road-to-unknowns-that-say-so step 1.5).
+        ['parse_failed', 'other'],
         ['timeout', 'timeout'],
         ['cli_quota_exhausted', 'quota_exhausted'],
         ['exit_503', 'server_error'],

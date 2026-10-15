@@ -95,7 +95,8 @@ Reproduced on 2026-10-01:
 
 ## Phase 2 — Records from opted-in machines
 
-- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — discovered mid-drain under `/roadmap:process-full --all`; the run's mandate is processing and merging, not taking an owner-reserved estate decision, so it is put to the owner in that run's end report instead of halting the queue --> **2.1 An arrival record per host version.** From the instruction-load
+- [ ] **2.1 An arrival record per host version.** Input: the record of
+      `road-to-a-setup-that-decides-itself` step 2.1 — run after it lands. From the instruction-load
       observer — step 3.0 of `stubs/road-to-instructions-loaded-observer.md`,
       NOT the carrier roadmap's step 0.2, which the owner cancelled on
       2026-10-06 (D10 there) and which moved the observer to that stub — one
@@ -109,13 +110,13 @@ Reproduced on 2026-10-01:
       text of an opted-in install contains every consequence-class law
       byte-equal to its source section.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t standing-only` -> 0
-- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — discovered mid-drain under `/roadmap:process-full --all`; the run's mandate is processing and merging, not taking an owner-reserved estate decision, so it is put to the owner in that run's end report instead of halting the queue --> **2.3 Does a stub get used?** Per session, reads of a rule body path that
+- [ ] **2.3 Does a stub get used?** Per session, reads of a rule body path that
       were not preceded by a delivery of that rule, from records the dispatcher
       already writes; and per rule, deliveries against the characters it stands
       at, zeros included. A rule never delivered and never read is a candidate
       for the owner, not an automatic removal.
       verify: `grep -c 'self-served' agents/evidence/analysis/stub-use-*.md` -> /^[1-9]/
-- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — discovered mid-drain under `/roadmap:process-full --all`; the run's mandate is processing and merging, not taking an owner-reserved estate decision, so it is put to the owner in that run's end report instead of halting the queue --> **2.4 The injection-effect row, on its own terms.** After the opt-in, the
+- [ ] **2.4 The injection-effect row, on its own terms.** After the opt-in, the
       injected copy is the only copy for the thinned rules; record the new
       exposure state beside `src/config/host-injection-effect.json:8` without
       changing that file's verdict, which `road-to-delivery-on-hook-hosts` owns.
@@ -360,7 +361,7 @@ Reproduced on 2026-10-01:
 
 ### blocker: arrival-record-needs-a-cancelled-observer
 
-- **Status:** open — discovered 2026-10-10. The instrument steps 2.1, 2.3 and 2.4 read from was cancelled by owner answer D10 of `road-to-a-rule-carrier-that-works-outside-the-repo` on 2026-10-06 and now travels only as step 3.0 of `stubs/road-to-instructions-loaded-observer.md`, which no active roadmap owns
+- **Status:** resolved — owner chose (a) in substance on 2026-10-15 (PR #2373 report, answer to `instruction-load-observer-has-no-scheduled-owner`): stub step 3.0 is now scheduled as steps 1.1–2.2 of the active `road-to-a-setup-that-decides-itself`, so steps 2.1, 2.3, 2.4 and AC-2 read that file's step 2.1 record and run once it lands. Was: discovered 2026-10-10. The instrument steps 2.1, 2.3 and 2.4 read from was cancelled by owner answer D10 of `road-to-a-rule-carrier-that-works-outside-the-repo` on 2026-10-06 and now travels only as step 3.0 of `stubs/road-to-instructions-loaded-observer.md`, which no active roadmap owns
 - **Owner:** owner — scheduling a stub is an estate decision, and the stub's own text records that the host observation does not close its 3.0
 - **Class:** 3
 - **Ownership:** product-owned
@@ -408,7 +409,7 @@ Reproduced on 2026-10-01:
 | D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -427,7 +428,7 @@ Reproduced on 2026-10-01:
       only honest way to read it and nothing in this change moves the corpus. Like 3.2,
       this waits on the full-bodied set shrinking rather than on the flip, so no marker
       is written — the gate it needs is not one this file registers.
-- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — registered in this file on 2026-10-10 and already addressed to the owner; this marker records that the criterion shares its gate --> AC-2 — One committed arrival record per supported host version.
+- [ ] AC-2 — One committed arrival record per supported host version.
       **Measured 2026-10-10: zero records exist.** `ls agents/evidence/analysis/installed-arrival-*.md`
       matches nothing. Its producer is step 2.1, whose instrument the owner cancelled on
       2026-10-06 — see `arrival-record-needs-a-cancelled-observer`.
