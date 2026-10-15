@@ -2,7 +2,7 @@
 
 # Council review of PR #2366 — egress rule table, placeholder tokens, secret detector refactor
 
-Two rounds, 2026-10-15, both with two seats present (`anthropic/claude-sonnet-4-5`,
+Four rounds, 2026-10-15, with two seats configured (`anthropic/claude-sonnet-4-5`,
 `openai/codex-default`, CLI transport, `--prompt-mode pr --rounds 2`). Prompts,
 committed verbatim before each run:
 `agents/evidence/council/pr2366-egress-review-20261015.question.md` (round 1) and
@@ -56,9 +56,37 @@ issue below), and both asked for changes on new defects:
 | R2-4 | medium (one seat) | the parity suite bypassed validators, context and exclusions | fixed — every case also runs through `findSpans` against the pre-move pattern plus a frozen pre-move value gate | red (6 cases) with the validator neutralised |
 | R2-5 | note (one seat) | `resolve()` does not check the fingerprint against the number | not a defect — the lookup key is the whole token string, fingerprint included, so a mismatched fingerprint finds nothing | existing forged-fingerprint test |
 
-The review was presented twice, as instructed. The round-2 fixes have **not**
-been re-reviewed by the council.
+The round-2 fixes were reviewed in round 3.
 
 Not changed and not raised as defects: the JWT linearity wording and the
 `findUnboundedQuantifier` name (one seat raised them as minor; the other judged
 them not to be defects).
+
+## Round 3 — verdicts
+
+Prompt: `agents/evidence/council/pr2366-egress-review-r3-20261015.question.md`
+(diff at `338287df2`, omissions named in the prompt). Quorum 1 of 2.
+
+| Seat | Stance |
+|---|---|
+| anthropic/claude-sonnet-4-5 | **No verdict — degraded.** The seat returned an empty text (transport timeout); it is recorded as absent, not as agreement. |
+| openai/codex-default | "REQUEST_CHANGES — cross-type minting can retain and resolve credential bytes, violating the central security invariant; the single highest-leverage change is to enforce class identity with a keyed canonical-value-only index independent of token type, then add a same-value/different-type regression test." |
+
+## Round 3 — findings and dispositions
+
+| # | Severity | Finding | Disposition | Red-proof |
+|---|---|---|---|---|
+| R3-1 | high | class identity keyed by (type, value): one value minted as APIKEY/credential then EMAIL/identifier kept and resolved the credential | fixed — the class is indexed by a keyed digest of the canonical value alone and a second class is refused before anything is stored; the old per-(type, value) check is removed | test red before, both orders; red again with the new check neutralised |
+| R3-2 | high | the contract stated a (type, value) invariant and concluded a stronger one | fixed — contract states one class per value whatever its type, indexed by a keyed digest, never the value | contract text |
+| R3-3 | medium | `formatToken()` emitted parts the recogniser rejects | fixed — the writer applies the recogniser's type, number range and fingerprint shape | test red before |
+| R3-4 | medium | the ceiling check in the parity suite compared counts only | fixed — exact expectation per ceiling case | red on the dotted-scheme case with the trailing `@` removed from the pattern, which the count check accepted |
+| R3-5 | medium | contract spelled the type as upper-case letters while the code allows digits | fixed — contract spells `[A-Z][A-Z0-9]{1,15}` | contract text |
+| R3-6 | low (seat) / medium (coordinator) | the scanner ignored context and exclusions and fell back to the match start without the `d` flag | fixed — `evaluateMatch` in the table applies every field; both readers call it; `scanText` takes an optional row set for tests | context, exclusion and missing-flag tests red before |
+
+The round-3 prompt also carried the parity-test fixtures quoted verbatim; their
+lines are pinned in `.secret-allow` after audit.
+
+## Round 4
+
+Prompt: `agents/evidence/council/pr2366-egress-review-r4-20261015.question.md`.
+Verdicts are recorded below once the run returns.
