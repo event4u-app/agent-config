@@ -395,7 +395,7 @@ describe('derivedBytes - a derived figure can never be read as a counted one', (
     });
 });
 
-describe('scanToolResults - the model-visible bytes of a tool result, per tool class', () => {
+describe('scanToolResults - the payload bytes of a tool result, per tool class', () => {
     // An Edit whose hook envelope carries the whole original file, while the
     // model receives only the confirmation line. Every expected figure is
     // computed from these constants, never copied from a run.
@@ -459,20 +459,81 @@ describe('scanToolResults - the model-visible bytes of a tool result, per tool c
         const scan = scanToolResults({ root, projectDir });
         const edit = scan.classes['Edit'];
         expect(edit?.count).toBe(1);
-        expect(edit?.model_visible_bytes).toBe(Buffer.byteLength(CONFIRMATION, 'utf8'));
+        expect(edit?.payload_bytes).toBe(Buffer.byteLength(CONFIRMATION, 'utf8'));
         expect(edit?.envelope_bytes).toBe(Buffer.byteLength(JSON.stringify(EDIT_ENVELOPE), 'utf8'));
-        expect(edit?.envelope_bytes ?? 0).toBeGreaterThan((edit?.model_visible_bytes ?? 0) * 10);
+        expect(edit?.envelope_bytes ?? 0).toBeGreaterThan((edit?.payload_bytes ?? 0) * 10);
     });
 
     it('counts text blocks, separates image Reads, and keeps orphans in their own class', () => {
         const root = mkTmp();
         const projectDir = writeToolFixture(root);
         const scan = scanToolResults({ root, projectDir });
-        expect(scan.classes['Bash']?.model_visible_bytes).toBe(Buffer.byteLength(BASH_OUT, 'utf8'));
-        expect(scan.classes['Read:image']?.model_visible_bytes).toBe(IMAGE_DATA.length);
+        expect(scan.classes['Bash']?.payload_bytes).toBe(Buffer.byteLength(BASH_OUT, 'utf8'));
+        expect(scan.classes['Read:image']?.payload_bytes).toBe(IMAGE_DATA.length);
         expect(scan.classes['Read:image']?.envelope_bytes).toBeNull();
         expect(scan.classes['Read']).toBeUndefined();
         expect(scan.classes['unknown']?.count).toBe(1);
         expect(scan.results).toBe(4);
+    });
+
+    describe('payload definition - text strings and base64 image data, never block structure', () => {
+        function scanOne(block: Record<string, unknown>, name = 'Bash') {
+            const root = mkTmp();
+            const projectDir = path.join(root, 'proj');
+            appendJsonl(path.join(projectDir, 's.jsonl'), [
+                { type: 'assistant', message: { id: 'm1', content: [{ type: 'tool_use', id: 'tu_1', name, input: {} }] } },
+                { type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_1', ...block }] } },
+            ]);
+            return scanToolResults({ root, projectDir });
+        }
+
+        it('is-error-flag-is-not-payload', () => {
+            const ERR = 'Exit code 1\nboom';
+            const cls = scanOne({ is_error: true, content: ERR }).classes['Bash'];
+            expect(cls?.count).toBe(1);
+            expect(cls?.payload_bytes).toBe(Buffer.byteLength(ERR, 'utf8'));
+        });
+
+        it('mixed-text-and-image-sums-both-and-classes-as-image', () => {
+            const A = 'before ✓';
+            const DATA = 'iVBORw0KGgo'.repeat(3);
+            const B = 'after';
+            const scan = scanOne(
+                {
+                    content: [
+                        { type: 'text', text: A },
+                        { type: 'image', source: { type: 'base64', data: DATA } },
+                        { type: 'text', text: B },
+                    ],
+                },
+                'Read',
+            );
+            expect(scan.classes['Read']).toBeUndefined();
+            expect(scan.classes['Read:image']?.payload_bytes).toBe(
+                Buffer.byteLength(A, 'utf8') + DATA.length + Buffer.byteLength(B, 'utf8'),
+            );
+        });
+
+        it('empty-content-counts-the-result-at-zero-bytes', () => {
+            for (const block of [{ content: '' }, { content: [] }, {}]) {
+                const cls = scanOne(block).classes['Bash'];
+                expect(cls?.count).toBe(1);
+                expect(cls?.payload_bytes).toBe(0);
+                expect(cls?.unsupported_members).toBe(0);
+            }
+        });
+
+        it('unsupported-members-are-counted-not-silently-dropped', () => {
+            const scan = scanOne({
+                content: [
+                    { type: 'document', source: { type: 'base64', data: 'JVBERi0xLjQ=' } },
+                    { type: 'text', text: 'ok' },
+                    'a bare string member',
+                ],
+            });
+            const cls = scan.classes['Bash'];
+            expect(cls?.payload_bytes).toBe(2);
+            expect(cls?.unsupported_members).toBe(2);
+        });
     });
 });

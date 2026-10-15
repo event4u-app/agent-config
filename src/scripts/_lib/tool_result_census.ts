@@ -13,7 +13,7 @@
  * every line written before the second field existed.
  *
  * Neither shape counts what reached the model; that is
- * `tool-model-visible-bytes`, read from transcripts (`cc_transcript.ts`).
+ * `tool-result-payload-bytes`, read from transcripts (`cc_transcript.ts`).
  */
 
 export type CensusShape = 'legacy' | 'two-field';
