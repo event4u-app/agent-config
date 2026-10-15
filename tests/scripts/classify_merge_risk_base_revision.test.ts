@@ -397,6 +397,24 @@ describe('a dependency manifest goes to the council, and still cannot reach rout
                 '#!/bin/sh\necho "verdict: routine-ish"\n',
             );
             expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable/u);
+            expect(r.code).not.toBe(0);
+        }, 60_000);
+
+        it('a listing that was written but cannot be read back is needs-owner, never "no manifest"', () => {
+            const shim = path.join(work, 'mktemp-write-only-listing');
+            const made = path.join(work, 'write-only-listing-tmp');
+            fs.mkdirSync(shim, { recursive: true });
+            fs.writeFileSync(
+                path.join(shim, 'mktemp'),
+                `#!/bin/sh\nmkdir "${made}" && : > "${made}/changed" && chmod 200 "${made}/changed" && echo "${made}"\n`,
+                { mode: 0o755 },
+            );
+            const head = commitOn('bump-unreadable-listing', base, { 'package.json': bumped(11) });
+            const r = withPoisonedRuntime(() =>
+                runGate(base, head, { PATH: `${shim}:${noStrip()['PATH'] ?? ''}` }),
+            );
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(manifest-unreadable/u);
+            expect(r.code).not.toBe(0);
         }, 60_000);
 
         it('a manifest under a directory whose name holds a newline is still a manifest change', () => {

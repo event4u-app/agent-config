@@ -496,16 +496,24 @@ if GATE_TMP="$(mktemp -d)" && [ -n "$GATE_TMP" ] && [ -d "$GATE_TMP" ]; then
   if REAL_TMP="$(cd "$GATE_TMP" && pwd -P)" && [ -n "$REAL_TMP" ]; then
     BASE_DIR="$REAL_TMP/classifier-base"
     VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
-    DEPS=0
-    if ! git diff --name-only -z "$BASE...$HEAD_SHA" > "$REAL_TMP/changed"; then
-      DEPS=2
-    else
+    DEPS=2
+    if git diff --name-only -z "$BASE...$HEAD_SHA" > "$REAL_TMP/changed" \
+       && printf '\0' >> "$REAL_TMP/changed"; then
+      FOUND=0
+      END_SEEN=0
       while IFS= read -r -d '' CHANGED_PATH; do
+        if [ -z "$CHANGED_PATH" ]; then
+          END_SEEN=1
+          break
+        fi
         case "${CHANGED_PATH##*/}" in
           package.json | package-lock.json | npm-shrinkwrap.json | .npmrc | yarn.lock | .yarnrc.yml | \
-          pnpm-lock.yaml | bun.lock | bun.lockb) DEPS=1 ;;
+          pnpm-lock.yaml | bun.lock | bun.lockb) FOUND=1 ;;
         esac
       done < "$REAL_TMP/changed"
+      if [ "$END_SEEN" -eq 1 ]; then
+        DEPS="$FOUND"
+      fi
     fi
     if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ]; then
       VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked)"
@@ -572,7 +580,10 @@ manifest installed, so a valid answer from it is not trusted downward: a
 `needs-council (runtime-uncertain)`. A fallback that gives no valid verdict at
 all is an anomaly like any other and stays `needs-owner`. The changed paths are
 read NUL-separated and matched by basename with shell built-ins only, so an odd
-path cannot slip past and a listing that cannot be read is `needs-owner`.
+path cannot slip past. The block appends an empty record — a path git never
+prints — as an end marker and believes the listing only if the loop reaches
+it: a listing that cannot be written, opened or read to its end is
+`manifest-unreadable`, `needs-owner`.
 
 **What it fails to.** Every other anomaly is **`needs-owner`** and says why —
 never a skipped gate and never a fall-back to the head's copy: a private
