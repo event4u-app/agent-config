@@ -81,6 +81,7 @@
  * Exit codes: 0 = pass (or nothing gated) · 1 = fail · 3 = internal error.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -128,6 +129,78 @@ export const READER_PATH = 'src/scripts/_lib/ratification_artifact.ts';
  * part of the mechanism for the reason `READER_PATH` is.
  */
 export const CLOSURE_READER_PATH = 'src/scripts/_lib/dispatch_import_closure.ts';
+
+/**
+ * Modules of this gate's static import closure that run inside the verdict, so
+ * an edit to one is an edit to the gate:
+ *
+ *   - `_lib/adr_frontmatter.ts` parses the record's header, verdict included;
+ *   - `_lib/gate_ledger.ts` and `_lib/scan_scope.ts` run before the exit code is
+ *     returned, so either could end the process first.
+ *
+ * `_lib/kernel_rules.ts` is already gated as plumbing. `_lib/ratification_subject.ts`,
+ * which computes the digest, joins in a separate change: one that gates it and
+ * edits it at once is digested over different files by the base revision's
+ * gate and by its own, so no single record answers for both. The writer CLIs
+ * `src/scripts/ratification_subject.ts` and `src/scripts/ratification_header.ts`
+ * and the contract stay outside by owner decision (2026-10-15): the gate does
+ * not import them, recomputes the digest and reads only the record.
+ */
+export const MECHANISM_IMPORT_PATHS: readonly string[] = [
+    'src/scripts/_lib/adr_frontmatter.ts',
+    'src/scripts/_lib/gate_ledger.ts',
+    'src/scripts/_lib/scan_scope.ts',
+];
+
+/**
+ * Closure modules not gated yet, each pinned to the Git blob its review saw.
+ *
+ * `_lib/ratification_subject.ts` cannot be gated in the change that edits it
+ * (see above), so until the change that gates it lands its bytes would be
+ * bound by no record. The pin binds them through this gated file instead: a
+ * diff that changes a pinned module is refused, and moving the pin edits this
+ * file, which needs a record. The change that gates the module removes its pin.
+ */
+export const PENDING_MECHANISM_PINS: Readonly<Record<string, string>> = {
+    'src/scripts/_lib/ratification_subject.ts': '3842d91528ec5229819dbd0da2f1a67a1f0eb06c',
+};
+
+/**
+ * Git's SHA-1 blob id for `bytes` — what `git hash-object` prints in a SHA-1
+ * repository, which this one is; a test compares the two.
+ */
+export function gitBlobId(bytes: Buffer): string {
+    return createHash('sha1')
+        .update(`blob ${bytes.length}\u0000`)
+        .update(bytes)
+        .digest('hex');
+}
+
+/**
+ * Pinned modules that differ from their pin at `commit`.
+ *
+ * A module PRESENT at the commit is compared whatever the diff lists, so a
+ * caller that omits or misspells the path cannot skip it. An ABSENT one is a
+ * deletion only when the diff names it — a tree that never had the module,
+ * such as a fixture, is not a deletion — and the names are canonicalised
+ * first. THROWS a {@link GatedSubjectRefusal} when the commit cannot be read.
+ */
+export function pinViolations(files: readonly string[], root: string, commit: string): string[] {
+    const named = new Set(
+        files.map((f) => path.posix.normalize(f.replace(/\\/g, '/').trim()).replace(/^\.\//, '')),
+    );
+    const out: string[] = [];
+    for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
+        const bytes = fileAtRevision(root, commit, rel);
+        if (bytes === null) {
+            if (named.has(rel)) out.push(`${rel} is absent, pinned to ${blob}`);
+            continue;
+        }
+        const actual = gitBlobId(bytes);
+        if (actual !== blob) out.push(`${rel} is ${actual}, pinned to ${blob}`);
+    }
+    return out;
+}
 
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
@@ -320,6 +393,22 @@ export interface GatedPaths {
     self: boolean;
 }
 
+/**
+ * True for a file of the ratification mechanism itself — the one list both the
+ * classification and the subject digest read.
+ */
+export function isMechanismPath(p: string): boolean {
+    return (
+        p === SELF_PATH ||
+        p === READER_PATH ||
+        p === CLOSURE_READER_PATH ||
+        p === POLICY_PATH ||
+        p === WORKFLOW_PATH ||
+        ANCHOR_PATHS.includes(p) ||
+        MECHANISM_IMPORT_PATHS.includes(p)
+    );
+}
+
 /** Partition a changed-file list into the surfaces this gate watches. */
 export function classifyPaths(
     files: readonly string[],
@@ -335,14 +424,7 @@ export function classifyPaths(
         if (p === '') {
             continue;
         }
-        if (
-            p === SELF_PATH ||
-            p === READER_PATH ||
-            p === CLOSURE_READER_PATH ||
-            p === POLICY_PATH ||
-            p === WORKFLOW_PATH ||
-            ANCHOR_PATHS.includes(p)
-        ) {
+        if (isMechanismPath(p)) {
             self = true;
             continue;
         }
@@ -507,9 +589,11 @@ export function evaluate(
     // read one head commit and one base.
     let derived: readonly string[];
     let headCommit: string;
+    let drifted: string[];
     try {
         headCommit = resolveRevision(root, revision);
         derived = derivedFor(root, baseRef, headCommit);
+        drifted = pinViolations(files, root, headCommit);
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
@@ -522,12 +606,24 @@ export function evaluate(
         lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
         return { exitCode: 1, lines, scanned };
     }
+    // Before any pass: a pinned module is ungated, so a diff touching only it
+    // would otherwise exit "nothing to ratify".
+    if (drifted.length > 0) {
+        lines.push('❌  a pinned ratification module changed — it is not gated yet, so its pin is what binds it:');
+        for (const d of drifted) lines.push(`  · ${d}`);
+        for (const target of ledger.unaccountedTargets()) {
+            ledger.fail(target, 'a pinned ratification module changed');
+        }
+        const tally = ledger.finalize();
+        lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
+        return { exitCode: 1, lines, scanned };
+    }
     const gated = classifyPaths(files, derived);
     const gatedSet = new Set<string>([
         ...gated.kernelRules,
         ...gated.governanceHooks,
         ...gated.plumbing,
-        ...(gated.self ? [SELF_PATH] : []),
+        ...files.map((f) => f.replace(/\\/g, '/').trim()).filter(isMechanismPath),
     ]);
     const artifactSet = new Set(ratificationArtifactsIn(files));
     for (const target of ledger.unaccountedTargets()) {
@@ -609,7 +705,7 @@ export function evaluate(
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
         ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
-        ...(gated.self ? ['the ratification mechanism itself (gate, reader, policy or workflow)'] : []),
+        ...(gated.self ? ['the ratification mechanism itself (gate, its imports, policy or workflow)'] : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
     for (const t of touched) {

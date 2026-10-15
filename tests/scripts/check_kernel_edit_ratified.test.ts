@@ -222,8 +222,11 @@ describe('classifyPaths', () => {
      * basenames outside the directories that make them plumbing.
      */
     it('does NOT match a neighbour of the served set', () => {
+        // `_lib/gate_ledger.ts` stood here until the gate's own imports joined
+        // the mechanism set; it is gated as the mechanism now, so another
+        // `_lib` module that is neither takes its place.
         for (const p of [
-            'src/scripts/_lib/gate_ledger.ts',
+            'src/scripts/_lib/link_crypto.ts',
             'src/scripts/_lib/host_capability.ts',
             'src/scripts/hooks/hook_stdin.ts',
             'src/scripts/hooks/table_fingerprint.ts',

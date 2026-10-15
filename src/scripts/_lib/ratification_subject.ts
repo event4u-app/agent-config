@@ -6,14 +6,17 @@
  * gated file edited after its review would still ship under a record that
  * approved something else.
  *
- * WHY IT RE-ASSEMBLES THE LIST RATHER THAN RE-DECIDING IT. The gate's
- * `classifyPaths` returns the kernel rules, hooks and plumbing by name but
- * reports the self surface as a BOOLEAN, so that part of the gated list cannot
- * be read back out of it. This module therefore imports the gate's own path
- * constants and re-assembles — it never restates the membership rule, because
- * a second definition of "gated" is a second thing to keep in step, and the
- * first time the two diverged a file would be reviewed by one and digested by
- * the other.
+ * WHY IT ASKS THE GATE RATHER THAN RE-DECIDING IT. The gate's `classifyPaths`
+ * returns the kernel rules, hooks and plumbing by name but reports the self
+ * surface as a BOOLEAN, so that part of the gated list cannot be read back out
+ * of it. This module therefore filters the changed files through the gate's own
+ * `isMechanismPath` — it never restates the membership rule, because a second
+ * definition of "gated" is a second thing to keep in step, and the first time
+ * the two diverged a file would be reviewed by one and digested by the other.
+ * Asking the predicate means a path the gate adds to its mechanism set is
+ * digested with no edit here. It is called per file, never at module scope,
+ * because the two modules import each other and the gate's constants are not
+ * initialised while this one evaluates.
  *
  * WHAT IT READS: GIT OBJECTS AT A NAMED REVISION, NEVER THE WORKING TREE. The
  * revision is resolved to a commit, each gated path is looked up in that
@@ -42,15 +45,7 @@
 import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
-import {
-    ANCHOR_PATHS,
-    CLOSURE_READER_PATH,
-    POLICY_PATH,
-    READER_PATH,
-    SELF_PATH,
-    WORKFLOW_PATH,
-    classifyPaths,
-} from '../check_kernel_edit_ratified.js';
+import { classifyPaths, isMechanismPath } from '../check_kernel_edit_ratified.js';
 
 /** The revision a digest is taken at when the caller names none. */
 export const DEFAULT_REVISION = 'HEAD';
@@ -461,31 +456,6 @@ export function treeAtRevision(root: string, commit: string): { read(rel: string
 }
 
 /**
- * The self surface, by the gate's own constants rather than a copy of them.
- *
- * READ ON FIRST CALL, NOT AT MODULE SCOPE, because of the import cycle: the
- * gate imports {@link subjectOf} and this module imports the gate's path
- * constants, so whichever of the two Node evaluates second sees the other
- * half-evaluated, and a module-scope `new Set([SELF_PATH, …])` would throw on
- * the temporal dead zone.
- */
-let selfSetCache: ReadonlySet<string> | null = null;
-
-function selfSet(): ReadonlySet<string> {
-    if (selfSetCache === null) {
-        selfSetCache = new Set<string>([
-            SELF_PATH,
-            READER_PATH,
-            CLOSURE_READER_PATH,
-            POLICY_PATH,
-            WORKFLOW_PATH,
-            ...ANCHOR_PATHS,
-        ]);
-    }
-    return selfSetCache;
-}
-
-/**
  * The gated subset of a changed-file list: sorted, deduplicated, and stable
  * against the order the caller happened to collect the paths in.
  */
@@ -496,9 +466,8 @@ export function gatedFilesOf(
     const normalized = files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => f !== '');
     const g = derived === undefined ? classifyPaths(normalized) : classifyPaths(normalized, derived);
     const out = new Set<string>([...g.kernelRules, ...g.governanceHooks, ...g.plumbing]);
-    const self = selfSet();
     for (const f of normalized) {
-        if (self.has(f)) out.add(f);
+        if (isMechanismPath(f)) out.add(f);
     }
     const sorted = [...out].sort();
     for (const rel of sorted) {
