@@ -118,6 +118,12 @@ explanation lives now that the file no longer carries it as comments.
 | `design.approximation.tolerance.length` | C | number,null | `null` |  | Length distance below which a value may be reconciled, in absolute CSS pixels. Ships null, same reasoning as color. GitHub Primer's ±1px spacing widening is recorded as an externally observed candidate in src/scripts/_lib/design_tolerance.ts and is deliberately not the shipped value; max(1px, 2%) was rejected for growing more permissive at large dimensions with no evidence that this is wanted. |
 | `design.fidelity_mode` | C | string | `"strict"` | `strict` · `structural` · `hard-floor` | How strictly the agent must follow a user-provided prototype / mockup / design system (consumed by the design-fidelity rule). strict = build 1:1, every visible deviation needs confirmation; structural = structure locked, silent gaps fillable with a stated assumption; hard-floor = any deviation is never autonomous. |
 
+## egress
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `egress.placeholders.mode` | C | string | `"off"` | `off` · `observe` · `protect` · `strict` | Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect until the host rewrite exists. No mode yet changes what reaches the model; the rule table holds credential rules only. Project layers only. |
+
 ## eloquent
 
 | Key | Class | Type | Default | Allowed values | What it does |

@@ -1257,6 +1257,24 @@ knowledge:
     # global card older than 90 days is lead-only and older than 180 days is
     # skipped until re-verified.
 
+# --- Egress placeholders ---
+#
+# The dispatcher's egress stage (docs/contracts/egress-placeholders-v1.md).
+# Project layers only — a user-global value is not merged.
+#   off      (default) — the stage does nothing.
+#   observe  detects and counts listed values in prompts and tool bodies into
+#            agents/runtime/state/egress-observations.jsonl (types and counts,
+#            never a value) and changes nothing any hook concern sees.
+#   protect  also hands every recording and advisory concern a copy with each
+#            value replaced by a placeholder token, so local stores such as
+#            chat history keep tokens. Guards still see the original.
+#   strict   behaves as protect until the host rewrite exists.
+# No mode yet changes what reaches the model. The rule table holds credential
+# rules only. AGENT_CONFIG_NO_EGRESS_STAGE=1 turns the stage off regardless.
+egress:
+  placeholders:
+    mode: "off"
+
 # --- Hooks ---
 #
 # Configuration surface for the hook dispatcher (see

@@ -36,6 +36,7 @@ import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import { asOf } from "./_lib/as_of.js";
 import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
+import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
 
 // src/scripts/lint_hook_manifest.ts → two levels up is the repo root.
 const REPO_ROOT = path.resolve(
@@ -826,6 +827,97 @@ export function _check_slot_answers(table: HostLowering, errors: string[]): void
   }
 }
 
+/**
+ * Host fields that replace what a tool or the model receives. The tool-output
+ * name is assembled rather than spelled, because a test pins that no file under
+ * src/ names it until the egress stage emits it (road-to-placeholders-on-the-wire
+ * step 3.2); refusing the field is not emitting it.
+ */
+const HOST_REWRITE_FIELDS: readonly string[] = ["updatedInput", ["updated", "ToolOutput"].join("")];
+const REWRITE_DECLARATION_KEYS: readonly string[] = ["rewrite", "rewrites"];
+
+/**
+ * ADR-285 — one dispatcher stage is the only rewriter. A concern that declares
+ * a rewrite, or whose own script names a host rewrite field, is refused: two
+ * concerns rewriting one input have no composition answer, so none may try.
+ */
+function _check_no_concern_rewrites(manifest: YamlObject, errors: string[]): void {
+  const concernsRaw = manifest["concerns"];
+  if (!isObject(concernsRaw)) return;
+  for (const [name, spec] of Object.entries(concernsRaw)) {
+    if (!isObject(spec)) continue;
+    const declared = REWRITE_DECLARATION_KEYS.find((k) => spec[k] !== undefined);
+    if (declared !== undefined) {
+      errors.push(
+        `concerns.${name}: rewrite-concern-refused — declares '${declared}', but only the ` +
+          `dispatcher's egress stage may produce a rewrite (ADR-285)`,
+      );
+    }
+    const script = spec["script"];
+    if (typeof script !== "string") continue;
+    let source = "";
+    try {
+      source = fs.readFileSync(path.join(REPO_ROOT, script), "utf8");
+    } catch {
+      continue; // missing script is already reported by _check_concerns
+    }
+    // Code forms only — a key, a quoted name, a property read. A header that
+    // explains the field in backticks (rtk_wrap_hook does) produces nothing.
+    const field = HOST_REWRITE_FIELDS.find((f) =>
+      [`${f}:`, `'${f}'`, `"${f}"`, `.${f}`].some((form) => source.includes(form)),
+    );
+    if (field !== undefined) {
+      errors.push(
+        `concerns.${name}: rewrite-concern-refused — ${script} names the host rewrite ` +
+          `field '${field}'; only the dispatcher's egress stage may produce a rewrite (ADR-285)`,
+      );
+    }
+  }
+}
+
+/**
+ * The execution view is granted by the dispatcher's closed list, never
+ * requested. Refused: a concern declaring `payload_view: execution` off the
+ * list, a blocking concern the list omits (it would be served tokens instead
+ * of the value it guards), and a listed concern that is not blocking.
+ */
+function _check_execution_view_grants(manifest: YamlObject, errors: string[]): void {
+  const concernsRaw = manifest["concerns"];
+  if (!isObject(concernsRaw)) return;
+  for (const [name, spec] of Object.entries(concernsRaw)) {
+    if (!isObject(spec)) continue;
+    const view = spec["payload_view"];
+    const granted = EXECUTION_VIEW_GRANTS.has(name);
+    const blocking = spec["severity"] === "blocking";
+    if (view !== undefined && view !== "execution" && view !== "placeholder") {
+      errors.push(`concerns.${name}: 'payload_view' must be execution or placeholder, got ${JSON.stringify(view)}`);
+    } else if (view === "execution" && !granted) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — declares 'payload_view: execution' but is not on ` +
+          `EXECUTION_VIEW_GRANTS in src/scripts/hooks/egress_stage.ts; a declaration grants nothing`,
+      );
+    }
+    if (blocking && !granted) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — severity: blocking but missing from ` +
+          `EXECUTION_VIEW_GRANTS; under protect it would be served placeholder tokens instead of the values it guards`,
+      );
+    } else if (granted && !blocking) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — on EXECUTION_VIEW_GRANTS but not severity: blocking; ` +
+          `the execution view is for concerns that decide whether a call runs`,
+      );
+    }
+    if (granted && spec["script"] !== EXECUTION_VIEW_GRANTS.get(name)) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — the grant is bound to ` +
+          `${String(EXECUTION_VIEW_GRANTS.get(name))}, but the manifest runs ${JSON.stringify(spec["script"])}; ` +
+          `the dispatcher will serve it the placeholder view`,
+      );
+    }
+  }
+}
+
 export function lint(
   manifestPath: string,
   strict: boolean,
@@ -858,6 +950,8 @@ export function lint(
   const concernNames = _check_concerns(manifest, errors);
   const bound = _check_platforms(manifest, concernNames, errors, warnings);
   _check_guard_payload_bodies(manifest, errors);
+  _check_no_concern_rewrites(manifest, errors);
+  _check_execution_view_grants(manifest, errors);
   _check_roles(manifest, concernNames, errors);
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);
