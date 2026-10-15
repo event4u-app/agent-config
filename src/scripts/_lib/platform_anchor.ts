@@ -1058,10 +1058,13 @@ export function evaluateAnchor(
  */
 export const BYPASS_RECORD_DIR = 'agents/evidence/bypass-records';
 
+/** The marker every bypass record carries below its frontmatter. */
+export const BYPASS_RECORD_MARKER = '<!-- evidence-type: bypass-record -->';
+
 /** A review of a restored bypass is overdue this long after `restored_at`. */
 export const BYPASS_REVIEW_DAYS = 7;
 
-/** The fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
+/** The nine fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
 export const BYPASS_RECORD_FIELDS = [
     'reason',
     'subject',
@@ -1074,39 +1077,76 @@ export const BYPASS_RECORD_FIELDS = [
     'council_review',
 ] as const;
 
-const BYPASS_OPEN_FIELDS: ReadonlySet<string> = new Set(['restored_at', 'council_review']);
+export type BypassFindingCode =
+    | 'bypass-record-malformed'
+    | 'bypass-record-unreadable'
+    | 'bypass-record-removed'
+    | 'bypass-not-restored'
+    | 'bypass-unreviewed';
 
 export interface BypassFinding {
-    code: 'bypass-record-malformed' | 'bypass-not-restored' | 'bypass-unreviewed';
+    code: BypassFindingCode;
     path: string;
     message: string;
 }
 
-const INSTANT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/u;
-
-function instant(value: string | undefined): number | null {
-    if (value === undefined || !INSTANT_RE.test(value)) {
-        return null;
-    }
-    const ms = Date.parse(value);
-    return Number.isNaN(ms) ? null : ms;
+/** One record as the caller found it: its text, or `null` when it could not be read. */
+export interface BypassRecordInput {
+    path: string;
+    text: string | null;
 }
 
-function bypassFields(text: string): Map<string, string> | null {
-    if (!text.startsWith('---\n')) {
+const INSTANT_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/u;
+
+/**
+ * An ISO-8601 instant with a timezone, as epoch milliseconds — or `null` when
+ * the text is not one or names a date the calendar does not have. `Date.parse`
+ * alone would roll February 30 into March, so the components are read back.
+ */
+export function bypassInstant(value: string | undefined): number | null {
+    const m = value === undefined ? null : INSTANT_RE.exec(value);
+    if (m === null) {
         return null;
     }
-    const end = text.indexOf('\n---', 4);
-    if (end === -1) {
+    const ms = Date.parse(value as string);
+    if (Number.isNaN(ms)) {
         return null;
+    }
+    const zone = m[7] as string;
+    const offset = zone === 'Z' ? 0 : (zone.startsWith('-') ? -1 : 1) * (Number(zone.slice(1, 3)) * 60 + Number(zone.slice(4, 6)));
+    const local = new Date(ms + offset * 60_000);
+    const same =
+        local.getUTCFullYear() === Number(m[1]) &&
+        local.getUTCMonth() + 1 === Number(m[2]) &&
+        local.getUTCDate() === Number(m[3]) &&
+        local.getUTCHours() === Number(m[4]) &&
+        local.getUTCMinutes() === Number(m[5]);
+    return same ? ms : null;
+}
+
+/** The frontmatter's `key: value` lines, or a reason the block is not one. */
+function bypassFields(text: string): Map<string, string> | string {
+    if (!text.startsWith('---\n')) {
+        return 'no frontmatter';
+    }
+    const end = text.indexOf('\n---\n', 4);
+    if (end === -1) {
+        return 'the frontmatter is not closed';
+    }
+    if (!text.slice(end + 5).split('\n').slice(0, 5).some((l) => l.trim() === BYPASS_RECORD_MARKER)) {
+        return `no \`${BYPASS_RECORD_MARKER}\` marker below the frontmatter`;
     }
     const fields = new Map<string, string>();
     for (const line of text.slice(4, end).split('\n')) {
-        const i = line.indexOf(':');
-        if (i <= 0) {
-            continue;
+        const m = /^([a-z_]+):[ \t]*(.*)$/u.exec(line);
+        if (m === null) {
+            return `unreadable frontmatter line \`${line}\` — one \`key: value\` per line, nothing else`;
         }
-        fields.set(line.slice(0, i).trim(), line.slice(i + 1).trim().replace(/^(["'])(.*)\1$/u, '$2'));
+        const key = m[1] as string;
+        if (fields.has(key)) {
+            return `field \`${key}\` is recorded more than once`;
+        }
+        fields.set(key, (m[2] as string).trim().replace(/^(["'])(.*)\1$/u, '$2'));
     }
     return fields;
 }
@@ -1114,59 +1154,82 @@ function bypassFields(text: string): Map<string, string> | null {
 /**
  * The bypass records that leave the route without a closing.
  *
- * Two findings, each the absence of a step the contract makes the record's
- * job: still open past `restore_by` (no `restored_at`), and restored with no
- * council review recorded {@link BYPASS_REVIEW_DAYS} days later. A record
- * missing one of the owner's fields, or carrying an instant that does not
- * parse, is a finding too: an unreadable record cannot show it closed.
+ * Read fail-closed: a record that cannot be read, lacks one of the nine
+ * fields, repeats a key, carries an instant that is not a real calendar
+ * instant with a timezone, puts `restore_by` or `restored_at` before the
+ * bypass or `restored_at` after `now`, or names a council review that does not
+ * exist is `bypass-record-malformed` — an unreadable record cannot show it
+ * closed. Of the readable ones: still open at or after `restore_by` is
+ * `bypass-not-restored`; restored with `council_review: pending`
+ * {@link BYPASS_REVIEW_DAYS} days on is `bypass-unreviewed`.
+ *
+ * `reviewExists` answers whether a `council_review` path names a committed
+ * file; it is injected so this module stays free of I/O.
  */
 export function evaluateBypassRecords(
-    records: readonly { path: string; text: string }[],
+    records: readonly BypassRecordInput[],
     now: Date,
+    reviewExists: (rel: string) => boolean = () => false,
 ): BypassFinding[] {
     const findings: BypassFinding[] = [];
     const t = now.getTime();
+    const malformed = (p: string, why: string): void => {
+        findings.push({ code: 'bypass-record-malformed', path: p, message: `${p} is not a readable bypass record — ${why}` });
+    };
     for (const { path: p, text } of records) {
+        if (text === null) {
+            findings.push({ code: 'bypass-record-unreadable', path: p, message: `${p} could not be read` });
+            continue;
+        }
         const f = bypassFields(text);
-        const missing =
-            f === null
-                ? ['frontmatter']
-                : BYPASS_RECORD_FIELDS.filter((k) => !BYPASS_OPEN_FIELDS.has(k) && (f.get(k) ?? '') === '');
-        const restoredRaw = f?.get('restored_at') ?? 'pending';
-        const restoredOpen = restoredRaw === '' || restoredRaw === 'pending';
-        const restored = restoredOpen ? null : instant(restoredRaw);
-        const restoreBy = instant(f?.get('restore_by'));
-        if (
-            f === null ||
-            missing.length > 0 ||
-            !/^[0-9a-f]{64}$/u.test(f.get('subject') ?? '') ||
-            !/^[0-9a-f]{40}$/u.test(f.get('commit') ?? '') ||
-            instant(f.get('time')) === null ||
-            restoreBy === null ||
-            (restored === null && !restoredOpen)
-        ) {
-            findings.push({
-                code: 'bypass-record-malformed',
-                path: p,
-                message:
-                    `${p} is not a readable bypass record — it needs ${BYPASS_RECORD_FIELDS.join(', ')}, ` +
-                    'a 64-hex `subject`, a 40-hex `commit`, and ISO-8601 instants with a timezone' +
-                    (missing.length > 0 ? ` (missing: ${missing.join(', ')})` : ''),
-            });
+        if (typeof f === 'string') {
+            malformed(p, f);
+            continue;
+        }
+        const missing = BYPASS_RECORD_FIELDS.filter((k) => (f.get(k) ?? '') === '');
+        const unknown = [...f.keys()].filter((k) => !(BYPASS_RECORD_FIELDS as readonly string[]).includes(k));
+        if (missing.length > 0 || unknown.length > 0) {
+            malformed(
+                p,
+                [missing.length > 0 ? `missing: ${missing.join(', ')}` : '', unknown.length > 0 ? `unknown: ${unknown.join(', ')}` : '']
+                    .filter((s) => s !== '')
+                    .join('; '),
+            );
+            continue;
+        }
+        const time = bypassInstant(f.get('time'));
+        const restoreBy = bypassInstant(f.get('restore_by'));
+        const restoredRaw = f.get('restored_at') as string;
+        const restored = restoredRaw === 'pending' ? null : bypassInstant(restoredRaw);
+        const review = f.get('council_review') as string;
+        const problem = !/^[0-9a-f]{64}$/u.test(f.get('subject') ?? '')
+            ? '`subject` is not a 64-hex digest'
+            : !/^[0-9a-f]{40}$/u.test(f.get('commit') ?? '')
+              ? '`commit` is not a full 40-hex revision'
+              : time === null || restoreBy === null || (restored === null && restoredRaw !== 'pending')
+                ? 'an instant is not ISO-8601 with a timezone, or names a date the calendar does not have'
+                : restoreBy < time
+                  ? '`restore_by` is before the bypass'
+                  : restored !== null && (restored < time || restored > t)
+                    ? '`restored_at` is before the bypass or in the future'
+                    : review !== 'pending' && !reviewExists(review)
+                      ? `\`council_review\` names \`${review}\`, which is not a committed file`
+                      : null;
+        if (problem !== null || time === null || restoreBy === null) {
+            malformed(p, problem ?? 'unreadable instant');
             continue;
         }
         if (restored === null) {
-            if (t > restoreBy) {
+            if (t >= restoreBy) {
                 findings.push({
                     code: 'bypass-not-restored',
                     path: p,
-                    message: `${p}: the bypass is past \`restore_by\` ${String(f.get('restore_by'))} and records no \`restored_at\``,
+                    message: `${p}: the bypass is at or past \`restore_by\` ${String(f.get('restore_by'))} and records no \`restored_at\``,
                 });
             }
             continue;
         }
-        const review = f.get('council_review') ?? '';
-        if ((review === '' || review === 'pending') && t > restored + BYPASS_REVIEW_DAYS * 86_400_000) {
+        if (review === 'pending' && t >= restored + BYPASS_REVIEW_DAYS * 86_400_000) {
             findings.push({
                 code: 'bypass-unreviewed',
                 path: p,

@@ -379,11 +379,24 @@ token carries (`src/config/platform-anchor.json`, `enforcement_boundary_note`),
 while the version ids are what the anchor's own notes already cite for the
 2026-09-11 episode (`49393554` → `49500777`).
 
-`check_platform_anchor` reads every record on every run and fails while one is
-past `restore_by` with no `restored_at`, or restored with `council_review:
-pending` seven days on, or missing a field. That check is what the rest of the
-anchor is — **local and voluntarily invoked** — so an open bypass reds the next
-run that someone chooses to make, not the forge.
+All nine fields are required; only `restored_at` and `council_review` may read
+the literal `pending`. `check_platform_anchor` reads every record on every run
+and fails while one is at or past `restore_by` with `restored_at: pending`, or
+restored with `council_review: pending` seven days on. It fails closed on a
+record that cannot show it closed: a missing, repeated or unknown field, no
+marker, an instant that is not a real calendar instant with a timezone,
+`restore_by` or `restored_at` before `time`, `restored_at` in the future, a
+`council_review` that names no committed file under `agents/evidence/`, a
+record or a record directory that cannot be read, and a record the diff
+deletes.
+
+**What that check does not establish.** The records are files in the branch it
+runs on, so a branch can rewrite one to look closed; the check reads them, it
+does not verify them against the forge, which needs the `administration`
+permission no workflow token carries. And it is what the rest of the anchor is
+— **local and voluntarily invoked** — so an open bypass reds the next run that
+someone chooses to make, not the forge. It makes a forgotten closing visible;
+it does not make a dishonest one impossible.
 
 ### The measurement this section was written from
 

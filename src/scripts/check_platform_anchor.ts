@@ -49,6 +49,8 @@ import {
     checkAnchorIdentity,
     evaluateAnchor,
     evaluateBypassRecords,
+    type BypassFinding,
+    type BypassRecordInput,
     readAnchorPolicy,
     readWaivers,
     type AnchorReading,
@@ -168,20 +170,43 @@ export function touchesPolicy(files: readonly string[]): boolean {
  * open bypass is a fact about the repository, not about the change under test.
  * A directory that cannot be read is no records, never a failure of the gate.
  */
-export function readBypassRecords(root: string): { path: string; text: string }[] {
+export function readBypassRecords(root: string): BypassRecordInput[] {
     let names: string[];
     try {
         names = fs.readdirSync(path.join(root, BYPASS_RECORD_DIR));
-    } catch {
-        return [];
+    } catch (err) {
+        // No directory means no bypass was ever recorded. Any other failure is
+        // a directory that exists and cannot be read, which shows nothing closed.
+        return (err as NodeJS.ErrnoException).code === 'ENOENT' ? [] : [{ path: BYPASS_RECORD_DIR, text: null }];
     }
     return names
         .filter((n) => n.endsWith('.md'))
         .sort()
         .map((n) => {
             const rel = `${BYPASS_RECORD_DIR}/${n}`;
-            return { path: rel, text: fs.readFileSync(path.join(root, rel), 'utf8') };
+            try {
+                return { path: rel, text: fs.readFileSync(path.join(root, rel), 'utf8') };
+            } catch {
+                return { path: rel, text: null };
+            }
         });
+}
+
+/**
+ * Bypass records the diff deletes. A record is the route's only trace, so
+ * removing one on a branch is a finding of its own rather than a quiet green.
+ */
+export function removedBypassRecords(changed: readonly string[], root: string): BypassFinding[] {
+    return changed
+        .map((f) => f.replace(/\\/g, '/').trim())
+        .filter((f) => f.startsWith(`${BYPASS_RECORD_DIR}/`) && f.endsWith('.md') && !fs.existsSync(path.join(root, f)))
+        .map((f) => ({ code: 'bypass-record-removed' as const, path: f, message: `${f} is deleted by this diff` }));
+}
+
+/** A `council_review` path names a committed evidence file inside the checkout. */
+function reviewExists(root: string, rel: string): boolean {
+    const norm = path.posix.normalize(rel);
+    return norm.startsWith('agents/evidence/') && !norm.includes('..') && fs.existsSync(path.join(root, norm));
 }
 
 export interface AnchorGateResult {
@@ -396,7 +421,10 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
     }
 
     const result = evaluateGate(changed, policyText, source, repo);
-    const open = evaluateBypassRecords(readBypassRecords(root), asOf());
+    const open = [
+        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel) => reviewExists(root, rel)),
+        ...removedBypassRecords(changed, root),
+    ];
     if (open.length > 0) {
         result.lines.push('', `❌  ${String(open.length)} bypass record(s) without a closing:`);
         for (const f of open) {
