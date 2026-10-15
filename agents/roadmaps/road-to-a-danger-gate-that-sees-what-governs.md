@@ -395,7 +395,7 @@ revert; the record loses its fields and the reader its check.*
 
 ## Phase 5 — The owner's load is a number
 
-- [ ] **5.1 A reader reproduces § Context's table and adds the column it
+- [x] **5.1 A reader reproduces § Context's table and adds the column it
       lacks.** `src/scripts/report_merge_gate_load.ts` replays the classifier
       over first-parent history from a pin back to a timestamp and tallies the
       clearance records by outcome. It emits
@@ -407,6 +407,14 @@ revert; the record loses its fields and the reader its check.*
       named rows. It counts and names commits and pull requests only, never a
       prompt or a reply. A re-run at the same pin and timestamp is
       byte-identical. It is a reader and exits 0.
+      Done 2026-10-15, at pin `a10aa16a1` from `2026-09-07T00:00:00+02:00`:
+      485 first-parent commits on 30 days, 283 `routine`, 99 `needs-council`,
+      103 `needs-owner` (60 governance surface, 25 owner-reserved decisions);
+      per day with a merge, `needs-owner` has a median of 2.5 and a maximum of
+      12. No clearance record exists at the pin, so all 99 `needs-council`
+      commits read "no council on record". Re-run byte-identical (`cmp` 0).
+      Seen red: the window filter and the split tally neutralised in place
+      failed two of seven cases.
       verify: `npx vitest run tests/scripts/report_merge_gate_load.test.ts` -> 0
 - [x] **5.2 The neighbours are told.** One dated note in
       `road-to-self-modification-that-a-council-must-pass` beside its Phase 4,
