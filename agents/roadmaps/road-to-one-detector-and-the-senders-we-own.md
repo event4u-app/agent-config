@@ -61,6 +61,20 @@ The placeholder grammar is one constant, chosen by a pre-registered measurement,
 and the contract states what each of four published states — `asserted`,
 `replaced`, `gated`, `uncovered` — proves.
 
+## Execution status — 2026-10-15
+
+One lane took the three steps `road-to-placeholders-on-the-wire` Phase 1 waits
+on (its D9) and what they depend on: 0.1, 0.2, 0.3, 2.1 and 3.1. Everything else
+is open.
+
+- **For the sibling:** the contract states token identity, scope, lifecycle and
+  the owner of resolution state, and leaves at-rest storage to its
+  `identifier-table-at-rest` blocker; the rule table exists; the grammar is
+  `__TYPE_n_fp__`. **The identifier class has no rows yet** — validated identifier
+  rules are 2.3 — so counting by class today yields credential evidence only.
+- **Next in order:** 0.4 (sender census), then 2.2 (which now carries the
+  single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
+
 ## What this roadmap deliberately does not do
 
 | # | Not done | Why |
@@ -80,7 +94,7 @@ and the contract states what each of four published states — `asserted`,
 |---|---|---|---|---|---|
 | D1 | reversible-technical | agent | Own estate stem, split in two: bytes this package writes (here) and host carriers (`road-to-placeholders-on-the-wire`) | 7 active roadmaps at `d41121927`, none owns outbound values; the split puts every `asserted` proof before any host contract is needed | a later roadmap takes ownership of outbound values |
 | D2 | reversible-technical | agent | The typed counter the goal asked for is kept; the bracket delimiter is not | F9, reproduced: `[IBAN_1]` fails three of four surfaces. The owner's form was an example ("z.B."), not a constraint <!-- md-language-check: ignore --> | — |
-| D3 | contested-technical | evidence | Which surviving spelling becomes the grammar — `⟦TYPE_n.fp⟧`, `__TYPE_n__` or a namespaced wire form with a separate display label — is decided by the model-fidelity bar of 0.3, not by taste | F9 narrows the field to forms that survive; no study of model copy fidelity per delimiter was found | the bar reports no spelling above its threshold |
+| D3 | contested-technical | evidence | Which surviving spelling becomes the grammar — `⟦TYPE_n.fp⟧`, `__TYPE_n__` or a namespaced wire form with a separate display label — is decided by the model-fidelity bar of 0.3, not by taste | F9 narrows the field to forms that survive; **settled 2026-10-15 by PREREG endpoint (d): all three survivors copied 20/20, the pre-registered rule picked `__TYPE_n_fp__`** | the bar reports no spelling above its threshold |
 | D4 | reversible-technical | agent | Refuse where content has not yet moved, replace where it has | Reconciles F7's two house positions under one rule | — |
 | D5 | reversible-technical | agent | Credentials and identifiers are two classes with opposite restore policies; a credential value is never stored | A local edit of a file holding a credential can re-derive the value from that file; nothing else needs it | — |
 | D6 | reversible-technical | agent | Settings block `egress.placeholders`, not `privacy.egress` | A key named "privacy" reads as the guarantee N1 exists to avoid | — |
@@ -89,7 +103,7 @@ and the contract states what each of four published states — `asserted`,
 
 ## Phase 0 — Contract, census, pre-registration (no product code)
 
-- [ ] **0.1 Write the contract** `docs/contracts/egress-placeholders-v1.md`: the
+- [x] **0.1 Write the contract** `docs/contracts/egress-placeholders-v1.md`: the
       two classes (`credential`, `identifier`) and their restore policy (D5);
       the four states and what counts as proof of each — `asserted` only where
       this package writes the request, `replaced` where a host hook substitutes
@@ -97,14 +111,14 @@ and the contract states what each of four published states — `asserted`,
       `uncovered` where nothing reaches; the logging rule (type and count, never
       a value, never a masked fragment); and D4.
       verify: the file exists and names all four states; `grep -c 'uncovered' docs/contracts/egress-placeholders-v1.md` is at least 1.
-- [ ] **0.2 Add threat-model row j** — session content travelling to a model
+- [x] **0.2 Add threat-model row j** — session content travelling to a model
       provider, with sub-rows for host telemetry that can export prompts or
       request bodies (a second egress path), the session mapping as a store worth
       stealing, a request gateway being bypassed, and tool arguments leaving
       through external tools — and correct "It holds no user data" to what is
       true.
       verify: `docs/threat-model.md` carries a row `j` and no longer contains the sentence "It holds no user data".
-- [ ] **0.3 Pre-register the bars before the first data point**, one document
+- [x] **0.3 Pre-register the bars before the first data point**, one document
       committed alone in the house shape of `internal/bench/*-PREREG.md`. Corpus
       in four workloads: identifier-heavy prose, credential-heavy configuration,
       implicit identity, proprietary code — the third measured to report the
@@ -152,7 +166,7 @@ read cannot leak through any later bug.
 
 ## Phase 2 — One detector table (F2, F3)
 
-- [ ] **2.1 One rule table, one schema.** Each rule: type, class, pattern,
+- [x] **2.1 One rule table, one schema.** Each rule: type, class, pattern,
       optional validator, optional context words and window, exclusions, and a
       span with start **and end**. Pure, no I/O, no network, no dependency — the
       shape `secret_detector` already has, extended. Overlaps resolve before any
@@ -160,12 +174,30 @@ read cannot leak through any later bug.
       the longer one; replacements apply right to left on the original text.
       Bounded quantifiers only; a test refuses a rule that backtracks on a
       pathological input.
-      verify: the table is the only place a credential pattern literal appears under `src/scripts` and `src/cli`; a lint fails a second one and is registered in `src/config/gate-coverage.yml` with a canary.
+      verify: `npx vitest run src/scripts/_lib/egress_rules.test.ts` -> 0 (schema, overlap precedence, right-to-left replacement, a bounded-quantifier refusal seen red on the old unbounded `db-connection-uri` pattern), and `secret_detector` reads its credential rows from the table with its own suites green.
+      **Correction (2026-10-15, at execution):** the original verify — the table is
+      the only place a credential pattern literal appears, enforced by a lint — cannot
+      be green before 2.2 moves the six other sites F2 names; a lint landed here would
+      need a baseline of exactly the sites 2.2 removes. It moves to 2.2's verify.
+      Landed as `src/scripts/_lib/egress_rules.ts`. Two spans are detection-grade, not
+      replacement-grade, and stay so for the commit-time scanner: `pem-private-key`
+      matches the header line only and `db-connection-uri` the whole authority; 3.3
+      widens them before any replacement reads them. Bounding changed two quantifiers
+      that had no practical reach (`\s*` → `\s{0,16}` around `=`, value caps of
+      1,024 / 8,192 characters).
+      **Superseded by the PR #2366 council review (2026-10-15):** quantifiers are
+      unbounded again wherever linear, with a per-rule `linearity` argument;
+      `jwt` and `db-connection-uri` start once per character run with an atomic
+      prefix, so the parity suite against the pre-move pack has no exceptions. Each
+      rule now declares its replacement span separately from its detection span:
+      `pem-private-key` replaces through its END marker and refuses the text when
+      that cannot be proven, so 3.3 inherits replacement-grade spans rather than
+      having to widen them.
 - [ ] **2.2 Move every site of F2 onto it** without changing what each site does
       with a hit — the council low-impact redactor still refuses, the explain
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
       detection is shared.
-      verify: a drift matrix — every positive fixture against every consumer — is green, and the `sk-ant-api03` case of F2 is a named row in it.
+      verify: a drift matrix — every positive fixture against every consumer — is green, and the `sk-ant-api03` case of F2 is a named row in it; the table is the only place a credential pattern literal appears under `src/scripts` and `src/cli`, and a lint that fails a second one is registered in `src/config/gate-coverage.yml` with a canary (moved here from 2.1).
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own
@@ -198,7 +230,7 @@ These senders are where this package controls the request **and** reads the
 response, with no host contract in between and no hook budget to spend — so
 `asserted` is proven here before any host is asked to cooperate.
 
-- [ ] **3.1 The grammar is one constant** (D3) with one recogniser: delimiter,
+- [x] **3.1 The grammar is one constant** (D3) with one recogniser: delimiter,
       type, number and a fingerprint — a truncated keyed digest over type and
       canonical value under a random key drawn per run and never sent. The
       number is what a reader sees; the fingerprint makes a token from another
@@ -206,6 +238,15 @@ response, with no host contract in between and no hook budget to spend — so
       never matches a detector rule. A lint refuses a second spelling of the
       grammar anywhere under `src/`.
       verify: a forged token and a token under another key do not resolve; replacing twice yields the same bytes as replacing once.
+      **Done 2026-10-15:** `src/scripts/_lib/egress_token.ts`, spelling `__TYPE_n_fp__`
+      selected by PREREG endpoint (d) — all three survivors copied 20/20 on the host
+      model, the pre-registered rule (ASCII-only, then shorter) picked this one
+      (`internal/bench/reports/egress-placeholders-fidelity-2026-10-15.md`; no second
+      provider measured). `npx vitest run src/scripts/_lib/egress_token.test.ts` -> 0;
+      the forgery, foreign-key, idempotence and one-spelling tests were each seen red
+      under a neutralised implementation. The one-spelling check is a test that scans
+      `src/`, not a registered gate. Replacement is in memory only; the variant
+      suffix is 3.2's.
 - [ ] **3.2 Two spellings of one entity share number and fingerprint and carry
       a variant suffix**, so a restore reproduces each spelling byte for byte.
       verify: a spaced and a compact IBAN share a number, differ in suffix, and both restore to their original bytes.

@@ -1,0 +1,445 @@
+{
+  "endpoint": "d",
+  "prereg": "internal/bench/egress-placeholders-PREREG.md",
+  "model": "sonnet",
+  "date": "2026-10-15T05:33:12.323Z",
+  "per_spelling": {
+    "S1": {
+      "trials": 20,
+      "passed": 20,
+      "no_tool_call": 0
+    },
+    "S2": {
+      "trials": 20,
+      "passed": 20,
+      "no_tool_call": 0
+    },
+    "S3": {
+      "trials": 20,
+      "passed": 20,
+      "no_tool_call": 0
+    }
+  },
+  "trials": [
+    {
+      "spelling": "S1",
+      "type": "EMAIL",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "EMAIL",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "EMAIL",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "EMAIL",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "PHONE",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "PHONE",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "PHONE",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "PHONE",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "IBAN",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "IBAN",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "IBAN",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "IBAN",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "CARD",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "CARD",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "CARD",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "CARD",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "APIKEY",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "APIKEY",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "APIKEY",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S1",
+      "type": "APIKEY",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "EMAIL",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "EMAIL",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "EMAIL",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "EMAIL",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "PHONE",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "PHONE",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "PHONE",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "PHONE",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "IBAN",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "IBAN",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "IBAN",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "IBAN",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "CARD",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "CARD",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "CARD",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "CARD",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "APIKEY",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "APIKEY",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "APIKEY",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S2",
+      "type": "APIKEY",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "EMAIL",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "EMAIL",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "EMAIL",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "EMAIL",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "PHONE",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "PHONE",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "PHONE",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "PHONE",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "IBAN",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "IBAN",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "IBAN",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "IBAN",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "CARD",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "CARD",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "CARD",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "CARD",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "APIKEY",
+      "template": 0,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "APIKEY",
+      "template": 1,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "APIKEY",
+      "template": 3,
+      "tool_call": true,
+      "pass": true
+    },
+    {
+      "spelling": "S3",
+      "type": "APIKEY",
+      "template": 2,
+      "tool_call": true,
+      "pass": true
+    }
+  ]
+}

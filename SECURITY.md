@@ -7,7 +7,9 @@ artifacts it ships: skills, rules, commands, MCP configs, hooks, and the
 installer script. It does **not** cover downstream consumer projects that install
 the package.
 
-**Trust boundary.** `agent-config` has no running server and holds no user data.
+**Trust boundary.** `agent-config` has no running server and owns no user database;
+its hooks and transports do handle session content locally, and some of it
+travels to model providers ([threat model](docs/threat-model.md) row j).
 The trust boundary is the **shipped artifact tree** (the content installed into a
 consumer project's `.augment/`, `.claude/`, `.cursor/`, etc.) and the **installer
 script** (`scripts/install.sh` / `src/cli/`). Threats are about artifact
