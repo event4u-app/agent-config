@@ -57,26 +57,29 @@ interface Entry {
  * the in-memory mapping from minted tokens back to identifier values.
  */
 export class TokenScope {
-    readonly #key: Uint8Array;
-    readonly #byDigest = new Map<string, Entry>();
-    readonly #byToken = new Map<string, Entry>();
-    readonly #counters = new Map<string, number>();
+    private readonly key: Uint8Array;
+    private readonly byDigest = new Map<string, Entry>();
+    private readonly byToken = new Map<string, Entry>();
+    private readonly counters = new Map<string, number>();
 
     constructor(key: Uint8Array = randomBytes(32)) {
         if (key.length < 32) {
             throw new Error('TokenScope: key must be at least 32 bytes');
         }
-        this.#key = key;
+        this.key = key;
     }
 
     mint(type: string, cls: EgressClass, canonical: string): string {
-        const digest = createHmac('sha256', this.#key).update(`${type}\u0000${canonical}`).digest('hex');
-        const known = this.#byDigest.get(digest);
+        const digest = createHmac('sha256', this.key).update(`${type}\u0000${canonical}`).digest('hex');
+        const known = this.byDigest.get(digest);
         if (known !== undefined) {
+            if (known.class !== cls) {
+                throw new Error(`TokenScope: ${type} was minted under class ${known.class}, refusing class ${cls}`);
+            }
             return formatToken(known);
         }
-        const number = (this.#counters.get(type) ?? 0) + 1;
-        this.#counters.set(type, number);
+        const number = (this.counters.get(type) ?? 0) + 1;
+        this.counters.set(type, number);
         const entry: Entry = {
             type,
             class: cls,
@@ -84,24 +87,24 @@ export class TokenScope {
             fingerprint: digest.slice(0, TOKEN_FP_LENGTH),
             value: cls === 'identifier' ? canonical : null,
         };
-        this.#byDigest.set(digest, entry);
-        this.#byToken.set(formatToken(entry), entry);
+        this.byDigest.set(digest, entry);
+        this.byToken.set(formatToken(entry), entry);
         return formatToken(entry);
     }
 
     /** True only for a token this scope minted; token syntax alone proves nothing. */
     owns(token: string): boolean {
-        return this.#byToken.has(token);
+        return this.byToken.has(token);
     }
 
     /** The identifier value a token stands for, or null: unknown, forged, foreign or credential. */
     resolve(token: string): string | null {
-        return this.#byToken.get(token)?.value ?? null;
+        return this.byToken.get(token)?.value ?? null;
     }
 
     /** What the scope holds, without any value. */
     snapshot(): Array<Omit<Entry, 'value'>> {
-        return [...this.#byDigest.values()].map(({ value: _value, ...rest }) => rest);
+        return [...this.byDigest.values()].map(({ value: _value, ...rest }) => rest);
     }
 }
 

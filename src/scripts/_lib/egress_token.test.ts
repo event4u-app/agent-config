@@ -24,6 +24,31 @@ function mixed(n: number): string {
 }
 const KEY = `sk-ant-${mixed(40)}`;
 
+/** Every string reachable from an object through own properties and Map/Set/array entries. */
+function reachableStrings(root: unknown): string[] {
+    const out: string[] = [];
+    const seen = new Set<unknown>();
+    const visit = (v: unknown): void => {
+        if (typeof v === 'string') {
+            out.push(v);
+            return;
+        }
+        if (v === null || typeof v !== 'object' || seen.has(v)) return;
+        seen.add(v);
+        if (v instanceof Map) {
+            for (const [k, x] of v) {
+                visit(k);
+                visit(x);
+            }
+        } else if (v instanceof Set || Array.isArray(v)) {
+            for (const x of v) visit(x);
+        }
+        for (const k of Reflect.ownKeys(v)) visit((v as Record<PropertyKey, unknown>)[k]);
+    };
+    visit(root);
+    return out;
+}
+
 describe('grammar', () => {
     it('format and parse round-trip the parts', () => {
         const tok = formatToken({ type: 'IBAN', number: 3, fingerprint: 'a1b2c3' });
@@ -85,11 +110,28 @@ describe('TokenScope', () => {
         expect(scope.resolve(tok) === 'one@corp.test').toBe(true);
     });
 
-    it('never resolves a credential token and never holds the credential value', () => {
+    it('never resolves a credential token', () => {
         const scope = new TokenScope();
-        const tok = scope.mint('APIKEY', 'credential', KEY);
-        expect(scope.resolve(tok)).toBeNull();
-        expect(JSON.stringify(scope.snapshot()).includes(KEY)).toBe(false);
+        expect(scope.resolve(scope.mint('APIKEY', 'credential', KEY))).toBeNull();
+    });
+
+    it('holds no credential value anywhere in its state, which the walk can see', () => {
+        const scope = new TokenScope();
+        scope.mint('EMAIL', 'identifier', 'seen@corp.test');
+        scope.mint('APIKEY', 'credential', KEY);
+        const strings = reachableStrings(scope);
+        // The walk reaches the private maps: the identifier value is there.
+        expect(strings.some((v) => v === 'seen@corp.test')).toBe(true);
+        expect(strings.some((v) => v.includes(KEY))).toBe(false);
+    });
+
+    it('refuses to mint one (type, value) under a second class', () => {
+        const a = new TokenScope();
+        a.mint('APIKEY', 'identifier', KEY);
+        expect(() => a.mint('APIKEY', 'credential', KEY)).toThrow(/class/);
+        const b = new TokenScope();
+        b.mint('APIKEY', 'credential', KEY);
+        expect(() => b.mint('APIKEY', 'identifier', KEY)).toThrow(/class/);
     });
 
     it('a forged token with the right number and a wrong fingerprint does not resolve', () => {
