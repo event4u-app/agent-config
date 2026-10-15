@@ -62,18 +62,31 @@ A token stands for one value inside one **issuing scope**. It carries four parts
 | variant | optional; distinguishes two spellings of one entity (a spaced and a compact IBAN) so a restore reproduces each spelling byte for byte |
 
 - **Identity.** Two occurrences of one canonical value in one scope get one
-  number and one fingerprint. Two different values get two numbers.
+  number and one fingerprint. Two different values get two numbers. One
+  (type, value) pair has one class for the life of the scope: minting it again
+  under the other class is refused, so a value first seen as a credential can
+  never become restorable, and the reverse cannot silently drop a restore.
 - **Scope.** For a request this package writes, the scope is the one invocation
   that builds and sends it. For a host carrier, the scope is set by that
   roadmap's session table, which must keep the key out of every request.
 - **Lifecycle.** A token is minted on first replacement and dies with its scope's
   key. A token from another scope, a token the model invented and a token whose
   fingerprint does not match its number are **unresolved** — never resolved by
-  number alone, never guessed.
+  number alone, never guessed. This holds with high probability, not with
+  certainty: the fingerprint is 24 bits, so one invented or foreign token whose
+  type and number match a token the scope issued resolves with probability
+  2^-24 (about 6 in 100 million), and k such guesses against one issued token
+  with probability about k·2^-24. What a successful guess returns is an
+  identifier value to the local process that holds the scope — never a
+  credential, which no scope stores.
 - **Owner of resolution state.** The process that minted the token. No other
   process resolves it unless the at-rest decision gives it the state.
-- **Stability of bytes.** Replacing already-replaced text yields the same bytes
-  (a token never matches a detector rule). One recogniser parses the grammar;
+- **Stability of bytes.** Replacing already-replaced text yields the same bytes.
+  A span is left alone only when it is exactly a token **this scope minted**;
+  token syntax alone protects nothing, so a token-shaped substring planted inside
+  a credential, or a token from another scope, does not stop detection. Rules do
+  match tokens in places — `generic-assignment` matches one after a keyword —
+  which is why the scope check, not the grammar, carries idempotence. One recogniser parses the grammar;
   the grammar's spelling is one constant, and no second spelling exists under
   `src/`.
 - **Spelling: `__TYPE_n_fp__`** — e.g. `__IBAN_1_495cff__`: type upper-case
@@ -110,6 +123,33 @@ else derived from the value: no value, no masked fragment, no prefix, no length,
 no digest a reader could test a guess against. Counts are aggregated per type
 per surface. A test that checks a finding asserts on type and count; a planted
 fixture value is never echoed into the test's own failure output.
+
+**Known exception, not yet conforming.** The commit-time scanner
+(`secret_detector.ts`, read by `check_secret_leak`) reports a masked preview —
+up to four leading and two trailing characters — because `secret-vcs-guard`
+asks the agent to show the match to the human before a commit. When that scanner
+runs inside an agent session, the preview reaches the model provider with the
+rest of the tool output. It predates this contract and is recorded here rather
+than claimed conforming; moving the scanner onto this rule is part of step 2.2
+of `road-to-one-detector-and-the-senders-we-own`, which shares detection across
+consumers.
+
+## Detection ceilings
+
+The credential rows moved here from the commit-time scanner unchanged in what
+they match, with two exceptions, each the price of making a pattern that was
+quadratic on a hostile input linear. `DETECTION_CEILINGS` in the rule table
+holds the same list; a test fails when the two disagree or when a listed ceiling
+no longer loses anything.
+
+| Rule | What is not detected | Why |
+|---|---|---|
+| `jwt` | a JWT glued to a preceding letter, digit, `_` or `-` (the old pattern matched from the inner `eyJ`) | a lookbehind admits a start only where a segment run begins; without it every inner `eyJ` restarted the same scan |
+| `db-connection-uri` | a scheme over 32 characters with no inner word boundary; a dotted scheme over 32 characters is matched from a later boundary, so the span starts inside the scheme while the userinfo is still covered | the scheme bound caps the restarts that reach one `://` |
+
+Every other rule states in its `linearity` field why it runs in linear time
+without a bound, and matches a value of any length whole, so a replacement never
+leaves a suffix in plaintext.
 
 ## Settings
 
