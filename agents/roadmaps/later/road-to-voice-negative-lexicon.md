@@ -5,6 +5,10 @@ status: later
 
 # Road to a voice negative lexicon — make "never say X" checkable instead of hoped
 
+> **Arrivals:** 2 — latest `inbox-2026-10-s` (2026-10-15), absorbed by
+> `road-to-a-brand-the-tree-can-check` Phase 5 (archive on its step 5.7);
+> earlier: the original 2026-07-30 park.
+
 > **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
 > roadmap was anchored on external adoption; that anchoring is struck by
 > [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
