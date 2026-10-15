@@ -307,7 +307,7 @@ describe("end to end through the dispatcher", () => {
     );
     const manifest = path.join(tmp, "manifest.yaml");
     writeManifest(manifest);
-    const env = { ...process.env, EGRESS_TEST_PLANTED: PLANTED };
+    const env: NodeJS.ProcessEnv = { ...process.env, EGRESS_TEST_PLANTED: PLANTED };
     delete env["AGENT_CONFIG_REPLAY"];
     delete env["AGENT_CHAT_HISTORY_FILE"];
     const r = spawnSync(
