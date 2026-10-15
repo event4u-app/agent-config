@@ -271,7 +271,7 @@ two new scripts and the context file are additive; deleting them restores today.
 ## Phase 3 — The final stage: emit, validate, publish, and `analyze:inbox`
 
 - [ ] **3.1 Emit locally (directive e).** Roadmaps via `roadmap-writing`,
-      `status: ready`; blocked work stays `ready` with a body `> Blocked until …`
+      `status: ready` (`draft` above the D18 intake limit, said in one line); blocked work stays `ready` with a body `> Blocked until …`
       note (`src/skills/roadmap-writing/SKILL.md:250-251`); English per
       `language-and-tone`; `relates:` with slug and relation; `ENC1:`
       provenance; recurrence via the inbox's Phase 4c and its `Arrivals:` line;
@@ -524,7 +524,7 @@ file; `council:pr` is unchanged.
 | D15 | spend-exhaustion | evidence | Council and analyst spend (closure-scan spend hit on 2.6) pauses and reports at the per-run budget cap of 2.2 (`handed-back`), never raises it | ADR-268 § 8 routes spend to pause-and-report | a run ends `handed-back` on budget twice in its first ten |
 | D16 | deterministic | evidence | The other 23 closure-scan hits are lexical, not open decisions: `merge`/`publish` inside a slug, a kill row or a calibration step; `contradicts` inside a rule clause (2.3, 3.4); `improve` inside the owner's quoted directives and evidence rows; each AC names its command or observable state | `./scripts-run src/scripts/closure_scan` on this file, 2026-10-15 | the scan's grammar changes and a hit survives a re-read |
 | D17 | product-owned | owner | Both owner blockers → (a): naming a source in the invocation authorises read-only fetches of it and the research step for that run (`source-fetch-authorization`); cross-family CLI analysts run under a separate read-only analyst profile, seat doctrine unchanged (`analyst-cli-agency`) | owner answers 2026-10-15 to the PR #2373 report | a fetch reaches private or authenticated content, or a probed binary writes outside its profile |
-| D18 | product-owned | owner | AC-5's always-`ready` landing yields to the harvest intake limit decided in `road-to-agent-throughput-recovery` D8: while more than 8 `ready` roadmaps sit at 0 ticked steps, a new inbox roadmap lands `draft` | owner answered both on 2026-10-15; the later, explicit limit narrows the transcript's standing preference | the owner lifts or changes N |
+| D18 | product-owned | owner | Step 3.1 encodes it, and AC-5's always-`ready` landing yields to the harvest intake limit decided in `road-to-agent-throughput-recovery` D8: while more than 8 `ready` roadmaps sit at 0 ticked steps, a new inbox roadmap lands `draft` | owner answered both on 2026-10-15; the later, explicit limit narrows the transcript's standing preference | the owner lifts or changes N |
 ## Source disposition
 
 **Lineage.** `lint_consolidation_lineage` is clean. Source A's exchange final
@@ -582,8 +582,8 @@ catch-up jobs → K4; blind A/B and canary → 6.6.
       verbatim, a disagreement ledger and a minority audit.
 - [ ] AC-4 — After every exchange the run shows the gate's numbers, and a further
       round happened only on a recorded council or owner decision.
-- [ ] AC-5 — `analyze:inbox` on a replayed round lands `status: ready`
-      roadmaps (subject to the intake limit of D18) and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
+- [ ] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
+      roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
       block.
 - [ ] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`

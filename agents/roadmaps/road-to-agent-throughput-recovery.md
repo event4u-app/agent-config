@@ -266,17 +266,13 @@ the Acceptance Criteria held.
       reads it as `user-wait`, per claim (5).
       verify: replayed asks — reserved ones still reach the owner; cheap ones do
       not stop the run.
-- [x] **5.3 Owner: an intake limit for harvest roadmaps.** Answered 2026-10-15: (a), N = 8 (D8). The
+- [x] **5.3 Owner: an intake limit for harvest roadmaps.** Answered 2026-10-15: (a), N = 8 (D8); encoded where roadmaps land by step 3.1 of `road-to-an-analysis-family-that-deepens-itself`. The
       question: does a new inbox roadmap land `draft` while more than N `ready`
       roadmaps sit at 0 ticked steps (10 of 20 on 2026-10-15)? Options: (a) yes,
       N = 8; (b) yes, another N; (c) no limit, inbox roadmaps land as the
       operator says per round. Owner-reserved, because it changes what reaches
       the estate.
       verify: the owner's answer is a Decisions row.
-- [ ] **5.4 Encode the intake limit where roadmaps land.** `/analyze:inbox`
-      Phase 6 counts `ready` roadmaps at 0 ticked steps before emitting; above 8
-      the new roadmap lands `draft` and the run says so in one line.
-      verify: `grep -c 'ticked steps' src/domains/analysis-workbench/analyze/inbox/command.md` -> /[1-9]/
 
 ## Decisions
 

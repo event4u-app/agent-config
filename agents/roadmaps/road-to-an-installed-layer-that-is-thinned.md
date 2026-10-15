@@ -409,7 +409,7 @@ Reproduced on 2026-10-01:
 | D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
