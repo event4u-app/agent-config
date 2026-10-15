@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import type { EgressRule } from './egress_rules.js';
+import { detect, type EgressRule } from './egress_rules.js';
 import { scanText, type SecretFinding } from './secret_detector.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -144,5 +144,34 @@ describe('the scanner applies every field of a table row', () => {
         const { context: _context, ...rest } = row;
         const noD: EgressRule = { ...rest, pattern: /pin (\d{6})/g, valueGroup: 1 };
         expect(() => scanText('pin 482915', { rules: [noD] })).toThrow(/d flag/);
+    });
+});
+
+describe('the scanner and the replacer on multi-line text', () => {
+    const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
+    const run = (n: number): string => ALNUM.repeat(Math.ceil(n / ALNUM.length)).slice(0, n);
+    const text = [
+        `token: sk-ant-${run(40)}`,
+        `password =`,
+        `${run(24)}`,
+        `url = postgres://u:${run(12)}@db`,
+        `api_key = "${run(24)}"`,
+    ].join('\n');
+
+    it('every scanner finding is also a replacer span: the scanner never sees more', () => {
+        const lineStarts = [0];
+        for (let i = 0; i < text.length; i++) if (text[i] === '\n') lineStarts.push(i + 1);
+        const spans = detect(text);
+        for (const f of scanText(text)) {
+            if (f.confidence !== 'high' || f.rule === 'entropy') continue;
+            const at = (lineStarts[f.line - 1] as number) + f.column - 1;
+            expect(spans.some((s) => s.start === at)).toBe(true);
+        }
+    });
+
+    it('the replacer sees a value the line-scoped scanner cannot: an assignment split across lines', () => {
+        const split = `password =\n${run(24)}`;
+        expect(detect(split).some((s) => s.rule === 'generic-assignment')).toBe(true);
+        expect(scanText(split).some((f) => f.rule === 'generic-assignment')).toBe(false);
     });
 });
