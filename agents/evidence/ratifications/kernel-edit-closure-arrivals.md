@@ -88,3 +88,23 @@ to `ratified`.
 The seat verdicts are transcribed by the implementing session; the council
 responses are gitignored and not committed. The prompts are committed, so what
 was asked can be checked; what was answered rests on this transcription.
+
+## Owner decision, recorded after merge
+
+This change edits the module that derives the gate's verdict, which
+`docs/contracts/ratification-artifact.md` § "When the user decides",
+condition 4, reserves for the owner. It was merged on 2026-10-15 as #2376
+(`e789a13f8`) on the council's 2/2 ratification alone, without the owner's
+decision — a process miss by the merging agent, disclosed to the owner the
+same day.
+
+- **Decided by:** owner, 2026-10-15, in chat: approved after the fact
+  (option 1 of: approve and record / revert and re-present / review first).
+- **Basis put to the owner:** the council's three rounds above, CI 50/50 on
+  `2c7e3e116`, and that a revert would restore the defect this change fixes
+  (a correct record refused locally whenever a module joins the dispatcher
+  closure).
+- **What this does not change:** the council review remains the content
+  review. The owner's decision is the authorization condition 4 requires; it
+  is recorded here because the record is where the gate and a later reader
+  look for it.
