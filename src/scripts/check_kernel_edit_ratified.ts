@@ -427,14 +427,17 @@ function resolveBaseRef(explicit: string | null, root: string): string {
  * compares against this script's checkout. A run that builds its own diff
  * always passes the base it diffed against.
  *
- * THROWS a {@link GatedSubjectRefusal} when either commit does not resolve.
+ * `headCommit` is already a commit id; the base ref is resolved here.
+ *
+ * THROWS a {@link GatedSubjectRefusal} when the base does not resolve or the
+ * object store cannot be read.
  */
-function derivedFor(root: string, baseRef: string | null, revision: string): readonly string[] {
+function derivedFor(root: string, baseRef: string | null, headCommit: string): readonly string[] {
     const verdictsOf = (tree: ClosureTree): string[] =>
         dispatchImportClosure(tree)
             .filter((e) => e.class === 'verdict')
             .map((e) => e.path);
-    const head = treeAtRevision(root, resolveRevision(root, revision));
+    const head = treeAtRevision(root, headCommit);
     if (baseRef === null && path.resolve(root) !== REPO) {
         return [...new Set([...derivedPlumbing(), ...verdictsOf(head), ...closureArrivals(head)])];
     }

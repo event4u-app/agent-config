@@ -212,6 +212,49 @@ describe('a module joining the dispatcher closure', () => {
         expect(local.code).toBe(1);
     }, 60_000);
 
+    it('a plumbing file matched by name, outside any closure, is gated in both shapes', () => {
+        const base = buildChange();
+        const budget = 'src/config/hook-bundle-budget.json';
+        write(budget, '{ "ceiling": 1 }\n');
+        commitAll(root, 'budget');
+        git(['worktree', 'add', '--detach', baseDir, base]);
+
+        const ci = run(path.join(baseDir, 'src/scripts/check_kernel_edit_ratified.ts'), [
+            '--root',
+            root,
+            '--base-ref',
+            base,
+        ]);
+        const local = run(path.join(root, 'src/scripts/check_kernel_edit_ratified.ts'), [
+            '--base-ref',
+            base,
+        ]);
+        for (const r of [ci, local]) {
+            expect(r.out).toContain(`hook-plumbing source ${budget}`);
+            expect(r.out).toContain(`hook-plumbing source ${DISPATCHER}`);
+            expect(r.code).toBe(1);
+        }
+    }, 60_000);
+
+    it('an invalid --rev refuses even when no changed path is gated', () => {
+        buildChange();
+        const gate = run(path.join(root, 'src/scripts/check_kernel_edit_ratified.ts'), [
+            '--rev',
+            'no-such-revision',
+            '--files',
+            'README.md',
+        ]);
+        const writer = run(path.join(root, 'src/scripts/ratification_subject.ts'), [
+            '--rev',
+            'no-such-revision',
+            '--files',
+            'README.md',
+        ]);
+        expect(gate.out).toContain('no-such-revision');
+        expect(gate.code).toBe(1);
+        expect(writer.code).toBe(1);
+    }, 60_000);
+
     it('a judging copy checked out at another commit still compares against --base-ref', () => {
         const base = buildChange();
         // The judging script's own tree is the HEAD, which already contains the
