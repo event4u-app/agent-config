@@ -1218,8 +1218,7 @@ export abstract class CliClient extends ExternalAIClient {
         'unauthorized',
         'auth failed',
         'auth_error',
-        'login',
-        'not logged in',
+        'not logged in', 'please log in', 'login required',
         'session expired',
         'invalid credentials',
     ];
@@ -1616,13 +1615,14 @@ export abstract class CliClient extends ExternalAIClient {
         return response;
     }
 
+    /** Fallback-INELIGIBLE classes first: a bare `login` once read a timeout as auth. */
     static _classify_stderr(stderr: string, returncode: number): string {
         const haystack = stderr.toLowerCase();
-        if (this._AUTH_FAILURE_PATTERNS.some((p) => haystack.includes(p))) {
-            return 'auth_expired';
-        }
         if (this._TIMEOUT_PATTERNS.some((p) => haystack.includes(p))) {
             return 'timeout';
+        }
+        if (this._AUTH_FAILURE_PATTERNS.some((p) => haystack.includes(p))) {
+            return 'auth_expired';
         }
         if (this._QUOTA_PATTERNS.some((p) => haystack.includes(p))) {
             return 'cli_quota_exhausted';

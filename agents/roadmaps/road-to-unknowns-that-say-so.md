@@ -91,29 +91,29 @@ the artefact; a reasoned best-effort events write
 
 First and alone: the only defect here that can charge twice with no ceiling set.
 
-- [ ] **1.1 Pin the reading as tests.** In `tests/scripts/ai_council/clients.test.ts`:
+- [x] **1.1 Pin the reading as tests.** In `tests/scripts/ai_council/clients.test.ts`:
       `timeout-with-login-substring-is-timeout` (the F1 string → `timeout`),
       `timeout-is-never-fallback-eligible` (same string, default policy →
       ineligible), and the failure matrix — truncated JSON on stdout, stderr plus
       a kill signal, quota text beside a timeout — each asserting the protected
       class wins. Seen red before 1.2.
       verify: `npx vitest run tests/scripts/ai_council/clients.test.ts -t timeout-with-login-substring-is-timeout --reporter=verbose` -> /✓.*timeout-with-login-substring-is-timeout/
-- [ ] **1.2 Ambiguity resolves to the protected class.** `_classify_stderr`
+- [x] **1.2 Ambiguity resolves to the protected class.** `_classify_stderr`
       tests `_TIMEOUT_PATTERNS` before the auth and quota lists; a string that
       matches an ineligible class and an eligible one is ineligible. The bare
       `login` narrows to the phrases it was written for (`not logged in`,
       `please log in`, `login required`), each pinned by a fixture from the
       provider CLI's real output.
       verify: `npx vitest run tests/scripts/ai_council/clients.test.ts --reporter=verbose` -> /✓.*timeout-is-never-fallback-eligible/
-- [ ] **1.3 Genuine auth still falls back.** `genuine-auth-still-falls-back`:
+- [x] **1.3 Genuine auth still falls back.** `genuine-auth-still-falls-back`:
       `not logged in` stays `auth_expired` and stays eligible under the policy
       that allows it today.
       verify: `npx vitest run tests/scripts/ai_council/clients.test.ts -t genuine-auth-still-falls-back --reporter=verbose` -> /✓.*genuine-auth-still-falls-back/
-- [ ] **1.4 The metered transport is never dispatched.** An end-to-end case
+- [x] **1.4 The metered transport is never dispatched.** An end-to-end case
       with a spied API transport: a CLI seat failing with the F1 stderr ends the
       seat; the spy records zero calls.
       verify: `npx vitest run tests/scripts/ai_council/clients.test.ts -t timeout-never-dispatches-api --reporter=verbose` -> /✓.*timeout-never-dispatches-api/
-- [ ] **1.5 The latent `parse_failed` replay is closed.** `classifyCliFailure`
+- [x] **1.5 The latent `parse_failed` replay is closed.** `classifyCliFailure`
       stops mapping an exact `parse_failed` to `cli_unsupported`; a parse failure
       happens after generation.
       verify: `npx vitest run tests/scripts/ai_council/clients.test.ts -t parse-failed-is-not-replayed --reporter=verbose` -> /✓.*parse-failed-is-not-replayed/
