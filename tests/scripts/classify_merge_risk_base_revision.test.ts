@@ -175,7 +175,8 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         expect(r.code).not.toBe(0);
     }, 60_000);
 
-    it('a temporary directory that exists but cannot be entered is needs-owner and is still removed', () => {
+    // Root enters a mode-0600 directory, so the case cannot be built there.
+    it.skipIf(process.getuid?.() === 0)('a temporary directory that exists but cannot be entered is needs-owner and is still removed', () => {
         const head = commitOn('docs-only-no-cd', base, { 'docs/installation.md': 'no cd\n' });
         const shim = path.join(work, 'mktemp-unenterable');
         const made = path.join(work, 'unenterable-tmp');

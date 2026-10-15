@@ -529,9 +529,11 @@ unclassified. The boundary this assumes, stated rather than checked: the
 checkout's `node_modules` was installed from the base's manifest, never by this
 run from a PR head — a run that installed dependencies from a head before this
 block has already handed that head the runtime. A private temporary directory
-that cannot be made is `needs-owner` before any path is derived from it, and the
-`trap` is installed the moment one exists, so it removes the worktree and the
-directory on every later path. The block prints the verdict last and exits 0
+that cannot be made is `needs-owner` before any path is derived from it. The
+`trap` is installed right after two checks on the new directory, so it removes
+the worktree and the directory on every path after them, a `cd` that fails
+included; an interruption inside those two checks can leave an empty directory
+behind, never a classification. The block prints the verdict last and exits 0
 only on `routine`.
 The temporary directory is resolved to its real path: the classifier's entry
 guard compares real paths, and on a host whose temp directory is a symlink an
