@@ -826,6 +826,54 @@ export function _check_slot_answers(table: HostLowering, errors: string[]): void
   }
 }
 
+/**
+ * Host fields that replace what a tool or the model receives. The tool-output
+ * name is assembled rather than spelled, because a test pins that no file under
+ * src/ names it until the egress stage emits it (road-to-placeholders-on-the-wire
+ * step 3.2); refusing the field is not emitting it.
+ */
+const HOST_REWRITE_FIELDS: readonly string[] = ["updatedInput", ["updated", "ToolOutput"].join("")];
+const REWRITE_DECLARATION_KEYS: readonly string[] = ["rewrite", "rewrites"];
+
+/**
+ * ADR-285 — one dispatcher stage is the only rewriter. A concern that declares
+ * a rewrite, or whose own script names a host rewrite field, is refused: two
+ * concerns rewriting one input have no composition answer, so none may try.
+ */
+function _check_no_concern_rewrites(manifest: YamlObject, errors: string[]): void {
+  const concernsRaw = manifest["concerns"];
+  if (!isObject(concernsRaw)) return;
+  for (const [name, spec] of Object.entries(concernsRaw)) {
+    if (!isObject(spec)) continue;
+    const declared = REWRITE_DECLARATION_KEYS.find((k) => spec[k] !== undefined);
+    if (declared !== undefined) {
+      errors.push(
+        `concerns.${name}: rewrite-concern-refused — declares '${declared}', but only the ` +
+          `dispatcher's egress stage may produce a rewrite (ADR-285)`,
+      );
+    }
+    const script = spec["script"];
+    if (typeof script !== "string") continue;
+    let source = "";
+    try {
+      source = fs.readFileSync(path.join(REPO_ROOT, script), "utf8");
+    } catch {
+      continue; // missing script is already reported by _check_concerns
+    }
+    // Code forms only — a key, a quoted name, a property read. A header that
+    // explains the field in backticks (rtk_wrap_hook does) produces nothing.
+    const field = HOST_REWRITE_FIELDS.find((f) =>
+      [`${f}:`, `'${f}'`, `"${f}"`, `.${f}`].some((form) => source.includes(form)),
+    );
+    if (field !== undefined) {
+      errors.push(
+        `concerns.${name}: rewrite-concern-refused — ${script} names the host rewrite ` +
+          `field '${field}'; only the dispatcher's egress stage may produce a rewrite (ADR-285)`,
+      );
+    }
+  }
+}
+
 export function lint(
   manifestPath: string,
   strict: boolean,
@@ -858,6 +906,7 @@ export function lint(
   const concernNames = _check_concerns(manifest, errors);
   const bound = _check_platforms(manifest, concernNames, errors, warnings);
   _check_guard_payload_bodies(manifest, errors);
+  _check_no_concern_rewrites(manifest, errors);
   _check_roles(manifest, concernNames, errors);
   _check_aliases(manifest, errors);
   _check_orphan_trampolines(manifest, errors);

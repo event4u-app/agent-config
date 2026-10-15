@@ -334,3 +334,52 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     expect(mismatched).toStrictEqual([]);
   });
 });
+
+/**
+ * ADR-285: one dispatcher stage is the only rewriter. A concern that declares
+ * a rewrite, or whose script names a host rewrite field, is refused, so the
+ * open composition question (two concerns rewriting one input) cannot arise.
+ */
+describe("rewrite-concern-refused — no concern may produce a rewrite (ADR-285)", () => {
+  const withConcern = (body: string, script = "src/scripts/session_canary_hook.ts"): string =>
+    VALID.replace(
+      "  session-canary:\n    script: src/scripts/session_canary_hook.ts\n    args: []\n    fail_closed: false\n    effect: context\n",
+      `  session-canary:\n    script: ${script}\n    args: []\n    fail_closed: false\n    effect: context\n${body}`,
+    );
+
+  function run(manifest: string): { code: number; text: string } {
+    const chunks: string[] = [];
+    const realErr = process.stderr.write.bind(process.stderr);
+    const realOut = process.stdout.write.bind(process.stdout);
+    const sink = (c: unknown): boolean => {
+      chunks.push(String(c));
+      return true;
+    };
+    process.stderr.write = sink as typeof process.stderr.write;
+    process.stdout.write = sink as typeof process.stdout.write;
+    try {
+      return { code: lint(fixtureManifest(manifest), false), text: chunks.join("") };
+    } finally {
+      process.stderr.write = realErr;
+      process.stdout.write = realOut;
+    }
+  }
+
+  it("rewrite-concern-refused: a concern declaring a rewrite is refused", () => {
+    const r = run(withConcern("    rewrites: [input]\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.session-canary: rewrite-concern-refused/);
+  });
+
+  it("rewrite-concern-refused: a concern whose script names a host rewrite field is refused", () => {
+    const r = run(withConcern("", "tests/hooks/fixtures/concern_names_rewrite_field.ts"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.session-canary: rewrite-concern-refused/);
+  });
+
+  it("rewrite-concern-refused: a concern that rewrites nothing is accepted", () => {
+    const r = run(VALID);
+    expect(r.code).toBe(0);
+    expect(r.text).not.toMatch(/rewrite-concern-refused/);
+  });
+});

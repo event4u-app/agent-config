@@ -24,7 +24,8 @@
  * (`agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md`).
  *
  * What IS true, and is why this hook still only warns: **this dispatcher does not
- * emit it, and no accepted composition policy exists for it.** The dispatcher
+ * emit it, and since ADR-285 no concern may produce a rewrite at all** — one
+ * egress stage is the only writer, and a command nudge is not egress. The dispatcher
  * aggregates many concerns per event and reduces them to one exit code; what
  * happens when two concerns both want to rewrite the same tool input is an
  * unanswered design question, not a plumbing detail. A default-OFF hook that
@@ -209,8 +210,8 @@ export function classify(command: string): Eligibility {
 // carries no `updatedInput`". Re-probed against Claude Code 2.1.241: the host
 // carries it (see the header, and
 // agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md). The real
-// reason is that THIS dispatcher emits no such field and has no accepted
-// composition policy for one across concerns. Same outcome, correct cause: a committed
+// reason is that THIS dispatcher emits no such field and, under ADR-285, no
+// concern may produce one. Same outcome, correct cause: a committed
 // per-command cap table (this constant — rows individually removable,
 // per-row opt-out via `enabled`) and a warn naming the bounded alternative.
 // Nothing is ever truncated; ignoring the advisory IS the uncapped re-run,

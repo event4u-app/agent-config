@@ -751,11 +751,19 @@ distinction.** `src/scripts/hooks/host_semantics.ts` builds the
   asserted with no date, which is why nobody could tell.
 
 The same collapse this section warns about twice already: a fact about our plumbing was
-written as a fact about the host. **What is still not established** is whether a
-per-concern rewrite can compose — the dispatcher reduces many concerns per event to one
-exit code, and what happens when two want to rewrite the same input is undecided. That
-gap, not a missing host field, is why `rtk_wrap_hook` still only warns (AI council
-2026-08-23, 2/2 convergent).
+written as a fact about the host. Whether a per-concern rewrite can compose — the
+dispatcher reduces many concerns per event to one exit code, and two concerns wanting to
+rewrite one input had no answer — was the gap that kept `rtk_wrap_hook` a warning (AI
+council 2026-08-23, 2/2 convergent). **It is closed by removing the question
+(ADR-285, 2026-10-15): no concern may produce a rewrite.** One dispatcher stage, the
+egress stage of `docs/contracts/egress-placeholders-v1.md`, is the only writer of a
+rewrite field; it runs before the concern loop and at emission. A block outranks a
+rewrite (a refused call emits none), and an `ask` or `deny` outranks an `allow`,
+unchanged. `lint_hook_manifest` refuses a concern that declares a rewrite or whose
+script names a host rewrite field (`rewrite-concern-refused`), and the dispatcher
+forwards no rewrite key from a concern reply. `rtk_wrap_hook` stays a warning: a
+command-rewriting nudge would be a second transformation, which is ADR-285's reopening
+condition rather than something it permits.
 
 **`permissionDecision` is now emitted, and its composition question is closed.**
 Corrected 2026-09-06 (`road-to-authorization-that-reaches-further` 1.1): the
@@ -770,9 +778,9 @@ the working tree with no consequence operation attached
 The composition policy is **one `ask` or `deny` beats every `allow`**
 (`composePermissionDecision`), and the emission additionally requires the reduced
 severity to already be `allow`, so an allow can never travel with a finding. This
-answers the permission half of the undecided-composition gap above and **not** the
-rewrite half, which stays open: two concerns rewriting one input still has no
-answer, and no allow-composition result may be read as one.
+answers the permission half of the composition gap above. The rewrite half is
+answered separately by ADR-285 (one stage writes, no concern does), and no
+allow-composition result may be read as a rewrite answer.
 
 An allow is not a grant. The host's own strings record
 `permissionDecision=allow ignored: a confined session takes grants only from its

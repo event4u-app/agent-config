@@ -161,7 +161,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 
 ## Phase 1 — The dispatcher gains one stage, in observe mode
 
-- [ ] **1.1 Decide composition by removing the question.** One ADR, citing the
+- [x] **1.1 Decide composition by removing the question.** One ADR, citing the
       sibling's contract: a rewrite is produced by a single dispatcher stage
       that runs before the concern loop and at emission; no concern may produce
       one; a block outranks it; an `ask` or `deny` outranks an `allow`,
