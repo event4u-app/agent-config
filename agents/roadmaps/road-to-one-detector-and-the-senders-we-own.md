@@ -104,7 +104,7 @@ and the contract states what each of four published states — `asserted`,
       through external tools — and correct "It holds no user data" to what is
       true.
       verify: `docs/threat-model.md` carries a row `j` and no longer contains the sentence "It holds no user data".
-- [ ] **0.3 Pre-register the bars before the first data point**, one document
+- [x] **0.3 Pre-register the bars before the first data point**, one document
       committed alone in the house shape of `internal/bench/*-PREREG.md`. Corpus
       in four workloads: identifier-heavy prose, credential-heavy configuration,
       implicit identity, proprietary code — the third measured to report the
@@ -152,7 +152,7 @@ read cannot leak through any later bug.
 
 ## Phase 2 — One detector table (F2, F3)
 
-- [ ] **2.1 One rule table, one schema.** Each rule: type, class, pattern,
+- [x] **2.1 One rule table, one schema.** Each rule: type, class, pattern,
       optional validator, optional context words and window, exclusions, and a
       span with start **and end**. Pure, no I/O, no network, no dependency — the
       shape `secret_detector` already has, extended. Overlaps resolve before any
@@ -160,12 +160,22 @@ read cannot leak through any later bug.
       the longer one; replacements apply right to left on the original text.
       Bounded quantifiers only; a test refuses a rule that backtracks on a
       pathological input.
-      verify: the table is the only place a credential pattern literal appears under `src/scripts` and `src/cli`; a lint fails a second one and is registered in `src/config/gate-coverage.yml` with a canary.
+      verify: `npx vitest run src/scripts/_lib/egress_rules.test.ts` -> 0 (schema, overlap precedence, right-to-left replacement, a bounded-quantifier refusal seen red on the old unbounded `db-connection-uri` pattern), and `secret_detector` reads its credential rows from the table with its own suites green.
+      **Correction (2026-10-15, at execution):** the original verify — the table is
+      the only place a credential pattern literal appears, enforced by a lint — cannot
+      be green before 2.2 moves the six other sites F2 names; a lint landed here would
+      need a baseline of exactly the sites 2.2 removes. It moves to 2.2's verify.
+      Landed as `src/scripts/_lib/egress_rules.ts`. Two spans are detection-grade, not
+      replacement-grade, and stay so for the commit-time scanner: `pem-private-key`
+      matches the header line only and `db-connection-uri` the whole authority; 3.3
+      widens them before any replacement reads them. Bounding changed two quantifiers
+      that had no practical reach (`\s*` → `\s{0,16}` around `=`, value caps of
+      1,024 / 8,192 characters).
 - [ ] **2.2 Move every site of F2 onto it** without changing what each site does
       with a hit — the council low-impact redactor still refuses, the explain
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
       detection is shared.
-      verify: a drift matrix — every positive fixture against every consumer — is green, and the `sk-ant-api03` case of F2 is a named row in it.
+      verify: a drift matrix — every positive fixture against every consumer — is green, and the `sk-ant-api03` case of F2 is a named row in it; the table is the only place a credential pattern literal appears under `src/scripts` and `src/cli`, and a lint that fails a second one is registered in `src/config/gate-coverage.yml` with a canary (moved here from 2.1).
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own

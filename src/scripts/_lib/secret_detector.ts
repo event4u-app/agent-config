@@ -21,6 +21,8 @@
 // returned so callers can choose), and the masked preview never reproduces the
 // full secret.
 
+import { EGRESS_RULES, shannonEntropy } from './egress_rules.js';
+
 /** One detected secret. Never carries the raw value — see `masked`. */
 export interface SecretFinding {
     rule: string;
@@ -48,48 +50,11 @@ export const BASE64_ENTROPY_THRESHOLD = 4.5;
 export const HEX_ENTROPY_THRESHOLD = 3.0;
 
 // ---------------------------------------------------------------------
-// Regex rule pack (HIGH-confidence).
+// Regex rule pack (HIGH-confidence) — the credential rows of the one rule
+// table in egress_rules.ts, which owns every pattern literal.
 // ---------------------------------------------------------------------
 
-interface Rule {
-    rule: string;
-    kind: string;
-    regex: RegExp; // MUST carry the global flag
-    valueGroup?: number; // capture group holding the sensitive value (default 0)
-}
-
-// Reused verbatim from lint_mcp_config_security.ts `_SECRET` (do NOT weaken),
-// split into individually-kinded rules, plus the extension set from the spec.
-const RULES: readonly Rule[] = [
-    { rule: 'anthropic-api-key', kind: 'anthropic-api-key', regex: /sk-ant-[A-Za-z0-9_-]{20,}/g },
-    { rule: 'anthropic-project-key', kind: 'anthropic-api-key', regex: /sk-proj-[A-Za-z0-9_-]{20,}/g },
-    { rule: 'aws-access-key', kind: 'aws-access-key', regex: /AKIA[0-9A-Z]{16}/g },
-    { rule: 'google-api-key', kind: 'google-api-key', regex: /AIza[0-9A-Za-z_-]{35}/g },
-    { rule: 'github-pat', kind: 'github-pat', regex: /ghp_[0-9A-Za-z]{36}/g },
-    // Fine-grained PATs (github_pat_…) were a measured detector gap: the
-    // 2026-07-28 adversarial corpus pass flagged them as missed positives.
-    { rule: 'github-fine-grained-pat', kind: 'github-pat', regex: /github_pat_[0-9A-Za-z_]{22,}/g },
-    {
-        rule: 'jwt',
-        kind: 'jwt',
-        regex: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
-    },
-    // Extensions.
-    { rule: 'stripe-secret-key', kind: 'stripe-secret-key', regex: /sk_(?:live|test)_[0-9A-Za-z]{16,}/g },
-    { rule: 'slack-token', kind: 'slack-token', regex: /xox[baprs]-[0-9A-Za-z-]{10,}/g },
-    { rule: 'pem-private-key', kind: 'pem-private-key', regex: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g },
-    {
-        rule: 'db-connection-uri',
-        kind: 'db-connection-uri',
-        regex: /\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:[^\s:/@]+@/g,
-    },
-    {
-        rule: 'generic-assignment',
-        kind: 'generic-assignment',
-        regex: /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/gi,
-        valueGroup: 1,
-    },
-];
+const RULES = EGRESS_RULES.filter((r) => r.class === 'credential');
 
 // ---------------------------------------------------------------------
 // Suppression + placeholder detection.
@@ -133,36 +98,6 @@ function isAllSameChar(value: string): boolean {
     return value.length > 0 && /^(.)\1*$/.test(value);
 }
 
-// Minimum length + entropy for a `generic-assignment` value to count as a real
-// credential. A bare `secret: moderate` / `token: modelName` / `key: request()`
-// is a keyword-shaped assignment of a low-entropy WORD — not a secret. Real
-// credentials assigned this way are long and high-entropy. Without this gate the
-// generic rule floods on prose, config, and test data (the FP class the council
-// warned about — precision over allowlist growth).
-const GENERIC_MIN_LENGTH = 16;
-const GENERIC_MIN_ENTROPY = 3.3;
-// Code-expression shapes: an assignment RHS that is a reference / call /
-// interpolation, not a literal credential (`opts.apiKey`, `${API_KEY}`,
-// `load()`, `process.env.X`, `$this->get()`). Never a real inline secret.
-const CODE_EXPR = /[()$`{}<>[\];,]|->|=>|\.\w/;
-
-function looksLikeSecretValue(value: string): boolean {
-    if (value.length < GENERIC_MIN_LENGTH) {
-        return false;
-    }
-    if (CODE_EXPR.test(value)) {
-        return false;
-    }
-    // A real credential carries entropy AND is not a plain lowercase word —
-    // it has a digit or mixed case.
-    const hasDigit = /[0-9]/.test(value);
-    const mixedCase = /[a-z]/.test(value) && /[A-Z]/.test(value);
-    if (!hasDigit && !mixedCase) {
-        return false;
-    }
-    return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
-}
-
 function isPlaceholderValue(value: string, pathHint?: string): boolean {
     if (pathHint !== undefined) {
         if (
@@ -188,20 +123,6 @@ function maskSecret(value: string): string {
         return `${value.slice(0, 1)}…`;
     }
     return `${front}…${back}`;
-}
-
-function shannonEntropy(value: string): number {
-    const freq = new Map<string, number>();
-    for (const ch of value) {
-        freq.set(ch, (freq.get(ch) ?? 0) + 1);
-    }
-    const n = value.length;
-    let entropy = 0;
-    for (const count of freq.values()) {
-        const p = count / n;
-        entropy -= p * Math.log2(p);
-    }
-    return entropy;
 }
 
 function overlaps(spans: ReadonlyArray<[number, number]>, start: number, end: number): boolean {
@@ -230,21 +151,21 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
 
         // Layer 1 — regex rule pack (HIGH, demoted to LOW for placeholders).
         for (const rule of RULES) {
-            rule.regex.lastIndex = 0;
+            rule.pattern.lastIndex = 0;
             let m: RegExpExecArray | null;
-            while ((m = rule.regex.exec(line)) !== null) {
+            while ((m = rule.pattern.exec(line)) !== null) {
                 const value = rule.valueGroup !== undefined ? m[rule.valueGroup] : m[0];
                 if (value === undefined) {
-                    if (m.index === rule.regex.lastIndex) {
-                        rule.regex.lastIndex += 1;
+                    if (m.index === rule.pattern.lastIndex) {
+                        rule.pattern.lastIndex += 1;
                     }
                     continue;
                 }
-                // The keyword-anchored generic rule needs a value-likeness gate:
-                // a low-entropy word after `secret:`/`token:` is not a credential.
-                if (rule.rule === 'generic-assignment' && !looksLikeSecretValue(value)) {
-                    if (m.index === rule.regex.lastIndex) {
-                        rule.regex.lastIndex += 1;
+                // A rule's validator gates the value: a low-entropy word after
+                // `secret:`/`token:` is not a credential.
+                if (rule.validator !== undefined && !rule.validator(value)) {
+                    if (m.index === rule.pattern.lastIndex) {
+                        rule.pattern.lastIndex += 1;
                     }
                     continue;
                 }
@@ -254,15 +175,15 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
                     : 'high';
                 findings.push({
                     rule: rule.rule,
-                    kind: rule.kind,
+                    kind: rule.kind ?? rule.rule,
                     line: lineNo,
                     column: valueStart + 1,
                     masked: maskSecret(value),
                     confidence,
                 });
                 covered.push([valueStart, valueStart + value.length]);
-                if (m.index === rule.regex.lastIndex) {
-                    rule.regex.lastIndex += 1;
+                if (m.index === rule.pattern.lastIndex) {
+                    rule.pattern.lastIndex += 1;
                 }
             }
         }
