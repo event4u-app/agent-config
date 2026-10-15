@@ -32,6 +32,8 @@ import {
   extractTaskSignals,
   recommendSliceTier,
   resolveActivation,
+  LEG_COLD_START_SOURCE,
+  LEG_COLD_START_UNCACHED_TOKENS,
 } from "../../src/scripts/hooks/delegation_nudge_hook.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..");
@@ -294,6 +296,7 @@ describe("buildNudgeLine", () => {
       "lite",
     );
     expect(line).toContain("starts cold");
+    expect(line).toContain(`~${Math.round(LEG_COLD_START_UNCACHED_TOKENS / 1000)}k uncached tokens`);
     expect(line).toContain("one to three direct reads");
     expect(line.endsWith("</delegation-nudge>")).toBe(true);
     const multi = buildNudgeLine(
@@ -303,6 +306,13 @@ describe("buildNudgeLine", () => {
       "lite",
     );
     expect(multi).not.toContain("starts cold");
+  });
+
+  it("cold-start-figure-matches-its-named-source", () => {
+    // The advisory's number is a measurement; the evidence file it names must
+    // carry it, so a re-taken reading cannot leave the advisory stale silently.
+    const evidence = fs.readFileSync(path.join(REPO_ROOT, LEG_COLD_START_SOURCE), "utf8");
+    expect(evidence).toContain(LEG_COLD_START_UNCACHED_TOKENS.toLocaleString("en-US"));
   });
 
   it("an unresolved rung renders as rung-? (unreachable in production, kept total for direct callers)", () => {

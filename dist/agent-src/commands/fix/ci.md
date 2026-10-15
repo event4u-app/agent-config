@@ -25,10 +25,11 @@ A run still in progress has no verdict to fix. Do NOT read a partial run and
 start guessing — and do NOT end the turn reporting "CI is running".
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <n>
+npm exec --no -- agent-config ci:settle <n>
 ```
 
-`ci_settle` is the one waiter for this condition — never a hand-written
+`npm exec --no --` reaches a project-local install and a global one alike and
+never fetches from the registry. `ci_settle` is the one waiter for this condition — never a hand-written
 `gh pr checks` loop. Run it in the BACKGROUND so the turn resumes when the
 verdict lands, and do not pipe it: its LAST output line is the verdict and its
 exit code carries it. Exit 0 is settled green for the named head; exit 1 is

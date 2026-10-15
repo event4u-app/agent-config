@@ -349,6 +349,14 @@ export function recommendSliceTier(downshift: boolean, separate_quota_pool: bool
 }
 
 /**
+ * Median first-call written-or-uncached tokens of a subagent leg — a
+ * measurement, not a tuning knob. Re-take it in {@link LEG_COLD_START_SOURCE}
+ * and change it here; a test fails while the two disagree.
+ */
+export const LEG_COLD_START_UNCACHED_TOKENS = 182_257;
+export const LEG_COLD_START_SOURCE = "agents/evidence/analysis/subagent-cold-start-2026-10-14.md";
+
+/**
  * `rung` names the resolved judgment-ladder rung (2.4): `null` renders as
  * `rung-?` — this concern only ever calls it for a `subagent` verdict
  * (rung 1 or 2), so `null` is unreachable in production and exists only so
@@ -403,11 +411,11 @@ export function buildNudgeLine(
   // Rung 1 (single bounded slice) carries no do-in-steps/do-in-parallel
   // mode of its own — `classification.mode` is `null` for that shape.
   const modeLabel = classification.mode ?? "single-slice";
-  // Advisory only, never a block: a leg's first call
-  // still writes or reads uncached a median of ~182k tokens.
+  // Advisory only, never a block.
   const coldStart =
     rung === 1
-      ? " A leg starts cold (~182k uncached tokens): a slice of one to three direct reads does not amortise it."
+      ? ` A leg starts cold (~${Math.round(LEG_COLD_START_UNCACHED_TOKENS / 1000)}k uncached tokens): ` +
+        "a slice of one to three direct reads does not amortise it."
       : "";
   return (
     `<delegation-nudge>${rungLabel}: dispatch ${modeLabel} ` +

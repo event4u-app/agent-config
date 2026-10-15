@@ -72,6 +72,10 @@ written review date (`src/config/recycle-threshold-budget.json`).
       fixture whose envelope carries an original file and asserts the
       model-visible count is the confirmation text only; seen red first.
       verify: `npx vitest run tests/scripts/cc_transcript.test.ts -t edit-envelope-is-not-model-visible --reporter=verbose` -> /✓.*edit-envelope-is-not-model-visible/
+      *Correction 2026-10-15, after the PR #2363 review: the reader counts the
+      block's PAYLOAD (text strings and base64 image data), not the serialised
+      block, so the registry row is renamed `tool-result-payload-bytes` and says
+      so; members of any other kind are counted in `unsupported_members`.*
 - [x] **1.3 Read both census shapes.** Whatever reads
       `tool-result-census.jsonl` treats a `{bytes}` line as `raw_bytes` with
       `delivered_bytes` unknown, never as equal.
@@ -147,11 +151,20 @@ Measured 2026-10-14 on this branch, darwin, Apple silicon:
       already names (`src/skills/git-workflow/SKILL.md:110`), keeping each
       command's surrounding prose on what to do with each exit code.
       verify: `grep -rl 'do sleep 45' src/domains | wc -l` -> /^\s*0$/
+      *Correction 2026-10-15, after the PR #2363 review: the source path named
+      above does not exist on a global or ephemeral install and pulled `tsx` from
+      the registry, so both commands, the git-workflow skill and the push-settle
+      reminder now call the packaged verb `agent-config ci:settle <pr>`.*
 - [x] **3.3 The deep clone states its shape and its transfer (D4).** `--deep`
       reuses an existing local clone that already holds the pinned SHA; otherwise
       it fetches only that commit at depth 1 into a fresh directory. The ceiling
       gains a fourth part, bytes transferred, read from git's own receive line.
       verify: `grep -c 'transfer' src/domains/analysis-workbench/analyze/repo/command.md` -> /^[1-9]/
+      *Correction 2026-10-15, after the PR #2363 review: git's receive line
+      neither appears reliably in non-interactive runs nor can stop a fetch in
+      flight, so the ceiling is three parts plus a best-effort pre-fetch size
+      gate on the host's reported repository size, which the text says is not
+      a ceiling and bounds no transfer.*
 
 ## Phase 4 — Does a spawn still cost a quarter million tokens?
 

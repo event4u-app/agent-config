@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-07T06:42:26.735Z",
-    "git_sha": "f85539faf8f9d211c9705aa5a85b4ee693f6990d",
+    "recorded_at": "2026-10-15T05:58:21.603Z",
+    "git_sha": "29c36d7531e591036110e91f30b33dc58bff8b74",
     "run_url": null,
-    "conditions": "Refresh for the 110 -> 111 cli_help_command_count move: the git:convention verb registers in the same PR that adds it. Re-measured via the pinned method (brace-name count in src/cli/registry.ts): 111. mcp_public_tool_count carried forward unchanged at 26 (no MCP surface touched). Measured locally on darwin/arm64 rather than in the umbrella container; both metrics are tree-derived and container-independent.",
+    "conditions": "Refresh for the 111 -> 112 cli_help_command_count move: the ci:settle verb registers in the same PR that adds it. Re-measured via the pinned method (registry enumeration in src/cli/registry.ts): 112. mcp_public_tool_count carried forward unchanged at 26 (no MCP surface touched). Measured locally on darwin/arm64 rather than in the umbrella container; both metrics are tree-derived and container-independent.",
     "measurements": {
-        "cli_help_command_count": 111,
+        "cli_help_command_count": 112,
         "mcp_public_tool_count": 26
     }
 }

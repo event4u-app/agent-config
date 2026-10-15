@@ -484,7 +484,7 @@ Pending is a reason to wait, never a reason to stop.
 **Settled** means every check has reached a terminal state:
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <n>
+npm exec --no -- agent-config ci:settle <n>
 gh pr checks <n> --json name,state,link \
   --jq '.[] | select(.state!="SUCCESS" and .state!="SKIPPED") | "\(.state)  \(.name)  \(.link)"'
 ```

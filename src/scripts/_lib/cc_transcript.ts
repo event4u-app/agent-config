@@ -476,24 +476,32 @@ export function aggregateByBucket(records: readonly TranscriptRecord[]): Record<
 /* -------------------------------------------------------------------------- */
 
 /**
- * One tool class's model-visible bytes, beside the host's hook envelope.
+ * One tool class's payload bytes, beside the host's hook envelope.
  *
- * The two are different populations and are never added together. The
- * model-visible figure is the `tool_result` block the model received; the
- * envelope is the transcript's `toolUseResult` — the same object the host hands
- * a post_tool_use hook, which for Edit and Write carries the whole original
- * file the model never sees.
+ * Payload bytes are the text strings and base64 image data inside the
+ * `tool_result` block the model received. They are NOT the serialised block:
+ * `type`, `tool_use_id`, `is_error` and the JSON punctuation around them are
+ * excluded, so the figure understates the block by its structure and is not
+ * comparable byte-for-byte with the JSON-serialised envelope. A content member
+ * of any other kind is counted in `unsupported_members`, never as bytes.
+ *
+ * The two populations are never added together. The envelope is the
+ * transcript's `toolUseResult` — the same object the host hands a
+ * post_tool_use hook, which for Edit and Write carries the whole original file
+ * the model never sees.
  */
 export interface ToolResultClass {
     tool: string;
     count: number;
-    model_visible_bytes: number;
+    payload_bytes: number;
     /** Sum over results that carried an envelope; `null` when none did. */
     envelope_bytes: number | null;
     /** Results with no `toolUseResult` — not zero, not measured. */
     envelope_missing: number;
-    /** One model-visible byte count per result, for percentiles. */
-    model_visible_samples: number[];
+    /** Content members that are neither text nor base64 image — present, not measured. */
+    unsupported_members: number;
+    /** One payload byte count per result, for percentiles. */
+    payload_samples: number[];
 }
 
 export interface ToolResultScan {
@@ -509,7 +517,7 @@ interface RawBlock {
     tool_use_id?: unknown;
     content?: unknown;
     text?: unknown;
-    source?: { data?: unknown };
+    source?: { type?: unknown; data?: unknown };
 }
 
 function blocksOf(raw: { message?: { content?: unknown } }): RawBlock[] {
@@ -517,23 +525,30 @@ function blocksOf(raw: { message?: { content?: unknown } }): RawBlock[] {
     return Array.isArray(c) ? (c.filter((b) => typeof b === 'object' && b !== null) as RawBlock[]) : [];
 }
 
-/** Model-visible bytes of one `tool_result` block, and whether it carried an image. */
-function modelVisibleBytes(block: RawBlock): { bytes: number; image: boolean } {
+interface Payload {
+    bytes: number;
+    image: boolean;
+    unsupported: number;
+}
+
+/** Payload bytes of one `tool_result` block — see {@link ToolResultClass}. */
+function payloadOf(block: RawBlock): Payload {
     const c = block.content;
-    if (typeof c === 'string') return { bytes: Buffer.byteLength(c, 'utf8'), image: false };
-    let bytes = 0;
-    let image = false;
-    if (Array.isArray(c)) {
-        for (const item of c as RawBlock[]) {
-            if (typeof item !== 'object' || item === null) continue;
-            if (typeof item.text === 'string') bytes += Buffer.byteLength(item.text, 'utf8');
-            if (item.type === 'image' && typeof item.source?.data === 'string') {
-                image = true;
-                bytes += item.source.data.length;
-            }
+    if (typeof c === 'string') return { bytes: Buffer.byteLength(c, 'utf8'), image: false, unsupported: 0 };
+    const out: Payload = { bytes: 0, image: false, unsupported: 0 };
+    if (!Array.isArray(c)) return out;
+    for (const item of c as unknown[]) {
+        const m = typeof item === 'object' && item !== null ? (item as RawBlock) : null;
+        if (m !== null && m.type === 'text' && typeof m.text === 'string') {
+            out.bytes += Buffer.byteLength(m.text, 'utf8');
+        } else if (m !== null && m.type === 'image' && m.source?.type === 'base64' && typeof m.source.data === 'string') {
+            out.image = true;
+            out.bytes += m.source.data.length;
+        } else {
+            out.unsupported += 1;
         }
     }
-    return { bytes, image };
+    return out;
 }
 
 function readLines(file: string): string[] {
@@ -545,7 +560,7 @@ function readLines(file: string): string[] {
 }
 
 /**
- * Model-visible tool-result bytes per tool class, joined to the tool name by
+ * Tool-result payload bytes per tool class, joined to the tool name by
  * `tool_use_id`. Two passes over the file set — names first, results second —
  * so a result whose `tool_use` sits in another file still joins. A result whose
  * id joins nothing is counted under `unknown`, never dropped and never guessed.
@@ -578,20 +593,22 @@ export function scanToolResults(opts: ScanOptions = {}): ToolResultScan {
                 const id = block.tool_use_id as string;
                 if (seen.has(id)) continue;
                 seen.add(id);
-                const { bytes, image } = modelVisibleBytes(block);
+                const { bytes, image, unsupported } = payloadOf(block);
                 const name = names.get(id) ?? 'unknown';
                 const tool = image ? `${name}:image` : name;
                 const cls = (classes[tool] ??= {
                     tool,
                     count: 0,
-                    model_visible_bytes: 0,
+                    payload_bytes: 0,
                     envelope_bytes: null,
                     envelope_missing: 0,
-                    model_visible_samples: [],
+                    unsupported_members: 0,
+                    payload_samples: [],
                 });
                 cls.count += 1;
-                cls.model_visible_bytes += bytes;
-                cls.model_visible_samples.push(bytes);
+                cls.payload_bytes += bytes;
+                cls.unsupported_members += unsupported;
+                cls.payload_samples.push(bytes);
                 // One envelope per record: attributed only when the record holds one result.
                 const env = blocks.length === 1 ? raw.toolUseResult : undefined;
                 if (env === undefined || env === null) {
