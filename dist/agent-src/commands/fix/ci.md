@@ -25,7 +25,7 @@ A run still in progress has no verdict to fix. Do NOT read a partial run and
 start guessing — and do NOT end the turn reporting "CI is running".
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <n>
+agent-config ci:settle <n>
 ```
 
 `ci_settle` is the one waiter for this condition — never a hand-written

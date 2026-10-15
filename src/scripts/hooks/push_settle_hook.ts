@@ -176,8 +176,8 @@ export function buildReminder(branch: string, pr: number | null): { reason: stri
   const settle =
     pr === null
       ? `gh pr view ${branch} --json number -q .number   # then:\n` +
-        `./scripts-run src/scripts/ci_settle <that number>`
-      : `./scripts-run src/scripts/ci_settle ${pr}`;
+        `agent-config ci:settle <that number>`
+      : `agent-config ci:settle ${pr}`;
   const subject = pr === null ? `branch ${branch}` : `PR #${pr} (${branch})`;
   const reason =
     `Pushed ${subject} — the turn is not finished until its CI has settled green ` +

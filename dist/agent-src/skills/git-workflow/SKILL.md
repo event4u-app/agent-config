@@ -107,7 +107,7 @@ Work complete. What would you like to do?
 3. `git push -u origin "<branch>"` (a rendered name is always quoted) — after a rebase of a pushed branch, `--force-with-lease` per `references/branch-update.md`.
 4. `gh pr create` using PR template.
 5. **Settle it** — the turn is not over at step 4:
-   `npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <pr>`
+   `agent-config ci:settle <pr>`
 
 ## A push closes its own loop
 

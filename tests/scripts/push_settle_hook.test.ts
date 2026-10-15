@@ -59,7 +59,7 @@ describe("push_settle_hook — the fire path", () => {
     // `reason` reaches stderr only and is capped; the instruction must ride
     // additional_context, which is what surfaces back to the model.
     expect(out.reason.length).toBeLessThanOrEqual(200);
-    expect(out.additional_context).toContain("ci_settle");
+    expect(out.additional_context).toContain("agent-config ci:settle");
     expect(out.additional_context).toContain("verify-before-complete");
   });
 
@@ -146,11 +146,18 @@ describe("push_settle_hook — units", () => {
     ).toBeNull();
   });
 
-  it("names the literal ci_settle command once the PR is known, and the two-step when it is not", () => {
-    expect(buildReminder("feat/x", 1234).additional_context).toContain("ci_settle 1234");
+  it("names the literal ci:settle command once the PR is known, and the two-step when it is not", () => {
+    expect(buildReminder("feat/x", 1234).additional_context).toContain("agent-config ci:settle 1234");
     const unknown = buildReminder("feat/x", null).additional_context;
     expect(unknown).toContain("gh pr view feat/x");
-    expect(unknown).not.toMatch(/ci_settle \d/); // never invents a number it did not read
+    expect(unknown).toContain("agent-config ci:settle <that number>");
+    expect(unknown).not.toMatch(/ci:settle \d/); // never invents a number it did not read
+  });
+
+  it("never names a source path a consumer install does not have", () => {
+    for (const pr of [1234, null]) {
+      expect(buildReminder("feat/x", pr).additional_context).not.toContain("src/scripts/");
+    }
   });
 
   it("returns null rather than a guess when the forge cannot be asked", () => {
