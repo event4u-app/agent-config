@@ -89,7 +89,7 @@ and the contract states what each of four published states — `asserted`,
 
 ## Phase 0 — Contract, census, pre-registration (no product code)
 
-- [ ] **0.1 Write the contract** `docs/contracts/egress-placeholders-v1.md`: the
+- [x] **0.1 Write the contract** `docs/contracts/egress-placeholders-v1.md`: the
       two classes (`credential`, `identifier`) and their restore policy (D5);
       the four states and what counts as proof of each — `asserted` only where
       this package writes the request, `replaced` where a host hook substitutes
@@ -97,7 +97,7 @@ and the contract states what each of four published states — `asserted`,
       `uncovered` where nothing reaches; the logging rule (type and count, never
       a value, never a masked fragment); and D4.
       verify: the file exists and names all four states; `grep -c 'uncovered' docs/contracts/egress-placeholders-v1.md` is at least 1.
-- [ ] **0.2 Add threat-model row j** — session content travelling to a model
+- [x] **0.2 Add threat-model row j** — session content travelling to a model
       provider, with sub-rows for host telemetry that can export prompts or
       request bodies (a second egress path), the session mapping as a store worth
       stealing, a request gateway being bypassed, and tool arguments leaving
