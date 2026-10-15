@@ -481,7 +481,6 @@ classify it with the **base revision's** classifier, never the head's:
 ```bash
 BASE="<manifest-base_sha>"
 HEAD_SHA="<manifest-head-sha>"
-MANIFEST_RE='(^|/)(package\.json|package-lock\.json|npm-shrinkwrap\.json|\.npmrc|yarn\.lock|\.yarnrc\.yml|pnpm-lock\.yaml|bun\.lockb?)$'
 run_base() {
   OUT="$("$@" "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
   CODE=$?
@@ -497,12 +496,16 @@ if GATE_TMP="$(mktemp -d)" && [ -n "$GATE_TMP" ] && [ -d "$GATE_TMP" ]; then
   if REAL_TMP="$(cd "$GATE_TMP" && pwd -P)" && [ -n "$REAL_TMP" ]; then
     BASE_DIR="$REAL_TMP/classifier-base"
     VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
-    if ! CHANGED="$(git -c core.quotePath=false diff --name-only "$BASE...$HEAD_SHA")"; then
+    DEPS=0
+    if ! git diff --name-only -z "$BASE...$HEAD_SHA" > "$REAL_TMP/changed"; then
       DEPS=2
-    elif printf '%s\n' "$CHANGED" | grep -Eq "$MANIFEST_RE"; then
-      DEPS=1
     else
-      DEPS=0
+      while IFS= read -r -d '' CHANGED_PATH; do
+        case "${CHANGED_PATH##*/}" in
+          package.json | package-lock.json | npm-shrinkwrap.json | .npmrc | yarn.lock | .yarnrc.yml | \
+          pnpm-lock.yaml | bun.lock | bun.lockb) DEPS=1 ;;
+        esac
+      done < "$REAL_TMP/changed"
     fi
     if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ]; then
       VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked)"
@@ -565,9 +568,11 @@ base copy that predates it, make it `needs-council` — and never `needs-owner` 
 that ground alone. Where the package-free run worked, its verdict stands as for
 any PR. Where it could not run, the checkout's `tsx` may be one the head's
 manifest installed, so a valid answer from it is not trusted downward: a
-`needs-owner` is kept, a lower verdict becomes
+`needs-owner` is kept, any other valid verdict becomes
 `needs-council (runtime-uncertain)`. A fallback that gives no valid verdict at
-all is an anomaly like any other and stays `needs-owner`.
+all is an anomaly like any other and stays `needs-owner`. The changed paths are
+read NUL-separated and matched by basename with shell built-ins only, so an odd
+path cannot slip past and a listing that cannot be read is `needs-owner`.
 
 **What it fails to.** Every other anomaly is **`needs-owner`** and says why —
 never a skipped gate and never a fall-back to the head's copy: a private

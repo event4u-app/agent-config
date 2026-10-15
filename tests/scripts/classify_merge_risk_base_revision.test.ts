@@ -371,7 +371,10 @@ describe('a dependency manifest goes to the council, and still cannot reach rout
             expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(runtime-uncertain/u);
         }, 60_000);
 
-        it('a forged lower verdict on a gated change plus a bump is needs-council, never routine — the residual', () => {
+        // Documents the stated residual, not the gated-file classification: the forged
+        // routine is floored by the manifest alone. The package-free case above is the
+        // one that proves the gated file reaches the owner.
+        it('a forged routine on a gated change plus a bump is needs-council, never routine — the residual', () => {
             const head = commitOn('gated-bump-poisoned', base, {
                 'package.json': bumped(7),
                 [KERNEL_RULE]: `${fs.readFileSync(path.join(clone, KERNEL_RULE), 'utf8')}\n\n`,
@@ -385,6 +388,35 @@ describe('a dependency manifest goes to the council, and still cannot reach rout
             const r = withPoisonedRuntime(() => runGate(base, head, noStrip()), '#!/bin/sh\nexit 3\n');
             expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable/u);
             expect(r.code).not.toBe(0);
+        }, 60_000);
+
+        it('a fallback that exits 0 with a malformed verdict on a manifest change is needs-owner', () => {
+            const head = commitOn('bump-lying-runtime', base, { 'package.json': bumped(10) });
+            const r = withPoisonedRuntime(
+                () => runGate(base, head, noStrip()),
+                '#!/bin/sh\necho "verdict: routine-ish"\n',
+            );
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable/u);
+        }, 60_000);
+
+        it('a manifest under a directory whose name holds a newline is still a manifest change', () => {
+            const head = commitOn('newline-dir-manifest', base, { 'odd\ndir/package.json': '{"x": 1}\n' });
+            const r = withPoisonedRuntime(() => runGate(base, head, noStrip()));
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(runtime-uncertain/u);
+        }, 60_000);
+
+        it('a changed-file list that cannot be read is needs-owner', () => {
+            const dir = path.join(work, 'git-shim-no-name-list');
+            fs.mkdirSync(dir, { recursive: true });
+            const real = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
+            fs.writeFileSync(
+                path.join(dir, 'git'),
+                `#!/bin/sh\nfor a in "$@"; do [ "$a" = "--name-only" ] && exit 1; done\nexec "${real}" "$@"\n`,
+                { mode: 0o755 },
+            );
+            const head = commitOn('docs-only-unreadable-list', base, { 'docs/installation.md': 'list\n' });
+            const r = runGate(base, head, { PATH: `${dir}:${process.env['PATH'] ?? ''}` });
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(manifest-unreadable/u);
         }, 60_000);
     });
 
