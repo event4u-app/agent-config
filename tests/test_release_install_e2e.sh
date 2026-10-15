@@ -17,6 +17,10 @@
 #   6. secret-gate-smoke           — repo-side check_secret_leak (not shipped
 #                                    as an installed CLI command — see § 6)
 #   7. clean-uninstall             — npm uninstall -g leaves no orphans
+#   8. consumer-ci-settle          — the CI-wait line the shipped /fix ci
+#                                    command emits runs from a project-local
+#                                    (--omit=dev) and a global install, with no
+#                                    TypeScript runner and no registry access
 #
 # Env:
 #   RELEASE_TARBALL   — pre-built tarball to install. Unset → `npm pack`
@@ -26,6 +30,10 @@
 #                        `npm pack @event4u/agent-config@9.7.0` once
 #                        (network). A failed fetch is a SETUP failure,
 #                        not a validation failure — see § 3.
+#   RELEASE_E2E_ONLY  — comma-separated section names to run instead of all
+#                        of them (e.g. `consumer-ci-settle`). Sections 2, 4, 5
+#                        and 7 read the install section 1 makes, so name it too.
+#                        The baseline is only resolved when § 3 is selected.
 #
 # Usage:
 #   bash tests/test_release_install_e2e.sh
@@ -42,6 +50,7 @@ SERVER_PID=""
 # --- helpers -------------------------------------------------------------
 
 ok() { echo "  ✅  $1"; }
+want() { [[ -z "${RELEASE_E2E_ONLY:-}" || ",$RELEASE_E2E_ONLY," == *",$1,"* ]]; }
 group_start() { echo "::group::$1"; echo "  🧪  $1"; }
 group_end() { echo "::endgroup::"; }
 die() {
@@ -131,10 +140,12 @@ RELEASE_TARBALL_PATH="$(resolve_release_tarball)"
 RELEASE_TARBALL_VERSION="$(tarball_version "$RELEASE_TARBALL_PATH")" || die "could not read version from release tarball: $RELEASE_TARBALL_PATH"
 ok "release tarball: $RELEASE_TARBALL_PATH ($RELEASE_TARBALL_VERSION)"
 
-BASELINE_TARBALL_PATH="$(resolve_baseline_tarball)"
-[[ -f "$BASELINE_TARBALL_PATH" ]] || die "resolved baseline tarball not found: $BASELINE_TARBALL_PATH"
-BASELINE_TARBALL_VERSION="$(tarball_version "$BASELINE_TARBALL_PATH")" || die "could not read version from baseline tarball: $BASELINE_TARBALL_PATH"
-ok "baseline tarball: $BASELINE_TARBALL_PATH ($BASELINE_TARBALL_VERSION)"
+if want upgrade-from-9.7.0; then
+    BASELINE_TARBALL_PATH="$(resolve_baseline_tarball)"
+    [[ -f "$BASELINE_TARBALL_PATH" ]] || die "resolved baseline tarball not found: $BASELINE_TARBALL_PATH"
+    BASELINE_TARBALL_VERSION="$(tarball_version "$BASELINE_TARBALL_PATH")" || die "could not read version from baseline tarball: $BASELINE_TARBALL_PATH"
+    ok "baseline tarball: $BASELINE_TARBALL_PATH ($BASELINE_TARBALL_VERSION)"
+fi
 echo ""
 
 # --- 1. fresh-global-install ------------------------------------------------
@@ -364,15 +375,69 @@ section_clean_uninstall() {
     group_end
 }
 
+# --- 8. consumer-ci-settle ---------------------------------------------------
+
+# Runs the CI-wait line exactly as the packed /fix ci command prints it, so the
+# check follows whatever invocation the shipped text names. The run happens with
+# PATH cut down to node, npm and npx: no tsx, no stray global agent-config, and
+# npm_config_offline=true so nothing can be fetched to paper over a miss.
+section_consumer_ci_settle() {
+    group_start "consumer-ci-settle"
+    local emitted invocation
+    emitted="$(tar -xzO -f "$RELEASE_TARBALL_PATH" package/dist/agent-src/commands/fix/ci.md \
+        | grep -m1 -E '^[^`|]*ci:settle <n>$' || true)"
+    [[ -n "$emitted" ]] || die "consumer-ci-settle: the packed /fix ci command names no ci:settle line"
+    invocation="${emitted% <n>}"
+    ok "emitted invocation: $invocation"
+
+    local nodebin="$TMP_ROOT/node-only-bin" bin
+    mkdir -p "$nodebin"
+    for bin in node npm npx; do
+        ln -s "$(PATH="$BASE_PATH" command -v "$bin")" "$nodebin/$bin" \
+            || die "consumer-ci-settle: $bin not found on PATH"
+    done
+    local stripped="$nodebin:/usr/bin:/bin"
+    if env -i PATH="$stripped" bash -c 'command -v agent-config || command -v tsx' >/dev/null 2>&1; then
+        die "consumer-ci-settle: the stripped PATH still reaches agent-config or tsx"
+    fi
+
+    local local_dir="$TMP_ROOT/consumer-local" prefix="$TMP_ROOT/prefix-consumer" global_dir="$TMP_ROOT/consumer-global"
+    mkdir -p "$local_dir" "$prefix" "$global_dir"
+    printf '{"name":"consumer","version":"0.0.0","private":true}\n' >"$local_dir/package.json"
+    (cd "$local_dir" && NPM_CONFIG_PREFIX="$prefix" PATH="$BASE_PATH" npm install --omit=dev "$RELEASE_TARBALL_PATH" \
+        --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000) >"$TMP_ROOT/consumer-local-install.log" 2>&1 \
+        || { cat "$TMP_ROOT/consumer-local-install.log" >&2; die "consumer-ci-settle: project-local npm install --omit=dev failed"; }
+    NPM_CONFIG_PREFIX="$prefix" PATH="$BASE_PATH" npm install -g "$RELEASE_TARBALL_PATH" --no-audit --no-fund \
+        --fetch-retries=5 --fetch-retry-mintimeout=10000 >"$TMP_ROOT/consumer-global-install.log" 2>&1 \
+        || { cat "$TMP_ROOT/consumer-global-install.log" >&2; die "consumer-ci-settle: global npm install failed"; }
+
+    local leg dir path out rc usages
+    for leg in project-local global; do
+        if [[ "$leg" == project-local ]]; then dir="$local_dir"; path="$stripped"; else dir="$global_dir"; path="$prefix/bin:$stripped"; fi
+        rc=0
+        out="$(cd "$dir" && env -i HOME="$TMP_ROOT/consumer-home" PATH="$path" NPM_CONFIG_PREFIX="$prefix" \
+            npm_config_offline=true EVENT4U_CONFIG_HOME="$EVENT4U_CONFIG_HOME" CI=1 AGENT_CONFIG_NO_UI=1 \
+            bash -c "$invocation" 2>&1)" || rc=$?
+        usages="$(printf '%s' "$out" | grep -c 'usage: ci_settle' || true)"
+        if [[ "$rc" -ne 2 || "$usages" -ne 1 ]]; then
+            printf '%s\n' "$out" >&2
+            die "consumer-ci-settle ($leg): '$invocation' exited $rc with $usages usage line(s); expected exit 2 and exactly one usage line"
+        fi
+        ok "$leg install: '$invocation' reaches the waiter (exit 2, one usage line)"
+    done
+    group_end
+}
+
 # --- run ---------------------------------------------------------------------
 
-section_fresh_global_install
-section_no_silent_gui_postinstall
-section_upgrade_from_9_7_0
-section_gui_server_ping
-section_reach_doctor
-section_secret_gate_smoke
-section_clean_uninstall
+want fresh-global-install && section_fresh_global_install
+want no-silent-gui-postinstall && section_no_silent_gui_postinstall
+want upgrade-from-9.7.0 && section_upgrade_from_9_7_0
+want gui-server-ping && section_gui_server_ping
+want reach-doctor && section_reach_doctor
+want secret-gate-smoke && section_secret_gate_smoke
+want consumer-ci-settle && section_consumer_ci_settle
+want clean-uninstall && section_clean_uninstall
 
 echo ""
 echo "✅  release install E2E gate: all sections passed"
