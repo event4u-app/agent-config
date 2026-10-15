@@ -86,6 +86,7 @@ import {
     type TextInputStream,
     type TextOutputStream,
 } from '../../../src/scripts/ai_council/clients.js';
+import { classifyCliFailure, isFallbackEligible } from '../../../src/scripts/ai_council/transport_resolver.js';
 import { hasPython3, oracleFile, REPO_ROOT, runPyCode } from './_harness.js';
 
 // Same resolution the shared harness uses — the cross-process booking test below
@@ -2178,5 +2179,78 @@ describe('clients — served-model attribution', () => {
         const r = new OpenAIClient({ client: mock }).ask('s', 'u');
         expect(r.error).toBe('RangeError: rl');
         expect(r.model_served).toBe('');
+    });
+});
+
+// ── Phase 1 of road-to-unknowns-that-say-so ────────────────────────────────
+//
+// A CLI failure that is NOT a no-double-charge class must never become one.
+// `auth_rejected` and `cli_unsupported` are both fallback-eligible, so a
+// misclassification does not merely mislabel a row — it replays a prompt the
+// CLI already generated against the metered API, and the run pays twice with
+// no ceiling set.
+describe('a timeout stays a timeout, and a parse failure is not replayed', () => {
+    class ProbeCli extends CliClient {
+        static override name = 'probe';
+        static override default_binary = 'probe';
+    }
+
+    it('timeout-with-login-substring-is-timeout', () => {
+        // The F1 string. `login` appears inside it, and the auth list carries a
+        // bare `login`, so an auth-first classifier reads a timeout as expired
+        // credentials.
+        expect(ProbeCli._classify_stderr('Error: timed out waiting for login', 1)).toBe('timeout');
+    });
+
+    it('timeout-is-never-fallback-eligible', () => {
+        const cls = classifyCliFailure(ProbeCli._classify_stderr('Error: timed out waiting for login', 1));
+        expect(cls).toBe('timeout');
+        expect(isFallbackEligible(cls)).toBe(false);
+    });
+
+    it('the failure matrix resolves every ambiguity to the protected class', () => {
+        // Each string matches an ineligible class AND an eligible one. The
+        // ineligible one must win in all three.
+        expect(ProbeCli._classify_stderr('deadline exceeded; please log in again', 1)).toBe('timeout');
+        expect(ProbeCli._classify_stderr('timeout after 30s — rate limit may apply', 124)).toBe('timeout');
+        expect(ProbeCli._classify_stderr('request timed out (auth failed earlier)', 1)).toBe('timeout');
+        for (const s of [
+            'deadline exceeded; please log in again',
+            'timeout after 30s — rate limit may apply',
+            'request timed out (auth failed earlier)',
+        ]) {
+            expect(isFallbackEligible(classifyCliFailure(ProbeCli._classify_stderr(s, 1)))).toBe(false);
+        }
+    });
+
+    it('genuine-auth-still-falls-back', () => {
+        // The narrowing must not cost the real case: a genuine expired login
+        // stays `auth_expired` and stays eligible, because nothing was
+        // generated and the API is not a second charge.
+        for (const s of ['Error: not logged in', 'please log in to continue', 'login required']) {
+            expect(ProbeCli._classify_stderr(s, 1)).toBe('auth_expired');
+            expect(isFallbackEligible(classifyCliFailure('auth_expired'))).toBe(true);
+        }
+    });
+
+    it('timeout-never-dispatches-api', () => {
+        // End to end over the two functions a dispatcher consults: a seat whose
+        // CLI died on the F1 stderr is ineligible, so no metered transport is
+        // selected. The spy counts what a dispatcher would have charged for.
+        const dispatched: string[] = [];
+        const seat = (stderr: string): void => {
+            const cls = classifyCliFailure(ProbeCli._classify_stderr(stderr, 1));
+            if (isFallbackEligible(cls)) dispatched.push(cls);
+        };
+        seat('Error: timed out waiting for login');
+        expect(dispatched).toEqual([]);
+    });
+
+    it('parse-failed-is-not-replayed', () => {
+        // A parse failure happens AFTER generation: the member answered and no
+        // parser could read it. Mapping it to `cli_unsupported` made it
+        // eligible, so the same prompt was paid for twice.
+        expect(classifyCliFailure('parse_failed')).not.toBe('cli_unsupported');
+        expect(isFallbackEligible(classifyCliFailure('parse_failed'))).toBe(false);
     });
 });

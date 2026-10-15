@@ -538,7 +538,13 @@ export function classifyCliFailure(raw: string): CliFailureClass {
     if (s === 'auth_expired' || s === 'auth_rejected' || s === 'unauthorized') {
         return 'auth_rejected';
     }
-    if (s === 'cli_unsupported' || s === 'unsupported' || s === 'parse_failed') {
+    // `parse_failed` is deliberately NOT here. `cli_unsupported` is
+    // fallback-eligible on the no-double-charge property: the CLI refused the
+    // request, so nothing was generated and the API is a first charge. A parse
+    // failure is the opposite — the member answered and no parser could read
+    // it, so generation already happened and a replay pays for it twice. It
+    // falls through to `other`, which is ineligible.
+    if (s === 'cli_unsupported' || s === 'unsupported') {
         return 'cli_unsupported';
     }
     // Prefix match, not equality: the detail carries the operator-facing reason
