@@ -114,7 +114,7 @@ verdict). Every loop is capped, every run leaves a `run.json` the retro reads.
       a door invokes stages, never another door; the changed default end state
       (ready PR, `--mode=plan` and `--no-pr` stop after validation without a
       push — an explicit contract change, not a silent one); the push model
-      (D7); ADR-118 conformance — every loop, round and fix cycle carries a
+      (D7); the owner's fetch and analyst-agency answers (D17); ADR-118 conformance — every loop, round and fix cycle carries a
       numeric cap in the door's `limits:` block, no run-until-condition; no
       `docs/contracts/` loop contract (D10). Alternatives: keep the optimize
       cluster; one monolithic `/analyze`.
@@ -221,9 +221,9 @@ the ADR moves to `superseded`; nothing else exists yet.
       drop yields three independence-stamped outputs with identical brief
       digests, none referencing another before the exchange; a `--quick` run
       records one analyst and no exchange.
-- [~] **2.4b `cli:<provider>` analysts.** Cross-family read-only analysts reusing
+- [ ] **2.4b `cli:<provider>` analysts.** Cross-family read-only analysts reusing
       the council's binaries under a separate analyst bound in
-      `cli_agency_bounds.ts`. <!-- deferred: blocker analyst-cli-agency -->
+      `cli_agency_bounds.ts`.
       verify: a probed binary runs a fixture analysis read-only and its output is
       stamped `cross-family`.
 - [ ] **2.5 Exchange that deepens instead of agreeing (directive c).** Each
@@ -359,11 +359,11 @@ today's analysis-only behaviour.
       verify: `npx vitest run tests/scripts/source_adapters.test.ts` -> 0 — pins each
       local kind, refuses an archive with a `../` entry, and fails a URL argument
       with the blocker's name.
-- [~] **4.2b Network sources and the research step.** Repositories at depth 1 to
+- [ ] **4.2b Network sources and the research step.** Repositories at depth 1 to
       a pinned SHA, URLs and articles (redirect and size caps, digest plus quoted
       anchor), and the research brief (code not README, other repositories,
       links, posts, the web); sources coded S1, S2, …, identity only as `ENC1:`
-      in `intake.md`. <!-- deferred: blocker source-fetch-authorization -->
+      in `intake.md`.
       verify: a connected fixture run's ledger carries one coded web row and no
       source name in any tracked output; a `--no-network` run completes labelled
       degraded.
@@ -482,7 +482,7 @@ file; `council:pr` is unchanged.
 ## Blockers
 
 ### blocker: source-fetch-authorization
-- **Status:** open
+- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report: an invocation naming a source authorises read-only fetches of that source plus the research step for that run; secrets and private network content stay excluded. Step 1.2's ADR records it, and the observation roadmap's `entry_condition` now says so (D17); step 4.2b is open.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 4.2b only (network sources and web research); local sources, every other phase and the read-only first slice run without it
@@ -493,7 +493,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** the ADR of step 1.2 records the option and the observation roadmap's `entry_condition` agrees with it.
 
 ### blocker: analyst-cli-agency
-- **Status:** open
+- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report: `cli:<provider>` analysts run under a separate read-only analyst profile in `src/scripts/ai_council/cli_agency_bounds.ts`; council seats stay oracles. Step 1.2's ADR records it (D17); step 2.4b is open.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 2.4b only; `subagent` and `external` analysts proceed and are stamped `same-family` honestly
@@ -523,6 +523,8 @@ file; `council:pr` is unchanged.
 | D14 | destructive-owned | owner | Push and PR creation (closure-scan typed-op hits on Phase 3 and 3.3): the invocation is the this-turn confirmation of exactly the objects D7 names — the run's own branch or the named PR branch — never a merge | directive (f); the Hard Floor's "approval names the exact object"; `optimize:deep` Step 0 precedent | the owner asks for a per-push confirmation |
 | D15 | spend-exhaustion | evidence | Council and analyst spend (closure-scan spend hit on 2.6) pauses and reports at the per-run budget cap of 2.2 (`handed-back`), never raises it | ADR-268 § 8 routes spend to pause-and-report | a run ends `handed-back` on budget twice in its first ten |
 | D16 | deterministic | evidence | The other 23 closure-scan hits are lexical, not open decisions: `merge`/`publish` inside a slug, a kill row or a calibration step; `contradicts` inside a rule clause (2.3, 3.4); `improve` inside the owner's quoted directives and evidence rows; each AC names its command or observable state | `./scripts-run src/scripts/closure_scan` on this file, 2026-10-15 | the scan's grammar changes and a hit survives a re-read |
+| D17 | product-owned | owner | Both owner blockers → (a): naming a source in the invocation authorises read-only fetches of it and the research step for that run (`source-fetch-authorization`); cross-family CLI analysts run under a separate read-only analyst profile, seat doctrine unchanged (`analyst-cli-agency`) | owner answers 2026-10-15 to the PR #2373 report | a fetch reaches private or authenticated content, or a probed binary writes outside its profile |
+| D18 | product-owned | owner | AC-5's always-`ready` landing yields to the harvest intake limit decided in `road-to-agent-throughput-recovery` D8: while more than 8 `ready` roadmaps sit at 0 ticked steps, a new inbox roadmap lands `draft` | owner answered both on 2026-10-15; the later, explicit limit narrows the transcript's standing preference | the owner lifts or changes N |
 ## Source disposition
 
 **Lineage.** `lint_consolidation_lineage` is clean. Source A's exchange final
@@ -580,8 +582,8 @@ catch-up jobs → K4; blind A/B and canary → 6.6.
       verbatim, a disagreement ledger and a minority audit.
 - [ ] AC-4 — After every exchange the run shows the gate's numbers, and a further
       round happened only on a recorded council or owner decision.
-- [ ] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
-      roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
+- [ ] AC-5 — `analyze:inbox` on a replayed round lands `status: ready`
+      roadmaps (subject to the intake limit of D18) and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
       block.
 - [ ] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`
