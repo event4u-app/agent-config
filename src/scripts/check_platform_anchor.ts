@@ -197,10 +197,14 @@ export function readBypassRecords(root: string): BypassRecordInput[] {
  * through that same descriptor with a byte ceiling — so the object checked is
  * the object read, and a replacement between the two cannot slip in.
  */
-function readRecordOnce(file: string): string | null {
+export function readRecordOnce(file: string, noFollow: number | null = fs.constants.O_NOFOLLOW ?? null): string | null {
+    // Without O_NOFOLLOW the open would follow a link, so no record is trusted.
+    if (noFollow === null) {
+        return null;
+    }
     let fd: number | null = null;
     try {
-        fd = fs.openSync(file, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW ?? 0));
+        fd = fs.openSync(file, fs.constants.O_RDONLY | noFollow);
         const st = fs.fstatSync(fd);
         if (!st.isFile() || st.size > BYPASS_RECORD_MAX_BYTES) {
             return null;
@@ -217,7 +221,13 @@ function readRecordOnce(file: string): string | null {
     } catch {
         return null;
     } finally {
-        if (fd !== null) fs.closeSync(fd);
+        if (fd !== null) {
+            try {
+                fs.closeSync(fd);
+            } catch {
+                // The result was already decided; a failed close must not turn it into a crash.
+            }
+        }
     }
 }
 

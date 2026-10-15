@@ -6,7 +6,13 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { BYPASS_RECORD_DIR, bypassInstant, evaluateBypassRecords } from '../../src/scripts/_lib/platform_anchor.js';
-import { main, reviewCommitted, type AnchorSource } from '../../src/scripts/check_platform_anchor.js';
+import {
+    committedEvidence,
+    main,
+    readRecordOnce,
+    reviewCommitted,
+    type AnchorSource,
+} from '../../src/scripts/check_platform_anchor.js';
 
 /**
  * A bypass of the ratification gate is the owner's route, and its record is
@@ -204,6 +210,20 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         expect(reviewCommitted(root, REVIEW)).toBe(false);
         expect(reviewCommitted(root, 'agents/evidence/seed.md')).toBe(true);
         expect(reviewCommitted(root, 'agents/evidence/../evidence/seed.md')).toBe(false);
+    });
+
+    it('without O_NOFOLLOW no record is trusted, and a link is never followed with it', () => {
+        put('plain.md', 'x\n');
+        expect(readRecordOnce(path.join(root, 'plain.md'))).toBe('x\n');
+        expect(readRecordOnce(path.join(root, 'plain.md'), null)).toBeNull();
+        fs.symlinkSync(path.join(root, 'plain.md'), path.join(root, 'link.md'));
+        expect(readRecordOnce(path.join(root, 'link.md'))).toBeNull();
+    });
+
+    it('a tree that cannot be listed gives no committed review', () => {
+        put('agents/evidence/seed.md', 'x\n');
+        expect(committedEvidence(root).size).toBe(0);
+        expect(reviewCommitted(root, 'agents/evidence/seed.md')).toBe(false);
     });
 
     it('a record that is a symbolic link, or oversized, is read as unreadable', () => {
