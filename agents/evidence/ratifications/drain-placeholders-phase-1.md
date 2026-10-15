@@ -7,7 +7,7 @@ verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
-subject: 7420603b2375b70c482fe8909de93b2fdfbeda7d6100e8570c194c1b1a04e2b9
+subject: 0476a16f388eb7fafca738c30b2335dbfeff8da612974b060d80a62b8089ee04
 effective_after: merge
 ---
 
@@ -21,17 +21,30 @@ gate reads this file before the PR exists.
 
 ## The gated surfaces
 
-`check_kernel_edit_ratified` classifies two files of the diff as hook plumbing:
+The base revision's gate classifies four files of the diff as hook plumbing —
+two edited, two that arrive in the dispatcher's import closure:
 
 - `src/scripts/hooks/dispatch_hook.ts` — three changed lines: the stage runs
   before the concern loop, the payload planner receives its placeholder view,
   and each concern's envelope is cut from the view `egressViewFor` grants it.
   The file stays at 1,499 lines.
+- `src/scripts/hooks/egress_stage.ts` — the stage itself (new).
+- `src/scripts/_lib/agent_settings.ts` — one `export` keyword on
+  `_resolve_cascade_paths`, which the stage uses for its fast path.
 - `src/config/hook-latency-budget.json` — one added note recording the bundle
   delta and the measured runtime cost. No cap, ceiling or threshold moves.
 
-The digest above is `ratification_subject` over those two files at commit
-`05546ca6791520aa25a1c514274036a716b92c3f`.
+The digest above is `ratification_subject` over those four files, computed with
+the base revision's gate (`085ec41ff`) against this tree. It is the same at
+`14b3eeef2` (reviewed in round 4) and at the head: no gated file changed after
+round 4.
+
+**Correction.** This record first carried a digest over two files
+(`7420603b…`), computed with the head checkout's gate. That gate measures import
+arrivals against its own checkout, so it could not see `egress_stage.ts` and
+`agent_settings.ts` arriving in the closure; CI's base-revision gate did, and
+refused the record. Round 5 below showed the three gated files earlier rounds
+had shown only in part, before the digest was replaced.
 
 ## What the change does to authority
 
@@ -45,13 +58,14 @@ bound to their scripts. Recorded as `ratified` rather than
 `confirmed-non-expanding` because the stage is new rewrite authority, however
 narrow its first use.
 
-## The review — four rounds, both seats each round
+## The review — five rounds, both seats each round
 
 Prompts, committed verbatim:
 `agents/evidence/council/placeholders-phase1-review-20261015.question.md` (full
 review, 49 KB, omissions named) and the delta-only rounds
 `placeholders-phase1-review-r2-20261015.question.md`,
-`-r3-20261015.question.md`, `-r4-20261015.question.md` in the same directory.
+`-r3-20261015.question.md`, `-r4-20261015.question.md`, `-r5-20261015.question.md`
+in the same directory.
 Every round reached quorum 2 of 2, through the CLI seats, nothing billed.
 
 | Round | Reviewed | anthropic/claude-sonnet-4-5 | openai/codex-default |
@@ -60,8 +74,9 @@ Every round reached quorum 2 of 2, through the CLI seats, nothing billed.
 | 2 | `0cec5745c` | REQUEST_CHANGES | REQUEST_CHANGES |
 | 3 | `a296651f6` | APPROVE | REQUEST_CHANGES |
 | 4 | `14b3eeef2` | APPROVE | APPROVE |
+| 5 | the complete diff of `dispatch_hook.ts`, `agent_settings.ts` and `hook-latency-budget.json` (byte-identical since `14b3eeef2`) | APPROVE | APPROVE |
 
-Final stances, in the seats' words:
+Round-4 stances, in the seats' words:
 
 - anthropic: "**APPROVE** — The portable injected-reader regression resolves
   the sole round-3 objection without changing default production behavior."
@@ -69,6 +84,23 @@ Final stances, in the seats' words:
   preserving fail-closed production behavior; highest-leverage change: remove
   the vestigial filesystem write or clarify that the injected reader—not
   filesystem state—is the regression-test boundary."
+
+Round-5 stances, in the seats' words:
+
+- anthropic: "Stance: **APPROVE**" — "JSON: documentation-only, no behavior
+  change"; "`agent_settings.ts`: minimal API expansion for necessary
+  functionality"; highest-leverage change: a one-line comment at the stage call
+  documenting the `off` fast path.
+- openai: "**APPROVE** — the displayed changes contain no concrete correctness
+  or security defect, the budget note changes no gate behavior, and the helper
+  export changes reachability rather than authority; the single
+  highest-leverage pre-merge change is a table-driven regression test proving
+  default-off equivalence and correct original-versus-placeholder views for
+  every concern."
+
+Neither round-5 suggestion was taken in this branch: both are additions to
+reviewed content, not findings against it, and either would change a gated file
+after its last review.
 
 The seats answered APPROVE / REQUEST_CHANGES; this record maps the final
 APPROVE of both to `ratified`.
