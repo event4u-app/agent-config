@@ -129,6 +129,27 @@ export const READER_PATH = 'src/scripts/_lib/ratification_artifact.ts';
  */
 export const CLOSURE_READER_PATH = 'src/scripts/_lib/dispatch_import_closure.ts';
 
+/**
+ * Modules of this gate's static import closure that run inside the verdict, so
+ * an edit to one is an edit to the gate:
+ *
+ *   - `_lib/adr_frontmatter.ts` parses the record's header, verdict included;
+ *   - `_lib/gate_ledger.ts` and `_lib/scan_scope.ts` run before the exit code is
+ *     returned, so either could end the process first.
+ *
+ * `_lib/kernel_rules.ts` is already gated as plumbing. `_lib/ratification_subject.ts`,
+ * which computes the digest, joins in a separate change: one that gates it and
+ * edits it at once is digested over different files by the base revision's
+ * gate and by its own, so no single record answers for both. The writer CLIs
+ * and the contract stay outside by owner decision (2026-10-15): the gate does
+ * not import them, recomputes the digest and reads only the record.
+ */
+export const MECHANISM_IMPORT_PATHS: readonly string[] = [
+    'src/scripts/_lib/adr_frontmatter.ts',
+    'src/scripts/_lib/gate_ledger.ts',
+    'src/scripts/_lib/scan_scope.ts',
+];
+
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
 
@@ -320,6 +341,22 @@ export interface GatedPaths {
     self: boolean;
 }
 
+/**
+ * True for a file of the ratification mechanism itself — the one list both the
+ * classification and the subject digest read.
+ */
+export function isMechanismPath(p: string): boolean {
+    return (
+        p === SELF_PATH ||
+        p === READER_PATH ||
+        p === CLOSURE_READER_PATH ||
+        p === POLICY_PATH ||
+        p === WORKFLOW_PATH ||
+        ANCHOR_PATHS.includes(p) ||
+        MECHANISM_IMPORT_PATHS.includes(p)
+    );
+}
+
 /** Partition a changed-file list into the surfaces this gate watches. */
 export function classifyPaths(
     files: readonly string[],
@@ -335,14 +372,7 @@ export function classifyPaths(
         if (p === '') {
             continue;
         }
-        if (
-            p === SELF_PATH ||
-            p === READER_PATH ||
-            p === CLOSURE_READER_PATH ||
-            p === POLICY_PATH ||
-            p === WORKFLOW_PATH ||
-            ANCHOR_PATHS.includes(p)
-        ) {
+        if (isMechanismPath(p)) {
             self = true;
             continue;
         }
@@ -527,7 +557,7 @@ export function evaluate(
         ...gated.kernelRules,
         ...gated.governanceHooks,
         ...gated.plumbing,
-        ...(gated.self ? [SELF_PATH] : []),
+        ...files.map((f) => f.replace(/\\/g, '/').trim()).filter(isMechanismPath),
     ]);
     const artifactSet = new Set(ratificationArtifactsIn(files));
     for (const target of ledger.unaccountedTargets()) {
@@ -609,7 +639,7 @@ export function evaluate(
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
         ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
-        ...(gated.self ? ['the ratification mechanism itself (gate, reader, policy or workflow)'] : []),
+        ...(gated.self ? ['the ratification mechanism itself (gate, its imports, policy or workflow)'] : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
     for (const t of touched) {
