@@ -44,7 +44,7 @@ function record(fields: Partial<Record<string, string | null>> = {}, extra = '')
 }
 
 const one = (text: string | null, now = NOW) =>
-    evaluateBypassRecords([{ path: 'agents/evidence/bypass-records/x.md', text }], now, (rel) => rel === REVIEW);
+    evaluateBypassRecords([{ path: 'agents/evidence/bypass-records/x.md', text }], now, (rel, subject) => rel === REVIEW && subject === 'a'.repeat(64));
 const codes = (text: string | null, now = NOW) => one(text, now).map((f) => f.code);
 
 describe('evaluateBypassRecords — an open bypass reds', () => {
@@ -183,12 +183,20 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         git('-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-m', 'x');
     };
 
-    it('passes once that record is closed and its review is committed', () => {
+    it('passes once that record is closed and its review is committed and cites it', () => {
         git('init', '-q');
         put(`${BYPASS_RECORD_DIR}/closed.md`, record());
-        put(REVIEW, '# review\n');
+        put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
         commitAll();
         expect(run()).toBe(0);
+    });
+
+    it('fails when the committed review cites a different subject', () => {
+        git('init', '-q');
+        put(`${BYPASS_RECORD_DIR}/closed.md`, record());
+        put(REVIEW, `# review of subject ${'c'.repeat(64)}\n`);
+        commitAll();
+        expect(run()).toBe(1);
     });
 
     it('fails when the closed record names a review that is not there', () => {
@@ -241,7 +249,37 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         expect(run()).toBe(1);
     });
 
-    it('fails when the diff deletes a bypass record', () => {
-        expect(run(`${BYPASS_RECORD_DIR}/gone.md`)).toBe(1);
+    describe('a record the base carries and the checkout does not — with no file list at all', () => {
+        const base = (): string => {
+            git('init', '-q');
+            put(`${BYPASS_RECORD_DIR}/closed.md`, record());
+            put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
+            commitAll();
+            const r = spawnSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' });
+            return r.stdout.trim();
+        };
+        const runAgainst = (sha: string): number => main(['--files', '--base-ref', sha, '--root', root, '--repo', 'o/r'], source);
+
+        it('the base itself passes', () => {
+            expect(runAgainst(base())).toBe(0);
+        });
+
+        it('one record deleted', () => {
+            const sha = base();
+            fs.rmSync(path.join(root, BYPASS_RECORD_DIR, 'closed.md'));
+            commitAll();
+            expect(runAgainst(sha)).toBe(1);
+        });
+
+        it('the whole directory deleted, uncommitted', () => {
+            const sha = base();
+            fs.rmSync(path.join(root, BYPASS_RECORD_DIR), { recursive: true });
+            expect(runAgainst(sha)).toBe(1);
+        });
+
+        it('a base that cannot be listed fails closed', () => {
+            base();
+            expect(runAgainst('no-such-ref')).toBe(1);
+        });
     });
 });

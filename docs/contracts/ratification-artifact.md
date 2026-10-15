@@ -342,8 +342,9 @@ bypass leaves a trace, not that it be impossible.
    `restore_by` at the latest.
 5. **Verify** with `check_platform_anchor` after restoration and attach the
    result to the incident record.
-6. **Commit** the record. An unrecorded bypass is the only failure mode this
-   procedure can actually have.
+6. **Commit** the record. An unrecorded bypass is the one failure of this
+   procedure that no reader here can see; every other way it can stay open is
+   a finding of `check_platform_anchor`, below.
 7. **Review after the fact.** The council reviews the bypassed change once it is
    restored, and the record names that review.
 
@@ -388,16 +389,22 @@ record that cannot show it closed: a missing, repeated or unknown field, a
 real calendar instant with a timezone, `restore_by` before `time` or more than
 seven days after it, `restored_at` before `time` or in the future, a
 `council_review` that names anything but a regular file committed at `HEAD`
-under `agents/evidence/` (an untracked file, a directory and a symbolic link do
-not count), a record or a record directory that cannot be read, a record that
-is a symbolic link or larger than 64 KiB, more than 200 records, and a record
-the diff deletes. Each record is opened once without following a link, and
+under `agents/evidence/` that cites the record's `subject` digest (an untracked
+file, a directory, a symbolic link and a review of another change do not
+count), a record or a record directory that cannot be read, a record that is a
+symbolic link or larger than 64 KiB, and more than 200 records. A record the
+base revision carries and the checkout does not — one file or the whole
+directory — is a finding too, read from Git against the base rather than from
+the file list a caller passes; a base whose records cannot be listed fails
+closed. Each record is opened once without following a link, and
 checked and read through that one descriptor; the committed reviews are read
 from one `HEAD` tree listing per run; a record's name and values reach a finding
 with control and line-separator characters replaced.
 
 **What that check does not establish.** The records are files in the branch it
-runs on, so a branch can rewrite one to look closed; the check reads them, it
+runs on, so a branch can rewrite one to look closed, and the values it checks
+are shapes and one citation — not that the commit, the digest or the ruleset
+versions are true; the check reads them, it
 does not verify them against the forge, which needs the `administration`
 permission no workflow token carries. And it is what the rest of the anchor is
 — **local and voluntarily invoked** — so an open bypass reds the next run that

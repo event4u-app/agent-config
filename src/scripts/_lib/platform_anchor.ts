@@ -1187,13 +1187,14 @@ function bypassFields(text: string): Map<string, string> | string {
  * `bypass-not-restored`; restored with `council_review: pending`
  * {@link BYPASS_REVIEW_DAYS} days on is `bypass-unreviewed`.
  *
- * `reviewExists` answers whether a `council_review` path names a committed
- * file; it is injected so this module stays free of I/O.
+ * `reviewCovers` answers whether a `council_review` path names a committed
+ * file that cites the record's `subject` digest — so a review of some other
+ * change cannot close this one; it is injected so this module stays free of I/O.
  */
 export function evaluateBypassRecords(
     records: readonly BypassRecordInput[],
     now: Date,
-    reviewExists: (rel: string) => boolean = () => false,
+    reviewCovers: (rel: string, subject: string) => boolean = () => false,
 ): BypassFinding[] {
     const findings: BypassFinding[] = [];
     const t = now.getTime();
@@ -1239,8 +1240,8 @@ export function evaluateBypassRecords(
                   ? `\`restore_by\` is before the bypass or more than ${String(BYPASS_MAX_OPEN_DAYS)} days after it`
                   : restored !== null && (restored < time || restored > t)
                     ? '`restored_at` is before the bypass or in the future'
-                    : review !== 'pending' && !reviewExists(review)
-                      ? `\`council_review\` names \`${shown(review)}\`, which is not a committed regular file`
+                    : review !== 'pending' && !reviewCovers(review, f.get('subject') as string)
+                      ? `\`council_review\` names \`${shown(review)}\`, which is not a committed regular file citing this record's \`subject\``
                       : null;
         if (problem !== null || time === null || restoreBy === null) {
             malformed(p, problem ?? 'unreadable instant');

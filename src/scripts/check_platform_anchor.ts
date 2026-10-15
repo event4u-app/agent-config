@@ -234,14 +234,51 @@ export function readRecordOnce(file: string, platformNoFollow: boolean = fs.cons
 }
 
 /**
- * Bypass records the diff deletes. A record is the route's only trace, so
- * removing one on a branch is a finding of its own rather than a quiet green.
+ * Bypass records the base revision carries and the checkout does not. A record
+ * is the route's only trace, so removing one — or the whole directory — is a
+ * finding of its own. Read from Git against the base, never from a caller's
+ * file list, which can simply leave the deletion out. A base listing that
+ * cannot be read fails closed; a root that is no Git work tree has no base.
  */
-export function removedBypassRecords(changed: readonly string[], root: string): BypassFinding[] {
-    return changed
-        .map((f) => f.replace(/\\/g, '/').trim())
-        .filter((f) => f.startsWith(`${BYPASS_RECORD_DIR}/`) && f.endsWith('.md') && !fs.existsSync(path.join(root, f)))
-        .map((f) => ({ code: 'bypass-record-removed' as const, path: printable(f), message: `${printable(f)} is deleted by this diff` }));
+export function removedBypassRecords(root: string, baseRef: string): BypassFinding[] {
+    const inside = spawnSync('git', ['-C', root, 'rev-parse', '--is-inside-work-tree'], { encoding: 'utf8' });
+    if (inside.status !== 0 || (inside.stdout ?? '').trim() !== 'true') {
+        return [];
+    }
+    const listed = spawnSync('git', ['-C', root, 'ls-tree', '-r', '-z', '--name-only', baseRef, '--', `${BYPASS_RECORD_DIR}/`], {
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024,
+    });
+    if (listed.status !== 0 || typeof listed.stdout !== 'string') {
+        return [
+            {
+                code: 'bypass-record-removed',
+                path: BYPASS_RECORD_DIR,
+                message: `the bypass records at the base \`${printable(baseRef)}\` could not be listed, so a deletion cannot be ruled out`,
+            },
+        ];
+    }
+    return listed.stdout
+        .split('\0')
+        .filter((f) => f.endsWith('.md'))
+        .filter((f) => {
+            try {
+                fs.lstatSync(path.join(root, f));
+                return false;
+            } catch {
+                return true;
+            }
+        })
+        .map((f) => ({ code: 'bypass-record-removed' as const, path: printable(f), message: `${printable(f)} is at the base \`${printable(baseRef)}\` and gone here` }));
+}
+
+/** The committed review cites the record's subject digest, read from `HEAD`. */
+export function reviewCitesSubject(root: string, rel: string, subject: string, index: ReadonlySet<string>): boolean {
+    if (!reviewCommitted(root, rel, index)) {
+        return false;
+    }
+    const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+    return shown.status === 0 && typeof shown.stdout === 'string' && shown.stdout.includes(subject);
 }
 
 /**
@@ -494,8 +531,10 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
     const result = evaluateGate(changed, policyText, source, repo);
     const evidenceIndex = committedEvidence(root);
     const open = [
-        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel) => reviewCommitted(root, rel, evidenceIndex)),
-        ...removedBypassRecords(changed, root),
+        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel, subject) =>
+            reviewCitesSubject(root, rel, subject, evidenceIndex),
+        ),
+        ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),
     ];
     if (open.length > 0) {
         result.lines.push('', `❌  ${String(open.length)} bypass record(s) without a closing:`);
