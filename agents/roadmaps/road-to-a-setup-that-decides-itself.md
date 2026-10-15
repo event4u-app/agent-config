@@ -135,26 +135,27 @@ with that file.
 
 ## Phase 1 — The instrument
 
-- [ ] <!-- blocked-by: instruction-load-observer-has-no-scheduled-owner | asked: yes — 2026-10-12, inbox-2026-10-n reply --> **1.1 Bind `InstructionsLoaded`.** Vocabulary, alias and platform
+- [ ] **1.1 Bind `InstructionsLoaded`.** Absorbs step 3.0 of
+  `stubs/road-to-instructions-loaded-observer.md` (D6). Vocabulary, alias and platform
   row, in the stub's order; observe-only; the stub's kill switch kept —
   removable on hook failure, duplicate events, session-start regression or
   unexplained test breaks.
   verify: the stub's re-entry probe returns `1` and `1`.
-- [ ] <!-- blocked-by: instruction-load-observer-has-no-scheduled-owner | asked: yes — 2026-10-12, inbox-2026-10-n reply --> **1.2 Negative controls for the observer.** Event unavailable on
+- [ ] **1.2 Negative controls for the observer.** Event unavailable on
   the host version, events reordered, malformed payload, duplicate call: each is
   recorded as `unknown`, never as arrival.
   verify: one fixture per control; none produces an arrival record.
 
 ## Phase 2 — An arrival record per session, on the ladder
 
-- [ ] <!-- blocked-by: instruction-load-observer-has-no-scheduled-owner | asked: yes — 2026-10-12, inbox-2026-10-n reply --> **2.1 The record.** Per session: host version, launch context where
+- [ ] **2.1 The record.** Per session: host version, launch context where
   exposed, which package rule files loaded and why (`load_reason`), whether the
   dispatcher was reached. It is the observable predicate of the ladder's
   `visible` rung for standing rules — no new state vocabulary. Names, counts and
   enums only.
   verify: a fixture produces one record; the schema rejects a body or prompt
   field; `activation_ladder` maps the record to `visible`.
-- [ ] <!-- blocked-by: instruction-load-observer-has-no-scheduled-owner | asked: yes — 2026-10-12, inbox-2026-10-n reply --> **2.2 Hand it to its waiting consumer.** The installed-layer
+- [ ] **2.2 Hand it to its waiting consumer.** The installed-layer
   roadmap's step 2.1 reads this record.
   verify: that step's verify line has an input.
 
@@ -265,7 +266,7 @@ with that file.
 
 ### blocker: instruction-load-observer-has-no-scheduled-owner
 
-- **Status:** open — raised 2026-10-12 by round inbox-2026-10-n, the seventh arrival of this subject; owner answer D10 of 2026-10-06 moved the binding into `stubs/road-to-instructions-loaded-observer.md`, which no active file owns, and `road-to-an-installed-layer-that-is-thinned` carries the same question as `arrival-record-needs-a-cancelled-observer`
+- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report (eighth arrival): steps 1.1–2.2 absorb stub step 3.0 with its kill switch, and the installed-layer blocker `arrival-record-needs-a-cancelled-observer` resolves in the same change. Was: raised 2026-10-12 by round inbox-2026-10-n, the seventh arrival of this subject; owner answer D10 of 2026-10-06 moved the binding into `stubs/road-to-instructions-loaded-observer.md`, which no active file owns, and `road-to-an-installed-layer-that-is-thinned` carries the same question as `arrival-record-needs-a-cancelled-observer`
 - **Owner:** owner — scheduling the stub is an estate decision, and the binding changes what every consumer's `.claude/settings.json` receives
 - **Class:** 3
 - **Ownership:** product-owned
@@ -284,6 +285,7 @@ with that file.
 | D3 | product-owned | owner | Land as a new file rather than fold into the installed-layer roadmap | Operator instruction of 2026-10-12 to land this round's roadmaps; folding would make that file the largest active roadmap | the installed-layer file closes its Phases 1–2 before this file starts Phase 3 |
 | D4 | reversible-technical | agent | The forms stay an internal enum after the keys go | The delivery experiment uses the modes as arms (`delivery_arm_experiment.ts`) | the experiment closes |
 | D5 | reversible-technical | agent | Thinnable hosts stay `THINNABLE_HOSTS` (claude-code, cursor, cline); each needs its own observed row before 3.1 can thin it | Binding and effect are separate axes (`host-injection-effect.json` `_comment`) | — |
+| D6 | product-owned | owner | Blocker `instruction-load-observer-has-no-scheduled-owner` → (a): this file schedules the `InstructionsLoaded` binding as steps 1.1–2.2, absorbing stub step 3.0 with its kill switch | owner answer 2026-10-15 to the PR #2373 report, the subject's eighth arrival | the kill switch fires, or the host drops the event |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
