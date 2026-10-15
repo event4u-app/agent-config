@@ -105,15 +105,15 @@ is prose recording why `ci:settle` became a verb, not an instruction.
 ## Phase 2 — Convert
 
 - [ ] **2.1 Implement the chosen shape and bundle every script it reaches.**
-      verify: `tests/test_release_install_e2e.sh` gains a section that runs one
+      `tests/test_release_install_e2e.sh` gains a section that runs one
       converted invocation from a `--omit=dev` project-local and a global install
       offline, the way § consumer-ci-settle does.
+      verify: `grep -c '^run_section consumer-' tests/test_release_install_e2e.sh` -> /^[2-9]/
 - [ ] **2.2 Rewrite every site in the table, shrinking the ratchet baseline per
       file in the same change.** Generic skills point at a command, per the
-      constraint above.
-      verify: `npx vitest run tests/scripts/consumer_invocations.test.ts` green
-      with an empty `BASELINE`, and `lint_framework_leakage` green with no new
-      allowlist entry.
+      constraint above. Done when the test holds an empty `BASELINE` and
+      `lint_framework_leakage` passes with no new allowlist entry.
+      verify: `npx vitest run tests/scripts/consumer_invocations.test.ts --reporter=verbose` -> /✓/
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
