@@ -580,7 +580,7 @@ pins something; it just does not name it. Contract and field shapes:
   take a PAT via env var and never echo it.
 - Max 40 fetches without explicit extension; under `--deep` the three-part
   ceiling of § 2b replaces it, checked between operations — the clone fetch
-  itself is bounded only by the best-effort size gate, by decision.
+  itself is only gated, not bounded, by the best-effort size check, by decision.
 - No auto-commits — the analysis is a draft until the user accepts.
 
 ## When **not** to use
