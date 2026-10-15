@@ -582,8 +582,8 @@ all is an anomaly like any other and stays `needs-owner`. The changed paths are
 read NUL-separated and matched by basename with shell built-ins only, so an odd
 path cannot slip past. The block appends an empty record — a path git never
 prints — as an end marker and believes the listing only if the loop reaches
-it: a listing that cannot be written, opened or read to its end is
-`manifest-unreadable`, `needs-owner`.
+that marker: a listing that cannot be written or opened, or ends before the
+marker, is `manifest-unreadable`, `needs-owner`.
 
 **What it fails to.** Every other anomaly is **`needs-owner`** and says why —
 never a skipped gate and never a fall-back to the head's copy: a private

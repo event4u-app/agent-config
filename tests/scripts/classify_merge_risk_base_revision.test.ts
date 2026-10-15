@@ -400,19 +400,28 @@ describe('a dependency manifest goes to the council, and still cannot reach rout
             expect(r.code).not.toBe(0);
         }, 60_000);
 
-        it('a listing that was written but cannot be read back is needs-owner, never "no manifest"', () => {
-            const shim = path.join(work, 'mktemp-write-only-listing');
-            const made = path.join(work, 'write-only-listing-tmp');
+        // The listing path is a link to /dev/null: writing it and appending the end
+        // marker both succeed, and reading it back reaches EOF before the marker — at
+        // any privilege. The git shim logs that the listing itself exited 0.
+        it('a listing written successfully but read back without its end marker is needs-owner', () => {
+            const shim = path.join(work, 'shim-listing-lost');
+            const made = path.join(work, 'listing-lost-tmp');
+            const log = path.join(work, 'listing-lost.log');
             fs.mkdirSync(shim, { recursive: true });
+            const realGit = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).stdout.trim();
             fs.writeFileSync(
                 path.join(shim, 'mktemp'),
-                `#!/bin/sh\nmkdir "${made}" && : > "${made}/changed" && chmod 200 "${made}/changed" && echo "${made}"\n`,
+                `#!/bin/sh\nmkdir "${made}" && ln -s /dev/null "${made}/changed" && echo "${made}"\n`,
                 { mode: 0o755 },
             );
-            const head = commitOn('bump-unreadable-listing', base, { 'package.json': bumped(11) });
-            const r = withPoisonedRuntime(() =>
-                runGate(base, head, { PATH: `${shim}:${noStrip()['PATH'] ?? ''}` }),
+            fs.writeFileSync(
+                path.join(shim, 'git'),
+                `#!/bin/sh\n"${realGit}" "$@"\nrc=$?\nfor a in "$@"; do [ "$a" = "--name-only" ] && echo "listing exit $rc" >> "${log}"; done\nexit $rc\n`,
+                { mode: 0o755 },
             );
+            const head = commitOn('bump-listing-lost', base, { 'package.json': bumped(11) });
+            const r = withPoisonedRuntime(() => runGate(base, head, { PATH: `${shim}:${noStrip()['PATH'] ?? ''}` }));
+            expect(fs.readFileSync(log, 'utf8')).toBe('listing exit 0\n');
             expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(manifest-unreadable/u);
             expect(r.code).not.toBe(0);
         }, 60_000);
