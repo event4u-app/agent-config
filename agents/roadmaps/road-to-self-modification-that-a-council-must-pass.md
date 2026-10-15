@@ -904,6 +904,15 @@ gaps again; the binding closes replay, and nothing else.
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
+> **Note, 2026-10-15** — `road-to-a-danger-gate-that-sees-what-governs`
+> Phases 1 and 2 changed the merge gate, not this ratification gate: ADR-282's
+> classifier now hands the gated surface, the reviewer's trust chain (its
+> imports, the council, the ratification contract, `_lib/ratification_subject.ts`)
+> and owner-reserved ADRs to the owner as `needs-owner`, and the merge command
+> runs the base revision's copy. Nothing in this phase's watch list moved; a
+> module this phase adds to the watch list is not yet on the merge gate's trust
+> chain unless it is named there too.
+
 - [ ] **4.1 The review's own code is a gated surface.** The gate's watch list
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their

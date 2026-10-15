@@ -203,6 +203,14 @@ depends on them yet, because no consumer is wired until Phase 3.*
 
 ## Phase 3 — The approver registry and the protected verifier
 
+> **Note, 2026-10-15** — `road-to-a-danger-gate-that-sees-what-governs`
+> Phase 1 now hands every pull request touching the gated surface, the
+> reviewer's trust chain or an owner-reserved ADR to the owner (`needs-owner`)
+> instead of letting a council clearance merge it, because the amended ADR-281
+> makes that clearance advisory until an authenticated owner authorisation is
+> bound to the digest. The authorisation this phase builds is what may later
+> let such a change route `needs-council` again (that roadmap's decision D2).
+
 *Record, required sequencing, item 3. The seven owner-reserved blockers below
 (`credential-custody-for-approver-registry` through
 `refusal-finality-policy`) gate specific steps in this phase — read their

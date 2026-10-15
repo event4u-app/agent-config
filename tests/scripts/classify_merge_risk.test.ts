@@ -7,11 +7,17 @@ import { describe, expect, it } from 'vitest';
 
 import {
     classifyChanges,
+    combinePolicy,
+    consequenceMembersOf,
     DELETION_THRESHOLD,
     main,
     parseNameStatus,
+    readSide,
+    reopenPolicyOf,
     resolvePr,
+    unionMembers,
     type ChangeEntry,
+    type ClassifyOptions,
     type ResolveDeps,
 } from '../../src/scripts/classify_merge_risk.js';
 
@@ -73,8 +79,8 @@ describe('routine — the near-misses that must not reach the council', () => {
         expect(ids([mod('src/scripts/authoring_helpers.ts'), mod('src/skills/laravel-migration/helper.ts')])).toEqual([]);
     });
 
-    it('a non-kernel rule is not a governance surface', () => {
-        expect(ids([mod('src/rules/tool-safety.md')])).toEqual([]);
+    it('a non-kernel rule outside the consequence class is not a governance surface', () => {
+        expect(ids([mod('src/rules/markdown-safe-codeblocks.md')])).toEqual([]);
     });
 
     it(`${DELETION_THRESHOLD - 1} deleted files under a surviving directory stay routine`, () => {
@@ -144,6 +150,226 @@ describe('needs-council — one trigger per Hard-Floor and security surface', ()
         expect(r.verdict).toBe('needs-council');
         expect(r.triggers[0]?.paths).toEqual(['infra/main.tf']);
         expect(r.triggers[0]?.rule).not.toBe('');
+    });
+});
+
+describe('the gate sees what governs — one case per trigger, each with its near-miss', () => {
+    const governs = (entries: ChangeEntry[], opts: Partial<ClassifyOptions> = {}): string[] =>
+        classifyChanges(entries, {
+            dirExistsInHead: everyDirExists,
+            decisionPolicy: () => 'other',
+            consequenceMembers: new Set(['tool-safety']),
+            ...opts,
+        }).triggers.map((t) => t.id);
+
+    it('an ADR declaring reopen_policy: owner is an owner-reserved decision', () => {
+        expect(governs([mod('docs/decisions/ADR-281-x.md')], { decisionPolicy: () => 'owner' })).toEqual([
+            'owner-reserved-decision',
+        ]);
+        expect(governs([mod('docs/decisions/ADR-100-x.md')])).toEqual([]);
+    });
+
+    it('a decision record whose frontmatter cannot be read fires the trigger', () => {
+        expect(governs([mod('docs/decisions/ADR-100-x.md')], { decisionPolicy: () => 'unreadable' })).toEqual([
+            'owner-reserved-decision',
+        ]);
+        expect(governs([mod('docs/decisions/INDEX.md')], { decisionPolicy: () => 'unreadable' })).toEqual([]);
+    });
+
+    it('a rule in the consequence class fires, as source and as projection; one outside does not', () => {
+        expect(governs([mod('src/rules/tool-safety.md')])).toEqual(['consequence-class-rule']);
+        expect(governs([mod('dist/agent-src/rules/tool-safety.md')])).toEqual(['consequence-class-rule']);
+        expect(governs([mod('src/rules/markdown-safe-codeblocks.md')])).toEqual([]);
+    });
+
+    it('an unreadable consequence-class list counts every rule file', () => {
+        expect(governs([mod('src/rules/markdown-safe-codeblocks.md')], { consequenceMembers: null })).toEqual([
+            'consequence-class-rule',
+        ]);
+    });
+
+    it('the ratification contract fires; a neighbouring contract does not', () => {
+        expect(governs([mod('docs/contracts/ratification-artifact.md')])).toEqual(['ratification-contract']);
+        expect(governs([mod('docs/contracts/evidence-artifact-types.md')])).toEqual([]);
+    });
+
+    it('the council fires, through each of its five forms', () => {
+        for (const p of [
+            'src/scripts/ai_council/orchestrator.ts',
+            'src/scripts/council_cli.ts',
+            'src/scripts/_lib/council_transport.ts',
+            'dist/agent-src/skills/ai-council/SKILL.md',
+            'src/rules/council-availability.md',
+        ]) {
+            expect(governs([mod(p)])).toContain('council-surface');
+        }
+        expect(governs([mod('src/scripts/check_councillor_names.ts')])).toEqual([]);
+    });
+
+    it('the carriers of the merge rule fire', () => {
+        for (const p of [
+            'src/agent-src/contexts/execution/roadmap-execution-contract.md',
+            'dist/agent-src/contexts/execution/roadmap-process-loop.md',
+            'src/scripts/refusal_envelope.ts',
+        ]) {
+            expect(governs([mod(p)])).toEqual(['merge-rule-carrier']);
+        }
+        expect(governs([mod('agents/evidence/council/authority-routing-20261007.md')])).toContain('merge-rule-carrier');
+        expect(governs([mod('src/agent-src/contexts/execution/roadmap-blockers.md')])).toEqual([]);
+    });
+
+    it('the consumer AGENTS.md template fires; the root AGENTS.md does not', () => {
+        expect(governs([mod('src/agent-src/templates/AGENTS.md')])).toEqual(['consumer-template']);
+        expect(governs([mod('AGENTS.md')])).toEqual([]);
+    });
+
+    it('every trigger names the rule it comes from', () => {
+        const r = classifyChanges(
+            [mod('docs/contracts/ratification-artifact.md'), mod('src/agent-src/templates/AGENTS.md')],
+            { dirExistsInHead: everyDirExists, decisionPolicy: () => 'other', consequenceMembers: new Set() },
+        );
+        for (const t of r.triggers) {
+            expect(t.rule).not.toBe('');
+        }
+    });
+});
+
+describe('frontmatter reading — both sides, failing closed', () => {
+    it('reads the policy, quoted or not, and refuses a file without frontmatter', () => {
+        expect(reopenPolicyOf('---\nid: ADR-1\nreopen_policy: owner\n---\n# x\n')).toBe('owner');
+        expect(reopenPolicyOf('---\nreopen_policy: "directional"\n---\n')).toBe('directional');
+        expect(reopenPolicyOf('---\nid: ADR-1\n---\n')).toBe('absent');
+        expect(reopenPolicyOf('# no frontmatter\n')).toBeNull();
+    });
+
+    it('reads every YAML spelling of owner as owner, and any unrecognised value as owner', () => {
+        for (const line of [
+            'reopen_policy: owner # governance reservation',
+            "reopen_policy: 'owner'",
+            'Reopen_Policy: OWNER',
+            'reopen_policy:',
+            'reopen_policy: |',
+            'reopen_policy: !!str owner',
+            'reopen_policy: typo-owner',
+        ]) {
+            expect(reopenPolicyOf(`---\nid: ADR-1\n${line}\n---\n`), line).toBe('owner');
+        }
+        expect(reopenPolicyOf('---\nreopen_policy: directional\nreopen_policy: owner\n---\n')).toBe('owner');
+        expect(reopenPolicyOf('---\nreopen_policy: *policy\n---\n')).toBe('owner');
+    });
+
+    it('reads owner for YAML outside the subset it parses, wherever owner could hide there', () => {
+        for (const fm of [
+            '{reopen_policy: owner}',
+            '? reopen_policy\n: owner',
+            '"reopen_policy": directional',
+            '"reopen\\u005fpolicy": owner',
+            'base: &b\n  reopen_policy: owner\n<<: *b',
+            'id: ADR-1\nnotes: {reopen_policy: owner}',
+            'metadata:\n  reopen_policy: directional',
+            'notes: |\n  reopen_policy: directional',
+            'reopen_policy: directional\nnotes:\n  - reopen_policy: unclassified',
+        ]) {
+            expect(reopenPolicyOf(`---\n${fm}\n---\n`), fm).toBe('owner');
+        }
+    });
+
+    it('reads every committed ADR as the policy it declares — the subset does not over-fire', () => {
+        const dir = path.resolve(__dirname, '..', '..', 'docs', 'decisions');
+        const adrs = fs.readdirSync(dir).filter((f) => /^ADR-.*\.md$/u.test(f));
+        expect(adrs.length).toBeGreaterThan(40);
+        for (const f of adrs) {
+            const text = fs.readFileSync(path.join(dir, f), 'utf8');
+            const declared = /^reopen_policy:\s*(\S+)/mu.exec(text)?.[1] ?? 'absent';
+            expect(reopenPolicyOf(text), f).toBe(declared);
+        }
+        expect(reopenPolicyOf('---\nreopen_policy: unclassified # not yet\n---\n')).toBe('unclassified');
+    });
+
+    it('owner at base OR at head fires; a side that exists and cannot be read fires', () => {
+        const owner = '---\nreopen_policy: owner\n---\n';
+        const other = '---\nreopen_policy: directional\n---\n';
+        expect(combinePolicy([owner, other])).toBe('owner');
+        expect(combinePolicy([other, owner])).toBe('owner');
+        expect(combinePolicy([undefined, other])).toBe('other');
+        expect(combinePolicy([other, null])).toBe('unreadable');
+        expect(combinePolicy([undefined, undefined])).toBe('unreadable');
+    });
+
+    it('the consequence class is the union of both sides, and an unreadable side is null', () => {
+        const a = JSON.stringify({ members: { 'tool-safety': {} } });
+        const b = JSON.stringify({ members: { 'session-canary': {} } });
+        expect([...(unionMembers([a, b]) ?? [])].sort()).toEqual(['session-canary', 'tool-safety']);
+        expect(unionMembers([a, 'not json'])).toBeNull();
+        expect(unionMembers([undefined, undefined])).toBeNull();
+        expect(consequenceMembersOf('{"members": {}}')).toEqual(new Set());
+        expect(consequenceMembersOf('{"members": []}')).toBeNull();
+        expect(consequenceMembersOf('{"members": null}')).toBeNull();
+    });
+
+    it('a failed read is null, never absence; an empty listing is absence', () => {
+        const run = (listOk: boolean, listOut: string, showOk: boolean) => (args: string[]) =>
+            args[0] === 'ls-tree' ? { ok: listOk, out: listOut } : { ok: showOk, out: 'text' };
+        expect(readSide(run(false, '', true), 'r', 'p')).toBeNull();
+        expect(readSide(run(true, '', true), 'r', 'p')).toBeUndefined();
+        expect(readSide(run(true, '100644 blob abc\tp\n', false), 'r', 'p')).toBeNull();
+        expect(readSide(run(true, '100644 blob abc\tp\n', true), 'r', 'p')).toBe('text');
+    });
+
+    it('a real range reads the head frontmatter of an added owner-reserved ADR', () => {
+        const dir = tmpRepo();
+        const g = (...args: string[]): void => {
+            spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        };
+        fs.mkdirSync(path.join(dir, 'docs', 'decisions'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'docs', 'decisions', 'ADR-001-a.md'), '---\nreopen_policy: owner\n---\n');
+        fs.writeFileSync(path.join(dir, 'docs', 'decisions', 'ADR-002-b.md'), '---\nreopen_policy: directional\n---\n');
+        g('add', '-A');
+        g('commit', '-q', '-m', 'adrs');
+        const out: string[] = [];
+        main(['--range', 'HEAD~1...HEAD', '--root', dir], (l) => out.push(l));
+        expect(out).toContain('  docs/decisions/ADR-001-a.md');
+        expect(out).not.toContain('  docs/decisions/ADR-002-b.md');
+        expect(out[out.length - 1]).toMatch(/^verdict: needs-owner \(1 trigger\(s\): owner-reserved-decision\)$/u);
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+});
+
+/**
+ * The trunk's own misses, replayed from the repository's history. Skipped only
+ * where the history is not present (a shallow clone), and the skip names why —
+ * the cases above carry the same paths as hand-written fixtures.
+ */
+/** Touches docs/installation.md, one analysis note and three roadmaps — nothing that governs. */
+const DOCS_ONLY_COMMIT = '7b236a00f';
+
+describe('replay — the commits the pin classed routine', () => {
+    const REPO = path.resolve(__dirname, '..', '..');
+    const has = (sha: string): boolean =>
+        spawnSync('git', ['cat-file', '-e', `${sha}^{commit}`], { cwd: REPO }).status === 0 &&
+        spawnSync('git', ['cat-file', '-e', `${sha}^1^{commit}`], { cwd: REPO }).status === 0;
+    const replay = (sha: string): string => {
+        const out: string[] = [];
+        main(['--range', `${sha}^1..${sha}`, '--root', REPO], (l) => out.push(l));
+        return out[out.length - 1] ?? '';
+    };
+
+    for (const [sha, what] of [
+        ['82a131feb', 'landed ADR-281 and rewrote the ratification contract'],
+        ['bbe5b73be', "the council's modification-review modules"],
+        ['edd18fea6', 'introduced the gate (#2256)'],
+    ] as const) {
+        it.skipIf(!has(sha))(`${sha} (${what}) is needs-owner — skipped when the history is shallow`, () => {
+            expect(replay(sha)).toMatch(/^verdict: needs-owner/u);
+        });
+    }
+
+    it.skipIf(!has('f76e83e47'))('f76e83e47 (the amendment of an owner-reserved ADR) is needs-owner', () => {
+        expect(replay('f76e83e47')).toMatch(/^verdict: needs-owner/u);
+    });
+
+    it.skipIf(!has(DOCS_ONLY_COMMIT))(`${DOCS_ONLY_COMMIT} (a documentation-only commit) stays routine`, () => {
+        expect(replay(DOCS_ONLY_COMMIT)).toBe('verdict: routine');
     });
 });
 
