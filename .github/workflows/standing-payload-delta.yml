@@ -606,3 +606,50 @@ jobs:
           ./scripts-run src/scripts/check_role_doc_links --quiet || rc=1
           ./scripts-run src/scripts/check_score_contract --quiet || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, second batch (2.2b) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Same job, same reasons, same selection rule as 2.2a: the remaining
+      # `wire`-class gates in name order, twenty, a gate skipped only for a
+      # reason written in the evidence page. None was skipped in this window.
+      # Each of the twenty exited 0 with this argv on the branch base and left
+      # `git status` clean. The four generators run their `--check` variant:
+      # without it each one rewrites the document it checks.
+      #
+      # Four of them diff the branch against `origin/main` (structural
+      # breaking, coverage diff, archived skills, breaking-changes index). They
+      # are pull-request gates by design, and `fetch-depth: 0` above is what
+      # gives them a base to diff against.
+      - name: Drain 2.2b-1 — skill requires, source pointers, static layer, structural breaking, surface tiers, coverage diff, token optimizer, tracked-but-ignored, capability documents
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/check_skill_requires || rc=1
+          ./scripts-run src/scripts/check_source_pointer_freshness || rc=1
+          ./scripts-run src/scripts/check_static_layer_stability || rc=1
+          ./scripts-run src/scripts/check_structural_breaking --quiet || rc=1
+          ./scripts-run src/scripts/check_surface_tiers || rc=1
+          ./scripts-run src/scripts/check_test_coverage_diff || rc=1
+          ./scripts-run src/scripts/check_token_optimizer_freshness || rc=1
+          ./scripts-run src/scripts/check_tracked_but_ignored --quiet || rc=1
+          ./scripts-run src/scripts/generate_capabilities_index --check || rc=1
+          ./scripts-run src/scripts/generate_capability_matrix --check || rc=1
+          exit "$rc"
+
+      - name: Drain 2.2b-2 — command flows, settings reference, abstraction thresholds, skill names, archived skills, eval freshness, bench, breaking-changes index, changelog rollback
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/generate_command_flows --check || rc=1
+          ./scripts-run src/scripts/generate_settings_reference --check || rc=1
+          ./scripts-run src/scripts/lint_abstraction_thresholds --quiet || rc=1
+          ./scripts-run src/scripts/lint_agent_skill_names --quiet || rc=1
+          ./scripts-run src/scripts/lint_archived_skills --quiet || rc=1
+          ./scripts-run src/scripts/lint_behavioural_eval_freshness --quiet || rc=1
+          ./scripts-run src/scripts/lint_bench_ab --quiet || rc=1
+          ./scripts-run src/scripts/lint_bench_corpus --quiet || rc=1
+          ./scripts-run src/scripts/lint_breaking_changes_index --quiet || rc=1
+          ./scripts-run src/scripts/lint_changelog_rollback || rc=1
+          exit "$rc"

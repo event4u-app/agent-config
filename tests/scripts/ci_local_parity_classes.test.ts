@@ -58,6 +58,55 @@ const DRAIN_BATCH_2_MARKER = "The local-only drain — batch 2";
  */
 const DRAIN_STEP_2_2_BATCH_A_MARKER = "The local-only drain — step 2.2, first batch";
 
+/**
+ * The block a drain batch owns: from its marker to the NEXT drain marker, or to
+ * the end of the file when it is the last one. An earlier version sliced 2.2a
+ * to the end of the file, which held only while 2.2a was the last batch — the
+ * first batch appended after it would have read as 2.2a's extras.
+ */
+function drainBatch(workflow: string, marker: string): string {
+  const start = workflow.indexOf(marker);
+  if (start < 0) return "";
+  const next = workflow.indexOf("# The local-only drain — ", start + marker.length);
+  return workflow.slice(start, next > start ? next : undefined);
+}
+
+/**
+ * Step 2.2's later batches, each the next twenty of the remaining `wire`-class
+ * gates in name order, read from the workflow in both directions exactly as
+ * 2.2a is. `check` names the members that are generators and must run their
+ * `--check` variant, because without it they rewrite the file they check.
+ */
+const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; check: string[] }[] = [
+  {
+    id: "2.2b",
+    marker: "The local-only drain — step 2.2, second batch (2.2b)",
+    gates: [
+      "check_skill_requires",
+      "check_source_pointer_freshness",
+      "check_static_layer_stability",
+      "check_structural_breaking",
+      "check_surface_tiers",
+      "check_test_coverage_diff",
+      "check_token_optimizer_freshness",
+      "check_tracked_but_ignored",
+      "generate_capabilities_index",
+      "generate_capability_matrix",
+      "generate_command_flows",
+      "generate_settings_reference",
+      "lint_abstraction_thresholds",
+      "lint_agent_skill_names",
+      "lint_archived_skills",
+      "lint_behavioural_eval_freshness",
+      "lint_bench_ab",
+      "lint_bench_corpus",
+      "lint_breaking_changes_index",
+      "lint_changelog_rollback",
+    ],
+    check: ["generate_capabilities_index", "generate_capability_matrix", "generate_command_flows", "generate_settings_reference"],
+  },
+];
+
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];
 
 const REQUIRED_EXPERIENCE_FIELDS = [
@@ -326,9 +375,8 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     // the roadmap splits it into numbered batches. This is batch 2a. Same
     // both-directions shape as the batch-1 case above, read from the workflow.
     const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
-    const start = workflow.indexOf(DRAIN_STEP_2_2_BATCH_A_MARKER);
-    expect(start, "the batch-2a block is missing").toBeGreaterThan(0);
-    const job = workflow.slice(start);
+    expect(workflow.indexOf(DRAIN_STEP_2_2_BATCH_A_MARKER), "the batch-2a block is missing").toBeGreaterThan(0);
+    const job = drainBatch(workflow, DRAIN_STEP_2_2_BATCH_A_MARKER);
 
     const actual = new Set(
       [...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string),
@@ -365,6 +413,38 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     // The one generator-shaped member must run its checking variant: without
     // `--check` it rewrites its inventory file.
     expect(job).toMatch(/src\/scripts\/audit_mcp_tools --check\b/);
+  });
+
+  for (const batch of STEP_2_2_LATER_BATCHES) {
+    it(`wires step 2.2's batch ${batch.id}, exactly, as steps of the same required job`, () => {
+      const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+      expect(workflow.indexOf(batch.marker), `the batch-${batch.id} block is missing`).toBeGreaterThan(0);
+      const job = drainBatch(workflow, batch.marker);
+
+      const actual = new Set([...job.matchAll(/src\/scripts\/([A-Za-z0-9_]+)/g)].map((m) => m[1] as string));
+      const missing = batch.gates.filter((g) => !actual.has(g));
+      const extra = [...actual].filter((g) => !batch.gates.includes(g)).sort();
+      expect(missing, `batch-${batch.id} gates with no caller in the drain job`).toEqual([]);
+      expect(extra, `gates in batch ${batch.id} beyond the bounded batch`).toEqual([]);
+      expect(actual.size, "the council bounded a batch at twenty").toBe(20);
+
+      for (const gate of batch.gates) {
+        expect(existsSync(path.join(repoRoot, "src", "scripts", `${gate}.ts`)), `${gate}.ts does not exist`).toBe(true);
+      }
+      for (const gen of batch.check) {
+        expect(job, `${gen} must run its --check variant`).toMatch(new RegExp(`src/scripts/${gen} --check\\b`));
+      }
+    });
+  }
+
+  it("never calls the same gate twice across the drain", () => {
+    // Read from the workflow: a gate copied into a second batch would satisfy
+    // that batch's exact-set case and cost a second startup for no reading.
+    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+    const drain = workflow.slice(workflow.indexOf("The local-only drain — batch 1"));
+    const calls = [...drain.matchAll(/^\s*\.\/scripts-run src\/scripts\/([A-Za-z0-9_]+)/gm)].map((m) => m[1] as string);
+    const dupes = calls.filter((g, i) => calls.indexOf(g) !== i);
+    expect(dupes, "gates called more than once in the drain").toEqual([]);
   });
 
   it("lives in a REQUIRED context, and on a workflow with no paths filter", () => {
