@@ -192,13 +192,15 @@ function plainScalar(raw: string): string {
  * Read by hand, not through a YAML library: the base copy runs from a detached
  * worktree with no `node_modules` of its own, so it may import only `node:`
  * built-ins. So the reader accepts one subset — top-level lines `key: value`
- * with an unquoted key, and indented or `- ` lines beneath them — and reads
- * `'owner'` for anything outside it, because outside it YAML could say `owner`
- * where this parser cannot see it: a flow mapping, an explicit `?` key, a quoted
- * or escaped key, a merge key, or the word `reopen_policy` anywhere the subset
- * did not read it. Inside the subset every occurrence counts (a duplicate cannot
- * hide an `owner`), and any value other than the two non-owner policies — empty,
- * a block scalar, a tag, an alias, a typo — reads as `'owner'` too.
+ * with an unquoted key, and indented or `- ` lines beneath them — and only a
+ * column-zero `reopen_policy:` line can yield a non-owner policy. It reads
+ * `'owner'` for anything outside the subset, because there YAML could say
+ * `owner` where this parser cannot see it: a flow mapping, an explicit `?` key,
+ * a quoted or escaped key, a merge key, the key nested under another or inside a
+ * block scalar, or the word `reopen_policy` anywhere else. Every column-zero
+ * occurrence counts (a duplicate cannot hide an `owner`), and any value other
+ * than the two non-owner policies — empty, a block scalar, a tag, an alias, a
+ * typo — reads as `'owner'` too.
  */
 export function reopenPolicyOf(text: string): string | null {
     const fm = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text);
@@ -213,9 +215,8 @@ export function reopenPolicyOf(text: string): string | null {
             continue;
         }
         if (/^\s/u.test(line) || line.startsWith('- ')) {
-            const child = /^\s*(?:-\s+)?reopen_policy\s*:(.*)$/iu.exec(line);
-            if (child !== null) {
-                values.push(plainScalar(child[1] ?? ''));
+            if (/reopen_policy/iu.test(line)) {
+                outsideSubset = true;
             }
             continue;
         }

@@ -98,7 +98,7 @@ function commitOn(branch: string, from: string, files: Record<string, string | n
         if (body === null) fs.rmSync(p);
         else fs.writeFileSync(p, body);
     }
-    git(clone, 'add', '-A', '--', ...Object.keys(files));
+    git(clone, 'add', '-A', '-f', '--', ...Object.keys(files));
     git(clone, 'commit', '-q', '-m', branch);
     return git(clone, 'rev-parse', 'HEAD');
 }
@@ -174,6 +174,31 @@ describe('the shipped block fails to needs-owner on every anomaly', () => {
         expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(temp-dir-unavailable/u);
         expect(r.code).not.toBe(0);
     }, 60_000);
+
+    it('a temporary directory that exists but cannot be entered is needs-owner and is still removed', () => {
+        const head = commitOn('docs-only-no-cd', base, { 'docs/installation.md': 'no cd\n' });
+        const shim = path.join(work, 'mktemp-unenterable');
+        const made = path.join(work, 'unenterable-tmp');
+        fs.mkdirSync(shim, { recursive: true });
+        fs.writeFileSync(path.join(shim, 'mktemp'), `#!/bin/sh\nmkdir -m 600 "${made}" && echo "${made}"\n`, {
+            mode: 0o755,
+        });
+        const r = runGate(base, head, { PATH: `${shim}:${process.env['PATH'] ?? ''}` });
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(temp-dir-unavailable/u);
+        expect(r.code).not.toBe(0);
+        expect(fs.existsSync(made)).toBe(false);
+    }, 60_000);
+
+    it.each(['yarn.lock', '.yarnrc.yml', 'pnpm-lock.yaml', 'bun.lock', 'bun.lockb', 'package-lock.json', '.npmrc'])(
+        'a head that changes %s is runtime-unverified',
+        (file) => {
+            const head = commitOn(`head-changes-${file.replace(/[^a-z]/gu, '-')}-manifest`, base, { [file]: `changed by the head\n` });
+            const r = runGate(base, head);
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(runtime-unverified/u);
+            expect(r.code).not.toBe(0);
+        },
+        60_000,
+    );
 
     it('a failing git ls-files is runtime-unverified, never read as "nothing tracked"', () => {
         const head = commitOn('docs-only-shim', base, { 'docs/installation.md': 'shim\n' });

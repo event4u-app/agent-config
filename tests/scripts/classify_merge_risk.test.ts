@@ -266,6 +266,9 @@ describe('frontmatter reading — both sides, failing closed', () => {
             '"reopen\\u005fpolicy": owner',
             'base: &b\n  reopen_policy: owner\n<<: *b',
             'id: ADR-1\nnotes: {reopen_policy: owner}',
+            'metadata:\n  reopen_policy: directional',
+            'notes: |\n  reopen_policy: directional',
+            'reopen_policy: directional\nnotes:\n  - reopen_policy: unclassified',
         ]) {
             expect(reopenPolicyOf(`---\n${fm}\n---\n`), fm).toBe('owner');
         }

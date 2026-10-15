@@ -482,24 +482,27 @@ classify it with the **base revision's** classifier, never the head's:
 BASE="<manifest-base_sha>"
 HEAD_SHA="<manifest-head-sha>"
 VERDICT="verdict: needs-owner (temp-dir-unavailable: no private temporary directory)"
-if GATE_TMP="$(mktemp -d)" && [ -d "$GATE_TMP" ] && GATE_TMP="$(cd "$GATE_TMP" && pwd -P)" && [ -n "$GATE_TMP" ]; then
+if GATE_TMP="$(mktemp -d)" && [ -n "$GATE_TMP" ] && [ -d "$GATE_TMP" ]; then
   BASE_DIR="$GATE_TMP/classifier-base"
   trap 'git worktree remove --force "$BASE_DIR" 2>/dev/null; rm -rf "$GATE_TMP"' EXIT
-  VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
-  if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ] \
-     || ! git diff --quiet "$BASE...$HEAD_SHA" -- package.json package-lock.json npm-shrinkwrap.json \
-          .npmrc yarn.lock .yarnrc.yml pnpm-lock.yaml bun.lock bun.lockb; then
-    VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked, or the head changes the manifest tsx was installed from)"
-  elif git cat-file -e "$BASE:src/scripts/classify_merge_risk.ts" \
-       && git worktree add -q --detach "$BASE_DIR" "$BASE"; then
-    OUT="$(node_modules/.bin/tsx "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
-    CODE=$?
-    LAST="$(printf '%s\n' "$OUT" | tail -n 1)"
-    case "$CODE:$LAST" in
-      "0:verdict: routine" | "1:verdict: needs-council ("* | "2:verdict: needs-owner ("*) VERDICT="$LAST" ;;
-      *) VERDICT="verdict: needs-owner (classifier-unusable: exit $CODE, last line '$LAST')" ;;
-    esac
-    printf '%s\n' "$OUT" | sed '$d'
+  if REAL_TMP="$(cd "$GATE_TMP" && pwd -P)" && [ -n "$REAL_TMP" ]; then
+    BASE_DIR="$REAL_TMP/classifier-base"
+    VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
+    if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ] \
+       || ! git diff --quiet "$BASE...$HEAD_SHA" -- package.json package-lock.json npm-shrinkwrap.json \
+            .npmrc yarn.lock .yarnrc.yml pnpm-lock.yaml bun.lock bun.lockb; then
+      VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked, or the head changes the manifest tsx was installed from)"
+    elif git cat-file -e "$BASE:src/scripts/classify_merge_risk.ts" \
+         && git worktree add -q --detach "$BASE_DIR" "$BASE"; then
+      OUT="$(node_modules/.bin/tsx "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
+      CODE=$?
+      LAST="$(printf '%s\n' "$OUT" | tail -n 1)"
+      case "$CODE:$LAST" in
+        "0:verdict: routine" | "1:verdict: needs-council ("* | "2:verdict: needs-owner ("*) VERDICT="$LAST" ;;
+        *) VERDICT="verdict: needs-owner (classifier-unusable: exit $CODE, last line '$LAST')" ;;
+      esac
+      printf '%s\n' "$OUT" | sed '$d'
+    fi
   fi
 fi
 echo "$VERDICT"
@@ -526,8 +529,10 @@ unclassified. The boundary this assumes, stated rather than checked: the
 checkout's `node_modules` was installed from the base's manifest, never by this
 run from a PR head — a run that installed dependencies from a head before this
 block has already handed that head the runtime. A private temporary directory
-that cannot be made is `needs-owner` before any path is derived from it. The block prints the verdict last and exits 0 only on `routine`,
-and the `trap` removes the worktree and its temporary directory on every path.
+that cannot be made is `needs-owner` before any path is derived from it, and the
+`trap` is installed the moment one exists, so it removes the worktree and the
+directory on every later path. The block prints the verdict last and exits 0
+only on `routine`.
 The temporary directory is resolved to its real path: the classifier's entry
 guard compares real paths, and on a host whose temp directory is a symlink an
 unresolved path makes it print nothing — which the block would correctly, but
