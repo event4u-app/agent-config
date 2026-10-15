@@ -287,7 +287,7 @@ the tree's copy again, which is D-2.*
 > `check_platform_anchor`, which the ratification gate watches, so it needs its
 > own ratification record; 5.1 tallies the clearance records Phase 3 creates.
 
-- [ ] **3.1 One writer and one reader for a clearance, read from the council's
+- [x] **3.1 One writer and one reader for a clearance, read from the council's
       own session record.** `src/scripts/merge_clearance.ts` writes
       `agents/evidence/merge-clearances/pr-<N>-<head>.md` from the session
       record the council run saved (`src/scripts/ai_council/response_record.ts`
@@ -305,8 +305,22 @@ the tree's copy again, which is D-2.*
       what that does not prove (decision D6). `--check <N>` exits 0 only when
       a record exists whose head is the pull request's live head and whose
       derived outcome is `cleared`.
+      `corrected-from-reproduction` (2026-10-15): a seat reads one of four
+      values, not three. § 9a asks each seat two questions, and a seat can
+      find no dangerous predicate and still answer that an owner review is
+      needed; that seat is `owner-review` — it does not clear, and calling it
+      `dangerous` or `no-final-verdict` would misreport it. The reply is read
+      from two closing lines the prompt asks for, `DANGEROUS: yes|no` and
+      `OWNER REVIEW NEEDED: yes|no`; a missing or contradictory line is
+      `no-final-verdict`. The prompt digest is bound by refusing a session
+      whose `artefact` is not the prompt file given. Scope delta: the writer,
+      the check and their record module join the classifier's
+      `reviewer-trust-chain`, so a head that rewrites the check is
+      `needs-owner` and never reaches it. Seen red: three guards neutralised
+      in place failed the copied-name, disagreeing-outcome and round-trip
+      cases; the two trust-chain cases failed on the trunk's classifier.
       verify: `npx vitest run tests/scripts/merge_clearance.test.ts` -> 0
-- [ ] **3.2 The command merges on the check, not on the run's reading.** § 9a
+- [x] **3.2 The command merges on the check, not on the run's reading.** § 9a
       writes the record through 3.1, and § 9 merges a `needs-council` pull
       request only after `--check` exits 0 for the manifest head. A push after
       the clearance moves the head and voids it; § 9a runs again. The record is
@@ -314,13 +328,18 @@ the tree's copy again, which is D-2.*
       it names. The test set carries three attack fixtures: a typed `CLEAR`
       string with no session record, a record for an earlier head, and a record
       whose recorded outcome disagrees with its seats — each exits non-zero.
+      Done 2026-10-15: the check runs through `node_modules/.bin/tsx`, not
+      `./scripts-run`, whose dispatcher is the head's code. The three attack
+      fixtures are in `tests/scripts/merge_clearance.test.ts`; the command
+      text is pinned in `tests/scripts/pr_merge_danger_gate_command.test.ts`,
+      seen red against the trunk's command (4 of 9).
       verify: `grep -c 'merge_clearance' src/domains/git/pr/merge/command.md` -> /^[2-9]/
-- [ ] **3.3 The evidence contract knows the type.**
+- [x] **3.3 The evidence contract knows the type.**
       `docs/contracts/evidence-artifact-types.md` and `lint_evidence_artifacts`
       gain `merge-clearance`, so an added record that does not parse is a
       finding.
       verify: `npx vitest run tests/scripts/lint_evidence_artifacts.test.ts` -> 0
-- [ ] **3.4 A hand-off is one decision-ready block, at the end of the run.**
+- [x] **3.4 A hand-off is one decision-ready block, at the end of the run.**
       § 9 of the merge command ends a drain that handed anything over with one
       block "Held for you": per pull request its number, title, verdict and
       triggers, the seats and their reasons where a council ran, the head it

@@ -7,6 +7,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { GateLedger } from '../../src/scripts/_lib/gate_ledger.js';
+import { renderClearance } from '../../src/scripts/_lib/merge_clearance_record.js';
 import {
     checkFiles,
     EVIDENCE_TYPES,
@@ -304,5 +305,62 @@ describe('the feel evidence type', () => {
         });
         expect(parseFeelLine('**Feel:** device —')).toBeNull();
         expect(parseFeelLine('Feel: device — fine')).toBeNull();
+    });
+});
+
+// A merge clearance decides whether a `needs-council` PR merges, so an added
+// one that does not parse is a finding, not a typed artifact.
+describe('the merge-clearance evidence type', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'evidence-clearance-'));
+        fs.mkdirSync(path.join(root, 'src/config'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'src/config/ratification-policy.json'), JSON.stringify({ required_providers: 2 }));
+    });
+
+    afterEach(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    const record = renderClearance({
+        pr: 9,
+        head: 'a'.repeat(40),
+        base: 'b'.repeat(40),
+        classifierVerdict: 'needs-council',
+        triggers: ['ci-workflow'],
+        promptSha256: 'c'.repeat(64),
+        seats: [
+            { provider: 'anthropic', model: 'claude-x', replySha256: 'd'.repeat(64), reading: 'clear' },
+            { provider: 'openai', model: 'codex-default', replySha256: 'e'.repeat(64), reading: 'clear' },
+        ],
+        outcome: 'cleared',
+    });
+
+    function write(body: string): string {
+        const rel = `agents/evidence/merge-clearances/pr-9-${'a'.repeat(40)}.md`;
+        fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+        fs.writeFileSync(path.join(root, rel), body, 'utf8');
+        return rel;
+    }
+
+    it('is one of the declared types, and a written record resolves to it', () => {
+        expect(EVIDENCE_TYPES as readonly string[]).toContain('merge-clearance');
+        expect(resolveEvidenceType('x.md', record).type).toBe('merge-clearance');
+    });
+
+    it('accepts a record that parses', () => {
+        expect(checkFiles(root, [write(record)])).toEqual([]);
+    });
+
+    it('refuses a record whose outcome disagrees with its seats', () => {
+        const findings = checkFiles(root, [write(record.replace('seat.openai: clear', 'seat.openai: dangerous'))]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.reason).toMatch(/disagrees with its seats/u);
+    });
+
+    it('refuses a record when the quorum policy cannot be read', () => {
+        fs.rmSync(path.join(root, 'src/config/ratification-policy.json'));
+        expect(checkFiles(root, [write(record)])).toHaveLength(1);
     });
 });

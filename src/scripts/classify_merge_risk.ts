@@ -149,13 +149,17 @@ const RATIFICATION_CONTRACT = 'docs/contracts/ratification-artifact.md';
 /**
  * The reviewer's trust chain beyond the gate's own files: what the classifier
  * imports, the list it reads, the subject binding the ratification review signs,
- * and the predicates the council is asked about.
+ * the predicates the council is asked about, and the writer and reader of the
+ * clearance a `needs-council` merge waits on — a head that rewrote the check
+ * would otherwise clear itself.
  */
 const TRUST_CHAIN_PATHS: ReadonlySet<string> = new Set([
     'src/scripts/_lib/rule_consequence_class.ts',
     CLASS_CONFIG_REL,
     'src/scripts/_lib/ratification_subject.ts',
     PREDICATE_RECORD,
+    'src/scripts/merge_clearance.ts',
+    'src/scripts/_lib/merge_clearance_record.ts',
 ]);
 
 const COUNCIL_SURFACE_RE =
