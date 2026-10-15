@@ -119,15 +119,16 @@ const EGRESS_WORD = /\begress\b/;
  * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer contains
  * the word at all the shipped default holds, and the full cascade — whose
  * template parse measured about 25 ms cold — is skipped. A layer that names it
- * anywhere, even in a comment, pays the full parse. `broken` means a naming
- * layer does not parse; the cascade would read it as empty and fall to `off`.
+ * anywhere, even in a comment, pays the full parse. `broken` means a layer
+ * exists but cannot be read, or names `egress` and does not parse; the cascade
+ * would read either as empty and fall to `off`.
  */
-function egressLayers(workspaceRoot: string): "none" | "named" | "broken" {
+function egressLayers(workspaceRoot: string, readFile: (p: string) => string): "none" | "named" | "broken" {
   let named = false;
   for (const p of _resolve_cascade_paths(workspaceRoot, null)) {
     let text: string;
     try {
-      text = fs.readFileSync(p, "utf8");
+      text = readFile(p);
     } catch (exc) {
       // Only a missing layer is skipped; a layer that exists and cannot be read could hold the mode.
       const code = (exc as NodeJS.ErrnoException).code;
@@ -150,11 +151,14 @@ function egressLayers(workspaceRoot: string): "none" | "named" | "broken" {
  * `protect`, never `off`: a broken file must not switch configured protection
  * off in silence. The count record carries the mode, so the fallback is visible.
  */
-export function readEgressMode(workspaceRoot: string): EgressMode {
+export function readEgressMode(
+  workspaceRoot: string,
+  readFile: (p: string) => string = (p) => fs.readFileSync(p, "utf8"),
+): EgressMode {
   if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "off";
   let layers: "none" | "named" | "broken";
   try {
-    layers = egressLayers(workspaceRoot);
+    layers = egressLayers(workspaceRoot, readFile);
   } catch {
     return "protect";
   }

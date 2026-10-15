@@ -94,10 +94,16 @@ describe("mode resolution", () => {
     expect(readEgressMode(tmp)).toBe("protect");
   });
 
-  it("a layer that exists but cannot be read is protect, not off", () => {
-    // A directory where the file should be reads as EISDIR on every platform.
-    fs.mkdirSync(path.join(tmp, ".agent-settings.yml"));
-    expect(readEgressMode(tmp)).toBe("protect");
+  it("a layer that exists but cannot be read is protect, not off; a missing one is skipped", () => {
+    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), "screenshots: {}\n");
+    const failing = (code: string) => (p: string): string => {
+      if (p.endsWith(".agent-settings.yml") && !p.includes(`${path.sep}agents${path.sep}`)) {
+        throw Object.assign(new Error("read failed"), { code });
+      }
+      throw Object.assign(new Error("absent"), { code: "ENOENT" });
+    };
+    for (const code of ["EACCES", "EIO", "EISDIR"]) expect(readEgressMode(tmp, failing(code))).toBe("protect");
+    expect(readEgressMode(tmp, failing("ENOENT"))).toBe("off");
   });
 
   it("reads the project layer, and a comment naming egress is not a key", () => {
