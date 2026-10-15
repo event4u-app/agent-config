@@ -484,12 +484,17 @@ Pending is a reason to wait, never a reason to stop.
 **Settled** means every check has reached a terminal state:
 
 ```bash
-until [ "$(gh pr checks <n> --json state \
-    --jq '[.[] | select(.state=="IN_PROGRESS" or .state=="QUEUED" or .state=="PENDING")] | length')" = "0" ]
-do sleep 45; done
+npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <n>
 gh pr checks <n> --json name,state,link \
   --jq '.[] | select(.state!="SUCCESS" and .state!="SKIPPED") | "\(.state)  \(.name)  \(.link)"'
 ```
+
+`ci_settle` is the one waiter for this condition, never a hand-written
+`gh pr checks` loop, and it is never piped — its last output line is the
+verdict. Exit 0: settled green for the named head. Exit 1: settled with a
+failed check, listed by the second command — go to **On red**. Exit 2: not a
+verdict (no settle within its budget, `gh` unreadable, or the PR merged, closed
+or head-diverged); say that rather than reporting a result.
 
 Run the wait as a BACKGROUND command so the turn resumes on its own when
 the verdict lands. A foreground sleep-poll chain is blocked, and burning

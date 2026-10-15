@@ -35,6 +35,7 @@ describe('mcpBridgeEntry — the emitted spec equals the manifest version', () =
     it('pins to the version in package.json', () => {
         fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '14.18.0' }));
         expect(serverOf(mcpBridgeEntry(root)).args).toEqual([
+            '--prefer-offline',
             '-y',
             `${MCP_PACKAGE_NAME}@14.18.0`,
             'mcp-server',
@@ -45,7 +46,7 @@ describe('mcpBridgeEntry — the emitted spec equals the manifest version', () =
         fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '9.9.9' }));
         const version = readPackageVersion(root);
         expect(version).toBe('9.9.9');
-        expect(serverOf(mcpBridgeEntry(root)).args[1]).toBe(`${MCP_PACKAGE_NAME}@${version!}`);
+        expect(serverOf(mcpBridgeEntry(root)).args).toContain(`${MCP_PACKAGE_NAME}@${version!}`);
     });
 
     it('leaves the spec UNPINNED when the version cannot be read', () => {
@@ -54,6 +55,19 @@ describe('mcpBridgeEntry — the emitted spec equals the manifest version', () =
         expect(serverOf(mcpBridgeEntry(root)).args[1]).toBe(MCP_PACKAGE_NAME);
         fs.writeFileSync(path.join(root, 'package.json'), '{ not json');
         expect(serverOf(mcpBridgeEntry(root)).args[1]).toBe(MCP_PACKAGE_NAME);
+    });
+
+    it('entry-prefers-offline', () => {
+        // With an exact version the cache can hold only that version, so a warm
+        // cache answers the server start without a registry request.
+        fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '14.18.0' }));
+        const args = serverOf(mcpBridgeEntry(root)).args;
+        expect(args[0]).toBe('--prefer-offline');
+        expect(args.slice(1)).toEqual(['-y', `${MCP_PACKAGE_NAME}@14.18.0`, 'mcp-server']);
+    });
+
+    it('does not prefer the cache for an unpinned spec, where it would serve a stale latest', () => {
+        expect(serverOf(mcpBridgeEntry(root)).args).not.toContain('--prefer-offline');
     });
 
     it('never emits a bare `latest` dist-tag once a version is readable', () => {
@@ -93,7 +107,7 @@ describe('migrateMcpBridge — rewrites our key and nothing beside it', () => {
         expect(migrateMcpBridge(root, root)).toBe('rewritten');
 
         const servers = readBack();
-        expect((servers[MCP_SERVER_KEY] as { args: string[] }).args[1]).toBe(
+        expect((servers[MCP_SERVER_KEY] as { args: string[] }).args).toContain(
             `${MCP_PACKAGE_NAME}@14.18.0`,
         );
         // The whole point: the neighbour is not read, reordered or rewritten.

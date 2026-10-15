@@ -75,7 +75,9 @@ A `/roadmap:process-full` pass found no step executable yet and built nothing (D
       A class enters scope when its model-visible p95 exceeds a stated byte
       threshold (D1) and its results have a failure-line structure the summary can
       keep. The selection, with the figures, goes into this file's `## Decisions`
-      as row D6 before any store is built.
+      as row D6 before any store is built. Any census line it reads goes through
+      `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`), so a legacy
+      `{bytes}` line counts as envelope bytes with delivered bytes unknown.
       verify: `grep -c '^| D6 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
 - [ ] **1.2 Freeze a golden corpus before any reducer exists.** Twenty recorded
       outputs per selected class, each with its known failure lines and exit code,

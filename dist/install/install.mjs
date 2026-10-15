@@ -8508,12 +8508,12 @@ var MCP_SERVER_KEY = "agent-config";
 var MCP_PACKAGE_NAME = "@event4u/agent-config";
 function mcpBridgeEntry(packageRoot) {
   const version = readPackageVersion(packageRoot);
-  const spec = version === null ? MCP_PACKAGE_NAME : `${MCP_PACKAGE_NAME}@${version}`;
+  const args = version === null ? ["-y", MCP_PACKAGE_NAME, "mcp-server"] : ["--prefer-offline", "-y", `${MCP_PACKAGE_NAME}@${version}`, "mcp-server"];
   return {
     mcpServers: {
       [MCP_SERVER_KEY]: {
         command: "npx",
-        args: ["-y", spec, "mcp-server"]
+        args
       }
     }
   };
