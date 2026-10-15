@@ -26,60 +26,61 @@ relates:
 
 ## Goal
 
-A verbose tool result can reach the model shorter than the host produced it
-**without losing anything**: the full output stays on this machine under a content
-hash, the model receives a summary that keeps every failure line plus a handle that
-retrieves the rest, and the census records a `delivered_bytes` smaller than
-`raw_bytes` for exactly those results. A second full read of unchanged content can
-become a reference to the first. Nothing is reduced by default for consumers;
-every reduction is measured against an outcome floor before it is armed.
+A large tool result can reach the model shorter than the host produced it
+**without losing anything**: the bytes the model would have received stay on this
+machine under a content hash, the model receives a deterministic stand-in plus a
+handle that returns those bytes, and the census records a `delivered_bytes`
+smaller than `raw_bytes` for exactly those results. Two profiles share one store
+and one writer: an **execution** profile for command output (exit code, failure
+lines) and a **content** profile for file-content reads (path, range, digest).
+Nothing is reduced by default for consumers; every reduction is measured against
+an outcome floor before it is armed.
 
-## Execution status — 2026-10-14, `main@90ed4e697`
+## Execution status — redesign 2026-10-15
 
-A `/roadmap:process-full` pass found no step executable yet and built nothing (D8).
+**History.** A `/roadmap:process-full` pass on 2026-10-14 (`main@90ed4e697`) found
+nothing executable and built nothing (D8). On 2026-10-15 the sibling's 1.4 landed
+and 1.1 selected no class (D6): the large model-visible results are file-content
+reads, and the results with failure lines are small, so the execution summary had
+nothing to apply to.
 
-- **Phase 1 waits on the sibling's 1.4.** `road-to-bytes-the-model-actually-receives`
-  1.4 has no dated distribution on `main`; 1.1 picks classes from that
-  distribution and from nothing else, and 1.2's corpus needs the classes.
-- **Phase 2 waits on `road-to-placeholders-on-the-wire` 1.2 and 1.3.** 2.1 writes
-  "in the placeholders stage's observe mode" and 2.2 stores "the placeholder view
-  of the envelope"; neither the stage nor the view exists. A store with no caller
-  would pass 2.1–2.4's unit-test verify lines without showing any of their
-  observable behaviour.
-- **Unblock events:** sibling 1.4 accepted → run Phase 1. Placeholders 1.1's ADR
-  accepted and its 1.2/1.3 landed (stage, observe mode, two views) → build
-  Phase 2 through that stage.
-- **Contracts to settle before 2.1 is built** (named by the council, not decided
-  here): whether the handle is an opaque hash or a path; whether 2.4's range is
-  in lines or bytes, and which existing read path serves it; which detector
-  confidence (high only, or high and medium) refuses storage in 2.2; how an
-  expired handle is told from an unknown one without keeping sensitive metadata
-  past retention; concurrent write, read and cleanup.
-- **Correction to Risk 4's mitigation:** it says Phases 1 and 2 "need only the
-  sibling's Phase 1". Phase 2's own wording needs the placeholders stage too, so
-  only Phase 1 is unblocked by the sibling alone.
+**Owner decision 2026-10-15 (D10): redesign, not close or park.** This revision:
 
-**Update 2026-10-15.** The sibling's 1.4 landed; 1.1 ran and selected no class
-(D6). The large model-visible results here are file-content reads, and the
-results with failure lines are small, so the summary this file plans — every
-failure line, head, tail, handle — has no class to apply to. 1.2 is deferred,
-not cancelled. **Owner question:** continue with a redesign (a criterion stated
-before a fresh window is read, possibly a content profile beside the execution
-profile — both seats raised it), or close this roadmap on the D6 null. Either is
-a scope decision this file cannot take for itself; Phases 2–4 stay as written
-until it is answered.
+- **Adds a content profile** for `Read` text and file-printing Bash, selected by a
+  criterion committed before the window it reads (D11,
+  `internal/bench/tool-results-content-profile-PREREG.md`, commit `033c3b2aa`).
+  Its window is the 14 days after 2026-10-15T12:26:27+02:00; 1.3 cannot be read
+  before 2026-10-29. No class selected closes this roadmap — there is no third
+  criterion.
+- **Leaves the content delivery form undecided.** The council split (D12): one
+  seat would shorten only byte-identical repeats, the other constrained first
+  reads. Both asked for the same missing reading — the repeat share — which 1.4
+  takes from the same window. 3.2 reopens D12 once, with that reading.
+- **Settles one of D8's contracts** (D13, both seats): a handle returns the bytes
+  stored at delivery, addressed by their hash, never a re-read from disk.
+- **Applies D9 of `road-to-placeholders-on-the-wire`:** `observe` never changes a
+  view and the placeholder view exists from `protect` upward, so the store is
+  written only from `protect`; in `observe` the stage counts what it would store.
 
-## Context — read at `main@9a943f30c`
+**Unblock events, unchanged in kind:** 1.2 is buildable now (a report, not a
+store). 1.3 and 1.4 wait on the window. Phase 2 waits on placeholders 1.1's ADR and
+its 1.2/1.3 (D8). Open contracts before 2.1 is built: whether 2.4's range is in
+lines or bytes; which detector confidence refuses storage in 2.2; how an expired
+handle is told from an unknown one without keeping sensitive metadata past
+retention; concurrent write, read and cleanup.
+
+## Context — read at `main@9a943f30c`, F6 at `main@085ec41ff`
 
 | # | Finding | Evidence |
 |---|---|---|
 | F1 | **Nothing reduces a tool result today, by construction and by test.** `tests/scripts/tool_result_bytes_hook.test.ts:212` pins "nothing in the tree rewrites a tool result"; the recorder writes `delivered_bytes` equal to `raw_bytes` (`src/scripts/hooks/tool_result_bytes_hook.ts:280`). |
 | F2 | **The writer this needs is planned, not built.** `road-to-placeholders-on-the-wire` 1.1 makes one dispatcher stage the only writer of a rewrite and 3.1 emits the host's result-replacement field from it; its 0.1 probes what a mismatched replacement does. None of its steps is done. |
 | F3 | **No store exists to make a reduction recoverable.** A grep for `spool`, `output_store`, `tool_result_store` and `local_handle` under `src/` returns nothing. Without one, a shortened output can only be recovered by re-running the command, which may be slow, non-deterministic or side-effecting. |
-| F4 | **Text results that are large and reducible are mostly Bash.** *(executed)* over 12 local transcripts: Bash 3,127 results, 2.69 M model-visible characters; text Reads 25 results, 0.38 M; Edit/Write already short (59 K for 263). Image Reads dominate the sample — 339 results, 85.2 M characters of encoded image — but an image has no failure-line structure to summarise and is out of scope here (K7). The sibling's 1.4 replaces this sample with a dated distribution. |
+| F4 | **Superseded by F6.** The 12-transcript sample read Bash as the large text class; the dated distribution shows the large Bash results are file-content reads. Image Reads stay out of scope (K7). |
 | F5 | **The command-output advisory exists and stays advisory.** `rtk_wrap_hook` nudges toward a bounded form and records its fire count (`src/config/hook-token-budget.json:110`); it rewrites nothing. |
+| F6 | **The large results are content, the failing ones are small.** Text `Read` p95 42,029 B with no exit code; 2,599 Bash results above 8,192 B carry 36.7 % of Bash bytes and are mostly `sed`, `cat` and `git diff`, 13 of them with a failure line; a test runner's p95 is 2,256 B (D6). `reread_guard_hook` already keeps a session ledger of full reads (path, mtime, size, sha256 — no content) and says one advisory line on an unchanged full re-read. |
 
-## Phase 1 — Choose what is worth reducing, from the distribution
+## Phase 1 — Choose what is worth reducing, under a criterion stated first
 
 - [x] **1.1 Pick the classes from the sibling's 1.4, not from the source plans.**
       A class enters scope when its model-visible p95 exceeds a stated byte
@@ -89,64 +90,119 @@ until it is answered.
       `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`), so a legacy
       `{bytes}` line counts as envelope bytes with delivered bytes unknown.
       verify: `grep -c '^| D6 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
-- [~] **1.2 Freeze a golden corpus before any reducer exists.** *Deferred 2026-10-15: D6 selected no class, so there is no class to record twenty outputs for; it waits on the owner question in Execution status.* Twenty recorded
-      outputs per selected class, each with its known failure lines and exit code,
-      under `tests/fixtures/tool-output-corpus/`. Recall on this corpus is what
-      every later phase is held to.
+- [ ] **1.2 Classify content results exactly as pre-registered.** A classifier in
+      `src/scripts/report_reducible_classes.ts` sorts a result into `Read:text`,
+      `Bash:file-print`, `Bash:vcs-content`, the execution profile, or Bash
+      residue by the PREREG table and nothing else; `--profile content` reports
+      per class the count, the p95 and `selected`, `out` or `insufficient`, plus
+      the residue count above 8,192 B. Case `content-class-follows-the-prereg`
+      covers every table row and every exclusion (a leading `cd`, a chain, a
+      redirect, a subshell, an image). It is built before the window closes and
+      reads no result inside it.
+      verify: `npx vitest run tests/scripts/report_reducible_classes.test.ts -t content-class-follows-the-prereg --reporter=verbose` -> /✓.*content-class-follows-the-prereg/
+- [ ] **1.3 Read the window once, after it closes.** On or after 2026-10-29, run
+      1.2 over the D11 window and record both profiles, the residue and any class
+      `insufficient` in `agents/evidence/analysis/content-profile-selection-<date>.md`;
+      the selection becomes row D14. No content class and no execution class
+      selected → this roadmap closes on its second null (D10, D11).
+      verify: `grep -c '^| D14 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
+- [ ] **1.4 Measure the repeat share in the same window.** For content results:
+      how many, and how many bytes, are byte-identical to one delivered earlier in
+      the same session (same path, same range, same digest over the delivered
+      payload), and how many of those followed an advisory line from
+      `reread_guard_hook`. Reported beside 1.3 with no bar; it is the reading
+      D12 waits for.
+      verify: `grep -rl 'repeat share' agents/evidence/analysis/ | grep -c content-profile-selection` -> /^[1-9]/
+- [~] **1.5 Freeze a golden corpus before any reducer exists.** *Deferred
+      2026-10-15: no class is selected; it waits on 1.3.* Twenty recorded results
+      per selected class under `tests/fixtures/tool-output-corpus/` — for an
+      execution class with its failure lines and exit code, for a content class
+      with its path, range and the sha256 of the delivered payload. Recall on this
+      corpus is what every later phase is held to.
       verify: `ls tests/fixtures/tool-output-corpus | wc -l` -> /^\s*[1-9][0-9]+$/
 
-## Phase 2 — A local store the summary can point into
+## Phase 2 — A local store the stand-in can point into
 
-- [ ] **2.1 Store the full output under its hash.** In the placeholders stage's
-      observe mode, a result of a selected class is written to
+- [ ] **2.1 Store the delivered bytes under their hash.** In the placeholders
+      stage, from `protect` upward, a result of a selected class is written to
       `agents/runtime/spool/<sha256>` — gitignored, workspace-local, never
-      `agents/tmp/` — before anything is shortened. Writing is idempotent on the
-      hash. Case `spool-write-is-content-addressed` asserts equal outputs share one
-      file.
+      `agents/tmp/` — before anything is shortened; the hash is over the bytes the
+      model receives. In `observe` the stage writes no body and counts what it
+      would store (class, bytes, digest), because `observe` never changes a view
+      (D9 of the placeholders roadmap). Writing is idempotent on the hash. Case
+      `spool-write-is-content-addressed` asserts equal outputs share one file.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t spool-write-is-content-addressed --reporter=verbose` -> /✓.*spool-write-is-content-addressed/
-- [ ] **2.2 No credential rests in the store.** The spool receives the
-      placeholder view of the envelope, never the execution view, so a value the
-      placeholders stage replaces is a token on disk too. With that stage off, a
-      result carrying a credential-class match is not stored and is delivered
-      unreduced.
+- [ ] **2.2 No credential rests in the store, and the store holds what the model
+      saw.** The spool receives the placeholder view of the envelope, never the
+      execution view, so a value the placeholders stage replaces is a token on disk
+      too. When the stored bytes would differ from the bytes delivered to the model,
+      nothing is stored and the result is delivered unreduced (D13). With that
+      stage off, a result carrying a credential-class match is not stored and is
+      delivered unreduced.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t credential-match-is-never-spooled --reporter=verbose` -> /✓.*credential-match-is-never-spooled/
 - [ ] **2.3 The store expires.** Entries older than the retention age (D2) are
       removed at `session_start`; the store has a byte cap past which the oldest
       go first. A handle to an expired entry answers "expired", never an empty
       body.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t expired-handle-says-expired --reporter=verbose` -> /✓.*expired-handle-says-expired/
-- [ ] **2.4 A handle can be read back.** One existing read path — not a new CLI
-      verb — returns a stored output by hash, whole or by line range.
+- [ ] **2.4 A handle returns the stored bytes.** One existing read path — not a new
+      CLI verb — returns a stored result by hash, whole or by range. It never
+      re-reads the file from disk; a missing, an expired and a corrupted entry
+      (digest mismatch) each answer their own state (D13).
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t handle-reads-a-range --reporter=verbose` -> /✓.*handle-reads-a-range/
 
 *Exit: 2.1–2.4 green; nothing is shortened yet, and `delivered_bytes` still equals `raw_bytes`.*
 
 ## Phase 3 — Shorten, in observe mode first
 
-- [ ] **3.1 A deterministic summary per selected class.** Exit code, every line
-      the class marks as a failure, a head and a tail bounded in bytes, and the
-      handle. No model summarises anything. The summary is computed and counted in
-      observe mode; nothing is delivered shorter.
+- [ ] **3.1 Execution profile: a deterministic summary per selected class.** Only
+      if 1.3 selects an execution class. Exit code, every line the class marks as
+      a failure, a head and a tail bounded in bytes, and the handle. No model
+      summarises anything. The summary is computed and counted in observe mode;
+      nothing is delivered shorter.
       verify: `npx vitest run tests/scripts/tool_output_summary.test.ts -t summary-keeps-every-failure-line --reporter=verbose` -> /✓.*summary-keeps-every-failure-line/
-- [ ] **3.2 Hold the floors on the corpus.** Failure-line recall 100 % and exit
-      code preserved on all of 1.2's corpus; a result whose summary would not save
-      at least the net-win floor (D3) is delivered unchanged.
+- [ ] **3.2 Content profile: decide the form once, with the readings.** Only if 1.3
+      selects a content class. D12 goes back to the council with 1.3's selection
+      and 1.4's repeat share; the candidates are (a) a shortened first read and
+      (b) a reference to a byte-identical earlier delivery. A split again, or a
+      repeat share and a selection that support neither, keeps the content profile
+      unbuilt and is recorded as such. The choice becomes row D15.
+      verify: `grep -c '^| D15 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
+- [ ] **3.3 Content profile: build the chosen form, in observe mode.** The stand-in
+      carries path, range, byte length, the sha256 of the delivered bytes and the
+      handle — plus, under form (a) only, an outline of top-level symbols or
+      headings with line numbers for file types whose structure is extracted
+      deterministically, every other type delivered unchanged. No model writes it.
+      Computed and counted; nothing is delivered shorter.
+      verify: `npx vitest run tests/scripts/tool_output_summary.test.ts -t content-stand-in-names-path-range-digest --reporter=verbose` -> /✓.*content-stand-in-names-path-range-digest/
+- [ ] **3.4 Hold the floors on the corpus.** Execution classes: failure-line
+      recall 100 % and exit code preserved on all of 1.5's corpus. Content
+      classes: for every corpus entry and every range requested of it, the handle
+      returns bytes identical to the entry, and the digest matches; under form (a)
+      every outline entry the corpus records is present. Either profile: a result
+      whose stand-in would not save at least the net-win floor (D3) is delivered
+      unchanged.
       verify: `npx vitest run tests/scripts/tool_output_summary.test.ts -t corpus-recall-is-total --reporter=verbose` -> /✓.*corpus-recall-is-total/
-- [ ] **3.3 Arm it for this workspace only.** After one release of observe-mode
-      readings, the stage delivers the summary for the selected classes in the
-      maintainer workspace, and the census line carries `delivered_bytes` from the
-      stage's output — the debt the placeholders roadmap's 3.2 names. Only the
-      tail of the newest result changes, so no earlier turn and no cache
-      breakpoint moves.
+- [ ] **3.5 Arm it for this workspace only.** After one release of observe-mode
+      readings, the stage delivers the stand-in for the selected classes of either
+      profile in the maintainer workspace, and the census line carries
+      `delivered_bytes` from the stage's output — the debt the placeholders
+      roadmap's 3.2 names. Only the tail of the newest result changes, so no
+      earlier turn and no cache breakpoint moves.
       verify: `npx vitest run tests/scripts/tool_result_bytes_hook.test.ts -t reduced-result-records-smaller-delivered --reporter=verbose` -> /✓.*reduced-result-records-smaller-delivered/
 
 ## Phase 4 — A second read of unchanged content becomes a reference
 
-- [ ] **4.1 Replace only on a content match.** When the sibling's content key
-      (its 2.2) shows a full Read of content already delivered this session, the
-      stage delivers a reference to the earlier read and the handle instead of the
-      body. A ranged Read, a changed hash, or content above the hash bound is
-      delivered unchanged.
+- [ ] **4.1 Replace only on a byte-identical match.** When a content result is
+      byte-identical to one delivered earlier this session (same path, same range,
+      same digest over the delivered bytes, by `Read` or a content-class Bash
+      command) and that earlier result is still stored, the stage delivers a
+      reference to it and the handle instead of the body. The match reads
+      `reread_guard_hook`'s ledger, which stays advisory and gains a range and a
+      delivered-bytes digest; no second ledger is kept. A changed hash, a
+      different range, or an expired entry is delivered unchanged. If D15 chooses
+      form (b), this step is that form's delivery and 3.3 builds nothing apart
+      from it.
       verify: `npx vitest run tests/scripts/reread_guard_hook.test.ts -t unchanged-full-read-becomes-reference --reporter=verbose` -> /✓.*unchanged-full-read-becomes-reference/
 - [ ] **4.2 Measure whether the model then re-reads anyway.** Over one release in
       the maintainer workspace, the count of references followed by a full re-read
@@ -162,10 +218,14 @@ until it is answered.
 | D2 | reversible-technical | agent | Spool retention is 7 days and 500 MB, whichever comes first | the same order as the council runtime retention (`ai_council.session_retention_days` default 7); a handle older than a week is rarely followed | a handle is followed after expiry in the 4.2 readings |
 | D3 | reversible-technical | agent | Net-win floor: a summary must be at most half the model-visible bytes of the original, else the original is delivered | below that the handle line and the head/tail eat the saving | the observe-mode readings show most results land just above the floor |
 | D4 | reversible-technical | agent | A reference rate followed by a full re-read above 30 % disarms 4.1 | a reference the model does not trust costs a turn and saves nothing | the rate sits near the bound |
-| D6 | reversible-technical | council:tool-results-d6-selection-2026-10-15 (2/2 present, both seats chose this) | The selection is empty: no class meets D1 and the failure-line condition of 1.1 together. Bash has the structure but its p95 is 6,282 B, under 8 KB; text Read (p95 42,029 B) and image Read (p95 621,520 B, K7) are above it with no exit code or failure line; Edit and Write are K3; every other class has p95 at most 2,784 B. D1 is not revised to admit Bash: a threshold lowered, a tail-mass criterion, or Bash cut into command families after reading these figures would be a fit, and the families above 8 KB are file-content reads (`sed`, `cat`, `git diff`). D1's revisit-if did not fire as written (two classes are above 8 KB) — it should have read "no eligible class" | `agents/evidence/analysis/model-visible-bytes-2026-10-14.md` (83,031 results); `report_reducible_classes` on 2026-10-15 reads `selected: none` and the census through `readCensusLine` (142,709 legacy lines, 71,700 two-field, 0 unreadable, delivered unknown on 143,462). Supplementary, not part of the dated distribution: 2,599 Bash results above 8,192 B carry 37.4 MB (36.7 % of Bash bytes), and 13 of them carry `is_error` or an `Exit code` line | the owner answers how this roadmap continues (see Execution status), or a fresh window under a criterion stated before it is read selects a class |
-| D7 | reversible-technical | agent | Verify lines of 3.3 and 4.1 name test titles the step itself creates; each is seen red before its implementation (closure listing C1, C2) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
+| D6 | reversible-technical | council:tool-results-d6-selection-2026-10-15 (2/2 present, both seats chose this) | The selection is empty: no class meets D1 and the failure-line condition of 1.1 together. Bash has the structure but its p95 is 6,282 B, under 8 KB; text Read (p95 42,029 B) and image Read (p95 621,520 B, K7) are above it with no exit code or failure line; Edit and Write are K3; every other class has p95 at most 2,784 B. D1 is not revised to admit Bash: a threshold lowered, a tail-mass criterion, or Bash cut into command families after reading these figures would be a fit, and the families above 8 KB are file-content reads (`sed`, `cat`, `git diff`). D1's revisit-if did not fire as written (two classes are above 8 KB) — it should have read "no eligible class" | `agents/evidence/analysis/model-visible-bytes-2026-10-14.md` (83,031 results); `report_reducible_classes` on 2026-10-15 reads `selected: none` and the census through `readCensusLine` (142,709 legacy lines, 71,700 two-field, 0 unreadable, delivered unknown on 143,462). Supplementary, not part of the dated distribution: 2,599 Bash results above 8,192 B carry 37.4 MB (36.7 % of Bash bytes), and 13 of them carry `is_error` or an `Exit code` line | the owner answers how this roadmap continues (answered: D10), or a fresh window under a criterion stated before it is read selects a class (D11) |
+| D7 | reversible-technical | agent | Verify lines of 1.2, 3.3, 3.5 and 4.1 name test titles the step itself creates; each is seen red before its implementation (closure listing C1, C2) | `closure_scan` lists a name filter with no matching title today because the titles do not exist yet | a step closes with its filter still matching no title |
 | D8 | reversible-technical | council:tool-results-handle-scope-2026-10-14 (2/2 present, both seats chose this) | Phase 2's store is not built ahead of its caller; every step stays open until its dependency lands. Rejected: a standalone store module flipping 2.3/2.4 (a callerless store cannot show the integrated behaviour 2.1–2.4 describe, and it fixes handle, range and expiry contracts before the stage exists); spooling from the byte-recorder hook today (a writer outside the single stage, storing unselected classes) | `road-to-bytes-the-model-actually-receives` 1.4 and `road-to-placeholders-on-the-wire` 1.2/1.3 are unchecked on `main@90ed4e697` | either dependency lands, or the placeholders 1.1 ADR freezes the stage interface before the stage is built |
 | D5 | reversible-technical | agent | No consumer default is set here; arming stops at the maintainer workspace | a consumer-facing default for result rewriting is already an owner blocker in `road-to-placeholders-on-the-wire` (`default-mode-for-consumers`); a second one would split one decision | that blocker is answered |
+| D10 | product-owned | owner | Redesign this roadmap rather than close it on the D6 null or park it: a content profile for file-content results beside the execution profile, selected under a criterion stated before a fresh window is read | Owner answer "1" on 2026-10-15 to the question in Execution status (redesign / close / park) | the D11 window selects no class — then this file closes on its second null (D11) |
+| D11 | reversible-technical | agent | Content-profile selection is pre-registered in `internal/bench/tool-results-content-profile-PREREG.md`: three classes fixed by what the body is a function of (`Read:text`, `Bash:file-print`, `Bash:vcs-content`); a class is selected when its p95 exceeds D1's 8,192 B over at least 200 results in a 14-day window that starts after that file's commit; no class selected closes the roadmap with no third criterion | committed alone before any reading of the window; the honest-limit section of that file names the D6 reading the class definitions were informed by | never edited; a change is a new registration with its own window |
+| D12 | reversible-technical | council:tool-results-content-delivery-2026-10-15 (2/2 present, split) | The content delivery form is not chosen. One seat: shorten only byte-identical repeats, and only after their share is measured. The other: the measured problem is large first reads, so a constrained shortened first read, failing open for types without reliable structure. Neither seat chose (c), head plus outline (K8). Both asked for the repeat share (1.4); 3.2 reopens this row once with it | `agents/evidence/council/tool-results-content-delivery-2026-10-15.md`, prompt verbatim beside it | 1.3 and 1.4 are recorded (step 3.2) |
+| D13 | reversible-technical | council:tool-results-content-delivery-2026-10-15 (2/2 present, both seats agreed) | A handle returns the bytes stored at delivery, addressed by the sha256 of the bytes the model received — never a re-read of the file by path and range. A result is stored and replaced only when the stored bytes equal the delivered bytes; a missing, an expired and a corrupted entry each answer their own state. Settles the "opaque hash or path" contract D8 listed | the same record: a disk re-read is a time-of-check/time-of-use mismatch that can return content no longer matching the digest; a privacy view that differs from the delivered view cannot recover what was delivered | the placeholders stage delivers a view other than the one it hands to a local store |
 
 ## What this roadmap deliberately does not do
 
@@ -176,27 +236,34 @@ until it is answered.
 - **K5** Store anything under `agents/tmp/`, or any credential value anywhere.
 - **K6** Claim a reduction percentage anywhere; the census delta is the record.
 - **K7** Reduce or re-encode images. Screenshots are evidence for UI work; whether their size is a lever is a question for the sibling's 1.4 figures, not a step here.
+- **K8** Deliver a first read as its first N bytes plus an outline (option (c) of D12). Neither seat chose it; a byte-position cut keeps what is early, not what matters, and still needs the outline (a) carries.
+- **K9** Resolve a handle by re-reading the file from disk (D13). The file may have changed since delivery; the handle would return bytes the digest does not describe.
+- **K10** Re-fit the selection after reading figures: lower D1, add a tail-mass share, re-cut Bash into new families, or extend the D11 window to reach the sample floor. Each was named a fit in D6 or in the PREREG; a new criterion is a new registration.
+- **K11** A size bound for shortened first reads proposed without evidence (one seat's 100 KB in D12). A bound enters only with a reading behind it, at 3.2.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A summary drops the line the agent needed | product | A reducer keeps the failures it was written for and loses an unanticipated one; the agent works from a wrong picture and does not know to open the handle. | The frozen corpus of 1.2 with 100 % recall (3.2), observe mode before arming (3.1, 3.3), and the handle line on every shortened result. | Phase 3 — Shorten, in observe mode first |
-| 2 | The spool becomes a second copy of sensitive output | implementation | Full command output can carry tokens, customer data or paths; a persistent store multiplies where it rests. | Placeholder view only (2.2), refusal to store a credential match when that stage is off, a retention age and a byte cap (2.3). | Phase 2 — A local store the summary can point into |
+| 1 | A stand-in drops what the agent needed | product | An execution summary loses an unanticipated failure line, or a content stand-in leaves out a value the agent was looking for (a configuration value, a comment, an implementation detail anywhere in the file); the agent works from a wrong picture and does not open the handle. | The frozen corpus of 1.5 with 100 % recall (3.4), observe mode before arming (3.1, 3.3, 3.5), a content form chosen only with the repeat-share reading (3.2), and the handle line on every shortened result. | Phase 3 — Shorten, in observe mode first |
+| 2 | The spool becomes a second copy of sensitive output | implementation | Full command output and file content can carry tokens, customer data or paths; a persistent store multiplies where it rests. | Placeholder view only and stored bytes equal to delivered bytes (2.2, D13), refusal to store a credential match when that stage is off, a retention age and a byte cap (2.3). | Phase 2 — A local store the stand-in can point into |
 | 3 | The host drops a replacement silently | implementation | A replacement whose shape the host rejects leaves the full result delivered while the census records it shortened. | The placeholders roadmap's 3.3 checks shape before emitting and counts a drop; this file records `delivered_bytes` from the stage only when that check passed. | Phase 3 — Shorten, in observe mode first |
-| 4 | The dependency never lands | product | Both roadmaps this depends on are open; this file can sit ready with nothing executable. | Phases 1 and 2 need only the sibling's Phase 1 and run in observe mode; arming (3.3, 4.1) is the part that waits. | Phase 1 — Choose what is worth reducing, from the distribution |
+| 4 | The dependency never lands | product | Both roadmaps this depends on are open; this file can sit ready with nothing executable. | Phase 1 needs no dependency: 1.2 is a report and 1.3/1.4 a dated reading; Phase 2 waits on the placeholders stage (D8), and arming (3.5, 4.1) is the part that waits longest. | Phase 1 — Choose what is worth reducing, under a criterion stated first |
+| 5 | The criterion is bent after the window is read | product | Text Read is expected to pass; a near-miss elsewhere invites a lowered bar, a re-cut family or a longer window. | The PREREG is committed before the window opens and never edited (D11); K10 lists every re-fit; no class selected closes the roadmap. | Phase 1 — Choose what is worth reducing, under a criterion stated first |
 
 ## Acceptance Criteria
 
 - [ ] AC-1 — In the maintainer workspace, a result of a selected class reaches the
       model shorter than the host produced it, its census line shows
-      `delivered_bytes` below `raw_bytes`, and the full output is retrievable by
-      its handle until it expires.
-- [ ] AC-2 — On the frozen corpus every failure line and every exit code survives
-      the summary.
+      `delivered_bytes` below `raw_bytes`, and the bytes it replaced are
+      retrievable by its handle until they expire — or the D11 window selected no
+      class and this roadmap closed on that null.
+- [ ] AC-2 — On the frozen corpus every failure line and exit code of an
+      execution class survives its summary, and every range of a content class
+      comes back byte-identical through its handle.
 - [ ] AC-3 — No credential value rests in the store, and no consumer install
       shortens a result without a setting a person chose.
-- [ ] AC-4 — A full re-read of unchanged content is delivered as a reference only
+- [ ] AC-4 — A re-read of unchanged content is delivered as a reference only
       while the measured follow-up re-read rate stays under its bound, or the null
       is on record.
