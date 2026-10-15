@@ -13,6 +13,13 @@
  * An ordinary pull request never reaches the network through this path, which is
  * what keeps a fail-closed network dependency proportionate.
  *
+ * One read runs on every invocation, gated diff or not, and needs no network:
+ * the bypass records in `BYPASS_RECORD_DIR`. A bypass still
+ * open past its `restore_by`, or restored with no council review recorded
+ * seven days on, fails the run — the contract's § Emergency use names the
+ * record, and this is the only reader that notices a route left unclosed. It
+ * stays what the rest of this gate is: local and voluntarily invoked.
+ *
  * Failing closed is deliberate and was the explicit condition of the decision
  * that commissioned this gate: `unverifiable` is a failure, not a pass, because
  * a control that succeeds when it cannot measure is advisory. The two negative
@@ -38,8 +45,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
+    BYPASS_RECORD_DIR,
     checkAnchorIdentity,
     evaluateAnchor,
+    evaluateBypassRecords,
     readAnchorPolicy,
     readWaivers,
     type AnchorReading,
@@ -152,6 +161,27 @@ function resolveBaseRef(explicit: string | null, root: string): string {
 /** True when the diff touches the expectation file itself. */
 export function touchesPolicy(files: readonly string[]): boolean {
     return files.map((f) => f.replace(/\\/g, '/').trim()).includes(POLICY_PATH);
+}
+
+/**
+ * The bypass records in the checkout. Read on every run, gated diff or not: an
+ * open bypass is a fact about the repository, not about the change under test.
+ * A directory that cannot be read is no records, never a failure of the gate.
+ */
+export function readBypassRecords(root: string): { path: string; text: string }[] {
+    let names: string[];
+    try {
+        names = fs.readdirSync(path.join(root, BYPASS_RECORD_DIR));
+    } catch {
+        return [];
+    }
+    return names
+        .filter((n) => n.endsWith('.md'))
+        .sort()
+        .map((n) => {
+            const rel = `${BYPASS_RECORD_DIR}/${n}`;
+            return { path: rel, text: fs.readFileSync(path.join(root, rel), 'utf8') };
+        });
 }
 
 export interface AnchorGateResult {
@@ -366,6 +396,14 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
     }
 
     const result = evaluateGate(changed, policyText, source, repo);
+    const open = evaluateBypassRecords(readBypassRecords(root), asOf());
+    if (open.length > 0) {
+        result.lines.push('', `❌  ${String(open.length)} bypass record(s) without a closing:`);
+        for (const f of open) {
+            result.lines.push(`  · [${f.code}] ${f.message}`);
+        }
+        result.exitCode = 1;
+    }
 
     reportScanned({
         gate: 'check_platform_anchor',

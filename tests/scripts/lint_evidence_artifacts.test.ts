@@ -346,6 +346,7 @@ describe('the merge-clearance evidence type', () => {
 
     it('is one of the declared types, and a written record resolves to it', () => {
         expect(EVIDENCE_TYPES as readonly string[]).toContain('merge-clearance');
+        expect(EVIDENCE_TYPES as readonly string[]).toContain('bypass-record');
         expect(resolveEvidenceType('x.md', record).type).toBe('merge-clearance');
     });
 

@@ -68,6 +68,7 @@ export const EVIDENCE_TYPES = [
     'feel',
     'ratification',
     'merge-clearance',
+    'bypass-record',
 ] as const;
 
 /**

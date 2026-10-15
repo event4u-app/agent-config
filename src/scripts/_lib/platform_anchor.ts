@@ -1051,3 +1051,128 @@ export function evaluateAnchor(
         evidence,
     };
 }
+
+/**
+ * Where the record of a bypass of the ratification gate lives — the owner's
+ * route of `docs/contracts/ratification-artifact.md` § Emergency use.
+ */
+export const BYPASS_RECORD_DIR = 'agents/evidence/bypass-records';
+
+/** A review of a restored bypass is overdue this long after `restored_at`. */
+export const BYPASS_REVIEW_DAYS = 7;
+
+/** The fields every bypass record carries; `restored_at` and `council_review` may read `pending`. */
+export const BYPASS_RECORD_FIELDS = [
+    'reason',
+    'subject',
+    'time',
+    'commit',
+    'ruleset_version_before',
+    'ruleset_version_after',
+    'restore_by',
+    'restored_at',
+    'council_review',
+] as const;
+
+const BYPASS_OPEN_FIELDS: ReadonlySet<string> = new Set(['restored_at', 'council_review']);
+
+export interface BypassFinding {
+    code: 'bypass-record-malformed' | 'bypass-not-restored' | 'bypass-unreviewed';
+    path: string;
+    message: string;
+}
+
+const INSTANT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/u;
+
+function instant(value: string | undefined): number | null {
+    if (value === undefined || !INSTANT_RE.test(value)) {
+        return null;
+    }
+    const ms = Date.parse(value);
+    return Number.isNaN(ms) ? null : ms;
+}
+
+function bypassFields(text: string): Map<string, string> | null {
+    if (!text.startsWith('---\n')) {
+        return null;
+    }
+    const end = text.indexOf('\n---', 4);
+    if (end === -1) {
+        return null;
+    }
+    const fields = new Map<string, string>();
+    for (const line of text.slice(4, end).split('\n')) {
+        const i = line.indexOf(':');
+        if (i <= 0) {
+            continue;
+        }
+        fields.set(line.slice(0, i).trim(), line.slice(i + 1).trim().replace(/^(["'])(.*)\1$/u, '$2'));
+    }
+    return fields;
+}
+
+/**
+ * The bypass records that leave the route without a closing.
+ *
+ * Two findings, each the absence of a step the contract makes the record's
+ * job: still open past `restore_by` (no `restored_at`), and restored with no
+ * council review recorded {@link BYPASS_REVIEW_DAYS} days later. A record
+ * missing one of the owner's fields, or carrying an instant that does not
+ * parse, is a finding too: an unreadable record cannot show it closed.
+ */
+export function evaluateBypassRecords(
+    records: readonly { path: string; text: string }[],
+    now: Date,
+): BypassFinding[] {
+    const findings: BypassFinding[] = [];
+    const t = now.getTime();
+    for (const { path: p, text } of records) {
+        const f = bypassFields(text);
+        const missing =
+            f === null
+                ? ['frontmatter']
+                : BYPASS_RECORD_FIELDS.filter((k) => !BYPASS_OPEN_FIELDS.has(k) && (f.get(k) ?? '') === '');
+        const restoredRaw = f?.get('restored_at') ?? 'pending';
+        const restoredOpen = restoredRaw === '' || restoredRaw === 'pending';
+        const restored = restoredOpen ? null : instant(restoredRaw);
+        const restoreBy = instant(f?.get('restore_by'));
+        if (
+            f === null ||
+            missing.length > 0 ||
+            !/^[0-9a-f]{64}$/u.test(f.get('subject') ?? '') ||
+            !/^[0-9a-f]{40}$/u.test(f.get('commit') ?? '') ||
+            instant(f.get('time')) === null ||
+            restoreBy === null ||
+            (restored === null && !restoredOpen)
+        ) {
+            findings.push({
+                code: 'bypass-record-malformed',
+                path: p,
+                message:
+                    `${p} is not a readable bypass record — it needs ${BYPASS_RECORD_FIELDS.join(', ')}, ` +
+                    'a 64-hex `subject`, a 40-hex `commit`, and ISO-8601 instants with a timezone' +
+                    (missing.length > 0 ? ` (missing: ${missing.join(', ')})` : ''),
+            });
+            continue;
+        }
+        if (restored === null) {
+            if (t > restoreBy) {
+                findings.push({
+                    code: 'bypass-not-restored',
+                    path: p,
+                    message: `${p}: the bypass is past \`restore_by\` ${String(f.get('restore_by'))} and records no \`restored_at\``,
+                });
+            }
+            continue;
+        }
+        const review = f.get('council_review') ?? '';
+        if ((review === '' || review === 'pending') && t > restored + BYPASS_REVIEW_DAYS * 86_400_000) {
+            findings.push({
+                code: 'bypass-unreviewed',
+                path: p,
+                message: `${p}: restored ${restoredRaw}, and no council review is recorded ${String(BYPASS_REVIEW_DAYS)} days on`,
+            });
+        }
+    }
+    return findings;
+}

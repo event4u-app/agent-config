@@ -355,7 +355,7 @@ again, which is D-4.*
 
 ## Phase 4 — A bypass carries the evidence the owner chose, and a closing
 
-- [ ] **4.1 The bypass record has a place and the owner's fields.** The record
+- [x] **4.1 The bypass record has a place and the owner's fields.** The record
       § Emergency use already requires (`docs/contracts/ratification-artifact.md:222-230`)
       lives under `agents/evidence/bypass-records/` and carries what decision
       D3 of `road-to-authority-routing-mechanism` fixed — reason, subject
@@ -369,12 +369,24 @@ again, which is D-4.*
       `administration` permission no workflow token carries
       (`src/config/platform-anchor.json`, `enforcement_boundary_note`), so the
       record cites the ruleset versions instead.
+      Done 2026-10-15: § Emergency use gains step 7 (the after-the-fact
+      review), the never-on-instruction sentence and § The bypass record. Scope
+      delta: the record declares a new evidence type, `bypass-record`, so an
+      added record passes `lint_evidence_artifacts` rather than reading as an
+      invalid marker.
       verify: `grep -c 'restore_by' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] **4.2 A reader notices a bypass that did not close.**
+- [x] **4.2 A reader notices a bypass that did not close.**
       `check_platform_anchor` fails while a committed bypass record is past
       `restore_by` with no `restored_at`, and while one has no council review
       recorded seven days after `restored_at`. The contract keeps saying what
       that check is: local and voluntarily invoked.
+      Done 2026-10-15: the pure evaluator is `evaluateBypassRecords` in
+      `_lib/platform_anchor.ts`, already on the ratification gate's watch
+      list; the gate reads the records on every run, gated diff or not, since
+      an open bypass is a fact about the repository rather than the change. A
+      record missing a field or carrying an unparseable instant fails closed.
+      Seen red: ten of eleven cases failed before the evaluator existed; the
+      eleventh is the no-record pass.
       verify: `npx vitest run tests/scripts/check_platform_anchor_open_bypass.test.ts` -> 0
 
 *Exit: 4.1 and 4.2 are green. Both edit files the ratification gate watches,
