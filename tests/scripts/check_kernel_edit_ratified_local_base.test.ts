@@ -252,6 +252,7 @@ describe('a module joining the dispatcher closure', () => {
         ]);
         expect(gate.out).toContain('no-such-revision');
         expect(gate.code).toBe(1);
+        expect(writer.out).toContain('no-such-revision');
         expect(writer.code).toBe(1);
     }, 60_000);
 
