@@ -140,16 +140,14 @@ consumers.
 
 ## Detection ceilings
 
-The credential rows moved here from the commit-time scanner unchanged in what
-they match, with two exceptions, each the price of making a pattern that was
-quadratic on a hostile input linear. `DETECTION_CEILINGS` in the rule table
-holds the same list; a test fails when the two disagree or when a listed ceiling
-no longer loses anything.
-
-| Rule | What is not detected | Why |
-|---|---|---|
-| `jwt` | a JWT glued to a preceding letter, digit, `_` or `-` (the old pattern matched from the inner `eyJ`) | a lookbehind admits a start only where a segment run begins; without it every inner `eyJ` restarted the same scan |
-| `db-connection-uri` | a scheme over 32 characters with no inner word boundary; a dotted scheme over 32 characters is matched from a later boundary, so the span starts inside the scheme while the userinfo is still covered | the scheme bound caps the restarts that reach one `://` |
+None. The credential rows match everything the commit-time scanner matched
+before they moved into the rule table. `jwt` and `db-connection-uri`, whose
+unbounded pre-move forms were quadratic on a hostile input, now make one
+attempt per character run and consume the run up to its first possible start
+atomically; their `linearity` fields state why that loses nothing.
+`DETECTION_CEILINGS` stays as the place a future ceiling would be declared; a
+test fails when a listed ceiling no longer loses its case, and the parity suite
+fails on any loss that is not listed.
 
 **Line scope.** The commit-time scanner evaluates each line on its own, as it
 did before the move; `detect()` and the replacement read the whole text. The

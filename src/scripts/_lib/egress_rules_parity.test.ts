@@ -116,17 +116,7 @@ function oldLooksLikeSecretValue(value: string): boolean {
     return oldShannon(value) >= 3.3;
 }
 // What each documented ceiling is allowed to lose, stated exactly per case.
-const CEILING_EXPECT: Readonly<Record<string, (before: string[], after: string[]) => boolean>> = {
-    'jwt|jwt-glued-word': (before, after) => before.length === 1 && after.length === 0,
-    'db-connection-uri|uri-scheme-33': (before, after) => before.length === 1 && after.length === 0,
-    // Matched from a later boundary: same end (the userinfo and its @ are covered), later start.
-    'db-connection-uri|uri-scheme-dotted-40': (before, after) => {
-        if (before.length !== 1 || after.length !== 1) return false;
-        const [b0, b1] = (before[0] as string).split('-').map(Number);
-        const [a0, a1] = (after[0] as string).split('-').map(Number);
-        return a1 === b1 && (a0 as number) > (b0 as number);
-    },
-};
+const CEILING_EXPECT: Readonly<Record<string, (before: string[], after: string[]) => boolean>> = {};
 
 const OLD_VALIDATORS: Readonly<Record<string, (v: string) => boolean>> = {
     'generic-assignment': oldLooksLikeSecretValue,

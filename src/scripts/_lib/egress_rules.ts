@@ -116,9 +116,11 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'jwt',
         type: 'TOKEN',
         class: 'credential',
-        pattern: /(?<![A-Za-z0-9_-])eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g,
+        pattern:
+            /(?<![A-Za-z0-9_-])(?=((?:(?!eyJ)[A-Za-z0-9_-])*))\1(eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})/dg,
+        valueGroup: 2,
         linearity:
-            'The lookbehind admits a start only where a segment run begins, so no attempt starts inside a run another attempt already read; an attempt spans at most three dot-separated runs, so each character is read by at most three attempts. Without the lookbehind every inner eyJ restarted a scan of the same run, which is quadratic.',
+            'One attempt per base64url run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first eyJ atomically, so the engine never retries a later eyJ in the same run. That loses nothing: every eyJ in one run reaches the same run end, so the first one, which has the most characters after it, matches whenever any later one would. An attempt spans at most three dot-separated runs, so each character is read a bounded number of times.',
     },
     {
         rule: 'stripe-secret-key',
@@ -146,9 +148,10 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'db-connection-uri',
         type: 'DBURI',
         class: 'credential',
-        pattern: /\b[a-z][a-z0-9+.-]{0,31}:\/\/[^\s:/@]+:[^\s:/@]+@/g,
+        pattern: /(?<![a-z0-9+.-])(?=((?:(?!\b[a-z])[a-z0-9+.-])*))\1(\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:[^\s:/@]+@)/dg,
+        valueGroup: 2,
         linearity:
-            'The scheme is bounded to 32 characters, so at most 32 starts reach any one ://; the userinfo classes exclude : and /, so a userinfo run belongs to exactly one :// and is read at most 32 times per side. Unbounded, the scheme let every inner word boundary of a dotted run restart the scan, which is quadratic.',
+            'One attempt per scheme-character run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first word-boundary letter atomically. Every such start in one run reaches the same :// at the same run end, so the first one matches whenever any later one would, and nothing the unbounded scheme matched is lost. The userinfo classes exclude : and /, so each userinfo run is read by one attempt per side.',
     },
     {
         rule: 'generic-assignment',
@@ -318,17 +321,4 @@ export interface DetectionCeiling {
     readonly cases: readonly string[];
 }
 
-export const DETECTION_CEILINGS: readonly DetectionCeiling[] = [
-    {
-        rule: 'jwt',
-        ceiling:
-            'A JWT glued to a preceding base64url character (letter, digit, _ or -) is not detected; the pre-move pattern matched from the inner eyJ. The lookbehind is what makes the rule linear.',
-        cases: ['jwt-glued-word'],
-    },
-    {
-        rule: 'db-connection-uri',
-        ceiling:
-            'A scheme longer than 32 characters with no inner word boundary is not detected, and a dotted scheme longer than 32 characters is matched from a later boundary, so the span starts inside the scheme; the userinfo, which holds the secret, is covered either way.',
-        cases: ['uri-scheme-33', 'uri-scheme-dotted-40'],
-    },
-];
+export const DETECTION_CEILINGS: readonly DetectionCeiling[] = [];
