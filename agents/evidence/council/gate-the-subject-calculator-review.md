@@ -377,3 +377,247 @@ The exact `PENDING` equality does correctly reject every additional *discovered*
 Coverage & confidence: deep-reviewed both shown files and the stated dispositions; unchanged stage-1 code and the implementations of `relativeSpecifiers`, `requiresRatification`, and `gatedFilesOf` were unavailable. Confidence: medium-high.
 
 REQUEST_CHANGES — CI still permits undetected mutation of the policy module and the closure oracle can miss executable dynamic imports; the single highest-leverage change is to machine-bind `_lib/ratification_subject.ts` from already-gated code now, while replacing regex import detection with the existing parser before merge.
+
+# Round 4 (stage 1, delta) — reviewed `5a2c68fb7` with prompt `gate-the-subject-calculator-review-r4-20261015.question.md`, anthropic REQUEST_CHANGES · openai REQUEST_CHANGES
+
+Final-round text of each seat, verbatim, in the order the run recorded the seats.
+
+## anthropic/claude-sonnet-4-5
+
+Matze, I'll analyze both reviews against the delta and state my own position.
+
+## Points I Agree With
+
+### Reviewer A
+- Pin design using Git blob IDs is sound ✓
+- Placement before "nothing to ratify" exit is correct ✓
+- Rename bypass is caught by the test (stale pin map fails the blob check) ✓
+- Change + restore is allowed (final state matters) ✓
+- Base-gate window is handled by the test as safety net ✓
+- AST walk handles the specific constructs tested ✓
+- Aliased `require` is a real theoretical weakness ✓
+
+### Reviewer B
+- SHA-1 blob construction is Git-compatible ✓
+- Checking resolved commit avoids checkout races ✓
+- Deletion becomes `absent` ✓
+- Change + restore correctly produces no violation ✓
+- **Pin check trusting caller-supplied `files` is the critical finding** ✓
+- **AST walk missing `ImportEqualsDeclaration` is valid** ✓
+
+## Points I Disagree With
+
+### Reviewer A
+- Severity assessment: calling the aliased-require bypass "THEORETICAL-LOW" might understate it. The prompt asks "can the AST walk still miss a module" — the answer is **yes**. However, I concede it's unlikely in practice given human review.
+
+### Reviewer B
+- No material disagreement on findings, but I'd weight them slightly differently (see below).
+
+## New Points & Refinements
+
+### 1. Path Canonicalization Gap (extends Reviewer B's HIGH finding)
+
+`pinViolations()` at line 180:
+```typescript
+const changed = new Set(files.map((f) => f.replace(/\\/g, '/').trim()));
+```
+
+Beyond Reviewer B's omission/spelling concerns, this normalization doesn't handle:
+- Repeated separators: `src//scripts/...`
+- Current directory: `./src/...`
+- Parent directory segments (though these would fail earlier)
+- Case sensitivity on case-insensitive filesystems
+
+The `files` parameter is user-supplied to `evaluate()`. There's no visible invariant guaranteeing it's complete and canonical. The test at line 143 always supplies the exact canonical path:
+```typescript
+const same = gate.evaluate([rel], root, 2);
+```
+
+**This cannot detect**:
+- Omission: `gate.evaluate([], root, 2)` after changing the pinned file
+- Alternate spelling: `gate.evaluate(['./src/scripts/_lib/ratification_subject.ts'], root, 2)`
+- Deletion bypass: delete the file but omit it from `files`
+- Rename bypass: rename the file, supply only the new path
+
+### 2. AST Walk Gaps (both reviewers correct)
+
+The walk at line 43 misses three cases:
+
+**a) `ImportEqualsDeclaration` (Reviewer B's MEDIUM)**:
+```typescript
+import dependency = require("./dependency.js");
+```
+This is `ImportEqualsDeclaration` with `ExternalModuleReference`, not a `CallExpression`.
+
+**b) Aliased require (Reviewer A's THEORETICAL-LOW)**:
+```typescript
+const r = require;
+r("./x.js");
+```
+The check `ts.isIdentifier(node.expression) && node.expression.text === 'require'` sees identifier "r", not "require".
+
+**c) Shadowed require (Reviewer B's implicit finding)**:
+```typescript
+function require(x: string) { }
+require(variable); // falsely fails — not a string literal
+```
+The current check treats any function named `require` as Node's loader.
+
+### 3. Base-Gate Window Defense Is One-Time
+
+Reviewer A notes the test on HEAD catches drift **in this PR**. But this is a one-time safety net, not ongoing enforcement. After this PR merges, future PRs are checked by the runtime gate, which has the path-enumeration gap Reviewer B identified. So the base-gate window is only protected for THIS PR, not generally.
+
+## My Verdict
+
+**REQUEST_CHANGES** — I agree with Reviewer B's stance. The pin mechanism has a HIGH-severity bypass, and the AST walk has MEDIUM gaps.
+
+### Defects
+
+**src/scripts/check_kernel_edit_ratified.ts:180 — HIGH**: `pinViolations` trusts the caller-supplied `files` list. A diff that changes a pinned module is ignored if `files` omits the path or spells it non-canonically (`./src/...`, `src//scripts/...`). Normalization handles backslashes but not `.` segments or repeated separators. Since `evaluate()` already resolves the head commit, derive changed pinned paths from Git directly: for each pinned path, check if bytes at base differ from bytes at head. Add tests for omission, alternate spelling, deletion, and rename.
+
+**tests/scripts/check_kernel_edit_ratified_mechanism_closure.test.ts:43 — MEDIUM**: The AST walk misses `import x = require("./x.js")` (`ImportEqualsDeclaration` with `ExternalModuleReference`), aliased require (`const r = require; r("./x.js")`), and falsely fails shadowed require (`function require(x) {}; require(variable)`). Handle `ts.isImportEqualsDeclaration` with `ts.isExternalModuleReference`, track `require` aliases, or verify the identifier resolves to Node's global. Add regression tests for all three.
+
+### Single Highest-Leverage Change
+
+**Derive pin candidates from the resolved Git diff inside `evaluate()`** — for each `PENDING_MECHANISM_PINS` entry, read bytes at base and head directly from Git objects, compare. This eliminates the path-enumeration bypass without trusting the caller. Add tests verifying omission, alternate spelling, deletion, and rename all still catch drift.
+
+## openai/codex-default
+
+Matze, Reviewer B identifies the merge-blocking issue; Reviewer A overstates the pin’s security because it assumes an unproven invariant about `files`.
+
+## Prior-point dispositions
+
+### Agree with Reviewer B
+
+1. **HIGH — `src/scripts/check_kernel_edit_ratified.ts:580`: pin enforcement trusts caller-supplied paths.**
+
+   `pinViolations(files, root, headCommit)` only examines entries present in `files`. A changed pinned module is therefore missed when:
+
+   - the caller omits it;
+   - it arrives as `./src/scripts/_lib/ratification_subject.ts`;
+   - another non-canonical spelling reaches this function;
+   - rename reporting supplies only the destination path.
+
+   Replacing backslashes and trimming whitespace is not path canonicalization. Nothing in the shown delta proves that `files` is complete and canonical, while the pin is explicitly presented as a security boundary. Severity: **HIGH**.
+
+2. **MEDIUM — `tests/scripts/check_kernel_edit_ratified_mechanism_closure.test.ts:43-69`: incomplete TypeScript dependency extraction.**
+
+   `moduleSpecifiers()` misses:
+
+   ```ts
+   import dependency = require("./dependency.js");
+   ```
+
+   That is an `ImportEqualsDeclaration`, not a `CallExpression`. The module could consequently execute without appearing in the closure or gated/pending assertions.
+
+   The inverse problem also exists: a locally shadowed `require(variable)` is treated as a Node module load and fails the suite, even though it may be an unrelated function. Severity: **MEDIUM**.
+
+### Partly agree with Reviewer A
+
+- The Git blob calculation is correct for SHA-1 Git repositories.
+- Reading bytes from the resolved head commit avoids working-tree races.
+- Deletion is correctly represented as `absent`.
+- Changing and restoring identical bytes should pass because the intended invariant is final content, not commit history.
+- `expect(ungated).toEqual(PENDING)` already detects a pending module becoming gated.
+- The AST regression covers the specific lexical-comment-delimiter failure from round 3.
+
+### Disagree with Reviewer A
+
+- **“The design is sound” is not established.** It is sound only if `files` is guaranteed to be the complete, canonically spelled base-to-head diff. That guarantee is neither enforced nor demonstrated here.
+- **Rename handling is not reliably caught at runtime.** The checkout-based test protects this PR only when that test is mandatory and running against the expected checkout. Future runtime enforcement still depends on how the caller reports renamed files.
+- **The suggested rename test is inadequate.** It mutates `REPO` rather than the temporary Git fixture and merely proves that `readFileSync` fails after a filesystem rename. It does not exercise `evaluate()`, Git rename output, or the actual pin boundary.
+- The aliased-`require` concern is real but secondary. Tracking arbitrary aliases is not the first fix; handling ordinary TypeScript module syntax and removing trust in caller path enumeration are higher leverage.
+
+## Additional refinements
+
+1. **MEDIUM — `check_kernel_edit_ratified.ts:162-177`: the implementation claims Git-generic blob IDs but hardcodes SHA-1.**
+
+   `gitBlobId()` always emits SHA-1, while Git also supports SHA-256 repositories. In such a repository, this is not “what `git hash-object` prints,” and every otherwise-correct pin will drift. Either explicitly require SHA-1 repositories or obtain the object ID from Git itself. Severity: **MEDIUM portability/shipping risk**.
+
+2. **LOW — `check_kernel_edit_ratified.ts:594-605`: refusal bookkeeping can report zero failures.**
+
+   For a diff containing only the ungated pinned module, `ledger.unaccountedTargets()` may be empty. The command exits 1 while printing `planned 0 · failed 0`, weakening auditability even though enforcement occurs. Add a dedicated ledger target or report pin refusal separately. Severity: **LOW**.
+
+3. **Test gaps:** the current end-to-end test supplies only the exact canonical path. Missing regression cases are omitted path, `./` spelling, deletion, rename, and a locally shadowed `require`. These are precisely the branches determining whether the new boundary can be bypassed or falsely refuse.
+
+4. **Reuse/shape:** no speculative OO problem is introduced; the small functions fit the project’s functional style. However, dependency extraction is compiler-semantics work. A repository/compiler utility should be reused if one exists rather than growing a partial loader model inside a test.
+
+5. **Shipping risk:** source and tests remain tightly scoped, but the behavior is security-sensitive and its stated guarantee is broader than its implementation. That makes the missing path invariant merge-blocking rather than a follow-up cleanup.
+
+**Coverage & confidence:** Deep-reviewed both shown files and every added branch; unchanged branch code and omitted evidence files were outside scope. Confidence: high on the caller-path bypass, medium-high on closure limitations because the surrounding module-resolution configuration was not provided.
+
+**REQUEST_CHANGES — the pin can be bypassed because enforcement trusts an unverified caller-supplied file list; the single highest-leverage change is to derive changed pinned paths directly from the resolved base-to-head Git diff inside `evaluate()` and cover omission, alternate spelling, deletion, and rename end to end.**
+
+# Round 5 (stage 1, delta) — reviewed `4b1e3f15a` with prompt `gate-the-subject-calculator-review-r5-20261015.question.md`, anthropic APPROVE · openai APPROVE
+
+Final-round text of each seat, verbatim, in the order the run recorded the seats.
+
+## anthropic/claude-sonnet-4-5
+
+Matze, reviewing the round-5 delta as an independent seat:
+
+## Agreement with prior reviewers
+
+**With Reviewer A:**
+- Findings 1–3 are addressed correctly with one security-relevant tradeoff explicitly acknowledged
+- The absent-and-unnamed carve-out is acceptable given (1) production uses `git diff --no-renames`, (2) deleting the module breaks the build via imports, (3) fixtures need this
+- The suggested inline comment documenting the assumption is good but not merge-blocking
+
+**With Reviewer B:**
+- No merge-blocking defect confirmed
+- The carve-out is reasonable for fixture repositories
+- An integration test for actual `main` file-list construction would be valuable but not blocking
+- Coverage is adequate; the delta closes the bypasses without weakening the gate
+
+## Disagreements
+
+None significant. Both reviewers approved with minor suggestions, and I concur.
+
+## New points not raised in round 1
+
+1. **Path normalization robustness:** The canonicalization (`path.posix.normalize`, backslash replacement, `./` stripping) handles edge cases like `src/../src/scripts/...` correctly by collapsing before comparison. Absolute paths wouldn't match pin keys, but `git diff` doesn't produce them — acceptable scope.
+
+2. **Export surface consideration:** `pinViolations` is exported, so a malicious/buggy caller *could* construct a fake file list to bypass the absent-and-unnamed check. However, this is mitigated by:
+   - The build-breakage property (gate imports the module)
+   - Production path documented as using `git diff --no-renames`
+   - The tradeoff being explicit in the disposition
+
+   Reviewer A's comment makes this even clearer for future reviewers.
+
+3. **Test coverage gap (non-blocking):** Tests prove drift detection with various spellings, deletion-when-named, and absent-and-unnamed (fixture). Missing: an actual end-to-end test showing `git diff --no-renames` lists a deletion. This would lock down the assumption behind the carve-out but isn't blocking since the unit tests plus the import dependency already cover the real risk.
+
+## Approval
+
+**APPROVE** — findings addressed, tradeoffs documented, no merge-blocking defect.
+
+**Highest-leverage change before merge:**
+
+Adopt Reviewer A's inline comment at `src/scripts/check_kernel_edit_ratified.ts:190–194` documenting the security assumption behind the absent-and-unnamed carve-out. Costs 3 lines, makes the tradeoff explicit for future reviewers, and addresses the only unwritten assumption in an otherwise well-documented fix.
+
+## openai/codex-default
+
+## Prior points
+
+- **Agree with Reviewer A:** The present-file bypass is fixed at `check_kernel_edit_ratified.ts:188–200`; every existing pinned module is hashed regardless of `files`.
+- **Agree with both reviewers:** The absent-and-unnamed carve-out is acceptable only because production reportedly uses `git diff --no-renames` and deleting the imported module also breaks gate loading.
+- **Agree with Reviewer B:** An actual-`main` deletion/rename regression test is more valuable than Reviewer A’s proposed explanatory comment. Tests enforce the security assumption; comments merely record it.
+- **Agree with both reviewers:** `mechanism_closure.test.ts:58–76` now covers import-equals and refuses aliased `require`; the SHA-1 behavior is appropriately constrained and checked against Git.
+
+## Disagreements
+
+- Reviewer A describes the closure change as fully “solid,” but the test at `mechanism_closure.test.ts:140–146` does not exercise the documented shadowing case (`function require(...) {}`); it only tests aliasing the ambient `require`. This is **LOW** severity because the AST rule appears to reject both, but the stated behavior is not directly locked down.
+- Reviewer A’s suggested comment is redundant with the function’s existing documentation at `check_kernel_edit_ratified.ts:177–186`. It would not reduce the actual risk.
+
+## New refinements
+
+No merge-blocking defect is demonstrated.
+
+- **LOW — `tests/scripts/check_kernel_edit_ratified_mechanism_closure.test.ts:140–146`:** Three distinct behaviors—dynamic loading, import-equals, and aliased `require` refusal—share one test. A failure may obscure which contract regressed. Separate cases would improve diagnosis, though this is not required for correctness.
+- **LOW — `tests/scripts/check_kernel_edit_ratified_mechanism_closure.test.ts:167–181`:** Deletion is tested only through direct `evaluate()` input. The security argument depends on production `main` generating that input with `git diff --no-renames`; that integration boundary remains untested in the supplied delta.
+- **Rejected concern:** A manually supplied empty list can conceal deletion at `check_kernel_edit_ratified.ts:190–193`, but this is not presently exploitable through the described production path, and treating all absent pins as violations would break intentionally minimal fixtures.
+- **Rejected concern:** The hash implementation does not support SHA-256 repositories. The code now explicitly declares a repository-local SHA-1 contract, and the Git comparison makes repository-format drift fail visibly.
+- **Rejected concern:** No new abstraction or OO structure is introduced; the change extends existing functional logic and tests with a proportionate blast radius.
+
+Coverage and confidence: deep-reviewed both supplied files and every changed branch; production `main`, unchanged closure traversal, and wider repository conventions were bounded out. Confidence: medium-high.
+
+APPROVE — the delta closes the reported bypasses without a confirmed correctness or security regression; the highest-leverage pre-merge change is an end-to-end `main` test proving deletion or rename produces the source path consumed by `pinViolations`.
