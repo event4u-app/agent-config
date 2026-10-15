@@ -1,7 +1,7 @@
 ---
 complexity: lightweight
 status: draft
-estate_offset_exempt: "Follow-up split out of PR #2367 by its own review — the remaining sites of a defect class that PR fixed for one verb. No existing roadmap covers them, and the open decision below is the reason they could not be converted in the same change."
+estate_offset_exempt: "Follow-up split out of PR #2367 by its own review: the remaining sites of a defect class that PR fixed for one verb. Rejected merging into later/road-to-credible-install.md, the closest relative: it is parked with one unrelated cadence-observation item, so this work would land parked and unread. Rejected parking this file in later/: Phase 1 is a council decision that can run now. Nothing to archive offsets it; no active roadmap covers consumer script invocations."
 execution:
   mode: phase-checkpoints
 ---
