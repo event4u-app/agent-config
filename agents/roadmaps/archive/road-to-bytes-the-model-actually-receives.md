@@ -162,8 +162,9 @@ Measured 2026-10-14 on this branch, darwin, Apple silicon:
       verify: `grep -c 'transfer' src/domains/analysis-workbench/analyze/repo/command.md` -> /^[1-9]/
       *Correction 2026-10-15, after the PR #2363 review: git's receive line
       neither appears reliably in non-interactive runs nor can stop a fetch in
-      flight, so the fourth part is now a pre-fetch size gate on the host's
-      reported repository size, and the text says no mid-fetch bound exists.*
+      flight, so the ceiling is three parts plus a best-effort pre-fetch size
+      gate on the host's reported repository size, which the text says is not
+      a ceiling and bounds no transfer.*
 
 ## Phase 4 — Does a spawn still cost a quarter million tokens?
 

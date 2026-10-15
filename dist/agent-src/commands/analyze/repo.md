@@ -98,7 +98,7 @@ overriding the budget:**
 ### Read ceiling per loop
 
 Loop *n* cannot read deeper than the seed pass without a local clone, so
-`--deep` (§ 2b) becomes the **default whenever the loop runs**. The four-part
+`--deep` (§ 2b) becomes the **default whenever the loop runs**. The three-part
 ceiling of § 2b applies per loop, and the loop that hits it logs one
 read-ceiling line naming the bound that fired.
 
@@ -162,7 +162,7 @@ seed pass's is a defect in the run, not a finding about the reference.
 
 Because loop *n* cannot read deeper than the seed pass without a local clone,
 `--deep` (§ 2b) is the default whenever the loop runs. Each loop that hits the
-§ 2b four-part ceiling logs **one** read-ceiling line naming the bound
+§ 2b three-part ceiling logs **one** read-ceiling line naming the bound
 that fired and the loop it fired in.
 
 ### 2b. Deep verification tier — `--deep`, opt-in
@@ -182,18 +182,18 @@ all. Otherwise fetch **only that commit, at depth 1**, into a fresh directory:
 Never a full-history clone, and no persistent object store: `--deep` is opt-in
 and rare, and a store is a maintenance surface for a rare path.
 
-The fetch ceiling is replaced by a **four-part ceiling**: an operation count, a
-total-bytes-read bound, a wall-clock bound, and a **pre-fetch size gate** —
-**whichever is hit first**, with the bound that fired recorded. The size gate is
-the only transfer control, and it acts **before** the fetch, not during it:
-read the host's reported repository size (on GitHub,
+The fetch ceiling is replaced by a **three-part ceiling** — an operation count,
+a total-bytes-read bound and a wall-clock bound, **whichever is hit first**, with
+the bound that fired recorded — plus a **best-effort pre-fetch size gate**, which
+is not a ceiling and does not bound the transfer. Before fetching, read the
+host's reported repository size (on GitHub,
 `gh api repos/<owner>/<repo> --jq .size`, in KiB) and do not fetch when it
-exceeds the bound. That figure is the whole repository, so it over-states a
-depth-1 pack — a conservative proxy, never a measurement. Nothing here stops a
-fetch that is already running: `git fetch` gives no enforceable mid-transfer
-limit, so a host that reports no size has **no** transfer bound — record that
-gap rather than a figure. After the fetch, record the on-disk size of the
-clone's `.git` (`0` when a local clone was reused) as what was received. A bare
+exceeds the gate. That figure is the whole repository at the moment of the
+call, so it is an estimate, never a measurement. Nothing here stops a fetch that
+is already running: `git fetch` gives no enforceable mid-transfer limit, and a
+host that reports no size leaves the transfer unbounded — record that gap rather
+than a figure. After the fetch, record the clone's `.git` size on disk (`0` when
+a local clone was reused); it is local storage, not bytes received. A bare
 read count bounds nothing (forty
 reads is one README or one 2 MB generated schema, and traversing a monorepo
 costs time a file count never expresses). Cloning **parses**
@@ -574,7 +574,7 @@ pins something; it just does not name it. Contract and field shapes:
   and "just run their tests to check" is a violation, not a shortcut.
 - No credentials in fetches. Public GitHub API is enough. For private mirrors,
   take a PAT via env var and never echo it.
-- Max 40 fetches without explicit extension; under `--deep` the four-part
+- Max 40 fetches without explicit extension; under `--deep` the three-part
   ceiling of § 2b replaces it — the cost bound never disappears with the count.
 - No auto-commits — the analysis is a draft until the user accepts.
 
