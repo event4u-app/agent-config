@@ -31,6 +31,8 @@ evidence:
     - agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md
     - src/scripts/hooks/rtk_wrap_hook.ts
     - tests/scripts/lint_hook_manifest.test.ts
+    - tests/scripts/hooks/egress_stage.test.ts
+    - agents/evidence/ratifications/drain-placeholders-phase-1.md
 ---
 
 # ADR-285 — One dispatcher stage is the only rewriter
@@ -110,6 +112,34 @@ all: Phase 1 builds views and counts, and `observe` mode changes no view.
 - **Keep rewrites out entirely.** Rejected for egress: the alternative to a
   placeholder on a tool result is a raw value at the provider, which is the
   threat `docs/threat-model.md` row j names.
+
+## Evidence
+
+`strength: E1` — the decision rests on tests that pin the rule and on one
+independent review process, not on a measurement of rewrites in use, because
+no rewrite reaches any host yet.
+
+- **The rule is mechanical and seen red.** `tests/scripts/lint_hook_manifest.test.ts`
+  (`rewrite-concern-refused`) fails a concern that declares a rewrite and one
+  whose script names a host rewrite field, and accepts one that does neither; the
+  two refusing cases were run red before the check existed.
+- **The dispatcher forwards no rewrite from a concern.**
+  `tests/scripts/hooks/egress_stage.test.ts` drives a concern replying with
+  `updatedInput` through the real dispatcher and asserts the emission carries
+  none, and that the concern did run; the assertion went red when the
+  dispatcher was made to echo concern output.
+- **Independent review.** Four AI-council rounds (anthropic/claude-sonnet-4-5,
+  openai/codex-default, 2/2 each) on the branch that introduced the stage, both
+  seats approving at round 4; prompts and dispositions in
+  `agents/evidence/ratifications/drain-placeholders-phase-1.md` and
+  `agents/evidence/council/placeholders-phase1-review-*`.
+- **The two grounds it answers** are quoted from the 2026-08-23 record in
+  `src/scripts/hooks/rtk_wrap_hook.ts` and the probe
+  `agents/evidence/analysis/host-input-rewrite-probe-2026-08-23.md`.
+- **What the evidence does NOT establish:** that a host applies the stage's
+  rewrite as intended, or at what rate it drops one. That is the probe of Phase 0
+  and the drop-rate publication of Phase 3 of `road-to-placeholders-on-the-wire`,
+  neither of which has run.
 
 ## Not reopened
 
