@@ -125,6 +125,17 @@ describe('TokenScope', () => {
         expect(strings.some((v) => v.includes(KEY))).toBe(false);
     });
 
+    it('refuses one value under a second class even when the type differs', () => {
+        const a = new TokenScope();
+        a.mint('APIKEY', 'credential', KEY);
+        expect(() => a.mint('EMAIL', 'identifier', KEY)).toThrow(/class/);
+        expect(a.resolve(a.mint('APIKEY', 'credential', KEY))).toBeNull();
+        expect(reachableStrings(a).some((v) => v.includes(KEY))).toBe(false);
+        const b = new TokenScope();
+        b.mint('EMAIL', 'identifier', KEY);
+        expect(() => b.mint('APIKEY', 'credential', KEY)).toThrow(/class/);
+    });
+
     it('refuses to mint one (type, value) under a second class', () => {
         const a = new TokenScope();
         a.mint('APIKEY', 'identifier', KEY);

@@ -64,6 +64,8 @@ export class TokenScope {
     private readonly byDigest = new Map<string, Entry>();
     private readonly byToken = new Map<string, Entry>();
     private readonly counters = new Map<string, number>();
+    /** Keyed digest of the canonical value alone → its class, whatever type it was minted under. */
+    private readonly classByValue = new Map<string, EgressClass>();
 
     constructor() {
         this.key = randomBytes(32);
@@ -73,12 +75,14 @@ export class TokenScope {
         if (!TOKEN_TYPE.test(type)) {
             throw new Error(`TokenScope: type ${JSON.stringify(type)} is outside the token grammar`);
         }
+        const valueDigest = createHmac('sha256', this.key).update(`value\u0000${canonical}`).digest('hex');
+        const seenClass = this.classByValue.get(valueDigest);
+        if (seenClass !== undefined && seenClass !== cls) {
+            throw new Error(`TokenScope: this value was minted under class ${seenClass}, refusing class ${cls}`);
+        }
         const digest = createHmac('sha256', this.key).update(`${type}\u0000${canonical}`).digest('hex');
         const known = this.byDigest.get(digest);
         if (known !== undefined) {
-            if (known.class !== cls) {
-                throw new Error(`TokenScope: ${type} was minted under class ${known.class}, refusing class ${cls}`);
-            }
             return formatToken(known);
         }
         const number = (this.counters.get(type) ?? 0) + 1;
@@ -93,6 +97,7 @@ export class TokenScope {
             fingerprint: digest.slice(0, TOKEN_FP_LENGTH),
             value: cls === 'identifier' ? canonical : null,
         };
+        this.classByValue.set(valueDigest, cls);
         this.byDigest.set(digest, entry);
         this.byToken.set(formatToken(entry), entry);
         return formatToken(entry);

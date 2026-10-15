@@ -63,9 +63,11 @@ A token stands for one value inside one **issuing scope**. It carries four parts
 
 - **Identity.** Two occurrences of one canonical value in one scope get one
   number and one fingerprint. Two different values get two numbers. One
-  (type, value) pair has one class for the life of the scope: minting it again
-  under the other class is refused, so a value first seen as a credential can
-  never become restorable, and the reverse cannot silently drop a restore.
+  canonical value has one class for the life of the scope, **whatever type it is
+  minted under**: minting it again under the other class is refused, so a value
+  first seen as a credential can never become restorable, and the reverse cannot
+  silently drop a restore. The class is indexed by a keyed digest of the value
+  alone, never by the value.
 - **Scope.** For a request this package writes, the scope is the one invocation
   that builds and sends it. For a host carrier, the scope is set by that
   roadmap's session table, which must keep the key out of every request.
@@ -89,8 +91,8 @@ A token stands for one value inside one **issuing scope**. It carries four parts
   which is why the scope check, not the grammar, carries idempotence. One recogniser parses the grammar;
   the grammar's spelling is one constant, and no second spelling exists under
   `src/`.
-- **Spelling: `__TYPE_n_fp__`** — e.g. `__IBAN_1_495cff__`: type upper-case
-  (2–16 characters), number from 1, fingerprint six lower-case hex digits. Chosen
+- **Spelling: `__TYPE_n_fp__`** — e.g. `__IBAN_1_495cff__`: type `[A-Z][A-Z0-9]{1,15}` (an upper-case
+  letter, then 1–15 upper-case letters or digits), number from 1, fingerprint six lower-case hex digits. Chosen
   by the model-fidelity bar pre-registered in
   `internal/bench/egress-placeholders-PREREG.md` (endpoint d) among spellings that
   survive an unquoted shell word, YAML, JSON and an anchored regex; reading in
