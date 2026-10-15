@@ -165,7 +165,10 @@ export const PENDING_MECHANISM_PINS: Readonly<Record<string, string>> = {
     'src/scripts/_lib/ratification_subject.ts': '3842d91528ec5229819dbd0da2f1a67a1f0eb06c',
 };
 
-/** Git's blob id for `bytes` — what `git hash-object` prints. */
+/**
+ * Git's SHA-1 blob id for `bytes` — what `git hash-object` prints in a SHA-1
+ * repository, which this one is; a test compares the two.
+ */
 export function gitBlobId(bytes: Buffer): string {
     return createHash('sha1')
         .update(`blob ${bytes.length}\u0000`)
@@ -174,17 +177,26 @@ export function gitBlobId(bytes: Buffer): string {
 }
 
 /**
- * Pinned modules this diff changes away from their pin at `commit`. A deleted
- * module counts as changed. THROWS a {@link GatedSubjectRefusal} when the commit
- * cannot be read.
+ * Pinned modules that differ from their pin at `commit`.
+ *
+ * A module PRESENT at the commit is compared whatever the diff lists, so a
+ * caller that omits or misspells the path cannot skip it. An ABSENT one is a
+ * deletion only when the diff names it — a tree that never had the module,
+ * such as a fixture, is not a deletion — and the names are canonicalised
+ * first. THROWS a {@link GatedSubjectRefusal} when the commit cannot be read.
  */
 export function pinViolations(files: readonly string[], root: string, commit: string): string[] {
-    const changed = new Set(files.map((f) => f.replace(/\\/g, '/').trim()));
+    const named = new Set(
+        files.map((f) => path.posix.normalize(f.replace(/\\/g, '/').trim()).replace(/^\.\//, '')),
+    );
     const out: string[] = [];
     for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
-        if (!changed.has(rel)) continue;
         const bytes = fileAtRevision(root, commit, rel);
-        const actual = bytes === null ? 'absent' : gitBlobId(bytes);
+        if (bytes === null) {
+            if (named.has(rel)) out.push(`${rel} is absent, pinned to ${blob}`);
+            continue;
+        }
+        const actual = gitBlobId(bytes);
         if (actual !== blob) out.push(`${rel} is ${actual}, pinned to ${blob}`);
     }
     return out;

@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -42,8 +43,10 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 
 /**
  * Every module specifier `source` loads, read from the TypeScript syntax tree:
- * import and export-from declarations, `import(…)` and `require(…)`. A call
- * whose argument is not a string literal cannot be resolved, so it fails.
+ * import and export-from declarations, `import x = require(…)`, `import(…)`
+ * and `require(…)`. A load whose argument is not a string literal, or a
+ * `require` used other than as a direct call, cannot be resolved, so it fails —
+ * a local function named `require` fails too, which errs closed.
  */
 function moduleSpecifiers(rel: string, source: string): string[] {
     const file = ts.createSourceFile(rel, source, ts.ScriptTarget.Latest, true);
@@ -55,6 +58,19 @@ function moduleSpecifiers(rel: string, source: string): string[] {
             ts.isStringLiteral(node.moduleSpecifier)
         ) {
             out.push(node.moduleSpecifier.text);
+        } else if (
+            ts.isImportEqualsDeclaration(node) &&
+            ts.isExternalModuleReference(node.moduleReference)
+        ) {
+            const ref = node.moduleReference.expression;
+            expect(ts.isStringLiteralLike(ref), `${rel}: unresolvable import-equals`).toBe(true);
+            out.push((ref as ts.StringLiteralLike).text);
+        } else if (
+            ts.isIdentifier(node) &&
+            node.text === 'require' &&
+            !(ts.isCallExpression(node.parent) && node.parent.expression === node)
+        ) {
+            expect.fail(`${rel}: \`require\` used other than as a direct call`);
         } else if (
             ts.isCallExpression(node) &&
             (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
@@ -124,10 +140,17 @@ describe('the gate watches the modules its verdict runs through', () => {
     it('the walk sees dynamic imports and re-exports a lexical scan could hide', () => {
         const src = 'const a = "/*";\nimport("./x.js");\nconst b = "*/";\nexport * from "./y.js";\n';
         expect(moduleSpecifiers('f.ts', src)).toEqual(['./x.js', './y.js']);
+        expect(moduleSpecifiers('g.ts', 'import d = require("./d.js");\n')).toEqual(['./d.js']);
+        expect(() => moduleSpecifiers('h.ts', 'const r = require;\nr("./x.js");\n')).toThrow();
     });
 
     it('every pending module is pinned to its current blob', () => {
         expect(gitBlobId(Buffer.from(''))).toBe('e69de29bb2d1d6434b8b29ae775ad8c2e48c5391');
+        for (const rel of PENDING) {
+            const git = spawnSync('git', ['hash-object', '--', rel], { cwd: REPO, encoding: 'utf8' });
+            expect(git.status, git.stderr).toBe(0);
+            expect(gitBlobId(fs.readFileSync(path.join(REPO, rel))), rel).toBe(git.stdout.trim());
+        }
         expect(Object.keys(PENDING_MECHANISM_PINS).sort()).toEqual([...PENDING].sort());
         for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
             expect(gitBlobId(fs.readFileSync(path.join(REPO, rel))), rel).toBe(blob);
@@ -144,9 +167,24 @@ describe('the gate watches the modules its verdict runs through', () => {
 
         fs.appendFileSync(path.join(root, rel), '// drift\n');
         commitAll(root);
-        const moved = gate.evaluate([rel], root, 2);
-        expect(moved.exitCode).toBe(1);
-        expect(moved.lines.join('\n')).toContain('a pinned ratification module changed');
+        // The path named exactly, spelled differently, and not named at all.
+        for (const files of [[rel], [`./${rel}`], ['README.md'], []]) {
+            const moved = gate.evaluate(files, root, 2);
+            expect(moved.exitCode, JSON.stringify(files)).toBe(1);
+            expect(moved.lines.join('\n')).toContain('a pinned ratification module changed');
+        }
+
+        fs.rmSync(path.join(root, rel));
+        commitAll(root);
+        const deleted = gate.evaluate([`./${rel}`], root, 2);
+        expect(deleted.exitCode).toBe(1);
+        expect(deleted.lines.join('\n')).toContain('is absent');
+    });
+
+    it('a tree that never had a pinned module is not a deletion', () => {
+        fs.writeFileSync(path.join(root, 'README.md'), 'x\n');
+        commitAll(root);
+        expect(gate.evaluate(['README.md'], root, 2).exitCode).toBe(0);
     });
 
     it('refuses an unratified edit of the record parser end to end', () => {
