@@ -80,7 +80,7 @@ and the contract states what each of four published states — `asserted`,
 |---|---|---|---|---|---|
 | D1 | reversible-technical | agent | Own estate stem, split in two: bytes this package writes (here) and host carriers (`road-to-placeholders-on-the-wire`) | 7 active roadmaps at `d41121927`, none owns outbound values; the split puts every `asserted` proof before any host contract is needed | a later roadmap takes ownership of outbound values |
 | D2 | reversible-technical | agent | The typed counter the goal asked for is kept; the bracket delimiter is not | F9, reproduced: `[IBAN_1]` fails three of four surfaces. The owner's form was an example ("z.B."), not a constraint <!-- md-language-check: ignore --> | — |
-| D3 | contested-technical | evidence | Which surviving spelling becomes the grammar — `⟦TYPE_n.fp⟧`, `__TYPE_n__` or a namespaced wire form with a separate display label — is decided by the model-fidelity bar of 0.3, not by taste | F9 narrows the field to forms that survive; no study of model copy fidelity per delimiter was found | the bar reports no spelling above its threshold |
+| D3 | contested-technical | evidence | Which surviving spelling becomes the grammar — `⟦TYPE_n.fp⟧`, `__TYPE_n__` or a namespaced wire form with a separate display label — is decided by the model-fidelity bar of 0.3, not by taste | F9 narrows the field to forms that survive; **settled 2026-10-15 by PREREG endpoint (d): all three survivors copied 20/20, the pre-registered rule picked `__TYPE_n_fp__`** | the bar reports no spelling above its threshold |
 | D4 | reversible-technical | agent | Refuse where content has not yet moved, replace where it has | Reconciles F7's two house positions under one rule | — |
 | D5 | reversible-technical | agent | Credentials and identifiers are two classes with opposite restore policies; a credential value is never stored | A local edit of a file holding a credential can re-derive the value from that file; nothing else needs it | — |
 | D6 | reversible-technical | agent | Settings block `egress.placeholders`, not `privacy.egress` | A key named "privacy" reads as the guarantee N1 exists to avoid | — |
@@ -208,7 +208,7 @@ These senders are where this package controls the request **and** reads the
 response, with no host contract in between and no hook budget to spend — so
 `asserted` is proven here before any host is asked to cooperate.
 
-- [ ] **3.1 The grammar is one constant** (D3) with one recogniser: delimiter,
+- [x] **3.1 The grammar is one constant** (D3) with one recogniser: delimiter,
       type, number and a fingerprint — a truncated keyed digest over type and
       canonical value under a random key drawn per run and never sent. The
       number is what a reader sees; the fingerprint makes a token from another
@@ -216,6 +216,15 @@ response, with no host contract in between and no hook budget to spend — so
       never matches a detector rule. A lint refuses a second spelling of the
       grammar anywhere under `src/`.
       verify: a forged token and a token under another key do not resolve; replacing twice yields the same bytes as replacing once.
+      **Done 2026-10-15:** `src/scripts/_lib/egress_token.ts`, spelling `__TYPE_n_fp__`
+      selected by PREREG endpoint (d) — all three survivors copied 20/20 on the host
+      model, the pre-registered rule (ASCII-only, then shorter) picked this one
+      (`internal/bench/reports/egress-placeholders-fidelity-2026-10-15.md`; no second
+      provider measured). `npx vitest run src/scripts/_lib/egress_token.test.ts` -> 0;
+      the forgery, foreign-key, idempotence and one-spelling tests were each seen red
+      under a neutralised implementation. The one-spelling check is a test that scans
+      `src/`, not a registered gate. Replacement is in memory only; the variant
+      suffix is 3.2's.
 - [ ] **3.2 Two spellings of one entity share number and fingerprint and carry
       a variant suffix**, so a restore reproduces each spelling byte for byte.
       verify: a spaced and a compact IBAN share a number, differ in suffix, and both restore to their original bytes.

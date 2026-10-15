@@ -14,8 +14,9 @@ toward an external model provider. Two owners build against this contract:
 itself) and `road-to-placeholders-on-the-wire` (channels a host writes). Neither
 re-defines a term below.
 
-**Stability: experimental.** The rule table and the token recogniser exist; the
-replacement path, the senders' final check and every host carrier do not. A
+**Stability: experimental.** The rule table, the token grammar and an in-memory
+replacement exist; identifier rules, the senders' final check and every host
+carrier do not. A
 section below that names an open decision is not a promise of its outcome.
 
 ## What this is not
@@ -75,10 +76,16 @@ A token stands for one value inside one **issuing scope**. It carries four parts
   (a token never matches a detector rule). One recogniser parses the grammar;
   the grammar's spelling is one constant, and no second spelling exists under
   `src/`.
-- **Spelling.** Chosen by the model-fidelity bar pre-registered in
-  `internal/bench/egress-placeholders-PREREG.md` among spellings that survive an
-  unquoted shell word, YAML, JSON and an anchored regex. The bracket form
-  `[TYPE_n]` is excluded on that survival test.
+- **Spelling: `__TYPE_n_fp__`** — e.g. `__IBAN_1_495cff__`: type upper-case
+  (2–16 characters), number from 1, fingerprint six lower-case hex digits. Chosen
+  by the model-fidelity bar pre-registered in
+  `internal/bench/egress-placeholders-PREREG.md` (endpoint d) among spellings that
+  survive an unquoted shell word, YAML, JSON and an anchored regex; reading in
+  `internal/bench/reports/egress-placeholders-fidelity-2026-10-15.md`. The
+  bracket form `[TYPE_n]` is excluded on that survival test. The variant suffix
+  is not yet part of the spelling; adding it is a change to this section. A
+  surface that renders Markdown must escape a token, which renders as bold
+  otherwise. Constant and recogniser: `src/scripts/_lib/egress_token.ts`.
 
 ## The four published states
 
