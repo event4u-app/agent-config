@@ -41,6 +41,31 @@ more sensitive class wins (`credential` over `identifier`), then the span a
 validator confirmed, then the longer span. Only the rule table
 (`src/scripts/_lib/egress_rules.ts`) defines a pattern for either class.
 
+## Detection span and replacement span
+
+A rule's **detection span** is what the commit-time scanner reports: enough
+bytes to say a secret is there. Its **replacement span** is every byte that
+must not leave. They are declared separately, per rule, in the table's
+`replacement` field:
+
+- `'detection'` — the detection span is the whole secret (keys, tokens, JWTs,
+  the connection URI's scheme-to-`@` authority, an assigned value);
+- a `through` function — the secret extends past the detection span and the
+  function proves where it ends. `pem-private-key` detects on the header and
+  replaces through the matching `-----END … PRIVATE KEY-----`.
+
+**A rule that cannot prove its replacement span fails closed.** When `through`
+returns no end — a private-key header with no matching end marker, or another
+header first — the replacer refuses the whole text (`EgressRefusedError`,
+naming the rule and carrying no byte of the text). It never replaces part of a
+secret and lets the rest leave. Overlapping replacement spans merge, and the
+merged span takes the more sensitive class.
+
+An end-to-end suite plants a credential for every rule — a multi-line key, a
+JWT glued to a word, a connection URI with a long scheme, values thousands of
+characters long — runs the full replacement path, and asserts that no planted
+sensitive byte sequence survives.
+
 ## Refuse or replace (D4)
 
 **Refuse where content has not yet moved; replace where it has.** A surface that

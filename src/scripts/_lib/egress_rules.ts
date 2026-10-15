@@ -19,12 +19,24 @@ export interface EgressRule {
     readonly pattern: RegExp;
     /** Why the pattern runs in linear time on any input; required, reviewed with the pattern. */
     readonly linearity: string;
+    /**
+     * Which bytes a replacement must remove. `'detection'`: the detection span is
+     * the whole secret. A `through` function returns the end of the secret for a
+     * detection span, or null when that end cannot be proven; the replacer then
+     * refuses the whole text rather than replace part of it.
+     */
+    readonly replacement: 'detection' | { readonly through: (text: string, span: SpanBounds) => number | null };
     /** Capture group holding the value; the whole match when absent. A rule that sets it MUST carry the d flag. */
     readonly valueGroup?: number;
     readonly validator?: (value: string) => boolean;
     /** The rule fires only when `words` matches within `window` chars of the value. */
     readonly context?: { readonly words: RegExp; readonly window: number };
     readonly exclusions?: readonly RegExp[];
+}
+
+export interface SpanBounds {
+    readonly start: number;
+    readonly end: number;
 }
 
 /** A detected value: offsets into the scanned text, never the value itself. */
@@ -69,6 +81,19 @@ export function looksLikeSecretValue(value: string): boolean {
     return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
 }
 
+// The nearest key marker after the header decides: the matching END ends the
+// block; another BEGIN first, or no marker at all, means the extent is unproven.
+// One sticky scan from the header to the nearest marker keeps this linear even
+// over many headers.
+const KEY_MARKER = /-----(BEGIN|END) [A-Z ]*PRIVATE KEY-----/g;
+
+export function pemBlockEnd(text: string, span: SpanBounds): number | null {
+    KEY_MARKER.lastIndex = span.end;
+    const m = KEY_MARKER.exec(text);
+    if (m === null || m[1] !== 'END') return null;
+    return m.index + m[0].length;
+}
+
 const PREFIX_RUN =
     'Starts only where the literal prefix occurs; the single class after it either reaches its minimum and consumes the whole run (the global scan resumes past it) or fails within the minimum, so each character is read a bounded number of times.';
 const FIXED_RUN =
@@ -83,6 +108,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'anthropic-api-key',
         type: 'APIKEY',
         class: 'credential',
+        replacement: 'detection',
         kind: 'anthropic-api-key',
         pattern: /sk-ant-[A-Za-z0-9_-]{20,}/g,
         linearity: PREFIX_RUN,
@@ -91,23 +117,40 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'anthropic-project-key',
         type: 'APIKEY',
         class: 'credential',
+        replacement: 'detection',
         kind: 'anthropic-api-key',
         pattern: /sk-proj-[A-Za-z0-9_-]{20,}/g,
         linearity: PREFIX_RUN,
     },
-    { rule: 'aws-access-key', type: 'APIKEY', class: 'credential', pattern: /AKIA[0-9A-Z]{16}/g, linearity: FIXED_RUN },
+    {
+        rule: 'aws-access-key',
+        type: 'APIKEY',
+        class: 'credential',
+        replacement: 'detection',
+        pattern: /AKIA[0-9A-Z]{16}/g,
+        linearity: FIXED_RUN,
+    },
     {
         rule: 'google-api-key',
         type: 'APIKEY',
         class: 'credential',
+        replacement: 'detection',
         pattern: /AIza[0-9A-Za-z_-]{35}/g,
         linearity: FIXED_RUN,
     },
-    { rule: 'github-pat', type: 'TOKEN', class: 'credential', pattern: /ghp_[0-9A-Za-z]{36}/g, linearity: FIXED_RUN },
+    {
+        rule: 'github-pat',
+        type: 'TOKEN',
+        class: 'credential',
+        replacement: 'detection',
+        pattern: /ghp_[0-9A-Za-z]{36}/g,
+        linearity: FIXED_RUN,
+    },
     {
         rule: 'github-fine-grained-pat',
         type: 'TOKEN',
         class: 'credential',
+        replacement: 'detection',
         kind: 'github-pat',
         pattern: /github_pat_[0-9A-Za-z_]{22,}/g,
         linearity: PREFIX_RUN,
@@ -116,6 +159,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'jwt',
         type: 'TOKEN',
         class: 'credential',
+        replacement: 'detection',
         pattern:
             /(?<![A-Za-z0-9_-])(?=((?:(?!eyJ)[A-Za-z0-9_-])*))\1(eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})/dg,
         valueGroup: 2,
@@ -126,6 +170,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'stripe-secret-key',
         type: 'APIKEY',
         class: 'credential',
+        replacement: 'detection',
         pattern: /sk_(?:live|test)_[0-9A-Za-z]{16,}/g,
         linearity: PREFIX_RUN,
     },
@@ -133,6 +178,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'slack-token',
         type: 'TOKEN',
         class: 'credential',
+        replacement: 'detection',
         pattern: /xox[baprs]-[0-9A-Za-z-]{10,}/g,
         linearity: PREFIX_RUN,
     },
@@ -140,7 +186,9 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'pem-private-key',
         type: 'PRIVATEKEY',
         class: 'credential',
+
         pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
+        replacement: { through: pemBlockEnd },
         linearity:
             'Starts only at the literal header; the label class excludes the dash, so label runs of different headers are disjoint, and backtracking over one run tries the fixed 16-character suffix at each position: linear with a constant factor of 16.',
     },
@@ -148,6 +196,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'db-connection-uri',
         type: 'DBURI',
         class: 'credential',
+        replacement: 'detection',
         pattern: /(?<![a-z0-9+.-])(?=((?:(?!\b[a-z])[a-z0-9+.-])*))\1(\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:[^\s:/@]+@)/dg,
         valueGroup: 2,
         linearity:
@@ -157,6 +206,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         rule: 'generic-assignment',
         type: 'SECRET',
         class: 'credential',
+        replacement: 'detection',
         pattern:
             /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
         valueGroup: 1,

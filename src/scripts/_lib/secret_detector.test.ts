@@ -126,6 +126,7 @@ describe('the scanner applies every field of a table row', () => {
         context: { words: /\bpin\b/i, window: 12 },
         exclusions: [/^000000$/],
         linearity: 'Fixed six-digit run between word boundaries.',
+        replacement: 'detection',
     };
 
     it('reports a value with its context word nearby', () => {

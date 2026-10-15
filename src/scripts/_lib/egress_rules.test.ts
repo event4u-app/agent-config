@@ -167,6 +167,7 @@ describe('context words, validators and exclusions', () => {
         validator: (v) => v.endsWith('0'),
         exclusions: [/^1234560$/],
         linearity: 'Bounded digit run between word boundaries; each attempt reads at most ten characters.',
+        replacement: 'detection',
     };
 
     it('fires only with a context word inside the window', () => {
