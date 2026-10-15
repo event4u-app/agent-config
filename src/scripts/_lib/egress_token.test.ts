@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { detect } from './egress_rules.js';
+import { detect, findSpans } from './egress_rules.js';
 import { formatToken, parseTokens, replaceValues, TOKEN_FP_LENGTH, TOKEN_PATTERN, TokenScope } from './egress_token.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -52,13 +52,18 @@ describe('grammar', () => {
         expect(parseTokens(good.replace('EMAIL', 'email'))).toHaveLength(0);
     });
 
-    it('no detector rule matches a token, alone or after a keyword', () => {
+    it('no detector rule matches a standalone token', () => {
         for (const type of ['APIKEY', 'SECRET', 'TOKEN', 'EMAIL', 'IBAN', 'DBURI']) {
-            const tok = formatToken({ type, number: 12, fingerprint: 'f00d42' });
-            expect(detect(tok)).toEqual([]);
-            const line = `api_key = "${tok}"`;
-            expect(replaceValues(line, new TokenScope())).toBe(line);
+            expect(detect(formatToken({ type, number: 12, fingerprint: 'f00d42' }))).toEqual([]);
         }
+    });
+
+    it('generic-assignment can match a token after a keyword (fingerprint-dependent entropy)', () => {
+        const tok = formatToken({ type: 'SECRET', number: 1, fingerprint: 'a9c3e7' });
+        const line = `api_key = "${tok}"`;
+        const spans = findSpans(line).filter((s) => s.rule === 'generic-assignment');
+        expect(spans).toHaveLength(1);
+        expect(line.slice(spans[0]?.start, spans[0]?.end) === tok).toBe(true);
     });
 });
 
@@ -119,6 +124,39 @@ describe('TokenScope', () => {
 });
 
 describe('replaceValues', () => {
+    it('leaves a token this scope minted alone after a keyword', () => {
+        const scope = new TokenScope();
+        const once = replaceValues(`api_key = "${mixed(24)}"`, scope);
+        expect(parseTokens(once)).toHaveLength(1);
+        expect(replaceValues(once, scope)).toBe(once);
+    });
+
+    it('treats a token this scope did not mint as data and replaces it', () => {
+        const line = `api_key = "${formatToken({ type: 'SECRET', number: 1, fingerprint: 'a9c3e7' })}"`;
+        expect(replaceValues(line, new TokenScope())).not.toBe(line);
+    });
+
+    // A token-shaped substring is attacker-controllable: planted inside a real
+    // credential it must not shield the credential from replacement.
+    const FORGED = formatToken({ type: 'APIKEY', number: 1, fingerprint: '000000' });
+    const EMBEDDED: Record<string, string> = {
+        'anthropic-api-key': `sk-ant-${mixed(20)}${FORGED}${mixed(20)}`,
+        'anthropic-project-key': `sk-proj-${mixed(20)}${FORGED}${mixed(20)}`,
+        'github-fine-grained-pat': `github_pat_${mixed(22)}${FORGED}${mixed(10)}`,
+        jwt: `eyJ${mixed(12)}${FORGED}.${mixed(12)}.${mixed(12)}`,
+        'generic-assignment': `${mixed(12)}${FORGED}${mixed(12)}`,
+        'db-connection-uri': `postgres://user:${mixed(8)}${FORGED}@db`,
+    };
+    for (const [rule, secret] of Object.entries(EMBEDDED)) {
+        it(`a forged token inside a ${rule} value does not stop its replacement`, () => {
+            const text = rule === 'generic-assignment' ? `password = ${secret}` : `x ${secret} y`;
+            expect(findSpans(text).some((s) => s.rule === rule)).toBe(true);
+            const out = replaceValues(text, new TokenScope());
+            expect(out.includes(secret)).toBe(false);
+            expect(out.includes(FORGED)).toBe(false);
+        });
+    }
+
     it('replaces every detected value with a token of its type', () => {
         const scope = new TokenScope();
         const text = `deploy with ${KEY} today`;

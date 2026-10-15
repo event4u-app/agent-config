@@ -89,6 +89,11 @@ export class TokenScope {
         return formatToken(entry);
     }
 
+    /** True only for a token this scope minted; token syntax alone proves nothing. */
+    owns(token: string): boolean {
+        return this.#byToken.has(token);
+    }
+
     /** The identifier value a token stands for, or null: unknown, forged, foreign or credential. */
     resolve(token: string): string | null {
         return this.#byToken.get(token)?.value ?? null;
@@ -101,11 +106,13 @@ export class TokenScope {
 }
 
 /**
- * Replaces every detected value with its token. Spans that overlap an existing
- * token are left alone, so a second pass returns the same bytes.
+ * Replaces every detected value with its token. A span is left alone only when
+ * it lies inside a token this scope minted, so a second pass returns the same
+ * bytes while a token-shaped substring planted inside a credential, or a token
+ * from another scope, shields nothing.
  */
 export function replaceValues(text: string, scope: TokenScope): string {
-    const tokens = parseTokens(text);
-    const spans = detect(text).filter((s) => !tokens.some((t) => s.start < t.end && t.start < s.end));
+    const owned = parseTokens(text).filter((t) => scope.owns(text.slice(t.start, t.end)));
+    const spans = detect(text).filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
     return replaceSpans(text, spans, (s) => scope.mint(s.type, s.class, text.slice(s.start, s.end)));
 }
