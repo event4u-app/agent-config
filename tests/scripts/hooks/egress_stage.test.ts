@@ -95,6 +95,8 @@ describe("mode resolution", () => {
   });
 
   it("a layer that exists but cannot be read is protect, not off; a missing one is skipped", () => {
+    // The file only anchors the settings cascade to tmp; the injected reader,
+    // not filesystem state, decides what each read returns.
     fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), "screenshots: {}\n");
     const failing = (code: string) => (p: string): string => {
       if (p.endsWith(".agent-settings.yml") && !p.includes(`${path.sep}agents${path.sep}`)) {
