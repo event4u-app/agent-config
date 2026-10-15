@@ -51,6 +51,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import * as path from 'node:path';
 
 /**
  * The largest default deadline that fits inside one foreground `Bash` call.
@@ -565,6 +566,8 @@ export function main(argv: readonly string[]): number {
     }
 }
 
-if (process.argv[1] !== undefined && process.argv[1].endsWith('ci_settle.ts')) {
+// Basename, not a suffix: `_cli/cmd_ci_settle.ts` also ends in `ci_settle.ts`,
+// and importing this module from it would otherwise run the wait twice.
+if (process.argv[1] !== undefined && path.basename(process.argv[1]) === 'ci_settle.ts') {
     process.exitCode = main(process.argv.slice(2));
 }

@@ -94,6 +94,7 @@ const TOOL_CAUSE: Readonly<Record<string, BlockingCause>> = {
  */
 const SHELL_RULES: ReadonlyArray<readonly [RegExp, BlockingCause]> = [
     [/^(\S*\/)?scripts-run \S*ci_settle\b/, 'ci-wait'],
+    [/^(npm exec (--\S+ )*-- |npx (--\S+ )*)?(\S*\/)?agent-config ci:settle\b/, 'ci-wait'],
     [/^gh (run watch|pr checks)\b/, 'ci-wait'],
     [/^(sleep|until|while|watch)\b/, 'sleep-poll'],
     [/^((npx |\S*node_modules\/\.bin\/)?(vitest|jest|pytest|phpunit)\b|npm (run )?test\b|task (ci|test)\b)/, 'test'],

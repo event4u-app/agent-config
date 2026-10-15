@@ -52,8 +52,8 @@
  * hook — and NOT what reached the model. The two differ by tool: for Edit and
  * Write the hook envelope carries the whole original file while the model
  * receives a short confirmation (measured over 12 local transcripts: 19.5x;
- * Bash 1.44x; Read within 0.1 %). The model-visible figure is a separate
- * metric, `tool-model-visible-bytes`, read from transcripts. `raw_bytes` is
+ * Bash 1.44x; Read within 0.1 %). The payload the model received is a separate
+ * metric, `tool-result-payload-bytes`, read from transcripts. `raw_bytes` is
  * the hook envelope the host handed the dispatcher; `delivered_bytes` is the
  * hook envelope after any rewrite a concern could apply on its way back.
  * Today they are EQUAL BY CONSTRUCTION, and the construction is
@@ -207,7 +207,7 @@ export interface CensusLine {
     raw_bytes: number | null;
     /**
      * UTF-8 bytes of the hook envelope after any rewrite — NOT what reached
-     * the model (see the header; that figure is `tool-model-visible-bytes`).
+     * the model (see the header; that figure is `tool-result-payload-bytes`).
      *
      * Equal to {@link CensusLine.raw_bytes} by construction today — nothing in
      * this tree rewrites a tool result. It is recorded anyway so that a later

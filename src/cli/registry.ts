@@ -56,6 +56,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'packs', disposition: 'native', synopsis: 'List packs from the discovery manifest (ls subcommand).' },
     { name: 'packs:active', disposition: 'delegate', synopsis: 'Which packs are active here, from which file — names the degraded zero-pack case.' },
     { name: 'brand:status', disposition: 'delegate', synopsis: 'Whether a consumer brand tokens file is present, where, and dot-prefixed near-misses.' },
+    { name: 'ci:settle', disposition: 'delegate', synopsis: "Wait for a PR's checks to settle; the last output line is the verdict." },
     { name: 'commands', disposition: 'native', synopsis: 'List/explain the command surface from the discovery manifest (ls / explain subcommands); ls --candidates reports surface-reduction signals.' },
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },
     { name: 'explain', disposition: 'delegate', synopsis: 'Read-only decision-chain trace (config | rule <name> | route "<text>") or command explanation.' },

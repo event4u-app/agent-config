@@ -153,7 +153,8 @@ metrics:
   # `tool_response` a post_tool_use hook receives — not what reached the model.
   # For Edit and Write the hook envelope carries the whole original file: over 12
   # local transcripts it was 19.5x the model-visible bytes (Bash 1.44x, Read
-  # within 0.1 %). What reached the model is `tool-model-visible-bytes` below.
+  # within 0.1 %). The payload that reached the model is `tool-result-payload-bytes`
+  # below.
   - id: tool-raw-bytes
     unit: bytes
     basis: measured
@@ -180,7 +181,7 @@ metrics:
       the same census reader, comparing it against `tool-raw-bytes` on the same
       line. Equal by construction today, because nothing in this tree rewrites
       a tool result on its way back to the host. Both count the hook envelope,
-      not what reached the model — that is `tool-model-visible-bytes`.
+      not what reached the model — its payload is `tool-result-payload-bytes`.
     decision: >-
       whether a result-rewriting mechanism, if one ever lands, reduced anything.
       A non-zero gap between the two columns is the reduction; no gap is no
@@ -190,10 +191,16 @@ metrics:
       and can only assert an improvement. The two columns exist now precisely
       so that claim is a measured delta later rather than a story.
 
-  - id: tool-model-visible-bytes
+  - id: tool-result-payload-bytes
     unit: bytes
     basis: measured
-    producer: src/scripts/_lib/cc_transcript.ts (`scanToolResults`, the `tool_result` block per tool class, joined to the `tool_use` name by id)
+    producer: >-
+      src/scripts/_lib/cc_transcript.ts (`scanToolResults`, per tool class,
+      joined to the `tool_use` name by id). Counts the PAYLOAD of each
+      `tool_result` block — its text strings and base64 image data — not the
+      serialised block: `type`, `tool_use_id`, `is_error` and JSON punctuation
+      are excluded, and a content member of any other kind is counted in
+      `unsupported_members`, never as bytes.
     consumer: >-
       the dated distribution under `agents/evidence/analysis/` that
       `road-to-tool-results-that-leave-a-handle` and the placeholders roadmap
@@ -201,8 +208,10 @@ metrics:
       checking which bytes it counted.
     decision: >-
       which tool classes are worth reducing at all. A class whose hook envelope
-      is large and whose model-visible bytes are small (Edit, Write) has nothing
-      to reduce on the model side.
+      is large and whose payload is small (Edit, Write) has little to reduce on
+      the model side; the block structure the payload excludes is a per-result
+      overhead that does not grow with the payload, so it does not reorder the
+      classes.
     absent: >-
       the only tool-result byte figure is the hook envelope, which overstates
       Edit and Write by an order of magnitude, and a reduction plan aims at

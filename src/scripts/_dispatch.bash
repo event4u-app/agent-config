@@ -80,6 +80,8 @@ TS-shell native (run via the installed `agent-config` binary):
   brand:status               Is a consumer brand layer present, and at which of the
                              four canonical tokens.json paths. Flags a dot-prefixed
                              .tokens.json, which nothing reads.
+  ci:settle <pr>             Wait for a PR's checks to settle; the last line is the
+                             verdict (exit 0 green · 1 red · 2 no verdict).
   packs:active               Which packs are active HERE, and from which file.
                              Names the degraded case (settings file without a
                              profile.id → zero packs) that nothing else reports.
@@ -836,6 +838,12 @@ cmd_mcp_available() {
 
 cmd_brand_status() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_brand_status.ts" "$@"
+}
+
+# `ci:settle <pr>` — the one CI waiter, through the package's own executable so a
+# shipped command never names a node_modules path or fetches a TS runner.
+cmd_ci_settle() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_ci_settle.ts" "$@"
 }
 
 # `--archive`: a completed roadmap is archived here rather than reported as a
@@ -1598,6 +1606,7 @@ main() {
     git:convention)          cmd_git_convention "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
+    ci:settle)               cmd_ci_settle "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
