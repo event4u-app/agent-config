@@ -6,6 +6,13 @@ probe: none
 
 # Stub: a short typed lead makes the language pin follow the PASTE, in both directions
 
+> **Arrivals:** 2 — latest `inbox-2026-10-s` (2026-10-15): a throughput review
+> counts 64 turn-end refusals pinned `en` against German prompts *(local)*;
+> re-probed that day, a short German lead over an English paragraph with no
+> heading still pins `en`, while the same paste under a `## ` heading now pins
+> `de`. `road-to-agent-throughput-recovery` step 4.1 classifies the refusals and
+> promotes this stub if they are its class. Earlier: found in-drain 2026-08-23.
+
 > **Stub — not active work.** Found 2026-08-23 while draining
 > `road-to-council-evidence-integrity`, outside that roadmap's scope. Recorded
 > rather than fixed in that PR because the fix changes a public behavioural
