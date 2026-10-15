@@ -14,9 +14,10 @@ toward an external model provider. Two owners build against this contract:
 itself) and `road-to-placeholders-on-the-wire` (channels a host writes). Neither
 re-defines a term below.
 
-**Stability: experimental.** The rule table, the token grammar and an in-memory
-replacement exist; identifier rules, the senders' final check and every host
-carrier do not. A
+**Stability: experimental.** The rule table, the token grammar, an in-memory
+replacement and the dispatcher's egress stage (local views and counts only)
+exist; identifier rules, the senders' final check and every host rewrite do
+not. A
 section below that names an open decision is not a promise of its outcome.
 
 ## What this is not
@@ -189,12 +190,84 @@ Every other rule states in its `linearity` field why it runs in linear time
 without a bound, and matches a value of any length whole, so a replacement never
 leaves a suffix in plaintext.
 
+## The egress stage and its two views
+
+The dispatcher's egress stage (`src/scripts/hooks/egress_stage.ts`) is the only
+code that may produce a rewrite (ADR-285). It runs once per hook event, before
+any concern, over the prompt (`prompt`), the tool input and the tool result —
+the keys `payload_stub.ts` names as body classes — and builds at most two views
+of one envelope through the payload-shape planner:
+
+- the **execution view** — the envelope as the host sent it. It goes only to
+  the concerns on `EXECUTION_VIEW_GRANTS`, a closed list the dispatcher owns:
+  every concern that decides whether a call may run, each bound to the one
+  script it runs. A manifest entry that borrows a listed name for another script
+  gets the placeholder view. A concern cannot request the grant;
+  `lint_hook_manifest` refuses a `payload_view: execution` declaration off the
+  list, a blocking concern missing from it, a listed concern that is not
+  blocking, and a listed name bound to another script. Until a session table exists there are no tokens to resolve, so the
+  execution view is the received envelope unchanged.
+- the **placeholder view** — every detected value replaced by its token. It goes
+  to every other concern, so a local store written by a recording concern
+  (chat history, journals, ledgers) inherits tokens without a scrubber of its
+  own. A key whose secret has no provable extent is withheld whole (an object
+  carrying `_agent_config_egress_withheld` and the rule id), never partly
+  replaced; any other failure of the stage withholds every body and is
+  recorded as a `stage-error` refusal.
+
+**A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
+from a concern reply (`decision`, `reason`, `additional_context`, `context` and
+the permission verdict) and builds the host emission from those alone, so a
+rewrite field in a reply reaches no host; a test drives a concern that returns
+one through the dispatcher and asserts the emission carries none. The lint rule
+`rewrite-concern-refused` is the authoring-time half and reads source text only.
+
+The token scope is one dispatch: a token in a local store cannot be resolved
+later, which is the intended state until the `identifier-table-at-rest` decision
+says how a scope may outlive a process. Byte lengths in a payload stub are
+measured on the received envelope whichever view the stub is cut from.
+
+**What the placeholder view does not reach.** A concern that opens the host's
+transcript file reads it from disk, raw; an operator-armed raw capture
+(`AGENT_HOOK_CAPTURE_DIR`) writes the received payload before the stage runs;
+and a guard's own refusal text, built from the execution view, is passed on as
+it is. Each is a residue of the view, not a covered surface.
+
 ## Settings
 
 Replacement paths are switched by `egress.placeholders.mode`. The shipped
 default is `off`; whether any class is replaced by default for consumers is an
-owner decision (`default-mode-for-consumers`). `observe` detects and counts only
-and never changes what any surface sees.
+owner decision (`default-mode-for-consumers`). The key is read from the project
+layers of the settings cascade only; a layer that does not contain the word
+`egress` skips the full cascade read. Resolution fails toward protection: an
+absent mode (or a bare YAML `off`) is `off`, a present value that is not one of
+the four is `protect`, and a layer that names `egress` but does not parse, or a
+read that fails, is `protect` — never a silent `off`.
+
+| Mode | Detects and counts | Placeholder view to concerns | Rewrite sent to the host |
+|---|---|---|---|
+| `off` | no | no | no |
+| `observe` | yes | no — every concern sees exactly what it saw without the stage | no |
+| `protect` | yes | yes, to every concern off the grant list | no, until the host rewrite is built |
+| `strict` | yes | as `protect` | no, until the host rewrite is built |
+
+`strict` differs from `protect` only once the host rewrite and the prompt gate
+exist; until then the two behave identically, and that is stated rather than
+implied by the name. `observe` never changes a view.
+
+A thrown kill switch (`AGENT_CONFIG_NO_EGRESS_STAGE`) turns the stage off
+whatever the settings say, and `publishedEgressState` then reports every channel
+`uncovered`, so a stale `replaced` cannot outlive the stage that earned it. A
+mode that replaces nothing reports `uncovered` the same way.
+
+**Counts.** In every mode but `off`, each dispatch that carried a scanned field
+appends one line to `agents/runtime/state/egress-observations.jsonl` (gitignored,
+rotated once past 4 MiB): platform, event, an id-shaped tool name, the mode, the
+fields scanned, and per field the class, type and count, plus the rule id of any
+refusal — nothing derived from a value. The rule table holds credential rules
+only, so every count is a credential count until identifier rules exist.
+`agent-config hooks:replay … --json` reports what the stage would do with a
+fixture under the workspace's mode, in the same shape, without writing.
 
 ## See also
 

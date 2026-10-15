@@ -389,8 +389,11 @@ export function _concern_body_classes(concern: JsonObject): Set<BodyClass> {
 
 /** The per-dispatch shaping plan. Built once, read per concern. */
 export interface PayloadShapePlan {
-  /** The envelope a concern with this keep-set receives. */
-  shapeFor(keep: ReadonlySet<BodyClass>): JsonObject;
+  /**
+   * The envelope a concern with this keep-set receives, built from the
+   * placeholder view when one was planned and `view` asks for it.
+   */
+  shapeFor(keep: ReadonlySet<BodyClass>, view?: "execution" | "placeholder"): JsonObject;
   /** How many payload keys were omitted for that concern. */
   stubsFor(keep: ReadonlySet<BodyClass>): number;
   /** The classes actually SERVED — declared AND present. Sorted. */
@@ -416,10 +419,16 @@ export interface PayloadShapePlan {
  * Extracted from the dispatcher loop rather than inlined there: the decision
  * has four moving parts that are only correct together, and the source-size
  * ratchet was right to object to a dispatcher carrying them.
+ *
+ * `placeholder` is the egress stage's placeholder view of the same envelope.
+ * Presence and byte lengths are always read from the received envelope, so a
+ * stub reports the size the host sent whichever view it was cut from; only
+ * the body that survives differs between the two views.
  */
 export function planPayloadShapes(
   envelope: JsonObject,
   keepSets: Iterable<ReadonlySet<BodyClass>>,
+  placeholder?: JsonObject,
 ): PayloadShapePlan {
   const present = presentBodyClasses(envelope);
   const stubbedSomewhere = new Set<BodyClass>();
@@ -436,12 +445,13 @@ export function planPayloadShapes(
   const cacheKey = (keep: ReadonlySet<BodyClass>): string =>
     [...keep].sort().join(",");
   return {
-    shapeFor(keep) {
-      if (present.size === 0) return envelope;
-      const key = cacheKey(keep);
+    shapeFor(keep, view = "execution") {
+      const base = view === "placeholder" && placeholder !== undefined ? placeholder : envelope;
+      if (present.size === 0) return base;
+      const key = `${base === envelope ? "execution" : "placeholder"}:${cacheKey(keep)}`;
       const hit = shaped.get(key);
       if (hit !== undefined) return hit;
-      const built = stubPayloadBodies(envelope, keep, measured);
+      const built = stubPayloadBodies(base, keep, measured);
       shaped.set(key, built);
       return built;
     },

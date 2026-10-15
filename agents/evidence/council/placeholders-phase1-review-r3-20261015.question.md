@@ -1,0 +1,461 @@
+<!-- evidence-type: analysis -->
+
+<!-- The round-3 prompt given to the council on 2026-10-15 for branch
+     drain/placeholders-phase-1, committed verbatim so the verdict recorded beside
+     it can be checked against what was actually asked. Not edited after the run. -->
+
+# Review branch drain/placeholders-phase-1 — delta since council round 2
+
+Head `a296651f6d56539dffee7f89f47341d0dd5ee337`. Round 2 reviewed commit `0cec5745c` (the round-1 fixes) and both seats asked for changes. This round covers only commit `a296651f6`, shown below with the full current `src/scripts/hooks/egress_stage.ts` for context.
+
+Round-2 findings and what the commit does with each:
+
+1. An existing settings layer that cannot be read (EACCES, EIO, EISDIR) was treated as absent, so the mode could resolve to `off` — only `ENOENT` and `ENOTDIR` now skip a layer; any other read error returns `broken`, which resolves to `protect`. A test puts a directory where the settings file should be (EISDIR) and expects `protect`.
+2. The rewrite regression test could pass if the rewriting fixture never ran — the test now also reads the fixture's dispatcher feedback record and asserts it exited 0 with decision `allow`.
+3. `egressViewFor` coerced a missing name with `String(...)` — it now requires a string name.
+
+Two round-2 suggestions were not taken: explicit tests for object and array mode values (they take the same `includes` branch as the boolean, number and misspelled-string cases already tested), and a mocked `fs.readFileSync` for EACCES (the EISDIR case exercises the same branch without a mock).
+
+For each finding, state whether the delta resolves it. Report any defect in the delta or in the current stage file with file:line, the failure scenario and a severity. State your stance (APPROVE or REQUEST_CHANGES) and the single highest-leverage change.
+
+Omitted: everything rounds 1 and 2 already covered.
+
+## Current src/scripts/hooks/egress_stage.ts
+
+```ts
+/**
+ * The egress stage — the one dispatcher stage that may produce a rewrite
+ * (ADR-285) and the only code that builds the views concerns receive.
+ * Contract, including the per-mode table: docs/contracts/egress-placeholders-v1.md.
+ *
+ * `observe` detects and counts and never changes a view; the placeholder view
+ * exists only from `protect` onward. The execution view is the envelope as the
+ * host sent it, granted by the closed list below and never requested: a
+ * concern's own manifest declaration grants nothing.
+ *
+ * The rule table holds credential rules only, so every count is a credential
+ * count until identifier rules exist.
+ */
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+import { parse as parseYaml } from "yaml";
+
+import { _resolve_cascade_paths, load_agent_settings } from "../_lib/agent_settings.js";
+import { detect, EGRESS_RULES, type EgressClass } from "../_lib/egress_rules.js";
+import { EgressRefusedError, replaceValues, TokenScope } from "../_lib/egress_token.js";
+import { isEnvKillSwitchActive } from "../_lib/env_kill_switch.js";
+import { BODY_KEYS, type JsonObject, type JsonValue } from "./payload_stub.js";
+import { is_replay_mode } from "./state_io.js";
+
+export const EGRESS_MODES = ["off", "observe", "protect", "strict"] as const;
+export type EgressMode = (typeof EGRESS_MODES)[number];
+
+/** Set to anything outside the off-set and the stage does nothing, whatever the settings say. */
+export const EGRESS_STAGE_KILL_SWITCH = "AGENT_CONFIG_NO_EGRESS_STAGE";
+
+/**
+ * The concerns that receive the execution view — every concern that decides
+ * whether a call may run — each bound to the one script it may run. A guard
+ * served the placeholder view would match a token instead of the value it
+ * exists to stop, so `lint_hook_manifest` fails when a blocking concern is
+ * missing here, when a name here is not a blocking concern, and when the
+ * manifest binds a listed name to another script. The binding to the script is
+ * what stops a manifest entry from borrowing a guard's name to read raw values.
+ */
+export const EXECUTION_VIEW_GRANTS: ReadonlyMap<string, string> = new Map([
+  ["block-config-weakening", "src/scripts/hooks/block_config_weakening.ts"],
+  ["block-kernel-rule-writes", "src/scripts/hooks/block_kernel_rule_writes.ts"],
+  ["block-no-verify", "src/scripts/hooks/block_no_verify.ts"],
+  ["block-plumbing-writes", "src/scripts/hooks/block_plumbing_writes.ts"],
+  ["block-speaking-inbox-dir", "src/scripts/hooks/block_speaking_inbox_dir.ts"],
+  ["evidence-independence", "src/scripts/hooks/evidence_independence.ts"],
+  ["one-question-per-ask", "src/scripts/hooks/one_question_per_ask_hook.ts"],
+  ["turn-end-gate", "src/scripts/hooks/turn_end_gate_hook.ts"],
+]);
+
+export type EnvelopeView = "execution" | "placeholder";
+
+/** Execution only for a listed name running its listed script; everything else gets the placeholder view. */
+export function egressViewFor(concern: JsonObject): EnvelopeView {
+  const name = concern["name"];
+  const script = typeof name === "string" ? EXECUTION_VIEW_GRANTS.get(name) : undefined;
+  return script !== undefined && concern["script"] === script ? "execution" : "placeholder";
+}
+
+export type EgressField = "prompt" | "input" | "result";
+
+const FIELD_KEYS: Readonly<Record<EgressField, readonly string[]>> = {
+  prompt: ["prompt", "userPrompt"],
+  input: BODY_KEYS.input,
+  result: BODY_KEYS.result,
+};
+const FIELDS = Object.keys(FIELD_KEYS) as EgressField[];
+
+/** Marks a field the placeholder view could not replace safely; carries the rule id and nothing else. */
+export const WITHHELD_MARKER = "_agent_config_egress_withheld" as const;
+
+export interface EgressCount {
+  readonly field: EgressField;
+  readonly class: EgressClass;
+  readonly type: string;
+  readonly count: number;
+}
+
+export interface EgressRefusal {
+  readonly field: EgressField;
+  readonly rule: string;
+}
+
+export interface EgressStageResult {
+  readonly mode: EgressMode;
+  /** The envelope every concern off the grant list receives; `undefined` means the received envelope. */
+  readonly placeholder: JsonObject | undefined;
+  readonly scanned: readonly EgressField[];
+  readonly counts: readonly EgressCount[];
+  /** Fields whose secret had no provable extent; withheld from the placeholder view. */
+  readonly refused: readonly EgressRefusal[];
+}
+
+function isObject(v: unknown): v is JsonObject {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+/**
+ * An absent mode is `off`, the shipped default. A mode that is present but not
+ * one of the four is `protect`: someone asked for the stage, and guessing the
+ * least protective reading of a typo would serve raw values in their name.
+ */
+export function resolveEgressMode(settings: unknown): EgressMode {
+  if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "off";
+  const egress = isObject(settings) ? settings["egress"] : undefined;
+  const placeholders = isObject(egress) ? egress["placeholders"] : undefined;
+  const mode = isObject(placeholders) ? placeholders["mode"] : undefined;
+  // YAML 1.1 reads a bare `off` as false, which is the user writing `off`.
+  if (mode === undefined || mode === null || mode === false) return "off";
+  return (EGRESS_MODES as readonly unknown[]).includes(mode) ? (mode as EgressMode) : "protect";
+}
+
+/** Any spelling of the key — block, flow or quoted — contains the word. */
+const EGRESS_WORD = /\begress\b/;
+
+/**
+ * Every project settings layer the cascade would read; the user-global layer
+ * cannot carry `egress` (it is not on MERGEABLE_KEYS). When no layer contains
+ * the word at all the shipped default holds, and the full cascade — whose
+ * template parse measured about 25 ms cold — is skipped. A layer that names it
+ * anywhere, even in a comment, pays the full parse. `broken` means a naming
+ * layer does not parse; the cascade would read it as empty and fall to `off`.
+ */
+function egressLayers(workspaceRoot: string): "none" | "named" | "broken" {
+  let named = false;
+  for (const p of _resolve_cascade_paths(workspaceRoot, null)) {
+    let text: string;
+    try {
+      text = fs.readFileSync(p, "utf8");
+    } catch (exc) {
+      // Only a missing layer is skipped; a layer that exists and cannot be read could hold the mode.
+      const code = (exc as NodeJS.ErrnoException).code;
+      if (code === "ENOENT" || code === "ENOTDIR") continue;
+      return "broken";
+    }
+    if (!EGRESS_WORD.test(text)) continue;
+    named = true;
+    try {
+      parseYaml(text, { version: "1.1" });
+    } catch {
+      return "broken";
+    }
+  }
+  return named ? "named" : "none";
+}
+
+/**
+ * A layer that names `egress` but cannot be read or parsed resolves to
+ * `protect`, never `off`: a broken file must not switch configured protection
+ * off in silence. The count record carries the mode, so the fallback is visible.
+ */
+export function readEgressMode(workspaceRoot: string): EgressMode {
+  if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "off";
+  let layers: "none" | "named" | "broken";
+  try {
+    layers = egressLayers(workspaceRoot);
+  } catch {
+    return "protect";
+  }
+  if (layers === "none") return "off";
+  if (layers === "broken") return "protect";
+  try {
+    return resolveEgressMode(load_agent_settings({ cwd: workspaceRoot }));
+  } catch {
+    return "protect";
+  }
+}
+
+function payloadOf(envelope: JsonObject): JsonObject | null {
+  const p = envelope["payload"];
+  return isObject(p) ? p : null;
+}
+
+function presentKeys(payload: JsonObject, field: EgressField): string[] {
+  return FIELD_KEYS[field].filter((k) => payload[k] !== undefined && payload[k] !== null);
+}
+
+function collectStrings(v: JsonValue, out: string[]): void {
+  if (typeof v === "string") out.push(v);
+  else if (Array.isArray(v)) for (const x of v) collectStrings(x, out);
+  else if (isObject(v)) for (const x of Object.values(v)) collectStrings(x, out);
+}
+
+const RULE_BY_ID = new Map(EGRESS_RULES.map((r) => [r.rule, r]));
+
+/** Detection and the extent proof only — nothing is replaced and nothing is kept. */
+export function countEnvelope(envelope: JsonObject): Pick<EgressStageResult, "scanned" | "counts" | "refused"> {
+  const payload = payloadOf(envelope);
+  const scanned: EgressField[] = [];
+  const counts = new Map<string, EgressCount>();
+  const refused: EgressRefusal[] = [];
+  if (payload === null) return { scanned, counts: [], refused };
+  for (const field of FIELDS) {
+    const keys = presentKeys(payload, field);
+    if (keys.length === 0) continue;
+    scanned.push(field);
+    const texts: string[] = [];
+    for (const k of keys) collectStrings(payload[k] as JsonValue, texts);
+    for (const text of texts) {
+      for (const span of detect(text)) {
+        const policy = RULE_BY_ID.get(span.rule)?.replacement;
+        if (policy !== undefined && policy !== "detection") {
+          const end = policy.through(text, span);
+          if (end === null || end < span.end) {
+            refused.push({ field, rule: span.rule });
+            continue;
+          }
+        }
+        const key = `${field}\u0000${span.class}\u0000${span.type}`;
+        const prev = counts.get(key);
+        counts.set(key, { field, class: span.class, type: span.type, count: (prev?.count ?? 0) + 1 });
+      }
+    }
+  }
+  return { scanned, counts: [...counts.values()], refused };
+}
+
+function replaceDeep(v: JsonValue, scope: TokenScope): JsonValue {
+  if (typeof v === "string") return replaceValues(v, scope);
+  if (Array.isArray(v)) return v.map((x) => replaceDeep(x, scope));
+  if (isObject(v)) {
+    const out: JsonObject = {};
+    for (const [k, x] of Object.entries(v)) out[k] = replaceDeep(x, scope);
+    return out;
+  }
+  return v;
+}
+
+/**
+ * The placeholder view: every listed value in the prompt, the tool input and
+ * the tool result replaced by its token, under one scope that lives as long as
+ * this dispatch. A key whose value cannot be replaced safely is withheld whole,
+ * never partly replaced. The received envelope is not modified.
+ */
+export function buildPlaceholderEnvelope(envelope: JsonObject, scope: TokenScope = new TokenScope()): JsonObject {
+  const payload = payloadOf(envelope);
+  if (payload === null) return envelope;
+  const next: JsonObject = { ...payload };
+  for (const field of FIELDS) {
+    for (const k of presentKeys(payload, field)) {
+      try {
+        next[k] = replaceDeep(payload[k] as JsonValue, scope);
+      } catch (exc) {
+        // Anything but a refusal is a defect, and withholds every body upstream.
+        if (!(exc instanceof EgressRefusedError)) throw exc;
+        next[k] = { [WITHHELD_MARKER]: true, rule: exc.rule };
+      }
+    }
+  }
+  return { ...envelope, payload: next };
+}
+
+/** Bounds the append-only record; past it the file rotates once to `.1`. */
+export const OBSERVATION_FILE_MAX_BYTES = 4 * 1024 * 1024;
+export const OBSERVATION_FILE = path.join("agents", "runtime", "state", "egress-observations.jsonl");
+
+const TOOL_NAME = /^[A-Za-z0-9_.:-]{1,128}$/;
+
+/**
+ * One fixed-field line per scanned dispatch: type and count per field, the rule
+ * id of a refusal, and nothing derived from a value — no value, fragment,
+ * length or digest. The tool name is kept only when it is id-shaped.
+ */
+export interface EgressObservationLine {
+  ts: string;
+  platform: string;
+  event: string;
+  tool: string | null;
+  mode: EgressMode;
+  scanned: EgressField[];
+  counts: EgressCount[];
+  refused: EgressRefusal[];
+}
+
+export function observationLine(envelope: JsonObject, result: EgressStageResult): EgressObservationLine {
+  const tool = payloadOf(envelope)?.["tool_name"];
+  return {
+    ts: new Date().toISOString(),
+    platform: String(envelope["platform"] ?? ""),
+    event: String(envelope["event"] ?? ""),
+    tool: typeof tool === "string" && TOOL_NAME.test(tool) ? tool : null,
+    mode: result.mode,
+    scanned: [...result.scanned],
+    counts: result.counts.map((c) => ({ field: c.field, class: c.class, type: c.type, count: c.count })),
+    refused: result.refused.map((r) => ({ field: r.field, rule: r.rule })),
+  };
+}
+
+export function recordObservation(workspaceRoot: string, line: EgressObservationLine): void {
+  if (is_replay_mode()) return;
+  try {
+    const file = path.join(workspaceRoot, OBSERVATION_FILE);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    try {
+      if (fs.statSync(file).size > OBSERVATION_FILE_MAX_BYTES) fs.renameSync(file, `${file}.1`);
+    } catch {
+      // no file yet
+    }
+    fs.appendFileSync(file, `${JSON.stringify(line)}\n`, "utf8");
+  } catch {
+    // observability never breaks the hook
+  }
+}
+
+/**
+ * Runs before the concern loop. Reads the mode only when the event carries a
+ * prompt or a tool body, so a body-less event pays one property read. Never
+ * throws: an unexpected failure in `protect` or `strict` withholds every body
+ * from the placeholder view rather than serving it raw.
+ */
+export function runEgressStage(
+  envelope: JsonObject,
+  readMode: (workspaceRoot: string) => EgressMode = readEgressMode,
+): EgressStageResult {
+  const none: EgressStageResult = { mode: "off", placeholder: undefined, scanned: [], counts: [], refused: [] };
+  const payload = payloadOf(envelope);
+  if (payload === null || !FIELDS.some((f) => presentKeys(payload, f).length > 0)) return none;
+  const workspaceRoot = String(envelope["workspace_root"] || process.cwd());
+  let mode: EgressMode;
+  try {
+    mode = readMode(workspaceRoot);
+  } catch {
+    mode = "protect";
+  }
+  if (mode === "off") return none;
+  let result: EgressStageResult;
+  try {
+    const counted = countEnvelope(envelope);
+    const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope);
+    result = { mode, placeholder, ...counted };
+  } catch {
+    const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);
+    const refused = scanned.map((field) => ({ field, rule: "stage-error" }));
+    if (mode === "observe") {
+      result = { ...none, mode, scanned, refused };
+    } else {
+      const withheld: JsonObject = { ...payload };
+      for (const f of scanned) {
+        for (const k of presentKeys(payload, f)) withheld[k] = { [WITHHELD_MARKER]: true, rule: "stage-error" };
+      }
+      result = { ...none, mode, scanned, refused, placeholder: { ...envelope, payload: withheld } };
+    }
+  }
+  recordObservation(workspaceRoot, observationLine(envelope, result));
+  return result;
+}
+
+export type PublishedState = "asserted" | "replaced" | "gated" | "uncovered";
+
+/**
+ * The state a channel may be published in. A thrown kill switch, or a mode that
+ * replaces nothing, makes every channel `uncovered` whatever evidence was
+ * committed for it, so a stale `replaced` can never outlive the stage.
+ */
+export function publishedEgressState(claimed: PublishedState, mode: EgressMode): PublishedState {
+  if (isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return "uncovered";
+  if (mode !== "protect" && mode !== "strict") return "uncovered";
+  return claimed;
+}
+```
+
+## The delta
+
+```diff
+diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
+index 02894e812..8c4028c27 100644
+--- a/src/config/hook-latency-budget.json
++++ b/src/config/hook-latency-budget.json
+@@ -59,7 +59,7 @@
+         "why_not_a_retry_or_best_of_n": "A second bench on the same job would not help: the spread is between runner classes (p50 111-148 ms), not transient noise within one machine, so a slow runner measures slow twice. Retry logic is the escalation if 175 flaps, not the first move.",
+         "revisit_if": "The p50 — not the p95 — of a green run rises above 160 ms. Read the MEDIAN because that is the runner-speed indicator: the observed p50 range is 111-148 ms, so a p50 past 160 is outside every machine this window saw and is the cost itself growing. It then belongs to the owning roadmap (road-to-per-turn-hook-economy, D-2: the dispatcher's own payload read+parse, once per event) rather than to a third cap raise. Raising this number again without a measured distribution beside it is the config-bending this block exists to make visible.",
+         "_revisit_if_FIRED_2026_09_30": "THE TRIGGER ABOVE HAS FIRED, and this row records it rather than spending it. Measured on PR #2104 (road-to-a-stop-that-holds), three consecutive CI runs of the gated `via cli` leg: pre_tool_use p50 172, 175 and 176 ms against a revisit-if threshold of 160 and an observed historical p50 range of 111-148. The p95 readings were 179, 176 and 176 against the 175 cap. THE CAP IS NOT RAISED — this block says raising it again without a measured distribution beside it is the config-bending the block exists to make visible, and that verdict is unchanged. WHAT THIS BRANCH CONTRIBUTED, measured rather than guessed: `npm run build:hooks` at this branch produces 1,443,442 bytes against 1,424,332 at its merge base, i.e. +19,110 bytes / +1.34%. Every concern shares one bundle, so that cost is paid by EVERY slot including pre_tool_use, which this branch's diff otherwise does not touch (none of its six changed files is bound on that slot). At ~149 ms of non-spawn work the proportional share is ~2 ms — real, and far short of the 24-64 ms by which the p50 exceeds its historical range, so the dominant term is the runner and the branch is a contributor rather than the cause. `--legal-comments=none` was measured as a mitigation and recovers 635 bytes: the growth is code, not prose, so it cannot be given back without removing the feature. ROUTING, per this block's own revisit-if: this belongs to road-to-per-turn-hook-economy D-2 (the dispatcher's own payload read+parse, once per event) and to the maintainer, not to a third cap raise. Recorded here because a budget pre-registered so it could not be spent silently must not be spent silently.",
+-        "_egress_stage_bundle_delta_2026_10_15": "road-to-placeholders-on-the-wire Phase 1 states its delta here, as the fired trigger above requires of every phase that touches the dispatcher. BUNDLE: check_hook_bundle_composition measured 1,529,222 B at the merge base and 1,543,851 B with the egress stage, i.e. +14,629 B / +0.96 %, almost all of it the egress rule table and token grammar the stage imports; 292 modules. RUNTIME, measured in-process on darwin (not on a CI runner): with the shipped default `off` the stage costs one regex over the project settings layers that exist, 0.25 ms cold and 0.09 ms warm, because the full settings cascade (about 25 ms cold, dominated by the template parse) is skipped unless a project layer opens a top-level `egress:` key; with `observe` or `protect`, one detection pass of about 2.3 ms on a 52 KB tool result and 25-35 ms on 2 MB. No cap is changed. Proportional share of the bundle growth at ~149 ms of non-spawn work is about 1 ms on every slot.",
++        "_egress_stage_bundle_delta_2026_10_15": "road-to-placeholders-on-the-wire Phase 1 states its delta here, as the fired trigger above requires of every phase that touches the dispatcher. BUNDLE: check_hook_bundle_composition measured 1,529,222 B at the merge base and 1,544,003 B with the egress stage, i.e. +14,781 B / +0.97 %, almost all of it the egress rule table and token grammar the stage imports; 292 modules. RUNTIME, measured in-process on darwin (not on a CI runner): with the shipped default `off` the stage costs one regex over the project settings layers that exist, 0.25 ms cold and 0.09 ms warm, because the full settings cascade (about 25 ms cold, dominated by the template parse) is skipped unless a project layer opens a top-level `egress:` key; with `observe` or `protect`, one detection pass of about 2.3 ms on a 52 KB tool result and 25-35 ms on 2 MB. No cap is changed. Proportional share of the bundle growth at ~149 ms of non-spawn work is about 1 ms on every slot.",
+         "_revisit_if_correction":"First written as 'a green run measures p95 above 160 ms', which round 2 finding 9 refuted from inside this same block: 160 sits 15 ms BELOW the new cap and 3 ms above the observed max, so the very first green 161 ms run would pass the gate and simultaneously trip a trigger declaring the variance to be over. A trigger has to live outside the spread its own cap absorbs, and on a p95 with 42 ms of runner spread no such point exists below 175. The p50 has a spread of 37 ms and a ceiling of 148, so it does."
+     },
+     "per_turn_composite": {
+diff --git a/src/scripts/hooks/egress_stage.ts b/src/scripts/hooks/egress_stage.ts
+index dca631dde..da14701b9 100644
+--- a/src/scripts/hooks/egress_stage.ts
++++ b/src/scripts/hooks/egress_stage.ts
+@@ -53,7 +53,8 @@ export type EnvelopeView = "execution" | "placeholder";
+ 
+ /** Execution only for a listed name running its listed script; everything else gets the placeholder view. */
+ export function egressViewFor(concern: JsonObject): EnvelopeView {
+-  const script = EXECUTION_VIEW_GRANTS.get(String(concern["name"]));
++  const name = concern["name"];
++  const script = typeof name === "string" ? EXECUTION_VIEW_GRANTS.get(name) : undefined;
+   return script !== undefined && concern["script"] === script ? "execution" : "placeholder";
+ }
+ 
+@@ -127,8 +128,11 @@ function egressLayers(workspaceRoot: string): "none" | "named" | "broken" {
+     let text: string;
+     try {
+       text = fs.readFileSync(p, "utf8");
+-    } catch {
+-      continue; // absent layer
++    } catch (exc) {
++      // Only a missing layer is skipped; a layer that exists and cannot be read could hold the mode.
++      const code = (exc as NodeJS.ErrnoException).code;
++      if (code === "ENOENT" || code === "ENOTDIR") continue;
++      return "broken";
+     }
+     if (!EGRESS_WORD.test(text)) continue;
+     named = true;
+diff --git a/tests/scripts/hooks/egress_stage.test.ts b/tests/scripts/hooks/egress_stage.test.ts
+index 334d3b1b2..a48b9eb41 100644
+--- a/tests/scripts/hooks/egress_stage.test.ts
++++ b/tests/scripts/hooks/egress_stage.test.ts
+@@ -94,6 +94,12 @@ describe("mode resolution", () => {
+     expect(readEgressMode(tmp)).toBe("protect");
+   });
+ 
++  it("a layer that exists but cannot be read is protect, not off", () => {
++    // A directory where the file should be reads as EISDIR on every platform.
++    fs.mkdirSync(path.join(tmp, ".agent-settings.yml"));
++    expect(readEgressMode(tmp)).toBe("protect");
++  });
++
+   it("reads the project layer, and a comment naming egress is not a key", () => {
+     const file = path.join(tmp, ".agent-settings.yml");
+     fs.writeFileSync(file, "# a shipped screenshot is a published egress\nscreenshots: {}\n");
+@@ -351,5 +357,11 @@ describe("end to end through the dispatcher", () => {
+       tool_input: { command: "ls" },
+     });
+     expect(stdout.includes("updatedInput")).toBe(false);
++    // The rewriting fixture did run and reply: without this the assertion above
++    // would also pass for a fixture that never started.
++    const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-rewrite");
++    const entry = JSON.parse(fs.readFileSync(path.join(dir, "rewriter.json"), "utf8")) as Record<string, unknown>;
++    expect(entry["raw_exit_code"]).toBe(0);
++    expect(entry["decision"]).toBe("allow");
+   });
+ });
+```

@@ -249,8 +249,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 100 |
-| **Total** | **112** |
+| C — guarded | 101 |
+| **Total** | **113** |
+
+It rose to 113 on 2026-10-15 when `road-to-placeholders-on-the-wire` step 1.4 added `egress.placeholders.mode` — one C, `policy`: it decides whether conversation content is replaced before it reaches local stores, and the default for consumers is an owner decision no agent may take by writing the key.
 
 <!-- derivable-retirement-2026-10-09 -->
 It fell to 112 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 46 `derivable` keys (17 A, 29 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behavior, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`; 2.6 hooks and engine — `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`; 2.7 remaining — `project.pr_template`, `pipelines.skill_improvement`, `consistency.cross_source`, `subagents.downshift`, `ai_team.suppress_setup_hint`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
@@ -396,8 +398,8 @@ the template, which is the drift this contract exists to prevent.
 | derivable | 37 |
 | un-inferrable | 10 |
 | consent | 48 |
-| policy | 17 |
-| **Total** | **112** |
+| policy | 18 |
+| **Total** | **113** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -587,6 +589,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |
 | `knowledge.global_sharing.enabled` | C | `true` | kill-switch over cross-project egress | consent |
 | `knowledge.global_sharing.allowed_tiers` | C | `[public]` | allowlist for that egress | consent |
+| `egress.placeholders.mode` | C | `"off"` | C-tests 6 and 8 — it decides whether conversation content is replaced before it reaches local stores and, once the host rewrite exists, a model provider, and lowering it erases what the egress record would have shown | policy — whether a consumer's content is replaced by default is the owner decision `default-mode-for-consumers`; no tree fact computes a protection preference |
 | `hooks.concern_budget.tier1_concerns` | C | `[]` | allowlist of concerns permitted to fail closed | policy |
 | `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner | derivable — the scanner's own signature match on the tool envelope; warn-only and silent on no hit |
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call | derivable — the live PATH and identity probe the hook already runs; silent when rtk is absent |

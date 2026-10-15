@@ -99,6 +99,24 @@ describe('replay_hook — no state mutation (every platform, post_tool_use)', ()
     }
 });
 
+describe('replay_hook — what the egress stage would do', () => {
+    it('reports the mode, the action and the counts, never the value', () => {
+        // Assembled at runtime so no credential-shaped literal sits in this file.
+        const planted = ['ghp', 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7'.slice(0, 36)].join('_');
+        const payload = path.join(tmp, 'egress.json');
+        fs.writeFileSync(payload, JSON.stringify({ tool_name: 'Bash', tool_input: { command: `echo ${planted}` } }));
+        fs.writeFileSync(path.join(tmp, '.agent-settings.yml'), 'egress:\n  placeholders:\n    mode: observe\n');
+        const cmd = ['--platform', 'claude', '--event', 'pre_tool_use', '--payload', payload, '--manifest', MANIFEST];
+        const r = runInProc(replayMain, [...cmd, '--json', '--dry-run'], { cwd: tmp });
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout.includes(planted)).toBe(false);
+        const egress = JSON.parse(r.stdout)['egress'] as Record<string, unknown>;
+        expect(egress['mode']).toBe('observe');
+        expect(egress['action']).toBe('count');
+        expect(egress['counts']).toStrictEqual([{ field: 'input', class: 'credential', type: 'TOKEN', count: 1 }]);
+    });
+});
+
 describe('replay_hook — summary + resolution', () => {
     it('sets replay flag and emits --json summary', () => {
         const r = runTsReplay(tmp, 'augment', 'post_tool_use', ['--json']);

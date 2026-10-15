@@ -244,12 +244,31 @@ describe('release settings delta — the released surface', () => {
 
     it('single-writer: the committed file is written by the cut and nothing else', () => {
         const committed = readReleasedSurface();
-        // It is a real surface, not a stub: the live schema at the committed
-        // version agrees with it key for key.
-        expect(Object.keys(committed.entries).length).toBeGreaterThan(50);
-        expect(serializeReleasedSurface(committed)).toBe(
-            serializeReleasedSurface(emitReleasedSurface(committed.version)),
+        // It is a real surface, not a stub: more than 50 entries, keys sorted,
+        // no descriptions, sorted tombstone lists. It is NOT compared with a
+        // fresh emission of the live schema: between two cuts the live schema
+        // may gain a key or change a default, and those differences are what
+        // the next cut reads with `classifySettingsDelta`. What must hold
+        // between cuts is that the live schema carries none of the changes
+        // the cut would refuse: an untombstoned removal, a type change, an
+        // enum removal, an addition without a default.
+        const keys = Object.keys(committed.entries);
+        expect(keys.length).toBeGreaterThan(50);
+        expect(keys).toEqual([...keys].sort());
+        for (const [k, e] of Object.entries(committed.entries)) {
+            expect(`${k}:${String('description' in e)}`).toBe(`${k}:false`);
+        }
+        expect(committed.removedKeys).toEqual([...committed.removedKeys].sort());
+        expect(committed.renamedKeys.map(([from]) => from)).toEqual(
+            committed.renamedKeys.map(([from]) => from).sort((a, b) => a.localeCompare(b)),
         );
+        const vanishedFrom = (released: readonly string[], live: object): string[] =>
+            released.filter((k) => !Object.hasOwn(live, k) && !REMOVED_KEYS.has(k) && !RENAMED_KEYS.has(k));
+        const live = emitReleasedSurface(committed.version);
+        expect(refusalLines(classifySettingsDelta(committed, live))).toEqual([]);
+        expect(vanishedFrom(keys, live.entries)).toEqual([]);
+        // An inherited property name is not a live key.
+        expect(vanishedFrom(['constructor', 'toString'], {})).toEqual(['constructor', 'toString']);
 
         // Writer set, read from the source tree. The CALL shape and not the
         // bare name: prose elsewhere names the function, and a mention is not

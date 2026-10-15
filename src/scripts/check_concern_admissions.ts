@@ -66,6 +66,16 @@ export const REQUIRED_ANSWERS = [
     'per_event_budget_impact',
 ] as const;
 
+/**
+ * Dispatcher stages that run like a concern but are not manifest keys, so the
+ * added-concern set difference cannot see them. Each needs a complete admitted
+ * row whenever its module exists — always, not only when newly added, because
+ * the list is closed and short and a stage has no grandfathered population.
+ */
+export const DISPATCHER_STAGES: readonly { id: string; source: string }[] = [
+    { id: 'egress-stage', source: 'src/scripts/hooks/egress_stage.ts' },
+];
+
 export const DECISIONS = ['admitted', 'rejected'] as const;
 export type Decision = (typeof DECISIONS)[number];
 
@@ -188,16 +198,18 @@ export function evaluate(root = REPO_ROOT, baseRef: string | null): Finding[] {
         }
     }
 
-    if (baseRef === null) return findings;
-
     const admitted = new Map(rows.filter((r) => r.decision === 'admitted').map((r) => [r.concern, r]));
-    for (const id of addedConcerns(root, baseRef)) {
+    const stages = DISPATCHER_STAGES.filter((s) => fs.existsSync(path.join(root, s.source))).map((s) => s.id);
+    const required = baseRef === null ? stages : [...stages, ...addedConcerns(root, baseRef)];
+    for (const id of required) {
         const row = admitted.get(id);
         if (row === undefined) {
             findings.push({
                 concern: id,
                 kind: 'missing_row',
-                message: `added since ${baseRef} with no \`admitted\` row in ${LEDGER_REL}`,
+                message: stages.includes(id)
+                    ? `dispatcher stage with no \`admitted\` row in ${LEDGER_REL}`
+                    : `added since ${String(baseRef)} with no \`admitted\` row in ${LEDGER_REL}`,
             });
             continue;
         }
@@ -248,7 +260,12 @@ function selfTest(): number {
     const script = path.join('src', 'scripts', 'check_concern_admissions.ts');
 
     /** A throwaway repo with a base commit and a working-tree change on top. */
-    const fixture = (opts: { base: readonly string[]; head: readonly string[]; ledger?: string }): number => {
+    const fixture = (opts: {
+        base: readonly string[];
+        head: readonly string[];
+        ledger?: string;
+        files?: readonly string[];
+    }): number => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ca-selftest-'));
         roots.push(dir);
         const g = (...a: string[]): void => {
@@ -267,6 +284,7 @@ function selfTest(): number {
         g('commit', '-q', '-m', 'base');
         put(CONCERN_MANIFEST_POSIX, MANIFEST(opts.head));
         if (opts.ledger !== undefined) put(LEDGER_REL, `${opts.ledger}\n`);
+        for (const rel of opts.files ?? []) put(rel, '');
         // repoRoot locates tsx AND resolves the relative script path, so it is
         // THIS checkout; cwd and --root are the fixture.
         return runGateCli(REPO_ROOT, script, ['--base', 'main', '--root', dir], dir);
@@ -300,6 +318,24 @@ function selfTest(): number {
             name: 'a rejected row naming a LIVE concern → reject',
             expect: 'reject',
             run: () => fixture({ base: ['one', 'two'], head: ['one', 'two'], ledger: ROW('two', 'rejected') }),
+        },
+        {
+            // A dispatcher stage is not a manifest key, so the set difference
+            // cannot see it; its row is required whenever its module exists.
+            name: 'a dispatcher stage with no ledger row → reject',
+            expect: 'reject',
+            run: () => fixture({ base: ['one'], head: ['one'], files: [DISPATCHER_STAGES[0]!.source] }),
+        },
+        {
+            name: 'a dispatcher stage WITH a complete admitted row → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    base: ['one'],
+                    head: ['one'],
+                    files: [DISPATCHER_STAGES[0]!.source],
+                    ledger: ROW(DISPATCHER_STAGES[0]!.id, 'admitted'),
+                }),
         },
         {
             // The grandfathering, asserted rather than assumed: pre-existing

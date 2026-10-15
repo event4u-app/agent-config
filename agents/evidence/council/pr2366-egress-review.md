@@ -163,4 +163,40 @@ needed. Both judged round-5 findings 3–5 resolved and both asked for changes:
 | R6-5 | low (anthropic) | the generic-assignment value gate skips secrets under 16 characters | not changed — it is the pre-move gate, kept for parity; the floor is part of the frozen reference | — |
 | R6-6 | advisory (anthropic) | 999,999 tokens per type | not changed — the refusal is a throw, not silent | — |
 
-**The round-6 fixes have not been re-reviewed by the council.**
+The round-6 fixes were reviewed in round 7.
+
+## Round 7 — verdicts
+
+Prompt: `agents/evidence/council/pr2366-egress-review-r7-20261015.question.md`
+(delta-only: commit `0aca4ea38` plus the current PEM rule for context; rounds 1–6
+named as the rest of the review). Quorum 2 of 2. Both seats approved and neither
+reported a defect.
+
+| Seat | Stance |
+|---|---|
+| anthropic/claude-sonnet-4-5 | "APPROVE" — "No defects found. Both fixes are sound and the tests are precise." |
+| openai/codex-default | "APPROVE — the change fixes the mismatched-label truncation fail-closed and makes partial replacement observable; the highest-leverage pre-merge action is to record the targeted suite failing on `0aca4ea38^` and passing on `0aca4ea38`." |
+
+Points raised without a defect: openai called the hard-coded `FIXTURES[1]` in
+the helper regression test "mildly brittle" and not a blocker; it judged
+refusing at the first mismatched END marker, rather than scanning on to a later
+matching one, the safe policy; and it noted that the missing end anchor on
+`BEGIN_LABEL` is harmless because the detection span comes from the complete
+header pattern. anthropic traced the empty-label case (`BEGIN PRIVATE KEY`) as
+matching `""` to `""`.
+
+## Round 7 — the recorded red-before / green-after
+
+Run 2026-10-15 in a detached scratch worktree, `vitest run
+src/scripts/_lib/egress_replacement_e2e.test.ts`:
+
+| Production code | Suite | Result |
+|---|---|---|
+| `0aca4ea38` | `0aca4ea38` | 26 passed |
+| `0aca4ea38^` (`egress_rules.ts` from the parent) | `0aca4ea38` | 1 failed, 25 passed — `an end marker with a different label refuses, even when the right one follows` |
+| `0aca4ea38^` | `0aca4ea38^` | 23 passed |
+
+The third row is the point of the first two: the parent's own suite was green
+on the defective code, so the defect was invisible to it; the round-6 suite reds
+on exactly the defect it was written for.
+

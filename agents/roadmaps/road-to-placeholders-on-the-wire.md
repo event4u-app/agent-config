@@ -74,6 +74,31 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-15, branch `drain/placeholders-phase-1`
+
+Phase 1 ran after #2366 landed the contract, the rule table and the token
+grammar. D9 is applied as recorded: `observe` changes no view, the placeholder
+view exists from `protect`, and the execution view comes from
+`EXECUTION_VIEW_GRANTS` in `src/scripts/hooks/egress_stage.ts`, which
+`lint_hook_manifest` holds equal to the set of blocking concerns.
+
+- **1.1, 1.2, 1.4 done.** ADR-285; the stage and the two views through the
+  planner; the admission row (the gate was extended to require a row per
+  dispatcher stage rather than exempting it), the kill-switch row, and the
+  `egress.placeholders` block. The per-mode table now exists in the contract;
+  `strict` behaves as `protect` until Phase 3 and says so.
+- **1.3 built, not closed.** The stage counts in `observe` into a fixed-field
+  record and `hooks:replay --json` previews it, but the step's `verify:` needs a
+  release of readings from this repository's own sessions, which no single
+  change can produce. Counts are credential-only until the sibling's 2.3 adds
+  identifier rules.
+- **The execution view resolves nothing yet.** With no session table (Phase 2)
+  there are no tokens to resolve, so it is the received envelope; the 1.2 test's
+  "restored command" is the original command for that reason.
+- **Residues named in the contract:** a concern reading the host transcript from
+  disk, the operator-armed `AGENT_HOOK_CAPTURE_DIR` raw capture, and a guard's
+  own refusal text.
+
 ## Execution status — 2026-10-14, `main@90ed4e697`
 
 A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
@@ -161,7 +186,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 
 ## Phase 1 — The dispatcher gains one stage, in observe mode
 
-- [ ] **1.1 Decide composition by removing the question.** One ADR, citing the
+- [x] **1.1 Decide composition by removing the question.** One ADR, citing the
       sibling's contract: a rewrite is produced by a single dispatcher stage
       that runs before the concern loop and at emission; no concern may produce
       one; a block outranks it; an `ask` or `deny` outranks an `allow`,
@@ -170,7 +195,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       and records what would reopen it.
       verify: `npx vitest run tests/scripts/lint_hook_manifest.test.ts -t rewrite-concern-refused --reporter=verbose` -> /✓.*rewrite-concern-refused/
       — and `hook-architecture-v1.md` no longer calls the rewrite half open.
-- [ ] **1.2 Two views of one envelope, built by the payload-shape planner (D2).**
+- [x] **1.2 Two views of one envelope, built by the payload-shape planner (D2).**
       The **placeholder view** — values replaced in the prompt, `tool_input` and
       `tool_response` — is what every recording and advisory concern receives,
       so local stores inherit tokens without a scrubber. The **execution view**
@@ -183,7 +208,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       that cannot hold a value, the construction `tool_result_bytes_hook.ts`
       already uses. `hooks:replay` shows what the stage would do on a fixture.
       verify: one release of readings from this repository's own sessions exists, and the arming step 3.1 cites them.
-- [ ] **1.4 Govern the stage like a concern** — an admission row answering the
+- [x] **1.4 Govern the stage like a concern** — an admission row answering the
       five questions of `src/scripts/hook_manifest.yaml`'s header, a kill-switch
       row, and the `egress.placeholders` settings block with modes `off`,
       `observe`, `protect`, `strict`. A thrown kill switch changes every affected

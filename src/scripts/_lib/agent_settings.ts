@@ -800,7 +800,7 @@ export function resolve_project_root(
  * `agents/settings/`, then the per-machine local override. When `cwd` is
  * `null` or no anchor is reached, falls back to the legacy three-path set.
  */
-function _resolve_cascade_paths(
+export function _resolve_cascade_paths(
     cwd: string | null,
     project_path: string | null,
 ): string[] {
