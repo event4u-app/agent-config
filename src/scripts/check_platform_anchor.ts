@@ -287,31 +287,53 @@ export function removedBypassRecords(root: string, baseRef: string): BypassFindi
 }
 
 /** The committed review cites the record's subject digest, read from `HEAD`. */
-export function reviewCitesSubject(
+export function reviewReader(
     root: string,
-    rel: string,
-    subject: string,
     index: ReadonlySet<string>,
-    cache: Map<string, string | null> = new Map(),
-): boolean {
-    // A council review lives with the council's records — never in the bypass
-    // record directory, so a record cannot name itself or another record.
-    if (!rel.startsWith(COUNCIL_REVIEW_DIR) || rel.startsWith(`${BYPASS_RECORD_DIR}/`) || !reviewCommitted(root, rel, index)) {
-        return false;
-    }
-    if (!cache.has(rel)) {
+): (rel: string, subject: string, restoredAtMs: number) => boolean {
+    const cache = new Map<string, { text: string; addedAtMs: number } | null>();
+    let bytes = 0;
+    const read = (rel: string): { text: string; addedAtMs: number } | null => {
+        if (cache.size >= REVIEW_READ_LIMIT || bytes >= REVIEW_TOTAL_BYTES) {
+            return null;
+        }
         const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { encoding: 'utf8', maxBuffer: REVIEW_MAX_BYTES });
-        cache.set(rel, shown.status === 0 && typeof shown.stdout === 'string' ? shown.stdout : null);
-    }
-    const text = cache.get(rel);
-    return typeof text === 'string' && text.includes(subject);
+        // The commit that first added the file: a review written before the
+        // restore was committed before it, whatever its text says.
+        const added = spawnSync('git', ['-C', root, 'log', '--diff-filter=A', '--format=%ct', '--', rel], { encoding: 'utf8' });
+        const times = (added.stdout ?? '').trim().split('\n').filter((l) => /^\d+$/u.test(l));
+        const first = times.length > 0 ? Number(times[times.length - 1]) * 1000 : NaN;
+        if (shown.status !== 0 || typeof shown.stdout !== 'string' || added.status !== 0 || Number.isNaN(first)) {
+            return null;
+        }
+        bytes += shown.stdout.length;
+        return { text: shown.stdout, addedAtMs: first };
+    };
+    return (rel, subject, restoredAtMs) => {
+        // A council review lives with the council's records — never in the bypass
+        // record directory, so a record cannot name itself or another record.
+        if (!rel.startsWith(COUNCIL_REVIEW_DIR) || rel.startsWith(`${BYPASS_RECORD_DIR}/`) || !reviewCommitted(root, rel, index)) {
+            return false;
+        }
+        if (!cache.has(rel)) {
+            cache.set(rel, read(rel));
+        }
+        const review = cache.get(rel);
+        return review !== null && review !== undefined && review.text.includes(subject) && review.addedAtMs >= restoredAtMs;
+    };
 }
 
 /** Where a council review a bypass record may cite lives. */
 export const COUNCIL_REVIEW_DIR = 'agents/evidence/council/';
 
-/** A review larger than this is not read; with the record ceiling it bounds the run. */
+/**
+ * The run's review budget: one review at most 1 MiB, at most 20 distinct
+ * reviews and 4 MiB in total. Past it a review is not read, so the record that
+ * names it fails closed rather than costing more.
+ */
 const REVIEW_MAX_BYTES = 1024 * 1024;
+const REVIEW_READ_LIMIT = 20;
+const REVIEW_TOTAL_BYTES = 4 * 1024 * 1024;
 
 /**
  * A `council_review` path names a regular file committed at `HEAD` inside the
@@ -561,12 +583,8 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
     }
 
     const result = evaluateGate(changed, policyText, source, repo);
-    const evidenceIndex = committedEvidence(root);
-    const reviewCache = new Map<string, string | null>();
     const open = [
-        ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel, subject) =>
-            reviewCitesSubject(root, rel, subject, evidenceIndex, reviewCache),
-        ),
+        ...evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, committedEvidence(root))),
         ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),
     ];
     if (open.length > 0) {

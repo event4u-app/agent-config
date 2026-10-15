@@ -390,9 +390,12 @@ real calendar instant with a timezone, `restore_by` before `time` or more than
 seven days after it, `restored_at` before `time` or in the future, a
 `time` in the future, a `council_review` that names anything but a regular file
 committed at `HEAD` under `agents/evidence/council/` that cites the record's
-`subject` digest (an untracked file, a directory, a symbolic link, a bypass
-record — itself included — and a review of another change do not count; a
-review over 1 MiB is not read), a record or a record directory that cannot be
+`subject` digest and was first committed at or after `restored_at` (an
+untracked file, a directory, a symbolic link, a bypass record — itself
+included — a review of another change and one committed before the restore do
+not count; a review named while `restored_at` is still `pending` is malformed;
+a run reads at most 20 distinct reviews, each at most 1 MiB and 4 MiB in all,
+and a review past that budget does not count), a record or a record directory that cannot be
 read, a record that is a symbolic link or larger than 64 KiB, and a directory
 of more than 200 entries of any kind. The 200 and 64 KiB ceilings bound what
 one run reads — at most about 13 MiB of records — and are set far above any
@@ -409,8 +412,9 @@ with control and line-separator characters replaced.
 
 **What that check does not establish.** The records are files in the branch it
 runs on, so a branch can rewrite one to look closed, and the values it checks
-are shapes and one citation — not that the commit, the digest or the ruleset
-versions are true; the check reads them, it
+are shapes, one citation and one commit date — not that the commit, the digest
+or the ruleset versions are true, and a committer date is what the committer
+wrote; the check reads them, it
 does not verify them against the forge, which needs the `administration`
 permission no workflow token carries. And it is what the rest of the anchor is
 — **local and voluntarily invoked** — so an open bypass reds the next run that

@@ -97,6 +97,10 @@ describe('evaluateBypassRecords — a record that cannot show it closed fails cl
         expect(bypassInstant('2026-02-28T23:30:00-02:00')).toBe(Date.parse('2026-03-01T01:30:00Z'));
     });
 
+    it('a review named before the restore is malformed', () => {
+        expect(codes(record({ restored_at: 'pending', restore_by: '2026-10-16T00:00:00Z' }))).toEqual(['bypass-record-malformed']);
+    });
+
     it('a bypass dated in the future cannot defer its closing', () => {
         expect(
             codes(record({ time: '2099-01-01T00:00:00Z', restore_by: '2099-01-07T00:00:00Z', restored_at: 'pending', council_review: 'pending' })),
@@ -213,6 +217,21 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
     it('a directory with more entries than the ceiling, of any kind, is unreadable', () => {
         fs.mkdirSync(path.join(root, BYPASS_RECORD_DIR), { recursive: true });
         for (let i = 0; i < 201; i += 1) fs.writeFileSync(path.join(root, BYPASS_RECORD_DIR, `n${String(i)}.txt`), '');
+        expect(run()).toBe(1);
+    });
+
+    it('a review committed before the restore does not close the record', () => {
+        git('init', '-q');
+        put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
+        git('add', '-A');
+        const early = { GIT_COMMITTER_DATE: '2026-10-10T12:00:00Z', GIT_AUTHOR_DATE: '2026-10-10T12:00:00Z' };
+        const r = spawnSync('git', ['-C', root, '-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-m', 'early'], {
+            encoding: 'utf8',
+            env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t', ...early },
+        });
+        expect(r.status).toBe(0);
+        put(`${BYPASS_RECORD_DIR}/closed.md`, record());
+        commitAll();
         expect(run()).toBe(1);
     });
 

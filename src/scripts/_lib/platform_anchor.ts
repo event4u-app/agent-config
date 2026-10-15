@@ -1188,13 +1188,15 @@ function bypassFields(text: string): Map<string, string> | string {
  * {@link BYPASS_REVIEW_DAYS} days on is `bypass-unreviewed`.
  *
  * `reviewCovers` answers whether a `council_review` path names a committed
- * file that cites the record's `subject` digest — so a review of some other
- * change cannot close this one; it is injected so this module stays free of I/O.
+ * council review that cites the record's `subject` digest and was first
+ * committed at or after the restore — so neither a review of some other change
+ * nor one written before the fact can close this one. It is injected so this
+ * module stays free of I/O.
  */
 export function evaluateBypassRecords(
     records: readonly BypassRecordInput[],
     now: Date,
-    reviewCovers: (rel: string, subject: string) => boolean = () => false,
+    reviewCovers: (rel: string, subject: string, restoredAtMs: number) => boolean = () => false,
 ): BypassFinding[] {
     const findings: BypassFinding[] = [];
     const t = now.getTime();
@@ -1242,9 +1244,11 @@ export function evaluateBypassRecords(
                   ? `\`restore_by\` is before the bypass or more than ${String(BYPASS_MAX_OPEN_DAYS)} days after it`
                   : restored !== null && (restored < time || restored > t)
                     ? '`restored_at` is before the bypass or in the future'
-                    : review !== 'pending' && !reviewCovers(review, f.get('subject') as string)
-                      ? `\`council_review\` names \`${shown(review)}\`, which is not a committed regular file citing this record's \`subject\``
-                      : null;
+                    : review !== 'pending' && restored === null
+                      ? '`council_review` is named while `restored_at` is pending — the review comes after the restore'
+                      : review !== 'pending' && restored !== null && !reviewCovers(review, f.get('subject') as string, restored)
+                        ? `\`council_review\` names \`${shown(review)}\`, which is not a committed council review citing this record's \`subject\`, first committed at or after \`restored_at\``
+                        : null;
         if (problem !== null || time === null || restoreBy === null) {
             malformed(p, problem ?? 'unreadable instant');
             continue;
