@@ -53,7 +53,8 @@ export type EnvelopeView = "execution" | "placeholder";
 
 /** Execution only for a listed name running its listed script; everything else gets the placeholder view. */
 export function egressViewFor(concern: JsonObject): EnvelopeView {
-  const script = EXECUTION_VIEW_GRANTS.get(String(concern["name"]));
+  const name = concern["name"];
+  const script = typeof name === "string" ? EXECUTION_VIEW_GRANTS.get(name) : undefined;
   return script !== undefined && concern["script"] === script ? "execution" : "placeholder";
 }
 
@@ -127,8 +128,11 @@ function egressLayers(workspaceRoot: string): "none" | "named" | "broken" {
     let text: string;
     try {
       text = fs.readFileSync(p, "utf8");
-    } catch {
-      continue; // absent layer
+    } catch (exc) {
+      // Only a missing layer is skipped; a layer that exists and cannot be read could hold the mode.
+      const code = (exc as NodeJS.ErrnoException).code;
+      if (code === "ENOENT" || code === "ENOTDIR") continue;
+      return "broken";
     }
     if (!EGRESS_WORD.test(text)) continue;
     named = true;

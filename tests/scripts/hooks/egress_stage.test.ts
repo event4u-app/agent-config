@@ -94,6 +94,12 @@ describe("mode resolution", () => {
     expect(readEgressMode(tmp)).toBe("protect");
   });
 
+  it("a layer that exists but cannot be read is protect, not off", () => {
+    // A directory where the file should be reads as EISDIR on every platform.
+    fs.mkdirSync(path.join(tmp, ".agent-settings.yml"));
+    expect(readEgressMode(tmp)).toBe("protect");
+  });
+
   it("reads the project layer, and a comment naming egress is not a key", () => {
     const file = path.join(tmp, ".agent-settings.yml");
     fs.writeFileSync(file, "# a shipped screenshot is a published egress\nscreenshots: {}\n");
@@ -351,5 +357,11 @@ describe("end to end through the dispatcher", () => {
       tool_input: { command: "ls" },
     });
     expect(stdout.includes("updatedInput")).toBe(false);
+    // The rewriting fixture did run and reply: without this the assertion above
+    // would also pass for a fixture that never started.
+    const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-rewrite");
+    const entry = JSON.parse(fs.readFileSync(path.join(dir, "rewriter.json"), "utf8")) as Record<string, unknown>;
+    expect(entry["raw_exit_code"]).toBe(0);
+    expect(entry["decision"]).toBe("allow");
   });
 });
