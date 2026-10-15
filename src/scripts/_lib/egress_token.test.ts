@@ -160,12 +160,39 @@ describe('TokenScope', () => {
         expect(a).not.toBe(b);
     });
 
-    it('refuses a key shorter than 32 bytes', () => {
-        expect(() => new TokenScope(new Uint8Array(8))).toThrow(/key/);
+    it('accepts no caller key: every scope draws its own', () => {
+        const Ctor = TokenScope as unknown as new (key?: Uint8Array) => TokenScope;
+        const shared = new Uint8Array(32).fill(7);
+        const a = new Ctor(shared);
+        const b = new Ctor(shared);
+        expect(a.mint('EMAIL', 'identifier', 'one@corp.test')).not.toBe(b.mint('EMAIL', 'identifier', 'one@corp.test'));
+    });
+
+    it('refuses a type the recogniser would not parse', () => {
+        const scope = new TokenScope();
+        for (const bad of ['x', 'X', 'email', 'A_B', 'TOOLONGTYPENAME17']) {
+            expect(() => scope.mint(bad, 'identifier', 'v@corp.test')).toThrow(/type/);
+        }
+    });
+
+    it('refuses a number past the six digits the recogniser parses', () => {
+        const scope = new TokenScope();
+        (scope as unknown as { counters: Map<string, number> }).counters.set('EMAIL', 999_999);
+        expect(() => scope.mint('EMAIL', 'identifier', 'late@corp.test')).toThrow(/number/);
     });
 });
 
 describe('replaceValues', () => {
+    it('replaces the captured value, not an earlier copy of it in the keyword', () => {
+        // The captured value repeats the keyword, so it also occurs at offset 0 of the match.
+        const text = 'AuthToken=AuthToken=AuthToken=';
+        const out = replaceValues(text, new TokenScope());
+        const toks = parseTokens(out);
+        expect(toks).toHaveLength(1);
+        expect(out.slice(0, toks[0]?.start)).toBe('AuthToken=');
+        expect(out.slice(toks[0]?.end)).toBe('');
+    });
+
     it('leaves a token this scope minted alone after a keyword', () => {
         const scope = new TokenScope();
         const once = replaceValues(`api_key = "${mixed(24)}"`, scope);

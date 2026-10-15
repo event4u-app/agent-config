@@ -12,6 +12,9 @@ export const TOKEN_FP_LENGTH = 6;
 /** `__TYPE_n_fingerprint__` — type upper-case, number from 1, fingerprint lower hex. */
 export const TOKEN_PATTERN = /__([A-Z][A-Z0-9]{1,15})_([1-9][0-9]{0,5})_([0-9a-f]{6})__/g;
 
+const TOKEN_TYPE = /^[A-Z][A-Z0-9]{1,15}$/;
+const MAX_TOKEN_NUMBER = 999_999;
+
 export interface TokenParts {
     readonly type: string;
     readonly number: number;
@@ -62,14 +65,14 @@ export class TokenScope {
     private readonly byToken = new Map<string, Entry>();
     private readonly counters = new Map<string, number>();
 
-    constructor(key: Uint8Array = randomBytes(32)) {
-        if (key.length < 32) {
-            throw new Error('TokenScope: key must be at least 32 bytes');
-        }
-        this.key = key;
+    constructor() {
+        this.key = randomBytes(32);
     }
 
     mint(type: string, cls: EgressClass, canonical: string): string {
+        if (!TOKEN_TYPE.test(type)) {
+            throw new Error(`TokenScope: type ${JSON.stringify(type)} is outside the token grammar`);
+        }
         const digest = createHmac('sha256', this.key).update(`${type}\u0000${canonical}`).digest('hex');
         const known = this.byDigest.get(digest);
         if (known !== undefined) {
@@ -79,6 +82,9 @@ export class TokenScope {
             return formatToken(known);
         }
         const number = (this.counters.get(type) ?? 0) + 1;
+        if (number > MAX_TOKEN_NUMBER) {
+            throw new Error(`TokenScope: ${type} has used every number the grammar can carry`);
+        }
         this.counters.set(type, number);
         const entry: Entry = {
             type,
