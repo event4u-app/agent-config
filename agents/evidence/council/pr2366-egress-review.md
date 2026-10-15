@@ -86,7 +86,27 @@ Prompt: `agents/evidence/council/pr2366-egress-review-r3-20261015.question.md`
 The round-3 prompt also carried the parity-test fixtures quoted verbatim; their
 lines are pinned in `.secret-allow` after audit.
 
-## Round 4
+## Round 4 — verdicts
 
-Prompt: `agents/evidence/council/pr2366-egress-review-r4-20261015.question.md`.
-Verdicts are recorded below once the run returns.
+Prompt: `agents/evidence/council/pr2366-egress-review-r4-20261015.question.md`
+(diff at `c4760bd90`, omissions named). Quorum 2 of 2; no re-run was needed.
+Both seats judged the round-3 class-identity, formatter and ceiling findings
+resolved, and both asked for changes:
+
+| Seat | Stance |
+|---|---|
+| anthropic/claude-sonnet-4-5 | "REQUEST_CHANGES — the multiline semantic drift means the commit-time scanner and replacement engine disagree on detection, undermining the 'one rule table' claim; the token identity contract contradicts itself." |
+| openai/codex-default | "REQUEST_CHANGES — token numbering contradicts the contract's first-seen guarantee and token identity remains misstated; highest-leverage change: pre-mint replacements in ascending span order, add a two-value ordering regression test, and clarify identity as `(type, canonical value)`." |
+
+## Round 4 — findings and dispositions
+
+| # | Severity | Finding | Disposition | Red-proof |
+|---|---|---|---|---|
+| R4-1 | medium (one seat, new) | `replaceValues` minted inside the right-to-left substitution, so the last value of a type got number 1 | fixed — mint in text order, then substitute | two-key ordering test red before |
+| R4-2 | medium (both) | the contract promised one token per value while the code issues one per (type, value) | fixed in the contract — identity is the (type, canonical value) pair; class is per value regardless of type | contract text |
+| R4-3 | low (both) | the contract omitted the 999,999 number ceiling | fixed in the contract | contract text |
+| R4-4 | medium (anthropic) / low-to-medium (openai) | the scanner reads one line at a time and the replacer the whole text, so an assignment split across lines is replaced but not reported | documented as intended — line scope is the pre-move scanner behaviour, and the replacer seeing more is the safe direction for egress; a test pins that every scanner finding is also a replacer span, and that the split assignment is the documented difference | subset test red with the scanner column shifted by one |
+| R4-5 | low (openai) | no tests at the grammar boundaries | added — 2- and 16-character types, a digit after the first letter, 999,999; 17 characters and a leading digit refused | tests (they pass on the current code; they guard drift) |
+| R4-6 | low (both) | `matchesFromStart` is misleadingly named | renamed `testWholeValue` | — |
+
+**The round-4 fixes have not been re-reviewed by the council.**
