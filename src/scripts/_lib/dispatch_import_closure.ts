@@ -137,7 +137,16 @@ export function dispatchImportClosure(
     root: string | ClosureTree,
     entry: string = DISPATCHER_PATH,
 ): ClosureEntry[] {
-    const tree = typeof root === 'string' ? checkoutTree(root) : root;
+    // Each path is read at most once per walk, so the source a module was
+    // resolved by is the source it is classified and walked from.
+    const backing = typeof root === 'string' ? checkoutTree(root) : root;
+    const memo = new Map<string, string | null>();
+    const tree: ClosureTree = {
+        read(rel: string): string | null {
+            if (!memo.has(rel)) memo.set(rel, backing.read(rel));
+            return memo.get(rel) ?? null;
+        },
+    };
     if (tree.read(entry) === null) {
         return [];
     }

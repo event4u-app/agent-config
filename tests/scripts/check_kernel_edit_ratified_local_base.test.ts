@@ -77,37 +77,81 @@ afterEach(() => {
     fs.rmSync(baseDir, { recursive: true, force: true });
 });
 
+function git(args: readonly string[]): void {
+    const res = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' });
+    expect(res.status, res.stderr).toBe(0);
+}
+
+/**
+ * A base commit whose dispatcher imports one module, and a head commit that
+ * brings a second one into the closure — the shape of PR #2371. Returns the
+ * base commit id.
+ */
+function buildChange(): string {
+    for (const rel of GATE_FILES) {
+        write(rel, fs.readFileSync(path.join(REPO, rel), 'utf8'));
+    }
+    write(DISPATCHER, "import { save } from './state_io.js';\nsave();\n");
+    write('src/scripts/hooks/state_io.ts', 'export function save(): void {}\n');
+    const base = commitAll(root, 'base');
+    write(
+        DISPATCHER,
+        "import { save } from './state_io.js';\nimport { stage } from './egress_stage.js';\nsave();\nstage();\n",
+    );
+    write(ARRIVAL, 'export function stage(): void {}\n');
+    commitAll(root, 'head');
+    return base;
+}
+
+/** Commit a record carrying `subject`. */
+function commitRecord(subject: string): void {
+    write(
+        path.join(RATIFICATION_DIR, 'closure-arrival.md'),
+        [
+            '---',
+            'proposed_by: claude/session-a',
+            'implemented_by: claude/session-a',
+            'reviewed_by: council/anthropic+openai',
+            `subject: ${subject}`,
+            'verdict: ratified',
+            'effective_after: merge',
+            'providers:',
+            '  - anthropic',
+            '  - openai',
+            'seats:',
+            '  anthropic: ratified',
+            '  openai: ratified',
+            '---',
+            '',
+            '<!-- evidence-type: ratification -->',
+            '',
+            'Review body.',
+            '',
+        ].join('\n'),
+    );
+    commitAll(root, 'record');
+}
+
+function lastLine(out: string): string {
+    return out.trim().split('\n').pop() as string;
+}
+
+const CHANGED = [DISPATCHER, ARRIVAL];
+
 describe('a module joining the dispatcher closure', () => {
     it('is gated by the local run exactly as by the base-revision run', () => {
-        for (const rel of GATE_FILES) {
-            write(rel, fs.readFileSync(path.join(REPO, rel), 'utf8'));
-        }
-        write(DISPATCHER, "import { save } from './state_io.js';\nsave();\n");
-        write('src/scripts/hooks/state_io.ts', 'export function save(): void {}\n');
-        const base = commitAll(root, 'base');
+        const base = buildChange();
+        git(['worktree', 'add', '--detach', baseDir, base]);
 
-        write(
-            DISPATCHER,
-            "import { save } from './state_io.js';\nimport { stage } from './egress_stage.js';\nsave();\nstage();\n",
-        );
-        write(ARRIVAL, 'export function stage(): void {}\n');
-        commitAll(root, 'head');
-
-        const git = spawnSync('git', ['-C', root, 'worktree', 'add', '--detach', baseDir, base], {
-            encoding: 'utf8',
-        });
-        expect(git.status).toBe(0);
-
-        const changed = [DISPATCHER, ARRIVAL];
         const writer = run(path.join(baseDir, 'src/scripts/ratification_subject.ts'), [
             '--root',
             root,
             '--quiet',
             '--files',
-            ...changed,
+            ...CHANGED,
         ]);
         expect(writer.code).toBe(0);
-        const subject = writer.out.trim().split('\n').pop() as string;
+        const subject = lastLine(writer.out);
         expect(subject).toMatch(/^[0-9a-f]{64}$/u);
 
         // The writer run locally, as an author would before pushing, prints
@@ -117,37 +161,12 @@ describe('a module joining the dispatcher closure', () => {
             base,
             '--quiet',
             '--files',
-            ...changed,
+            ...CHANGED,
         ]);
         expect(localWriter.code).toBe(0);
-        expect(localWriter.out.trim().split('\n').pop()).toBe(subject);
+        expect(lastLine(localWriter.out)).toBe(subject);
 
-        write(
-            path.join(RATIFICATION_DIR, 'closure-arrival.md'),
-            [
-                '---',
-                'proposed_by: claude/session-a',
-                'implemented_by: claude/session-a',
-                'reviewed_by: council/anthropic+openai',
-                `subject: ${subject}`,
-                'verdict: ratified',
-                'effective_after: merge',
-                'providers:',
-                '  - anthropic',
-                '  - openai',
-                'seats:',
-                '  anthropic: ratified',
-                '  openai: ratified',
-                '---',
-                '',
-                '<!-- evidence-type: ratification -->',
-                '',
-                'Review body.',
-                '',
-            ].join('\n'),
-        );
-        commitAll(root, 'record');
-
+        commitRecord(subject);
         const ci = run(path.join(baseDir, 'src/scripts/check_kernel_edit_ratified.ts'), [
             '--root',
             root,
@@ -163,5 +182,49 @@ describe('a module joining the dispatcher closure', () => {
         expect(ci.code).toBe(0);
         expect(gated(local.out)).toEqual(gated(ci.out));
         expect(local.code).toBe(0);
+    }, 60_000);
+
+    it('the default base, with no --base-ref, is the one the diff is taken against', () => {
+        const base = buildChange();
+        git(['update-ref', 'refs/remotes/origin/main', base]);
+        const writer = run(path.join(root, 'src/scripts/ratification_subject.ts'), [
+            '--quiet',
+            '--files',
+            ...CHANGED,
+        ]);
+        expect(writer.code).toBe(0);
+        commitRecord(lastLine(writer.out));
+
+        const local = run(path.join(root, 'src/scripts/check_kernel_edit_ratified.ts'), []);
+        expect(local.out).toContain(`hook-plumbing source ${ARRIVAL}`);
+        expect(local.code).toBe(0);
+    }, 60_000);
+
+    it('an uncommitted edit dropping the import does not hide the committed arrival', () => {
+        const base = buildChange();
+        write(DISPATCHER, "import { save } from './state_io.js';\nsave();\n");
+
+        const local = run(path.join(root, 'src/scripts/check_kernel_edit_ratified.ts'), [
+            '--base-ref',
+            base,
+        ]);
+        expect(local.out).toContain(`hook-plumbing source ${ARRIVAL}`);
+        expect(local.code).toBe(1);
+    }, 60_000);
+
+    it('a judging copy checked out at another commit still compares against --base-ref', () => {
+        const base = buildChange();
+        // The judging script's own tree is the HEAD, which already contains the
+        // arrival; only the supplied base can reveal it.
+        git(['worktree', 'add', '--detach', baseDir, 'HEAD']);
+
+        const ci = run(path.join(baseDir, 'src/scripts/check_kernel_edit_ratified.ts'), [
+            '--root',
+            root,
+            '--base-ref',
+            base,
+        ]);
+        expect(ci.out).toContain(`hook-plumbing source ${ARRIVAL}`);
+        expect(ci.code).toBe(1);
     }, 60_000);
 });

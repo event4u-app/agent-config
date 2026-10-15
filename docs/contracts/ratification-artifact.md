@@ -84,17 +84,21 @@ whose `subject` is absent (`subject-absent`), not a digest
 (`subject-malformed`) or a different one (`subject-mismatch`). Both default to
 `HEAD`.
 
-**The local run and the CI run classify the same gated set.** Which files are
-gated includes every module that newly enters the hook dispatcher's import
-closure, so the base side of the change has to be read. CI runs the base
-revision's copy of the gate with `--root <head>`, whose own tree is the base. A
-run whose `--root` is the gate's own checkout — pre-push, `task ci`, the subject
-CLI — reads the base side from Git objects at `--base-ref` (default
-`origin/main`, then `origin/master`, `main`, `master`, `HEAD~1`), so both print
-and check one digest. Give `ratification_subject` the same `--base-ref` as the
-gate; a base that does not resolve is a refusal. Until PR #2371 surfaced it, the
-local run compared the head with itself, saw no arrivals and refused the record
-CI required.
+**The gated set is a function of two commits.** Which files are gated includes
+every module that newly enters the hook dispatcher's import closure, so both
+sides of the change are read — the head at `--rev`, the base at `--base-ref`
+(default `origin/main`, then `origin/master`, `main`, `master`, `HEAD~1`, the
+same resolution the diff uses), both from Git objects, whichever copy of the
+gate runs. So the CI run (the base revision's gate, `--root <head> --base-ref
+<base.sha>`) and a local run classify the same set **when they are given the
+same base commit**: locally that holds when `origin/main` is fetched and the PR
+targets `main`; otherwise pass `--base-ref` explicitly, to the gate and to
+`ratification_subject` alike. A base that does not resolve is a refusal. An
+uncommitted edit changes neither side. The one call that still compares against
+the gate's own checkout is one naming another `--root` with no `--base-ref` (a
+direct call, or `--files` without one). Until PR #2371 surfaced it, a local run
+compared the head with itself, saw no arrivals and refused the record CI
+required.
 
 **The digest is read from Git objects, never from the working tree.** The
 revision is resolved to a commit, each gated path is looked up in that commit's
@@ -128,12 +132,13 @@ from the step and runs that older diff call under them. An option that takes a v
 `--root`, `--base-ref`, `--policy-root` — and is given none is a refusal
 (exit 1), as in the subject CLI, never a fall-back to the default.
 
-**The one exception: an empty gated set reads no commit.** When no changed path
-is gated, the digest is the digest of nothing and no record is owed, so neither
-`ratification_subject` nor the gate under `--files` resolves the revision, and
-an invalid `--rev` then passes rather than refusing. Without `--files` the gate
-still resolves it, because the diff needs a commit. The exception is
-deliberate: there is no content whose reading the revision could change.
+**An empty gated set still reads the commit.** It used not to: when no changed
+path was gated, neither `ratification_subject` nor the gate under `--files`
+resolved the revision, and an invalid `--rev` passed. Which paths are gated now
+depends on the dispatcher closure at `--rev`, so the revision is resolved before
+the gated set exists, and an invalid `--rev` is a refusal in every shape. The
+digest of an empty gated set is still the digest of nothing, and no record is
+owed.
 
 A gated path that is absent in the commit is a deletion. A gated path whose
 tree entry is a regular file (`100644`, `100755`) is hashed. **Every other entry
