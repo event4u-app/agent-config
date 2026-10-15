@@ -86,6 +86,13 @@ describe('the near-misses stay where they were', () => {
         expect(verdict('src/agent-src/contexts/execution/roadmap-process-loop.md')).toBe('needs-council');
     });
 
+    it('a dependency bump alone is needs-council, never needs-owner (owner decision 2026-10-15)', () => {
+        for (const p of ['package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'packages/ui/package.json']) {
+            expect(verdict(p), p).toBe('needs-council');
+        }
+        expect(verdict('docs/package-json-guide.md')).toBe('routine');
+    });
+
     it('a docs edit stays routine', () => {
         expect(verdict('docs/guides/parallel-sessions.md')).toBe('routine');
     });

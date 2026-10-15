@@ -334,6 +334,16 @@ function isWorkflow(p: string): boolean {
     return p.startsWith('.github/workflows/');
 }
 
+/** Dependency manifests and lockfiles, at any depth: what an install resolves the runtime from. */
+const DEPENDENCY_MANIFESTS: ReadonlySet<string> = new Set([
+    'package.json', 'package-lock.json', 'npm-shrinkwrap.json', '.npmrc',
+    'yarn.lock', '.yarnrc.yml', 'pnpm-lock.yaml', 'bun.lock', 'bun.lockb',
+]);
+
+function isDependencyManifest(p: string): boolean {
+    return DEPENDENCY_MANIFESTS.has(path.posix.basename(p));
+}
+
 /** Every path a change touches — both sides of a rename or copy. */
 function touched(entries: readonly ChangeEntry[]): string[] {
     const out = new Set<string>();
@@ -371,6 +381,11 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
     add('prod-data-or-migration', 'non-destructive-by-default — production data or a migration', all.filter(isProdOrMigration));
     add('deploy-or-release', 'non-destructive-by-default — deploy or release path', all.filter(isDeployOrRelease));
     add('ci-workflow', 'process-full — a disabled required check cannot reach delivery-ready', all.filter(isWorkflow));
+    add(
+        'dependency-manifest',
+        'supply-chain-intake — a dependency manifest or lockfile; owner decision 2026-10-15 sends it to the council, not the owner',
+        all.filter(isDependencyManifest),
+    );
     add('security-surface', 'security-sensitive-stop — auth, authz, tenancy, billing, secrets, uploads, webhooks, routes', all.filter(isSecurity));
 
     const gated = classifyPaths(all);
