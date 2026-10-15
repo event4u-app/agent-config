@@ -388,11 +388,17 @@ record that cannot show it closed: a missing, repeated or unknown field, a
 `pending` anywhere but the two open fields, no marker, an instant that is not a
 real calendar instant with a timezone, `restore_by` before `time` or more than
 seven days after it, `restored_at` before `time` or in the future, a
-`council_review` that names anything but a regular file committed at `HEAD`
-under `agents/evidence/` that cites the record's `subject` digest (an untracked
-file, a directory, a symbolic link and a review of another change do not
-count), a record or a record directory that cannot be read, a record that is a
-symbolic link or larger than 64 KiB, and more than 200 records. A record the
+`time` in the future, a `council_review` that names anything but a regular file
+committed at `HEAD` under `agents/evidence/council/` that cites the record's
+`subject` digest (an untracked file, a directory, a symbolic link, a bypass
+record — itself included — and a review of another change do not count; a
+review over 1 MiB is not read), a record or a record directory that cannot be
+read, a record that is a symbolic link or larger than 64 KiB, and a directory
+of more than 200 entries of any kind. The 200 and 64 KiB ceilings bound what
+one run reads — at most about 13 MiB of records — and are set far above any
+plausible number of owner bypasses, not measured; on a platform without
+`O_NOFOLLOW` the check reads no record and fails, so a closing there is
+verified by running the check on a platform that has it. A record the
 base revision carries and the checkout does not — one file or the whole
 directory — is a finding too, read from Git against the base rather than from
 the file list a caller passes; a base whose records cannot be listed fails

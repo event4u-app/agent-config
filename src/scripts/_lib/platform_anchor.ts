@@ -1236,6 +1236,8 @@ export function evaluateBypassRecords(
               ? '`commit` is not a full 40-hex revision'
               : time === null || restoreBy === null || (restored === null && restoredRaw !== 'pending')
                 ? 'an instant is not ISO-8601 with a timezone, or names a date the calendar does not have'
+                : time > t
+                  ? '`time` is in the future — a bypass not yet taken cannot be recorded'
                 : restoreBy < time || restoreBy - time > BYPASS_MAX_OPEN_DAYS * DAY_MS
                   ? `\`restore_by\` is before the bypass or more than ${String(BYPASS_MAX_OPEN_DAYS)} days after it`
                   : restored !== null && (restored < time || restored > t)

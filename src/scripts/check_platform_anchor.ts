@@ -174,22 +174,36 @@ export function touchesPolicy(files: readonly string[]): boolean {
  * A directory that cannot be read is no records, never a failure of the gate.
  */
 export function readBypassRecords(root: string): BypassRecordInput[] {
-    let names: string[];
+    const names: string[] = [];
+    let dir: fs.Dir | null = null;
     try {
         if (!fs.lstatSync(path.join(root, BYPASS_RECORD_DIR)).isDirectory()) {
             return [{ path: BYPASS_RECORD_DIR, text: null }];
         }
-        names = fs.readdirSync(path.join(root, BYPASS_RECORD_DIR));
+        // Every entry counts toward the ceiling, and the listing stops one past
+        // it, so a directory stuffed with other files cannot cost an unbounded read.
+        dir = fs.opendirSync(path.join(root, BYPASS_RECORD_DIR));
+        for (let entry = dir.readSync(); entry !== null; entry = dir.readSync()) {
+            names.push(entry.name);
+            if (names.length > BYPASS_RECORD_LIMIT) {
+                return [{ path: `${BYPASS_RECORD_DIR} (more than ${String(BYPASS_RECORD_LIMIT)} entries)`, text: null }];
+            }
+        }
     } catch (err) {
         // No directory means no bypass was ever recorded. Any other failure is
         // a directory that exists and cannot be read, which shows nothing closed.
         return (err as NodeJS.ErrnoException).code === 'ENOENT' ? [] : [{ path: BYPASS_RECORD_DIR, text: null }];
+    } finally {
+        try {
+            dir?.closeSync();
+        } catch {
+            // Closing a listing that already ended is not a finding.
+        }
     }
-    const records = names.filter((n) => n.endsWith('.md')).sort();
-    if (records.length > BYPASS_RECORD_LIMIT) {
-        return [{ path: `${BYPASS_RECORD_DIR} (${String(records.length)} records, above ${String(BYPASS_RECORD_LIMIT)})`, text: null }];
-    }
-    return records.map((n) => ({ path: `${BYPASS_RECORD_DIR}/${n}`, text: readRecordOnce(path.join(root, BYPASS_RECORD_DIR, n)) }));
+    return names
+        .filter((n) => n.endsWith('.md'))
+        .sort()
+        .map((n) => ({ path: `${BYPASS_RECORD_DIR}/${n}`, text: readRecordOnce(path.join(root, BYPASS_RECORD_DIR, n)) }));
 }
 
 /**
@@ -273,13 +287,31 @@ export function removedBypassRecords(root: string, baseRef: string): BypassFindi
 }
 
 /** The committed review cites the record's subject digest, read from `HEAD`. */
-export function reviewCitesSubject(root: string, rel: string, subject: string, index: ReadonlySet<string>): boolean {
-    if (!reviewCommitted(root, rel, index)) {
+export function reviewCitesSubject(
+    root: string,
+    rel: string,
+    subject: string,
+    index: ReadonlySet<string>,
+    cache: Map<string, string | null> = new Map(),
+): boolean {
+    // A council review lives with the council's records — never in the bypass
+    // record directory, so a record cannot name itself or another record.
+    if (!rel.startsWith(COUNCIL_REVIEW_DIR) || rel.startsWith(`${BYPASS_RECORD_DIR}/`) || !reviewCommitted(root, rel, index)) {
         return false;
     }
-    const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
-    return shown.status === 0 && typeof shown.stdout === 'string' && shown.stdout.includes(subject);
+    if (!cache.has(rel)) {
+        const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { encoding: 'utf8', maxBuffer: REVIEW_MAX_BYTES });
+        cache.set(rel, shown.status === 0 && typeof shown.stdout === 'string' ? shown.stdout : null);
+    }
+    const text = cache.get(rel);
+    return typeof text === 'string' && text.includes(subject);
 }
+
+/** Where a council review a bypass record may cite lives. */
+export const COUNCIL_REVIEW_DIR = 'agents/evidence/council/';
+
+/** A review larger than this is not read; with the record ceiling it bounds the run. */
+const REVIEW_MAX_BYTES = 1024 * 1024;
 
 /**
  * A `council_review` path names a regular file committed at `HEAD` inside the
@@ -530,9 +562,10 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
 
     const result = evaluateGate(changed, policyText, source, repo);
     const evidenceIndex = committedEvidence(root);
+    const reviewCache = new Map<string, string | null>();
     const open = [
         ...evaluateBypassRecords(readBypassRecords(root), asOf(), (rel, subject) =>
-            reviewCitesSubject(root, rel, subject, evidenceIndex),
+            reviewCitesSubject(root, rel, subject, evidenceIndex, reviewCache),
         ),
         ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),
     ];

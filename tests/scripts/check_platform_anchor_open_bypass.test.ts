@@ -97,6 +97,12 @@ describe('evaluateBypassRecords — a record that cannot show it closed fails cl
         expect(bypassInstant('2026-02-28T23:30:00-02:00')).toBe(Date.parse('2026-03-01T01:30:00Z'));
     });
 
+    it('a bypass dated in the future cannot defer its closing', () => {
+        expect(
+            codes(record({ time: '2099-01-01T00:00:00Z', restore_by: '2099-01-07T00:00:00Z', restored_at: 'pending', council_review: 'pending' })),
+        ).toEqual(['bypass-record-malformed']);
+    });
+
     it('impossible chronology: restore_by or restored_at before the bypass, restored_at in the future', () => {
         expect(codes(record({ restore_by: '2026-10-09T00:00:00Z' }))).toEqual(['bypass-record-malformed']);
         expect(codes(record({ restored_at: '2026-10-09T00:00:00Z' }))).toEqual(['bypass-record-malformed']);
@@ -189,6 +195,25 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
         commitAll();
         expect(run()).toBe(0);
+    });
+
+    it('a record cannot certify itself, and evidence outside the council records does not count', () => {
+        git('init', '-q');
+        const self = `${BYPASS_RECORD_DIR}/self.md`;
+        put(self, record({ council_review: self }));
+        commitAll();
+        expect(run()).toBe(1);
+        fs.rmSync(path.join(root, self));
+        put(`${BYPASS_RECORD_DIR}/other.md`, record({ council_review: 'agents/evidence/analysis/note.md' }));
+        put('agents/evidence/analysis/note.md', `mentions ${'a'.repeat(64)}\n`);
+        commitAll();
+        expect(run()).toBe(1);
+    });
+
+    it('a directory with more entries than the ceiling, of any kind, is unreadable', () => {
+        fs.mkdirSync(path.join(root, BYPASS_RECORD_DIR), { recursive: true });
+        for (let i = 0; i < 201; i += 1) fs.writeFileSync(path.join(root, BYPASS_RECORD_DIR, `n${String(i)}.txt`), '');
+        expect(run()).toBe(1);
     });
 
     it('fails when the committed review cites a different subject', () => {
