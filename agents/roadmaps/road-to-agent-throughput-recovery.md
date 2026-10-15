@@ -266,7 +266,7 @@ the Acceptance Criteria held.
       reads it as `user-wait`, per claim (5).
       verify: replayed asks — reserved ones still reach the owner; cheap ones do
       not stop the run.
-- [~] **5.3 Owner: an intake limit for harvest roadmaps.** Human-gated. The
+- [x] **5.3 Owner: an intake limit for harvest roadmaps.** Answered 2026-10-15: (a), N = 8 (D8); encoded where roadmaps land by step 3.1 of `road-to-an-analysis-family-that-deepens-itself`. The
       question: does a new inbox roadmap land `draft` while more than N `ready`
       roadmaps sit at 0 ticked steps (10 of 20 on 2026-10-15)? Options: (a) yes,
       N = 8; (b) yes, another N; (c) no limit, inbox roadmaps land as the
@@ -285,6 +285,7 @@ the Acceptance Criteria held.
 | D5 | contested-technical | evidence | Step 4.3 is a precision fix to a hook-bypass guard, not a lowered floor: the blocked set after the change is a superset of every form that bypasses a hook (`commit -n`, `am -n`, any `--no-verify`, `-c core.hooksPath`); it ships only with a council or independent review of that set, per `decision-revisit-gate` (an equivalent swap above a floor is council-decidable) | `git <sub> -h` on 2026-10-15: `-n` is `--dry-run` for push, `--no-stat` for merge/rebase, `--no-commit` for revert/cherry-pick; the probe in Context reproduced the false positives | a short flag outside `commit`/`am` is found to skip a hook |
 | D6 | reversible-technical | evidence | The closure scan's typed-op hits on "merge", "push" and "merged" in Context, Goal, 3.2 and 4.3 are measurement prose or guard names, not operations: no step here merges, pushes or force-pushes, and 3.2 waits on the council in 3.1 | `closure_scan` run 2026-10-15, eight `typed-op` hits, each read | a step is added that merges or pushes on its own authority |
 | D7 | reversible-technical | evidence | `/roadmap:next` keeps one invocation = one roadmap = one branch = one PR; no composite drain command and no bundling here | `roadmap/next/command.md:28`; merges per night are flat, work per merge fell | Phase 2 reads wall-clock-bound and lane conflicts are measured |
+| D8 | product-owned | owner | Harvest intake limit (5.3) → (a): a new inbox roadmap lands `draft` while more than 8 `ready` roadmaps sit at 0 ticked steps | owner answer 2026-10-15 to the PR #2373 report; 10 of 20 ready roadmaps at 0 that day | the 0-ticked share stays under 8 for a month, or the owner changes N |
 
 ## Kill register
 

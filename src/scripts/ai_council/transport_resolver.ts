@@ -538,7 +538,8 @@ export function classifyCliFailure(raw: string): CliFailureClass {
     if (s === 'auth_expired' || s === 'auth_rejected' || s === 'unauthorized') {
         return 'auth_rejected';
     }
-    if (s === 'cli_unsupported' || s === 'unsupported' || s === 'parse_failed') {
+    // `parse_failed` is NOT here: answered-unreadably, so a replay pays twice.
+    if (s === 'cli_unsupported' || s === 'unsupported') {
         return 'cli_unsupported';
     }
     // Prefix match, not equality: the detail carries the operator-facing reason
