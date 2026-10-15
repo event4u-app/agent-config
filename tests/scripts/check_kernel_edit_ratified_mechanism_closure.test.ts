@@ -3,17 +3,19 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import {
     classifyPaths,
+    gitBlobId,
     MECHANISM_IMPORT_PATHS,
+    PENDING_MECHANISM_PINS,
     READER_PATH,
     requiresRatification,
     SELF_PATH,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
-import { relativeSpecifiers } from '../../src/scripts/_lib/dispatch_import_closure.js';
 import { gatedFilesOf } from '../../src/scripts/_lib/ratification_subject.js';
 import { commitAll } from './ratification_git_fixture.js';
 
@@ -38,7 +40,37 @@ const PENDING = ['src/scripts/_lib/ratification_subject.ts'];
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-/** Repo-relative paths of every module reachable from the gate by relative static imports. */
+/**
+ * Every module specifier `source` loads, read from the TypeScript syntax tree:
+ * import and export-from declarations, `import(…)` and `require(…)`. A call
+ * whose argument is not a string literal cannot be resolved, so it fails.
+ */
+function moduleSpecifiers(rel: string, source: string): string[] {
+    const file = ts.createSourceFile(rel, source, ts.ScriptTarget.Latest, true);
+    const out: string[] = [];
+    const visit = (node: ts.Node): void => {
+        if (
+            (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+            node.moduleSpecifier !== undefined &&
+            ts.isStringLiteral(node.moduleSpecifier)
+        ) {
+            out.push(node.moduleSpecifier.text);
+        } else if (
+            ts.isCallExpression(node) &&
+            (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+                (ts.isIdentifier(node.expression) && node.expression.text === 'require'))
+        ) {
+            const arg = node.arguments[0];
+            expect(arg !== undefined && ts.isStringLiteralLike(arg), `${rel}: unresolvable dynamic load`).toBe(true);
+            out.push((arg as ts.StringLiteralLike).text);
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(file);
+    return out;
+}
+
+/** Repo-relative paths of every repository module the gate loads, transitively. */
 function gateImportClosure(): string[] {
     const seen = new Set<string>();
     const queue = [SELF_PATH];
@@ -47,13 +79,12 @@ function gateImportClosure(): string[] {
         if (seen.has(rel)) continue;
         seen.add(rel);
         const source = fs.readFileSync(path.join(REPO, rel), 'utf8');
-        const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
-        expect(code, `${rel} uses a dynamic import the walk cannot follow`).not.toMatch(/\bimport\s*\(/);
-        for (const spec of relativeSpecifiers(source)) {
+        for (const spec of moduleSpecifiers(rel, source)) {
+            if (!spec.startsWith('.')) continue;
             const target = path.posix.normalize(
                 path.posix.join(path.posix.dirname(rel), spec).replace(/\.js$/, '.ts'),
             );
-            expect(fs.existsSync(path.join(REPO, target)), `${rel} imports ${spec}`).toBe(true);
+            expect(fs.existsSync(path.join(REPO, target)), `${rel} imports ${spec} → ${target}`).toBe(true);
             queue.push(target);
         }
     }
@@ -88,6 +119,34 @@ describe('the gate watches the modules its verdict runs through', () => {
         for (const m of closure.filter((x) => !PENDING.includes(x))) {
             expect(gatedFilesOf([m], []), m).toEqual([m]);
         }
+    });
+
+    it('the walk sees dynamic imports and re-exports a lexical scan could hide', () => {
+        const src = 'const a = "/*";\nimport("./x.js");\nconst b = "*/";\nexport * from "./y.js";\n';
+        expect(moduleSpecifiers('f.ts', src)).toEqual(['./x.js', './y.js']);
+    });
+
+    it('every pending module is pinned to its current blob', () => {
+        expect(gitBlobId(Buffer.from(''))).toBe('e69de29bb2d1d6434b8b29ae775ad8c2e48c5391');
+        expect(Object.keys(PENDING_MECHANISM_PINS).sort()).toEqual([...PENDING].sort());
+        for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
+            expect(gitBlobId(fs.readFileSync(path.join(REPO, rel))), rel).toBe(blob);
+        }
+    });
+
+    it('refuses a diff that moves a pinned module off its pin, and passes it unchanged', () => {
+        const rel = PENDING[0] as string;
+        fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+        fs.writeFileSync(path.join(root, rel), fs.readFileSync(path.join(REPO, rel)));
+        commitAll(root);
+        const same = gate.evaluate([rel], root, 2);
+        expect(same.exitCode).toBe(0);
+
+        fs.appendFileSync(path.join(root, rel), '// drift\n');
+        commitAll(root);
+        const moved = gate.evaluate([rel], root, 2);
+        expect(moved.exitCode).toBe(1);
+        expect(moved.lines.join('\n')).toContain('a pinned ratification module changed');
     });
 
     it('refuses an unratified edit of the record parser end to end', () => {

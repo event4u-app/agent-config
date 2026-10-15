@@ -81,6 +81,7 @@
  * Exit codes: 0 = pass (or nothing gated) · 1 = fail · 3 = internal error.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -150,6 +151,44 @@ export const MECHANISM_IMPORT_PATHS: readonly string[] = [
     'src/scripts/_lib/gate_ledger.ts',
     'src/scripts/_lib/scan_scope.ts',
 ];
+
+/**
+ * Closure modules not gated yet, each pinned to the Git blob its review saw.
+ *
+ * `_lib/ratification_subject.ts` cannot be gated in the change that edits it
+ * (see above), so until the change that gates it lands its bytes would be
+ * bound by no record. The pin binds them through this gated file instead: a
+ * diff that changes a pinned module is refused, and moving the pin edits this
+ * file, which needs a record. The change that gates the module removes its pin.
+ */
+export const PENDING_MECHANISM_PINS: Readonly<Record<string, string>> = {
+    'src/scripts/_lib/ratification_subject.ts': '3842d91528ec5229819dbd0da2f1a67a1f0eb06c',
+};
+
+/** Git's blob id for `bytes` — what `git hash-object` prints. */
+export function gitBlobId(bytes: Buffer): string {
+    return createHash('sha1')
+        .update(`blob ${bytes.length}\u0000`)
+        .update(bytes)
+        .digest('hex');
+}
+
+/**
+ * Pinned modules this diff changes away from their pin at `commit`. A deleted
+ * module counts as changed. THROWS a {@link GatedSubjectRefusal} when the commit
+ * cannot be read.
+ */
+export function pinViolations(files: readonly string[], root: string, commit: string): string[] {
+    const changed = new Set(files.map((f) => f.replace(/\\/g, '/').trim()));
+    const out: string[] = [];
+    for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
+        if (!changed.has(rel)) continue;
+        const bytes = fileAtRevision(root, commit, rel);
+        const actual = bytes === null ? 'absent' : gitBlobId(bytes);
+        if (actual !== blob) out.push(`${rel} is ${actual}, pinned to ${blob}`);
+    }
+    return out;
+}
 
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
@@ -538,9 +577,11 @@ export function evaluate(
     // read one head commit and one base.
     let derived: readonly string[];
     let headCommit: string;
+    let drifted: string[];
     try {
         headCommit = resolveRevision(root, revision);
         derived = derivedFor(root, baseRef, headCommit);
+        drifted = pinViolations(files, root, headCommit);
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
@@ -548,6 +589,18 @@ export function evaluate(
         lines.push(`❌  ${err.message}`);
         for (const target of ledger.unaccountedTargets()) {
             ledger.fail(target, 'the dispatcher closure could not be read at the named commits');
+        }
+        const tally = ledger.finalize();
+        lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
+        return { exitCode: 1, lines, scanned };
+    }
+    // Before any pass: a pinned module is ungated, so a diff touching only it
+    // would otherwise exit "nothing to ratify".
+    if (drifted.length > 0) {
+        lines.push('❌  a pinned ratification module changed — it is not gated yet, so its pin is what binds it:');
+        for (const d of drifted) lines.push(`  · ${d}`);
+        for (const target of ledger.unaccountedTargets()) {
+            ledger.fail(target, 'a pinned ratification module changed');
         }
         const tally = ledger.finalize();
         lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
