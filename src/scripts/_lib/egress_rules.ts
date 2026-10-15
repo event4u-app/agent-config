@@ -200,6 +200,12 @@ const CLASS_RANK: Readonly<Record<EgressClass, number>> = {
     identifier: 0,
 };
 
+/** A global or sticky regex keeps lastIndex between calls; reset it so every call tests the whole value. */
+function matchesFromStart(re: RegExp, value: string): boolean {
+    re.lastIndex = 0;
+    return re.test(value);
+}
+
 /** Candidate spans per rule, before overlap resolution. */
 export function findSpans(text: string, rules: readonly EgressRule[] = EGRESS_RULES): EgressSpan[] {
     const out: EgressSpan[] = [];
@@ -216,7 +222,7 @@ export function findSpans(text: string, rules: readonly EgressRule[] = EGRESS_RU
             const offset = r.valueGroup !== undefined ? m[0].indexOf(value) : 0;
             const start = m.index + offset;
             const end = start + value.length;
-            if (r.exclusions?.some((x) => x.test(value))) continue;
+            if (r.exclusions?.some((x) => matchesFromStart(x, value))) continue;
             if (r.context) {
                 const lo = Math.max(0, start - r.context.window);
                 const hi = Math.min(text.length, end + r.context.window);

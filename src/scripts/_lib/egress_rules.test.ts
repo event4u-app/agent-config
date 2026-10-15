@@ -170,6 +170,13 @@ describe('context words, validators and exclusions', () => {
         expect((detect('account 9876540', [digits])[0] as EgressSpan).validated).toBe(true);
     });
 
+    it('a global or sticky exclusion excludes every occurrence, not every other one', () => {
+        for (const flags of ['g', 'y']) {
+            const rule: EgressRule = { ...digits, exclusions: [new RegExp('^1234560$', flags)] };
+            expect(detect('account 1234560, account 1234560, account 1234560', [rule])).toEqual([]);
+        }
+    });
+
     it('drops an excluded value', () => {
         expect(detect('account 1234560', [digits]).length).toBe(0);
     });
