@@ -123,10 +123,15 @@ export interface ReadRecord {
 export const HASH_BOUND_BYTES = 2 * 1024 * 1024;
 
 /**
- * What the content key could say about one read. `over-bound` and `unreadable`
- * are different answers: only the first licenses the stat fallback.
+ * What the content key could say about one read. Only `over-bound` — the stat
+ * itself was over — licenses the stat fallback: after `grew-during-read` the
+ * stat pair is stale, and after `unreadable` nothing was compared.
  */
-export type Digest = { kind: 'sha256'; value: string } | { kind: 'over-bound' } | { kind: 'unreadable' };
+export type Digest =
+    | { kind: 'sha256'; value: string }
+    | { kind: 'over-bound' }
+    | { kind: 'grew-during-read' }
+    | { kind: 'unreadable' };
 
 /**
  * sha256 of a file at or under the bound. The stat `size` skips the read when it
@@ -145,7 +150,7 @@ export function contentDigest(absPath: string, size: number): Digest {
             if (n === 0) break;
             filled += n;
         }
-        if (filled > HASH_BOUND_BYTES) return { kind: 'over-bound' };
+        if (filled > HASH_BOUND_BYTES) return { kind: 'grew-during-read' };
         return { kind: 'sha256', value: crypto.createHash('sha256').update(buf.subarray(0, filled)).digest('hex') };
     } catch {
         return { kind: 'unreadable' };

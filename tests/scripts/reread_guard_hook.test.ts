@@ -175,7 +175,15 @@ describe('content key and its size bound (D3)', () => {
         it('stops at the bound when the file is larger than its stat said', () => {
             // The file grew between stat and read: the read itself must enforce the bound.
             const f = realFile(HASH_BOUND_BYTES + 1);
-            expect(contentDigest(f, 16)).toEqual({ kind: 'over-bound' });
+            expect(contentDigest(f, 16)).toEqual({ kind: 'grew-during-read' });
+        });
+
+        it('a file that grew past the bound after its stat is never called unchanged', () => {
+            // The stale stat pair matches the prior read; the content does not.
+            const f = realFile(HASH_BOUND_BYTES + 1);
+            const prior = { mtime: 1, size: 16, ts: 0, sha256: 'a' };
+            expect(compareRead(prior, 1, 16, contentDigest(f, 16))).toBeNull();
+            expect(compareRead({ mtime: 1, size: 16, ts: 0 }, 1, 16, contentDigest(f, 16))).toBeNull();
         });
 
         it('reports a read failure as its own state, not as over the bound', () => {
