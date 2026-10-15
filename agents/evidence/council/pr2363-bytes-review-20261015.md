@@ -126,5 +126,11 @@ openai, closing line:
 | The emitter consistency test uses a hand-kept file list | anthropic | medium | **not taken** — openai: "the static `EMITTERS` list is acceptable here"; anthropic: "Static list is acceptable for known surfaces." |
 | The global leg puts the prefix `bin` on PATH, so it does not show `npm exec` finding the global store on its own | anthropic | low | **not taken** — openai: "prepending `$prefix/bin` is the normal execution environment for an npm global installation." |
 
+After round 4, CI's suppression-hygiene gate refused the leakage-allowlist
+entry from `55764e20a` (the list is shrink-only). `296d6f611` removes it: the
+git-workflow skill now points at `/fix ci` § 0 instead of emitting the
+`npm exec` line itself, so the command files and the push-settle hook are the
+emitters.
+
 The round-4 fixes were not put to a fifth round: the instruction was one run.
 They are therefore unreviewed by the council.
