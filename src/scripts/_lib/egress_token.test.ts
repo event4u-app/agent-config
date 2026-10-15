@@ -66,6 +66,13 @@ describe('grammar', () => {
         expect(/(?<!\\)[+*]|\{\d+,\}/.test(TOKEN_PATTERN.source.replace(/\[[^\]]*\]/g, ''))).toBe(false);
     });
 
+    it('formatToken refuses parts the recogniser would not parse', () => {
+        expect(() => formatToken({ type: 'A', number: 1, fingerprint: 'abcdef' })).toThrow(/grammar/);
+        expect(() => formatToken({ type: 'EMAIL', number: 0, fingerprint: 'abcdef' })).toThrow(/grammar/);
+        expect(() => formatToken({ type: 'EMAIL', number: 1_000_000, fingerprint: 'abcdef' })).toThrow(/grammar/);
+        expect(() => formatToken({ type: 'EMAIL', number: 1, fingerprint: 'xyz' })).toThrow(/grammar/);
+    });
+
     it('rejects malformed shapes', () => {
         const good = formatToken({
             type: 'EMAIL',

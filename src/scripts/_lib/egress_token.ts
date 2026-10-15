@@ -26,7 +26,19 @@ export interface ParsedToken extends TokenParts {
     readonly end: number;
 }
 
+const TOKEN_FP = /^[0-9a-f]{6}$/;
+
+/** The one writer of the grammar; it refuses parts the recogniser would not parse back. */
 export function formatToken(p: TokenParts): string {
+    if (
+        !TOKEN_TYPE.test(p.type) ||
+        !Number.isInteger(p.number) ||
+        p.number < 1 ||
+        p.number > MAX_TOKEN_NUMBER ||
+        !TOKEN_FP.test(p.fingerprint)
+    ) {
+        throw new Error('formatToken: parts outside the token grammar');
+    }
     return `__${p.type}_${p.number}_${p.fingerprint}__`;
 }
 
