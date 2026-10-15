@@ -44,3 +44,43 @@ prompt re-run, which is the run recorded below.
 | 3 | The trap came after `cd` (both, low) | fixed — the trap follows `mktemp`'s two checks | unenterable-directory test red before |
 | 4 | The prose said "the moment one exists" while two checks precede the trap (openai, low) | fixed in the prose, after the approving round: it now names the two checks and what an interruption there can leave | — |
 | 4 | The unenterable-directory test cannot be built as root (both, non-blocking) | the case skips for uid 0, saying why | — |
+
+## Rounds 5–9 — the owner's decision on dependency manifests
+
+On 2026-10-15 the owner decided, on PR #2375, that a change to `package.json`
+or a lockfile must not yield `needs-owner`; it goes to the council. The base
+classifier must still not run through a head-influenced runtime. The change was
+re-presented as delta rounds, prompts verbatim in
+`agents/evidence/council/danger-gate-review-r5-20261015.question.md` to
+`agents/evidence/council/danger-gate-review-r9-20261015.question.md`. The first
+round-9 run was skipped by the council's necessity heuristic (agent invocation,
+"bugfix" bucket). A skip is not a verdict, so the same prompt was re-run with
+`--invocation user_explicit`, since the owner had ordered the review. That
+re-run is the one recorded.
+
+| Round | anthropic/claude-sonnet-4-5 | openai/codex-default |
+|---|---|---|
+| 5 | "REQUEST_CHANGES — the delta is close but needs: 1. Explicit prose documenting crash→council behavior … 2. Test combining no-strip-types with poisoned tsx … 3. Gate-level test for nested manifest changes" | "REQUEST_CHANGES — nested manifests can still reach `routine`, and fallback-runtime failures are incorrectly downgraded from owner to council." |
+| 6 | "REQUEST_CHANGES — The grep exit-status fail-open … must be fixed before merge." | "REQUEST_CHANGES — manifest detection still fails open when `grep` errors" |
+| 7 | "REQUEST_CHANGES — … two shipping-risk gaps remain: Fail-open file-read … Gated+manifest precedence" | "REQUEST_CHANGES — the temporary-file reader can still fail open despite the new prose claiming otherwise" |
+| 8 | "REQUEST_CHANGES — The production code is correct, but the test has two issues" | "REQUEST_CHANGES — the production fix is correct, but the regression test is privilege-dependent" |
+| 9 | "APPROVE — all four round-8 findings correctly addressed, no new defects, test coverage is sound and privilege-independent." | "APPROVE — the delta correctly answers all four round-8 findings without expanding the production blast radius" |
+
+| Round | Finding (seats) | Disposition | Red-proof |
+|---|---|---|---|
+| 5 | Only root manifests were checked; a nested `package.json` took the trusted-runtime branch (openai, high) | fixed — manifests are matched by basename at any depth | nested manifest + no type stripping + head-installed `tsx` |
+| 5 | A failed fallback on a manifest change became `needs-council` (both) | fixed — only a valid fallback verdict is floored to `needs-council`; no valid verdict is `needs-owner` | crashing runtime |
+| 5 | No test combined no type stripping with a head-installed `tsx` (both) | fixed — three such tests, one of them pinning the stated residual | — |
+| 5 | Bare `git diff --quiet` broke under `set -e` (openai, medium) | fixed | `set -e` test |
+| 6 | grep's error status read as "no manifest" (both, high) | fixed — no external matcher; NUL-separated listing matched by a `case` on the basename | — |
+| 6 | A newline in a parent directory could evade a line-based match (openai, medium) | fixed — `git diff --name-only -z` | newline-directory test |
+| 6 | Malformed zero-exit fallback untested (openai, low) | test added; it asserts the exit code since round 7 | — |
+| 7 | A listing written but not read back left `DEPS=0` (both, medium/high) | fixed — an empty record is appended as an end marker, and the listing is trusted only when the loop reaches it | listing linked to `/dev/null` |
+| 7 | Gated file plus bump under a forged `routine` should be `needs-owner` (anthropic) | kept — under the owner's decision a valid lower verdict from the fallback becomes `needs-council (runtime-uncertain)`. That is the stated residual, and the other seat agreed | — |
+| 8 | The fixture depended on privileges; generation was not proven (both) | fixed — `/dev/null` link plus a `git` shim logging that the listing exited 0 | test red against the round-7 block |
+
+The PR's own class after these rounds: the trunk's classifier, run by this
+block, says `needs-council` (`merge-authority-surface`). The trunk's closure
+cannot be stripped, so that run falls back to `tsx`, and this PR changes no
+manifest. The classifier this PR introduces says `needs-owner`
+(`merge-authority-surface`, `reviewer-trust-chain`).
