@@ -45,8 +45,8 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * Every module specifier `source` loads, read from the TypeScript syntax tree:
  * import and export-from declarations, `import x = require(…)`, `import(…)`
  * and `require(…)`. A load whose argument is not a string literal, or a
- * `require` used other than as a direct call, cannot be resolved, so it fails —
- * a local function named `require` fails too, which errs closed.
+ * `require` used other than as a direct call, cannot be resolved and is refused —
+ * a local function named `require` is refused too, which errs closed.
  */
 function moduleSpecifiers(rel: string, source: string): string[] {
     const file = ts.createSourceFile(rel, source, ts.ScriptTarget.Latest, true);
