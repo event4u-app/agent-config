@@ -73,7 +73,7 @@ function runGate(
     env: Record<string, string> = {},
 ): { lines: string[]; code: number | null } {
     const script = gateBlock().replaceAll('<manifest-base_sha>', baseSha).replaceAll('<manifest-head-sha>', headSha);
-    const r = spawnSync('bash', ['-c', script], { cwd: clone, encoding: 'utf8', env: { ...process.env, ...env } });
+    const r = spawnSync('bash', ['-c', `${env['GATE_PRELUDE'] ?? ''}\n${script}`], { cwd: clone, encoding: 'utf8', env: { ...process.env, ...env } });
     return { lines: (r.stdout ?? '').trim().split('\n'), code: r.status };
 }
 
@@ -96,7 +96,10 @@ function commitOn(branch: string, from: string, files: Record<string, string | n
     for (const [f, body] of Object.entries(files)) {
         const p = path.join(clone, f);
         if (body === null) fs.rmSync(p);
-        else fs.writeFileSync(p, body);
+        else {
+            fs.mkdirSync(path.dirname(p), { recursive: true });
+            fs.writeFileSync(p, body);
+        }
     }
     git(clone, 'add', '-A', '-f', '--', ...Object.keys(files));
     git(clone, 'commit', '-q', '-m', branch);
@@ -276,11 +279,11 @@ function nodeShimWithoutStripTypes(): string {
 }
 
 /** Swap the checkout's runtime for one that always answers routine — a head-installed tsx. */
-function withPoisonedRuntime<T>(run: () => T): T {
+function withPoisonedRuntime<T>(run: () => T, tsx = '#!/bin/sh\necho "verdict: routine"\n'): T {
     const nm = path.join(clone, 'node_modules');
     fs.unlinkSync(nm);
     fs.mkdirSync(path.join(nm, '.bin'), { recursive: true });
-    fs.writeFileSync(path.join(nm, '.bin', 'tsx'), '#!/bin/sh\necho "verdict: routine"\n', { mode: 0o755 });
+    fs.writeFileSync(path.join(nm, '.bin', 'tsx'), tsx, { mode: 0o755 });
     try {
         return run();
     } finally {
@@ -355,5 +358,40 @@ describe('a dependency manifest goes to the council, and still cannot reach rout
         });
         const r = runGate(base, gated, { PATH });
         expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(/u);
+    }, 60_000);
+
+    describe('without type stripping and with a head-installed tsx — the stated residual, and its bounds', () => {
+        const noStrip = (): Record<string, string> => ({
+            PATH: `${nodeShimWithoutStripTypes()}:${process.env['PATH'] ?? ''}`,
+        });
+
+        it('a nested package.json counts as a manifest change, so a forged routine is not accepted', () => {
+            const head = commitOn('nested-manifest-poisoned', base, { 'packages/ui/package.json': '{"x": 1}\n' });
+            const r = withPoisonedRuntime(() => runGate(base, head, noStrip()));
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(runtime-uncertain/u);
+        }, 60_000);
+
+        it('a forged lower verdict on a gated change plus a bump is needs-council, never routine — the residual', () => {
+            const head = commitOn('gated-bump-poisoned', base, {
+                'package.json': bumped(7),
+                [KERNEL_RULE]: `${fs.readFileSync(path.join(clone, KERNEL_RULE), 'utf8')}\n\n`,
+            });
+            const r = withPoisonedRuntime(() => runGate(base, head, noStrip()));
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(runtime-uncertain/u);
+        }, 60_000);
+
+        it('a fallback that crashes on a manifest change is an anomaly, so needs-owner', () => {
+            const head = commitOn('bump-crashing-runtime', base, { 'package.json': bumped(8) });
+            const r = withPoisonedRuntime(() => runGate(base, head, noStrip()), '#!/bin/sh\nexit 3\n');
+            expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-owner \(classifier-unusable/u);
+            expect(r.code).not.toBe(0);
+        }, 60_000);
+    });
+
+    it('under set -e a detected manifest change still prints its verdict', () => {
+        const r = runGate(base, commitOn('dep-bump-errexit', base, { 'package.json': bumped(9) }), {
+            GATE_PRELUDE: 'set -e',
+        });
+        expect(r.lines[r.lines.length - 1]).toMatch(/^verdict: needs-council \(/u);
     }, 60_000);
 });

@@ -481,7 +481,7 @@ classify it with the **base revision's** classifier, never the head's:
 ```bash
 BASE="<manifest-base_sha>"
 HEAD_SHA="<manifest-head-sha>"
-MANIFESTS="package.json package-lock.json npm-shrinkwrap.json .npmrc yarn.lock .yarnrc.yml pnpm-lock.yaml bun.lock bun.lockb"
+MANIFEST_RE='(^|/)(package\.json|package-lock\.json|npm-shrinkwrap\.json|\.npmrc|yarn\.lock|\.yarnrc\.yml|pnpm-lock\.yaml|bun\.lockb?)$'
 run_base() {
   OUT="$("$@" "$BASE_DIR/src/scripts/classify_merge_risk.ts" --range "$BASE...$HEAD_SHA" --root "$PWD")"
   CODE=$?
@@ -497,12 +497,17 @@ if GATE_TMP="$(mktemp -d)" && [ -n "$GATE_TMP" ] && [ -d "$GATE_TMP" ]; then
   if REAL_TMP="$(cd "$GATE_TMP" && pwd -P)" && [ -n "$REAL_TMP" ]; then
     BASE_DIR="$REAL_TMP/classifier-base"
     VERDICT="verdict: needs-owner (base-unavailable: no classifier or no worktree at $BASE)"
-    git diff --quiet "$BASE...$HEAD_SHA" -- $MANIFESTS
-    DEPS=$?
+    if ! CHANGED="$(git -c core.quotePath=false diff --name-only "$BASE...$HEAD_SHA")"; then
+      DEPS=2
+    elif printf '%s\n' "$CHANGED" | grep -Eq "$MANIFEST_RE"; then
+      DEPS=1
+    else
+      DEPS=0
+    fi
     if ! TRACKED="$(git ls-files -- node_modules)" || [ -n "$TRACKED" ]; then
       VERDICT="verdict: needs-owner (runtime-unverified: node_modules unreadable or tracked)"
     elif [ "$DEPS" -gt 1 ]; then
-      VERDICT="verdict: needs-owner (manifest-unreadable: git diff exited $DEPS)"
+      VERDICT="verdict: needs-owner (manifest-unreadable: the changed-file list could not be read)"
     elif git cat-file -e "$BASE:src/scripts/classify_merge_risk.ts" \
          && git worktree add -q --detach "$BASE_DIR" "$BASE"; then
       cat > "$REAL_TMP/loader.mjs" <<'LOADER'
@@ -518,8 +523,7 @@ LOADER
         :
       elif [ "$DEPS" -eq 0 ] && RUN="$(run_base node_modules/.bin/tsx)"; then
         :
-      elif [ "$DEPS" -eq 1 ]; then
-        RUN="$(run_base node_modules/.bin/tsx)"
+      elif [ "$DEPS" -eq 1 ] && RUN="$(run_base node_modules/.bin/tsx)"; then
         case "$(printf '%s\n' "$RUN" | tail -n 1)" in
           "verdict: needs-owner ("*) ;;
           *) RUN="verdict: needs-council (runtime-uncertain: no package-free runtime, and the head changes the manifest the checkout's runtime came from)" ;;
@@ -555,13 +559,15 @@ cannot carry) does the block fall back to the checkout's `tsx`, never through
 `./scripts-run`, whose dispatcher is the head's code.
 
 **Dependency manifests go to the council (owner decision, 2026-10-15).** A head
-that changes `package.json` or a lockfile is never `routine` — the classifier's
-`dependency-manifest` trigger, and a floor in the block for a base copy that
-predates it, make it `needs-council` — and never `needs-owner` on that ground
-alone. Where the package-free run worked, its verdict stands as for any PR.
-Where it could not run, the checkout's `tsx` may be one the head's manifest
-installed, so its answer is not trusted downward: a `needs-owner` from it is
-kept, anything else becomes `needs-council (runtime-uncertain)`.
+that changes `package.json` or a lockfile, at any depth, is never `routine` —
+the classifier's `dependency-manifest` trigger, and a floor in the block for a
+base copy that predates it, make it `needs-council` — and never `needs-owner` on
+that ground alone. Where the package-free run worked, its verdict stands as for
+any PR. Where it could not run, the checkout's `tsx` may be one the head's
+manifest installed, so a valid answer from it is not trusted downward: a
+`needs-owner` is kept, a lower verdict becomes
+`needs-council (runtime-uncertain)`. A fallback that gives no valid verdict at
+all is an anomaly like any other and stays `needs-owner`.
 
 **What it fails to.** Every other anomaly is **`needs-owner`** and says why —
 never a skipped gate and never a fall-back to the head's copy: a private
