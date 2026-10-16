@@ -186,9 +186,14 @@ needs a transcript.
 - [ ] **3.3 Widening is posed, not taken.** Extending the fork set is put to the
   owner on 3.2's record.
   verify: the question is recorded with `asked:` beside 3.2's result.
-- [ ] **3.4 Compaction tail to the body budget.** Record in
+- [x] **3.4 Compaction tail to the body budget.** Record in
   `src/config/skill-body-budget.json`'s comment the 5,000-token re-attach limit
   and name the six D4 skills as shrink candidates. No new gate.
+  Done 2026-10-16: the `_comment` names the 5,000 / 25,000-token re-attach limit
+  and the six SKILL.md files at or above 20,193 characters that day —
+  existing-ui-audit, ai-council, memory-consolidation, roadmap-writing,
+  git-workflow, conventional-commits-writing. Same change: six `raised` entries
+  of +7 bytes each for the 1.1 key rename, which the body gate refused unraised.
   verify: the comment names the limit and the six skills.
 
 ## Phase 4 — Materialise on demand, only where a host drops or lacks a skill
