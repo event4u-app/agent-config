@@ -3,7 +3,7 @@
  *
  * WHAT 6.1 ASKS, AND WHY IT IS NOT THE PRICE GRID. Step 6.1 says: measure
  * `eager-all` against `thin` against `delivery` — the three values
- * `_lib/lean_projection_mode.ts:19` already declares — BEFORE any new retrieval
+ * `_lib/lean_projection_mode.ts` `LeanProjectionMode` already declares — BEFORE any new retrieval
  * component is written. `model_rule_injection.ts` already prices those three
  * shapes, and a price grid is a cost model rather than a delivery measurement:
  * it reports what each shape COSTS and never what each shape DELIVERS. The
@@ -236,7 +236,7 @@ export function renderArmExperiment(rows: readonly ArmRow[], capBytes: number): 
 
     push('── three-arm delivery experiment (road-to-governed-harness-evolution 6.1) ──');
     push(
-        `arms = LeanProjectionMode (_lib/lean_projection_mode.ts:19) · ` +
+        `arms = LeanProjectionMode (_lib/lean_projection_mode.ts) · ` +
             `one corpus · one matcher (_lib/router_match.ts) · cap ${capBytes} B`,
     );
     push('');
