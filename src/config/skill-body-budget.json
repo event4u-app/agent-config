@@ -270,10 +270,10 @@
     "storybook-workshop": 13536,
     "subagent-orchestration": 19742,
     "supply-chain-intake": 10137,
-    "svg-authoring": 17525,
+    "svg-authoring": 17818,
     "symfony-workflow": 10329,
     "systematic-debugging": 17024,
-    "tailwind-engineer": 13092,
+    "tailwind-engineer": 13083,
     "tech-debt-tracker": 5542,
     "technical-specification": 7733,
     "terraform": 8893,
@@ -286,7 +286,7 @@
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
-    "typography-system": 11382,
+    "typography-system": 11344,
     "ui-apply-generic": 8283,
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
@@ -424,6 +424,12 @@
       "old": 5168,
       "new": 6728,
       "reason": "An account-flow block under Conventions: the lifecycle traced as one path, the public auth response as an observable contract, constant-time comparison with its length precondition, no fast hash and no invented primitive, fresh re-authentication on an identity change, and a pointer to the corpus rows rather than a restatement of them. No value in it; the numbers stay with the authority the block below already names. 3.2, plus the triggers block from 3.1."
+    },
+    {
+      "skill": "svg-authoring",
+      "old": 17525,
+      "new": 17818,
+      "reason": "The counter rule in § Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
     }
   ]
 }

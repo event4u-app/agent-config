@@ -217,7 +217,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       above-the-fold face. In `typography-system`: `tabular-nums` for aligned
       figures, `opsz` for optical-size families.
       verify: `grep -c "unicode-range" docs/guidelines/design-asset-discipline.md` -> /^[1-9]/
-      Done 2026-10-16: subsetting + preload bullet in design-asset-discipline; tabular-nums + opsz in typography-system step 3.
+      Done 2026-10-16: subsetting + preload bullet in design-asset-discipline; tabular-nums + opsz in typography-system (step 3 points at `references/worked-scales.md`, which carries them).
 - [ ] **2.4 Parity holds.** The detector-status table lists T11 and T12 with
       their status, and no row reads backed without a test.
       verify: `./scripts-run src/scripts/lint_design_antipattern_parity` -> 0

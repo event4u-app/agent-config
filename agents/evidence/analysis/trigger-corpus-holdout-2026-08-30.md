@@ -446,10 +446,45 @@ reads 158 grandfathered, the shrink-only direction.
 run as the LAST act before publishing this section, after the final edit to any
 file in the set.
 
+## Re-pin — 2026-10-16, one train corpus re-hashed; the corpus did not grow
+
+```
+THE ROW IS NOT NEW. IT IS A TRAIN-SIDE RE-HASH.
+NO HOLDOUT FILE'S BYTES CHANGED, AND THE SEALED SET STAYS AT 31.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS EDIT.
+```
+
+**What changed.** `road-to-type-with-a-witness` step 6.1 routes a namespaced or
+third-party shadcn registry item through `supply-chain-intake` before `add`, and
+the step asks for one should-trigger query for that route. `react-shadcn-ui`'s
+corpus gained one exemplar (`rsu-e7`), and its description's exemplar count
+moved 6 -> 7.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `react-shadcn-ui` | train | `0x47` = 71 ≥ 51 | re-hashed |
+
+**The sealed set does not move.** 71 is above the ceiling of 51, so the holdout
+stays at **31** and the train set at **111**; the corpus is **142 files**, as
+before. Cases went 1086 -> **1087**.
+
+**Both train-side measurements were re-taken.** `routing-body-signal-verdict.json`:
+verdict unchanged in kind, still `harmful` on the false-activation guard
+(**5.993 pp** against +2.0 pp, unmoved); delta-recall 2.174 -> **2.351 pp**, below
+the 5.0 pp bar; McNemar p 0.3933 -> **0.3531**. `delivery-set-measurement-2026-08-31.json`:
+precision@5 **80.332 %** and false activation@5 **15.543 %** unmoved, recall@5
+61.413 -> **61.302 %**, recall loss 38.587 -> **38.698 pp** — the ceiling stays
+**BREACHED** — context cost 230.6 -> **230.7** tokens against the 500 target,
+still **MET**. Neither verdict changes in kind.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` and
+`routing_signal_measurement.test.ts` § 5.1 were both run as the last act after
+the final edit to the corpus file.
+
 ## The set hash
 
 ```
-SET-SHA256  6a2ba529f8f48066559ba087fa4fc93f906f3af39e091aa5d959dd37e088339a
+SET-SHA256  5f922d5b56cbc366f465f89566ada9250c37c84a3ec6001e70a4c6cf0e484a4a
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -900,7 +935,7 @@ open and which this file does not settle.
 | `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
-| `react-shadcn-ui` | `c09d357232b10629dd11c552cac4513a0712c72de5f584ffc017a16935b428fb` |
+| `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
