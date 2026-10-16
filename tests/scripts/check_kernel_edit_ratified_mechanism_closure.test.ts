@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -10,9 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import {
     classifyPaths,
-    gitBlobId,
     MECHANISM_IMPORT_PATHS,
-    PENDING_MECHANISM_PINS,
     READER_PATH,
     requiresRatification,
     SELF_PATH,
@@ -28,16 +25,9 @@ import { commitAll } from './ratification_git_fixture.js';
 const IMPORTED = [
     'src/scripts/_lib/adr_frontmatter.ts',
     'src/scripts/_lib/gate_ledger.ts',
+    'src/scripts/_lib/ratification_subject.ts',
     'src/scripts/_lib/scan_scope.ts',
 ];
-
-/**
- * The one module of the closure not gated yet. It is edited in the change that
- * routes its digest through `isMechanismPath`, and a change that gates a file
- * while editing it is digested differently by the base gate and its own, so it
- * joins in the next change, which removes it from here.
- */
-const PENDING = ['src/scripts/_lib/ratification_subject.ts'];
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -126,13 +116,13 @@ describe('the gate watches the modules its verdict runs through', () => {
         }
     });
 
-    it('every module the gate imports is gated and digested, except the named pending one', () => {
+    it('every module the gate imports is gated and digested', () => {
         const closure = gateImportClosure();
         expect(closure).toContain(READER_PATH);
         for (const p of IMPORTED) expect(closure, p).toContain(p);
         const ungated = closure.filter((m) => !requiresRatification(classifyPaths([m], [])));
-        expect(ungated).toEqual(PENDING);
-        for (const m of closure.filter((x) => !PENDING.includes(x))) {
+        expect(ungated).toEqual([]);
+        for (const m of closure) {
             expect(gatedFilesOf([m], []), m).toEqual([m]);
         }
     });
@@ -144,64 +134,17 @@ describe('the gate watches the modules its verdict runs through', () => {
         expect(() => moduleSpecifiers('h.ts', 'const r = require;\nr("./x.js");\n')).toThrow();
     });
 
-    it('every pending module is pinned to its current blob', () => {
-        expect(gitBlobId(Buffer.from(''))).toBe('e69de29bb2d1d6434b8b29ae775ad8c2e48c5391');
-        for (const rel of PENDING) {
-            const git = spawnSync('git', ['hash-object', '--', rel], { cwd: REPO, encoding: 'utf8' });
-            expect(git.status, git.stderr).toBe(0);
-            expect(gitBlobId(fs.readFileSync(path.join(REPO, rel))), rel).toBe(git.stdout.trim());
-        }
-        expect(Object.keys(PENDING_MECHANISM_PINS).sort()).toEqual([...PENDING].sort());
-        for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
-            expect(gitBlobId(fs.readFileSync(path.join(REPO, rel))), rel).toBe(blob);
-        }
-    });
-
-    // CI judges every pull request with the base revision's gate, which reads the
-    // committed blob; a trunk whose committed module is off its pin refuses all of them.
-    it('the committed trunk satisfies its own pins', () => {
-        expect(gate.pinViolations([], REPO, 'HEAD')).toEqual([]);
-    });
-
-    it('refuses a diff that moves a pinned module off its pin, and passes it unchanged', () => {
-        const rel = PENDING[0] as string;
-        fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
-        fs.writeFileSync(path.join(root, rel), fs.readFileSync(path.join(REPO, rel)));
-        commitAll(root);
-        const same = gate.evaluate([rel], root, 2);
-        expect(same.exitCode).toBe(0);
-
-        fs.appendFileSync(path.join(root, rel), '// drift\n');
-        commitAll(root);
-        // The path named exactly, spelled differently, and not named at all.
-        for (const files of [[rel], [`./${rel}`], ['README.md'], []]) {
-            const moved = gate.evaluate(files, root, 2);
-            expect(moved.exitCode, JSON.stringify(files)).toBe(1);
-            expect(moved.lines.join('\n')).toContain('a pinned ratification module changed');
-        }
-
-        fs.rmSync(path.join(root, rel));
-        commitAll(root);
-        const deleted = gate.evaluate([`./${rel}`], root, 2);
-        expect(deleted.exitCode).toBe(1);
-        expect(deleted.lines.join('\n')).toContain('is absent');
-    });
-
-    it('a tree that never had a pinned module is not a deletion', () => {
-        fs.writeFileSync(path.join(root, 'README.md'), 'x\n');
-        commitAll(root);
-        expect(gate.evaluate(['README.md'], root, 2).exitCode).toBe(0);
-    });
-
-    it('refuses an unratified edit of the record parser end to end', () => {
-        const rel = 'src/scripts/_lib/adr_frontmatter.ts';
-        fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
-        fs.writeFileSync(path.join(root, rel), 'export const x = 1;\n');
-        commitAll(root);
-        const r = gate.evaluate([rel], root, 2);
-        expect(r.exitCode).toBe(1);
-        expect(r.lines.join('\n')).toContain('no ratification artifact');
-    });
+    it.each(['src/scripts/_lib/adr_frontmatter.ts', 'src/scripts/_lib/ratification_subject.ts'])(
+        'refuses an unratified edit of %s end to end',
+        (rel) => {
+            fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+            fs.writeFileSync(path.join(root, rel), 'export const x = 1;\n');
+            commitAll(root);
+            const r = gate.evaluate([rel], root, 2);
+            expect(r.exitCode).toBe(1);
+            expect(r.lines.join('\n')).toContain('no ratification artifact');
+        },
+    );
 
     it('the digest covers every mechanism file the gate classifies', () => {
         for (const p of [...IMPORTED, READER_PATH]) {
