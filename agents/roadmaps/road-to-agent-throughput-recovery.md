@@ -139,7 +139,12 @@ the Acceptance Criteria held.
       `blocking_share` and `context_floor_max` (exit 1 since 2026-10-01, still
       on 2026-10-15) are owned by this roadmap.
       verify: the entry names this roadmap and both figures.
-- [ ] **0.3 Review the correction independently.** The #2359 review artefact
+- [x] **0.3 Review the correction independently.** Done 2026-10-16: a fresh
+      subagent over the `dispatch_r2_reviewer` package, asked the three axes on
+      top of the hashed prompt (declared in the artefact), returned 11 findings
+      in `agents/evidence/reviews/agent-throughput-recovery-correction.findings.md`
+      — denominators (1, 8), windows (2, 3, 9), sums (4, 5) — committed open in
+      `63702e3b5`, fixed in `71e5d99c9`. The #2359 review artefact
       reads `Skipped` (no-code diff), so its causal claims reached `main`
       unreviewed. The correction PR gets a review that checks denominators,
       windows and sums, by an instance that did not write it.
