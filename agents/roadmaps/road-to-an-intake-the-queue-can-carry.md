@@ -134,15 +134,21 @@ files as there were findings without an owner.
 
 ## Phase 3 — Age is visible, and a stall reaches a decision
 
-- [ ] **3.1 Two ages per file.** The dashboard prints, per active roadmap, days
+- [x] **3.1 Two ages per file.** The dashboard prints, per active roadmap, days
       since the file landed and days since its last ticked step, both read from
       `git log`, never from a field an author writes.
       verify: `npx vitest run tests/scripts/update_roadmap_progress.test.ts -t prints-two-ages --reporter=verbose` -> /✓.*prints-two-ages/
-- [ ] **3.2 A stall is a proposal, never an action.** A file with no ticked step
+- [x] **3.2 A stall is a proposal, never an action.** A file with no ticked step
       21 days after landing is listed as a park proposal; one line
       `renewed: <date> — <reason>` in its frontmatter clears the proposal for 21
       more days. Nothing is moved, archived or deleted by the tool.
       verify: `npx vitest run tests/scripts/update_roadmap_progress.test.ts -t park-proposal-renewable --reporter=verbose` -> /✓.*park-proposal-renewable/
+      > **Landed 2026-10-16.** `src/agent-src/scripts/roadmap_age.ts` reads one
+      > `git log -U0 -p --no-renames` over the active files: landing is the
+      > newest add at the current path (a promotion from `later/` lands anew),
+      > a tick is a commit adding more `[x]` lines than it removes. No git, or
+      > a path git does not know, reads `—` and is never proposed. The key is
+      > documented in `templates/roadmaps.md` rule 18.
 
 ## Phase 4 — A digest an outside session reads first
 
