@@ -802,18 +802,6 @@ record says — is `ratified` with one provider, and the record fails on
 different names (`header`, `disposition`), so a caller cannot write the one into
 the place of the other.
 
-**The record is written from the run, not typed.**
-`src/scripts/_lib/ratification_record_writer.ts` reads the council's session
-record (`reviewSeatsFromCouncilSession`: each seat's stance line, and its answers
-keyed by the questions' numbering — an answer it cannot key is recorded as
-unanswered, never guessed), takes `subject` from the gate's own
-`expectedSubjectFor`, spells `reviewed_by` one way (`ai-council`), derives the
-header, and reads the result back through the canonical reader, throwing rather
-than returning a record that reader refuses. A record that does not pass is
-still written, because the user who decides needs it. What it does not
-establish is unchanged from § Frontmatter: the session record is the caller's
-file, so nothing proves a council produced it.
-
 ## What the artifact does NOT decide
 
 Whether the diff is authority-**expanding**. That is a judgement over rule
