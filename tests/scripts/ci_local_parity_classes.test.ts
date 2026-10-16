@@ -464,6 +464,15 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     });
   }
 
+  // The runner has `origin/main` and no local `main`, and this gate's default base
+  // is the local name, so dropping the argument fails CI and passes every checkout.
+  it("hands lint_command_verbs a base the CI checkout has", () => {
+    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+    const calls = [...workflow.matchAll(/src\/scripts\/lint_command_verbs\b[^\n]*/g)].map((m) => m[0]);
+    expect(calls.length, "lint_command_verbs has a caller in the drain job").toBeGreaterThan(0);
+    for (const call of calls) expect(call).toMatch(/--baseline origin\/main\b/);
+  });
+
   it("never calls the same gate twice across the drain", () => {
     // Read from the workflow: a gate copied into a second batch would satisfy
     // that batch's exact-set case and cost a second startup for no reading.

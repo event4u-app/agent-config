@@ -576,3 +576,10 @@ the CI runner does not: the first run of this batch failed `Drain 2.2c-1` with
 `fatal: ambiguous argument 'main...HEAD'`. The step now passes
 `--baseline origin/main`, which exits 0 locally too. The local reading above could
 not have caught it — every developer checkout carries `main`.
+
+**The baseline at 64, on CI's reading of this branch.** After the base fix, the
+consistency job at `1db488224` (run 38861614919) printed
+`ci-parity:local-only: 64 violation(s), baseline 84`. The baseline is lowered to
+64 in the same pull request, so 2.2c's twenty cannot be given back by a later
+change. A test now pins that `lint_command_verbs` is called with
+`--baseline origin/main`; without the argument it reads red.
