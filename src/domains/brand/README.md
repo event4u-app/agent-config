@@ -15,8 +15,8 @@ Brand as a first-class UX layer — archetype/voice/identity grounding corpus, b
 - **`brand-identity`** — Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes.
 - **`brand-review`** — Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule.
 - **`brand-strategy`** — Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI.
-- **`brand-tokens`** — Derive a DTCG .tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator.
-- **`brand-voice`** — Define the brand voice-and-tone profile — register, do/don't lexicon, and tone shifts by context — the profile the brand-consistency gate checks copy against.
+- **`brand-tokens`** — Derive a DTCG tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator.
+- **`brand-voice`** — Define the brand voice-and-tone profile — three attributes, a tone matrix by context, and a consistency review — the profile `/brand:review` reads copy against.
 
 ## Rules (2)
 
@@ -29,4 +29,4 @@ Brand as a first-class UX layer — archetype/voice/identity grounding corpus, b
 - **`brand-audit`** — Audit how a brand is currently expressed across touchpoints and flag drift from its defined tokens, voice, and strategy. Use to inventory and critique an existing brand before changing it.
 - **`brand-identity`** — Define a brand identity constraint set from a confirmed strategy — colour story, type story, logo direction, imagery direction. Defines the tokens that token emission and asset generation consume.
 - **`brand-strategy`** — Ground a brand strategy from the corpus — archetype, opposable positioning, voice and tone, messaging framework. Use to decide who a brand is for, what it stands for, and how it sounds.
-- **`brand-to-tokens`** — Turn a confirmed brand identity into a DTCG .tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates.
+- **`brand-to-tokens`** — Turn a confirmed brand identity into a DTCG tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates.

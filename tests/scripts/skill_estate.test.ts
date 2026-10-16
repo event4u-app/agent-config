@@ -159,9 +159,13 @@ describe('the live corpus', () => {
         // payload than before. A re-derivation of both pins after a decided
         // change, not a loosened bar — the compression is in the ceiling's
         // direction and the new description sits under the 200-character cap.
+        //
+        // 11456 -> 11455 on 2026-10-16: `brand-to-tokens` names the file the
+        // resolver reads (`tokens.json`, not `.tokens.json`), one character
+        // shorter (road-to-a-brand-the-tree-can-check 1.2). Shrink direction.
         const e = measureSkillEstate(REPO);
         expect(e.skill_count).toBe(300);
-        expect(e.skill_description_tokens).toBe(11456);
+        expect(e.skill_description_tokens).toBe(11455);
         expect(e.deprecated_count).toBe(0);
     });
 

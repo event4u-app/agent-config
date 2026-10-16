@@ -71,7 +71,7 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 
 7. **Human confirms** the constraint set before any downstream step runs.
 
-8. **Export** — hand off: `brand-to-tokens` receives the colour + type constraints and emits `.tokens.json` (DTCG); `logo-generation` and `brand-asset-generation` receive the logo direction and imagery direction. Direction of flow: B (pack-brand) -> A (pack-ai-image).
+8. **Export** — hand off: `brand-to-tokens` receives the colour + type constraints and emits `tokens.json` (DTCG); `logo-generation` and `brand-asset-generation` receive the logo direction and imagery direction. Direction of flow: B (pack-brand) -> A (pack-ai-image).
 
 ## Output format
 

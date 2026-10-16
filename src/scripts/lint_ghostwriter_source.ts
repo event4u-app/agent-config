@@ -36,7 +36,12 @@ const QUIET = process.argv.slice(2).includes('--quiet');
 const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 // 6.0.x (ADR-051): ghostwriter fixtures live at src/agent-src/ghostwriter/.
 const PACKAGE_DIR = path.join(REPO, 'src', 'agent-src', 'ghostwriter');
-const CONSUMER_DIR = path.join(REPO, 'agents', 'ghostwriter');
+// Every ghostwriter command writes profiles to `agents/reference/ghostwriter/`
+// (docs/contracts/ghostwriter-schema.md); `agents/ghostwriter/` is the legacy
+// path. Both are linted, canonical first, so a profile at either is checked.
+const CONSUMER_DIR = path.join(REPO, 'agents', 'reference', 'ghostwriter');
+const LEGACY_CONSUMER_DIR = path.join(REPO, 'agents', 'ghostwriter');
+const CONSUMER_DIRS: readonly string[] = [CONSUMER_DIR, LEGACY_CONSUMER_DIR];
 const ALLOWLIST = path.join(REPO, 'src', 'scripts', 'ghostwriter_fixture_allowlist.txt');
 const EXEMPT_STEMS: ReadonlySet<string> = new Set(['README']);
 
@@ -84,6 +89,35 @@ function _globMdSorted(dir: string): string[] {
         }
     }
     return out.sort();
+}
+
+/** Sorted `*.md` files anywhere under `dir`, nested directories included. */
+function _globMdRecursiveSorted(dir: string): string[] {
+    let entries: fs.Dirent[];
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+    const out: string[] = [];
+    for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            out.push(..._globMdRecursiveSorted(full));
+        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+            out.push(full);
+        }
+    }
+    return out.sort();
+}
+
+/** Every consumer-side profile file, canonical path first, then legacy. */
+function consumer_profile_files(dirs: readonly string[] = CONSUMER_DIRS): string[] {
+    const out: string[] = [];
+    for (const dir of dirs) {
+        out.push(..._globMdRecursiveSorted(dir));
+    }
+    return out;
 }
 
 function _stem(p: string): string {
@@ -213,14 +247,11 @@ function lint_package_side(allowlist: Set<string>): string[] {
     return errors;
 }
 
-function lint_consumer_side(): string[] {
+function lint_consumer_side(dirs: readonly string[] = CONSUMER_DIRS): string[] {
     const errors: string[] = [];
-    if (!_exists(CONSUMER_DIR)) {
-        return errors;
-    }
     // (alias_ci → [source_path, source_value, source_kind])
     const seen = new Map<string, [string, string, string]>();
-    for (const p of _globMdSorted(CONSUMER_DIR)) {
+    for (const p of consumer_profile_files(dirs)) {
         if (EXEMPT_STEMS.has(_stem(p))) {
             continue;
         }
@@ -302,15 +333,13 @@ function main(): number {
     const pkg_count = _exists(PACKAGE_DIR)
         ? _globMdSorted(PACKAGE_DIR).filter((p) => !EXEMPT_STEMS.has(_stem(p))).length
         : 0;
-    const cons_count = _exists(CONSUMER_DIR)
-        ? _globMdSorted(CONSUMER_DIR).filter((p) => !EXEMPT_STEMS.has(_stem(p))).length
-        : 0;
+    const cons_count = consumer_profile_files().filter((p) => !EXEMPT_STEMS.has(_stem(p))).length;
     try {
         assertScanned({
             gate: 'lint_ghostwriter_source',
             scanned: pkg_count + cons_count,
             units: 'profile(s)',
-            roots: ['src/agent-src/ghostwriter', 'agents/ghostwriter'],
+            roots: ['src/agent-src/ghostwriter', 'agents/reference/ghostwriter', 'agents/ghostwriter'],
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
@@ -414,6 +443,9 @@ export {
     REPO,
     PACKAGE_DIR,
     CONSUMER_DIR,
+    LEGACY_CONSUMER_DIR,
+    CONSUMER_DIRS,
+    consumer_profile_files,
     ALLOWLIST,
     EXEMPT_STEMS,
     ALIAS_MIN_LEN,

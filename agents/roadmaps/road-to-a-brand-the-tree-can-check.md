@@ -182,103 +182,120 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 0 — Control readings (red first)
 
-- [ ] **0.1 Name parity, red.** Every authored surface naming the token file
+- [x] **0.1 Name parity, red.** Every authored surface naming the token file
       names a path in the resolver; fails on the D1 list. Generated catalogues
       and ADRs are excluded from the assertion and regenerate or stay historical.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t token-name-parity --reporter=verbose` -> /✓.*token-name-parity/
-- [ ] **0.2 Status honesty, red.** Fixtures: malformed file, two files with
+      Done 2026-10-16: `token-name-parity` in `brand_status.test.ts` walks `src/skills`, `src/domains` and `docs/contracts` (evals and generated READMEs excluded); red against the 49 dotted lines at the base, green after 1.2's authored half.
+- [x] **0.2 Status honesty, red.** Fixtures: malformed file, two files with
       different content, two files with identical content, tokens without voice,
       voice without tokens, nothing. Today the first two read "present".
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t state-fixtures --reporter=verbose` -> /✓.*state-fixtures/
-- [ ] **0.3 Object values and same-line skip, red.** 2025.10 colour, dimension
+      Done 2026-10-16: eight `state-fixtures` cases, seven red at the base (no `state`, `sources` or validity there); the two voice fixtures assert the voice side reads as absent, as 2.3 allows until 4.5.
+- [x] **0.3 Object values and same-line skip, red.** 2025.10 colour, dimension
       and alias; `#ff0000` beside `var(--x)`.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t "dtcg-2025|same-line" --reporter=verbose` -> /✓.*dtcg-2025[\s\S]*✓.*same-line/
+      Done 2026-10-16: `dtcg-2025` and `same-line` cases in `skills_design_tokens_tokens.test.ts`, seen red against the base `tokens.ts` before 3.1 and 3.2 landed.
 - [ ] **0.4 Taboo and claim never checked, red.** A ghostwriter draft containing
       its own taboo and a brand draft containing "the number one platform"
       produce no finding from any tool. (new test file)
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **0.5 Ghostwriter path, red.** The ignore block and the lint roots both
+- [x] **0.5 Ghostwriter path, red.** The ignore block and the lint roots both
       cover the documented path; fails today.
       verify: `npx vitest run tests/scripts/lint_ghostwriter_source.test.ts -t documented-path --reporter=verbose` -> /✓.*documented-path/
+      Done 2026-10-16: `documented-path` checks the managed block with `check-ignore --no-index` in a scratch repository and the lint roots; six of ten cases red at the base.
 - [ ] **0.6 Zero brand bytes off-brand, guard.** A backend prompt in a project
       with a full brand produces no brand emission; green today, kept as the
       floor every later phase must hold.
       verify: `npx vitest run tests/scripts/hooks -t no-brand-bytes --reporter=verbose` -> /✓.*no-brand-bytes/
-- [ ] **0.7 Profile exposure check** (`folded-from-deep-dive`). Before 1.1 lands,
+- [x] **0.7 Profile exposure check** (`folded-from-deep-dive`). Before 1.1 lands,
       report how many files under either ghostwriter path are tracked in this
       repository and in its test fixtures — counts only, never names or content.
       A non-zero count outside `README.md` and `fictional: true` fixtures stops
       Phase 1 and goes to the owner as a data-exposure finding.
       verify: `git ls-files agents/reference/ghostwriter agents/ghostwriter | rg -v 'README\.md$' | wc -l` -> /^\s*0$/
+      Done 2026-10-16: the count is 0 — only `agents/reference/ghostwriter/README.md` is tracked; Phase 1 proceeds.
 
 ## Phase 1 — Small truths (one immediate PR)
 
-- [ ] **1.1 Profiles ignored where they live** (E2, first). The ignore block and
+- [x] **1.1 Profiles ignored where they live** (E2, first). The ignore block and
       the lint roots cover `agents/reference/ghostwriter/` (canonical) and keep
       `agents/ghostwriter/` (legacy), including `*.md.bak` copies and nested
       files (`folded-from-deep-dive`); `README.md` stays tracked;
       `agents-layout.md:90` names `reference/ghostwriter/` as local-only beside
       the tracked rest of `reference/`. 0.5 goes green. No history rewrite, ever.
       verify: `rg -n 'agents/reference/ghostwriter' src/config/gitignore-block.txt src/scripts/lint_ghostwriter_source.ts docs/contracts/agents-layout.md` -> /reference\/ghostwriter/
+      Done 2026-10-16: the block (and `agents-paths.yml`) ignores `agents/reference/ghostwriter/**` and `agents/ghostwriter/**` with `README.md` carved out; the lint scans both roots recursively, canonical first; `agents-layout.md` marks `reference/ghostwriter/` local-only. 0.5 green.
 - [ ] **1.2 One token name** (E10). The D1 authored surfaces say `tokens.json`;
       routing evals keep the dotted phrasing as a user utterance and gain the
       plain one; generated catalogues regenerate; ADR-061 gets no edit. The
       "Recorded, not resolved" section is deleted. 0.1 goes green.
       verify: `rg -n '\.tokens\.json' src/skills src/domains docs/contracts --glob '!**/evals/**' | rg -v 'NEVER|nothing reads|near-miss'` -> 1 (no output)
+      Open 2026-10-16: the authored half landed — 14 files say `tokens.json`, the "Recorded, not resolved" section is gone, catalogues regenerated, ADR-061 untouched, the verify passes and 0.1 is green. The eval half did not: adding the plain utterance to the `brand-to-tokens` and `brand-asset-generation` trigger evals changes the pinned trigger-corpus holdout (`trigger_corpus_holdout_pin`), whose published SET-SHA256 and the measurements built on it would need re-pinning; that is left for a change that owns the corpus.
 - [ ] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
       instead of declaring its own.
       verify: `rg -c 'export const BRAND_TOKEN_PATHS' src` -> 1 file
-- [ ] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
+      Open 2026-10-16: a re-export is the edit `uiAudit.ts:35` records as tried and reverted — `dist/cli` is compiled by tsc and the work-engine template tree is not, so a runtime import from the CLI into the template fails to resolve in the published package, and the template stays self-contained the other way. Needs a home both trees may import at runtime.
+- [x] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
       § Iron Law 2; the rule gains `enforced_by: instruction-only`, and
       "Validation gate" reads "checklist" until Phase 5 names its checker.
       verify: `rg -n 'brand-consistency' src/skills src/domains docs/contracts/brand-token-consumption.md --glob '!**/evals/**' --glob '!**/README.md'` -> 1 (no match)
-- [ ] **1.5 `/brand:voice` says what it makes today.** "Three attributes, tone
+      Done 2026-10-16: the eleven sites cite `brand-source-of-truth` § Iron Law 2; the rule carries `enforced_by: instruction-only: …` and says "checklist".
+- [x] **1.5 `/brand:voice` says what it makes today.** "Three attributes, tone
       matrix, consistency review"; the lexicon line returns with 4.3.
       verify: `rg -n 'do/don.t lexicon' src/domains/brand` -> 1 (no match)
+      Done 2026-10-16: `/brand:voice` now says three attributes, a tone matrix by context, and a consistency review.
 
 ## Phase 2 — `brand:status` tells the state
 
-- [ ] **2.1 Parse before present.** Each found file is parsed; invalid JSON or a
+- [x] **2.1 Parse before present.** Each found file is parsed; invalid JSON or a
       non-DTCG root is `invalid` with the parse error, never present. 0.2 (part)
       goes green.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t invalid --reporter=verbose` -> /✓.*invalid/
-- [ ] **2.2 Shadowed sources reported.** Every hit at the four paths is listed
+      Done 2026-10-16: `inspectBrand` parses each hit; not-JSON, a non-object root or no `$value` anywhere is `invalid` with the reason, and the brand is the first VALID file.
+- [x] **2.2 Shadowed sources reported.** Every hit at the four paths is listed
       with its content hash; equal hashes are `duplicate`, unequal ones are
       `shadowed` with the winner named. Nothing is merged by value.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t shadowed --reporter=verbose` -> /✓.*shadowed/
-- [ ] **2.3 The contract's vocabulary, computed** (E9). `state` is
+      Done 2026-10-16: every hit carries its sha256; equal to the winner is `duplicate`, different is `shadowed` with `winner`; nothing merged by value.
+- [x] **2.3 The contract's vocabulary, computed** (E9). `state` is
       `greenfield | mixed | branded` from tokens and the Phase 4 slot, with
       `invalid` and `shadowed` as qualifiers; `sources[]` carries path, sha256
       and kind (`tokens | voice | design-system | design-md`). Computed on every
       call, never persisted. Until 4.5 lands the voice side reads as absent; the
       step ships the tokens half first.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t state-fixtures --reporter=verbose` -> /✓.*state-fixtures/
+      Done 2026-10-16: `brand:status --json` adds `state`, `qualifiers` and `sources[]` (path, sha256, kind, status), computed per call. The contract table's set names are `branded | bare | mixed` — `bare`, not `greenfield`, so `bare` is emitted (E9: one vocabulary). Voice reads as absent until 4.5; `DESIGN.md` is listed as `design-md`; `design-system.json` has no canonical path to search, so that kind is typed and not yet emitted.
 - [ ] **2.4 Readers ask the resolver.** The scaffold seed line and the asset
       renderer use the 2.1 validity, not file existence.
       verify: `npx vitest run tests/scripts -t token-seed-invalid --reporter=verbose` -> /✓.*token-seed-invalid/
+      Open 2026-10-16: same constraint as 1.3 — the 2.1 validity lives in `src/scripts/_cli/cmd_brand_status.ts`, which neither the template-side scaffold nor the compiled asset renderer can import at runtime.
 
 ## Phase 3 — The stable token format
 
-- [ ] **3.1 Read 2025.10.** Object colour → `hex` when present, else CSS Color 4
+- [x] **3.1 Read 2025.10.** Object colour → `hex` when present, else CSS Color 4
       for the named spaces, with `alpha`; dimension → `<value><unit>`; any other
       object, a non-finite component or an out-of-range value is a hard error
       naming the token path, non-zero exit (`folded-from-deep-dive`); string
       values stay accepted.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t dtcg-2025 --reporter=verbose` -> /✓.*dtcg-2025/
-- [ ] **3.2 Skip the span, not the line.** `validate` removes `var(--…)` spans
+      Done 2026-10-16: `tokenValueToCss` — colour `hex` (8-digit with alpha) or a CSS Color 4 function for 14 named spaces, `{value, unit}` for px/rem/ms/s, every other object or an out-of-range/non-finite value exits 1 naming the token path.
+- [x] **3.2 Skip the span, not the line.** `validate` removes `var(--…)` spans
       and still reports every other literal on the line.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t same-line --reporter=verbose` -> /✓.*same-line/
+      Done 2026-10-16: `validate` blanks each `var(--…)` span (nested fallbacks included) and scans the rest of the line.
 - [ ] **3.3 The reading canvas 8.2 consumes.** With a valid registered file,
       `validate --json` tags each literal `on-palette (<token>)` or
       `off-palette (nearest <token>, ΔE2000)`, each with a stable finding id
       canvas 8.2 can deduplicate on (`folded-from-deep-dive`). Blocks nothing; the finding and
       its baseline stay canvas 8.2's. Tokens are never combined by value.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t palette-tag --reporter=verbose` -> /✓.*palette-tag/
-- [ ] **3.4 The starter speaks the format it claims** (E3). It emits 2025.10
+- [x] **3.4 The starter speaks the format it claims** (E3). It emits 2025.10
       objects and drops its `$schema` key, whose value sits on a different host
       from the specification's own site and which nothing in `tokens.ts` reads
       (E12).
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t starter-shape --reporter=verbose` -> /✓.*starter-shape/
+      Done 2026-10-16: the starter carries colour, dimension and duration objects and no `$schema`; shadows stay strings (no composite-shadow serialiser here) and `0` became `0px`.
 - [ ] **3.5 One row for canvas 0.4** (after canvas 3.1). The object-valued alias
       target joins the canvas alias fixture, so a missing token and an existing
       but unmappable one stay distinct; no new import test.

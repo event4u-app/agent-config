@@ -32,14 +32,14 @@ what this skill owns.
 2. Diff every field against the current `DESIGN.md`.
 3. Surface a **per-field confirm/merge proposal** — the artifact is *observed,
    not authoritative* (mirrors `source-discovery`). Never write silently.
-4. **Conflict with a registered brand value** (a confirmed `.tokens.json` /
+4. **Conflict with a registered brand value** (a confirmed `tokens.json` /
    brand token) → **flag, never auto-apply** (`brand-source-of-truth`:
    consumer brand wins). Precedence: brand tokens > confirmed `DESIGN.md` >
    imported observation.
 5. On the human's accept, persist the chosen fields into `DESIGN.md`. Where the
    consumer wants a token source of truth, hand the mapped DTCG fields to
    `brand-to-tokens` / `design-tokens` to
-   materialise `.tokens.json` — do not invent a parallel token format.
+   materialise `tokens.json` — do not invent a parallel token format.
 
 **Two sources, one shape:**
 

@@ -69,7 +69,7 @@ Provenance: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 3. **Propose grounded options** (archetype + voice + colour + logo + messaging),
    each cited per corpus row, with alternatives — the human confirms.
 4. The confirmed selections become the **brand token + voice constraint set**
-   that `brand-to-tokens`, `brand-consistency`, and pack-ai-image's brand-asset
+   that `brand-to-tokens`, `brand-source-of-truth` § Iron Law 2, and pack-ai-image's brand-asset
    generation consume.
 
 ## Output format
@@ -98,7 +98,7 @@ Provenance: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 ## Gotchas
 
 - Corpus grounds **pre-action selection** — not mid-task reference and not
-  output validation ([`brand-consistency`](../../rules/brand-consistency.md)
+  output validation (`brand-source-of-truth` § Iron Law 2
   owns validation).
 - Keep queries brand-shaped ("luxury law firm rebrand", "playful kids snack
   brand") — generic words land on the default `archetype` domain.

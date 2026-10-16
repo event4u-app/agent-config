@@ -20,6 +20,11 @@
  *   - `json.dumps(..., indent=2)` with the DEFAULT `ensure_ascii=True`
  *     (non-ASCII → `\uXXXX`, astral → surrogate pairs).
  *
+ * Two deliberate departures from the original (road-to-a-brand-the-tree-can-check
+ * 3.1 / 3.2): stable DTCG 2025.10 object values (colour, dimension, duration)
+ * serialise to CSS and any other object value fails with its token path, and
+ * `validate` blanks the `var(--…)` span instead of skipping the whole line.
+ *
  * Pure stdlib (Node builtins only) · read-only except `generate -o` · no
  * network · no subprocess. A `.ts` MUST NOT import a `.py`.
  */
@@ -189,6 +194,112 @@ export function resolveReference(value: Json, tokens: JsonObject): Json {
     return node !== null ? node : value;
 }
 
+// ------------------------------------------------- DTCG 2025.10 object values
+
+/** A token value this toolchain cannot serialise to CSS. Names the token path. */
+export class TokenValueError extends Error {}
+
+const DIMENSION_UNITS: ReadonlySet<string> = new Set(['px', 'rem']);
+const DURATION_UNITS: ReadonlySet<string> = new Set(['ms', 's']);
+
+/**
+ * Per colour space: the CSS Color 4 function and, per component, its inclusive
+ * range. `null` is unbounded. Hue ranges are the specification's 0-360.
+ */
+type Range = readonly [number, number] | null;
+const COLOR_SPACES: Readonly<Record<string, { fn: string; ranges: readonly [Range, Range, Range] }>> = {
+    srgb: { fn: 'color(srgb', ranges: [[0, 1], [0, 1], [0, 1]] },
+    'srgb-linear': { fn: 'color(srgb-linear', ranges: [[0, 1], [0, 1], [0, 1]] },
+    'display-p3': { fn: 'color(display-p3', ranges: [[0, 1], [0, 1], [0, 1]] },
+    'a98-rgb': { fn: 'color(a98-rgb', ranges: [[0, 1], [0, 1], [0, 1]] },
+    'prophoto-rgb': { fn: 'color(prophoto-rgb', ranges: [[0, 1], [0, 1], [0, 1]] },
+    rec2020: { fn: 'color(rec2020', ranges: [[0, 1], [0, 1], [0, 1]] },
+    'xyz-d65': { fn: 'color(xyz-d65', ranges: [null, null, null] },
+    'xyz-d50': { fn: 'color(xyz-d50', ranges: [null, null, null] },
+    hsl: { fn: 'hsl(', ranges: [[0, 360], [0, 100], [0, 100]] },
+    hwb: { fn: 'hwb(', ranges: [[0, 360], [0, 100], [0, 100]] },
+    lab: { fn: 'lab(', ranges: [[0, 100], null, null] },
+    lch: { fn: 'lch(', ranges: [[0, 100], [0, Infinity], [0, 360]] },
+    oklab: { fn: 'oklab(', ranges: [[0, 1], null, null] },
+    oklch: { fn: 'oklch(', ranges: [[0, 1], [0, Infinity], [0, 360]] },
+};
+
+/** Six decimals at most, no exponent, no trailing zeros. */
+function _num(n: number): string {
+    return String(Number(n.toFixed(6)));
+}
+
+function _finite(v: unknown, what: string, tokenPath: string): number {
+    if (typeof v !== 'number' || !Number.isFinite(v)) {
+        throw new TokenValueError(`token ${tokenPath}: ${what} must be a finite number, got ${JSON.stringify(v)}`);
+    }
+    return v;
+}
+
+function _colorToCss(v: JsonObject, tokenPath: string): string {
+    const space = v['colorSpace'];
+    const alpha = v['alpha'] === undefined ? 1 : _finite(v['alpha'], 'alpha', tokenPath);
+    if (alpha < 0 || alpha > 1) {
+        throw new TokenValueError(`token ${tokenPath}: alpha ${alpha} is outside 0-1`);
+    }
+    const hex = v['hex'];
+    if (typeof hex === 'string') {
+        if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+            throw new TokenValueError(`token ${tokenPath}: hex ${JSON.stringify(hex)} is not a #rrggbb value`);
+        }
+        if (alpha === 1) return hex;
+        const a = Math.round(alpha * 255).toString(16).padStart(2, '0');
+        return hex + (hex === hex.toUpperCase() ? a.toUpperCase() : a);
+    }
+    const spec = typeof space === 'string' ? COLOR_SPACES[space] : undefined;
+    if (spec === undefined) {
+        throw new TokenValueError(`token ${tokenPath}: colorSpace ${JSON.stringify(space)} has no CSS mapping`);
+    }
+    const comps = v['components'];
+    if (!Array.isArray(comps) || comps.length !== 3) {
+        throw new TokenValueError(`token ${tokenPath}: components must be an array of three values`);
+    }
+    const parts = comps.map((c, i) => {
+        if (c === 'none') return 'none';
+        const n = _finite(c, `component ${i}`, tokenPath);
+        const range = spec.ranges[i] ?? null;
+        if (range !== null && (n < range[0] || n > range[1])) {
+            throw new TokenValueError(
+                `token ${tokenPath}: component ${i} (${n}) is outside ${range[0]}-${range[1]} for ${String(space)}`,
+            );
+        }
+        return space === 'hsl' || space === 'hwb' ? (i === 0 ? _num(n) : `${_num(n)}%`) : _num(n);
+    });
+    const alphaPart = alpha === 1 ? '' : ` / ${_num(alpha)}`;
+    const open = spec.fn.endsWith('(') ? spec.fn : `${spec.fn} `;
+    return `${open}${parts.join(' ')}${alphaPart})`;
+}
+
+/**
+ * Serialise a resolved token value for CSS. Strings pass through unchanged
+ * (legacy-valid). A DTCG 2025.10 colour or dimension/duration object becomes
+ * CSS; any other object is a hard error naming the token — never `[object Object]`.
+ */
+export function tokenValueToCss(value: Json, tokenPath: string): Json {
+    if (!_isPlainObject(value)) {
+        return value;
+    }
+    if ('colorSpace' in value || 'components' in value || 'hex' in value) {
+        return _colorToCss(value, tokenPath);
+    }
+    if ('unit' in value && 'value' in value) {
+        const unit = value['unit'];
+        const n = _finite(value['value'], 'value', tokenPath);
+        if (typeof unit !== 'string' || !(DIMENSION_UNITS.has(unit) || DURATION_UNITS.has(unit))) {
+            throw new TokenValueError(`token ${tokenPath}: unit ${JSON.stringify(unit)} is not px, rem, ms or s`);
+        }
+        return `${_num(n)}${unit}`;
+    }
+    throw new TokenValueError(
+        `token ${tokenPath}: object value ${JSON.stringify(value)} is neither a DTCG colour nor a dimension/duration`,
+    );
+}
+
 /** Flatten a DTCG token tree into `--css-var → resolved value`. */
 export function flattenTokens(
     obj: JsonObject,
@@ -204,7 +315,7 @@ export function flattenTokens(
         if (_isPlainObject(value)) {
             if ('$value' in value) {
                 const cssVar = '--' + current.join('-').replace(/\./g, '-');
-                res[cssVar] = resolveReference(value['$value'], tokens);
+                res[cssVar] = tokenValueToCss(resolveReference(value['$value'], tokens), current.join('.'));
             } else {
                 flattenTokens(value, tokens, current, res);
             }
@@ -412,6 +523,35 @@ function _searchGroup0(regex: RegExp, line: string): string | null {
     return m ? m[0] : null;
 }
 
+/**
+ * Replace every `var(--…)` span — nested `var()` fallbacks included — with
+ * spaces of the same length, so columns stay put and only the reference goes.
+ */
+function _blankVarSpans(line: string): string {
+    let out = '';
+    let i = 0;
+    while (i < line.length) {
+        if (line.startsWith('var(--', i)) {
+            let depth = 0;
+            let j = i;
+            for (; j < line.length; j += 1) {
+                if (line[j] === '(') depth += 1;
+                else if (line[j] === ')') {
+                    depth -= 1;
+                    if (depth === 0) break;
+                }
+            }
+            const end = Math.min(j + 1, line.length);
+            out += ' '.repeat(end - i);
+            i = end;
+        } else {
+            out += line[i];
+            i += 1;
+        }
+    }
+    return out;
+}
+
 export function scanFile(p: string): Violation[] {
     const violations: Violation[] = [];
     let text: string;
@@ -423,16 +563,14 @@ export function scanFile(p: string): Violation[] {
     const lines = text.split('\n');
     for (let i = 0; i < lines.length; i += 1) {
         const lineno = i + 1;
-        const line = lines[i] as string;
-        const stripped = _strip(line);
-        if (
-            stripped.startsWith('//') ||
-            stripped.startsWith('/*') ||
-            stripped.startsWith('*') ||
-            line.includes('var(--')
-        ) {
+        const raw = lines[i] as string;
+        const stripped = _strip(raw);
+        if (stripped.startsWith('//') || stripped.startsWith('/*') || stripped.startsWith('*')) {
             continue;
         }
+        // Skip the `var(--…)` span, not the line: a literal beside a token
+        // reference on the same line is still a literal.
+        const line = _blankVarSpans(raw);
         for (const kind of Object.keys(PATTERNS)) {
             const { regex, message, suggestion } = PATTERNS[kind] as Pattern;
             const matches = _findall(regex, line);
@@ -802,8 +940,16 @@ export function main(argv: string[] | null = null): number {
             return 1;
         }
         const tokens = JSON.parse(fs.readFileSync(config, 'utf-8')) as JsonObject;
-        const output =
-            parsed.format === 'tailwind' ? generateTailwind(tokens) : generateCss(tokens);
+        let output: string;
+        try {
+            output = parsed.format === 'tailwind' ? generateTailwind(tokens) : generateCss(tokens);
+        } catch (exc) {
+            if (exc instanceof TokenValueError) {
+                process.stderr.write(`Error: ${exc.message}\n`);
+                return 1;
+            }
+            throw exc;
+        }
         if (parsed.output) {
             const out = parsed.output;
             const dir = path.dirname(out);

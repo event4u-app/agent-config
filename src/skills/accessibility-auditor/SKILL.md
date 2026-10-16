@@ -177,8 +177,8 @@ upstream color ramp, they never vendor a hex table:
   when the brief is light-only — dark mode arrives later.
 
 The ramp itself is authoritative in [`design-tokens`](../design-tokens/SKILL.md)
-(token derivation) and the consumer's [`brand-consistency`](../../rules/brand-consistency.md)
-tokens — this procedure sits beside that authority, it does not duplicate the
+(token derivation) and the consumer's tokens (`brand-source-of-truth`
+§ Iron Law 2) — this procedure sits beside that authority, it does not duplicate the
 values.
 
 ## Gotcha

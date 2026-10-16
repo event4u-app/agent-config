@@ -1,6 +1,6 @@
 ---
 # Marp brand deck template — locked brand variables.
-# Every visual value below references a brand token from .tokens.json
+# Every visual value below references a brand token from tokens.json
 # (var(--token)). Do NOT inline raw hex/fonts — that breaks brand sync.
 # Render with the user's own Marp tooling; no engine is owned here.
 marp: true
@@ -43,4 +43,4 @@ Subtitle in the brand voice — replace with confirmed positioning line.
 ## Closing
 
 Call to action in the brand voice. All colour and type come from
-`.tokens.json` via `var(--token)` — change the tokens, the deck restyles.
+`tokens.json` via `var(--token)` — change the tokens, the deck restyles.

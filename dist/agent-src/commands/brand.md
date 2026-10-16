@@ -33,7 +33,7 @@ scaffold seed consume (B → A dependency).
 |---|---|---|
 | `/brand:strategy "<brief>"` | `commands/brand/strategy.md` | Positioning, archetype, voice, tone, messaging over the brand corpus |
 | `/brand:identity "<strategy ref>"` | `commands/brand/identity.md` | Logo/colour/type/imagery direction; defines the token constraints |
-| `/brand:tokens "<identity ref>"` | `commands/brand/tokens.md` | Derive a DTCG `.tokens.json` source of truth → CSS vars + Tailwind |
+| `/brand:tokens "<identity ref>"` | `commands/brand/tokens.md` | Derive a DTCG `tokens.json` source of truth → CSS vars + Tailwind |
 | `/brand:review "<artifact>"` | `commands/brand/review.md` | Audit emitted UI/copy/assets against active brand tokens + voice |
 | `/brand:voice "<brand ref>"` | `commands/brand/voice.md` | Define the voice-and-tone profile the consistency gate checks copy against |
 
@@ -50,7 +50,7 @@ scaffold seed consume (B → A dependency).
 - **Do NOT chain subcommands.** One `/brand <sub>` per turn.
 - **Consumer brand tokens are the source of truth.** The brand corpus only
   fills gaps; a value not traceable to a brand token or voice rule is off-brand
-  (per [`brand-consistency`](../rules/brand-consistency.md)).
+  (per [`brand-source-of-truth`](../rules/brand-source-of-truth.md) § Iron Law 2).
 - **Edit `src/` only.** Generated mirrors regenerate.
 
 ## See also

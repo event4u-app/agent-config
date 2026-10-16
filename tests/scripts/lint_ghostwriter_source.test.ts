@@ -3,6 +3,12 @@
 // No pytest suite exists. Light behavioural spec over exported pure helpers
 // (validate_alias, is_latin_or_allowed) plus the golden-parity layer that runs
 // python3 vs tsx on the REAL REPO (skipped without python3).
+import { execFileSync, spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import * as lgs from '../../src/scripts/lint_ghostwriter_source.js';
@@ -43,4 +49,66 @@ describe('lint_ghostwriter_source — is_latin_or_allowed', () => {
 });
 
 // --- Golden parity on the REAL REPO -----------------------------------------
+
+// --- documented-path (road-to-a-brand-the-tree-can-check 0.5 / 1.1) ---------
+//
+// Every ghostwriter command writes profiles to agents/reference/ghostwriter/.
+// The managed ignore block and the lint roots must cover that path, and keep
+// the legacy agents/ghostwriter/ one, or a real-person profile is committable.
+describe('lint_ghostwriter_source — documented-path', () => {
+    const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+    function ignored(rel: string): boolean {
+        const block = fs.readFileSync(path.join(REPO_ROOT, 'src', 'config', 'gitignore-block.txt'), 'utf-8');
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gw-ignore-'));
+        try {
+            execFileSync('git', ['init', '-q'], { cwd: tmp });
+            fs.writeFileSync(path.join(tmp, '.gitignore'), block);
+            const r = spawnSync('git', ['check-ignore', '-q', '--no-index', rel], { cwd: tmp });
+            return r.status === 0;
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    }
+
+    it.each([
+        'agents/reference/ghostwriter/someone.md',
+        'agents/reference/ghostwriter/someone.md.bak',
+        'agents/reference/ghostwriter/nested/someone.md',
+        'agents/ghostwriter/someone.md',
+        'agents/ghostwriter/someone.md.bak',
+        'agents/ghostwriter/nested/someone.md',
+    ])('documented-path: the managed block ignores %s', (rel) => {
+        expect(ignored(rel)).toBe(true);
+    });
+
+    it.each(['agents/reference/ghostwriter/README.md', 'agents/ghostwriter/README.md'])(
+        'documented-path: the managed block keeps %s tracked',
+        (rel) => {
+            expect(ignored(rel)).toBe(false);
+        },
+    );
+
+    it('documented-path: the lint roots name the canonical path first and keep the legacy one', () => {
+        const dirs = (lgs as Record<string, unknown>)['CONSUMER_DIRS'] as string[] | undefined;
+        const rels = (dirs ?? []).map((d) => path.relative(REPO_ROOT, d).split(path.sep).join('/'));
+        expect(rels).toEqual(['agents/reference/ghostwriter', 'agents/ghostwriter']);
+    });
+
+    it('documented-path: the lint reads a nested profile at the canonical path', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'gw-lint-'));
+        try {
+            const canonical = path.join(tmp, 'reference', 'ghostwriter');
+            fs.mkdirSync(path.join(canonical, 'nested'), { recursive: true });
+            fs.writeFileSync(path.join(canonical, 'README.md'), '# readme\n');
+            fs.writeFileSync(path.join(canonical, 'nested', 'fake.md'), '---\nfictional: true\n---\n');
+            const lint = lgs.lint_consumer_side as (dirs?: readonly string[]) => string[];
+            const joined = lint([canonical]).join('\n');
+            expect(joined).toContain("'fictional: true' in consumer tree");
+            expect(joined).toContain('fake.md');
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+});
 
