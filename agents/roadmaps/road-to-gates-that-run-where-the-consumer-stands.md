@@ -49,17 +49,30 @@ consumer behaviour points at something that executes.
 
 ## Phase 1 — Count honestly, then name the harness
 
-- [ ] **1.1 Re-derive the consumer-path gate count.** A script that joins
+- [x] **1.1 Re-derive the consumer-path gate count.** A script that joins
       `src/scripts/hook_manifest.yaml` against the CLI surface and reports how
       many of the 353 gates run on a consumer's machine. The supplied figure
       of 21 is **not** carried forward until this reproduces it.
       verify: the script runs and prints a number; the number — whatever it
       is — is what gets written, not the one in the source.
-- [ ] **1.2 Enumerate the consumer-claim subset.** Mark every claim in
+      **Result:** `./scripts-run src/scripts/report_consumer_gate_reach`
+      prints 353 prefix entries, of which 345 are gate modules (the other 8
+      are allowlist data files and tests), and **13** of the 345 are
+      statically reachable from a consumer entry point (125 entry points
+      walked: hook dispatcher, every manifest `script:`, the node CLI, every
+      delegated `cmd_*` verb, the installer, the MCP server and every source
+      the bash dispatcher names). The supplied 21 did not reproduce; 13 is a
+      lower bound on reach through a supported surface, for the reasons the
+      script's header states.
+- [x] **1.2 Enumerate the consumer-claim subset.** Mark every claim in
       `docs/CLAIMS.md` whose subject is consumer behaviour rather than this
       repository's own tree.
       verify: the subset is a list of claim ids, not a count.
-- [ ] **1.3 Name `tests/install/` as the consumer harness.** One paragraph in
+      **Result:** 12 ids in `docs/contracts/consumer-harness.md`
+      § Consumer-facing claims (11 backed, 1 withdrawn), with the evidence
+      class each carries today; `consumer_harness_contract.test.ts` fails when
+      a listed id leaves the ledger or changes status.
+- [x] **1.3 Name `tests/install/` as the consumer harness.** One paragraph in
       `docs/contracts/` recording what it is, how a case is added, and the
       `env: { HOME }` injection rule the existing cases already follow.
       The matched lines are the new paragraph.
@@ -101,12 +114,14 @@ consumer behaviour points at something that executes.
       repository is not evidence for a claim about a consumer's machine.
       The measured exec share is written from the run's output, never predicted.
       verify: `./scripts-run src/scripts/build_proof` -> 0
-- [ ] **4.2 Make a red harness case the entry point for a consumer bug.** A
+- [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
       verify: the paragraph exists and names the directory; the two sibling
       roadmaps in this round already follow it, which is the evidence it is
       workable rather than aspirational.
+      **Result:** landed with 1.3 as `docs/contracts/consumer-harness.md`
+      § The harness, paragraph "A consumer defect starts here".
 
 ## Blockers
 
