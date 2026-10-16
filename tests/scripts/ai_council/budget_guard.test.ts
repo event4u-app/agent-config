@@ -14,6 +14,7 @@ import {
     ROLLING_WINDOW_HOURS,
     read_entries,
     record_spend,
+    today_spend_summary,
     today_spend_usd,
     would_exceed,
 } from '../../../src/scripts/ai_council/budget_guard.js';
@@ -140,6 +141,42 @@ describe('budget_guard — read_entries robustness', () => {
         expect(entries.length).toBe(2);
         expect(entries[0]?.usd).toBe(0.05);
         expect(entries[1]?.usd).toBeCloseTo(0.3, 10);
+    });
+});
+
+// road-to-unknowns-that-say-so 2.3. A billable call on a model the price table
+// does not list used to arrive here as `usd: 0` and vanish behind the
+// zero-cost early return, indistinguishable from a subscription call. It now
+// leaves a row that says what it is, with the tokens it actually used.
+describe('budget_guard — unpriced calls reach the ledger', () => {
+    it('unpriced-row-is-appended', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        expect(
+            record_spend(0, 'anthropic', 'claude-opus-4-5', {
+                path: p,
+                now: NOW,
+                unpriced: true,
+                input_tokens: 1200,
+                output_tokens: 300,
+            }),
+        ).toBe(true);
+        // A non-billable zero still skips the ledger, exactly as before.
+        record_spend(0, 'manual', 'x', { path: p, now: NOW });
+        const lines = fs.readFileSync(p, 'utf-8').trimEnd().split('\n');
+        expect(lines.length).toBe(1);
+        const row = JSON.parse(lines[0] as string) as Record<string, unknown>;
+        expect(row['usd']).toBeNull();
+        expect(row['unpriced']).toBe(true);
+        expect(row['input_tokens']).toBe(1200);
+        expect(row['output_tokens']).toBe(300);
+        const entries = read_entries(p);
+        expect(entries.length).toBe(1);
+        expect(entries[0]?.unpriced).toBe(true);
+        expect(entries[0]?.usd).toBe(0);
+        // A priced row beside it: the sum is the priced money, the count is the unknowns.
+        record_spend(0.25, 'anthropic', 'claude-opus-4-1', { path: p, now: NOW });
+        expect(today_spend_summary({ path: p, now: NOW })).toEqual({ usd: 0.25, unpriced_calls: 1 });
+        expect(today_spend_usd({ path: p, now: NOW })).toBe(0.25);
     });
 });
 

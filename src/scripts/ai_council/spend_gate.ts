@@ -58,7 +58,7 @@ export class OverrunEvent {
     projected_total_usd: number; // spent_usd + next_estimate.total_usd
     daily_spent_usd: number; // rolling 24h spend BEFORE this member (D3)
     daily_limit_usd: number; // the configured daily cap (0 = disabled)
-    breach_kind: string; // "session" | "daily" | "tokens"
+    breach_kind: string; // "session" | "daily" | "tokens" | "unpriced"
 
     constructor(args: {
         member_index: number;
@@ -91,12 +91,25 @@ export function _total_usd(e: CostEstimate): number {
     return e.input_usd + e.output_usd;
 }
 
-export type BreachKind = 'tokens' | 'daily' | 'session' | null;
+export type BreachKind = 'tokens' | 'unpriced' | 'daily' | 'session' | null;
+
+/** The error a refused seat carries. `unpriced` is named apart so the report says why. */
+export function breachErrorTag(kind: Exclude<BreachKind, null>): string {
+    if (kind === 'daily') return 'daily_budget_exceeded';
+    if (kind === 'unpriced') return 'cost_budget_unpriced';
+    return 'cost_budget_exceeded';
+}
 
 /**
  * The projected-spend verdict. One implementation because the round head and
  * the fallback's metered retry must gate on the SAME rules — two copies of
  * four comparisons is how they drift.
+ *
+ * Both callers reach it only for a BILLABLE seat (a non-billable one skips the
+ * gate in `orchestrator.ts`), which is what makes `unpriced` a refusal: under a
+ * USD ceiling a person set, an estimate with no price row is not $0, it is
+ * unknown, and a ceiling an unknown passes is not that ceiling (D2). With no
+ * USD ceiling set nothing here changes (ADR-279).
  */
 export function _breach(
     est: CostEstimate | null,
@@ -117,6 +130,9 @@ export function _breach(
             spent.output + (est ? est.output_tokens : 0) > budget.max_output_tokens)
     ) {
         return 'tokens';
+    }
+    if (est && !est.priced && (budget.daily_limit_usd > 0 || budget.max_total_usd > 0)) {
+        return 'unpriced';
     }
     if (budget.daily_limit_usd > 0 && _would_exceed_daily(budget.daily_limit_usd, usd)) {
         return 'daily';
