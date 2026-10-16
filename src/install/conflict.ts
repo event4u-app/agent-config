@@ -20,7 +20,7 @@ import { existsSync } from 'node:fs';
 import { sha256File } from './plan.js';
 import {
     classifyOwnership,
-    recordedHashesForRoot,
+    recordedHashesWithLedger,
     type RecordedHashes,
 } from './recordedOwnership.js';
 import type {
@@ -197,7 +197,7 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *   modified rows above and loses the unchanged ones below.
  *
  * `recorded` is injectable for tests; by default it is read from the
- * manifest at `plan.root`.
+ * manifest at `plan.root`, with the user-scoped ownership ledger laid over it.
  */
 export function computeConflicts(
     plan: InstallPlan,
@@ -207,7 +207,7 @@ export function computeConflicts(
     // map was built at call entry and discarded on the next line, so every
     // force-mode plan paid a read and a YAML parse for nothing.
     if (plan.policy.force) return [];
-    const recorded = recordedOverride ?? recordedHashesForRoot(plan.root);
+    const recorded = recordedOverride ?? recordedHashesWithLedger(plan.root);
     const out: ConflictEntry[] = [];
     for (const entries of Object.values(plan.filesByTool)) {
         for (const entry of entries) {

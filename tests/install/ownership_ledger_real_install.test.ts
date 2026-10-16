@@ -31,6 +31,8 @@ import { SIDECAR_SUFFIX } from '../../src/install/preserve.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const ORCHESTRATOR = path.join(REPO_ROOT, 'src', 'scripts', 'install');
+const DOCTOR = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_doctor.ts');
+const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 const TOOL = 'cursor';
 const TAG = 'event4u/agent-config';
 
@@ -98,11 +100,42 @@ function inventoryPath(home: string): string {
     return path.join(home, '.event4u', 'agent-config', 'deployed-files.json');
 }
 
-/** A project directory carrying settings, so the project manifest is written. */
+/**
+ * A project directory carrying settings at the canonical location, so the
+ * project manifest IS written there. (A root-level `.agent-settings.yml` is a
+ * legacy layout the global install migrates away before it gets that far.)
+ */
 function projectWithSettings(prefix: string): string {
     const dir = mkTmp(prefix);
-    fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'cost_profile: minimal\n');
+    fs.mkdirSync(path.join(dir, 'agents', 'settings'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'agents', 'settings', '.agent-settings.yml'), 'cost_profile: minimal\n');
     return dir;
+}
+
+/** `doctor --ci` run from `cwd` against `home`: exit code and parsed payload. */
+function doctor(home: string, cwd: string): { status: number | null; modified: string[]; raw: string } {
+    const r = spawnSync(TSX, [DOCTOR, '--ci'], {
+        cwd,
+        encoding: 'utf8',
+        timeout: 240_000,
+        env: {
+            ...process.env,
+            HOME: home,
+            EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
+            AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
+            AGENT_CONFIG_INSTALLED_TOOLS: undefined,
+            AGENT_CONFIG_NO_UI: '1',
+            CI: '1',
+        },
+    });
+    let modified: string[] = [];
+    try {
+        const payload = JSON.parse(r.stdout) as { modified?: Array<{ path?: string }> };
+        modified = (payload.modified ?? []).map((m) => String(m.path ?? ''));
+    } catch {
+        /* an unparseable payload leaves `modified` empty and fails the case loudly */
+    }
+    return { status: r.status, modified, raw: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
 }
 
 describe('step 1.5 — the assertions compare bytes, not existence or text', () => {
@@ -164,6 +197,12 @@ describe('ownership record — a global install from anywhere keeps a user edit'
             const sidecar = `${target}${SIDECAR_SUFFIX}`;
             expect(digestOf(sidecar), 'no sidecar staged beside the preserved edit').toBe(shipped);
             expect(second.status).toBe(3);
+
+            // The documented resolution — merge the sidecar — clears it.
+            fs.renameSync(sidecar, target);
+            const third = install(home, projectA);
+            expect(third.status, third.out).toBe(0);
+            expect(digestOf(target)).toBe(shipped);
         },
     );
 
@@ -213,6 +252,32 @@ describe('ownership record — a global install from anywhere keeps a user edit'
             const fourth = install(home, bare);
             expect(fourth.status, fourth.out).toBe(0);
             expect(digestOf(retired)).toBeNull();
+        },
+    );
+});
+
+describe('step 3.1 — the installer and doctor say the same thing about one tree', () => {
+    it(
+        'installer rc=3 and doctor --ci non-zero naming the preserved file, on the same tree',
+        { timeout: 600_000 },
+        () => {
+            const home = mkTmp('own-ledger-home-');
+            const project = projectWithSettings('own-ledger-doc-');
+            const first = install(home, project);
+            expect(first.status, first.out).toBe(0);
+            const target = aDeployedRule(home);
+            const before = doctor(home, project);
+            expect(before.modified, before.raw).toEqual([]);
+
+            fs.writeFileSync(target, `${fs.readFileSync(target, 'utf8')}\nmy own note\n`);
+            const second = install(home, project);
+            expect(second.status, second.out).toBe(3);
+
+            // `cmd_doctor` skipped every global-scope tool, so the file the
+            // installer had just called not-current was invisible to it.
+            const after = doctor(home, project);
+            expect(after.modified, after.raw).toContain(target);
+            expect(after.status).not.toBe(0);
         },
     );
 });

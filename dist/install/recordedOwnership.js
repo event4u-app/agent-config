@@ -37,22 +37,63 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
 import * as YAML from 'yaml';
+import * as global_deploy_inventory from '../scripts/_lib/global_deploy_inventory.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
 /** The empty answer — "nothing is recorded", used whenever no manifest resolves. */
 export const NO_RECORDED_HASHES = new Map();
+/**
+ * Classify one file from the digest we INSTALLED, the digest we would install
+ * NOW, and the digest on disk.
+ *
+ * `packagedSha256`: a string is the current package content; `null` means the
+ * package no longer ships the file (retired); `undefined` means the caller does
+ * not know — the comparison then degrades to the installed digest alone, which
+ * is exactly the old three-state answer and never yields an `-outdated` or
+ * `retired-` state. Bytes on disk equal to what we would ship are `clean`
+ * whatever was recorded: there is nothing to preserve and nothing to update.
+ */
+export function classifyFileState(installedSha256, packagedSha256, onDiskSha256) {
+    if (installedSha256 === undefined || installedSha256 === null)
+        return 'unknown';
+    if (onDiskSha256 === null)
+        return 'unknown';
+    const untouched = onDiskSha256 === installedSha256;
+    if (packagedSha256 === null)
+        return untouched ? 'retired-unmodified' : 'retired-modified';
+    if (packagedSha256 !== undefined && onDiskSha256 === packagedSha256)
+        return 'clean';
+    const shipsWhatWeWrote = packagedSha256 === undefined || packagedSha256 === installedSha256;
+    if (untouched)
+        return shipsWhatWeWrote ? 'clean' : 'outdated';
+    return shipsWhatWeWrote ? 'customized' : 'customized-and-outdated';
+}
+/** Collapse a {@link FileState} to the three-state ownership the write decision reads. */
+export function ownershipOfState(state) {
+    switch (state) {
+        case 'clean':
+        case 'outdated':
+        case 'retired-unmodified':
+            return 'recorded-unchanged';
+        case 'customized':
+        case 'customized-and-outdated':
+        case 'retired-modified':
+            return 'recorded-modified';
+        case 'unknown':
+            return 'unknown';
+    }
+}
 /**
  * Classify one target from the recorded digest and the on-disk digest.
  *
  * Pure — the caller supplies both digests. `undefined` for `recordedSha256`
  * means the path is not recorded at all; `null` means recorded without a
  * digest. Both answer `unknown`, because neither supports a comparison.
+ *
+ * The three-state view of {@link classifyFileState} with the packaged digest
+ * unknown — one classifier, so the two answers cannot drift apart.
  */
 export function classifyOwnership(recordedSha256, onDiskSha256) {
-    if (recordedSha256 === undefined || recordedSha256 === null)
-        return 'unknown';
-    if (onDiskSha256 === null)
-        return 'unknown';
-    return recordedSha256 === onDiskSha256 ? 'recorded-unchanged' : 'recorded-modified';
+    return ownershipOfState(classifyFileState(recordedSha256, undefined, onDiskSha256));
 }
 /**
  * Read `tools[].files[]` out of an installed-tools manifest into a
@@ -128,5 +169,30 @@ function expanduser(p) {
  */
 export function recordedHashesForRoot(root, env) {
     return readRecordedHashes(manifest_path(root, env), root);
+}
+/**
+ * {@link recordedHashesForRoot} with the USER-scoped ownership ledger laid over
+ * it.
+ *
+ * The project manifest is written only from a project that carries settings,
+ * so on its own it decided a globally installed file's fate by the working
+ * directory of the install. The ledger (the `digests` of the global deploy
+ * inventory) is written on every global deploy, wherever it ran from, and it
+ * WINS where both record a path: it is rewritten by every global install, while
+ * a project's manifest is rewritten only by installs run from that project and
+ * so goes stale the moment a second project installs. A path the ledger does
+ * not record keeps the manifest's answer, so a project-scope target reads
+ * exactly as before.
+ *
+ * The one table the preview (`computeConflicts`) and the writer
+ * (`conflictTracker`) both read, so the two cannot answer differently.
+ */
+export function recordedHashesWithLedger(root, env) {
+    const out = new Map(recordedHashesForRoot(root, env));
+    const ledger = global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env));
+    for (const [target, sha] of global_deploy_inventory.recorded_absolute_digests(ledger, env?.['HOME'])) {
+        out.set(target, sha);
+    }
+    return out;
 }
 //# sourceMappingURL=recordedOwnership.js.map

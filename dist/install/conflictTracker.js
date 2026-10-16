@@ -21,7 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from './fsPrimitives.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
-import { recordedHashesForRoot } from './recordedOwnership.js';
+import { recordedHashesWithLedger } from './recordedOwnership.js';
 /**
  * Build a tracker bound to one installer's reporting surface.
  *
@@ -56,7 +56,7 @@ export function createConflictTracker(host) {
     function recordedHashFor(target) {
         if (conflictState.root === null)
             return undefined;
-        conflictState.recorded ??= recordedHashesForRoot(conflictState.root);
+        conflictState.recorded ??= recordedHashesWithLedger(conflictState.root);
         const plain = path.resolve(target);
         if (conflictState.recorded.has(plain))
             return conflictState.recorded.get(plain);
@@ -146,6 +146,7 @@ export function createConflictTracker(host) {
     }
     return {
         conflictState,
+        recordedDigest: recordedHashFor,
         begin(root) {
             conflictState.root = root;
             conflictState.recorded = null;
