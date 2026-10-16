@@ -52,23 +52,29 @@ output. It is the classifier and the data behind it.
 
 ## Phase 1 — Name the impact where it is known: at commit time
 
-- [ ] **1.1 Define the trailer.** `Consumer-Impact: none | automatic | notice |
+- [x] **1.1 Define the trailer.** `Consumer-Impact: none | automatic | notice |
       action`, plus an optional `Security: yes`, documented in
       `CONTRIBUTING.md` beside the bump table at `:329-333`. `none` = nothing a
       consumer can observe; `automatic` = the update handles it; `notice` =
       read this; `action` = do something or it breaks.
       The four values are enumerated on one line.
       verify: `grep -c 'Consumer-Impact' CONTRIBUTING.md` -> /^[1-9][0-9]*$/
-- [ ] **1.2 Parse it where commits are already parsed.** `src/scripts/release.ts`
+- [x] **1.2 Parse it where commits are already parsed.** `src/scripts/release.ts`
       builds its `Commit` records at `:455-470`; read the trailer in that same
       pass, defaulting to `none` with the absence recorded.
       verify: a unit test over a synthetic commit list returns the four values
       and `none` for an untrailered subject.
-- [ ] **1.3 Refuse a breaking subject with no trailer.** A commit carrying `!`
+- [x] **1.3 Refuse a breaking subject with no trailer.** A commit carrying `!`
       or `BREAKING CHANGE` inside the release span and no `Consumer-Impact:`
       fails the release check — the one place the author is still present.
       verify: a fixture span with such a commit exits non-zero; the same span
       with the trailer exits 0. Both directions.
+      Landed: `src/scripts/_lib/consumer_impact.ts` (`impact_span_verdict`),
+      called from `release.ts` `main()` right after the span is read;
+      `tests/lib/consumer_impact.test.ts` builds a real span in a temp
+      repository and asserts both directions plus an out-of-enum value. Seen
+      red by neutralising the predicate. The span since 16.5.0 carries no `!`
+      subject, so the next release is not affected.
 
 ## Phase 2 — The bump follows the impact, not the punctuation
 
@@ -88,10 +94,14 @@ output. It is the classifier and the data behind it.
 
 ## Phase 3 — Publish the map, and read versions correctly
 
-- [ ] **3.1 Write the map into the published package.** The release script
+- [x] **3.1 Write the map into the published package.** The release script
       emits `agentConfig.impact` into `package.json`, non-`none` entries only,
       so the document stays small.
       verify: a dry-run release writes the key and omits `none` rows.
+      Landed: `set_package_version` (release step 2) writes the map through
+      `write_impact_map`. `--dry-run` returns before step 2 and writes no
+      file, so the writer is exercised on a temp `package.json` instead: an
+      `action` release writes the key, a `none` release adds no row.
 - [ ] **3.2 Spike — is the map reachable in one request?** `update_check.ts:36`
       already fetches `https://registry.npmjs.org/@event4u/agent-config/latest`
       once per 24 h. Establish whether that document carries custom

@@ -332,6 +332,22 @@ the policy is interpreted as follows:
 | **Minor** (x.X.0) | New skills, rules, commands, or guidelines. New tool support. New installer flags. New `.agent-settings.yml` keys with safe defaults. |
 | **Patch** (x.x.X) | Wording fixes and improvements in existing skills, linter fixes, CI changes, documentation updates, internal refactors with no user-visible effect. |
 
+Consumer impact: a commit states what it costs a consumer in a
+`Consumer-Impact:` trailer in the commit body (for a squash merge, the squash
+commit's body). Values: `none` | `automatic` | `notice` | `action`.
+
+- `none` — nothing a consumer can observe.
+- `automatic` — the update handles it; the consumer does nothing.
+- `notice` — the consumer should read the release notes.
+- `action` — the consumer must do something or the install breaks.
+
+An optional `Security: yes` trailer marks a security fix. A commit with no
+`Consumer-Impact:` trailer is recorded as `none`, with the absence kept. A
+commit whose subject carries `!` or `BREAKING CHANGE` must carry the trailer:
+`task release` refuses a span that contains one without it. Until the
+numbering model is decided, the trailer is recorded and the bump table above
+is unchanged — a `!` subject is still a major.
+
 Settings keys: A settings key may be removed or renamed in a minor release
 only when no consumer project can rely on it — default-neutral and derivable,
 proven by a named test; any other removal or rename ships only in a major, and

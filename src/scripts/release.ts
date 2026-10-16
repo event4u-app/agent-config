@@ -125,6 +125,8 @@ import {
     derive_head_prefill,
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
+import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
+import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, impact_span_verdict, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
 import { preflightPosition } from './_lib/release_position.js';
 import { settleFindingsLedger } from './_lib/release_findings_ingest.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
@@ -386,6 +388,7 @@ class Commit {
         public readonly scope: string | null,
         public readonly subject: string,
         public readonly breaking: boolean,
+        public readonly trailers: ImpactTrailers = NO_IMPACT_TRAILERS,
     ) {}
 }
 
@@ -445,33 +448,18 @@ function bump_version(current: string, kind: string): string {
 /** Return non-merge commits after `tag` (or all of history if tag is null). */
 function commits_since(tag: string | null): Commit[] {
     const rev = tag ? `${tag}..HEAD` : 'HEAD';
-    const raw = git(['log', rev, '--no-merges', '--format=%H%x1f%s'], { capture: true });
-    const out: Commit[] = [];
-    for (const line of raw.split('\n')) {
-        if (!line.includes('\x1f')) {
-            continue;
-        }
-        // str.split("\x1f", 1) — maxsplit=1: head + remainder.
-        const idx = line.indexOf('\x1f');
-        const sha = line.slice(0, idx);
-        const subject = line.slice(idx + 1);
-        const m = CONVENTIONAL_RE.exec(subject);
-        if (!m) {
-            out.push(new Commit(sha, 'other', null, subject, false));
-            continue;
-        }
-        const breaking = Boolean(m.groups!['bang']) || subject.includes('BREAKING CHANGE');
-        out.push(
-            new Commit(
-                sha,
-                m.groups!['type'] as string,
-                (m.groups!['scope'] ?? null) as string | null,
-                m.groups!['subject'] as string,
-                breaking,
-            ),
-        );
-    }
-    return out;
+    const raw = git(['log', rev, '--no-merges', `--format=${COMMIT_LOG_FORMAT}`], { capture: true });
+    return parse_commit_log(raw).map(commit_from_record);
+}
+
+/** One log record → `Commit`, with its `Consumer-Impact:` trailer read in the same pass. */
+function commit_from_record({ sha, subject, body }: CommitRecord): Commit {
+    const trailers = parse_impact_trailers(body);
+    const m = CONVENTIONAL_RE.exec(subject);
+    if (!m) return new Commit(sha, 'other', null, subject, false, trailers);
+    const breaking = Boolean(m.groups!['bang']) || subject.includes('BREAKING CHANGE');
+    const scope = (m.groups!['scope'] ?? null) as string | null;
+    return new Commit(sha, m.groups!['type'] as string, scope, m.groups!['subject'] as string, breaking, trailers);
 }
 
 /** Derive the semver bump from commit types (for preview only). */
@@ -642,9 +630,10 @@ function prepend_changelog(p: string, entry: string): void {
 // ─── file mutations ───────────────────────────────────────────────────────────
 
 /** Update the top-level `version` field; preserve 4-space indentation. */
-function set_package_version(p: string, version: string): void {
+function set_package_version(p: string, version: string, commits: readonly Commit[] = []): void {
     const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
     data['version'] = version;
+    write_impact_map(data, version, commits);
     fs.writeFileSync(p, jsonDumpsIndent(data, 4) + '\n', 'utf-8');
 }
 
@@ -947,7 +936,7 @@ function execute(
                 total,
                 'Bump package.json + package-lock.json + marketplace manifests + template pin, prepend CHANGELOG',
             );
-            set_package_version(PACKAGE_JSON, plan.target);
+            set_package_version(PACKAGE_JSON, plan.target, plan.commits);
             set_lockfile_version(PACKAGE_LOCK_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
             set_augment_manifest_version(AUGMENT_PLUGIN_JSON, plan.target);
@@ -1494,6 +1483,8 @@ function main(argv: readonly string[] | null = null): number {
 
     const prev = latest_tag();
     const commits = commits_since(prev);
+    const impact = impact_span_verdict(commits);
+    if (impact.exit !== 0) die(impact.message, impact.exit);
 
     if (nothing_to_release_ci(args.ci, args.explicit, args.bump_override, commits)) {
         process.stdout.write(
@@ -1671,6 +1662,7 @@ export {
     parse_version,
     bump_version,
     commits_since,
+    commit_from_record,
     infer_bump,
     assert_major_migration_section,
     assert_scheduled_deprecations_clear,
