@@ -57,46 +57,52 @@ nothing in it may be cited as a reason to.
 
 ## Phase 1 — Reconcile the ledger with the upstream it describes
 
-- [ ] **1.1 Read every row's live state once.** For each row carrying a pull
+- [x] **1.1 Read every row's live state once.** For each row carrying a pull
       request or a form URL, take the upstream state with `gh pr view <n>
       --repo <owner/repo> --json state,closedAt,mergedAt` or, for a form, a
       single fetch of the listing page. Record the reading and its date in the
       row's notes.
       verify: `gh pr view 9607 --repo punkpeye/awesome-mcp-servers --json state -q .state` -> /CLOSED/
-- [ ] **1.2 Correct row 1.** Its status becomes the verified upstream state
+      *Done 2026-10-16:* five of six rows read live. Row 3 (`mcpservers.org`)
+      answered HTTP 403 to an automated and a browser user agent, so its
+      `Last read` stays empty and the detector reports it `unread-never`. The
+      reads also corrected rows 2 and 3, which this sheet held `pending` while
+      `registries.md` recorded them submitted — the live `mcp.so` page shows
+      row 2 listed.
+- [x] **1.2 Correct row 1.** Its status becomes the verified upstream state
       with the closing date, not `submitted`. The note records that it stood
       wrong for 39 days and what the reading was.
       verify: `grep -c 'Awaiting upstream review' docs/distribution/registry-submissions.md` -> /^0$/
-- [ ] **1.3 Record both attempts, in one place.** Rows 6865 and 9607 are two
+- [x] **1.3 Record both attempts, in one place.** Rows 6865 and 9607 are two
       attempts at one registry. Whichever sheet survives Phase 2 carries both,
       in order, with their outcomes — so the next person asking "have we tried
       this" gets a number rather than a row.
       verify: both pull-request numbers appear in the surviving sheet, each
       with a dated outcome.
-- [ ] **1.4 Repoint the authority lines.** `registry-submissions.md:4` and
+- [x] **1.4 Repoint the authority lines.** `registry-submissions.md:4` and
       `registries.md`'s authority block name archived roadmaps. Point them at
       this file, or at nothing with a sentence saying the pipeline is
       standalone — never at a path under `archive/`.
       verify: `grep -rn 'roadmaps/archive' docs/distribution/` -> 1
-- [ ] **1.5 Resolve the lapsed beta marker.** `keep-beta-until: 2026-08-26` is
+- [x] **1.5 Resolve the lapsed beta marker.** `keep-beta-until: 2026-08-26` is
       51 days past. Either set a new date with what changes by then, or drop
       the marker because the sheet is simply operational.
       verify: `grep -c 'keep-beta-until: 2026-08-26' docs/distribution/registry-submissions.md` -> /^0$/
 
 ## Phase 2 — One ledger, not two
 
-- [ ] **2.1 Decide which file is the ledger.** `registries.md` defines the
+- [x] **2.1 Decide which file is the ledger.** `registries.md` defines the
       channels and the submission shape; `registry-submissions.md` is the
       operational row set. The split is defensible — what is not is a second
       row table inside the definitions file. Move `registries.md`'s
       § Submission status rows into the tracker and leave a pointer.
       verify: exactly one table of submission rows exists under
       `docs/distribution/`.
-- [ ] **2.2 Keep the channel posture where it is.** The npm-primary /
+- [x] **2.2 Keep the channel posture where it is.** The npm-primary /
       Packagist-deprecated decision stays in `registries.md` under its ADR;
       only the per-submission rows move.
       verify: `grep -c 'ADR-033' docs/distribution/registries.md` -> /^[1-9][0-9]*$/
-- [ ] **2.3 Give the ledger a shape a script can read.** The row table gains
+- [x] **2.3 Give the ledger a shape a script can read.** The row table gains
       the fields the detector in Phase 3 needs — registry, upstream kind,
       upstream ref, status, last-read date — so a reading can be checked
       rather than narrated.
@@ -105,23 +111,29 @@ nothing in it may be cited as a reason to.
 
 ## Phase 3 — A detector that notices an answer, not a calendar
 
-- [ ] **3.1 Red first: pin the state the detector cannot see.** A fixture
+- [x] **3.1 Red first: pin the state the detector cannot see.** A fixture
       ledger with a `submitted` row whose upstream is closed must be reported.
       Today it is not.
       verify: the new case is **red** against the current `adoption_status`
-      and its failure names the date-only `stalled` rule.
-- [ ] **3.2 Read the upstream, do not infer it.** `adoption_status` gains an
+      and its failure names the date-only rule behind `stalled`.
+      *Observed red 2026-10-16:* all seven new cases failed before the change
+      (`TypeError: parse_ledger_rows is not a function` — the detector had no
+      way to read an upstream at all); the closed-upstream case asserts the
+      legacy reading `submitted 4 · stalled 0` first and carries the message
+      "the date-only stalled rule cannot see a closed upstream". Sensitivity:
+      forcing the 60-day guard to `true` turns the both-directions case red.
+- [x] **3.2 Read the upstream, do not infer it.** `adoption_status` gains an
       opt-in live check (`--check-upstream`) that reads each row's upstream ref
       and reports three new states: `answered-closed`, `answered-merged`,
       `unread-for-N-days`. Offline and in CI it reports from the sheet exactly
       as today and says that it did.
       verify: with no network, the command's output is byte-identical to
       today's and names the degraded mode.
-- [ ] **3.3 A stale reading is a finding, not a silence.** A row whose
+- [x] **3.3 A stale reading is a finding, not a silence.** A row whose
       `last-read` date is older than the sheet's own threshold is reported as
       `unread`, whatever its status says.
       verify: `./scripts-run src/scripts/adoption_status` -> 0
-- [ ] **3.4 Keep `stalled` and make it mean something.** It stays the
+- [x] **3.4 Keep `stalled` and make it mean something.** It stays the
       "submitted, no answer, 60 days" state. It is now reachable only when the
       upstream really has not answered, because 3.2 can tell the difference.
       verify: a fixture closed at day 10 reports `answered-closed`, and a
@@ -129,21 +141,25 @@ nothing in it may be cited as a reason to.
 
 ## Phase 4 — Stage what the owner must submit, and claim nothing
 
-- [ ] **4.1 Stage the three form and publish actions.** Rows 2, 3 and 4 get
+- [x] **4.1 Stage the three form and publish actions.** Rows 2, 3 and 4 get
       their submission text finalised against the current positioning, each
       with the exact command or form field it goes into. Nothing is submitted.
       verify: each row carries staged text and the word `pending`.
-- [ ] **4.2 Stage the Packagist disposition.** `registries.md` already offers
+      *Deviation 2026-10-16:* row 2 (`mcp.so`) gets no staged text — the live
+      read shows it listed, so there is nothing to submit; the ledger says so.
+      A staged third awesome-list attempt (`1c`) was added instead, since that
+      is the act the two closed attempts leave open.
+- [x] **4.2 Stage the Packagist disposition.** `registries.md` already offers
       two acceptable paths under ADR-033. Prepare the exact text for each so
       the owner's login session is a paste rather than a drafting exercise.
       verify: both paths carry ready text; neither checkbox is flipped.
-- [ ] **4.3 Record the round against the stub that owns these acts.** Add this
+- [x] **4.3 Record the round against the stub that owns these acts.** Add this
       round and this roadmap to
       `agents/roadmaps/stubs/road-to-bus-factor-external-actions.md`, so the
       owner's queue holds one entry naming the staged work rather than five
       scattered ones.
       verify: that stub names this roadmap.
-- [ ] **4.4 State the directory route honestly.** The ledger records that the
+- [x] **4.4 State the directory route honestly.** The ledger records that the
       official-directory route is gated on the marketplace listing being a
       functional plugin rather than a shim, citing
       `.claude-plugin/marketplace.json:8`. Whether to change that is out of
@@ -190,21 +206,21 @@ nothing in it may be cited as a reason to.
 
 - [ ] **AC-1** Every row in the ledger carries a status that matches a live
       upstream read taken in the same change, with the reading's date.
-- [ ] **AC-2** `grep -c 'Awaiting upstream review' docs/distribution/registry-submissions.md`
+- [x] **AC-2** `grep -c 'Awaiting upstream review' docs/distribution/registry-submissions.md`
       returns 0, and both awesome-list attempts appear once each with dated
       outcomes.
-- [ ] **AC-3** Exactly one table of submission rows exists under
+- [x] **AC-3** Exactly one table of submission rows exists under
       `docs/distribution/`, and no file there cites a roadmap under
       `agents/roadmaps/archive/`.
-- [ ] **AC-4** A fixture ledger whose `submitted` row has a closed upstream is
+- [x] **AC-4** A fixture ledger whose `submitted` row has a closed upstream is
       reported; the same fixture still open at 70 days reports `stalled`. The
       first case was observed **red** before Phase 3 and the observation is
       recorded in the PR.
-- [ ] **AC-5** With no network, `adoption_status` produces byte-identical
+- [x] **AC-5** With no network, `adoption_status` produces byte-identical
       output to the current release and names its degraded mode.
-- [ ] **AC-6** No step in this roadmap reports an externally visible
+- [x] **AC-6** No step in this roadmap reports an externally visible
       submission as done; the bus-factor stub names this roadmap.
-- [ ] **AC-7** No step, acceptance criterion or blocker in this file names an
+- [x] **AC-7** No step, acceptance criterion or blocker in this file names an
       adoption count, a download figure or a star count as a condition.
 - [ ] **AC-8** `task ci` green.
 
@@ -238,3 +254,10 @@ and against the roadmap tree. The supplied plans proposed completing the
 submissions; verification found the ledger describing those submissions to be
 wrong about the one row it tracked as live, so the completion became Phase 4
 and the reconciliation became Phase 1.
+
+## Open after the 2026-10-16 drain
+
+- **AC-1** stays open: row 3 (`mcpservers.org`) answers HTTP 403 to automated
+  reads, so its status is the maintainer's 2026-06 word, recorded as such in the
+  ledger with an empty `Last read`. It closes when a human reads the site.
+- **AC-8** is discharged by the PR's CI, not by a local `task ci` run.

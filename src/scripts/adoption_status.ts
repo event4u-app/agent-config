@@ -22,7 +22,13 @@
  *
  * CLI:
  *
- *   ./scripts-run src/scripts/adoption_status [--json] [--branch main]
+ *   ./scripts-run src/scripts/adoption_status [--json] [--branch main] [--check-upstream]
+ *
+ * `--check-upstream` reads each ledger row's upstream (`gh pr view` for a pull
+ * request, one `curl` for a listing page or registry query) and appends what it
+ * found. Without the flag nothing touches the network: stdout is the sheet-only
+ * report exactly as before, and stderr names that mode plus every row whose
+ * `Last read` date is missing or older than the sheet's re-read threshold.
  *
  * Exit codes:
  *
@@ -34,6 +40,8 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/adoption_status.ts → parents[2] is the repo root (mirrors
@@ -234,22 +242,26 @@ export function render_json(
 interface Args {
     json: boolean;
     branch: string;
+    checkUpstream: boolean;
 }
 
 export function parse_args(argv: string[]): Args {
     let json = false;
     let branch = 'main';
+    let checkUpstream = false;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--json') {
             json = true;
+        } else if (a === '--check-upstream') {
+            checkUpstream = true;
         } else if (a === '--branch') {
             branch = argv[++i] ?? '';
         } else if (a !== undefined && a.startsWith('--branch=')) {
             branch = a.slice('--branch='.length);
         }
     }
-    return { json, branch };
+    return { json, branch, checkUpstream };
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
@@ -267,12 +279,312 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const reports = count_recruit_reports(RECRUIT_DIR);
     const ci = ci_status_color(args.branch);
 
+    const rows = parse_ledger_rows(registryText);
+    const today = _todayUtc();
+    const unread = unread_findings(rows, today, parse_reread_threshold(registryText));
+
+    if (!args.checkUpstream) {
+        if (args.json) {
+            process.stdout.write(render_json(registryCounts, reports, ci, args.branch) + '\n');
+        } else {
+            process.stdout.write(render_text(registryCounts, reports, ci, args.branch) + '\n');
+        }
+        process.stderr.write(upstream_mode_note(false) + '\n');
+        for (const u of unread) {
+            process.stderr.write(`  row ${u.id} ${u.registry}: ${u.label}\n`);
+        }
+        return 0;
+    }
+
+    const verdicts = judge_upstream(rows, live_upstream_reader, today);
     if (args.json) {
-        process.stdout.write(render_json(registryCounts, reports, ci, args.branch) + '\n');
+        const base = JSON.parse(render_json(registryCounts, reports, ci, args.branch)) as Record<
+            string,
+            unknown
+        >;
+        base.upstream = { mode: _modeOf(verdicts), verdicts, unread };
+        process.stdout.write(_pyJsonDumpsIndent2(base) + '\n');
     } else {
         process.stdout.write(render_text(registryCounts, reports, ci, args.branch) + '\n');
+        process.stdout.write(render_upstream_text(verdicts, unread) + '\n');
     }
     return 0;
+}
+
+// --- upstream reading --------------------------------------------------------
+
+/** One row of the `Tracking rows` table, keyed by header name, not position. */
+export interface LedgerRow {
+    id: string;
+    registry: string;
+    status: string;
+    kind: string;
+    ref: string;
+    lastRead: string;
+    date: string;
+}
+
+export type UpstreamReading =
+    | { ok: true; state: 'open' | 'closed' | 'merged' | 'listed' | 'not-listed'; at?: string }
+    | { ok: false; reason: string };
+
+export type UpstreamReader = (row: LedgerRow) => UpstreamReading;
+
+export type UpstreamVerdict =
+    | 'answered-closed'
+    | 'answered-merged'
+    | 'stalled'
+    | 'open'
+    | 'listed'
+    | 'not-listed'
+    | 'unreachable'
+    | 'no-upstream';
+
+export interface RowVerdict {
+    id: string;
+    registry: string;
+    verdict: UpstreamVerdict;
+    detail: string;
+}
+
+export interface UnreadFinding {
+    id: string;
+    registry: string;
+    label: string;
+}
+
+/** Same threshold the sheet's legend states for `stalled`. */
+export const STALLED_AFTER_DAYS = 60;
+const DEFAULT_REREAD_THRESHOLD_DAYS = 30;
+
+function _cellValue(cell: string): string {
+    const v = cell.trim().replace(/`/g, '');
+    const link = /^<(.+)>$/.exec(v);
+    const out = link ? (link[1] as string) : v;
+    return out === '—' || out === '-' ? '' : out;
+}
+
+/**
+ * Parse the `Tracking rows` table by its header names, so a sheet that lacks a
+ * column yields empty fields rather than a misread neighbour.
+ */
+export function parse_ledger_rows(text: string): LedgerRow[] {
+    const rows: LedgerRow[] = [];
+    let inTable = false;
+    let header: string[] | null = null;
+    for (const line of _splitlines(text)) {
+        if (line.startsWith('## Tracking rows')) {
+            inTable = true;
+            continue;
+        }
+        if (inTable && line.startsWith('## ')) {
+            break;
+        }
+        if (!inTable || !line.startsWith('|')) {
+            continue;
+        }
+        const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+        if (header === null) {
+            header = cells.map((c) => c.toLowerCase());
+            continue;
+        }
+        if (cells.every((c) => /^-+$/.test(c))) {
+            continue;
+        }
+        const names = header;
+        const col = (name: string): string => {
+            const i = names.indexOf(name);
+            return i < 0 || i >= cells.length ? '' : _cellValue(cells[i] as string);
+        };
+        rows.push({
+            id: col('#'),
+            registry: col('registry'),
+            status: col('status'),
+            kind: col('upstream kind'),
+            ref: col('upstream ref'),
+            lastRead: col('last read'),
+            date: col('date'),
+        });
+    }
+    return rows;
+}
+
+/** The sheet states its own re-read threshold as `**Re-read threshold:** N days`. */
+export function parse_reread_threshold(text: string): number {
+    const m = /\*\*Re-read threshold:\*\*\s*(\d+)\s*days/.exec(text);
+    return m ? Number(m[1]) : DEFAULT_REREAD_THRESHOLD_DAYS;
+}
+
+function _daysBetween(fromIso: string, toIso: string): number | null {
+    const a = Date.parse(fromIso.slice(0, 10) + 'T00:00:00Z');
+    const b = Date.parse(toIso.slice(0, 10) + 'T00:00:00Z');
+    if (Number.isNaN(a) || Number.isNaN(b)) {
+        return null;
+    }
+    return Math.round((b - a) / 86_400_000);
+}
+
+/** A row never read, or read longer ago than the threshold, is a finding. */
+export function unread_findings(
+    rows: LedgerRow[],
+    today: string,
+    thresholdDays: number,
+): UnreadFinding[] {
+    const out: UnreadFinding[] = [];
+    for (const row of rows) {
+        const age = row.lastRead === '' ? null : _daysBetween(row.lastRead, today);
+        if (age === null) {
+            out.push({ id: row.id, registry: row.registry, label: 'unread-never' });
+        } else if (age > thresholdDays) {
+            out.push({ id: row.id, registry: row.registry, label: `unread-for-${age}-days` });
+        }
+    }
+    return out;
+}
+
+/**
+ * `stalled` keeps its old meaning — submitted, no answer, 60 days — but is
+ * reachable only when the reading says the upstream is still open, so an
+ * answered row can no longer hide behind the date arithmetic.
+ */
+export function judge_upstream(
+    rows: LedgerRow[],
+    reader: UpstreamReader,
+    today: string,
+): RowVerdict[] {
+    return rows.map((row): RowVerdict => {
+        const base = { id: row.id, registry: row.registry };
+        if (row.kind === '' || row.ref === '') {
+            return { ...base, verdict: 'no-upstream', detail: 'the row names no upstream to read' };
+        }
+        const r = reader(row);
+        if (!r.ok) {
+            return { ...base, verdict: 'unreachable', detail: r.reason };
+        }
+        switch (r.state) {
+            case 'closed':
+                return { ...base, verdict: 'answered-closed', detail: `closed ${r.at ?? 'date unknown'}` };
+            case 'merged':
+                return { ...base, verdict: 'answered-merged', detail: `merged ${r.at ?? 'date unknown'}` };
+            case 'listed':
+            case 'not-listed':
+                return { ...base, verdict: r.state, detail: row.ref };
+            case 'open': {
+                const age = row.date === '' ? null : _daysBetween(row.date, today);
+                if (row.status === 'submitted' && age !== null && age >= STALLED_AFTER_DAYS) {
+                    return { ...base, verdict: 'stalled', detail: `open ${age} days, no answer` };
+                }
+                return { ...base, verdict: 'open', detail: age === null ? 'open' : `open ${age} days` };
+            }
+        }
+    });
+}
+
+export function upstream_mode_note(checked: boolean): string {
+    return checked
+        ? 'upstream: read live (--check-upstream)'
+        : 'upstream: not read — reporting from the sheet only; pass --check-upstream for live state';
+}
+
+function _modeOf(verdicts: RowVerdict[]): string {
+    const readable = verdicts.filter((v) => v.verdict !== 'no-upstream');
+    if (readable.length > 0 && readable.every((v) => v.verdict === 'unreachable')) {
+        return 'degraded — no upstream could be read; the sheet above is the only source';
+    }
+    return 'live';
+}
+
+export function render_upstream_text(verdicts: RowVerdict[], unread: UnreadFinding[]): string {
+    const lines: string[] = ['', `Upstream readings (${_modeOf(verdicts)}):`];
+    for (const v of verdicts) {
+        lines.push(`  row ${v.id.padEnd(3)} ${v.verdict.padEnd(16)} ${v.registry} — ${v.detail}`);
+    }
+    lines.push('');
+    lines.push(
+        unread.length === 0
+            ? 'Ledger readings: all within the re-read threshold'
+            : 'Ledger readings out of date:',
+    );
+    for (const u of unread) {
+        lines.push(`  row ${u.id.padEnd(3)} ${u.label} ${u.registry}`);
+    }
+    return lines.join('\n');
+}
+
+function _readPullRequest(ref: string): UpstreamReading {
+    const m = /^([\w.-]+\/[\w.-]+)#(\d+)$/.exec(ref);
+    if (!m) {
+        return { ok: false, reason: `unparseable pull-request ref ${ref}` };
+    }
+    if (_which('gh') === null) {
+        return { ok: false, reason: 'gh CLI not on PATH' };
+    }
+    const proc = spawnSync(
+        'gh',
+        ['pr', 'view', m[2] as string, '--repo', m[1] as string, '--json', 'state,closedAt,mergedAt'],
+        { encoding: 'utf8', timeout: 20_000 },
+    );
+    if (proc.status !== 0) {
+        const snip = sanitize_text(_pyStrip(proc.stderr ?? '')).slice(0, 80);
+        return { ok: false, reason: `gh exit=${proc.status}: ${snip}` };
+    }
+    let d: { state?: string; closedAt?: string; mergedAt?: string };
+    try {
+        d = JSON.parse(proc.stdout) as typeof d;
+    } catch {
+        return { ok: false, reason: 'gh output not parseable as JSON' };
+    }
+    if (d.state === 'MERGED') return { ok: true, state: 'merged', at: sanitize_text(d.mergedAt ?? '').slice(0, 10) };
+    if (d.state === 'CLOSED') return { ok: true, state: 'closed', at: sanitize_text(d.closedAt ?? '').slice(0, 10) };
+    if (d.state === 'OPEN') return { ok: true, state: 'open' };
+    return { ok: false, reason: `unknown pull-request state ${sanitize_text(String(d.state)).slice(0, 40)}` };
+}
+
+function _readUrl(kind: string, ref: string): UpstreamReading {
+    if (_which('curl') === null) {
+        return { ok: false, reason: 'curl not on PATH' };
+    }
+    const proc = spawnSync('curl', ['-sL', '--max-time', '20', '-w', '\n%{http_code}', ref], {
+        encoding: 'utf8',
+        timeout: 25_000,
+    });
+    const out = proc.stdout ?? '';
+    const cut = out.lastIndexOf('\n');
+    const code = out.slice(cut + 1).trim();
+    if (proc.status !== 0 || code === '000' || code === '') {
+        return { ok: false, reason: `no response from ${ref}` };
+    }
+    if (kind === 'listing-page') {
+        if (code === '200') return { ok: true, state: 'listed' };
+        if (code === '404') return { ok: true, state: 'not-listed' };
+        return { ok: false, reason: `HTTP ${code} from ${ref}` };
+    }
+    let body: { metadata?: { count?: unknown } };
+    try {
+        body = JSON.parse(out.slice(0, cut)) as typeof body;
+    } catch {
+        return { ok: false, reason: `registry answer from ${ref} not parseable as JSON` };
+    }
+    const n = body.metadata?.count;
+    if (typeof n !== 'number') {
+        return { ok: false, reason: 'registry answer has no metadata.count' };
+    }
+    return { ok: true, state: n > 0 ? 'listed' : 'not-listed' };
+}
+
+/** Reads the real upstream: `gh` for a pull request, `curl` otherwise. */
+export const live_upstream_reader: UpstreamReader = (row) => {
+    if (row.kind === 'github-pr') {
+        return _readPullRequest(row.ref);
+    }
+    if (row.kind === 'listing-page' || row.kind === 'registry-query') {
+        return _readUrl(row.kind, row.ref);
+    }
+    return { ok: false, reason: `no reader for upstream kind ${row.kind}` };
+};
+
+function _todayUtc(): string {
+    return new Date().toISOString().slice(0, 10);
 }
 
 // --- helpers -----------------------------------------------------------------
