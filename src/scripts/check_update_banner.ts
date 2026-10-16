@@ -72,19 +72,20 @@ function _read_settings_flag(cwd: string): boolean {
     return true;
 }
 
-function _has_project_pin(cwd: string): boolean {
+function _read_project_pin(cwd: string): string | null {
     try {
         const pin = agent_settings.load_agent_settings({ cwd })['agent_config_version'];
-        return typeof pin === 'string' && pin.trim() !== '';
+        return typeof pin === 'string' && pin.trim() !== '' ? pin.trim() : null;
     } catch {
-        return false;
+        return null;
     }
 }
 
-function _detect_origin(package_root: string, cwd: string): update_check.InstallOrigin {
+function _detect_origin(package_root: string, cwd: string, latest: string): update_check.InstallOrigin {
     return update_check.classify_install_origin({
         package_root,
-        has_project_pin: _has_project_pin(cwd),
+        project_pin: _read_project_pin(cwd),
+        latest,
         is_global_consumer: _is_global_only_consumer(cwd),
     });
 }
@@ -166,7 +167,7 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     try {
         banner = await update_check.check_for_update(installed, {
             settings_enabled: enabled,
-            origin: _detect_origin(ROOT, cwd),
+            origin: (latest) => _detect_origin(ROOT, cwd, latest),
         });
     } catch {
         return 0;

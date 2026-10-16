@@ -174,16 +174,22 @@ const GLOBAL_TREE = /[\\/](?:lib|npm)[\\/]node_modules[\\/]@event4u[\\/]agent-co
  * Classify the running install from signals the caller gathers.
  *
  * Order matters: a pinned project also runs from the npx cache, so the pin is
- * read before the `_npx` segment. An origin nobody enumerated is `unknown` and
+ * read before the `_npx` segment. `latest` is the registry version the banner
+ * announces; the pin is compared against it, never the running executable. An origin nobody enumerated is `unknown` and
  * gets no command, because a guessed command is the defect this replaces.
  */
 export function classify_install_origin(signals: {
     package_root: string;
-    has_project_pin: boolean;
+    project_pin: string | null;
+    latest: string | null;
     is_global_consumer: boolean;
 }): InstallOrigin {
-    if (signals.has_project_pin) {
-        return 'project-pin';
+    const pin = signals.project_pin?.trim() ?? '';
+    if (pin !== '') {
+        // `update` moves the pin, not the running executable: a pin already at
+        // or past latest has nothing to move, and no other command is known
+        // to be right for a pinned project.
+        return signals.latest && _is_newer(signals.latest, pin) ? 'project-pin' : 'unknown';
     }
     if (signals.package_root.split(/[\\/]+/).includes('_npx')) {
         return 'ephemeral';
@@ -253,6 +259,13 @@ export function _is_newer(latest: string, installed: string): boolean {
     return false;
 }
 
+function _resolve_origin(
+    origin: InstallOrigin | ((latest: string) => InstallOrigin) | undefined,
+    latest: string,
+): InstallOrigin | undefined {
+    return typeof origin === 'function' ? origin(latest) : origin;
+}
+
 /** Format a Date as `%Y-%m-%dT%H:%M:%SZ` (UTC, no milliseconds). */
 function _format_utc(d: Date): string {
     return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -274,7 +287,7 @@ export async function check_for_update(
         is_tty?: boolean | null;
         settings_enabled?: boolean;
         fetcher?: Fetcher;
-        origin?: InstallOrigin;
+        origin?: InstallOrigin | ((latest: string) => InstallOrigin);
     } = {},
 ): Promise<string | null> {
     const env = options.env ?? process.env;
@@ -306,7 +319,7 @@ export async function check_for_update(
     if (!_should_check(state, now)) {
         const latest = state.last_seen_version;
         if (typeof latest === 'string' && _is_newer(latest, installed_version)) {
-            return _format_banner(latest, installed_version, options.origin);
+            return _format_banner(latest, installed_version, _resolve_origin(options.origin, latest));
         }
         return null;
     }
@@ -335,5 +348,5 @@ export async function check_for_update(
     if (!latest || !_is_newer(latest, installed_version)) {
         return null;
     }
-    return _format_banner(latest, installed_version, options.origin);
+    return _format_banner(latest, installed_version, _resolve_origin(options.origin, latest));
 }

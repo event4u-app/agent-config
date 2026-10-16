@@ -584,8 +584,11 @@ finished. There is no prompt — the user updates when they want.
 
 The second line names the command for the install that is running:
 `agent-config upgrade` for a global install, `agent-config update` for a
-project whose `agent_config_version` pin is behind, and no command at all
-for an ephemeral `npx` run or an install shape the check cannot classify.
+project whose `agent_config_version` pin is behind the registry's latest
+release, and no command at all for an ephemeral `npx` run, an install shape
+the check cannot classify, or a pinned project whose pin already names the
+latest release (or a newer one) — `update` moves the pin, not the running
+executable, so it has nothing to do there.
 
 ```
 ℹ️  agent-config 1.42.0 available (you have 1.38.0).
