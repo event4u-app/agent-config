@@ -968,7 +968,7 @@ gaps again; the binding closes replay, and nothing else.
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
 
-- [ ] **4.3 The comment matches the hooks.** The gate's header stops saying
+- [x] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
       time.
       verify: `grep -c 'also denied at tool-call time' src/scripts/check_kernel_edit_ratified.ts` -> /^0$/
@@ -988,6 +988,17 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Landed 2026-10-16 on its own**, as the smallest of the staged steps: the
+      header now says neither path is denied at tool-call time and that the
+      record is their only layer. Re-checked against the guards at that base, not
+      carried over from the 2026-10-12 note: `block_plumbing_writes.ts` protects
+      four build outputs — `dist/hooks/dispatch.js`, `hooks/hooks.json`,
+      `hook_manifest.json` and `host_lowering.json`; the 2026-10-12 note's
+      "three" predates the bundle joining the list — and
+      `block_kernel_rule_writes.ts` only imports `kernel_rules.ts`. The verify
+      grep reads 0, and `check_kernel_edit_ratified_header_claims.test.ts` keeps
+      the header's claim true against both guards.
 
 ## Phase 5 — A council that cannot settle it stops the run for the user
 

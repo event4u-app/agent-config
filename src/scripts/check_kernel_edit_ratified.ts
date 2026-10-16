@@ -233,10 +233,11 @@ const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
  *     from that list removes a rule from this gate's own reach — the one edit
  *     that could quietly narrow the gate while every other path kept working.
  *
- * Both are also denied at tool-call time, `dispatch_hook.ts` through the
- * plumbing guard's source set and `kernel_rules.ts` through the kernel-rule
- * write guard, so the pairing of deny-plus-record matches what the YAML sources
- * already had.
+ * No `pre_tool_use` concern bound in `hook_manifest.yaml` denies an edit to
+ * either: the plumbing guard protects four generated build outputs and names
+ * `dispatch_hook.ts` only where it reads one, and the kernel-rule write guard
+ * imports `kernel_rules.ts` without protecting it. For these two paths the
+ * record this gate demands is the only layer, not a second one beside a deny.
  *
  * The compiled tables are REGENERATED, not hand-edited, by
  * `./scripts-run src/scripts/compile_hook_manifest --table manifest|host-lowering`,
