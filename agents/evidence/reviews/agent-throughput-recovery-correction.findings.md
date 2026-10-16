@@ -1,12 +1,12 @@
 # Findings: agent-throughput-recovery-correction
-<!-- completion-review: v1 | reviewed: 2026-10-16 | scope: 71218205a4bb92d75eee5075888c5e4b4d81e5becd2eabe0b3d3577356959433 | diff: 3fc192f9ab7ce2fe841befd41071b0a846a46c81 | reviewer: r2-fresh-subagent-agent-throughput-recovery-correction | prompt_hash: 0c479b083da4f961159c297a927a7df54f1a02666270538f6527383f6d248871 -->
+<!-- completion-review: v1 | reviewed: 2026-10-16 | scope: 92772f413031c7f95ddb45b45ba5e9f5d53820196e616911b0dc5397e78b2dcd | diff: c829b1047e3933f7e199017a0bf039fd9bd2551f | reviewer: r2-fresh-subagent-agent-throughput-recovery-correction | prompt_hash: 0c479b083da4f961159c297a927a7df54f1a02666270538f6527383f6d248871 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-agent-throughput-recovery-correction"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-16 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 3fc192f9ab7ce2fe841befd41071b0a846a46c81
-  scope_hash: 71218205a4bb92d75eee5075888c5e4b4d81e5becd2eabe0b3d3577356959433
+  diff_sha: c829b1047e3933f7e199017a0bf039fd9bd2551f
+  scope_hash: 92772f413031c7f95ddb45b45ba5e9f5d53820196e616911b0dc5397e78b2dcd
   roadmap: agents/roadmaps/road-to-agent-throughput-recovery.md
   roadmap_hash: 03c5a983e4b3d9f332ccfb855d6c602cf16a20ec9fc103bb6a5e5103a19c5e05
   ac_hash: accb145e7d6cf1135c13bc050fe057490e9110eb3876debc44962af832c559e4
@@ -38,3 +38,14 @@ and one extra question asked on top of the prompt's search grid — for the
 appended corrections section and the new budget readings, check denominators,
 windows and sums (step 0.3 of the roadmap names those three axes). The addition
 stated no expected outcome. The reviewer wrote this table directly.
+
+## Re-bind after the fix pass (2026-10-16)
+
+Re-bound twice inside the round, prompt_hash unchanged. First to the fix commit
+`71e5d99c9` and the 0.3 tick (rows flipped). Then to `c829b1047`, after CI asked
+for `docs/contracts/retrieval-read-surfaces.md` to be regenerated and
+`origin/main` was merged in. Measured against the reviewed head `3fc192f9a`: the
+six reviewed files are byte-identical (`git diff 3fc192f9a HEAD` over them is
+empty). One generated file entered scope, the read-surface table, with one added
+row for `_lib/turnaround_throughput.ts` and its count line. No reviewed content
+changed.
