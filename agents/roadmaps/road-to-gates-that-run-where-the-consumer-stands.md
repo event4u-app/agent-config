@@ -91,7 +91,7 @@ consumer behaviour points at something that executes.
       (`src/scripts/_lib/install_reach_checks.ts`, so `cmd_doctor.ts` does not
       grow). `tests/install/doctor_artifact_location.test.ts` runs the real
       doctor against the fixture and reads one finding,
-      `apps/x/docs/roadmaps/road-to-y.md → agents/roadmaps/road-to-y.md`.
+      the fixture file named with its target under `agents/roadmaps/`.
 - [x] **2.2 Advisory by default, `manual` under `--strict`. Report only.**
       No auto-move: `doctor` is read-only, and moving a consumer's file
       without asking is the ownership break a sibling roadmap exists to end.

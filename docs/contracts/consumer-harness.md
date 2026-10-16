@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2027-01-16
+keep-beta-until: 2027-01-14
 ---
 
 # Consumer harness — where a claim about a consumer's machine is checked
