@@ -110,28 +110,35 @@ output. It is the classifier and the data behind it.
       it. This is a spike with a written outcome, not a build step.
       verify: the finding is recorded in this file's `## Decisions` as D4 with
       the observed response shape.
-- [ ] **3.3 A real comparator for policy decisions.** Add one beside
+- [x] **3.3 A real comparator for policy decisions.** Add one beside
       `_is_newer`: prerelease ordering, `v` prefix, invalid input → no action.
       **Keep `_is_newer` and its behaviour** as a pinned regression fixture —
       `_is_newer('16.6.0','16.6.0-next.3') === false` is the witness that the
       new path and the old one are different code.
       verify: the new comparator returns `true` for that pair; the pinned
       fixture still returns `false`.
-- [ ] **3.4 The local machine overrides the map.** If the candidate's
+- [x] **3.4 The local machine overrides the map.** If the candidate's
       `engines.node` is unsatisfied by `process.version`, the impact for this
       machine is `action`, whatever the map says.
       verify: a fixture with `engines.node: ">=22"` under a Node 20
       `process.version` yields `action`.
+      Landed (3.3 + 3.4): `is_newer_version` sits beside `_is_newer` in
+      `src/scripts/_lib/update_check.ts`, backed by the pure
+      `src/scripts/_lib/version_order.ts` (SemVer precedence and the
+      `engines.node` range subset); `_is_newer` and the banner are untouched.
+      `machine_override` in `classify_update.ts` returns `action` for that
+      fixture and for a range it cannot check. Tests:
+      `tests/lib/version_order.test.ts`, `tests/lib/classify_update.test.ts`.
 
 ## Phase 4 — One pure classifier, no behaviour change
 
-- [ ] **4.1 Write `classifyUpdate`.** Signature:
+- [x] **4.1 Write `classifyUpdate`.** Signature:
       `{installed, candidate, origin, env, impactMap, engines, publishedAt, deprecated, provenance, settings} → {action: auto|ask|notify|none, reasons[]}`.
       Origins come from `src/scripts/_cli/doctor_install_mode.ts`; no new
       detector, no new CLI verb (ADR-041).
       verify: the function is pure — no filesystem, no network, no process
       exit — asserted by a test that calls it with a frozen input object.
-- [ ] **4.2 Encode the rules.** Any `action` in range, or engines unmet →
+- [x] **4.2 Encode the rules.** Any `action` in range, or engines unmet →
       `ask`. `Security: yes` in range → `notify` in every mode but `off`. A
       project pin present → never `auto`. CI, non-interactive, a source
       checkout, or `AGENT_CONFIG_NO_UPDATE_CHECK=1` → `none`, mirroring the
@@ -141,10 +148,26 @@ output. It is the classifier and the data behind it.
       verify: a ≥ 40-case matrix including the five no-action majors, a forged
       manifest, a prerelease, a dist-tag drift and a disk-full read. **Zero
       `auto` verdicts under uncertainty** is the assertion that matters.
+      Landed (4.1 + 4.2): `src/scripts/_lib/classify_update.ts`, 55-case
+      matrix in `tests/lib/classify_update.test.ts`. Interpretations taken
+      where the step was silent: "wait" is `none` with a `wait:` reason; a
+      security fix lifts a wait to `notify`; an absent mode, an unknown
+      origin or a prerelease candidate is an uncertainty; a malformed map
+      entry is treated as `action`. The origin type names the shapes
+      `doctor_install_mode.ts` distinguishes; nothing calls a detector.
+      The no-`auto` assertion was seen red by disabling the provenance rule.
 - [ ] **4.3 Expose it read-only.** `doctor --json` reports the verdict and its
       reasons. Nothing acts on it in this roadmap.
       verify: the banner, `upgrade` and `update` emit byte-identical output on
       the existing fixtures — a diff of recorded stdout before and after.
+      Open (2026-10-16): the verdict has nothing true to report from yet.
+      The cached `update-check.json` keeps only `last_seen_version`, so
+      `engines`, `agentConfig.impact`, `dist.attestations` and
+      `deprecated` — all present in the `/latest` document per D4 — would
+      need to be persisted by the probe first, which changes a state file
+      the banner reads. And `cmd_doctor.ts` sits above the 1,500-line
+      ceiling, so the reporting line needs a neighbouring extraction to pay
+      for it. Both belong in one reviewed change, not appended to this one.
 
 ## Blockers
 
@@ -212,15 +235,20 @@ direct check named in the revisit column.
 
 - [ ] **AC-1** Replaying 10.0.0 → 16.0.0 through the new bump rule yields minor
       for 13.0.0, 14.0.0 and 16.0.0 and major for 12.0.0 and 15.0.0.
-- [ ] **AC-2** A release-span commit carrying `!` with no `Consumer-Impact:`
+- [x] **AC-2** A release-span commit carrying `!` with no `Consumer-Impact:`
       trailer fails the release check; the same commit with a trailer passes.
-- [ ] **AC-3** The new comparator returns `true` for
+- [x] **AC-3** The new comparator returns `true` for
       `('16.6.0','16.6.0-next.3')` while the pinned `_is_newer` fixture still
       returns `false`.
 - [ ] **AC-4** Over a ≥ 40-case matrix, `classifyUpdate` returns `ask` for
       every input whose `engines.node` is unsatisfied, and `auto` for **no**
       input carrying an unknown, a missing provenance or a project pin.
-- [ ] **AC-5** `classifyUpdate` performs no filesystem or network access,
+      Held open: the second half holds; the first holds for every input
+      that is not suppressed and has a newer candidate. Step 4.2 itself
+      makes CI, non-interactive, source checkout, the opt-out and mode `off`
+      resolve to `none`, so a literal "every input" contradicts 4.2. Which
+      wins is for the reviewer to settle; the test asserts the scoped form.
+- [x] **AC-5** `classifyUpdate` performs no filesystem or network access,
       asserted by a test that calls it with a frozen input.
 - [ ] **AC-6** The banner, `upgrade` and `update` produce byte-identical
       recorded stdout before and after the whole change.
