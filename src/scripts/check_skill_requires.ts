@@ -21,6 +21,7 @@ import YAML from 'yaml';
 import { ROOT, iter_artefacts } from './_lib/agent_src.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
+import { relativeTargets } from './lint_skill_link_reach.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
@@ -74,6 +75,43 @@ interface SkillInfo {
     packs: Set<string>;
     requires_skills: string[];
     path: string;
+    /** Skills whose `references/` this skill's body or reference files link into. */
+    reference_links?: string[];
+}
+
+/** A link target resolved against the skills root that lands in a skill's `references/`. */
+const FOREIGN_REFERENCE = /^([a-z0-9-]+)\/references\//;
+
+function _markdown_files(dir: string): string[] {
+    if (!fs.existsSync(dir)) {
+        return [];
+    }
+    const out: string[] = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            out.push(..._markdown_files(full));
+        } else if (entry.name.endsWith('.md')) {
+            out.push(full);
+        }
+    }
+    return out;
+}
+
+function _reference_links(skill_md: string, skill_id: string): string[] {
+    const dir = path.dirname(skill_md);
+    const found = new Set<string>();
+    for (const file of [skill_md, ..._markdown_files(path.join(dir, 'references'))]) {
+        for (const target of relativeTargets(fs.readFileSync(file, 'utf-8'))) {
+            const bare = target.split('#')[0] ?? '';
+            const resolved = path.relative(path.dirname(dir), path.resolve(path.dirname(file), bare));
+            const m = FOREIGN_REFERENCE.exec(resolved.split(path.sep).join('/'));
+            if (m !== null && m[1] !== skill_id) {
+                found.add(m[1]!);
+            }
+        }
+    }
+    return [...found].sort();
 }
 
 function _collect_skills(): Record<string, SkillInfo> {
@@ -90,6 +128,7 @@ function _collect_skills(): Record<string, SkillInfo> {
             packs: new Set(Array.isArray(packsVal) ? (packsVal as string[]) : []),
             requires_skills: Array.isArray(reqVal) ? (reqVal as string[]).slice() : [],
             path: path.relative(ROOT(), p).split(path.sep).join('/'),
+            reference_links: _reference_links(p, skill_id),
         };
     }
     return skills;
@@ -130,6 +169,7 @@ function main(): number {
 
     for (const skill_id of Object.keys(skills).sort()) {
         const info = skills[skill_id]!;
+        errors.push(..._undeclared_reference_links(skill_id, info, skills, closure));
         const reqs = info.requires_skills;
         if (reqs.length === 0) {
             continue;
@@ -196,6 +236,37 @@ function main(): number {
             `${n_skills} skill(s) — all sub-skills co-available.\n`,
     );
     return 0;
+}
+
+/**
+ * A link into another skill's `references/` across a pack boundary must be a
+ * declared `requires_skills` edge; the co-availability check then holds it.
+ */
+function _undeclared_reference_links(
+    skill_id: string,
+    info: SkillInfo,
+    skills: Record<string, SkillInfo>,
+    closure: Record<string, Set<string>>,
+): string[] {
+    const errors: string[] = [];
+    for (const target_id of info.reference_links ?? []) {
+        const target = skills[target_id];
+        if (target === undefined || info.requires_skills.includes(target_id) || target.packs.size === 0) {
+            continue;
+        }
+        const reached =
+            info.packs.size > 0 &&
+            [...info.packs].every((p) => _intersects(target.packs, closure[p] ?? new Set<string>([p])));
+        if (reached) {
+            continue;
+        }
+        errors.push(
+            `${info.path}: skill '${skill_id}' links into '${target_id}/references/' ` +
+                `(pack ${_pyList([...target.packs])}) across a pack boundary. Add '${target_id}' ` +
+                `to requires_skills, or move the shared file to where both packs ship it.`,
+        );
+    }
+    return errors;
 }
 
 function _intersects(a: Set<string>, b: Set<string>): boolean {

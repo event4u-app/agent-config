@@ -101,3 +101,41 @@ describe('check_skill_requires — co-availability gate (ported pytest)', () => 
     });
 });
 
+describe('check_skill_requires — reference link across a pack boundary (roadmap 1.4)', () => {
+    afterEach(() => {
+        mod._set_hooks_for_test({
+            collect_skills: mod._collect_skills,
+            load_pack_closure: mod._load_pack_closure,
+        });
+    });
+
+    function linking(packs: readonly string[], targets: readonly string[], requires: readonly string[] = []): SkillInfo {
+        return { ...skill(packs, requires, 'skills/parent/SKILL.md'), reference_links: [...targets] };
+    }
+
+    it('cross-pack-reference-undeclared fails and names the target', () => {
+        const skills = { parent: linking(['base'], ['other']), other: skill(['design']) };
+        const { rc, out } = drive(skills, { base: new Set(['base']), design: new Set(['design', 'base']) });
+        expect(rc).toBe(1);
+        expect(out).toContain("'other'");
+        expect(out).toContain('references/');
+    });
+
+    it('cross-pack-reference-declared falls to the co-availability edge', () => {
+        const skills = { parent: linking(['design'], ['other'], ['other']), other: skill(['base']) };
+        const { rc } = drive(skills, { base: new Set(['base']), design: new Set(['design', 'base']) });
+        expect(rc).toBe(0);
+    });
+
+    it('a reachable-pack reference needs no declaration', () => {
+        const skills = { parent: linking(['design'], ['other']), other: skill(['base']) };
+        const { rc } = drive(skills, { base: new Set(['base']), design: new Set(['design', 'base']) });
+        expect(rc).toBe(0);
+    });
+
+    it('collects reference links from the real tree', () => {
+        const skills = mod._collect_skills();
+        expect(skills['design-intelligence']?.reference_links ?? []).toContain('fe-design');
+    });
+});
+

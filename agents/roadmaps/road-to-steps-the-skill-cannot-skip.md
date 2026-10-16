@@ -150,12 +150,20 @@ A split multiplies links. The gate that checks them comes first.
       `SKILL.md:350`, so delete that line and keep both sections in the body.
       *Done 2026-10-16.*
       verify: `grep -c 'output-and-pitfalls' src/skills/existing-ui-audit/SKILL.md` -> /^0$/
-- [ ] **1.4 A reference link into another pack declares it.** A link from one
+- [x] **1.4 A reference link into another pack declares it.** A link from one
       skill into another skill's `references/` across a pack boundary requires
       the target in `requires_skills`; the two cases in Context are resolved by
       the owner of each target file — add `requires_skills`, or move the shared
       file to where both packs ship it. `check_skill_requires` then holds the
       rest.
+      *Done 2026-10-17:* `check_skill_requires` now collects every link into
+      another skill's `references/` (from `SKILL.md` and `references/*.md`) and
+      fails one whose target pack the linking pack does not reach unless it is
+      a declared edge. `design-intelligence` → `fe-design` needs no edge:
+      `frontend-design` requires `engineering-base`. `design-review` →
+      `wireframe` could not take an edge (`engineering-base` does not reach
+      `frontend-design`), so the ledger schema — linked from nothing inside
+      `wireframe` — moved to `design-review/references/`, shipped by both packs.
       verify: `./scripts-run src/scripts/check_skill_requires` -> 0
 - [ ] **1.5 A table of contents is generated, not written.** A generator adds a
       heading index to every reference file over 100 lines and its `--check`

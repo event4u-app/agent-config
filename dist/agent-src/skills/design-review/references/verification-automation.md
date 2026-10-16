@@ -42,7 +42,7 @@ reads it in Phase 2 alongside the viewport sweep.
 ```
 
 `beat_id` references the ledger at
-[`wireframe/references/story-beat-ledger.schema.json`](../../wireframe/references/story-beat-ledger.schema.json),
+[`story-beat-ledger.schema.json`](story-beat-ledger.schema.json) (the `wireframe` skill authors the ledger),
 which is what makes a sample checkable against an intent rather than against a
 remembered screenshot: a row whose `state` and `observed` disagree is a finding,
 and a reviewer can diff two runs of this file.
