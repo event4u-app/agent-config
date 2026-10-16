@@ -112,16 +112,18 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       no later claim is checkable.
       verify: `npx vitest run tests/scripts/cache_realization_report.test.ts -t resumed-run-gets-its-own-first-call --reporter=verbose` -> /✓.*resumed-run-gets-its-own-first-call/
       Done 2026-10-16: `segmentLegsIntoRuns` + `readLedgerStarts` in the report, `subagent_runs` in its JSON and text, new `--ledger-dir` flag; joins on `refFor` from the ledger hook, so no second hash.
-- [ ] **1.2 Burst baseline from the ledger that exists.** Spawns per 10 s and per
+- [x] **1.2 Burst baseline from the ledger that exists.** Spawns per 10 s and per
       60 s, maximum overlap, per session, over the current ledger window — no
       new capture. Filed with its window and its bound: `spawn_guard_shadow`
       lines carry no `session_id`, so per-session figures come from the
       start/stop lines only.
       verify: `ls agents/evidence/analysis/` -> /spawn-burst-baseline/
-- [ ] **1.3 Council seats measured as their own population.** First-call
+      Done 2026-10-16: `agents/evidence/analysis/spawn-burst-baseline-2026-10.md`, ledger window 2026-08-13 to 2026-10-16, with the open-record bound on the overlap rows.
+- [x] **1.3 Council seats measured as their own population.** First-call
       written-or-uncached tokens per seat launch, separated from subagent legs,
       so Phase 5 has a baseline of its own.
       verify: `grep -c 'council seat' agents/evidence/analysis/spawn-burst-baseline-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: same file, n=4 joined seat launches, filed as a scale and not a subtrahend; Phase 5 should re-read.
 - [ ] **1.4 Observe `worker_resume`.** In a real session: a finished leg receives
       a follow-up by name, its next `SubagentStart` carries the same ledger
       `ref`, and that run's first call reads more than half its input from
@@ -327,9 +329,10 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
       verify: `grep -c 'resume-non-inferiority' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
-- [ ] **6.3 Correct D3** in the recycling roadmap's Context, citing the
+- [x] **6.3 Correct D3** in the recycling roadmap's Context, citing the
       per-spawn reading.
       verify: `grep -c 'per-spawn-standing-2026-10' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: correction sub-bullet under the kernel-floor bullet, citing the per-spawn reading.
 - [x] **6.4 Record the
       owner's answer** to the recycling roadmap's posed question on that file,
       with this plan's Phase 3 as the evidence the answer reads.
