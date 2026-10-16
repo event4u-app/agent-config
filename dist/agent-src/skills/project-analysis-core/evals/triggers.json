@@ -1,0 +1,13 @@
+{
+  "skill": "project-analysis-core",
+  "last_eval": "2026-10-16",
+  "description": "3 should-trigger + 3 should-not-trigger. Should-trigger covers discovery of an unknown codebase, resolving the real framework versions and mapping the execution flow, and a German phrasing. Should-not-trigger covers near-miss neighbours (a known-framework analysis, a root-cause hunt on an isolated bug) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "this codebase is unknown to me, discover its structure and architecture first", "trigger": true, "class": "exemplar"},
+    {"q": "resolve the real framework versions and map the execution flow of this project", "trigger": true, "class": "exemplar"},
+    {"q": "ich kenne das Projekt nicht, ermittle Versionen und Architektur", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "analyze this Laravel app's service container setup", "trigger": false, "class": "near-miss", "note": "the framework is already known; project-analysis-laravel goes directly"},
+    {"q": "why does this one endpoint return 500 only in staging?", "trigger": false, "class": "near-miss", "note": "an isolated issue needs root-cause analysis, not discovery"},
+    {"q": "rename the variable total to grandTotal", "trigger": false, "class": "counterexample"}
+  ]
+}

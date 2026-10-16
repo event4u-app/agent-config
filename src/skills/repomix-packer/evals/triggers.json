@@ -1,0 +1,13 @@
+{
+  "skill": "repomix-packer",
+  "last_eval": "2026-10-16",
+  "description": "3 should-trigger + 3 should-not-trigger. Should-trigger covers packing a repo into one LLM-ready file, packing a remote library with a token count, and a German phrasing. Should-not-trigger covers near-miss neighbours (reading two specific files, converting a PDF to text) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "pack this repository into a single AI-friendly file for an LLM review", "trigger": true, "class": "exemplar"},
+    {"q": "package the remote library as XML with a token count, without cloning it", "trigger": true, "class": "exemplar"},
+    {"q": "pack das Repo in eine einzige Datei für die LLM-Analyse", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "show me these two files so I can read them", "trigger": false, "class": "near-miss", "note": "a few specific files are read directly, not packaged"},
+    {"q": "convert this PDF report to markdown", "trigger": false, "class": "near-miss", "note": "binary-format conversion is markitdown"},
+    {"q": "fix the failing login test", "trigger": false, "class": "counterexample"}
+  ]
+}

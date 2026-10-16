@@ -124,7 +124,8 @@ to a concrete model.
 The native Claude `model:` key exists **only** in the rendered Claude
 projection; the portable source and every other tool keep the neutral tier.
 No vendor model name leaves the band abstraction in source. The optional
-orthogonal `context: large` modifier is metadata only — it never changes the
+orthogonal `context_window: large` modifier (renamed from `context` so it never
+collides with the host-owned `context` key) is metadata only — it never changes the
 native `model:`. See ADR-035 and `road-to-model-capability-tiers.md`.
 
 ## Automated probe — `task lint-projection-fidelity`

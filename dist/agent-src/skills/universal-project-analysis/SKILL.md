@@ -1,6 +1,6 @@
 ---
 model_tier: high
-context: large
+context_window: large
 name: universal-project-analysis
 description: "Deep multi-pass codebase audit — orchestrates project-analysis-core plus the framework-specific project-analysis-*; explicit request only. Single-pass scan → project-analyzer."
 domain: discovery

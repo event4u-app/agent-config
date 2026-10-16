@@ -234,6 +234,37 @@ describe('route:explain --skills — the shell path', () => {
         expect(report.suggestions.map((r) => r.skill)).toContain('merge-conflicts');
     });
 
+    it('reaches a package skill the host root lacks, labelled not-installed', () => {
+        // The installed root carries one skill. A package skill outside it used
+        // to be invisible here: the projection is only ever a fallback root.
+        const report = build_skills_report('write a conventional commit message', {
+            workspaceRoot: skillWorkspace(),
+            packageRoot: REPO_ROOT,
+            home: tmp('rx-home-'),
+            limit: 3,
+        });
+        expect(report.package_fallback_used).toBe(false);
+        const names = report.not_installed.map((r) => r.skill);
+        expect(names).toContain('conventional-commits-writing');
+        // An installed name is never repeated as not-installed.
+        expect(names).not.toContain('merge-conflicts');
+        expect(names.length).toBeLessThanOrEqual(3);
+        expect(render_skills_text(report)).toMatch(/· conventional-commits-writing {2}\[[\d.]+\] {2}not-installed/);
+    });
+
+    it('labels every row not-installed when only the package projection answered', () => {
+        const report = build_skills_report('resolve merge conflicts', {
+            workspaceRoot: foreignWorkspace(),
+            packageRoot: REPO_ROOT,
+            home: tmp('rx-home-'),
+            limit: 3,
+        });
+        expect(report.not_installed).toEqual([]);
+        const rows = render_skills_text(report).split('\n').filter((l) => l.startsWith('  · '));
+        expect(rows.length).toBeGreaterThan(0);
+        for (const l of rows) expect(l).toMatch(/ {2}not-installed$/);
+    });
+
     it('carries the same four fields the MCP servers return, description included', () => {
         const report = build_skills_report('resolve merge conflicts in a rebase', {
             workspaceRoot: skillWorkspace(),

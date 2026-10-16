@@ -1,7 +1,7 @@
 {
   "owner": "maintainer",
   "review_by": "2027-04-12",
-  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat.",
+  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
   "ceilings": {
     "accessibility-auditor": 11080,
     "activation-design": 8513,
@@ -67,7 +67,7 @@
     "deal-qualification-meddic": 8505,
     "decision-record": 14289,
     "decision-review": 19391,
-    "deep-reading-analyst": 13539,
+    "deep-reading-analyst": 13546,
     "defense-in-depth": 6205,
     "dependency-upgrade": 13371,
     "description-assist": 7721,
@@ -206,15 +206,15 @@
     "prediction-pool-optimizer": 16448,
     "premortem": 7456,
     "privacy-review": 11249,
-    "project-analysis-core": 5266,
-    "project-analysis-hypothesis-driven": 3817,
+    "project-analysis-core": 5273,
+    "project-analysis-hypothesis-driven": 3824,
     "project-analysis-laravel": 4121,
     "project-analysis-nextjs": 3760,
     "project-analysis-node-express": 3934,
     "project-analysis-react": 3632,
     "project-analysis-symfony": 3854,
     "project-analysis-zend-laminas": 3669,
-    "project-analyzer": 18199,
+    "project-analyzer": 18206,
     "project-docs": 6263,
     "prompt-engineering-image": 6147,
     "prompt-engineering-patterns": 7041,
@@ -232,7 +232,7 @@
     "refine-prompt": 13022,
     "refine-ticket": 17500,
     "release-comms": 7789,
-    "repomix-packer": 5410,
+    "repomix-packer": 5417,
     "requesting-code-review": 7845,
     "retention-loops": 8227,
     "review-routing": 7896,
@@ -290,7 +290,7 @@
     "ui-apply-generic": 8283,
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
-    "universal-project-analysis": 5540,
+    "universal-project-analysis": 5547,
     "upstream-contribute": 12171,
     "using-git-worktrees": 11762,
     "validate-feature-fit": 4252,
@@ -424,6 +424,42 @@
       "old": 5168,
       "new": 6728,
       "reason": "An account-flow block under Conventions: the lifecycle traced as one path, the public auth response as an observable contract, constant-time comparison with its length precondition, no fast hash and no invented primitive, fresh re-authentication on an identity change, and a pointer to the corpus rows rather than a restatement of them. No value in it; the numbers stay with the authority the block below already names. 3.2, plus the triggers block from 3.1."
+    },
+    {
+      "skill": "deep-reading-analyst",
+      "old": 13539,
+      "new": 13546,
+      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+    },
+    {
+      "skill": "project-analysis-core",
+      "old": 5266,
+      "new": 5273,
+      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+    },
+    {
+      "skill": "project-analysis-hypothesis-driven",
+      "old": 3817,
+      "new": 3824,
+      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+    },
+    {
+      "skill": "project-analyzer",
+      "old": 18199,
+      "new": 18206,
+      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+    },
+    {
+      "skill": "repomix-packer",
+      "old": 5410,
+      "new": 5417,
+      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+    },
+    {
+      "skill": "universal-project-analysis",
+      "old": 5540,
+      "new": 5547,
+      "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
     }
   ]
 }
