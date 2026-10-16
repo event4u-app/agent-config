@@ -1,3 +1,7 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-17 (round 2) for branch drain/road-to-self-modification-that-a-council-must-pass-20261017, verbatim below this comment. -->
+
 # Modification review, round 2 — the header/disposition split alone
 
 You are one seat of a modification review. Review the change below.

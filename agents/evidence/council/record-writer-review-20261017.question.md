@@ -1,3 +1,7 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-17 (round 1) for branch drain/road-to-self-modification-that-a-council-must-pass-20261017, verbatim below this comment. -->
+
 # Modification review — a writer for ratification records
 
 You are one seat of a modification review. The change below adds a module that
