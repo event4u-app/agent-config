@@ -1,53 +1,61 @@
 // Tests for src/scripts/score_skill_selection.ts (py2ts Phase 8 / Wave 8c).
 //
-// No pytest suite exists → focused differential suite. The script reads
-// tests/fixtures/skill_selection/fixtures.yml + agents/reports/
-// skill-collision-clusters.json and writes a JSON report (default
-// agents/reports/skill-selection-accuracy.json).
+// The script reads tests/fixtures/skill_selection/fixtures.yml plus the
+// clusters JSON that `skill_collision_clusters.ts` writes, and writes a JSON
+// report (default agents/reports/skill-selection-accuracy.json).
 //
-// Real-repo realities the contract makes us replicate-and-flag:
+//   A. With NO selection flag it prints "❌  Specify ..." to stderr and exits 2
+//      BEFORE reading any input.
 //
-//   A. With NO selection flag, the .py prints "❌  Specify ..." to stderr and
-//      exits 2 BEFORE reading any input. Byte-identical (stderr + exit).
+//   B. `--baseline` without the clusters JSON throws on the read → exit 1,
+//      empty stdout, no report written.
 //
-//   B. `--baseline` (and `--predictions`) read the clusters JSON, which does
-//      NOT exist on the current layout → uncaught FileNotFoundError →
-//      traceback → exit 1, EMPTY stdout, NO file written. The TS twin
-//      reproduces the crash (throwing on read ENOENT → exit 1). Traceback
-//      prose is interpreter-specific; only exit code + empty stdout + no-write
-//      are compared.
+//   C. The happy path runs on every machine, against a fixture written at the
+//      PRODUCER's path, imported from the producer. It used to be gated on a
+//      file existing at a path nothing writes, so the suite stayed green while
+//      the happy path never ran (road-to-unknowns-that-say-so F6).
 //
-//   C. The happy path (both inputs present) is gated on clusters existing;
-//      when it does, the written report + stdout are byte-identical. The shared
-//      output path is snapshotted/restored under the global-state lock.
-//
-// Skipped without python3.
-import { spawnSync } from 'node:child_process';
+// B and C swap the shared clusters file in and out under the global-state lock
+// and restore whatever was there before.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { acquireGlobalStateLock } from './_global_state_lock.js';
-import { main } from '../../src/scripts/score_skill_selection.js';
+import { CLUSTERS_JSON_PATH as READER_CLUSTERS, main } from '../../src/scripts/score_skill_selection.js';
+import { OUT_JSON as PRODUCER_CLUSTERS } from '../../src/scripts/skill_collision_clusters.js';
 import { runInProc } from '../_lib/run_in_process.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'score_skill_selection.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);
-const CLUSTERS = path.join(REPO_ROOT, 'agents', 'reports', 'skill-collision-clusters.json');
 const DEFAULT_OUT = path.join(REPO_ROOT, 'agents', 'reports', 'skill-selection-accuracy.json');
 
-function clustersPresent(): boolean {
-    return fs.existsSync(CLUSTERS);
-}
+const FIXTURE_CLUSTERS = {
+    clusters: [{ id: 'C01', members: ['adversarial-review', 'security-audit', 'performance-analysis'] }],
+};
+
 function runTs(args: string[]) {
     return runInProc(main, args);
+}
+
+/** Run `body` with the shared clusters file set to `content` (null = absent), then restore it. */
+function withClustersFile<T>(content: string | null, body: () => T): T {
+    const release = acquireGlobalStateLock();
+    const before = fs.existsSync(PRODUCER_CLUSTERS) ? fs.readFileSync(PRODUCER_CLUSTERS, 'utf-8') : null;
+    try {
+        if (content === null) {
+            fs.rmSync(PRODUCER_CLUSTERS, { force: true });
+        } else {
+            fs.mkdirSync(path.dirname(PRODUCER_CLUSTERS), { recursive: true });
+            fs.writeFileSync(PRODUCER_CLUSTERS, content, 'utf-8');
+        }
+        return body();
+    } finally {
+        if (before !== null) fs.writeFileSync(PRODUCER_CLUSTERS, before, 'utf-8');
+        else fs.rmSync(PRODUCER_CLUSTERS, { force: true });
+        release();
+    }
 }
 
 describe('score_skill_selection — CLI contract', () => {
@@ -59,40 +67,38 @@ describe('score_skill_selection — CLI contract', () => {
         expect(after).toBe(before);
     });
 
-    it.skipIf(clustersPresent())(
-        '--baseline without clusters JSON → both crash exit 1, empty stdout, no write',
-        () => {
+    it('--baseline without clusters JSON → exit 1, empty stdout, no write', () => {
+        withClustersFile(null, () => {
             const before = fs.existsSync(DEFAULT_OUT) ? fs.readFileSync(DEFAULT_OUT, 'utf-8') : null;
             const ts = runTs(['--baseline']);
             expect(ts.status).toBe(1);
             expect(ts.stdout).toBe('');
             const after = fs.existsSync(DEFAULT_OUT) ? fs.readFileSync(DEFAULT_OUT, 'utf-8') : null;
             expect(after).toBe(before);
-        },
-    );
+        });
+    });
 
-    describe.runIf(clustersPresent())('happy path (clusters present)', () => {
-        let snap: string | null = null;
-        let release: (() => void) | null = null;
-        beforeEach(() => {
-            release = acquireGlobalStateLock();
-            snap = fs.existsSync(DEFAULT_OUT) ? fs.readFileSync(DEFAULT_OUT, 'utf-8') : null;
-        });
-        afterEach(() => {
-            if (snap !== null) fs.writeFileSync(DEFAULT_OUT, snap, 'utf-8');
-            else if (fs.existsSync(DEFAULT_OUT)) fs.rmSync(DEFAULT_OUT);
-            snap = null;
-            if (release) {
-                release();
-                release = null;
-            }
-        });
-
-        it('--baseline → byte-identical stdout + written report', () => {
-            const ts = runTs(['--baseline']);
-            expect(ts.status, ts.stderr).not.toBeNull();
-            expect(() => JSON.parse(fs.readFileSync(DEFAULT_OUT, 'utf-8'))).not.toThrow();
-        });
+    it('reader-and-writer-share-the-clusters-path', () => {
+        expect(READER_CLUSTERS).toBe(PRODUCER_CLUSTERS);
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'score-skill-selection-'));
+        const out = path.join(tmp, 'accuracy.json');
+        try {
+            withClustersFile(JSON.stringify(FIXTURE_CLUSTERS), () => {
+                const ts = runTs(['--baseline', '--out', out]);
+                expect(ts.status, ts.stderr).toBe(0);
+                expect(ts.stdout).toContain('source=tfidf-baseline');
+                const report = JSON.parse(fs.readFileSync(out, 'utf-8')) as {
+                    source: string;
+                    overall: { n: number };
+                    clusters: Array<{ cluster: string }>;
+                };
+                expect(report.source).toBe('tfidf-baseline');
+                expect(report.overall.n).toBeGreaterThan(0);
+                expect(report.clusters.map((c) => c.cluster)).toContain('C01');
+            });
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
     });
 
     it('bad flag → exit code parity (argparse banner prose not compared)', () => {

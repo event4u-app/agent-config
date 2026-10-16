@@ -186,11 +186,18 @@ No-op by construction while no ceiling is set; 3.4 proves it.
 
 ## Phase 5 — Tests that cannot spend and cannot quietly pass
 
-- [ ] **5.1 The production path is fixed, then the test runs it.**
+- [x] **5.1 The production path is fixed, then the test runs it.**
       `score_skill_selection.ts:51` reads the producer's path; the test imports
       the producer's constant; the crash branch becomes an always-running
       fixture-backed happy path (`reader-and-writer-share-the-clusters-path`).
       verify: `npx vitest run tests/scripts/score_skill_selection.test.ts -t reader-and-writer-share-the-clusters-path --reporter=verbose` -> /✓.*reader-and-writer-share-the-clusters-path/
+      *Done (2026-10-16):* the reader now imports `OUT_JSON` from
+      `skill_collision_clusters.ts`, so there is one path. The new case was seen
+      red first (reader path `agents/reports/…` against the producer's
+      `agents/runtime/reports/…`). It writes a fixture at the producer's path
+      under the global-state lock and restores what was there. The crash case
+      runs on every machine too, against a removed file. Neither case is
+      gated any more.
 - [ ] **5.2 The network is closed by default, children included (D5).** A setup
       file points `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` at a closed loopback
       port with `NO_PROXY=localhost,127.0.0.1,::1` in `process.env`, so every
