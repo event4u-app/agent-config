@@ -212,14 +212,28 @@ describe('report_reducible_classes — content profile (PREREG)', () => {
             // Execution-profile Bash repeated: outside the content profile, never counted.
             r({ tool: 'Bash', command: 'npm test', path: null, timestamp: '2026-10-16T09:03:00Z', digest: 'e1' }),
             r({ tool: 'Bash', command: 'npm test', path: null, timestamp: '2026-10-16T09:04:00Z', digest: 'e1' }),
-            // An image read is K7, a result without a digest cannot match.
+            // An image read is K7 and outside the profile.
             r({ tool: 'Read:image', timestamp: '2026-10-16T09:09:00Z' }),
+            // A content result without a digest counts as content but never matches.
+            r({ timestamp: '2026-10-16T09:10:00Z', digest: null }),
+            r({ timestamp: '2026-10-16T09:11:00Z', digest: null }),
         ];
         const share = repeatShare(records);
-        expect(share.content).toStrictEqual({ count: 7, bytes: 5_800 });
+        expect(share.content).toStrictEqual({ count: 9, bytes: 7_800 });
         expect(share.repeats).toStrictEqual({ count: 2, bytes: 1_400, advised: 1 });
-        expect(share.by_class['Read:text']).toStrictEqual({ count: 5, bytes: 5_000, repeats: 1, repeat_bytes: 1_000 });
+        expect(share.by_class['Read:text']).toStrictEqual({ count: 7, bytes: 7_000, repeats: 1, repeat_bytes: 1_000 });
         expect(share.by_class['Bash:file-print']).toStrictEqual({ count: 2, bytes: 800, repeats: 1, repeat_bytes: 400 });
         expect(share.by_class['Bash:vcs-content']).toStrictEqual({ count: 0, bytes: 0, repeats: 0, repeat_bytes: 0 });
+    });
+
+    it('repeat-share-first-delivery-is-the-earliest-timestamp-and-undated-results-sort-last', () => {
+        const base = { tool: 'Read', command: null, session: 's', path: '/a', range: null, digest: 'd' };
+        const share = repeatShare([
+            { ...base, bytes: 10, timestamp: '2026-10-16T09:10:00Z', advised: true },
+            { ...base, bytes: 20, timestamp: null, advised: true },
+            { ...base, bytes: 30, timestamp: '2026-10-16T09:05:00Z', advised: false },
+        ]);
+        // 09:05 is the first delivery; the 09:10 read and the undated one repeat it.
+        expect(share.repeats).toStrictEqual({ count: 2, bytes: 30, advised: 2 });
     });
 });

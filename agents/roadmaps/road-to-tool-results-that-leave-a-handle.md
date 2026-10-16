@@ -112,9 +112,11 @@ retention; concurrent write, read and cleanup.
 - [ ] **1.4 Measure the repeat share in the same window.** *Instrument built
       2026-10-16, reading still open: `repeatShare` in the report prints the
       share in the same `--profile content` run as 1.3; `scanToolResultRecords`
-      now carries session, `Read` path and range, a sha256 over the payload,
-      and whether a `reread_guard_hook` advisory preceded the call. A `Read` and
-      a `cat` of one file never match each other, so the share is a lower bound.
+      now carries the transcript file as the session (a subagent is its own
+      context), `Read` path and range, a sha256 over the payload, and whether a
+      `reread_guard_hook` advisory preceded the call. A `Read` and a `cat` of
+      one file never match each other, and a result first delivered before the
+      window opened is not counted, so the share is a lower bound.
       Not run over the window.* For content results:
       how many, and how many bytes, are byte-identical to one delivered earlier in
       the same session (same path, same range, same digest over the delivered

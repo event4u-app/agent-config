@@ -641,7 +641,11 @@ export interface ToolResultRecord {
     bytes: number;
     /** The result record's `timestamp`, or null when absent. */
     timestamp: string | null;
-    /** The result record's `sessionId`, else the transcript file's basename. */
+    /**
+     * The transcript file, relative to the scanned directory, without `.jsonl` — one
+     * model context. Never the record's `sessionId`: a subagent transcript carries
+     * its parent's, but the parent's reads were never in the subagent's context.
+     */
     session: string;
     /** A `Read` call's `file_path`, else null. */
     path: string | null;
@@ -653,7 +657,8 @@ export interface ToolResultRecord {
     advised: boolean;
 }
 
-const REREAD_ADVISORY = 're-read guard: ';
+/** The prefix every `reread_guard_hook` advisory line starts with (pinned by a test against its builders). */
+export const REREAD_ADVISORY = 're-read guard: ';
 
 function textOf(block: RawBlock): string | null {
     const c = block.content;
@@ -677,14 +682,17 @@ function rangeOf(input: Record<string, unknown>): string | null {
 }
 
 function advisedCalls(line: string): string | null {
-    const raw = parseLine(line) as { attachment?: { toolUseID?: unknown; stdout?: unknown } } | null;
+    const raw = parseLine(line) as { attachment?: { toolUseID?: unknown; hookEvent?: unknown; stdout?: unknown } } | null;
     const a = raw?.attachment;
-    return typeof a?.toolUseID === 'string' && typeof a.stdout === 'string' && a.stdout.includes(REREAD_ADVISORY) ? a.toolUseID : null;
+    if (a?.hookEvent !== 'PreToolUse' || typeof a.toolUseID !== 'string' || typeof a.stdout !== 'string') return null;
+    return a.stdout.includes(REREAD_ADVISORY) ? a.toolUseID : null;
 }
 
 /** Per-result view of {@link scanToolResults}: same join, same dedup by `tool_use_id`, same `:image` split. */
 export function scanToolResultRecords(opts: ScanOptions = {}): ToolResultRecord[] {
     const files = listTranscriptFiles(opts);
+    const root = opts.root ?? DEFAULT_PROJECTS_ROOT;
+    const base = opts.projectDir ? path.resolve(root, opts.projectDir) : root;
     const calls = new Map<string, { name: string; command: string | null; path: string | null; range: string | null }>();
     const advised = new Set<string>();
     for (const file of files) {
@@ -709,14 +717,12 @@ export function scanToolResultRecords(opts: ScanOptions = {}): ToolResultRecord[
     const out: ToolResultRecord[] = [];
     const seen = new Set<string>();
     for (const file of files) {
-        const fileSession = path.basename(file, '.jsonl');
+        const session = path.relative(base, file).replace(/\.jsonl$/, '');
         for (const line of readLines(file)) {
             if (!line.includes('"tool_result"')) continue;
             const raw = parseLine(line);
             if (!raw || raw.type !== 'user') continue;
             const timestamp = typeof raw.timestamp === 'string' ? raw.timestamp : null;
-            const sid = (raw as { sessionId?: unknown }).sessionId;
-            const session = typeof sid === 'string' ? sid : fileSession;
             for (const block of blocksOf(raw)) {
                 if (block.type !== 'tool_result' || typeof block.tool_use_id !== 'string' || seen.has(block.tool_use_id)) continue;
                 seen.add(block.tool_use_id);

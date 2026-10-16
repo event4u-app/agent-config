@@ -17,6 +17,8 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { buildDuplicateReadLine, buildPostEditReadLine } from '../../src/scripts/hooks/reread_guard_hook.js';
+
 import {
     aggregateByBucket,
     billableInputTokens,
@@ -24,6 +26,7 @@ import {
     listTranscriptFiles,
     measureBytesPerToken,
     measureContentBytes,
+    REREAD_ADVISORY,
     scanToolResultRecords,
     scanToolResults,
     scanTranscripts,
@@ -558,10 +561,29 @@ describe('scanToolResults - the payload bytes of a tool result, per tool class',
         const sha = createHash('sha256').update(BODY, 'utf8').digest('hex');
         const records = scanToolResultRecords({ root, projectDir });
         expect(records.map((r) => [r.tool, r.session, r.path, r.range, r.digest, r.advised])).toStrictEqual([
-            ['Read', 'sess-1', '/repo/a.ts', null, sha, false],
-            ['Read', 'sess-1', '/repo/a.ts', '10+5', sha, true],
-            ['Read:image', 'sess-1', '/repo/p.png', null, null, false],
+            ['Read', 'f', '/repo/a.ts', null, sha, false],
+            ['Read', 'f', '/repo/a.ts', '10+5', sha, true],
+            ['Read:image', 'f', '/repo/p.png', null, null, false],
         ]);
+    });
+
+    it('records-key-the-session-by-transcript-file-so-a-subagent-is-its-own-context', () => {
+        const root = mkTmp();
+        const projectDir = path.join(root, 'proj');
+        const call = (id: string) => ({ type: 'assistant', message: { id: `m-${id}`, content: [{ type: 'tool_use', id, name: 'Read', input: { file_path: '/repo/a.ts' } }] } });
+        const result = (id: string) => ({ type: 'user', sessionId: 'sess-1', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: 'same body' }] } });
+        appendJsonl(path.join(projectDir, 'sess-1.jsonl'), [call('tu_parent'), result('tu_parent')]);
+        appendJsonl(path.join(projectDir, 'sess-1', 'subagents', 'agent-1.jsonl'), [call('tu_child'), result('tu_child')]);
+        const sessions = scanToolResultRecords({ root, projectDir })
+            .map((r) => r.session)
+            .sort();
+        expect(sessions).toStrictEqual(['sess-1', path.join('sess-1', 'subagents', 'agent-1')]);
+    });
+
+    it('advisory-prefix-is-the-one-reread-guard-emits', () => {
+        for (const line of [buildDuplicateReadLine('a.ts', 0, 'content'), buildPostEditReadLine('a.ts')]) {
+            expect(line.startsWith(REREAD_ADVISORY)).toBe(true);
+        }
     });
 
     it('records-match-the-class-scan-on-the-shared-fixture', () => {

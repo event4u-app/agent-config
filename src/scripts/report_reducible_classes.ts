@@ -302,8 +302,11 @@ export function repeatShare(records: readonly RepeatInput[]): RepeatShare {
     const by_class = Object.fromEntries(CONTENT_CLASSES.map((c) => [c, { count: 0, bytes: 0, repeats: 0, repeat_bytes: 0 }])) as RepeatShare['by_class'];
     const out: RepeatShare = { content: { count: 0, bytes: 0 }, repeats: { count: 0, bytes: 0, advised: 0 }, by_class };
     const ordered = records
-        .map((r, i) => ({ r, i, t: r.timestamp === null ? Number.NaN : Date.parse(r.timestamp) }))
-        .sort((a, b) => (Number.isNaN(a.t) || Number.isNaN(b.t) || a.t === b.t ? a.i - b.i : a.t - b.t));
+        .map((r, i) => {
+            const t = r.timestamp === null ? Number.NaN : Date.parse(r.timestamp);
+            return { r, i, t: Number.isNaN(t) ? Number.POSITIVE_INFINITY : t };
+        })
+        .sort((a, b) => (a.t === b.t ? a.i - b.i : a.t < b.t ? -1 : 1));
     const delivered = new Set<string>();
     for (const { r } of ordered) {
         const c = classifyResult(r.tool, r.command);
