@@ -238,8 +238,12 @@ In this order, after all decisions of the batch are taken:
    a parked file lowers `later_roadmaps`, never `active_roadmaps`. So each
    promoted file needs its own `estate_offset_exempt: <reason>` written in this
    change; the reason must name the disposition rejected instead (archive, park,
-   merge — `_lib/exemption_shape.ts`), e.g. *"promoted from later/: resume
-   condition met (PR #N); not re-parked because …; not merged because …"*. Many
+   merge — `_lib/exemption_shape.ts`) and should quote the owner search it ran
+   in one clause — the command, what it searched for, the whole roadmap tree and
+   an empty result; the gate reports a missing quote and does not fail — e.g.
+   *"promoted from later/: resume condition met (PR #N); not re-parked because
+   …; not merged because a grep over agents/roadmaps for <subject> returns
+   nothing"*. Many
    parked files already carry an old `estate_offset_exempt` — **replace** it,
    never inherit a reason written for a different event. The gate reads
    `<base>...HEAD`, so it sees only committed changes: run it after the change is

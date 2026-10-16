@@ -1336,3 +1336,116 @@ describe('update_roadmap_progress — --check tracked/untracked mode', () => {
         expect(r.stdout).toContain('--untracked-mode');
     });
 });
+
+describe('update_roadmap_progress — ages and park proposals', () => {
+    let tmp: string;
+    let root: string;
+
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'urp-age-'));
+        root = path.join(tmp, 'proj');
+        fs.mkdirSync(path.join(root, 'agents', 'roadmaps'), { recursive: true });
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function git(args: string[], date?: string): void {
+        const env = date
+            ? { ...process.env, GIT_AUTHOR_DATE: `${date}T12:00:00Z`, GIT_COMMITTER_DATE: `${date}T12:00:00Z` }
+            : process.env;
+        const r = spawnSync('git', args, { cwd: root, encoding: 'utf8', env });
+        expect(r.status, `git ${args.join(' ')}: ${r.stderr}`).toBe(0);
+    }
+
+    function gitInit(): void {
+        git(['init', '--quiet']);
+        git(['config', 'user.email', 't@example.com']);
+        git(['config', 'user.name', 'T']);
+    }
+
+    function commit(rel: string, body: string, date: string): void {
+        fs.writeFileSync(path.join(root, rel), body, 'utf-8');
+        git(['add', '--', rel]);
+        git(['commit', '--quiet', '-m', `edit ${rel}`], date);
+    }
+
+    const roadmap = (box: string, fm = ''): string =>
+        `---\nstatus: ready\n${fm}---\n# Demo\n\n## Phase 1: Work\n\n- ${box} **1.1 A step.**\n- [ ] **1.2 Another.**\n`;
+
+    it('prints-two-ages: days since landing and since the last tick come from git log', () => {
+        gitInit();
+        commit('agents/roadmaps/road-to-a.md', roadmap('[ ]'), '2026-01-01');
+        commit('agents/roadmaps/road-to-a.md', roadmap('[x]'), '2026-01-05');
+        commit('agents/roadmaps/road-to-b.md', roadmap('[ ]'), '2026-01-03');
+        const r = runTs(['--repo-root', root], tmp);
+        expect(r.status, r.stderr).toBe(0);
+        const dash = fs.readFileSync(path.join(root, 'agents', 'roadmaps-progress.md'), 'utf-8');
+        const age = dash.slice(dash.indexOf('## Age'));
+        expect(dash).toContain('## Age');
+        const rowA = age.split('\n').find((l) => l.startsWith('| [road-to-a.md]'));
+        const rowB = age.split('\n').find((l) => l.startsWith('| [road-to-b.md]'));
+        const ageA = /\| (\d+) \| (\d+) \|$/.exec(rowA ?? '');
+        expect(ageA, rowA).not.toBeNull();
+        // derived from the commit dates, not hardcoded: landing is 4 days older than the tick
+        expect(Number(ageA![1]) - Number(ageA![2])).toBe(4);
+        expect(rowB).toMatch(/\| \d+ \| — \|$/);
+    });
+
+    it('prints-two-ages: the parser counts a net tick, not an edit of a done line', async () => {
+        const { parse_age_log } = await import('../../src/agent-src/scripts/roadmap_age.js');
+        const log = [
+            '@@C 2026-02-10',
+            '',
+            'diff --git a/r.md b/r.md',
+            '-- [x] **1.1 Old wording.**',
+            '+- [x] **1.1 New wording.**',
+            '@@C 2026-02-01',
+            '',
+            'diff --git a/r.md b/r.md',
+            '-- [ ] **1.1 Old wording.**',
+            '+- [x] **1.1 Old wording.**',
+            '@@C 2026-01-20',
+            '',
+            'diff --git a/r.md b/r.md',
+            'new file mode 100644',
+            '+- [ ] **1.1 Old wording.**',
+        ].join('\n');
+        expect(parse_age_log(log).get('r.md')).toEqual({ landed: '2026-01-20', last_tick: '2026-02-01' });
+    });
+
+    it('park-proposal-renewable: no tick 21 days after landing is proposed, a renewal clears it', async () => {
+        const { is_park_proposal, render_age_section } = await import('../../src/agent-src/scripts/roadmap_age.js');
+        const now = new Date('2026-03-01T09:00:00Z');
+        const stale = { landed: '2026-02-01', last_tick: null };
+        expect(is_park_proposal(stale, '', now)).toBe(true);
+        // 20 days is not yet a stall
+        expect(is_park_proposal({ landed: '2026-02-09', last_tick: null }, '', now)).toBe(false);
+        // a tick after landing is not a stall
+        expect(is_park_proposal({ landed: '2026-02-01', last_tick: '2026-02-02' }, '', now)).toBe(false);
+        // an unknown age is never a stall
+        expect(is_park_proposal({ landed: null, last_tick: null }, '', now)).toBe(false);
+        // a renewal within 21 days clears it; an expired one and a reasonless one do not
+        expect(is_park_proposal(stale, 'renewed: 2026-02-20 — still wanted', now)).toBe(false);
+        expect(is_park_proposal(stale, 'renewed: 2026-02-01 — still wanted', now)).toBe(true);
+        expect(is_park_proposal(stale, 'renewed: 2026-02-20', now)).toBe(true);
+        const out = render_age_section([{ rel: 'road-to-old.md', frontmatter: '', age: stale }], now);
+        expect(out).toContain('## Park proposals');
+        expect(out).toContain('- [road-to-old.md](roadmaps/road-to-old.md) — landed 2026-02-01');
+        expect(out).toContain('never an action');
+    });
+
+    it('park-proposal-renewable: the CLI lists a stalled file and leaves it where it is', () => {
+        gitInit();
+        commit('agents/roadmaps/road-to-old.md', roadmap('[ ]'), '2020-01-01');
+        commit('agents/roadmaps/road-to-kept.md', roadmap('[ ]', 'renewed: 2999-01-01 — still wanted\n'), '2020-01-01');
+        const r = runTs(['--repo-root', root], tmp);
+        expect(r.status, r.stderr).toBe(0);
+        const dash = fs.readFileSync(path.join(root, 'agents', 'roadmaps-progress.md'), 'utf-8');
+        const proposals = dash.slice(dash.indexOf('## Park proposals'));
+        expect(dash).toContain('## Park proposals');
+        expect(proposals).toContain('road-to-old.md');
+        expect(proposals).not.toContain('road-to-kept.md');
+        expect(fs.existsSync(path.join(root, 'agents', 'roadmaps', 'road-to-old.md'))).toBe(true);
+    });
+});

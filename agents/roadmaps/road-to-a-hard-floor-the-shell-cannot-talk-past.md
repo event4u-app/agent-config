@@ -3,9 +3,10 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
+depends: [road-to-typed-grants-that-persist]
 relates:
   - slug: road-to-typed-grants-that-persist
-    relation: extends
+    relation: depends
     note: "Owns the grant object, the ledger (3.1), the gate that reads it (4.3), the Hard Floor push-row narrowing (1.1) and the undecided kernel-deny crossing (blocker kernel-guard-first-crossing, K7). This roadmap builds none of those. Its typed-op ask (4.5) waits for 3.1, and its kernel-guard migration (1.9) waits for that blocker."
   - slug: later/road-to-adversarial-verification-and-long-runs
     relation: extends

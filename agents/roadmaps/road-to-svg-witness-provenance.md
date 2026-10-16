@@ -18,6 +18,10 @@ relates: []
 > pattern list) and `3b21e612b3ae` (a declared delivery mode is trusted
 > unverified). The 16.5.0 release findings ledger, committed with that
 > release, carries all three with their dispositions.
+>
+> **Fold into `road-to-type-with-a-witness` declined 2026-10-16** (council
+> 2/2, `agents/evidence/council/intake-folds-2026-10-16.md`): shared use of the
+> asset render witness is not shared ownership.
 
 ## Goal
 

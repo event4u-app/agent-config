@@ -241,6 +241,18 @@ that was never a judgement call.
     edge source stays the single one already defined above; `relates:` never
     becomes a second dependency source.
 
+    A step that waits on another roadmap says so in both places: an inline
+    `<!-- blocked-by: road-to-X#… -->` marker fails the roadmap lint unless a
+    `relates:` row names X with `relation: depends`. A `depends` row naming a
+    file under `archive/` is flagged, because an archived file lands nothing —
+    turn it into `extends` or depend on the successor.
+
+    **Optional — `renewed: <YYYY-MM-DD> — <reason>`.** The dashboard's `## Age`
+    section lists, from `git log`, days since each active file landed and since
+    its last ticked step, and proposes parking a file with no ticked step 21
+    days after landing. The proposal is text, never an action; this one line
+    clears it for 21 days from its date.
+
     **Sibling block, same frontmatter — `delivery:`.** Optional, and unlike
     `execution:` it describes what happens to the BRANCH rather than to the
     run's interaction pattern:

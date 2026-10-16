@@ -92,6 +92,70 @@ export function lemmasNamed(reason: string): string[] {
 }
 
 /**
+ * Does this reason quote the owner search it ran — in ONE clause, a search verb,
+ * what was searched for, where, and an empty result?
+ *
+ * A disposition word says what was rejected; it does not say anyone looked for
+ * an existing owner first, and re-arrival of an owned subject as a new file is
+ * the measured cost. The AI council of 2026-10-16 refused a first version that tested the three parts anywhere in the reason:
+ * "grep was considered; agents/roadmaps contains plans; another check returned
+ * 0 hits" passed and describes no search. So all of it has to sit in one clause
+ * (split on `;` and on a sentence-ending period):
+ *
+ * - a verb — `grep`, `rg`, `find`, searched, scanned — or `roadmap:context`;
+ * - a query — a quoted pattern, or `for <identifiers>`; `roadmap:context`
+ *   carries its own;
+ * - the whole roadmap tree as scope — its root, its `/*` glob, or a brace set
+ *   naming `later` and `stubs`; one subdirectory alone is not a
+ *   search for an owner, and `archive/` owns nothing new (an archived file
+ *   lands nothing);
+ * - an EMPTY result, or one whose every hit is named as a non-owner with
+ *   `only` ("returns only archived files"). A search that found an owner is a
+ *   reason to land the finding there, never to add a file.
+ *
+ * Like the disposition check, this sees that a search is QUOTED, not that it was
+ * run or was a good one. The council's stronger objection — author-written prose
+ * is not provenance — is why this reports and does not refuse.
+ */
+const SEARCH_VERB_RE = /\b(?:grep|rg|ripgrep|find|search(?:ed|es|ing)?|scan(?:ned|s)?)\b|roadmap:context/i;
+const SEARCH_QUERY_RE = /\bfor\s+\S|['"`][^'"`\s][^'"`]*['"`]|roadmap:context/i;
+const SEARCH_SCOPE_RE =
+    /agents\/roadmaps(?:\/\*|\/\{(?=[^}]*\blater\b)(?=[^}]*\bstubs\b)[^}]*\}|\/?(?=[\s,;:)`'"]|$))|roadmap:context/i;
+const SEARCH_EMPTY_RE = new RegExp(
+    [
+        String.raw`\b(?:returns?|returned|found|finds|yield(?:s|ed)?|gives?|gave|match(?:es|ed)?|shows?|showed|lists?|listed)\b[^;]{0,40}?\b(?:nothing|none|no\b|zero|0\b|only\b)`,
+        String.raw`(?:^|[\s(:→>-])(?:0|no|zero)\s+(?:hits?|match(?:es)?|results?|files?|owners?)\b`,
+        String.raw`(?:→|->)\s*(?:nothing|none|no\b|0\b|empty)`,
+    ].join('|'),
+    'i',
+);
+
+/** One clause per `;` or sentence-ending period; a period inside `tokens.json` does not split. */
+function clauses(reason: string): string[] {
+    return reason.split(/;|\.(?=\s|$)/);
+}
+
+export function quotesOwnerSearch(reason: string): boolean {
+    return clauses(reason).some(
+        (c) =>
+            SEARCH_VERB_RE.test(c) && SEARCH_QUERY_RE.test(c) && SEARCH_SCOPE_RE.test(c) && SEARCH_EMPTY_RE.test(c),
+    );
+}
+
+/**
+ * The added exemptions that quote no owner search. REPORT-ONLY: the estate gate
+ * prints these as warnings and stays green, by the council verdict above, until a
+ * report-only window has been read.
+ */
+export function unsearchedExemptions(
+    exempt: readonly { readonly file: string; readonly reason: string }[],
+): ExemptionFinding[] {
+    return exempt
+        .filter((e) => namesDisposition(e.reason) && !quotesOwnerSearch(e.reason))
+        .map((e) => ({ file: e.file, kind: 'unsearched' as const, twin: null, reason: e.reason }));
+}
+
+/**
  * The comparison key for "two added files say the same thing".
  *
  * Case and whitespace are folded because a reason pasted into a second file and
@@ -106,7 +170,7 @@ export function reasonKey(reason: string): string {
 /** One added file whose exemption reason does not hold up. */
 export interface ExemptionFinding {
     readonly file: string;
-    readonly kind: 'shapeless' | 'duplicate';
+    readonly kind: 'shapeless' | 'unsearched' | 'duplicate';
     /** For `duplicate`, the other added file carrying the same reason. */
     readonly twin: string | null;
     readonly reason: string;
