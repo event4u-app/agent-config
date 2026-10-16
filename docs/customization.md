@@ -580,12 +580,19 @@ and is unrelated to the install `--profile=<minimal|balanced|full>` flag
 `npx @event4u/agent-config <cmd>` checks the npm registry once per
 24 h for a newer release of the package and, when one is available,
 writes a two-line banner to **stderr** *after* the subcommand has
-finished. There is no prompt — the user updates when they want with
-`npx @event4u/agent-config update` (Phase 3).
+finished. There is no prompt — the user updates when they want.
+
+The second line names the command for the install that is running:
+`agent-config upgrade` for a global install, `agent-config update` for a
+project whose `agent_config_version` pin is behind the registry's latest
+release, and no command at all for an ephemeral `npx` run, an install shape
+the check cannot classify, or a pinned project whose pin already names the
+latest release (or a newer one) — `update` moves the pin, not the running
+executable, so it has nothing to do there.
 
 ```
 ℹ️  agent-config 1.42.0 available (you have 1.38.0).
-    Update: npx @event4u/agent-config update
+    Update: agent-config upgrade
 ```
 
 State is persisted at `~/.event4u/agent-config/update-check.json`

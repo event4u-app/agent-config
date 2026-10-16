@@ -26,9 +26,10 @@ topics:
   - skills
   - prompt-engineering
   - typescript
-  - python
   - agent-skills
   - cinematic-ai-video
+  - mcp-server
+  - agent-rules
 
 notes:
   # Topics not in this list MUST NOT be set in the GitHub UI.
@@ -45,12 +46,17 @@ notes:
   skills: "Skill-based execution model."
   prompt-engineering: "Skill catalogue covers prompt patterns."
   typescript: "CLI + UI shipped as TypeScript."
-  python: "Maintenance scripts + build pipeline."
   agent-skills: "Differentiates from generic `skills` — agent-specific skill execution model."
   cinematic-ai-video: "Hollywood-grade video pipeline differentiator (`/video:*` commands)."
+  mcp-server: "The package ships an MCP server (`dist/mcp/server.mjs`) listed in MCP directories."
+  agent-rules: "Governed rules compiled into each host's native rule format."
+  # The topic for the retired maintenance-script language was removed on
+  # 2026-10-16: a CI workflow forbids that language under `src/`, so the topic
+  # advertised a language the package does not use. `claude-code-plugin` was
+  # considered and not added: the README states that plugin is deprecated.
 
 equivalents:
-  # Optional paraphrase map consumed by `scripts/lint_positioning.py`.
+  # Optional paraphrase map consumed by `src/scripts/lint_positioning.ts`.
   # Keys are topics from the `topics:` list above. Values are
   # README phrasings that should satisfy the "topic appears in
   # README" check without requiring the literal slug in prose.
@@ -60,3 +66,5 @@ equivalents:
   ai-agent: ["AI agent", "AI Agent", "host agent"]
   prompt-engineering: ["prompt engineering", "prompt-engineering-patterns", "optimize-prompt", "refine-prompt"]
   typescript: ["TypeScript"]
+  mcp-server: ["MCP server"]
+  agent-rules: ["governed rules"]
