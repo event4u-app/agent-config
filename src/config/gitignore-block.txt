@@ -98,10 +98,13 @@
 # Agent config — ghostwriter profiles (real-person public-figure voices,
 # written by /ghostwriter:fetch). Local-only by default; commit explicitly
 # only via the deferred --shared opt-in. README.md stays tracked.
-# See docs/contracts/ghostwriter-schema.md.
-/agents/ghostwriter/*.md
+# agents/reference/ghostwriter/ is where every command writes them;
+# agents/ghostwriter/ is the legacy path. Both cover nested files and
+# *.md.bak copies. See docs/contracts/ghostwriter-schema.md.
+/agents/reference/ghostwriter/**
+!/agents/reference/ghostwriter/README.md
+/agents/ghostwriter/**
 !/agents/ghostwriter/README.md
-/agents/ghostwriter/*.md.bak
 
 # Agent config — legacy chat-history flat path. Current installs put
 # the file at agents/runtime/.agent-chat-history (covered by the

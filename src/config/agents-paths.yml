@@ -133,27 +133,33 @@
 # Ghostwriter profiles
 # ---------------------------------------------------------------------------
 
-- path: /agents/ghostwriter/*.md
+- path: /agents/reference/ghostwriter/**
   scope: both
   policy: ignored
   writer: /ghostwriter:fetch skill
-  rationale: Real-person voice profiles; local-only by default; shared opt-in deferred
+  rationale: Real-person voice profiles at the path every ghostwriter command writes; nested files and .md.bak copies included; local-only by default; shared opt-in deferred
   comment: |
     # Agent config — ghostwriter profiles (real-person public-figure voices).
     # Local-only by default; commit explicitly only via the deferred --shared opt-in.
     # See docs/contracts/ghostwriter-schema.md.
+
+- path: "!/agents/reference/ghostwriter/README.md"
+  scope: both
+  policy: carve-out
+  writer: maintainer
+  rationale: README is tracked and ships with the package
+
+- path: /agents/ghostwriter/**
+  scope: both
+  policy: ignored
+  writer: /ghostwriter:fetch skill (legacy path)
+  rationale: Legacy profile path; kept ignored so profiles written before the move stay local-only
 
 - path: "!/agents/ghostwriter/README.md"
   scope: both
   policy: carve-out
   writer: maintainer
   rationale: README is tracked and ships with the package
-
-- path: /agents/ghostwriter/*.md.bak
-  scope: both
-  policy: ignored
-  writer: /ghostwriter:fetch skill (backup)
-  rationale: Safety backup during profile updates
 
 # ---------------------------------------------------------------------------
 # Chat history (legacy path; current installs use agents/runtime/)

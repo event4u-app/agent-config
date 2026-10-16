@@ -197,29 +197,32 @@ irreversible-external-action row of `non-destructive-by-default`).
       its own taboo and a brand draft containing "the number one platform"
       produce no finding from any tool. (new test file)
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **0.5 Ghostwriter path, red.** The ignore block and the lint roots both
+- [x] **0.5 Ghostwriter path, red.** The ignore block and the lint roots both
       cover the documented path; fails today.
       verify: `npx vitest run tests/scripts/lint_ghostwriter_source.test.ts -t documented-path --reporter=verbose` -> /✓.*documented-path/
+      Done 2026-10-16: `documented-path` checks the managed block with `check-ignore --no-index` in a scratch repository and the lint roots; six of ten cases red at the base.
 - [ ] **0.6 Zero brand bytes off-brand, guard.** A backend prompt in a project
       with a full brand produces no brand emission; green today, kept as the
       floor every later phase must hold.
       verify: `npx vitest run tests/scripts/hooks -t no-brand-bytes --reporter=verbose` -> /✓.*no-brand-bytes/
-- [ ] **0.7 Profile exposure check** (`folded-from-deep-dive`). Before 1.1 lands,
+- [x] **0.7 Profile exposure check** (`folded-from-deep-dive`). Before 1.1 lands,
       report how many files under either ghostwriter path are tracked in this
       repository and in its test fixtures — counts only, never names or content.
       A non-zero count outside `README.md` and `fictional: true` fixtures stops
       Phase 1 and goes to the owner as a data-exposure finding.
       verify: `git ls-files agents/reference/ghostwriter agents/ghostwriter | rg -v 'README\.md$' | wc -l` -> /^\s*0$/
+      Done 2026-10-16: the count is 0 — only `agents/reference/ghostwriter/README.md` is tracked; Phase 1 proceeds.
 
 ## Phase 1 — Small truths (one immediate PR)
 
-- [ ] **1.1 Profiles ignored where they live** (E2, first). The ignore block and
+- [x] **1.1 Profiles ignored where they live** (E2, first). The ignore block and
       the lint roots cover `agents/reference/ghostwriter/` (canonical) and keep
       `agents/ghostwriter/` (legacy), including `*.md.bak` copies and nested
       files (`folded-from-deep-dive`); `README.md` stays tracked;
       `agents-layout.md:90` names `reference/ghostwriter/` as local-only beside
       the tracked rest of `reference/`. 0.5 goes green. No history rewrite, ever.
       verify: `rg -n 'agents/reference/ghostwriter' src/config/gitignore-block.txt src/scripts/lint_ghostwriter_source.ts docs/contracts/agents-layout.md` -> /reference\/ghostwriter/
+      Done 2026-10-16: the block (and `agents-paths.yml`) ignores `agents/reference/ghostwriter/**` and `agents/ghostwriter/**` with `README.md` carved out; the lint scans both roots recursively, canonical first; `agents-layout.md` marks `reference/ghostwriter/` local-only. 0.5 green.
 - [ ] **1.2 One token name** (E10). The D1 authored surfaces say `tokens.json`;
       routing evals keep the dotted phrasing as a user utterance and gain the
       plain one; generated catalogues regenerate; ADR-061 gets no edit. The
