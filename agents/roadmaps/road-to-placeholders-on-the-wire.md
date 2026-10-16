@@ -74,6 +74,30 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-16, branch `drain/placeholders-on-the-wire-20261016`
+
+One drain lane, scoped to steps no other lane holds. 7.1 closed.
+
+- **Phase 0 not taken.** Both probes need a project settings file that binds
+  probe hooks, and `block-config-weakening` refuses an agent write of a `hooks`
+  key in any settings file. The probe is a human-run step: a person installs
+  the probe settings in a scratch workspace and the agent reads the results.
+- **6.1, 5.1 and 5.2 were built and then withdrawn from the change.** The
+  rewrite axis lives in `host_lowering.yaml` and the prompt gate must be called
+  from `dispatch_hook.ts`; both files are hook plumbing, and
+  `check_kernel_edit_ratified` requires a ratification record for any diff that
+  touches them. The built version had the rewrite axis (`replace` on claude
+  `pre_tool_use` from the 2026-08-23 probe, `gate` on claude
+  `user_prompt_submit`, `none` everywhere else) with its lint and the
+  `rewrite-toward-non-replace-host-refused` tests, and the prompt refusal with
+  the redacted copy and the residue line, tested end to end. It waits for a
+  ratification round.
+- **Read in the 2.1.301 binary, not probed:** its strings name
+  `updatedToolOutput` and `updatedMCPToolOutput`, report a value that does not
+  match the tool's output shape as refused, and say that in a confined session
+  a hook may block or ask about a call but not change its input. 0.1 and 0.2
+  should cover the last one.
+
 ## Execution status — 2026-10-15, branch `drain/placeholders-phase-1`
 
 Phase 1 ran after #2366 landed the contract, the rule table and the token
@@ -330,7 +354,7 @@ On Claude Code nothing but the request itself carries the typed prompt, an
 package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
 7.3 onward wait for it.
 
-- [ ] **7.1 Classify it before building it.** A loopback listener is not Class A
+- [x] **7.1 Classify it before building it.** A loopback listener is not Class A
       ("no listening socket", `docs/contracts/runtime-component-classes.md:16`). It
       is Class B in the shape already carried for the UI server — "human-started,
       session-bounded, loopback only" (`:56`) — with one difference written down:
@@ -338,6 +362,9 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
       launching command), what it writes (the session table and nothing else) and
       how it stops (with its child).
       verify: the inventory row exists before any gateway code and cites neither "no daemon" nor an unattended-process ADR as its basis.
+      — 2026-10-16: row added to `docs/contracts/runtime-component-classes.md`
+      (Class B, the UI server's shape, carrying model traffic); no gateway code
+      exists under `src/`, and the row's basis names neither phrase.
 - [ ] **7.2 Probe before building**, against the pinned host: a subscription
       login through a loopback base URL with the OAuth capability forwarded; which
       host features turn off behind a non-first-party base URL; twenty turns with
