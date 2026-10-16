@@ -11,6 +11,8 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type * as DetectorModule from '../../src/scripts/_lib/agent_artifact_location.js';
+
 const made: string[] = [];
 
 function emptyTreeWithOneDoc(): string {
@@ -46,7 +48,7 @@ describe('artifact-location detector — two callers, one implementation', () =>
     it('a changed detector changes both verdicts', async () => {
         vi.resetModules();
         vi.doMock('../../src/scripts/_lib/agent_artifact_location.js', async (importOriginal) => {
-            const real = await importOriginal<typeof import('../../src/scripts/_lib/agent_artifact_location.js')>();
+            const real = await importOriginal<typeof DetectorModule>();
             return {
                 ...real,
                 scan: () => ({ findings: [{ rel: 'notes.md', signals: ['a planted signal'] }], scanned: 1 }),
