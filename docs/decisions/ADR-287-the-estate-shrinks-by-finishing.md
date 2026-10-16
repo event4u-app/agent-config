@@ -184,3 +184,19 @@ different question wearing the same complaint.
 - **2026-10-16** — accepted. Owner ruling, taken in round `inbox-2026-10-t`
   after three capping options were offered and all three declined in the same
   sentence: the roadmaps are to be finished, not closed or parked.
+- **2026-10-16, later the same day — one figure in § The state the ruling was
+  taken against is corrected, and the correction strengthens the record rather
+  than disturbing it.** The table reads **15** open blockers in the active tree,
+  taken from `agents/roadmaps-progress.md`. A sweep that counted `## Blockers`
+  entries whose `Status:` does not begin `resolved` returns **20**, and executed
+  each one's own `Resolved when` clause rather than trusting the field:
+  `agents/evidence/analysis/active-blocker-disposition-20261016.md`. **The table's
+  15 is not an error** — the dashboard excludes `status: draft` roadmaps, and the
+  five it leaves out are exactly the difference; the wider count is recorded here
+  because a blocker in a draft roadmap is still a decision somebody owes, and
+  three of those five are `Class: 3` human-only. None of the twenty had gone
+  stale. Three were closed by council that day; of the seventeen that
+  remain, eleven wait on an owner decision for which a recommendation is already
+  written. The Decision is untouched — a larger blocker count makes
+  § Consequences' claim that the binding constraint is the owner queue more
+  exact, not less.
