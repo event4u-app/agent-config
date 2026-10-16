@@ -273,9 +273,11 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ## Phase 6 — Small items to existing carriers
 
-- [ ] **6.1 One arrival for the live-arm stub.** Record on
+- [x] **6.1 One arrival for the live-arm stub.** Record on
   `stubs/road-to-skill-tiering-live-arm.md` that the host now documents hot pickup
   and a name-only listing state.
+  Done 2026-10-16: the stub's arrivals line counts `inbox-2026-10-n` and quotes
+  both from the host's skills page as read that day.
   verify: the stub carries the line with this round's codename.
 - [ ] **6.2 Watch the second host's skills page** in the host-docs digest watch
   the search roadmap's 0.2 adds for the first host.
