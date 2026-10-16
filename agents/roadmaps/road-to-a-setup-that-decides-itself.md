@@ -130,8 +130,9 @@ with that file.
   cases, plus one added class: obligation cases — a safety-floor or
   consequence-class rule must fire — drawn from rule frontmatter.
   verify: a test asserts no sealed holdout file is opened.
-- [ ] **0.3 Fix the stale anchors** of D4.
+- [x] **0.3 Fix the stale anchors** of D4.
   verify: the three cites resolve to the type.
+  Landed 2026-10-16: the cites (and a fourth in `tests/scripts/activation_ladder.test.ts`) now name `LeanProjectionMode` by symbol, not by line, so they cannot go stale on the next edit to that file.
 
 ## Phase 1 — The instrument
 
