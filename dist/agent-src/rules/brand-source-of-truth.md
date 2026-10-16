@@ -20,12 +20,14 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [brand]
+enforced_by:
+  - "instruction-only: no checker reads emitted UI, copy or assets against the brand yet; the tree side is brand:status only"
 obligation_frequency: "per-edit"
 ---
 
 # Brand Source of Truth
 
-A precedence rule plus its validation gate (merged from the former
+A precedence rule plus its validation checklist (merged from the former
 `brand-consistency` rule, 2026-08-04 — the pair shared triggers and one
 subject). When a consumer already has a brand — registered tokens
 (`tokens.json`), a voice profile, a brand guide — that brand is authoritative
@@ -33,7 +35,7 @@ for the run. The curated `brand` corpus (archetypes, colour psychology, type
 principles) is a **gap-filler**, never an override.
 
 Brand is the layer that *constrains* UI, copy, and assets — not a coat of paint
-applied after. The gate half is a concrete Validation gate: emitted artifacts
+applied after. The gate half is a concrete checklist: emitted artifacts
 are checked against the **active brand tokens and voice profile**, and anything
 that cannot be traced back to one is flagged off-brand. It mirrors the
 design-intelligence principle that **audit findings outrank corpus

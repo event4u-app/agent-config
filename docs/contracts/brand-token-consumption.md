@@ -21,12 +21,12 @@ build time:
 
 | Artifact | Producer | Shape |
 |---|---|---|
-| `.tokens.json` | [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) | DTCG (`$value` / `$type`) token tree — colour, type, spacing, radius. The same file `src/skills/design-tokens/scripts/tokens.ts` emits CSS vars + Tailwind from. |
+| `tokens.json` | [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) | DTCG (`$value` / `$type`) token tree — colour, type, spacing, radius. The same file `src/skills/design-tokens/scripts/tokens.ts` emits CSS vars + Tailwind from. |
 | voice profile | [`brand-strategy`](../../src/skills/brand-strategy/SKILL.md) / [`brand-identity`](../../src/skills/brand-identity/SKILL.md) | the confirmed voice traits + do/don't (3-5 traits) used to seed microcopy register. |
 
 **Read contract (frozen v1):**
 
-- The scaffold step reads `.tokens.json` as a DTCG document — never a
+- The scaffold step reads `tokens.json` as a DTCG document — never a
   pack-brand-internal format. Style Dictionary / Tokens Studio round-trip is the
   sanctioned external transform.
 - It reads the voice profile as a list of `{trait, do, don't}` records.
@@ -43,9 +43,17 @@ names which path the scaffold takes:
 
 | Set | Meaning | Brand-token behaviour |
 |---|---|---|
-| `branded` | a brand profile (`.tokens.json` + voice) exists | consume tokens; `brand-consistency` gates emitted artifacts. |
+| `branded` | a brand profile (`tokens.json` + voice) exists | consume tokens; `brand-source-of-truth` § Iron Law 2 is the checklist emitted artifacts are read against. |
 | `bare` | no brand layer, none requested | scaffold on neutral defaults; no brand gate. |
-| `mixed` | partial brand (some tokens, no voice; or voice, no tokens) | consume what exists; **route the gaps** to `brand-identity` to define the missing slice before emitting, then re-read `.tokens.json`. |
+| `mixed` | partial brand (some tokens, no voice; or voice, no tokens) | consume what exists; **route the gaps** to `brand-identity` to define the missing slice before emitting, then re-read `tokens.json`. |
+
+`agent-config brand:status --json` computes the set on every call — `state`
+is one of the three names above, `qualifiers` adds `invalid` (a canonical
+path holds a file that is not a DTCG document) and `shadowed` (a second valid
+file with different content loses to the first on precedence), and `sources[]`
+lists every hit with its path, `sha256`, kind and status. Nothing is
+persisted. Until the brand-voice slot exists the voice side reads as absent, so
+a valid tokens file alone is `mixed`.
 
 The `mixed` path is the load-bearing one: it prevents a scaffold from either
 ignoring a partial brand or hard-failing on an incomplete one. The sibling
@@ -55,7 +63,7 @@ inputs/outputs so that implementation has a stable target.
 ## 3 — Direction of dependency (do not invert)
 
 ```
-pack-brand  EXPORTS  .tokens.json + voice profile
+pack-brand  EXPORTS  tokens.json + voice profile
                  │
                  ▼  (read-only, build time)
 greenfield scaffold step  (sibling roadmap)  and  pack-ai-image generation
@@ -68,7 +76,7 @@ side.
 
 ## See also
 
-- [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) — emits the `.tokens.json` source of truth.
-- [`brand-consistency`](../../src/rules/brand-consistency.md) — the gate that runs on the `branded` / `mixed` paths.
+- [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) — emits the `tokens.json` source of truth.
+- [`brand-source-of-truth`](../../src/rules/brand-source-of-truth.md) § Iron Law 2 — the consistency checklist read on the `branded` / `mixed` paths (instruction-only: nothing runs it yet).
 - [`design-tokens`](../../src/skills/design-tokens/SKILL.md) — DTCG token authoring + CSS/Tailwind emission.
 - `road-to-greenfield-scaffold.md` (sibling roadmap) — the scaffold directive that consumes this contract.

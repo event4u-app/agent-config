@@ -21,6 +21,6 @@ packs:
 
 Run the [`brand-audit`](../../skills/brand-audit/SKILL.md) skill — audit
 emitted UI / copy / assets against the active brand tokens (from
-`state.ui_design` / the consumer's `.tokens.json`) and the voice profile, per
-the `brand-consistency` gate. A value not traceable to a brand token or voice
+`state.ui_design` / the consumer's `tokens.json`) and the voice profile, per
+the `brand-source-of-truth` § Iron Law 2 checklist. A value not traceable to a brand token or voice
 rule is flagged off-brand. Args: `"<artifact path or description>"`.

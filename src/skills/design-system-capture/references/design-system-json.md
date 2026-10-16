@@ -34,7 +34,7 @@
 ## Field rules
 
 - **Map to DTCG where it maps cleanly.** `colors` / `typography` / `spacing` /
-  `radius` / `shadow` correspond to the DTCG `.tokens.json` shape that
+  `radius` / `shadow` correspond to the DTCG `tokens.json` shape that
   `design-tokens` / `brand-to-tokens` already author — reuse it; do **not**
   invent a parallel token format.
 - **Mark extraction-only metadata.** Anything that is *observation*, not a
@@ -75,7 +75,7 @@
 An imported artifact is **observed, not authoritative** (mirrors
 `source-discovery`: evidence vs. authoritative). It seeds `DESIGN.md` as a
 **proposal the human confirms per field** — never a silent write. A field that
-conflicts with a registered brand value (a confirmed `.tokens.json` / brand
+conflicts with a registered brand value (a confirmed `tokens.json` / brand
 token) is **flagged, never auto-applied** (`brand-source-of-truth`: consumer
 brand wins). Precedence on import: registered brand tokens > confirmed
 `DESIGN.md` > imported observation.
