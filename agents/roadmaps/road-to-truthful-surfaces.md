@@ -144,9 +144,11 @@ file can report an externally visible change as done.
 
 ## What this roadmap deliberately does not do
 
-- It does not make external adoption a goal, add a star prompt, submit to a
-  directory, or argue for any of them. That axis is held by an owner-reserved
-  record and is out of scope here by construction.
+- It adds no star prompt and argues for none: `ADR-286` § D2 refuses in-product
+  asking outright, in the same round that produced this file. It also submits
+  nothing to a directory — `ADR-286` § D1 permits that work and
+  `road-to-a-distribution-ledger-that-is-true` owns it; this file corrects
+  in-tree text and nothing outward.
 - It does not change when the banner fires, what it is throttled by, or whether
   an update installs itself. Only the command it names.
 - It does not touch `agent_config_version`, `installed-tools.lock` or any team
@@ -208,7 +210,8 @@ phase:
 | A release channel | CUT | Already shipped — `publish-npm.yml:154-168`. |
 | Repo description / homepage / topic push | FOLD | Owned by `stubs/road-to-a-visibility-sync-that-can-write.md`; folded in as an arrival, not planned here. |
 | Registry submissions, Packagist claim, awesome-list | FOLD | Owned by `stubs/road-to-bus-factor-external-actions.md` under a council disposition that forbids a parent recording them as done. |
-| Star prompt, directory listings as growth | CUT | Owner-reserved record; out of scope by construction. |
+| Star prompt | CUT | Refused outright by `ADR-286` § D2 (owner ruling, same round). |
+| Directory listings, registry submissions | FOLD | Permitted by `ADR-286` § D1 and owned by `road-to-a-distribution-ledger-that-is-true`; this file corrects in-tree text only. |
 
 ## Notes — how this file was derived
 

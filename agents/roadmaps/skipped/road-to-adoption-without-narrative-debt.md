@@ -5,6 +5,17 @@ status: skipped
 
 # Road to adoption without narrative debt — win users on the proof identity, not on unbacked headline numbers
 
+> **Narrowed on 2026-10-16 by [`ADR-286`](../../../docs/decisions/ADR-286-discoverability-is-a-goal-asking-is-not.md).**
+> The owner has since adopted **discoverability** as a goal — accurate
+> repository metadata, registry and directory listings the project submits
+> itself to, honest badges, legible documentation. Some of the steps below
+> fall inside that. **This disposition is NOT reversed** (ADR-286 § D5): the
+> file stays skipped, and anything inside the new goal is re-planned as new
+> work with the current tree verified under it, never resurrected from here.
+> In-product asking — a star prompt, a rating prompt, a referral ask — stays
+> refused outright (ADR-286 § D2).
+
+
 > **SKIPPED 2026-08-05 — decision against pursuit, per
 > [`ADR-216`](../../../docs/decisions/ADR-216-restraint-reanchored-to-capacity.md)
 > § D4.** Owner decision: **external adoption is not a project goal.** This suite
