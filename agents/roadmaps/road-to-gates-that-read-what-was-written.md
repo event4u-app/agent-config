@@ -51,11 +51,20 @@ changes what either gate is for.
       resolve its parents.
       verify: both **red** against the current parser, and the failure names
       `:177`. A test that passes here has not reproduced M1.
-- [ ] **1.2 Strip quotes in the block-list branch.** `:177` gains
+      **Held open, 2026-10-16.** The block-list half landed and was observed
+      red first (`"road-to-x` and `'road-to-y.md'` received). The
+      helper-level half contradicts D1 and the "does not touch
+      `normalizeParent`" fence below; the council split on it (record:
+      `agents/evidence/council/lineage-gate-parse-and-direction-20261016.md`).
+      Closing it is a reopen of D1, not an implementation step.
+- [x] **1.2 Strip quotes in the block-list branch.** `:177` gains
       `.replace(/["']/g, '')`, matching its sibling at `:168`.
       verify: 1.1 green; re-running the gate over the round's own folder
       yields **1** finding, not 3.
-- [ ] **1.3 Report the sweep.** The construct is `normalizeParent(` without a
+      Measured 2026-10-16: **2** after this step alone, not 1 — the
+      omitted-sibling finding also named a sibling declaring `relation:
+      extends` over the consolidating file. It reaches 1 after 2.1.
+- [x] **1.3 Report the sweep.** The construct is `normalizeParent(` without a
       quote strip. 5 call sites, 1 affected (`:177`), 1 already correct
       (`:168`), 2 structurally immune (`:218`, `:231`), 1 lower-risk prose
       branch (`:198`). Record the count in the PR; zero further matches is a
@@ -64,26 +73,40 @@ changes what either gate is for.
 
 ## Phase 2 — The lineage gate can express direction
 
-- [ ] **2.1 A successor is not an omitted parent.** A sibling declaring
+- [x] **2.1 A successor is not an omitted parent.** A sibling declaring
       `supersedes_proposals:` (or `supersedes:`) over the consolidating file
       is reported as a succession, or not reported at all — never as
       `omitted-sibling`.
       verify: a fixture pair where B supersedes A yields no omitted-sibling
       finding on A, and the inverse pair still does.
-- [ ] **2.2 A prose-named parent gets its own finding class.** A parent named
+      Landed with a third key the council converged on: a `relates:` entry
+      with `relation: extends` (allowlist of one). The round's fourth file
+      declares exactly that and nothing else, so without it 2.3 cannot read 1.
+- [x] **2.2 A prose-named parent gets its own finding class.** A parent named
       only in prose, with no slug and no backticks, reports as
       `unresolvable-parent` — distinct from `missing-parent`, which means a
       slug that resolves to nothing.
       verify: a fixture declaring a parent in prose yields
       `unresolvable-parent` and not `missing-parent`.
-- [ ] **2.3 Re-run over the round that found this.** The folder that produced
+- [x] **2.3 Re-run over the round that found this.** The folder that produced
       3 findings produces exactly 1, and that one is the genuine prose-named
       ghost.
       verify: the gate's output over
       `agents/tmp.old/inbox-2026-10-t/topic-2/` is pinned as a fixture
       expectation.
+      The folder is gitignored, so the pin is over
+      `tests/fixtures/consolidation-lineage/round-mirror/`, which mirrors its
+      declaration shapes with neutral names: 3 findings at `origin/main` over
+      both, 1 over both after the fix.
 
 ## Phase 3 — The guard judges a write, not a mention
+
+> **Held, 2026-10-16 drain.** Every step edits
+> `src/scripts/hooks/block_speaking_inbox_dir.ts`, a `pre_tool_use` deny guard
+> of the same class as `block_no_verify` and `block_config_weakening`. The
+> drain that ran Phases 1–2 was barred from editing deny guards, so this phase
+> was not started — no evidence about its design is implied. It needs a run
+> that is permitted to change a guard.
 
 - [ ] **3.1 Red first: the two commands this round was refused.** Pin both as
       polarity cases on `creatableTokens` and on the envelope path — a
@@ -152,12 +175,12 @@ changes what either gate is for.
 - [ ] **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
       and a quoted block-list `consolidates:` entry resolves; both cases were
       observed **red** first and the observation is in the PR.
-- [ ] **AC-2** Re-running `lint_consolidation_lineage` over
+- [x] **AC-2** Re-running `lint_consolidation_lineage` over
       `agents/tmp.old/inbox-2026-10-t/topic-2/` yields exactly **1** finding,
       and it is the prose-named ghost.
-- [ ] **AC-3** A sibling declaring supersession over the consolidating file
+- [x] **AC-3** A sibling declaring supersession over the consolidating file
       produces no `omitted-sibling` finding; the inverse pair still does.
-- [ ] **AC-4** A prose-named parent reports as `unresolvable-parent`, not
+- [x] **AC-4** A prose-named parent reports as `unresolvable-parent`, not
       `missing-parent`.
 - [ ] **AC-5** A read-only `ls` of an **existing** inbox directory and a
       `printf` naming one inside a quoted literal are both allowed; a
@@ -166,7 +189,7 @@ changes what either gate is for.
       polarity suite.
 - [ ] **AC-6** The remediation command printed in the guard's own error text
       executes unblocked against a fixture.
-- [ ] **AC-7** The defect-pattern sweep for `normalizeParent` without a quote
+- [x] **AC-7** The defect-pattern sweep for `normalizeParent` without a quote
       strip is reported with its count and file list.
 - [ ] **AC-8** `task ci` green.
 
