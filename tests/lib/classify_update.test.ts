@@ -142,17 +142,24 @@ const MATRIX: readonly Case[] = [
         uncertain: false,
     },
 
-    { name: 'engines unmet: >=22 under Node 20', patch: { engines: { node: '>=22' } }, expected: 'ask', uncertain: true },
+    { name: 'engines unmet: >=22 under Node 20', patch: { engines: { node: '>=22' } }, expected: 'action', uncertain: true },
     {
         name: 'engines unmet beats an automatic map',
         patch: { engines: { node: '>=22' }, impactMap: { '16.6.0': { impact: 'none' } } },
-        expected: 'ask',
+        expected: 'action',
         uncertain: true,
     },
-    { name: 'engines unmet on a deprecated candidate', patch: { engines: { node: '>=22' }, deprecated: 'x' }, expected: 'ask', uncertain: true },
-    { name: 'engines unmet with a project pin', patch: { engines: { node: '>=24' }, settings: { projectPin: '16.5.0' } }, expected: 'ask', uncertain: true },
-    { name: 'engines range unparseable', patch: { engines: { node: 'banana' } }, expected: 'ask', uncertain: true },
-    { name: 'runtime version unparseable', patch: { env: { nodeVersion: 'unknown' } }, expected: 'ask', uncertain: true },
+    { name: 'engines unmet on a deprecated candidate', patch: { engines: { node: '>=22' }, deprecated: 'x' }, expected: 'action', uncertain: true },
+    { name: 'engines unmet with a project pin', patch: { engines: { node: '>=24' }, settings: { projectPin: '16.5.0' } }, expected: 'action', uncertain: true },
+    { name: 'engines range unparseable', patch: { engines: { node: 'banana' } }, expected: 'action', uncertain: true },
+    { name: 'runtime version unparseable', patch: { env: { nodeVersion: 'unknown' } }, expected: 'action', uncertain: true },
+    { name: 'prerelease runtime', patch: { env: { nodeVersion: 'v23.0.0-nightly' } }, expected: 'notify', uncertain: true },
+    {
+        name: 'prerelease runtime under an unmet-looking range',
+        patch: { env: { nodeVersion: 'v22.0.0-rc.1' }, engines: { node: '>=22' } },
+        expected: 'notify',
+        uncertain: true,
+    },
     { name: 'engines block absent', patch: { engines: null }, expected: 'notify', uncertain: true },
     { name: 'engines.node absent', patch: { engines: {} }, expected: 'notify', uncertain: true },
 
@@ -217,7 +224,7 @@ describe('classifyUpdate — the rule matrix', () => {
         expect(autos).toEqual([]);
     });
 
-    it('asks for every input with an unsatisfied engines.node unless the check is suppressed or there is no update', () => {
+    it('answers action for every input with an unsatisfied engines.node unless the check is suppressed or there is no update', () => {
         const noUpdateOrSuppressed = new Set([
             'CI',
             'non-interactive',
@@ -231,12 +238,15 @@ describe('classifyUpdate — the rule matrix', () => {
             'candidate equals installed',
             'candidate unparseable',
             'installed unparseable',
+            // A prerelease runtime is an uncertainty, never an engines verdict.
+            'prerelease runtime',
+            'prerelease runtime under an unmet-looking range',
         ]);
         const wrong: string[] = [];
         for (const node of ['>=22', '>=24', '^22', '>=20.12.0']) {
             for (const c of MATRIX.filter((m) => !noUpdateOrSuppressed.has(m.name))) {
                 const action = classifyUpdate(input({ ...c.patch, engines: { node } })).action;
-                if (action !== 'ask') wrong.push(`${c.name} / ${node} → ${action}`);
+                if (action !== 'action') wrong.push(`${c.name} / ${node} → ${action}`);
             }
         }
         expect(wrong).toEqual([]);
@@ -250,6 +260,13 @@ describe('machine_override — the local machine overrides the map', () => {
 
     it('leaves the map in charge when the runtime satisfies the range', () => {
         expect(machine_override({ node: '>=20.11.0' }, 'v20.11.0')).toEqual({ impact: null, reason: null });
+    });
+
+    it('treats a prerelease runtime as an uncertainty, the same policy as a prerelease candidate', () => {
+        expect(machine_override({ node: '>=22' }, 'v22.0.0-rc.1')).toEqual({
+            impact: null,
+            reason: 'running Node v22.0.0-rc.1 is a prerelease',
+        });
     });
 
     it('treats a range it cannot check as action and a missing range as an unknown', () => {

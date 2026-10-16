@@ -1,7 +1,9 @@
 /**
  * `classifyUpdate` — what an update from `installed` to `candidate` should do on
  * this machine: install it (`auto`), ask first (`ask`), tell the user (`notify`),
- * or nothing (`none`). Every verdict carries the reasons that produced it.
+ * nothing (`none`), or `action` — this machine cannot run the candidate until the
+ * user changes it (its `engines.node`), so it is never installed, not even on an
+ * approval. Every verdict carries the reasons that produced it.
  *
  * Pure by contract: no filesystem, no network, no process state. The caller
  * gathers the inputs — the cached registry document, the running Node version, the
@@ -16,7 +18,7 @@ import { CONSUMER_IMPACT_VALUES, type ConsumerImpact } from './consumer_impact';
 import type { InstallOrigin as RunningOrigin } from './update_check';
 import { compare_versions, node_engine_satisfied, parse_version } from './version_order';
 
-export type UpdateAction = 'auto' | 'ask' | 'notify' | 'none';
+export type UpdateAction = 'auto' | 'ask' | 'notify' | 'none' | 'action';
 /** The running install as `classify_install_origin` reports it, plus a source checkout. */
 export type InstallOrigin = RunningOrigin | 'source-checkout';
 export type UpdateMode = 'off' | 'notify' | 'ask' | 'auto';
@@ -87,8 +89,8 @@ function read_impact_range(map: unknown, installed: string, candidate: string): 
 /**
  * The local machine overrides the published map: a candidate whose
  * `engines.node` this runtime does not satisfy — or that cannot be checked —
- * is `action` here whatever the map says. No `engines.node` at all is an
- * unknown, not an override.
+ * is `action` here whatever the map says. No `engines.node` at all, or a
+ * prerelease runtime, is an unknown, not an override.
  */
 export function machine_override(
     engines: unknown,
@@ -96,6 +98,7 @@ export function machine_override(
 ): { impact: 'action'; reason: string } | { impact: null; reason: string | null } {
     const range = engines !== null && typeof engines === 'object' ? (engines as Record<string, unknown>)['node'] : undefined;
     if (range === undefined) return { impact: null, reason: 'candidate declares no engines.node' };
+    if ((parse_version(nodeVersion)?.pre.length ?? 0) > 0) return { impact: null, reason: `running Node ${nodeVersion} is a prerelease` };
     const ok = node_engine_satisfied(range, nodeVersion);
     if (ok === true) return { impact: null, reason: null };
     const why = ok === false ? 'is not satisfied by' : 'cannot be checked against';
@@ -124,7 +127,7 @@ export function classifyUpdate(input: ClassifyUpdateInput): UpdateVerdict {
     const uncertain: string[] = [];
 
     const local = machine_override(input.engines, input.env.nodeVersion);
-    if (local.impact === 'action') return { action: 'ask', reasons: [local.reason] };
+    if (local.impact === 'action') return { action: 'action', reasons: [local.reason] };
     if (local.reason !== null) uncertain.push(local.reason);
 
     const range = read_impact_range(input.impactMap, input.installed, input.candidate);

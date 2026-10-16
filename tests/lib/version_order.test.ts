@@ -65,7 +65,8 @@ describe('node_engine_satisfied — the local machine overrides the map', () => 
         ['^18 || >=22', 'v22.5.0', true],
         ['20.x', 'v20.3.1', true],
         ['*', 'v20.0.0', true],
-        ['>=22', 'v22.0.0-nightly', false],
+        ['>=22', 'v22.0.0-nightly', null],
+        ['*', 'v23.0.0-nightly', null],
         ['banana', 'v20.0.0', null],
         ['>=22', 'not-a-version', null],
     ])('range %j under %s → %s', (range, runtime, expected) => {

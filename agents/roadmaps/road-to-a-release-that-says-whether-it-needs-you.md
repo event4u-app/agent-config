@@ -164,6 +164,13 @@ output. It is the classifier and the data behind it.
       makes CI, non-interactive, source checkout, the opt-out and mode `off`
       resolve to `none`, so a literal "every input" contradicts it. Which
       wins is for the reviewer to settle; the test asserts the scoped form.
+      Amended after the merge-danger council on this PR: engines unmet now
+      yields a fifth verdict, `action`, not `ask` — `ask` means "install on
+      approval", and a candidate this machine cannot run must not be
+      installable that way (3.4 already names the impact `action`). A
+      prerelease Node runtime is an uncertainty (`notify`), the same policy
+      as a prerelease candidate, because the `engines.node` subset does not
+      reproduce npm's prerelease range bounds.
 - [ ] **4.3 Expose it read-only.** `doctor --json` reports the verdict and its
       reasons. Nothing acts on it in this roadmap.
       verify: the banner, `upgrade` and `update` emit byte-identical output on

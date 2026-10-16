@@ -121,8 +121,10 @@ function holds(b: Bound, v: ParsedVersion): boolean {
 
 /**
  * Does `runtime` (a `process.version` string) satisfy the `engines.node`
- * range? `null` when either side cannot be parsed. A prerelease runtime
- * satisfies no range, matching npm's default of excluding prereleases.
+ * range? `null` when either side cannot be parsed, and `null` for a prerelease
+ * runtime: npm's own engines check includes prereleases, whose range bounds this
+ * subset does not reproduce, so a prerelease is "cannot tell" here — the same
+ * uncertainty `classifyUpdate` records for a prerelease candidate.
  */
 export function node_engine_satisfied(range: unknown, runtime: unknown): boolean | null {
     const v = parse_version(runtime);
@@ -139,6 +141,6 @@ export function node_engine_satisfied(range: unknown, runtime: unknown): boolean
         }
         sets.push(set);
     }
-    if (v.pre.length > 0) return false;
+    if (v.pre.length > 0) return null;
     return sets.some((set) => set.every((b) => holds(b, v)));
 }
