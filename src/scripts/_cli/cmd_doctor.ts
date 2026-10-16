@@ -31,7 +31,7 @@
  * offline-readiness · python-runtime · humanizer-runtime · tier-usage-readiness ·
  * council-cli · team ·
  * unsupported-combos · wizard-state · settings-review-pending ·
- * memory-merge-union · duplicate-scope-rules.
+ * memory-merge-union · duplicate-scope-rules · layer-form.
  * Each emits a structured `{id, status, message, remedy}` record with
  * `status` ∈ `ok` / `warn` / `fail` / `skipped` (rendered
  * `✅` / `⚠️` / `❌` / `⏭️`). `--check <id>` runs a single check.
@@ -97,6 +97,7 @@ import * as installed_tools from '../_lib/installed_tools.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
 import { censusDuplicateScope } from '../_lib/duplicate_scope_census.js';
+import { gatherShippedEvidence, shadowLayerFormCheck } from '../_lib/layer_form_decision.js';
 import * as preamble_byte_census from '../preamble_byte_census.js';
 import * as dispatch_economy_report from '../dispatch_economy_report.js';
 import * as runtime_wiring from '../_lib/runtime_wiring_checks.js';
@@ -741,6 +742,7 @@ const CHECK_IDS = [
     'settings-review-pending',
     'memory-merge-union',
     'duplicate-scope-rules',
+    'layer-form',
 ] as const;
 
 /** Checks that need only the project root and run regardless of a lockfile. */
@@ -770,6 +772,7 @@ const GLOBAL_CHECK_IDS: ReadonlySet<string> = new Set([
     'settings-review-pending',
     'memory-merge-union',
     'duplicate-scope-rules',
+    'layer-form',
 ]);
 
 /** Checks that genuinely cannot run without the project manifest. */
@@ -1394,6 +1397,15 @@ function _check_mcp_mode(project_root: string): Dict {
 }
 
 const _check_offline_readiness = (): Dict => checkOfflineReadiness(_package_root());
+
+/**
+ * Shadow decision of road-to-a-setup-that-decides-itself step 3.2: which form
+ * the rule layer WOULD take per thinnable host. Read-only; changes nothing.
+ */
+function _check_layer_form(): Dict {
+    const gather = gatherShippedEvidence(_package_root(), _current_package_version() ?? 'unknown');
+    return shadowLayerFormCheck(gather) as unknown as Dict;
+}
 
 function _check_stale_orphans(): Dict {
     const gdi = global_deploy_inventory;
@@ -2837,6 +2849,7 @@ function _run_checks(
         'settings-review-pending': _check_settings_review_pending,
         'memory-merge-union': () => _check_memory_merge_union(project_root),
         'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
+        'layer-form': _check_layer_form,
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -2921,6 +2934,7 @@ function _run_checks_no_manifest(
         'settings-review-pending': _check_settings_review_pending,
         'memory-merge-union': () => _check_memory_merge_union(project_root),
         'duplicate-scope-rules': () => _check_duplicate_scope_rules(project_root),
+        'layer-form': _check_layer_form,
     };
     const out: Dict[] = [];
     for (const cid of CHECK_IDS) {
@@ -3517,6 +3531,7 @@ export {
     _check_stale_orphans,
     _check_rule_scope_drift,
     _check_duplicate_scope_rules,
+    _check_layer_form,
     _check_python_runtime,
     _check_humanizer_runtime,
     _check_mcp_beta_readiness,
