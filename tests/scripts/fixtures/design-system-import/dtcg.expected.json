@@ -33,6 +33,10 @@
     "easings": { "standard": "cubic-bezier(0.4, 0, 0.2, 1)" }
   },
   "_meta": {
-    "unmapped": { "component.button.paddingX": "1rem" }
+    "unmapped": { "component.button.paddingX": "1rem" },
+    "alias_of": {
+      "semantic.color.background": "primitive.color.gray.50",
+      "semantic.color.foreground": "primitive.color.gray.900"
+    }
   }
 }

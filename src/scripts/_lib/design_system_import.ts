@@ -498,9 +498,42 @@ export function resolveAlias(raw: string, root: Record<string, unknown>, depth =
     return resolveAlias(value, root, depth + 1);
 }
 
+/** The path a whole-value DTCG alias points at, or null for a literal. */
+function aliasRef(raw: string): string | null {
+    const match = /^\{([^}]+)\}$/.exec(raw.trim());
+    return match === null ? null : (match[1] as string);
+}
+
+/**
+ * True when following `ref` revisits a token. Separates a defined-but-looping
+ * reference from one whose target does not exist, which `resolveAlias` cannot:
+ * both come back verbatim from it.
+ */
+function reachesCycle(ref: string, root: Record<string, unknown>): boolean {
+    const seen = new Set<string>();
+    let current: string | null = ref;
+    while (current !== null) {
+        if (seen.has(current)) return true;
+        seen.add(current);
+        let node: unknown = root;
+        for (const segment of current.split('.')) {
+            if (!isPlainObject(node)) return false;
+            node = node[segment];
+        }
+        if (!isTokenLeaf(node)) return false;
+        const value = leafValue(node);
+        if (value === null) return false;
+        current = aliasRef(value);
+    }
+    return false;
+}
+
 function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOutcome {
     const notes: string[] = [];
     let unresolvedAliases = 0;
+    // Token path → the path its alias names (one hop; a chain is the hops).
+    const aliasOf: Record<string, string> = {};
+    const aliasCycles: string[] = [];
     const colorsLight: Record<string, string> = {};
     const colorsDark: Record<string, string> = {};
     const radius: Record<string, string> = {};
@@ -524,9 +557,15 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
                     unmapped[next.join('.')] = '<non-scalar $value>';
                     continue;
                 }
-                const raw = resolveAlias(literal, input);
-                if (raw === literal && /^\{[^}]+\}$/.test(literal.trim())) {
-                    unresolvedAliases += 1;
+                const ref = aliasRef(literal);
+                // Decided before resolving: `resolveAlias`'s depth bound stops a
+                // two-token loop on whichever brace string it reached, not on this one.
+                const cyclic = ref !== null && reachesCycle(ref, input);
+                const raw = cyclic ? literal : resolveAlias(literal, input);
+                if (ref !== null) {
+                    aliasOf[next.join('.')] = ref;
+                    if (cyclic) aliasCycles.push(next.join('.'));
+                    else if (raw === literal) unresolvedAliases += 1;
                 }
                 const bucket = dtcgBucket(leafType(value), next);
                 const role = roleName(next);
@@ -594,12 +633,21 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
         if (Object.keys(durations).length > 0) out.motion.durations = durations;
         if (Object.keys(easings).length > 0) out.motion.easings = easings;
     }
+    const meta: Record<string, unknown> = {};
     if (Object.keys(unmapped).length > 0) {
-        out._meta = { unmapped };
+        meta['unmapped'] = unmapped;
         notes.push(
             `${Object.keys(unmapped).length} DTCG token(s) had no contract bucket — kept as observation under _meta.unmapped`,
         );
     }
+    if (Object.keys(aliasOf).length > 0) meta['alias_of'] = aliasOf;
+    if (aliasCycles.length > 0) {
+        meta['alias_cycles'] = [...aliasCycles].sort();
+        notes.push(
+            `${aliasCycles.length} DTCG alias reference(s) form a cycle — the reference is kept verbatim and listed under _meta.alias_cycles`,
+        );
+    }
+    if (Object.keys(meta).length > 0) out._meta = meta;
     if (darkByPath > 0) {
         notes.push(
             `${darkByPath} colour(s) were filed under the dark theme because a path segment is named "dark" — the format states no colour scheme, so verify these are theme values and not shades named dark`,

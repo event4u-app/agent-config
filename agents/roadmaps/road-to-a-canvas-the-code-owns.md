@@ -146,9 +146,10 @@ deleted or left as a silent twin without a row the user has seen.
       `design-consent` and `design-revoke`.
       (2026-10-16: red on all three names; fixture pinned at the installed host, `2.1.301.json`.)
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts -t pinned-host-control --reporter=verbose` -> /✓.*pinned-host-control/
-- [ ] **0.4 Alias loss and cycle misreport, red** (`corrected-from-reproduction`).
+- [x] **0.4 Alias loss and cycle misreport, red** (`corrected-from-reproduction`).
       The D5 fixture asserts an alias record for both roles and a cycle reported as
       a cycle; both fail today.
+      (2026-10-16: alias record and cycle both red before 3.1.)
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-control --reporter=verbose` -> /✓.*alias-control/
 - [ ] **0.5 Lock without carrier, red.** The D6 fixture asserts a rebuttable finding
       for `#e11d48`; no tool produces one today.
@@ -186,10 +187,11 @@ deleted or left as a silent twin without a row the user has seen.
 
 ## Phase 3 — A lane that keeps meaning
 
-- [ ] **3.1 Alias record and cycles.** `dtcg` and the new lane keep each role's
+- [x] **3.1 Alias record and cycles.** `dtcg` and the new lane keep each role's
       chain under `_meta.alias_of` (role → referenced path); the value stays
       resolved and outputs outside `_meta` stay byte-stable. A cycle is recorded
       under `_meta.alias_cycles`, not counted as undefined. 0.4 goes green.
+      (2026-10-16: `dtcg` lane only; the `claude-design` lane is 3.2.)
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-record --reporter=verbose` -> /✓.*alias-record/
 - [ ] <!-- blocked-by: host-sync-layout-at-current-host | asked: no — authored from inbox round inbox-2026-10-m, which carried no owner turn on this question --> **3.2 `claude-design` lane.** Reads a user-exported snapshot directory
       or the local bundle whose layout the blocker pins: tokens and the
