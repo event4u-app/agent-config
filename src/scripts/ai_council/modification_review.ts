@@ -24,12 +24,6 @@
  */
 
 import { parse_stance_line } from './stance_tally.js';
-import {
-    SEAT_NO_FINAL_VERDICT,
-    deriveRatificationHeader,
-    type RatificationVerdict,
-    type SeatVerdict,
-} from '../_lib/ratification_artifact.js';
 
 /**
  * The closed vocabulary a seat may close on. Open it and a grep for a passing
@@ -80,18 +74,7 @@ export function readSeatConclusions(
 }
 
 /**
- * Derive the review's DISPOSITION — never the artifact's `verdict` field.
- *
- * For one seat `ratified` and another without a final verdict this returns
- * `non-convergent`, while the reader's `deriveRatificationHeader` returns
- * `ratified` with one provider — and a record carrying this answer is refused by
- * the reader's `header-not-derived` check. `seats:` is evidence and the header is
- * derived from it, so a policy count must not relabel it: the reader alone
- * decides what a record SAYS, quorum stays a separate validation, and this result
- * decides what the run does next. {@link deriveModificationOutcome} returns both
- * under different names.
- *
- * ONE rule, and the ORDER is the rule:
+ * Derive the record's verdict. ONE rule, and the ORDER is the rule:
  *
  *   1. any concluding seat on `refused`  → `refused`
  *   2. concluding providers < required   → `non-convergent`
@@ -114,40 +97,4 @@ export function deriveModificationVerdict(
     if (concluded.length < requiredProviders) return 'non-convergent';
     if (concluded.includes('ratified')) return 'ratified';
     return 'confirmed-non-expanding';
-}
-
-/**
- * What a run does next. Never written into the artifact. A refusal and a short
- * quorum stay apart because only the second is cured by asking again.
- */
-export type ModificationDisposition = 'accepted' | 'refused' | 'quorum-short';
-
-export interface ModificationOutcome {
-    /** The header the record carries, from the one canonical derivation. */
-    header: { providers: string[]; verdict: RatificationVerdict };
-    /** Whether enough distinct providers concluded. */
-    quorumSatisfied: boolean;
-    disposition: ModificationDisposition;
-}
-
-/**
- * Both answers from one call, so a caller cannot take the orchestration answer
- * and write it into the record.
- */
-export function deriveModificationOutcome(
-    seats: Readonly<Record<string, ModificationVerdictLabel | null>>,
-    requiredProviders: number,
-): ModificationOutcome {
-    const asSeatVerdicts: Record<string, SeatVerdict> = {};
-    for (const [seat, label] of Object.entries(seats)) {
-        asSeatVerdicts[seat] = label ?? SEAT_NO_FINAL_VERDICT;
-    }
-    const header = deriveRatificationHeader(asSeatVerdicts);
-    const quorumSatisfied = new Set(header.providers).size >= requiredProviders;
-    const verdict = deriveModificationVerdict(seats, requiredProviders);
-    let disposition: ModificationDisposition;
-    if (verdict === 'refused') disposition = 'refused';
-    else if (!quorumSatisfied || verdict === 'non-convergent') disposition = 'quorum-short';
-    else disposition = 'accepted';
-    return { header, quorumSatisfied, disposition };
 }

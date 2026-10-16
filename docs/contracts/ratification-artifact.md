@@ -778,8 +778,8 @@ line are deliberately not used: they answer which *option* wins a
 deliberation, not whether each *seat* passed a change. A missing line, an
 abstention or any other label is a seat that did not conclude.
 
-What the run does next — land, retry, escalate — is then derived by one rule,
-and the ORDER is the rule (`modification_review.deriveModificationVerdict`):
+The record's verdict is then derived by one rule, and the ORDER is the rule
+(`modification_review.deriveModificationVerdict`):
 
 1. any concluding seat on `refused` gives `refused`;
 2. fewer concluding providers than `required_providers` gives `non-convergent`;
@@ -790,17 +790,6 @@ Step 1 precedes step 2 deliberately. A single refusing seat is a refusal even
 when it is the only seat that concluded; letting the quorum rule fire first
 would turn *one reviewer said no* into *not enough reviewers answered*, which
 reads as a retryable condition rather than as the objection it is.
-
-**That rule decides the run, never the record.** For one seat `ratified` and the
-other without a final verdict it answers `non-convergent`, while the record's
-header — derived by `deriveRatificationHeader`, the sole authority over what a
-record says — is `ratified` with one provider, and the record fails on
-`diversity-required` instead. A 2/2 council settled it this way on 2026-10-12:
-`seats:` is evidence, and a policy count must not relabel it, or a grep for
-`non-convergent` returns two failure modes with different remedies.
-`modification_review.deriveModificationOutcome` returns both answers under
-different names (`header`, `disposition`), so a caller cannot write the one into
-the place of the other.
 
 ## What the artifact does NOT decide
 
