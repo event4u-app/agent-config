@@ -85,9 +85,10 @@ a learning held is read from the recurrence count that already exists. With
 
 ## Phase 0 — Contract, settings shape, pre-registration (no product code)
 
-- [ ] **0.1 File the directive.** The five owner directives above, verbatim with
+- [x] **0.1 File the directive.** The five owner directives above, verbatim with
       their date, under `agents/evidence/owner-directives/`.
       verify: `ls agents/evidence/owner-directives/` -> /2026-10-12-retro/
+      *Done 2026-10-16: `2026-10-12-retro-inbox-2026-10-o.md`.*
 - [ ] **0.2 One ADR for the setting and the verb (D1, D2, D3).** It adds
       `retro.enabled` as class C with default `true` to
       `docs/contracts/settings-classes.md` after the `continuity.auto_record`
@@ -95,7 +96,7 @@ a learning held is read from the recurrence count that already exists. With
       (F6), and adds `retro` to `command-verbs.yml` as the ADR-041 § 5 addendum.
       The governance diff carries its council ratification artefact.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> /0 finding/
-- [ ] **0.3 The contract.** `docs/contracts/retro-v1.md`: the three paths, one
+- [x] **0.3 The contract.** `docs/contracts/retro-v1.md`: the three paths, one
       local-only unit key `{repo, pr|session, merge_sha|tag, policy}`, the closed
       target vocabulary (`intake-signal`, `override-proposal`,
       `contract-no-go-proposal`, `package-record`, `none`), caps (≤ 1 durable
@@ -105,12 +106,14 @@ a learning held is read from the recurrence count that already exists. With
       covered | expired | deferred`) and their signals. A skip is a durable
       disposition, re-evaluated only on new evidence or a new policy version.
       verify: `grep -c 'skip:low-signal' docs/contracts/retro-v1.md` -> /[1-9]/
-- [ ] **0.4 One evidence threshold.** A census of the four sites that state a
+      *Done 2026-10-16: key and verb wait for 0.2.*
+- [x] **0.4 One evidence threshold.** A census of the four sites that state a
       threshold for the same question (`src/skills/upstream-contribute/SKILL.md:47`,
       `:71`; `src/domains/meta/upstream-contribute/command.md:60`;
       `docs/guidelines/agent-infra/self-improvement-pipeline.md:78`;
       `learning_sidecar.ts:47`) and one canonical table in the contract (D4).
       verify: `grep -c 'Evidence threshold' docs/contracts/retro-v1.md` -> /[1-9]/
+      *Done 2026-10-16: census re-read at current lines.*
 - [ ] **0.5 Pre-registration.** Before any code: triage start values with a
       weighted scoring table as a hypothesis, the daily model-retro budget (D7),
       the catch-up window (D8), a labelled gold set of the last 30 merged PRs and

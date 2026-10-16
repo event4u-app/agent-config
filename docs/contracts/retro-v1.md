@@ -1,0 +1,132 @@
+---
+stability: beta
+keep-beta-until: 2027-01-14
+---
+
+# Retro v1 — paths, unit key, targets, caps, triage
+
+> What a retro is, which finished work it examines, and what it may write. Written
+> for `road-to-a-retro-the-merge-runs` step 0.3 and **before** any retro code
+> exists, so the code is written against this file and not the other way round.
+>
+> Not yet implemented. The switch `retro.enabled` and the verb `retro` do not
+> exist until the ADR of that roadmap's step 0.2 lands; until then nothing in
+> this file is a setting, a command or a public surface. Start values for the
+> triage scores, the daily budget and the catch-up window are pre-registered in
+> step 0.5 and calibrated in step 5.3, never tuned silently in code.
+
+## The three paths
+
+| Path | Trigger | What it does |
+|---|---|---|
+| **A — `/pr:merge`** | `/pr:merge <N>` finished; `/pr:merge all` finished its whole queue | Enqueues the merged PRs as units. Never between two merges of one drain. |
+| **B — forge merge** | A push wrote a merge marker with the PR number; the forge later reports `MERGED` or `CLOSED` | The daily probe resolves open markers through the forge reader; `unread` keeps the marker. Covers web-UI merges, automerge and merges by someone else. |
+| **C — daily sweep** | The first session of a new local calendar day | Counts the sessions since the last high-water mark, resolves open markers, triages deterministically and writes one queue line. No model, no spawn. Zero candidates writes nothing. |
+
+All three paths fill **one** queue in the git common directory, so two worktrees
+on one day produce one sweep and one queue. Hooks and probes only write markers,
+count and enqueue; no model ever runs inside a hook. A merge is an event, never
+a permission — nothing here reads or writes a merge setting.
+
+## The unit key
+
+A unit is one piece of finished work, identified locally by
+
+```
+{repo, pr | session, merge_sha | tag, policy}
+```
+
+- `repo` — the repository the work happened in.
+- `pr` with `merge_sha` for a merged pull request; `session` with its session
+  `tag` for a session without one.
+- `policy` — the version of this contract's triage policy that classified the
+  unit. A new policy version is the only thing besides new evidence that reopens
+  a disposition.
+
+The key never leaves the machine. It is also the **origin** of every intake
+signal a retro writes, because a free-form origin string does not separate
+evidence: two hosts in one session must count as one origin, and two PRs on one
+host as two.
+
+## Triage — deterministic, never a model
+
+| Class | Meaning |
+|---|---|
+| `analyse` | Worth a model retro; enters the daily budget, highest score first. |
+| `skip:low-signal` | Too small or too smooth to teach anything. |
+| `covered` | Already examined — a session whose PR has a retro, or a retro session itself. |
+| `expired` | Older than the catch-up window; its inputs may already be gone. |
+| `deferred` | Worth a retro, but past today's budget; examined on a later day. |
+
+Signals, all read from local facts and never from a transcript:
+
+- for a PR — CI red-to-green iterations, review threads, repair commits after
+  the first push, a later revert, the conflict classes of the drain summary;
+- for a session — turns, tool calls, compactions and final context size from
+  the session end-of-life state, interruptions from the interruption ledger,
+  self-repair records in its time window.
+
+A short session with no friction signal is `skip:low-signal`. A short session
+with a user correction or a self-repair record is `analyse`. A field that could
+not be read is `missing`, never 0, and a missing field never lowers a score.
+
+**A skip is a durable disposition.** A unit classified `skip:low-signal`,
+`covered` or `expired` is not re-triaged on the next sweep; it is re-evaluated
+only on new evidence about that unit or on a new `policy` version.
+
+## Targets — a closed vocabulary
+
+Every durable learning routes to exactly one target:
+
+| Target | What is written | Effect |
+|---|---|---|
+| `intake-signal` | A decaying intake signal with the unit key as origin | Behaviour-neutral until a human promotes a lesson |
+| `override-proposal` | A proposal file under `agents/proposals/` | None until a human applies it |
+| `contract-no-go-proposal` | A proposal file for a project no-go | None until a human applies it |
+| `package-record` | A self-repair record with `target` / `proposes` and the unit key | Local; leaving the machine is another roadmap's question |
+| `none` | Nothing, with the reason | — |
+
+Nothing is written into an always-loaded file, a rule or a skill.
+
+## Caps
+
+- At most **one** durable learning per unit.
+- At most **three** intake signals per unit.
+- At most **one** package record per run.
+
+## The durability test
+
+A learning is durable only if it is **not derivable from the code, the tests or
+the docs, and it would recur without a note**. <!-- harvest:one-durable-lesson-per-retro-run --> A learning readable from the diff
+itself is discarded; a trivial typo PR yields `none`. Otherwise the target is
+`none` and the reason is stated.
+
+## Evidence threshold
+
+The tree stated the threshold for "is this learning established" in four files,
+in three different shapes. Census, read on 2026-10-16:
+
+| Site | What it says |
+|---|---|
+| `src/skills/upstream-contribute/SKILL.md:73` | learnings must have occurred 2+ times or be clearly generalizable |
+| `src/skills/upstream-contribute/SKILL.md:97-103` | an aggregate is admissible from independently operated consumers converging on the same substance, or with a named public mechanism |
+| `src/domains/meta/upstream-contribute/command.md:78` | the learning occurred twice or more, or is clearly generalizable |
+| `docs/guidelines/agent-infra/self-improvement-pipeline.md:82` | at least 2 independent evidence entries (distinct PRs, issues, or incidents) |
+| `src/scripts/learning_sidecar.ts:47` | `MIN_CORROBORATIONS = 2` distinct origins before a lesson is promoted |
+
+The retro uses one table and the sites above are read against it:
+
+| Scope | Evidence threshold |
+|---|---|
+| **Local** — a lesson for this installation | Two unit keys from **different** PRs or sessions, each carrying its own incident. Two hosts in one unit are one key. |
+| **Package** — a change proposed to the shared package | Clustering across independently operated installations by mechanism fingerprint, **or** a named mechanism with a fixture that reproduces it. |
+
+A single retro is evidence #1, never a mandate. "Clearly generalizable" is not a
+third route: a generalization without a second unit key or a named mechanism is
+a hypothesis, recorded as a signal and nothing more.
+
+## Version history
+
+| Version | Date | Change |
+|---|---|---|
+| v1 | 2026-10-16 | Initial contract, written before any implementation. |
