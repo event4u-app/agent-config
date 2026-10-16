@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **591**
-- Edges (incl. self-WRITE): **2274**
+- Files indexed: **592**
+- Edges (incl. self-WRITE): **2278**
 
 ## READ_ONLY edges
 
@@ -1344,6 +1344,7 @@
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/mcp/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/react-shadcn-ui/references/registry.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `.agent-src.uncondensed/skills/storybook-workshop/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/react-shadcn-ui/references/registry.md` | `.agent-src.uncondensed/skills/supply-chain-intake/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` | `.agent-src.uncondensed/skills/humanizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/readme-writing/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
@@ -1643,6 +1644,8 @@
 | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/design-tokens/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/iconography/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/typography-system/references/worked-scales.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/typography-system/references/worked-scales.md` | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ui-apply-generic/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ui-apply-generic/SKILL.md` | `.agent-src.uncondensed/skills/design-tokens/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ui-apply-generic/SKILL.md` | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
@@ -1703,5 +1706,5 @@
 | `context` | 65 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 368 |
+| `skill` | 369 |
 

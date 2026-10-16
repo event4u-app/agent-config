@@ -25,6 +25,13 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
   emitters (`typography-system`, UI-apply directives, brand-asset paths) are
   consumers and point here rather than restating it. (fixture:
   `daf-webfont-delivery`.)
+- **Self-hosted font files are subset and the one above-the-fold face is
+  preloaded.** Split a self-hosted family into files by script and declare each
+  with `unicode-range` on its `@font-face`, so a page downloads only the ranges
+  its text uses. Add `<link rel="preload" as="font" type="font/woff2"
+  crossorigin>` for the single face that paints above the fold, and for no
+  other: every preload competes with the first render for bandwidth. These are
+  mechanics, not tells — nothing here is detected.
 - **Real imagery where inspection matters.** On visual pages/decks, use actual
   product / place / object / state imagery where the image IS the proof (a
   product screenshot, a real dashboard state). Decorative atmosphere is not proof

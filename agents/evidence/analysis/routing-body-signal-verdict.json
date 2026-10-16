@@ -13,11 +13,11 @@
     "verdict": "harmful",
     "reason": "false activation +5.83 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 1.94,
+    "delta_recall_pp": 2.113,
     "delta_false_activation_pp": 5.829,
-    "p_value": 0.4445,
+    "p_value": 0.4017,
     "discordant_positive_pairs": {
-      "gained": 91,
+      "gained": 92,
       "lost": 80
     },
     "bars": {
@@ -28,21 +28,21 @@
     },
     "arms": {
       "description": {
-        "positives": 567,
+        "positives": 568,
         "positiveHits": 349,
         "negatives": 549,
         "negativeHits": 84
       },
       "description+body": {
-        "positives": 567,
-        "positiveHits": 360,
+        "positives": 568,
+        "positiveHits": 361,
         "negatives": 549,
         "negativeHits": 116
       }
     },
     "recall_pp": {
-      "description": 61.552,
-      "description+body": 63.492
+      "description": 61.444,
+      "description+body": 63.556
     },
     "false_activation_pp": {
       "description": 15.301,
@@ -57,7 +57,7 @@
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1116,
+    "cases": 1117,
     "catalogue_size": 300
   }
 }

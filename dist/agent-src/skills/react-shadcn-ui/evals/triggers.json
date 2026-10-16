@@ -1,7 +1,7 @@
 {
   "skill": "react-shadcn-ui",
-  "last_eval": "2026-10-13",
-  "description": "6 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which moved this skill's bundled shadcn installer to `node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs` and rewrote its grounded-guidance line, so it entered check_routing_coverage's touched-skill scope. Exemplars cover the three lanes its own When-to-use names — adding a primitive through the gated installer, restyling the generated components against the tokens, and the polish pass after a design review — reached both by naming shadcn and by the detection signals the skill itself lists (components.json, a components/ui folder). Near-misses are three neighbours that share component vocabulary and are somebody else's job: the same dialog on the Livewire stack (flux), the Tailwind token scale underneath (tailwind-engineer), and the inventory pass this skill requires but does not perform (existing-ui-audit). Counterexamples guard the assumption that every task in a React repo is a component task, and the letters UI with no code surface.",
+  "last_eval": "2026-10-16",
+  "description": "7 exemplars (one German) + 3 near-misses + 2 counterexamples. Authored 2026-10-13 under road-to-skill-scripts-that-run-where-they-land, which moved this skill's bundled shadcn installer to `node <skills-root>/react-shadcn-ui/scripts/shadcn_add.mjs` and rewrote its grounded-guidance line, so it entered check_routing_coverage's touched-skill scope. Exemplars cover the three lanes its own When-to-use names — adding a primitive through the gated installer, restyling the generated components against the tokens, and the polish pass after a design review — reached both by naming shadcn and by the detection signals the skill itself lists (components.json, a components/ui folder). Near-misses are three neighbours that share component vocabulary and are somebody else's job: the same dialog on the Livewire stack (flux), the Tailwind token scale underneath (tailwind-engineer), and the inventory pass this skill requires but does not perform (existing-ui-audit). Counterexamples guard the assumption that every task in a React repo is a component task, and the letters UI with no code surface.",
   "queries": [
     {
       "id": "rsu-e1",
@@ -39,6 +39,13 @@
       "trigger": true,
       "class": "exemplar",
       "language": "de"
+    },
+    {
+      "id": "rsu-e7",
+      "q": "add @acme/data-table from their shadcn registry — check it is safe before it lands",
+      "trigger": true,
+      "class": "exemplar",
+      "note": "third-party registry item: routes through supply-chain-intake before add"
     },
     {
       "id": "rsu-n1",

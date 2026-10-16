@@ -76,7 +76,7 @@ Produce `agents/design-assets/{slug}/{slug}.{pdf|png}`:
 1. Pick the execution tool (Pillow, matplotlib, SVG, or framework-native). When
    it is SVG, author it under [`svg-authoring`](../svg-authoring/SKILL.md) —
    the canvas is still an asset and gets the same static check and witness
-2. **Font selection** — pick a font that earns the philosophy. Inspect a working dir (e.g. `agents/design-assets/{slug}/fonts/` — create if missing) and place the chosen file there before render. System defaults (Arial, Helvetica, DejaVu, the matplotlib default sans) are the AI-template tell; reach for them only as deliberate fallback, never as the unexamined default
+2. **Font selection** — pick a font that earns the philosophy. Place the file in a working dir (`agents/design-assets/{slug}/fonts/`) before render, with its name, source and license (unknown stays unknown; fetch none whose license is unshown). System defaults (Arial, Helvetica, DejaVu, the matplotlib default sans) are the AI-template tell; reach for them only as deliberate fallback, never as the unexamined default
 3. Limited palette — 2–5 colors, intentional and cohesive
 4. Geometric or organic forms per philosophy
 5. Text — sparse, design-forward, integrated as visual element; never overlapping, never falling off canvas
@@ -116,7 +116,7 @@ If the user requests a series, treat each page as a story beat — distinct but 
 * **No artist mimicry** — copying a living artist's signature style is copyright risk and breaks the original-work mandate. Propose an original direction.
 * **Text discipline** — most pieces fail because text creeps in as paragraphs. Words are visual accents, not explanation.
 * **One canvas** — single page unless multi-page is explicitly requested.
-* **Font availability** — the environment may not ship your target font. Procedure step 4.2 governs selection; pick a fallback before render time and place the file in the working fonts dir.
+* **Font availability** — the environment may not ship your target font. Step 4.2 governs selection and license; pick a fallback before render.
 * **Output location** — always `agents/design-assets/{slug}/`. Never write binary artifacts to the repo root or to source-of-truth dirs.
 * **Refinement loop is real** — first render is the draft, not the deliverable.
 
