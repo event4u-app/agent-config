@@ -1,0 +1,63 @@
+{
+    "skill": "design-review",
+    "last_eval": "2026-10-16",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-16 under road-to-steps-the-skill-cannot-skip 1.2, which repaired links in this skill's references and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the comprehensive UI/UX review in the phrasings the description names, including German. Near-misses share UI vocabulary and are another skill's job: the component inventory (existing-ui-audit, which this skill's description names for its inventory), a WCAG-only audit (accessibility-auditor) and building a new screen (fe-design). Counterexamples guard 'review' meaning code review and 'design' meaning API design.",
+    "queries": [
+        {
+            "q": "review the design of the checkout flow before launch",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "check the UI of the settings page — interaction, responsiveness, the lot",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "give the new onboarding screens a full UX review across breakpoints",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "does this dashboard hold up on mobile, and do the hover and empty states make sense?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "schau dir das Design der neuen Profilseite an und prüf UI und UX gründlich",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "list every button and card component we already have in the repo",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the inventory this skill runs first, without a review verdict → existing-ui-audit, named in this skill's description"
+        },
+        {
+            "q": "does this form meet WCAG 2.2 AA? nothing else, just accessibility",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "accessibility is one of this skill's phases, but an a11y-only audit is the narrower skill's job → accessibility-auditor"
+        },
+        {
+            "q": "build the new pricing page from this mockup",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "same UI surface, but the ask is to build, not to review → fe-design"
+        },
+        {
+            "q": "review this pull request for bugs",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'review' meaning code review → code-review"
+        },
+        {
+            "q": "design the REST endpoints for the invoice service",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'design' meaning API design → api-design"
+        }
+    ]
+}

@@ -466,6 +466,18 @@
       "old": 5540,
       "new": 5547,
       "reason": "Frontmatter key rename `context: large` -> `context_window: large` (+7 bytes), so the host-owned `context` key is free for `context: fork`. No body prose changed. road-to-skills-that-arrive-when-called 1.1."
+    },
+    {
+      "skill": "skill-writing",
+      "old": 12413,
+      "new": 13374,
+      "reason": "The split canon contradicted itself (\"strongly consider split above 1500 words\" against \"a skill at 1,500 words is ordinary\"); it is now one statement, a split head keeps all five required sections, and one new section defines reference, requires_skills, procedure and chain. road-to-steps-the-skill-cannot-skip 2.1-2.3."
+    },
+    {
+      "skill": "skill-reviewer",
+      "old": 9177,
+      "new": 9286,
+      "reason": "Killer 5 repeated the removed word-count split trigger; it now points at the single split statement in skill-writing. road-to-steps-the-skill-cannot-skip 2.1."
     }
   ]
 }

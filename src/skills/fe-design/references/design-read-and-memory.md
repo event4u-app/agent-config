@@ -66,7 +66,7 @@ Audit-pinned tokens and components always take precedence (see `existing-ui-audi
 Typography pairings (73 curated heading/body combinations with Google
 Fonts URLs + Tailwind config) and icon-system guidance (104 Phosphor
 entries with import code) come grounded from
-[`design-intelligence`](../design-intelligence/SKILL.md)
+[`design-intelligence`](../../design-intelligence/SKILL.md)
 (`--domain typography`, `--domain icons`) — query before picking from
 memory.
 

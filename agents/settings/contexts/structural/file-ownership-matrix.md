@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **592**
-- Edges (incl. self-WRITE): **2275**
+- Edges (incl. self-WRITE): **2297**
 
 ## READ_ONLY edges
 
@@ -905,7 +905,16 @@
 | `.agent-src.uncondensed/skills/design-intelligence/references/context-and-registers.md` | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md` | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-intelligence/references/design-rules-checklist.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/design-tokens/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/design-variations/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/html-deck/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/svg-authoring/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/tailwind-engineer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md` | `.agent-src.uncondensed/skills/wireframe/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `.agent-src.uncondensed/rules/evaluator-independence.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `body_link` | 1 |
@@ -913,6 +922,8 @@
 | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `.agent-src.uncondensed/skills/design-review/references/verification-automation.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `.agent-src.uncondensed/skills/playwright-testing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-review/references/verification-automation.md` | `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-review/references/verification-automation.md` | `.agent-src.uncondensed/skills/verify-repair-loop/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/import-procedure.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/snapshot-preference-order.md` | `body_link` | 1 |
@@ -974,6 +985,7 @@
 | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `.agent-src.uncondensed/skills/existing-ui-audit/references/anti-slop-cross-reference.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `.agent-src.uncondensed/skills/existing-ui-audit/references/component-taxonomy-detection.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `.agent-src.uncondensed/skills/storybook-workshop/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/existing-ui-audit/references/anti-slop-cross-reference.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `.agent-src.uncondensed/skills/forecast-accuracy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `.agent-src.uncondensed/skills/onboarding-design/SKILL.md` | `body_link` | 1 |
@@ -1003,6 +1015,10 @@
 | `.agent-src.uncondensed/skills/fe-design/references/craft-floor.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/craft-floor.md` | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/design-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/design-variations/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/fe-design/references/design-patterns.md` | `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/fe-design/references/source-led-port.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/feature-planning/SKILL.md` | `.agent-src.uncondensed/rules/cross-source-consistency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/feature-planning/SKILL.md` | `.agent-src.uncondensed/skills/complexity-first-planning/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md` | `.agent-src.uncondensed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
@@ -1411,10 +1427,16 @@
 | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-management/references/authoring.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-management/references/dashboard.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `.agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/references/archival.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/references/archival.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/references/authoring.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/references/authoring.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/references/dashboard.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/references/dashboard.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/references/dashboard.md` | `.agent-src.uncondensed/skills/roadmap-management/references/authoring.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/references/dashboard.md` | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncondensed/contexts/execution/plan-confidence-gate.md` | `body_link` | 1 |

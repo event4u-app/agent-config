@@ -47,7 +47,7 @@ Every roadmap follows this structure:
 
 ### Checkboxes — mandatory, not decorative
 
-- **Every active roadmap MUST contain at least one `- [ ]` per non-intro phase.** Decision tables, ICE matrices, and block-sequencing tables are valid rationale, but they do not satisfy this rule on their own — pair them with a `## Phase N` or `## Implementation Checklist` section whose checkboxes execute the decision. A roadmap without checkboxes is invisible to `agents/roadmaps-progress.md` and violates [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md) Iron Law #2.
+- **Every active roadmap MUST contain at least one `- [ ]` per non-intro phase.** Decision tables, ICE matrices, and block-sequencing tables are valid rationale, but they do not satisfy this rule on their own — pair them with a `## Phase N` or `## Implementation Checklist` section whose checkboxes execute the decision. A roadmap without checkboxes is invisible to `agents/roadmaps-progress.md` and violates [`roadmap-progress-sync`](../../../rules/roadmap-progress-sync.md) Iron Law #2.
 - Every actionable step uses `- [ ]` (unchecked) or `- [x]` (completed).
 - Mark steps as `[x]` immediately after completing them.
 - Never remove completed steps — they serve as history.
@@ -55,7 +55,7 @@ Every roadmap follows this structure:
 
 ### Awaiting evidence — a blocker entry, never a new glyph
 
-- Waiting on **evidence that has not arrived** (soak still running, benchmark unfunded, adopter absent) is neither `[~]` nor `[-]`. Signal it with a structured `## Blockers` entry — five-field shape in [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md) — whose `Resolved when:` names the decidable signal ending the wait. The item stays `- [ ]` and points at it: `<!-- blocked-by: <id> -->`.
+- Waiting on **evidence that has not arrived** (soak still running, benchmark unfunded, adopter absent) is neither `[~]` nor `[-]`. Signal it with a structured `## Blockers` entry — five-field shape in [`templates/roadmaps.md` rule 20](../../../templates/roadmaps.md) — whose `Resolved when:` names the decidable signal ending the wait. The item stays `- [ ]` and points at it: `<!-- blocked-by: <id> -->`.
 - **No new glyph.** `[ ]` + `blocked-by:` = open, awaiting named evidence (stays active) · `[~]` = deferred by decision (bars archival, Iron Law 3) · `[-]` = cancelled with a reason (does not bar it). A fifth state buys nothing the entry above does not already carry.
 
 ### Phases

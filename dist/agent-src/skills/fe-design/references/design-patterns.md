@@ -39,7 +39,7 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 - **Compose with reusable UI components** for shared shells, headers, fields.
 - **Use the project's library primitives first** — never rebuild what the design system already provides (audit findings tell you which).
 - **Extract a props-only UI shell when used 3+ times** — DRY applies to UI too; stateful components carry a higher bar (~4 + real state) — per-class canon: [`abstraction-thresholds`](../../../guidelines/abstraction-thresholds.md).
-- **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
+- **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
 
 ## Form Design
 
@@ -343,5 +343,5 @@ exploration was asked, nor spam options when one production answer was asked.
 
 Hand off the actual variation **mechanics** — the basic→bold method and the
 single-file tweak-panel (CSS custom properties + floating "Tweaks" panel +
-`localStorage`) — to [`design-variations`](../design-variations/SKILL.md): this
+`localStorage`) — to [`design-variations`](../../design-variations/SKILL.md): this
 section owns the *planning decision*, that skill owns the *execution*.

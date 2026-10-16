@@ -1,0 +1,63 @@
+{
+    "skill": "roadmap-management",
+    "last_eval": "2026-10-16",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-16 under road-to-steps-the-skill-cannot-skip 1.2, which repaired links in this skill's references and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three verbs the description names — create, show, execute — plus archival and the dashboard, including German. Near-misses share roadmap vocabulary and belong elsewhere: authoring the plan's content (roadmap-writing, which this skill's dashboard reference links), a product-level prioritisation (rice-prioritization) and a ticket refinement (refine-ticket). Counterexamples guard 'roadmap' as a public product page and 'execute' as running a script.",
+    "queries": [
+        {
+            "q": "create roadmap for the billing migration",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "show roadmap progress — which phases are still open?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "execute roadmap step 2.1 and tick it off",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this roadmap is finished — archive it and update the dashboard",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "zeig mir die Roadmap und welche Schritte noch offen sind",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "rewrite the goal and acceptance criteria of this plan so they are falsifiable",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring the plan's content rather than managing the file's lifecycle → roadmap-writing"
+        },
+        {
+            "q": "score these five features by reach, impact, confidence and effort",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "product prioritisation that often feeds a roadmap, but is not one → rice-prioritization"
+        },
+        {
+            "q": "refine this Jira ticket before we pull it into the sprint",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "planning work at ticket level → refine-ticket"
+        },
+        {
+            "q": "update the public product roadmap page on our marketing site",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'roadmap' as a published web page, not a file under agents/roadmaps/"
+        },
+        {
+            "q": "execute the database seeder",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'execute' meaning run a script"
+        }
+    ]
+}
