@@ -166,6 +166,16 @@ files as there were findings without an owner.
       status, and the paths it cites most. Generated, drift-checked, at most
       4,000 tokens, no external source names.
       verify: `./scripts-run src/scripts/generate_owned_digest --check` -> 0
+      > **Not started 2026-10-16, for two reasons found while screening it.**
+      > (1) D6's arithmetic does not hold at today's count: 30 active plus 104
+      > `later/` files is 134 rows, and 4,000 tokens is ~30 per row, while 20
+      > words alone are ~27 before slug, status and paths. The budget, the word
+      > cap or the row set has to move first, and D6 is the decision to reopen.
+      > (2) `agents/roadmaps/OWNED.md` sits inside `agents/roadmaps/*.md`, the
+      > glob `lint_roadmap_complexity`, `check_roadmap_trackable` and the estate
+      > gate read as the active tree; it would be judged as a roadmap unless
+      > each gate's exclusion list gains it, or the digest lives outside that
+      > glob. Either choice belongs with the D6 reopen, not with a drain.
 - [ ] **4.2 The intake reads it before deep work.** `/analyze:inbox` Phase 2
       consults the digest for the `recurrence` column before the Phase 4c grep,
       so a re-arrived subject is visible in the triage table at the first look.
@@ -190,11 +200,18 @@ files as there were findings without an owner.
 
 ## Phase 6 — Read the effect once
 
-- [ ] **6.1 Replay three past rounds.** Re-run the triage half of
+- [x] **6.1 Replay three past rounds.** Re-run the triage half of
       `/analyze:inbox` over the three most recent consumed rounds in
       `agents/tmp.old/` as a dry run and count new top-level files against
       findings without an owner. A report, not a gate.
       verify: `grep -c 'owner-less findings' agents/evidence/analysis/intake-replay-*.md` -> /^[1-9]/
+      > **Landed 2026-10-16** as `agents/evidence/analysis/intake-replay-2026-10-16.md`
+      > over rounds `-r`, `-s`, `-t`: a structural replay of the artefacts each
+      > round produced against the Phase 2 predicate, not a re-run of the
+      > triage over the rounds' source files — the report says so. `-r` meets
+      > AC-6; `-s` has one new file with candidate owners and no quoted search;
+      > `-t`'s eight files quote true empty searches yet five extend a sibling
+      > the same round created, a gap the predicate cannot see.
 - [ ] **6.2 Four weeks after Phase 2 lands,** record new top-level files per
       inbox round and the share of findings that landed as arrivals, beside the
       dashboard ages from Phase 3.
