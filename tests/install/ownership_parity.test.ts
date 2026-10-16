@@ -138,7 +138,7 @@ describe('step 2.5 — preview, writer and doctor agree on one table', () => {
         // The classifier is fed the manifest parsed in full. `cmd_doctor`'s own
         // production read (`installed_tools.read_manifest`) drops every nested
         // `files[]` entry, so on a real tree this classifier is never reached —
-        // a separate defect, recorded as step 2.6 of the roadmap and pinned below.
+        // a separate defect, pinned below until it is fixed on its own.
         const [records] = doctor._collect_manifest_entries(
             root,
             YAML.parse(fs.readFileSync(manifest, 'utf8')) as Record<string, unknown>,
@@ -150,8 +150,8 @@ describe('step 2.5 — preview, writer and doctor agree on one table', () => {
         expect(writerSays()).toEqual(EDITED);
         expect(doctorSays).toEqual(EDITED);
 
-        // Step 2.6, pinned as it is today: the read `cmd_doctor` actually uses
-        // hands the classifier no files at all. Flip this when 2.6 lands.
+        // Pinned as it is today: the read `cmd_doctor` actually uses
+        // hands the classifier no files at all. Flip this when that is fixed.
         const asDoctorReadsIt = installed_tools.read_manifest(manifest) as { tools: Array<{ files: unknown[] }> };
         expect(asDoctorReadsIt.tools[0]?.files).toEqual([]);
     });

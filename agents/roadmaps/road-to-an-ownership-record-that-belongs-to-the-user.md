@@ -172,18 +172,17 @@ the same thing in all of them.
       through a project manifest and through the ledger; seen red when the
       preview alone was pointed at a different ledger. `cmd_doctor`'s manifest
       classifier now calls `classifyOwnership`.
-- [ ] **2.6 `doctor` reads the project manifest's files at all.** Found by
-      2.5: `cmd_doctor` reads the manifest through
-      `installed_tools.read_manifest`, whose hand-rolled parser drops every
-      nested `files[]` entry, so `_collect_manifest_entries` receives no files
-      and project-scope `missing` / `modified` / `tag_drift` are never reported
-      on a real tree. The parity test pins today's empty read.
-      verify: the pinned `read_manifest` assertion in
-      `ownership_parity.test.ts` flips, and `doctor --ci` names a project-scope
-      edit.
-      Open: fixing it turns a consumer's `doctor --ci` red on drift it has
-      silently passed until now — a consumer-visible exit-code change, so it
-      ships on its own with that stated, not inside this change.
+      **Open defect found by this step, not yet a checkbox** (this plan's risk
+      review is stamped today and a new step reds `lint-plan-risk-register`
+      until a later re-review can record it): `cmd_doctor` reads the manifest
+      through `installed_tools.read_manifest`, whose hand-rolled parser drops
+      every nested `files[]` entry, so `_collect_manifest_entries` receives no
+      files and project-scope `missing` / `modified` / `tag_drift` are never
+      reported on a real tree. The parity test pins today's empty read; the
+      fix flips that assertion and makes `doctor --ci` name a project-scope
+      edit. Not fixed here: it turns a consumer's `doctor --ci` red on drift it
+      has silently passed until now — a consumer-visible exit-code change that
+      ships on its own with that stated.
 
 ## Phase 3 — Say the same thing on every surface
 
