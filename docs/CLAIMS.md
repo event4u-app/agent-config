@@ -1278,3 +1278,31 @@ is the named exception in the claim itself.
 - status: backed
 - last_verified: 2026-10-14
 - non_inference: Replaces the retired README sentence that the suite "follows the Agent Skills open standard", withdrawn by owner decision 2026-10-14 (blocker `skill-standard-claim-wording`, option (a)). The schema sets `additionalProperties: false` and lists 39 top-level keys, of which it requires `name`, `description`, `source` and `domain`; a reading of `src/skills/*/SKILL.md` on 2026-10-14 found every skill carrying at least one top-level key outside the six the specification defines (`name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`), with `domain`, `model_tier`, `workspaces` and `packs` on every one. This licenses no statement about how any host reads those keys, does not claim that the file format is unreadable to tools that follow the specification, and does not reproduce the external reference validator's verdict, which this tree does not run.
+
+### claim: warm-worker-cold-start-relief
+- claim: PRE-REGISTERED, unmeasured. A resumed warm worker's first call writes or leaves uncached at most 20 % of the tokens a fresh spawn of the same definition does.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1), BEFORE the reuse guard flips (step 3.6) and before any resume has been observed (steps 1.4-1.10 are open). BASELINE: the fresh cold start, median first-call written-or-uncached 242,891 tokens over 611 legs (`agents/evidence/analysis/downshift-vs-cache.md:35-51`) — the scale, never the subtrahend, because that corpus spans every project under the transcript root. INSTRUMENT: `cache_realization_report` `subagent_runs`, which splits a leg at every ledger re-start so a resumed run has its own first call. METRIC: median first-call written-or-uncached tokens over resumed runs (ordinal >= 2) divided by the median over fresh runs (ordinal 1) of the SAME definition, in the same window. THRESHOLD: <= 0.20. SAMPLE FLOOR: >= 30 resumed runs across >= 5 sessions. FALSIFICATION: the ratio exceeds 0.20 at the floor, and the claim files `resolved-null`. UNDERPOWERED below the floor, cited for neither direction. SCOPE: cache economics only; whether a resumed worker does the task as well is `resume-non-inferiority`.
+- status: unbacked
+- last_verified: 2026-10-16
+
+### claim: rate-limit-stops-per-drain
+- claim: PRE-REGISTERED, unmeasured. Rate-limit stops per drain run fall after the reuse and rate-pressure phases land.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1), BEFORE Phases 3-4 change any behaviour. METRIC: host `StopFailure` events with error class `rate_limit` per drain run, counted before and after Phases 3-4, same operator, same host version band. DIRECTION ONLY: a fall is a pass, no fall is a null; no percentage target is set (that roadmap's K7). PRECONDITION: the `StopFailure` row of step 1.9 exists with a version; without it the event is unobserved and the claim is UNDERPOWERED. This counts stops, not tokens, because the owner's constraint is requests in a short window, and subscription windows need not follow API token arithmetic.
+- status: unbacked
+- last_verified: 2026-10-16
+
+### claim: fresh-spawns-per-drain
+- claim: PRE-REGISTERED, unmeasured. Fresh subagent spawns per drain run fall after the reuse phase lands.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1), BEFORE step 3.6. METRIC: ledger `subagent_start` lines per drain run whose ref was not seen earlier in that run, before and after Phase 3. DIRECTION ONLY: a fall is a pass, no fall is a null. A resume does not reduce the number of requests, so this claim is reported beside `rate-limit-stops-per-drain` and never substitutes for it.
+- status: unbacked
+- last_verified: 2026-10-16
+
+### claim: resume-non-inferiority
+- claim: PRE-REGISTERED, unmeasured. Tasks given to a resumed worker pass verification at least as often as tasks of the same class given to a fresh one, within a fixed margin.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1, margin per its decision D6), BEFORE step 3.6 and before any resumed task exists. METRIC: verify-pass rate of resumed tasks minus verify-pass rate of fresh tasks of the same class, in the same window. MARGIN: -5 percentage points; a difference at or above -5 pp is non-inferior. SAMPLE FLOOR: >= 30 resumed and >= 30 fresh tasks of the same class. FALSIFICATION: the difference is below -5 pp at the floor; the reuse half of the guard then stays in shadow even if `warm-worker-cold-start-relief` passes. UNDERPOWERED below the floor, cited for neither direction.
+- status: unbacked
+- last_verified: 2026-10-16

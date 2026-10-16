@@ -312,7 +312,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 6 — Prove it or record the null, then hand off
 
-- [ ] **6.1 Pre-register four claims in `docs/CLAIMS.md` before 3.6**, and run
+- [x] **6.1 Pre-register four claims in `docs/CLAIMS.md` before 3.6**, and run
       `build_proof` in the same change: `warm-worker-cold-start-relief` —
       resumed runs' first-call written-or-uncached tokens at most 20 % of the
       same definition's fresh median, over at least 30 resumes across at least
@@ -322,6 +322,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       `resume-non-inferiority` — verify-pass rate of resumed against fresh tasks
       of the same class, margin from decision D6.
       verify: `grep -c 'warm-worker-cold-start-relief' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: four `unbacked` pre-registrations, D6 margin set at -5 pp, `build_proof` run in the same change.
 - [ ] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
