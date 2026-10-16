@@ -130,7 +130,7 @@ describe('precedence of the three verdicts', () => {
         const witness: Record<string, string> = {
             'governance-surface': 'src/rules/non-destructive-by-default.md',
             'merge-authority-surface': 'src/scripts/classify_merge_risk.ts',
-            'reviewer-trust-chain': 'src/scripts/_lib/ratification_subject.ts',
+            'reviewer-trust-chain': 'src/scripts/_lib/merge_clearance_record.ts',
             'council-surface': 'src/scripts/council_cli.ts',
             'ratification-contract': 'docs/contracts/ratification-artifact.md',
             'owner-reserved-decision': 'docs/decisions/ADR-281-x.md',

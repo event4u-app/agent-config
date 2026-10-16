@@ -81,7 +81,6 @@
  * Exit codes: 0 = pass (or nothing gated) · 1 = fail · 3 = internal error.
  */
 
-import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -136,71 +135,23 @@ export const CLOSURE_READER_PATH = 'src/scripts/_lib/dispatch_import_closure.ts'
  *
  *   - `_lib/adr_frontmatter.ts` parses the record's header, verdict included;
  *   - `_lib/gate_ledger.ts` and `_lib/scan_scope.ts` run before the exit code is
- *     returned, so either could end the process first.
+ *     returned, so either could end the process first;
+ *   - `_lib/ratification_subject.ts` computes the digest a record must carry.
  *
- * `_lib/kernel_rules.ts` is already gated as plumbing. `_lib/ratification_subject.ts`,
- * which computes the digest, joins in a separate change: one that gates it and
- * edits it at once is digested over different files by the base revision's
- * gate and by its own, so no single record answers for both. The writer CLIs
- * `src/scripts/ratification_subject.ts` and `src/scripts/ratification_header.ts`
+ * `_lib/kernel_rules.ts` is already gated as plumbing. A change that gates a
+ * module and edits it at once is digested over different files by the base
+ * revision's gate and by its own, so no single record answers for both: a
+ * module joins this list in a change that leaves its bytes alone. The writer
+ * CLIs `src/scripts/ratification_subject.ts` and `src/scripts/ratification_header.ts`
  * and the contract stay outside by owner decision (2026-10-15): the gate does
  * not import them, recomputes the digest and reads only the record.
  */
 export const MECHANISM_IMPORT_PATHS: readonly string[] = [
     'src/scripts/_lib/adr_frontmatter.ts',
     'src/scripts/_lib/gate_ledger.ts',
+    'src/scripts/_lib/ratification_subject.ts',
     'src/scripts/_lib/scan_scope.ts',
 ];
-
-/**
- * Closure modules not gated yet, each pinned to the Git blob its review saw.
- *
- * `_lib/ratification_subject.ts` cannot be gated in the change that edits it
- * (see above), so until the change that gates it lands its bytes would be
- * bound by no record. The pin binds them through this gated file instead: a
- * diff that changes a pinned module is refused, and moving the pin edits this
- * file, which needs a record. The change that gates the module removes its pin.
- */
-export const PENDING_MECHANISM_PINS: Readonly<Record<string, string>> = {
-    'src/scripts/_lib/ratification_subject.ts': '3842d91528ec5229819dbd0da2f1a67a1f0eb06c',
-};
-
-/**
- * Git's SHA-1 blob id for `bytes` — what `git hash-object` prints in a SHA-1
- * repository, which this one is; a test compares the two.
- */
-export function gitBlobId(bytes: Buffer): string {
-    return createHash('sha1')
-        .update(`blob ${bytes.length}\u0000`)
-        .update(bytes)
-        .digest('hex');
-}
-
-/**
- * Pinned modules that differ from their pin at `commit`.
- *
- * A module PRESENT at the commit is compared whatever the diff lists, so a
- * caller that omits or misspells the path cannot skip it. An ABSENT one is a
- * deletion only when the diff names it — a tree that never had the module,
- * such as a fixture, is not a deletion — and the names are canonicalised
- * first. THROWS a {@link GatedSubjectRefusal} when the commit cannot be read.
- */
-export function pinViolations(files: readonly string[], root: string, commit: string): string[] {
-    const named = new Set(
-        files.map((f) => path.posix.normalize(f.replace(/\\/g, '/').trim()).replace(/^\.\//, '')),
-    );
-    const out: string[] = [];
-    for (const [rel, blob] of Object.entries(PENDING_MECHANISM_PINS)) {
-        const bytes = fileAtRevision(root, commit, rel);
-        if (bytes === null) {
-            if (named.has(rel)) out.push(`${rel} is absent, pinned to ${blob}`);
-            continue;
-        }
-        const actual = gitBlobId(bytes);
-        if (actual !== blob) out.push(`${rel} is ${actual}, pinned to ${blob}`);
-    }
-    return out;
-}
 
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
@@ -589,11 +540,9 @@ export function evaluate(
     // read one head commit and one base.
     let derived: readonly string[];
     let headCommit: string;
-    let drifted: string[];
     try {
         headCommit = resolveRevision(root, revision);
         derived = derivedFor(root, baseRef, headCommit);
-        drifted = pinViolations(files, root, headCommit);
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
@@ -601,18 +550,6 @@ export function evaluate(
         lines.push(`❌  ${err.message}`);
         for (const target of ledger.unaccountedTargets()) {
             ledger.fail(target, 'the dispatcher closure could not be read at the named commits');
-        }
-        const tally = ledger.finalize();
-        lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
-        return { exitCode: 1, lines, scanned };
-    }
-    // Before any pass: a pinned module is ungated, so a diff touching only it
-    // would otherwise exit "nothing to ratify".
-    if (drifted.length > 0) {
-        lines.push('❌  a pinned ratification module changed — it is not gated yet, so its pin is what binds it:');
-        for (const d of drifted) lines.push(`  · ${d}`);
-        for (const target of ledger.unaccountedTargets()) {
-            ledger.fail(target, 'a pinned ratification module changed');
         }
         const tally = ledger.finalize();
         lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
@@ -844,38 +781,36 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
-    let changed: string[];
-    if (files.length > 0) {
-        changed = files;
-    } else {
-        // ONE resolution for the whole run. The diff, the digest and the
-        // record read all receive this id; passing the name to each would let
-        // a ref that moves between them yield a file list from one commit and
-        // a digest and record from another.
-        let commit: string;
-        try {
-            commit = resolveRevision(root, revision);
-        } catch (err) {
-            if (!(err instanceof GatedSubjectRefusal)) {
-                throw err;
-            }
-            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
-            return 1;
+    // ONE resolution for the whole run. The diff, the digest and the record read
+    // all receive this id; passing the name to each would let a ref that moves
+    // between them yield a file list from one commit and a digest and record
+    // from another.
+    let commit: string;
+    try {
+        commit = resolveRevision(root, revision);
+    } catch (err) {
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
         }
-        try {
-            // The base, too, is resolved once: the diff and the closure's base
-            // side read the same commit.
-            baseRef = resolveRevision(root, resolveBaseRef(baseRef, root));
-            changed = changedFilesBetween(root, baseRef, commit);
-        } catch (err) {
-            if (!(err instanceof GatedSubjectRefusal)) {
-                throw err;
-            }
-            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
-            return 3;
-        }
-        revision = commit;
+        process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
+        return 1;
     }
+    let changed: string[];
+    try {
+        // The base, too, is resolved once: the diff and the closure's base side
+        // read the same commit. A `--files` list may add paths to the range,
+        // never hide one, so a range that cannot be read refuses rather than
+        // falling back to the list alone.
+        baseRef = resolveRevision(root, resolveBaseRef(baseRef, root));
+        changed = [...new Set([...files, ...changedFilesBetween(root, baseRef, commit)])];
+    } catch (err) {
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
+        }
+        process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
+        return 3;
+    }
+    revision = commit;
 
     const result = evaluate(changed, root, configuredProviderCount(policyRoot), revision, baseRef);
 
