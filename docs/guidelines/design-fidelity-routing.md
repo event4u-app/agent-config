@@ -77,6 +77,7 @@ contract rather than a courtesy:
 | `phrase: claude.site/artifacts` | `near-claude-ai-chat-link` | a bare `claude.ai` chat link is a conversation reference, not a spec |
 | `path_prefix: .claude/design-system/` | `near-generic-design-system-dir` | a bare `design-system/` is a normal source folder in a large fraction of frontend repos |
 | `file_pattern: *.dc.html` | `near-plain-html-open-file`, `near-dc-in-a-filename` | an ordinary `.html` file in the tree; a filename that merely contains the letters |
+| `path_prefix: .design-sync/` | `near-plain-sync-dir` | a bare `sync/` or `design-sync/` folder is ordinary source, only the host's dot-folder is a handover |
 | the withdrawn builder URL | `near-bare-host-mention` | left behind on purpose, so the broad form stays pinned silent |
 
 ### Write the near-miss row first — and test the right direction

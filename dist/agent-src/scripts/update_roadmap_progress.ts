@@ -75,6 +75,7 @@ import { headerFragment as stubHeaderFragment } from './stubs_due.js';
 
 import { isCliEntry } from './_cli_entry.js';
 import { reportGuardedBaselines } from './guarded_baseline.js'; // third step state; contract lives there
+import { collect_ages, render_age_section } from './roadmap_age.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -1374,7 +1375,14 @@ function main(argv?: readonly string[]): number {
         }
     }
     const roadmaps = collect(roadmap_root), guarded = reportGuardedBaselines(roadmaps, repo_root);
-    const new_text = render(roadmaps, collect_bundles(repo_root), roadmap_root) + guarded.section;
+    const ages = collect_ages(repo_root, roadmaps.map((r) => r.path));
+    const age_rows = roadmaps.map((r) => ({
+        rel: r.rel,
+        frontmatter: FRONTMATTER_RE.exec(fs.readFileSync(r.path, 'utf-8'))?.[1] ?? '',
+        age: ages.get(_relPosix(repo_root, r.path)),
+    }));
+    const new_text =
+        render(roadmaps, collect_bundles(repo_root), roadmap_root) + render_age_section(age_rows, new Date()) + guarded.section;
     const complete = unarchived_complete(roadmaps);
     const pending = pending_iron_law_3(roadmaps);
     const gated = merge_gated_pending(roadmaps);

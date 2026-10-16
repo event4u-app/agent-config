@@ -95,3 +95,25 @@ export function isUiTreePath(p: string): boolean {
     if (UI_TREE_EXCLUSIONS.some((fragment) => normalized.includes(fragment))) return false;
     return UI_PATH_FRAGMENTS.some((fragment) => normalized.includes(fragment));
 }
+
+/**
+ * The file-shaped triggers of `design-fidelity` — the ONE list every handover
+ * carrier reads (`isArtifactRead`, `isHandoverPath`, `HANDOVER_TRIGGERS`).
+ * Three hand copies drifted: one lacked `*.dc.html`. `design_pass.test.ts`
+ * pins this list to the rule's frontmatter in both directions.
+ */
+export const HANDOVER_SHAPES: readonly ({ file_pattern: string } | { path_prefix: string })[] = [
+    { file_pattern: '*design.html' },
+    { file_pattern: '*.dc.html' },
+    { path_prefix: '.claude/design-system/' },
+    { path_prefix: '.design-sync/' },
+];
+
+/** True when `file` has a handover shape. Direction-agnostic, case-insensitive. */
+export function isHandoverShape(file: string): boolean {
+    if (!file) return false;
+    const normalized = file.replace(/\\/g, '/').toLowerCase();
+    return HANDOVER_SHAPES.some((s) =>
+        'path_prefix' in s ? normalized.includes(s.path_prefix) : normalized.endsWith(s.file_pattern.slice(1)),
+    );
+}

@@ -154,7 +154,7 @@ import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { materialiseSubtree } from './_lib/base_tree.js';
 import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
 import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
-import { exemptionFindings, type ExemptionFinding } from './_lib/exemption_shape.js';
+import { exemptionFindings, unsearchedExemptions, type ExemptionFinding } from './_lib/exemption_shape.js';
 import { classifyDiff, growthClaims, type GrowthClaim, type OffsetLedger } from './_lib/estate_offsets.js';
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
@@ -344,6 +344,8 @@ export interface EstateVerdict {
      * another added file's. Empty on every change that adds no exemption.
      */
     exemptionFindings: ExemptionFinding[];
+    /** Added exemptions quoting no owner search — reported, never gating (council 2026-10-16). */
+    exemptionWarnings: ExemptionFinding[];
     /**
      * Roadmaps carrying an unscheduled status — REPORTED, never gated.
      *
@@ -793,6 +795,7 @@ export function evaluate(
         offsetSkipReason,
         unpaid,
         exemptionFindings: findings,
+        exemptionWarnings: offsets === null ? [] : unsearchedExemptions(offsets.exempt),
         draftRoadmaps: countDrafts(repoRoot),
         provisionalPromotion,
         // No floor is a FAILURE, not a skip, and it is the one place this gate
@@ -1411,6 +1414,18 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     '    the reason this FILE could not be offset, or offset the ones that could.\n',
             );
         }
+    }
+    for (const f of verdict.exemptionWarnings) {
+        process.stderr.write(
+            `⚠️  ${f.file}: estate_offset_exempt quotes no owner search (report-only).\n` +
+                `    reason: ${f.reason.slice(0, 160)}\n` +
+                '    Before a finding becomes a new file, search for the roadmap that already\n' +
+                '    owns it and quote the search in one clause: the command, what it searched\n' +
+                '    for, the whole tree as scope and an empty result, e.g. "a grep over\n' +
+                '    agents/roadmaps/{*,later,stubs} for <identifiers> returns nothing". If the\n' +
+                '    search finds an owner, land the finding there as a step and an `Arrivals:`\n' +
+                '    line instead. Added files only; this does not fail the gate.\n',
+        );
     }
     ledger.report();
     if (verdict.withinBudget) {

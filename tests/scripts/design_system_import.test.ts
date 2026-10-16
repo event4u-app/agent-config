@@ -187,6 +187,78 @@ describe('DTCG alias resolution', () => {
     });
 });
 
+describe('DTCG alias chains are kept, cycles are named', () => {
+    // D5: two roles aliasing one primitive used to import as two equal hex
+    // values with nothing saying they were the same decision.
+    const shared = {
+        color: { blue: { 600: { $value: '#2563EB', $type: 'color' } } },
+        action: { primary: { $value: '{color.blue.600}', $type: 'color' } },
+        link: { $value: '{color.blue.600}', $type: 'color' },
+    };
+
+    it('alias-control: both roles keep their reference, and a cycle is a cycle', () => {
+        const outcome = importDesignSystem(shared, PROVENANCE);
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system._meta?.['alias_of']).toEqual({
+            'action.primary': 'color.blue.600',
+            link: 'color.blue.600',
+        });
+
+        const looping = importDesignSystem(
+            { color: { self: { $value: '{color.self}', $type: 'color' } } },
+            PROVENANCE,
+        );
+        expect(looping.ok).toBe(true);
+        if (!looping.ok) return;
+        expect(looping.design_system._meta?.['alias_cycles']).toEqual(['color.self']);
+        expect(looping.notes.join(' ')).not.toContain('does not define');
+    });
+
+    it('alias-record: values stay resolved and a chain is recorded hop by hop', () => {
+        const chained = {
+            ...shared,
+            brand: { $value: '{action.primary}', $type: 'color' },
+        };
+        const outcome = importDesignSystem(chained, PROVENANCE);
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system.colors?.light).toMatchObject({
+            primary: '#2563EB',
+            link: '#2563EB',
+            brand: '#2563EB',
+        });
+        expect(outcome.design_system._meta?.['alias_of']).toMatchObject({ brand: 'action.primary' });
+        expect(outcome.design_system._meta?.['alias_cycles']).toBeUndefined();
+    });
+
+    it('alias-record: a dangling reference is still undefined, not a cycle', () => {
+        const outcome = importDesignSystem(
+            { color: { bg: { $value: '{nope.missing}', $type: 'color' } } },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system._meta?.['alias_cycles']).toBeUndefined();
+        expect(outcome.notes.join(' ')).toContain('does not define');
+    });
+
+    it('alias-record: a two-token loop names both members', () => {
+        const outcome = importDesignSystem(
+            {
+                color: {
+                    a: { $value: '{color.b}', $type: 'color' },
+                    b: { $value: '{color.a}', $type: 'color' },
+                },
+            },
+            PROVENANCE,
+        );
+        expect(outcome.ok).toBe(true);
+        if (!outcome.ok) return;
+        expect(outcome.design_system._meta?.['alias_cycles']).toEqual(['color.a', 'color.b']);
+    });
+});
+
 describe('observation is never promoted to a token', () => {
     it('routes WCAG results and breakpoints to _meta', () => {
         const outcome = importDesignSystem(readFixture('dembrandt.json'), PROVENANCE);

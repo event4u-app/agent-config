@@ -227,6 +227,7 @@ function lint_roadmap(
     }
     _check_execution_mode(fm, problems);
     _check_relates(fm, problems);
+    _check_cross_file_waits(text, fm, path.dirname(p), problems, warnings);
     if (warnings) {
         _check_autonomous_authoring(text, fm, warnings);
         _check_human_gate_steps(text, warnings);
@@ -497,6 +498,67 @@ export function _check_relates(fm: string, problems: string[]): void {
                 'the set contract reads `depends:` and only `depends:` ' +
                 '(templates/roadmaps.md rule 18)',
         );
+    }
+}
+
+const BLOCKED_BY_FILE_PAT = /<!--[ \t]*blocked-by:[ \t]*((?:(?:later|stubs|archive)\/)?road-to-[a-z0-9-]+)#/g;
+
+function _relates_rows(fm: string): Array<{ slug: string; relation: string }> {
+    const rows: Array<{ slug: string; relation: string }> = [];
+    for (const chunk of fm.split(/^[ \t]*-[ \t]+slug:/m).slice(1)) {
+        const slug = /^[ \t]*['"]?([^\s'"#]+)/.exec(chunk)?.[1];
+        const relation = /^[ \t]+relation:[ \t]*['"]?([^\s'"#]+)/m.exec(chunk)?.[1];
+        if (slug && relation) rows.push({ slug, relation });
+    }
+    return rows;
+}
+
+function _is_archived(slug: string, roadmap_dir: string): boolean {
+    if (slug.startsWith('archive/')) return true;
+    const base = slug.replace(/^(?:later|stubs)\//, '');
+    return (
+        !fs.existsSync(path.join(roadmap_dir, `${slug}.md`)) &&
+        fs.existsSync(path.join(roadmap_dir, 'archive', `${base}.md`))
+    );
+}
+
+/**
+ * A step that waits on another roadmap says so twice or not at all: an inline
+ * `blocked-by: road-to-X#…` marker needs a `relates:` row for X with
+ * `relation: depends`, and a `depends` row may not name an archived file,
+ * which can no longer land the thing waited on. The archived half warns rather
+ * than fails while active files still carry such rows; see
+ * road-to-an-intake-the-queue-can-carry 1.2 for the flip condition.
+ */
+export function _check_cross_file_waits(
+    text: string,
+    fm: string,
+    roadmap_dir: string,
+    problems: string[],
+    warnings?: string[],
+): void {
+    const rows = _relates_rows(fm);
+    const strip = (s: string): string => s.replace(/^(?:later|stubs|archive)\//, '');
+    const depends = new Set(rows.filter((r) => r.relation === 'depends').map((r) => strip(r.slug)));
+    const seen = new Set<string>();
+    BLOCKED_BY_FILE_PAT.lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = BLOCKED_BY_FILE_PAT.exec(text)) !== null) {
+        const target = strip(m[1]!);
+        if (seen.has(target) || depends.has(target)) continue;
+        seen.add(target);
+        problems.push(
+            `blocked-by marker names '${target}' but no relates: row declares it ` +
+                'with relation: depends (templates/roadmaps.md rule 18)',
+        );
+    }
+    for (const r of rows) {
+        if (warnings && r.relation === 'depends' && _is_archived(r.slug, roadmap_dir)) {
+            warnings.push(
+                `depends row names '${r.slug}', which is under archive/ — an archived ` +
+                    'file lands nothing; drop the row or depend on its successor',
+            );
+        }
     }
 }
 

@@ -44,6 +44,15 @@
  *                       parent set does not name.
  * - `missing-parent`    a declared parent with no matching file — the lineage
  *                       names something nobody can open.
+ * - `unresolvable-parent`  a declared parent named only in prose: no slug, so
+ *                       no file could ever match it. Distinct from
+ *                       `missing-parent`, which sends the reader looking for a
+ *                       file.
+ *
+ * A sibling that declares itself DOWNSTREAM of the consolidating file
+ * (`supersedes:`, `supersedes_proposals:`, or a `relates:` entry with
+ * `relation: extends`) is a successor, not an omission, and is not reported
+ * as `omitted-sibling`.
  * - `overlapping-sets`  two artifacts in one folder declaring overlapping parent
  *                       sets while neither names the other: an artifact that
  *                       reads as the settled answer while a peer of equal
@@ -121,7 +130,7 @@ export interface Declaration {
 }
 
 export interface Finding {
-    code: 'omitted-sibling' | 'missing-parent' | 'overlapping-sets' | 'claims-without-field';
+    code: 'omitted-sibling' | 'missing-parent' | 'unresolvable-parent' | 'overlapping-sets' | 'claims-without-field';
     folder: string;
     file: string;
     detail: string;
@@ -174,7 +183,7 @@ function frontmatterList(fm: string, key: string): string[] | null {
             if (/^\s*#/.test(line)) continue;
             const item = /^\s+-\s+(.*)$/.exec(line);
             if (item) {
-                out.push(normalizeParent((item[1] as string).replace(/#.*$/, '')));
+                out.push(normalizeParent((item[1] as string).replace(/#.*$/, '').replace(/["']/g, '')));
                 continue;
             }
             if (line.trim() === '') continue;
@@ -184,6 +193,82 @@ function frontmatterList(fm: string, key: string): string[] | null {
     }
     return null;
 }
+
+/**
+ * The `relates:` entries of a frontmatter block that carry a DOWNSTREAM
+ * relation, as `{slug}` stems.
+ *
+ * Only `extends` is directional by declaration in the measured corpus; a
+ * generic `relates` names a neighbour without saying which came first, and
+ * reading it as succession would suppress real omissions. AI council
+ * 2026-10-16 (anthropic + openai, convergent): an allowlist of one, widened
+ * only on evidence that another relation value states a direction.
+ */
+const DOWNSTREAM_RELATIONS: ReadonlySet<string> = new Set(['extends']);
+
+function downstreamRelates(fm: string): string[] {
+    const lines = fm.split(/\r?\n/);
+    const start = lines.findIndex((l) => /^relates:\s*$/.test(l));
+    if (start === -1) return [];
+    const out: string[] = [];
+    let slug: string | null = null;
+    const flush = (relation: string | null): void => {
+        if (slug && relation && DOWNSTREAM_RELATIONS.has(relation)) out.push(normalizeParent(slug));
+    };
+    let relation: string | null = null;
+    for (let j = start + 1; j < lines.length; j += 1) {
+        const line = lines[j] as string;
+        if (line.trim() === '' || /^\s*#/.test(line)) continue;
+        if (!/^\s/.test(line)) break;
+        const head = /^\s+-\s+(.*)$/.exec(line);
+        const body = head ? (head[1] as string) : line.trim();
+        if (head) {
+            flush(relation);
+            slug = null;
+            relation = null;
+        }
+        const kv = /^(slug|relation):\s*(.*)$/.exec(body);
+        if (!kv) continue;
+        const value = (kv[2] as string).replace(/#.*$/, '').replace(/["']/g, '').trim();
+        if (kv[1] === 'slug') slug = value;
+        else relation = value;
+    }
+    flush(relation);
+    return out.filter(Boolean);
+}
+
+/**
+ * The stems this artifact declares itself DOWNSTREAM of: a supersession key
+ * (`supersedes:`, `supersedes_proposals:`) or a `relates:` entry with a
+ * directional relation. A sibling that names the consolidating file here was
+ * written knowing it, so it is a successor, never an undiscussed parent.
+ * Keyed on explicit declaration only — never on dates or file order.
+ */
+export function downstreamOf(text: string): string[] {
+    const fmMatch = FM_RE.exec(text);
+    if (!fmMatch) return [];
+    const fm = fmMatch[1] as string;
+    return [
+        ...(frontmatterList(fm, 'supersedes') ?? []),
+        ...(frontmatterList(fm, 'supersedes_proposals') ?? []),
+        ...downstreamRelates(fm),
+    ];
+}
+
+/**
+ * Whether a declared parent that resolves to no file is at least slug-shaped.
+ *
+ * A separator-joined name (`road-to-x`, `deep-plan-2026-09-30`) is a file
+ * somebody can be sent to look for: `missing-parent`. A single word — the
+ * first word of a prose title, `AC` — names no file at all, and reporting it as
+ * missing sends the reader hunting for one: `unresolvable-parent`.
+ *
+ * The council suggested a lowercase `road-to-*` grammar. It is widened on two
+ * measured facts: a non-roadmap parent is a supported shape (see
+ * analyseFolder's `present`), and the archived estate carries roadmap names
+ * with dots and capitals (`road-to-6.0.0-…`, `…-HUMAN-MEASUREMENT`).
+ */
+const SLUG_RE = /^[A-Za-z0-9._]+(?:[-_][A-Za-z0-9._]+)+$/;
 
 /** A prose `**Label:**` heading followed by a `- ` bullet list. */
 function proseList(body: string, label: RegExp): string[] | null {
@@ -276,6 +361,8 @@ interface Artifact {
     stem: string;
     file: string;
     decl: Declaration;
+    /** Stems this artifact declares itself a successor of — see downstreamOf. */
+    downstream: string[];
 }
 
 /**
@@ -320,11 +407,15 @@ export function analyseFolder(
         return findings;
     }
     const names = entries.filter((n) => ROADMAP_RE.test(n)).sort();
-    const artifacts: Artifact[] = names.map((n) => ({
-        stem: n.replace(/\.md$/i, ''),
-        file: n,
-        decl: parseDeclaration(fs.readFileSync(path.join(dir, n), 'utf-8'), surface),
-    }));
+    const artifacts: Artifact[] = names.map((n) => {
+        const text = fs.readFileSync(path.join(dir, n), 'utf-8');
+        return {
+            stem: n.replace(/\.md$/i, ''),
+            file: n,
+            decl: parseDeclaration(text, surface),
+            downstream: downstreamOf(text),
+        };
+    });
     // A parent need not be named road-to-*: a dated deep-dive plan is a parent
     // too, and only its absence makes it missing.
     const present = new Set(entries.filter((n) => /\.md$/i.test(n)).map((n) => n.replace(/\.md$/i, '')));
@@ -342,18 +433,35 @@ export function analyseFolder(
         if (a.decl.parents.length === 0) continue;
 
         for (const p of a.decl.parents) {
-            if (!present.has(p)) {
-                findings.push({
-                    code: 'missing-parent',
-                    folder: folderLabel,
-                    file: a.file,
-                    detail: `declares parent \`${p}\` but no such file is present`,
-                });
-            }
+            if (present.has(p)) continue;
+            findings.push(
+                SLUG_RE.test(p)
+                    ? {
+                          code: 'missing-parent',
+                          folder: folderLabel,
+                          file: a.file,
+                          detail: `declares parent \`${p}\` but no such file is present`,
+                      }
+                    : {
+                          code: 'unresolvable-parent',
+                          folder: folderLabel,
+                          file: a.file,
+                          detail: `declares a parent named only in prose (normalised to \`${p}\`) — no slug, so no file can match; name it by slug`,
+                      },
+            );
         }
         const omitted =
             surface === 'inbox'
-                ? artifacts.filter((b) => b.stem !== a.stem && !a.decl.parents.includes(b.stem)).map((b) => b.stem)
+                ? artifacts
+                      .filter(
+                          (b) =>
+                              b.stem !== a.stem
+                              && !a.decl.parents.includes(b.stem)
+                              // A sibling declaring itself downstream of `a` is
+                              // a successor: `a` could not have discussed it.
+                              && !b.downstream.includes(a.stem),
+                      )
+                      .map((b) => b.stem)
                 : [];
         if (omitted.length > 0) {
             findings.push({

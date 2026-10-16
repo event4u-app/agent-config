@@ -46,7 +46,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hookSectionEnabled } from '../_lib/hook_settings.js';
-import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
+import { isHandoverShape, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -164,17 +164,7 @@ export function isUiWrite(event: ToolEvent): boolean {
  * read-before-write, and `report_consultation_rate`'s output says so.
  */
 export function isArtifactRead(event: ToolEvent): boolean {
-    if (event.isWrite || !event.file) return false;
-    const normalized = event.file.replace(/\\/g, '/').toLowerCase();
-    return (
-        normalized.endsWith('design.html') ||
-        // The Claude Design canvas artboard. NOT covered by the line above:
-        // `ToDo.dc.html` does not end in `design.html`, which is exactly why
-        // the rule needed a second file pattern (2.5) and why the drift guard
-        // below reds when one is added here without the other.
-        normalized.endsWith('.dc.html') ||
-        normalized.includes('.claude/design-system/')
-    );
+    return !event.isWrite && isHandoverShape(event.file);
 }
 
 export interface SessionState {

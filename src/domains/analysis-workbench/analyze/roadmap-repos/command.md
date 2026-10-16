@@ -92,6 +92,15 @@ exactly one disposition per repository:
 roadmap. They never create three.** That is the whole reason this command exists
 rather than a loop that invokes `analyze-repo` and keeps whatever it returns.
 
+**An owned gap lands on its owner as a step and an `Arrivals:` line.** "Already
+planned" and "extend" both mean the owning roadmap — active, `later/` or
+`stubs/` — gains a new step for the gap and one `Arrivals:` line under its
+`Source:` header (the format of [`/analyze:inbox`](inbox.md) § Phase 5). "Create
+new" is legal only when the owner search comes back empty, and the new file's
+`estate_offset_exempt` quotes that search in one clause — command, query, the
+whole roadmap tree as scope and an empty result — which `check_estate_count`
+reports on an added file that lacks it.
+
 ### 4. Landing — local-only
 
 The batch's consolidated result is written to `agents/.harvest-local/` and

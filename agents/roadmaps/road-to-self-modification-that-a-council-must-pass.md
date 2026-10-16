@@ -3,9 +3,13 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
+depends: [road-to-authority-routing-mechanism]
 estate_offset_exempt: "An owner directive of 2026-10-05 makes self-modification a goal on one condition: an AI council confirms it at the least, questions what the change does, and the user decides when the council cannot. At the pin the approval record names no change, the council has no question set and no verdict of its own for such a review, the reviewer's code sits outside the gate, a council that cannot conclude leaves no way for the owner's word to be recorded, and the lane meant to carry a change nobody asked for has produced no proposal. The roadmap that owns the ratification gate is a draft waiting on two owner blockers. Merging these steps into it was considered and rejected: they would wait behind blockers none of them needs. Adds no gate script and no verdict vocabulary; extends one artifact, one council review and one path list."
 estate_growth_exempt: "Grows open_blockers by two. One asks the owner to confirm how far the directive reaches, with the measured cost of the wider reading and with the quorum and escalation rules the tree already reserves to the owner written into the record he accepts. The other asks by which route the owner's own permission is given when a council cannot conclude, because every route this file could build for it is one an agent could also write. Also grows active_roadmaps by one, because the owner asked on 2026-10-05 for this round's roadmaps to land as ready in one change."
 relates:
+  - slug: road-to-authority-routing-mechanism
+    relation: depends
+    note: "Its blocker external-bootstrap-boundary-for-phases-2-3 is the binding gate for the first authority-expanding merge to this surface (Phase 5 note); nothing here lands that merge before it resolves."
   - slug: road-to-typed-grants-that-persist
     relation: extends
     note: "Its Phase 5 built the artifact and the gate; Phases 2 to 5 here extend both. It keeps the retirement of the tool-call deny and both open blockers on it; step 1.3 here adds one dated note beside them and edits none of its steps."

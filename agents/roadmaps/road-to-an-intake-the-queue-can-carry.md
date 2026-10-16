@@ -78,12 +78,24 @@ files as there were findings without an owner.
 
 ## Phase 1 — `depends:` says what waits on what
 
-- [ ] **1.1 Repair the four false declarations.** Add `relation: depends` on
+- [x] **1.1 Repair the four false declarations.** Add `relation: depends` on
       `road-to-authority-routing-mechanism` to the self-modification file; drop
       the two archived targets from the installed-layer file and depend on
       `road-to-a-setup-that-decides-itself`; turn the hard-floor and danger-gate
       `extends` rows into `depends` where a step is gated on the other file.
       verify: `grep -c 'road-to-authority-routing-mechanism' agents/roadmaps/road-to-self-modification-that-a-council-must-pass.md` -> /^[1-9]/
+      > **Landed 2026-10-16, re-read at `origin/main@fe7a22c6d`.** The 13
+      > inline markers in the self-modification file are gone (removed with
+      > #2325); its gate on `road-to-authority-routing-mechanism` survives as
+      > the Phase 5 note, so the `depends` row is added on that note. The
+      > installed-layer file depends on `road-to-a-setup-that-decides-itself`
+      > and keeps its two archived predecessors as `extends`. The hard-floor
+      > `typed-grants` row is now `depends` (4.5 waits on 3.1). The danger-gate
+      > file is archived since #2375, so its row is moot and was not edited.
+      > The 1.2 rule found two more archived `depends` rows, both on complete
+      > files, and turned them into `extends`:
+      > `road-to-skills-that-arrive-when-called`,
+      > `road-to-tool-results-that-leave-a-handle`.
 - [ ] **1.2 A rule that keeps them true.** *corrected-from-reproduction:* the
       supplied plans put this in `lint_blocker_citations`, which checks
       line-number citations, not relations; the rule belongs to
@@ -92,6 +104,15 @@ files as there were findings without an owner.
       name a file under `archive/`. Test first: a fixture with the marker and no
       row is red before the change.
       verify: `npx vitest run tests/scripts/lint_roadmap_complexity.test.ts -t blocked-by-needs-depends --reporter=verbose` -> /✓.*blocked-by-needs-depends/
+      > **Partly landed 2026-10-16; left open on purpose.** `_check_cross_file_waits`
+      > in `lint_roadmap_complexity.ts` fails a `<!-- blocked-by: road-to-X#… -->`
+      > marker without a `depends` row for X (seen red first). The archived
+      > half reports as a **warning**, not a failure, because one active file —
+      > `road-to-a-setup-that-decides-itself`, held by a parallel drain lane
+      > this run — still depends on the complete, archived
+      > `road-to-a-release-that-reads-its-settings-delta`. Closes when that row
+      > becomes `extends` and the `warnings.push` for the archived half turns
+      > into `problems.push`.
 
 ## Phase 2 — An addition shows the owner search it ran
 
@@ -104,7 +125,16 @@ files as there were findings without an owner.
       already uses; only additions are read. The change is a governance diff and
       carries its council ratification artefact.
       verify: `npx vitest run tests/scripts/exemption_shape.test.ts -t quotes-owner-search --reporter=verbose` -> /✓.*quotes-owner-search/
-- [ ] **2.2 A finding with an owner lands on the owner.** `/analyze:inbox`
+      > **Report-only half landed 2026-10-16; left open on purpose.** The AI
+      > council (`agents/evidence/council/intake-exemption-search-2026-10-16.md`,
+      > 2/2) refused a blocking gate on the first predicate: both seats showed a
+      > reason that passed three independent regexes and described no search.
+      > `quotesOwnerSearch` now needs verb, query, whole-tree scope and an
+      > empty result in one clause, and `check_estate_count` prints
+      > `unsearched` as a warning without failing. Closes when a report-only
+      > window over real additions (Phase 6) shows the warning's false-refusal
+      > rate and the warning becomes a refusal, with its own council round.
+- [x] **2.2 A finding with an owner lands on the owner.** `/analyze:inbox`
       Phase 5 and `/analyze:roadmap-repos` gain one rule: a verified finding
       whose subject an active, parked or stub roadmap already owns becomes a
       new step and an `Arrivals:` line on that owner; a new file is written only
@@ -113,15 +143,21 @@ files as there were findings without an owner.
 
 ## Phase 3 — Age is visible, and a stall reaches a decision
 
-- [ ] **3.1 Two ages per file.** The dashboard prints, per active roadmap, days
+- [x] **3.1 Two ages per file.** The dashboard prints, per active roadmap, days
       since the file landed and days since its last ticked step, both read from
       `git log`, never from a field an author writes.
       verify: `npx vitest run tests/scripts/update_roadmap_progress.test.ts -t prints-two-ages --reporter=verbose` -> /✓.*prints-two-ages/
-- [ ] **3.2 A stall is a proposal, never an action.** A file with no ticked step
+- [x] **3.2 A stall is a proposal, never an action.** A file with no ticked step
       21 days after landing is listed as a park proposal; one line
       `renewed: <date> — <reason>` in its frontmatter clears the proposal for 21
       more days. Nothing is moved, archived or deleted by the tool.
       verify: `npx vitest run tests/scripts/update_roadmap_progress.test.ts -t park-proposal-renewable --reporter=verbose` -> /✓.*park-proposal-renewable/
+      > **Landed 2026-10-16.** `src/agent-src/scripts/roadmap_age.ts` reads one
+      > `git log -U0 -p --no-renames` over the active files: landing is the
+      > newest add at the current path (a promotion from `later/` lands anew),
+      > a tick is a commit adding more `[x]` lines than it removes. No git, or
+      > a path git does not know, reads `—` and is never proposed. The key is
+      > documented in `templates/roadmaps.md` rule 18.
 
 ## Phase 4 — A digest an outside session reads first
 
@@ -130,6 +166,16 @@ files as there were findings without an owner.
       status, and the paths it cites most. Generated, drift-checked, at most
       4,000 tokens, no external source names.
       verify: `./scripts-run src/scripts/generate_owned_digest --check` -> 0
+      > **Not started 2026-10-16, for two reasons found while screening it.**
+      > (1) D6's arithmetic does not hold at today's count: 30 active plus 104
+      > `later/` files is 134 rows, and 4,000 tokens is ~30 per row, while 20
+      > words alone are ~27 before slug, status and paths. The budget, the word
+      > cap or the row set has to move first, and D6 is the decision to reopen.
+      > (2) `agents/roadmaps/OWNED.md` sits inside `agents/roadmaps/*.md`, the
+      > glob `lint_roadmap_complexity`, `check_roadmap_trackable` and the estate
+      > gate read as the active tree; it would be judged as a roadmap unless
+      > each gate's exclusion list gains it, or the digest lives outside that
+      > glob. Either choice belongs with the D6 reopen, not with a drain.
 - [ ] **4.2 The intake reads it before deep work.** `/analyze:inbox` Phase 2
       consults the digest for the `recurrence` column before the Phase 4c grep,
       so a re-arrived subject is visible in the triage table at the first look.
@@ -137,7 +183,7 @@ files as there were findings without an owner.
 
 ## Phase 5 — Three folds, each decided with a burial check
 
-- [ ] **5.1 Put the three pairs to the council.**
+- [x] **5.1 Put the three pairs to the council.**
       `road-to-an-installed-layer-that-is-thinned` →
       `road-to-a-setup-that-decides-itself` (its criterion already points
       there); `road-to-what-was-built-and-never-ran` →
@@ -146,19 +192,34 @@ files as there were findings without an owner.
       `road-to-type-with-a-witness` (same witness mechanism). One batched
       question; each verdict is recorded with its dissent at the pair.
       verify: `ls agents/evidence/council/ | grep -c 'intake-folds'` -> /^[1-9]/
-- [ ] **5.2 Fold what the council approves, losing nothing.** Each approved
+- [x] **5.2 Fold what the council approves, losing nothing.** Each approved
       fold moves every open step into the target, archives the source with a
       pointer, and passes the burial check: open checkboxes before equal open
       checkboxes after, across both files.
       verify: `./scripts-run src/scripts/check_estate_count` -> 0
+      > **Closed 2026-10-16 with nothing moved.** The council
+      > (`agents/evidence/council/intake-folds-2026-10-16.md`, 2/2) kept both
+      > live pairs apart: pair 1 on an undecided rollback-setting fork and a
+      > target under execution, pair 2 because shared use of one render
+      > command is not shared ownership. Pair 2 of the plan
+      > (`road-to-what-was-built-and-never-ran`) was already archived by
+      > #2352. No fold means the frontmatter's "net negative once it runs"
+      > does not hold: this file adds one active roadmap and offsets none.
 
 ## Phase 6 — Read the effect once
 
-- [ ] **6.1 Replay three past rounds.** Re-run the triage half of
+- [x] **6.1 Replay three past rounds.** Re-run the triage half of
       `/analyze:inbox` over the three most recent consumed rounds in
       `agents/tmp.old/` as a dry run and count new top-level files against
       findings without an owner. A report, not a gate.
       verify: `grep -c 'owner-less findings' agents/evidence/analysis/intake-replay-*.md` -> /^[1-9]/
+      > **Landed 2026-10-16** as `agents/evidence/analysis/intake-replay-2026-10-16.md`
+      > over rounds `-r`, `-s`, `-t`: a structural replay of the artefacts each
+      > round produced against the Phase 2 predicate, not a re-run of the
+      > triage over the rounds' source files — the report says so. `-r` meets
+      > AC-6; `-s` has one new file with candidate owners and no quoted search;
+      > `-t`'s eight files quote true empty searches yet five extend a sibling
+      > the same round created, a gap the predicate cannot see.
 - [ ] **6.2 Four weeks after Phase 2 lands,** record new top-level files per
       inbox round and the share of findings that landed as arrivals, beside the
       dashboard ages from Phase 3.
@@ -236,11 +297,11 @@ files as there were findings without an owner.
       every cross-file `blocked-by:` marker has a matching `depends` row.
 - [ ] **AC-2** The estate gate refuses an added `estate_offset_exempt` that
       quotes no owner search, and accepts one that does.
-- [ ] **AC-3** The dashboard shows two ages per active roadmap, read from git,
+- [x] **AC-3** The dashboard shows two ages per active roadmap, read from git,
       and lists every file with no ticked step after 21 days unless renewed.
-- [ ] **AC-4** No roadmap is moved, archived or deleted by any tool this file
+- [x] **AC-4** No roadmap is moved, archived or deleted by any tool this file
       adds.
-- [ ] **AC-5** Every fold that landed kept its open-step count, and each
+- [x] **AC-5** Every fold that landed kept its open-step count, and each
       council verdict is recorded at its pair.
 - [ ] **AC-6** A replay of three past rounds lands no more new top-level files
       than findings without an owner.

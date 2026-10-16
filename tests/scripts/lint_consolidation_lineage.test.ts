@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     analyseFolder,
+    downstreamOf,
     normalizeParent,
     parseDeclaration,
     selfTest,
@@ -90,6 +91,29 @@ describe('lint_consolidation_lineage — normalization', () => {
         expect(normalizeParent('road-to-b')).toBe('road-to-b');
         expect(normalizeParent('`road-to-c` v3 (Claude-Session) — P0–P7, K1–K5')).toBe('road-to-c');
         expect(normalizeParent('  road-to-d.md   # a comment')).toBe('road-to-d');
+    });
+
+    // road-to-gates-that-read-what-was-written 1.1. Observed RED before the
+    // fix: the block-list branch passed the opening quote through, so the
+    // declared parent resolved to `"road-to-x` — reported once as
+    // missing-parent and once more as an omitted sibling.
+    it('a block-list `consolidates:` of quoted YAML scalars resolves its parents', () => {
+        const decl = parseDeclaration(
+            '---\nconsolidates:\n  - "road-to-x (note, more) — prose"\n  - \'road-to-y.md\'\n---\n# m\n',
+        );
+        expect(decl.kind).toBe('consolidates');
+        expect(decl.parents).toEqual(['road-to-x', 'road-to-y']);
+    });
+
+    it('a declared, present, quoted parent is neither missing nor omitted', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lineage-quoted-'));
+        try {
+            fs.writeFileSync(path.join(dir, 'road-to-m.md'), '---\nconsolidates:\n  - "road-to-x (note)"\n---\n# m\n');
+            fs.writeFileSync(path.join(dir, 'road-to-x.md'), '# x\n');
+            expect(analyseFolder(dir)).toEqual([]);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     });
 });
 
@@ -237,5 +261,97 @@ describe('dead-scope: enumeration of the declared root, not a count of what it h
         } finally {
             fs.rmSync(empty, { recursive: true, force: true });
         }
+    });
+});
+
+describe('direction: a successor is not an omitted parent (road-to-gates-that-read-what-was-written 2.1)', () => {
+    const folder = (files: Record<string, string>): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lineage-dir-'));
+        for (const [n, body] of Object.entries(files)) fs.writeFileSync(path.join(dir, n), body);
+        return dir;
+    };
+    const master = '---\nconsolidates:\n  - road-to-p\n---\n# a\n';
+    const omittedOn = (sibling: string): string[] => {
+        const dir = folder({ 'road-to-a.md': master, 'road-to-p.md': '# p\n', 'road-to-b.md': sibling });
+        try {
+            return analyseFolder(dir).filter((f) => f.code === 'omitted-sibling').map((f) => f.detail);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    };
+
+    it('B declaring `supersedes_proposals:` over A is not reported as omitted on A', () => {
+        expect(omittedOn('---\nsupersedes_proposals:\n  - road-to-a (Proposal, pin 1)\n---\n# b\n')).toEqual([]);
+    });
+    it('B declaring `supersedes:` over A is not reported', () => {
+        expect(omittedOn('---\nsupersedes: [road-to-a]\n---\n# b\n')).toEqual([]);
+    });
+    it('B declaring `relates:` with `relation: extends` over A is not reported', () => {
+        expect(omittedOn('---\nrelates:\n  - slug: road-to-a\n    relation: extends\n---\n# b\n')).toEqual([]);
+    });
+
+    // The inverse polarity — without these, a check that exempted every
+    // sibling would pass the three cases above.
+    it('B that declares nothing about A IS still reported', () => {
+        expect(omittedOn('# b\n')).toEqual(['declared 1, present 2, omitted `road-to-b`']);
+    });
+    it('an empty supersession key is not a succession', () => {
+        expect(omittedOn('---\nsupersedes: []\n---\n# b\n')).toHaveLength(1);
+    });
+    it('a non-directional relation over A is not a succession', () => {
+        expect(omittedOn('---\nrelates:\n  - slug: road-to-a\n    relation: disjoint\n---\n# b\n')).toHaveLength(1);
+    });
+    it('`extends` over a different file is not a succession over A', () => {
+        expect(omittedOn('---\nrelates:\n  - slug: road-to-p\n    relation: extends\n---\n# b\n')).toHaveLength(1);
+    });
+    it('A superseding B is the inverse pair and does not exempt B', () => {
+        const dir = folder({
+            'road-to-a.md': '---\nconsolidates:\n  - road-to-p\nsupersedes: [road-to-b]\n---\n# a\n',
+            'road-to-p.md': '# p\n',
+            'road-to-b.md': '# b\n',
+        });
+        try {
+            expect(analyseFolder(dir).map((f) => f.code)).toEqual(['omitted-sibling']);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+    it('downstreamOf reads all three declaration keys and nothing else', () => {
+        expect(
+            downstreamOf(
+                '---\nsupersedes: [road-to-x]\nsupersedes_proposals:\n  - "road-to-y (note)"\nrelates:\n'
+                    + '  - slug: road-to-z\n    relation: extends\n  - slug: road-to-w\n    relation: references\n---\n',
+            ).sort(),
+        ).toEqual(['road-to-x', 'road-to-y', 'road-to-z']);
+        expect(downstreamOf('# no frontmatter, supersedes: road-to-x\n')).toEqual([]);
+    });
+});
+
+describe('a prose-named parent is unresolvable, not missing (2.2)', () => {
+    it('a parent named only in prose reports `unresolvable-parent`, not `missing-parent`', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lineage-prose-'));
+        try {
+            fs.writeFileSync(
+                path.join(dir, 'road-to-m.md'),
+                '---\nconsolidates:\n  - "AC × A prose title (author, 2026) — note"\n  - road-to-gone\n---\n# m\n',
+            );
+            expect(analyseFolder(dir).map((f) => f.code).sort()).toEqual(['missing-parent', 'unresolvable-parent']);
+            const f = analyseFolder(dir).find((x) => x.code === 'missing-parent');
+            expect(f!.detail).toContain('road-to-gone');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+});
+
+describe('the round that found these defects reproduces from a committed mirror (2.3)', () => {
+    // `round-mirror/` mirrors the DECLARATION SHAPES of the gitignored round
+    // folder, with neutral names. Verified equivalence, 2026-10-16: the gate at
+    // origin/main reported 3 findings over both the live folder and this
+    // mirror, and reports exactly 1 over both after the fix.
+    it('yields exactly one finding, and it is the prose-named ghost', () => {
+        const f = analyseFolder(path.join(FIX, 'round-mirror'));
+        expect(f.map((x) => [x.code, x.file])).toEqual([['unresolvable-parent', 'road-to-consolidator.md']]);
+        expect(f[0]!.detail).toContain('`AC`');
     });
 });
