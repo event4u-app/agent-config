@@ -102,7 +102,7 @@ output. It is the classifier and the data behind it.
       `write_impact_map`. `--dry-run` returns before step 2 and writes no
       file, so the writer is exercised on a temp `package.json` instead: an
       `action` release writes the key, a `none` release adds no row.
-- [ ] **3.2 Spike — is the map reachable in one request?** `update_check.ts:36`
+- [x] **3.2 Spike — is the map reachable in one request?** `update_check.ts:36`
       already fetches `https://registry.npmjs.org/@event4u/agent-config/latest`
       once per 24 h. Establish whether that document carries custom
       `package.json` fields. If it does not, cost the packument fallback
@@ -179,14 +179,14 @@ output. It is the classifier and the data behind it.
 | D1 | deterministic | evidence | SemVer-major is never the ask trigger | 5 of the last 7 majors needed no consumer action (`BREAKING_CHANGES.md:50-56`, executed) | a major is cut only for consumer-visible change for four consecutive releases |
 | D2 | reversible-technical | evidence | Keep `_is_newer` beside the new comparator rather than replacing it | its truncation behaviour is asserted by an existing fixture; replacing it in place would delete the regression witness for the defect | the pinned fixture is retired with a recorded reason |
 | D3 | deterministic | agent | No new CLI verb; the classifier is a function `doctor --json` reports | ADR-041 | ADR-041 is superseded |
-| D4 | contested-technical | agent | Defer the read-path choice (`/latest` vs the packument) to step 3.2's spike, and let nothing before it depend on the answer | the question is about a third party's response document and cannot be settled offline; step 3.2 settles it and records the observed shape | the registry changes what `/latest` carries, or a step before 3.2 acquires a dependency on the answer |
+| D4 | contested-technical | evidence | Read the impact map from the `/latest` document the 24 h probe already fetches; no packument fallback is needed | step 3.2, observed 2026-10-16: `GET https://registry.npmjs.org/@event4u/agent-config/latest` returned 7,948 bytes for 16.5.0 carrying every top-level `package.json` key of the 16.5.0 tag except `files`, **including the non-standard `mcpName`** — so a custom top-level key reaches the reader. The same document carries `engines` (`{"node": ">=20.11.0"}`) and `dist.attestations` (provenance); `deprecated` is absent when unset. The fallbacks cost far more: the full packument was 842,897 bytes and the abbreviated `application/vnd.npm.install-v1+json` form 260,604 bytes, against one request per 24 h | the registry stops carrying a non-standard top-level key in `/latest`, or the first release that writes `agentConfig` shows it absent from that document |
 | D5 | critical-technical | evidence | Uncertainty never resolves to `auto` | an updater that guesses on a release it cannot classify is the failure mode the whole file exists to prevent | never |
 
-D4 closes a deferral, not a read path: what was decided is that the read path
-is settled by a measurement rather than by argument, because the question is
-about a third party's response document and cannot be answered offline. Step
-3.2 takes the measurement and records the shape it found. Nothing before 3.2
-depends on which way it comes out.
+D4 was first recorded as a deferral to a measurement; step 3.2 took it. The
+witness is indirect on purpose: no published version carries `agentConfig`
+yet, so the evidence that it will survive is that `mcpName`, another key npm
+does not define, already does. The first release that writes the key is the
+direct check named in the revisit column.
 
 ## What this roadmap deliberately does not do
 
