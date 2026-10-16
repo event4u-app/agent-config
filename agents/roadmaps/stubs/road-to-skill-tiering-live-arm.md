@@ -12,8 +12,8 @@ review_by: 2026-09-25
 > pickup — a skill added, edited or removed under a watched skills directory is
 > picked up within the current session, without a restart — and a `name-only`
 > listing state in `skillOverrides`, listed by name without its description and
-> still in the `/` menu. Both bear on the closing criterion: a `name-only` skill
-> is the Tier B shape the host now offers natively.
+> still in the `/` menu. Both bear on the closing criterion: the host
+> now offers natively the Tier B shape.
 
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > placeholder: the work is specified, wanted, and blocked only on a capability an
