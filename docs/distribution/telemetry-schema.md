@@ -170,5 +170,4 @@ was built with — no client-side migration.
 
 - [`telemetry-privacy.md`](telemetry-privacy.md) — reader-facing privacy doc.
 - [AI Council Round-2 transcript](../../agents/runtime/council/responses/install-telemetry.json) — verdict + revisions.
-- `agents/roadmaps/road-to-product-adoption.md § Phase 4`.
 - `non-destructive-by-default` — worker deploy is Hard-Floor.

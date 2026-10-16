@@ -2,7 +2,7 @@
 
 Track third-party registries / directories we want this package to surface in. Submissions are **human-owner** — they require a GitHub account interacting with another org's PR review or with the GitHub UI to flip settings.
 
-> **Authority** — Phase 2 of [`road-to-product-adoption.md`](../../agents/roadmaps/road-to-product-adoption.md). The autonomous roadmap pass cannot open PRs in third-party repos; this file is the handoff.
+> **Authority** — standalone; no roadmap owns this file. Its channel posture is [`ADR-033`](../decisions/ADR-033-distribution-identity-npm-primary.md). Automation cannot open PRs in third-party repos; this file and the ledger in [`registry-submissions.md`](registry-submissions.md) are the handoff.
 
 ## Distribution channels — npm-primary
 
@@ -20,7 +20,19 @@ The Packagist `event4u/agent-config` listing pins at 1.0.4 from a repository sta
 - [ ] **Claim + abandoned-flag the package.** Log in at packagist.org, claim the `event4u/agent-config` namespace, set the package to `abandoned` with the replacement pointer `event4u/agent-config` on npm (or the npm package URL as a body note where Packagist's abandoned-replacement field expects a Composer-namespace value, fall back to a `description` field redirect).
 - [ ] **OR: leave the listing as legacy + add a description-field redirect.** If claim is blocked or out of scope, edit the listing description to add a one-line `> Deprecated — install via npm: \`@event4u/agent-config\`` so any consumer who lands there sees the correct path.
 
-This item is **owner-owned**, not autonomous; the roadmap explicitly captures it as such (`road-to-distribution-identity.md` Phase 2 Step 1). Mark the chosen path with `[x]` once executed.
+This item is **owner-owned**, not autonomous. Mark the chosen path with `[x]` once executed — and only then; staging the text below is not executing it.
+
+**Staged text, 2026-10-16 — both paths pending.** Path 1, in the package's settings after claiming it: tick *Abandoned* and, because the replacement field expects a Composer package name and the replacement is an npm package, leave the replacement empty and set the description to:
+
+```text
+Abandoned — this listing is a 1.0.4 legacy artefact. Install via npm: npm install @event4u/agent-config (https://www.npmjs.com/package/@event4u/agent-config)
+```
+
+Path 2, if the claim is blocked — the description field alone:
+
+```text
+> Deprecated — install via npm: `@event4u/agent-config` (https://www.npmjs.com/package/@event4u/agent-config). This 1.0.4 listing is a legacy artefact and is not updated.
+```
 
 ### Breaking-change communication
 
@@ -35,12 +47,10 @@ No bespoke `BREAKING_CHANGES.md` is maintained — the changelog is the authorit
 
 ## Submission status
 
-| # | Registry | URL | Submission shape | Status | PR link |
-|---|---|---|---|---|---|
-| 1 | `punkpeye/awesome-mcp-servers` | <https://github.com/punkpeye/awesome-mcp-servers> | One-line entry under the Developer-Tools section + Glama score badge | ❌ **PR closed unmerged 2026-06-11** (verified live 2026-07-25 via `gh pr view 6865`; this row previously read "PR open" for six weeks) | <https://github.com/punkpeye/awesome-mcp-servers/pull/6865> |
-| 2 | `mcp.so` | <https://mcp.so/> | Submit via the directory form; same one-line shape | ✅ submitted (maintainer-confirmed 2026-06) | — |
-| 3 | `mcpservers.org` | <https://mcpservers.org/> | Submit via the directory form; same one-line shape (verify URL current at submission time) | ✅ submitted (maintainer-confirmed 2026-06) | — |
-| 4 | `glama.ai` | <https://glama.ai/mcp/servers/event4u-app/agent-config> | Server page live; score badge embedded in the awesome-mcp-servers entry (PR #6865) | ✅ listed (server page + badge return HTTP 200, verified 2026-06-08) | <https://glama.ai/mcp/servers/event4u-app/agent-config> |
+Every per-submission row — each attempt, its upstream, and the date that
+upstream was last read — lives in one place: [`registry-submissions.md`](registry-submissions.md).
+This file used to carry a second row table that disagreed with that ledger; the
+rows moved there on 2026-10-16.
 
 ## Submission template
 
@@ -123,4 +133,4 @@ Run a topic / keyword reality check **every quarter**:
 - [`package.json`](../../package.json) — `keywords` array, must mirror topics by category.
 - [`docs/distribution/topics-equivalents-decay-policy.md`](./topics-equivalents-decay-policy.md) — when to add / retire `equivalents:` entries.
 - [`docs/distribution/mcp-submission-checklist.md`](./mcp-submission-checklist.md) — MCP-specific submission checklist.
-- [`agents/roadmaps/road-to-product-adoption.md`](../../agents/roadmaps/road-to-product-adoption.md) — parent roadmap.
+- [`registry-submissions.md`](registry-submissions.md) — the submission ledger.

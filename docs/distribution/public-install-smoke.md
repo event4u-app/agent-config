@@ -2,7 +2,7 @@
 
 Cross-platform install matrix for the two consumer entrypoints.
 
-> **Authority** — Phase 1 of [`road-to-product-adoption.md`](../../agents/roadmaps/road-to-product-adoption.md). The matrix is the regression guard for Phases 3–5 of that roadmap.
+> **Authority** — standalone. The plan that introduced this matrix is archived; the matrix stays as the regression guard for the public install path.
 
 ## What the matrix runs
 
@@ -65,4 +65,3 @@ These deviations are recorded here so a future maintainer reading the roadmap do
 - [`tests/test_one_liner_entrypoints.sh`](../../tests/test_one_liner_entrypoints.sh) — the smoke harness invoked per matrix leg.
 - [`scripts/install`](../../src/scripts/install) — the consumer-facing installer orchestrator.
 - [`.github/workflows/tests.yml`](../../.github/workflows/tests.yml) — the broader install integration matrix (Linux + macOS, 35 tests × 4 shards).
-- [`agents/roadmaps/road-to-product-adoption.md`](../../agents/roadmaps/road-to-product-adoption.md) — parent roadmap and acceptance criteria.
