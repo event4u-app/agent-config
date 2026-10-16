@@ -50,9 +50,10 @@ rather than asserted.
 | Council CLI | `src/scripts/council_cli.ts` | **A**, with a query-time network call | Per-invocation. It calls providers at QUERY time, which is governed by the council budget rules — not a Class-C build path. It builds no index. |
 | **UI / settings server** | `src/cli/commands/uiServe.ts` → `src/server/app.ts` | **B** | Listens on `127.0.0.1`. Started by an explicit human action (`agent-config config`, `settings`, `install`, `setup`), bounded to that session. |
 | **MCP server** | `src/scripts/mcp_server/server.ts` | **B** | A stdio server with a lifecycle beyond one command; ADR-124's own Class-B text names "MCP *servers* run as memory/retrieval backends" explicitly. |
+| **A request gateway** | not in this tree yet — `road-to-placeholders-on-the-wire` Phase 7, and building it is an open owner decision (blocker `request-gateway-build`) | **B**, in the UI server's shape | Classified before any gateway code exists. A loopback listener fails Class A's "no listening socket" test, so it is Class B in the shape the UI server already carries — human-started, session-bounded, loopback only — with one difference written down: it carries model traffic. **Started by** the launching command, which spawns the host as its child. **Writes** the session table and nothing else. **Stops** with its child. |
 | **A supervised telemetry collector** | not in this tree yet — `road-to-supervised-telemetry-collector` builds it | **B**, permitted under ADR-249 | Listed because ADR-249 exists FOR this row and a table that omitted it would read as if the reversal had no subject. It is the only planned component that runs unattended, and it is therefore the only one that needs ADR-249's four conditions rather than "a human started it". |
 
-### The Class-B rows are three, and each is permitted for a different reason
+### The Class-B rows are four, and each is permitted for a different reason
 
 Stating this per row rather than once, because "Class B is allowed now" is the
 misreading ADR-249's `supersedes_scope` was written to prevent:
@@ -62,6 +63,12 @@ misreading ADR-249's `supersedes_scope` was written to prevent:
   no other form. It does not run unattended.
 - **MCP server** — started by the host tool that speaks the protocol, for the
   duration of that session. Same shape, different caller.
+- **The request gateway** — the UI server's shape: a human runs the launching
+  command, the gateway lives exactly as long as the host it launched, and it
+  listens on loopback only. It does not run unattended, so its standing rests
+  on "a human started it", as the UI server's does. What sets it apart from the UI server is the
+  payload — it carries model traffic — and that is why it is classified before
+  it is built rather than after. It does not exist in this tree yet.
 - **The supervised collector** — the only row that would run unattended, and
   therefore the only one that needs ADR-249's four governance conditions rather
   than "a human started it". It does not exist in this tree yet; the row is here
