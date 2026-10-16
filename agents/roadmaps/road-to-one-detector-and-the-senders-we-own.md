@@ -73,8 +73,11 @@ is open.
   `__TYPE_n_fp__`. **The identifier class has no rows yet** — validated identifier
   rules are 2.3 — so counting by class today yields credential evidence only.
 - **2026-10-16:** 0.4 landed (sender census in the contract).
-- **2026-10-17:** 2.2's detection move landed; the step stays open on its gate
-  registration and the keyword-assignment variants (see 2.2).
+- **2026-10-17:** 1.3 landed (gap fixtures named by the sibling). 2.2's detection
+  move landed; the step stays open on its gate registration and the
+  keyword-assignment variants (see 2.2). 2.3 was prototyped and set aside on the
+  hook-bundle budget (see 2.3). 1.1 and 1.2 touch a pre-tool-use guard and the
+  installer, which this drain lane does not edit.
 - **Next in order:** 2.2 (which now carries the
   single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
 
@@ -169,11 +172,19 @@ read cannot leak through any later bug.
       environment-scrub tiers are documented as user-enabled, never written into
       a project.
       verify: a fresh install into an empty project shows the deny entries; `hooks:doctor` reports the tier in force; uninstall leaves no entry behind.
-- [ ] **1.3 Record what prevention cannot see** — a value printed by a program, a
+- [x] **1.3 Record what prevention cannot see** — a value printed by a program, a
       row returned by a database tool, a secret typed by the user — as fixtures
       that fail today and are referenced by the host-carrier roadmap's phases
       that close them.
       verify: three fixtures exist and each is named by a step in `road-to-placeholders-on-the-wire`.
+      **Done 2026-10-17:** `tests/fixtures/egress-prevention-gaps/` holds
+      `program-output.json`, `database-row.json` and `typed-secret.json`, each with a
+      `closed_by` naming the sibling step (3.1, 3.1, 5.1), and those steps name the
+      fixtures back. `npx vitest run tests/scripts/hooks/egress_prevention_gaps.test.ts`
+      -> 0: per fixture the stage counts a credential, and the real dispatcher in
+      `strict` returns no rewrite field and no block while the bound concern did
+      run (that check seen red with the concern unbound). The assertions describe
+      the open gap, so the closing step inverts them for its fixture.
 
 ## Phase 2 — One detector table (F2, F3)
 
@@ -238,6 +249,22 @@ read cannot leak through any later bug.
       value is stored as a keyed digest, never as the value. The two
       unvalidated copies of F3 are replaced by the table.
       verify: the F3 census re-run through the table reports its count as a test with a pinned ceiling, not a report; recall and precision per class are read against the 0.3 bars.
+      **Measured 2026-10-17, not landed — the hook bundle cannot carry it.** A
+      prototype with six identifier rows (IBAN by country length and mod-97, card
+      by Luhn plus context, e-mail with documentation, no-reply and file-name
+      exclusions, phone international and national-with-context, German tax ID by
+      ISO 7064 plus context) passed its own suite, including the checksum-disabled
+      and context-removed mutations. Every row is inlined into
+      `dist/hooks/dispatch.js` because the egress stage imports the table: the
+      bundle read 1,550,279 B against the 1,550,000 B ceiling, and 1,549,879 B
+      after packing the IBAN length table — 121 B of headroom, inside the
+      hundreds of bytes an esbuild rebuild moves. It was set aside rather than
+      landed. Landing it needs one of: bytes freed elsewhere in the bundle (the
+      table's `linearity` prose is about 2 KB the stage never reads), a ratified
+      ceiling raise, or the stage reading a detection-only view of the table.
+      That choice touches the hook bundle's shape and its budget, so it is left
+      to the maintainer. Still open beyond it: replacing the two F3 copies, the
+      pinned census test, the 0.3 bar readings and the keyed-digest allowlist.
 - [ ] **2.4 Known values (D7).** An exact-match set built per invocation from
       environment variables whose names mark them as credentials and from local
       `.env*` files, matched also in base64, URL-encoded and JSON-escaped form

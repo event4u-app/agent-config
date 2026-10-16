@@ -1,0 +1,12 @@
+{
+  "closed_by": "road-to-placeholders-on-the-wire 3.1",
+  "gap": "a value printed by a program: no file read happened, so no read guard sees it",
+  "event": "post_tool_use",
+  "native_event": "PostToolUse",
+  "payload": {
+    "session_id": "egress-gap-program-output",
+    "tool_name": "Bash",
+    "tool_input": { "command": "./bin/print-config --env production" },
+    "tool_response": { "stdout": "DATABASE_URL=postgres://app:{{VALUE}}@db.internal:5432/app\n", "stderr": "" }
+  }
+}
