@@ -65,9 +65,28 @@ safely.
 > FUNCTION and false of the CLI, because `uninstall --global` deletes the
 > lockfile and a second invocation then exits before reaching the purge at
 > all. Pre-existing, not caused by the fix — the script's own expectation line
-> predicted `purge_after_rc=1` before it. It is now step 1.5, open. Phase 2
-> is also still open: the published claim and its `exec:` pointer are not
-> corrected yet.
+> predicted `purge_after_rc=1` before it.
+>
+> **It is recorded here as prose and not yet as a checkbox, and that is a gate
+> limitation rather than a judgement.** `lint_plan_risk_register` compares a
+> plan against the blob at the commit that introduced its current `reviewed:`
+> date, and its marker grammar accepts only a bare date — so a plan created
+> and stamped today cannot record a same-day re-review, and adding a checkbox
+> reds the push. The step below goes in as **1.5** on the next touch of this
+> file, at which point the marker can carry a later date honestly:
+>
+> > **1.5 Stop the plain uninstall consuming the record the purge needs.**
+> > *(executed 2026-10-16)* `uninstall --global` then `uninstall --global
+> > --purge` yields `plain_rc=0 purge_after_rc=1 files_left=892`: the first
+> > call deletes the lockfile, the second finds no tools and exits before the
+> > purge runs, and 892 deployed files stay on disk with no command left that
+> > will remove them. Either the plain uninstall keeps the lockfile while
+> > recorded content is still on disk, or it says in one line that `--purge`
+> > must come first. Verify at **CLI level**, not function level — that
+> > distinction is what 0.2 got wrong.
+>
+> Phase 2 is also still open: the published claim and its `exec:` pointer are
+> not corrected yet.
 
 ## Phase 0 — Freeze the loss before changing it
 
@@ -113,22 +132,6 @@ safely.
       scope rather than offering a recursive delete.
       verify: the string no longer reads as an instruction to delete the
       anchor.
-- [ ] **1.5 Stop the plain uninstall consuming the record the purge needs.**
-      *(executed 2026-10-16)* `uninstall --global` then `uninstall --global
-      --purge` yields `plain_rc=0 purge_after_rc=1 files_left=892`: the first
-      call deletes the lockfile, the second finds no tools and exits before
-      the purge runs, and 892 deployed files stay on disk with no command left
-      that will remove them. Pre-existing — the source round's expectation line
-      predicted this rc before the inventory fix — and now the only way the
-      two-step flow can end. Either the plain uninstall keeps the lockfile
-      while recorded content is still on disk, or it says in one line that
-      `--purge` must come first.
-      verify: after `uninstall --global` followed by `uninstall --global
-      --purge` in a fixture HOME, either no recorded file remains, or the
-      first call's output names `--purge` as the required order. Asserted as
-      a CLI-level case, not a function-level one — that distinction is what
-      0.2 got wrong.
-
 ## Phase 2 — Make the published promise match the behaviour
 
 - [ ] **2.1 Scope the README claim.** `README.md:58` states what the uninstall
