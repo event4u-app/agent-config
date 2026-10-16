@@ -1,0 +1,12 @@
+{
+  "closed_by": "road-to-placeholders-on-the-wire 3.1",
+  "gap": "a row returned by a database tool: the value lives in a table, not in a credential-class file",
+  "event": "post_tool_use",
+  "native_event": "PostToolUse",
+  "payload": {
+    "session_id": "egress-gap-database-row",
+    "tool_name": "mcp__database__query",
+    "tool_input": { "sql": "select id, name, api_token from integrations limit 1" },
+    "tool_response": { "rows": [{ "id": 1, "name": "billing", "api_token": "{{VALUE}}" }] }
+  }
+}
