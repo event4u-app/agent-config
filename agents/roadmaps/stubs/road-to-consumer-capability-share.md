@@ -10,6 +10,18 @@ probe: none
 > analyses again ask that cycles go to consumer capability rather than to
 > self-governance, and supply two conflicting WIP numbers (12 and 8) for the
 > active-roadmap estate. The count before it read: 8 (at least).
+>
+> **The WIP half is ANSWERED — [`ADR-287`](../../../docs/decisions/ADR-287-the-estate-shrinks-by-finishing.md),
+> owner ruling 2026-10-16.** No cap, at any number; parking is not an
+> estate-management device; the estate shrinks by **completion** only. All
+> three capping options were put to the owner and all three declined in one
+> sentence. `check_estate_count` stays as a shrink-only measurement and does
+> not become a cap. The tenth arrival of the WIP question meets that record
+> rather than a fresh argument.
+>
+> **The consumer-share half below is UNCHANGED and still open.** ADR-287 rules
+> on volume, not on subject: its options 1-3 are unanswered, and nothing in
+> that record should be read as touching them.
 
 
 > **Stub — not active work.** The measurement half shipped and was archived
