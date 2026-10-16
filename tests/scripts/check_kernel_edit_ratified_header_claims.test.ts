@@ -4,10 +4,11 @@ import { check_envelope as kernelRuleGuard } from '../../src/scripts/hooks/block
 import { check_envelope as plumbingGuard } from '../../src/scripts/hooks/block_plumbing_writes.js';
 
 /**
- * `check_kernel_edit_ratified`'s header says no tool-call guard denies an edit
- * of the dispatcher source or the kernel-rule list, so the record is their only
- * layer. These cases keep that sentence true: if a guard starts denying either
- * path, the header has to change with it.
+ * `check_kernel_edit_ratified`'s header names two guards and says neither
+ * protects the dispatcher source or the kernel-rule list. These cases check
+ * exactly those two guards, and nothing wider: the header's broader sentence,
+ * that no bound `pre_tool_use` concern denies either path, was verified once by
+ * sending both edits through the built dispatcher and is not automated here.
  */
 
 const UNGUARDED = ['src/scripts/hooks/dispatch_hook.ts', 'src/scripts/_lib/kernel_rules.ts'];
@@ -23,8 +24,8 @@ function envelopes(filePath: string): Envelope[] {
     ];
 }
 
-describe("the gate header's claim about tool-call guards", () => {
-    it.each(UNGUARDED)('neither write guard denies an edit of %s', (rel) => {
+describe('the two guards the gate header names', () => {
+    it.each(UNGUARDED)('neither the plumbing nor the kernel-rule guard denies an edit of %s', (rel) => {
         for (const env of envelopes(rel)) {
             expect(plumbingGuard(env)[0], `plumbing guard, ${env.tool_name}`).toBe(false);
             expect(kernelRuleGuard(env)[0], `kernel-rule guard, ${env.tool_name}`).toBe(false);
