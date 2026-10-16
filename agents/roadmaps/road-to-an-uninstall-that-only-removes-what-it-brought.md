@@ -52,10 +52,22 @@ safely.
 
 > **Phases 0 and 1 shipped out of band on 2026-10-16**, on the owner's
 > direction: the data-loss path was taken out of the roadmap queue and fixed
-> as its own change rather than waiting for a slot. `tests/install/uninstall_purge_containment.test.ts`
-> was observed **red** against `26c06aef7` — `.credentials.json was deleted`,
-> plus the refusal arm — and green after the fix. Phase 2 remains open: the
-> published claim and its `exec:` pointer have not been corrected yet.
+> as its own change rather than waiting for a slot.
+> `tests/install/uninstall_purge_containment.test.ts` was observed **red**
+> against `26c06aef7` — `.credentials.json was deleted`, plus the refusal arm
+> — and green after the fix. An end-to-end run of the owner's own reproduction
+> script against the fixed tree confirms it where it counts:
+> `U2 rc=0 own_rule=kept credentials=kept`, against an expectation line that
+> predicted `DELETED`.
+>
+> **That run also found what this file had wrong.** Step 0.2 recorded the
+> two-step case as answered "still possible"; that is true of the deletion
+> FUNCTION and false of the CLI, because `uninstall --global` deletes the
+> lockfile and a second invocation then exits before reaching the purge at
+> all. Pre-existing, not caused by the fix — the script's own expectation line
+> predicted `purge_after_rc=1` before it. It is now step 1.5, open. Phase 2
+> is also still open: the published claim and its `exec:` pointer are not
+> corrected yet.
 
 ## Phase 0 — Freeze the loss before changing it
 
@@ -70,7 +82,7 @@ safely.
       verify: the test is **red** and its failure names
       `cmd_uninstall.ts:283`. A test that passes here has not reproduced the
       defect and is not evidence.
-- [x] **0.2 Pin the two-step case.** `uninstall --global` followed by
+- [x] **0.2 Pin the two-step case, at the level the test reaches.** `uninstall --global` followed by
       `uninstall --global --purge`: assert the second invocation is still
       possible, i.e. the first does not remove the record the second needs.
       verify: red or green, recorded either way — this one is a genuine
@@ -101,6 +113,21 @@ safely.
       scope rather than offering a recursive delete.
       verify: the string no longer reads as an instruction to delete the
       anchor.
+- [ ] **1.5 Stop the plain uninstall consuming the record the purge needs.**
+      *(executed 2026-10-16)* `uninstall --global` then `uninstall --global
+      --purge` yields `plain_rc=0 purge_after_rc=1 files_left=892`: the first
+      call deletes the lockfile, the second finds no tools and exits before
+      the purge runs, and 892 deployed files stay on disk with no command left
+      that will remove them. Pre-existing — the source round's expectation line
+      predicted this rc before the inventory fix — and now the only way the
+      two-step flow can end. Either the plain uninstall keeps the lockfile
+      while recorded content is still on disk, or it says in one line that
+      `--purge` must come first.
+      verify: after `uninstall --global` followed by `uninstall --global
+      --purge` in a fixture HOME, either no recorded file remains, or the
+      first call's output names `--purge` as the required order. Asserted as
+      a CLI-level case, not a function-level one — that distinction is what
+      0.2 got wrong.
 
 ## Phase 2 — Make the published promise match the behaviour
 
