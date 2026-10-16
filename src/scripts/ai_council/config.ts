@@ -75,7 +75,6 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { CREDENTIAL_PREFIXES } from '../_lib/egress_rules.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as budget from './cli_call_budget.js';
 // LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while
@@ -109,10 +108,17 @@ const _FALLBACK_DEPS = {
 
 /**
  * Prefixes that signal "this is a raw API key" so we refuse it loudly
- * even when the user accidentally inlined it in `api_key_ref`. The rule
- * table owns them (road-to-one-detector-and-the-senders-we-own 2.2).
+ * even when the user accidentally inlined it in `api_key_ref`.
  */
-export const _RAW_KEY_PREFIXES: readonly string[] = CREDENTIAL_PREFIXES;
+export const _RAW_KEY_PREFIXES: readonly string[] = [
+    'sk-',
+    'sk-ant-',
+    'ya29.',
+    'AIza',
+    'xai-',
+    'pplx-',
+    'gsk_',
+];
 
 // ── value type shapes ──────────────────────────────────────────────
 

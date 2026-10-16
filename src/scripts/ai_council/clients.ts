@@ -45,7 +45,6 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor } from './cli_agency_bounds.js';
 import {
@@ -364,12 +363,12 @@ function _loadKey(p: string, prefix: string, installScript: string): string {
 
 export function load_anthropic_key(p: string | null = null): string {
     const resolved = p !== null ? p : _resolveKeyPath(ANTHROPIC_KEY_FILENAME);
-    return _loadKey(resolved, vendorPrefix('anthropic-api-key'), 'src/scripts/install_anthropic_key.sh');
+    return _loadKey(resolved, 'sk-ant-', 'src/scripts/install_anthropic_key.sh');
 }
 
 export function load_openai_key(p: string | null = null): string {
     const resolved = p !== null ? p : _resolveKeyPath(OPENAI_KEY_FILENAME);
-    return _loadKey(resolved, vendorPrefix('openai-api-key'), 'src/scripts/install_openai_key.sh');
+    return _loadKey(resolved, 'sk-', 'src/scripts/install_openai_key.sh');
 }
 
 // ── attribute-access helpers (mirror Python getattr) ──────────────────

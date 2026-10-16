@@ -87,7 +87,7 @@ export function main(): number {
     // The roster is only constructible while the key var is set; restore
     // whatever was there so the probe leaves no environment residue.
     const prior = process.env[KEY_VAR];
-    process.env[KEY_VAR] = 'sk-probe-key'; // not-a-credential-pattern: inert fake key value
+    process.env[KEY_VAR] = 'sk-probe-key';
     try {
         // ── Criterion 1: a deliberately broken seat yields `unavailable`. ──
         const broken = qualifyMember({

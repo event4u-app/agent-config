@@ -38,18 +38,6 @@ const OLD_PATTERNS: Readonly<Record<string, { regex: RegExp; valueGroup?: number
     },
 };
 
-// Rows added after the move, when step 2.2 moved the other consumers' private
-// patterns onto the table. They had no row in secret_detector, so there is
-// nothing to be at parity with; egress_drift_matrix.test.ts covers them.
-const ADDED_AFTER_MOVE: readonly string[] = [
-    'openai-api-key',
-    'google-oauth-token',
-    'github-app-token',
-    'xai-api-key',
-    'perplexity-api-key',
-    'groq-api-key',
-];
-
 const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
 function run(n: number): string {
     let s = '';
@@ -137,7 +125,7 @@ const OLD_VALIDATORS: Readonly<Record<string, (v: string) => boolean>> = {
 describe('old-versus-new parity of the credential rows', () => {
     it('the frozen reference covers exactly the credential rows of the table', () => {
         const credential = EGRESS_RULES.filter((r) => r.class === 'credential').map((r) => r.rule);
-        expect(credential.sort()).toEqual([...Object.keys(OLD_PATTERNS), ...ADDED_AFTER_MOVE].sort());
+        expect(credential.sort()).toEqual(Object.keys(OLD_PATTERNS).sort());
     });
 
     const ceilings = new Set(DETECTION_CEILINGS.flatMap((c) => c.cases.map((id) => `${c.rule}|${id}`)));

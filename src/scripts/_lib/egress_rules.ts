@@ -32,12 +32,6 @@ export interface EgressRule {
     /** The rule fires only when `words` matches within `window` chars of the value. */
     readonly context?: { readonly words: RegExp; readonly window: number };
     readonly exclusions?: readonly RegExp[];
-    /**
-     * Literal vendor prefixes that mark a raw key by construction. Surfaces that
-     * act on shape alone (a config ref, a masked log value) read these instead of
-     * spelling their own list.
-     */
-    readonly prefixes?: readonly string[];
 }
 
 export interface SpanBounds {
@@ -116,7 +110,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'anthropic-api-key',
         type: 'APIKEY',
-        prefixes: ['sk-ant-'],
         class: 'credential',
         replacement: 'detection',
         kind: 'anthropic-api-key',
@@ -126,7 +119,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'anthropic-project-key',
         type: 'APIKEY',
-        prefixes: ['sk-proj-'],
         class: 'credential',
         replacement: 'detection',
         kind: 'anthropic-api-key',
@@ -136,7 +128,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'aws-access-key',
         type: 'APIKEY',
-        prefixes: ['AKIA'],
         class: 'credential',
         replacement: 'detection',
         pattern: /AKIA[0-9A-Z]{16}/g,
@@ -145,7 +136,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'google-api-key',
         type: 'APIKEY',
-        prefixes: ['AIza'],
         class: 'credential',
         replacement: 'detection',
         pattern: /AIza[0-9A-Za-z_-]{35}/g,
@@ -154,7 +144,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'github-pat',
         type: 'TOKEN',
-        prefixes: ['ghp_'],
         class: 'credential',
         replacement: 'detection',
         pattern: /ghp_[0-9A-Za-z]{36}/g,
@@ -163,65 +152,10 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'github-fine-grained-pat',
         type: 'TOKEN',
-        prefixes: ['github_pat_'],
         class: 'credential',
         replacement: 'detection',
         kind: 'github-pat',
         pattern: /github_pat_[0-9A-Za-z_]{22,}/g,
-        linearity: PREFIX_RUN,
-    },
-    {
-        rule: 'openai-api-key',
-        type: 'APIKEY',
-        prefixes: ['sk-'],
-        class: 'credential',
-        replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9])sk-[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
-    },
-    {
-        rule: 'google-oauth-token',
-        type: 'TOKEN',
-        prefixes: ['ya29.'],
-        class: 'credential',
-        replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9])ya29\.[0-9A-Za-z_-]{20,}/g,
-        linearity: PREFIX_RUN,
-    },
-    {
-        rule: 'github-app-token',
-        type: 'TOKEN',
-        prefixes: ['gho_', 'ghu_', 'ghs_', 'ghr_'],
-        class: 'credential',
-        replacement: 'detection',
-        pattern: /gh[ousr]_[A-Za-z0-9]{36,}/g,
-        linearity: PREFIX_RUN,
-    },
-    {
-        rule: 'xai-api-key',
-        type: 'APIKEY',
-        prefixes: ['xai-'],
-        class: 'credential',
-        replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9])xai-[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
-    },
-    {
-        rule: 'perplexity-api-key',
-        type: 'APIKEY',
-        prefixes: ['pplx-'],
-        class: 'credential',
-        replacement: 'detection',
-        pattern: /pplx-[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
-    },
-    {
-        rule: 'groq-api-key',
-        type: 'APIKEY',
-        prefixes: ['gsk_'],
-        class: 'credential',
-        replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9])gsk_[A-Za-z0-9]{20,}/g,
         linearity: PREFIX_RUN,
     },
     {
@@ -238,7 +172,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'stripe-secret-key',
         type: 'APIKEY',
-        prefixes: ['sk_live_', 'sk_test_'],
         class: 'credential',
         replacement: 'detection',
         pattern: /sk_(?:live|test)_[0-9A-Za-z]{16,}/g,
@@ -247,7 +180,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'slack-token',
         type: 'TOKEN',
-        prefixes: ['xoxb-', 'xoxp-', 'xoxa-', 'xoxr-', 'xoxs-'],
         class: 'credential',
         replacement: 'detection',
         pattern: /xox[baprs]-[0-9A-Za-z-]{10,}/g,
@@ -286,56 +218,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
             'Starts only at a keyword; the whitespace runs end at the first non-space and the value run at the first quote or space, and a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops at the first character after the whitespace.',
     },
 ];
-
-/** Every raw-key prefix the table declares, longest first. */
-export const CREDENTIAL_PREFIXES: readonly string[] = EGRESS_RULES.flatMap((r) => r.prefixes ?? []).sort(
-    (a, b) => b.length - a.length,
-);
-
-/** The prefixes one row declares; throws on an unknown rule so a rename cannot go silent. */
-export function prefixesOf(rule: string): readonly string[] {
-    const row = EGRESS_RULES.find((r) => r.rule === rule);
-    if (row === undefined) throw new Error(`egress rule ${rule}: no such row`);
-    return row.prefixes ?? [];
-}
-
-/** A row's first declared prefix — the shape a key file of that vendor starts with. */
-export function vendorPrefix(rule: string): string {
-    const first = prefixesOf(rule)[0];
-    if (first === undefined) throw new Error(`egress rule ${rule}: declares no prefix`);
-    return first;
-}
-
-/**
- * A raw-key prefix at a token start followed by at least `minTail` key
- * characters. Coarser than the rows on purpose: it is for surfaces that refuse or
- * mask on shape alone, where a short or truncated key must still be caught.
- */
-export function rawKeyPrefixPattern(minTail: number, prefixes: readonly string[] = CREDENTIAL_PREFIXES): RegExp {
-    const alt = [...prefixes]
-        .sort((a, b) => b.length - a.length)
-        .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-        .join('|');
-    return new RegExp(`(?<![A-Za-z0-9])(?:${alt})[A-Za-z0-9_-]{${minTail},}`, 'g');
-}
-
-/** The longest declared prefix `value` starts with, or undefined. */
-export function rawKeyPrefixOf(value: string): string | undefined {
-    return CREDENTIAL_PREFIXES.find((p) => value.startsWith(p));
-}
-
-/**
- * End of the bytes a replacement of `span` must remove, or null when the row
- * cannot prove it (the caller then decides: a refusing surface refuses, a
- * masking surface masks the detection span).
- */
-export function replacementEnd(text: string, span: EgressSpan): number | null {
-    const row = EGRESS_RULES.find((r) => r.rule === span.rule);
-    if (row === undefined) return null;
-    if (row.replacement === 'detection') return span.end;
-    const end = row.replacement.through(text, span);
-    return end === null || end < span.end ? null : end;
-}
 
 /**
  * Returns a description of the first unbounded quantifier (`+`, `*`, `{n,}`)

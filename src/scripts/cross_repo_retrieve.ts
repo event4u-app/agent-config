@@ -19,9 +19,7 @@
  * TypeScript and a `.ts` cannot import a `.py`, so the redaction + chunking
  * primitives are ported faithfully inline here and verified byte-identical
  * against the retired Python implementations (differential-tested, no behavior divergence).
- * They carry no legacy-source-path literal, matching the `.py`. The secret
- * scrub is the exception: it calls the ported `workspace_secrets.scrub`, whose
- * credential detection is the one rule table's.
+ * They carry no legacy-source-path literal, matching the `.py`.
  *
  * Scope guards (Option A):
  *   - read-only, no writes, no network;
@@ -40,7 +38,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { scrub } from '../cli/python/workspace_secrets.js';
 import { collect } from './linked_projects_list.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -59,6 +56,23 @@ const SKIP_DIRS: ReadonlySet<string> = new Set([
 // --- Redaction / chunking floor (faithful port; see header note) ----------
 
 const CHUNK_BYTES = 2 * 1024;
+
+// workspace_secrets patterns (HIGH-confidence first, then FUZZY).
+const _RE_PRIVATE_KEY =
+    /-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+PRIVATE KEY-----/g;
+const _RE_AWS = /AKIA[0-9A-Z]{16}/g;
+const _RE_GH = /gh[pousr]_[A-Za-z0-9]{36,}/g;
+const _RE_OPENAI = /sk-[A-Za-z0-9]{20,}/g;
+const _RE_KV_SECRET =
+    /(?:api[_-]?key|secret|token|password|passwd|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-+/=]{12,}['"]?/gi;
+const _SECRET_PATTERNS: ReadonlyArray<RegExp> = [
+    _RE_PRIVATE_KEY,
+    _RE_AWS,
+    _RE_GH,
+    _RE_OPENAI,
+    _RE_KV_SECRET,
+];
+const _SECRET_PLACEHOLDER = '[SECRET]';
 
 // knowledge_ingest PII patterns.
 const _RE_EMAIL = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
@@ -83,9 +97,19 @@ function _subn(text: string, pat: RegExp, repl: string): [string, number] {
     return [out, n];
 }
 
-/** `workspace_secrets.scrub(text, include_fuzzy=True)`: credential detection is the rule table's. */
+/** Faithful port of `workspace_secrets.scrub(text, include_fuzzy=True)`. */
 function _scrub_secrets(text: string): [string, number] {
-    return scrub(text, { include_fuzzy: true });
+    if (typeof text !== 'string' || text === '') {
+        return [text, 0];
+    }
+    let count = 0;
+    let out = text;
+    for (const pat of _SECRET_PATTERNS) {
+        const [t, n] = _subn(out, pat, _SECRET_PLACEHOLDER);
+        out = t;
+        count += n;
+    }
+    return [out, count];
 }
 
 /** Faithful port of `knowledge_ingest.redact(text, counters)`. */
