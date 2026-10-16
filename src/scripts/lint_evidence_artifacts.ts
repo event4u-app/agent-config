@@ -49,6 +49,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { parseClearance } from './_lib/merge_clearance_record.js';
+import { readRequiredProviders } from './_lib/ratification_artifact.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { parseExecutionMode } from './_lib/repeated_run.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -65,6 +67,8 @@ export const EVIDENCE_TYPES = [
     'analysis',
     'feel',
     'ratification',
+    'merge-clearance',
+    'bypass-record',
 ] as const;
 
 /**
@@ -202,6 +206,22 @@ export interface Finding {
     readonly reason: string;
 }
 
+const RATIFICATION_POLICY = path.join('src', 'config', 'ratification-policy.json');
+
+function clearanceProblems(root: string, contents: string): string[] {
+    let required: number | null = null;
+    try {
+        required = readRequiredProviders(fs.readFileSync(path.join(root, RATIFICATION_POLICY), 'utf8'));
+    } catch {
+        required = null;
+    }
+    if (required === null) {
+        return [`${RATIFICATION_POLICY} is missing or unreadable, so the outcome cannot be derived`];
+    }
+    const parsed = parseClearance(contents, required);
+    return Array.isArray(parsed) ? parsed : [];
+}
+
 export function checkFiles(root: string, files: readonly string[], ledger?: GateLedger): Finding[] {
     const findings: Finding[] = [];
     ledger?.plan([...files]);
@@ -245,6 +265,17 @@ export function checkFiles(root: string, files: readonly string[], ledger?: Gate
                         + `line naming one of ${FEEL_METHODS.join(' | ')}. An outcome of \`unbacked\` is legal; `
                         + 'an absent method is not',
                 });
+                continue;
+            }
+        }
+        // A clearance decides whether a `needs-council` PR merges, so one that
+        // does not parse — or whose outcome its own seats do not support under
+        // the committed quorum policy — is a finding rather than a typed record.
+        if (res.type === 'merge-clearance') {
+            const problems = clearanceProblems(root, contents);
+            if (problems.length > 0) {
+                ledger?.fail(rel, 'merge clearance does not parse');
+                findings.push({ file: rel, reason: `merge-clearance does not parse: ${problems.join('; ')}` });
                 continue;
             }
         }

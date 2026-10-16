@@ -629,16 +629,55 @@ unreadable diff is `needs-council` — the gate fails closed.
   (`agents/evidence/council/authority-routing-20261007.md` § 4) apply?* and *is
   an owner review unnecessary?* — never an expected answer, per
   `evaluator-independence`). A council may resolve doubt but cannot waive
-  danger: a seat finding that a predicate applies is a "dangerous" seat. Record the prompt and both
-  verdicts under `agents/evidence/`. **Both seats: not dangerous, owner review
-  unnecessary → merge.** Dangerous, split, degraded quorum, or council
-  unavailable → do not merge; record the PR `unauthorized` and hand it to the
-  owner with the seats' reasons.
+  danger: a seat finding that a predicate applies is a "dangerous" seat. The
+  prompt asks each seat to end its reply with two lines, `DANGEROUS: yes|no`
+  and `OWNER REVIEW NEEDED: yes|no` — a format, not an expected answer. **Both
+  seats: not dangerous, owner review unnecessary → merge**, through the
+  clearance below and never on the run's own reading of the replies.
+  Dangerous, split, degraded quorum, or council unavailable → do not merge;
+  record the PR `unauthorized` and hand it to the owner with the seats' reasons.
+
+**The clearance is a record, written and checked by `merge_clearance`.** Save
+the gate's output, run the council with `--output` on the prompt file, then:
+
+```bash
+./scripts-run src/scripts/merge_clearance write --pr <N> \
+  --head <manifest-head-sha> --base <manifest-base_sha> \
+  --classification <gate-output-file> --session <council-session-json> --prompt <prompt-file>
+```
+
+It writes `agents/evidence/merge-clearances/pr-<N>-<head>.md` from the
+council's own session record — per seat the provider, the model, a digest of
+the reply (never its text) and one reading, `clear`, `dangerous`,
+`owner-review` or `no-final-verdict` — plus the head, the base, the triggers
+and the prompt's digest. The outcome is derived from the seats and never typed:
+any `dangerous` seat gives `dangerous`, fewer clearing providers than
+`required_providers` in `src/config/ratification-policy.json` gives
+`not-cleared`, otherwise `cleared`. The record says `assurance: recorded` and
+what that does not prove. It refuses a classification other than
+`needs-council`, and a session whose prompt is not the file given. The record
+is not pushed to the PR: it is committed with the drain's summary
+(§ 9), so writing it does not move the head it names.
 
 A `needs-council` clearance only clears the merge. Deploy, release and every
 other Hard-Floor action keep their own confirmation.
 
 ## 9. Merge, and the summary
+
+A `needs-council` PR merges only after the check passes for the manifest head:
+
+```bash
+node_modules/.bin/tsx src/scripts/merge_clearance.ts --check <N> --head <manifest-head-sha>
+```
+
+It runs without `./scripts-run`, whose dispatcher is the head's code; the
+script and its record module are on the classifier's trust chain, so a head
+that changes either is `needs-owner` and never reaches this check. It exits 0 only when the record for the PR's **live** head exists, parses,
+re-derives to `cleared`, and that live head is the manifest head. A push after
+the clearance — this run's own included — moves the head and voids it: § 9a
+runs again on the new head. A non-zero exit is never overridden by the run's
+reading of the replies; the PR is held (below). A `routine` PR needs no check,
+and a `needs-owner` PR never reaches one.
 
 ```bash
 gh pr merge <N> --<detected-method> --delete-branch --match-head-commit <manifest-head-sha>
@@ -685,6 +724,29 @@ can produce that row any more, and a closed set holding an unproducible member
 is a set nobody can check a run against. `unauthorized` names what actually
 happens in its place — § 7's pause and § 6's straggler batch, the two ways a PR
 ends this run prepared and unmerged.
+
+### Held for you — one block, at the end of the run
+
+A run that handed anything over ends with exactly one block headed **Held for
+you**, after the summary and nowhere else. While the run works it asks nothing
+about a held PR: holding it is the whole action, and the decision is the
+owner's once, with everything in front of him. Per held PR:
+
+- number and title;
+- the verdict and its triggers, each with the rule it comes from;
+- where a council ran, each seat's provider and its reading with the seat's
+  stated reason, and the clearance record's path;
+- the head it was judged at, in full;
+- how the change is undone if it merges — the revert, and anything a revert
+  does not undo.
+
+A PR with a `dangerous` seat is listed under its own sub-heading, **Held — a
+seat found it dangerous**, ahead of the rest, so it cannot read as one more
+`needs-owner` hand-over. The entry shape is the one
+[`ratification-artifact` § When the user decides](../../../../../docs/contracts/ratification-artifact.md)
+already gives — the council's reading, the dissent, the exact change, what it
+risks and how it is undone — reused per PR, not restated as a second contract.
+A run with nothing held prints no block.
 
 ## Rules
 

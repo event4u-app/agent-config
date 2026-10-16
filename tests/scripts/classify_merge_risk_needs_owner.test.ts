@@ -62,6 +62,8 @@ describe("needs-owner — every member class of the reviewer's trust chain", () 
         ['the subject binding', 'src/scripts/_lib/ratification_subject.ts'],
         ['the ratification contract', 'docs/contracts/ratification-artifact.md'],
         ['the predicate record', 'agents/evidence/council/authority-routing-20261007.md'],
+        ['the clearance writer and check', 'src/scripts/merge_clearance.ts'],
+        ['the clearance record module', 'src/scripts/_lib/merge_clearance_record.ts'],
         ['an ai_council module', 'src/scripts/ai_council/orchestrator.ts'],
         ['a council script', 'src/scripts/council_cli.ts'],
         ['a council library module', 'src/scripts/_lib/council_transport.ts'],

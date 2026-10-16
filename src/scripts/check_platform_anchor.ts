@@ -13,6 +13,13 @@
  * An ordinary pull request never reaches the network through this path, which is
  * what keeps a fail-closed network dependency proportionate.
  *
+ * One read runs on every invocation, gated diff or not, and needs no network:
+ * the bypass records in `BYPASS_RECORD_DIR`. A bypass still
+ * open past its `restore_by`, or restored with no council review recorded
+ * seven days on, fails the run — the contract's § Emergency use names the
+ * record, and this is the only reader that notices a route left unclosed. It
+ * stays what the rest of this gate is: local and voluntarily invoked.
+ *
  * Failing closed is deliberate and was the explicit condition of the decision
  * that commissioned this gate: `unverifiable` is a failure, not a pass, because
  * a control that succeeds when it cannot measure is advisory. The two negative
@@ -38,8 +45,15 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
+    BYPASS_RECORD_DIR,
+    BYPASS_RECORD_LIMIT,
+    BYPASS_RECORD_MAX_BYTES,
     checkAnchorIdentity,
     evaluateAnchor,
+    evaluateBypassRecords,
+    printable,
+    type BypassFinding,
+    type BypassRecordInput,
     readAnchorPolicy,
     readWaivers,
     type AnchorReading,
@@ -152,6 +166,218 @@ function resolveBaseRef(explicit: string | null, root: string): string {
 /** True when the diff touches the expectation file itself. */
 export function touchesPolicy(files: readonly string[]): boolean {
     return files.map((f) => f.replace(/\\/g, '/').trim()).includes(POLICY_PATH);
+}
+
+/**
+ * The bypass records in the checkout. Read on every run, gated diff or not: an
+ * open bypass is a fact about the repository, not about the change under test.
+ * A missing directory is no records; one that exists and cannot be listed is
+ * returned as an unreadable record, which fails the gate.
+ */
+export function readBypassRecords(root: string): BypassRecordInput[] {
+    const names: string[] = [];
+    let dir: fs.Dir | null = null;
+    try {
+        if (!fs.lstatSync(path.join(root, BYPASS_RECORD_DIR)).isDirectory()) {
+            return [{ path: BYPASS_RECORD_DIR, text: null }];
+        }
+        // Every entry counts toward the ceiling, and the listing stops one past
+        // it, so a directory stuffed with other files cannot cost an unbounded read.
+        dir = fs.opendirSync(path.join(root, BYPASS_RECORD_DIR));
+        for (let entry = dir.readSync(); entry !== null; entry = dir.readSync()) {
+            names.push(entry.name);
+            if (names.length > BYPASS_RECORD_LIMIT) {
+                return [{ path: `${BYPASS_RECORD_DIR} (more than ${String(BYPASS_RECORD_LIMIT)} entries)`, text: null }];
+            }
+        }
+    } catch (err) {
+        // No directory means no bypass was ever recorded. Any other failure is
+        // a directory that exists and cannot be read, which shows nothing closed.
+        return (err as NodeJS.ErrnoException).code === 'ENOENT' ? [] : [{ path: BYPASS_RECORD_DIR, text: null }];
+    } finally {
+        try {
+            dir?.closeSync();
+        } catch {
+            // Closing a listing that already ended is not a finding.
+        }
+    }
+    return names
+        .filter((n) => n.endsWith('.md'))
+        .sort()
+        .map((n) => ({ path: `${BYPASS_RECORD_DIR}/${n}`, text: readRecordOnce(path.join(root, BYPASS_RECORD_DIR, n)) }));
+}
+
+/**
+ * One record, opened once without following a symbolic link, checked and read
+ * through that same descriptor with a byte ceiling — so the object checked is
+ * the object read, and a replacement between the two cannot slip in.
+ */
+export function readRecordOnce(file: string, platformNoFollow: boolean = fs.constants.O_NOFOLLOW !== undefined): string | null {
+    // Without O_NOFOLLOW the open would follow a link, so no record is trusted.
+    // The flag itself is never a parameter: a caller can only say it is missing.
+    const noFollow = fs.constants.O_NOFOLLOW;
+    if (!platformNoFollow || noFollow === undefined) {
+        return null;
+    }
+    let fd: number | null = null;
+    try {
+        fd = fs.openSync(file, fs.constants.O_RDONLY | noFollow);
+        const st = fs.fstatSync(fd);
+        if (!st.isFile() || st.size > BYPASS_RECORD_MAX_BYTES) {
+            return null;
+        }
+        const buf = Buffer.alloc(BYPASS_RECORD_MAX_BYTES + 1);
+        let total = 0;
+        for (;;) {
+            const read = fs.readSync(fd, buf, total, buf.length - total, null);
+            if (read === 0) break;
+            total += read;
+            if (total > BYPASS_RECORD_MAX_BYTES) return null;
+        }
+        return buf.subarray(0, total).toString('utf8');
+    } catch {
+        return null;
+    } finally {
+        if (fd !== null) {
+            try {
+                fs.closeSync(fd);
+            } catch {
+                // The result was already decided; a failed close must not turn it into a crash.
+            }
+        }
+    }
+}
+
+/**
+ * Bypass records the base revision carries and the checkout does not. A record
+ * is the route's only trace, so removing one — or the whole directory — is a
+ * finding of its own. Read from Git against the base, never from a caller's
+ * file list, which can simply leave the deletion out. A base listing that
+ * cannot be read fails closed; a root that is no Git work tree has no base.
+ */
+export function removedBypassRecords(root: string, baseRef: string): BypassFinding[] {
+    const inside = spawnSync('git', ['-C', root, 'rev-parse', '--is-inside-work-tree'], { encoding: 'utf8' });
+    if (inside.status !== 0 || (inside.stdout ?? '').trim() !== 'true') {
+        return [];
+    }
+    const listed = spawnSync('git', ['-C', root, 'ls-tree', '-r', '-z', '--name-only', baseRef, '--', `${BYPASS_RECORD_DIR}/`], {
+        encoding: 'utf8',
+        maxBuffer: 16 * 1024 * 1024,
+    });
+    if (listed.status !== 0 || typeof listed.stdout !== 'string') {
+        return [
+            {
+                code: 'bypass-record-removed',
+                path: BYPASS_RECORD_DIR,
+                message: `the bypass records at the base \`${printable(baseRef)}\` could not be listed, so a deletion cannot be ruled out`,
+            },
+        ];
+    }
+    return listed.stdout
+        .split('\0')
+        .filter((f) => f.endsWith('.md'))
+        .filter((f) => {
+            try {
+                fs.lstatSync(path.join(root, f));
+                return false;
+            } catch {
+                return true;
+            }
+        })
+        .map((f) => ({ code: 'bypass-record-removed' as const, path: printable(f), message: `${printable(f)} is at the base \`${printable(baseRef)}\` and gone here` }));
+}
+
+/** The committed review cites the record's subject digest, read from `HEAD`. */
+export function reviewReader(
+    root: string,
+    index: ReadonlySet<string>,
+    budget: { perReview: number; total: number; reads: number } = {
+        perReview: REVIEW_MAX_BYTES,
+        total: REVIEW_TOTAL_BYTES,
+        reads: REVIEW_READ_LIMIT,
+    },
+): (rel: string, subject: string, restoredAtMs: number) => boolean {
+    const cache = new Map<string, { text: string; addedAtMs: number } | null>();
+    let bytes = 0;
+    const read = (rel: string): { text: string; addedAtMs: number } | null => {
+        // The allowance is computed before the read and caps it, so the total
+        // can reach the budget and never pass it; bytes are counted as bytes.
+        const allowance = Math.min(budget.perReview, budget.total - bytes);
+        if (cache.size >= budget.reads || allowance <= 0) {
+            return null;
+        }
+        const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { maxBuffer: allowance });
+        // The commit that first added the file: a review written before the
+        // restore was committed before it, whatever its text says.
+        const added = spawnSync('git', ['-C', root, 'log', '--diff-filter=A', '--format=%ct', '--', rel], { encoding: 'utf8' });
+        const times = (added.stdout ?? '').trim().split('\n').filter((l) => /^\d+$/u.test(l));
+        const first = times.length > 0 ? Number(times[times.length - 1]) * 1000 : NaN;
+        if (shown.status !== 0 || !Buffer.isBuffer(shown.stdout) || shown.stdout.length > allowance || added.status !== 0 || Number.isNaN(first)) {
+            return null;
+        }
+        bytes += shown.stdout.length;
+        return { text: shown.stdout.toString('utf8'), addedAtMs: first };
+    };
+    return (rel, subject, restoredAtMs) => {
+        // A council review lives with the council's records — never in the bypass
+        // record directory, so a record cannot name itself or another record.
+        if (!rel.startsWith(COUNCIL_REVIEW_DIR) || rel.startsWith(`${BYPASS_RECORD_DIR}/`) || !reviewCommitted(root, rel, index)) {
+            return false;
+        }
+        if (!cache.has(rel)) {
+            cache.set(rel, read(rel));
+        }
+        const review = cache.get(rel);
+        return review !== null && review !== undefined && review.text.includes(subject) && review.addedAtMs >= restoredAtMs;
+    };
+}
+
+/** Where a council review a bypass record may cite lives. */
+export const COUNCIL_REVIEW_DIR = 'agents/evidence/council/';
+
+/**
+ * The run's review budget: one review at most 1 MiB, at most 20 distinct
+ * reviews and 4 MiB in total. Past it a review is not read, so the record that
+ * names it fails closed rather than costing more.
+ */
+const REVIEW_MAX_BYTES = 1024 * 1024;
+const REVIEW_READ_LIMIT = 20;
+const REVIEW_TOTAL_BYTES = 4 * 1024 * 1024;
+
+/**
+ * A `council_review` path names a regular file committed at `HEAD` inside the
+ * evidence tree — read from the commit's tree, never the working tree, so
+ * a directory, an untracked file or a symbolic link does not count.
+ */
+export function reviewCommitted(root: string, rel: string, index: ReadonlySet<string> = committedEvidence(root)): boolean {
+    const norm = path.posix.normalize(rel);
+    if (norm !== rel || !norm.startsWith('agents/evidence/') || norm.endsWith('/') || norm.split('/').includes('..')) {
+        return false;
+    }
+    return index.has(norm);
+}
+
+/**
+ * Every regular file committed at `HEAD` in the evidence tree, read once
+ * per run from one tree snapshot. A tree that cannot be read is an empty set,
+ * so every non-pending review then fails closed.
+ */
+export function committedEvidence(root: string): Set<string> {
+    const r = spawnSync('git', ['-C', root, 'ls-tree', '-r', '-z', 'HEAD', '--', 'agents/evidence/'], {
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    const out = new Set<string>();
+    if (r.status !== 0 || typeof r.stdout !== 'string') {
+        return out;
+    }
+    for (const entry of r.stdout.split('\0')) {
+        const m = /^(100644|100755) blob [0-9a-f]+\t(.+)$/su.exec(entry);
+        if (m !== null) {
+            out.add(m[2] as string);
+        }
+    }
+    return out;
 }
 
 export interface AnchorGateResult {
@@ -366,6 +592,17 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
     }
 
     const result = evaluateGate(changed, policyText, source, repo);
+    const open = [
+        ...evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, committedEvidence(root))),
+        ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),
+    ];
+    if (open.length > 0) {
+        result.lines.push('', `❌  ${String(open.length)} bypass record(s) without a closing:`);
+        for (const f of open) {
+            result.lines.push(`  · [${f.code}] ${f.message}`);
+        }
+        result.exitCode = 1;
+    }
 
     reportScanned({
         gate: 'check_platform_anchor',

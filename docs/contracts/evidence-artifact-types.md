@@ -48,7 +48,7 @@ So the obligation is forward-looking: a **newly written** evidence artifact
 declares its type. `lint_evidence_artifacts.ts` enforces exactly that and
 nothing wider.
 
-## The seven types
+## The nine types
 
 | Type | What it asserts | How it is declared |
 |---|---|---|
@@ -59,6 +59,8 @@ nothing wider.
 | `analysis` | A measurement, census, investigation, or report. Asserts what was true when it was written and is never re-bound. | `<!-- evidence-type: analysis -->` |
 | `feel` | A perceptual check on shipped motion — the class for "technically correct and still wrong", which every type above is blind to because every one of them is mechanical or textual. | `<!-- evidence-type: feel -->` **plus** a `**Feel:** <method> — <outcome>` line |
 | `ratification` | ADR-268 § 4's governance control: an authority-expanding edit to a kernel rule, a governance hook or an authority schema, reviewed by a party other than the one gaining the authority. Unlike every type above it binds **forward** — it carries an `effective_after`. | `<!-- evidence-type: ratification -->` **plus** the frontmatter contract in [`ratification-artifact`](ratification-artifact.md) |
+| `merge-clearance` | The council clearance a `needs-council` pull request merges on (ADR-282 § 9a of the merge command): per seat the provider, model, a reply digest and a reading, bound to the full head it cleared. The outcome is derived from the seats, never typed. | `<!-- evidence-type: merge-clearance -->` **plus** the frontmatter `merge_clearance write` renders, parsed by `_lib/merge_clearance_record.ts`; an added record that does not parse, or whose stated outcome its seats do not support under `src/config/ratification-policy.json`, is a finding |
+| `bypass-record` | The trace of an owner bypass of the ratification gate — reason, subject digest, time, commit, the ruleset versions before and after, and its closing (`restore_by`, `restored_at`, the after-the-fact council review). | `<!-- evidence-type: bypass-record -->` **plus** the frontmatter in [`ratification-artifact` § The bypass record](ratification-artifact.md); `check_platform_anchor` reds on one left open, not this linter |
 
 ### `feel` carries a method, not an adjective
 
@@ -222,7 +224,7 @@ first 40 lines:
 <!-- evidence-type: analysis -->
 ```
 
-Accepted values are exactly the six in the table. Anything else is a lint
+Accepted values are exactly the types in the table. Anything else is a lint
 error rather than a warning: a misspelled type reads as untyped to every
 consumer, which is the state this contract exists to end.
 

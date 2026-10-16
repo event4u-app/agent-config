@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: archived
 execution:
   mode: phase-checkpoints
 relates:
@@ -283,11 +283,13 @@ the tree's copy again, which is D-2.*
 ## Phase 3 — A clearance names the head it cleared, and a hand-off is one block
 
 > **Status, 2026-10-15** — Phases 1 and 2 and step 5.2 shipped in one pull
-> request; Phases 3, 4 and step 5.1 remain open. Phase 4 edits
-> `check_platform_anchor`, which the ratification gate watches, so it needs its
-> own ratification record; 5.1 tallies the clearance records Phase 3 creates.
+> request; Phases 3, 4 and step 5.1 shipped in a second, branch
+> `drain/danger-gate-governs-20261015`. Phase 4 edits `check_platform_anchor`,
+> which the ratification gate watches; its record is
+> `agents/evidence/ratifications/drain-danger-gate-governs-20261015.md`, after a
+> ten-round council review that ended confirmed-non-expanding from both seats.
 
-- [ ] **3.1 One writer and one reader for a clearance, read from the council's
+- [x] **3.1 One writer and one reader for a clearance, read from the council's
       own session record.** `src/scripts/merge_clearance.ts` writes
       `agents/evidence/merge-clearances/pr-<N>-<head>.md` from the session
       record the council run saved (`src/scripts/ai_council/response_record.ts`
@@ -305,8 +307,22 @@ the tree's copy again, which is D-2.*
       what that does not prove (decision D6). `--check <N>` exits 0 only when
       a record exists whose head is the pull request's live head and whose
       derived outcome is `cleared`.
+      `corrected-from-reproduction` (2026-10-15): a seat reads one of four
+      values, not three. § 9a asks each seat two questions, and a seat can
+      find no dangerous predicate and still answer that an owner review is
+      needed; that seat is `owner-review` — it does not clear, and calling it
+      `dangerous` or `no-final-verdict` would misreport it. The reply is read
+      from two closing lines the prompt asks for, `DANGEROUS: yes|no` and
+      `OWNER REVIEW NEEDED: yes|no`; a missing or contradictory line is
+      `no-final-verdict`. The prompt digest is bound by refusing a session
+      whose `artefact` is not the prompt file given. Scope delta: the writer,
+      the check and their record module join the classifier's
+      `reviewer-trust-chain`, so a head that rewrites the check is
+      `needs-owner` and never reaches it. Seen red: three guards neutralised
+      in place failed the copied-name, disagreeing-outcome and round-trip
+      cases; the two trust-chain cases failed on the trunk's classifier.
       verify: `npx vitest run tests/scripts/merge_clearance.test.ts` -> 0
-- [ ] **3.2 The command merges on the check, not on the run's reading.** § 9a
+- [x] **3.2 The command merges on the check, not on the run's reading.** § 9a
       writes the record through 3.1, and § 9 merges a `needs-council` pull
       request only after `--check` exits 0 for the manifest head. A push after
       the clearance moves the head and voids it; § 9a runs again. The record is
@@ -314,13 +330,18 @@ the tree's copy again, which is D-2.*
       it names. The test set carries three attack fixtures: a typed `CLEAR`
       string with no session record, a record for an earlier head, and a record
       whose recorded outcome disagrees with its seats — each exits non-zero.
+      Done 2026-10-15: the check runs through `node_modules/.bin/tsx`, not
+      `./scripts-run`, whose dispatcher is the head's code. The three attack
+      fixtures are in `tests/scripts/merge_clearance.test.ts`; the command
+      text is pinned in `tests/scripts/pr_merge_danger_gate_command.test.ts`,
+      seen red against the trunk's command (4 of 9).
       verify: `grep -c 'merge_clearance' src/domains/git/pr/merge/command.md` -> /^[2-9]/
-- [ ] **3.3 The evidence contract knows the type.**
+- [x] **3.3 The evidence contract knows the type.**
       `docs/contracts/evidence-artifact-types.md` and `lint_evidence_artifacts`
       gain `merge-clearance`, so an added record that does not parse is a
       finding.
       verify: `npx vitest run tests/scripts/lint_evidence_artifacts.test.ts` -> 0
-- [ ] **3.4 A hand-off is one decision-ready block, at the end of the run.**
+- [x] **3.4 A hand-off is one decision-ready block, at the end of the run.**
       § 9 of the merge command ends a drain that handed anything over with one
       block "Held for you": per pull request its number, title, verdict and
       triggers, the seats and their reasons where a council ran, the head it
@@ -336,7 +357,7 @@ again, which is D-4.*
 
 ## Phase 4 — A bypass carries the evidence the owner chose, and a closing
 
-- [ ] **4.1 The bypass record has a place and the owner's fields.** The record
+- [x] **4.1 The bypass record has a place and the owner's fields.** The record
       § Emergency use already requires (`docs/contracts/ratification-artifact.md:222-230`)
       lives under `agents/evidence/bypass-records/` and carries what decision
       D3 of `road-to-authority-routing-mechanism` fixed — reason, subject
@@ -350,12 +371,24 @@ again, which is D-4.*
       `administration` permission no workflow token carries
       (`src/config/platform-anchor.json`, `enforcement_boundary_note`), so the
       record cites the ruleset versions instead.
+      Done 2026-10-15: § Emergency use gains step 7 (the after-the-fact
+      review), the never-on-instruction sentence and § The bypass record. Scope
+      delta: the record declares a new evidence type, `bypass-record`, so an
+      added record passes `lint_evidence_artifacts` rather than reading as an
+      invalid marker.
       verify: `grep -c 'restore_by' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] **4.2 A reader notices a bypass that did not close.**
+- [x] **4.2 A reader notices a bypass that did not close.**
       `check_platform_anchor` fails while a committed bypass record is past
       `restore_by` with no `restored_at`, and while one has no council review
       recorded seven days after `restored_at`. The contract keeps saying what
       that check is: local and voluntarily invoked.
+      Done 2026-10-15: the pure evaluator is `evaluateBypassRecords` in
+      `_lib/platform_anchor.ts`, already on the ratification gate's watch
+      list; the gate reads the records on every run, gated diff or not, since
+      an open bypass is a fact about the repository rather than the change. A
+      record missing a field or carrying an unparseable instant fails closed.
+      Seen red: ten of eleven cases failed before the evaluator existed; the
+      eleventh is the no-record pass.
       verify: `npx vitest run tests/scripts/check_platform_anchor_open_bypass.test.ts` -> 0
 
 *Exit: 4.1 and 4.2 are green. Both edit files the ratification gate watches,
@@ -364,7 +397,7 @@ revert; the record loses its fields and the reader its check.*
 
 ## Phase 5 — The owner's load is a number
 
-- [ ] **5.1 A reader reproduces § Context's table and adds the column it
+- [x] **5.1 A reader reproduces § Context's table and adds the column it
       lacks.** `src/scripts/report_merge_gate_load.ts` replays the classifier
       over first-parent history from a pin back to a timestamp and tallies the
       clearance records by outcome. It emits
@@ -376,6 +409,14 @@ revert; the record loses its fields and the reader its check.*
       named rows. It counts and names commits and pull requests only, never a
       prompt or a reply. A re-run at the same pin and timestamp is
       byte-identical. It is a reader and exits 0.
+      Done 2026-10-15, at pin `a10aa16a1` from `2026-09-07T00:00:00+02:00`:
+      485 first-parent commits on 30 days, 283 `routine`, 99 `needs-council`,
+      103 `needs-owner` (60 governance surface, 25 owner-reserved decisions);
+      per day with a merge, `needs-owner` has a median of 2.5 and a maximum of
+      12. No clearance record exists at the pin, so all 99 `needs-council`
+      commits read "no council on record". Re-run byte-identical (`cmp` 0).
+      Seen red: the window filter and the split tally neutralised in place
+      failed two of seven cases.
       verify: `npx vitest run tests/scripts/report_merge_gate_load.test.ts` -> 0
 - [x] **5.2 The neighbours are told.** One dated note in
       `road-to-self-modification-that-a-council-must-pass` beside its Phase 4,
@@ -449,14 +490,27 @@ notes; nothing reads them.*
       a documentation-only change as `routine`.
 - [x] AC-2 — A pull request that edits the classifier is classed by the base
       revision's copy.
-- [ ] AC-3 — No `needs-council` pull request merges without a clearance record
+- [x] AC-3 — No `needs-council` pull request merges without a clearance record
       for the head that merges, and no gated-surface pull request merges on a
       clearance at all.
-- [ ] AC-4 — Every hand-off of a drain reaches the owner as one block at the
+      Evidence: § 9 runs `merge_clearance --check <N> --head <manifest-head>`
+      before `gh pr merge` (pinned in `pr_merge_danger_gate_command.test.ts`);
+      the check's three attack fixtures in `merge_clearance.test.ts`; the
+      gated surface is `needs-owner` and the writer refuses that verdict.
+- [x] AC-4 — Every hand-off of a drain reaches the owner as one block at the
       end of the run, and no `routine` pull request gained a review step.
-- [ ] AC-5 — A committed bypass record carries the owner's evidence fields and
+      Evidence: § 9 "Held for you" and the unchanged `routine` row, both
+      pinned in `pr_merge_danger_gate_command.test.ts`.
+- [x] AC-5 — A committed bypass record carries the owner's evidence fields and
       a closing date, and an overdue one reds `check_platform_anchor`.
-- [ ] AC-6 — The owner's hand-offs are a committed number with its command,
+      Evidence: § The bypass record in the contract; 35 cases in
+      `check_platform_anchor_open_bypass.test.ts`. No bypass record exists
+      yet, so the property is shown on fixtures, not on a real record.
+- [x] AC-6 — The owner's hand-offs are a committed number with its command,
       its pin and its timestamp.
-- [ ] AC-7 — No hook and no workflow was added or changed, and no step,
+      Evidence: `agents/evidence/analysis/merge-gate-load-2026-10.md`, pin
+      `a10aa16a1`, window from `2026-09-07T00:00:00+02:00`, 103 `needs-owner`.
+- [x] AC-7 — No hook and no workflow was added or changed, and no step,
       blocker field or decision in another roadmap was edited.
+      Evidence: `git diff --name-only origin/main...HEAD` lists no file under
+      `.github/` or any `hooks/` path, and one roadmap — this one.
