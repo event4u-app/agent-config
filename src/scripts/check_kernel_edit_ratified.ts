@@ -162,7 +162,7 @@ export const MECHANISM_IMPORT_PATHS: readonly string[] = [
  * file, which needs a record. The change that gates the module removes its pin.
  */
 export const PENDING_MECHANISM_PINS: Readonly<Record<string, string>> = {
-    'src/scripts/_lib/ratification_subject.ts': '3842d91528ec5229819dbd0da2f1a67a1f0eb06c',
+    'src/scripts/_lib/ratification_subject.ts': '176f6532cbb2a9c60492e9aceecf39021d691f69',
 };
 
 /**
