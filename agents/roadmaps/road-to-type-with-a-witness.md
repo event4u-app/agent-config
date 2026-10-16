@@ -398,7 +398,7 @@ failure message the agent can act on.
       configuration that is supposed to produce it. The check also covers
       release archives, container build contexts and provenance bundles, because
       an exclusion from `package.json#files` is necessary and not sufficient.
-      verify: `npm pack --dry-run` lists no path under `tests/fixtures/fonts/` <!-- ref-ignore --> and no file with a typeface extension
+      verify: the produced tarball carries no typeface binary and no fixture path — `npm pack --dry-run | grep -cE '[.](ttf|otf|woff2?|ttc)$'` -> /^0$/
 - [ ] **5.10 The fixture carve-out states its own bound.** The amendment covers
       typeface families for this benchmark and nothing else: a later family
       joins by an explicit decision, never drive-by, and "openly licensed" means
