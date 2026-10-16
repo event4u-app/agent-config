@@ -166,11 +166,12 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 2 — Workers that load what their role needs
 
-- [ ] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
+- [x] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
       and `fork_shares_cache` (read by the D5 correction), both safe-default
       `false`, set `true` only from a Phase 1 row. `worker_respawn` stays
       untouched: no derivation, no deprecation.
       verify: `npx vitest run tests/scripts/_lib_host_capability.test.ts -t worker-resume-defaults-false --reporter=verbose` -> /✓.*worker-resume-defaults-false/
+      Done 2026-10-16: both atoms in `host_capability.ts`, the contract table and the observation criteria; no registry row sets either.
 - [ ] **2.2 Open the subagent schema** with vendor-neutral fields —
       `omit_project_instructions`, `preload_skills`, `max_turns`, `background`,
       `cache_ttl`, `reuse` (`continuity` or `never`) — and `SendMessage` in the
