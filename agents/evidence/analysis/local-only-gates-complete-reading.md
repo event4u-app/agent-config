@@ -536,7 +536,7 @@ checked after it: all twenty exit 0 and leave the tree clean, and none calls
 |---|---|---|---|
 | `lint_command_flow_coverage` | `--quiet` | 0 | 0.24 |
 | `lint_command_routing` | `--quiet` | 0 | 0.26 |
-| `lint_command_verbs` | `--quiet` | 0 | 0.34 |
+| `lint_command_verbs` | `--baseline origin/main --quiet` | 0 | 0.34 |
 | `lint_context_spine_usage` | `--quiet` | 0 | 0.22 |
 | `lint_discovery_vocabulary` | `--quiet` | 0 | 0.22 |
 | `lint_documented_commands` | — | 0 | 0.28 |
@@ -569,3 +569,10 @@ with the batch wired. The baseline moves to 64 on CI's reading of this change.
 **Left for 2.2d onward: 45 gates** — 40 `wire`-class in name order from
 `lint_namespace`, `lint_marketplace_install_completeness` while it stays red, and
 2.2a's four skipped gates for 2.2f.
+
+**Corrected on CI's first reading of 2.2c.** `lint_command_verbs` defaults its
+`--baseline` to the local branch name `main`, which a checkout exists to have and
+the CI runner does not: the first run of this batch failed `Drain 2.2c-1` with
+`fatal: ambiguous argument 'main...HEAD'`. The step now passes
+`--baseline origin/main`, which exits 0 locally too. The local reading above could
+not have caught it — every developer checkout carries `main`.

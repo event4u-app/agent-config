@@ -670,7 +670,7 @@ jobs:
           rc=0
           ./scripts-run src/scripts/lint_command_flow_coverage --quiet || rc=1
           ./scripts-run src/scripts/lint_command_routing --quiet || rc=1
-          ./scripts-run src/scripts/lint_command_verbs --quiet || rc=1
+          ./scripts-run src/scripts/lint_command_verbs --baseline origin/main --quiet || rc=1
           ./scripts-run src/scripts/lint_context_spine_usage --quiet || rc=1
           ./scripts-run src/scripts/lint_discovery_vocabulary --quiet || rc=1
           ./scripts-run src/scripts/lint_documented_commands || rc=1
