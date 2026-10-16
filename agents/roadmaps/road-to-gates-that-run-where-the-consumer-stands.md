@@ -112,14 +112,35 @@ consumer behaviour points at something that executes.
 
 ## Phase 3 — Freeze the exit-code contract
 
-- [ ] **3.1 Generate the register.** A `docs/contracts/` table of exit codes
+- [x] **3.1 Generate the register.** A `docs/contracts/` table of exit codes
       for `init`, `sync`, `doctor` and `uninstall`, generated from the code
       rather than written beside it.
       verify: the generator runs in CI and the file is drift-checked.
+      **Result:** `src/scripts/build_exit_code_register.ts` scans each
+      command's sources for the codes it returns (literal, ternary,
+      `ArgparseExit`, bash `exit`, resolved `EXIT_*` constants, and a named
+      forwarding line for `sync` → `init`) and writes
+      `docs/contracts/exit-code-register.md`; only the one-line meanings are
+      hand-written, and a code without a meaning, or a meaning without a code,
+      fails the run. The drift check is
+      `tests/scripts/build_exit_code_register.test.ts`, which runs in the CI
+      vitest suite — no workflow or gate-coverage row was added for it.
 - [ ] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
       state — installer `rc=3` and `doctor --ci` — the register records the
       pair and a test asserts it.
       verify: the assertion fails if either side changes alone.
+      **Open, read 2026-10-16:** the pair does not exist yet, so there is
+      nothing to pin. No `doctor` check reads the preserved-sidecar state —
+      `.agent-config.new` / `SIDECAR_SUFFIX` occur only under `src/install/`,
+      `src/scripts/install.ts` and the wizard UI — so on a tree where the
+      installer returned `3`, `doctor --ci` exits `0`. Closing the step means
+      giving `doctor` a check that fails on that state, which changes what
+      `doctor --ci` returns for consumers already scripting against it; the
+      `doctor-exit-contract` decision of 2026-09-03 (recorded in
+      `src/scripts/_cli/_doctor_strict.ts`) kept that contract stable and put
+      new failing behaviour behind `--strict`. Whether the preserved state
+      fails `--ci`, fails only `--strict`, or warns is a consumer-facing exit
+      decision this lane did not take.
 
 ## Phase 4 — Point the claims at something that runs
 
