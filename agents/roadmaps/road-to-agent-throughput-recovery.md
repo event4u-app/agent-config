@@ -134,7 +134,7 @@ the Acceptance Criteria held.
       the file did not cite.
       verify: each correction cites a commit or `file:line`, and
       `lint_evidence_artifacts` passes.
-- [ ] **0.2 Own the two orphaned regressions.** Record in
+- [x] **0.2 Own the two orphaned regressions.** Done 2026-10-16: a `subsequent_readings` entry with `owned_by` this roadmap and `owned_figures` `blocking_share` (0.8091) and `context_floor_max` (244,472), from a fresh `--against-baseline` run (exit 1 on both); no baseline moved. Record in
       `src/config/turnaround-budget.json` `subsequent_readings` that
       `blocking_share` and `context_floor_max` (exit 1 since 2026-10-01, still
       on 2026-10-15) are owned by this roadmap.
@@ -159,7 +159,7 @@ the Acceptance Criteria held.
       verify: one run prints every figure of the Context section; a fixture with
       overlapping labels fails the sum check; tests pin each new classifier rule
       red-first.
-- [ ] **1.2 Register the throughput baseline in the existing budget.** Add the
+- [x] **1.2 Register the throughput baseline in the existing budget.** Done 2026-10-16: `kind: throughput-git` entry, nights 2026-09-28..10-13 at `085ec41ff`; 108 / 14 = 7.71 merged changes and 306 / 14 = 21.86 net ticked steps per night, both recomputed from the entry's corpus block. Add the
       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
       shape; no new baseline file.
       verify: the entry's figures recompute from its own corpus block.

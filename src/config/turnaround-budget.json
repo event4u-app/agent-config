@@ -61,6 +61,63 @@
                 "calls_per_request": "72.67 → 93.74. REPORTED ONLY, and the movement is the denominator again exactly as `directions` records: `api_calls` is comparable (3,052 → 3,281) while `user_requests` fell 42 → 35. Evidence of nothing."
             },
             "gate_verdict": "exit 1, on `blocking_share` alone. `mean_batch_size` passed."
+        },
+        {
+            "read_at": "2026-10-16",
+            "reason": "road-to-agent-throughput-recovery step 0.2 — the two regressions `--against-baseline` has reported since 2026-10-01 (`agents/evidence/analysis/turnaround-reading-2026-10-01.md:100` left them 'for whoever owns that number next') get an owner. This entry records the reading and the ownership; it raises and lowers no baseline.",
+            "owned_by": "road-to-agent-throughput-recovery",
+            "owned_figures": ["blocking_share", "context_floor_max"],
+            "invocation": "./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10 --against-baseline",
+            "invocation_note": "Run from a lane worktree, so `--store` points at the main checkout's store; the bare command would read the worktree's own (empty) project directory and exit 1 on `empty_corpus: \"fail\"`.",
+            "corpus": {
+                "window": "the 10 most recently modified sessions in the main checkout's transcript store, read 2026-10-16; the measuring session wrote to a worktree-suffixed store and is not in this window",
+                "sessions": 10,
+                "user_requests": 267,
+                "api_calls": 2912,
+                "tool_calls": 2962,
+                "tool_using_requests": 2577,
+                "blocking_tail_calls": 130,
+                "blocking_tail_minutes": 555,
+                "tool_minutes": 686,
+                "note": "Ratios recompute from this block: 2912 / 267 = 10.91; 2962 / 2577 = 1.15; 555 / 686 = 0.809. The cause split of the blocking tail, in minutes: sleep-poll 212, ci-wait 186, network 115, unknown 38, test 3, build 1, subagent-wait 0, mcp 0, user-wait 0 (sum 555)."
+            },
+            "reading": {
+                "calls_per_request": 10.91,
+                "mean_batch_size": 1.15,
+                "blocking_share": 0.8091,
+                "context_floor_min": 212193,
+                "context_floor_max": 244472
+            },
+            "delta_vs_baseline": {
+                "blocking_share": "+0.1889 — 0.6202 → 0.8091. REGRESSION, owned by road-to-agent-throughput-recovery from this entry on. Not re-baselined.",
+                "context_floor_max": "+13,767 — 230,705 → 244,472. REGRESSION, owned by road-to-agent-throughput-recovery from this entry on. Not re-baselined.",
+                "mean_batch_size": "1.01 → 1.15, in the gated direction (UP). Not raised: a ratchet is never tightened on a single local reading.",
+                "calls_per_request": "72.67 → 10.91. REPORTED ONLY — `user_requests` rose 42 → 267, the denominator effect `directions` names."
+            },
+            "gate_verdict": "exit 1, on `blocking_share` and `context_floor_max`."
+        },
+        {
+            "read_at": "2026-10-16",
+            "reason": "road-to-agent-throughput-recovery step 1.2 — the throughput baseline the roadmap's goal is judged against, registered here rather than in a new baseline file. It is a git reading, not a transcript reading, so it carries its own window shape and does not feed `--against-baseline`.",
+            "kind": "throughput-git",
+            "invocation": "first-parent commits of `main` @ 085ec41ff, dated in Europe/Berlin; a night is 22:00–08:00, a commit before 08:00 belongs to the previous evening's night; only nights with at least one commit count. Net ticked steps = added minus removed `- [x]` lines under `agents/roadmaps/` in each commit's first-parent diff. A merge commit is a commit with more than one parent.",
+            "corpus": {
+                "window": "nights 2026-09-28 .. 2026-10-13",
+                "ref": "085ec41ff",
+                "nights_with_activity": 14,
+                "commits": 108,
+                "true_merge_commits": 13,
+                "net_ticked_steps": 306,
+                "note": "Ratios recompute from this block: 108 / 14 = 7.71 commits per night; 306 / 14 = 21.86 net ticked steps per night. Since October nearly every PR lands as a squash commit, so `commits` counts merged changes and `true_merge_commits` does not. Same method over 2026-08-10..23: 13 nights, 148 commits, 794 net ticked (11.4 / 61.1); over 2026-08-24..09-06: 13 nights, 98 commits, 420 net ticked (7.5 / 32.3)."
+            },
+            "reading": {
+                "merged_changes_per_night": 7.71,
+                "net_ticked_steps_per_night": 21.86
+            },
+            "directions": {
+                "merged_changes_per_night": "UP",
+                "net_ticked_steps_per_night": "UP"
+            }
         }
     ]
 }
