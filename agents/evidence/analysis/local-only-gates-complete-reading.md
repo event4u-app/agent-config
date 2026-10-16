@@ -452,3 +452,62 @@ the four skipped above if their reasons are resolved. Four of the 81 are
 writer-shaped by name or by their first output line and need the `git status`
 check before anything else — `rebuild_hook_bundle`, `report_imperative_density`,
 and the two `second_brain_*` gates run `--dry-run`.
+
+## 2026-10-15 — step 2.2, second batch (2.2b), and a re-reading of what is left
+
+Read on branch `drain/local-gates-wired-20261015`, off `origin/main` at
+`a10aa16a1`, in a fresh worktree after `npm ci`. At that base
+`check_ci_local_parity --format json` lists **104** undeclared local-only gates,
+the number the 2.2a closure recorded: **85** of them classed `wire` above (the
+81 after 2.2a's window plus the four it skipped) and 19 in the other classes or
+red.
+
+**All 85 were re-run before choosing the batch**, serially, with the argv in the
+table above, and `git status --short` checked after each. 84 exit 0 and none
+leaves the tree dirty. One is red: `lint_marketplace_install_completeness` exits
+1 with `10 issue(s) in hooks/hooks.json`. It was green at the 2026-10-13 reading;
+it is outside 2.2b's window, and the batch that reaches it skips it and records
+it here, as step 2.2 says of any gate found red at wiring time.
+
+**The twenty**, being the next twenty in name order after 2.2a's window. None in
+this window was skipped. Serial sum 8.9 s, of which 1.3 s is
+`generate_capabilities_index --check`.
+
+| Gate | Argv | Exit | Seconds |
+|---|---|---|---|
+| `check_skill_requires` | — | 0 | 0.29 |
+| `check_source_pointer_freshness` | — | 0 | 0.27 |
+| `check_static_layer_stability` | — | 0 | 0.29 |
+| `check_structural_breaking` | `--quiet` | 0 | 0.42 |
+| `check_surface_tiers` | — | 0 | 0.43 |
+| `check_test_coverage_diff` | — | 0 | 0.37 |
+| `check_token_optimizer_freshness` | — | 0 | 0.34 |
+| `check_tracked_but_ignored` | `--quiet` | 0 | 0.41 |
+| `generate_capabilities_index` | `--check` | 0 | 1.33 |
+| `generate_capability_matrix` | `--check` | 0 | 0.58 |
+| `generate_command_flows` | `--check` | 0 | 0.47 |
+| `generate_settings_reference` | `--check` | 0 | 0.79 |
+| `lint_abstraction_thresholds` | `--quiet` | 0 | 0.36 |
+| `lint_agent_skill_names` | `--quiet` | 0 | 0.38 |
+| `lint_archived_skills` | `--quiet` | 0 | 0.43 |
+| `lint_behavioural_eval_freshness` | `--quiet` | 0 | 0.33 |
+| `lint_bench_ab` | `--quiet` | 0 | 0.38 |
+| `lint_bench_corpus` | `--quiet` | 0 | 0.42 |
+| `lint_breaking_changes_index` | `--quiet` | 0 | 0.35 |
+| `lint_changelog_rollback` | — | 0 | 0.26 |
+
+Two reads inside the twenty were checked rather than assumed. The four
+generators each rewrite their document without `--check`, so each step passes
+`--check` and the batch's test case pins it. Four gates —
+`check_structural_breaking`, `check_test_coverage_diff`, `lint_archived_skills`,
+`lint_breaking_changes_index` — diff the branch against `origin/main` through a
+merge-base; they are pull-request gates by design, and the host job checks out
+with `fetch-depth: 0`, so the base ref exists there. None of the twenty calls
+`checkRatchet` or reads the wall clock for its verdict.
+
+**Still a local reading.** `check_ci_local_parity` reads **84** on this branch,
+104 - 20, and `check_gate_reachability` and `check_gate_coverage` exit 0 with the
+batch wired. The baseline moves on CI's reading of this branch, as for 2.2a.
+
+**Left for 2.2c onward: 65 gates** — 61 in name order from
+`lint_command_flow_coverage`, plus 2.2a's four skipped gates for 2.2f.

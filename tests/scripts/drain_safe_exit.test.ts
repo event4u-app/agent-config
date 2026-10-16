@@ -23,17 +23,23 @@ function run(args: string[]): { stdout: string; status: number | null } {
     return { stdout: r.stdout ?? '', status: r.status };
 }
 
-// The gates whose report exceeds a socketpair's capacity (8 KiB on macOS).
-const GATES = ['check_ci_local_parity.ts', 'check_memory.ts', 'lint_roadmap_blockers.ts'];
+// The gates whose report exceeds a socketpair's capacity (8 KiB on macOS). The
+// parity gate's text report shrinks as gates get wired, so its JSON form keeps it
+// above the capacity; both forms leave through the same exit path.
+const GATES: readonly (readonly [string, readonly string[]])[] = [
+    ['check_ci_local_parity.ts', ['--format', 'json']],
+    ['check_memory.ts', []],
+    ['lint_roadmap_blockers.ts', []],
+];
 
 describe('large-output gates exit without discarding queued stdout', () => {
-    for (const gate of GATES) {
+    for (const [gate, args] of GATES) {
         it(`${gate} delivers its whole report to a reader that lags`, () => {
             const script = path.join(REPO, 'src', 'scripts', gate);
-            const direct = run([script]);
+            const direct = run([script, ...args]);
             // Guard the guard: a gate printing nothing would pass the equality below.
             expect(direct.stdout.length).toBeGreaterThan(8192);
-            const lagged = run([HARNESS, script]);
+            const lagged = run([HARNESS, script, ...args]);
             // A harness that crashes truncates too; the status tells that apart from a gate loss.
             expect(lagged.status).toBe(direct.status);
             expect(lagged.stdout).toBe(direct.stdout);

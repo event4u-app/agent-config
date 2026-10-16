@@ -174,6 +174,11 @@ with it and left alone.
       Four of them are writer-shaped and get the `git status` check first:
       `rebuild_hook_bundle`, `report_imperative_density`, both `second_brain_*`.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
+      <br>**Progress, one pull request per batch.** 2.2b (`check_skill_requires`
+      through `lint_changelog_rollback`, none skipped) is wired as steps
+      `Drain 2.2b-1` and `Drain 2.2b-2`; the evidence page's 2026-10-15 section
+      holds its reading and a re-run of all 85 remaining candidates, which found
+      `lint_marketplace_install_completeness` red since the first reading.
 - [ ] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
       if their reasons are resolved; a gate whose reason stands stays in the
       backlog with it written down, never declared to move the number.
