@@ -83,7 +83,7 @@ safely.
       after the run.
 - [ ] **1.2 Prune only directories this package created, and only when
       empty.** No recursive directory removal survives in the file.
-      verify: `grep -c 'rmSync(target, { recursive' src/scripts/_cli/cmd_uninstall.ts`
+      verify: `grep -c 'rmSync(target, { recursive' src/scripts/_cli/cmd_uninstall.ts` -> /^0$/
       returns 0.
 - [ ] **1.3 A missing or unparseable inventory refuses.** Exit 1 with a
       one-line reason naming the file. There is no fallback that deletes the
@@ -99,8 +99,8 @@ safely.
 
 - [ ] **2.1 Scope the README claim.** `README.md:58` states what the uninstall
       covers and what it leaves, in the terms Phase 1 actually implements.
-      verify: `./scripts-run src/scripts/build_proof` runs in the same change
-      and `docs/CLAIMS.md` stays consistent.
+      `docs/CLAIMS.md` stays consistent in the same change.
+      verify: `./scripts-run src/scripts/build_proof` -> 0
 - [ ] **2.2 Give `surgical-uninstall` an `exec:` pointer.** The claim gains
       evidence pointing at the Phase 0 tests, moving it out of the 44
       pointer-only claims.

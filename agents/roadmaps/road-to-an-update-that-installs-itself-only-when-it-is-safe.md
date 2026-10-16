@@ -117,7 +117,7 @@ None of this is rebuilt here.
 - [ ] **2.5 Add `--skip <version>`, and do not add `--to`.** `update --to`
       already exists (`cmd_update.ts:412`); a second near-identical flag on
       the confusable verb is the defect its sibling roadmap is fixing.
-      verify: `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
+      verify: `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` -> /^0$/
 
 ## Phase 3 — Delivery into the session, without entering the model
 
@@ -142,8 +142,8 @@ None of this is rebuilt here.
       verify: a fixture with `Security: yes` in range produces the notice
       under `notify` and under `ask`.
 - [ ] **3.5 Hosts with no session slot keep the CLI banner.**
-      verify: `agent-config hooks:status` reporting no `session_start` binding
-      still yields the banner path, asserted by fixture.
+      verify: a fixture in which `agent-config hooks:status` reports no
+      `session_start` binding still yields the banner path.
 
 ## Phase 4 — Consent and rollout, nothing flipped silently
 

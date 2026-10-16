@@ -72,11 +72,11 @@ file can report an externally visible change as done.
       — already shipped, no new detector — and emits `agent-config upgrade`
       for a global install, `agent-config update` for a project whose pin is
       behind latest, and no command line at all for an ephemeral `npx` run.
-      verify: `npx vitest run tests/scripts/update_check*` with one fixture per
-      origin asserting the emitted command string.
+      One fixture per origin asserts the emitted command string.
+      verify: `npx vitest run tests/scripts/update_check*` -> 0
 - [ ] **1.2 Fix the stale pointer in the banner entry point.**
       `src/scripts/check_update_banner.ts:11` names `_lib/update_check.py`.
-      verify: `grep -rn 'update_check\.py' src/` returns 0.
+      verify: `grep -rn 'update_check\.py' src/` -> 1
 
 ## Phase 2 — A download badge that cannot corrupt the claim row
 
@@ -84,13 +84,14 @@ file can report an externally visible change as done.
       `https://img.shields.io/npm/dm/@event4u/agent-config` badge on
       `README.md:5`, linked to the npm page, labelled with its window
       (`downloads/month`) so the number is not read as an install base.
-      verify: `grep -n 'npm/dm' README.md` returns a line ≠ 7 and ≠ 9.
+      verify: a `grep -n` for `npm/dm` in `README.md` returns a line number that
+      is neither 7 nor 9.
 - [ ] **2.2 Scope the machine-checked promise to what is actually
       re-derivable.** `README.md:3`, `package.json:5` and `.github/about.yml:13`
       say "the counts in these badges"; `update_counts` re-derives six artifact
       counts and nothing else. Narrow the phrase to "the artifact counts in
       these badges" on all three surfaces.
-      verify: `grep -c 'artifact counts in these badges' package.json .github/about.yml README.md` returns 1 on each, and `grep -c 'the counts in these badges' …` returns 0 on each.
+      verify: a `grep -c` for `artifact counts in these badges` over `package.json`, `.github/about.yml` and `README.md` returns 1 on each, and the same count for the unscoped phrase returns 0 on each.
 - [ ] **2.3 Give the claim row a positional guard.** Extend
       `src/scripts/update_counts.ts` so that every badge on the line carrying
       `<!-- claim:published-artifact-counts -->` must match one of the six
@@ -105,17 +106,18 @@ file can report an externally visible change as done.
 
 - [ ] **3.1 Correct `.github/about.yml:10-12`** to `src/scripts/lint_positioning.ts`
       — directory and extension.
-      verify: `grep -rn 'lint_positioning\.py' .github/ src/` returns 0, and
-      `./scripts-run src/scripts/lint_positioning` exits 0.
+      `./scripts-run src/scripts/lint_positioning` exits 0, and no `.py` pointer
+      survives.
+      verify: `grep -rn 'lint_positioning\.py' .github/ src/` -> 1
 - [ ] **3.2 Drop `python` from `.github/topics.yml`** — the entry at `:29`, its
       description at `:48` and its synonym row. Add the search terms the file
       is missing: `claude-code-plugin`, `mcp-server`, `agent-rules`. Leave
       `cinematic-ai-video` alone; `:50` records why it is there.
-      verify: `grep -n 'python' .github/topics.yml` returns 0.
+      verify: `grep -n 'python' .github/topics.yml` -> 1
 - [ ] **3.3 Link Discussions from the issue chooser.** Add the two Discussions
       contact links to `.github/ISSUE_TEMPLATE/config.yml` beside the existing
       contributing and troubleshooting entries.
-      verify: `grep -c 'discussions' .github/ISSUE_TEMPLATE/config.yml` ≥ 1.
+      verify: `grep -c 'discussions' .github/ISSUE_TEMPLATE/config.yml` -> /^[1-9][0-9]*$/
 - [ ] **3.4 Record the push items against the stub that owns them.** Add an
       arrivals line to
       `agents/roadmaps/stubs/road-to-a-visibility-sync-that-can-write.md`

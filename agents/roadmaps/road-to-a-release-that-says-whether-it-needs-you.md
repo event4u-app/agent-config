@@ -57,8 +57,8 @@ output. It is the classifier and the data behind it.
       `CONTRIBUTING.md` beside the bump table at `:329-333`. `none` = nothing a
       consumer can observe; `automatic` = the update handles it; `notice` =
       read this; `action` = do something or it breaks.
-      verify: `grep -c 'Consumer-Impact' CONTRIBUTING.md` ≥ 1 and the four
-      values are enumerated on one line.
+      The four values are enumerated on one line.
+      verify: `grep -c 'Consumer-Impact' CONTRIBUTING.md` -> /^[1-9][0-9]*$/
 - [ ] **1.2 Parse it where commits are already parsed.** `src/scripts/release.ts`
       builds its `Commit` records at `:455-470`; read the trailer in that same
       pass, defaulting to `none` with the absence recorded.

@@ -62,8 +62,8 @@ consumer behaviour points at something that executes.
 - [ ] **1.3 Name `tests/install/` as the consumer harness.** One paragraph in
       `docs/contracts/` recording what it is, how a case is added, and the
       `env: { HOME }` injection rule the existing cases already follow.
-      verify: `grep -rn 'tests/install' docs/contracts/` returns the new
-      paragraph.
+      The matched lines are the new paragraph.
+      verify: `grep -rn 'tests/install' docs/contracts/` -> 0
 
 ## Phase 2 — Implement the check that is cited and absent
 
@@ -99,8 +99,8 @@ consumer behaviour points at something that executes.
 - [ ] **4.1 Give every consumer-facing claim an `exec:` pointer** into the
       harness, or mark it `unbacked` and say so. A pointer into this
       repository is not evidence for a claim about a consumer's machine.
-      verify: `./scripts-run src/scripts/build_proof` runs in the same change
-      and the measured exec share is written from its output, never predicted.
+      The measured exec share is written from the run's output, never predicted.
+      verify: `./scripts-run src/scripts/build_proof` -> 0
 - [ ] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.

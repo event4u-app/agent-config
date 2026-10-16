@@ -129,16 +129,16 @@ the same thing in all of them.
       asserted by one test that runs both.
 - [ ] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
       `docs/contracts/install-layout.md:206` with its uninstall semantics.
-      verify: `grep -c sidecar docs/contracts/install-layout.md` > 0.
+      verify: `grep -c sidecar docs/contracts/install-layout.md` -> /^[1-9][0-9]*$/
 - [ ] **3.3 Close the `$HOME`-leak gap.** Add the manifest to
       `src/config/gitignore-block.txt`, and reconcile `README.md:357` with
       `docs/contracts/agents-layout.md:71` so the consumer case is governed by
       one sentence rather than by neither.
-      verify: `grep -c installed-tools src/config/gitignore-block.txt` ≥ 1,
-      and the two documents state the same rule for the consumer tree.
+      The two documents state the same rule for the consumer tree.
+      verify: `grep -c installed-tools src/config/gitignore-block.txt` -> /^[1-9][0-9]*$/
 - [ ] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
       they attach to an existing command.
-      verify: `agent-config --help` lists no new top-level verb.
+      verify: the output of `agent-config --help` lists no new top-level verb.
 
 ## Blockers
 
