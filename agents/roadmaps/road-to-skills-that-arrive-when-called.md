@@ -303,12 +303,20 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   `_prune_scoped_modules` (`src/install/install.ts:3302`) keep every skill a
   surviving artefact declares. Additive only: delivery grows, never shrinks.
   verify: `./scripts-run src/scripts/count_scoped_projection --json` -> 0
-- [ ] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
+- [x] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
   list. Measured population in the source tree at `5fa963cec`: **2**
   (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small
   enough to fix in the same change. The round's source claimed 26; that
   figure was taken over the INSTALLED tree and did not reproduce here, so the
   installed-tree count is re-measured before it is quoted anywhere.
+  Done 2026-10-17: the row lives in the existing `check_skill_requires` gate
+  (already run in CI), not a new gate. It reads every `skills:` list on a
+  SKILL.md or command.md and refuses a name that is a rule and not a skill. The
+  same two entries were still present — `/threat-model` and `/review:routing` —
+  and both are dropped from their `skills:` lists, which also removes them from
+  the generated `meta` pack manifest. The installed-tree figure was not
+  re-measured and is quoted nowhere. Three tests were red before the row
+  existed; the tree test stayed red until the two entries left.
   verify: a seeded rule-name entry makes the linter exit non-zero, and a
   seeded skill name does not. Both directions.
 

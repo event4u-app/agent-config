@@ -62,13 +62,11 @@ dependencies:
   - refine-prompt
   - refine-ticket
   - review-routing
-  - reviewer-awareness
   - roadmap-management
   - roadmap-writing
   - rule-compliance-audit
   - scene-expander
   - security-audit
-  - security-sensitive-stop
   - sentry-integration
   - skill-reviewer
   - skill-writing
@@ -98,8 +96,8 @@ surface_tier: core
 token_passport:
   basis: chars/4
   catalog_tokens: 3649
-  commands_tokens: 254661
+  commands_tokens: 254649
   other_tokens: 1304
   rules_tokens: 63953
-  total_tokens: 323567
+  total_tokens: 323555
 trust_level_default: core
