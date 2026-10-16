@@ -21,6 +21,11 @@
  *   - the >60 s blocking tail and its share of tool time  (F2)
  *   - that tail split by cause, `unknown` always printed (road-to-blocking-time-by-cause)
  *   - the first-call context floor         (F3 cross-check)
+ *   - turn ends by ask shape, usage-limit pauses split night/day, and turn-end
+ *     refusals by detector — every class table with an `unknown` row and a sum
+ *     check
+ *   - with `--git FROM..TO`, merged changes, true merges, net ticked steps and
+ *     archived roadmaps per night window
  *
  * A MEASUREMENT, NOT A GATE — by default. `--against-baseline` compares against
  * `src/config/turnaround-budget.json` and is the only mode that can exit
@@ -33,16 +38,37 @@
  *   ./scripts-run src/scripts/probe_turnaround [--store PATH] [--limit N]
  *   ./scripts-run src/scripts/probe_turnaround --json
  *   ./scripts-run src/scripts/probe_turnaround --against-baseline
+ *   ./scripts-run src/scripts/probe_turnaround --workspace PATH --git 2026-09-28..2026-10-13 [--ref main]
  *
  * The MEASURING session is excluded by default — see `recentSessions`.
  *
- * Exit codes: 0 = reported (or within baseline) · 1 = baseline regression, or an
- * empty corpus under `--against-baseline` · 2 = usage error.
+ * Exit codes: 0 = reported (or within baseline) · 1 = baseline regression, an
+ * empty corpus under `--against-baseline`, or a class table whose rows do not
+ * sum to its total · 2 = usage error.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { collectRefusalStats, DETECTOR_IDS, type RefusalStats } from './_lib/turn_end_refusals.js';
+import {
+    checkSum,
+    classifyTurnEnd,
+    median,
+    readCiMinutes,
+    readEstateAtRef,
+    standingRules,
+    isUsageLimitPause,
+    isUsageLimitReset,
+    nightKey,
+    readCommitFacts,
+    type EstateFigures,
+    type NightTally,
+    type Tally,
+    tallyExclusive,
+    tallyNights,
+    TURN_END_CLASSES,
+} from './_lib/turnaround_throughput.js';
 import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
 
 const _FILE = fileURLToPath(import.meta.url);
@@ -200,6 +226,12 @@ export function classifyBlockingCall(tool: string, input: unknown): BlockingCaus
     return 'unknown';
 }
 
+/** A shell call that pushes: any segment whose command is `git push`. */
+export function isGitPushCall(tool: string, input: unknown): boolean {
+    if (tool !== 'Bash' || !isObj(input) || typeof input['command'] !== 'string') return false;
+    return shellSegments(input['command']).some((raw) => /^git push\b/.test(commandHead(raw.trim().replace(LOOP_KEYWORD, ''))));
+}
+
 /**
  * The in-memory record of one blocking call. `summary` is bounded and never
  * printed or serialised by `main`: command text names local paths and hosts,
@@ -309,8 +341,23 @@ export function measure(files: readonly string[]): Turnaround {
     return measureDetailed(files).turnaround;
 }
 
+/** Aggregate only: counts and minutes, never text. */
+export interface Throughput {
+    /** The last assistant text before each real user request, and at end of file. */
+    turnEnds: Tally;
+    pauses: { total: number; night: number; day: number; unknown: number; pausedMinutes: number; unresolved: number };
+    /** `git push` calls and their median wall-clock, pre-push hook included. */
+    push: { calls: number; medianSeconds: number | null };
+}
+
+const TURN_END_NAMED = TURN_END_CLASSES.filter((c) => c !== 'unknown');
+
 /** `measure`, plus the per-call blocking records the cause table is built from. */
-export function measureDetailed(files: readonly string[]): { turnaround: Turnaround; blocking: BlockingCall[] } {
+export function measureDetailed(files: readonly string[]): {
+    turnaround: Turnaround;
+    blocking: BlockingCall[];
+    throughput: Throughput;
+} {
     const requestIds = new Set<string>();
     /** requestId → tool_use blocks in it. */
     const batch = new Map<string, number>();
@@ -323,10 +370,16 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
     const contextFloors: number[] = [];
     let userRequests = 0;
     let sessions = 0;
+    const turnEndTexts: string[] = [];
+    const pauses: Throughput['pauses'] = { total: 0, night: 0, day: 0, unknown: 0, pausedMinutes: 0, unresolved: 0 };
+    const pushSeconds: number[] = [];
 
     for (const file of files) {
         let sawFloor = false;
         let sawAny = false;
+        let lastText: string | null = null;
+        let pauseOpen = false;
+        let pausedAt: number | null = null;
         for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
             if (!line.trim()) continue;
             let e: Entry;
@@ -339,13 +392,36 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
             sawAny = true;
             const msg = e['message'];
 
+            if (isUsageLimitPause(e)) {
+                const t = ms(e['timestamp']);
+                pauses.total += 1;
+                if (t === null) pauses.unknown += 1;
+                else if (nightKey(t) !== null) pauses.night += 1;
+                else pauses.day += 1;
+                if (pauseOpen) pauses.unresolved += 1;
+                pauseOpen = true;
+                pausedAt = t;
+                continue;
+            }
+            if (isUsageLimitReset(e)) {
+                const t = ms(e['timestamp']);
+                if (pausedAt !== null && t !== null) pauses.pausedMinutes += (t - pausedAt) / 60_000;
+                pauseOpen = false;
+                pausedAt = null;
+                continue;
+            }
+
             if (e['type'] === 'user') {
                 // The SAME predicate the conformance scan uses, imported rather
                 // than re-typed: a skill body and a slash-command header arrive
                 // in the user role and are not requests. Counting them would
                 // deflate calls-per-request by inventing a denominator.
                 const text = userText(e);
-                if (text !== null && !isInjectedBody(text)) userRequests += 1;
+                if (text !== null && !isInjectedBody(text)) {
+                    userRequests += 1;
+                    if (lastText !== null) turnEndTexts.push(lastText);
+                    lastText = null;
+                }
                 if (isObj(msg) && Array.isArray(msg['content'])) {
                     const at = ms(e['timestamp']);
                     for (const b of msg['content']) {
@@ -358,6 +434,7 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
                         emittedAt.delete(id);
                         const call = calledWith.get(id);
                         calledWith.delete(id);
+                        if (call !== undefined && isGitPushCall(call.tool, call.input)) pushSeconds.push(seconds);
                         if (seconds > BLOCKING_SECONDS) {
                             const tool = call?.tool ?? '';
                             blockingCalls.push({
@@ -392,6 +469,9 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
             const at = ms(e['timestamp']);
             let n = 0;
             for (const b of msg['content']) {
+                if (isObj(b) && b['type'] === 'text' && typeof b['text'] === 'string' && b['text'].trim() !== '') {
+                    lastText = b['text'];
+                }
                 if (!isObj(b) || b['type'] !== 'tool_use') continue;
                 n += 1;
                 const id = String(b['id'] ?? '');
@@ -405,6 +485,8 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
             }
         }
         if (sawAny) sessions += 1;
+        if (lastText !== null) turnEndTexts.push(lastText);
+        if (pauseOpen) pauses.unresolved += 1;
     }
 
     const toolCalls = [...batch.values()].reduce((a, b) => a + b, 0);
@@ -435,7 +517,13 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
         contextFloorMax: contextFloors.length === 0 ? 0 : Math.max(...contextFloors),
         blockingByCause: byCause,
     };
-    return { turnaround, blocking: blockingCalls };
+    pauses.pausedMinutes = Math.round(pauses.pausedMinutes);
+    const throughput: Throughput = {
+        turnEnds: tallyExclusive(turnEndTexts, TURN_END_NAMED, (t) => [classifyTurnEnd(t)]),
+        pauses,
+        push: { calls: pushSeconds.length, medianSeconds: median(pushSeconds) },
+    };
+    return { turnaround, blocking: blockingCalls, throughput };
 }
 
 export interface Budget {
@@ -493,6 +581,60 @@ export function compare(t: Turnaround, b: Budget): string[] {
     return out;
 }
 
+type GitReading = NightTally & { range: string; ref: string };
+
+interface Standing {
+    estate: EstateFigures;
+    rules: { files: number; withoutPaths: number };
+    ci: Array<{ range: string; workflow: string; runs: number; medianMinutes: number | null; truncated: boolean }>;
+}
+
+const WINDOW = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
+
+/** `FROM..TO[,FROM..TO…]` as date pairs, or `null` when any window is malformed. */
+export function parseWindows(value: string): Array<[string, string]> | null {
+    const out: Array<[string, string]> = [];
+    for (const w of value.split(',')) {
+        const m = WINDOW.exec(w.trim());
+        if (m === null) return null;
+        out.push([m[1] as string, m[2] as string]);
+    }
+    return out;
+}
+
+function renderThroughput(tp: Throughput, refusals: RefusalStats, git: readonly GitReading[], st: Standing): string {
+    const p50 = (x: number | null, unit: string): string => (x === null ? 'n/a' : `${String(Math.round(x * 10) / 10)} ${unit}`);
+    const per = (n: number, d: number): string => (d === 0 ? '0' : String(Math.round((n / d) * 10) / 10));
+    const lines = [
+        `  turn ends                    ${String(tp.turnEnds.total)}`,
+        ...Object.entries(tp.turnEnds.rows).map(([c, n]) => `    ${c.padEnd(16)}${String(n)}`),
+        `  usage-limit pauses           ${String(tp.pauses.total)} (night ${String(tp.pauses.night)}, day ${String(tp.pauses.day)}, unknown ${String(tp.pauses.unknown)}), ` +
+            `${String(tp.pauses.pausedMinutes)} min paused, ${String(tp.pauses.unresolved)} without a reset`,
+        `  turn-end refusals            ${String(refusals.total)} in ${String(refusals.sessionsWithRefusals)} session(s) with a refusal — ` +
+            `the whole refusal store, ${(refusals.earliest ?? '-').slice(0, 10)}..${(refusals.latest ?? '-').slice(0, 10)}, not the --limit window`,
+        ...DETECTOR_IDS.map((d) => `    ${d.padEnd(18)}${String(refusals.byDetector[d])}`),
+        `  git push                     ${String(tp.push.calls)} call(s), p50 ${p50(tp.push.medianSeconds, 's')}`,
+        `  ready roadmaps at 0 ticked   ${String(st.estate.atZero)} of ${String(st.estate.ready)} (at --ref)`,
+        `  open steps without blocked-by ${String(st.estate.unblocked)} of ${String(st.estate.openSteps)}`,
+        `  standing rule files          ${String(st.rules.files)}, ${String(st.rules.withoutPaths)} without \`paths:\``,
+    ];
+    for (const ci of st.ci) {
+        lines.push(
+            `  ${ci.workflow} ${ci.range} (created, UTC dates)   ${String(ci.runs)} successful PR run(s), p50 ${p50(ci.medianMinutes, 'min')}` +
+                (ci.truncated ? ' — TRUNCATED at the listing limit, the window holds more runs' : ''),
+        );
+    }
+    for (const g of git) {
+        lines.push(
+            `  git ${g.range} @ ${g.ref} · ${String(g.calendarNights)} night(s), ${String(g.nights)} with a commit (22:00–08:00 Europe/Berlin)`,
+            `    commits ${String(g.commits)} (${per(g.commits, g.calendarNights)}/night), naming a PR ${String(g.prCommits)} (${per(g.prCommits, g.calendarNights)}/night) · true merges ${String(g.trueMerges)}`,
+            `    net ticked steps ${String(g.netTicked)} (${per(g.netTicked, g.calendarNights)}/night) · roadmaps archived ${String(g.archived)}`,
+        );
+    }
+    lines.push('');
+    return lines.join('\n');
+}
+
 function render(t: Turnaround, store: string): string {
     const pct = (x: number): string => `${String(Math.round(x * 1000) / 10)} %`;
     return [
@@ -516,7 +658,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
     };
     for (const a of argv) {
-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '-h', '--help'].includes(a)) {
+        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '-h', '--help'].includes(a)) {
             if (!argv.includes('--store') && !argv.includes('--limit')) {
                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
                 return 2;
@@ -525,7 +667,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
     if (argv.includes('-h') || argv.includes('--help')) {
         process.stdout.write(
-            'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n',
+            'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
+                '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n',
         );
         return 0;
     }
@@ -535,14 +678,57 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write('probe_turnaround: --limit needs a positive integer\n');
         return 2;
     }
+    const gitWindows = argv.includes('--git') ? parseWindows(arg('--git', '')) : [];
+    const ciWindows = argv.includes('--ci') ? parseWindows(arg('--ci', '')) : [];
+    if (gitWindows === null || ciWindows === null) {
+        process.stderr.write('probe_turnaround: --git and --ci need FROM..TO[,FROM..TO…] as YYYY-MM-DD..YYYY-MM-DD\n');
+        return 2;
+    }
     const files = recentSessions(store, limit, argv.includes('--include-current'));
-    const t = files.length === 0 ? ZERO : measure(files);
+    const detailed = files.length === 0 ? null : measureDetailed(files);
+    const t = detailed?.turnaround ?? ZERO;
+    const tp: Throughput = detailed?.throughput ?? {
+        turnEnds: tallyExclusive([], TURN_END_NAMED, () => []),
+        pauses: { total: 0, night: 0, day: 0, unknown: 0, pausedMinutes: 0, unresolved: 0 },
+        push: { calls: 0, medianSeconds: null },
+    };
+    const workspace = arg('--workspace', REPO_ROOT);
+    const ref = arg('--ref', 'HEAD');
+    const rulesDir = arg('--rules-dir', path.join(process.env['HOME'] ?? '', '.claude', 'rules'));
+    const ci: Standing['ci'] = ciWindows.map(([from, to]) => {
+        const { minutes, truncated } = readCiMinutes(REPO_ROOT, 'tests.yml', from, to);
+        return { range: `${from}..${to}`, workflow: 'tests.yml', runs: minutes.length, medianMinutes: median(minutes), truncated };
+    });
+    const standing: Standing = {
+        estate: readEstateAtRef(REPO_ROOT, ref),
+        rules: standingRules(rulesDir),
+        ci,
+    };
+    const refusals = collectRefusalStats(workspace);
+    const git: GitReading[] = gitWindows.map(([from, to]) => ({
+        range: `${from}..${to}`,
+        ref,
+        ...tallyNights(readCommitFacts(REPO_ROOT, ref, from, to), from, to),
+    }));
     const gating = argv.includes('--against-baseline');
 
     if (argv.includes('--json')) {
-        process.stdout.write(`${JSON.stringify({ store, ...t }, null, 2)}\n`);
+        const refusalSummary = { total: refusals.total, sessions: refusals.sessionsWithRefusals, byDetector: refusals.byDetector };
+        process.stdout.write(`${JSON.stringify({ store, ...t, throughput: tp, refusals: refusalSummary, git, standing }, null, 2)}\n`);
     } else {
         process.stdout.write(render(t, store));
+        process.stdout.write(renderThroughput(tp, refusals, git, standing));
+    }
+
+    const sumErrors = [
+        checkSum('turn ends', tp.turnEnds.rows, tp.turnEnds.total),
+        checkSum('usage-limit pauses', { night: tp.pauses.night, day: tp.pauses.day, unknown: tp.pauses.unknown }, tp.pauses.total),
+        checkSum('turn-end refusals', refusals.byDetector, refusals.total),
+        checkSum('blocking tail', Object.fromEntries(BLOCKING_CAUSES.map((c) => [c, t.blockingByCause[c].calls])), t.blockingCalls),
+    ].filter((x): x is string => x !== null);
+    if (sumErrors.length > 0) {
+        for (const err of sumErrors) process.stderr.write(`❌  probe_turnaround: ${err}\n`);
+        return 1;
     }
 
     if (!gating) {

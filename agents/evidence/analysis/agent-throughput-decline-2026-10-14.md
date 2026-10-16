@@ -150,3 +150,102 @@ on every subagent spawn, so it converts directly into earlier limit hits.
   account; their count is a lower bound of their cost, not a causal proof.
 - Decision-ask classification is by closing text, so an ask phrased without a
   `Recommendation:` / `Empfehlung:` line is counted as "summary / other".
+
+## Corrections (2026-10-16)
+
+Appended, not rewritten: the body above stands as written on 2026-10-14 so a
+reader can see what the correction corrects. Every figure here is re-read
+against `main` @ `085ec41ff` (the commit the roadmap's 2026-10-15 revision
+measured) unless a row says otherwise.
+
+### C1 — Finding 1's "about 4×" compares commits, and commits stopped meaning merges
+
+First-parent commits on `085ec41ff`, night window 22:00–08:00 Europe/Berlin (a
+commit before 08:00 belongs to the previous evening's night). Per-night figures
+divide by **every** night in the window, so a night on which runs stalled and
+nothing landed stays in the denominator. A merged change is a commit whose
+subject ends in `(#N)` or is GitHub's merge subject — every commit in all three
+windows does. Net ticked steps = added minus removed `- [x]` lines under
+`agents/roadmaps/` in each commit's first-parent diff; the first tick column
+excludes files the commit creates (a roadmap authored with checked steps is
+authoring), the second counts them. Reproduce with `probe_turnaround --ref
+085ec41ff --git 2026-08-10..2026-08-23,2026-08-24..2026-09-06,2026-09-28..2026-10-13`.
+
+| Window | nights (with a commit) | merged changes | per night | true merge commits | net ticked, edited files | per night | net ticked, incl. created files | per night |
+|---|---|---|---|---|---|---|---|---|
+| 2026-08-10..23 | 14 (13) | 148 | 10.6 | 148 | 383 | 27.4 | 794 | 56.7 |
+| 2026-08-24..09-06 | 14 (13) | 98 | 7.0 | 48 | 311 | 22.2 | 420 | 30.0 |
+| 2026-09-28..10-13 | 16 (14) | 108 | 6.8 | 13 | 282 | 17.6 | 306 | 19.1 |
+
+Merged changes per night are near flat between the second and third window; what
+fell is **work per merge**. The roadmap's 2026-10-15 revision printed 56.7 /
+30.0 / 19.1 ticked steps per night — **reconciled exactly**: that series counts
+ticks in created files and divides by calendar nights. Half of the first
+window's ticks were roadmaps authored with checked steps, so the decline in work
+done is 27.4 → 17.6, smaller than the 56.7 → 19.1 the revision shows. Its
+merged-change series (11.1 / 7.7 / 7.7) is **not reconciled**: no denominator
+tried here (active or calendar nights) reproduces it, and its method is not
+recorded.
+
+### C2 — the `drain/*` column reads zero by construction after the squash switch
+
+The column counts merge commits whose subject names a `drain/*` branch. The last
+such commit on first-parent `main` is `d88b9b556` (2026-09-30, PR #2107); from
+October nearly every PR lands as a squash commit, whose subject carries no
+branch name (13 true merge commits in the third window above, against 108
+commits). "No drain lane has merged since W41" is therefore a property of the
+merge method, not evidence that lanes stopped.
+
+### C3 — three of the six causes were this size during the high-throughput weeks
+
+| Cause in this file | Value in the high-throughput period | Source |
+|---|---|---|
+| first-call context 209k–245k (Finding 6) | 218,705–230,705 on 2026-08-30 | `agents/evidence/analysis/agent-turnaround-2026-08-30.md:95` |
+| `git push` p50 1.0 min (Finding 2) | median 67 s on 2026-08-30 | `agents/evidence/analysis/agent-turnaround-2026-08-30.md:52` |
+| `tests.yml` p50 13–14 min W41/W42 (Finding 2) | 14 min 2026-08-17..24 | this file's own CI table, Finding 2 |
+
+They are costs worth cutting, not causes of the decline.
+
+### C4 — Finding 3's "workable backlog shrank" is contradicted by the estate
+
+At `085ec41ff`, 26 active roadmaps carry **576** open `- [ ]` steps; **51** of
+them carry a `blocked-by:` (or code-spanned `` `blocked-by``) marker in the
+step's text (from its checkbox to the next checkbox or heading), so **525** carry
+none; `status:` is read from frontmatter only. The same run gives **10 of 20**
+`ready` roadmaps at 0 ticked steps. Reproduce with `probe_turnaround --ref
+085ec41ff`. The roadmap's revision counts 528 with a narrower marker scope;
+either figure means the active estate does not bound a night.
+
+### C5 — three sums in the body do not add up
+
+| Table | Rows sum to | Stated total | Status |
+|---|---|---|---|
+| Finding 2 activity hours | 84.8 h | 92.2 h | `unknown` — 7.4 h unaccounted; the extraction script was not committed, so the missing class cannot be named |
+| Finding 5 refusal classes | 124 | 123 | `unknown` — one refusal counted in two classes, or the total is off by one; not reconstructible from the tree |
+| Finding 4 turn classes | 1,558 | 1,560 | `unknown` — two turns unclassified; not reconstructible from the tree |
+
+### C6 — the real `block-no-verify` false-positive set
+
+Finding 5 names `grep -n` / `-nE`. Plain `grep -n` and `git status; sed -n …`
+pass today. What the guard still refuses is short `-n` on **every** git
+subcommand: `_NO_VERIFY_SHORT` (`src/scripts/hooks/block_no_verify.ts:45`) is
+checked against every token at `:342`, and any short bundle containing `n` at
+`:349`. Probed 2026-10-16 through the exported `_check_command`: `git grep -n`,
+`git grep -nE`, `git log -n 5`, `git branch -n`, `git push -n` and
+`git merge -n` are all refused; `grep -n` and `git status; sed -n 1p` pass;
+`git commit -n` and `git am -n`, the real bypasses, are refused as they must be.
+
+### C7 — prior art this file did not cite
+
+- `src/scripts/probe_turnaround.ts` — the committed transcript instrument the
+  "throwaway Python" duplicates; its baseline is `src/config/turnaround-budget.json`.
+- `agents/evidence/analysis/turnaround-reading-2026-10-01.md:100` — the
+  regression in blocking share and context floor was already read on 2026-10-01
+  and left "for whoever owns that number next".
+- `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md:83-85` — the
+  2026-10-07 cause split (`ci-wait` 261 min, `sleep-poll` 28 min), against which
+  the 2026-10-16 run of the probe reads `sleep-poll` 212 min and `ci-wait` 186 min.
+- Decisions D6–D8 of the archived `road-to-blocking-time-by-cause` — the CI-wait
+  mitigation (background next wait on the waiter's last line,
+  `src/scripts/ci_settle.ts:300`) and the closure of `user-wait` as holding no
+  avoidable minutes, both of which this file's recommendations re-plan.

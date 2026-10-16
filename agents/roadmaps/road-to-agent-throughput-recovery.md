@@ -124,7 +124,7 @@ the Acceptance Criteria held.
 
 ## Phase 0 — Correct the record
 
-- [ ] **0.1 Append a correction to the evidence file.** Add `## Corrections
+- [x] **0.1 Append a correction to the evidence file.** Done 2026-10-16: `## Corrections (2026-10-16)`, C1–C7, each row on a commit or `file:line`; `lint_evidence_artifacts --all` exit 0. Re-measured at `085ec41ff` per calendar night after review: 10.6 / 7.0 / 6.8 merged changes; net ticked 27.4 / 22.2 / 17.6 in edited files, 56.7 / 30.0 / 19.1 including roadmaps created with checked steps (the Context series, reconciled exactly); 525 unblocked of 576 (Context's 528 used a narrower marker scope); the three sums stay `unknown` rows. Add `## Corrections
       (2026-10-xx)` to `agents/evidence/analysis/agent-throughput-decline-2026-10-14.md`
       — never rewrite the body: the night-window table above, the squash
       switch behind the `drain/*` column, the three causes flat since
@@ -134,12 +134,17 @@ the Acceptance Criteria held.
       the file did not cite.
       verify: each correction cites a commit or `file:line`, and
       `lint_evidence_artifacts` passes.
-- [ ] **0.2 Own the two orphaned regressions.** Record in
+- [x] **0.2 Own the two orphaned regressions.** Done 2026-10-16: a `subsequent_readings` entry with `owned_by` this roadmap and `owned_figures` `blocking_share` (0.8091) and `context_floor_max` (244,472), from a fresh `--against-baseline` run (exit 1 on both); no baseline moved. Record in
       `src/config/turnaround-budget.json` `subsequent_readings` that
       `blocking_share` and `context_floor_max` (exit 1 since 2026-10-01, still
       on 2026-10-15) are owned by this roadmap.
       verify: the entry names this roadmap and both figures.
-- [ ] **0.3 Review the correction independently.** The #2359 review artefact
+- [x] **0.3 Review the correction independently.** Done 2026-10-16: a fresh
+      subagent over the `dispatch_r2_reviewer` package, asked the three axes on
+      top of the hashed prompt (declared in the artefact), returned 11 findings
+      in `agents/evidence/reviews/agent-throughput-recovery-correction.findings.md`
+      — denominators (1, 8), windows (2, 3, 9), sums (4, 5) — committed open in
+      `63702e3b5`, fixed in `71e5d99c9`. The #2359 review artefact
       reads `Skipped` (no-code diff), so its causal claims reached `main`
       unreviewed. The correction PR gets a review that checks denominators,
       windows and sums, by an instance that did not write it.
@@ -148,7 +153,26 @@ the Acceptance Criteria held.
 
 ## Phase 1 — One instrument, extended
 
-- [ ] **1.1 Extend `probe_turnaround`, do not add a second reader.** Add the
+- [x] **1.1 Extend `probe_turnaround`, do not add a second reader.** Done
+      2026-10-16: classifiers and tallies in `src/scripts/_lib/turnaround_throughput.ts`,
+      read in the probe's one transcript pass; new flags `--workspace`,
+      `--git W[,W…]`, `--ref`, `--rules-dir`, `--ci W[,W…]`. One run over the
+      three Context windows at `--ref 085ec41ff` printed, per calendar night,
+      10.6 / 7.0 / 6.8 merged changes and 56.7 / 30.0 / 19.1 net ticked steps
+      with created files (27.4 / 22.2 / 17.6 without), 10 of 20 `ready` at 0
+      ticked, 525 of 576 open steps without `blocked-by`, refusals by detector
+      over the whole refusal store (305 in 141 sessions, language 86), 87
+      structured asks of 265 turn ends, 10 usage-limit pauses (4 night, 6 day),
+      push p50 65 s, `tests.yml` p50 14.1 min (2026-08-17..24) and 15 min
+      (2026-10-05..15), 106 rule files with 104 standing. Every classifier rule
+      was neutralised once and its test went red; `checkSum` fails the
+      overlapping-label fixture, while the four production tables are exclusive
+      by construction, so their sum checks are guards, not evidence. 0
+      plain-text asks survives a widened rule (emphasis, brackets, links).
+      August transcript figures are not re-readable (no store), so August is
+      read through `--git` and `--ci` only. Added paths are not printed; the
+      store line predates this step. The fresh review's eleven findings are in
+      `agents/evidence/reviews/agent-throughput-recovery-correction.findings.md`. Add the
       figures it lacks: turn-end refusals by detector (read through
       `_lib/turn_end_refusals.ts`, not re-parsed), structured and plain-text
       asks per session, usage-limit pauses split night/day, and a `--git`
@@ -159,7 +183,7 @@ the Acceptance Criteria held.
       verify: one run prints every figure of the Context section; a fixture with
       overlapping labels fails the sum check; tests pin each new classifier rule
       red-first.
-- [ ] **1.2 Register the throughput baseline in the existing budget.** Add the
+- [x] **1.2 Register the throughput baseline in the existing budget.** Done 2026-10-16: `kind: throughput-git` entry, nights 2026-09-28..10-13 at `085ec41ff`, denominator every night in the window (16, 14 with a commit) after review finding 1; 108 / 16 = 6.75 merged changes and 282 / 16 = 17.63 net ticked steps per night, both recomputed from the entry's corpus block. Add the
       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
       shape; no new baseline file.
       verify: the entry's figures recompute from its own corpus block.
