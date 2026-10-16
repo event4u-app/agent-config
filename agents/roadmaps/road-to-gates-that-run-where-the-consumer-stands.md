@@ -187,11 +187,14 @@ consumer behaviour points at something that executes.
 
 ### blocker: consumer-gate-denominator
 
-- **Status:** open
-- **Owner:** repository owner
-- **Blocks:** publishing the Phase 1.1 figure as a ratchet floor. The
-  measurement itself is step 1.1 and is not blocked; what is blocked is
-  turning the result into a gate nobody can lower.
+- **Status:** resolved — **(b)**, AI council 2026-10-16, 2/2 concluded, no split,
+  recorded as D4 with the methodology freeze and the evidence-based exit the
+  seats made it conditional on. Record:
+  `agents/evidence/council/owner-blocker-routing-20261016.md`.
+- **Owner:** repository owner — **the council read the transition instead and found it unreserved; the label records who raised it.**
+- **Blocks:** nothing further. It blocked publishing the Phase 1.1 figure as a
+  ratchet floor; D4 now records (b), so 1.1 proceeds and its result is published
+  ungated under the methodology D4 fixes.
 - **What to do:** pick exactly one — (a) publish the re-derived figure as a
   shrink-only ratchet once 1.1 produces it, on the same terms as the other
   estate ratchets; or (b) publish it as a reported, ungated figure for three
@@ -215,7 +218,7 @@ consumer behaviour points at something that executes.
 | D1 | deterministic | evidence | Extend `tests/install/`, do not build a consumer-scenario tree | the harness already drives real installs into a throwaway HOME across two existing files | the install surface splits into two genuinely independent harnesses |
 | D2 | critical-technical | evidence | The artifact-location check reports and never moves | `doctor` is read-only and an unasked move is the ownership break a sibling roadmap is ending | the user explicitly asks for a move command, which would be its own verb and its own decision |
 | D3 | deterministic | agent | The supplied 21-of-353 figure is not carried forward unverified | 353 reproduced; 21 did not | 1.1 reproduces it |
-| D4 | product-owned | owner | Hold the ratchet question for the `consumer-gate-denominator` blocker; step 1.1 produces the figure either way | a ratchet floor set from the first reading of a metric nobody has watched move fixes a number before its variance is known | the blocker resolves, or three months of reported readings exist |
+| D4 | product-owned | council:agents/evidence/council/owner-blocker-routing-20261016.md | **(b) — publish the re-derived figure as a reported, ungated number first, and exit on evidence rather than on the calendar.** Three months is the observation WINDOW, not the criterion. Before the first reading, freeze the methodology and publish it with every reading: definition, numerator, denominator, exclusions and the reproduction command. "Representative" is fixed up front as spanning at least three host platforms, fresh and upgrade installs, and minimal and full projection scopes. The window ENDS IN A DECISION — (a) ratchet or (c) one-off — never in a drift into permanent (b); too few observations extend the window rather than force a pick | AI council 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport), both seats `DECIDE`: the transition is reversible, weakens no floor and creates no ratchet, so it is not reserved. A ratchet makes the first observation load-bearing, and with no history there is no way to tell a real regression from denominator churn, a classification change, nondeterminism or ordinary variance. Both seats refused a fixed numeric variance threshold as unsupported for a discrete ratio over a small denominator | a material unexplained decline during the window, or evidence that the absent gate was exploited — either triggers review immediately rather than at the window's end |
 | D5 | reversible-technical | agent | A pointer into this repository does not back a claim about a consumer machine | it is the distinction that makes the 18-of-62 figure meaningful rather than an accounting detail | the claim vocabulary gains a third evidence class |
 | D6 | reversible-technical | agent | Step 2.2's "advisory by default, `manual` under `--strict`" is carried as a `warn` row: `doctor` and `--strict` exit 0 on it, `--strict --strict-level warn` fails | the doctor's published status vocabulary is `ok \| warn \| fail \| skipped`; a `manual` value would not reach the MCP `doctor_report` contract | the status vocabulary gains a value that means "needs a human" |
 

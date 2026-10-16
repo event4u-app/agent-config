@@ -2,7 +2,7 @@
 /**
  * Positioning consistency lint for event4u/agent-config.
  *
- * Ported from the retired Python `src/scripts/lint_positioning.py` (ADR-200, Phase 4 /
+ * Ported from its retired Python twin (ADR-200, Phase 4 /
  * Wave 4b). Mirrors the CLI contract EXACTLY — the `--quiet` argparse flag,
  * exit codes (0 clean, 1 drift, 2 missing PyYAML — inert here since `yaml`
  * is always present), byte-identical stdout (success line) and stderr
@@ -134,8 +134,8 @@ interface ParsedArgs {
 }
 
 function _argparse_error(message: string): never {
-    process.stderr.write('usage: lint_positioning.py [-h] [--quiet]\n');
-    process.stderr.write(`lint_positioning.py: error: ${message}\n`);
+    process.stderr.write('usage: lint_positioning [-h] [--quiet]\n');
+    process.stderr.write(`lint_positioning: error: ${message}\n`);
     process.exit(2);
 }
 
@@ -145,7 +145,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
         if (arg === '--quiet') {
             quiet = true;
         } else if (arg === '-h' || arg === '--help') {
-            process.stdout.write('usage: lint_positioning.py [-h] [--quiet]\n');
+            process.stdout.write('usage: lint_positioning [-h] [--quiet]\n');
             process.exit(0);
         } else {
             _argparse_error(`unrecognized arguments: ${arg}`);

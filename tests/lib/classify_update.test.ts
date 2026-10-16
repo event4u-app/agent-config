@@ -18,7 +18,7 @@ const SOURCE = path.join(HERE, '..', '..', 'src', 'scripts', '_lib', 'classify_u
 const CLEAN: ClassifyUpdateInput = {
     installed: '16.5.0',
     candidate: '16.6.0',
-    origin: 'global-only',
+    origin: 'global',
     env: {
         ci: false,
         interactive: true,
@@ -168,6 +168,8 @@ const MATRIX: readonly Case[] = [
     { name: 'provenance unknown', patch: { provenance: null }, expected: 'notify', uncertain: true },
     { name: 'project pin present', patch: { settings: { projectPin: '16.5.0' } }, expected: 'notify', uncertain: true },
     { name: 'origin unknown', patch: { origin: 'unknown' }, expected: 'notify', uncertain: true },
+    { name: 'origin is a project pin', patch: { origin: 'project-pin' }, expected: 'notify', uncertain: true },
+    { name: 'ephemeral npx run', patch: { origin: 'ephemeral' }, expected: 'none', uncertain: false },
     { name: 'candidate is a prerelease', patch: { candidate: '16.6.0-next.3', impactMap: {} }, expected: 'notify', uncertain: true },
     {
         name: 'prerelease installed, final candidate',
@@ -220,6 +222,7 @@ describe('classifyUpdate — the rule matrix', () => {
             'CI',
             'non-interactive',
             'source checkout',
+            'ephemeral npx run',
             'AGENT_CONFIG_NO_UPDATE_CHECK=1',
             'mode off',
             'security fix with mode off',

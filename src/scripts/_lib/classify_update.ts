@@ -5,7 +5,7 @@
  *
  * Pure by contract: no filesystem, no network, no process state. The caller
  * gathers the inputs — the cached registry document, the running Node version, the
- * install origin `doctor_install_mode.ts` already detects — and this only
+ * install origin `classify_install_origin` already detects — and this only
  * decides. Nothing acts on the verdict yet; `doctor --json` is the surface it is
  * meant to be reported on.
  *
@@ -13,10 +13,12 @@
  * resolves to `auto`.
  */
 import { CONSUMER_IMPACT_VALUES, type ConsumerImpact } from './consumer_impact';
+import type { InstallOrigin as RunningOrigin } from './update_check';
 import { compare_versions, node_engine_satisfied, parse_version } from './version_order';
 
 export type UpdateAction = 'auto' | 'ask' | 'notify' | 'none';
-export type InstallOrigin = 'global-only' | 'project' | 'source-checkout' | 'unknown';
+/** The running install as `classify_install_origin` reports it, plus a source checkout. */
+export type InstallOrigin = RunningOrigin | 'source-checkout';
 export type UpdateMode = 'off' | 'notify' | 'ask' | 'auto';
 
 export interface ClassifyUpdateInput {
@@ -104,6 +106,7 @@ function suppression(input: ClassifyUpdateInput): string | null {
     if (input.env.ci) return 'suppressed: CI';
     if (!input.env.interactive) return 'suppressed: non-interactive';
     if (input.origin === 'source-checkout') return 'suppressed: source checkout';
+    if (input.origin === 'ephemeral') return 'suppressed: ephemeral npx run has nothing to update';
     if (input.env.noUpdateCheck) return 'suppressed: AGENT_CONFIG_NO_UPDATE_CHECK=1';
     if (input.settings.mode === 'off') return 'suppressed: mode off';
     return null;
@@ -151,6 +154,7 @@ export function classifyUpdate(input: ClassifyUpdateInput): UpdateVerdict {
     if (security) notify.push('security fix in range');
     if (input.provenance !== true) uncertain.push('provenance attestation missing');
     if (input.settings.projectPin) uncertain.push(`project pins ${input.settings.projectPin}`);
+    else if (input.origin === 'project-pin') uncertain.push('install is pinned by the project');
     if (input.origin === 'unknown') uncertain.push('install origin unknown');
     if (parse_version(input.candidate)!.pre.length > 0) uncertain.push('candidate is a prerelease');
     if (input.settings.mode === undefined) uncertain.push('update mode not set');

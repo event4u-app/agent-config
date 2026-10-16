@@ -148,13 +148,16 @@ output. It is the classifier and the data behind it.
       verify: a ≥ 40-case matrix including the five no-action majors, a forged
       manifest, a prerelease, a dist-tag drift and a disk-full read. **Zero
       `auto` verdicts under uncertainty** is the assertion that matters.
-      Landed (4.1 + 4.2): `src/scripts/_lib/classify_update.ts`, 55-case
+      Landed (4.1 + 4.2): `src/scripts/_lib/classify_update.ts`, 57-case
       matrix in `tests/lib/classify_update.test.ts`. Interpretations taken
       where the step was silent: "wait" is `none` with a `wait:` reason; a
       security fix lifts a wait to `notify`; an absent mode, an unknown
-      origin or a prerelease candidate is an uncertainty; a malformed map
-      entry is treated as `action`. The origin type names the shapes
-      `doctor_install_mode.ts` distinguishes; nothing calls a detector.
+      origin, a `project-pin` origin or a prerelease candidate is an
+      uncertainty; an `ephemeral` npx run is `none`; a malformed map entry
+      is treated as `action`. The origin type reuses `InstallOrigin` from
+      `classify_install_origin` in `update_check.ts` (landed on main in
+      #2416, which `doctor_install_mode.ts` feeds) plus `source-checkout`;
+      no new detector.
       The no-`auto` assertion was seen red by disabling the provenance rule.
       AC-4 stays open: its second half holds; its first holds for every
       input that is not suppressed and has a newer candidate. This step
@@ -178,24 +181,63 @@ output. It is the classifier and the data behind it.
 
 ### blocker: impact-numbering-model
 
-- **Status:** open
-- **Owner:** repository owner
-- **Blocks:** Phase 2 and everything downstream of it. Phases 1, 3 and 4 are
-  additive and run without it; Phase 2 changes how every future release is
-  numbered, which is a product commitment the agent must not take.
-- **What to do:** pick exactly one — (a) accept the `Consumer-Impact:` trailer
-  **and** the new bump rule, recorded as an ADR, and Phase 2 proceeds as
-  written; or (b) accept the trailer as **advisory only** — it is recorded and
-  published, the bump rule at `release.ts:463` is untouched, and Phase 2
-  reduces to 2.3 (the backfill); or (c) reject both, and this roadmap stops
-  after Phase 1.1's documentation step with the rest cancelled.
+- **Status:** open on (a) only — **(b) is decided and (c) is refused.** AI
+  council 2026-10-16, 2/2 concluded, no split, routing **per option** as the
+  question invited: **(b) DECIDE** — advisory collection alters no dependency
+  resolution and stays inside delegated authority; **(c) DECIDE** — preserving
+  the existing rule creates no commitment, and both seats declined it; **(a)
+  ESCALATE** — binding the trailer to the version number changes a public
+  compatibility commitment, because version numbers govern consumer dependency
+  resolution. Record:
+  `agents/evidence/council/owner-blocker-routing-20261016.md`.
+- **Owner:** repository owner, **for (a) alone.**
+- **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
+  2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
+  and 2.3 are not blocked — see the contradiction resolved under
+  `What to do` — and Phases 1, 3 and 4 were already additive.
+- **What to do:** **(b) now, decided by council; (a) is the owner's and waits on
+  2.2's result.** The trailer is recorded and published as **explicitly
+  experimental, non-normative metadata**; the bump rule at `release.ts:463` is
+  untouched. Superseded alternatives: (a) the trailer plus the new bump rule —
+  owner-reserved, not refused; (c) reject both — declined by both seats.
+
+  **The contradiction both seats caught, and its resolution.** This field used
+  to say (b) *"reduces Phase 2 to 2.3 (the backfill)"*, while the recommendation
+  said *"(b) first, then (a) once the replay in 2.2 has run"*. Those cannot both
+  hold: with 2.2 cut, the evidence for (a) is never produced and (b) becomes
+  terminal by accident. `anthropic` supplied the clean resolution — **2.2 scores
+  historical releases** (10.0.0 → 16.0.0 against the recorded rows) and
+  therefore needs no new commit to carry the trailer at all. So under (b),
+  Phase 2 reduces to **2.2 and 2.3**, and 2.2 is exactly the evidence (a)
+  waits on.
+
+  **"Advisory commits the package to nothing" is too absolute**, and both seats
+  said so independently. The trailer is **published in git history**, so it is
+  externally observable whether or not it binds: a commit reading
+  `Consumer-Impact: BREAKING` that ships as a patch is contradictory public
+  communication. (b) therefore ships with an explicit stability disclaimer —
+  experimental, non-normative, not authoritative compatibility guidance — and
+  that disclaimer is part of (b), not a nicety on top of it.
+
+  **What 2.2 must show for (a) to be defensible, since the staged path is only
+  worth as much as its threshold.** The bar is **accuracy** — the share of
+  trailer-driven bumps that match actual consumer impact — and not the share of
+  bumps that would change (`anthropic`: *"a 30% change rate where all 30% are
+  misclassifications is worse than 5% where all are fixes"*). The hard
+  requirement is **zero false negatives on BREAKING**: a missed breaking change
+  is the one error consumers cannot recover trust from.
 - **Resolved when:** an ADR under `docs/decisions/` records (a), (b) or (c),
   and this blocker's Status reads `resolved — <adr>`.
-- **Recommendation:** (b) first, then (a) once the replay in 2.2 has run.
-  The replay is the evidence for (a) and it costs nothing to produce under
-  (b): a trailer that is recorded but not acted on makes the next three
-  releases a measurement of whether the classification is right, before the
-  numbering depends on it.
+- **Recommendation:** (b) first, then (a) once the replay in 2.2 has run —
+  **endorsed by the AI council on 2026-10-16, which decided (b) outright and
+  left (a) with the owner.** The replay is the evidence for (a) and costs
+  nothing to produce.
+
+  **One clause of the original reasoning is withdrawn.** It said the trailer
+  *"makes the next three releases a measurement"*, which would make (a) wait on
+  three future cuts. Step 2.2 scores **historical** releases (10.0.0 → 16.0.0
+  against the recorded rows), so the evidence needs no future release and no
+  new commit carrying the trailer — the measurement can run the day (b) lands.
 - **If you do nothing:** the package keeps cutting majors its own
   `CONTRIBUTING.md` calls patches, and the classifier in Phase 4 has an
   `impactMap` that is correct for nothing before the first trailered release.

@@ -186,6 +186,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 | D3 | reversible-technical | agent | Prompt path on a host that cannot replace a prompt: refuse and print the redacted copy for re-submission | A one-step resend would be a second visible call | the host gains a prompt-replace field |
 | D4 | reversible-technical | agent | An identifier restore into a call that is not a consequence-free local read, build or file write composes to `ask`, showing the restored input; on a host with no `ask`, deny | `src/scripts/hooks/category_a.ts` already classifies consequence-free calls | — |
 | D5 | reversible-technical | agent | Identifier scope: IBAN, payment card, e-mail outside the allowlist, phone with country code or context word, German tax ID with context; names and customers only from configured lists | The validated set of the sibling's 2.3; free-text names need a recogniser declared out of scope | the paired comparison shows a class costs more than it protects |
+| D6 | contested-technical | council:agents/evidence/council/identifier-table-at-rest-20261016.md | **(b) — no detected value of any class is persisted between events.** The table holds a per-session key, a keyed fingerprint, type, ordinal and an authenticated origin descriptor; every restoration re-derives from the origin and fails closed in five named outcomes, same-destination included | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). A `0600` mode decides which OS principals may read a file and is not a defence against same-user compromise, backup capture or crash residue; (a) would convert many dispersed disclosures into one durable one. Record: `agents/evidence/council/identifier-table-at-rest-20261016.md` | the capability becomes operationally unusable through prompt habituation (measured by adoption or reports, **not** by a prompt-rate threshold) · origins turn out to be commonly ephemeral, mutable or permission-sensitive · offline guessing against the fingerprint table is demonstrated on realistic low-entropy identifiers |
 | D6 | contested-technical | council:identifier-table-at-rest | How identifier values rest between hook processes | blocker `identifier-table-at-rest` | — |
 | D7 | product-owned | owner | Whether to build the request gateway | blocker `request-gateway-build` | — |
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | blocker `default-mode-for-consumers` | — |
@@ -243,12 +244,36 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 
 ## Phase 2 — The session table and continuity
 
-- [ ] <!-- blocked-by: identifier-table-at-rest | asked: no — routed to the AI council, not the owner; no council run was taken during authoring --> **2.1 The session table, in the shape blocker `identifier-table-at-rest`
-      selects.** Under either option: outside the workspace, one per session,
-      removed by age; for a credential it holds fingerprint, type, number and the
-      file it was first read from — never the value (K5); reads of its path by
+- [ ] **2.1 The session table holds no value of any class — option (b), as the
+      council ruled on 2026-10-16.** Outside the workspace, one per session,
+      removed by age. It holds a per-session key, a keyed fingerprint, the type,
+      an ordinal and an **authenticated origin descriptor** — never the value, for
+      a credential (K5) and now for every other class too. Reads of its path by
       the agent are refused by the sibling's prevention guard.
-      verify: a tool call that reads the table path is denied; the serialised table contains no credential fixture value; a table older than the retention age is gone after the next `session_start`.
+
+      The invariant is stated as the council stated it: **no detected value is
+      persisted by this subsystem between events.** Not "the value lives
+      nowhere" — it still exists transiently while an origin is re-read and
+      while an outbound restoration is assembled, and the stronger wording would
+      be false.
+
+      An origin path is not sufficient. The descriptor binds connector or tool,
+      tenant or account, a stable object identity, the exact field location, the
+      session, the token type and the intended operation. Per source type:
+      a file is `(device, inode, path)` or a content digest where the path may be
+      replaced; an API response is `(endpoint, method, request fingerprint,
+      response timestamp)`; a database result is `(connection, query fingerprint,
+      row identifier)`.
+      verify: the serialised table contains no fixture value of any class, credential or identifier; a tool call that reads the table path is denied; a table older than the retention age is gone after the next `session_start`.
+- [ ] **2.1b Restoration fails closed, in five named outcomes.** Every
+      restoration re-derives the value from its origin object and matches the
+      fingerprint first — **including a same-destination restoration**, because
+      an origin that changed between detection and re-use would otherwise replay
+      a stale value transparently. The outcomes are `ORIGIN_CHANGED`,
+      `ORIGIN_UNAVAILABLE`, `ORIGIN_AMBIGUOUS`, `DESTINATION_MISMATCH` and
+      `SESSION_EXPIRED`; each carries a user-facing message and exactly one
+      recovery path — explicit confirmation with the value shown.
+      verify: a fixture per outcome, each asserting no value was restored; the same-destination case with a mutated origin lands on `ORIGIN_CHANGED` rather than restoring.
 - [ ] **2.2 Continuity never resolves a token to the wrong value.** Text carried
       into a new session — handoff, memory recall, a resumed session — is
       re-issued at injection: restored through the predecessor's table while it
@@ -343,9 +368,14 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       README states pseudonymisation of listed value types on listed channels and
       nothing wider.
       verify: the claims gate is green and no shipped prose about this feature calls it anonymisation.
-- [ ] <!-- blocked-by: default-mode-for-consumers | asked: no — put to the owner in the run report of round inbox-2026-10-g on 2026-10-11, not yet answered --> **6.5 Apply the default the owner chose** (blocker `default-mode-for-consumers`).
-      Until it resolves, `egress.placeholders.mode` ships `off` for consumers.
-      verify: the settings template carries the resolved default and the blocker records the answer.
+- [ ] **6.5 Apply the default the council chose, bounded to new installs.**
+      Once 6.4's result meets its pre-registered bars, the settings template
+      defaults the **credential** class to `protect`; the identifier class stays
+      opt-in. The disclosure that the default is on sits **inline in the
+      template**, not in a separate document. Existing installs are untouched —
+      measured 2026-10-16, no path writes the template into one, which is the
+      condition the council's (a) rests on.
+      verify: the settings template carries the credential default and its inline disclosure, the identifier class is absent from it, and 6.4's published result carries failure categories and known exceptions beside the pass mark.
 
 ## Phase 7 — A request gateway for what no hook reaches (blocker `request-gateway-build`)
 
@@ -411,7 +441,9 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
 ## Blockers
 
 ### blocker: identifier-table-at-rest
-- **Status:** open
+- **Status:** resolved — (b), AI council 2026-10-16, 2/2 concluded, no split,
+  conditional on four revisions now carried by steps 2.1 and 2.1b. Record:
+  `agents/evidence/council/identifier-table-at-rest-20261016.md`.
 - **Owner:** AI council
 - **Blocks:** step 2.1, and through it Phases 3–4.
 - **What to do:** pick exactly one — (a) identifier values rest in a 0600 file
@@ -449,17 +481,79 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
   typed prompt the owner's goal names; its price is set by the host (features off
   behind a non-first-party base URL, sessions not launched through it not
   covered) and is stated in the table rather than hidden.
+
+  **An AI council split on this, 2026-10-16 — one of two splits in ten rounds —
+  so it reaches the owner on the escalation condition.** Record:
+  `agents/evidence/council/owner-blocker-routing-20261016.md`.
+
+  `openai` — **DECIDE, (a) conditional on 7.2**: a reversible mechanism
+  strengthening an existing floor, crossing no reserved row. Choosing (b)
+  *knowingly* makes the owner's stated typed-prompt goal unreachable, and
+  conditional coverage beats permanent non-coverage when its activation and its
+  limits are conspicuous per session.
+
+  `anthropic` — **ESCALATE, (b) with a staged future option**: operating
+  infrastructure that users depend on creates a public commitment and an ongoing
+  operational burden. Its three substantive arguments, none of which the (a)
+  side rebutted:
+
+  1. **The gateway is net new exposure surface.** Token-restoration logic,
+     logging, error paths and bypass detection are each a place the thing built
+     to prevent credential leakage could create one.
+  2. **The typed prompt has a different exposure profile from the automated
+     path.** A human typing a credential has an awareness moment; a pre-tool-use
+     path is silent, higher-volume and unaware. The protection already
+     achievable covers the higher-value half.
+  3. **Partial coverage is a two-class experience** — "am I protected?" becomes
+     a function of how the session was launched, which is a support burden and a
+     false-security risk rather than only a documentation one.
+
+  Its staged alternative, offered so (b) is not a dead end: publish the three
+  channels as `uncovered`, amend the goal to the achievable scope, and keep the
+  gateway as an experimental opt-in if 7.2 later shows a small fail-closed
+  implementation that adds no logging, persistence or error-path exposure.
+
+  **What is not in dispute:** step 7.2 is a probe needing a real subscription
+  login through a loopback base URL, so it is human-run either way, and both
+  seats treat the coverage table's honesty as already settled — (b) hides
+  nothing, it only narrows what is promised.
 - **If you do nothing:** Phase 7 stops after 7.2; the coverage table keeps those
   rows `gated` or `uncovered`, which is honest and incomplete.
 
 ### blocker: default-mode-for-consumers
-- **Status:** open
+- **Status:** resolved — **(a)**, bounded to new installs and freshly generated
+  settings. AI council 2026-10-16, 2/2 concluded, no split, both seats `DECIDE`:
+  a default that adds a protection for a **new** install strengthens a floor,
+  and the pre-registered bar gates it. Record:
+  `agents/evidence/council/owner-blocker-routing-20261016.md`.
 - **Owner:** maintainer
 - **Blocks:** step 6.5.
-- **What to do:** pick exactly one — (a) once 6.4 publishes a result meeting the
-  pre-registered bars, consumers default to `protect` for the credential class
-  with the identifier class opt-in; or (b) every class stays opt-in for
-  consumers regardless of the result.
+- **What to do:** **(a), bounded as the council bounded it.** Once 6.4 publishes
+  a result meeting the pre-registered bars, consumers default to `protect` for
+  the credential class, identifier class opt-in — **for new installs and freshly
+  generated settings only.** Superseded alternative: (b) every class stays
+  opt-in regardless of the result.
+
+  **The deployment fact both seats made it conditional on, measured 2026-10-16
+  rather than assumed.** `renderSettingsTemplate`
+  (`src/server/io/substituteTemplate.ts`) is the only render path, its docstring
+  scopes it to the wizard's Skip path, and a tree-wide search finds **no caller**
+  of it outside its own file; `cmd_update.ts` states in its header that the
+  daily banner *"never writes settings files"*. So the template does not reach
+  an existing install, and `openai`'s reserved branch — *"if templates update
+  existing installations, do not flip those automatically; treat migration as a
+  separate owner decision"* — is moot today rather than unanswered. **It becomes
+  live again the moment that changes**, which is this entry's `revisit-if`.
+
+  **Narrow the claim before publishing it.** Both seats refused "the credential
+  class has no utility cost" as too absolute: authentication debugging,
+  credential-format checks and fixture-based tests can depend on structure,
+  stability or equality. The defensible claim is that a coding task does not
+  depend on *the secret value itself being visible*, and stable placeholders
+  preserve structure and consistency — so the cost is bounded and addressable,
+  not zero. 6.4 therefore publishes failure categories and known exceptions
+  beside the pass mark, and 6.5's disclosure sits **inline in the settings
+  template**, not in a document the reader may never open.
 - **Resolved when:** this section records the answer and the settings template
   carries the matching default.
 - **Recommendation:** (a) — the credential class has no utility cost a coding task
@@ -497,7 +591,7 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
   probe under 6.2.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -507,6 +601,8 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
 | 4 | The feature is read as a compliance guarantee | product | Names, addresses and context re-identification are untouched | Four published states, the implicit-identity residue in the claim, no anonymisation wording (6.4) | Phase 6 — Host tiers, the coverage table, the claim |
 | 5 | The gateway is bypassed or costs more than it covers | product | A direct upstream path or `NO_PROXY` skips it; host features are off behind it | Launch-time environment check and startup canary (7.6); price stated per launch mode (7.7); the owner decides with 7.2 in hand | Phase 7 — A request gateway for what no hook reaches (blocker `request-gateway-build`) |
 | 6 | The stage grows a hook bundle whose latency trigger already fired | implementation | Every slot pays for the stage | No dependency; byte delta per phase (1.4); observe before arming (1.3) | Phase 1 — The dispatcher gains one stage, in observe mode |
+| 7 | The fingerprint table is guessed offline | implementation | The per-session key rests beside the fingerprint, so a reader of the table can run a dictionary attack against low-entropy identifiers — account ids, ticket keys, internal hostnames. A keyed fingerprint stops precomputation, not guessing; the council named this unresolved by the keying alone | Keep the table's contents minimal and its lifetime short; treat (b) as data minimisation and blast-radius reduction rather than as protection against same-user compromise, and say so in the published claim (6.4) | Phase 2 — The session table and continuity |
+| 8 | Confirmation prompts become approval theatre | product | (b) turns a cross-destination copy into a question. A session moving many identifiers between objects becomes a session of prompts, and habituated approval is a weaker state than no prompt at all | Confirmations stay rare and contextual, each naming the destination and showing the value; the revisit-if is operational unusability measured by adoption and reports, never an arbitrary prompt rate | Phase 2 — The session table and continuity |
 
 ## Acceptance Criteria
 

@@ -409,7 +409,23 @@ rather than as a ninth roadmap.
 - **If you do nothing:** 2.1, 2.3 and 2.4 stay open and now read as blocked rather than as runnable, so an autonomous run stops re-entering them. The default flip stays opt-in indefinitely, every non-opted-in install keeps loading 338,225 characters, and the owner's (a) answer of 2026-10-06 keeps looking like a pending decision when it is in fact a decision waiting on an instrument.
 
 ### blocker: default-flip-of-the-installed-layer
-- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5); closes when the ADR of step 3.3 records (a) with the arrival record it relied on, which waits on that record and the step 2.2 fixture, not on a question. **Re-read 2026-10-10:** that arrival record is step 2.1, and 2.1's instrument was cancelled by owner answer D10 elsewhere on the same day this one was answered — see `arrival-record-needs-a-cancelled-observer`. The answer is given; what it waits on is not obtainable in any scheduled file.
+- **Status:** open — **not a question, and no longer unobtainable.** The owner
+  answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5). It closes when
+  an ADR records (a) together with the arrival record it relied on.
+  **Corrected 2026-10-16, and the correction reverses the previous reading.**
+  The 2026-10-10 re-read said the instrument had been cancelled by owner answer
+  D10 and that nothing scheduled could produce the record. **Its own sibling one
+  entry above — `arrival-record-needs-a-cancelled-observer` — records the
+  opposite and has done since 2026-10-15:** the owner scheduled stub step 3.0 as
+  steps 1.1–2.2 of the active `road-to-a-setup-that-decides-itself`, whose step
+  2.2 reads *"Hand it to its waiting consumer. The installed-layer roadmap's step
+  2.1 reads this record."* That roadmap is `status: ready`.
+
+  So the stale claim was never about the tree; it was a cross-reference inside
+  this one file that was not updated when the blocker it cites resolved. D10
+  cancelled a **carrier**, not the instrument, which step 2.1 of this roadmap
+  also states in its own first sentence. This blocker is an accrual wait on a
+  named, scheduled producer — not a decision, and not a dead end.
 - **Owner:** owner
 - **Blocks:** 3.1
 - **What to do:** pick exactly one — (a) flip the default for `claude-code`
@@ -417,7 +433,13 @@ rather than as a ninth roadmap.
   host version and the step 2.2 fixture is green, or (b) keep the thinned layer
   opt-in and record in the ADR of step 3.3 that consumers choose it.
 - **Resolved when:** an ADR names (a) or (b) **with the arrival record it relied
-  on**. **Re-pointed 2026-10-12:** this clause used to name "the ADR of step
+  on**, and `agents/evidence/analysis/installed-arrival-*.md` exists for the
+  current host version carrying step 2.1's three assertions — which stubs and
+  standing laws loaded at start and after compaction, whether a user-layer
+  `paths:` rule loads on `Read`, `Edit`, a creating `Write` and a Bash-first
+  edit, and every matched delivery under the 8,000 budget with none replaced by
+  a preview. **Producer, named 2026-10-16 after following the chain rather than
+  the summary:** step 2.2 of `road-to-a-setup-that-decides-itself`. **Re-pointed 2026-10-12:** this clause used to name "the ADR of step
   3.3", and step 3.3 is now closed by ADR-284, which records the owner's (a) and
   its unmet condition without discharging either. A resolution clause whose named
   producer is closed can never fire, so the clause names the condition instead of
@@ -444,6 +466,7 @@ rather than as a ninth roadmap.
 | D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
 | D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable. **Amended 2026-10-12, on the council's Q1 finding that the original wording admitted two readings.** The intended reading is the NARROW one: D6 settles the mechanism it tested — a hard gate at 75,000 — and does not bar every hard gate forever. A different mechanism is not governed by it and may be proposed. What governs a different mechanism is D7 | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
 | D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
+| D8 | deterministic | evidence | `default-flip-of-the-installed-layer` is an **accrual wait on a named, scheduled producer** — step 2.2 of `road-to-a-setup-that-decides-itself` — and not the dead end its Status field described. Its resolution clause now names that producer and step 2.1's three assertions instead of a closed step | Measured 2026-10-16 while a council round was running on the premise that no scheduled file could produce the record. The premise is refuted inside this very file: the sibling blocker `arrival-record-needs-a-cancelled-observer`, one entry above, has read `resolved` since 2026-10-15 recording that the owner scheduled stub step 3.0 as steps 1.1–2.2 of `road-to-a-setup-that-decides-itself` (`status: ready`), whose step 2.2 reads "Hand it to its waiting consumer. The installed-layer roadmap's step 2.1 reads this record." D10 cancelled a **carrier**, not the instrument, which this roadmap's own step 2.1 states in its first sentence | the setup roadmap's step 2.2 is cut, deferred or re-scoped away from this consumer · the arrival record lands without step 2.1's three assertions |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->

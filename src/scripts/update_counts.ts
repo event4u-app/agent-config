@@ -223,6 +223,21 @@ export function count(kind: string): number {
     }
     let total = 0;
     const seen = new Set<string>();
+    if (kind === 'advisors') {
+        // The Advisors badge sat on the claim row with no pattern behind it,
+        // while the sub-note said all six badge counts are re-derived. The
+        // `personas` walk is flat, so the advisors subdirectory is its own kind.
+        for (const root of artefact_roots()) {
+            for (const f of _glob(path.join(root, 'personas', 'advisors'), (n) => n.endsWith('.md'))) {
+                if (path.basename(f) === 'README.md') continue;
+                const rel = path.relative(root, f).split(path.sep).join('/');
+                if (seen.has(rel)) continue;
+                seen.add(rel);
+                total += 1;
+            }
+        }
+        return total;
+    }
     if (kind === 'commands') {
         // Commands live under packages/*/commands/ AND the 6.0.0-D
         // src/domains/<pack>/<subpath>/command.md homes; iter_commands()
@@ -289,6 +304,7 @@ export const TARGETS: ReadonlyArray<[string, ReadonlyArray<[string, string]>]> =
             ['(/badge/Commands-)(\\d+)(-)', 'commands_active'],
             ['(/badge/Guidelines-)(\\d+)(-)', 'guidelines'],
             ['(/badge/Personas-)(\\d+)(-)', 'personas'],
+            ['(/badge/Advisors-)(\\d+)(-)', 'advisors'],
             // The sub-note under the badges. The comment above used to end at
             // "Prose counts were removed from the README on purpose", and the
             // sub-note re-added four of them in `fc1bdec4f` without an owner.
@@ -497,8 +513,57 @@ export const KINDS = [
     'rules_projected',
     'guidelines',
     'personas',
+    'advisors',
     'router_rules',
 ] as const;
+
+export const CLAIM_ROW_MARKER = '<!-- claim:published-artifact-counts -->';
+
+/**
+ * Badges on a claim-row line that no count pattern re-derives.
+ *
+ * The counts are matched by URL pattern, never by position, so a badge dropped
+ * onto the claim row that matches no pattern used to pass `--check` unseen
+ * while the row promises every figure on it is machine-checked. The allowed
+ * set is the target's own `/badge/` patterns, so adding a count adds its badge.
+ * Inline, reference-style and HTML `<img>` images are all read.
+ */
+export function claim_row_findings(
+    text: string,
+    patterns: ReadonlyArray<[string, string]>,
+): Array<[number, string]> {
+    const badge_patterns = patterns
+        .filter(([pattern]) => pattern.includes('/badge/'))
+        .map(([pattern]) => new RegExp(pattern));
+    const definitions = new Map<string, string>();
+    for (const m of text.matchAll(/^ {0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?/gm)) {
+        definitions.set((m[1] as string).trim().toLowerCase(), m[2] as string);
+    }
+    const findings: Array<[number, string]> = [];
+    text.split('\n').forEach((line, index) => {
+        if (!line.includes(CLAIM_ROW_MARKER)) return;
+        const urls: string[] = [];
+        for (const m of line.matchAll(/!\[([^\]]*)\](?:\(([^)\s]+)[^)]*\)|\[([^\]]*)\])?/g)) {
+            if (m[2] !== undefined) {
+                urls.push(m[2]);
+                continue;
+            }
+            // Reference (`![a][ref]`), collapsed (`![a][]`) and shortcut (`![a]`)
+            // forms. An unresolvable label is reported as itself, never skipped.
+            const label = (m[3] || m[1] || '').trim();
+            urls.push(definitions.get(label.toLowerCase()) ?? `[${label}]`);
+        }
+        for (const m of line.matchAll(/<img\b[^>]*?\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
+            urls.push((m[1] ?? m[2] ?? m[3]) as string);
+        }
+        for (const url of urls) {
+            if (!badge_patterns.some((re) => re.test(url))) {
+                findings.push([index + 1, url]);
+            }
+        }
+    });
+    return findings;
+}
 
 function parse_args(argv: readonly string[]): { check: boolean } {
     const args = { check: false };
@@ -541,12 +606,14 @@ export function main(
             `rules=${counts['rules']} commands=${counts['commands']} ` +
             `commands_active=${counts['commands_active']} ` +
             `guidelines=${counts['guidelines']} ` +
-            `personas=${counts['personas']} router_rules=${counts['router_rules']}\n`,
+            `personas=${counts['personas']} advisors=${counts['advisors']} ` +
+            `router_rules=${counts['router_rules']}\n`,
     );
 
     let any_drift = false;
     let any_change = false;
     let any_unapplied = false;
+    let any_unguarded = false;
     for (const [rel, patterns] of targets) {
         const p = path.join(root, rel);
         if (!_exists(p)) {
@@ -555,6 +622,12 @@ export function main(
         }
         const text = fs.readFileSync(p, 'utf-8');
         const [new_text, drifts, unapplied] = apply_to_text(text, patterns, counts);
+        for (const [line, url] of claim_row_findings(text, patterns)) {
+            any_unguarded = true;
+            process.stderr.write(
+                `  ❌  ${rel}:${line}: badge on the claim row that no count re-derives — ${url}\n`,
+            );
+        }
         for (const [pattern, kind, reason] of unapplied) {
             any_unapplied = true;
             process.stderr.write(`  ❌  ${rel}: ${reason} — /${pattern}/ (kind=${kind})\n`);
@@ -577,6 +650,13 @@ export function main(
                 '\n❌  A pattern applied to nothing (named above). The figure it owns is ' +
                     'no longer generated, so a drift in it would pass unseen. Fix the pattern ' +
                     'or drop it with the figure.\n',
+            );
+            return 1;
+        }
+        if (any_unguarded) {
+            process.stderr.write(
+                '\n❌  A badge on the claim row is not re-derived (named above). Move it off ' +
+                    'the line carrying the claim marker, or add a count that derives it.\n',
             );
             return 1;
         }
