@@ -146,6 +146,19 @@ describe('the gate watches the modules its verdict runs through', () => {
         },
     );
 
+    // The pin bound the calculator whatever file list a caller passed. Gated, it is
+    // bound through the file list instead, so the entry point CI and pre-push call
+    // must derive that list from the commits itself and never from the caller.
+    it('the CLI derives the diff itself, so an edit of the calculator no caller names is refused', () => {
+        const rel = 'src/scripts/_lib/ratification_subject.ts';
+        fs.writeFileSync(path.join(root, 'README.md'), 'x\n');
+        const base = commitAll(root);
+        fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+        fs.writeFileSync(path.join(root, rel), 'export const x = 1;\n');
+        commitAll(root);
+        expect(gate.main(['--root', root, '--base-ref', base, '--quiet'])).toBe(1);
+    });
+
     it('the digest covers every mechanism file the gate classifies', () => {
         for (const p of [...IMPORTED, READER_PATH]) {
             expect(gatedFilesOf([p, 'README.md'], []), p).toEqual([p]);
