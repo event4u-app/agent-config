@@ -32,6 +32,9 @@ import {
     _reset_yaml,
     _set_yaml,
     apply_schema_defaults,
+    check_host_key_collisions,
+    type HostSkillKeys,
+    load_host_skill_keys,
     load_schema,
     strict_yaml_error,
     validate,
@@ -296,14 +299,29 @@ describe('model_tier / context enum (test_model_tier_schema.py)', () => {
         },
     );
 
-    it('context modifier', () => {
+    it('context_window modifier', () => {
         for (const [at, mk] of [
             ['skill', skillFm],
             ['command', commandFm],
         ] as Array<[string, (e?: FM) => FM]>) {
-            expect(validateFatal(at, mk({ model_tier: 'high', context: 'large' }))).toEqual([]);
-            const bad = validateErrors(at, mk({ model_tier: 'high', context: 'huge' }));
-            expect(bad.some((e) => e.rule === 'enum' && e.path.includes('context')), JSON.stringify(bad)).toBe(true);
+            expect(validateFatal(at, mk({ model_tier: 'high', context_window: 'large' }))).toEqual([]);
+            const bad = validateErrors(at, mk({ model_tier: 'high', context_window: 'huge' }));
+            expect(
+                bad.some((e) => e.rule === 'enum' && e.path.includes('context_window')),
+                JSON.stringify(bad),
+            ).toBe(true);
+        }
+    });
+
+    // The host owns `context` (`context: fork`); the package's large-context
+    // modifier moved to `context_window` so the two can never collide.
+    it('the retired package key `context: large` is rejected', () => {
+        for (const [at, mk] of [
+            ['skill', skillFm],
+            ['command', commandFm],
+        ] as Array<[string, (e?: FM) => FM]>) {
+            const bad = validateErrors(at, mk({ model_tier: 'high', context: 'large' }));
+            expect(bad.length, `${at} context: large`).toBeGreaterThan(0);
         }
     });
 
@@ -314,6 +332,62 @@ describe('model_tier / context enum (test_model_tier_schema.py)', () => {
         ] as Array<[string, FM]>) {
             expect(validateFatal(at, fm), `${at} without model_tier/context`).toEqual([]);
         }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Host-key collision row (road-to-skills-that-arrive-when-called 1.2)
+// ---------------------------------------------------------------------------
+
+describe('host-key collision row', () => {
+    const hostKeys: HostSkillKeys = {
+        hosts: [
+            {
+                host: 'fixture-host',
+                url: 'https://example.com/skills',
+                read_date: '2026-10-16',
+                expires: '2027-01-14',
+                keys: ['name', 'context', 'agent'],
+            },
+        ],
+        passthrough: { name: 'the host reads it as the invocation name' },
+    };
+
+    it('a package-owned key equal to a host key fails', () => {
+        const schema = { properties: { name: {}, context: {}, model_tier: {} } } as Record<string, YamlValue>;
+        const errs = check_host_key_collisions('skill', schema, hostKeys, '2026-10-16');
+        expect(errs.map((e) => [e.rule, e.path, e.severity])).toEqual([
+            ['host-key-collision', '$.properties.context', 'error'],
+        ]);
+        expect(errs[0]?.message).toContain('fixture-host');
+    });
+
+    it('a passthrough key and a package key the host does not document pass', () => {
+        const schema = { properties: { name: {}, context_window: {} } } as Record<string, YamlValue>;
+        expect(check_host_key_collisions('skill', schema, hostKeys, '2026-10-16')).toEqual([]);
+    });
+
+    it('an expired host list is a warning, never an error', () => {
+        const schema = { properties: { name: {} } } as Record<string, YamlValue>;
+        const errs = check_host_key_collisions('skill', schema, hostKeys, '2027-01-15');
+        expect(errs.map((e) => [e.rule, e.severity])).toEqual([['host-key-list-expired', 'warning']]);
+    });
+
+    it('the shipped skill and command schemas pass against the shipped host list', () => {
+        const shipped = load_host_skill_keys();
+        expect(shipped.hosts.length).toBeGreaterThan(0);
+        for (const at of ['skill', 'command']) {
+            const fatal = check_host_key_collisions(at, load_schema(at), shipped).filter(
+                (e) => e.severity === 'error',
+            );
+            expect(fatal, at).toEqual([]);
+        }
+    });
+
+    it('the shipped list still documents `context`, the key 1.1 gave back', () => {
+        const shipped = load_host_skill_keys();
+        expect(shipped.hosts.some((h) => h.keys.includes('context'))).toBe(true);
+        expect(Object.keys(shipped.passthrough)).not.toContain('context');
     });
 });
 

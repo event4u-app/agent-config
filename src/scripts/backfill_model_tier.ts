@@ -19,7 +19,7 @@
  * - Untagged → classify fresh from the task→tier heuristic.
  *
  * A small explicit `_LITE` set demotes obviously-trivial mechanical skills
- * to the cheapest band; `_CONTEXT_LARGE` adds the orthogonal `context: large`
+ * to the cheapest band; `_CONTEXT_LARGE` adds the orthogonal `context_window: large`
  * modifier to genuinely long-context skills. Writes BOTH the source and its
  * `dist/agent-src` copy (frontmatter stays byte-identical).
  *
@@ -94,7 +94,7 @@ const _CONTEXT_LARGE = new Set<string>([
 // re.MULTILINE patterns. `^...$` anchor per-line.
 const _RM_RE = /^recommended_model:[ \t]*"?[a-z0-9-]+"?[ \t]*$/m;
 const _MT_RE = /^model_tier:/m;
-const _CTX_RE = /^context:/m;
+const _CTX_RE = /^context_window:/m;
 
 type Fm = Record<string, unknown> | null;
 
@@ -152,8 +152,7 @@ function _apply(p: string, tier: string, want_context: boolean): boolean {
         changed = true;
     }
     if (want_context && !_CTX_RE.test(fm)) {
-        // re.sub(r'(^model_tier:.*$)', r'\1\ncontext: large', fm, count=1, MULTILINE)
-        fm = _subOnce(fm, /^model_tier:.*$/m, (match) => `${match}\ncontext: large`);
+        fm = _subOnce(fm, /^model_tier:.*$/m, (match) => `${match}\ncontext_window: large`);
         changed = true;
     }
     if (changed) {
@@ -221,7 +220,7 @@ export function run(apply: boolean): number {
         total += v;
     }
     process.stdout.write(
-        `  context:large on ${ctx} skills · ${verb} ${touched} newly · total ${total}\n`,
+        `  context_window:large on ${ctx} skills · ${verb} ${touched} newly · total ${total}\n`,
     );
     return 0;
 }

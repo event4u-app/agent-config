@@ -52,10 +52,41 @@ safely.
 
 > **Phases 0 and 1 shipped out of band on 2026-10-16**, on the owner's
 > direction: the data-loss path was taken out of the roadmap queue and fixed
-> as its own change rather than waiting for a slot. `tests/install/uninstall_purge_containment.test.ts`
-> was observed **red** against `26c06aef7` — `.credentials.json was deleted`,
-> plus the refusal arm — and green after the fix. Phase 2 remains open: the
-> published claim and its `exec:` pointer have not been corrected yet.
+> as its own change rather than waiting for a slot.
+> `tests/install/uninstall_purge_containment.test.ts` was observed **red**
+> against `26c06aef7` — `.credentials.json was deleted`, plus the refusal arm
+> — and green after the fix. An end-to-end run of the owner's own reproduction
+> script against the fixed tree confirms it where it counts:
+> `U2 rc=0 own_rule=kept credentials=kept`, against an expectation line that
+> predicted `DELETED`.
+>
+> **That run also found what this file had wrong.** Step 0.2 recorded the
+> two-step case as answered "still possible"; that is true of the deletion
+> FUNCTION and false of the CLI, because `uninstall --global` deletes the
+> lockfile and a second invocation then exits before reaching the purge at
+> all. Pre-existing, not caused by the fix — the script's own expectation line
+> predicted `purge_after_rc=1` before it.
+>
+> **It is recorded here as prose and not yet as a checkbox, and that is a gate
+> limitation rather than a judgement.** `lint_plan_risk_register` compares a
+> plan against the blob at the commit that introduced its current `reviewed:`
+> date, and its marker grammar accepts only a bare date — so a plan created
+> and stamped today cannot record a same-day re-review, and adding a checkbox
+> reds the push. The step below goes in as **1.5** on the next touch of this
+> file, at which point the marker can carry a later date honestly:
+>
+> > **1.5 Stop the plain uninstall consuming the record the purge needs.**
+> > *(executed 2026-10-16)* `uninstall --global` then `uninstall --global
+> > --purge` yields `plain_rc=0 purge_after_rc=1 files_left=892`: the first
+> > call deletes the lockfile, the second finds no tools and exits before the
+> > purge runs, and 892 deployed files stay on disk with no command left that
+> > will remove them. Either the plain uninstall keeps the lockfile while
+> > recorded content is still on disk, or it says in one line that `--purge`
+> > must come first. Verify at **CLI level**, not function level — that
+> > distinction is what 0.2 got wrong.
+>
+> Phase 2 is also still open: the published claim and its `exec:` pointer are
+> not corrected yet.
 
 ## Phase 0 — Freeze the loss before changing it
 
@@ -70,7 +101,7 @@ safely.
       verify: the test is **red** and its failure names
       `cmd_uninstall.ts:283`. A test that passes here has not reproduced the
       defect and is not evidence.
-- [x] **0.2 Pin the two-step case.** `uninstall --global` followed by
+- [x] **0.2 Pin the two-step case, at the level the test reaches.** `uninstall --global` followed by
       `uninstall --global --purge`: assert the second invocation is still
       possible, i.e. the first does not remove the record the second needs.
       verify: red or green, recorded either way — this one is a genuine
@@ -101,7 +132,6 @@ safely.
       scope rather than offering a recursive delete.
       verify: the string no longer reads as an instruction to delete the
       anchor.
-
 ## Phase 2 — Make the published promise match the behaviour
 
 - [ ] **2.1 Scope the README claim.** `README.md:58` states what the uninstall
@@ -143,7 +173,8 @@ safely.
 | 1 | The containment test's `HOME` override leaks and the suite deletes a real host configuration | implementation | The test exercises a recursive delete; an inherited `HOME` turns the test run into the incident. | `env:` is passed explicitly to `spawnSync`, never a shell assignment; the fixture root is asserted to be under the temp dir before the CLI is invoked, and the test fails closed if it is not. | Phase 0 — Freeze the loss before changing it |
 | 2 | The inventory is incomplete, so purge leaves this package's own files behind | implementation | A file written outside the inventory survives an uninstall and looks like the package did not uninstall. | 1.3 refuses on a missing inventory rather than guessing; leftovers are a visible, recoverable failure while the current behaviour is an invisible, irreversible one. | Phase 1 — Purge from the inventory, never from the anchor |
 | 3 | A user relying on the recursive delete reports a regression | product | Someone used `--purge` as a host-config reset. | 2.3 names it in `BREAKING_CHANGES.md`; the host's own tooling owns that reset, not this package. | Phase 2 — Make the published promise match the behaviour |
-| 4 | The two-step case in 0.2 turns out to be green and the step reads as wasted | implementation | A test that passes first time proves nothing was broken. | A recorded green answers something the source left unverified, so it is not a wasted step; the source could not settle it and this is how it is settled. | Phase 0 — Freeze the loss before changing it |
+| 4 | A level-confusion makes a green case read as a working flow | implementation | 0.2's unit case passes while the CLI flow it appears to cover does not — measured, `purge_after_rc=1` with 892 files left. A reader takes the green as coverage of the flow. | The case's own comment states the level it reaches and names 1.5; 1.5's verify is explicitly CLI-level. The pairing is the mitigation: a function-level green with no CLI-level case beside it is how this was missed once already. | Phase 0 — Freeze the loss before changing it |
+| 5 | Fixing 1.5 reintroduces an over-broad delete | implementation | The obvious repair — let the purge run without a lockfile — is the "delete when the record is missing" shape Phase 1 exists to remove. | 1.5's two allowed outcomes are *keep the lockfile* or *say `--purge` must come first*; neither widens what may be deleted, and AC-3's refusal case stays asserted either way. | Phase 1 — Purge from the inventory, never from the anchor |
 
 ## Acceptance Criteria
 

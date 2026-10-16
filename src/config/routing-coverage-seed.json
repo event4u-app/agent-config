@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.9626,
-        "skills": 0.4733
+        "skills": 0.4933
     },
     "seed_provenance": {
         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "142 of 300 skills carry evals/triggers.json on 2026-10-14; was 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+        "skills": "148 of 300 skills carry evals/triggers.json on 2026-10-16; was 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
     },
     "history": [
@@ -178,6 +178,13 @@
             "from": 0.47,
             "to": 0.4733,
             "reason": "road-to-account-surface-detector step 3.2 wired check_account_surface into launch-readiness AUTH area (and into the production-validator subagent, which carries no corpus), so check_routing_coverage required a corpus from the touched skill and it had none (141 -> 142 of 300). TEN cases, the 2026-10-14b shape: 5 exemplars of which one is German covering the go/no-go decision, the pre-merge checklist, the rollout plan with rollback criteria, the prelaunch diagnostic and the ops handoff; 3 near-misses that are the skill own WHEN-NOT routes (release-comms, finishing-a-development-branch, stakeholder-tradeoff); 2 counterexamples guarding launch and rollback outside a release. The seed rises to the live value; it may never be LOWERED. The partition is TRAIN: sha256(launch-readiness)[0:2] is 0x71 = 113, above the holdout ceiling of 51, so the sealed 31 rows are untouched and BOTH published train-side measurements are re-taken in the same change, after the skill body edit was on disk. One grandfather entry removed with the corpus: 159 -> 158 as check_trigger_eval_presence reads it, the shrink-only direction."
+        },
+        {
+            "date": "2026-10-16",
+            "scope": "skills",
+            "from": 0.4733,
+            "to": 0.4933,
+            "reason": "road-to-skills-that-arrive-when-called step 1.1 renamed the package frontmatter key context: large to context_window: large on the six skills that carried it (deep-reading-analyst, project-analysis-core, project-analysis-hypothesis-driven, project-analyzer, repomix-packer, universal-project-analysis), so the host-owned context key is free. check_routing_coverage requires a corpus from every touched skill and none of the six had one (142 -> 148 of 300). SIX cases each, smaller than the 2026-10-14b shape and stated as such: 3 exemplars of which one is German, 2 near-misses naming the neighbour each skill's own Do-NOT list hands off to, 1 counterexample. The seed rises to the live value; it may never be LOWERED. ONE ROW SEALS: deep-reading-analyst is 0x19 = 25, below the holdout ceiling of 51; the other five train. The sealed set moves 31 -> 32 and the train set 111 -> 116. BOTH published train-side measurements were re-taken after every skill edit was on disk: routing-body-signal-verdict.json still harmful (false activation +5.829 pp against the +2.0 pp guard, delta-recall +1.94 pp against the 5.0 pp bar, McNemar p 0.4445, train corpora 116, cases 1116, catalogue 300); delivery-set-measurement-2026-08-31.json precision@5 80.6 %, recall@5 61.552 %, false activation@5 15.301 %. Six grandfather entries removed with the corpora: 158 -> 152, the shrink-only direction."
         }
     ]
 }

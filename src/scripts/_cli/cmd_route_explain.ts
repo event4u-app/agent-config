@@ -33,7 +33,8 @@ import { measure, method_note } from '../_lib/token_count.js';
 import { load_agent_settings } from '../_lib/agent_settings.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { resolveSkillCatalogueRoots } from '../_lib/skill_catalogue.js';
-import { rankDetailed } from '../skill_tools/score_skill_relevance.js';
+import { splitQualifiedName } from '../_lib/skill_origin.js';
+import { rankDetailed, type RankRow } from '../skill_tools/score_skill_relevance.js';
 import { DEFAULT_SUGGEST_LIMIT } from '../../shared/skillRanking.js';
 
 // Marker-anchored, not hop-counted: this module runs from `src/scripts/_cli/`
@@ -269,6 +270,13 @@ export interface SkillsReport {
     skills_indexed: number;
     limit: number;
     suggestions: SkillRow[];
+    /**
+     * Ranked rows reachable from the installed package's own projection whose
+     * name no resolved root carries — a skill the package ships but this host
+     * does not have. Empty when the projection IS the only root: then every
+     * suggestion is not installed, and the text output says so per row.
+     */
+    not_installed: SkillRow[];
 }
 
 export const SKILLS_MEASUREMENT_HEADER =
@@ -285,20 +293,52 @@ export function build_skills_report(
     const { rows, descriptions } = roots.length > 0
         ? rankDetailed(task, roots)
         : { rows: [], descriptions: new Map<string, string>() };
+    const fallbackOnly = roots.length === 1 && roots[0] === packageRootAbs;
+    const toRow = (d: ReadonlyMap<string, string>) => ([name, score, personas]: RankRow): SkillRow => ({
+        skill: name,
+        score,
+        personas,
+        description: d.get(name) ?? '',
+    });
+    let notInstalled: SkillRow[] = [];
+    if (roots.length > 0 && !fallbackOnly && _hasSkills(packageRootAbs)) {
+        const installed = new Set(roots.flatMap(_skillNames));
+        const pkg = rankDetailed(task, [packageRootAbs]);
+        notInstalled = pkg.rows
+            .filter(([name]) => !installed.has(splitQualifiedName(name).name))
+            .slice(0, opts.limit)
+            .map(toRow(pkg.descriptions));
+    }
     return {
         measurement_level: SKILLS_MEASUREMENT_HEADER,
         task,
         skills_roots: roots,
-        package_fallback_used: roots.length === 1 && roots[0] === packageRootAbs,
+        package_fallback_used: fallbackOnly,
         skills_indexed: rows.length,
         limit: opts.limit,
-        suggestions: rows.slice(0, opts.limit).map(([name, score, personas]) => ({
-            skill: name,
-            score,
-            personas,
-            description: descriptions.get(name) ?? '',
-        })),
+        suggestions: rows.slice(0, opts.limit).map(toRow(descriptions)),
+        not_installed: notInstalled,
     };
+}
+
+function _skillNames(root: string): string[] {
+    try {
+        return fs
+            .readdirSync(root)
+            .filter((n) => fs.existsSync(path.join(root, n, 'SKILL.md')));
+    } catch {
+        return [];
+    }
+}
+
+function _hasSkills(root: string): boolean {
+    return _skillNames(root).length > 0;
+}
+
+function _pushRow(out: string[], r: SkillRow, label: string): void {
+    out.push(`  · ${r.skill}  [${r.score}]${label}`);
+    if (r.description) out.push(`      ${r.description}`);
+    if (r.personas.length > 0) out.push(`      personas: ${r.personas.join(', ')}`);
 }
 
 export function render_skills_text(report: SkillsReport): string {
@@ -316,13 +356,17 @@ export function render_skills_text(report: SkillsReport): string {
     );
     out.push('');
     out.push(`ranked skills (${report.suggestions.length} of ${report.skills_indexed} scoring above zero, limit ${report.limit}):`);
-    for (const r of report.suggestions) {
-        out.push(`  · ${r.skill}  [${r.score}]`);
-        if (r.description) out.push(`      ${r.description}`);
-        if (r.personas.length > 0) out.push(`      personas: ${r.personas.join(', ')}`);
-    }
+    const label = report.package_fallback_used ? '  not-installed' : '';
+    for (const r of report.suggestions) _pushRow(out, r, label);
     if (report.suggestions.length === 0) {
         out.push('  · (nothing scored above zero — say that, and proceed without a skill)');
+    }
+    if (report.not_installed.length > 0) {
+        out.push('');
+        out.push(
+            `not installed on this host — reachable from the installed package's own projection (${report.not_installed.length}):`,
+        );
+        for (const r of report.not_installed) _pushRow(out, r, '  not-installed');
     }
     return out.join('\n') + '\n';
 }
@@ -385,7 +429,7 @@ export function main(argv: string[]): number {
         // 1 is "nothing to show", the same meaning the rule arm gives it. A
         // catalogue that could not be read and a catalogue with no match are
         // both 1 here and are distinguished in the OUTPUT, never silently.
-        return report.suggestions.length === 0 ? 1 : 0;
+        return report.suggestions.length === 0 && report.not_installed.length === 0 ? 1 : 0;
     }
     const prompt = positional.join(' ').trim();
     if (!prompt) {

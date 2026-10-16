@@ -1,6 +1,6 @@
 ---
 model_tier: high
-context: large
+context_window: large
 name: project-analyzer
 description: "Single-pass tech-stack detection with an agents/evidence/analysis/ write-up; explicit request only. Deep multi-pass audit → universal-project-analysis. Raw primitives → project-analysis-core."
 domain: discovery

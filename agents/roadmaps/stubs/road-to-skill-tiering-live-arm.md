@@ -5,7 +5,15 @@ review_by: 2026-09-25
 
 # Stub: the live arm for skill tiering (H1) — needs host sessions, not a repository
 
-> **Arrivals:** 9 (at least) — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+> **Arrivals:** 10 (at least) — latest `inbox-2026-10-n` (2026-10-12); earlier rounds not enumerated here.
+>
+> **`inbox-2026-10-n` (recorded 2026-10-16):** the host's skills page
+> (https://code.claude.com/docs/en/skills, read 2026-10-16) now documents hot
+> pickup — a skill added, edited or removed under a watched skills directory is
+> picked up within the current session, without a restart — and a `name-only`
+> listing state in `skillOverrides`, listed by name without its description and
+> still in the `/` menu. Both bear on the closing criterion: the host
+> now offers natively the Tier B shape.
 
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated
 > placeholder: the work is specified, wanted, and blocked only on a capability an

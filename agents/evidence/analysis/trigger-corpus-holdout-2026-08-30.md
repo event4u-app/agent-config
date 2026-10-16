@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 142 files, 31 holdout and 111 train.** That bullet read
+- **Now: 148 files, 32 holdout and 116 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -32,8 +32,8 @@ beside it.
   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
-  § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d and
-  § Growth — 2026-10-14e; the
+  § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
+  § Growth — 2026-10-14e and § Growth — 2026-10-16; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -446,45 +446,69 @@ reads 158 grandfathered, the shrink-only direction.
 run as the LAST act before publishing this section, after the final edit to any
 file in the set.
 
-## Re-pin — 2026-10-16, one train corpus re-hashed; the corpus did not grow
+## Growth — 2026-10-16, six corpora; one seals
 
 ```
-THE ROW IS NOT NEW. IT IS A TRAIN-SIDE RE-HASH.
-NO HOLDOUT FILE'S BYTES CHANGED, AND THE SEALED SET STAYS AT 31.
-BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN AFTER THE CORPUS EDIT.
+SIX ROWS ADDED: FIVE TRAIN, ONE HOLDOUT. THE SEALED SET MOVES 31 -> 32.
+NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS ARE OWED
+AND WERE RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
 ```
 
-**What changed.** `road-to-type-with-a-witness` step 6.1 routes a namespaced or
-third-party shadcn registry item through `supply-chain-intake` before `add`, and
-the step asks for one should-trigger query for that route. `react-shadcn-ui`'s
-corpus gained one exemplar (`rsu-e7`), and its description's exemplar count
-moved 6 -> 7.
+**What changed.** `road-to-skills-that-arrive-when-called` step 1.1 renamed the
+package's frontmatter key `context: large` to `context_window: large` on the six
+skills that carried it, so the host's own `context` key is free.
+`check_routing_coverage` requires a corpus from every touched skill and none of
+the six had one. Each gained **6** labelled queries — 3 exemplars of which one is
+German, 2 near-misses naming the neighbour the skill's own "Do NOT use when" list
+hands off to, and 1 counterexample; 36 cases in all. A smaller shape than the
+2026-10-14b one, stated rather than hidden: it meets `lint_skill_trigger_corpus`'s
+floor (at least 3 positives and 2 near-misses) and no more.
 
-| Row | Partition | `sha256(name)[0:2]` | Now |
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
 |---|---|---|---|
-| `react-shadcn-ui` | train | `0x47` = 71 ≥ 51 | re-hashed |
+| `deep-reading-analyst` | holdout | `0x19` | 25 < 51 |
+| `project-analysis-core` | train | `0xb9` | 185 ≥ 51 |
+| `project-analysis-hypothesis-driven` | train | `0x98` | 152 ≥ 51 |
+| `project-analyzer` | train | `0xdc` | 220 ≥ 51 |
+| `repomix-packer` | train | `0x36` | 54 ≥ 51 |
+| `universal-project-analysis` | train | `0x98` | 152 ≥ 51 |
 
-**The sealed set does not move.** 71 is above the ceiling of 51, so the holdout
-stays at **31** and the train set at **111**; the corpus is **142 files**, as
-before. Cases went 1086 -> **1087**.
+**One row seals.** `deep-reading-analyst` draws `0x19` = 25, below the ceiling of
+51; the rule is a hash of the directory name, so nobody chose that. The sealed set
+moves **31 -> 32**, the train set **111 -> 116**, and the realised split is
+**32/148 = 21.62 %** against the rule's 19.9 % target. AC-6 still rests
+on the same 18 rows, so it is 18 of 32; a proposer evaluated against this
+holdout must exclude `deep-reading-analyst` or say it is using a row whose seal is
+younger than the evaluation.
 
-**Both train-side measurements were re-taken.** `routing-body-signal-verdict.json`:
-verdict unchanged in kind, still `harmful` on the false-activation guard
-(**5.993 pp** against +2.0 pp, unmoved); delta-recall 2.174 -> **2.351 pp**, below
-the 5.0 pp bar; McNemar p 0.3933 -> **0.3531**. `delivery-set-measurement-2026-08-31.json`:
-precision@5 **80.332 %** and false activation@5 **15.543 %** unmoved, recall@5
-61.413 -> **61.302 %**, recall loss 38.587 -> **38.698 pp** — the ceiling stays
-**BREACHED** — context cost 230.6 -> **230.7** tokens against the 500 target,
-still **MET**. Neither verdict changes in kind.
+**Both train-side measurements were re-taken, after the skill edits.**
+`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful` on
+the false-activation guard — false activation 5.993 -> **5.829 pp** against
+the +2.0 pp guard, delta-recall 2.174 -> **1.94 pp** (below the 5.0 pp bar), McNemar
+p 0.3933 -> **0.4445**, train corpora 111 -> **116**, cases 1086 -> **1116**,
+catalogue 300. `delivery-set-measurement-2026-08-31.json`: precision@5 80.332 ->
+**80.6 %**, recall@5 61.413 -> **61.552 %**, recall loss 38.587 -> **38.448 pp** —
+the ceiling stays **BREACHED** — false activation@5 15.543 -> **15.301 %**,
+context cost 230.6 -> **230.3** tokens against the 500 target, still **MET**.
+Neither verdict changes in kind.
 
-**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` and
-`routing_signal_measurement.test.ts` § 5.1 were both run as the last act after
-the final edit to the corpus file.
+**What provably did NOT change.** No pre-existing corpus file was edited, so this
+growth is pure addition: `trigger_corpus_holdout_pin.test.ts` reproduces every
+published row and the set hash after the six rows above were added, and
+`routing_signal_measurement.test.ts` agrees on which side of the seal each sits.
+
+**Six grandfather entries went with them.** All six were removed from
+`src/scripts/trigger_eval_grandfather.json`; `check_trigger_eval_presence` now
+reads 152 grandfathered, the shrink-only direction.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to any
+file in the set.
 
 ## The set hash
 
 ```
-SET-SHA256  5f922d5b56cbc366f465f89566ada9250c37c84a3ec6001e70a4c6cf0e484a4a
+SET-SHA256  0b00f2759100241601b1e06c14ee378d8548aa7f8464c67de68a0092b621fad7
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -701,6 +725,7 @@ open and which this file does not settle.
 | `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |
 | `dashboard-design` | `118088e410b5fe2bf03f9b4b5eacec86735cee3be56d4f2b201f841e86e9bdaf` |
 | `decision-record` | `5003c69b353baf1a6cd25b679d029f1988a83482cf2664f316d7c451d7a906d1` |
+| `deep-reading-analyst` | `9d4e5e7f05961f470696e0ea80a47b9bd0eecdc83139817ee430ebdc86865722` |
 | `fe-design` | `bfc10d1fce9264a9b9e6a542354b1f679dec12331a605c97c4615795a804cc3e` |
 | `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
 | `judge-injection-defense` | `dad5757b5ee71d78b761467d007d18c18fb3d440d1e1f5eb54ca10b4ce6d156f` |
@@ -932,12 +957,16 @@ open and which this file does not settle.
 | `persona-improvement` | `510402b135807db3ead05e2e6ab3c315d86caeb55b7bf45b4919d2ba69e56804` |
 | `po-discovery` | `ac9cf914b69004d4d351272fbaf790126ff6dd255263f8020213bded6226b8b5` |
 | `prediction-pool-optimizer` | `5eab312a114476b7fc8dc1ef3846b40d759c0db580c75e14b7abbdc541bc2b7f` |
+| `project-analysis-core` | `48fada14ae5c23d493aadc189db3256964da73ee2484e7ee6575556cc7b7435e` |
+| `project-analysis-hypothesis-driven` | `57e22d3611f6d11081f5650c3081f8bf4fdd8381b962f28b4d4b87116a95efbd` |
+| `project-analyzer` | `fbbec0a0941da77d517fca42a3de9056ca019d272c04b5dc9cb53e7aa502b76a` |
 | `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
 | `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
+| `repomix-packer` | `62489a82ccd7a01c53d8a4ca265a3f9249782c12d5b74ac7ae2e3d1a12df478e` |
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
 | `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
@@ -955,6 +984,7 @@ open and which this file does not settle.
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
+| `universal-project-analysis` | `969eb38cf45fbd0f85b81ac0656bdff36a20a5946b911ead54449da0bb05b61c` |
 | `upstream-contribute` | `563a1ab0381b7a96f9a993381119403f81064426d7b3aaf17fbf81467534cdea` |
 | `using-git-worktrees` | `66f8a8709d975f3c98103341469ea0af34b909ce1ca7042170690707a61878da` |
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
@@ -1265,3 +1295,33 @@ whenever the corpus grows on either side and cannot on its own distinguish
 distinguishes them, which is why this section carries it rather than only the
 new number.
 
+
+## Re-pin — 2026-10-16, one train corpus re-hashed, on top of the six-corpus growth
+
+```
+THE ROW IS NOT NEW. IT IS A TRAIN-SIDE RE-HASH, TAKEN AFTER THE GROWTH ABOVE.
+NO HOLDOUT FILE'S BYTES CHANGED; THE SEALED SET STAYS WHERE THE GROWTH LEFT IT.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN ON THE COMBINED TREE.
+```
+
+**What changed.** `road-to-type-with-a-witness` step 6.1 routes a namespaced or
+third-party shadcn registry item through `supply-chain-intake` before `add`, and
+the step asks for one should-trigger query for that route. `react-shadcn-ui`'s
+corpus gained one exemplar (`rsu-e7`).
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `react-shadcn-ui` | train | `0x47` = 71 ≥ 51 | re-hashed |
+
+This re-pin was first written against the tree before the six-corpus growth
+merged, and is re-applied here on top of it rather than merged line by line: the
+row hash and `SET-SHA256` above are the values `trigger_corpus_holdout_pin.test.ts`
+reproduces from the combined tree.
+
+**Both train-side measurements were re-taken on that tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation guard
+(**+5.83 pp** against +2.0 pp), delta-recall **+2.11 pp** below the 5.0 pp bar,
+McNemar p **0.4017**. `delivery-set-measurement-2026-08-31.json`: precision@5
+**80.60 %**, recall loss **38.56 pp** — the ceiling stays **BREACHED** — context
+cost **230.3** tokens against the 500 target, still **MET**. Neither verdict
+changes in kind.

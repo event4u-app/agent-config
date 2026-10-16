@@ -132,6 +132,33 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
     ],
     check: [],
   },
+  {
+    id: "2.2d",
+    marker: "The local-only drain — step 2.2, fourth batch (2.2d)",
+    gates: [
+      "lint_namespace",
+      "lint_namespace_collisions",
+      "lint_new_skill_gate",
+      "lint_no_activation_gates",
+      "lint_no_new_atomic_commands",
+      "lint_no_python_twin_rationale",
+      "lint_orchestrator_auto_detect",
+      "lint_pack_first_win",
+      "lint_pack_risk_class",
+      "lint_profile_overlay_set_only",
+      "lint_profile_personas",
+      "lint_provenance",
+      "lint_roadmap_complexity",
+      "lint_roadmap_family_cap",
+      "lint_role_experiences",
+      "lint_rule_interactions",
+      "lint_rule_skill_pack_reach",
+      "lint_showcase_sessions",
+      "lint_skill_descriptions",
+      "lint_skill_originality",
+    ],
+    check: [],
+  },
 ];
 
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];
@@ -464,14 +491,17 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
     });
   }
 
-  // The runner has `origin/main` and no local `main`, and this gate's default base
+  // The runner has `origin/main` and no local `main`, and these gates' default base
   // is the local name, so dropping the argument fails CI and passes every checkout.
-  it("hands lint_command_verbs a base the CI checkout has", () => {
-    const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
-    const calls = [...workflow.matchAll(/src\/scripts\/lint_command_verbs\b[^\n]*/g)].map((m) => m[0]);
-    expect(calls.length, "lint_command_verbs has a caller in the drain job").toBeGreaterThan(0);
-    for (const call of calls) expect(call).toMatch(/--baseline origin\/main\b/);
-  });
+  it.each(["lint_command_verbs", "lint_new_skill_gate", "lint_no_new_atomic_commands"])(
+    "hands %s a base the CI checkout has",
+    (gate) => {
+      const workflow = readFileSync(path.join(repoRoot, ".github", "workflows", "standing-payload-delta.yml"), "utf8");
+      const calls = [...workflow.matchAll(new RegExp(`src/scripts/${gate}\\b[^\\n]*`, "g"))].map((m) => m[0]);
+      expect(calls.length, `${gate} has a caller in the drain job`).toBeGreaterThan(0);
+      for (const call of calls) expect(call).toMatch(/--baseline origin\/main\b/);
+    },
+  );
 
   it("never calls the same gate twice across the drain", () => {
     // Read from the workflow: a gate copied into a second batch would satisfy

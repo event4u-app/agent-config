@@ -1,0 +1,13 @@
+{
+  "skill": "project-analyzer",
+  "last_eval": "2026-10-16",
+  "description": "3 should-trigger + 3 should-not-trigger. Should-trigger covers an explicit single-pass tech-stack scan, an onboarding baseline write-up, and a German phrasing. Should-not-trigger covers near-miss neighbours (a deep multi-pass audit, regular feature work) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "run the project analyzer and detect this project's tech stack", "trigger": true, "class": "exemplar"},
+    {"q": "I'm onboarding to this codebase, write a baseline analysis of the stack and features", "trigger": true, "class": "exemplar"},
+    {"q": "analysiere das Projekt einmal und erkenne den Tech-Stack", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "do a deep multi-pass audit of the whole system", "trigger": false, "class": "near-miss", "note": "a deep multi-pass audit is universal-project-analysis"},
+    {"q": "add a CSV export to the invoices page", "trigger": false, "class": "near-miss", "note": "regular feature work does not need a project scan"},
+    {"q": "what time zone does the cron run in?", "trigger": false, "class": "counterexample"}
+  ]
+}

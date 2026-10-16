@@ -1,0 +1,13 @@
+{
+  "skill": "deep-reading-analyst",
+  "last_eval": "2026-10-16",
+  "description": "3 should-trigger + 3 should-not-trigger. Should-trigger covers a deep dive on a pasted article, a named thinking framework applied to a memo, and a German phrasing. Should-not-trigger covers near-miss neighbours (a three-bullet summary, a critique of a code diff) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "deep dive into this article and extract the real insights, not a summary", "trigger": true, "class": "exemplar"},
+    {"q": "apply SCQA and inversion thinking to this strategy memo", "trigger": true, "class": "exemplar"},
+    {"q": "analysiere diesen Artikel gründlich mit mentalen Modellen", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "give me a three-bullet TL;DR of this page", "trigger": false, "class": "near-miss", "note": "a short summary is a direct answer, not a multi-framework analysis"},
+    {"q": "poke holes in this diff before I merge it", "trigger": false, "class": "near-miss", "note": "critique of a code change is adversarial-review"},
+    {"q": "add a dark mode toggle to the settings page", "trigger": false, "class": "counterexample"}
+  ]
+}

@@ -130,12 +130,22 @@ needs a transcript.
 
 ## Phase 1 — Give the host its key back
 
-- [ ] **1.1 Rename the package key.** `context: large` → `context_window: large`
+- [x] **1.1 Rename the package key.** `context: large` → `context_window: large`
   across the schema, the writer, the six skills and every reader.
+  Done 2026-10-16: both the skill and the command schema carry `context_window`;
+  `backfill_model_tier.ts` writes it; the six skills, `model-recommendations.md`
+  and the projection-fidelity contract say it; a schema test rejects the retired
+  `context: large` (seen red before the rename). No reader consumed the old key.
   verify: the schema test is green, and `! grep -rq '^context: large' src/skills` -> 0
-- [ ] **1.2 Guard the host's keys.** A lint row: no package-owned skill
+- [x] **1.2 Guard the host's keys.** A lint row: no package-owned skill
   frontmatter key may equal a key the host documents for skills; the host key
   list is data with its documentation URL, read date and expiry.
+  Done 2026-10-16: `src/config/host-skill-frontmatter-keys.json` holds the host
+  page's 20 keys and the Agent Skills spec's 6, both read 2026-10-16 and expiring
+  2027-01-14, plus a `passthrough` list of keys the package uses with the host's
+  meaning. `validate_frontmatter` checks the skill and command schemas against
+  it; an expired list warns. Re-adding `context` to the skill schema made the
+  corpus run fail with `host-key-collision`; restored, it passes.
   verify: a colliding fixture fails; the corpus passes.
 - [ ] **1.3 Snapshot the projection per host.** Projected SKILL.md for the first
   host, the second host and one unaffected host, so a host key is never rewritten
@@ -145,9 +155,19 @@ needs a transcript.
 
 ## Phase 2 — Reach every skill, and say how
 
-- [ ] **2.1 A recovery path without the MCP server.** Once the search roadmap's
+- [x] **2.1 A recovery path without the MCP server.** Once the search roadmap's
   2.1 lands, `missing-skill-recovery` names that shell search path as the fallback
   when the MCP tool is not registered.
+  Done 2026-10-16: the rule already named `route:explain --skills` (the search
+  roadmap's 2.2), but on a default install the host root resolves, so the
+  package projection was never ranked and an uninstalled skill stayed
+  unreachable. The report now also ranks the projection and lists, under
+  `not_installed`, rows whose name no resolved root carries, each labelled
+  `not-installed`; a projection-only answer labels every row so.
+  `tests/install/skill_reach_not_installed_real_install.test.ts` runs a hermetic
+  `--global --tools=claude-code` install into a scratch `HOME`, picks the first
+  skill it did not write and finds it labelled `not-installed`; with the field
+  forced empty the test failed.
   verify: scratch-`HOME` default install with MCP disabled — a query for an
   uninstalled skill returns it, labelled `not-installed`.
 - [ ] **2.2 Declare reach.** `doctor` prints installed / described / name-only /
@@ -176,9 +196,14 @@ needs a transcript.
 - [ ] **3.3 Widening is posed, not taken.** Extending the fork set is put to the
   owner on 3.2's record.
   verify: the question is recorded with `asked:` beside 3.2's result.
-- [ ] **3.4 Compaction tail to the body budget.** Record in
+- [x] **3.4 Compaction tail to the body budget.** Record in
   `src/config/skill-body-budget.json`'s comment the 5,000-token re-attach limit
   and name the six D4 skills as shrink candidates. No new gate.
+  Done 2026-10-16: the `_comment` names the 5,000 / 25,000-token re-attach limit
+  and the six SKILL.md files at or above 20,193 characters that day —
+  existing-ui-audit, ai-council, memory-consolidation, roadmap-writing,
+  git-workflow, conventional-commits-writing. Same change: six `raised` entries
+  of +7 bytes each for the 1.1 key rename, which the body gate refused unraised.
   verify: the comment names the limit and the six skills.
 
 ## Phase 4 — Materialise on demand, only where a host drops or lacks a skill
@@ -248,9 +273,11 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ## Phase 6 — Small items to existing carriers
 
-- [ ] **6.1 One arrival for the live-arm stub.** Record on
+- [x] **6.1 One arrival for the live-arm stub.** Record on
   `stubs/road-to-skill-tiering-live-arm.md` that the host now documents hot pickup
   and a name-only listing state.
+  Done 2026-10-16: the stub's arrivals line counts `inbox-2026-10-n` and quotes
+  both from the host's skills page as read that day.
   verify: the stub carries the line with this round's codename.
 - [ ] **6.2 Watch the second host's skills page** in the host-docs digest watch
   the search roadmap's 0.2 adds for the first host.

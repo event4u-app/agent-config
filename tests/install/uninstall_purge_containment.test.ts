@@ -239,11 +239,19 @@ describe('uninstall --purge — containment', () => {
         }
     });
 
-    it('is still possible after a plain uninstall — the two-step case', () => {
-        // The source round marked this unverifiable and it is the one genuine
-        // unknown in the set: a plain `uninstall --global` must not remove the
-        // record a later `--purge` needs. A recorded green here is the answer,
-        // not a wasted case.
+    it('is still possible after a plain removal — the two-step case, at this level', () => {
+        // SCOPE, because this case is easy to over-read. It proves the DELETION
+        // FUNCTION can run twice: a `purge: false` call does not consume the
+        // record a later `purge: true` call needs.
+        //
+        // It does NOT prove the two-step CLI flow works, and an end-to-end run
+        // on 2026-10-16 showed it does not: `uninstall --global` deletes the
+        // LOCKFILE (`cmd_uninstall.ts` global path, final block), so a second
+        // invocation finds no tools and exits 1 before reaching this function
+        // at all. That is pre-existing — the behaviour predates the inventory
+        // fix and the source round's own expectation line predicted `rc=1`
+        // for it — and it is tracked as step 1.5 of
+        // `road-to-an-uninstall-that-only-removes-what-it-brought`.
         const fx = makeFixture({ record: true });
         const foreignBefore = new Map(fx.foreign.map((f) => [f, digest(f)]));
 
