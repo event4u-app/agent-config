@@ -6,6 +6,12 @@ probe: none
 
 # Stub: the governance-vs-consumer share is measured and has never been acted on
 
+> **Arrivals:** 9 (at least) — latest `inbox-2026-10-t` (2026-10-16): two parallel
+> analyses again ask that cycles go to consumer capability rather than to
+> self-governance, and supply two conflicting WIP numbers (12 and 8) for the
+> active-roadmap estate. The count before it read: 8 (at least).
+
+
 > **Stub — not active work.** The measurement half shipped and was archived
 > (`agents/roadmaps/archive/road-to-meta-ratio-measured.md`); the AI council
 > that supplied its mechanism explicitly **declined** a ratio ratchet, and

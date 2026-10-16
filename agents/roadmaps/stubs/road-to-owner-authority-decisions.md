@@ -6,7 +6,9 @@ probe: none
 
 # Stub: road to the owner-reserved authority decisions
 
-> **Arrivals:** 5 (at least) — latest `inbox-2026-09-w` (2026-09-08); earlier: `inbox-2026-09-m`
+> **Arrivals:** 6 (at least) — latest `inbox-2026-10-t` (2026-10-16): the owner-queue
+> load is named again as the constraint behind the governance-versus-consumer split.
+> The count before it read: 5 (at least) — latest `inbox-2026-09-w` (2026-09-08); earlier: `inbox-2026-09-m`
 > (2026-09-05), agents/roadmaps/archive/road-to-gate-autonomy.md,
 > agents/roadmaps/archive/road-to-user-out-of-the-loop.md, one untracked prior round. The
 > 2026-09-08 round carried two challenge-me interviews in which the owner **answered
