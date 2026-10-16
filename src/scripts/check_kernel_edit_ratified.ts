@@ -234,7 +234,7 @@ const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
  *     that could quietly narrow the gate while every other path kept working.
  *
  * No `pre_tool_use` concern bound in `hook_manifest.yaml` denies an edit to
- * either: the plumbing guard protects three generated build outputs and names
+ * either: the plumbing guard protects four generated build outputs and names
  * `dispatch_hook.ts` only where it reads one, and the kernel-rule write guard
  * imports `kernel_rules.ts` without protecting it. For these two paths the
  * record this gate demands is the only layer, not a second one beside a deny.

@@ -993,9 +993,12 @@ gaps again; the binding closes replay, and nothing else.
       header now says neither path is denied at tool-call time and that the
       record is their only layer. Re-checked against the guards at that base, not
       carried over from the 2026-10-12 note: `block_plumbing_writes.ts` protects
-      `hooks/hooks.json`, `hook_manifest.json` and `host_lowering.json`, and
+      four build outputs — `dist/hooks/dispatch.js`, `hooks/hooks.json`,
+      `hook_manifest.json` and `host_lowering.json`; the 2026-10-12 note's
+      "three" predates the bundle joining the list — and
       `block_kernel_rule_writes.ts` only imports `kernel_rules.ts`. The verify
-      grep reads 0.
+      grep reads 0, and `check_kernel_edit_ratified_header_claims.test.ts` keeps
+      the header's claim true against both guards.
 
 ## Phase 5 — A council that cannot settle it stops the run for the user
 
