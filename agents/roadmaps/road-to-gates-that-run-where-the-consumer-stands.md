@@ -149,6 +149,31 @@ consumer behaviour points at something that executes.
       repository is not evidence for a claim about a consumer's machine.
       The measured exec share is written from the run's output, never predicted.
       verify: `./scripts-run src/scripts/build_proof` -> 0
+      **Open, read 2026-10-16.** Of the 11 backed ids in the 1.2 subset, one
+      already meets the bar (`host-agent-count`, `exec:` into
+      `tests/install/toolDetection.test.ts`). The other ten split three ways,
+      and none of the three is closed by editing the ledger alone:
+      (a) `surgical-uninstall`, `council-fallback-loses-zero-seats` and
+      `default-install-context-cost` carry `exec:` evidence that runs, but
+      into `tests/lib/`, `tests/scripts/` or a repository count — they need a
+      harness case, which this file's own scope note leaves to the sibling
+      roadmaps; `surgical-uninstall` is also the one of the ten markered in
+      `README.md`, so downgrading it would change public copy.
+      (b) `install-audit-clean` and `hook-dispatch-latency` point at CI jobs
+      that already run on a fresh install or on the installed invocation path.
+      Marking them `unbacked` would misstate them; wrapping each as an
+      `exec:` harness case is the honest fix and is the same harness work.
+      (c) `thin-inject-delivery-equivalence`,
+      `mcp-registered-server-standing-cost`,
+      `skill-tiering-h2-costs-more-by-default`, `scope-dedup-cold-start-reduction`
+      and `gated-platform-reads` are fixture or network measurements of a
+      consumer-facing mechanism. `unbacked` means "not yet bound" in
+      `docs/CLAIMS.md`, so flipping a finished measurement to it files a
+      reading as debt — the misfiling the ledger's own `resolved-null` and
+      `withdrawn` paragraphs exist to prevent, and Risk rank 1 below. D5's
+      revisit condition (a third evidence class) is the shape of the real fix.
+      Doing (c) by mass status change was declined in this lane for that
+      reason; doing (a) and (b) waits on harness cases.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
@@ -192,6 +217,7 @@ consumer behaviour points at something that executes.
 | D3 | deterministic | agent | The supplied 21-of-353 figure is not carried forward unverified | 353 reproduced; 21 did not | 1.1 reproduces it |
 | D4 | product-owned | owner | Hold the ratchet question for the `consumer-gate-denominator` blocker; step 1.1 produces the figure either way | a ratchet floor set from the first reading of a metric nobody has watched move fixes a number before its variance is known | the blocker resolves, or three months of reported readings exist |
 | D5 | reversible-technical | agent | A pointer into this repository does not back a claim about a consumer machine | it is the distinction that makes the 18-of-62 figure meaningful rather than an accounting detail | the claim vocabulary gains a third evidence class |
+| D6 | reversible-technical | agent | Step 2.2's "advisory by default, `manual` under `--strict`" is carried as a `warn` row: `doctor` and `--strict` exit 0 on it, `--strict --strict-level warn` fails | the doctor's published status vocabulary is `ok \| warn \| fail \| skipped`; a `manual` value would not reach the MCP `doctor_report` contract | the status vocabulary gains a value that means "needs a human" |
 
 ## What this roadmap deliberately does not do
 
@@ -215,18 +241,18 @@ consumer behaviour points at something that executes.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** A script re-derives the consumer-path gate count from
+- [x] **AC-1** A script re-derives the consumer-path gate count from
       `hook_manifest.yaml` and the CLI surface, and the written figure is its
       output.
-- [ ] **AC-2** The consumer-claim subset of `docs/CLAIMS.md` is enumerated by
+- [x] **AC-2** The consumer-claim subset of `docs/CLAIMS.md` is enumerated by
       claim id.
-- [ ] **AC-3** A fixture monorepo with a roadmap outside `agents/` yields
+- [x] **AC-3** A fixture monorepo with a roadmap outside `agents/` yields
       exactly one advisory finding naming the target, and the tree is
       byte-identical afterwards.
-- [ ] **AC-4** The artifact-location detector has two callers and one
+- [x] **AC-4** The artifact-location detector has two callers and one
       implementation, asserted by a test that changes it once and sees both
       fail.
-- [ ] **AC-5** `docs/contracts/` carries a generated, drift-checked exit-code
+- [x] **AC-5** `docs/contracts/` carries a generated, drift-checked exit-code
       register for `init`, `sync`, `doctor` and `uninstall`.
 - [ ] **AC-6** `docs/proof.md`'s exec share is written from a `build_proof`
       run in the same change, and no consumer-facing claim is `backed` on a
