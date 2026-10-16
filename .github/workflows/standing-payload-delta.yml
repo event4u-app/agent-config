@@ -737,3 +737,44 @@ jobs:
           ./scripts-run src/scripts/lint_skill_descriptions --quiet || rc=1
           ./scripts-run src/scripts/lint_skill_originality --quiet || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, fifth batch (2.2e) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # The rest of the window: the remaining `wire`-class gates in name order
+      # from lint_skill_router_head, nineteen, none skipped. Each exited 0 with
+      # this argv on the branch base and left `git status` clean — including the
+      # four writer-shaped ones the roadmap names, which were checked first.
+      # second_brain_retrieval reaches the network only under `--run`; this step
+      # passes `--dry-run`, which stubs the model arms.
+      - name: Drain 2.2e-1 — skill router head, skill scripts readonly, skill tools, spawn payload, store boundary, surface matrix, ticket buildable, token budget discipline, trigger precision, ui stack bundles
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_skill_router_head --quiet || rc=1
+          ./scripts-run src/scripts/lint_skill_scripts_readonly --quiet || rc=1
+          ./scripts-run src/scripts/lint_skill_tools --quiet || rc=1
+          ./scripts-run src/scripts/lint_spawn_payload || rc=1
+          ./scripts-run src/scripts/lint_store_boundary || rc=1
+          ./scripts-run src/scripts/lint_surface_matrix || rc=1
+          ./scripts-run src/scripts/lint_ticket_buildable || rc=1
+          ./scripts-run src/scripts/lint_token_budget_discipline --quiet || rc=1
+          ./scripts-run src/scripts/lint_trigger_precision --quiet || rc=1
+          ./scripts-run src/scripts/lint_ui_stack_bundles --quiet || rc=1
+          exit "$rc"
+
+      - name: Drain 2.2e-2 — versioned cache, hook bundle, imperative density, second brain retrieval and score, agent settings, decision engine, flow teams, reach prescriptions
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_versioned_cache --quiet || rc=1
+          ./scripts-run src/scripts/rebuild_hook_bundle || rc=1
+          ./scripts-run src/scripts/report_imperative_density || rc=1
+          ./scripts-run src/scripts/second_brain_retrieval --dry-run || rc=1
+          ./scripts-run src/scripts/second_brain_score --dry-run || rc=1
+          ./scripts-run src/scripts/validate_agent_settings || rc=1
+          ./scripts-run src/scripts/validate_decision_engine || rc=1
+          ./scripts-run src/scripts/validate_flow_teams --quiet || rc=1
+          ./scripts-run src/scripts/validate_reach_prescriptions --quiet || rc=1
+          exit "$rc"

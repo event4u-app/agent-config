@@ -169,7 +169,7 @@ with it and left alone.
       host job's duration with the batch is recorded — neither can be taken
       on this branch's local reading, which is 104.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t "first batch, exactly" --reporter=verbose` -> /✓.*first batch, exactly/
-- [ ] **2.2b–2.2e The next eighty, twenty a batch,** by the same rule, each
+- [x] **2.2b–2.2e The next eighty, twenty a batch,** by the same rule, each
       with its own exact-set case in `every-wire-class-gate-has-a-workflow-caller`.
       Four of them are writer-shaped and get the `git status` check first:
       `rebuild_hook_bundle`, `report_imperative_density`, both `second_brain_*`.
@@ -188,6 +188,12 @@ with it and left alone.
       wired as `Drain 2.2d-1` and `Drain 2.2d-2`; two of its gates default their
       base to the local `main` and run with `--baseline origin/main`. Left: 2.2e,
       twenty gates from `lint_skill_router_head`.
+      **Closed 2026-10-16 with 2.2e**, nineteen gates, which empties the window:
+      `Drain 2.2e-1` and `Drain 2.2e-2`, none skipped, the four writer-shaped
+      gates checked first and clean. The batch test marks 2.2e `final`, the one
+      batch allowed fewer than twenty. 79 of the "next eighty" are wired; the
+      eightieth, `lint_marketplace_install_completeness`, is red and goes to 2.2f
+      with 2.2a's four.
 - [ ] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
       if their reasons are resolved; a gate whose reason stands stays in the
       backlog with it written down, never declared to move the number.
