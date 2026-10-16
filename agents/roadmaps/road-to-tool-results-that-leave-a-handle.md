@@ -90,7 +90,11 @@ retention; concurrent write, read and cleanup.
       `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`), so a legacy
       `{bytes}` line counts as envelope bytes with delivered bytes unknown.
       verify: `grep -c '^| D6 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
-- [ ] **1.2 Classify content results exactly as pre-registered.** A classifier in
+- [x] **1.2 Classify content results exactly as pre-registered.** *Done
+      2026-10-16: `classifyResult` + `contentProfile` in the report, a per-result
+      `scanToolResultRecords` in `cc_transcript.ts` (command and timestamp kept),
+      the D11 window fixed in code and a run before it closes labelled PEEK.
+      Seen red first; not run over the window.* A classifier in
       `src/scripts/report_reducible_classes.ts` sorts a result into `Read:text`,
       `Bash:file-print`, `Bash:vcs-content`, the execution profile, or Bash
       residue by the PREREG table and nothing else; `--profile content` reports
