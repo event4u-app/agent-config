@@ -80,21 +80,35 @@ consumer behaviour points at something that executes.
 
 ## Phase 2 — Implement the check that is cited and absent
 
-- [ ] **2.1 Write the artifact-location check.** The consumer half
+- [x] **2.1 Write the artifact-location check.** The consumer half
       `check_agent_artifact_location.ts:15` already promises, reusing
       `is_roadmap_candidate` rather than a second detector — one detector is
       the file's own argument.
       verify: a fixture monorepo carrying
       `apps/x/docs/roadmaps/road-to-y.md` yields exactly one finding naming
       the target location under `agents/`.
-- [ ] **2.2 Advisory by default, `manual` under `--strict`. Report only.**
+      **Result:** `doctor`'s `artifact-location` row
+      (`src/scripts/_lib/install_reach_checks.ts`, so `cmd_doctor.ts` does not
+      grow). `tests/install/doctor_artifact_location.test.ts` runs the real
+      doctor against the fixture and reads one finding,
+      `apps/x/docs/roadmaps/road-to-y.md → agents/roadmaps/road-to-y.md`.
+- [x] **2.2 Advisory by default, `manual` under `--strict`. Report only.**
       No auto-move: `doctor` is read-only, and moving a consumer's file
       without asking is the ownership break a sibling roadmap exists to end.
       verify: the fixture run leaves the tree byte-identical.
-- [ ] **2.3 One detector, two callers.** The package gate and the consumer
+      **Result:** the doctor's status vocabulary is `ok | warn | fail |
+      skipped` and has no `manual`, so "advisory, opt-in failing" is carried
+      as `warn`: a default run and `--strict` (level `fail`) exit 0 on it;
+      `--strict --strict-level warn` fails. The same harness case hashes every
+      path and byte of the fixture before and after and asserts equality.
+- [x] **2.3 One detector, two callers.** The package gate and the consumer
       check import the same function.
       verify: a test that changes the detector's behaviour fails both call
       sites, not one.
+      **Result:** the detector moved to `src/scripts/_lib/agent_artifact_location.ts`;
+      the gate re-exports it. `agent_artifact_location_two_callers.test.ts`
+      replaces `scan` once and sees the gate flip 0 → 1 and the doctor row
+      flip `ok` → `warn`.
 
 ## Phase 3 — Freeze the exit-code contract
 
