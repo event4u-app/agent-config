@@ -147,9 +147,17 @@ needs a transcript.
   it; an expired list warns. Re-adding `context` to the skill schema made the
   corpus run fail with `host-key-collision`; restored, it passes.
   verify: a colliding fixture fails; the corpus passes.
-- [ ] **1.3 Snapshot the projection per host.** Projected SKILL.md for the first
+- [x] **1.3 Snapshot the projection per host.** Projected SKILL.md for the first
   host, the second host and one unaffected host, so a host key is never rewritten
   silently.
+  Done 2026-10-17: `tests/install/host_skill_projection_snapshot.test.ts` copies
+  the six skills from `dist/agent-src/skills` through the installer's own
+  `_copy_dir_dereferencing_symlinks` into a scratch home for claude-code (plus
+  the `model_tier` → `model` render), codex (`~/.codex/skills`, the Claude
+  bundle) and augment, and pins the landed key order. It also asserts no
+  host-documented key is added, dropped or rewritten in deploy except the one
+  deliberate `model` write. With `dist/.../deep-reading-analyst/SKILL.md` set
+  back to `context: large` it failed 4 cases; restored, 37 pass.
   verify: snapshot test; the six skills' projected frontmatter carries
   `context_window`.
 
