@@ -41,6 +41,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/adoption_status.ts → parents[2] is the repo root (mirrors
 // `Path(__file__).resolve().parent.parent.parent` in the .py).
@@ -523,7 +525,7 @@ function _readPullRequest(ref: string): UpstreamReading {
         { encoding: 'utf8', timeout: 20_000 },
     );
     if (proc.status !== 0) {
-        const snip = _pyStrip(proc.stderr ?? '').slice(0, 80);
+        const snip = sanitize_text(_pyStrip(proc.stderr ?? '')).slice(0, 80);
         return { ok: false, reason: `gh exit=${proc.status}: ${snip}` };
     }
     let d: { state?: string; closedAt?: string; mergedAt?: string };
@@ -532,10 +534,10 @@ function _readPullRequest(ref: string): UpstreamReading {
     } catch {
         return { ok: false, reason: 'gh output not parseable as JSON' };
     }
-    if (d.state === 'MERGED') return { ok: true, state: 'merged', at: (d.mergedAt ?? '').slice(0, 10) };
-    if (d.state === 'CLOSED') return { ok: true, state: 'closed', at: (d.closedAt ?? '').slice(0, 10) };
+    if (d.state === 'MERGED') return { ok: true, state: 'merged', at: sanitize_text(d.mergedAt ?? '').slice(0, 10) };
+    if (d.state === 'CLOSED') return { ok: true, state: 'closed', at: sanitize_text(d.closedAt ?? '').slice(0, 10) };
     if (d.state === 'OPEN') return { ok: true, state: 'open' };
-    return { ok: false, reason: `unknown pull-request state ${String(d.state)}` };
+    return { ok: false, reason: `unknown pull-request state ${sanitize_text(String(d.state)).slice(0, 40)}` };
 }
 
 function _readUrl(kind: string, ref: string): UpstreamReading {

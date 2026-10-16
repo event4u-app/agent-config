@@ -115,7 +115,7 @@ nothing in it may be cited as a reason to.
       ledger with a `submitted` row whose upstream is closed must be reported.
       Today it is not.
       verify: the new case is **red** against the current `adoption_status`
-      and its failure names the date-only `stalled` rule.
+      and its failure names the date-only rule behind `stalled`.
       *Observed red 2026-10-16:* all seven new cases failed before the change
       (`TypeError: parse_ledger_rows is not a function` — the detector had no
       way to read an upstream at all); the closed-upstream case asserts the

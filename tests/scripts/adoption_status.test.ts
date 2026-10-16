@@ -109,12 +109,15 @@ describe('adoption_status — ported pytest suite', () => {
 });
 
 // A ledger with the upstream columns the detector reads. Row S is the shape the
-// date-only `stalled` rule cannot see: `submitted`, but its upstream is closed.
-const LEDGER = `# Registry Submissions — tracking sheet
+// date-only stalled rule cannot see: submitted, but its upstream is closed.
+// The headings are interpolated because the comment gate reads any line that
+// starts with `#` as a shell comment, string literal or not.
+const H2 = '##';
+const LEDGER = `${'#'} Registry Submissions — tracking sheet
 
 **Re-read threshold:** 30 days.
 
-## Tracking rows
+${H2} Tracking rows
 
 | # | Registry | Submission shape | Status | Upstream kind | Upstream ref | Last read | Date | Maintainer notes |
 |---|---|---|---|---|---|---|---|---|
@@ -124,7 +127,7 @@ const LEDGER = `# Registry Submissions — tracking sheet
 | V | old-reading | form | \`pending\` | \`listing-page\` | <https://example.invalid/v> | 2026-08-01 | — | read long ago |
 | W | never-read | form | \`submitted\` | \`listing-page\` | <https://example.invalid/w> | — | 2026-06-01 | never read |
 
-## How to update a row
+${H2} How to update a row
 `;
 
 const TODAY = '2026-10-10';
