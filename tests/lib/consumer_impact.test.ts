@@ -35,7 +35,7 @@ describe('parse_impact_trailers', () => {
     it('keeps an out-of-enum value as invalid and does not count it as recorded', () => {
         const t = parse_impact_trailers('Consumer-Impact: huge\n');
         expect(t.recorded).toBe(false);
-        expect(t.invalid).toBe('huge');
+        expect(t.invalid).toContain('huge');
         expect(t.impact).toBe('none');
     });
 
@@ -46,6 +46,72 @@ describe('parse_impact_trailers', () => {
 
     it('does not read a trailer word that only appears mid-line', () => {
         expect(parse_impact_trailers('see the Consumer-Impact: action note\n').recorded).toBe(false);
+    });
+
+    it('ignores a Consumer-Impact line quoted in prose outside the trailer block', () => {
+        const quoted = 'Write it like this:\nConsumer-Impact: action\n\nThis commit changes nothing.\n';
+        expect(parse_impact_trailers(quoted)).toEqual({ impact: 'none', recorded: false, invalid: null, security: false });
+        const mixed = 'Intro.\n\nConsumer-Impact: action\nis the line a breaking commit needs.\n';
+        expect(parse_impact_trailers(mixed).recorded).toBe(false);
+    });
+
+    it('reads the trailer from the final block beside other trailers and continuations', () => {
+        const body = 'Prose.\n\nConsumer-Impact: notice\nSigned-off-by: a <a@example.com>\n  continued\nCo-Authored-By: b <b@example.com>\n';
+        expect(parse_impact_trailers(body)).toEqual({ impact: 'notice', recorded: true, invalid: null, security: false });
+    });
+
+    it('refuses conflicting duplicate trailers and accepts an agreeing duplicate', () => {
+        const conflict = parse_impact_trailers('Consumer-Impact: none\nConsumer-Impact: action\n');
+        expect(conflict.recorded).toBe(false);
+        expect(conflict.invalid).toContain('conflicting');
+        expect(parse_impact_trailers('Consumer-Impact: action\nConsumer-Impact: action\n').impact).toBe('action');
+    });
+
+    it('accepts only the canonical key and value spelling', () => {
+        expect(parse_impact_trailers('consumer-impact: action\n').invalid).toContain('Consumer-Impact');
+        expect(parse_impact_trailers('Consumer-Impact: Action\n').recorded).toBe(false);
+        expect(parse_impact_trailers('Consumer-Impact: action\n').recorded).toBe(true);
+    });
+
+    it('reads Security: yes only from the trailer block', () => {
+        expect(parse_impact_trailers('Security: yes\nwas suggested.\n\nDone.\n').security).toBe(false);
+    });
+});
+
+describe('breaking detection — independent of the conventional subject parse', () => {
+    const sha = 'e'.repeat(40);
+    const breaking: Array<[string, string]> = [
+        ['feat!: drop the flag', ''],
+        ['feat(api)!: drop the flag', ''],
+        ['BREAKING CHANGE: remove legacy command', ''],
+        ['Remove legacy command BREAKING-CHANGE', ''],
+        ['feat: drop the flag BREAKING CHANGE', ''],
+        ['feat: drop the flag', 'Why.\n\nBREAKING CHANGE: the flag is gone'],
+        ['feat: drop the flag', 'Why.\n\nBREAKING-CHANGE: the flag is gone'],
+        ['Remove legacy command', 'BREAKING CHANGE: it is gone\n\nMore detail on a later paragraph.'],
+    ];
+
+    it.each(breaking)('%j with body %j is breaking and the span refuses it without a trailer', (subject, body) => {
+        const c = commit_from_record({ sha, subject, body });
+        expect(c.breaking).toBe(true);
+        expect(impact_span_verdict([c]).exit).toBe(2);
+    });
+
+    it.each(breaking)('%j with body %j passes once a valid trailer closes the body', (subject, body) => {
+        const c = commit_from_record({ sha, subject, body: `${body}\n\nConsumer-Impact: action\n` });
+        expect(impact_span_verdict([c])).toEqual({ exit: 0, message: '' });
+    });
+
+    it('does not flag lowercase prose or a non-conventional plain subject', () => {
+        expect(commit_from_record({ sha, subject: 'feat: x', body: 'not a breaking change: just prose' }).breaking).toBe(false);
+        expect(commit_from_record({ sha, subject: 'Merge stuff', body: '' }).breaking).toBe(false);
+    });
+
+    it('refuses a breaking commit whose trailers conflict', () => {
+        const c = commit_from_record({ sha, subject: 'feat!: x', body: 'Consumer-Impact: none\nConsumer-Impact: action' });
+        const v = impact_span_verdict([c]);
+        expect(v.exit).toBe(2);
+        expect(v.message).toContain('conflicting');
     });
 });
 

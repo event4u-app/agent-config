@@ -333,20 +333,32 @@ the policy is interpreted as follows:
 | **Patch** (x.x.X) | Wording fixes and improvements in existing skills, linter fixes, CI changes, documentation updates, internal refactors with no user-visible effect. |
 
 Consumer impact: a commit states what it costs a consumer in a
-`Consumer-Impact:` trailer in the commit body (for a squash merge, the squash
-commit's body). Values: `none` | `automatic` | `notice` | `action`.
+`Consumer-Impact:` Git trailer (for a squash merge, in the squash commit's
+body). A trailer counts only in the body's final paragraph, and only when every
+line of that paragraph is a `Key: value` trailer (an indented line continues the
+one above); the same line anywhere else — quoted in prose, or in an earlier
+paragraph — is ignored. The key is spelled exactly `Consumer-Impact` and the
+value is exactly one of the lowercase words `none` | `automatic` | `notice` |
+`action`. A misspelt key (`consumer-impact`), an unknown value, or two
+`Consumer-Impact` trailers with different values make the trailer invalid; a
+repeated identical trailer is accepted.
 
 - `none` — nothing a consumer can observe.
 - `automatic` — the update handles it; the consumer does nothing.
 - `notice` — the consumer should read the release notes.
 - `action` — the consumer must do something or the install breaks.
 
-An optional `Security: yes` trailer marks a security fix. A commit with no
-`Consumer-Impact:` trailer is recorded as `none`, with the absence kept. A
-commit whose subject carries `!` or `BREAKING CHANGE` must carry the trailer:
-`task release` refuses a span that contains one without it. Until the
+An optional `Security: yes` trailer, in the same final block, marks a security
+fix. A commit with no valid `Consumer-Impact:` trailer is recorded as `none`,
+with the absence kept. A breaking commit must carry a valid trailer, and
+`task release` refuses a span that contains one without it. A commit is
+breaking when any of these holds, whether or not its subject is a Conventional
+Commit: a `!` before the colon of a conventional subject (`feat!:`,
+`feat(api)!:`); `BREAKING CHANGE` or `BREAKING-CHANGE` anywhere in the subject;
+or a body line that starts with `BREAKING CHANGE:` or `BREAKING-CHANGE:`, in
+any paragraph. Until the
 numbering model is decided, the trailer is recorded and the bump table above
-is unchanged — a `!` subject is still a major.
+is unchanged — a breaking commit, by the rule above, is still a major.
 
 Settings keys: A settings key may be removed or renamed in a minor release
 only when no consumer project can rely on it — default-neutral and derivable,

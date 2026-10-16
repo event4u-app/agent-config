@@ -6,8 +6,8 @@
  * field and a record separator rather than one line per commit. The vocabulary
  * is documented beside the bump table in CONTRIBUTING.md § Versioning policy.
  *
- * Recording is advisory: nothing here changes how a release is numbered. The
- * bump still follows the `!` subject rule in `release.ts`; whether it should
+ * Recording is advisory: the impact does not change how a release is numbered. The
+ * bump still follows breaking-ness (`is_breaking_commit`); whether it should
  * follow the impact instead is an open owner decision.
  */
 
@@ -18,7 +18,7 @@ export interface ImpactTrailers {
     readonly impact: ConsumerImpact;
     /** False when the commit carried no valid trailer and `impact` is the default. */
     readonly recorded: boolean;
-    /** The raw value of an out-of-enum trailer, kept so the refusal can name it. */
+    /** Why the trailer is not valid — out-of-enum value, conflicting duplicates, misspelt key — for the refusal. */
     readonly invalid: string | null;
     readonly security: boolean;
 }
@@ -50,18 +50,51 @@ export function parse_commit_log(raw: string): CommitRecord[] {
     return out;
 }
 
-const IMPACT_LINE = /^Consumer-Impact:[ \t]*(\S*)[ \t]*$/im;
-const SECURITY_LINE = /^Security:[ \t]*yes[ \t]*$/im;
+const TRAILER_LINE = /^(BREAKING CHANGE|[A-Za-z0-9][A-Za-z0-9-]*):[ \t]*(.*?)[ \t]*$/;
+
+/**
+ * The body's Git trailer block: its final paragraph, and only when every line of
+ * it is a `Key: value` trailer or an indented continuation. A `Key:` line quoted
+ * in prose, or sitting in an earlier paragraph, is not a trailer.
+ */
+export function trailer_block(body: string): Array<[key: string, value: string]> {
+    const paragraphs = body.replace(/\r\n/g, '\n').trim().split(/\n[ \t]*\n/);
+    const out: Array<[string, string]> = [];
+    for (const line of (paragraphs[paragraphs.length - 1] ?? '').split('\n')) {
+        if (/^[ \t]+\S/.test(line) && out.length > 0) continue;
+        const m = TRAILER_LINE.exec(line);
+        if (!m) return [];
+        out.push([m[1]!, m[2]!]);
+    }
+    return out;
+}
 
 export function parse_impact_trailers(body: string): ImpactTrailers {
-    const security = SECURITY_LINE.test(body);
-    const m = IMPACT_LINE.exec(body);
-    if (!m) return { ...NO_IMPACT_TRAILERS, security };
-    const value = (m[1] ?? '').toLowerCase();
+    const block = trailer_block(body);
+    const security = block.some(([k, v]) => k === 'Security' && v === 'yes');
+    const variant = block.find(([k]) => k !== 'Consumer-Impact' && k.toLowerCase() === 'consumer-impact');
+    if (variant) return { ...NO_IMPACT_TRAILERS, invalid: `key '${variant[0]}' (spell it Consumer-Impact)`, security };
+    const values = [...new Set(block.filter(([k]) => k === 'Consumer-Impact').map(([, v]) => v))];
+    if (values.length === 0) return { ...NO_IMPACT_TRAILERS, security };
+    if (values.length > 1) return { ...NO_IMPACT_TRAILERS, invalid: `conflicting values '${values.join("', '")}'`, security };
+    const value = values[0]!;
     if ((CONSUMER_IMPACT_VALUES as readonly string[]).includes(value)) {
         return { impact: value as ConsumerImpact, recorded: true, invalid: null, security };
     }
-    return { impact: 'none', recorded: false, invalid: m[1] ?? '', security };
+    return { ...NO_IMPACT_TRAILERS, invalid: `value '${value}'`, security };
+}
+
+/**
+ * Breaking-ness, decided without depending on the subject being conventional: a
+ * `!` before the colon (`bang`, when the conventional parse matched), `BREAKING
+ * CHANGE` / `BREAKING-CHANGE` in the subject, or a `BREAKING CHANGE:` /
+ * `BREAKING-CHANGE:` footer at any body line start. The footer is not limited to
+ * the trailer block: a Conventional Commits breaking footer may run on over
+ * paragraphs, and over-matching here only demands a trailer, where
+ * under-matching lets a breaking change through.
+ */
+export function is_breaking_commit(subject: string, body: string, bang = false): boolean {
+    return bang || /BREAKING[ -]CHANGE/.test(subject) || /^BREAKING[ -]CHANGE:/m.test(body);
 }
 
 export interface ImpactCommit {
@@ -86,7 +119,7 @@ export function impact_span_verdict(commits: readonly ImpactCommit[]): { exit: n
     const missing = commits.filter((c) => c.breaking && !c.trailers.recorded);
     if (missing.length === 0) return { exit: 0, message: '' };
     const lines = missing.map((c) => {
-        const why = c.trailers.invalid !== null ? `invalid value '${c.trailers.invalid}'` : 'no trailer';
+        const why = c.trailers.invalid !== null ? `invalid trailer: ${c.trailers.invalid}` : 'no trailer';
         return `  ${c.sha.slice(0, 7)} ${label(c)} — ${why}`;
     });
     return {
@@ -94,7 +127,7 @@ export function impact_span_verdict(commits: readonly ImpactCommit[]): { exit: n
         message:
             'release span carries a breaking subject with no valid Consumer-Impact trailer:\n' +
             `${lines.join('\n')}\n` +
-            `Each needs a body line 'Consumer-Impact: ${CONSUMER_IMPACT_VALUES.join(' | ')}' ` +
+            `Each needs one 'Consumer-Impact: ${CONSUMER_IMPACT_VALUES.join(' | ')}' trailer in the body's final paragraph ` +
             '(CONTRIBUTING.md § Versioning policy).',
     };
 }

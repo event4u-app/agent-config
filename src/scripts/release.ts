@@ -126,7 +126,7 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
-import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, impact_span_verdict, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
+import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, impact_span_verdict, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
 import { preflightPosition } from './_lib/release_position.js';
 import { settleFindingsLedger } from './_lib/release_findings_ingest.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
@@ -456,8 +456,8 @@ function commits_since(tag: string | null): Commit[] {
 function commit_from_record({ sha, subject, body }: CommitRecord): Commit {
     const trailers = parse_impact_trailers(body);
     const m = CONVENTIONAL_RE.exec(subject);
-    if (!m) return new Commit(sha, 'other', null, subject, false, trailers);
-    const breaking = Boolean(m.groups!['bang']) || subject.includes('BREAKING CHANGE');
+    if (!m) return new Commit(sha, 'other', null, subject, is_breaking_commit(subject, body), trailers);
+    const breaking = is_breaking_commit(subject, body, Boolean(m.groups!['bang']));
     const scope = (m.groups!['scope'] ?? null) as string | null;
     return new Commit(sha, m.groups!['type'] as string, scope, m.groups!['subject'] as string, breaking, trailers);
 }
