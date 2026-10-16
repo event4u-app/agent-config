@@ -695,3 +695,45 @@ jobs:
           ./scripts-run src/scripts/lint_missions --quiet || rc=1
           ./scripts-run src/scripts/lint_model_tier_coverage --quiet || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, fourth batch (2.2d) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Same job, same reasons, same selection rule: the next twenty
+      # `wire`-class gates in name order from lint_namespace, none skipped. Each
+      # exited 0 with this argv on the branch base and left `git status` clean;
+      # none reads the wall clock, a ratchet or the network. Two default their
+      # base to the local branch `main`, which the runner does not have, and are
+      # given `--baseline origin/main` as 2.2c's lint_command_verbs was.
+      - name: Drain 2.2d-1 — namespace, namespace collisions, new skill gate, activation gates, atomic commands, python twin rationale, orchestrator auto-detect, pack first win, pack risk class, profile overlay
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_namespace --quiet || rc=1
+          ./scripts-run src/scripts/lint_namespace_collisions || rc=1
+          ./scripts-run src/scripts/lint_new_skill_gate --baseline origin/main --quiet || rc=1
+          ./scripts-run src/scripts/lint_no_activation_gates --quiet || rc=1
+          ./scripts-run src/scripts/lint_no_new_atomic_commands --baseline origin/main || rc=1
+          ./scripts-run src/scripts/lint_no_python_twin_rationale --quiet || rc=1
+          ./scripts-run src/scripts/lint_orchestrator_auto_detect --quiet || rc=1
+          ./scripts-run src/scripts/lint_pack_first_win --quiet || rc=1
+          ./scripts-run src/scripts/lint_pack_risk_class --quiet || rc=1
+          ./scripts-run src/scripts/lint_profile_overlay_set_only --quiet || rc=1
+          exit "$rc"
+
+      - name: Drain 2.2d-2 — profile personas, provenance, roadmap complexity, roadmap family cap, role experiences, rule interactions, rule skill pack reach, showcase sessions, skill descriptions, skill originality
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_profile_personas --quiet || rc=1
+          ./scripts-run src/scripts/lint_provenance --quiet || rc=1
+          ./scripts-run src/scripts/lint_roadmap_complexity --quiet || rc=1
+          ./scripts-run src/scripts/lint_roadmap_family_cap --quiet || rc=1
+          ./scripts-run src/scripts/lint_role_experiences --plain-language || rc=1
+          ./scripts-run src/scripts/lint_rule_interactions --quiet || rc=1
+          ./scripts-run src/scripts/lint_rule_skill_pack_reach --quiet || rc=1
+          ./scripts-run src/scripts/lint_showcase_sessions || rc=1
+          ./scripts-run src/scripts/lint_skill_descriptions --quiet || rc=1
+          ./scripts-run src/scripts/lint_skill_originality --quiet || rc=1
+          exit "$rc"
