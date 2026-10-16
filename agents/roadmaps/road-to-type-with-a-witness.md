@@ -212,22 +212,24 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       fixture. The derivation of the overrides from the font's vertical metrics
       lands as a mechanics row in `design-asset-discipline.md`.
       verify: `npx vitest run tests/scripts/design_slop_t12.test.ts` -> 0
-- [ ] **2.3 Mechanics rows, no tells.** In `design-asset-discipline.md`:
+- [x] **2.3 Mechanics rows, no tells.** In `design-asset-discipline.md`:
       `unicode-range` subsetting for self-hosted files and `preload` for the one
       above-the-fold face. In `typography-system`: `tabular-nums` for aligned
       figures, `opsz` for optical-size families.
       verify: `grep -c "unicode-range" docs/guidelines/design-asset-discipline.md` -> /^[1-9]/
+      Done 2026-10-16: subsetting + preload bullet in design-asset-discipline; tabular-nums + opsz in typography-system step 3.
 - [ ] **2.4 Parity holds.** The detector-status table lists T11 and T12 with
       their status, and no row reads backed without a test.
       verify: `./scripts-run src/scripts/lint_design_antipattern_parity` -> 0
 
 ## Phase 3 — The SVG tooling learns fill rule and counters
 
-- [ ] **3.1 `svg-authoring` states the counter rule.** In § Trace to measure,
+- [x] **3.1 `svg-authoring` states the counter rule.** In § Trace to measure,
       construct to deliver: a shape with counters (o, e, a, B, 8, an O-ring
       mark) declares its fill rule, outer and inner contours wind in opposite
       directions, and overlap removal runs only after both are settled.
       verify: `grep -ci "fill-rule" src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
+      Done 2026-10-16: counter rule in § Trace to measure step 2.
 - [ ] **3.2 An advisory finding, measured before it gates (decision A8).**
       `svg-structure-filled-counter` in `src/scripts/_lib/svg_rules.ts`: a
       `path` under `nonzero` whose subpath sits inside another subpath with
@@ -381,12 +383,13 @@ failure message the agent can act on.
 
 ## Phase 6 — Third-party registry items are audited before `add`
 
-- [ ] **6.1 Route the item through intake.** `react-shadcn-ui/references/registry.md`
+- [x] **6.1 Route the item through intake.** `react-shadcn-ui/references/registry.md`
       § CLI verbs: a namespaced or third-party item goes through
       `supply-chain-intake` before `add`, with a checklist (network calls,
       environment reads, `eval` or dynamic import, install scripts) and a
       `diff` after `add`. One should-trigger eval for the route.
       verify: `grep -c "supply-chain-intake" src/skills/react-shadcn-ui/references/registry.md` -> /^[1-9]/
+      Done 2026-10-16: intake checklist + `diff` after `add` in registry.md; eval rsu-e7.
 
 ## Decisions
 

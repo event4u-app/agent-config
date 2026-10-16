@@ -174,7 +174,11 @@ nobody is still trying to match. Stop reporting it as progress and say why.
    traced silhouette that clips everything, then named regions split along an
    edge map; smooth, resample and simplify each contour. The outer edge comes
    from one contour and the holes come from the source. That trace is the
-   underlay; the shapes you ship are constructed on top of it.
+   underlay; the shapes you ship are constructed on top of it. **A shape with
+   counters** (o, e, a, B, 8, an O-ring mark) declares its `fill-rule`, winds
+   its outer and inner contours in opposite directions, and runs overlap removal
+   only after both are settled — two same-direction contours under the default
+   `nonzero` paint the counter solid.
 3. **Fit colour, do not pick it.** Least-squares per region against that region's
    own pixels; swap a linear gradient for a radial one only when the residual
    actually drops.
