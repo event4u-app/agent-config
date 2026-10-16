@@ -156,6 +156,11 @@ output. It is the classifier and the data behind it.
       entry is treated as `action`. The origin type names the shapes
       `doctor_install_mode.ts` distinguishes; nothing calls a detector.
       The no-`auto` assertion was seen red by disabling the provenance rule.
+      AC-4 stays open: its second half holds; its first holds for every
+      input that is not suppressed and has a newer candidate. This step
+      makes CI, non-interactive, source checkout, the opt-out and mode `off`
+      resolve to `none`, so a literal "every input" contradicts it. Which
+      wins is for the reviewer to settle; the test asserts the scoped form.
 - [ ] **4.3 Expose it read-only.** `doctor --json` reports the verdict and its
       reasons. Nothing acts on it in this roadmap.
       verify: the banner, `upgrade` and `update` emit byte-identical output on
@@ -243,11 +248,6 @@ direct check named in the revisit column.
 - [ ] **AC-4** Over a ≥ 40-case matrix, `classifyUpdate` returns `ask` for
       every input whose `engines.node` is unsatisfied, and `auto` for **no**
       input carrying an unknown, a missing provenance or a project pin.
-      Held open: the second half holds; the first holds for every input
-      that is not suppressed and has a newer candidate. Step 4.2 itself
-      makes CI, non-interactive, source checkout, the opt-out and mode `off`
-      resolve to `none`, so a literal "every input" contradicts 4.2. Which
-      wins is for the reviewer to settle; the test asserts the scoped form.
 - [x] **AC-5** `classifyUpdate` performs no filesystem or network access,
       asserted by a test that calls it with a frozen input.
 - [ ] **AC-6** The banner, `upgrade` and `update` produce byte-identical
