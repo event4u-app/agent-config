@@ -22,6 +22,16 @@ describe('lint_marketplace_install_completeness — pure helpers', () => {
         // no agent-config invocation yields null.
         expect(lmic.extract_subcommand('echo hello world')).toBeNull();
     });
+
+    it('a message the command prints is not the command it runs', () => {
+        // hooks.json's no-dispatcher branch echoes prose that names "agent-config hook";
+        // the invocation on the same line is `"$BIN" dispatch:hook`.
+        const line =
+            "BIN=agent-config; command -v \"$BIN\" >/dev/null 2>&1 || { echo 'agent-config: no hook dispatcher " +
+            "reachable, so no agent-config hook runs in this session.' >&2; exit 0; }; \"$BIN\" dispatch:hook --platform claude";
+        expect(lmic.extract_subcommand(line)).toBe('dispatch:hook');
+        expect(lmic.extract_subcommand('"$CLAUDE_PROJECT_DIR"/agent-config roadmap:progress')).toBe('roadmap:progress');
+    });
 });
 
 // --- Golden parity on the REAL REPO -----------------------------------------

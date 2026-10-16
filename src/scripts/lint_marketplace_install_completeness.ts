@@ -97,6 +97,9 @@ function load_hook_commands(hooks_path: string): Array<[string, string]> {
 
 /** Pull the agent-config subcommand out of a hooks.json command line. */
 function extract_subcommand(command_line: string): string | null {
+    // Single-quoted text is what the line prints, never what it runs: the
+    // no-dispatcher branch echoes prose that names "agent-config hook".
+    command_line = command_line.replace(/'[^']*'/g, "''");
     const m = _CMD_RE.exec(command_line);
     if (m) {
         return m[1] as string;
