@@ -68,7 +68,7 @@ keep-beta-until: 2026-08-17
 | `.agent-tools.yml` | tracked-durable | maintainer | Declares which tool projections `task generate-tools` builds |
 | `.maintainer-workspace.md` | tracked-durable | maintainer | Maintainer-facing workspace notes; source-repo only |
 | `.gitkeep` | tracked-durable | — | Keeps `agents/` in the tree even when all other files are ignored |
-| `installed-tools.lock` | **local-only** (gitignored) | installer (`scripts/install.py`) | Per-user install inventory; leaks `$HOME`; consumer-only artefact, must never be committed in the source repo |
+| `installed-tools.lock` | **source repo: local-only** (gitignored at `.gitignore:290`) · **consumer repo: tracked-durable** | installer (`scripts/install.py`) | Scoped per repo, because the two halves of this file serve different purposes and the unqualified word "gitignored" sent readers the wrong way. In the SOURCE repo it is a global-scope inventory carrying the maintainer's own absolute paths — it leaks `$HOME` and must never be committed. In a CONSUMER repo it is the project's tool manifest and team-reproducibility surface: `README.md:357` tells teams to commit it and to run `sync` after cloning, so it is deliberately absent from `src/config/gitignore-block.txt` and adding it there would break that workflow. |
 
 ---
 
