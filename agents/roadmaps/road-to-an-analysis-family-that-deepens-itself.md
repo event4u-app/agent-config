@@ -155,7 +155,7 @@ the ADR moves to `superseded`; nothing else exists yet.
 
 ## Phase 2 — The run core
 
-- [ ] **2.1 Scope from wherever the user stands (directive b).**
+- [x] **2.1 Scope from wherever the user stands (directive b).**
       `src/scripts/analysis_target.ts` returns `{project_root, scope_root,
       scope_kind: repo|module|subdir, anchor, vcs, ac_installed}` and every door
       prints it first: `Scope: <kind> <name> at <path> (anchor: <…>)`. It
@@ -177,8 +177,8 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: `npx vitest run tests/scripts/analysis_target.test.ts` -> 0 — covers root,
       subdir, module with and without its own `agents/roadmaps/`, `--scope`
       outside the root, submodule, symlink escape, detached HEAD, no git and no
-      AC install — seen red with the outer walk removed.
-- [ ] **2.2 Run core in code.** `src/scripts/analysis_run.ts`: run id; persisted
+      AC install — seen red with the outer walk removed. Done 2026-10-16; doors print it once wired (AC-1 open).
+- [x] **2.2 Run core in code.** `src/scripts/analysis_run.ts`: run id; persisted
       states `initialized → pinned → seeded → deepened → exchanged → judged →
       awaiting-decision → emitted → validated → committed → pushed → pr-open →
       ci-settled → done`, plus `handed-back` from any state; legal transitions
@@ -190,8 +190,8 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: `npx vitest run tests/scripts/analysis_run.test.ts` -> 0 — resumes a run
       killed in `emitted` without re-emitting, reports a moved head on resume,
       refuses an illegal transition, and stops at the budget cap in
-      `handed-back`.
-- [ ] **2.3 Lenses and the loop ledger (directive c).** Each analyst runs seed +
+      `handed-back`. Done 2026-10-16 (resume and budget cases seen red).
+- [x] **2.3 Lenses and the loop ledger (directive c).** Each analyst runs seed +
       three loops, each over its analysis **and** its roadmap: **Coverage** (what
       is there; code, not the README; what is wrongly marked missing),
       **Adversary** (every retained item tested against named counter-hypotheses
@@ -206,7 +206,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       loop added a top-tier item; the summary prints the real count.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0 — rejects a
       loop without top-tier evidence, never stops before the three lenses ran,
-      and stops loop 4 after a plateaued loop 3.
+      and stops loop 4 after a plateaued loop 3. Done 2026-10-16 (seen red).
 - [ ] **2.4 The analyst class (directive c).** Reads the scope (the web once
       `source-fetch-authorization` allows), writes only into its own round
       folder, never runs project scripts, never pushes. Modes: `subagent` (same
