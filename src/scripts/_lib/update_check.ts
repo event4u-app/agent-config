@@ -1,7 +1,7 @@
 /**
  * Daily update-check banner for the `agent-config` dispatcher.
  *
- * Ported from the retired Python `src/scripts/_lib/update_check.py` (ADR-200,
+ * Ported from its retired Python twin (ADR-200,
  * Phase 2 / Wave 1 batch B). Pure functions: `check_for_update()`
  * decides whether a banner should be emitted and returns the banner
  * string (or `null`). The dispatcher prints the returned string to

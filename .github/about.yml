@@ -7,7 +7,7 @@
 #
 # Never edit description / homepage in the GitHub UI.
 #
-# The `description` field is asserted by `scripts/lint_positioning.py`
+# The `description` field is asserted by `src/scripts/lint_positioning.ts`
 # to be consistent with the README tagline and the `package.json`
 # description.
 description: "Every claim machine-checked, including the artifact counts in these badges — governed skills, rules and replayable state. One contract, every host agent."
