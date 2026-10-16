@@ -5,7 +5,10 @@ review_by: 2026-12-15
 
 # Stub: road to a visibility sync that can actually write
 
-> **Arrivals:** 2 — latest 2026-10-15, repaired by hand a second time. Earlier:
+> **Arrivals:** 3 — latest `inbox-2026-10-t` (2026-10-16): a round reading the
+> update, badge and metadata surfaces found the About homepage, the repository
+> description and the topic list all needing a push this channel cannot make.
+> Third arrival, so the owner question is now live rather than latent. Earlier:
 > 2026-08-03, recorded in `sync-visibility.yml`'s own header note as found
 > "while repairing an about-description drift by hand".
 

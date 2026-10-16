@@ -5,7 +5,11 @@ review_by: 2026-09-25
 
 # Road to an assurance benchmark — stub
 
-> **Arrivals:** 3 (at least) - latest `inbox-2026-10-m` (2026-10-12): two 16.4.0 release reviews ask that installed-rule delivery be measured against real agent outcomes before any further delivery flip — "byte equality is not an outcome test". Same mechanism as below; the promotion probe still cannot return true. Third arrival, so the lapsed `review_by` (2026-09-25) is now an owner question: renew it with a date that names what changes by then, or archive this stub with its probe recorded. The count before it read: 2 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks for an eager-versus-carrier outcome benchmark before any delivery flip; the parity instrument is closed by ADR-202 and the owner decided installed-layer D5 on 2026-10-06. The count before it read: 1 counted — latest `inbox-2026-10-b` (2026-10-01); earlier rounds were
+> **Arrivals:** 4 (at least) - latest `inbox-2026-10-t` (2026-10-16): two parallel
+> analyses again ask that this package's real effect be measured before further
+> delivery or governance work is prioritised; the `review_by` below (2026-09-25)
+> is now 21 days lapsed and a fourth arrival does not make it less of an owner
+> question. The count before it read: 3 (at least) - latest `inbox-2026-10-m` (2026-10-12): two 16.4.0 release reviews ask that installed-rule delivery be measured against real agent outcomes before any further delivery flip — "byte equality is not an outcome test". Same mechanism as below; the promotion probe still cannot return true. Third arrival, so the lapsed `review_by` (2026-09-25) is now an owner question: renew it with a date that names what changes by then, or archive this stub with its probe recorded. The count before it read: 2 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks for an eager-versus-carrier outcome benchmark before any delivery flip; the parity instrument is closed by ADR-202 and the owner decided installed-layer D5 on 2026-10-06. The count before it read: 1 counted — latest `inbox-2026-10-b` (2026-10-01); earlier rounds were
 > not counted for this stub. That round's outcome-benchmark proposal folds here, as no
 > new file: (a) the corpus spans at least eight task classes; (b) where a neighbour
 > package offers a capability, the arms are native / neighbour direct / native plus
