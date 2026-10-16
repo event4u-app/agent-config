@@ -24,7 +24,7 @@
 | 3 | Performance | HIGH | `ux` | WebP/AVIF, Lazy loading, Reserve space (CLS &lt; 0.1) | Layout thrashing, Cumulative Layout Shift |
 | 4 | Style Selection | HIGH | `style`, `product` | Match product type, Consistency, SVG icons (no emoji) | Mixing flat & skeuomorphic randomly, Emoji as icons |
 | 5 | Layout & Responsive | HIGH | `ux` | Mobile-first breakpoints, Viewport meta, No horizontal scroll | Horizontal scroll, Fixed px container widths, Disable zoom |
-| 6 | Typography & Color | MEDIUM | `typography`, `color` | Base 16px, Line-height 1.5, Semantic color tokens | Text &lt; 12px body, Gray-on-gray, Raw hex in components |
+| 6 | Typography & Color | MEDIUM | `typography`, `color` | Base 16px, Line-height per `typography-system` (the one authority), Semantic color tokens | Text &lt; 12px body, Gray-on-gray, Raw hex in components |
 | 7 | Animation | MEDIUM | `ux` | Duration within the authority's per-interaction bands, Motion conveys meaning, Spatial continuity | Decorative-only animation, Animating width/height, No reduced-motion |
 | 8 | Forms & Feedback | MEDIUM | `ux` | Visible labels, Error near field, Helper text, Progressive disclosure | Placeholder-only label, Errors only at top, Overwhelm upfront |
 | 9 | Navigation Patterns | HIGH | `ux` | Predictable back, Bottom nav ≤5, Deep linking | Overloaded nav, Broken back behavior, No deep links |
@@ -112,7 +112,8 @@
 - `viewport-meta` - width=device-width initial-scale=1 (never disable zoom)
 - `mobile-first` - Design mobile-first, then scale up to tablet and desktop
 - `breakpoint-consistency` - Use systematic breakpoints (e.g. 375 / 768 / 1024 / 1440)
-- `readable-font-size` - Minimum 16px body text on mobile (avoids iOS auto-zoom)
+- `readable-font-size` - Body text at or above the Q2 floor in `docs/guidelines/design-antipatterns.md`
+- `control-font-size` - Inputs, selects and textareas at 16px or more on touch layouts; a smaller control font is the documented trigger for iOS auto-zoom on focus
 - `line-length-control` - Mobile 35–60 chars per line; desktop 60–75 chars
 - `horizontal-scroll` - No horizontal scroll on mobile; ensure content fits viewport width
 - `spacing-scale` - Use 4pt/8dp incremental spacing system (Material Design)
@@ -128,7 +129,7 @@
 
 ### 6. Typography & Color (MEDIUM)
 
-- `line-height` - Use 1.5-1.75 for body text
+- `line-height` - Body line-height comes from `typography-system` (one authority; Q8 is the floor)
 - `line-length` - Limit to 65-75 characters per line
 - `font-pairing` - Match heading/body font personalities
 - `font-scale` - Consistent type scale (e.g. 12 14 16 18 24 32)

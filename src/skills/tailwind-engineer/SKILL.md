@@ -201,8 +201,8 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
   they read as auto-generated (catalog C1/C2). Reach for a single accent
   from the token map, or a duotone built from configured tokens.
 - **Anti-AI-slop: typography.** Unless audit-pinned, avoid surfacing
-  the system stack (`font-sans` fallback to Arial / Helvetica / Inter
-  via system defaults) as the *visible* body face. If `tailwind.config`
+  the default as the *visible* body face — Inter as a template webfont,
+  or `font-sans` (Arial / Helvetica). If `tailwind.config`
   pins a font family, use it; if not, treat the missing token as a
   gap to flag, not a license to ship the OS default.
 - **Anti-AI-slop: layout.** Unless audit-pinned, the centered hero +

@@ -508,7 +508,7 @@ file in the set.
 ## The set hash
 
 ```
-SET-SHA256  3b2dcd59d2a3e2cd06eba91b8bc08a6da36c9266e1610baa25064e77c8e4b662
+SET-SHA256  0b00f2759100241601b1e06c14ee378d8548aa7f8464c67de68a0092b621fad7
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -963,7 +963,7 @@ open and which this file does not settle.
 | `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
-| `react-shadcn-ui` | `c09d357232b10629dd11c552cac4513a0712c72de5f584ffc017a16935b428fb` |
+| `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `repomix-packer` | `62489a82ccd7a01c53d8a4ca265a3f9249782c12d5b74ac7ae2e3d1a12df478e` |
@@ -1295,3 +1295,33 @@ whenever the corpus grows on either side and cannot on its own distinguish
 distinguishes them, which is why this section carries it rather than only the
 new number.
 
+
+## Re-pin — 2026-10-16, one train corpus re-hashed, on top of the six-corpus growth
+
+```
+THE ROW IS NOT NEW. IT IS A TRAIN-SIDE RE-HASH, TAKEN AFTER THE GROWTH ABOVE.
+NO HOLDOUT FILE'S BYTES CHANGED; THE SEALED SET STAYS WHERE THE GROWTH LEFT IT.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN ON THE COMBINED TREE.
+```
+
+**What changed.** `road-to-type-with-a-witness` step 6.1 routes a namespaced or
+third-party shadcn registry item through `supply-chain-intake` before `add`, and
+the step asks for one should-trigger query for that route. `react-shadcn-ui`'s
+corpus gained one exemplar (`rsu-e7`).
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `react-shadcn-ui` | train | `0x47` = 71 ≥ 51 | re-hashed |
+
+This re-pin was first written against the tree before the six-corpus growth
+merged, and is re-applied here on top of it rather than merged line by line: the
+row hash and `SET-SHA256` above are the values `trigger_corpus_holdout_pin.test.ts`
+reproduces from the combined tree.
+
+**Both train-side measurements were re-taken on that tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation guard
+(**+5.83 pp** against +2.0 pp), delta-recall **+2.11 pp** below the 5.0 pp bar,
+McNemar p **0.4017**. `delivery-set-measurement-2026-08-31.json`: precision@5
+**80.60 %**, recall loss **38.56 pp** — the ceiling stays **BREACHED** — context
+cost **230.3** tokens against the 500 target, still **MET**. Neither verdict
+changes in kind.

@@ -59,3 +59,16 @@ merge `cssVars` into the project's token layer (reconcile, do not overwrite).
 updated registry) · `info --json` (project context — see the SKILL handshake)
 · `build` (publish a registry). Inspect with `view` before `add` — evidence
 before action.
+
+**A namespaced or third-party item is audited, not only viewed.** Before `add`,
+take an `@ns/item` from any registry outside the project's own through
+[`supply-chain-intake`](../../supply-chain-intake/SKILL.md), and check what
+`view` returns for:
+
+- network calls (`fetch`, `XMLHttpRequest`, WebSocket, beacon URLs);
+- environment reads (`process.env`, `import.meta.env`) beyond the item's
+  documented config;
+- `eval`, `new Function` or a dynamic `import()` of a computed specifier;
+- install scripts or added dependencies with their own lifecycle hooks.
+
+After `add`, run `diff` and read every file the item wrote.
