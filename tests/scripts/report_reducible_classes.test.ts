@@ -1,11 +1,21 @@
 /**
- * road-to-tool-results-that-leave-a-handle.md step 1.1.
+ * road-to-tool-results-that-leave-a-handle.md steps 1.1 and 1.2.
  *
  * verify: this file.
  */
 import { describe, expect, it } from 'vitest';
 
-import { nearestRankP95, readCensus, selectClasses } from '../../src/scripts/report_reducible_classes.js';
+import {
+    classifyResult,
+    type ContentClass,
+    contentProfile,
+    D11_WINDOW_START,
+    d11WindowEnd,
+    inWindow,
+    nearestRankP95,
+    readCensus,
+    selectClasses,
+} from '../../src/scripts/report_reducible_classes.js';
 
 function cls(tool: string, samples: number[]) {
     return { tool, count: samples.length, payload_bytes: samples.reduce((a, b) => a + b, 0), payload_samples: samples };
@@ -68,5 +78,107 @@ describe('report_reducible_classes', () => {
             raw_bytes: 1_200,
             delivered_bytes_known: 700,
         });
+    });
+});
+
+describe('report_reducible_classes — content profile (PREREG)', () => {
+    it('content-class-follows-the-prereg', () => {
+        const cases: Array<[string, string | null, ContentClass]> = [
+            // Read rows: text is content, an image is K7 and stays out.
+            ['Read', null, 'Read:text'],
+            ['Read:image', null, 'out-of-scope'],
+            // Bash:file-print — every program of the table, alone and piped.
+            ['Bash', 'cat src/a.ts', 'Bash:file-print'],
+            ['Bash', 'head -n 40 README.md', 'Bash:file-print'],
+            ['Bash', 'tail -20 CHANGELOG.md', 'Bash:file-print'],
+            ['Bash', 'nl -ba src/a.ts', 'Bash:file-print'],
+            ['Bash', 'wc -l src/a.ts src/b.ts', 'Bash:file-print'],
+            ['Bash', "sed -n '1,120p' src/a.ts", 'Bash:file-print'],
+            ['Bash', "sed -n -e '10p' -e '/^## /p' a.md", 'Bash:file-print'],
+            ['Bash', "sed -n '1,5p;40,60p' a.md", 'Bash:file-print'],
+            ['Bash', 'cat a.md | head -50 | nl', 'Bash:file-print'],
+            ['Bash', "nl -ba a.ts | sed -n '200,260p'", 'Bash:file-print'],
+            ['Bash', 'cat "a b.md"', 'Bash:file-print'],
+            ['Bash', "cat 'x; y && z > w'", 'Bash:file-print'],
+            // sed without -n, with a non-print script, or in place is not print-only.
+            ['Bash', "sed 's/a/b/' a.md", 'execution'],
+            ['Bash', "sed -n 's/a/b/p' a.md", 'execution'],
+            ['Bash', "sed -n -i '1p' a.md", 'execution'],
+            ['Bash', "sed '1,10p' a.md", 'execution'],
+            ['Bash', 'sed -n', 'execution'],
+            // Bash:vcs-content — first stage git diff / git show / git log -p, later stages file-print.
+            ['Bash', 'git diff', 'Bash:vcs-content'],
+            ['Bash', 'git diff origin/main -- src/', 'Bash:vcs-content'],
+            ['Bash', 'git show HEAD~1:src/a.ts', 'Bash:vcs-content'],
+            ['Bash', 'git log -p -3 -- src/a.ts', 'Bash:vcs-content'],
+            ['Bash', 'git diff | head -200', 'Bash:vcs-content'],
+            ['Bash', 'git log --oneline -5', 'execution'],
+            ['Bash', 'git status', 'execution'],
+            ['Bash', 'git -C src diff', 'execution'],
+            ['Bash', 'git diff | grep foo', 'execution'],
+            ['Bash', 'cat a.md | git diff', 'execution'],
+            // Other Bash is the execution profile.
+            ['Bash', 'npx vitest run tests/x.test.ts', 'execution'],
+            ['Bash', 'grep -rn foo src', 'execution'],
+            ['Bash', 'cat a.md | grep foo', 'execution'],
+            ['Bash', 'FOO=1 cat a.md', 'execution'],
+            // Exclusions — residue, whatever the command prints.
+            ['Bash', 'cd src', 'residue'],
+            ['Bash', 'cd src && cat a.ts', 'residue'],
+            ['Bash', 'cat a.ts && cat b.ts', 'residue'],
+            ['Bash', 'cat a.ts; cat b.ts', 'residue'],
+            ['Bash', 'cat a.ts || true', 'residue'],
+            ['Bash', 'cat a.ts\ncat b.ts', 'residue'],
+            ['Bash', 'cat a.ts &', 'residue'],
+            ['Bash', 'cat a.ts > out.txt', 'residue'],
+            ['Bash', 'cat a.ts 2>/dev/null', 'residue'],
+            ['Bash', 'git diff 2>&1 | head', 'residue'],
+            ['Bash', 'cat < a.ts', 'residue'],
+            ['Bash', '(cat a.ts)', 'residue'],
+            ['Bash', 'cat $(ls *.md)', 'residue'],
+            ['Bash', 'cat "$(ls)"', 'residue'],
+            ['Bash', 'cat `ls`', 'residue'],
+            ['Bash', 'cat "unterminated', 'residue'],
+            // A Bash call without a command string joins no content class.
+            ['Bash', null, 'execution'],
+            // Other tools are outside both profiles.
+            ['Edit', null, 'out-of-scope'],
+            ['Grep', null, 'out-of-scope'],
+        ];
+        const got = cases.map(([tool, command]) => [tool, command, classifyResult(tool, command)]);
+        expect(got).toStrictEqual(cases);
+    });
+
+    it('content-profile-verdicts-apply-size-and-sample-floor', () => {
+        const reads = (n: number, size: number) =>
+            Array.from({ length: n }, (_, i) => ({ tool: 'Read', command: null, bytes: i < n * 0.9 ? 100 : size }));
+        const bash = (command: string, n: number, size: number) => Array.from({ length: n }, () => ({ tool: 'Bash', command, bytes: size }));
+        const report = contentProfile(
+            [
+                ...reads(200, 42_029),
+                ...bash('cat a.md', 199, 20_000),
+                ...bash('git diff', 300, 500),
+                ...bash('cd x && cat y', 3, 9_000),
+                ...bash('cd x', 5, 10),
+            ],
+            8192,
+        );
+        expect(Object.fromEntries(report.classes.map((c) => [c.class, [c.count, c.p95, c.verdict]]))).toStrictEqual({
+            'Read:text': [200, 42_029, 'selected'],
+            'Bash:file-print': [199, 20_000, 'insufficient'],
+            'Bash:vcs-content': [300, 500, 'out'],
+        });
+        expect(report.residue).toStrictEqual({ count: 8, above_threshold: 3 });
+        expect(report.selected).toStrictEqual(['Read:text']);
+    });
+
+    it('content-window-is-strictly-after-start-and-before-end', () => {
+        const start = Date.parse(D11_WINDOW_START);
+        const end = Date.parse(d11WindowEnd());
+        expect(end - start).toBe(14 * 24 * 3600 * 1000);
+        expect(inWindow(D11_WINDOW_START, start, end)).toBe(false);
+        expect(inWindow('2026-10-15T10:26:28Z', start, end)).toBe(true);
+        expect(inWindow(d11WindowEnd(), start, end)).toBe(false);
+        expect(inWindow(null, start, end)).toBe(false);
     });
 });

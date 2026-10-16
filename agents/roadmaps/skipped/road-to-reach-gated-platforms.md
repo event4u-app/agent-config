@@ -6,6 +6,17 @@ parent_roadmap: road-to-internet-reach
 
 # Roadmap: Reach — measure the gated-platform case (the half the first null could not test)
 
+> **Narrowed on 2026-10-16 by [`ADR-286`](../../../docs/decisions/ADR-286-discoverability-is-a-goal-asking-is-not.md).**
+> The owner has since adopted **discoverability** as a goal — accurate
+> repository metadata, registry and directory listings the project submits
+> itself to, honest badges, legible documentation. Some of the steps below
+> fall inside that. **This disposition is NOT reversed** (ADR-286 § D5): the
+> file stays skipped, and anything inside the new goal is re-planned as new
+> work with the current tree verified under it, never resurrected from here.
+> In-product asking — a star prompt, a rating prompt, a referral ask — stays
+> refused outright (ADR-286 § D2).
+
+
 > **Superseded (2026-07-25):** its resume trigger fired and it was executed by
 > `road-to-gated-reach`, which measured the gated-platform case with its own
 > pre-registration. The headline finding inverts this file's premise: the case did

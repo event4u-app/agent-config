@@ -23,6 +23,7 @@ import {
     listTranscriptFiles,
     measureBytesPerToken,
     measureContentBytes,
+    scanToolResultRecords,
     scanToolResults,
     scanTranscripts,
     weightedInputUnits,
@@ -474,6 +475,50 @@ describe('scanToolResults - the payload bytes of a tool result, per tool class',
         expect(scan.classes['Read']).toBeUndefined();
         expect(scan.classes['unknown']?.count).toBe(1);
         expect(scan.results).toBe(4);
+    });
+
+    it('records-keep-the-bash-command-and-the-result-timestamp', () => {
+        const root = mkTmp();
+        const projectDir = path.join(root, 'proj');
+        const WRITE_BODY = 'x'.repeat(5_000);
+        appendJsonl(path.join(projectDir, 's.jsonl'), [
+            {
+                type: 'assistant',
+                message: {
+                    id: 'm1',
+                    content: [
+                        { type: 'tool_use', id: 'tu_b', name: 'Bash', input: { command: 'cat a.md' } },
+                        { type: 'tool_use', id: 'tu_w', name: 'Write', input: { file_path: 'a.md', content: WRITE_BODY } },
+                    ],
+                },
+            },
+            {
+                type: 'user',
+                timestamp: '2026-10-16T09:00:00.000Z',
+                message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_b', content: BASH_OUT }] },
+            },
+            { type: 'user', message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_w', content: CONFIRMATION }] } },
+            {
+                type: 'user',
+                timestamp: '2026-10-16T09:00:05.000Z',
+                message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_b', content: BASH_OUT }] },
+            },
+        ]);
+        expect(scanToolResultRecords({ root, projectDir })).toStrictEqual([
+            { tool: 'Bash', command: 'cat a.md', bytes: Buffer.byteLength(BASH_OUT, 'utf8'), timestamp: '2026-10-16T09:00:00.000Z' },
+            { tool: 'Write', command: null, bytes: Buffer.byteLength(CONFIRMATION, 'utf8'), timestamp: null },
+        ]);
+    });
+
+    it('records-match-the-class-scan-on-the-shared-fixture', () => {
+        const root = mkTmp();
+        const projectDir = writeToolFixture(root);
+        const records = scanToolResultRecords({ root, projectDir });
+        const scan = scanToolResults({ root, projectDir });
+        expect(records).toHaveLength(scan.results);
+        for (const cls of Object.values(scan.classes)) {
+            expect(records.filter((r) => r.tool === cls.tool).map((r) => r.bytes)).toStrictEqual(cls.payload_samples);
+        }
     });
 
     describe('payload definition - text strings and base64 image data, never block structure', () => {
