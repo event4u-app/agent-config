@@ -163,6 +163,8 @@ describe('drift guard — the copied triggers still exist in the rule', () => {
             // change: adding the trigger alone reds here.
             { file_pattern: '*.dc.html' },
             { path_prefix: '.claude/design-system/' },
+            // road-to-a-canvas-the-code-owns 2.2: the host's design-sync config.
+            { path_prefix: '.design-sync/' },
         ]);
     });
 
@@ -175,6 +177,7 @@ describe('drift guard — the copied triggers still exist in the rule', () => {
             '*design.html': 'some/dir/design.html',
             '*.dc.html': 'ToDo.dc.html',
             '.claude/design-system/': '.claude/design-system/tokens.json',
+            '.design-sync/': '.design-sync/config.json',
         };
         for (const trigger of ruleTriggers()) {
             const value = trigger['file_pattern'] ?? trigger['path_prefix'];
