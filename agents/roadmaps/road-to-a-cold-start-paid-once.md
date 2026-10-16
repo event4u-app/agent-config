@@ -106,11 +106,12 @@ reuse.
 
 Nothing in Phases 2–6 that reads a capability starts before its row exists.
 
-- [ ] **1.1 Segment a leg into runs.** `cache_realization_report` splits a leg at
+- [x] **1.1 Segment a leg into runs.** `cache_realization_report` splits a leg at
       every `SubagentStart` that carries an already-seen ledger `ref`, and
       reports first-call metrics per run with an ordinal. Closes D10; without it
       no later claim is checkable.
       verify: `npx vitest run tests/scripts/cache_realization_report.test.ts -t resumed-run-gets-its-own-first-call --reporter=verbose` -> /✓.*resumed-run-gets-its-own-first-call/
+      Done 2026-10-16: `segmentLegsIntoRuns` + `readLedgerStarts` in the report, `subagent_runs` in its JSON and text, new `--ledger-dir` flag; joins on `refFor` from the ledger hook, so no second hash.
 - [ ] **1.2 Burst baseline from the ledger that exists.** Spawns per 10 s and per
       60 s, maximum overlap, per session, over the current ledger window — no
       new capture. Filed with its window and its bound: `spawn_guard_shadow`
