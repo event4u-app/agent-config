@@ -148,7 +148,20 @@ the Acceptance Criteria held.
 
 ## Phase 1 — One instrument, extended
 
-- [ ] **1.1 Extend `probe_turnaround`, do not add a second reader.** Add the
+- [x] **1.1 Extend `probe_turnaround`, do not add a second reader.** Done
+      2026-10-16: classifiers and tallies in `src/scripts/_lib/turnaround_throughput.ts`,
+      read in the probe's one transcript pass; new flags `--workspace`,
+      `--git W[,W…]`, `--ref`, `--rules-dir`, `--ci W[,W…]`. One run over the
+      three Context windows printed 11.4 / 7.5 / 7.7 merged changes and 61.1 /
+      32.3 / 21.9 net ticked steps per night, refusals by detector (305 in 141
+      sessions, language 86), 87 structured and 0 plain-text asks of 265 turn
+      ends, 10 usage-limit pauses (4 night, 6 day), push p50 65 s, `tests.yml`
+      p50 14.1 / 15 min, 16 of 29 `ready` at 0 ticked, 106 rule files with 104
+      standing. Four sum checks exit 1 on a mismatch; the overlapping-label
+      fixture fails it; every classifier rule was neutralised once and its test
+      went red. August transcript figures are not re-readable (no store), so
+      August is read through `--git` and `--ci` only. Added paths are not
+      printed; the store line predates this step. Add the
       figures it lacks: turn-end refusals by detector (read through
       `_lib/turn_end_refusals.ts`, not re-parsed), structured and plain-text
       asks per session, usage-limit pauses split night/day, and a `--git`
