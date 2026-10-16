@@ -165,9 +165,12 @@ A split multiplies links. The gate that checks them comes first.
       `frontend-design`), so the ledger schema — linked from nothing inside
       `wireframe` — moved to `design-review/references/`, shipped by both packs.
       verify: `./scripts-run src/scripts/check_skill_requires` -> 0
-- [ ] **1.5 A table of contents is generated, not written.** A generator adds a
+- [x] **1.5 A table of contents is generated, not written.** A generator adds a
       heading index to every reference file over 100 lines and its `--check`
       mode is the drift check — zero author cost, warn-only.
+      *Done 2026-10-17:* `task sync` runs the generator first; 22 of 45
+      reference files got an index (three more over 100 lines carry fewer than
+      two `##` headings and need none).
       <!-- harvest:reference-file-table-of-contents -->
       verify: `./scripts-run src/scripts/generate_reference_toc --check` -> 0
 
