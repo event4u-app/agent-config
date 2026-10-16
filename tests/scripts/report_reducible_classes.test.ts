@@ -14,6 +14,7 @@ import {
     inWindow,
     nearestRankP95,
     readCensus,
+    type RepeatInput,
     repeatShare,
     selectClasses,
 } from '../../src/scripts/report_reducible_classes.js';
@@ -183,7 +184,7 @@ describe('report_reducible_classes — content profile (PREREG)', () => {
         expect(inWindow(null, start, end)).toBe(false);
     });
     it('repeat-share-counts-byte-identical-redelivery', () => {
-        const r = (o: Record<string, unknown>) => ({
+        const r = (o: Partial<RepeatInput>): RepeatInput => ({
             tool: 'Read',
             command: null,
             bytes: 1_000,
@@ -192,6 +193,7 @@ describe('report_reducible_classes — content profile (PREREG)', () => {
             range: null,
             digest: 'd1',
             advised: false,
+            timestamp: null,
             ...o,
         });
         const records = [
