@@ -161,3 +161,18 @@ describe('recordedHashesForRoot', () => {
         expect(recordedHashesForRoot(join(tmp, 'nowhere')).size).toBe(0);
     });
 });
+
+// Step 1.4 of road-to-an-ownership-record-that-belongs-to-the-user. Today's
+// `unknown` arm, pinned by name before Phase 2 changes what reaches it: a
+// globally deployed file installed from a directory that holds no project
+// manifest has NO recorded digest, classifies `unknown`, and is written over.
+// Phase 2 does not change this function's answer for these inputs — it stops
+// a ledger-recorded global target from arriving here with `undefined`.
+describe('the unknown arm a global target reaches with no project manifest', () => {
+    it('GLOBAL-TARGET-WITHOUT-PROJECT-MANIFEST: no recorded digest classifies unknown', () => {
+        const recorded = recordedHashesForRoot(join(tmp, 'no-settings-cwd'));
+        const target = join(homedir(), '.cursor', 'rules', 'a.md');
+        expect(recorded.get(target)).toBeUndefined();
+        expect(classifyOwnership(recorded.get(target), 'edited-on-disk')).toBe('unknown');
+    });
+});

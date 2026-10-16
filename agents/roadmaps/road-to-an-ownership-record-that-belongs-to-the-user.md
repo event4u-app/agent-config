@@ -84,24 +84,32 @@ the same thing in all of them.
 
 ## Phase 1 — Freeze the three losses, red first
 
-- [ ] **1.1 Install without project settings.** A test that installs from a
+- [x] **1.1 Install without project settings.** A test that installs from a
       directory with no settings file, edits a deployed file, re-installs, and
       asserts the edit survives.
       verify: **red**, with `install.ts:3531` named in the failure.
-- [ ] **1.2 A second project under the same HOME.** Install from project A,
+      Done 2026-10-16: `tests/install/ownership_ledger_real_install.test.ts`
+      case 1.1, observed red (edited digest `e7f6d00b…` replaced by `4141eda3…`).
+- [x] **1.2 A second project under the same HOME.** Install from project A,
       then from project B, and assert the record from A is still the record.
       verify: **red**, with the sidecar object named.
-- [ ] **1.3 A retired-but-edited file.** Deploy, edit, retire the file from
+      Done 2026-10-16: case 1.2, observed red at the same digest swap; the case
+      asserts the `.agent-config.new` sidecar by digest once the edit survives.
+- [x] **1.3 A retired-but-edited file.** Deploy, edit, retire the file from
       the package, re-install, and assert the edit is not deleted silently.
       verify: **red**, with `global_deploy_inventory.ts` named.
-- [ ] **1.4 Pin the current `unknown` arm as a named case.** Extend
+      Done 2026-10-16: case 1.3, observed red (`expected null` — the edited
+      retired file was unlinked).
+- [x] **1.4 Pin the current `unknown` arm as a named case.** Extend
       `tests/install/recordedOwnership.test.ts` so today's behaviour is
       asserted explicitly before it changes.
       verify: green now, and the case that changes in Phase 2 is the one this
       step names.
-- [ ] **1.5 Assert bytes and exit codes, not output text.** Every assertion
+      Done 2026-10-16: `GLOBAL-TARGET-WITHOUT-PROJECT-MANIFEST`, green.
+- [x] **1.5 Assert bytes and exit codes, not output text.** Every assertion
       above compares digests.
       verify: a fixture whose file is recreated empty fails.
+      Done 2026-10-16: the step-1.5 case in the same file asserts it.
 
 ## Phase 2 — Two digests, one classifier
 
