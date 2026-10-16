@@ -436,10 +436,16 @@ deleted or left as a silent twin without a row the user has seen.
 
   **Verified on this tree, 2026-10-16, so the pick is applicable rather than
   plausible:** `agent-design` is held by no command and is absent from
-  `CLAUDE_CODE_BUILTIN_NAMES` (103 entries), so the predicate returns `false`
-  for it as (a) requires. `design` itself is **not yet** in that set either —
-  it carries `design-login` and `design-sync` only — which is what step 1.2
-  adds, so 1.3 sequences strictly after 1.2.
+  `CLAUDE_CODE_BUILTIN_NAMES`, so the predicate returns `false` for it as (a)
+  requires.
+
+  **Step 1.2 landed while this was being written, and that settles the
+  sequencing rather than leaving it to be read.** The set now carries `design`,
+  `design-consent` and `design-revoke` beside `design-login` and `design-sync`
+  — 106 entries, up from the 103 measured hours earlier — so the flat `/design`
+  router is already withheld on Claude Code by the existing guard. 1.3 is
+  therefore unblocked in both senses: its blocker is answered and the step it
+  waits on is done.
 
   **`/design:router` was considered and refused** (`openai`): colon portability
   across every supported host is not established in this tree, and the name

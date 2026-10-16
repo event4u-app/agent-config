@@ -166,11 +166,16 @@ and cannot exist on the host's slash surface. That is a property of the host,
 not a gap in the migration.
 
 **Two tree facts confirming the pick is applicable.** `agent-design` is held by
-no command and is not in `CLAUDE_CODE_BUILTIN_NAMES` (103 entries), so the
-predicate returns `false` for it as option (a) requires. And `design` itself is
-**not yet** in that set — the list carries `design-login` and `design-sync` only
-— which is precisely what step 1.2 adds; 1.3 therefore sequences after 1.2 and
-not before it.
+no command and is not in `CLAUDE_CODE_BUILTIN_NAMES`, so the predicate returns
+`false` for it as option (a) requires.
+
+The second fact changed under this record while it was being written, which is
+worth recording rather than silently overwriting. At the time of the round the
+set carried 103 entries and **not** `design`, so the note here read that 1.3
+sequences after 1.2. Step 1.2 then landed on `main` — the set now holds
+`design`, `design-consent` and `design-revoke` at 106 entries — so the flat
+`/design` router is already withheld on Claude Code and 1.3's remaining
+dependency is this verdict alone.
 
 ### q6 — the destruction rule, written by consequence rather than by path
 
