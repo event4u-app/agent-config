@@ -129,39 +129,45 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
 
 ## Phase 0 — Typography truth
 
-- [ ] **0.1 One body line-height authority.** `typography-system` owns the
+- [x] **0.1 One body line-height authority.** `typography-system` owns the
       value: 1.5 default, a stated 1.4 to 1.7 band chosen by measure and
       x-height. `design-rules-checklist.md:27` and `:131` cite it instead of
       restating a number; Q8 stays a floor.
       verify: `grep -c "1.5-1.75" src/skills/design-intelligence/references/design-rules-checklist.md` -> /^0$/
-- [ ] **0.2 Two rows where one mixed two facts.** `design-rules-checklist.md:115`
+      Done 2026-10-16: authority line in typography-system step 3; checklist rows cite it.
+- [x] **0.2 Two rows where one mixed two facts.** `design-rules-checklist.md:115`
       becomes a body floor that cites Q2 and a separate form-control row:
       inputs, selects and textareas at 16 px or more on touch layouts, which is
       what triggers the zoom. The engine behaviour is not re-measured here
       (no WebKit in reach); the row states it as the documented trigger.
       verify: `grep -cE "readable-font-size.*auto-zoom" src/skills/design-intelligence/references/design-rules-checklist.md` -> /^0$/
-- [ ] **0.3 The rich claim matches the content (decision A4).** Add
+      Done 2026-10-16: `readable-font-size` cites Q2; new `control-font-size` row carries the zoom trigger.
+- [x] **0.3 The rich claim matches the content (decision A4).** Add
       `src/skills/typography-system/references/worked-scales.md` with six
       worked scales (marketing, dashboard, docs, e-commerce, SaaS, editorial),
       each the ratio, the base, the rounded sizes and the line-height it takes
       from 0.1. Rewrite `SKILL.md:189-196` to name what the skill carries and
       drop the per-pairing line-height claim.
       verify: `grep -c "per-pairing line-height" src/skills/typography-system/SKILL.md` -> /^0$/
-- [ ] **0.4 Inter is a webfont.** `tailwind-engineer/SKILL.md:204-205` says the
+      Done 2026-10-16: `references/worked-scales.md` with six scales; rich justification rewritten.
+- [x] **0.4 Inter is a webfont.** `tailwind-engineer/SKILL.md:204-205` says the
       template default reaches for Inter as a webfont and the OS stack resolves
       to Arial or Helvetica.
       verify: `grep -c "Inter$" src/skills/tailwind-engineer/SKILL.md` -> /^0$/
-- [ ] **0.5 Every placed font file carries its licence.** `canvas-design` step 2
+      Done 2026-10-16.
+- [x] **0.5 Every placed font file carries its licence.** `canvas-design` step 2
       and its § Font availability inherit the lettering rule at
       `svg-authoring/SKILL.md:245-248`: name, source and licence of every font
       file placed; an unknown licence is reported as unknown; no file is
       fetched whose licence is not shown.
       verify: `grep -ci "licen" src/skills/canvas-design/SKILL.md` -> /^[1-9]/
-- [ ] **0.6 A drift test for the two values.** A vitest under `tests/skills/`
+      Done 2026-10-16: step 4.2 and § Font availability record name, source and licence.
+- [x] **0.6 A drift test for the two values.** A vitest under `tests/skills/`
       reads the three carriers and fails when body line-height or the control
       font-size floor appears with a second value. Seen red against a copy of
       today's text before 0.1 and 0.2 land.
       verify: `npx vitest run tests/skills/typography_value_drift.test.ts` -> 0
+      Done 2026-10-16: seen red on the live text before 0.1/0.2 (2 failing cases), and a pinned prior-text case keeps the sensitivity.
 
 ## Phase 1 — The witness says which face painted
 
