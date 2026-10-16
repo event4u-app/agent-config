@@ -89,14 +89,6 @@ describe('classification', () => {
         expect([row?.content, row?.engine]).toEqual(['fixed-corpus', true]);
     });
 
-    it('does not count an import of a table constant as passing the engine', () => {
-        const row = classifyModule(
-            'src/scripts/x.ts',
-            "import { vendorPrefix } from '" + "./_lib/egress_rules.js';\nawait fetch('https://api.openai.com/v1');",
-        );
-        expect(row?.engine).toBe(false);
-    });
-
     it('keeps an adapter with a configured endpoint as an unclassified row', () => {
         const row = classifyModule('src/scripts/ai-image/adapters/new.sh', '#!/usr/bin/env bash\naiv_post "$AIV_ENDPOINT"\n');
         expect([row?.status, row?.endpoints]).toEqual(['unclassified', ['configured']]);

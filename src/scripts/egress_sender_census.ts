@@ -30,8 +30,7 @@ export function renderRegion(repoRoot: string): string {
         'A module whose endpoint is computed at runtime **and** whose send shape the',
         'scanner does not recognise is absent from this table; that residual is why',
         '`unclassified` exists. `content` stays `undeclared` until the module carries an',
-        '`egress-content:` marker, and `engine` counts a direct import of a function that detects or replaces',
-        '(`detect`, `findSpans`, `replaceSpans`, `replaceValues`); importing a table constant does not count.',
+        '`egress-content:` marker, and `engine` counts a direct import only.',
         '',
         renderTable(scanSenders(repoRoot)),
     ].join('\n');
