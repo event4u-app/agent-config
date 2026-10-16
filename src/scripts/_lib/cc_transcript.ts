@@ -628,3 +628,53 @@ export function scanToolResults(opts: ScanOptions = {}): ToolResultScan {
     }
     return { classes, results: seen.size };
 }
+
+/**
+ * One tool result, not a class sum: what a classifier that looks at the call
+ * needs. `command` is kept for Bash only — every other input (a Write's whole
+ * file, an Edit's strings) would cost memory no caller reads.
+ */
+export interface ToolResultRecord {
+    tool: string;
+    command: string | null;
+    bytes: number;
+    /** The result record's `timestamp`, or null when absent. */
+    timestamp: string | null;
+}
+
+/** Per-result view of {@link scanToolResults}: same join, same dedup by `tool_use_id`, same `:image` split. */
+export function scanToolResultRecords(opts: ScanOptions = {}): ToolResultRecord[] {
+    const files = listTranscriptFiles(opts);
+    const calls = new Map<string, { name: string; command: string | null }>();
+    for (const file of files) {
+        for (const line of readLines(file)) {
+            if (!line.includes('"tool_use"')) continue;
+            const raw = parseLine(line);
+            if (!raw || raw.type !== 'assistant') continue;
+            for (const b of blocksOf(raw) as Array<RawBlock & { input?: { command?: unknown } }>) {
+                if (b.type !== 'tool_use' || typeof b.id !== 'string' || typeof b.name !== 'string') continue;
+                const command = b.name === 'Bash' && typeof b.input?.command === 'string' ? b.input.command : null;
+                calls.set(b.id, { name: b.name, command });
+            }
+        }
+    }
+    const out: ToolResultRecord[] = [];
+    const seen = new Set<string>();
+    for (const file of files) {
+        for (const line of readLines(file)) {
+            if (!line.includes('"tool_result"')) continue;
+            const raw = parseLine(line);
+            if (!raw || raw.type !== 'user') continue;
+            const timestamp = typeof raw.timestamp === 'string' ? raw.timestamp : null;
+            for (const block of blocksOf(raw)) {
+                if (block.type !== 'tool_result' || typeof block.tool_use_id !== 'string' || seen.has(block.tool_use_id)) continue;
+                seen.add(block.tool_use_id);
+                const { bytes, image } = payloadOf(block);
+                const call = calls.get(block.tool_use_id);
+                const name = call?.name ?? 'unknown';
+                out.push({ tool: image ? `${name}:image` : name, command: call?.command ?? null, bytes, timestamp });
+            }
+        }
+    }
+    return out;
+}
