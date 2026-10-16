@@ -12060,6 +12060,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
       "type": "WRITE",
       "via": "self",
@@ -12067,7 +12074,63 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/design-tokens/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/design-variations/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/html-deck/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
       "target": ".agent-src.uncondensed/skills/svg-authoring/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-intelligence/references/integration-mapping.md",
+      "target": ".agent-src.uncondensed/skills/wireframe/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12141,6 +12204,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-review/references/verification-automation.md",
+      "target": ".agent-src.uncondensed/skills/subagent-orchestration/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-review/references/verification-automation.md",
+      "target": ".agent-src.uncondensed/skills/verify-repair-loop/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/design-system-capture/SKILL.md",
@@ -12711,6 +12788,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/anti-slop-cross-reference.md",
+      "target": ".agent-src.uncondensed/rules/design-fidelity.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/anti-slop-cross-reference.md",
       "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/anti-slop-cross-reference.md",
       "type": "WRITE",
       "via": "self",
@@ -12977,10 +13061,31 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/fe-design/references/design-patterns.md",
+      "target": ".agent-src.uncondensed/skills/design-variations/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/references/design-patterns.md",
       "target": ".agent-src.uncondensed/skills/fe-design/references/design-patterns.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/references/design-patterns.md",
+      "target": ".agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md",
+      "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/fe-design/references/design-read-and-memory.md",
@@ -12988,6 +13093,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/fe-design/references/source-led-port.md",
+      "target": ".agent-src.uncondensed/rules/design-fidelity.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/fe-design/references/source-led-port.md",
@@ -16981,6 +17093,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/roadmap-management/references/archival.md",
+      "target": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/references/archival.md",
       "target": ".agent-src.uncondensed/skills/roadmap-management/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -16995,6 +17114,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/roadmap-management/references/authoring.md",
+      "target": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/references/authoring.md",
       "target": ".agent-src.uncondensed/skills/roadmap-management/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -17006,6 +17132,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/references/dashboard.md",
+      "target": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/roadmap-management/references/dashboard.md",
@@ -17027,6 +17160,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/references/dashboard.md",
+      "target": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md",
+      "target": ".agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md",
+      "target": ".agent-src.uncondensed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/skills/roadmap-management/references/lifecycle.md",

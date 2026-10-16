@@ -43,8 +43,8 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --stack react "list rerender memo" [--filter "Severity=HIGH"]
 ```
 
-Stack executors ([`blade-ui`](../../blade-ui/SKILL.md),
-[`livewire`](../../livewire/SKILL.md), [`flux`](../../flux/SKILL.md),
+Stack executors (`blade-ui`,
+`livewire`, `flux`,
 [`react-shadcn-ui`](../../react-shadcn-ui/SKILL.md),
 [`tailwind-engineer`](../../tailwind-engineer/SKILL.md)) pull idiomatic
 guidance + docs URLs from here instead of memory.
