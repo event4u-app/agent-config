@@ -40,7 +40,8 @@ function prose(text: string): string[] {
 /**
  * A structured ask is the numbered-options shape `user-interaction` prescribes:
  * at least two option lines AND a recommendation line. A plain-text ask is a
- * turn whose last prose line ends in a question mark. Precedence is fixed, so a
+ * turn whose last prose line ends in a question mark, read through trailing
+ * emphasis, quotes, brackets and a trailing link. Precedence is fixed, so a
  * structured ask that also ends in `?` is counted once.
  */
 export function classifyTurnEnd(text: string): TurnEndClass {
@@ -48,7 +49,7 @@ export function classifyTurnEnd(text: string): TurnEndClass {
     const options = lines.filter((l) => OPTION_LINE.test(l)).length;
     if (options >= 2 && lines.some((l) => RECOMMENDATION_LINE.test(l))) return 'structured-ask';
     const last = [...lines].reverse().find((l) => l.trim() !== '');
-    if (last !== undefined && /[?？]\s*$/.test(last)) return 'plain-ask';
+    if (last !== undefined && /[?？][*_`'"”)\]\s]*(?:\(<?https?:\/\/\S+>?\)|<https?:\/\/\S+>)?[*_)\]\s]*$/.test(last)) return 'plain-ask';
     return 'other';
 }
 
@@ -114,25 +115,48 @@ export interface CommitFacts {
     ticked: number;
     /** Roadmap files added or renamed into the archive directory. */
     archived: number;
+    /** The subject names a pull request — `(#N)` at its end, or a merge of one. */
+    pr: boolean;
 }
 
 export interface NightTally {
+    /** Nights in the window that carry at least one commit. */
     nights: number;
+    /** Every night in the window, active or not — the denominator a stalled night stays in. */
+    calendarNights: number;
     commits: number;
+    /** Commits whose subject names a pull request. */
+    prCommits: number;
     trueMerges: number;
     netTicked: number;
     archived: number;
 }
 
-/** Totals over the nights in `[from, to]` that carry at least one commit. */
+/** Every night in `[from, to]`, inclusive. */
+export function calendarNights(from: string, to: string): number {
+    const a = Date.parse(`${from}T00:00:00Z`);
+    const b = Date.parse(`${to}T00:00:00Z`);
+    return Number.isNaN(a) || Number.isNaN(b) || b < a ? 0 : Math.round((b - a) / 86_400_000) + 1;
+}
+
+/** Totals over the nights in `[from, to]`, with both the active and the calendar night count. */
 export function tallyNights(commits: readonly CommitFacts[], from: string, to: string): NightTally {
     const nights = new Set<string>();
-    const t: NightTally = { nights: 0, commits: 0, trueMerges: 0, netTicked: 0, archived: 0 };
+    const t: NightTally = {
+        nights: 0,
+        calendarNights: calendarNights(from, to),
+        commits: 0,
+        prCommits: 0,
+        trueMerges: 0,
+        netTicked: 0,
+        archived: 0,
+    };
     for (const c of commits) {
         const n = nightKey(c.epochMs);
         if (n === null || n < from || n > to) continue;
         nights.add(n);
         t.commits += 1;
+        if (c.pr) t.prCommits += 1;
         if (c.parents > 1) t.trueMerges += 1;
         t.netTicked += c.ticked;
         t.archived += c.archived;
@@ -141,13 +165,19 @@ export function tallyNights(commits: readonly CommitFacts[], from: string, to: s
     return t;
 }
 
+/** A squash subject ending in `(#N)`, or GitHub's merge-commit subject. */
+export function isPrSubject(subject: string): boolean {
+    return /\(#\d+\)\s*$/.test(subject) || /^Merge pull request #\d+\b/.test(subject);
+}
+
 const TICK_ADDED = /^\+\s*- \[x\]/i;
 const TICK_REMOVED = /^-\s*- \[x\]/i;
 
 /**
  * First-parent commit facts of `ref` between two dates, read from git. A merge
  * commit is diffed against its first parent, so a squash and a true merge of the
- * same change count the same ticks.
+ * same change count the same ticks. A checked step in a file the commit creates
+ * is authoring, not work done, and is not counted.
  */
 export function readCommitFacts(repoRoot: string, ref: string, from: string, to: string): CommitFacts[] {
     const since = new Date(`${from}T00:00:00Z`);
@@ -159,18 +189,28 @@ export function readCommitFacts(repoRoot: string, ref: string, from: string, to:
         execFileSync('git', ['-C', repoRoot, ...args], { maxBuffer: 1 << 30, encoding: 'utf8' });
 
     const facts = new Map<string, CommitFacts>();
-    for (const row of git(['log', '--first-parent', ref, ...range, '--format=%H %ct %P']).split('\n')) {
-        const [sha, ct, ...parents] = row.trim().split(' ');
+    for (const row of git(['log', '--first-parent', ref, ...range, '--format=%H%x09%ct%x09%P%x09%s']).split('\n')) {
+        const [sha, ct, parents, subject] = row.split('\t');
         if (sha === undefined || sha === '' || ct === undefined) continue;
-        facts.set(sha, { epochMs: Number(ct) * 1000, parents: parents.length, ticked: 0, archived: 0 });
+        facts.set(sha, {
+            epochMs: Number(ct) * 1000,
+            parents: (parents ?? '').split(' ').filter((x) => x !== '').length,
+            ticked: 0,
+            archived: 0,
+            pr: isPrSubject(subject ?? ''),
+        });
     }
     const patch = git(['log', '--first-parent', '-m', ref, ...range, '--format=%x00%H', '-p', '--no-color', '-U0', '--', 'agents/roadmaps']);
     for (const chunk of patch.split('\0').slice(1)) {
         const [head, ...lines] = chunk.split('\n');
         const f = facts.get((head ?? '').trim());
         if (f === undefined) continue;
+        let created = false;
         for (const l of lines) {
-            if (TICK_ADDED.test(l)) f.ticked += 1;
+            if (l.startsWith('diff --git ')) created = false;
+            else if (l.startsWith('new file mode')) created = true;
+            else if (created) continue;
+            else if (TICK_ADDED.test(l)) f.ticked += 1;
             else if (TICK_REMOVED.test(l)) f.ticked -= 1;
         }
     }
@@ -234,19 +274,16 @@ export interface EstateFigures {
 
 const ANY_CHECKBOX = /^\s*- \[[ x~-]\]/i;
 
-/** Estate figures over the roadmap files directly under `dir`. */
-export function readyAtZero(dir: string): EstateFigures {
+/** A step marker, not a prose mention: `blocked-by:` or a code-spanned `` `blocked-by``. */
+const BLOCKED_BY = /blocked-by\s*:|`blocked-by/;
+
+/** Estate figures over roadmap bodies; `status:` is read from the frontmatter only. */
+export function estateOf(bodies: readonly string[]): EstateFigures {
     const out: EstateFigures = { ready: 0, atZero: 0, openSteps: 0, unblocked: 0 };
-    let names: string[];
-    try {
-        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md'));
-    } catch {
-        return out;
-    }
-    for (const n of names) {
-        const body = fs.readFileSync(path.join(dir, n), 'utf8');
-        if (!/^status:/m.test(body)) continue;
-        if (/^status:\s*ready\s*$/m.test(body)) {
+    for (const body of bodies) {
+        const fm = /^---\n([\s\S]*?)\n---/.exec(body)?.[1] ?? null;
+        if (fm === null || !/^status:/m.test(fm)) continue;
+        if (/^status:\s*ready\s*$/m.test(fm)) {
             out.ready += 1;
             if (!/^\s*- \[x\]/im.test(body)) out.atZero += 1;
         }
@@ -258,10 +295,31 @@ export function readyAtZero(dir: string): EstateFigures {
                 text += `\n${lines[j] as string}`;
             }
             out.openSteps += 1;
-            if (!/blocked-by/.test(text)) out.unblocked += 1;
+            if (!BLOCKED_BY.test(text)) out.unblocked += 1;
         }
     }
     return out;
+}
+
+/** Estate figures over the roadmap files directly under `dir`, in the working tree. */
+export function readyAtZero(dir: string): EstateFigures {
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md'));
+    } catch {
+        return estateOf([]);
+    }
+    return estateOf(names.map((n) => fs.readFileSync(path.join(dir, n), 'utf8')));
+}
+
+/** Estate figures at a git ref, so a run's estate and git figures share one tree. */
+export function readEstateAtRef(repoRoot: string, ref: string): EstateFigures {
+    const git = (args: string[]): string =>
+        execFileSync('git', ['-C', repoRoot, ...args], { maxBuffer: 1 << 28, encoding: 'utf8' });
+    const names = git(['ls-tree', '--name-only', ref, 'agents/roadmaps/'])
+        .split('\n')
+        .filter((n) => /^agents\/roadmaps\/[^/]+\.md$/.test(n));
+    return estateOf(names.map((n) => git(['show', `${ref}:${n}`])));
 }
 
 /**
@@ -298,20 +356,23 @@ export function median(xs: readonly number[]): number | null {
  * CI API through `gh`. `updatedAt − startedAt` is the duration to within the
  * run's last status write, the finest resolution the listing offers.
  */
-export function readCiMinutes(repoRoot: string, workflow: string, from: string, to: string): number[] {
+export const CI_LIST_LIMIT = 1000;
+
+export function readCiMinutes(repoRoot: string, workflow: string, from: string, to: string): { minutes: number[]; truncated: boolean } {
     const raw = execFileSync(
         'gh',
         [
             'run', 'list', '--workflow', workflow, '--event', 'pull_request', '--status', 'success',
-            '--created', `${from}..${to}`, '--limit', '1000', '--json', 'startedAt,updatedAt',
+            '--created', `${from}..${to}`, '--limit', String(CI_LIST_LIMIT), '--json', 'startedAt,updatedAt',
         ],
         { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 26 },
     );
+    const rows = JSON.parse(raw) as Array<{ startedAt?: string; updatedAt?: string }>;
     const out: number[] = [];
-    for (const r of JSON.parse(raw) as Array<{ startedAt?: string; updatedAt?: string }>) {
+    for (const r of rows) {
         const a = Date.parse(r.startedAt ?? '');
         const b = Date.parse(r.updatedAt ?? '');
         if (!Number.isNaN(a) && !Number.isNaN(b) && b >= a) out.push((b - a) / 60_000);
     }
-    return out;
+    return { minutes: out, truncated: rows.length >= CI_LIST_LIMIT };
 }

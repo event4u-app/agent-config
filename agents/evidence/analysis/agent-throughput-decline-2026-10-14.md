@@ -161,22 +161,31 @@ measured) unless a row says otherwise.
 ### C1 — Finding 1's "about 4×" compares commits, and commits stopped meaning merges
 
 First-parent commits on `085ec41ff`, night window 22:00–08:00 Europe/Berlin (a
-commit before 08:00 belongs to the previous evening's night), nights with at
-least one commit. Net ticked steps = added minus removed `- [x]` lines under
-`agents/roadmaps/` in each commit's first-parent diff.
+commit before 08:00 belongs to the previous evening's night). Per-night figures
+divide by **every** night in the window, so a night on which runs stalled and
+nothing landed stays in the denominator. A merged change is a commit whose
+subject ends in `(#N)` or is GitHub's merge subject — every commit in all three
+windows does. Net ticked steps = added minus removed `- [x]` lines under
+`agents/roadmaps/` in each commit's first-parent diff; the first tick column
+excludes files the commit creates (a roadmap authored with checked steps is
+authoring), the second counts them. Reproduce with `probe_turnaround --ref
+085ec41ff --git 2026-08-10..2026-08-23,2026-08-24..2026-09-06,2026-09-28..2026-10-13`.
 
-| Window | nights | commits | per night | true merge commits | net ticked steps | per night |
-|---|---|---|---|---|---|---|
-| 2026-08-10..23 | 13 | 148 | 11.4 | 148 | 794 | 61.1 |
-| 2026-08-24..09-06 | 13 | 98 | 7.5 | 48 | 420 | 32.3 |
-| 2026-09-28..10-13 | 14 | 108 | 7.7 | 13 | 306 | 21.9 |
+| Window | nights (with a commit) | merged changes | per night | true merge commits | net ticked, edited files | per night | net ticked, incl. created files | per night |
+|---|---|---|---|---|---|---|---|---|
+| 2026-08-10..23 | 14 (13) | 148 | 10.6 | 148 | 383 | 27.4 | 794 | 56.7 |
+| 2026-08-24..09-06 | 14 (13) | 98 | 7.0 | 48 | 311 | 22.2 | 420 | 30.0 |
+| 2026-09-28..10-13 | 16 (14) | 108 | 6.8 | 13 | 282 | 17.6 | 306 | 19.1 |
 
-Merged changes per night are flat between the second and third window; what fell
-is **work per merge** (ticked steps per night). The roadmap's 2026-10-15
-revision printed 11.1 / 7.7 / 7.7 and 56.7 / 30.0 / 19.1 for the same windows;
-the method behind those is not recorded, so the two series are **reconciled in
-shape, not in value** — both rank the windows the same way and both show merges
-flat and ticks falling.
+Merged changes per night are near flat between the second and third window; what
+fell is **work per merge**. The roadmap's 2026-10-15 revision printed 56.7 /
+30.0 / 19.1 ticked steps per night — **reconciled exactly**: that series counts
+ticks in created files and divides by calendar nights. Half of the first
+window's ticks were roadmaps authored with checked steps, so the decline in work
+done is 27.4 → 17.6, smaller than the 56.7 → 19.1 the revision shows. Its
+merged-change series (11.1 / 7.7 / 7.7) is **not reconciled**: no denominator
+tried here (active or calendar nights) reproduces it, and its method is not
+recorded.
 
 ### C2 — the `drain/*` column reads zero by construction after the squash switch
 
@@ -200,10 +209,12 @@ They are costs worth cutting, not causes of the decline.
 ### C4 — Finding 3's "workable backlog shrank" is contradicted by the estate
 
 At `085ec41ff`, 26 active roadmaps carry **576** open `- [ ]` steps; **51** of
-them carry a `blocked-by` marker anywhere in the step's text (from its checkbox
-to the next checkbox or heading), so **525** carry none. The roadmap's revision
-counts 528 with a narrower marker scope; either figure means the active estate
-does not bound a night.
+them carry a `blocked-by:` (or code-spanned `` `blocked-by``) marker in the
+step's text (from its checkbox to the next checkbox or heading), so **525** carry
+none; `status:` is read from frontmatter only. The same run gives **10 of 20**
+`ready` roadmaps at 0 ticked steps. Reproduce with `probe_turnaround --ref
+085ec41ff`. The roadmap's revision counts 528 with a narrower marker scope;
+either figure means the active estate does not bound a night.
 
 ### C5 — three sums in the body do not add up
 

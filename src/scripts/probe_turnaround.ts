@@ -56,7 +56,7 @@ import {
     classifyTurnEnd,
     median,
     readCiMinutes,
-    readyAtZero,
+    readEstateAtRef,
     standingRules,
     isUsageLimitPause,
     isUsageLimitReset,
@@ -345,7 +345,7 @@ export function measure(files: readonly string[]): Turnaround {
 export interface Throughput {
     /** The last assistant text before each real user request, and at end of file. */
     turnEnds: Tally;
-    pauses: { total: number; night: number; day: number; pausedMinutes: number; unresolved: number };
+    pauses: { total: number; night: number; day: number; unknown: number; pausedMinutes: number; unresolved: number };
     /** `git push` calls and their median wall-clock, pre-push hook included. */
     push: { calls: number; medianSeconds: number | null };
 }
@@ -371,13 +371,14 @@ export function measureDetailed(files: readonly string[]): {
     let userRequests = 0;
     let sessions = 0;
     const turnEndTexts: string[] = [];
-    const pauses: Throughput['pauses'] = { total: 0, night: 0, day: 0, pausedMinutes: 0, unresolved: 0 };
+    const pauses: Throughput['pauses'] = { total: 0, night: 0, day: 0, unknown: 0, pausedMinutes: 0, unresolved: 0 };
     const pushSeconds: number[] = [];
 
     for (const file of files) {
         let sawFloor = false;
         let sawAny = false;
         let lastText: string | null = null;
+        let pauseOpen = false;
         let pausedAt: number | null = null;
         for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
             if (!line.trim()) continue;
@@ -394,15 +395,18 @@ export function measureDetailed(files: readonly string[]): {
             if (isUsageLimitPause(e)) {
                 const t = ms(e['timestamp']);
                 pauses.total += 1;
-                if (t !== null && nightKey(t) !== null) pauses.night += 1;
+                if (t === null) pauses.unknown += 1;
+                else if (nightKey(t) !== null) pauses.night += 1;
                 else pauses.day += 1;
-                if (pausedAt !== null) pauses.unresolved += 1;
+                if (pauseOpen) pauses.unresolved += 1;
+                pauseOpen = true;
                 pausedAt = t;
                 continue;
             }
             if (isUsageLimitReset(e)) {
                 const t = ms(e['timestamp']);
                 if (pausedAt !== null && t !== null) pauses.pausedMinutes += (t - pausedAt) / 60_000;
+                pauseOpen = false;
                 pausedAt = null;
                 continue;
             }
@@ -482,7 +486,7 @@ export function measureDetailed(files: readonly string[]): {
         }
         if (sawAny) sessions += 1;
         if (lastText !== null) turnEndTexts.push(lastText);
-        if (pausedAt !== null) pauses.unresolved += 1;
+        if (pauseOpen) pauses.unresolved += 1;
     }
 
     const toolCalls = [...batch.values()].reduce((a, b) => a + b, 0);
@@ -582,7 +586,7 @@ type GitReading = NightTally & { range: string; ref: string };
 interface Standing {
     estate: EstateFigures;
     rules: { files: number; withoutPaths: number };
-    ci: Array<{ range: string; workflow: string; runs: number; medianMinutes: number | null }>;
+    ci: Array<{ range: string; workflow: string; runs: number; medianMinutes: number | null; truncated: boolean }>;
 }
 
 const WINDOW = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
@@ -604,23 +608,27 @@ function renderThroughput(tp: Throughput, refusals: RefusalStats, git: readonly 
     const lines = [
         `  turn ends                    ${String(tp.turnEnds.total)}`,
         ...Object.entries(tp.turnEnds.rows).map(([c, n]) => `    ${c.padEnd(16)}${String(n)}`),
-        `  usage-limit pauses           ${String(tp.pauses.total)} (night ${String(tp.pauses.night)}, day ${String(tp.pauses.day)}), ` +
+        `  usage-limit pauses           ${String(tp.pauses.total)} (night ${String(tp.pauses.night)}, day ${String(tp.pauses.day)}, unknown ${String(tp.pauses.unknown)}), ` +
             `${String(tp.pauses.pausedMinutes)} min paused, ${String(tp.pauses.unresolved)} without a reset`,
-        `  turn-end refusals            ${String(refusals.total)} in ${String(refusals.sessionsWithRefusals)} session(s) with a refusal`,
+        `  turn-end refusals            ${String(refusals.total)} in ${String(refusals.sessionsWithRefusals)} session(s) with a refusal — ` +
+            `the whole refusal store, ${(refusals.earliest ?? '-').slice(0, 10)}..${(refusals.latest ?? '-').slice(0, 10)}, not the --limit window`,
         ...DETECTOR_IDS.map((d) => `    ${d.padEnd(18)}${String(refusals.byDetector[d])}`),
         `  git push                     ${String(tp.push.calls)} call(s), p50 ${p50(tp.push.medianSeconds, 's')}`,
-        `  ready roadmaps at 0 ticked   ${String(st.estate.atZero)} of ${String(st.estate.ready)}`,
+        `  ready roadmaps at 0 ticked   ${String(st.estate.atZero)} of ${String(st.estate.ready)} (at --ref)`,
         `  open steps without blocked-by ${String(st.estate.unblocked)} of ${String(st.estate.openSteps)}`,
         `  standing rule files          ${String(st.rules.files)}, ${String(st.rules.withoutPaths)} without \`paths:\``,
     ];
     for (const ci of st.ci) {
-        lines.push(`  ${ci.workflow} ${ci.range}   ${String(ci.runs)} successful PR run(s), p50 ${p50(ci.medianMinutes, 'min')}`);
+        lines.push(
+            `  ${ci.workflow} ${ci.range} (created, UTC dates)   ${String(ci.runs)} successful PR run(s), p50 ${p50(ci.medianMinutes, 'min')}` +
+                (ci.truncated ? ' — TRUNCATED at the listing limit, the window holds more runs' : ''),
+        );
     }
     for (const g of git) {
         lines.push(
-            `  git ${g.range} @ ${g.ref} · ${String(g.nights)} night(s) with activity (22:00–08:00 Europe/Berlin)`,
-            `    merged changes ${String(g.commits)} (${per(g.commits, g.nights)}/night) · true merges ${String(g.trueMerges)}`,
-            `    net ticked steps ${String(g.netTicked)} (${per(g.netTicked, g.nights)}/night) · roadmaps archived ${String(g.archived)}`,
+            `  git ${g.range} @ ${g.ref} · ${String(g.calendarNights)} night(s), ${String(g.nights)} with a commit (22:00–08:00 Europe/Berlin)`,
+            `    commits ${String(g.commits)} (${per(g.commits, g.calendarNights)}/night), naming a PR ${String(g.prCommits)} (${per(g.prCommits, g.calendarNights)}/night) · true merges ${String(g.trueMerges)}`,
+            `    net ticked steps ${String(g.netTicked)} (${per(g.netTicked, g.calendarNights)}/night) · roadmaps archived ${String(g.archived)}`,
         );
     }
     lines.push('');
@@ -681,22 +689,22 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const t = detailed?.turnaround ?? ZERO;
     const tp: Throughput = detailed?.throughput ?? {
         turnEnds: tallyExclusive([], TURN_END_NAMED, () => []),
-        pauses: { total: 0, night: 0, day: 0, pausedMinutes: 0, unresolved: 0 },
+        pauses: { total: 0, night: 0, day: 0, unknown: 0, pausedMinutes: 0, unresolved: 0 },
         push: { calls: 0, medianSeconds: null },
     };
     const workspace = arg('--workspace', REPO_ROOT);
+    const ref = arg('--ref', 'HEAD');
     const rulesDir = arg('--rules-dir', path.join(process.env['HOME'] ?? '', '.claude', 'rules'));
     const ci: Standing['ci'] = ciWindows.map(([from, to]) => {
-        const minutes = readCiMinutes(REPO_ROOT, 'tests.yml', from, to);
-        return { range: `${from}..${to}`, workflow: 'tests.yml', runs: minutes.length, medianMinutes: median(minutes) };
+        const { minutes, truncated } = readCiMinutes(REPO_ROOT, 'tests.yml', from, to);
+        return { range: `${from}..${to}`, workflow: 'tests.yml', runs: minutes.length, medianMinutes: median(minutes), truncated };
     });
     const standing: Standing = {
-        estate: readyAtZero(path.join(REPO_ROOT, 'agents', 'roadmaps')),
+        estate: readEstateAtRef(REPO_ROOT, ref),
         rules: standingRules(rulesDir),
         ci,
     };
     const refusals = collectRefusalStats(workspace);
-    const ref = arg('--ref', 'HEAD');
     const git: GitReading[] = gitWindows.map(([from, to]) => ({
         range: `${from}..${to}`,
         ref,
@@ -714,7 +722,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     const sumErrors = [
         checkSum('turn ends', tp.turnEnds.rows, tp.turnEnds.total),
-        checkSum('usage-limit pauses', { night: tp.pauses.night, day: tp.pauses.day }, tp.pauses.total),
+        checkSum('usage-limit pauses', { night: tp.pauses.night, day: tp.pauses.day, unknown: tp.pauses.unknown }, tp.pauses.total),
         checkSum('turn-end refusals', refusals.byDetector, refusals.total),
         checkSum('blocking tail', Object.fromEntries(BLOCKING_CAUSES.map((c) => [c, t.blockingByCause[c].calls])), t.blockingCalls),
     ].filter((x): x is string => x !== null);

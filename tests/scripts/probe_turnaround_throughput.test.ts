@@ -6,12 +6,17 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { execFileSync } from "node:child_process";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  calendarNights,
   checkSum,
   classifyTurnEnd,
+  estateOf,
+  isPrSubject,
+  readCommitFacts,
   isUsageLimitPause,
   isUsageLimitReset,
   median,
@@ -44,6 +49,13 @@ describe("classifyTurnEnd", () => {
 
   it("reads a closing question as a plain-text ask", () => {
     expect(classifyTurnEnd("Done with the sync.\n\nShall I open the PR now?")).toBe("plain-ask");
+  });
+
+  it("reads a question wrapped in emphasis, a bracket or a trailing link as a plain-text ask", () => {
+    expect(classifyTurnEnd("Done.\n\n**Soll ich den PR aufmachen?**")).toBe("plain-ask");
+    expect(classifyTurnEnd("Done.\n\n(merge now?)")).toBe("plain-ask");
+    expect(classifyTurnEnd("Open [the PR](https://example.invalid/pr/1)?")).toBe("plain-ask");
+    expect(classifyTurnEnd("Is it green? Yes, it is.")).toBe("other");
   });
 
   it("ignores a question mark inside a trailing code fence", () => {
@@ -90,20 +102,71 @@ describe("tallyNights", () => {
     const next = Date.parse("2026-10-03T21:00:00Z"); // 23:00 Berlin, night of 10-03
     const r = tallyNights(
       [
-        { epochMs: night, parents: 1, ticked: 5, archived: 1 },
-        { epochMs: night + 60_000, parents: 2, ticked: -1, archived: 0 },
-        { epochMs: day, parents: 1, ticked: 40, archived: 3 },
-        { epochMs: next, parents: 1, ticked: 2, archived: 0 },
+        { epochMs: night, parents: 1, ticked: 5, archived: 1, pr: true },
+        { epochMs: night + 60_000, parents: 2, ticked: -1, archived: 0, pr: true },
+        { epochMs: day, parents: 1, ticked: 40, archived: 3, pr: true },
+        { epochMs: next, parents: 1, ticked: 2, archived: 0, pr: false },
       ],
       "2026-10-01",
       "2026-10-03",
     );
-    expect(r).toEqual({ nights: 2, commits: 3, trueMerges: 1, netTicked: 6, archived: 1 });
+    expect(r).toEqual({ nights: 2, calendarNights: 3, commits: 3, prCommits: 2, trueMerges: 1, netTicked: 6, archived: 1 });
   });
 
   it("drops nights outside the window", () => {
-    const r = tallyNights([{ epochMs: Date.parse("2026-09-30T22:00:00Z"), parents: 1, ticked: 9, archived: 0 }], "2026-10-01", "2026-10-03");
+    const r = tallyNights([{ epochMs: Date.parse("2026-09-30T22:00:00Z"), parents: 1, ticked: 9, archived: 0, pr: true }], "2026-10-01", "2026-10-03");
     expect(r.nights).toBe(0);
+    expect(r.calendarNights).toBe(3);
+  });
+
+  it("counts calendar nights inclusively, across a month end", () => {
+    expect(calendarNights("2026-09-28", "2026-10-13")).toBe(16);
+    expect(calendarNights("2026-08-10", "2026-08-23")).toBe(14);
+    expect(calendarNights("2026-10-03", "2026-10-01")).toBe(0);
+  });
+
+  it("names a PR from a squash subject or a merge subject only", () => {
+    expect(isPrSubject("fix(x): y (#2391)")).toBe(true);
+    expect(isPrSubject("Merge pull request #2296 from event4u-app/chore/x")).toBe(true);
+    expect(isPrSubject("chore: bump (#2391) follow-up")).toBe(false);
+    expect(isPrSubject("release 16.4.0")).toBe(false);
+  });
+});
+
+describe("readCommitFacts", () => {
+  it("counts ticks in edited roadmaps, not in roadmaps the commit creates", () => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), "probe-git-"));
+    const g = (...args: string[]): string =>
+      execFileSync("git", ["-C", repo, ...args], {
+        encoding: "utf8",
+        env: { ...process.env, GIT_AUTHOR_DATE: "2026-10-02T23:00:00+02:00", GIT_COMMITTER_DATE: "2026-10-02T23:00:00+02:00" },
+      });
+    g("init", "-q", "-b", "main");
+    g("config", "user.email", "t@example.invalid");
+    g("config", "user.name", "t");
+    fs.mkdirSync(path.join(repo, "agents", "roadmaps"), { recursive: true });
+    fs.writeFileSync(path.join(repo, "agents", "roadmaps", "a.md"), "- [ ] one\n- [ ] two\n");
+    g("add", ".");
+    g("commit", "-q", "-m", "seed (#1)");
+    fs.writeFileSync(path.join(repo, "agents", "roadmaps", "a.md"), "- [x] one\n- [ ] two\n");
+    fs.writeFileSync(path.join(repo, "agents", "roadmaps", "b.md"), "- [x] pre-ticked\n- [x] pre-ticked\n");
+    g("add", ".");
+    g("commit", "-q", "-m", "tick one, author b (#2)");
+    const facts = readCommitFacts(repo, "main", "2026-10-01", "2026-10-03");
+    const ticks = facts.map((f) => f.ticked).sort();
+    expect(ticks).toEqual([0, 1]);
+    expect(facts.every((f) => f.pr)).toBe(true);
+  });
+});
+
+describe("estateOf", () => {
+  it("reads status from the frontmatter only, and blocked-by as a marker only", () => {
+    const e = estateOf([
+      "---\nstatus: ready\n---\n- [ ] a\n      blocked-by: x\n- [ ] b — not blocked-by anything\n",
+      "# no frontmatter\nstatus: ready\n- [ ] c\n",
+      "---\ntitle: x\n---\nstatus: ready\n- [ ] d\n",
+    ]);
+    expect(e).toEqual({ ready: 1, atZero: 1, openSteps: 2, unblocked: 1 });
   });
 });
 
@@ -195,6 +258,7 @@ function writeStore(): string {
     assistant("r3", 60 + 30 * 60, "PR is green."),
     // a day-time pause: 2026-10-03T12:00 Berlin
     { type: "system", subtype: "informational", timestamp: "2026-10-03T10:00:00.000Z", content: "Usage limit reached · continuing automatically at 1:00pm" },
+    { type: "system", subtype: "informational", content: "Usage limit reached · no timestamp on this one" },
   ];
   fs.writeFileSync(path.join(dir, "s1.jsonl"), rows.map((r) => JSON.stringify(r)).join("\n"));
   return dir;
@@ -206,7 +270,7 @@ describe("measureDetailed — throughput fields", () => {
     const { throughput } = measureDetailed([path.join(store, "s1.jsonl")]);
     expect(throughput.turnEnds.total).toBe(3);
     expect(throughput.turnEnds.rows).toEqual({ "structured-ask": 1, "plain-ask": 1, other: 1, unknown: 0 });
-    expect(throughput.pauses).toEqual({ total: 2, night: 1, day: 1, pausedMinutes: 30, unresolved: 1 });
+    expect(throughput.pauses).toEqual({ total: 3, night: 1, day: 1, unknown: 1, pausedMinutes: 30, unresolved: 2 });
     expect(throughput.push).toEqual({ calls: 1, medianSeconds: 2 });
     expect(TURN_END_CLASSES).toContain("unknown");
   });
@@ -235,7 +299,8 @@ describe("main — the new sections", () => {
     expect(code).toBe(0);
     expect(out).toMatch(/turn ends\s+3/);
     expect(out).toMatch(/structured-ask\s+1/);
-    expect(out).toMatch(/usage-limit pauses\s+2 \(night 1, day 1\)/);
+    expect(out).toMatch(/usage-limit pauses\s+3 \(night 1, day 1, unknown 1\)/);
+    expect(out).toMatch(/the whole refusal store, 2026-10-02\.\.2026-10-02, not the --limit window/);
     expect(out).toMatch(/turn-end refusals\s+3 in 1 session/);
     expect(out).toMatch(/language\s+2/);
     expect(out).toMatch(/git push\s+1 call\(s\), p50 2 s/);
