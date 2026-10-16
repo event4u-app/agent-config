@@ -77,7 +77,7 @@ function drainBatch(workflow: string, marker: string): string {
  * 2.2a is. `check` names the members that are generators and must run their
  * `--check` variant, because without it they rewrite the file they check.
  */
-const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; check: string[] }[] = [
+const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; check: string[]; final?: true }[] = [
   {
     id: "2.2b",
     marker: "The local-only drain — step 2.2, second batch (2.2b)",
@@ -158,6 +158,33 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
       "lint_skill_originality",
     ],
     check: [],
+  },
+  {
+    id: "2.2e",
+    marker: "The local-only drain — step 2.2, fifth batch (2.2e)",
+    gates: [
+      "lint_skill_router_head",
+      "lint_skill_scripts_readonly",
+      "lint_skill_tools",
+      "lint_spawn_payload",
+      "lint_store_boundary",
+      "lint_surface_matrix",
+      "lint_ticket_buildable",
+      "lint_token_budget_discipline",
+      "lint_trigger_precision",
+      "lint_ui_stack_bundles",
+      "lint_versioned_cache",
+      "rebuild_hook_bundle",
+      "report_imperative_density",
+      "second_brain_retrieval",
+      "second_brain_score",
+      "validate_agent_settings",
+      "validate_decision_engine",
+      "validate_flow_teams",
+      "validate_reach_prescriptions",
+    ],
+    check: [],
+    final: true,
   },
 ];
 
@@ -480,7 +507,9 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
       const extra = [...actual].filter((g) => !batch.gates.includes(g)).sort();
       expect(missing, `batch-${batch.id} gates with no caller in the drain job`).toEqual([]);
       expect(extra, `gates in batch ${batch.id} beyond the bounded batch`).toEqual([]);
-      expect(actual.size, "the council bounded a batch at twenty").toBe(20);
+      // Twenty a batch; only the batch that empties the window may hold fewer.
+      expect(actual.size, "the council bounded a batch at twenty").toBe(batch.final === true ? batch.gates.length : 20);
+      expect(actual.size).toBeLessThanOrEqual(20);
 
       for (const gate of batch.gates) {
         expect(existsSync(path.join(repoRoot, "src", "scripts", `${gate}.ts`)), `${gate}.ts does not exist`).toBe(true);
