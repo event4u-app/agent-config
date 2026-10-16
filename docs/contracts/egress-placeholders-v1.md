@@ -42,6 +42,19 @@ more sensitive class wins (`credential` over `identifier`), then the span a
 validator confirmed, then the longer span. Only the rule table
 (`src/scripts/_lib/egress_rules.ts`) defines a pattern for either class.
 
+A credential row may also declare its literal vendor **prefixes**. Surfaces
+that act on shape alone — a council `api_key_ref`, a masked `explain last`
+value, the low-impact corpus redactor — read those prefixes
+(`CREDENTIAL_PREFIXES`, `rawKeyPrefixPattern`) instead of spelling a list of
+their own; every other consumer runs the rows. Each consumer keeps its own
+policy for a hit (refuse, mask, report, redact a line); only detection is
+shared, and `egress_drift_matrix.test.ts` runs a positive fixture for every
+credential row against every consumer. Not yet moved: the keyword-assignment
+variants (`password =`, `api_key:`) that several consumers read at their own,
+looser threshold, and one prefix spelled through a character class in
+`check_reach_channels.ts`; neither carries a vendor literal, so the
+single-spelling test cannot see them.
+
 ## Detection span and replacement span
 
 A rule's **detection span** is what the commit-time scanner reports: enough
@@ -287,7 +300,8 @@ Scanned: `src/scripts/`, `src/cli/`, `src/install/`, `src/shared/`, TypeScript a
 A module whose endpoint is computed at runtime **and** whose send shape the
 scanner does not recognise is absent from this table; that residual is why
 `unclassified` exists. `content` stays `undeclared` until the module carries an
-`egress-content:` marker, and `engine` counts a direct import only.
+`egress-content:` marker, and `engine` counts a direct import of a function that detects or replaces
+(`detect`, `findSpans`, `replaceSpans`, `replaceValues`); importing a table constant does not count.
 
 | module | endpoint | content | engine | status | evidence |
 |---|---|---|---|---|---|

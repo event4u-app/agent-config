@@ -73,6 +73,8 @@ is open.
   `__TYPE_n_fp__`. **The identifier class has no rows yet** — validated identifier
   rules are 2.3 — so counting by class today yields credential evidence only.
 - **2026-10-16:** 0.4 landed (sender census in the contract).
+- **2026-10-17:** 2.2's detection move landed; the step stays open on its gate
+  registration and the keyword-assignment variants (see 2.2).
 - **Next in order:** 2.2 (which now carries the
   single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
 
@@ -207,6 +209,27 @@ read cannot leak through any later bug.
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
       detection is shared.
       verify: a drift matrix — every positive fixture against every consumer — is green, and the `sk-ant-api03` case of F2 is a named row in it; the table is the only place a credential pattern literal appears under `src/scripts` and `src/cli`, and a lint that fails a second one is registered in `src/config/gate-coverage.yml` with a canary (moved here from 2.1).
+      **Progress 2026-10-17 — detection moved, two remainders keep this open.**
+      Every F2 site now reads the table: `secret_detector` (already), the MCP
+      config lint, `workspace_secrets` and through it `cross_repo_retrieve`, the
+      council bundler (detection only; whole-line replacement stays until 3.3),
+      the `explain last` scrubber, the council `api_key_ref` check and the
+      low-impact redactor. The table gained six rows the consumers had and it
+      lacked (OpenAI, Google OAuth, GitHub app tokens, xAI, Perplexity, Groq) and
+      a `prefixes` field, which shape-only surfaces read instead of their own
+      lists. `npx vitest run src/scripts/_lib/egress_drift_matrix.test.ts` -> 0:
+      18 rows against 6 pattern-grade and 3 prefix-grade consumers, the
+      `sk-ant-api03` case a named row; seen red with one row removed from one
+      consumer. `npx vitest run src/scripts/_lib/egress_rules_single_source.test.ts`
+      -> 0: no vendor prefix is spelled outside the table under `src/scripts` and
+      `src/cli` (two prose or fake-value lines carry a reasoned
+      `not-a-credential-pattern:` marker). **Open:** (a) the single-spelling check
+      is a test, not a gate registered in `src/config/gate-coverage.yml` with a
+      canary; that registration is a governance surface and needs a ratification
+      record, which this lane did not produce. (b) The keyword-assignment variants
+      (`password =`, `api_key:`) that four consumers read at their own looser
+      threshold, and one class-spelled prefix list in `check_reach_channels.ts`,
+      are still local; they carry no vendor literal, so the test cannot see them.
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own
