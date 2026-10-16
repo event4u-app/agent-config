@@ -1,3 +1,9 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-16, committed verbatim below
+     this comment so the verdict beside it can be checked against what was
+     asked. Only these two comment blocks were added afterwards. -->
+
 # Council question — lineage gate: quote parsing and succession
 
 Repository: event4u/agent-config. Gate: `src/scripts/lint_consolidation_lineage.ts`
