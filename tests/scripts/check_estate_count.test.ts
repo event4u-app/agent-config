@@ -509,6 +509,18 @@ describe('check_estate_count — one-in-one-out', () => {
         expect(res.stderr).not.toContain('with no offset in the same change');
     });
 
+    it('shape — quotes-owner-search: WARNS, never fails, on an added exemption that quotes no owner search', () => {
+        // Report-only: the council of 2026-10-16 held that author-written prose is
+        // not provenance, so the warning names the file and the gate stays green.
+        const repo = initRepo(3);
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: EXEMPT }));
+        commitAll(repo, 'add an exempt roadmap whose reason searched nothing');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+        expect(res.stderr).toContain('road-to-new.md: estate_offset_exempt quotes no owner search');
+        expect(res.stderr).not.toContain('names no rejected alternative');
+    });
+
     it('shape — is RED on two added files whose exemptions say the same thing', () => {
         const repo = initRepo(3);
         write(repo, 'agents/roadmaps/road-to-n1.md', roadmap('N1', { exempt: EXEMPT }));

@@ -125,7 +125,16 @@ files as there were findings without an owner.
       already uses; only additions are read. The change is a governance diff and
       carries its council ratification artefact.
       verify: `npx vitest run tests/scripts/exemption_shape.test.ts -t quotes-owner-search --reporter=verbose` -> /✓.*quotes-owner-search/
-- [ ] **2.2 A finding with an owner lands on the owner.** `/analyze:inbox`
+      > **Report-only half landed 2026-10-16; left open on purpose.** The AI
+      > council (`agents/evidence/council/intake-exemption-search-2026-10-16.md`,
+      > 2/2) refused a blocking gate on the first predicate: both seats showed a
+      > reason that passed three independent regexes and described no search.
+      > `quotesOwnerSearch` now needs verb, query, whole-tree scope and an
+      > empty result in one clause, and `check_estate_count` prints
+      > `unsearched` as a warning without failing. Closes when a report-only
+      > window over real additions (Phase 6) shows the warning's false-refusal
+      > rate and the warning becomes a refusal, with its own council round.
+- [x] **2.2 A finding with an owner lands on the owner.** `/analyze:inbox`
       Phase 5 and `/analyze:roadmap-repos` gain one rule: a verified finding
       whose subject an active, parked or stub roadmap already owns becomes a
       new step and an `Arrivals:` line on that owner; a new file is written only

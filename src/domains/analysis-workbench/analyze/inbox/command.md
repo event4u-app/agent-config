@@ -824,6 +824,23 @@ The question is never "what does the file say" but **"what does it become here"*
 | a consolidation omitting a parent | **not an artifact — a discharge, see below** |
 | a demand — a want with no truth value | **not settled here — Phase 5b, which must discharge it** |
 
+**A finding with an owner lands on the owner, never in a new file.** Before a
+verified finding becomes a new top-level roadmap, search for the roadmap that
+already owns its subject — active, `later/` or `stubs/`:
+
+```bash
+grep -rlE '<identifier-a>|<identifier-b>' agents/roadmaps/*.md agents/roadmaps/later agents/roadmaps/stubs
+```
+
+A hit that owns the subject takes the finding as a **new step** on that file
+plus an `Arrivals:` line under its `Source:` header (format below), and no new
+file is written. A new file is written only when the search comes back empty,
+and its `estate_offset_exempt` quotes that search in one clause — command, what
+it searched for, the whole tree as scope and an empty result — which
+`check_estate_count` reports on an added file that lacks it. "Owns" is the owner's
+stated subject, not a shared keyword: a hit that only mentions an identifier
+in passing is named and set aside in the run's output, in one line.
+
 **An omitted parent is discharged, never left silent.** When Phase 2's `lineage`
 column read anything but `n/a` or `complete`, this phase says what happened to
 each omitted parent. Exactly three discharges are legal, and the choice is the
