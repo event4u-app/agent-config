@@ -80,19 +80,19 @@ file can report an externally visible change as done.
 
 ## Phase 2 — A download badge that cannot corrupt the claim row
 
-- [ ] **2.1 Add the downloads badge outside the claim row.** A
+- [x] **2.1 Add the downloads badge outside the claim row.** A
       `https://img.shields.io/npm/dm/@event4u/agent-config` badge on
       `README.md:5`, linked to the npm page, labelled with its window
       (`downloads/month`) so the number is not read as an install base.
       verify: a `grep -n` for `npm/dm` in `README.md` returns a line number that
       is neither 7 nor 9.
-- [ ] **2.2 Scope the machine-checked promise to what is actually
+- [x] **2.2 Scope the machine-checked promise to what is actually
       re-derivable.** `README.md:3`, `package.json:5` and `.github/about.yml:13`
       say "the counts in these badges"; `update_counts` re-derives six artifact
       counts and nothing else. Narrow the phrase to "the artifact counts in
       these badges" on all three surfaces.
       verify: a `grep -c` for `artifact counts in these badges` over `package.json`, `.github/about.yml` and `README.md` returns 1 on each, and the same count for the unscoped phrase returns 0 on each.
-- [ ] **2.3 Give the claim row a positional guard.** Extend
+- [x] **2.3 Give the claim row a positional guard.** Extend
       `src/scripts/update_counts.ts` so that every badge on the line carrying
       `<!-- claim:published-artifact-counts -->` must match one of the six
       re-derivable URL patterns at `:282-292`; anything else is a finding.

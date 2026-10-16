@@ -259,6 +259,61 @@ describe('update_counts — missed-pattern-fails', () => {
     });
 });
 
+describe('update_counts — the claim row admits only re-derived badges', () => {
+    const readmePatterns = uc.TARGETS.find(([rel]) => rel === 'README.md')?.[1] ?? [];
+    const badgePatterns = readmePatterns.filter(([p]) => p.includes('/badge/'));
+    const downloads =
+        '[![npm downloads](https://img.shields.io/npm/dm/@event4u/agent-config?label=downloads%2Fmonth)](https://www.npmjs.com/package/@event4u/agent-config)';
+
+    function claimRow(): string {
+        const names: Record<string, string> = {
+            skills: 'Skills',
+            rules: 'Rules',
+            commands_active: 'Commands',
+            guidelines: 'Guidelines',
+            personas: 'Personas',
+            advisors: 'Advisors',
+        };
+        const badges = badgePatterns.map(
+            ([, kind]) => `[![x](https://img.shields.io/badge/${names[kind]}-${uc.count(kind)}-orange)](x/)`,
+        );
+        return `${badges.join(' ')} ${uc.CLAIM_ROW_MARKER}`;
+    }
+
+    function runCheck(body: string): { code: number; err: string } {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'uc-claim-'));
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        try {
+            fs.writeFileSync(path.join(root, 'README.md'), body, 'utf-8');
+            const code = uc.main(['--check'], { root, targets: [['README.md', badgePatterns]] });
+            return { code, err: err.mock.calls.map((c) => String(c[0])).join('') };
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    }
+
+    it('every badge on the real claim row is re-derived, Advisors included', () => {
+        const text = fs.readFileSync(path.join(uc.REPO_ROOT, 'README.md'), 'utf-8');
+        expect(badgePatterns.map(([, kind]) => kind)).toContain('advisors');
+        expect(uc.claim_row_findings(text, readmePatterns)).toEqual([]);
+    });
+
+    it('a download badge ON the claim line makes --check exit non-zero', () => {
+        const row = claimRow().replace(uc.CLAIM_ROW_MARKER, `${downloads} ${uc.CLAIM_ROW_MARKER}`);
+        const { code, err } = runCheck(`# T\n\n${row}\n`);
+        expect(code).not.toBe(0);
+        expect(err).toContain('README.md:3');
+        expect(err).toContain('/npm/dm/');
+    });
+
+    it('the same badge one line above the claim line exits 0', () => {
+        const { code, err } = runCheck(`# T\n${downloads}\n${claimRow()}\n`);
+        expect(err).not.toContain('claim row');
+        expect(code).toBe(0);
+    });
+});
+
 describe('update_counts.TARGETS — regression guard', () => {
     it('stronger-skills baseline is not tracked', () => {
         const paths = uc.TARGETS.map(([rel]) => rel);
