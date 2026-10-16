@@ -1,0 +1,7 @@
+{
+  "host": "claude-code",
+  "version": "2.1.301",
+  "read": "2026-10-16, offline, from the installed binary (strings over claude.exe)",
+  "scope": "the design command family only; not the host's full command list",
+  "names": ["design", "design-consent", "design-login", "design-revoke", "design-sync"]
+}

@@ -29,6 +29,7 @@ triggers:
   - file_pattern: "*design.html"
   - file_pattern: "*.dc.html"
   - path_prefix: ".claude/design-system/"
+  - path_prefix: ".design-sync/"
 applies_to_user_types:
   - "creator"
   - "developer"
@@ -147,14 +148,13 @@ porting, or modifying UI to match it.
 
 ## Routing — an attached artifact is a trigger, an attached HTML file is not
 
-Matching is lower-cased substring containment on the prompt plus fnmatch over
-the open files. Five classes reach this rule without a keyword being typed: the
-filename patterns `*design.html` and `*.dc.html`, the published-artifact path
-`claude.site/artifacts`, the directory prefix `.claude/design-system/`, and the
-English and German handover phrasings. A handover under any other filename, and
-a third-party builder's share link, need one word in the prompt — the
-builder-URL trigger was tried and **withdrawn** as over-broad, and stays pinned
-silent rather than merely absent.
+Five classes reach this rule without a keyword being typed: the filename
+patterns `*design.html` and `*.dc.html`, the published-artifact path
+`claude.site/artifacts`, the prefixes `.claude/design-system/` and
+`.design-sync/`, and the English and German handover phrasings. A handover under
+any other filename, and a third-party builder's share link, need one word in the
+prompt — the builder-URL trigger was tried and **withdrawn** as over-broad, and
+stays pinned silent.
 
 Each class carries a near-miss row in the routing matrix, and a new trigger's
 row must test the direction that trigger opens. The matrix, the reasons behind
