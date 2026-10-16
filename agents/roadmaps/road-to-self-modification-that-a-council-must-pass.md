@@ -1292,10 +1292,6 @@ gaps again; the binding closes replay, and nothing else.
       criterion is open until that code lands on a branch of its own. See
       § Staged, not abandoned.
 
-      **Still open 2026-10-17.** The writer's own branch was refused in
-      review twice (see step 3.4), so the code this criterion is measured
-      through has not landed.
-
 - [ ] AC-3 — A change to the question list, the verdict rule or the writer is
       refused without a passing record.
       **MET 2026-10-12, measured with the real CLI rather than from the test.**
