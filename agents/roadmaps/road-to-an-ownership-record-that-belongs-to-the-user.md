@@ -196,7 +196,7 @@ the same thing in all of them.
       the manifest and the no-manifest path (`cmd_doctor.ts` net zero lines).
       `ownership_ledger_real_install.test.ts` step-3.1 case runs both, observed
       red first (`modified` empty after an rc=3 install).
-- [ ] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
+- [x] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
       `docs/contracts/install-layout.md:206` with its uninstall semantics.
       verify: `grep -c sidecar docs/contracts/install-layout.md` -> /^[1-9][0-9]*$/
       Done 2026-10-16: named with today's uninstall semantics (reported as

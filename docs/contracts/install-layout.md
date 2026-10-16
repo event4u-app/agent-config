@@ -168,6 +168,7 @@ printed only).
 | `.agent-settings.yml` | `install.py` | global layer of the three-layer settings merge |
 | `.agent-user.yml` | `install.py` | user personal settings |
 | `install-log.jsonl` | `src/install/` (TS) | transaction log (TS engine only) |
+| `deployed-files.json` | `src/install/ownershipLedger.ts` | the user-scoped ownership ledger: per tool, the deployed `files` and (schema 2, additive) per-file `installed_sha256` / `packaged_sha256`. Written on every global deploy, whatever directory the install ran from; read by the writer, the reaper and `doctor` |
 
 ### User-scope hook trampolines (explicit-flag only)
 
@@ -203,9 +204,17 @@ foreign keys and files intact. The pointers it follows:
 
 1. **`bridge_marker`** (per tool) — single canonical path proving the tool is
    installed. Existence-tracked; removal signals complete uninstall for that tool.
-2. **`files[]`** (per tool) — objects with `path`, `kind` ∈ `{deployed, bridge, marker}`,
+2. **`files[]`** (per tool) — objects with `path`, `kind` ∈ `{deployed, bridge, marker, sidecar}`,
    and `sha256` (or `null` for markers). `deployed` = owned content (delete);
-   `bridge` = shared config (remove only our keys); `marker` = sentinel (delete).
+   `bridge` = shared config (remove only our keys); `marker` = sentinel (delete);
+   `sidecar` = package content staged beside a preserved user edit
+   (`<target>.agent-config.new`), recorded with the digest of the bytes staged.
+   A sidecar is the one object in this list that exists only because the user
+   edited a managed file, and an install from a second project under the same
+   HOME produces one just as an install from the first does. Uninstall does not
+   delete a sidecar: it is reported as skipped and left in place, because it may
+   be half-merged into the user's file. Changing that belongs to the uninstall
+   flow, not to this record.
 3. **`merged_keys[]`** (per tool) — objects with `file` + `json_pointer` (+ optional
    `value_hash`). Uninstall removes only these keys.
 4. **`status`** — `installed` (default) or `uninstalling`; the two-phase uninstall
