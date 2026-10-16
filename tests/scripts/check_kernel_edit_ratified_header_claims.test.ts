@@ -27,6 +27,12 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * which let both edits through the built dispatcher with the guards, and
  * `one-question-per-ask`, which reads only the question tool. The rest are
  * advisory in the manifest and cannot deny.
+ *
+ * When the last case fails because a concern was bound: if it can deny (its
+ * manifest `severity` is `blocking`), send an edit of both paths through the
+ * built dispatcher and see whether it refuses; if it refuses either, change the
+ * header of `check_kernel_edit_ratified.ts`, which then needs a record. Either
+ * way, add the concern here, sorted, and say how it was checked above.
  */
 const REVIEWED_PRE_TOOL_USE = [
     'block-config-weakening',
