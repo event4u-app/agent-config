@@ -157,6 +157,12 @@ describe('the gate watches the modules its verdict runs through', () => {
         }
     });
 
+    // CI judges every pull request with the base revision's gate, which reads the
+    // committed blob; a trunk whose committed module is off its pin refuses all of them.
+    it('the committed trunk satisfies its own pins', () => {
+        expect(gate.pinViolations([], REPO, 'HEAD')).toEqual([]);
+    });
+
     it('refuses a diff that moves a pinned module off its pin, and passes it unchanged', () => {
         const rel = PENDING[0] as string;
         fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
