@@ -653,3 +653,45 @@ jobs:
           ./scripts-run src/scripts/lint_breaking_changes_index --quiet || rc=1
           ./scripts-run src/scripts/lint_changelog_rollback || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, third batch (2.2c) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Same job, same reasons, same selection rule as 2.2a and 2.2b: the next
+      # twenty `wire`-class gates in name order. One was skipped for the reason
+      # written in the evidence page: lint_marketplace_install_completeness is
+      # red (10 issues in hooks/hooks.json), so the window reaches one further.
+      # Each of the twenty exited 0 with this argv on the branch base and left
+      # `git status` clean; none reads the wall clock, a ratchet or the network.
+      - name: Drain 2.2c-1 — command flow coverage, command routing, command verbs, context spine, discovery vocabulary, documented commands, empty roadmaps, eval fixture citations, examples, flows
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_command_flow_coverage --quiet || rc=1
+          ./scripts-run src/scripts/lint_command_routing --quiet || rc=1
+          ./scripts-run src/scripts/lint_command_verbs --baseline origin/main --quiet || rc=1
+          ./scripts-run src/scripts/lint_context_spine_usage --quiet || rc=1
+          ./scripts-run src/scripts/lint_discovery_vocabulary --quiet || rc=1
+          ./scripts-run src/scripts/lint_documented_commands || rc=1
+          ./scripts-run src/scripts/lint_empty_roadmaps --quiet || rc=1
+          ./scripts-run src/scripts/lint_eval_fixture_citations --quiet || rc=1
+          ./scripts-run src/scripts/lint_examples --quiet || rc=1
+          ./scripts-run src/scripts/lint_flows --quiet || rc=1
+          exit "$rc"
+
+      - name: Drain 2.2c-2 — frontmatter boilerplate, ghostwriter source, glama drift, harvest provenance, hook concern budget, knowledge scale, load context, metric consumers, missions, model tier coverage
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_frontmatter_boilerplate --quiet || rc=1
+          ./scripts-run src/scripts/lint_ghostwriter_source --quiet || rc=1
+          ./scripts-run src/scripts/lint_glama_drift || rc=1
+          ./scripts-run src/scripts/lint_harvest_provenance --quiet || rc=1
+          ./scripts-run src/scripts/lint_hook_concern_budget || rc=1
+          ./scripts-run src/scripts/lint_knowledge_scale --quiet || rc=1
+          ./scripts-run src/scripts/lint_load_context --quiet || rc=1
+          ./scripts-run src/scripts/lint_metric_consumers --quiet || rc=1
+          ./scripts-run src/scripts/lint_missions --quiet || rc=1
+          ./scripts-run src/scripts/lint_model_tier_coverage --quiet || rc=1
+          exit "$rc"

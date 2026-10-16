@@ -511,3 +511,75 @@ batch wired. The baseline moves on CI's reading of this branch, as for 2.2a.
 
 **Left for 2.2c onward: 65 gates** — 61 in name order from
 `lint_command_flow_coverage`, plus 2.2a's four skipped gates for 2.2f.
+
+## 2026-10-16 — step 2.2, third batch (2.2c), and the baseline on CI's reading
+
+Read on branch `drain/local-gates-wired-2c-20261016`, off `origin/main` at
+`5fa963cec`. At that base `check_ci_local_parity --format json` lists **84**
+undeclared local-only gates, 65 of them `wire`-class: the 61 left after 2.2b plus
+2.2a's four skipped gates, which stay for 2.2f.
+
+**The baseline moves on CI's reading.** The consistency job on main at
+`73eb69439` (run 38849726162), after 2.2b merged, printed
+`ci-parity:local-only: 84 violation(s), baseline 104 — ratchet is loose`. The
+baseline is lowered 104 -> 84 in this change; 104 - 84 = 20, 2.2b's twenty.
+
+**The twenty**, the next in name order from `lint_command_flow_coverage`. Each was
+run serially with the argv in the table at the top and `git status --short`
+checked after it: all twenty exit 0 and leave the tree clean, and none calls
+`checkRatchet`, reads the wall clock or reaches the network. **One skipped:**
+`lint_marketplace_install_completeness`, still red with the finding the
+2026-10-15 re-reading recorded, so the window reaches one gate further to
+`lint_model_tier_coverage`.
+
+| Gate | Argv | Exit | Seconds |
+|---|---|---|---|
+| `lint_command_flow_coverage` | `--quiet` | 0 | 0.24 |
+| `lint_command_routing` | `--quiet` | 0 | 0.26 |
+| `lint_command_verbs` | `--baseline origin/main --quiet` | 0 | 0.34 |
+| `lint_context_spine_usage` | `--quiet` | 0 | 0.22 |
+| `lint_discovery_vocabulary` | `--quiet` | 0 | 0.22 |
+| `lint_documented_commands` | — | 0 | 0.28 |
+| `lint_empty_roadmaps` | `--quiet` | 0 | 0.34 |
+| `lint_eval_fixture_citations` | `--quiet` | 0 | 0.55 |
+| `lint_examples` | `--quiet` | 0 | 0.20 |
+| `lint_flows` | `--quiet` | 0 | 0.23 |
+| `lint_frontmatter_boilerplate` | `--quiet` | 0 | 0.24 |
+| `lint_ghostwriter_source` | `--quiet` | 0 | 0.22 |
+| `lint_glama_drift` | — | 0 | 0.20 |
+| `lint_harvest_provenance` | `--quiet` | 0 | 0.26 |
+| `lint_hook_concern_budget` | — | 0 | 0.24 |
+| `lint_knowledge_scale` | `--quiet` | 0 | 0.21 |
+| `lint_load_context` | `--quiet` | 0 | 0.26 |
+| `lint_metric_consumers` | `--quiet` | 0 | 0.19 |
+| `lint_missions` | `--quiet` | 0 | 0.19 |
+| `lint_model_tier_coverage` | `--quiet` | 0 | 0.24 |
+
+**A stale exemption, corrected rather than kept.** Wiring `lint_glama_drift`
+makes the task `mcp:glama-drift-check` reachable, and
+`check_gate_reachability --gate` refuses its exemption row. The row's reason —
+"queries an external registry, network-dependent" — does not describe the task:
+`taskfiles/mcp.yml` calls it a fast, Docker-free guard, and the script compares
+`internal/glama/README.md` with the two scripts beside it. The row is removed.
+
+**Still a local reading.** `check_ci_local_parity` reads **64** on this branch,
+84 - 20, and `check_gate_reachability --gate` and `check_gate_coverage` exit 0
+with the batch wired. The baseline moves to 64 on CI's reading of this change.
+
+**Left for 2.2d onward: 45 gates** — 40 `wire`-class in name order from
+`lint_namespace`, `lint_marketplace_install_completeness` while it stays red, and
+2.2a's four skipped gates for 2.2f.
+
+**Corrected on CI's first reading of 2.2c.** `lint_command_verbs` defaults its
+`--baseline` to the local branch name `main`, which a checkout exists to have and
+the CI runner does not: the first run of this batch failed `Drain 2.2c-1` with
+`fatal: ambiguous argument 'main...HEAD'`. The step now passes
+`--baseline origin/main`, which exits 0 locally too. The local reading above could
+not have caught it — every developer checkout carries `main`.
+
+**The baseline at 64, on CI's reading of this branch.** After the base fix, the
+consistency job at `1db488224` (run 38861614919) printed
+`ci-parity:local-only: 64 violation(s), baseline 84`. The baseline is lowered to
+64 in the same pull request, so 2.2c's twenty cannot be given back by a later
+change. A test now pins that `lint_command_verbs` is called with
+`--baseline origin/main`; without the argument it reads red.
