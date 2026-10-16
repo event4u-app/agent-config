@@ -17,7 +17,7 @@ export const EVIDENCE_TIERS = ['executed', 'read', 'claimed', 'inferred'] as con
 export type EvidenceTier = (typeof EVIDENCE_TIERS)[number];
 export const TOP_TIERS: readonly EvidenceTier[] = ['executed', 'read'];
 
-export const MANDATORY_LOOPS = LENSES.length;
+export const MANDATORY_LOOPS: number = LENSES.length;
 export const MAX_LOOPS = 5;
 
 export interface Evidence {
@@ -101,7 +101,7 @@ export function appendLoop(ledger: readonly LoopRow[], input: LoopRowInput): Loo
     return [...ledger, { loop, lens: input.lens, items: input.items, status }];
 }
 
-export function nextLoop(ledger: readonly LoopRow[], loops = MANDATORY_LOOPS): NextLoop {
+export function nextLoop(ledger: readonly LoopRow[], loops: number = MANDATORY_LOOPS): NextLoop {
     assertLoopsSetting(loops);
     const done = ledger.length;
     if (done < MANDATORY_LOOPS) {
