@@ -99,6 +99,7 @@ import {
     CostBudget,
     OverrunEvent,
     _breach,
+    breachErrorTag,
     _total_usd,
     type Spent,
 } from './spend_gate.js';
@@ -664,10 +665,7 @@ function _run_round(
         const breach = _breach(est, spent, budget);
         if (breach !== null) {
             const breach_kind = breach;
-            const error_tag =
-                breach_kind === 'daily'
-                    ? 'daily_budget_exceeded'
-                    : 'cost_budget_exceeded';
+            const error_tag = breachErrorTag(breach_kind);
             // A seat that arrived here by escalating from an UNMETERED cli
             // call degrades to its own original failure — never to an abort,
             // and never to the round-wide short-circuit below. The reasoning,
@@ -809,6 +807,7 @@ function _run_round(
                     cache_read_input_tokens: response.cache_read_input_tokens,
                     cache_creation_input_tokens: response.cache_creation_input_tokens,
                     cache_ttl: '5m',
+                    ...(actual.priced ? {} : { unpriced: true, input_tokens: actual.input_tokens, output_tokens: actual.output_tokens }),
                 });
             }
         }

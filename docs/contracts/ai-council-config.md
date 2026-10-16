@@ -294,6 +294,13 @@ Implications:
   vendor-official CLIs (`anthropic`, `openai`, `gemini`) or to
   `mode: manual`.** All four are `billable=False`; the USD ceiling is
   a token-billing concept they don't participate in.
+- **A set USD ceiling refuses a billable seat whose model has no price
+  row.** With `max_total_usd` or `daily_limit_usd` above zero, an estimate
+  the price table cannot quote is unknown rather than $0, so the seat is not
+  called and is reported as `cost_budget_unpriced`, the way an over-budget
+  seat is. With both at zero nothing is refused; the cost table still prints
+  `unpriced: <provider>/<model>` and the call is ledgered as
+  `"usd": null, "unpriced": true` with its token counts.
 - **`api_key_ref` is required for enabled members whose effective mode
   is `api`, AND for `xai` / `perplexity` even in `mode: cli`** — the
   community CLI reads the key from its own env, but the agent still
