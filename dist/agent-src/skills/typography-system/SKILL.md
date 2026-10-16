@@ -50,15 +50,9 @@ degrades gracefully: with no brand layer, only stage 1 runs.
 3. **Derive the type scale** — pick a modular ratio (1.25 Minor Third or 1.333
    Perfect Fourth for most products); compute sizes for `xs / sm / base / lg /
    xl / 2xl / 3xl`; assign weights (400 body, 600–700 heading).
-   **Body line-height — this skill is the one authority:** 1.5 default for body
-   text, chosen inside a 1.4–1.7 band by measure and x-height (longer lines and
-   small x-heights take the upper end). Other carriers cite this line instead
-   of restating a number; Q8 in `design-antipatterns` stays a floor.
-   Display sizes take a tighter leading, around 1.2.
-   Two settings ride with the scale: `font-variant-numeric: tabular-nums` where
-   figures must align (tables, prices, timers), and the `opsz` axis left on
-   auto (`font-optical-sizing: auto`) for optical-size families, so small and
-   display sizes each get their drawn cut.
+   **Body line-height authority:** 1.5 for body text, within a 1.4–1.7 band
+   by measure and x-height; other carriers cite this, Q8 is the floor. Display
+   takes about 1.2. `tabular-nums` and `opsz`: [worked scales](references/worked-scales.md).
 4. **Emit DTCG `$type: "typography"` tokens** through `design-tokens`
    (`scripts/tokens.ts`) — add a `typography` section to `tokens.json` with
    `$type: "typography"` and `$value` objects carrying `fontFamily`,
@@ -199,11 +193,7 @@ the shorter line.
 Typography is one of the highest-leverage design decisions and one of the
 most commonly mis-applied by AI agents (defaulting to Inter + arbitrary sizes).
 The skill carries 73 curated font pairings (heading + body + mono combinations
-with Google Fonts URLs and Tailwind config), the single body line-height
-authority, and six worked modular scales in
-[`references/worked-scales.md`](references/worked-scales.md) (marketing,
-dashboard, docs, e-commerce, SaaS, editorial). Condensing to "use a 1.25
-modular scale" loses the worked examples that teach agents the difference
-between a 14/17.5/21.8/27.2 rounded scale and an invented arbitrary scale.
-Without the worked examples, agents produce: 16, 20, 24, 28 (arbitrary)
-instead of a properly grounded typographic system.
+with Google Fonts URLs and Tailwind config), the body line-height authority,
+and six worked scales in `references/worked-scales.md`. Condensing to "use a
+1.25 modular scale" loses the examples that teach a rounded scale from an
+arbitrary one: agents produce 16, 20, 24, 28 instead.

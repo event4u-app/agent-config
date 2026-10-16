@@ -69,6 +69,14 @@ row:
   and a serif text face with a small x-height.
 - Why this ratio: display headlines need contrast against a large body size.
 
+## Two settings that ride with every scale
+
+- `font-variant-numeric: tabular-nums` wherever figures must align — tables,
+  prices, timers, counters — so each digit takes the same advance.
+- For an optical-size family, leave the `opsz` axis on auto
+  (`font-optical-sizing: auto`) so small and display sizes each get the cut
+  drawn for them; pin it only to match a measured comp.
+
 ## The arbitrary scale this replaces
 
 `16, 20, 24, 28` is not a scale: its steps grow by a fixed 4 px, so the ratio
