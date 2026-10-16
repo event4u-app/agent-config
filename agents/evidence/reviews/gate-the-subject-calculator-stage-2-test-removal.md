@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: analysis -->
 
 # Independent verdict — the pin tests removed in stage 2 (2026-10-16)
 
