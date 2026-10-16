@@ -101,7 +101,7 @@ Do NOT create a skill or rule for:
 
 → See `docs/guidelines/agent-infra/size-and-scope.md` for full limits.
 
-* Target: 300–900 words. Review for split above 1200 words. Strongly consider split above 1500 words.
+* Target: 300–900 words. A word or line count is never by itself a reason to split — § Progressive disclosure says when to.
 * Over the 400-line K6 cap → the **router-head contract** in `templates/skill.md`
   applies: entry head (when-to-use · mode table · routing) plus one `tasks/` or
   `references/` file per mode, and the head never inlines more than one mode's
@@ -119,20 +119,35 @@ named one; the split cost a rename, not a decision.
 
 * **Body:** the trigger, the workflow, the ownership statement, and every
   heuristic that changes a write decision. A skill whose body is a map to its
-  own content is loaded and not applied.
+  own content is loaded and not applied. So a split head keeps every such
+  heuristic and all five required sections (`When to use`, `Gotcha`,
+  `Procedure`, `Output format`, `Do NOT`); only step execution moves out.
 * **`references/`:** corpora, lookup tables, long schemas, worked examples —
   read on the path that needs them, never on every activation.
 
-Splitting is not a size escape hatch. The measured estate (n=289, 2026-08-12):
-median 1,077 words, p90 1,867, **only 6 skills above 2,500 and 4 above 3,000**.
-So a skill at 1,500 words is ordinary, and moving prose out of the body to hit
-a number makes it worse. Split when the material is genuinely
-consulted-on-demand; keep the load-bearing part in the body even when that
-leaves the file long.
+Split for one of two reasons only: the material is genuinely consulted on
+demand, or a procedure needs to be handed out in order. Never split to hit a
+number. The measured estate (n=289, 2026-08-12): median 1,077 words, p90 1,867,
+**only 6 skills above 2,500 and 4 above 3,000** — a skill at 1,500 words is
+ordinary, and the load-bearing part stays in the body even when that leaves the
+file long.
 
 A `references/` split does not change the gates that already apply: a
 `token_budget_class: rich` skill still meets its 3,500-token ceiling on the
 body alone.
+
+### Four words: reference, co-requirement, procedure, chain
+
+* A **reference** is context loaded on demand from the skill's own
+  `references/`. It stays one level deep: a reference file links no sibling
+  reference of its own skill, so the head reaches every one.
+  `lint_skill_link_reach` holds today's sibling links as a shrink-only ratchet.
+* **`requires_skills`** is co-availability — the named skill ships wherever this
+  one does. It states no order.
+* A **procedure** is the ordered steps of one skill. Held as data, it is a
+  sidecar beside `SKILL.md` that names only files of the same skill.
+* A **chain between skills** is not supported (the skill-DAG lock, ADR-263).
+  Prose such as "then invoke X" is a hint to the reader, not a chain link.
 
 ## Modes
 

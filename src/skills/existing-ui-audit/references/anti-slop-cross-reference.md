@@ -24,7 +24,7 @@ wrong about one of them:
 
 A corrective direction change against a supplied spec is not a design
 improvement, it is overriding a decision the user already made — the failure
-[`design-fidelity`](../../rules/design-fidelity.md) exists to prevent, arriving
+[`design-fidelity`](../../../rules/design-fidelity.md) exists to prevent, arriving
 through the audit's side door. Precedence and its exact scope:
 [`design-fidelity-mechanics`](../../../docs/guidelines/design-fidelity-mechanics.md)
 § Provided-artifact precedence. Where the two sources disagree, surface the

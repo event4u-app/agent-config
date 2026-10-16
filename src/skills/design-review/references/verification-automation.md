@@ -109,8 +109,8 @@ view — it takes the screenshots, probes viewports, and checks states, then
 **stays silent on pass and surfaces only real, actionable problems** (never
 nitpicks). The main agent does not self-screenshot, so its context stays clean
 for the actual review reasoning. This is an orchestration pattern —
-dispatch it via [`subagent-orchestration`](../subagent-orchestration/SKILL.md)
-and position it against [`verify-repair-loop`](../verify-repair-loop/SKILL.md)
+dispatch it via [`subagent-orchestration`](../../subagent-orchestration/SKILL.md)
+and position it against [`verify-repair-loop`](../../verify-repair-loop/SKILL.md)
 (the existing verify skill); it complements them, it does not duplicate them.
 
 **Why the audit passes stay serial (not a parallel-4 fan-out).** A fan-out of

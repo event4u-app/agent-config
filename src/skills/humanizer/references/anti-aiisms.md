@@ -83,7 +83,7 @@ Read after a rewrite; each bound is a **default, not a suite measurement**.
 
 Two columns, because "enforced by the scanner" was one word doing two jobs and
 three of these bounds were attributed to code that did not implement them. A
-**mechanical signal** is something [`detect_ai_tells.ts`](../../../scripts/detect_ai_tells.ts)
+**mechanical signal** is something `detect_ai_tells.ts`
 actually counts. **Bound applied by** says who compares that count against the
 number in the Default column — the scanner, when a runtime is available, or the
 step-3 audit by eye. A row can have a signal and still be eye-checked: the

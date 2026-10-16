@@ -93,7 +93,7 @@ The highest-signal content in a skill. Documents failure patterns.
 
 Skill exceeds size limits (see `docs/guidelines/agent-infra/size-and-scope.md`).
 
-**Check:** Review at >400 lines. Strongly consider split at >1200 words / >1500 words.
+**Check:** Review at >400 lines. A word count alone is no split reason — split only material consulted on demand, or a procedure handed out in order (`skill-writing` § Progressive disclosure).
 **Fix:** Extract reference tables, templates, and examples into separate files
 in the skill folder, or split by responsibility.
 

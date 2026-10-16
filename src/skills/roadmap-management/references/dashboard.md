@@ -11,7 +11,7 @@ A generated dashboard aggregates progress across every open roadmap. It sits at
 is rewritten by `.augment/scripts/update_roadmap_progress.ts`.
 
 **Always regenerate in the SAME response** after any of the following
-(enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
+(enforced by [`roadmap-progress-sync`](../../../rules/roadmap-progress-sync.md)):
 
 - Creating a new roadmap (`/roadmap:create`)
 - Marking a step `[x]`, `[~]`, or `[-]` during `/roadmap:process-*`
@@ -38,8 +38,8 @@ The overview table's `Blocker` column counts each roadmap's open
 `## Blockers` entries (or the legacy `> Blocked until` note) and links
 to the per-roadmap breakdown, which lists every open blocker with
 owner, blocked scope, and full instructions. Authoring shape:
-[`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md);
-authoring guidance: [`roadmap-writing § 5b`](../roadmap-writing/SKILL.md).
+[`templates/roadmaps.md` rule 20](../../../templates/roadmaps.md);
+authoring guidance: [`roadmap-writing § 5b`](../../roadmap-writing/SKILL.md).
 Clearing a blocker flips its `Status: resolved` and regenerates the
 dashboard in the same reply, same cadence as a checkbox flip. The
 blocker entry is also the canonical **awaiting-evidence** signal —

@@ -123,7 +123,7 @@ when it is due, and a learning lands in the step that failed.
 
 A split multiplies links. The gate that checks them comes first.
 
-- [ ] **1.1 Resolve every relative link against its own file, test first.**
+- [x] **1.1 Resolve every relative link against its own file, test first.**
       Write the fixture before the change — a delivered skill whose
       `references/a.md` links `../b/SKILL.md` (one `../` short) and whose
       `SKILL.md` links `references/missing.md` — and record in the PR that
@@ -133,17 +133,22 @@ A split multiplies links. The gate that checks them comes first.
       `docs/` are reported as their own class (not delivered —
       `measure_docs_dead_links` owns that question) and do not fail; a link in a
       fenced block or an angle-bracket placeholder is not a link.
+      *Done 2026-10-16:* the fixture ran red against the old gate (exit 0);
+      33 unresolved links surfaced on `origin/main`.
       verify: `npx vitest run tests/scripts/lint_skill_link_reach.test.ts -t reference-depth --reporter=verbose` -> /✓.*reference-depth/
-- [ ] **1.2 Repair the 28 short links and the three path errors.** Mechanical:
+- [x] **1.2 Repair the 28 short links and the three path errors.** Mechanical:
       add the missing `../`; fix the three named errors. Re-derive the list with
       the gate rather than copying this file's count — the tree moves.
+      *Done 2026-10-16:* 29 short links; the path errors were two template
+      paths and one link to an undelivered script.
       verify: `./scripts-run src/scripts/lint_skill_link_reach` -> 0
-- [ ] **1.3 Remove the stale link in `existing-ui-audit`.**
+- [x] **1.3 Remove the stale link in `existing-ui-audit`.**
       *corrected-from-reproduction:* the supplied plans move `Output format` and
       `Gotcha` out to `references/output-and-pitfalls.md`; both are required
       in-body sections (`skill_linter.ts:98`) and were moved back by
       `b3cc0ada6` for that reason. The defect is the leftover link at
       `SKILL.md:350`, so delete that line and keep both sections in the body.
+      *Done 2026-10-16.*
       verify: `grep -c 'output-and-pitfalls' src/skills/existing-ui-audit/SKILL.md` -> /^0$/
 - [ ] **1.4 A reference link into another pack declares it.** A link from one
       skill into another skill's `references/` across a pack boundary requires
@@ -160,22 +165,27 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 2 — One canon for size, split and order
 
-- [ ] **2.1 Remove the contradiction.** `skill-writing/SKILL.md:104` and
+- [x] **2.1 Remove the contradiction.** `skill-writing/SKILL.md:104` and
       `:126-129` become one statement: split when material is genuinely
       consulted on demand or when a procedure needs to be handed out in order;
       never to hit a number. The `:121-122` sentence stays and gains its
       corollary: a split head keeps every heuristic that changes a write
       decision and all five required sections; only step execution moves.
+      *Done 2026-10-16:* `skill-reviewer` Killer 5 repeated the trigger and
+      now points at the one statement.
       verify: `grep -c 'Strongly consider split above 1500 words' src/skills/skill-writing/SKILL.md` -> /^0$/
-- [ ] **2.2 Four words, four meanings.** One section in `skill-writing` (no new
+- [x] **2.2 Four words, four meanings.** One section in `skill-writing` (no new
       document): a **reference** is context loaded on demand; `requires_skills`
       is co-availability; a **procedure** is the ordered steps of one skill with
       a sidecar; a **chain between skills** is not supported (skill-DAG lock,
       ADR-263). Prose such as "then invoke X" is a hint, not a chain link.
+      *Done 2026-10-16:* section `Four words: reference, co-requirement,
+      procedure, chain`.
       verify: `grep -cE '^### .*(reference|procedure)' src/skills/skill-writing/SKILL.md` -> /^[1-9]/
-- [ ] **2.3 Reference files stay one level deep.** The same section says a
+- [x] **2.3 Reference files stay one level deep.** The same section says a
       reference file links no sibling reference of its own skill; a ratchet in
       `lint_skill_link_reach` seeds at today's count and only shrinks.
+      *Done 2026-10-16:* ceiling 7, pinned against the real tree by a test.
       verify: `npx vitest run tests/scripts/lint_skill_link_reach.test.ts -t sibling-ratchet --reporter=verbose` -> /✓.*sibling-ratchet/
 
 ## Phase 3 — A procedure as data, with no runtime
