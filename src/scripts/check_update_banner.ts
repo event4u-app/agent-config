@@ -8,7 +8,7 @@
  * banner (when emitted) goes to stderr; all other output suppressed.
  *
  * Invoked by the `scripts/agent-config` dispatcher AFTER a subcommand
- * finishes. See `src/scripts/_lib/update_check.py` for the decision logic.
+ * finishes. See `src/scripts/_lib/update_check.ts` for the decision logic.
  *
  * Usage:
  *     check_update_banner [--installed-version X.Y.Z]
@@ -21,6 +21,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { _is_global_only_consumer } from './_cli/doctor_install_mode.js';
 import * as agent_settings from './_lib/agent_settings.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 import * as update_check from './_lib/update_check.js';
@@ -69,6 +70,23 @@ function _read_settings_flag(cwd: string): boolean {
         }
     }
     return true;
+}
+
+function _has_project_pin(cwd: string): boolean {
+    try {
+        const pin = agent_settings.load_agent_settings({ cwd })['agent_config_version'];
+        return typeof pin === 'string' && pin.trim() !== '';
+    } catch {
+        return false;
+    }
+}
+
+function _detect_origin(package_root: string, cwd: string): update_check.InstallOrigin {
+    return update_check.classify_install_origin({
+        package_root,
+        has_project_pin: _has_project_pin(cwd),
+        is_global_consumer: _is_global_only_consumer(cwd),
+    });
 }
 
 interface ParsedArgs {
@@ -146,7 +164,10 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
 
     let banner: string | null;
     try {
-        banner = await update_check.check_for_update(installed, { settings_enabled: enabled });
+        banner = await update_check.check_for_update(installed, {
+            settings_enabled: enabled,
+            origin: _detect_origin(ROOT, cwd),
+        });
     } catch {
         return 0;
     }
@@ -196,4 +217,4 @@ if (_isCliEntry() || process.argv[1] === _HERE) {
     void main().then((code) => process.exit(code));
 }
 
-export { ROOT, _read_installed_version, _read_settings_flag, parse_args, main };
+export { ROOT, _detect_origin, _read_installed_version, _read_settings_flag, parse_args, main };

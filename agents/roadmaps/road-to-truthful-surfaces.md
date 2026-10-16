@@ -67,14 +67,14 @@ file can report an externally visible change as done.
 
 ## Phase 1 — The banner names the command that does what it says
 
-- [ ] **1.1 Make `_format_banner` origin-aware.** `update_check.ts:164-168`
+- [x] **1.1 Make `_format_banner` origin-aware.** `update_check.ts:164-168`
       reads the install origin from `src/scripts/_cli/doctor_install_mode.ts`
       — already shipped, no new detector — and emits `agent-config upgrade`
       for a global install, `agent-config update` for a project whose pin is
       behind latest, and no command line at all for an ephemeral `npx` run.
       One fixture per origin asserts the emitted command string.
       verify: `npx vitest run tests/scripts/update_check*` -> 0
-- [ ] **1.2 Fix the stale pointer in the banner entry point.**
+- [x] **1.2 Fix the stale pointer in the banner entry point.**
       `src/scripts/check_update_banner.ts:11` names `_lib/update_check.py`.
       verify: `grep -rn 'update_check\.py' src/` -> 1
 

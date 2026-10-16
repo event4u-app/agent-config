@@ -161,11 +161,52 @@ function _should_check(state: Record<string, unknown>, now: Date): boolean {
     return now.getTime() - last_ms >= CHECK_WINDOW_MS;
 }
 
-function _format_banner(latest: string, installed: string): string {
-    return (
-        `ℹ️  agent-config ${latest} available (you have ${installed}).\n` +
-        `    Update: npx ${PACKAGE_NAME} update`
-    );
+/**
+ * The install shape that is running. It decides which command the banner may
+ * name: `upgrade` replaces the global binary, `update` flips a project's
+ * `agent_config_version` pin, and an ephemeral `npx` run has nothing to update.
+ */
+export type InstallOrigin = 'global' | 'project-pin' | 'ephemeral' | 'unknown';
+
+const GLOBAL_TREE = /[\\/](?:lib|npm)[\\/]node_modules[\\/]@event4u[\\/]agent-config[\\/]?$/;
+
+/**
+ * Classify the running install from signals the caller gathers.
+ *
+ * Order matters: a pinned project also runs from the npx cache, so the pin is
+ * read before the `_npx` segment. An origin nobody enumerated is `unknown` and
+ * gets no command, because a guessed command is the defect this replaces.
+ */
+export function classify_install_origin(signals: {
+    package_root: string;
+    has_project_pin: boolean;
+    is_global_consumer: boolean;
+}): InstallOrigin {
+    if (signals.has_project_pin) {
+        return 'project-pin';
+    }
+    if (signals.package_root.split(/[\\/]+/).includes('_npx')) {
+        return 'ephemeral';
+    }
+    if (signals.is_global_consumer || GLOBAL_TREE.test(signals.package_root)) {
+        return 'global';
+    }
+    return 'unknown';
+}
+
+export function _format_banner(
+    latest: string,
+    installed: string,
+    origin: InstallOrigin = 'unknown',
+): string {
+    const head = `ℹ️  agent-config ${latest} available (you have ${installed}).`;
+    if (origin === 'global') {
+        return `${head}\n    Update: agent-config upgrade`;
+    }
+    if (origin === 'project-pin') {
+        return `${head}\n    Update: agent-config update`;
+    }
+    return head;
 }
 
 /** Strict integer parse mirroring Python's `int(p)` (else 0). */
@@ -233,6 +274,7 @@ export async function check_for_update(
         is_tty?: boolean | null;
         settings_enabled?: boolean;
         fetcher?: Fetcher;
+        origin?: InstallOrigin;
     } = {},
 ): Promise<string | null> {
     const env = options.env ?? process.env;
@@ -264,7 +306,7 @@ export async function check_for_update(
     if (!_should_check(state, now)) {
         const latest = state.last_seen_version;
         if (typeof latest === 'string' && _is_newer(latest, installed_version)) {
-            return _format_banner(latest, installed_version);
+            return _format_banner(latest, installed_version, options.origin);
         }
         return null;
     }
@@ -293,5 +335,5 @@ export async function check_for_update(
     if (!latest || !_is_newer(latest, installed_version)) {
         return null;
     }
-    return _format_banner(latest, installed_version);
+    return _format_banner(latest, installed_version, options.origin);
 }
