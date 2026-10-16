@@ -69,6 +69,54 @@ describe('dispatch — local invariants', () => {
     });
 });
 
+describe('dispatch — an order per input kind (roadmap steps-the-skill-cannot-skip 5.1)', () => {
+    function ordered(names: readonly string[], plan: StepPlan = {}): Map<string, Step> {
+        const m = new Map<string, Step>();
+        for (const name of names) {
+            const spec = plan[name];
+            m.set(name, () => new StepResult({
+                outcome: (spec ? spec.outcome : Outcome.SUCCESS) as Outcome,
+                questions: spec?.questions ?? [],
+            }));
+        }
+        return m;
+    }
+
+    it('walks a caller-supplied order and needs no handler outside it', () => {
+        const st = new DeliveryState({ ticket: {} });
+        const order = ['scan', 'audit', 'write'];
+        const [final, halting] = dispatch(st, ordered(order), null, order);
+        expect(final).toBe(Outcome.SUCCESS);
+        expect(halting).toBeNull();
+        expect(Object.keys(st.outcomes)).toEqual(order);
+    });
+
+    it('halts inside a custom order and resumes past its SUCCESS steps', () => {
+        const order = ['scan', 'audit', 'write'];
+        const st = new DeliveryState({ ticket: {} });
+        const plan = { audit: { outcome: Outcome.PARTIAL, questions: ['which file?'] } };
+        expect(dispatch(st, ordered(order, plan), null, order)).toEqual([Outcome.PARTIAL, 'audit']);
+        let scanned = 0;
+        const again = ordered(order);
+        again.set('scan', () => {
+            scanned += 1;
+            return new StepResult({ outcome: Outcome.SUCCESS });
+        });
+        expect(dispatch(st, again, null, order)).toEqual([Outcome.SUCCESS, null]);
+        expect(scanned).toBe(0);
+    });
+
+    it('refuses an empty or duplicated order', () => {
+        const st = new DeliveryState({ ticket: {} });
+        expect(() => dispatch(st, ordered(['a']), null, [])).toThrow();
+        expect(() => dispatch(st, ordered(['a']), null, ['a', 'a'])).toThrow();
+    });
+
+    it('the default order is still STEP_ORDER', () => {
+        expect(() => dispatch(new DeliveryState({ ticket: {} }), ordered(['scan']))).toThrow();
+    });
+});
+
 // ── select_directive_set / load / assert_kind_supported ───────────────────
 
 describe('select_directive_set — local', () => {

@@ -256,10 +256,13 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 5 — The cursor in the `/work` engine (default-off)
 
-- [ ] **5.1 An order per input kind.** `dispatch()` takes an optional step
+- [x] **5.1 An order per input kind.** `dispatch()` takes an optional step
       order; the default stays `STEP_ORDER`, so every existing directive set and
       the resume contract are untouched. This is the roadmap-level decision
       `dispatcher.ts:64-67` asks for.
+      *Done 2026-10-17:* a fourth optional `order` parameter, refused when empty
+      or repeated; the full `tests/scripts/work_engine` suite (92 files, 1,001
+      tests) passes unchanged.
       verify: `npx vitest run tests/scripts/work_engine/dispatcher.test.ts --reporter=verbose` -> /✓/
 - [ ] **5.2 `input.kind: procedure`.** Added to `KNOWN_INPUT_KINDS`; its
       directive set is built from the sidecar. One call checks the exit of step

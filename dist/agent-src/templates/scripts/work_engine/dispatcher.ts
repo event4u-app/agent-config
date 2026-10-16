@@ -65,6 +65,9 @@ const _NOOP_RUNNER: HookRunner = new HookRunner();
  *
  * Changing this order is a roadmap-level decision — not a PR rider — per the
  * surface-growth guardrails in `agents/roadmaps/road-to-implement-ticket.md`.
+ * `dispatch` may be handed another order for another input kind
+ * (road-to-steps-the-skill-cannot-skip 5.1); this default stays the order every
+ * existing directive set runs.
  */
 export const STEP_ORDER: ReadonlyArray<string> = [
     'refine',
@@ -115,6 +118,9 @@ const _DIRECTIVE_SET_MODULES: Record<string, DirectiveSetModule> = {
  * rather than silently skipping, so incomplete wiring surfaces as a hard
  * failure.
  *
+ * `order` defaults to {@link STEP_ORDER}; a caller that runs another input kind
+ * passes its own linear order, which must be non-empty and free of repeats.
+ *
  * `hooks` is an optional {@link HookRunner}. `null` preserves every existing
  * call site verbatim — internally `dispatch` falls back to a shared
  * empty-registry runner so hook bookkeeping stays uniform without a per-emit
@@ -127,8 +133,10 @@ export function dispatch(
     state: DeliveryState,
     steps: Map<string, Step>,
     hooks: HookRunner | null = null,
+    order: ReadonlyArray<string> = STEP_ORDER,
 ): [Outcome, string | null] {
-    _assert_all_steps_present(steps);
+    _assert_order_valid(order);
+    _assert_all_steps_present(steps, order);
 
     // Clear stale questions from a previous halt before we resume so the caller
     // never mistakes old options for fresh ones.
@@ -136,7 +144,7 @@ export function dispatch(
 
     const runner = hooks !== null ? hooks : _NOOP_RUNNER;
 
-    for (const name of STEP_ORDER) {
+    for (const name of order) {
         if (_get(state.outcomes, name) === Outcome.SUCCESS) {
             // Already completed on an earlier invocation — skip per the resume
             // contract. The caller is responsible for keeping `state.outcomes`
@@ -245,8 +253,14 @@ function _emit_on_halt(
  * inside the dispatch loop after partial state mutation, which makes debugging
  * the wiring harder than it needs to be.
  */
-function _assert_all_steps_present(steps: Map<string, Step>): void {
-    const missing = STEP_ORDER.filter((name) => !steps.has(name));
+function _assert_order_valid(order: ReadonlyArray<string>): void {
+    if (order.length === 0 || new Set(order).size !== order.length) {
+        throw new ValueError('Step order must be non-empty and name each step once: ' + order.join(', '));
+    }
+}
+
+function _assert_all_steps_present(steps: Map<string, Step>, order: ReadonlyArray<string>): void {
+    const missing = order.filter((name) => !steps.has(name));
     if (missing.length > 0) {
         throw new KeyError('Step mapping is missing handlers for: ' + missing.join(', '));
     }
