@@ -109,9 +109,22 @@ Every row is recorded in the shape of `src/config/host-injection-effect.json`
 (host, version, transcript pointer, date, state) with an expiry; `observed-true`
 needs a transcript.
 
-- [ ] **0.1 Skill census.** Per host and install path: entries installed,
+- [x] **0.1 Skill census.** Per host and install path: entries installed,
   listing characters with descriptions and names-only, omitted set. One
   deterministic report.
+  Done 2026-10-17: `./scripts-run src/scripts/report_skill_host_census` prints
+  one row per host whose global deploy writes `dist/agent-src/skills` (15) and
+  per install path (`default` = the installer's scoped projection, `full`).
+  At this commit: 229 / 300 installed on the default path; listing 44,004
+  characters with descriptions and 3,813 names-only (57,917 / 5,040 on full).
+  claude-code is modelled to keep 45 descriptions and list 184 names only on
+  the default path — the same 184 step 4.7's install wrote. codex exceeds its
+  documented 8,000-character budget on both paths, and its written root
+  `~/.codex/skills` is not the `$HOME/.agents/skills` its page names, so the row
+  reads `root_read: no`; which entries it omits stays unobserved (0.3). Every
+  other host is `unobserved`. Wrapped commands are not counted.
+  `tests/scripts/report_skill_host_census.test.ts` checks byte-equal runs and
+  that every row sums to the authored count.
   verify: two runs at one commit are byte-equal; totals equal
   `ls src/skills/*/SKILL.md | wc -l`.
 - [ ] **0.2 First-host probes:** (a) a skill written into the watched user
