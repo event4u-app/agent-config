@@ -73,11 +73,13 @@ is open.
   `__TYPE_n_fp__`. **The identifier class has no rows yet** — validated identifier
   rules are 2.3 — so counting by class today yields credential evidence only.
 - **2026-10-16:** 0.4 landed (sender census in the contract).
-- **2026-10-17:** 1.3 landed (gap fixtures named by the sibling). 2.2's detection
-  move landed; the step stays open on its gate registration and the
-  keyword-assignment variants (see 2.2). 2.3 was prototyped and set aside on the
-  hook-bundle budget (see 2.3). 1.1 and 1.2 touch a pre-tool-use guard and the
-  installer, which this drain lane does not edit.
+- **2026-10-17:** 1.3 landed (gap fixtures named by the sibling). 2.2 was built
+  and reverted: the rule table is hook-plumbing source for the ratification gate
+  (see 2.2). 2.3 was prototyped and set aside on the hook-bundle budget (see
+  2.3). 1.1 and 1.2 touch a pre-tool-use guard and the installer, which that
+  drain lane did not edit. 2.3 to 2.6 and 3.2 edit the rule table or the token
+  module, both bundled into the dispatcher, so each needs a ratification record
+  before it can land.
 - **Next in order:** 2.2 (which now carries the
   single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
 
@@ -220,27 +222,25 @@ read cannot leak through any later bug.
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
       detection is shared.
       verify: a drift matrix — every positive fixture against every consumer — is green, and the `sk-ant-api03` case of F2 is a named row in it; the table is the only place a credential pattern literal appears under `src/scripts` and `src/cli`, and a lint that fails a second one is registered in `src/config/gate-coverage.yml` with a canary (moved here from 2.1).
-      **Progress 2026-10-17 — detection moved, two remainders keep this open.**
-      Every F2 site now reads the table: `secret_detector` (already), the MCP
-      config lint, `workspace_secrets` and through it `cross_repo_retrieve`, the
-      council bundler (detection only; whole-line replacement stays until 3.3),
-      the `explain last` scrubber, the council `api_key_ref` check and the
-      low-impact redactor. The table gained six rows the consumers had and it
-      lacked (OpenAI, Google OAuth, GitHub app tokens, xAI, Perplexity, Groq) and
-      a `prefixes` field, which shape-only surfaces read instead of their own
-      lists. `npx vitest run src/scripts/_lib/egress_drift_matrix.test.ts` -> 0:
-      18 rows against 6 pattern-grade and 3 prefix-grade consumers, the
-      `sk-ant-api03` case a named row; seen red with one row removed from one
-      consumer. `npx vitest run src/scripts/_lib/egress_rules_single_source.test.ts`
-      -> 0: no vendor prefix is spelled outside the table under `src/scripts` and
-      `src/cli` (two prose or fake-value lines carry a reasoned
-      `not-a-credential-pattern:` marker). **Open:** (a) the single-spelling check
-      is a test, not a gate registered in `src/config/gate-coverage.yml` with a
-      canary; that registration is a governance surface and needs a ratification
-      record, which this lane did not produce. (b) The keyword-assignment variants
-      (`password =`, `api_key:`) that four consumers read at their own looser
-      threshold, and one class-spelled prefix list in `check_reach_channels.ts`,
-      are still local; they carry no vendor literal, so the test cannot see them.
+      **Built and reverted 2026-10-17 — blocked on a ratification record.** The
+      move was implemented on the branch of the PR that recorded this note and is
+      reachable in its history (the four commits before its two `Revert` commits):
+      every F2 site read the table, six rows the consumers had and the table
+      lacked (OpenAI, Google OAuth, GitHub app tokens, xAI, Perplexity, Groq) and a
+      `prefixes` field for shape-only surfaces were added, a drift matrix (18 rows
+      against 6 pattern-grade and 3 prefix-grade consumers, `sk-ant-api03` a named
+      row, seen red with one row removed from one consumer) and a single-spelling
+      test were green, and the hook bundle grew 1,616 B. The pre-push ratification
+      gate classifies `src/scripts/_lib/egress_rules.ts` as hook-plumbing source,
+      because the egress stage bundles it, so any edit to the table needs a
+      ratification artifact under ADR-268 § 4; producing one was outside that
+      drain lane, so the work was reverted rather than pushed past the gate.
+      **Landing it needs:** that record, then the same commits re-applied.
+      **Still open after that:** registering the single-spelling check in
+      `src/config/gate-coverage.yml` with a canary (also a governance surface),
+      and the keyword-assignment variants (`password =`, `api_key:`) four
+      consumers read at their own threshold plus the class-spelled prefix list in
+      `check_reach_channels.ts`, which carry no vendor literal.
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own
@@ -250,7 +250,7 @@ read cannot leak through any later bug.
       unvalidated copies of F3 are replaced by the table.
       verify: the F3 census re-run through the table reports its count as a test with a pinned ceiling, not a report; recall and precision per class are read against the 0.3 bars.
       **Measured 2026-10-17, not landed — the hook bundle cannot carry it.** A
-      prototype with six identifier rows (IBAN by country length and mod-97, card
+      prototype (on top of the reverted 2.2 table) with six identifier rows (IBAN by country length and mod-97, card
       by Luhn plus context, e-mail with documentation, no-reply and file-name
       exclusions, phone international and national-with-context, German tax ID by
       ISO 7064 plus context) passed its own suite, including the checksum-disabled
