@@ -96,6 +96,7 @@ import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { resolveConsumerRoot } from './subagent_ledger_hook.js';
 import { EXIT_ALLOW } from './exit_codes.js';
+import { isHandoverShape } from '../_lib/ui_surface.js';
 
 /** Would-warns per session before the valve goes silent — `MAX_NUDGES` shape. */
 export const MAX_SHADOW_WARNS = 2;
@@ -170,20 +171,17 @@ export const COMMAND_MATCHERS: readonly { pattern: RegExp; hit: MatcherHit }[] =
 
 /**
  * The handover path shapes `design-fidelity` routes on a FILE rather than on a
- * word: `file_pattern: *design.html` and `path_prefix: .claude/design-system/`.
+ * word, read from the one shared list `HANDOVER_SHAPES` in `_lib/ui_surface`.
  *
  * DIRECTION-AGNOSTIC ON PURPOSE, and that is the one difference from
  * `ui_route_nudge_hook.isArtifactRead`, which requires a non-write. Handover
  * *presence* and handover *having been read* are the two separate facts this
- * concern needs, and a single predicate cannot carry both. The read latch
- * below delegates to that exported predicate rather than re-deriving it;
- * `source_first_gate.test.ts` pins the two path shapes against each other so
- * the copy cannot drift.
+ * concern needs, and a single predicate cannot carry both.
+ * `handover_predicate_parity.test.ts` probes every carrier with one example per
+ * shape, so a shape no carrier accepts reds there.
  */
 export function isHandoverPath(file: string): boolean {
-    if (!file) return false;
-    const normalized = file.replace(/\\/g, '/').toLowerCase();
-    return normalized.endsWith('design.html') || normalized.includes('.claude/design-system/');
+    return isHandoverShape(file);
 }
 
 export interface CaptureEvent {

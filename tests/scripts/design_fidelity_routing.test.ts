@@ -313,6 +313,26 @@ export const ROUTING_MATRIX: readonly Row[] = [
         baseline: false,
     },
     {
+        // Written BEFORE `path_prefix: .design-sync/`. The direction that
+        // prefix opens is "a folder named for syncing"; the over-broad form is
+        // a bare `sync/` or `design-sync/` segment, which ordinary repos carry.
+        id: 'near-plain-sync-dir',
+        klass: 'none',
+        prompt: 'Can you fix the failing test?',
+        open_files: ['sync/config.json', 'packages/design-sync/index.ts'],
+        routes: false,
+        baseline: false,
+    },
+    {
+        // The host's own design-sync config, opened with no handover word.
+        id: 'design-sync-config-handover',
+        klass: 'none',
+        prompt: 'Can you do this?',
+        open_files: ['.design-sync/config.json'],
+        routes: true,
+        baseline: false,
+    },
+    {
         id: 'near-greenfield',
         klass: 'en',
         prompt: 'Design a pricing page for us from scratch.',
