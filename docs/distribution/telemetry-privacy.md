@@ -124,5 +124,4 @@ clearer wording) ship as plain edits. The current version corresponds to
 ## See also
 
 - [`telemetry-schema.md`](telemetry-schema.md) — full wire contract.
-- `agents/roadmaps/road-to-product-adoption.md § Phase 4`.
 - `non-destructive-by-default` — why worker deploy is a separate PR.

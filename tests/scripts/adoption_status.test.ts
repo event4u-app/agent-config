@@ -107,3 +107,110 @@ describe('adoption_status — ported pytest suite', () => {
         expect(parsed.ci.branch).toBe('main');
     });
 });
+
+// A ledger with the upstream columns the detector reads. Row S is the shape the
+// date-only stalled rule cannot see: submitted, but its upstream is closed.
+// The headings are interpolated because the comment gate reads any line that
+// starts with `#` as a shell comment, string literal or not.
+const H2 = '##';
+const LEDGER = `${'#'} Registry Submissions — tracking sheet
+
+**Re-read threshold:** 30 days.
+
+${H2} Tracking rows
+
+| # | Registry | Submission shape | Status | Upstream kind | Upstream ref | Last read | Date | Maintainer notes |
+|---|---|---|---|---|---|---|---|---|
+| S | closed-early | pr | \`submitted\` | \`github-pr\` | \`o/r#1\` | 2026-10-10 | 2026-10-01 | answered at day 10 |
+| T | still-open | pr | \`submitted\` | \`github-pr\` | \`o/r#2\` | 2026-10-10 | 2026-08-01 | open at day 70 |
+| U | merged | pr | \`submitted\` | \`github-pr\` | \`o/r#3\` | 2026-10-10 | 2026-10-01 | merged |
+| V | old-reading | form | \`pending\` | \`listing-page\` | <https://example.invalid/v> | 2026-08-01 | — | read long ago |
+| W | never-read | form | \`submitted\` | \`listing-page\` | <https://example.invalid/w> | — | 2026-06-01 | never read |
+
+${H2} How to update a row
+`;
+
+const TODAY = '2026-10-10';
+
+const READINGS: Record<string, as_.UpstreamReading> = {
+    'o/r#1': { ok: true, state: 'closed', at: '2026-10-11' },
+    'o/r#2': { ok: true, state: 'open' },
+    'o/r#3': { ok: true, state: 'merged', at: '2026-10-05' },
+};
+const fakeReader: as_.UpstreamReader = (row) =>
+    READINGS[row.ref] ?? { ok: false, reason: 'no network in this test' };
+
+describe('adoption_status — a detector that notices an answer, not a calendar', () => {
+    it('reports a submitted row whose upstream closed, which the date-only stalled rule cannot see', () => {
+        // The pre-existing reading: the sheet alone says `submitted`, never `stalled`.
+        const legacy = as_.parse_registry_statuses(LEDGER);
+        expect(legacy.submitted).toBe(4);
+        expect(legacy.stalled).toBe(0);
+        const verdicts = as_.judge_upstream(as_.parse_ledger_rows(LEDGER), fakeReader, TODAY);
+        const s = verdicts.find((v) => v.id === 'S');
+        expect(s?.verdict, 'the date-only stalled rule cannot see a closed upstream').toBe(
+            'answered-closed',
+        );
+    });
+
+    it('reports a merged upstream as answered-merged', () => {
+        const verdicts = as_.judge_upstream(as_.parse_ledger_rows(LEDGER), fakeReader, TODAY);
+        expect(verdicts.find((v) => v.id === 'U')?.verdict).toBe('answered-merged');
+    });
+
+    it('keeps stalled for an upstream still open past 60 days — both directions', () => {
+        const verdicts = as_.judge_upstream(as_.parse_ledger_rows(LEDGER), fakeReader, TODAY);
+        expect(verdicts.find((v) => v.id === 'T')?.verdict).toBe('stalled');
+        // Same open upstream, submitted 10 days ago: open, not stalled.
+        const young = LEDGER.replace('| 2026-10-10 | 2026-08-01 |', '| 2026-10-10 | 2026-09-30 |');
+        const v2 = as_.judge_upstream(as_.parse_ledger_rows(young), fakeReader, TODAY);
+        expect(v2.find((v) => v.id === 'T')?.verdict).toBe('open');
+    });
+
+    it('reports an unreachable upstream as unreachable, never as a state', () => {
+        const verdicts = as_.judge_upstream(as_.parse_ledger_rows(LEDGER), fakeReader, TODAY);
+        expect(verdicts.find((v) => v.id === 'W')?.verdict).toBe('unreachable');
+    });
+
+    it('reports a stale or missing last-read as unread, whatever the status says', () => {
+        const rows = as_.parse_ledger_rows(LEDGER);
+        const threshold = as_.parse_reread_threshold(LEDGER);
+        expect(threshold).toBe(30);
+        const unread = as_.unread_findings(rows, TODAY, threshold);
+        expect(unread.map((u) => u.id)).toEqual(['V', 'W']);
+        expect(unread.find((u) => u.id === 'V')?.label).toBe('unread-for-70-days');
+        expect(unread.find((u) => u.id === 'W')?.label).toBe('unread-never');
+    });
+
+    it('reports a row whose ledger has no last-read column at all', () => {
+        // SAMPLE_REGISTRY is the pre-reshape table: no `Last read` column.
+        const unread = as_.unread_findings(as_.parse_ledger_rows(SAMPLE_REGISTRY), TODAY, 30);
+        expect(unread).toHaveLength(5);
+        expect(unread.every((u) => u.label === 'unread-never')).toBe(true);
+    });
+
+    it('leaves the sheet-only text report byte-identical and names the degraded mode', () => {
+        const counts = { pending: 3, submitted: 1, accepted: 0, rejected: 0, stalled: 0 };
+        const out = as_.render_text(counts, 0, ['red', '1 required check(s) red'], 'main');
+        expect(out).toBe(
+            [
+                'Adoption status (one-screen)',
+                '============================',
+                '',
+                'Registry submissions:',
+                '  pending    3',
+                '  submitted  1',
+                '  accepted   0',
+                '  rejected   0',
+                '  stalled    0',
+                '',
+                'Recruit-session reports filed: 0',
+                '',
+                'Required-check status on main: 🔴 red — 1 required check(s) red',
+            ].join('\n'),
+        );
+        expect(as_.upstream_mode_note(false)).toMatch(/sheet only/);
+        expect(as_.parse_args(['--check-upstream']).checkUpstream).toBe(true);
+        expect(as_.parse_args([]).checkUpstream).toBe(false);
+    });
+});

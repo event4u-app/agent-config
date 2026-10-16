@@ -191,8 +191,8 @@ EOF
 echo ""
 echo "✅  PR opened: $PR_URL"
 echo ""
-echo "Next step: update docs/distribution/registry-submissions.md row 1"
-echo "  → status: pending → submitted"
+echo "Next step: add a new attempt row (1c, 1d, ...) to docs/distribution/registry-submissions.md"
+echo "  → status: submitted, upstream kind: github-pr, last read: today"
 echo "  → PR link: $PR_URL"
 
 exit 0
