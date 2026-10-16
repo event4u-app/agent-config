@@ -287,8 +287,17 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   Done 2026-10-16: the stub's arrivals line counts `inbox-2026-10-n` and quotes
   both from the host's skills page as read that day.
   verify: the stub carries the line with this round's codename.
-- [ ] **6.2 Watch the second host's skills page** in the host-docs digest watch
+- [x] **6.2 Watch the second host's skills page** in the host-docs digest watch
   the search roadmap's 0.2 adds for the first host.
+  Done 2026-10-17: `src/scripts/hooks/host_docs_pages.yaml` carries
+  `codex-skills` beside `claude-code-skills`, at the redirect target
+  `learn.chatgpt.com/docs/build-skills.md` (the old Codex URL answers 308),
+  digest taken that day. The page read surfaced one thing this file did not
+  know: Codex's user root is `$HOME/.agents/skills`, while a `--global` install
+  for `codex` deploys the Claude bundle to `~/.codex/skills`
+  (`GLOBAL_DEPLOY_SOURCES` + `USER_SCOPE_PATHS`), so D3's "receives none" holds
+  in effect even though files are written. Changing that root is a frozen
+  install-ABI change and stays with Phase 4.
   verify: the digest list names both pages.
 - [ ] **6.3 Close the declared-dependency hole the default projection opens.**
   Round `inbox-2026-10-t` reproduced it offline against
