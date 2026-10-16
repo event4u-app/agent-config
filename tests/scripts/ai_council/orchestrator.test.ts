@@ -35,6 +35,7 @@ import {
     run_peer_review,
 } from '../../../src/scripts/ai_council/orchestrator.js';
 import { load_prices, type CostEstimate } from '../../../src/scripts/ai_council/pricing.js';
+import { read_entries } from '../../../src/scripts/ai_council/budget_guard.js';
 import { ANTI_CONFORMITY_DIRECTIVE } from '../../../src/scripts/ai_council/prompts.js';
 import { EMPTY_HANDOFF } from '../../../src/scripts/ai_council/handoff.js';
 
@@ -697,6 +698,32 @@ describe('orchestrator — cost gating', () => {
         const res = consult(members, q, budget, { table, on_overrun: onOverrun });
         expect(res.every((r) => r.error === 'cost_budget_exceeded')).toBe(true);
         expect(seen.length).toBeGreaterThan(0);
+    });
+
+    // road-to-unknowns-that-say-so 2.2/2.3, through the real loop. A billable
+    // seat on a model the table does not list is refused under a USD ceiling a
+    // person set, and is called — and ledgered as unpriced — when none is set.
+    it('an unpriced billable seat is refused under a set ceiling and ledgered without one', () => {
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x'.repeat(40) });
+        const table = load_prices();
+        let calls = 0;
+        class Counting extends Mock {
+            override ask(): CouncilResponse {
+                calls += 1;
+                return super.ask();
+            }
+        }
+        const unlisted = 'model-the-table-does-not-list';
+        const refused = consult([new Counting('anthropic', unlisted)], q, new CostBudget({ max_total_usd: 0.01 }), { table });
+        expect(refused.map((r) => r.error)).toEqual(['cost_budget_unpriced']);
+        expect(calls).toBe(0);
+        const before = read_entries().filter((e) => e.unpriced && e.model === unlisted).length;
+        const ran = consult([new Counting('anthropic', unlisted)], q, new CostBudget(), { table });
+        expect(ran[0]?.error).toBeFalsy();
+        expect(calls).toBe(1);
+        const after = read_entries().filter((e) => e.unpriced && e.model === unlisted);
+        expect(after.length).toBe(before + 1);
+        expect(after[after.length - 1]?.output_tokens).toBe(20);
     });
 });
 

@@ -179,6 +179,11 @@ with it and left alone.
       `Drain 2.2b-1` and `Drain 2.2b-2`; the evidence page's 2026-10-15 section
       holds its reading and a re-run of all 85 remaining candidates, which found
       `lint_marketplace_install_completeness` red since the first reading.
+      2.2c (`lint_command_flow_coverage` through `lint_model_tier_coverage`, one
+      skipped: `lint_marketplace_install_completeness`, still red) is wired as
+      `Drain 2.2c-1` and `Drain 2.2c-2`; the same change lowers the parity
+      baseline 104 -> 84 on CI's reading of main after 2.2b (run 38849726162).
+      Left: 2.2d and 2.2e, forty gates from `lint_namespace`.
 - [ ] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
       if their reasons are resolved; a gate whose reason stands stays in the
       backlog with it written down, never declared to move the number.

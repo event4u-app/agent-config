@@ -116,6 +116,12 @@ export interface CostEstimate {
     output_tokens: number;
     input_usd: number;
     output_usd: number;
+    /**
+     * False when `lookup` found no row. The two amounts are then zero so
+     * arithmetic callers keep working, but zero is not the price: a ceiling
+     * that compared against it would let an unknown model through as free.
+     */
+    priced: boolean;
 }
 
 export function estimate_cost(
@@ -134,6 +140,7 @@ export function estimate_cost(
             output_tokens: maxOutputTokens,
             input_usd: 0.0,
             output_usd: 0.0,
+            priced: false,
         };
     }
     const inputUsd = (inputTokens / 1_000_000) * price.input_per_1m_usd;
@@ -145,6 +152,7 @@ export function estimate_cost(
         output_tokens: maxOutputTokens,
         input_usd: inputUsd,
         output_usd: outputUsd,
+        priced: true,
     };
 }
 
@@ -357,6 +365,7 @@ export function reprice_with_cache(
             output_tokens: tokens.output_tokens,
             input_usd: 0.0,
             output_usd: 0.0,
+            priced: false,
         };
     }
     const writeMult = ttl === '1h' ? CACHE_WRITE_MULTIPLIER_1H : CACHE_WRITE_MULTIPLIER_5M;
@@ -372,6 +381,7 @@ export function reprice_with_cache(
         output_tokens: tokens.output_tokens,
         input_usd: inputUsd,
         output_usd: outputUsd,
+        priced: true,
     };
 }
 

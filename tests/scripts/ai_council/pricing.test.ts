@@ -29,6 +29,7 @@ import {
     lookup,
     reprice_with_cache,
 } from '../../../src/scripts/ai_council/pricing.js';
+import { CostBudget, _breach, breachErrorTag, type Spent } from '../../../src/scripts/ai_council/spend_gate.js';
 
 const _tmpDirs: string[] = [];
 
@@ -592,5 +593,63 @@ describe('pricing — lookup falls back to the longest matching prefix', () => {
     it('a genuinely unknown model still resolves to null, not to some neighbour', () => {
         const table = tableWith([['anthropic', 'claude-sonnet-4-5', 3.0, 15.0]]);
         expect(lookup(table, 'anthropic', 'gpt-4o')).toBeNull();
+    });
+});
+
+// ── unpriced is a state, not a zero (road-to-unknowns-that-say-so Phase 2) ──
+//
+// Measured 2026-10-12: under `max_total_usd: 0.01`, a billable seat on a model
+// the table does not list estimated at $0.0000 and `_breach` returned `null`,
+// while a listed sibling at $4.05 breached. An unknown passed the ceiling a
+// person set. The estimate now says it is unpriced, and a set ceiling refuses it.
+describe('unpriced is a state, not a zero', () => {
+    function listedOnly() {
+        const p = path.join(mkTmp(), 'prices.md');
+        fs.writeFileSync(
+            p,
+            '---\nlast_updated: 2026-04-29\ncurrency: USD\nunit: per_1M_tokens\nsource: t\n---\n\n' +
+                '| provider | model | input | output |\n|---|---|---|---|\n' +
+                '| anthropic | claude-opus-4-1 | 15.0 | 75.0 |\n',
+            'utf-8',
+        );
+        return load_prices(p);
+    }
+    const NOTHING: Spent = { input: 0, output: 0, usd: 0 };
+
+    it('estimate-carries-priced-flag', () => {
+        const table = listedOnly();
+        const listed = estimate_cost('anthropic', 'claude-opus-4-1', 1000, 1000, table);
+        const unlisted = estimate_cost('anthropic', 'claude-opus-4-5', 1000, 1000, table);
+        expect(listed.priced).toBe(true);
+        expect(unlisted.priced).toBe(false);
+        // Arithmetic callers keep seeing numbers, never NaN or null.
+        expect(unlisted.input_usd + unlisted.output_usd).toBe(0);
+        expect(unlisted.input_tokens).toBe(1000);
+        const tokens = { input_tokens: 10, output_tokens: 10 };
+        expect(reprice_with_cache('anthropic', 'claude-opus-4-1', tokens, table).priced).toBe(true);
+        expect(reprice_with_cache('anthropic', 'claude-opus-4-5', tokens, table).priced).toBe(false);
+    });
+
+    it('unpriced-billable-breaches-set-ceiling', () => {
+        const table = listedOnly();
+        const unpriced = estimate_cost('anthropic', 'claude-opus-4-5', 30_000, 4_000, table);
+        const priced = estimate_cost('anthropic', 'claude-opus-4-1', 30_000, 4_000, table);
+        const session = new CostBudget({ max_total_usd: 0.01 });
+        // The measured case: the unknown no longer slips under the ceiling.
+        expect(_breach(unpriced, NOTHING, session)).toBe('unpriced');
+        // A listed model over the same ceiling still breaches as it always did.
+        expect(_breach(priced, NOTHING, session)).toBe('session');
+        // A daily ceiling alone is a set ceiling too.
+        expect(_breach(unpriced, NOTHING, new CostBudget({ daily_limit_usd: 5 }))).toBe('unpriced');
+        // ADR-279: with no USD ceiling set, what runs is unchanged.
+        expect(_breach(unpriced, NOTHING, new CostBudget())).toBeNull();
+        // A priced estimate under the ceiling is untouched.
+        const cheap = estimate_cost('anthropic', 'claude-opus-4-1', 10, 10, table);
+        expect(_breach(cheap, NOTHING, new CostBudget({ max_total_usd: 10 }))).toBeNull();
+        // Reported the way an over-budget seat is, under its own name.
+        expect(breachErrorTag('unpriced')).toBe('cost_budget_unpriced');
+        expect(breachErrorTag('daily')).toBe('daily_budget_exceeded');
+        expect(breachErrorTag('session')).toBe('cost_budget_exceeded');
+        expect(breachErrorTag('tokens')).toBe('cost_budget_exceeded');
     });
 });
