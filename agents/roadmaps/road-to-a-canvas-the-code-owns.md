@@ -134,9 +134,10 @@ deleted or left as a silent twin without a row the user has seen.
 - [ ] **0.1 Blind spot.** A test greps `src/`, `docs/`, `tests/` for the host sync
       artefact names and asserts today's count (one file, unrelated).
       verify: `npx vitest run tests/scripts/design_sync_surface.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **0.2 Predicate drift, red.** A parity test asserts that `isHandoverPath`,
+- [x] **0.2 Predicate drift, red.** A parity test asserts that `isHandoverPath`,
       `isArtifactRead` and `HANDOVER_TRIGGERS` accept one path set; it fails on
       `*.dc.html` in `isHandoverPath`. Run and record the failure before 1.1.
+      (2026-10-16: red on `*.dc.html` in `isHandoverPath`, then green after 1.1.)
       verify: `npx vitest run tests/hooks/handover_predicate_parity.test.ts -t control --reporter=verbose` -> /✓.*control/
 - [ ] **0.3 Reserved list, red** (`corrected-from-reproduction`: the source named
       only `design`). A new `tests/scripts/claude_builtin_names.test.ts` asserts that
@@ -154,9 +155,10 @@ deleted or left as a silent twin without a row the user has seen.
 
 ## Phase 1 — The small fixes (immediate PR)
 
-- [ ] **1.1 One handover predicate.** Export one shape list; `isHandoverPath`,
+- [x] **1.1 One handover predicate.** Export one shape list; `isHandoverPath`,
       `isArtifactRead` and `HANDOVER_TRIGGERS` read it, and `*.dc.html` is accepted
       everywhere. Measure the hook bundle before and after; 0.2 goes green.
+      (2026-10-16: `HANDOVER_SHAPES` in `_lib/ui_surface.ts`; bundle 1,544,206 to 1,543,904 B.)
       verify: `npx vitest run tests/hooks/handover_predicate_parity.test.ts tests/hooks/source_first_gate.test.ts --reporter=verbose` -> /✓/
 - [ ] **1.2 Three host names reserved** (`corrected-from-reproduction`). Add
       `design`, `design-consent`, `design-revoke`, refresh the source date and name
@@ -170,12 +172,14 @@ deleted or left as a silent twin without a row the user has seen.
 
 ## Phase 2 — The tree sees the sync surface
 
-- [ ] **2.1 Near-miss rows first.** Add a row for `.design-sync/` that tests the
+- [x] **2.1 Near-miss rows first.** Add a row for `.design-sync/` that tests the
       direction its trigger opens (a plain `sync/` folder), red-then-green, per
       `docs/guidelines/design-fidelity-routing.md:85-92`.
+      (2026-10-16: `near-plain-sync-dir`; positive row red before 2.2.)
       verify: `npx vitest run tests/scripts/design_fidelity_routing.test.ts --reporter=verbose` -> /✓/
-- [ ] **2.2 Trigger.** `path_prefix: .design-sync/` on `design-fidelity`, carried by
+- [x] **2.2 Trigger.** `path_prefix: .design-sync/` on `design-fidelity`, carried by
       the shared list from 1.1. (`ds-bundle/` waits for the host-layout blocker.)
+      (2026-10-16: done.)
       verify: `npx vitest run tests/hooks/handover_predicate_parity.test.ts --reporter=verbose` -> /✓/
 
 ## Phase 3 — A lane that keeps meaning

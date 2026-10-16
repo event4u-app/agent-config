@@ -90,7 +90,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { appendDischarge, stamp } from '../_lib/obligations.js';
 import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
-import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
+import { HANDOVER_SHAPES, isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
 import { readHookStdin } from './hook_stdin.js';
 import { CHUNK_BASENAME, loadSvgScan } from './svg_rules_loader.js';
@@ -239,7 +239,7 @@ export interface ConformanceOptions {
  * The file-based half of `src/rules/design-fidelity.md`'s `triggers:` set — the
  * shipped answer to "is this file a provided design handover?".
  *
- * COPIED AS A CONSTANT, MATCHED BY THE SHIPPED MATCHER. Reading and parsing the
+ * A CONSTANT (the shared `HANDOVER_SHAPES`), MATCHED BY THE SHIPPED MATCHER. Reading and parsing the
  * rule's frontmatter here would put a YAML load on `post_tool_use`, the hottest
  * slot this concern binds, and would depend on a rule path that differs between
  * this repository and an installed consumer. The drift that a constant invites
@@ -248,18 +248,14 @@ export interface ConformanceOptions {
  * and not here fails CI.
  *
  * THE HONEST REACH. Only the two HTML patterns are reachable through this
- * carrier. `.claude/design-system/` names JSON and token files, which
+ * carrier. Both path prefixes name JSON and token files, which
  * `isUiSurface` does not admit, so `main` returns before the verdict is
  * computed. Widening `isUiSurface` to admit them would change the UI-turn
  * denominator that the consultation-rate measurement is defined against, which
- * is a different decision than this one. The prefix stays for parity with the
- * rule and is stated as unreachable rather than quietly dropped.
+ * is a different decision than this one. The prefixes stay for parity with the
+ * rule and are stated as unreachable rather than quietly dropped.
  */
-export const HANDOVER_TRIGGERS: readonly Trigger[] = [
-    { file_pattern: '*design.html' },
-    { file_pattern: '*.dc.html' },
-    { path_prefix: '.claude/design-system/' },
-];
+export const HANDOVER_TRIGGERS: readonly Trigger[] = HANDOVER_SHAPES;
 
 /** True when any of the paths this turn wrote is a provided design handover. */
 export function handoverTouched(paths: readonly string[]): boolean {
