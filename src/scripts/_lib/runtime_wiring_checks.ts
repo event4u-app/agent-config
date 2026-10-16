@@ -28,6 +28,7 @@ import process from 'node:process';
 import { parse as parseYaml } from 'yaml';
 
 import { inheritedGitOverrides } from './repo_root.js';
+import { layerFormDoctorCheck } from './layer_form_decision.js';
 import {
     checkHostPermissionSettings,
     defaultHostPermissionDeps,
@@ -295,7 +296,7 @@ export function checkInheritedGitEnv(env: NodeJS.ProcessEnv = process.env): Wiri
  * two spreads.
  */
 /** The four ids, in render order. Spread into `cmd_doctor`'s two id registries. */
-export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env', 'hooks-kill-switch', 'host-permission-settings'] as const;
+export const WIRING_CHECK_IDS = ['settings-resolution', 'router-artifact', 'hook-resolution', 'inherited-git-env', 'hooks-kill-switch', 'host-permission-settings', 'layer-form'] as const;
 
 
 /**
@@ -355,6 +356,8 @@ export function wiringRunners(opts: {
         // for the same host — the question is the same surface, one key over.
         'host-permission-settings': () =>
             checkHostPermissionSettings(defaultHostPermissionDeps(opts.projectRoot)),
+        // Shadow rule-layer form (road-to-a-setup-that-decides-itself 3.2); writes nothing.
+        'layer-form': () => layerFormDoctorCheck(opts.packageRoot),
     };
 }
 

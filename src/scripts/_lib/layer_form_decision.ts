@@ -246,3 +246,15 @@ export function shadowLayerFormCheck(gather: (host: string) => LayerFormInput): 
         remedy: '',
     };
 }
+
+/** The doctor entry point: shipped evidence at the installed package's own version. */
+export function layerFormDoctorCheck(packageRoot: string): ReturnType<typeof shadowLayerFormCheck> {
+    let version = 'unknown';
+    try {
+        const raw = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf-8')) as { version?: unknown };
+        if (typeof raw.version === 'string' && raw.version.trim()) version = raw.version.trim();
+    } catch {
+        // An unreadable package.json leaves the version unknown; no package-version brake row can match it.
+    }
+    return shadowLayerFormCheck(gatherShippedEvidence(packageRoot, version));
+}

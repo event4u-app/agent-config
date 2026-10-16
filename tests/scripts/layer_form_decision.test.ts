@@ -21,7 +21,7 @@ import {
     type LayerFormInput,
 } from '../../src/scripts/_lib/layer_form_decision.js';
 import { readConsequenceClass } from '../../src/scripts/_lib/rule_consequence_class.js';
-import { _check_layer_form } from '../../src/scripts/_cli/cmd_doctor.js';
+import { WIRING_CHECK_IDS, wiringRunners } from '../../src/scripts/_lib/runtime_wiring_checks.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
@@ -211,9 +211,11 @@ describe('shadow decision — 3.2', () => {
     });
 
     it('doctor carries the shadow record under its own id', () => {
-        const res = _check_layer_form();
-        expect(res['id']).toBe('layer-form');
-        expect(String(res['message'])).toContain('claude-code would-be: full');
-        expect(String(res['message'])).not.toContain('would-be: thinned');
+        expect(WIRING_CHECK_IDS).toContain('layer-form');
+        const runners = wiringRunners({ packageRoot: REPO_ROOT, projectRoot: REPO_ROOT, iterOverrides: () => [] });
+        const res = runners['layer-form']!();
+        expect(res.id).toBe('layer-form');
+        expect(res.message).toContain('claude-code would-be: full');
+        expect(res.message).not.toContain('would-be: thinned');
     });
 });
