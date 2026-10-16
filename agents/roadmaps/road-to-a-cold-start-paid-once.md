@@ -203,7 +203,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 3 — One decision function, recorded in shadow
 
-- [ ] **3.1 `_lib/worker_reuse.ts`, pure.** It runs only after the existing
+- [x] **3.1 `_lib/worker_reuse.ts`, pure.** It runs only after the existing
       in-session and lookup rungs have declined to stay in-session, and returns
       `resume` only when **all** hold, else `fresh` with the failing reason:
       (a) same domain as the worker's durable name;
@@ -221,10 +221,12 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       The decision object carries every input it read, so no prose sets a
       number.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t one-fixture-per-refusal-reason --reporter=verbose` -> /✓.*one-fixture-per-refusal-reason/
-- [ ] **3.2 The register is a view, not a store.** Eligibility is computed from
+      Done 2026-10-16: `src/scripts/_lib/worker_reuse.ts`. A missing observed cold start refuses as `no_observed_cold_start` instead of falling back to a constant.
+- [x] **3.2 The register is a view, not a store.** Eligibility is computed from
       the ledger and the transcript at decision time; the worker's name is the
       address; no agent id is written anywhere.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t no-agent-id-reaches-disk --reporter=verbose` -> /✓.*no-agent-id-reaches-disk/
+      Done 2026-10-16: `eligibleWorkers` derives the view from caller-supplied state; the module imports no I/O and no field can hold a host id.
 - [ ] **3.3 Shadow first.** `spawn-guard-shadow` records, on every `Agent`
       call, the verdict `would_resume` with the eligible name or `fresh` with
       the reason. Where 1.5 observed `PreToolUse` on `SendMessage`, the concern
@@ -232,10 +234,11 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       so one count covers spawn and resume; where it did not, the record says
       the resume half is unobserved. Still exit 0 on every path.
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t records-would-resume-and-never-denies --reporter=verbose` -> /✓.*records-would-resume-and-never-denies/
-- [ ] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
+- [x] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
       re-tasked; its successor is briefed from its `worker` capsule — the
       generation chain the recycling roadmap wanted, reached at task boundaries.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t retired-worker-briefs-successor-from-capsule --reporter=verbose` -> /✓.*retired-worker-briefs-successor-from-capsule/
+      Done 2026-10-16: `briefSuccessor`. (b) also retires, per 4.4 and risk 2; (a) and (g) spawn plain fresh; a missing or invalid capsule falls back to stop-loss.
 - [ ] **3.5 File the shadow window** — at least 100 `Agent` calls or two
       weeks, the would-resume distribution and the refusal reasons. A window in
       which every reuse was refused is a valid null.
