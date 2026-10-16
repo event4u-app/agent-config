@@ -202,7 +202,7 @@ export function main(argv: string[] = process.argv.slice(2), root: string = REPO
             scanned: skills.length,
             units: 'skill(s)',
             roots: ['src/skills'],
-            allowEmpty: root === REPO_ROOT ? undefined : 'EMPTY_VALID: a fixture root may carry no skills',
+            ...(root === REPO_ROOT ? {} : { allowEmpty: 'EMPTY_VALID: a fixture root may carry no skills' }),
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
