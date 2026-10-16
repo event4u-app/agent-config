@@ -124,7 +124,7 @@ the Acceptance Criteria held.
 
 ## Phase 0 — Correct the record
 
-- [ ] **0.1 Append a correction to the evidence file.** Add `## Corrections
+- [x] **0.1 Append a correction to the evidence file.** Done 2026-10-16: `## Corrections (2026-10-16)`, C1–C7, each row on a commit or `file:line`; `lint_evidence_artifacts --all` exit 0. Re-measured at `085ec41ff`: 11.4 / 7.5 / 7.7 commits and 61.1 / 32.3 / 21.9 net ticked steps per night (same ranking as Context), 525 unblocked of 576 (Context's 528 used a narrower marker scope); the three sums stay `unknown` rows. Add `## Corrections
       (2026-10-xx)` to `agents/evidence/analysis/agent-throughput-decline-2026-10-14.md`
       — never rewrite the body: the night-window table above, the squash
       switch behind the `drain/*` column, the three causes flat since
