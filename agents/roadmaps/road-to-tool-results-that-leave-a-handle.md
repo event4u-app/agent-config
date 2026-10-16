@@ -5,7 +5,6 @@ execution:
   mode: phase-checkpoints
 depends:
   - road-to-placeholders-on-the-wire
-  - road-to-bytes-the-model-actually-receives
 estate_offset_exempt: "Second arrival of one subject (round inbox-2026-10-p; first inbox-2026-09-ab, whose two roadmaps are archived). The one active roadmap that emits a tool-result rewrite, road-to-placeholders-on-the-wire, replaces identifiers for privacy and declares no size reduction and no recoverable store; folding a size class into it would widen a privacy roadmap already carrying three blockers. No stub or later/ entry holds a spool or an output store (a grep for spool, output_store and tool_result_store across agents/roadmaps/ returns nothing). Archiving or parking leaves raw_bytes equal to delivered_bytes by construction with no plan to make them differ."
 estate_growth_exempt: "Second of a two-roadmap set from round inbox-2026-10-p; grows active_roadmaps by one and open_blockers by zero. It is a separate file because its arming waits on road-to-placeholders-on-the-wire while its sibling waits on nothing."
 relates:
@@ -13,8 +12,8 @@ relates:
     relation: depends
     note: "Consumes its tool-output probe (0.1), its composition ADR (1.1: one dispatcher stage is the only writer) and its observe-mode stage (1.3). This file adds a size class to that stage; it adds no second writer and no concern that rewrites."
   - slug: road-to-bytes-the-model-actually-receives
-    relation: depends
-    note: "Consumes its model-visible distribution (1.4) to pick the tool classes worth reducing, and its content key (2.2) for the repeated-Read reference."
+    relation: extends
+    note: "Archived, every step closed, 1.4 included. Consumes its model-visible distribution (1.4) to pick the tool classes worth reducing, and its content key (2.2) for the repeated-Read reference."
 ---
 # Road to tool results that leave a handle
 

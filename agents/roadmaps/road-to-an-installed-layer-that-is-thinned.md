@@ -3,16 +3,19 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-depends: [road-to-a-rule-carrier-that-works-outside-the-repo, road-to-rule-laws-that-can-stand]
+depends: [road-to-a-setup-that-decides-itself]
 estate_offset_exempt: "Round inbox-2026-10-c reproduced the host's 150k notice on a fresh install: 102 unconditional files and 338,225 chars under ~/.claude/rules, because install.ts has zero references to lean_projection and the delivery flip ADR-267 shipped thins only the project tree consumers do not get. The subject has arrived in at least 22 consumed rounds and no active roadmap owns the installed layer; this file is the only one whose done state removes the notice."
 estate_growth_exempt: "+1 open_blockers for `arrival-record-needs-a-cancelled-observer`. Discovered 2026-10-10 while screening Phase 2, not a repaired undercount: step 2.1 named the carrier roadmap's step 0.2 as its data source, and that step was cancelled by owner answer D10 on 2026-10-06, moving the instruction-load observer into an unscheduled stub. The entry closes no box and changes no behaviour; it makes three steps read as blocked to run-continuation, which decides open-vs-blocked from the inline marker alone, and it records that the owner's already-given (a) on the default flip is stranded behind an instrument no scheduled file owns. The superseded claim it replaces was spent on `default-flip-of-the-installed-layer`, which is registered and still open."
 relates:
+  - slug: road-to-a-setup-that-decides-itself
+    relation: depends
+    note: Its 5.3 carries the default flip this file's 3.1 and 3.5 were re-cut to wait on (2026-10-12 note under 3.5).
   - slug: road-to-a-rule-carrier-that-works-outside-the-repo
-    relation: depends
-    note: Phase 1 here may not start before that file's Phase 1 has merged; thinning before the carrier works turns over-delivery into under-delivery.
+    relation: extends
+    note: Archived, every step closed. Phase 1 here waited on that file's Phase 1, which has merged.
   - slug: road-to-rule-laws-that-can-stand
-    relation: depends
-    note: The stub-plus-law form and the consequence class come from that file's Phase 2.
+    relation: extends
+    note: Archived, every step closed. The stub-plus-law form and the consequence class came from that file's Phase 2.
   - slug: road-to-standing-rule-delivery-per-machine
     relation: extends
     note: Stub. Its AC-0 becomes dischargeable once Phase 3 here ships.

@@ -241,6 +241,12 @@ that was never a judgement call.
     edge source stays the single one already defined above; `relates:` never
     becomes a second dependency source.
 
+    A step that waits on another roadmap says so in both places: an inline
+    `<!-- blocked-by: road-to-X#… -->` marker fails the roadmap lint unless a
+    `relates:` row names X with `relation: depends`. A `depends` row naming a
+    file under `archive/` is flagged, because an archived file lands nothing —
+    turn it into `extends` or depend on the successor.
+
     **Sibling block, same frontmatter — `delivery:`.** Optional, and unlike
     `execution:` it describes what happens to the BRANCH rather than to the
     run's interaction pattern:

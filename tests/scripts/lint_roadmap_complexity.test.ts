@@ -257,3 +257,75 @@ describe('relates: — a closed relation vocabulary', () => {
         expect(mod.lint_roadmap(write('name: x'), 0)).toEqual([]);
     });
 });
+
+describe('blocked-by-needs-depends — a cross-file marker needs a live depends row', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrc-blocked-'));
+        fs.mkdirSync(path.join(tmp, 'archive'));
+        fs.writeFileSync(path.join(tmp, 'road-to-live.md'), '---\ncomplexity: structural\n---\n', 'utf-8');
+        fs.writeFileSync(path.join(tmp, 'archive', 'road-to-gone.md'), '---\ncomplexity: structural\n---\n', 'utf-8');
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    function write(fm: string, body = ''): string {
+        const p = path.join(tmp, 'road.md');
+        fs.writeFileSync(p, `---\ncomplexity: structural\n${fm}\n---\n## Phase 1\n\n${body}- [ ] x\n`, 'utf-8');
+        return p;
+    }
+
+    it('blocked-by-needs-depends: a marker naming another roadmap with no relates row is red', () => {
+        const p = write('relates: []', '- [ ] <!-- blocked-by: road-to-live#phase-3 --> wait\n');
+        const problems = mod.lint_roadmap(p, 0);
+        expect(problems).toHaveLength(1);
+        expect(problems[0]).toContain("blocked-by marker names 'road-to-live'");
+    });
+
+    it('blocked-by-needs-depends: an extends row does not satisfy the marker', () => {
+        const p = write(
+            'relates:\n  - slug: road-to-live\n    relation: extends\n    note: "n"',
+            '- [ ] <!-- blocked-by: road-to-live#3.1 --> wait\n',
+        );
+        expect(mod.lint_roadmap(p, 0)[0]).toContain("blocked-by marker names 'road-to-live'");
+    });
+
+    it('blocked-by-needs-depends: a depends row satisfies the marker', () => {
+        const p = write(
+            'depends: [road-to-live]\nrelates:\n  - slug: road-to-live\n    relation: depends\n    note: "n"',
+            '- [ ] <!-- blocked-by: road-to-live#3.1 --> wait\n',
+        );
+        expect(mod.lint_roadmap(p, 0)).toEqual([]);
+    });
+
+    it('blocked-by-needs-depends: a blocker-id marker is not a cross-file marker', () => {
+        const p = write('relates: []', '- [ ] <!-- blocked-by: default-flip-of-the-layer | asked: no --> wait\n');
+        expect(mod.lint_roadmap(p, 0)).toEqual([]);
+    });
+
+    it('blocked-by-needs-depends: prose quoting the marker outside a comment is not a marker', () => {
+        const p = write('relates: []', 'A `blocked-by: road-to-live#…` marker is described here.\n');
+        expect(mod.lint_roadmap(p, 0)).toEqual([]);
+    });
+
+    it('blocked-by-needs-depends: a depends row naming an archived file is flagged', () => {
+        const p = write(
+            'depends: [road-to-gone]\nrelates:\n  - slug: road-to-gone\n    relation: depends\n    note: "n"',
+        );
+        const warnings: string[] = [];
+        expect(mod.lint_roadmap(p, 0, warnings)).toEqual([]);
+        expect(warnings.filter((w) => w.includes("depends row names 'road-to-gone', which is under archive/"))).toHaveLength(1);
+    });
+
+    it('blocked-by-needs-depends: an explicit archive/ slug is flagged too, a live one is not', () => {
+        const p = write(
+            'depends: [archive/road-to-gone, road-to-live]\nrelates:\n  - slug: archive/road-to-gone\n    relation: depends\n    note: "n"\n  - slug: road-to-live\n    relation: depends\n    note: "n"',
+        );
+        const warnings: string[] = [];
+        mod.lint_roadmap(p, 0, warnings);
+        const hits = warnings.filter((w) => w.includes('under archive/'));
+        expect(hits).toHaveLength(1);
+        expect(hits[0]).toContain("'archive/road-to-gone'");
+    });
+});

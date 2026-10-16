@@ -78,12 +78,24 @@ files as there were findings without an owner.
 
 ## Phase 1 — `depends:` says what waits on what
 
-- [ ] **1.1 Repair the four false declarations.** Add `relation: depends` on
+- [x] **1.1 Repair the four false declarations.** Add `relation: depends` on
       `road-to-authority-routing-mechanism` to the self-modification file; drop
       the two archived targets from the installed-layer file and depend on
       `road-to-a-setup-that-decides-itself`; turn the hard-floor and danger-gate
       `extends` rows into `depends` where a step is gated on the other file.
       verify: `grep -c 'road-to-authority-routing-mechanism' agents/roadmaps/road-to-self-modification-that-a-council-must-pass.md` -> /^[1-9]/
+      > **Landed 2026-10-16, re-read at `origin/main@fe7a22c6d`.** The 13
+      > inline markers in the self-modification file are gone (removed with
+      > #2325); its gate on `road-to-authority-routing-mechanism` survives as
+      > the Phase 5 note, so the `depends` row is added on that note. The
+      > installed-layer file depends on `road-to-a-setup-that-decides-itself`
+      > and keeps its two archived predecessors as `extends`. The hard-floor
+      > `typed-grants` row is now `depends` (4.5 waits on 3.1). The danger-gate
+      > file is archived since #2375, so its row is moot and was not edited.
+      > The 1.2 rule found two more archived `depends` rows, both on complete
+      > files, and turned them into `extends`:
+      > `road-to-skills-that-arrive-when-called`,
+      > `road-to-tool-results-that-leave-a-handle`.
 - [ ] **1.2 A rule that keeps them true.** *corrected-from-reproduction:* the
       supplied plans put this in `lint_blocker_citations`, which checks
       line-number citations, not relations; the rule belongs to
@@ -92,6 +104,15 @@ files as there were findings without an owner.
       name a file under `archive/`. Test first: a fixture with the marker and no
       row is red before the change.
       verify: `npx vitest run tests/scripts/lint_roadmap_complexity.test.ts -t blocked-by-needs-depends --reporter=verbose` -> /✓.*blocked-by-needs-depends/
+      > **Partly landed 2026-10-16; left open on purpose.** `_check_cross_file_waits`
+      > in `lint_roadmap_complexity.ts` fails a `<!-- blocked-by: road-to-X#… -->`
+      > marker without a `depends` row for X (seen red first). The archived
+      > half reports as a **warning**, not a failure, because one active file —
+      > `road-to-a-setup-that-decides-itself`, held by a parallel drain lane
+      > this run — still depends on the complete, archived
+      > `road-to-a-release-that-reads-its-settings-delta`. Closes when that row
+      > becomes `extends` and the `warnings.push` for the archived half turns
+      > into `problems.push`.
 
 ## Phase 2 — An addition shows the owner search it ran
 
