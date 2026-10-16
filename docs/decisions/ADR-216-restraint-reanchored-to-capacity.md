@@ -4,7 +4,7 @@ status: accepted
 date: 2026-08-05
 decision: restraint-reanchored-to-capacity
 supersedes: —
-superseded_by: —
+superseded_by: ADR-286 (§ Context only)
 phase: ADR-211 Amendment E + correction of ADR-215 + adoption-anchor sweep
 type: structural
 protected_dimensions: [purpose]
@@ -35,6 +35,15 @@ unblocked in the same change.
 This suite is developed for internal use. **External adoption is explicitly not
 a project goal.** It is a pleasant side effect if it happens and it is not
 something the project will spend effort pursuing or waiting for.
+
+> **Narrowed on 2026-10-16 by ADR-286, § Context only.** The owner has since
+> adopted **discoverability** as a goal — accurate repository metadata,
+> registry and directory listings the project submits itself to, honest
+> badges, legible documentation. The sentence above is now true of the
+> *in-product* half only: no surface of this package asks its user for a star,
+> a rating or any act of promotion. **Every decision in this record survives
+> that narrowing, D5 included** — a goal is not a gate, and nothing in this
+> tree may still be anchored on an adoption signal.
 
 **This ruling is not new, and that is the sharpest fact in this record.** It was
 already recorded in `agents/settings/contexts/feedback-9x-council-cut.md`, whose
