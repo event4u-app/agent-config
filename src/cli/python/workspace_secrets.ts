@@ -7,7 +7,7 @@
  * same `subn`/`finditer` counting, same `scrub_obj` depth + cycle guard,
  * same `[SECRET]` placeholder.
  *
- * Leaf module — `RegExp` only, **zero internal imports** — so the
+ * Near-leaf module — its one import is the pure rule table (no I/O) — so the
  * hot-path analytics `emit()` and the heavier `knowledge_ingest` can both
  * depend on it cheaply without dragging in PII redaction, chunking, or file
  * I/O. Every workspace store that persists text or arbitrary payloads at rest
@@ -16,8 +16,9 @@
  *
  * Two confidence tiers:
  *
- * - **HIGH** — structurally unambiguous credentials (AWS access-key id, GitHub
- *   PAT, OpenAI key, PEM private-key block). Near-zero false-positive rate, so
+ * - **HIGH** — structurally unambiguous credentials: the credential rows of
+ *   the one rule table (vendor keys, tokens, PEM private-key block, a
+ *   connection URI with an inline password). Near-zero false-positive rate, so
  *   safe to scrub destructively or to refuse a write over.
  * - **FUZZY** — the generic `key/secret/token/password = <value>` assignment.
  *   Fires on legitimate prose ("password reset token: see attached"), so it is
@@ -28,22 +29,48 @@
  * two surfaces stay byte-consistent.
  */
 
+import { detect, EGRESS_RULES, type EgressRule, replacementEnd } from '../../scripts/_lib/egress_rules.js';
+
 export const PLACEHOLDER = '[SECRET]';
 
-// --- HIGH-confidence patterns (gitleaks-equivalent subset) ------------------
+// --- HIGH-confidence tier: the credential rows of the one rule table -------
 //
-// Python compiles each pattern once; JS needs a FRESH `RegExp` per match call
-// because the `g` flag carries `lastIndex` state. `_finditer` / `_subn` below
-// each construct a local global-flagged copy, so the module-level patterns
-// stay stateless (matching Python's stateless compiled patterns).
-//
-// `[\s\S]` mirrors Python `re.DOTALL`-style `[\s\S]` (the .py uses the same
-// idiom, not the DOTALL flag). `*?` is lazy in both engines.
-const _RE_PRIVATE_KEY =
-    /-----BEGIN [A-Z ]+PRIVATE KEY-----[\s\S]*?-----END [A-Z ]+PRIVATE KEY-----/;
-const _RE_AWS = /AKIA[0-9A-Z]{16}/;
-const _RE_GH = /gh[pousr]_[A-Za-z0-9]{36,}/;
-const _RE_OPENAI = /sk-[A-Za-z0-9]{20,}/;
+// Detection lives in `src/scripts/_lib/egress_rules.ts`, the only place a
+// credential pattern is defined (road-to-one-detector-and-the-senders-we-own
+// 2.2); this module keeps its own policy — the `[SECRET]` placeholder, the
+// HIGH/FUZZY tiers and the counts. `generic-assignment` is left to the FUZZY tier
+// below, which is this module's own, looser reading of the same shape.
+
+const HIGH_RULES: readonly EgressRule[] = EGRESS_RULES.filter(
+    (r) => r.class === 'credential' && r.rule !== 'generic-assignment',
+);
+
+// The finding names this module has always reported; a row without one reports
+// its rule id.
+const LEGACY_NAME: Readonly<Record<string, string>> = {
+    'pem-private-key': 'private_key',
+    'aws-access-key': 'aws_access_key',
+    'github-pat': 'github_pat',
+    'github-app-token': 'github_pat',
+    'openai-api-key': 'openai_key',
+};
+const LEGACY_ORDER = ['private_key', 'aws_access_key', 'github_pat', 'openai_key'];
+const rank = (name: string): number => {
+    const i = LEGACY_ORDER.indexOf(name);
+    return i < 0 ? LEGACY_ORDER.length : i;
+};
+
+/** HIGH spans in report order, each widened to the bytes a scrub must remove. */
+function highSpans(text: string): Array<{ name: string; start: number; end: number }> {
+    return detect(text, HIGH_RULES)
+        .map((s) => ({
+            name: LEGACY_NAME[s.rule] ?? s.rule,
+            start: s.start,
+            // A masking surface cannot refuse; an unproven extent masks the detection span.
+            end: replacementEnd(text, s) ?? s.end,
+        }))
+        .sort((x, y) => rank(x.name) - rank(y.name) || x.start - y.start);
+}
 
 // --- FUZZY pattern (heuristic key/value assignment) -------------------------
 // Python `(?i)` inline flag → JS `i` flag. Character class is identical.
@@ -52,16 +79,7 @@ const _RE_KV_SECRET =
 
 type PatternEntry = readonly [string, RegExp];
 
-// Ordered HIGH-confidence first so the private-key block is consumed before
-// the narrower key patterns can fragment it.
-export const HIGH_CONFIDENCE: readonly PatternEntry[] = [
-    ['private_key', _RE_PRIVATE_KEY],
-    ['aws_access_key', _RE_AWS],
-    ['github_pat', _RE_GH],
-    ['openai_key', _RE_OPENAI],
-];
 export const FUZZY: readonly PatternEntry[] = [['kv_secret', _RE_KV_SECRET]];
-export const ALL_PATTERNS: readonly PatternEntry[] = [...HIGH_CONFIDENCE, ...FUZZY];
 
 // Recursion guard for `scrub_obj` — deep / cyclic structures degrade to a
 // controlled return instead of a RangeError on the never-raises hot path.
@@ -113,11 +131,7 @@ export function scan(text: unknown, opts?: { include_fuzzy?: boolean }): Finding
     if (typeof text !== 'string' || !text) {
         return [];
     }
-    const out: Finding[] = [];
-    for (const [name, pat] of HIGH_CONFIDENCE) {
-        const n = _finditerCount(pat, text);
-        for (let i = 0; i < n; i += 1) out.push({ pattern: name, confidence: 'high' });
-    }
+    const out: Finding[] = highSpans(text).map((s) => ({ pattern: s.name, confidence: 'high' }));
     if (include_fuzzy) {
         for (const [name, pat] of FUZZY) {
             const n = _finditerCount(pat, text);
@@ -133,13 +147,25 @@ export function scrub(text: unknown, opts?: { include_fuzzy?: boolean }): [strin
     if (typeof text !== 'string' || !text) {
         return [text as string, 0];
     }
+    const spans = highSpans(text).sort((x, y) => x.start - y.start);
+    const merged: Array<{ start: number; end: number }> = [];
+    for (const sp of spans) {
+        const last = merged[merged.length - 1];
+        if (last !== undefined && sp.start < last.end) last.end = Math.max(last.end, sp.end);
+        else merged.push({ start: sp.start, end: sp.end });
+    }
     let out = text;
-    let count = 0;
-    const patterns = include_fuzzy ? ALL_PATTERNS : HIGH_CONFIDENCE;
-    for (const [, pat] of patterns) {
-        const [next, n] = _subn(pat, PLACEHOLDER, out);
-        out = next;
-        count += n;
+    for (let i = merged.length - 1; i >= 0; i -= 1) {
+        const m = merged[i] as { start: number; end: number };
+        out = out.slice(0, m.start) + PLACEHOLDER + out.slice(m.end);
+    }
+    let count = merged.length;
+    if (include_fuzzy) {
+        for (const [, pat] of FUZZY) {
+            const [next, n] = _subn(pat, PLACEHOLDER, out);
+            out = next;
+            count += n;
+        }
     }
     return [out, count];
 }
