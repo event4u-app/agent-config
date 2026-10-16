@@ -783,7 +783,22 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 
     let changed: string[];
     if (files.length > 0) {
+        // A caller's list may add paths, never hide one: where the range resolves,
+        // every path it changed is judged as well, so omitting a gated file from
+        // `--files` does not take it out of the verdict. A range that does not
+        // resolve (a fixture with no base) leaves the list as given.
         changed = files;
+        try {
+            const commit = resolveRevision(root, revision);
+            const base = resolveRevision(root, resolveBaseRef(baseRef, root));
+            changed = [...new Set([...files, ...changedFilesBetween(root, base, commit)])];
+            revision = commit;
+            baseRef = base;
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+        }
     } else {
         // ONE resolution for the whole run. The diff, the digest and the
         // record read all receive this id; passing the name to each would let

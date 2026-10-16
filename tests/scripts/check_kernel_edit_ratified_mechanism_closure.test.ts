@@ -157,6 +157,8 @@ describe('the gate watches the modules its verdict runs through', () => {
         fs.writeFileSync(path.join(root, rel), 'export const x = 1;\n');
         commitAll(root);
         expect(gate.main(['--root', root, '--base-ref', base, '--quiet'])).toBe(1);
+        // A list that leaves the calculator out cannot hide it either.
+        expect(gate.main(['--root', root, '--base-ref', base, '--quiet', '--files', 'README.md'])).toBe(1);
     });
 
     it('the digest covers every mechanism file the gate classifies', () => {
