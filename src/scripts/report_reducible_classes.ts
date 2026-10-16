@@ -7,8 +7,13 @@
  * failure-line structure (an exit code and error lines) a summary can keep,
  * AND no non-goal of that roadmap excludes it. A REPORT, not a gate: exits 0.
  *
+ * Step 1.2, `--profile content`: results classed exactly as
+ * `internal/bench/tool-results-content-profile-PREREG.md` registers them, read
+ * over its D11 window only, beside the execution profile on the same window.
+ *
  * ```bash
  *   report_reducible_classes                      # human table
+ *   report_reducible_classes --profile content    # PREREG classes over the D11 window
  *   report_reducible_classes --json
  *   report_reducible_classes --threshold 8192 --project-prefix <slug> --census <path>
  * ```
@@ -20,7 +25,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { DEFAULT_PROJECTS_ROOT, projectStoreSlug, scanToolResults } from './_lib/cc_transcript.js';
+import { DEFAULT_PROJECTS_ROOT, projectStoreSlug, scanToolResultRecords, scanToolResults, type ToolResultRecord } from './_lib/cc_transcript.js';
 import { readCensusLine } from './_lib/tool_result_census.js';
 
 const _FILE = fileURLToPath(import.meta.url);
@@ -84,6 +89,191 @@ export function selectClasses(classes: Record<string, ClassInput>, thresholdByte
         .sort((a, b) => b.payload_bytes - a.payload_bytes);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Content profile — step 1.2, classes exactly as                              */
+/* `internal/bench/tool-results-content-profile-PREREG.md` registers them      */
+/* -------------------------------------------------------------------------- */
+
+export type ContentClass = 'Read:text' | 'Bash:file-print' | 'Bash:vcs-content' | 'execution' | 'residue' | 'out-of-scope';
+export const CONTENT_CLASSES = ['Read:text', 'Bash:file-print', 'Bash:vcs-content'] as const;
+
+/** D11: the window opens at the committer date of the PREREG commit `033c3b2aa` and runs 14 days. */
+export const D11_WINDOW_START = '2026-10-15T12:26:27+02:00';
+export const D11_WINDOW_DAYS = 14;
+/** PREREG sample floor: a class with fewer results is `insufficient`, never `out`. */
+export const CONTENT_SAMPLE_FLOOR = 200;
+
+export function d11WindowEnd(): string {
+    return new Date(Date.parse(D11_WINDOW_START) + D11_WINDOW_DAYS * 24 * 3600 * 1000).toISOString();
+}
+
+/** Strictly after the start, strictly before the end; a result with no timestamp is outside. */
+export function inWindow(timestamp: string | null, startMs: number, endMs: number): boolean {
+    if (timestamp === null) return false;
+    const t = Date.parse(timestamp);
+    return !Number.isNaN(t) && t > startMs && t < endMs;
+}
+
+/**
+ * Pipeline stages as word lists, or null when the command carries a construct
+ * the PREREG excludes: a `&&` / `||` / `;` / `&` / newline chain, a redirect, a
+ * subshell or command substitution, or an unterminated quote.
+ */
+export function pipelineStages(command: string): string[][] | null {
+    const stages: string[][] = [[]];
+    let word = '';
+    let inWord = false;
+    let quote: '"' | "'" | null = null;
+    const push = (): void => {
+        if (inWord) (stages[stages.length - 1] as string[]).push(word);
+        word = '';
+        inWord = false;
+    };
+    for (let i = 0; i < command.length; i++) {
+        const ch = command[i] as string;
+        const next = command[i + 1];
+        if (quote === "'") {
+            if (ch === "'") quote = null;
+            else word += ch;
+            continue;
+        }
+        if (quote === '"') {
+            if (ch === '"') quote = null;
+            else if (ch === '`' || (ch === '$' && next === '(')) return null;
+            else if (ch === '\\' && next !== undefined) word += command[++i];
+            else word += ch;
+            continue;
+        }
+        if (ch === "'" || ch === '"') {
+            quote = ch;
+            inWord = true;
+        } else if (ch === '\\' && next === '\n') {
+            i += 1;
+            push();
+        } else if (ch === '\\' && next !== undefined) {
+            word += command[++i];
+            inWord = true;
+        } else if (ch === ' ' || ch === '\t') {
+            push();
+        } else if (ch === '|') {
+            if (next === '|') return null;
+            push();
+            stages.push([]);
+        } else if (';&\n<>()`'.includes(ch) || (ch === '$' && next === '(')) {
+            return null;
+        } else {
+            word += ch;
+            inWord = true;
+        }
+    }
+    if (quote !== null) return null;
+    push();
+    return stages.some((s) => s.length === 0) ? null : stages;
+}
+
+const ADDR = String.raw`(?:\d+|\$|/(?:[^/\\]|\\.)*/)`;
+const PRINT_ONLY = new RegExp(String.raw`^(?:${ADDR}(?:\s*,\s*${ADDR})?)?\s*p$`);
+
+/** `sed` with `-n` and a script whose every command is a (possibly addressed) `p`. */
+function sedPrintsOnly(args: readonly string[]): boolean {
+    let quiet = false;
+    let explicitScript = false;
+    const scripts: string[] = [];
+    let operandsOnly = false;
+    for (let i = 0; i < args.length; i++) {
+        const a = args[i] as string;
+        if (!operandsOnly && a === '--') operandsOnly = true;
+        else if (!operandsOnly && (a === '-n' || a === '--quiet' || a === '--silent')) quiet = true;
+        else if (!operandsOnly && a === '-e') {
+            const s = args[++i];
+            if (s === undefined) return false;
+            scripts.push(s);
+            explicitScript = true;
+        } else if (!operandsOnly && a.startsWith('--expression=')) {
+            scripts.push(a.slice('--expression='.length));
+            explicitScript = true;
+        } else if (!operandsOnly && /^-[nErsuz]+$/.test(a)) {
+            if (a.includes('n')) quiet = true;
+        } else if (!operandsOnly && a.startsWith('-') && a !== '-') return false;
+        else if (!explicitScript && scripts.length === 0) scripts.push(a);
+    }
+    if (!quiet || scripts.length === 0) return false;
+    return scripts.every((s) => {
+        const parts = s
+            .split(/[;\n]/)
+            .map((p) => p.trim())
+            .filter((p) => p !== '');
+        return parts.length > 0 && parts.every((p) => PRINT_ONLY.test(p));
+    });
+}
+
+const FILE_PRINT_PROGRAMS = new Set(['cat', 'head', 'tail', 'nl', 'wc']);
+
+function isFilePrint(stage: readonly string[]): boolean {
+    const [prog, ...args] = stage;
+    if (prog === undefined) return false;
+    return FILE_PRINT_PROGRAMS.has(prog) || (prog === 'sed' && sedPrintsOnly(args));
+}
+
+function isVcsContent(stage: readonly string[]): boolean {
+    if (stage[0] !== 'git') return false;
+    if (stage[1] === 'diff' || stage[1] === 'show') return true;
+    return stage[1] === 'log' && stage.slice(2).some((a) => a === '-p' || a === '--patch');
+}
+
+/** One result into a PREREG content class, the execution profile, Bash residue, or out of scope. */
+export function classifyResult(tool: string, command: string | null): ContentClass {
+    if (tool === 'Read') return 'Read:text';
+    if (tool !== 'Bash') return 'out-of-scope';
+    if (command === null || command.trim() === '') return 'execution';
+    const stages = pipelineStages(command);
+    if (stages === null || stages[0]?.[0] === 'cd') return 'residue';
+    if (stages.every(isFilePrint)) return 'Bash:file-print';
+    if (isVcsContent(stages[0] as string[]) && stages.slice(1).every(isFilePrint)) return 'Bash:vcs-content';
+    return 'execution';
+}
+
+export interface ContentResult {
+    tool: string;
+    command: string | null;
+    bytes: number;
+}
+
+export interface ContentClassVerdict {
+    class: (typeof CONTENT_CLASSES)[number];
+    count: number;
+    payload_bytes: number;
+    p95: number | null;
+    verdict: 'selected' | 'out' | 'insufficient';
+}
+
+export interface ContentProfileReport {
+    classes: ContentClassVerdict[];
+    /** Bash results excluded by construct (leading `cd`, chain, redirect, subshell) — reported, never re-classed. */
+    residue: { count: number; above_threshold: number };
+    selected: string[];
+}
+
+export function contentProfile(results: readonly ContentResult[], thresholdBytes: number, floor = CONTENT_SAMPLE_FLOOR): ContentProfileReport {
+    const samples = new Map<string, number[]>(CONTENT_CLASSES.map((c) => [c, []]));
+    const residue = { count: 0, above_threshold: 0 };
+    for (const r of results) {
+        const c = classifyResult(r.tool, r.command);
+        if (c === 'residue') {
+            residue.count += 1;
+            if (r.bytes > thresholdBytes) residue.above_threshold += 1;
+        }
+        samples.get(c)?.push(r.bytes);
+    }
+    const classes = CONTENT_CLASSES.map((c): ContentClassVerdict => {
+        const s = samples.get(c) as number[];
+        const p95 = nearestRankP95(s);
+        const verdict = s.length < floor ? 'insufficient' : p95 !== null && p95 > thresholdBytes ? 'selected' : 'out';
+        return { class: c, count: s.length, payload_bytes: s.reduce((a, b) => a + b, 0), p95, verdict };
+    });
+    return { classes, residue, selected: classes.filter((c) => c.verdict === 'selected').map((c) => c.class) };
+}
+
 export interface CensusSummary {
     legacy: number;
     two_field: number;
@@ -130,9 +320,54 @@ function flag(argv: readonly string[], name: string): string | null {
     return i >= 0 ? (argv[i + 1] ?? null) : null;
 }
 
-export function main(argv: readonly string[] = process.argv.slice(2)): number {
+function windowRecords(prefix: string, root: string, startMs: number, endMs: number): ToolResultRecord[] {
+    const dirs = fs.existsSync(root) ? fs.readdirSync(root).filter((d) => d.startsWith(prefix)) : [];
+    return dirs.flatMap((dir) => scanToolResultRecords({ root, projectDir: dir })).filter((r) => inWindow(r.timestamp, startMs, endMs));
+}
+
+/** Both profiles over the D11 window only; a run before the window closes is labelled a peek (PREREG). */
+function mainContent(argv: readonly string[], threshold: number, prefix: string, now: Date): number {
+    const startMs = Date.parse(D11_WINDOW_START);
+    const endMs = Date.parse(d11WindowEnd());
+    const peek = now.getTime() < endMs;
+    const records = windowRecords(prefix, DEFAULT_PROJECTS_ROOT, startMs, endMs);
+    const content = contentProfile(records, threshold);
+    const byTool: Record<string, ClassInput> = {};
+    for (const r of records) {
+        const m = (byTool[r.tool] ??= { tool: r.tool, count: 0, payload_bytes: 0, payload_samples: [] });
+        m.count += 1;
+        m.payload_bytes += r.bytes;
+        m.payload_samples.push(r.bytes);
+    }
+    const execution = selectClasses(byTool, threshold);
+    const window = { start: D11_WINDOW_START, end: d11WindowEnd(), results: records.length, peek };
+    if (argv.includes('--json')) {
+        const executionSelected = execution.filter((v) => v.selected).map((v) => v.tool);
+        process.stdout.write(`${JSON.stringify({ profile: 'content', threshold, prefix, window, content, execution, execution_selected: executionSelected }, null, 2)}\n`);
+        return 0;
+    }
+    const lines = [
+        `content profile: threshold ${String(threshold)} B, floor ${String(CONTENT_SAMPLE_FLOOR)} results, window ${window.start} .. ${window.end} (${String(records.length)} results), prefix ${prefix}`,
+    ];
+    if (peek) lines.push('PEEK — the window has not closed; this reading is not a selection (PREREG)');
+    for (const c of content.classes) lines.push(`  ${c.verdict.padEnd(12)} ${c.class} n=${String(c.count)} bytes=${String(c.payload_bytes)} p95=${String(c.p95)}`);
+    lines.push(`  residue      Bash n=${String(content.residue.count)} above ${String(threshold)} B: ${String(content.residue.above_threshold)}`);
+    lines.push(`content selected: ${content.selected.length === 0 ? 'none' : content.selected.join(', ')}`);
+    const executionSelected = execution.filter((v) => v.selected).map((v) => v.tool);
+    lines.push(`execution selected (1.1 criterion, same window): ${executionSelected.length === 0 ? 'none' : executionSelected.join(', ')}`);
+    process.stdout.write(`${lines.join('\n')}\n`);
+    return 0;
+}
+
+export function main(argv: readonly string[] = process.argv.slice(2), now: Date = new Date()): number {
     const threshold = Number(flag(argv, '--threshold') ?? D1_THRESHOLD_BYTES);
     const prefix = flag(argv, '--project-prefix') ?? projectStoreSlug(REPO);
+    const profile = flag(argv, '--profile') ?? 'execution';
+    if (profile === 'content') return mainContent(argv, threshold, prefix, now);
+    if (profile !== 'execution') {
+        process.stderr.write(`unknown --profile ${profile} (execution | content)\n`);
+        return 2;
+    }
     const verdicts = selectClasses(mergeScans(prefix, DEFAULT_PROJECTS_ROOT), threshold);
     const censusPath = flag(argv, '--census') ?? path.join(REPO, CENSUS);
     const census = fs.existsSync(censusPath) ? readCensus(fs.readFileSync(censusPath, 'utf-8')) : null;
