@@ -1,14 +1,14 @@
 # Findings: agent-throughput-recovery-correction
-<!-- completion-review: v1 | reviewed: 2026-10-16 | scope: af611bf61919d71a83cfcdab69e95b660a449a7c4b5db0bc516f59fcec8a8096 | diff: 71e5d99c9a8af42b1875a130928e38e9cba72daa | reviewer: r2-fresh-subagent-agent-throughput-recovery-correction | prompt_hash: 0c479b083da4f961159c297a927a7df54f1a02666270538f6527383f6d248871 -->
+<!-- completion-review: v1 | reviewed: 2026-10-16 | scope: 71218205a4bb92d75eee5075888c5e4b4d81e5becd2eabe0b3d3577356959433 | diff: 3fc192f9ab7ce2fe841befd41071b0a846a46c81 | reviewer: r2-fresh-subagent-agent-throughput-recovery-correction | prompt_hash: 0c479b083da4f961159c297a927a7df54f1a02666270538f6527383f6d248871 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-agent-throughput-recovery-correction"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-16 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 71e5d99c9a8af42b1875a130928e38e9cba72daa
-  scope_hash: af611bf61919d71a83cfcdab69e95b660a449a7c4b5db0bc516f59fcec8a8096
+  diff_sha: 3fc192f9ab7ce2fe841befd41071b0a846a46c81
+  scope_hash: 71218205a4bb92d75eee5075888c5e4b4d81e5becd2eabe0b3d3577356959433
   roadmap: agents/roadmaps/road-to-agent-throughput-recovery.md
-  roadmap_hash: 5a22adcc7679f5bef4bc2a58c6fcd36efc7c2bc441a9af6cd83dfb096011b107
+  roadmap_hash: 03c5a983e4b3d9f332ccfb855d6c602cf16a20ec9fc103bb6a5e5103a19c5e05
   ac_hash: accb145e7d6cf1135c13bc050fe057490e9110eb3876debc44962af832c559e4
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
