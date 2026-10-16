@@ -85,11 +85,11 @@ const MAX_BLOB_BYTES = 32 * 1024 * 1024;
  * repository.
  */
 export class GatedSubjectRefusal extends Error {
-    readonly rel: string;
-
-    constructor(rel: string, message: string) {
+    constructor(
+        readonly rel: string,
+        message: string,
+    ) {
         super(message);
-        this.rel = rel;
         this.name = 'GatedSubjectRefusal';
     }
 }
@@ -116,11 +116,12 @@ export class GatedPathEscapes extends GatedSubjectRefusal {
  * Raised when a gated path's tree entry is not absent and not a regular file.
  */
 export class GatedPathUnsupported extends GatedSubjectRefusal {
-    readonly kind: string;
-
-    constructor(rel: string, kind: string, why: string) {
+    constructor(
+        rel: string,
+        readonly kind: string,
+        why: string,
+    ) {
         super(rel, `gated path \`${rel}\` ${why} — the digest refuses rather than describing it`);
-        this.kind = kind;
         this.name = 'GatedPathUnsupported';
     }
 }
@@ -131,15 +132,15 @@ export class GatedPathUnsupported extends GatedSubjectRefusal {
  * would be read as an option.
  */
 export class GatedRevisionUnresolved extends GatedSubjectRefusal {
-    readonly revision: string;
-
-    constructor(revision: string, detail: string) {
+    constructor(
+        readonly revision: string,
+        detail: string,
+    ) {
         super(
             '',
             `revision \`${revision}\` does not resolve to a commit (${detail}) — the digest is ` +
                 'taken over a commit and refuses rather than guessing which one',
         );
-        this.revision = revision;
         this.name = 'GatedRevisionUnresolved';
     }
 }
