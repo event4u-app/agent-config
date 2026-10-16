@@ -29,7 +29,7 @@
  *
  * `projected`, `delivered` and `visible` are three rungs and not one because
  * the shipping substrate already separates them:
- * `_lib/lean_projection_mode.ts:19` defines `eager-all | thin | delivery`, and
+ * `_lib/lean_projection_mode.ts` `LeanProjectionMode` defines `eager-all | thin | delivery`, and
  * under `thin`/`delivery` an artefact can be projected without being visible in
  * a given turn. The 4-rung form collapses all three into `injected`.
  */

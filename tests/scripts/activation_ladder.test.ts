@@ -47,7 +47,7 @@ describe('1.1 — a failing eval is classifiable from the receipt alone', () => 
     });
 
     it('ACTIVATION: delivered but NOT visible — the split the 6-rung form exists for', () => {
-        // Under `thin`/`delivery` (lean_projection_mode.ts:19) an artefact can
+        // Under `thin`/`delivery` (lean_projection_mode.ts `LeanProjectionMode`) an artefact can
         // be delivered and then trimmed. The 4-rung ladder collapses this into
         // `injected` and cannot express it, which is why E4 resolved to six.
         const r = receipt({ visible: 'not-reached' }, 'context-budget');

@@ -1,0 +1,4 @@
+{
+  "_comment": "Release brake for the computed rule-layer form (road-to-a-setup-that-decides-itself step 3.4). Each row forces `full` for one host at one host version or one package version. Maintainer-owned operator rollback, never a consumer surface: no settings key, schema entry or wizard question reads or writes it. Loader and match rule: src/scripts/_lib/layer_form_decision.ts (`loadBrakes`, `brakeApplies`). An unreadable or malformed file holds the brake ON for every thinnable host.",
+  "rows": []
+}

@@ -125,13 +125,16 @@ with that file.
   resolved form. These are the "today" arm of Phase 5.
   verify: two runs at one commit are byte-equal; every row names its commit;
   run at `d760ecbde` the installed row reads 106 files / 369,415 bytes.
+  Open 2026-10-16: the instrument exists (`src/scripts/installed_layer_report.ts`), the per-host fixture set does not. The 106 / 369,415 row is a reading of one maintainer machine's `~/.claude/rules`, not of a scratch-`HOME` install at that commit, so the step needs a decision on which install path the fixture is taken from before it can be byte-reproducible.
 - [ ] **0.2 Corpus by reuse.** The comparison set is the routing matrix, the
   train slice of the trigger corpus, the host-graded cases and the conformance
   cases, plus one added class: obligation cases — a safety-floor or
   consequence-class rule must fire — drawn from rule frontmatter.
   verify: a test asserts no sealed holdout file is opened.
-- [ ] **0.3 Fix the stale anchors** of D4.
+  Open 2026-10-16: no artefact named "host-graded cases" exists in the tree (the only other mention is the skills roadmap's own plan), and `tests/conformance/` holds a retrieval set only. Building the manifest now would name two of its four sources by guess. The train slice is already holdout-sealed by `loadTrainCases` in `src/scripts/_lib/routing_corpus.ts`.
+- [x] **0.3 Fix the stale anchors** of D4.
   verify: the three cites resolve to the type.
+  Landed 2026-10-16: the cites (and a fourth in `tests/scripts/activation_ladder.test.ts`) now name `LeanProjectionMode` by symbol, not by line, so they cannot go stale on the next edit to that file.
 
 ## Phase 1 — The instrument
 
@@ -141,6 +144,7 @@ with that file.
   removable on hook failure, duplicate events, session-start regression or
   unexplained test breaks.
   verify: the stub's re-entry probe returns `1` and `1`.
+  Open 2026-10-16: binding a host event edits the hook manifest and what every consumer's `.claude/settings.json` receives — hook plumbing, which an autonomous drain lane does not edit. Needs a lane with that surface in scope.
 - [ ] **1.2 Negative controls for the observer.** Event unavailable on
   the host version, events reordered, malformed payload, duplicate call: each is
   recorded as `unknown`, never as arrival.
@@ -161,7 +165,7 @@ with that file.
 
 ## Phase 3 — The package decides; no key does
 
-- [ ] **3.1 One decision function.** Per layer, host and machine it returns
+- [x] **3.1 One decision function.** Per layer, host and machine it returns
   `full` or `thinned` and a reason code. `thinned` requires all of: host in
   `THINNABLE_HOSTS` (`lean_projection_mode.ts:113`); delivery mechanics observed
   for that host in `host-injection-effect.json`; an arrival record (2.1) for this
@@ -173,11 +177,13 @@ with that file.
   the delivery experiment's arms keep working.
   verify: table test — each condition failing alone yields `full`; a
   consequence-class rule is `full` under every input.
-- [ ] **3.2 Shadow first.** Until 5.3 enables it, the function runs and records
+  Landed 2026-10-16: `src/scripts/_lib/layer_form_decision.ts` (`decideLayerForm`, `ruleForm`), test `tests/scripts/layer_form_decision.test.ts`. The arrival record and carrier probe enter as typed inputs with no producer yet, so every machine reads `full`. "Delivery mechanics observed" is read as `observed-true` in `host-injection-effect.json`, because that record has no mechanics field — stricter, never looser.
+- [x] **3.2 Shadow first.** Until 5.3 enables it, the function runs and records
   what it would choose; `doctor` prints that as `would-be`, and nothing on disk
   changes.
   verify: fixture where every condition holds — the layer on disk is unchanged
   and doctor prints `would-be: thinned`.
+  Landed 2026-10-16: `agent-config doctor --check layer-form` prints the per-host shadow decision; live it reads `would-be: full (delivery-unobserved)` for all three thinnable hosts.
 - [ ] **3.3 Promote after proof, never at install.** A fresh install writes the
   full layer, exactly as today. A later session whose arrival record satisfies
   3.1 promotes the layer for following sessions, in the `session_start` concern
@@ -187,10 +193,11 @@ with that file.
   carrier does.
   verify: fresh-`HOME` fixture — session 1 full, session 2 thinned, only with
   the record present; a record missing a standing law yields `demoted`.
-- [ ] **3.4 A release brake the maintainer owns.** A shipped table row forces
+- [x] **3.4 A release brake the maintainer owns.** A shipped table row forces
   `full` for a host version or a package version. It is the operator rollback,
   not a consumer surface.
   verify: a row for a fixture host version forces `full`.
+  Landed 2026-10-16: table `src/config/layer-form-brakes.json` (empty), read by `loadBrakes`; an unreadable or malformed table holds the brake on.
 - [ ] **3.5 A user brake that is not a setting.** `install --full` writes one
   field into the install receipt; only 3.1 reads it; no settings key, schema
   entry or wizard question.
