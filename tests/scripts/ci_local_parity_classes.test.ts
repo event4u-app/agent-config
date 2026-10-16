@@ -105,6 +105,33 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
     ],
     check: ["generate_capabilities_index", "generate_capability_matrix", "generate_command_flows", "generate_settings_reference"],
   },
+  {
+    id: "2.2c",
+    marker: "The local-only drain — step 2.2, third batch (2.2c)",
+    gates: [
+      "lint_command_flow_coverage",
+      "lint_command_routing",
+      "lint_command_verbs",
+      "lint_context_spine_usage",
+      "lint_discovery_vocabulary",
+      "lint_documented_commands",
+      "lint_empty_roadmaps",
+      "lint_eval_fixture_citations",
+      "lint_examples",
+      "lint_flows",
+      "lint_frontmatter_boilerplate",
+      "lint_ghostwriter_source",
+      "lint_glama_drift",
+      "lint_harvest_provenance",
+      "lint_hook_concern_budget",
+      "lint_knowledge_scale",
+      "lint_load_context",
+      "lint_metric_consumers",
+      "lint_missions",
+      "lint_model_tier_coverage",
+    ],
+    check: [],
+  },
 ];
 
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];
