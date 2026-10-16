@@ -781,53 +781,36 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
     }
 
-    let changed: string[];
-    if (files.length > 0) {
-        // A caller's list may add paths, never hide one: where the range resolves,
-        // every path it changed is judged as well, so omitting a gated file from
-        // `--files` does not take it out of the verdict. A range that does not
-        // resolve (a fixture with no base) leaves the list as given.
-        changed = files;
-        try {
-            const commit = resolveRevision(root, revision);
-            const base = resolveRevision(root, resolveBaseRef(baseRef, root));
-            changed = [...new Set([...files, ...changedFilesBetween(root, base, commit)])];
-            revision = commit;
-            baseRef = base;
-        } catch (err) {
-            if (!(err instanceof GatedSubjectRefusal)) {
-                throw err;
-            }
+    // ONE resolution for the whole run. The diff, the digest and the record read
+    // all receive this id; passing the name to each would let a ref that moves
+    // between them yield a file list from one commit and a digest and record
+    // from another.
+    let commit: string;
+    try {
+        commit = resolveRevision(root, revision);
+    } catch (err) {
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
         }
-    } else {
-        // ONE resolution for the whole run. The diff, the digest and the
-        // record read all receive this id; passing the name to each would let
-        // a ref that moves between them yield a file list from one commit and
-        // a digest and record from another.
-        let commit: string;
-        try {
-            commit = resolveRevision(root, revision);
-        } catch (err) {
-            if (!(err instanceof GatedSubjectRefusal)) {
-                throw err;
-            }
-            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
-            return 1;
-        }
-        try {
-            // The base, too, is resolved once: the diff and the closure's base
-            // side read the same commit.
-            baseRef = resolveRevision(root, resolveBaseRef(baseRef, root));
-            changed = changedFilesBetween(root, baseRef, commit);
-        } catch (err) {
-            if (!(err instanceof GatedSubjectRefusal)) {
-                throw err;
-            }
-            process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
-            return 3;
-        }
-        revision = commit;
+        process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
+        return 1;
     }
+    let changed: string[];
+    try {
+        // The base, too, is resolved once: the diff and the closure's base side
+        // read the same commit. A `--files` list may add paths to the range,
+        // never hide one, so a range that cannot be read refuses rather than
+        // falling back to the list alone.
+        baseRef = resolveRevision(root, resolveBaseRef(baseRef, root));
+        changed = [...new Set([...files, ...changedFilesBetween(root, baseRef, commit)])];
+    } catch (err) {
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
+        }
+        process.stderr.write(`❌  check_kernel_edit_ratified: ${err.message}\n`);
+        return 3;
+    }
+    revision = commit;
 
     const result = evaluate(changed, root, configuredProviderCount(policyRoot), revision, baseRef);
 

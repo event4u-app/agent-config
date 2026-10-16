@@ -159,6 +159,10 @@ describe('the gate watches the modules its verdict runs through', () => {
         expect(gate.main(['--root', root, '--base-ref', base, '--quiet'])).toBe(1);
         // A list that leaves the calculator out cannot hide it either.
         expect(gate.main(['--root', root, '--base-ref', base, '--quiet', '--files', 'README.md'])).toBe(1);
+        // Nor can a base that does not resolve, which refuses instead of reading the list alone.
+        expect(
+            gate.main(['--root', root, '--base-ref', 'no-such-base', '--quiet', '--files', 'README.md']),
+        ).toBe(3);
     });
 
     it('the digest covers every mechanism file the gate classifies', () => {
