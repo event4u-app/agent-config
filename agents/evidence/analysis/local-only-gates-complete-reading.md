@@ -583,3 +583,48 @@ consistency job at `1db488224` (run 38861614919) printed
 64 in the same pull request, so 2.2c's twenty cannot be given back by a later
 change. A test now pins that `lint_command_verbs` is called with
 `--baseline origin/main`; without the argument it reads red.
+
+## 2026-10-16 — step 2.2, fourth batch (2.2d)
+
+Read on branch `drain/local-gates-wired-2d-20261016`, off `origin/main` after
+2.2c merged. `check_ci_local_parity --format json` lists **64** undeclared
+local-only gates, 45 of them `wire`-class.
+
+**The twenty**, the next in name order from `lint_namespace`, none skipped. Each
+ran serially with the argv below and `git status --short` checked after it: all
+twenty exit 0 and leave the tree clean, and none calls `checkRatchet`, reads the
+wall clock or reaches the network. **Two carry 2.2c's trap:**
+`lint_new_skill_gate` and `lint_no_new_atomic_commands` default `--baseline` to
+the local branch `main`; both run with `--baseline origin/main`, exit 0 locally,
+and a test now pins the argument for all three such gates.
+
+| Gate | Argv | Exit | Seconds |
+|---|---|---|---|
+| `lint_namespace` | `--quiet` | 0 | 0.28 |
+| `lint_namespace_collisions` | — | 0 | 0.33 |
+| `lint_new_skill_gate` | `--baseline origin/main --quiet` | 0 | 0.46 |
+| `lint_no_activation_gates` | `--quiet` | 0 | 0.25 |
+| `lint_no_new_atomic_commands` | `--baseline origin/main` | 0 | 0.29 |
+| `lint_no_python_twin_rationale` | `--quiet` | 0 | 0.52 |
+| `lint_orchestrator_auto_detect` | `--quiet` | 0 | 0.23 |
+| `lint_pack_first_win` | `--quiet` | 0 | 0.22 |
+| `lint_pack_risk_class` | `--quiet` | 0 | 0.25 |
+| `lint_profile_overlay_set_only` | `--quiet` | 0 | 0.30 |
+| `lint_profile_personas` | `--quiet` | 0 | 0.29 |
+| `lint_provenance` | `--quiet` | 0 | 0.29 |
+| `lint_roadmap_complexity` | `--quiet` | 0 | 0.29 |
+| `lint_roadmap_family_cap` | `--quiet` | 0 | 0.19 |
+| `lint_role_experiences` | `--plain-language` | 0 | 0.25 |
+| `lint_rule_interactions` | `--quiet` | 0 | 0.26 |
+| `lint_rule_skill_pack_reach` | `--quiet` | 0 | 0.32 |
+| `lint_showcase_sessions` | — | 0 | 0.20 |
+| `lint_skill_descriptions` | `--quiet` | 0 | 0.44 |
+| `lint_skill_originality` | `--quiet` | 0 | 0.27 |
+
+**Still a local reading.** `check_ci_local_parity` reads **44** on this branch,
+64 - 20; `check_gate_reachability --gate` and `check_gate_coverage` exit 0. The
+baseline moves on CI's reading of this branch.
+
+**Left for 2.2e onward: 25 gates** — 20 `wire`-class in name order from
+`lint_skill_router_head`, `lint_marketplace_install_completeness` while it stays
+red, and 2.2a's four skipped gates for 2.2f.

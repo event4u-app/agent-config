@@ -184,6 +184,10 @@ with it and left alone.
       `Drain 2.2c-1` and `Drain 2.2c-2`; the same change lowers the parity
       baseline 104 -> 84 on CI's reading of main after 2.2b (run 38849726162).
       Left: 2.2d and 2.2e, forty gates from `lint_namespace`.
+      2.2d (`lint_namespace` through `lint_skill_originality`, none skipped) is
+      wired as `Drain 2.2d-1` and `Drain 2.2d-2`; two of its gates default their
+      base to the local `main` and run with `--baseline origin/main`. Left: 2.2e,
+      twenty gates from `lint_skill_router_head`.
 - [ ] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
       if their reasons are resolved; a gate whose reason stands stays in the
       backlog with it written down, never declared to move the number.
