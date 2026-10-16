@@ -347,8 +347,6 @@ Load on demand once the audit needs the pitfall catalog:
 - [`references/anti-slop-cross-reference.md`](references/anti-slop-cross-reference.md) — Anti-slop cross-reference
 - [`references/component-taxonomy-detection.md`](references/component-taxonomy-detection.md) — Component-taxonomy detection rules
 
-- [`references/output-and-pitfalls.md`](references/output-and-pitfalls.md) — Output format · Gotcha · Anti-slop cross-reference
-
 ## Output format
 
 1. **`state.ui_audit.components`** — array of component/template descriptors (path, name, kind, exports)

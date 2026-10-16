@@ -31,7 +31,7 @@ finding classes instead of ad-hoc judgment:
 - **Contrast findings** — `--domain color "<product>"` returns the
   WCAG-adjusted token set; a finding that a hex pair deviates from the
   adopted set cites the row instead of eyeballing ratios. Auditing
-  *method* stays with [`accessibility-auditor`](../accessibility-auditor/SKILL.md).
+  *method* stays with [`accessibility-auditor`](../../accessibility-auditor/SKILL.md).
 
 ## Stack guidance (`--stack` axis)
 
@@ -43,10 +43,10 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
   --stack react "list rerender memo" [--filter "Severity=HIGH"]
 ```
 
-Stack executors ([`blade-ui`](../blade-ui/SKILL.md),
-[`livewire`](../livewire/SKILL.md), [`flux`](../flux/SKILL.md),
-[`react-shadcn-ui`](../react-shadcn-ui/SKILL.md),
-[`tailwind-engineer`](../tailwind-engineer/SKILL.md)) pull idiomatic
+Stack executors (`blade-ui`,
+`livewire`, `flux`,
+[`react-shadcn-ui`](../../react-shadcn-ui/SKILL.md),
+[`tailwind-engineer`](../../tailwind-engineer/SKILL.md)) pull idiomatic
 guidance + docs URLs from here instead of memory.
 
 ## Diagram-type routing — route on the verb
@@ -83,12 +83,12 @@ or a maintained upstream — this skill vendors no drawn-asset corpus.)
 
 | Concern | Owner |
 |---|---|
-| What already exists (components, tokens) | [`existing-ui-audit`](../existing-ui-audit/SKILL.md) — mandatory pre-step; audit findings outrank corpus suggestions |
+| What already exists (components, tokens) | [`existing-ui-audit`](../../existing-ui-audit/SKILL.md) — mandatory pre-step; audit findings outrank corpus suggestions |
 | What to build (grounded selection) | **this skill** |
-| Stack-agnostic heuristics + flow | [`fe-design`](../fe-design/SKILL.md) — invokes this skill for grounding |
+| Stack-agnostic heuristics + flow | [`fe-design`](../../fe-design/SKILL.md) — invokes this skill for grounding |
 | Orchestration gates + locks | `directives/ui/{design,review,polish}.ts` — never import the engine |
-| WCAG audit method | [`accessibility-auditor`](../accessibility-auditor/SKILL.md) |
-| Token authoring | [`design-tokens`](../design-tokens/SKILL.md) |
-| Lo-fi structure exploration (pre-selection) | [`wireframe`](../wireframe/SKILL.md) — disposable greyscale variants |
-| Multiple hi-fi options (post-selection) | [`design-variations`](../design-variations/SKILL.md) — grounds each variation via this skill |
-| Fixed-canvas slide decks | [`html-deck`](../html-deck/SKILL.md) — own medium, still corpus-grounded |
+| WCAG audit method | [`accessibility-auditor`](../../accessibility-auditor/SKILL.md) |
+| Token authoring | [`design-tokens`](../../design-tokens/SKILL.md) |
+| Lo-fi structure exploration (pre-selection) | [`wireframe`](../../wireframe/SKILL.md) — disposable greyscale variants |
+| Multiple hi-fi options (post-selection) | [`design-variations`](../../design-variations/SKILL.md) — grounds each variation via this skill |
+| Fixed-canvas slide decks | [`html-deck`](../../html-deck/SKILL.md) — own medium, still corpus-grounded |

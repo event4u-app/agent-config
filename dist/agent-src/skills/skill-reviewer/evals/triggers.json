@@ -1,0 +1,63 @@
+{
+    "skill": "skill-reviewer",
+    "last_eval": "2026-10-16",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-16 under road-to-steps-the-skill-cannot-skip 2.1, which aligned this skill's Killer 5 with the single split rule and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover reviewing, auditing and optimising an existing skill against the Skill Killers, including German. Near-misses share skill vocabulary and belong elsewhere: writing a new skill (skill-writing), running the mechanical linter (lint-skills) and condensing a file (condense). Counterexamples guard 'review' as code review and 'skills' as a person's abilities.",
+    "queries": [
+        {
+            "q": "review this SKILL.md against the skill killers and tell me what to fix",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "audit the git-workflow skill — is it too monolithic?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this skill never seems to get applied; what is wrong with it?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "optimize the existing design-review skill and give me fix recommendations",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "prüf diesen Skill auf die typischen Schwächen und schlag Verbesserungen vor",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write a new skill for terraform drift detection",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring rather than reviewing → skill-writing"
+        },
+        {
+            "q": "run the skill linter on my branch",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the mechanical gate, not the judgement review → lint-skills"
+        },
+        {
+            "q": "condense this skill into telegraph format",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a transform of the file, not a review of it → condense"
+        },
+        {
+            "q": "review my PHP service class for bugs",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'review' meaning code review → code-review"
+        },
+        {
+            "q": "which skills should a senior backend engineer have?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'skills' meaning a person's abilities"
+        }
+    ]
+}

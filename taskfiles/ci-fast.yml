@@ -2252,7 +2252,7 @@ tasks:
   check-reply-consistency:
     silent: true
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
-    cmd: ./scripts-run src/scripts/check_reply_consistency {{.QUIET_FLAG}} --scan-dir .agent-src.uncondensed
+    cmd: ./scripts-run src/scripts/check_reply_consistency {{.QUIET_FLAG}} --scan-dir src
 
   check-iron-law-prominence:
     silent: true

@@ -17,7 +17,7 @@
    evidence-based reason (e.g. risky migration benefits from a spike).
    Never include release versions, deprecation dates, or git tags in
    the roadmap text. If the user declines, do **not** re-propose during
-   `/roadmap:process-*`. Decline = silence. See [`scope-control`](../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
+   `/roadmap:process-*`. Decline = silence. See [`scope-control`](../../../rules/scope-control.md#decline--silence--no-re-asking-on-the-same-task).
 5. Save with a kebab-case filename (e.g. `optimize-webhook-jobs.md`).
    **Before writing**, scan the entire roadmap namespace for a
    collision — active, `archive/`, `skipped/`, and nested subdirs —
@@ -25,7 +25,7 @@
    hit comes back, stop and ask the user to rename, open the
    existing file, or abort. Never silently overwrite an archived
    or skipped roadmap. Detailed prompt in
-   [`commands/roadmap/create.md`](../../commands/roadmap/create.md)
+   [`commands/roadmap/create.md`](../../../commands/roadmap/create.md)
    step 6.
 6. Regenerate the dashboard so the new roadmap is included.
 
@@ -35,7 +35,7 @@
    `execution.mode`, invocation form (absent = derived, not
    `interactive`). Under `/roadmap:process-*` the mode selects the
    interaction pattern via the run-start execution contract — see
-   [`roadmap-execution-contract`](../../contexts/execution/roadmap-execution-contract.md).
+   [`roadmap-execution-contract`](../../../contexts/execution/roadmap-execution-contract.md).
    The manual flow below describes `interactive`; under `autonomous`
    / `phase-checkpoints` step 4's per-step ask is replaced by the
    accepted contract. **Mode never changes archival semantics** —

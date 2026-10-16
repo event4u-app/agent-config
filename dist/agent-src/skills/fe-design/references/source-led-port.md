@@ -6,7 +6,7 @@ Pulled when `ui_authority.reference_maturity` is `runnable-artifact`. Contract:
 When `reference_maturity` is `runnable-artifact`, the artifact's own markup, CSS
 and JS is the data basis and adapting it is the DEFAULT. A from-scratch
 re-derivation is a deviation and needs the same confirmation as a swapped
-control (per [`design-fidelity`](../../rules/design-fidelity.md)).
+control (per [`design-fidelity`](../../../rules/design-fidelity.md)).
 
 Account for every mechanic the source carries, in the engine's own vocabulary
 (`COVERAGE_BUCKETS`, shared rather than copied — `agent-config ui:audit`

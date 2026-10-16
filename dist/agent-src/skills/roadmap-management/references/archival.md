@@ -39,7 +39,7 @@ After the last step of a roadmap is done, check completion status:
 3. **Decision rule — `count_open == 0` means the roadmap has no active
    work left. `[x]`, `[-]` are final states. `[~]` deferred items
    block silent closure — they carry plans the user has not consented
-   to drop (enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+   to drop (enforced by [`roadmap-progress-sync`](../../../rules/roadmap-progress-sync.md)
    Iron Law 3).**
 
    | count_x | count_open | count_deferred | count_cancelled | Action |
@@ -97,7 +97,7 @@ After the last step of a roadmap is done, check completion status:
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
    Archive **blocked** until resolved. WHO resolves is the preservation test in
-   [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md),
+   [`roadmap-progress-sync § Who resolves it`](../../../rules/roadmap-progress-sync.md),
    never the mode — same menu either way, only the resolver differs:
 
    - **1, 2, 4** keep the item alive → **council**, recorded at the item (2 only
@@ -194,7 +194,7 @@ When the user picks option 1 or 2 in step 4b:
    ready visible) and the parent — once moved — drops off.
 
 5. **Archive the parent** (`git mv` → `archive/`) and regen one
-   more time per [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+   more time per [`roadmap-progress-sync`](../../../rules/roadmap-progress-sync.md)
    Iron Laws 1 + 3.
 
 5. **Move the file** with `git mv` so history is preserved:
