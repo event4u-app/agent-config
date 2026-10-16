@@ -258,8 +258,11 @@ read cannot leak through any later bug.
       `dist/hooks/dispatch.js` because the egress stage imports the table: the
       bundle read 1,550,279 B against the 1,550,000 B ceiling, and 1,549,879 B
       after packing the IBAN length table — 121 B of headroom, inside the
-      hundreds of bytes an esbuild rebuild moves. It was set aside rather than
-      landed. Landing it needs one of: bytes freed elsewhere in the bundle (the
+      hundreds of bytes an esbuild rebuild moves. Those readings include the
+      reverted 2.2 table (+1,616 B); main reads 1,543,940 B, so the identifier
+      rows alone (about 4.3 KB) would leave about 1.7 KB for every later change
+      to the dispatcher, and both together leave nothing. It was set aside rather
+      than landed. Landing it needs one of: bytes freed elsewhere in the bundle (the
       table's `linearity` prose is about 2 KB the stage never reads), a ratified
       ceiling raise, or the stage reading a detection-only view of the table.
       That choice touches the hook bundle's shape and its budget, so it is left
