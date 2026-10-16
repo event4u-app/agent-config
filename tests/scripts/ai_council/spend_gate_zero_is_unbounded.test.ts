@@ -37,6 +37,7 @@ function estimate(inputTokens: number, outputTokens: number, usd = 0): CostEstim
         output_tokens: outputTokens,
         input_usd: usd,
         output_usd: 0,
+        priced: true,
     };
 }
 

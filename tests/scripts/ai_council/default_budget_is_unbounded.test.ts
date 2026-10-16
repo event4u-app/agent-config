@@ -51,6 +51,7 @@ function estimate(tokens: number, usd: number): CostEstimate {
         output_tokens: tokens,
         input_usd: usd,
         output_usd: 0,
+        priced: true,
     };
 }
 

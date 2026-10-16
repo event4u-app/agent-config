@@ -1126,7 +1126,7 @@ function format_estimate_table(
         const e = estimates[i] as CostEstimateLike;
         rows.push(
             `  ${m.name}/${m.model}: ` +
-                `~${e.input_tokens} in + ${e.output_tokens} out  =  $${_pyFixed(_total_usd(e), 4)}`,
+                `~${e.input_tokens} in + ${e.output_tokens} out  =  $${_pyFixed(_total_usd(e), 4)}${e.priced === false ? `  unpriced: ${m.name}/${m.model}` : ''}`,
         );
     }
     let total = estimates.reduce((acc, e) => acc + _total_usd(e), 0.0);
@@ -1159,6 +1159,7 @@ interface CostEstimateLike {
     output_tokens: number;
     input_usd: number;
     output_usd: number;
+    priced?: boolean;
 }
 
 function _total_usd(e: CostEstimateLike): number {

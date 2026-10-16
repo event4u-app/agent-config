@@ -123,24 +123,33 @@ green.*
 
 ## Phase 2 — Unpriced is a state, not a zero
 
-- [ ] **2.1 The estimate says it is unpriced.** `CostEstimate` gains
+- [x] **2.1 The estimate says it is unpriced.** `CostEstimate` gains
       `priced: boolean`, `false` on a null `lookup`; amounts stay zero for
       arithmetic callers. No price row, file or fetch is added.
+      *Done 2026-10-16: `estimate_cost` and `reprice_with_cache` both set it.*
       verify: `npx vitest run tests/scripts/ai_council/pricing.test.ts -t estimate-carries-priced-flag --reporter=verbose` -> /✓.*estimate-carries-priced-flag/
-- [ ] **2.2 A set ceiling refuses an unpriced billable seat (D2).** With any USD
+- [x] **2.2 A set ceiling refuses an unpriced billable seat (D2).** With any USD
       ceiling set, `_breach` returns `unpriced` for a billable seat whose
       estimate is unpriced; the seat is not called and is reported the way an
       over-budget seat is — pause and report, no question. With no ceiling, what
       runs is unchanged (ADR-279). Case `unpriced-billable-breaches-set-ceiling`
       is seen red first.
+      *Done 2026-10-16: seen red, then green; the refused seat carries
+      `cost_budget_unpriced` (`breachErrorTag`), and an orchestrator case pins
+      zero calls under a ceiling and one call without.*
       verify: `npx vitest run tests/scripts/ai_council/pricing.test.ts -t unpriced-billable-breaches-set-ceiling --reporter=verbose` -> /✓.*unpriced-billable-breaches-set-ceiling/
-- [ ] **2.3 An unpriced call reaches the ledger (D3).** `record_spend`
+- [x] **2.3 An unpriced call reaches the ledger (D3).** `record_spend`
       separates non-billable from unpriced: a billable call with
       `priced: false` appends `usd: null, unpriced: true` with its token counts;
       `today_spend_usd` reports `unpriced_calls` beside the sum.
+      *Done 2026-10-16: the count is reported by `today_spend_summary`, which
+      `today_spend_usd` now delegates to, so its numeric return and its callers
+      are unchanged.*
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t unpriced-row-is-appended --reporter=verbose` -> /✓.*unpriced-row-is-appended/
-- [ ] **2.4 The run says so.** The council's cost line prints
+- [x] **2.4 The run says so.** The council's cost line prints
       `unpriced: <provider>/<model>` once per such seat, ceiling or not.
+      *Done 2026-10-16: on the seat's row of the cost table `council:run` and
+      `council:estimate` print; a listed seat's row is unchanged.*
       verify: `npx vitest run tests/scripts/council_cli.test.ts -t prints-unpriced-seat --reporter=verbose` -> /✓.*prints-unpriced-seat/
 
 *Exit: 2.1–2.4 green; with no ceiling, council output over listed models is
@@ -365,7 +374,7 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
 - [ ] **AC-1** No CLI failure whose stderr matches a timeout pattern is
       replay-eligible, whatever else it contains, and the metered transport is
       not dispatched for it.
-- [ ] **AC-2** No council run passes a person-set USD ceiling with an unpriced
+- [x] **AC-2** No council run passes a person-set USD ceiling with an unpriced
       billable seat; every such seat appears in output and ledger.
 - [ ] **AC-3** Two concurrent councils under one set ceiling cannot both spend
       the same remainder; a crashed run's reservation closes at its estimate.

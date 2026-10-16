@@ -18,7 +18,9 @@
  *   "usd": float, "provider": str, "model": str}`, optionally followed by
  *   `"cache_read_input_tokens": int, "cache_creation_input_tokens": int,
  *   "cache_ttl": "5m"|"1h"` when the caller reports cache activity — absent
- *   on every entry recorded before this extension shipped.
+ *   on every entry recorded before this extension shipped. A billable call
+ *   with no price row is written as `"usd": null, …, "unpriced": true,
+ *   "input_tokens": int, "output_tokens": int` (TS-only; reads as 0 in the sum).
  * - `today_spend_usd()` sums entries within the last 24h from "now".
  * - `would_exceed(limit_usd, next_call_usd)` returns true iff the next call
  *   would push the rolling window past the limit.
@@ -85,6 +87,10 @@ export interface SpendEntry {
     cache_creation_input_tokens?: number;
     /** Write-multiplier TTL tier in effect when this entry was recorded. */
     cache_ttl?: '5m' | '1h';
+    /** A billable call with no price row: `usd` reads as 0, the row says it is unknown. */
+    unpriced?: true;
+    input_tokens?: number;
+    output_tokens?: number;
 }
 
 function _nowUtcMs(): number {
@@ -278,16 +284,17 @@ function _pyJsonString(s: string): string {
  */
 function _dumpEntry(
     ts: string,
-    usd: number,
+    usd: number | null,
     provider: string,
     model: string,
     cacheRead?: number,
     cacheWrite?: number,
     cacheTtl?: '5m' | '1h',
+    unpricedTokens?: { input: number; output: number },
 ): string {
     let body =
         `${_pyJsonString('ts')}: ${_pyJsonString(ts)}, ` +
-        `${_pyJsonString('usd')}: ${pyFloatRepr(usd)}, ` +
+        `${_pyJsonString('usd')}: ${usd === null ? 'null' : pyFloatRepr(usd)}, ` +
         `${_pyJsonString('provider')}: ${_pyJsonString(provider)}, ` +
         `${_pyJsonString('model')}: ${_pyJsonString(model)}`;
     if (cacheRead !== undefined) {
@@ -298,6 +305,12 @@ function _dumpEntry(
     }
     if (cacheTtl !== undefined) {
         body += `, ${_pyJsonString('cache_ttl')}: ${_pyJsonString(cacheTtl)}`;
+    }
+    if (unpricedTokens !== undefined) {
+        body +=
+            `, ${_pyJsonString('unpriced')}: true` +
+            `, ${_pyJsonString('input_tokens')}: ${Math.trunc(unpricedTokens.input)}` +
+            `, ${_pyJsonString('output_tokens')}: ${Math.trunc(unpricedTokens.output)}`;
     }
     return `{${body}}`;
 }
@@ -420,6 +433,13 @@ export function read_entries(p: string | null = null): SpendEntry[] {
         if (cacheTtl !== undefined) {
             entry.cache_ttl = cacheTtl;
         }
+        if (record.unpriced === true) {
+            entry.unpriced = true;
+            const inTok = _toOptionalNonNegInt(record.input_tokens);
+            if (inTok !== undefined) entry.input_tokens = inTok;
+            const outTok = _toOptionalNonNegInt(record.output_tokens);
+            if (outTok !== undefined) entry.output_tokens = outTok;
+        }
         out.push(entry);
     }
     return out;
@@ -447,21 +467,33 @@ function _rawStr(v: unknown): string {
     return _toStr(v, '');
 }
 
-/** Sum of USD spent in the last `windowHours` (rolling window). */
-export function today_spend_usd(
+/**
+ * The rolling window's priced sum, with the count of unpriced billable calls
+ * beside it. The sum alone would let an unknown read as nothing spent.
+ */
+export function today_spend_summary(
     options: { path?: string | null; now?: number | null; windowHours?: number } = {},
-): number {
+): { usd: number; unpriced_calls: number } {
     const path_ = options.path ?? null;
     const nowMs = options.now ?? _nowUtcMs();
     const windowHours = options.windowHours ?? ROLLING_WINDOW_HOURS;
     const cutoff = nowMs - windowHours * 3600 * 1000;
     let total = 0;
+    let unpriced = 0;
     for (const e of read_entries(path_)) {
         if (e.ts >= cutoff) {
             total += e.usd;
+            if (e.unpriced) unpriced += 1;
         }
     }
-    return total;
+    return { usd: total, unpriced_calls: unpriced };
+}
+
+/** Sum of USD spent in the last `windowHours` (rolling window). */
+export function today_spend_usd(
+    options: { path?: string | null; now?: number | null; windowHours?: number } = {},
+): number {
+    return today_spend_summary(options).usd;
 }
 
 /**
@@ -495,9 +527,17 @@ export function record_spend(
         cache_read_input_tokens?: number;
         cache_creation_input_tokens?: number;
         cache_ttl?: '5m' | '1h';
+        // A BILLABLE call whose model has no price row (road-to-unknowns-that-
+        // say-so 2.3). Its `usd` is not zero, it is unknown, so it is written
+        // as `usd: null, unpriced: true` with the tokens it used — never
+        // dropped beside the subscription calls the early return below skips.
+        unpriced?: boolean;
+        input_tokens?: number;
+        output_tokens?: number;
     } = {},
 ): boolean {
-    if (usd <= 0) {
+    const unpriced = options.unpriced === true;
+    if (usd <= 0 && !unpriced) {
         return true; // zero-cost calls (manual mode) skip the ledger
     }
     const p = options.path ?? LEDGER_PATH;
@@ -508,12 +548,13 @@ export function record_spend(
     const ts = nowUtcIso(nowMs);
     const entry = `${_dumpEntry(
         ts,
-        _pyRound6(usd),
+        unpriced ? null : _pyRound6(usd),
         provider,
         model,
         options.cache_read_input_tokens,
         options.cache_creation_input_tokens,
         options.cache_ttl,
+        unpriced ? { input: options.input_tokens ?? 0, output: options.output_tokens ?? 0 } : undefined,
     )}\n`;
     try {
         fs.appendFileSync(p, entry, { encoding: 'utf-8' });

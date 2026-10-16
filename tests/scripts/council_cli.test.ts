@@ -671,3 +671,35 @@ describe('council CLI first-run ergonomics', () => {
         expect(out.split('\n')[0]).toBe('usage: agent-config council run [-h] ...');
     });
 });
+
+// road-to-unknowns-that-say-so 2.4. The cost table `council:run` and
+// `council:estimate` print is the line an operator reads before money moves. A
+// seat on a model the price table does not list printed `$0.0000` there, which
+// reads as free. It now says it is unpriced, once per such seat, ceiling or not.
+describe('council_cli cost table — an unpriced seat says so', () => {
+    it('prints-unpriced-seat', async () => {
+        const { format_estimate_table } = await import('../../src/scripts/council_cli.js');
+        const { estimate_cost } = await import('../../src/scripts/ai_council/pricing.js');
+        const { priceKey } = await import('../../src/scripts/ai_council/_default_prices.js');
+        const listed = { provider: 'anthropic', model: 'claude-opus-4-1', input_per_1m_usd: 15, output_per_1m_usd: 75 };
+        const table = {
+            last_updated: '2026-10-16',
+            currency: 'USD',
+            unit: 'per_1M_tokens',
+            source: 't',
+            prices: new Map([[priceKey('anthropic', 'claude-opus-4-1'), listed]]),
+        };
+        const members = [
+            { name: 'anthropic', model: 'claude-opus-4-1' },
+            { name: 'anthropic', model: 'claude-opus-4-5' },
+        ];
+        const estimates = members.map((m) => estimate_cost(m.name, m.model, 1000, 1000, table));
+        expect(estimates.map((e) => e.priced)).toEqual([true, false]);
+        const out = format_estimate_table(members as never, estimates);
+        const lines = out.split('\n');
+        expect(out.split('unpriced: anthropic/claude-opus-4-5').length - 1).toBe(1);
+        expect(lines.find((l) => l.includes('claude-opus-4-1'))).not.toContain('unpriced');
+        // A listed seat's row keeps the format it has always had.
+        expect(lines[0]).toMatch(/^ {2}anthropic\/claude-opus-4-1: ~1000 in \+ 1000 out {2}= {2}\$\d+\.\d{4}$/);
+    });
+});
