@@ -32,6 +32,11 @@ describe('lint_marketplace_install_completeness — pure helpers', () => {
         expect(lmic.extract_subcommand(line)).toBe('dispatch:hook');
         expect(lmic.extract_subcommand('"$CLAUDE_PROJECT_DIR"/agent-config roadmap:progress')).toBe('roadmap:progress');
     });
+
+    it('a single-quoted string a shell runs is still read as the command', () => {
+        expect(lmic.extract_subcommand("sh -c 'agent-config roadmap:progress'")).toBe('roadmap:progress');
+        expect(lmic.extract_subcommand("printf '%s' 'agent-config hook'; agent-config dispatch:hook")).toBe('dispatch:hook');
+    });
 });
 
 // --- Golden parity on the REAL REPO -----------------------------------------
