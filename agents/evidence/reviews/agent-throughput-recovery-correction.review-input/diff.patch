@@ -1,0 +1,1115 @@
+diff --git a/agents/evidence/analysis/agent-throughput-decline-2026-10-14.md b/agents/evidence/analysis/agent-throughput-decline-2026-10-14.md
+index 707a6fc27b322cc223356698d2ab3a059b54859a..0af9366c5e31d4e0a1c4c544457d9c3d1e31996c 100644
+--- a/agents/evidence/analysis/agent-throughput-decline-2026-10-14.md
++++ b/agents/evidence/analysis/agent-throughput-decline-2026-10-14.md
+@@ -150,3 +150,91 @@ on every subagent spawn, so it converts directly into earlier limit hits.
+   account; their count is a lower bound of their cost, not a causal proof.
+ - Decision-ask classification is by closing text, so an ask phrased without a
+   `Recommendation:` / `Empfehlung:` line is counted as "summary / other".
++
++## Corrections (2026-10-16)
++
++Appended, not rewritten: the body above stands as written on 2026-10-14 so a
++reader can see what the correction corrects. Every figure here is re-read
++against `main` @ `085ec41ff` (the commit the roadmap's 2026-10-15 revision
++measured) unless a row says otherwise.
++
++### C1 — Finding 1's "about 4×" compares commits, and commits stopped meaning merges
++
++First-parent commits on `085ec41ff`, night window 22:00–08:00 Europe/Berlin (a
++commit before 08:00 belongs to the previous evening's night), nights with at
++least one commit. Net ticked steps = added minus removed `- [x]` lines under
++`agents/roadmaps/` in each commit's first-parent diff.
++
++| Window | nights | commits | per night | true merge commits | net ticked steps | per night |
++|---|---|---|---|---|---|---|
++| 2026-08-10..23 | 13 | 148 | 11.4 | 148 | 794 | 61.1 |
++| 2026-08-24..09-06 | 13 | 98 | 7.5 | 48 | 420 | 32.3 |
++| 2026-09-28..10-13 | 14 | 108 | 7.7 | 13 | 306 | 21.9 |
++
++Merged changes per night are flat between the second and third window; what fell
++is **work per merge** (ticked steps per night). The roadmap's 2026-10-15
++revision printed 11.1 / 7.7 / 7.7 and 56.7 / 30.0 / 19.1 for the same windows;
++the method behind those is not recorded, so the two series are **reconciled in
++shape, not in value** — both rank the windows the same way and both show merges
++flat and ticks falling.
++
++### C2 — the `drain/*` column reads zero by construction after the squash switch
++
++The column counts merge commits whose subject names a `drain/*` branch. The last
++such commit on first-parent `main` is `d88b9b556` (2026-09-30, PR #2107); from
++October nearly every PR lands as a squash commit, whose subject carries no
++branch name (13 true merge commits in the third window above, against 108
++commits). "No drain lane has merged since W41" is therefore a property of the
++merge method, not evidence that lanes stopped.
++
++### C3 — three of the six causes were this size during the high-throughput weeks
++
++| Cause in this file | Value in the high-throughput period | Source |
++|---|---|---|
++| first-call context 209k–245k (Finding 6) | 218,705–230,705 on 2026-08-30 | `agents/evidence/analysis/agent-turnaround-2026-08-30.md:95` |
++| `git push` p50 1.0 min (Finding 2) | median 67 s on 2026-08-30 | `agents/evidence/analysis/agent-turnaround-2026-08-30.md:52` |
++| `tests.yml` p50 13–14 min W41/W42 (Finding 2) | 14 min 2026-08-17..24 | this file's own CI table, Finding 2 |
++
++They are costs worth cutting, not causes of the decline.
++
++### C4 — Finding 3's "workable backlog shrank" is contradicted by the estate
++
++At `085ec41ff`, 26 active roadmaps carry **576** open `- [ ]` steps; **51** of
++them carry a `blocked-by` marker anywhere in the step's text (from its checkbox
++to the next checkbox or heading), so **525** carry none. The roadmap's revision
++counts 528 with a narrower marker scope; either figure means the active estate
++does not bound a night.
++
++### C5 — three sums in the body do not add up
++
++| Table | Rows sum to | Stated total | Status |
++|---|---|---|---|
++| Finding 2 activity hours | 84.8 h | 92.2 h | `unknown` — 7.4 h unaccounted; the extraction script was not committed, so the missing class cannot be named |
++| Finding 5 refusal classes | 124 | 123 | `unknown` — one refusal counted in two classes, or the total is off by one; not reconstructible from the tree |
++| Finding 4 turn classes | 1,558 | 1,560 | `unknown` — two turns unclassified; not reconstructible from the tree |
++
++### C6 — the real `block-no-verify` false-positive set
++
++Finding 5 names `grep -n` / `-nE`. Plain `grep -n` and `git status; sed -n …`
++pass today. What the guard still refuses is short `-n` on **every** git
++subcommand: `_NO_VERIFY_SHORT` (`src/scripts/hooks/block_no_verify.ts:45`) is
++checked against every token at `:342`, and any short bundle containing `n` at
++`:349`. Probed 2026-10-16 through the exported `_check_command`: `git grep -n`,
++`git grep -nE`, `git log -n 5`, `git branch -n`, `git push -n` and
++`git merge -n` are all refused; `grep -n` and `git status; sed -n 1p` pass;
++`git commit -n` and `git am -n`, the real bypasses, are refused as they must be.
++
++### C7 — prior art this file did not cite
++
++- `src/scripts/probe_turnaround.ts` — the committed transcript instrument the
++  "throwaway Python" duplicates; its baseline is `src/config/turnaround-budget.json`.
++- `agents/evidence/analysis/turnaround-reading-2026-10-01.md:100` — the
++  regression in blocking share and context floor was already read on 2026-10-01
++  and left "for whoever owns that number next".
++- `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md:83-85` — the
++  2026-10-07 cause split (`ci-wait` 261 min, `sleep-poll` 28 min), against which
++  the 2026-10-16 run of the probe reads `sleep-poll` 212 min and `ci-wait` 186 min.
++- Decisions D6–D8 of the archived `road-to-blocking-time-by-cause` — the CI-wait
++  mitigation (background next wait on the waiter's last line,
++  `src/scripts/ci_settle.ts:300`) and the closure of `user-wait` as holding no
++  avoidable minutes, both of which this file's recommendations re-plan.
+diff --git a/agents/roadmaps/road-to-agent-throughput-recovery.md b/agents/roadmaps/road-to-agent-throughput-recovery.md
+index 226fe963cd2dbcb311f244f75078ca4205b9517c..00e5eae5d94c2b99dd524ee0a674dbf1b1817fa6 100644
+--- a/agents/roadmaps/road-to-agent-throughput-recovery.md
++++ b/agents/roadmaps/road-to-agent-throughput-recovery.md
+@@ -124,7 +124,7 @@ the Acceptance Criteria held.
+ 
+ ## Phase 0 — Correct the record
+ 
+-- [ ] **0.1 Append a correction to the evidence file.** Add `## Corrections
++- [x] **0.1 Append a correction to the evidence file.** Done 2026-10-16: `## Corrections (2026-10-16)`, C1–C7, each row on a commit or `file:line`; `lint_evidence_artifacts --all` exit 0. Re-measured at `085ec41ff`: 11.4 / 7.5 / 7.7 commits and 61.1 / 32.3 / 21.9 net ticked steps per night (same ranking as Context), 525 unblocked of 576 (Context's 528 used a narrower marker scope); the three sums stay `unknown` rows. Add `## Corrections
+       (2026-10-xx)` to `agents/evidence/analysis/agent-throughput-decline-2026-10-14.md`
+       — never rewrite the body: the night-window table above, the squash
+       switch behind the `drain/*` column, the three causes flat since
+@@ -134,7 +134,7 @@ the Acceptance Criteria held.
+       the file did not cite.
+       verify: each correction cites a commit or `file:line`, and
+       `lint_evidence_artifacts` passes.
+-- [ ] **0.2 Own the two orphaned regressions.** Record in
++- [x] **0.2 Own the two orphaned regressions.** Done 2026-10-16: a `subsequent_readings` entry with `owned_by` this roadmap and `owned_figures` `blocking_share` (0.8091) and `context_floor_max` (244,472), from a fresh `--against-baseline` run (exit 1 on both); no baseline moved. Record in
+       `src/config/turnaround-budget.json` `subsequent_readings` that
+       `blocking_share` and `context_floor_max` (exit 1 since 2026-10-01, still
+       on 2026-10-15) are owned by this roadmap.
+@@ -148,7 +148,20 @@ the Acceptance Criteria held.
+ 
+ ## Phase 1 — One instrument, extended
+ 
+-- [ ] **1.1 Extend `probe_turnaround`, do not add a second reader.** Add the
++- [x] **1.1 Extend `probe_turnaround`, do not add a second reader.** Done
++      2026-10-16: classifiers and tallies in `src/scripts/_lib/turnaround_throughput.ts`,
++      read in the probe's one transcript pass; new flags `--workspace`,
++      `--git W[,W…]`, `--ref`, `--rules-dir`, `--ci W[,W…]`. One run over the
++      three Context windows printed 11.4 / 7.5 / 7.7 merged changes and 61.1 /
++      32.3 / 21.9 net ticked steps per night, refusals by detector (305 in 141
++      sessions, language 86), 87 structured and 0 plain-text asks of 265 turn
++      ends, 10 usage-limit pauses (4 night, 6 day), push p50 65 s, `tests.yml`
++      p50 14.1 / 15 min, 16 of 29 `ready` at 0 ticked, 106 rule files with 104
++      standing. Four sum checks exit 1 on a mismatch; the overlapping-label
++      fixture fails it; every classifier rule was neutralised once and its test
++      went red. August transcript figures are not re-readable (no store), so
++      August is read through `--git` and `--ci` only. Added paths are not
++      printed; the store line predates this step. Add the
+       figures it lacks: turn-end refusals by detector (read through
+       `_lib/turn_end_refusals.ts`, not re-parsed), structured and plain-text
+       asks per session, usage-limit pauses split night/day, and a `--git`
+@@ -159,7 +172,7 @@ the Acceptance Criteria held.
+       verify: one run prints every figure of the Context section; a fixture with
+       overlapping labels fails the sum check; tests pin each new classifier rule
+       red-first.
+-- [ ] **1.2 Register the throughput baseline in the existing budget.** Add the
++- [x] **1.2 Register the throughput baseline in the existing budget.** Done 2026-10-16: `kind: throughput-git` entry, nights 2026-09-28..10-13 at `085ec41ff`; 108 / 14 = 7.71 merged changes and 306 / 14 = 21.86 net ticked steps per night, both recomputed from the entry's corpus block. Add the
+       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
+       shape; no new baseline file.
+       verify: the entry's figures recompute from its own corpus block.
+diff --git a/src/config/turnaround-budget.json b/src/config/turnaround-budget.json
+index 67321ddfcf70934f5ddc7a73040de012446f35b1..fbeeeba384b22c5c6ac5ba0c9d1c63062ba6fd20 100644
+--- a/src/config/turnaround-budget.json
++++ b/src/config/turnaround-budget.json
+@@ -61,6 +61,63 @@
+                 "calls_per_request": "72.67 → 93.74. REPORTED ONLY, and the movement is the denominator again exactly as `directions` records: `api_calls` is comparable (3,052 → 3,281) while `user_requests` fell 42 → 35. Evidence of nothing."
+             },
+             "gate_verdict": "exit 1, on `blocking_share` alone. `mean_batch_size` passed."
++        },
++        {
++            "read_at": "2026-10-16",
++            "reason": "road-to-agent-throughput-recovery step 0.2 — the two regressions `--against-baseline` has reported since 2026-10-01 (`agents/evidence/analysis/turnaround-reading-2026-10-01.md:100` left them 'for whoever owns that number next') get an owner. This entry records the reading and the ownership; it raises and lowers no baseline.",
++            "owned_by": "road-to-agent-throughput-recovery",
++            "owned_figures": ["blocking_share", "context_floor_max"],
++            "invocation": "./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10 --against-baseline",
++            "invocation_note": "Run from a lane worktree, so `--store` points at the main checkout's store; the bare command would read the worktree's own (empty) project directory and exit 1 on `empty_corpus: \"fail\"`.",
++            "corpus": {
++                "window": "the 10 most recently modified sessions in the main checkout's transcript store, read 2026-10-16; the measuring session wrote to a worktree-suffixed store and is not in this window",
++                "sessions": 10,
++                "user_requests": 267,
++                "api_calls": 2912,
++                "tool_calls": 2962,
++                "tool_using_requests": 2577,
++                "blocking_tail_calls": 130,
++                "blocking_tail_minutes": 555,
++                "tool_minutes": 686,
++                "note": "Ratios recompute from this block: 2912 / 267 = 10.91; 2962 / 2577 = 1.15; 555 / 686 = 0.809. The cause split of the blocking tail, in minutes: sleep-poll 212, ci-wait 186, network 115, unknown 38, test 3, build 1, subagent-wait 0, mcp 0, user-wait 0 (sum 555)."
++            },
++            "reading": {
++                "calls_per_request": 10.91,
++                "mean_batch_size": 1.15,
++                "blocking_share": 0.8091,
++                "context_floor_min": 212193,
++                "context_floor_max": 244472
++            },
++            "delta_vs_baseline": {
++                "blocking_share": "+0.1889 — 0.6202 → 0.8091. REGRESSION, owned by road-to-agent-throughput-recovery from this entry on. Not re-baselined.",
++                "context_floor_max": "+13,767 — 230,705 → 244,472. REGRESSION, owned by road-to-agent-throughput-recovery from this entry on. Not re-baselined.",
++                "mean_batch_size": "1.01 → 1.15, in the gated direction (UP). Not raised: a ratchet is never tightened on a single local reading.",
++                "calls_per_request": "72.67 → 10.91. REPORTED ONLY — `user_requests` rose 42 → 267, the denominator effect `directions` names."
++            },
++            "gate_verdict": "exit 1, on `blocking_share` and `context_floor_max`."
++        },
++        {
++            "read_at": "2026-10-16",
++            "reason": "road-to-agent-throughput-recovery step 1.2 — the throughput baseline the roadmap's goal is judged against, registered here rather than in a new baseline file. It is a git reading, not a transcript reading, so it carries its own window shape and does not feed `--against-baseline`.",
++            "kind": "throughput-git",
++            "invocation": "first-parent commits of `main` @ 085ec41ff, dated in Europe/Berlin; a night is 22:00–08:00, a commit before 08:00 belongs to the previous evening's night; only nights with at least one commit count. Net ticked steps = added minus removed `- [x]` lines under `agents/roadmaps/` in each commit's first-parent diff. A merge commit is a commit with more than one parent.",
++            "corpus": {
++                "window": "nights 2026-09-28 .. 2026-10-13",
++                "ref": "085ec41ff",
++                "nights_with_activity": 14,
++                "commits": 108,
++                "true_merge_commits": 13,
++                "net_ticked_steps": 306,
++                "note": "Ratios recompute from this block: 108 / 14 = 7.71 commits per night; 306 / 14 = 21.86 net ticked steps per night. Since October nearly every PR lands as a squash commit, so `commits` counts merged changes and `true_merge_commits` does not. Same method over 2026-08-10..23: 13 nights, 148 commits, 794 net ticked (11.4 / 61.1); over 2026-08-24..09-06: 13 nights, 98 commits, 420 net ticked (7.5 / 32.3)."
++            },
++            "reading": {
++                "merged_changes_per_night": 7.71,
++                "net_ticked_steps_per_night": 21.86
++            },
++            "directions": {
++                "merged_changes_per_night": "UP",
++                "net_ticked_steps_per_night": "UP"
++            }
+         }
+     ]
+ }
+diff --git a/src/scripts/_lib/turnaround_throughput.ts b/src/scripts/_lib/turnaround_throughput.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..76a0c05358d4e3b122131dda960cf0566aa7dd25
+--- /dev/null
++++ b/src/scripts/_lib/turnaround_throughput.ts
+@@ -0,0 +1,317 @@
++/**
++ * Throughput figures for `probe_turnaround`. Pure classifiers and tallies; the
++ * transcript pass that feeds them stays in `probe_turnaround.ts`, so there is
++ * one reader, not two.
++ *
++ * Every table here is EXCLUSIVE and carries an `unknown` row: a row that matches
++ * no rule is counted there, never dropped, and `checkSum` refuses a table whose
++ * class rows do not add up to its total. A table that double-counts reads as a
++ * larger effect than the corpus holds, which is the defect the 2026-10-14
++ * analysis carried in three of its tables.
++ */
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++// ---------------------------------------------------------------------------
++// Turn ends — how a run hands control back
++// ---------------------------------------------------------------------------
++
++export const TURN_END_CLASSES = ['structured-ask', 'plain-ask', 'other', 'unknown'] as const;
++export type TurnEndClass = (typeof TURN_END_CLASSES)[number];
++
++const OPTION_LINE = /^\s*\d+[.)]\s+\S/;
++const RECOMMENDATION_LINE = /^\s*(?:>\s*)?(?:\*\*)?(?:Recommendation|Empfehlung)\b/i;
++
++/** Text outside fenced code blocks; a `?` inside a fence asks nobody anything. */
++function prose(text: string): string[] {
++    const out: string[] = [];
++    let fenced = false;
++    for (const line of text.split('\n')) {
++        if (/^\s*(```|~~~)/.test(line)) {
++            fenced = !fenced;
++            continue;
++        }
++        if (!fenced) out.push(line);
++    }
++    return out;
++}
++
++/**
++ * A structured ask is the numbered-options shape `user-interaction` prescribes:
++ * at least two option lines AND a recommendation line. A plain-text ask is a
++ * turn whose last prose line ends in a question mark. Precedence is fixed, so a
++ * structured ask that also ends in `?` is counted once.
++ */
++export function classifyTurnEnd(text: string): TurnEndClass {
++    const lines = prose(text);
++    const options = lines.filter((l) => OPTION_LINE.test(l)).length;
++    if (options >= 2 && lines.some((l) => RECOMMENDATION_LINE.test(l))) return 'structured-ask';
++    const last = [...lines].reverse().find((l) => l.trim() !== '');
++    if (last !== undefined && /[?？]\s*$/.test(last)) return 'plain-ask';
++    return 'other';
++}
++
++// ---------------------------------------------------------------------------
++// Usage-limit pauses
++// ---------------------------------------------------------------------------
++
++type Entry = Record<string, unknown>;
++
++function informational(e: Entry): string | null {
++    if (e['type'] !== 'system' || e['subtype'] !== 'informational') return null;
++    return typeof e['content'] === 'string' ? e['content'] : null;
++}
++
++/** The host's own banner when a run is suspended on the account's usage limit. */
++export function isUsageLimitPause(e: Entry): boolean {
++    return /^Usage limit reached\b/.test(informational(e) ?? '');
++}
++
++/** The banner that ends a pause. */
++export function isUsageLimitReset(e: Entry): boolean {
++    return /^Usage limit reset\b/.test(informational(e) ?? '');
++}
++
++// ---------------------------------------------------------------------------
++// Nights
++// ---------------------------------------------------------------------------
++
++const BERLIN = new Intl.DateTimeFormat('en-CA', {
++    timeZone: 'Europe/Berlin',
++    year: 'numeric',
++    month: '2-digit',
++    day: '2-digit',
++    hour: '2-digit',
++    hourCycle: 'h23',
++});
++
++/**
++ * The night an instant belongs to, as the `YYYY-MM-DD` of the evening it began,
++ * or `null` for day time. A night is 22:00–08:00 Europe/Berlin, the window the
++ * owner's question was asked about; an instant before 08:00 belongs to the
++ * previous evening.
++ */
++export function nightKey(epochMs: number): string | null {
++    const parts = Object.fromEntries(BERLIN.formatToParts(new Date(epochMs)).map((p) => [p.type, p.value]));
++    const hour = Number(parts['hour']);
++    const date = `${String(parts['year'])}-${String(parts['month'])}-${String(parts['day'])}`;
++    if (hour >= 22) return date;
++    if (hour >= 8) return null;
++    const prev = new Date(`${date}T12:00:00Z`);
++    prev.setUTCDate(prev.getUTCDate() - 1);
++    return prev.toISOString().slice(0, 10);
++}
++
++// ---------------------------------------------------------------------------
++// Git throughput
++// ---------------------------------------------------------------------------
++
++export interface CommitFacts {
++    epochMs: number;
++    parents: number;
++    /** Added minus removed checked-step lines in the roadmap tree. */
++    ticked: number;
++    /** Roadmap files added or renamed into the archive directory. */
++    archived: number;
++}
++
++export interface NightTally {
++    nights: number;
++    commits: number;
++    trueMerges: number;
++    netTicked: number;
++    archived: number;
++}
++
++/** Totals over the nights in `[from, to]` that carry at least one commit. */
++export function tallyNights(commits: readonly CommitFacts[], from: string, to: string): NightTally {
++    const nights = new Set<string>();
++    const t: NightTally = { nights: 0, commits: 0, trueMerges: 0, netTicked: 0, archived: 0 };
++    for (const c of commits) {
++        const n = nightKey(c.epochMs);
++        if (n === null || n < from || n > to) continue;
++        nights.add(n);
++        t.commits += 1;
++        if (c.parents > 1) t.trueMerges += 1;
++        t.netTicked += c.ticked;
++        t.archived += c.archived;
++    }
++    t.nights = nights.size;
++    return t;
++}
++
++const TICK_ADDED = /^\+\s*- \[x\]/i;
++const TICK_REMOVED = /^-\s*- \[x\]/i;
++
++/**
++ * First-parent commit facts of `ref` between two dates, read from git. A merge
++ * commit is diffed against its first parent, so a squash and a true merge of the
++ * same change count the same ticks.
++ */
++export function readCommitFacts(repoRoot: string, ref: string, from: string, to: string): CommitFacts[] {
++    const since = new Date(`${from}T00:00:00Z`);
++    since.setUTCDate(since.getUTCDate() - 1);
++    const until = new Date(`${to}T00:00:00Z`);
++    until.setUTCDate(until.getUTCDate() + 2);
++    const range = [`--since=${since.toISOString()}`, `--until=${until.toISOString()}`];
++    const git = (args: string[]): string =>
++        execFileSync('git', ['-C', repoRoot, ...args], { maxBuffer: 1 << 30, encoding: 'utf8' });
++
++    const facts = new Map<string, CommitFacts>();
++    for (const row of git(['log', '--first-parent', ref, ...range, '--format=%H %ct %P']).split('\n')) {
++        const [sha, ct, ...parents] = row.trim().split(' ');
++        if (sha === undefined || sha === '' || ct === undefined) continue;
++        facts.set(sha, { epochMs: Number(ct) * 1000, parents: parents.length, ticked: 0, archived: 0 });
++    }
++    const patch = git(['log', '--first-parent', '-m', ref, ...range, '--format=%x00%H', '-p', '--no-color', '-U0', '--', 'agents/roadmaps']);
++    for (const chunk of patch.split('\0').slice(1)) {
++        const [head, ...lines] = chunk.split('\n');
++        const f = facts.get((head ?? '').trim());
++        if (f === undefined) continue;
++        for (const l of lines) {
++            if (TICK_ADDED.test(l)) f.ticked += 1;
++            else if (TICK_REMOVED.test(l)) f.ticked -= 1;
++        }
++    }
++    const status = git(['log', '--first-parent', '-m', ref, ...range, '--format=%x00%H', '--name-status', '-M', '--', 'agents/roadmaps/archive']);
++    for (const chunk of status.split('\0').slice(1)) {
++        const [head, ...lines] = chunk.split('\n');
++        const f = facts.get((head ?? '').trim());
++        if (f === undefined) continue;
++        for (const l of lines) {
++            const cols = l.split('\t');
++            const dest = cols[cols.length - 1] ?? '';
++            if (/^(A|R\d*)$/.test(cols[0] ?? '') && /^agents\/roadmaps\/archive\/[^/]+\.md$/.test(dest)) f.archived += 1;
++        }
++    }
++    return [...facts.values()];
++}
++
++// ---------------------------------------------------------------------------
++// Exclusive tallies and the sum check
++// ---------------------------------------------------------------------------
++
++export interface Tally {
++    total: number;
++    rows: Record<string, number>;
++}
++
++/**
++ * Count `items` into `classes` plus `unknown`. The labeller may return any
++ * number of labels; an item with none lands in `unknown`, and an item with two
++ * is counted in both, which is exactly what `checkSum` exists to catch.
++ */
++export function tallyExclusive<T>(items: readonly T[], classes: readonly string[], label: (item: T) => readonly string[]): Tally {
++    const rows: Record<string, number> = Object.fromEntries([...classes, 'unknown'].map((c) => [c, 0]));
++    for (const item of items) {
++        const labels = label(item);
++        if (labels.length === 0) rows['unknown'] = (rows['unknown'] ?? 0) + 1;
++        for (const l of labels) rows[l] = (rows[l] ?? 0) + 1;
++    }
++    return { total: items.length, rows };
++}
++
++/** `null` when the class rows add up to the total, else the discrepancy. */
++export function checkSum(name: string, rows: Readonly<Record<string, number>>, total: number): string | null {
++    const sum = Object.values(rows).reduce((a, b) => a + b, 0);
++    return sum === total ? null : `${name}: rows sum to ${String(sum)}, total is ${String(total)}`;
++}
++
++// ---------------------------------------------------------------------------
++// Estate and standing-context figures
++// ---------------------------------------------------------------------------
++
++export interface EstateFigures {
++    ready: number;
++    /** `ready` roadmaps that carry no ticked step. */
++    atZero: number;
++    /** Open steps across every roadmap with a `status:` line. */
++    openSteps: number;
++    /** Open steps whose text, up to the next checkbox or heading, names no `blocked-by`. */
++    unblocked: number;
++}
++
++const ANY_CHECKBOX = /^\s*- \[[ x~-]\]/i;
++
++/** Estate figures over the roadmap files directly under `dir`. */
++export function readyAtZero(dir: string): EstateFigures {
++    const out: EstateFigures = { ready: 0, atZero: 0, openSteps: 0, unblocked: 0 };
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md'));
++    } catch {
++        return out;
++    }
++    for (const n of names) {
++        const body = fs.readFileSync(path.join(dir, n), 'utf8');
++        if (!/^status:/m.test(body)) continue;
++        if (/^status:\s*ready\s*$/m.test(body)) {
++            out.ready += 1;
++            if (!/^\s*- \[x\]/im.test(body)) out.atZero += 1;
++        }
++        const lines = body.split('\n');
++        for (let i = 0; i < lines.length; i++) {
++            if (!/^\s*- \[ \]/.test(lines[i] as string)) continue;
++            let text = lines[i] as string;
++            for (let j = i + 1; j < lines.length && !ANY_CHECKBOX.test(lines[j] as string) && !/^#/.test(lines[j] as string); j++) {
++                text += `\n${lines[j] as string}`;
++            }
++            out.openSteps += 1;
++            if (!/blocked-by/.test(text)) out.unblocked += 1;
++        }
++    }
++    return out;
++}
++
++/**
++ * Rule files in a host rule directory, and how many load unconditionally: the
++ * host reads `paths:` as the only activation key, so a file without one in its
++ * frontmatter is loaded on every turn.
++ */
++export function standingRules(dir: string): { files: number; withoutPaths: number } {
++    const out = { files: 0, withoutPaths: 0 };
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md'));
++    } catch {
++        return out;
++    }
++    for (const n of names) {
++        out.files += 1;
++        const fm = /^---\n([\s\S]*?)\n---/.exec(fs.readFileSync(path.join(dir, n), 'utf8'));
++        if (fm === null || !/^paths:/m.test(fm[1] ?? '')) out.withoutPaths += 1;
++    }
++    return out;
++}
++
++/** Median of a list, `null` when empty. */
++export function median(xs: readonly number[]): number | null {
++    if (xs.length === 0) return null;
++    const s = [...xs].sort((a, b) => a - b);
++    const mid = Math.floor(s.length / 2);
++    return s.length % 2 === 1 ? (s[mid] as number) : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
++}
++
++/**
++ * Wall-clock minutes of successful pull-request runs of one workflow, from the
++ * CI API through `gh`. `updatedAt − startedAt` is the duration to within the
++ * run's last status write, the finest resolution the listing offers.
++ */
++export function readCiMinutes(repoRoot: string, workflow: string, from: string, to: string): number[] {
++    const raw = execFileSync(
++        'gh',
++        [
++            'run', 'list', '--workflow', workflow, '--event', 'pull_request', '--status', 'success',
++            '--created', `${from}..${to}`, '--limit', '1000', '--json', 'startedAt,updatedAt',
++        ],
++        { cwd: repoRoot, encoding: 'utf8', maxBuffer: 1 << 26 },
++    );
++    const out: number[] = [];
++    for (const r of JSON.parse(raw) as Array<{ startedAt?: string; updatedAt?: string }>) {
++        const a = Date.parse(r.startedAt ?? '');
++        const b = Date.parse(r.updatedAt ?? '');
++        if (!Number.isNaN(a) && !Number.isNaN(b) && b >= a) out.push((b - a) / 60_000);
++    }
++    return out;
++}
+diff --git a/src/scripts/probe_turnaround.ts b/src/scripts/probe_turnaround.ts
+index 5c52c3dd64828b9269a380aace1807b7249fe703..c29a39e1ed7c03cee84820ea349ff2ef1165d8df 100644
+--- a/src/scripts/probe_turnaround.ts
++++ b/src/scripts/probe_turnaround.ts
+@@ -21,6 +21,11 @@
+  *   - the >60 s blocking tail and its share of tool time  (F2)
+  *   - that tail split by cause, `unknown` always printed (road-to-blocking-time-by-cause)
+  *   - the first-call context floor         (F3 cross-check)
++ *   - turn ends by ask shape, usage-limit pauses split night/day, and turn-end
++ *     refusals by detector — every class table with an `unknown` row and a sum
++ *     check
++ *   - with `--git FROM..TO`, merged changes, true merges, net ticked steps and
++ *     archived roadmaps per night window
+  *
+  * A MEASUREMENT, NOT A GATE — by default. `--against-baseline` compares against
+  * `src/config/turnaround-budget.json` and is the only mode that can exit
+@@ -33,16 +38,37 @@
+  *   ./scripts-run src/scripts/probe_turnaround [--store PATH] [--limit N]
+  *   ./scripts-run src/scripts/probe_turnaround --json
+  *   ./scripts-run src/scripts/probe_turnaround --against-baseline
++ *   ./scripts-run src/scripts/probe_turnaround --workspace PATH --git 2026-09-28..2026-10-13 [--ref main]
+  *
+  * The MEASURING session is excluded by default — see `recentSessions`.
+  *
+- * Exit codes: 0 = reported (or within baseline) · 1 = baseline regression, or an
+- * empty corpus under `--against-baseline` · 2 = usage error.
++ * Exit codes: 0 = reported (or within baseline) · 1 = baseline regression, an
++ * empty corpus under `--against-baseline`, or a class table whose rows do not
++ * sum to its total · 2 = usage error.
+  */
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
++import { collectRefusalStats, DETECTOR_IDS, type RefusalStats } from './_lib/turn_end_refusals.js';
++import {
++    checkSum,
++    classifyTurnEnd,
++    median,
++    readCiMinutes,
++    readyAtZero,
++    standingRules,
++    isUsageLimitPause,
++    isUsageLimitReset,
++    nightKey,
++    readCommitFacts,
++    type EstateFigures,
++    type NightTally,
++    type Tally,
++    tallyExclusive,
++    tallyNights,
++    TURN_END_CLASSES,
++} from './_lib/turnaround_throughput.js';
+ import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
+ 
+ const _FILE = fileURLToPath(import.meta.url);
+@@ -200,6 +226,12 @@ export function classifyBlockingCall(tool: string, input: unknown): BlockingCaus
+     return 'unknown';
+ }
+ 
++/** A shell call that pushes: any segment whose command is `git push`. */
++export function isGitPushCall(tool: string, input: unknown): boolean {
++    if (tool !== 'Bash' || !isObj(input) || typeof input['command'] !== 'string') return false;
++    return shellSegments(input['command']).some((raw) => /^git push\b/.test(commandHead(raw.trim().replace(LOOP_KEYWORD, ''))));
++}
++
+ /**
+  * The in-memory record of one blocking call. `summary` is bounded and never
+  * printed or serialised by `main`: command text names local paths and hosts,
+@@ -309,8 +341,23 @@ export function measure(files: readonly string[]): Turnaround {
+     return measureDetailed(files).turnaround;
+ }
+ 
++/** Aggregate only: counts and minutes, never text. */
++export interface Throughput {
++    /** The last assistant text before each real user request, and at end of file. */
++    turnEnds: Tally;
++    pauses: { total: number; night: number; day: number; pausedMinutes: number; unresolved: number };
++    /** `git push` calls and their median wall-clock, pre-push hook included. */
++    push: { calls: number; medianSeconds: number | null };
++}
++
++const TURN_END_NAMED = TURN_END_CLASSES.filter((c) => c !== 'unknown');
++
+ /** `measure`, plus the per-call blocking records the cause table is built from. */
+-export function measureDetailed(files: readonly string[]): { turnaround: Turnaround; blocking: BlockingCall[] } {
++export function measureDetailed(files: readonly string[]): {
++    turnaround: Turnaround;
++    blocking: BlockingCall[];
++    throughput: Throughput;
++} {
+     const requestIds = new Set<string>();
+     /** requestId → tool_use blocks in it. */
+     const batch = new Map<string, number>();
+@@ -323,10 +370,15 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
+     const contextFloors: number[] = [];
+     let userRequests = 0;
+     let sessions = 0;
++    const turnEndTexts: string[] = [];
++    const pauses: Throughput['pauses'] = { total: 0, night: 0, day: 0, pausedMinutes: 0, unresolved: 0 };
++    const pushSeconds: number[] = [];
+ 
+     for (const file of files) {
+         let sawFloor = false;
+         let sawAny = false;
++        let lastText: string | null = null;
++        let pausedAt: number | null = null;
+         for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+             if (!line.trim()) continue;
+             let e: Entry;
+@@ -339,13 +391,33 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
+             sawAny = true;
+             const msg = e['message'];
+ 
++            if (isUsageLimitPause(e)) {
++                const t = ms(e['timestamp']);
++                pauses.total += 1;
++                if (t !== null && nightKey(t) !== null) pauses.night += 1;
++                else pauses.day += 1;
++                if (pausedAt !== null) pauses.unresolved += 1;
++                pausedAt = t;
++                continue;
++            }
++            if (isUsageLimitReset(e)) {
++                const t = ms(e['timestamp']);
++                if (pausedAt !== null && t !== null) pauses.pausedMinutes += (t - pausedAt) / 60_000;
++                pausedAt = null;
++                continue;
++            }
++
+             if (e['type'] === 'user') {
+                 // The SAME predicate the conformance scan uses, imported rather
+                 // than re-typed: a skill body and a slash-command header arrive
+                 // in the user role and are not requests. Counting them would
+                 // deflate calls-per-request by inventing a denominator.
+                 const text = userText(e);
+-                if (text !== null && !isInjectedBody(text)) userRequests += 1;
++                if (text !== null && !isInjectedBody(text)) {
++                    userRequests += 1;
++                    if (lastText !== null) turnEndTexts.push(lastText);
++                    lastText = null;
++                }
+                 if (isObj(msg) && Array.isArray(msg['content'])) {
+                     const at = ms(e['timestamp']);
+                     for (const b of msg['content']) {
+@@ -358,6 +430,7 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
+                         emittedAt.delete(id);
+                         const call = calledWith.get(id);
+                         calledWith.delete(id);
++                        if (call !== undefined && isGitPushCall(call.tool, call.input)) pushSeconds.push(seconds);
+                         if (seconds > BLOCKING_SECONDS) {
+                             const tool = call?.tool ?? '';
+                             blockingCalls.push({
+@@ -392,6 +465,9 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
+             const at = ms(e['timestamp']);
+             let n = 0;
+             for (const b of msg['content']) {
++                if (isObj(b) && b['type'] === 'text' && typeof b['text'] === 'string' && b['text'].trim() !== '') {
++                    lastText = b['text'];
++                }
+                 if (!isObj(b) || b['type'] !== 'tool_use') continue;
+                 n += 1;
+                 const id = String(b['id'] ?? '');
+@@ -405,6 +481,8 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
+             }
+         }
+         if (sawAny) sessions += 1;
++        if (lastText !== null) turnEndTexts.push(lastText);
++        if (pausedAt !== null) pauses.unresolved += 1;
+     }
+ 
+     const toolCalls = [...batch.values()].reduce((a, b) => a + b, 0);
+@@ -435,7 +513,13 @@ export function measureDetailed(files: readonly string[]): { turnaround: Turnaro
+         contextFloorMax: contextFloors.length === 0 ? 0 : Math.max(...contextFloors),
+         blockingByCause: byCause,
+     };
+-    return { turnaround, blocking: blockingCalls };
++    pauses.pausedMinutes = Math.round(pauses.pausedMinutes);
++    const throughput: Throughput = {
++        turnEnds: tallyExclusive(turnEndTexts, TURN_END_NAMED, (t) => [classifyTurnEnd(t)]),
++        pauses,
++        push: { calls: pushSeconds.length, medianSeconds: median(pushSeconds) },
++    };
++    return { turnaround, blocking: blockingCalls, throughput };
+ }
+ 
+ export interface Budget {
+@@ -493,6 +577,56 @@ export function compare(t: Turnaround, b: Budget): string[] {
+     return out;
+ }
+ 
++type GitReading = NightTally & { range: string; ref: string };
++
++interface Standing {
++    estate: EstateFigures;
++    rules: { files: number; withoutPaths: number };
++    ci: Array<{ range: string; workflow: string; runs: number; medianMinutes: number | null }>;
++}
++
++const WINDOW = /^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$/;
++
++/** `FROM..TO[,FROM..TO…]` as date pairs, or `null` when any window is malformed. */
++export function parseWindows(value: string): Array<[string, string]> | null {
++    const out: Array<[string, string]> = [];
++    for (const w of value.split(',')) {
++        const m = WINDOW.exec(w.trim());
++        if (m === null) return null;
++        out.push([m[1] as string, m[2] as string]);
++    }
++    return out;
++}
++
++function renderThroughput(tp: Throughput, refusals: RefusalStats, git: readonly GitReading[], st: Standing): string {
++    const p50 = (x: number | null, unit: string): string => (x === null ? 'n/a' : `${String(Math.round(x * 10) / 10)} ${unit}`);
++    const per = (n: number, d: number): string => (d === 0 ? '0' : String(Math.round((n / d) * 10) / 10));
++    const lines = [
++        `  turn ends                    ${String(tp.turnEnds.total)}`,
++        ...Object.entries(tp.turnEnds.rows).map(([c, n]) => `    ${c.padEnd(16)}${String(n)}`),
++        `  usage-limit pauses           ${String(tp.pauses.total)} (night ${String(tp.pauses.night)}, day ${String(tp.pauses.day)}), ` +
++            `${String(tp.pauses.pausedMinutes)} min paused, ${String(tp.pauses.unresolved)} without a reset`,
++        `  turn-end refusals            ${String(refusals.total)} in ${String(refusals.sessionsWithRefusals)} session(s) with a refusal`,
++        ...DETECTOR_IDS.map((d) => `    ${d.padEnd(18)}${String(refusals.byDetector[d])}`),
++        `  git push                     ${String(tp.push.calls)} call(s), p50 ${p50(tp.push.medianSeconds, 's')}`,
++        `  ready roadmaps at 0 ticked   ${String(st.estate.atZero)} of ${String(st.estate.ready)}`,
++        `  open steps without blocked-by ${String(st.estate.unblocked)} of ${String(st.estate.openSteps)}`,
++        `  standing rule files          ${String(st.rules.files)}, ${String(st.rules.withoutPaths)} without \`paths:\``,
++    ];
++    for (const ci of st.ci) {
++        lines.push(`  ${ci.workflow} ${ci.range}   ${String(ci.runs)} successful PR run(s), p50 ${p50(ci.medianMinutes, 'min')}`);
++    }
++    for (const g of git) {
++        lines.push(
++            `  git ${g.range} @ ${g.ref} · ${String(g.nights)} night(s) with activity (22:00–08:00 Europe/Berlin)`,
++            `    merged changes ${String(g.commits)} (${per(g.commits, g.nights)}/night) · true merges ${String(g.trueMerges)}`,
++            `    net ticked steps ${String(g.netTicked)} (${per(g.netTicked, g.nights)}/night) · roadmaps archived ${String(g.archived)}`,
++        );
++    }
++    lines.push('');
++    return lines.join('\n');
++}
++
+ function render(t: Turnaround, store: string): string {
+     const pct = (x: number): string => `${String(Math.round(x * 1000) / 10)} %`;
+     return [
+@@ -516,7 +650,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
+     };
+     for (const a of argv) {
+-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '-h', '--help'].includes(a)) {
++        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '-h', '--help'].includes(a)) {
+             if (!argv.includes('--store') && !argv.includes('--limit')) {
+                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
+                 return 2;
+@@ -525,7 +659,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     }
+     if (argv.includes('-h') || argv.includes('--help')) {
+         process.stdout.write(
+-            'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n',
++            'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
++                '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n',
+         );
+         return 0;
+     }
+@@ -535,14 +670,57 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+         process.stderr.write('probe_turnaround: --limit needs a positive integer\n');
+         return 2;
+     }
++    const gitWindows = argv.includes('--git') ? parseWindows(arg('--git', '')) : [];
++    const ciWindows = argv.includes('--ci') ? parseWindows(arg('--ci', '')) : [];
++    if (gitWindows === null || ciWindows === null) {
++        process.stderr.write('probe_turnaround: --git and --ci need FROM..TO[,FROM..TO…] as YYYY-MM-DD..YYYY-MM-DD\n');
++        return 2;
++    }
+     const files = recentSessions(store, limit, argv.includes('--include-current'));
+-    const t = files.length === 0 ? ZERO : measure(files);
++    const detailed = files.length === 0 ? null : measureDetailed(files);
++    const t = detailed?.turnaround ?? ZERO;
++    const tp: Throughput = detailed?.throughput ?? {
++        turnEnds: tallyExclusive([], TURN_END_NAMED, () => []),
++        pauses: { total: 0, night: 0, day: 0, pausedMinutes: 0, unresolved: 0 },
++        push: { calls: 0, medianSeconds: null },
++    };
++    const workspace = arg('--workspace', REPO_ROOT);
++    const rulesDir = arg('--rules-dir', path.join(process.env['HOME'] ?? '', '.claude', 'rules'));
++    const ci: Standing['ci'] = ciWindows.map(([from, to]) => {
++        const minutes = readCiMinutes(REPO_ROOT, 'tests.yml', from, to);
++        return { range: `${from}..${to}`, workflow: 'tests.yml', runs: minutes.length, medianMinutes: median(minutes) };
++    });
++    const standing: Standing = {
++        estate: readyAtZero(path.join(REPO_ROOT, 'agents', 'roadmaps')),
++        rules: standingRules(rulesDir),
++        ci,
++    };
++    const refusals = collectRefusalStats(workspace);
++    const ref = arg('--ref', 'HEAD');
++    const git: GitReading[] = gitWindows.map(([from, to]) => ({
++        range: `${from}..${to}`,
++        ref,
++        ...tallyNights(readCommitFacts(REPO_ROOT, ref, from, to), from, to),
++    }));
+     const gating = argv.includes('--against-baseline');
+ 
+     if (argv.includes('--json')) {
+-        process.stdout.write(`${JSON.stringify({ store, ...t }, null, 2)}\n`);
++        const refusalSummary = { total: refusals.total, sessions: refusals.sessionsWithRefusals, byDetector: refusals.byDetector };
++        process.stdout.write(`${JSON.stringify({ store, ...t, throughput: tp, refusals: refusalSummary, git, standing }, null, 2)}\n`);
+     } else {
+         process.stdout.write(render(t, store));
++        process.stdout.write(renderThroughput(tp, refusals, git, standing));
++    }
++
++    const sumErrors = [
++        checkSum('turn ends', tp.turnEnds.rows, tp.turnEnds.total),
++        checkSum('usage-limit pauses', { night: tp.pauses.night, day: tp.pauses.day }, tp.pauses.total),
++        checkSum('turn-end refusals', refusals.byDetector, refusals.total),
++        checkSum('blocking tail', Object.fromEntries(BLOCKING_CAUSES.map((c) => [c, t.blockingByCause[c].calls])), t.blockingCalls),
++    ].filter((x): x is string => x !== null);
++    if (sumErrors.length > 0) {
++        for (const err of sumErrors) process.stderr.write(`❌  probe_turnaround: ${err}\n`);
++        return 1;
+     }
+ 
+     if (!gating) {
+diff --git a/tests/scripts/probe_turnaround_throughput.test.ts b/tests/scripts/probe_turnaround_throughput.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..26f8587d8c3a69b1dea59fe4d1cbd8ef27adee44
+--- /dev/null
++++ b/tests/scripts/probe_turnaround_throughput.test.ts
+@@ -0,0 +1,246 @@
++// Tests for the throughput extension of src/scripts/probe_turnaround.ts —
++// road-to-agent-throughput-recovery step 1.1.
++//
++// Each classifier rule gets a case that only that rule can satisfy, so
++// neutralising one rule turns exactly its case red.
++import * as fs from "node:fs";
++import * as os from "node:os";
++import * as path from "node:path";
++
++import { afterEach, describe, expect, it, vi } from "vitest";
++
++import {
++  checkSum,
++  classifyTurnEnd,
++  isUsageLimitPause,
++  isUsageLimitReset,
++  median,
++  nightKey,
++  readyAtZero,
++  standingRules,
++  tallyExclusive,
++  tallyNights,
++  TURN_END_CLASSES,
++} from "../../src/scripts/_lib/turnaround_throughput.js";
++import { isGitPushCall, main, measureDetailed, parseWindows } from "../../src/scripts/probe_turnaround.js";
++
++describe("classifyTurnEnd", () => {
++  it("reads numbered options plus a recommendation line as a structured ask", () => {
++    const text = "Two ways:\n\n1. Ship it\n2. Park it\n\n**Recommendation: 1** — smaller.";
++    expect(classifyTurnEnd(text)).toBe("structured-ask");
++  });
++
++  it("reads the German recommendation label too", () => {
++    expect(classifyTurnEnd("1. A\n2. B\n\nEmpfehlung: 2")).toBe("structured-ask");
++  });
++
++  it("does not read numbered options without a recommendation line as structured", () => {
++    expect(classifyTurnEnd("Steps done:\n1. sync\n2. build")).toBe("other");
++  });
++
++  it("does not read a lone recommendation line without two options as structured", () => {
++    expect(classifyTurnEnd("1. Ship it\n\nRecommendation: ship it.")).toBe("other");
++  });
++
++  it("reads a closing question as a plain-text ask", () => {
++    expect(classifyTurnEnd("Done with the sync.\n\nShall I open the PR now?")).toBe("plain-ask");
++  });
++
++  it("ignores a question mark inside a trailing code fence", () => {
++    expect(classifyTurnEnd("Ran it.\n\n```\nwhy?\n```")).toBe("other");
++  });
++
++  it("reads a summary as other", () => {
++    expect(classifyTurnEnd("PR #12 is green.\nhttps://example.invalid/pr/12")).toBe("other");
++  });
++});
++
++describe("usage-limit events", () => {
++  it("recognises the host's pause and reset banners and nothing else", () => {
++    expect(isUsageLimitPause({ type: "system", subtype: "informational", content: "Usage limit reached · continuing automatically at 2:50am" })).toBe(true);
++    expect(isUsageLimitPause({ type: "system", subtype: "informational", content: "Usage limit reached again after you continued · continuing" })).toBe(true);
++    expect(isUsageLimitPause({ type: "user", content: "Usage limit reached" })).toBe(false);
++    expect(isUsageLimitReset({ type: "system", subtype: "informational", content: "Usage limit reset · continuing automatically" })).toBe(true);
++    expect(isUsageLimitReset({ type: "system", subtype: "informational", content: "Usage limit reached · x" })).toBe(false);
++  });
++});
++
++describe("nightKey", () => {
++  it("assigns 22:00-08:00 Europe/Berlin to the evening it started", () => {
++    // 2026-10-02T23:30 Berlin (CEST, UTC+2) = 21:30Z
++    expect(nightKey(Date.parse("2026-10-02T21:30:00Z"))).toBe("2026-10-02");
++    // 2026-10-03T03:00 Berlin = 01:00Z belongs to the night of 10-02
++    expect(nightKey(Date.parse("2026-10-03T01:00:00Z"))).toBe("2026-10-02");
++    // 2026-10-03T12:00 Berlin is day
++    expect(nightKey(Date.parse("2026-10-03T10:00:00Z"))).toBeNull();
++  });
++
++  it("follows the winter offset", () => {
++    // 2026-12-01T22:30 Berlin (CET, UTC+1) = 21:30Z; 21:30Z in summer would be 23:30
++    expect(nightKey(Date.parse("2026-12-01T21:30:00Z"))).toBe("2026-12-01");
++    // 2026-12-01T21:30 Berlin = 20:30Z is still evening, not night
++    expect(nightKey(Date.parse("2026-12-01T20:30:00Z"))).toBeNull();
++  });
++});
++
++describe("tallyNights", () => {
++  it("counts merged changes, true merges, net ticks and archives per active night", () => {
++    const night = Date.parse("2026-10-02T22:00:00Z"); // 00:00 Berlin, night of 10-02
++    const day = Date.parse("2026-10-03T10:00:00Z");
++    const next = Date.parse("2026-10-03T21:00:00Z"); // 23:00 Berlin, night of 10-03
++    const r = tallyNights(
++      [
++        { epochMs: night, parents: 1, ticked: 5, archived: 1 },
++        { epochMs: night + 60_000, parents: 2, ticked: -1, archived: 0 },
++        { epochMs: day, parents: 1, ticked: 40, archived: 3 },
++        { epochMs: next, parents: 1, ticked: 2, archived: 0 },
++      ],
++      "2026-10-01",
++      "2026-10-03",
++    );
++    expect(r).toEqual({ nights: 2, commits: 3, trueMerges: 1, netTicked: 6, archived: 1 });
++  });
++
++  it("drops nights outside the window", () => {
++    const r = tallyNights([{ epochMs: Date.parse("2026-09-30T22:00:00Z"), parents: 1, ticked: 9, archived: 0 }], "2026-10-01", "2026-10-03");
++    expect(r.nights).toBe(0);
++  });
++});
++
++describe("standing figures", () => {
++  it("counts ready roadmaps and those with no ticked step", () => {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-estate-"));
++    fs.writeFileSync(path.join(dir, "a.md"), "---\nstatus: ready\n---\n- [ ] one\n      blocked-by: x\n- [ ] two\n## H\nblocked-by: not a step\n");
++    fs.writeFileSync(path.join(dir, "b.md"), "---\nstatus: ready\n---\n- [x] one\n- [ ] two\n");
++    fs.writeFileSync(path.join(dir, "c.md"), "---\nstatus: draft\n---\n- [ ] one\n");
++    expect(readyAtZero(dir)).toEqual({ ready: 2, atZero: 1, openSteps: 4, unblocked: 3 });
++  });
++
++  it("counts rule files without a frontmatter paths key as standing", () => {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-rules-"));
++    fs.writeFileSync(path.join(dir, "scoped.md"), "---\npaths:\n  - src/**\n---\nbody\n");
++    fs.writeFileSync(path.join(dir, "always.md"), "---\ntype: always\n---\nbody mentions paths: here\n");
++    fs.writeFileSync(path.join(dir, "bare.md"), "no frontmatter\n");
++    expect(standingRules(dir)).toEqual({ files: 3, withoutPaths: 2 });
++  });
++
++  it("takes the median of odd and even lists, null when empty", () => {
++    expect(median([3, 1, 2])).toBe(2);
++    expect(median([4, 1, 3, 2])).toBe(2.5);
++    expect(median([])).toBeNull();
++  });
++
++  it("reads a push behind a cd or a global git option, and nothing else", () => {
++    expect(isGitPushCall("Bash", { command: "cd ../lane && git -C x push -u origin b" })).toBe(true);
++    expect(isGitPushCall("Bash", { command: "git fetch origin" })).toBe(false);
++    expect(isGitPushCall("Bash", { command: "git commit -m 'then git push'" })).toBe(false);
++    expect(isGitPushCall("Read", { command: "git push" })).toBe(false);
++  });
++});
++
++describe("parseWindows", () => {
++  it("reads one or several windows and refuses a malformed one", () => {
++    expect(parseWindows("2026-08-10..2026-08-23")).toEqual([["2026-08-10", "2026-08-23"]]);
++    expect(parseWindows("2026-08-10..2026-08-23,2026-09-28..2026-10-13")).toHaveLength(2);
++    expect(parseWindows("2026-08-10..2026-08-23,last-week")).toBeNull();
++  });
++});
++
++describe("sum check", () => {
++  it("passes when exclusive labels sum to the total", () => {
++    const t = tallyExclusive(["a", "b", "c"], ["x", "y"], (s) => [s === "a" ? "x" : "y"]);
++    expect(t.total).toBe(3);
++    expect(checkSum("fixture", t.rows, t.total)).toBeNull();
++  });
++
++  it("fails when a labeller hands one row two labels", () => {
++    const t = tallyExclusive(["a", "b"], ["x", "y"], (s) => (s === "a" ? ["x", "y"] : ["y"]));
++    expect(checkSum("fixture", t.rows, t.total)).toMatch(/fixture: rows sum to 3, total is 2/);
++  });
++
++  it("counts a row with no label as unknown rather than dropping it", () => {
++    const t = tallyExclusive(["a"], ["x"], () => []);
++    expect(t.rows["unknown"]).toBe(1);
++    expect(checkSum("fixture", t.rows, t.total)).toBeNull();
++  });
++});
++
++const T0 = Date.parse("2026-10-02T20:00:00.000Z"); // 22:00 Berlin
++const at = (s: number): string => new Date(T0 + s * 1000).toISOString();
++
++function writeStore(): string {
++  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-throughput-"));
++  const assistant = (rid: string, s: number, text: string): unknown => ({
++    type: "assistant",
++    requestId: rid,
++    timestamp: at(s),
++    message: { role: "assistant", content: [{ type: "text", text }] },
++  });
++  const user = (s: number, text: string): unknown => ({ type: "user", timestamp: at(s), message: { role: "user", content: text } });
++  const rows = [
++    user(0, "go"),
++    assistant("r1", 10, "1. A\n2. B\n\nRecommendation: 1"),
++    user(20, "1"),
++    assistant("r2", 30, "Done. Open the PR?"),
++    user(40, "ja"),
++    { type: "system", subtype: "informational", timestamp: at(50), content: "Usage limit reached · continuing automatically at 2:50am" },
++    { type: "system", subtype: "informational", timestamp: at(50 + 30 * 60), content: "Usage limit reset · continuing automatically" },
++    {
++      type: "assistant",
++      requestId: "r3a",
++      timestamp: at(55 + 30 * 60),
++      message: { role: "assistant", content: [{ type: "tool_use", id: "tp1", name: "Bash", input: { command: "git push -u origin b" } }] },
++    },
++    { type: "user", timestamp: at(57 + 30 * 60), message: { role: "user", content: [{ type: "tool_result", tool_use_id: "tp1", content: "ok" }] } },
++    assistant("r3", 60 + 30 * 60, "PR is green."),
++    // a day-time pause: 2026-10-03T12:00 Berlin
++    { type: "system", subtype: "informational", timestamp: "2026-10-03T10:00:00.000Z", content: "Usage limit reached · continuing automatically at 1:00pm" },
++  ];
++  fs.writeFileSync(path.join(dir, "s1.jsonl"), rows.map((r) => JSON.stringify(r)).join("\n"));
++  return dir;
++}
++
++describe("measureDetailed — throughput fields", () => {
++  it("classifies each turn end once and splits pauses night/day", () => {
++    const store = writeStore();
++    const { throughput } = measureDetailed([path.join(store, "s1.jsonl")]);
++    expect(throughput.turnEnds.total).toBe(3);
++    expect(throughput.turnEnds.rows).toEqual({ "structured-ask": 1, "plain-ask": 1, other: 1, unknown: 0 });
++    expect(throughput.pauses).toEqual({ total: 2, night: 1, day: 1, pausedMinutes: 30, unresolved: 1 });
++    expect(throughput.push).toEqual({ calls: 1, medianSeconds: 2 });
++    expect(TURN_END_CLASSES).toContain("unknown");
++  });
++});
++
++describe("main — the new sections", () => {
++  afterEach(() => vi.restoreAllMocks());
++
++  it("prints asks, pauses and refusals, and exits 0 in report mode", () => {
++    const store = writeStore();
++    const workspace = fs.mkdtempSync(path.join(os.tmpdir(), "probe-ws-"));
++    const stateDir = path.join(workspace, "agents", "runtime", "state", "turn-end-gate");
++    fs.mkdirSync(stateDir, { recursive: true });
++    fs.writeFileSync(
++      path.join(stateDir, "abc.json"),
++      JSON.stringify({ refused_at: "2026-10-02T21:00:00Z", refused_turn: 4, detector: "language", counts: { language: 2, verification: 1 } }),
++    );
++    let out = "";
++    vi.spyOn(process.stdout, "write").mockImplementation((s: string | Uint8Array) => {
++      out += String(s);
++      return true;
++    });
++    const rules = fs.mkdtempSync(path.join(os.tmpdir(), "probe-rules-"));
++    fs.writeFileSync(path.join(rules, "r.md"), "---\ntype: always\n---\n");
++    const code = main(["--store", store, "--include-current", "--workspace", workspace, "--rules-dir", rules]);
++    expect(code).toBe(0);
++    expect(out).toMatch(/turn ends\s+3/);
++    expect(out).toMatch(/structured-ask\s+1/);
++    expect(out).toMatch(/usage-limit pauses\s+2 \(night 1, day 1\)/);
++    expect(out).toMatch(/turn-end refusals\s+3 in 1 session/);
++    expect(out).toMatch(/language\s+2/);
++    expect(out).toMatch(/git push\s+1 call\(s\), p50 2 s/);
++    expect(out).toMatch(/standing rule files\s+1, 1 without/);
++    expect(out).toMatch(/ready roadmaps at 0 ticked\s+\d+ of \d+/);
++    expect(out).not.toMatch(/Open the PR/);
++  });
++});

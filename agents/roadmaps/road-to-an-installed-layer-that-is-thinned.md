@@ -347,6 +347,36 @@ Reproduced on 2026-10-01:
       > event that has not happened; what is corrected is where the event will
       > happen, which until now this file named wrongly.
 
+## Phase 4 — The host that is delivered to and may not be reading it
+
+Added by round `inbox-2026-10-t`. It is one defect on the surface this file
+already owns — what the install puts where — so it lands here as a phase
+rather than as a ninth roadmap.
+
+- [ ] **4.1 Establish what the host actually reads, before changing the
+      delivery.** `src/install/wizard-plan.ts:48` anchors this host at
+      `~/.codex/` and `:150` sends it the full skill bundle;
+      `docs/contracts/install-layout.md:152` records the delivered set as
+      `rules/, skills/, commands/, personas/`; `README.md:349` carries a ✅ for
+      it. What none of those establishes is that the host reads a markdown file
+      under that namespace as instructions rather than as execution policy, and
+      no `AGENTS.md` is written at the root it documents. Probe the real host
+      and record the answer.
+      verify: the finding lands under `agents/evidence/analysis/` with an
+      `evidence-type` marker, naming the host build it was taken against.
+- [ ] **4.2 Make the delivery match the reading, or make the claim match the
+      delivery.** If 4.1 shows the namespace is not read as instructions, write
+      what the host does read; if it shows the delivery is fine, correct the
+      round's finding in the same change. One of the two ships — a probe whose
+      outcome changes nothing was not worth taking.
+      verify: `README.md:349` and `docs/contracts/install-layout.md:152` agree
+      with the 4.1 record, asserted by a fixture over the two files.
+- [ ] **4.3 Do not generalise from one host.** The check added in 4.2 asserts
+      agreement between the claim and the delivery for this host only. Whether
+      other hosts have the same gap is a separate measurement and is not
+      assumed here.
+      verify: the fixture names the host it covers.
+
 ## What this roadmap deliberately does not do
 
 - No thinning of any other host (ADR-267).
@@ -409,13 +439,15 @@ Reproduced on 2026-10-01:
 | D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A missed trigger leaves a pointer where a body was | product | Prompt-only reach is 305/335; after thinning a miss costs the rule's mechanics in that session. | The consequence class keeps its law standing; 2.3 counts self-served reads; the rollback stays one setting. | Phase 2 — Records from opted-in machines |
 | 2 | The upgrade overwrites a consumer's edited rule | implementation | Converging an existing install rewrites files in place. | 1.3 preserves and reports user-modified files and fails its test if one is overwritten. | Phase 1 — An opt-in thinned install |
 | 3 | The host stops honouring user-layer files the way 2.1 recorded | implementation | Host versions change load semantics without notice. | 2.1 is per host version, and 3.2's report names the host version it read. | Phase 3 — The default, decided |
+| 4 | The 4.1 probe is taken once and read as a standing fact | implementation | One host build's reading of a namespace becomes a claim about the host. | 4.1 records the build it was taken against; 4.3 scopes the resulting check to that host by name and forbids generalising to others without their own measurement. | Phase 4 — The host that is delivered to and may not be reading it |
+| 5 | Changing the delivery breaks an install that works today | product | If 4.1 shows the namespace is read after all, a well-meant relocation would move files a host currently finds. | 4.2 is conditional on 4.1's outcome and ships whichever side is wrong — the claim or the delivery. Nothing moves before the probe. | Phase 4 — The host that is delivered to and may not be reading it |
 
 ## Acceptance Criteria
 

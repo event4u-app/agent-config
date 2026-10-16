@@ -61,6 +61,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import * as fs_atomic from '../_lib/fs_atomic.js';
+import * as global_deploy_inventory from '../_lib/global_deploy_inventory.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
 import { remove_managed_hooks } from '../_lib/claude_settings_hooks.js';
@@ -260,7 +261,33 @@ function _remove_project_marker(
     }
 }
 
-function _remove_global_content(
+/**
+ * Delete the files a previous global deploy RECORDED writing under `anchor`.
+ *
+ * This used to be `fs.rmSync(target, { recursive: true })` on the anchor
+ * itself. The anchors are whole host configuration roots — `~/.claude/`,
+ * `~/.codex/`, `~/.config/zed/` — so a purge took everything under them,
+ * whoever wrote it, including a host's own credentials file. That is not a
+ * quirk this port replicated from Python deliberately; it is a defect, and the
+ * ownership proof that fixes it has existed since the 2026-06 Zed fix:
+ * `global_deploy_inventory` records, per tool, the anchor plus the
+ * anchor-relative path of every file the deploy maintains there.
+ *
+ * Three properties, each one a thing the old code could not do:
+ *
+ * - **Only recorded paths are deleted.** `recorded_rel_files` returns the empty
+ *   set when the inventory's anchor does not match the one being purged, so a
+ *   moved anchor purges nothing rather than purging the wrong tree.
+ * - **An unreadable or empty record REFUSES.** There is deliberately no
+ *   fall-back to the old recursive delete: a fall-back on missing evidence is
+ *   how this defect would return on the first corrupted inventory.
+ * - **Symlinks are unlinked, never followed.** `lstatSync` + `unlinkSync`, so a
+ *   recorded path that is a link removes the link and leaves its target alone.
+ *
+ * Directories are pruned only when they are left empty, and only up to the
+ * anchor — an anchor that still holds a user's own files stays.
+ */
+export function _remove_global_content(
     tool: string,
     opts: { dry_run: boolean; purge: boolean },
 ): [string, boolean] {
@@ -273,21 +300,73 @@ function _remove_global_content(
         return [`${tool}: ${anchor} already absent`, false];
     }
     if (!opts.purge) {
-        return [`${tool}: ${anchor} preserved (pass --purge to delete)`, false];
+        return [
+            `${tool}: ${anchor} preserved (--purge removes the files this package recorded writing there)`,
+            false,
+        ];
     }
-    if (opts.dry_run) {
-        return [`${tool}: would purge ${anchor}`, true];
-    }
+
+    let recorded: ReadonlySet<string>;
     try {
-        if (_isDir(target)) {
-            fs.rmSync(target, { recursive: true, force: false });
-        } else {
-            fs.unlinkSync(target);
-        }
-        return [`${tool}: purged ${anchor}`, true];
+        recorded = global_deploy_inventory.recorded_rel_files(tool, target);
     } catch (exc) {
-        return [`${tool}: ❌ failed to purge ${anchor} (${_osErr(exc)})`, false];
+        return [
+            `${tool}: ❌ refusing to purge ${anchor} — deploy inventory unreadable (${_osErr(exc)})`,
+            false,
+        ];
     }
+    if (recorded.size === 0) {
+        return [
+            `${tool}: ❌ refusing to purge ${anchor} — no recorded inventory for this anchor; nothing was deleted`,
+            false,
+        ];
+    }
+
+    if (opts.dry_run) {
+        return [`${tool}: would purge ${recorded.size} recorded file(s) under ${anchor}`, true];
+    }
+
+    const resolved_anchor = path.resolve(target);
+    let deleted = 0;
+    const touched_dirs = new Set<string>();
+    for (const rel of recorded) {
+        const abs = path.resolve(resolved_anchor, rel);
+        // Containment, re-checked here rather than trusted: a `..` in a
+        // recorded path must not reach outside the anchor even if the record
+        // was written by an older or tampered-with install.
+        if (abs !== resolved_anchor && !abs.startsWith(resolved_anchor + path.sep)) {
+            continue;
+        }
+        try {
+            // lstat, so a symlink is removed as a link and its target is not
+            // touched; a directory recorded by mistake is skipped rather than
+            // recursed into.
+            const st = fs.lstatSync(abs);
+            if (st.isDirectory()) continue;
+            fs.unlinkSync(abs);
+            deleted += 1;
+            touched_dirs.add(path.dirname(abs));
+        } catch {
+            // Already gone is success; anything else is reported by the count.
+        }
+    }
+
+    // Prune directories this package emptied, deepest first, never the anchor's
+    // parent and never a directory that still holds somebody else's file.
+    for (const dir of [...touched_dirs].sort((a, b) => b.length - a.length)) {
+        let cur = dir;
+        while (cur.startsWith(resolved_anchor + path.sep)) {
+            try {
+                if (fs.readdirSync(cur).length > 0) break;
+                fs.rmdirSync(cur);
+            } catch {
+                break;
+            }
+            cur = path.dirname(cur);
+        }
+    }
+
+    return [`${tool}: purged ${deleted} recorded file(s) under ${anchor}`, deleted > 0];
 }
 
 /** Render an OSError-shaped message: Python `str(OSError)` is the strerror. */
@@ -767,12 +846,20 @@ function _uninstall_global(opts: Options): number {
         `${opts.dry_run ? '[dry-run] ' : ''}uninstalling ${tools.length} tool(s) from global scope:`,
     );
     const removed_names: string[] = [];
+    // A purge that REFUSED must not look like a purge that succeeded. The
+    // refusal is the whole point of reading the inventory — reporting it on
+    // stdout and exiting 0 would leave the caller believing the content is
+    // gone, which is the state this fix exists to make impossible.
+    let refused = false;
     for (const tool of tools) {
         const [line, removed] = _remove_global_content(tool, {
             dry_run: opts.dry_run,
             purge: opts.purge,
         });
         _print(_stdout, `  · ${line}`);
+        if (line.includes('refusing to purge')) {
+            refused = true;
+        }
         if (removed && !opts.dry_run) {
             removed_names.push(tool);
         }
@@ -845,7 +932,7 @@ function _uninstall_global(opts: Options): number {
             _print(_stdout, `✅  lockfile deleted (${write_path})`);
         }
     }
-    return 0;
+    return refused ? 1 : 0;
 }
 
 export function main(argv: string[] | null = null): number {

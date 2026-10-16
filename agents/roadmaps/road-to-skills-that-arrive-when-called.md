@@ -255,6 +255,27 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 - [ ] **6.2 Watch the second host's skills page** in the host-docs digest watch
   the search roadmap's 0.2 adds for the first host.
   verify: the digest list names both pages.
+- [ ] **6.3 Close the declared-dependency hole the default projection opens.**
+  Round `inbox-2026-10-t` reproduced it offline against
+  `_lib/scoped_projection`: **28** `skills:` declarations across `src/skills`
+  and `src/domains` name a skill that exists in the package and that the
+  default projection prunes — `/implement-ticket` alone declares
+  `refine-ticket` and `feature-planning`, and `src/skills/refine-ticket/SKILL.md`
+  carries no `packs:` key at all. Add `tests/install/default-projection-closure.test.ts`
+  importing `load_packs_registry`, `compute_active_pack_ids` and
+  `is_pruned_under_scoped` — offline, no install — asserting zero
+  declared-but-pruned, with the two header cases pinned by name. Then make
+  `_prune_scoped_modules` (`src/install/install.ts:3302`) keep every skill a
+  surviving artefact declares. Additive only: delivery grows, never shrinks.
+  verify: `./scripts-run src/scripts/count_scoped_projection --json` -> 0
+- [ ] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
+  list. Measured population in the source tree at `5fa963cec`: **2**
+  (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small
+  enough to fix in the same change. The round's source claimed 26; that
+  figure was taken over the INSTALLED tree and did not reproduce here, so the
+  installed-tree count is re-measured before it is quoted anywhere.
+  verify: a seeded rule-name entry makes the linter exit non-zero, and a
+  seeded skill name does not. Both directions.
 
 ## Blockers
 
@@ -322,7 +343,7 @@ pooling skill payloads across subagent spawns — neither was argued by any plan
 beyond its name.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -330,6 +351,8 @@ beyond its name.
 | 2 | Two sessions, one directory | implementation | A removal in one session pulls a skill from another. | 4.4 leases; never remove under a live lease; 0.2 (b) measures first. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
 | 3 | A fork hides context a skill needed | product | A forked run sees no conversation. | Only report skills (3.1); harm guard in 3.2. | Phase 3 — Fork what ends in a report |
 | 4 | Host contracts move | implementation | A host version changes pickup, budget or key semantics. | Expiring rows (Phase 0); digest watch (6.2); 1.2's key list expires. | Phase 0 — Probe the host contracts before building on them |
+| 5 | Closing the dependency hole grows the install this file is thinning | product | 6.3 keeps every skill a surviving artefact declares, so the default projection gets larger — the opposite direction from the sibling thinning roadmap. | The growth is bounded by the declarations themselves and measured, not estimated: 6.3's verify prints the new projected count and it is published rather than assumed. A declared dependency that is pruned is a broken install either way; the honest trade is a larger install over a silently incomplete one, and 23 of the 28 sit in one pack, so per-pack pruning of the declaring COMMAND is the cheaper lever if the number lands badly. | Phase 6 — Small items to existing carriers |
+| 6 | The rule-name linter is built against the wrong population | implementation | 6.4's figure of 2 was measured on the SOURCE tree; the round's source claimed 26 from the installed tree. A linter sized for 2 may meet a much larger set where it actually runs. | 6.4 requires the installed-tree count to be re-measured before it is quoted, and the linter is a seeded-fixture check in both directions rather than a one-off cleanup — a larger population changes the effort, not the correctness. | Phase 6 — Small items to existing carriers |
 
 ## Acceptance Criteria
 
