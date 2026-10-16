@@ -307,6 +307,37 @@ describe('update_counts — the claim row admits only re-derived badges', () => 
         expect(err).toContain('/npm/dm/');
     });
 
+    it('a reference-style image ON the claim line is resolved and checked', () => {
+        const dm = 'https://img.shields.io/npm/dm/@event4u/agent-config';
+        const row = claimRow().replace(uc.CLAIM_ROW_MARKER, `![downloads][dl] ${uc.CLAIM_ROW_MARKER}`);
+        const findings = uc.claim_row_findings(`# T\n\n${row}\n\n[dl]: ${dm}\n`, readmePatterns);
+        expect(findings).toEqual([[3, dm]]);
+    });
+
+    it('a collapsed reference image ON the claim line is resolved and checked', () => {
+        const dm = 'https://img.shields.io/npm/dm/@event4u/agent-config';
+        const row = claimRow().replace(uc.CLAIM_ROW_MARKER, `![dl][] ${uc.CLAIM_ROW_MARKER}`);
+        expect(uc.claim_row_findings(`${row}\n\n[dl]: <${dm}> "title"\n`, readmePatterns)).toEqual([[1, dm]]);
+    });
+
+    it('a reference image with no definition is a finding, never a pass', () => {
+        const row = claimRow().replace(uc.CLAIM_ROW_MARKER, `![x][missing] ${uc.CLAIM_ROW_MARKER}`);
+        expect(uc.claim_row_findings(row, readmePatterns)).toEqual([[1, '[missing]']]);
+    });
+
+    it('a reference image resolving to a count badge passes', () => {
+        const [first] = claimRow().match(/https:\/\/img\.shields\.io\/badge\/[^)\s]+/) ?? [];
+        expect(first).toBeDefined();
+        const row = claimRow().replace(uc.CLAIM_ROW_MARKER, `![c][count] ${uc.CLAIM_ROW_MARKER}`);
+        expect(uc.claim_row_findings(`${row}\n[count]: ${first}\n`, readmePatterns)).toEqual([]);
+    });
+
+    it('an HTML <img> ON the claim line is checked', () => {
+        const dm = 'https://img.shields.io/npm/dm/@event4u/agent-config';
+        const row = claimRow().replace(uc.CLAIM_ROW_MARKER, `<img alt="dl" src='${dm}'> ${uc.CLAIM_ROW_MARKER}`);
+        expect(uc.claim_row_findings(row, readmePatterns)).toEqual([[1, dm]]);
+    });
+
     it('the same badge one line above the claim line exits 0', () => {
         const { code, err } = runCheck(`# T\n${downloads}\n${claimRow()}\n`);
         expect(err).not.toContain('claim row');

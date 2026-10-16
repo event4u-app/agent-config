@@ -526,6 +526,7 @@ export const CLAIM_ROW_MARKER = '<!-- claim:published-artifact-counts -->';
  * onto the claim row that matches no pattern used to pass `--check` unseen
  * while the row promises every figure on it is machine-checked. The allowed
  * set is the target's own `/badge/` patterns, so adding a count adds its badge.
+ * Inline, reference-style and HTML `<img>` images are all read.
  */
 export function claim_row_findings(
     text: string,
@@ -534,11 +535,28 @@ export function claim_row_findings(
     const badge_patterns = patterns
         .filter(([pattern]) => pattern.includes('/badge/'))
         .map(([pattern]) => new RegExp(pattern));
+    const definitions = new Map<string, string>();
+    for (const m of text.matchAll(/^ {0,3}\[([^\]]+)\]:\s*<?([^\s>]+)>?/gm)) {
+        definitions.set((m[1] as string).trim().toLowerCase(), m[2] as string);
+    }
     const findings: Array<[number, string]> = [];
     text.split('\n').forEach((line, index) => {
         if (!line.includes(CLAIM_ROW_MARKER)) return;
-        for (const m of line.matchAll(/!\[[^\]]*\]\(([^)\s]+)\)/g)) {
-            const url = m[1] as string;
+        const urls: string[] = [];
+        for (const m of line.matchAll(/!\[([^\]]*)\](?:\(([^)\s]+)[^)]*\)|\[([^\]]*)\])?/g)) {
+            if (m[2] !== undefined) {
+                urls.push(m[2]);
+                continue;
+            }
+            // Reference (`![a][ref]`), collapsed (`![a][]`) and shortcut (`![a]`)
+            // forms. An unresolvable label is reported as itself, never skipped.
+            const label = (m[3] || m[1] || '').trim();
+            urls.push(definitions.get(label.toLowerCase()) ?? `[${label}]`);
+        }
+        for (const m of line.matchAll(/<img\b[^>]*?\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)) {
+            urls.push((m[1] ?? m[2] ?? m[3]) as string);
+        }
+        for (const url of urls) {
             if (!badge_patterns.some((re) => re.test(url))) {
                 findings.push([index + 1, url]);
             }
