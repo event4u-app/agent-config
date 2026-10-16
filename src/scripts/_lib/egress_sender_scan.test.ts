@@ -82,7 +82,9 @@ describe('classification', () => {
     it('reads the content marker and a direct engine import', () => {
         const row = classifyModule(
             'src/scripts/x.ts',
-            "// egress-content: fixed-corpus\nimport { replaceValues } from './_lib/egress_token.js';\nawait fetch('https://api.openai.com/v1');",
+            // Split so the prepack import scan does not read the fixture as a real import.
+            "// egress-content: fixed-corpus\nimport { replaceValues } from '" +
+                "./_lib/egress_token.js';\nawait fetch('https://api.openai.com/v1');",
         );
         expect([row?.content, row?.engine]).toEqual(['fixed-corpus', true]);
     });
