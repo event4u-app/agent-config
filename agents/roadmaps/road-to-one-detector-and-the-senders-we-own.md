@@ -72,7 +72,8 @@ is open.
   `identifier-table-at-rest` blocker; the rule table exists; the grammar is
   `__TYPE_n_fp__`. **The identifier class has no rows yet** — validated identifier
   rules are 2.3 — so counting by class today yields credential evidence only.
-- **Next in order:** 0.4 (sender census), then 2.2 (which now carries the
+- **2026-10-16:** 0.4 landed (sender census in the contract).
+- **Next in order:** 2.2 (which now carries the
   single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
 
 ## What this roadmap deliberately does not do
@@ -132,13 +133,21 @@ is open.
       confirmed there: recall at least 99% for e-mail and checksum-valid IBAN,
       false positives under 1% on code. Each bar names what a null looks like.
       verify: the PREREG commit precedes every commit under Phases 2–3 in `git log`; the prototype readings it cites are labelled anchors, not results.
-- [ ] **0.4 Generate the census of this package's own senders (F8).** One row
+- [x] **0.4 Generate the census of this package's own senders (F8).** One row
       per module that posts to a provider endpoint: endpoint, whether it carries
       session content or a fixed corpus, whether it passes the engine. Derived
       from the import graph, the way `src/scripts/check_read_surface_coverage.ts`
       derives read surfaces; a module the generator cannot classify is an
       `unclassified` row, never an absent one.
       verify: every file named in F8 appears in the generated table; a fixture module posting to an unknown endpoint appears as `unclassified`.
+      **Done 2026-10-16:** scanner `src/scripts/_lib/egress_sender_scan.ts`, regenerated
+      by `./scripts-run src/scripts/egress_sender_census --write` into the contract's
+      § This package's own senders (23 modules: 17 sender, 1 local, 5 unclassified).
+      `npx vitest run src/scripts/_lib/egress_sender_scan.test.ts` -> 0; the F8 and
+      unknown-endpoint cases are named tests, the latter seen red with the
+      unknown-host branch neutralised. Every `content` cell reads `undeclared`: the
+      `egress-content:` marker exists, declaring it per sender is 3.4's. The drift
+      check is a test, not a registered gate.
 
 ## Phase 1 — Prevention that needs no rewrite (F4)
 
