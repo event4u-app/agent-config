@@ -15,7 +15,7 @@
 - [Mechanism-teaching section (optional pattern, skills whose subject has one)](#mechanism-teaching-section-optional-pattern-skills-whose-subject-has-one)
 - [Illustrative-not-verbatim marker (optional pattern, reference code)](#illustrative-not-verbatim-marker-optional-pattern-reference-code)
 - [Headline metric + closing report (optional pattern, optimization skills)](#headline-metric--closing-report-optional-pattern-optimization-skills)
-- [Contrastive-example slot (optional pattern, authoring and behaviour skills)](#contrastive-example-slot-optional-pattern-authoring-and-behaviour-skills)
+- [Contrastive-example slot (optional pattern, authoring and behavior skills)](#contrastive-example-slot-optional-pattern-authoring-and-behavior-skills)
 <!-- reference-toc:end -->
 
 > Mode body of the [`skill-writing`](../SKILL.md) skill (router-head
@@ -295,7 +295,7 @@ moves the headline number by degrading something it does not measure is the
 failure this pattern exists to make visible, and only the author knows where that
 edge is.
 
-## Contrastive-example slot (optional pattern, authoring and behaviour skills)
+## Contrastive-example slot (optional pattern, authoring and behavior skills)
 
 Where a skill's guidance is easy to agree with and hard to apply — tone, phrasing,
 question shape, what counts as evidence — a wrong/right pair does what prose

@@ -6,7 +6,7 @@
 - [Multi-round debate (rounds:N)](#multi-round-debate-roundsn)
 - [Karpathy peer-review (opt-in)](#karpathy-peer-review-opt-in)
 - [Thinking-style advisors (replace-mode)](#thinking-style-advisors-replace-mode)
-- [Decision-replay artefact (Phase 9, audit trail)](#decision-replay-artefact-phase-9-audit-trail)
+- [Decision-replay artifact (Phase 9, audit trail)](#decision-replay-artifact-phase-9-audit-trail)
 - [Lightweight-QA fast-path (Phase 11)](#lightweight-qa-fast-path-phase-11)
 <!-- reference-toc:end -->
 
@@ -241,7 +241,7 @@ One-per-provider invariant — two enabled advisors targeting the same
 member is a config error (replace-mode runs exactly one advisor per
 provider; the call plan never doubles up by accident).
 
-## Decision-replay artefact (Phase 9, audit trail)
+## Decision-replay artifact (Phase 9, audit trail)
 
 Every session that runs consensus scoring drops a
 `decision-replay.md` next to the saved `responses.json`. Pure
