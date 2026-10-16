@@ -29,9 +29,12 @@ import {
     mean,
     median,
     parseArgs,
+    readLedgerStarts,
     renderText,
+    segmentLegsIntoRuns,
     type Report,
 } from '../../src/scripts/cache_realization_report.js';
+import { refFor } from '../../src/scripts/hooks/subagent_ledger_hook.js';
 
 /** A minimally-populated report, so a renderer test asserts on ONE section. */
 function baseReport(): Report {
@@ -60,6 +63,7 @@ function baseReport(): Report {
             subagent: { ...emptyBucket, bucket: 'subagent' as const },
         },
         subagent_cold_start: computeColdStarts([]),
+        subagent_runs: segmentLegsIntoRuns([], []),
         provider_bytes: { factor: null, main: null, subagent: null },
         by_agent: [],
         duplicate_scope: {
@@ -116,6 +120,70 @@ function rec(agentId: string, timestamp: string, u: Partial<TokenCounts>): Trans
     // fixtures exercise the token columns, and a 0 would be a measured value.
     return { bucket: 'subagent', agentId, model: 'claude-sonnet-4-5', timestamp, usage: usage(u), content_bytes: null };
 }
+
+// ── runs within a leg (road-to-a-cold-start-paid-once step 1.1) ─────────
+
+describe('segmentLegsIntoRuns', () => {
+    it('resumed-run-gets-its-own-first-call', () => {
+        const agent = 'agent-resumed';
+        const ref = refFor(agent);
+        const records: TranscriptRecord[] = [
+            rec(agent, '2026-10-01T10:00:01.000Z', { input_tokens: 2_000, cache_creation_input_tokens: 200_000 }),
+            rec(agent, '2026-10-01T10:00:05.000Z', { cache_read_input_tokens: 202_000, input_tokens: 500 }),
+            rec(agent, '2026-10-01T10:03:01.000Z', { cache_read_input_tokens: 180_000, input_tokens: 1_000, cache_creation_input_tokens: 4_000 }),
+            rec(agent, '2026-10-01T10:03:09.000Z', { cache_read_input_tokens: 185_000, input_tokens: 300 }),
+        ];
+        const starts = [
+            { ref, ts: '2026-10-01T10:00:00.000Z' },
+            { ref, ts: '2026-10-01T10:03:00.000Z' },
+        ];
+        const r = segmentLegsIntoRuns(records, starts);
+        expect(r.legs_with_ledger_start).toBe(1);
+        expect(r.runs.map((x) => x.ordinal)).toEqual([1, 2]);
+        const resumed = r.runs[1]!;
+        // Derived from the third record, the resumed run's own first call —
+        // not from the leg's first call, which is where D10 folded it.
+        expect(resumed.first_call_written_or_uncached).toBe(1_000 + 4_000);
+        expect(resumed.first_call_cache_read_share).toBeCloseTo(180_000 / (180_000 + 1_000 + 4_000), 10);
+        expect(resumed.calls).toBe(2);
+        expect(r.runs[0]!.first_call_written_or_uncached).toBe(2_000 + 200_000);
+        expect(r.resumed_runs).toBe(1);
+        expect(r.median_resumed_first_call_written_or_uncached).toBe(5_000);
+        // The run carries the ledger ref, never the host's agent id.
+        expect(JSON.stringify(r)).not.toContain(agent);
+    });
+
+    it('a leg with one start, or none in the ledger, is one run', () => {
+        const a = 'agent-single';
+        const b = 'agent-unledgered';
+        const records = [
+            rec(a, '2026-10-01T11:00:01.000Z', { input_tokens: 10 }),
+            rec(a, '2026-10-01T11:00:02.000Z', { input_tokens: 20 }),
+            rec(b, '2026-10-01T11:00:03.000Z', { input_tokens: 30 }),
+        ];
+        const r = segmentLegsIntoRuns(records, [{ ref: refFor(a), ts: '2026-10-01T11:00:00.000Z' }]);
+        expect(r.runs).toHaveLength(2);
+        expect(r.runs.every((x) => x.ordinal === 1)).toBe(true);
+        expect(r.resumed_runs).toBe(0);
+        expect(r.median_resumed_first_call_written_or_uncached).toBeNull();
+        expect(r.legs_with_ledger_start).toBe(1);
+    });
+
+    it('readLedgerStarts keeps subagent_start lines with a ref and skips the rest', () => {
+        const dir = mkTmp('crr-ledger-');
+        fs.writeFileSync(
+            path.join(dir, '2026-10.jsonl'),
+            [
+                JSON.stringify({ event: 'subagent_start', ts: '2026-10-01T10:00:00.000Z', ref: 'abc123abc123' }),
+                JSON.stringify({ event: 'subagent_stop', ts: '2026-10-01T10:01:00.000Z', ref: 'abc123abc123' }),
+                JSON.stringify({ event: 'subagent_start', ts: '2026-10-01T10:02:00.000Z', ref: null }),
+                'not json',
+            ].join('\n') + '\n',
+        );
+        expect(readLedgerStarts(dir)).toEqual([{ ref: 'abc123abc123', ts: '2026-10-01T10:00:00.000Z' }]);
+        expect(readLedgerStarts(path.join(dir, 'absent'))).toEqual([]);
+    });
+});
 
 // ── median / mean ────────────────────────────────────────────────────────
 

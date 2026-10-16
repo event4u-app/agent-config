@@ -68,6 +68,22 @@ export interface HostCapabilityManifest {
      */
     worker_respawn: boolean;
     /**
+     * A finished worker can be re-tasked by name and its next run reads more
+     * than half of its first call's input from cache — the warm-reuse path
+     * `_lib/worker_reuse.ts` decides on.
+     *
+     * Independent of `worker_respawn`: that field is mid-task kill-and-respawn,
+     * this one is a re-task at a task boundary. Neither derives the other.
+     * `false` on every host until a dated observation row sets it.
+     */
+    worker_resume: boolean;
+    /**
+     * A forked worker's first call reads the parent's prefix from cache and
+     * keeps the parent's tool pool. Read by the fork guidance in
+     * `subagent-orchestration`; `false` until observed.
+     */
+    fork_shares_cache: boolean;
+    /**
      * The host exposes its own structured-ask tool — a native question picker
      * the agent can call instead of rendering a numbered-options block as prose.
      *
@@ -122,6 +138,8 @@ const SAFE_DEFAULT: HostCapabilityManifest = {
     separate_quota_pool: false,
     agent_teams: false,
     worker_respawn: false,
+    worker_resume: false,
+    fork_shares_cache: false,
     structured_ask: false,
     reads_project_mcp_config: false,
     // `true` because the safe answer here is "there is still a step", not
@@ -155,6 +173,8 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
         separate_quota_pool: asBool(src.separate_quota_pool),
         agent_teams: asBool(src.agent_teams),
         worker_respawn: asBool(src.worker_respawn),
+        worker_resume: asBool(src.worker_resume),
+        fork_shares_cache: asBool(src.fork_shares_cache),
         structured_ask: asBool(src.structured_ask),
         reads_project_mcp_config: asBool(src.reads_project_mcp_config),
         // Inverted coercion, matching the inverted default: only an explicit
@@ -380,6 +400,8 @@ const CAPABILITY_FIELDS: readonly CapabilityField[] = [
     'separate_quota_pool',
     'agent_teams',
     'worker_respawn',
+    'worker_resume',
+    'fork_shares_cache',
     'structured_ask',
     'reads_project_mcp_config',
     'mcp_needs_manual_activation',

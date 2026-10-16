@@ -39,11 +39,35 @@ const ALL_FALSE: HostCapabilityManifest = {
     separate_quota_pool: false,
     agent_teams: false,
     worker_respawn: false,
+    worker_resume: false,
+    fork_shares_cache: false,
     structured_ask: false,
     reads_project_mcp_config: false,
     // Not `false`: this field's safe answer is "a manual step remains".
     mcp_needs_manual_activation: true,
 };
+
+describe('worker_resume / fork_shares_cache (road-to-a-cold-start-paid-once 2.1)', () => {
+    it('worker-resume-defaults-false', () => {
+        // No Phase 1 observation row exists yet, so every host — including the
+        // one with a registry row — resolves both atoms to the safe default.
+        for (const host of ['claude', 'cursor', 'some-unrecognized-host', null]) {
+            const { manifest, sources } = describeHostCapabilities(host);
+            expect(manifest.worker_resume).toBe(false);
+            expect(manifest.fork_shares_cache).toBe(false);
+            expect(sources.worker_resume).toBe('default');
+            expect(sources.fork_shares_cache).toBe('default');
+        }
+        // Only a strict `true` survives normalization, and the two atoms never
+        // derive from `worker_respawn` in either direction.
+        expect(normalizeHostManifest({ worker_resume: 'yes', fork_shares_cache: 1 }).worker_resume).toBe(false);
+        expect(normalizeHostManifest({ worker_respawn: true }).worker_resume).toBe(false);
+        const set = normalizeHostManifest({ worker_resume: true, fork_shares_cache: true });
+        expect(set.worker_resume).toBe(true);
+        expect(set.fork_shares_cache).toBe(true);
+        expect(set.worker_respawn).toBe(false);
+    });
+});
 
 describe('normalizeHostManifest — safe default', () => {
     it('empty object → all false + schema_version 1', () => {
@@ -105,6 +129,8 @@ describe('normalizeHostManifest — valid full input', () => {
             separate_quota_pool: true,
             agent_teams: false,
             worker_respawn: true,
+            worker_resume: false,
+            fork_shares_cache: false,
             structured_ask: true,
             reads_project_mcp_config: false,
             // Absent from the input, and absence does NOT clear a residual.
@@ -352,6 +378,8 @@ describe('describeHostCapabilities — per-field provenance', () => {
             separate_quota_pool: 'default',
             agent_teams: 'default',
             worker_respawn: 'default',
+            worker_resume: 'default',
+            fork_shares_cache: 'default',
             structured_ask: 'registry',
             reads_project_mcp_config: 'default',
             mcp_needs_manual_activation: 'default',

@@ -24,6 +24,7 @@
  *   ./scripts-run src/scripts/cache_realization_report [--format text|json]
  *     [--root <path>] [--max-age-days <n>] [--repo-root <path>]
  *     [--council-root <path>] [--user-rules-dir <path>] [--project-rules-dir <path>]
+ *     [--ledger-dir <path>]
  *
  * Defaults: `--root` is `~/.claude/projects` (the full tree, matching the
  * roadmap's own "First-party measurement" method — no per-project filter);
@@ -53,6 +54,7 @@ import {
     type TranscriptRecord,
 } from './_lib/cc_transcript.js';
 import { censusDuplicateScope } from './_lib/duplicate_scope_census.js';
+import { LEDGER_DIR, refFor } from './hooks/subagent_ledger_hook.js';
 import { load_prices, reprice_with_cache } from './ai_council/pricing.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -131,21 +133,23 @@ function firstCallsByLeg(records: readonly TranscriptRecord[]): TranscriptRecord
         byAgent.set(r.agentId, arr);
     }
     const firstCalls: TranscriptRecord[] = [];
-    for (const arr of byAgent.values()) {
-        const sorted = arr
-            .map((r, idx) => ({ r, idx }))
-            .sort((a, b) => {
-                const ta = a.r.timestamp;
-                const tb = b.r.timestamp;
-                if (ta !== null && tb !== null && ta !== tb) return ta < tb ? -1 : 1;
-                if (ta !== null && tb === null) return -1;
-                if (ta === null && tb !== null) return 1;
-                return a.idx - b.idx;
-            })
-            .map((x) => x.r);
-        firstCalls.push(sorted[0] as TranscriptRecord);
-    }
+    for (const arr of byAgent.values()) firstCalls.push(chronological(arr)[0] as TranscriptRecord);
     return firstCalls;
+}
+
+/** One leg's records in chronological order; scan order breaks ties, missing timestamps sort last. */
+function chronological(arr: readonly TranscriptRecord[]): TranscriptRecord[] {
+    return arr
+        .map((r, idx) => ({ r, idx }))
+        .sort((a, b) => {
+            const ta = a.r.timestamp;
+            const tb = b.r.timestamp;
+            if (ta !== null && tb !== null && ta !== tb) return ta < tb ? -1 : 1;
+            if (ta !== null && tb === null) return -1;
+            if (ta === null && tb !== null) return 1;
+            return a.idx - b.idx;
+        })
+        .map((x) => x.r);
 }
 
 export function computeColdStarts(records: readonly TranscriptRecord[]): ColdStartStats {
@@ -174,6 +178,127 @@ export function computeColdStarts(records: readonly TranscriptRecord[]): ColdSta
         write_share_of_billable: sumBillable > 0 ? sumWrite / sumBillable : 0,
         read_share_of_billable: sumBillable > 0 ? sumRead / sumBillable : 0,
         uncached_share_of_billable: sumBillable > 0 ? sumUncached / sumBillable : 0,
+    };
+}
+
+// A resumed subagent keeps its `agentId`, so `firstCallsByLeg` folds a
+// resume's first call into the original leg and the cold-start median cannot
+// see whether a resume was cheap. The ledger records a `subagent_start` per
+// run under `ref = refFor(agentId)`; every start after the first for one ref
+// opens a new run, and each run gets its own first-call metrics.
+
+export interface LedgerStart {
+    ref: string;
+    ts: string;
+}
+
+export interface SubagentRun {
+    /** Ledger ref of the leg — never the host's agent id. */
+    ref: string;
+    /** 1 for the original spawn, 2+ for each resume the ledger saw. */
+    ordinal: number;
+    calls: number;
+    first_call_written_or_uncached: number;
+    first_call_cache_read_share: number;
+}
+
+export interface SubagentRunStats {
+    /** Legs whose ref has at least one `subagent_start` in the ledger. */
+    legs_with_ledger_start: number;
+    resumed_runs: number;
+    /** `null` when no resumed run exists — a median of nothing is not 0. */
+    median_resumed_first_call_written_or_uncached: number | null;
+    runs: SubagentRun[];
+}
+
+/** `subagent_start` lines carrying a ref, from every `*.jsonl` in `ledgerDir`. Missing dir → []. */
+export function readLedgerStarts(ledgerDir: string): LedgerStart[] {
+    let names: string[];
+    try {
+        names = fs.readdirSync(ledgerDir).filter((n) => n.endsWith('.jsonl'));
+    } catch {
+        return [];
+    }
+    const out: LedgerStart[] = [];
+    for (const name of names.sort()) {
+        let text: string;
+        try {
+            text = fs.readFileSync(path.join(ledgerDir, name), 'utf-8');
+        } catch {
+            continue;
+        }
+        for (const line of text.split('\n')) {
+            if (!line.trim()) continue;
+            let v: unknown;
+            try {
+                v = JSON.parse(line);
+            } catch {
+                continue;
+            }
+            if (typeof v !== 'object' || v === null) continue;
+            const o = v as Record<string, unknown>;
+            if (o['event'] !== 'subagent_start') continue;
+            const ref = o['ref'];
+            const ts = o['ts'];
+            if (typeof ref !== 'string' || typeof ts !== 'string') continue;
+            out.push({ ref, ts });
+        }
+    }
+    return out;
+}
+
+export function segmentLegsIntoRuns(records: readonly TranscriptRecord[], starts: readonly LedgerStart[]): SubagentRunStats {
+    const startsByRef = new Map<string, string[]>();
+    for (const s of starts) {
+        const arr = startsByRef.get(s.ref) ?? [];
+        arr.push(s.ts);
+        startsByRef.set(s.ref, arr);
+    }
+    for (const arr of startsByRef.values()) arr.sort();
+
+    const byAgent = new Map<string, TranscriptRecord[]>();
+    for (const r of records) {
+        if (r.bucket !== 'subagent' || r.agentId === null) continue;
+        const arr = byAgent.get(r.agentId) ?? [];
+        arr.push(r);
+        byAgent.set(r.agentId, arr);
+    }
+
+    const runs: SubagentRun[] = [];
+    let legsWithStart = 0;
+    for (const [agentId, recs] of byAgent) {
+        const ref = refFor(agentId);
+        const legStarts = startsByRef.get(ref) ?? [];
+        if (legStarts.length > 0) legsWithStart++;
+        const boundaries = legStarts.slice(1);
+        const byOrdinal = new Map<number, TranscriptRecord[]>();
+        for (const r of chronological(recs)) {
+            const ts = r.timestamp;
+            const ordinal = 1 + (ts === null ? 0 : boundaries.filter((b) => b <= ts).length);
+            const arr = byOrdinal.get(ordinal) ?? [];
+            arr.push(r);
+            byOrdinal.set(ordinal, arr);
+        }
+        for (const ordinal of [...byOrdinal.keys()].sort((a, b) => a - b)) {
+            const arr = byOrdinal.get(ordinal) as TranscriptRecord[];
+            const first = arr[0] as TranscriptRecord;
+            const billable = billableInputTokens(first.usage);
+            runs.push({
+                ref,
+                ordinal,
+                calls: arr.length,
+                first_call_written_or_uncached: first.usage.cache_creation_input_tokens + first.usage.input_tokens,
+                first_call_cache_read_share: billable > 0 ? first.usage.cache_read_input_tokens / billable : 0,
+            });
+        }
+    }
+    const resumed = runs.filter((r) => r.ordinal > 1);
+    return {
+        legs_with_ledger_start: legsWithStart,
+        resumed_runs: resumed.length,
+        median_resumed_first_call_written_or_uncached:
+            resumed.length > 0 ? median(resumed.map((r) => r.first_call_written_or_uncached)) : null,
+        runs,
     };
 }
 
@@ -642,6 +767,7 @@ export interface Options {
     userRulesDir: string;
     projectRulesDir: string;
     auditDir: string;
+    ledgerDir: string;
 }
 
 function defaultOptions(): Options {
@@ -654,6 +780,7 @@ function defaultOptions(): Options {
         userRulesDir: path.join(homedir(), '.claude', 'rules'),
         projectRulesDir: path.join(REPO_ROOT, 'dist', 'agent-src', 'rules'),
         auditDir: path.join(REPO_ROOT, 'agents', 'runtime', 'state', 'audit'),
+        ledgerDir: path.join(REPO_ROOT, LEDGER_DIR),
     };
 }
 
@@ -678,6 +805,8 @@ export function parseArgs(argv: string[]): Options {
         else if (a.startsWith('--project-rules-dir=')) opts.projectRulesDir = a.slice('--project-rules-dir='.length);
         else if (a === '--audit-dir') opts.auditDir = argv[++i] ?? opts.auditDir;
         else if (a.startsWith('--audit-dir=')) opts.auditDir = a.slice('--audit-dir='.length);
+        else if (a === '--ledger-dir') opts.ledgerDir = argv[++i] ?? opts.ledgerDir;
+        else if (a.startsWith('--ledger-dir=')) opts.ledgerDir = a.slice('--ledger-dir='.length);
     }
     if (opts.format !== 'text' && opts.format !== 'json') opts.format = 'text';
     return opts;
@@ -763,6 +892,8 @@ export interface Report {
     deduped_count: number;
     buckets: Record<TranscriptBucket, BucketAggregate>;
     subagent_cold_start: ColdStartStats;
+    /** Runs within each leg, split at ledger re-starts. */
+    subagent_runs: SubagentRunStats;
     by_agent: AgentAggregate[];
     duplicate_scope: DuplicateScopeResult;
     council_mispricing: CouncilMispricingResult;
@@ -848,6 +979,7 @@ export function buildReport(opts: Options): Report {
         deduped_count: scan.dedupedCount,
         buckets,
         subagent_cold_start: subagentColdStart,
+        subagent_runs: segmentLegsIntoRuns(scan.records, readLedgerStarts(opts.ledgerDir)),
         by_agent: byAgent,
         duplicate_scope: duplicateScope,
         council_mispricing: councilMispricing,
@@ -938,6 +1070,15 @@ export function renderText(r: Report): string {
     out.push(
         `  write_share=${pct(cs.write_share_of_billable)} read_share=${pct(cs.read_share_of_billable)}` +
             ` uncached_share=${pct(cs.uncached_share_of_billable)} (of billable input, all subagent records)`,
+    );
+    out.push('');
+
+    const sr = r.subagent_runs;
+    const resumedMedian = sr.median_resumed_first_call_written_or_uncached;
+    out.push('Subagent runs (a leg split at every ledger re-start):');
+    out.push(
+        `  legs_with_ledger_start=${sr.legs_with_ledger_start} runs=${sr.runs.length} resumed_runs=${sr.resumed_runs}` +
+            ` median_resumed_written_or_uncached=${resumedMedian === null ? 'none' : Math.round(resumedMedian)}`,
     );
     out.push('');
 
