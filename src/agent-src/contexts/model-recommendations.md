@@ -18,9 +18,9 @@ is the Claude generator's (`frontier→fable`, `high→opus`, `medium→sonnet`,
 | `inherit` | — | (session model) | Genuinely model-agnostic / meta work |
 
 Long context is **orthogonal** to the tier (ADR-035): a skill that must read a
-very large input declares the optional `context: large` modifier *in addition*
-to its tier (e.g. `high` + `context: large` for large-codebase analysis). The
-tier is the reasoning band; `context: large` is the context-window need.
+very large input declares the optional `context_window: large` modifier *in addition*
+to its tier (e.g. `high` + `context_window: large` for large-codebase analysis). The
+tier is the reasoning band; `context_window: large` is the context-window need.
 
 ## Task → Tier Mapping
 
@@ -31,7 +31,7 @@ tier is the reasoning band; `context: large` is the context-window need.
 | **Complex debugging** (unknown root cause, cross-layer) | `high` | Follows chains across files and systems |
 | **Design decisions** | `high` | Weighs trade-offs, considers long-term |
 | **Multi-file feature** (cross-domain / architecture relevant) | `high` | Maintains coherence across layers |
-| **Large codebase analysis / research / planning** | `high` (+ `context: large`) | Strong reasoning over a long input |
+| **Large codebase analysis / research / planning** | `high` (+ `context_window: large`) | Strong reasoning over a long input |
 | **Debugging** (known issue, reproducible) | `medium` | Fast, efficient fixes |
 | **Write tests** | `medium` | Pattern-based, no deep reasoning required |
 | **Single-layer feature** (CRUD, same layer) | `medium` | Straightforward implementation |
@@ -76,7 +76,7 @@ for the session.
 | "bug" with unclear cause or spanning multiple layers | Complex debugging | `high` |
 | "should I", "which approach", "what pattern" | Design decision | `high` |
 | Feature touching multiple domains/layers | Multi-file feature | `high` |
-| "analyze project", "scan codebase", research / roadmap creation | Large analysis / planning | `high` + `context: large` |
+| "analyze project", "scan codebase", research / roadmap creation | Large analysis / planning | `high` + `context_window: large` |
 | "bug" with clear error and reproducible case | Debugging (known) | `medium` |
 | Feature within same layer (controller/service CRUD) | Single-layer feature | `medium` |
 | linters / type-checks / formatters | Quality checks | `medium` |

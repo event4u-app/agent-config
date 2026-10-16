@@ -42,6 +42,6 @@ describe('backfill_model_tier — CLI dry-run (tsx)', () => {
         for (const tier of ['lite', 'medium', 'high', 'inherit']) {
             expect(ts.stdout).toMatch(new RegExp(`^ {2}${tier}\\s*: \\d+$`, 'm'));
         }
-        expect(ts.stdout).toMatch(/context:large on \d+ skills · would set \d+ newly · total \d+/);
+        expect(ts.stdout).toMatch(/context_window:large on \d+ skills · would set \d+ newly · total \d+/);
     });
 });

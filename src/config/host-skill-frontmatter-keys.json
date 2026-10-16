@@ -1,0 +1,56 @@
+{
+  "$comment": "Skill frontmatter keys each host documents, read from the host's own documentation. validate_frontmatter fails when a skill or command schema declares one of these keys as a package-owned key - a key the package gives its own meaning - because the host reads the key first and the package's meaning is lost (road-to-skills-that-arrive-when-called 1.2; the defect it guards is `context: large`, renamed to `context_window` in 1.1). A key the package declares WITH the host's meaning is listed under `passthrough` with the reason. A host entry past `expires` is reported as a warning: re-read the page, update `keys` and `read_date`, and move `expires` forward.",
+  "hosts": [
+    {
+      "host": "claude-code",
+      "url": "https://code.claude.com/docs/en/skills",
+      "read_date": "2026-10-16",
+      "expires": "2027-01-14",
+      "keys": [
+        "name",
+        "description",
+        "when_to_use",
+        "argument-hint",
+        "arguments",
+        "disable-model-invocation",
+        "user-invocable",
+        "allowed-tools",
+        "disallowed-tools",
+        "model",
+        "effort",
+        "context",
+        "agent",
+        "background",
+        "hooks",
+        "paths",
+        "shell",
+        "metadata",
+        "license",
+        "compatibility"
+      ]
+    },
+    {
+      "host": "agent-skills-spec",
+      "url": "https://agentskills.io/specification",
+      "read_date": "2026-10-16",
+      "expires": "2027-01-14",
+      "keys": [
+        "name",
+        "description",
+        "license",
+        "compatibility",
+        "metadata",
+        "allowed-tools"
+      ]
+    }
+  ],
+  "passthrough": {
+    "name": "The skill or command slug; the host reads it as the invocation name, which is the package's meaning.",
+    "description": "The trigger line; the host lists it, which is the package's meaning.",
+    "effort": "Declared as a verbatim passthrough to the host's effort knob (skill schema description).",
+    "user-invocable": "Declared as the host's own extension, used to keep a built-in name unshadowed.",
+    "compatibility": "Declared as the Agent Skills spec field with the spec's meaning; deprecated in the skill schema.",
+    "argument-hint": "Commands project as host skills; the hint is the host's argument hint.",
+    "disable-model-invocation": "Commands project as host skills; the flag is the host's own."
+  }
+}

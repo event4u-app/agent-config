@@ -935,6 +935,76 @@ export function check_scope_declaration(data: Record<string, YamlValue>): Schema
     return [];
 }
 
+// --- Host-key collision row ------------------------------------------------
+
+export interface HostSkillKeyList {
+    host: string;
+    url: string;
+    read_date: string;
+    expires: string;
+    keys: string[];
+}
+
+export interface HostSkillKeys {
+    hosts: HostSkillKeyList[];
+    /** Keys the package declares WITH the host's meaning, each with its reason. */
+    passthrough: Record<string, string>;
+}
+
+const _HOST_KEYS_PATH = path.join(_HERE, '..', 'config', 'host-skill-frontmatter-keys.json');
+
+export function load_host_skill_keys(file = _HOST_KEYS_PATH): HostSkillKeys {
+    const raw = JSON.parse(fs.readFileSync(file, 'utf-8')) as Partial<HostSkillKeys>;
+    return { hosts: raw.hosts ?? [], passthrough: raw.passthrough ?? {} };
+}
+
+/**
+ * A schema property the package owns must not equal a key a host documents for
+ * skills: the host reads the key first, so the package's meaning is silently
+ * lost (`context: large` sat on the host's `context` until it was renamed).
+ * Checked against the schema rather than each artefact, so a colliding key is
+ * refused before any skill carries it.
+ */
+export function check_host_key_collisions(
+    artefactType: string,
+    schema: Record<string, YamlValue>,
+    hostKeys: HostSkillKeys,
+    today: string = new Date().toISOString().slice(0, 10),
+): SchemaError[] {
+    const errors: SchemaError[] = [];
+    const props = schema['properties'];
+    const declared = props !== null && typeof props === 'object' && !Array.isArray(props) ? Object.keys(props) : [];
+    for (const key of declared) {
+        if (Object.prototype.hasOwnProperty.call(hostKeys.passthrough, key)) continue;
+        const owners = hostKeys.hosts.filter((h) => h.keys.includes(key)).map((h) => h.host);
+        if (owners.length === 0) continue;
+        errors.push(
+            new SchemaError(
+                `$.properties.${key}`,
+                'host-key-collision',
+                `the ${artefactType} schema declares \`${key}\` as a package-owned key, but ` +
+                    `${owners.join(', ')} documents \`${key}\` for skills. Rename the package key, or ` +
+                    'list it under `passthrough` in src/config/host-skill-frontmatter-keys.json if the ' +
+                    "package uses it with the host's meaning.",
+            ),
+        );
+    }
+    for (const h of hostKeys.hosts) {
+        if (h.expires < today) {
+            errors.push(
+                new SchemaError(
+                    `$.hosts.${h.host}`,
+                    'host-key-list-expired',
+                    `the ${h.host} key list was read ${h.read_date} and expired ${h.expires} — ` +
+                        `re-read ${h.url} and refresh src/config/host-skill-frontmatter-keys.json.`,
+                    'warning',
+                ),
+            );
+        }
+    }
+    return errors;
+}
+
 // --- CLI entry point -------------------------------------------------------
 
 /** Yield `[artefact_type, path]` pairs for all lintable artefacts. */
@@ -1079,6 +1149,21 @@ export function _main(argv: string[]): number {
                     `${marker}[${artefactType}] ${p}: ${error.rule} at ${error.path} – ${error.message}\n`,
                 );
             }
+        }
+    }
+
+    // Expiry warnings are per host list, so they are reported once, under the first type.
+    const hostKeys = load_host_skill_keys();
+    for (const [i, artefactType] of ['skill', 'command'].entries()) {
+        const rows = check_host_key_collisions(artefactType, load_schema(artefactType), hostKeys).filter(
+            (e) => i === 0 || e.severity === 'error',
+        );
+        if (rows.some((e) => e.severity === 'error')) failing += 1;
+        for (const error of rows) {
+            const marker = error.severity === 'warning' ? '⚠️ ' : '❌ ';
+            process.stdout.write(
+                `${marker}[${artefactType}-schema] ${artefactType}.schema.json: ${error.rule} at ${error.path} – ${error.message}\n`,
+            );
         }
     }
 

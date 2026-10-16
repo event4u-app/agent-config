@@ -130,12 +130,22 @@ needs a transcript.
 
 ## Phase 1 — Give the host its key back
 
-- [ ] **1.1 Rename the package key.** `context: large` → `context_window: large`
+- [x] **1.1 Rename the package key.** `context: large` → `context_window: large`
   across the schema, the writer, the six skills and every reader.
+  Done 2026-10-16: both the skill and the command schema carry `context_window`;
+  `backfill_model_tier.ts` writes it; the six skills, `model-recommendations.md`
+  and the projection-fidelity contract say it; a schema test rejects the retired
+  `context: large` (seen red before the rename). No reader consumed the old key.
   verify: the schema test is green, and `! grep -rq '^context: large' src/skills` -> 0
-- [ ] **1.2 Guard the host's keys.** A lint row: no package-owned skill
+- [x] **1.2 Guard the host's keys.** A lint row: no package-owned skill
   frontmatter key may equal a key the host documents for skills; the host key
   list is data with its documentation URL, read date and expiry.
+  Done 2026-10-16: `src/config/host-skill-frontmatter-keys.json` holds the host
+  page's 20 keys and the Agent Skills spec's 6, both read 2026-10-16 and expiring
+  2027-01-14, plus a `passthrough` list of keys the package uses with the host's
+  meaning. `validate_frontmatter` checks the skill and command schemas against
+  it; an expired list warns. Re-adding `context` to the skill schema made the
+  corpus run fail with `host-key-collision`; restored, it passes.
   verify: a colliding fixture fails; the corpus passes.
 - [ ] **1.3 Snapshot the projection per host.** Projected SKILL.md for the first
   host, the second host and one unaffected host, so a host key is never rewritten
