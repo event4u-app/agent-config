@@ -5,6 +5,13 @@ review_by: 2026-12-24
 
 # Stub: road to bus-factor external actions
 
+> **Arrivals:** 2 — latest `inbox-2026-10-t` (2026-10-16): a round on this
+> package's distribution surfaces re-reached all four transferred items (the
+> registry publish, the Packagist claim, the two directory forms and the
+> awesome-list resubmission) and recorded them here rather than planning them,
+> per the council disposition below. Earlier: the 2026-08-20 drain transfer.
+
+
 > **Stub — not active work.** Drain-run transfer, 2026-08-20, from
 > [`road-to-maintainer-bus-factor.md`](../road-to-maintainer-bus-factor.md).
 > Council disposition **B**, outcome state **transferred**, per the framework of

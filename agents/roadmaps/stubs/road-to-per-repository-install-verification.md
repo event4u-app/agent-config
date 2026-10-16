@@ -5,7 +5,12 @@ review_by: 2026-09-25
 
 # Stub: road to per-repository install verification
 
-> **Arrivals:** 4 — latest `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
+> **Arrivals:** 5 — latest `inbox-2026-10-t` (2026-10-16): a round reproduced the
+> ownership losses this stub is the blocked sibling of (the manifest is written
+> only from a project carrying settings, and an unrecorded file is overwritten).
+> `road-to-an-ownership-record-that-belongs-to-the-user` Phase 0 routes the
+> ADR-020 reading to the council rather than re-proposing the work. Earlier:
+> `inbox-2026-09-ab` (2026-09-29); earlier rounds not enumerated here.
 
 > **Stub — not active work.** A **drain-run transfer**, not a demand-gated stub.
 > Created 2026-08-26 when

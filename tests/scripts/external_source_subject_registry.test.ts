@@ -29,6 +29,16 @@
  *
  *     npx vitest run tests/scripts/external_source_subject_registry.test.ts
  *
+ * A LATER CORRECTION TO THIS FILE (2026-10-16)
+ *
+ * `the base-ref reading` asserted `cfg.subjects` had length 10 — the size of
+ * the registry on the day the reading was taken. That coupled a historical
+ * measurement to the registry's current size, so the next round to audit a new
+ * comparison subject met a red test whose message named a 2026-09-29 figure its
+ * change had not touched. The reading is now taken over the ten rows it was
+ * actually taken over, selected by id; growth is covered by the binding
+ * predicate instead, which is the property that matters.
+ *
  * A CORRECTION TO THE ROADMAP THAT COMMISSIONED THIS
  *
  * `road-to-a-denylist-that-sees-every-subject` states the before-reading as
@@ -71,6 +81,15 @@ const TSX_BIN = path.join(
 
 /** The base commit the docstring's reading was taken at. */
 const BASE_REF = 'dbf1c917956745119e20ab3c3551fe20e33c26c6';
+
+/**
+ * The ten registry rows the 2026-09-29 reading was taken over. Ids, never
+ * slugs — the same discipline the docstring states for this whole file. Rows
+ * added by later rounds are deliberately outside the historical figure; they
+ * are bound by the predicate in `comparison-subject registry — bound to the
+ * denylist`, which is where a missing pattern belongs.
+ */
+const ORIGINAL_READING_IDS = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'];
 
 const big = (cwd: string) => ({ maxBuffer: 256 * 1024 * 1024, cwd, encoding: 'utf8' as const });
 
@@ -247,9 +266,25 @@ describe('comparison-subject registry — the base-ref reading', () => {
             return;
         }
         const base = JSON.parse(shown.stdout as string) as { deny: string[] };
-        const caught = cfg.subjects.filter((s) => covering(s.slug, base.deny).length > 0);
-        expect(cfg.subjects).toHaveLength(10);
+        // The reading is HISTORICAL: it is over the ten rows the registry held
+        // when it was written, not over whatever it holds today. Selecting them
+        // by id keeps the figure executable while letting later rounds add
+        // subjects — which is what the registry is for. Asserting over the whole
+        // array instead made every new comparison subject a test failure, with a
+        // message about a 2026-09-29 measurement that the new row did not touch.
+        const measured = cfg.subjects.filter((s) => ORIGINAL_READING_IDS.includes(s.id));
+        const caught = measured.filter((s) => covering(s.slug, base.deny).length > 0);
+        expect(measured).toHaveLength(10);
         expect(caught).toHaveLength(5);
         expect(caught.map((s) => s.id)).toEqual(['S1', 'S2', 'S3', 'S4', 'S6']);
+    });
+
+    it('every registry row added after the reading is still bound to a pattern', () => {
+        // The growth the assertion above no longer blocks is covered here, by
+        // the binding predicate rather than by a count: a row added later owes
+        // its deny pattern exactly as the original ten do.
+        const later = cfg.subjects.filter((s) => !ORIGINAL_READING_IDS.includes(s.id));
+        const uncovered = later.filter((s) => covering(s.slug, cfg.deny).length === 0).map((s) => s.id);
+        expect(uncovered).toEqual([]);
     });
 });
