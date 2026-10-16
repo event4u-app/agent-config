@@ -201,29 +201,35 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 3 — A procedure as data, with no runtime
 
-- [ ] **3.1 The sidecar.** `src/skills/<skill>/procedure.yaml` beside `SKILL.md`
+- [x] **3.1 The sidecar.** `src/skills/<skill>/procedure.yaml` beside `SKILL.md`
       (the skill schema stays `additionalProperties: false`):
       `schema_version`, `brief` (goal, inputs, done_when) and an ordered list of
       `steps`, each with `id`, `file` (under `references/steps/`) and `exit`.
       No field names another skill — a `skill:` key per step would be the chain
       the skill-DAG lock rejects.
       verify: `npx vitest run tests/scripts/lint_skill_procedures.test.ts -t rejects-skill-field --reporter=verbose` -> /✓.*rejects-skill-field/
-- [ ] **3.2 Typed exits, never a command string.** `exit` is exactly one of
+- [x] **3.2 Typed exits, never a command string.** `exit` is exactly one of
       `exists: <path>`, `schema: <path>#<schema-id>`, `check: <id>` or
       `judgement`. A `check:` id names a deterministic, read-only, offline
       TypeScript function registered in `src/scripts/_lib/procedure_checks.ts`;
       a manifest can name only ids that exist there. No string from a manifest
       is ever executed.
       verify: `npx vitest run tests/scripts/lint_skill_procedures.test.ts -t rejects-command-string-exit --reporter=verbose` -> /✓.*rejects-command-string-exit/
-- [ ] **3.3 Skipping is a stated state.** An optional `when:` takes a predicate
+- [x] **3.3 Skipping is a stated state.** An optional `when:` takes a predicate
       from a closed vocabulary; a step not taken is recorded as
       `skipped: <reason>`, never silently.
       verify: `npx vitest run tests/scripts/lint_skill_procedures.test.ts -t unknown-when-predicate --reporter=verbose` -> /✓.*unknown-when-predicate/
-- [ ] **3.4 The lint.** `lint_skill_procedures`: every `file` exists under
+- [x] **3.4 The lint.** `lint_skill_procedures`: every `file` exists under
       `references/steps/` and is linked from the head; ids are unique; exit
       types are valid; `when:` predicates are known; no path escapes the skill
       directory. It also reports — never fails on — the share of steps whose exit
       is `judgement`.
+      *Done 2026-10-17:* `lint_skill_procedures` + `_lib/procedure_checks.ts`
+      (registry starts empty; a check lands with the pilot step that needs it).
+      `when:` vocabulary is `file-exists: <path>` and `file-absent: <path>`.
+      Not yet a CI step: no sidecar exists before Phase 4, and registering a
+      gate in `gate-coverage.yml` needs a ratification record — registration
+      lands with the first sidecar.
       verify: `./scripts-run src/scripts/lint_skill_procedures` -> 0
 
 ## Phase 4 — Three pilots, split without losing a line
