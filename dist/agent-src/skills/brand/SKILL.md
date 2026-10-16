@@ -98,8 +98,8 @@ Provenance: [`ATTRIBUTION.md`](ATTRIBUTION.md); manifest:
 ## Gotchas
 
 - Corpus grounds **pre-action selection** — not mid-task reference and not
-  output validation ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)
-  § Iron Law 2 owns validation).
+  output validation (`brand-source-of-truth` § Iron Law 2
+  owns validation).
 - Keep queries brand-shaped ("luxury law firm rebrand", "playful kids snack
   brand") — generic words land on the default `archetype` domain.
 - An empty result is a legitimate outcome — surface the evidence gap and

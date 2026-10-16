@@ -59,11 +59,7 @@ linter. Obligations: [`design-intelligence/ATTRIBUTION.md`](../design-intelligen
 Rules: components never reference primitives directly; dark mode lives
 under `dark.semantic.*` overriding the same semantic names (emitted as a
 `.dark { … }` block); every value is a `{"$value": …, "$type": …}` pair
-(DTCG). Stable DTCG 2025.10 object values are read: a colour
-`{colorSpace, components, alpha?, hex?}` emits its `hex` when present, else a
-CSS Color 4 function; a dimension or duration `{value, unit}` emits
-`<value><unit>`; any other object fails `generate` with the token path and
-exit 1. String values stay accepted. Start from
+(DTCG; 2025.10 objects read). Start from
 [the bundled starter template](templates/design-tokens-starter.json).
 
 ## Toolchain (`scripts/tokens.ts` — skill-relative, any cwd)
@@ -162,8 +158,8 @@ call site.)
 
 ## Gotchas
 
-- `validate` intentionally skips `#000`/`#fff`(+6-digit forms), the
-  `var(--…)` span itself (never the rest of its line), comments, token-definition files, and
+- `validate` intentionally skips `#000`/`#fff`(+6-digit forms), `var(--…)`
+  spans (not their line), comments, token-definition files, and
   known external asset hosts — review its output, don't blindly allowlist.
 - Brand→token sync (`brand-guidelines.md` → scale generation) is
   **deferred** per council 2026-06-07 (fork D2) — watch note:
@@ -176,4 +172,4 @@ call site.)
 - [`design-intelligence`](../design-intelligence/SKILL.md) — grounded value selection.
 - [`tailwind-engineer`](../tailwind-engineer/SKILL.md) — utility-discipline consumer.
 - [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — shadcn token conventions.
-- [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md) — when authoring the colour layer, avoid the C5 cream/sand default palette (OKLCH L 0.84–0.97, C < 0.06) and C1 purple/violet primaries unless the brand explicitly defines them; `brand-source-of-truth` § Iron Law 2 is the checklist emitted tokens are read against.
+- [`docs/guidelines/design-antipatterns.md`](../../guidelines/design-antipatterns.md) — when authoring the colour layer, avoid the C5 cream/sand default palette (OKLCH L 0.84–0.97, C < 0.06) and C1 purple/violet primaries unless the brand explicitly defines them; check emitted tokens per `brand-source-of-truth` § Iron Law 2.

@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **592**
-- Edges (incl. self-WRITE): **2278**
+- Edges (incl. self-WRITE): **2275**
 
 ## READ_ONLY edges
 
@@ -621,7 +621,6 @@
 | `.agent-src.uncondensed/rules/verify-before-complete.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/verify-before-complete.md` | `.agent-src.uncondensed/contexts/execution/verification-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/rules/verify-before-complete.md` | `contexts/execution/verification-mechanics.md` | `load_context` | 1 |
-| `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncondensed/rules/brand-consistency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncondensed/skills/design-tokens/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncondensed/skills/fe-design/SKILL.md` | `body_link` | 1 |
@@ -729,7 +728,6 @@
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/corpus-grounding/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `.agent-src.uncondensed/rules/brand-consistency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `.agent-src.uncondensed/rules/brand-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `.agent-src.uncondensed/skills/design-tokens/SKILL.md` | `body_link` | 1 |
@@ -737,7 +735,6 @@
 | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/ATTRIBUTION.md` | `.agent-src.uncondensed/skills/corpus-grounding/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/ATTRIBUTION.md` | `.agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/rules/brand-consistency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/rules/brand-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand/SKILL.md` | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `body_link` | 1 |

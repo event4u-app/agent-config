@@ -186,7 +186,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       names a path in the resolver; fails on the D1 list. Generated catalogues
       and ADRs are excluded from the assertion and regenerate or stay historical.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t token-name-parity --reporter=verbose` -> /✓.*token-name-parity/
-      Done 2026-10-16: `token-name-parity` in `brand_status.test.ts` walks `src/skills`, `src/domains` and `docs/contracts` (evals and generated READMEs excluded); red against the 49 dotted lines at the base, green after 1.2.
+      Done 2026-10-16: `token-name-parity` in `brand_status.test.ts` walks `src/skills`, `src/domains` and `docs/contracts` (evals and generated READMEs excluded); red against the 49 dotted lines at the base, green after 1.2's authored half.
 - [x] **0.2 Status honesty, red.** Fixtures: malformed file, two files with
       different content, two files with identical content, tokens without voice,
       voice without tokens, nothing. Today the first two read "present".
@@ -226,12 +226,12 @@ irreversible-external-action row of `non-destructive-by-default`).
       the tracked rest of `reference/`. 0.5 goes green. No history rewrite, ever.
       verify: `rg -n 'agents/reference/ghostwriter' src/config/gitignore-block.txt src/scripts/lint_ghostwriter_source.ts docs/contracts/agents-layout.md` -> /reference\/ghostwriter/
       Done 2026-10-16: the block (and `agents-paths.yml`) ignores `agents/reference/ghostwriter/**` and `agents/ghostwriter/**` with `README.md` carved out; the lint scans both roots recursively, canonical first; `agents-layout.md` marks `reference/ghostwriter/` local-only. 0.5 green.
-- [x] **1.2 One token name** (E10). The D1 authored surfaces say `tokens.json`;
+- [ ] **1.2 One token name** (E10). The D1 authored surfaces say `tokens.json`;
       routing evals keep the dotted phrasing as a user utterance and gain the
       plain one; generated catalogues regenerate; ADR-061 gets no edit. The
       "Recorded, not resolved" section is deleted. 0.1 goes green.
       verify: `rg -n '\.tokens\.json' src/skills src/domains docs/contracts --glob '!**/evals/**' | rg -v 'NEVER|nothing reads|near-miss'` -> 1 (no output)
-      Done 2026-10-16: 14 authored files say `tokens.json`; the "Recorded, not resolved" section is gone; the two trigger evals keep the dotted utterance and gain the plain one; catalogues regenerated; ADR-061 untouched. 0.1 green.
+      Open 2026-10-16: the authored half landed — 14 files say `tokens.json`, the "Recorded, not resolved" section is gone, catalogues regenerated, ADR-061 untouched, the verify passes and 0.1 is green. The eval half did not: adding the plain utterance to the `brand-to-tokens` and `brand-asset-generation` trigger evals changes the pinned trigger-corpus holdout (`trigger_corpus_holdout_pin`), whose published SET-SHA256 and the measurements built on it would need re-pinning; that is left for a change that owns the corpus.
 - [ ] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
       instead of declaring its own.
       verify: `rg -c 'export const BRAND_TOKEN_PATHS' src` -> 1 file
