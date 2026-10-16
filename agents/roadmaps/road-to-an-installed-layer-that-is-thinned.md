@@ -489,3 +489,34 @@ provider-diverse council recorded as materially false, and it was left standing
 here after the page itself was fixed — on the surface an owner actually reads.
 It is replaced rather than deleted so the correction is visible from this side
 too.
+
+**Re-screened 2026-10-16 at `main` @ `5fa963cec` — no open step is executable
+here, and the layer grew rather than shrank.** Every open step was re-tested
+against the tree instead of against its marker:
+
+- **2.1, 2.3, 2.4 and AC-2** read the record of
+  `road-to-a-setup-that-decides-itself` step 2.1, and that step is still `[ ]`
+  together with its producers 1.1 and 1.2 (binding `InstructionsLoaded` and its
+  negative controls). `agents/evidence/analysis/` still matches no
+  `installed-arrival-*.md` and no `stub-use-*.md`, so every verify line greps
+  an empty set.
+- **3.1, 3.5 and AC-4** wait on that file's 5.3. `check_host_tree_parity` was
+  re-run and exits 0 (`2 non-delivery host tree(s) byte-identical to eager-all
+  · delivery hosts [claude-code]`); both limbs still hold, and the step still
+  asks about a flip that has not happened.
+- **3.2 and AC-1** were re-measured with this page's reproduce block (opt-in
+  install into an empty `HOME`, `installed_layer_report`), at the same
+  139-character body-link prefix as the 2026-10-06 "after" reading:
+
+| Reading | 2026-10-06 (after) | 2026-10-16 | Delta |
+|---|---|---|---|
+| files | 105 | 106 | +1 |
+| package-owned, all | 107,058 | 107,460 | +402 |
+| unconditional | 93,357 | 93,759 | +402 |
+| path-scoped | 13,701 | 13,701 | 0 |
+
+  D6's revisit condition — the full-bodied set shrinking until the total sits at
+  or under 75,000 — is further from firing than it was ten days ago, and D7's
+  precondition (an environment-independent measurement) is still unbuilt. A
+  ceiling at "measured plus 10 %, never above 75,000" would be red on `main` on
+  landing, so 3.2 stays open for the reason already recorded under it.
