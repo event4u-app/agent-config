@@ -19,8 +19,8 @@ in the tree plays that role. `installed_layer_ownership_real_install.test.ts` an
 `global_install_hooks_smoke.test.ts` are the shape to copy — they spawn the real
 orchestrator with `spawnSync`, let it write, then read back what it wrote.
 
-**Adding a case.** One file per behaviour under `tests/install/`, named for the
-behaviour rather than the module it touches. A case that runs the real
+**Adding a case.** One file per behavior under `tests/install/`, named for the
+behavior rather than the module it touches. A case that runs the real
 orchestrator costs seconds to minutes, so it says so in its header; a case that
 only exercises a pure planner belongs beside its unit tests instead.
 
