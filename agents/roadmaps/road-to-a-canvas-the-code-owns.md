@@ -139,11 +139,12 @@ deleted or left as a silent twin without a row the user has seen.
       `*.dc.html` in `isHandoverPath`. Run and record the failure before 1.1.
       (2026-10-16: red on `*.dc.html` in `isHandoverPath`, then green after 1.1.)
       verify: `npx vitest run tests/hooks/handover_predicate_parity.test.ts -t control --reporter=verbose` -> /✓.*control/
-- [ ] **0.3 Reserved list, red** (`corrected-from-reproduction`: the source named
+- [x] **0.3 Reserved list, red** (`corrected-from-reproduction`: the source named
       only `design`). A new `tests/scripts/claude_builtin_names.test.ts` asserts that
       every name in a pinned host fixture (`tests/fixtures/host-builtins/2.1.296.json`,
       read offline from the installed binary) is reserved; it fails on `design`,
       `design-consent` and `design-revoke`.
+      (2026-10-16: red on all three names; fixture pinned at the installed host, `2.1.301.json`.)
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts -t pinned-host-control --reporter=verbose` -> /✓.*pinned-host-control/
 - [ ] **0.4 Alias loss and cycle misreport, red** (`corrected-from-reproduction`).
       The D5 fixture asserts an alias record for both roles and a cycle reported as
@@ -160,10 +161,11 @@ deleted or left as a silent twin without a row the user has seen.
       everywhere. Measure the hook bundle before and after; 0.2 goes green.
       (2026-10-16: `HANDOVER_SHAPES` in `_lib/ui_surface.ts`; bundle 1,544,206 to 1,543,904 B.)
       verify: `npx vitest run tests/hooks/handover_predicate_parity.test.ts tests/hooks/source_first_gate.test.ts --reporter=verbose` -> /✓/
-- [ ] **1.2 Three host names reserved** (`corrected-from-reproduction`). Add
+- [x] **1.2 Three host names reserved** (`corrected-from-reproduction`). Add
       `design`, `design-consent`, `design-revoke`, refresh the source date and name
       the pinned fixture as the refresh trigger. The flat `/design` router is then
       withheld on Claude Code by the existing guard; 0.3 goes green.
+      (2026-10-16: done.)
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts --reporter=verbose` -> /✓.*pinned-host-control/
 - [ ] <!-- blocked-by: maintainer-design-router-name | asked: no — authored from inbox round inbox-2026-10-m, which carried no owner turn on this question --> **1.3 The router keeps a reachable name.** Apply the owner's answer to the
       blocker: rename the maintainer router with a `replaces:` alias, or record

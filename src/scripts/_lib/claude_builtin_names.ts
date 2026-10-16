@@ -19,10 +19,12 @@
 //      registration with `user-invocable: false` (Claude may still load it
 //      automatically; the built-in keeps the `/name`).
 //
-// Source: https://code.claude.com/docs/en/commands (fetched 2026-07-10),
-// plus a small legacy set still present in older Claude Code versions.
-// Refresh trigger: a package artefact stops appearing in Claude Code, or a
-// release-notes entry adds a new built-in command.
+// Source: https://code.claude.com/docs/en/commands (fetched 2026-07-10), the
+// design family read offline from host 2.1.301 (2026-10-16), plus a small
+// legacy set still present in older Claude Code versions.
+// Refresh trigger: a package artefact stops appearing in Claude Code, a
+// release-notes entry adds a new built-in command, or the pinned host fixture
+// `tests/fixtures/host-builtins/<version>.json` is re-read at a newer host.
 
 const _CURRENT = [
     'add-dir',
@@ -47,7 +49,10 @@ const _CURRENT = [
     'dataviz',
     'debug',
     'deep-research',
+    'design',
+    'design-consent',
     'design-login',
+    'design-revoke',
     'design-sync',
     'desktop',
     'diff',
