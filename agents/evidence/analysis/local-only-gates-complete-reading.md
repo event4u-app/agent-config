@@ -628,3 +628,55 @@ baseline moves on CI's reading of this branch.
 **Left for 2.2e onward: 25 gates** — 20 `wire`-class in name order from
 `lint_skill_router_head`, `lint_marketplace_install_completeness` while it stays
 red, and 2.2a's four skipped gates for 2.2f.
+
+## 2026-10-16 — step 2.2, fifth batch (2.2e), the window emptied
+
+Read on branch `drain/local-gates-wired-2e-20261016`, off `origin/main` after
+2.2d merged. `check_ci_local_parity --format json` lists **44** undeclared
+local-only gates; the `wire`-class ones left in name order from
+`lint_skill_router_head` number **nineteen**, and this batch wires all of them —
+the window is empty after it.
+
+Each ran serially and `git status --short` was checked after it: all nineteen
+exit 0 and leave the tree clean. That includes the four writer-shaped gates the
+roadmap names, checked first: `rebuild_hook_bundle` (no self-hosted bundle on a
+checkout, nothing to heal), `report_imperative_density`, and both
+`second_brain_*` under `--dry-run`. `second_brain_retrieval` calls the network
+only under `--run`; `--dry-run` stubs the model arms. None of the nineteen calls
+`checkRatchet`, reads the wall clock or defaults its base to a local branch.
+
+| Gate | Argv | Exit | Seconds |
+|---|---|---|---|
+| `lint_skill_router_head` | `--quiet` | 0 | 0.21 |
+| `lint_skill_scripts_readonly` | `--quiet` | 0 | 0.20 |
+| `lint_skill_tools` | `--quiet` | 0 | 0.19 |
+| `lint_spawn_payload` | — | 0 | 0.21 |
+| `lint_store_boundary` | — | 0 | 0.20 |
+| `lint_surface_matrix` | — | 0 | 0.32 |
+| `lint_ticket_buildable` | — | 0 | 0.23 |
+| `lint_token_budget_discipline` | `--quiet` | 0 | 0.35 |
+| `lint_trigger_precision` | `--quiet` | 0 | 0.20 |
+| `lint_ui_stack_bundles` | `--quiet` | 0 | 0.20 |
+| `lint_versioned_cache` | `--quiet` | 0 | 0.45 |
+| `rebuild_hook_bundle` | — | 0 | 0.23 |
+| `report_imperative_density` | — | 0 | 0.22 |
+| `second_brain_retrieval` | `--dry-run` | 0 | 0.26 |
+| `second_brain_score` | `--dry-run` | 0 | 0.23 |
+| `validate_agent_settings` | — | 0 | 0.22 |
+| `validate_decision_engine` | — | 0 | 0.23 |
+| `validate_flow_teams` | `--quiet` | 0 | 0.22 |
+| `validate_reach_prescriptions` | `--quiet` | 0 | 0.35 |
+
+The batch test's twenty-a-batch bound now allows the batch that empties the
+window to hold fewer: it is marked `final`, and every other batch is still held
+to exactly twenty.
+
+**Still a local reading.** `check_ci_local_parity` reads **25** on this branch,
+44 - 19; `check_gate_reachability --gate` exits 0. The baseline moves on CI's
+reading of this branch.
+
+**Left for 2.2f: five wire-class gates** — 2.2a's four skipped
+(`check_hook_bundle_freshness`, `check_quality_regression`,
+`check_release_trunk_sync`, `check_reply_consistency`) and
+`lint_marketplace_install_completeness`, red since 2026-10-15. The other twenty
+of the 25 are in classes that are not `wire`.
