@@ -288,6 +288,10 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       changed and nothing else. Armed only in `protect` or `strict`, and only
       after the 1.3 readings.
       verify: for each tool shape probed in 0.1, keys and types of the emitted value equal those of the input.
+      Closes two gap fixtures recorded by `road-to-one-detector-and-the-senders-we-own`
+      1.3: `tests/fixtures/egress-prevention-gaps/program-output.json` and
+      `database-row.json`. When this lands, `tests/scripts/hooks/egress_prevention_gaps.test.ts`
+      inverts its no-rewrite assertion for both.
 - [ ] **3.2 Pay the debt the byte counter recorded.** The test pinning "nothing in
       the tree rewrites a tool result" goes red by design; its premise becomes
       "exactly one module emits the field", and `delivered_bytes` is taken from
@@ -335,6 +339,10 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       identifier class follows the mode. The stage's own deadline sits well inside
       the host's, because a host timeout lets the prompt through.
       verify: a Claude Code fixture refuses and prints the copy; on a host that cannot refuse, the fixture asserts a warn and the coverage table says `uncovered`.
+      Closes the gap fixture `tests/fixtures/egress-prevention-gaps/typed-secret.json`
+      recorded by `road-to-one-detector-and-the-senders-we-own` 1.3; when this
+      lands, `tests/scripts/hooks/egress_prevention_gaps.test.ts` inverts its
+      no-block assertion for it.
 - [ ] **5.2 State the residue in the refusal itself:** the text was typed into the
       host and may sit in its local transcript and history; rotate a credential
       that was typed. Types and counts, never a value.
