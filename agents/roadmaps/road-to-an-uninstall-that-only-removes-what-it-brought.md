@@ -50,9 +50,16 @@ configuration, which is exactly the failure under test. The static reading
 above is sufficient to act on, and Phase 0 is how the behaviour gets exercised
 safely.
 
+> **Phases 0 and 1 shipped out of band on 2026-10-16**, on the owner's
+> direction: the data-loss path was taken out of the roadmap queue and fixed
+> as its own change rather than waiting for a slot. `tests/install/uninstall_purge_containment.test.ts`
+> was observed **red** against `26c06aef7` — `.credentials.json was deleted`,
+> plus the refusal arm — and green after the fix. Phase 2 remains open: the
+> published claim and its `exec:` pointer have not been corrected yet.
+
 ## Phase 0 — Freeze the loss before changing it
 
-- [ ] **0.1 Write the containment test, red first.** New
+- [x] **0.1 Write the containment test, red first.** New
       `tests/install/uninstall_purge_containment.test.ts`, beside
       `tests/install/installed_layer_ownership_real_install.test.ts`, driving
       `cmd_uninstall` through `spawnSync` with `env: { HOME: mkdtempSync(…) }`
@@ -63,34 +70,34 @@ safely.
       verify: the test is **red** and its failure names
       `cmd_uninstall.ts:283`. A test that passes here has not reproduced the
       defect and is not evidence.
-- [ ] **0.2 Pin the two-step case.** `uninstall --global` followed by
+- [x] **0.2 Pin the two-step case.** `uninstall --global` followed by
       `uninstall --global --purge`: assert the second invocation is still
       possible, i.e. the first does not remove the record the second needs.
       verify: red or green, recorded either way — this one is a genuine
       unknown and the test is how it stops being one.
-- [ ] **0.3 Assert bytes, not existence.** Every foreign-file assertion
+- [x] **0.3 Assert bytes, not existence.** Every foreign-file assertion
       compares a digest taken before the run, so a file that is deleted and
       recreated empty fails.
       verify: a deliberately mutated fixture file fails the assertion.
 
 ## Phase 1 — Purge from the inventory, never from the anchor
 
-- [ ] **1.1 Read the inventory.** `_remove_global_content` loads
+- [x] **1.1 Read the inventory.** `_remove_global_content` loads
       `~/.event4u/agent-config/deployed-files.json` through
       `src/scripts/_lib/global_deploy_inventory.ts` and deletes only the
       relative paths it lists, resolved under the anchor.
       verify: Phase 0.1 green; the seeded foreign files are byte-identical
       after the run.
-- [ ] **1.2 Prune only directories this package created, and only when
+- [x] **1.2 Prune only directories this package created, and only when
       empty.** No recursive directory removal survives in the file.
       verify: `grep -c 'rmSync(target, { recursive' src/scripts/_cli/cmd_uninstall.ts` -> /^0$/
       returns 0.
-- [ ] **1.3 A missing or unparseable inventory refuses.** Exit 1 with a
+- [x] **1.3 A missing or unparseable inventory refuses.** Exit 1 with a
       one-line reason naming the file. There is no fallback that deletes the
       anchor — a fallback is how this defect would come back.
       verify: a fixture with the inventory removed exits 1 and deletes
       nothing.
-- [ ] **1.4 Reword the preserved-path message.** `:277` names the inventory
+- [x] **1.4 Reword the preserved-path message.** `:277` names the inventory
       scope rather than offering a recursive delete.
       verify: the string no longer reads as an instruction to delete the
       anchor.

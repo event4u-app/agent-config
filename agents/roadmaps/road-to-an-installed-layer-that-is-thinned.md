@@ -347,6 +347,36 @@ Reproduced on 2026-10-01:
       > event that has not happened; what is corrected is where the event will
       > happen, which until now this file named wrongly.
 
+## Phase 4 — The host that is delivered to and may not be reading it
+
+Added by round `inbox-2026-10-t`. It is one defect on the surface this file
+already owns — what the install puts where — so it lands here as a phase
+rather than as a ninth roadmap.
+
+- [ ] **4.1 Establish what the host actually reads, before changing the
+      delivery.** `src/install/wizard-plan.ts:48` anchors this host at
+      `~/.codex/` and `:150` sends it the full skill bundle;
+      `docs/contracts/install-layout.md:152` records the delivered set as
+      `rules/, skills/, commands/, personas/`; `README.md:349` carries a ✅ for
+      it. What none of those establishes is that the host reads a markdown file
+      under that namespace as instructions rather than as execution policy, and
+      no `AGENTS.md` is written at the root it documents. Probe the real host
+      and record the answer.
+      verify: the finding lands under `agents/evidence/analysis/` with an
+      `evidence-type` marker, naming the host build it was taken against.
+- [ ] **4.2 Make the delivery match the reading, or make the claim match the
+      delivery.** If 4.1 shows the namespace is not read as instructions, write
+      what the host does read; if it shows the delivery is fine, correct the
+      round's finding in the same change. One of the two ships — a probe whose
+      outcome changes nothing was not worth taking.
+      verify: `README.md:349` and `docs/contracts/install-layout.md:152` agree
+      with the 4.1 record, asserted by a fixture over the two files.
+- [ ] **4.3 Do not generalise from one host.** The check added in 4.2 asserts
+      agreement between the claim and the delivery for this host only. Whether
+      other hosts have the same gap is a separate measurement and is not
+      assumed here.
+      verify: the fixture names the host it covers.
+
 ## What this roadmap deliberately does not do
 
 - No thinning of any other host (ADR-267).

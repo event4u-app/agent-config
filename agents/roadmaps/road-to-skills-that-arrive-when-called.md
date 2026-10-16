@@ -255,6 +255,27 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 - [ ] **6.2 Watch the second host's skills page** in the host-docs digest watch
   the search roadmap's 0.2 adds for the first host.
   verify: the digest list names both pages.
+- [ ] **6.3 Close the declared-dependency hole the default projection opens.**
+  Round `inbox-2026-10-t` reproduced it offline against
+  `_lib/scoped_projection`: **28** `skills:` declarations across `src/skills`
+  and `src/domains` name a skill that exists in the package and that the
+  default projection prunes — `/implement-ticket` alone declares
+  `refine-ticket` and `feature-planning`, and `src/skills/refine-ticket/SKILL.md`
+  carries no `packs:` key at all. Add `tests/install/default-projection-closure.test.ts`
+  importing `load_packs_registry`, `compute_active_pack_ids` and
+  `is_pruned_under_scoped` — offline, no install — asserting zero
+  declared-but-pruned, with the two header cases pinned by name. Then make
+  `_prune_scoped_modules` (`src/install/install.ts:3302`) keep every skill a
+  surviving artefact declares. Additive only: delivery grows, never shrinks.
+  verify: `./scripts-run src/scripts/count_scoped_projection --json` -> 0
+- [ ] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
+  list. Measured population in the source tree at `5fa963cec`: **2**
+  (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small
+  enough to fix in the same change. The round's source claimed 26; that
+  figure was taken over the INSTALLED tree and did not reproduce here, so the
+  installed-tree count is re-measured before it is quoted anywhere.
+  verify: a seeded rule-name entry makes the linter exit non-zero, and a
+  seeded skill name does not. Both directions.
 
 ## Blockers
 
