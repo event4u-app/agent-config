@@ -319,11 +319,6 @@ export function rawKeyPrefixPattern(minTail: number, prefixes: readonly string[]
     return new RegExp(`(?<![A-Za-z0-9])(?:${alt})[A-Za-z0-9_-]{${minTail},}`, 'g');
 }
 
-/** The longest declared prefix `value` starts with, or undefined. */
-export function rawKeyPrefixOf(value: string): string | undefined {
-    return CREDENTIAL_PREFIXES.find((p) => value.startsWith(p));
-}
-
 /**
  * End of the bytes a replacement of `span` must remove, or null when the row
  * cannot prove it (the caller then decides: a refusing surface refuses, a
