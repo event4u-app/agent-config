@@ -106,21 +106,24 @@ reuse.
 
 Nothing in Phases 2–6 that reads a capability starts before its row exists.
 
-- [ ] **1.1 Segment a leg into runs.** `cache_realization_report` splits a leg at
+- [x] **1.1 Segment a leg into runs.** `cache_realization_report` splits a leg at
       every `SubagentStart` that carries an already-seen ledger `ref`, and
       reports first-call metrics per run with an ordinal. Closes D10; without it
       no later claim is checkable.
       verify: `npx vitest run tests/scripts/cache_realization_report.test.ts -t resumed-run-gets-its-own-first-call --reporter=verbose` -> /✓.*resumed-run-gets-its-own-first-call/
-- [ ] **1.2 Burst baseline from the ledger that exists.** Spawns per 10 s and per
+      Done 2026-10-16: `segmentLegsIntoRuns` + `readLedgerStarts` in the report, `subagent_runs` in its JSON and text, new `--ledger-dir` flag; joins on `refFor` from the ledger hook, so no second hash.
+- [x] **1.2 Burst baseline from the ledger that exists.** Spawns per 10 s and per
       60 s, maximum overlap, per session, over the current ledger window — no
       new capture. Filed with its window and its bound: `spawn_guard_shadow`
       lines carry no `session_id`, so per-session figures come from the
       start/stop lines only.
       verify: `ls agents/evidence/analysis/` -> /spawn-burst-baseline/
-- [ ] **1.3 Council seats measured as their own population.** First-call
+      Done 2026-10-16: `agents/evidence/analysis/spawn-burst-baseline-2026-10.md`, ledger window 2026-08-13 to 2026-10-16, with the open-record bound on the overlap rows.
+- [x] **1.3 Council seats measured as their own population.** First-call
       written-or-uncached tokens per seat launch, separated from subagent legs,
       so Phase 5 has a baseline of its own.
       verify: `grep -c 'council seat' agents/evidence/analysis/spawn-burst-baseline-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: same file, n=4 joined seat launches, filed as a scale and not a subtrahend; Phase 5 should re-read.
 - [ ] **1.4 Observe `worker_resume`.** In a real session: a finished leg receives
       a follow-up by name, its next `SubagentStart` carries the same ledger
       `ref`, and that run's first call reads more than half its input from
@@ -165,11 +168,12 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 2 — Workers that load what their role needs
 
-- [ ] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
+- [x] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
       and `fork_shares_cache` (read by the D5 correction), both safe-default
       `false`, set `true` only from a Phase 1 row. `worker_respawn` stays
       untouched: no derivation, no deprecation.
       verify: `npx vitest run tests/scripts/_lib_host_capability.test.ts -t worker-resume-defaults-false --reporter=verbose` -> /✓.*worker-resume-defaults-false/
+      Done 2026-10-16: both atoms in `host_capability.ts`, the contract table and the observation criteria; no registry row sets either.
 - [ ] **2.2 Open the subagent schema** with vendor-neutral fields —
       `omit_project_instructions`, `preload_skills`, `max_turns`, `background`,
       `cache_ttl`, `reuse` (`continuity` or `never`) — and `SendMessage` in the
@@ -201,7 +205,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 3 — One decision function, recorded in shadow
 
-- [ ] **3.1 `_lib/worker_reuse.ts`, pure.** It runs only after the existing
+- [x] **3.1 `_lib/worker_reuse.ts`, pure.** It runs only after the existing
       in-session and lookup rungs have declined to stay in-session, and returns
       `resume` only when **all** hold, else `fresh` with the failing reason:
       (a) same domain as the worker's durable name;
@@ -219,10 +223,12 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       The decision object carries every input it read, so no prose sets a
       number.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t one-fixture-per-refusal-reason --reporter=verbose` -> /✓.*one-fixture-per-refusal-reason/
-- [ ] **3.2 The register is a view, not a store.** Eligibility is computed from
+      Done 2026-10-16: `src/scripts/_lib/worker_reuse.ts`. A missing observed cold start refuses as `no_observed_cold_start` instead of falling back to a constant.
+- [x] **3.2 The register is a view, not a store.** Eligibility is computed from
       the ledger and the transcript at decision time; the worker's name is the
       address; no agent id is written anywhere.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t no-agent-id-reaches-disk --reporter=verbose` -> /✓.*no-agent-id-reaches-disk/
+      Done 2026-10-16: `eligibleWorkers` derives the view from caller-supplied state; the module imports no I/O and no field can hold a host id.
 - [ ] **3.3 Shadow first.** `spawn-guard-shadow` records, on every `Agent`
       call, the verdict `would_resume` with the eligible name or `fresh` with
       the reason. Where 1.5 observed `PreToolUse` on `SendMessage`, the concern
@@ -230,10 +236,11 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       so one count covers spawn and resume; where it did not, the record says
       the resume half is unobserved. Still exit 0 on every path.
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t records-would-resume-and-never-denies --reporter=verbose` -> /✓.*records-would-resume-and-never-denies/
-- [ ] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
+- [x] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
       re-tasked; its successor is briefed from its `worker` capsule — the
       generation chain the recycling roadmap wanted, reached at task boundaries.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t retired-worker-briefs-successor-from-capsule --reporter=verbose` -> /✓.*retired-worker-briefs-successor-from-capsule/
+      Done 2026-10-16: `briefSuccessor`. (b) also retires, per 4.4 and risk 2; (a) and (g) spawn plain fresh; a missing or invalid capsule falls back to stop-loss.
 - [ ] **3.5 File the shadow window** — at least 100 `Agent` calls or two
       weeks, the would-resume distribution and the refusal reasons. A window in
       which every reuse was refused is a valid null.
@@ -307,7 +314,7 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 6 — Prove it or record the null, then hand off
 
-- [ ] **6.1 Pre-register four claims in `docs/CLAIMS.md` before 3.6**, and run
+- [x] **6.1 Pre-register four claims in `docs/CLAIMS.md` before 3.6**, and run
       `build_proof` in the same change: `warm-worker-cold-start-relief` —
       resumed runs' first-call written-or-uncached tokens at most 20 % of the
       same definition's fresh median, over at least 30 resumes across at least
@@ -317,13 +324,15 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       `resume-non-inferiority` — verify-pass rate of resumed against fresh tasks
       of the same class, margin from decision D6.
       verify: `grep -c 'warm-worker-cold-start-relief' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: four `unbacked` pre-registrations, D6 margin set at -5 pp, `build_proof` run in the same change.
 - [ ] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
       verify: `grep -c 'resume-non-inferiority' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
-- [ ] **6.3 Correct D3** in the recycling roadmap's Context, citing the
+- [x] **6.3 Correct D3** in the recycling roadmap's Context, citing the
       per-spawn reading.
       verify: `grep -c 'per-spawn-standing-2026-10' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: correction sub-bullet under the kernel-floor bullet, citing the per-spawn reading.
 - [x] **6.4 Record the
       owner's answer** to the recycling roadmap's posed question on that file,
       with this plan's Phase 3 as the evidence the answer reads.

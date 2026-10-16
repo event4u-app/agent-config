@@ -8425,6 +8425,8 @@ var SAFE_DEFAULT = {
   separate_quota_pool: false,
   agent_teams: false,
   worker_respawn: false,
+  worker_resume: false,
+  fork_shares_cache: false,
   structured_ask: false,
   reads_project_mcp_config: false,
   // `true` because the safe answer here is "there is still a step", not
@@ -8447,6 +8449,8 @@ function normalizeHostManifest(input) {
     separate_quota_pool: asBool(src.separate_quota_pool),
     agent_teams: asBool(src.agent_teams),
     worker_respawn: asBool(src.worker_respawn),
+    worker_resume: asBool(src.worker_resume),
+    fork_shares_cache: asBool(src.fork_shares_cache),
     structured_ask: asBool(src.structured_ask),
     reads_project_mcp_config: asBool(src.reads_project_mcp_config),
     // Inverted coercion, matching the inverted default: only an explicit
@@ -8481,6 +8485,8 @@ var CAPABILITY_FIELDS = [
   "separate_quota_pool",
   "agent_teams",
   "worker_respawn",
+  "worker_resume",
+  "fork_shares_cache",
   "structured_ask",
   "reads_project_mcp_config",
   "mcp_needs_manual_activation"

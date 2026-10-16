@@ -97,6 +97,13 @@ with an honest-null exit.
   template, drift-gated. The source's "maybe subagents work without rules"
   premise is the shipped design, not a proposal — nothing in this roadmap
   re-opens it.
+  - **Correction, 2026-10-16** (`road-to-a-cold-start-paid-once` step 6.3).
+    The floor is what the dispatch *template* adds, not all a worker carries.
+    `agents/evidence/analysis/per-spawn-standing-2026-10.md` (lines 11-13)
+    records that the host loads the full instruction hierarchy into every
+    non-built-in subagent, so each spawn also pays the whole standing layer on
+    top of the floor. "Only the kernel floor" holds for the template text and
+    not for the worker's context.
 - **The mandatory-delegation question is closed for now, by a rule written
   before the numbers.** `orchestration-observed-dispatch-cost` resolved
   **honest-null 2026-08-07** (`docs/CLAIMS.md`): no dispatch family proved out,
