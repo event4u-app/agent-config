@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 148 files, 32 holdout and 116 train.** That bullet read
+- **Now: 151 files, 34 holdout and 117 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -33,7 +33,7 @@ beside it.
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
-  § Growth — 2026-10-14e and § Growth — 2026-10-16; the
+  § Growth — 2026-10-14e, § Growth — 2026-10-16 and § Growth — 2026-10-16b; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -505,10 +505,56 @@ reads 152 grandfathered, the shrink-only direction.
 run as the LAST act before publishing this section, after the final edit to any
 file in the set.
 
+## Growth — 2026-10-16b, three corpora; two seal
+
+```
+THREE ROWS ADDED: ONE TRAIN, TWO HOLDOUT. THE SEALED SET MOVES 32 -> 34.
+NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
+RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
+```
+
+**What changed.** `road-to-steps-the-skill-cannot-skip` steps 1.2 and 2.1 repaired
+links in the references of `design-review` and `roadmap-management` and aligned
+`skill-reviewer`'s split rule, so `check_routing_coverage` required a corpus from
+each and none had one. Each gained **10** labelled queries — 5 exemplars of which
+one is German, 3 near-misses and 2 counterexamples; 30 cases in all.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `design-review` | holdout | `0x1d` | 29 < 51 |
+| `roadmap-management` | holdout | `0x07` | 7 < 51 |
+| `skill-reviewer` | train | `0x51` | 81 ≥ 51 |
+
+**Two rows seal.** The rule is a hash of the directory name, so nobody chose
+that. The sealed set moves **32 -> 34**, the train set **116 -> 117**, and the
+realised split is **34/151 = 22.52 %** against the rule's 19.9 % target. AC-6
+still rests on the same 18 rows, so it is 18 of 34; a proposer evaluated against
+this holdout must exclude `design-review` and `roadmap-management` or say it is
+using rows whose seal is younger than the evaluation.
+
+**Both train-side measurements were re-taken, after the skill edits.**
+`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful` on
+the false-activation guard — false activation 5.829 -> **5.776 pp** against the
++2.0 pp guard, delta-recall 2.113 -> **2.269 pp** (below the 5.0 pp bar), McNemar
+p 0.4017 -> **0.3616**, train corpora 116 -> **117**, cases 1117 -> **1127**,
+catalogue 300. `delivery-set-measurement-2026-08-31.json`: precision@5 80.6 ->
+**80.645 %**, recall@5 61.444 -> **61.082 %**, recall loss 38.556 -> **38.918 pp**
+— the ceiling stays **BREACHED** — false activation@5 15.301 -> **15.162 %**,
+context cost 230.3 -> **230** tokens against the 500 target, still **MET**.
+Neither verdict changes in kind.
+
+**Three grandfather entries went with them.** All three were removed from
+`src/scripts/trigger_eval_grandfather.json`; `check_trigger_eval_presence` now
+reads 149 grandfathered, the shrink-only direction.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` and
+`routing_signal_measurement.test.ts` were run after the final edit to any file in
+the set.
+
 ## The set hash
 
 ```
-SET-SHA256  0b00f2759100241601b1e06c14ee378d8548aa7f8464c67de68a0092b621fad7
+SET-SHA256  54986392b12c4bfb4d99dbf3e43a57868652aa41350ccd4e5811728d6110b6e5
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -726,6 +772,7 @@ open and which this file does not settle.
 | `dashboard-design` | `118088e410b5fe2bf03f9b4b5eacec86735cee3be56d4f2b201f841e86e9bdaf` |
 | `decision-record` | `5003c69b353baf1a6cd25b679d029f1988a83482cf2664f316d7c451d7a906d1` |
 | `deep-reading-analyst` | `9d4e5e7f05961f470696e0ea80a47b9bd0eecdc83139817ee430ebdc86865722` |
+| `design-review` | `78a22cccbd6964d28931c1ec0cefab69b30b93d479ca4966ab1b42dfb2ea3181` |
 | `fe-design` | `bfc10d1fce9264a9b9e6a542354b1f679dec12331a605c97c4615795a804cc3e` |
 | `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
 | `judge-injection-defense` | `dad5757b5ee71d78b761467d007d18c18fb3d440d1e1f5eb54ca10b4ce6d156f` |
@@ -741,6 +788,7 @@ open and which this file does not settle.
 | `quality-tools` | `d6dfc15a7258796dc586cb897d96e536d09cda6f276e95f6d8900bc79ace900f` |
 | `react-native-setup` | `1c62bd45cea7c9d4c2dc1202d12feff4b45e4794cfe88395a33115d7a01e401d` |
 | `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
+| `roadmap-management` | `e3b7b1e506b713a88fc9c8f4b0ee4854efda2b8dd7c54fc940a8989e242aa0dd` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
@@ -972,6 +1020,7 @@ open and which this file does not settle.
 | `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
+| `skill-reviewer` | `86b4abf170034661be4a9136bdfa51f2f00f5e9a3db0b579d4946c1f091108f7` |
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
 | `source-discovery` | `e32a41fdd41414cc4734ebf440a253f592775046f603c9daeec6a28f1b05eee3` |
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
