@@ -155,9 +155,19 @@ needs a transcript.
 
 ## Phase 2 — Reach every skill, and say how
 
-- [ ] **2.1 A recovery path without the MCP server.** Once the search roadmap's
+- [x] **2.1 A recovery path without the MCP server.** Once the search roadmap's
   2.1 lands, `missing-skill-recovery` names that shell search path as the fallback
   when the MCP tool is not registered.
+  Done 2026-10-16: the rule already named `route:explain --skills` (the search
+  roadmap's 2.2), but on a default install the host root resolves, so the
+  package projection was never ranked and an uninstalled skill stayed
+  unreachable. The report now also ranks the projection and lists, under
+  `not_installed`, rows whose name no resolved root carries, each labelled
+  `not-installed`; a projection-only answer labels every row so.
+  `tests/install/skill_reach_not_installed_real_install.test.ts` runs a hermetic
+  `--global --tools=claude-code` install into a scratch `HOME`, picks the first
+  skill it did not write and finds it labelled `not-installed`; with the field
+  forced empty the test failed.
   verify: scratch-`HOME` default install with MCP disabled — a query for an
   uninstalled skill returns it, labelled `not-installed`.
 - [ ] **2.2 Declare reach.** `doctor` prints installed / described / name-only /
