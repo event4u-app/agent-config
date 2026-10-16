@@ -680,3 +680,40 @@ reading of this branch.
 `check_release_trunk_sync`, `check_reply_consistency`) and
 `lint_marketplace_install_completeness`, red since 2026-10-15. The other twenty
 of the 25 are in classes that are not `wire`.
+
+## 2026-10-16 — step 2.2, the residue (2.2f)
+
+Read on branch `drain/local-gates-wired-2f-20261016`, off `origin/main` after
+2.2e and its baseline follow-up merged. Five `wire`-class gates were left; each
+reason was re-checked against the tree rather than carried forward.
+
+| Gate | Reason recorded | Holds now? | Outcome |
+|---|---|---|---|
+| `lint_marketplace_install_completeness` | red: 10 issues in `hooks/hooks.json` | **no** | fixed and wired |
+| `check_reply_consistency` | its task scanned a directory the tree lacks, so exit 0 was vacuous | **no** | task repointed and wired |
+| `check_hook_bundle_freshness` | verdict depends on whether a self-hosted bundle was built | yes | backlog |
+| `check_release_trunk_sync` | reads branch state | yes | backlog |
+| `check_quality_regression` | inert until an operator-run `internal/bench/reports/quality-run.json` exists | yes — the file is still absent | backlog |
+
+**`lint_marketplace_install_completeness` was a false positive.** #2360 made the
+plugin's no-dispatcher branch echo a sentence that contains the words
+"agent-config hook"; the lint's command pattern read that prose as an invocation
+of a subcommand `hook`, ten times, once per event. The invocation on the same line
+is `"$BIN" dispatch:hook`. The lint now drops single-quoted text — what a line
+prints, never what it runs — before matching; a test pinning that line failed
+first (received `hook`, expected `dispatch:hook`) and passes now, and the lint
+exits 0 on the tree.
+
+**`check_reply_consistency` was never vacuous in effect.** Given a directory that
+does not exist, it falls back to `src/agent-src` and `src` and says so. The task
+now names `src`, the source tree ADR-051 moved the old one into, and a planted
+`(recommended)` inline tag in a scratch directory reds it (exit 2), so the scan
+can see what it is for.
+
+**Still a local reading.** `check_ci_local_parity` reads **23** on this branch,
+25 - 2. The baseline moves on CI's reading of this branch.
+
+**What 2.2 leaves.** Three `wire`-class gates stay local-only with their reasons
+written above, as 2.2f says; none is declared under `local_only:` to move the
+number. AC-2 ("every `wire`-class gate has a pull-request caller") therefore does
+not hold yet for those three, and step 2.2 stays open with it.

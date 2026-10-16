@@ -194,10 +194,20 @@ with it and left alone.
       batch allowed fewer than twenty. 79 of the "next eighty" are wired; the
       eightieth, `lint_marketplace_install_completeness`, is red and goes to 2.2f
       with 2.2a's four.
-- [ ] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
+- [x] **2.2f The residue** — what 2.2b–2.2e leave, plus the four 2.2a skipped
       if their reasons are resolved; a gate whose reason stands stays in the
       backlog with it written down, never declared to move the number.
       verify: `npx vitest run tests/scripts/ci_local_parity_classes.test.ts -t every-wire-class-gate-has-a-workflow-caller --reporter=verbose` -> /✓.*every-wire-class-gate-has-a-workflow-caller/
+      **Closed 2026-10-16.** Five reasons re-checked against the tree. Two no
+      longer held and both gates are wired as `Drain 2.2f`:
+      `lint_marketplace_install_completeness` (a false positive — it read the
+      prose the no-dispatcher branch echoes as a command, fixed with its test)
+      and `check_reply_consistency` (its task now names `src`; a planted tag reds
+      it). Three still hold and stay in the backlog with the reason written in
+      the evidence page's 2026-10-16 step-2.2f section:
+      `check_hook_bundle_freshness`, `check_release_trunk_sync`,
+      `check_quality_regression`. Nothing was declared. Step 2.2 and AC-2 stay
+      open on those three.
 - [x] **2.3 Calendar gates get a scheduled caller, not a required one.** The
       `calendar`-class gates and `check_council_pin_staleness` run in the
       scheduled workflow that already runs the gate canary, which is not a

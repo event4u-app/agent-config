@@ -186,6 +186,13 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
     check: [],
     final: true,
   },
+  {
+    id: "2.2f",
+    marker: "The local-only drain — step 2.2, the residue (2.2f)",
+    gates: ["lint_marketplace_install_completeness", "check_reply_consistency"],
+    check: [],
+    final: true,
+  },
 ];
 
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];

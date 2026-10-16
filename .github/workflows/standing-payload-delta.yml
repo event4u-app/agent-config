@@ -778,3 +778,24 @@ jobs:
           ./scripts-run src/scripts/validate_flow_teams --quiet || rc=1
           ./scripts-run src/scripts/validate_reach_prescriptions --quiet || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, the residue (2.2f) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Two of the five wire-class gates left after 2.2e had a reason that no
+      # longer holds. lint_marketplace_install_completeness was red only because
+      # it read the prose hooks.json's no-dispatcher branch echoes as a command;
+      # it now ignores single-quoted text and exits 0. check_reply_consistency
+      # scans `src` — its task named a directory the tree no longer has, but the
+      # check falls back to the source tree and a planted inline tag reds it.
+      # The other three keep their reasons and stay in the backlog: the hook
+      # bundle's freshness and the release trunk's sync read machine state, and
+      # the quality-regression gate is inert until an operator writes its input.
+      - name: Drain 2.2f — marketplace install completeness, reply consistency
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_marketplace_install_completeness || rc=1
+          ./scripts-run src/scripts/check_reply_consistency --quiet --scan-dir src || rc=1
+          exit "$rc"
