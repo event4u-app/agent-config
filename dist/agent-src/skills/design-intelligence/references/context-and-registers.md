@@ -20,8 +20,8 @@ the project root for `DESIGN.md` and/or `PRODUCT.md` (written by
    in DESIGN.md (e.g., chose a specific shadow for a new elevated surface),
    flag it for capture: *"Suggest adding to DESIGN.md: elevated surface shadow = …"*
 
-Boundary vs `brand-to-tokens`/`.tokens.json`:
-- `.tokens.json` = primitive definitions (gray-700 = #374151)
+Boundary vs `brand-to-tokens`/`tokens.json`:
+- `tokens.json` = primitive definitions (gray-700 = #374151)
 - `DESIGN.md` = usage decisions (elevated surfaces use the gray-700 shadow, 8px radius)
 Both are consumed; DESIGN.md takes precedence for usage questions.
 

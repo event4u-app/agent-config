@@ -1,5 +1,5 @@
 # reveal.js brand deck template — locked brand variables.
-# Values reference brand tokens from .tokens.json; the consumer's reveal
+# Values reference brand tokens from tokens.json; the consumer's reveal
 # build injects assets/design-tokens.css so var(--token) resolves.
 # No render engine is owned here (decision 7) — this configures the user's reveal.
 deck:
@@ -29,4 +29,4 @@ slides:
   - heading: "Section title"
     body: "Body copy in the brand body font; emphasis uses the accent token."
   - heading: "Closing"
-    body: "Call to action. Restyle the whole deck by changing .tokens.json."
+    body: "Call to action. Restyle the whole deck by changing tokens.json."

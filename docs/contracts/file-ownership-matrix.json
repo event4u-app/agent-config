@@ -9428,13 +9428,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/brand-consistency.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
       "target": ".agent-src.uncondensed/skills/accessibility-auditor/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -10408,13 +10401,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/brand-to-tokens/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/brand-consistency.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/brand-to-tokens/SKILL.md",
       "target": ".agent-src.uncondensed/rules/brand-source-of-truth.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -10472,13 +10458,6 @@
     {
       "source": ".agent-src.uncondensed/skills/brand/ATTRIBUTION.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/ATTRIBUTION.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/brand/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/brand-consistency.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

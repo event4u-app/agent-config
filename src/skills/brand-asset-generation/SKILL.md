@@ -51,7 +51,7 @@ adapters — not a second image-gen stack.
    written here, because these change without notice. If the spec cannot be
    established, say so and ask rather than emitting an asset that will be
    cropped.
-2. **Inject brand tokens when present** — if `pack-brand` is installed, load `.tokens.json`
+2. **Inject brand tokens when present** — if `pack-brand` is installed, load `tokens.json`
    (colors, typography, voice). Feed hex values, font names, and tone keywords directly
    into the prompt. Without tokens, derive palette and type from the brief itself;
    raw generation works — output is brief-driven, not token-driven.
@@ -83,14 +83,14 @@ adapters — not a second image-gen stack.
   (Phase B of the brand pipeline) eliminate this gap; until that pack ships, rely on
   brief-supplied values.
 - **Brand tokens come from `pack-brand` (Phase B)** — this skill consumes tokens; it does
-  not author them. If `.tokens.json` is absent, proceed brief-driven and note the gap.
+  not author them. If `tokens.json` is absent, proceed brief-driven and note the gap.
 - **Adapters are scaffold-tier (dry-run only)** — all pack-ai-image adapters are `experimental`.
   This skill produces a blueprint and dry-run confirmation; actual renders require a
   maintainer to capture a smoke trace and promote the adapter to `stable`.
 
 ## Do NOT
 
-- Do NOT invent brand colors or voice — use tokens from `.tokens.json` or explicit values
+- Do NOT invent brand colors or voice — use tokens from `tokens.json` or explicit values
   from the brief. Guessing palette values produces off-brand output.
 - Do NOT omit the AI-generation disclosure — every delivered asset requires the disclosure
   footer per `media-governance-routing`, regardless of how generic the output appears.

@@ -87,7 +87,7 @@ Scope column: `pkg` = source repo only · `consumer` = consumer projects only ·
 | `overrides/` | both | tracked-durable | permanent | humans (`/override:*`) | Per-project skill/rule/command/guideline overrides; the only consumer-committed customisation layer |
 | `proposals/` | both | tracked-durable | permanent | `learning-to-rule-or-skill` → `upstream-contribute` (human-gated) | Curated self-improvement proposals, one `<proposal_id>.md` per proposal against `templates/agents/proposal.example.md`. Tracked because the `proposal-drift` workflow reads their `stage:` frontmatter in CI. Gated by `./agent-config proposal:check` before `upstream-contribute` opens a PR |
 | `recruit-sessions/` | pkg | tracked-durable | permanent | maintainer | User-recruit study session data and runbooks |
-| `reference/` | pkg | tracked-durable | permanent | maintainer | External reference material: `ai-video/`, `docs/`, `ghostwriter/` |
+| `reference/` | both | mixed (see notes) | permanent | maintainer · `/ghostwriter:*` | External reference material: `ai-video/` and `docs/` are tracked-durable; `ghostwriter/` holds real-person voice profiles and is **local-only** (gitignored, nested files and `*.md.bak` included) except its tracked `README.md` |
 | `roadmap-assets/` | pkg | tracked-durable | permanent | maintainer | Supplemental assets for specific roadmaps (e.g. design-asset `.assets.md` files). **Merge candidate** — new assets can land in `evidence/` or alongside the roadmap file |
 | `roadmaps/` | pkg | tracked-durable | permanent | agents + maintainer | Active roadmaps; sub-dirs: `archive/`, `later/`, `skipped/`, `stubs/` |
 | `roles/` | pkg | tracked-durable | permanent | maintainer | Role-definition docs for consumer user-types (consultant, galabau, support, …) |

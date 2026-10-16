@@ -310,3 +310,126 @@ describe.runIf(runnable)('tokens — CLI errors (python3 vs tsx, exit code only)
         expect(runTs(['generate']).status).not.toBe(0);
     });
 });
+
+// road-to-a-brand-the-tree-can-check 0.3 / 3.1: stable DTCG 2025.10 makes a
+// colour and a dimension an object. Nothing may reach CSS as `[object Object]`,
+// and a value the toolchain cannot serialise fails with its token path.
+describe('tokens — dtcg-2025 object values', () => {
+    function gen(tokens: unknown): Run {
+        const cfg = path.join(tmp, 'dtcg.json');
+        fs.writeFileSync(cfg, JSON.stringify(tokens), 'utf-8');
+        return runTs(['generate', '--config', cfg]);
+    }
+
+    it('dtcg-2025: colour, dimension, duration and an alias to an object serialise', () => {
+        const r = gen({
+            primitive: {
+                color: {
+                    brand: { $type: 'color', $value: { colorSpace: 'srgb', components: [0, 0.333, 1], hex: '#0055FF' } },
+                    p3: { $type: 'color', $value: { colorSpace: 'display-p3', components: [0.1, 0.2, 0.3], alpha: 0.5 } },
+                    ok: { $type: 'color', $value: { colorSpace: 'oklch', components: [0.7, 0.1, 250] } },
+                    hsl: { $type: 'color', $value: { colorSpace: 'hsl', components: [210, 50, 40] } },
+                    faded: { $type: 'color', $value: { colorSpace: 'srgb', components: [0, 0, 0], hex: '#000000', alpha: 0.5 } },
+                },
+                space: { md: { $type: 'dimension', $value: { value: 0.75, unit: 'rem' } } },
+                duration: { fast: { $type: 'duration', $value: { value: 150, unit: 'ms' } } },
+            },
+            semantic: { color: { primary: { $type: 'color', $value: '{primitive.color.brand}' } } },
+        });
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).not.toContain('[object Object]');
+        expect(r.stdout).toContain('--primitive-color-brand: #0055FF;');
+        expect(r.stdout).toContain('--primitive-color-p3: color(display-p3 0.1 0.2 0.3 / 0.5);');
+        expect(r.stdout).toContain('--primitive-color-ok: oklch(0.7 0.1 250);');
+        expect(r.stdout).toContain('--primitive-color-hsl: hsl(210 50% 40%);');
+        expect(r.stdout).toContain('--primitive-color-faded: #00000080;');
+        expect(r.stdout).toContain('--primitive-space-md: 0.75rem;');
+        expect(r.stdout).toContain('--primitive-duration-fast: 150ms;');
+        expect(r.stdout).toContain('--color-primary: #0055FF;');
+    });
+
+    it('dtcg-2025: string values stay accepted', () => {
+        const r = gen({ primitive: { color: { a: { $type: 'color', $value: '#123456' } } } });
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toContain('--primitive-color-a: #123456;');
+    });
+
+    it.each([
+        ['an unknown object shape', { foo: 1 }, /primitive\.x\.bad/],
+        ['an unmapped colour space', { colorSpace: 'cmyk', components: [0, 0, 0] }, /colorSpace "cmyk"/],
+        ['an out-of-range component', { colorSpace: 'srgb', components: [0, 2, 0] }, /component 1 \(2\) is outside 0-1/],
+        ['a non-finite component', { colorSpace: 'srgb', components: [0, 'x', 0] }, /component 1 must be a finite number/],
+        ['an alpha above one', { colorSpace: 'srgb', components: [0, 0, 0], alpha: 3 }, /alpha 3 is outside 0-1/],
+        ['an unknown unit', { value: 2, unit: 'em' }, /unit "em"/],
+    ])('dtcg-2025: %s is a hard error naming the token, exit 1', (_label, value, message) => {
+        const r = gen({ primitive: { x: { bad: { $type: 'color', $value: value } } } });
+        expect(r.status).toBe(1);
+        expect(r.stdout).toBe('');
+        expect(r.stderr).toMatch(/primitive\.x\.bad/);
+        expect(r.stderr).toMatch(message);
+    });
+
+    it('dtcg-2025: an alias that resolves to an unmappable object fails, distinct from a dangling one', () => {
+        const r = gen({
+            primitive: { group: { a: { $type: 'color', $value: '#111111' } } },
+            semantic: { color: { x: { $type: 'color', $value: '{primitive.group}' } } },
+        });
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/color\.x/);
+    });
+});
+
+// road-to-a-brand-the-tree-can-check 0.3 / 3.2: `validate` used to skip any
+// line containing `var(--`, hiding a literal that sat beside a reference.
+describe('tokens — same-line var() span', () => {
+    it('same-line: a literal beside a var(--x) reference is reported', () => {
+        const dir = path.join(tmp, 'src');
+        fs.mkdirSync(dir);
+        fs.writeFileSync(
+            path.join(dir, 'a.css'),
+            '.a { color: #ff0000; background: var(--x); }\n.b { color: #00ff00; }\n.c { color: var(--y, #0000ff); }\n',
+            'utf-8',
+        );
+        const r = runTs(['validate', '--dir', dir, '--json']);
+        const found = JSON.parse(r.stdout) as Array<{ line: number; value: string }>;
+        expect(found.map((v) => [v.line, v.value])).toEqual([
+            [1, '#ff0000'],
+            [2, '#00ff00'],
+        ]);
+    });
+});
+
+// road-to-a-brand-the-tree-can-check 3.4: the starter speaks the format it
+// claims — colours and dimensions as 2025.10 objects, and no `$schema` key.
+describe('tokens — starter-shape', () => {
+    function leaves(node: unknown, out: Array<{ type: unknown; value: unknown }>): void {
+        if (typeof node !== 'object' || node === null) return;
+        const o = node as Record<string, unknown>;
+        if ('$value' in o) {
+            out.push({ type: o['$type'], value: o['$value'] });
+            return;
+        }
+        for (const v of Object.values(o)) leaves(v, out);
+    }
+
+    it('starter-shape: no $schema key, and every literal colour or dimension is an object', () => {
+        const starter = JSON.parse(fs.readFileSync(STARTER, 'utf-8')) as Record<string, unknown>;
+        expect('$schema' in starter).toBe(false);
+        const all: Array<{ type: unknown; value: unknown }> = [];
+        leaves(starter, all);
+        const literal = all.filter((l) => !(typeof l.value === 'string' && l.value.startsWith('{')));
+        const offenders = literal.filter(
+            (l) => (l.type === 'color' || l.type === 'dimension' || l.type === 'duration') && typeof l.value !== 'object',
+        );
+        expect(offenders).toEqual([]);
+        expect(literal.some((l) => l.type === 'color')).toBe(true);
+    });
+
+    it('starter-shape: the starter still generates, with no [object Object]', () => {
+        const r = runTs(['generate', '--config', STARTER]);
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).not.toContain('[object Object]');
+        expect(r.stdout).toContain('--primitive-color-gray-50: #F9FAFB;');
+        expect(r.stdout).toContain('--primitive-spacing-1: 0.25rem;');
+    });
+});

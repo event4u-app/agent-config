@@ -55,7 +55,7 @@ be useful. The worked examples teach agents both the *vocabulary*
 
 Captures the *visual usage decisions* (not token primitives) that agents
 should apply consistently across all UI tasks in this project. Unlike
-`.tokens.json` (which records what a color value IS), DESIGN.md records
+`tokens.json` (which records what a color value IS), DESIGN.md records
 *how and when to use it*.
 
 **Format:**
@@ -240,7 +240,7 @@ When `DESIGN.md` or `PRODUCT.md` is present in the project root:
   read DESIGN.md as a proxy for "what this project's conventions are".
 
 The boundary from `brand-to-tokens`:
-- `.tokens.json` carries primitive values (gray-700 = #374151)
+- `tokens.json` carries primitive values (gray-700 = #374151)
 - DESIGN.md carries usage decisions (elevated surfaces use 8px radius,
   not 4px or 12px)
 Both are consumed together; DESIGN.md takes precedence for usage questions.
@@ -249,7 +249,7 @@ Both are consumed together; DESIGN.md takes precedence for usage questions.
 
 When handing a design to implementation, emit a README a developer can build
 from **without the mockup open**. Template only — no vendored values (tokens
-come from the consumer's `.tokens.json` / DESIGN.md):
+come from the consumer's `tokens.json` / DESIGN.md):
 
 ```markdown
 # <Feature> — implementation handoff
@@ -266,7 +266,7 @@ Fidelity: <hi-fi = pixel-recreate the mockup | lo-fi = apply the codebase's
   literal)
 
 ## Tokens
-- Color / type / spacing / radius: reference DESIGN.md / .tokens.json — do not
+- Color / type / spacing / radius: reference DESIGN.md / tokens.json — do not
   inline hex or px
 
 ## Done means
@@ -309,7 +309,7 @@ rendered snapshot only with consumer tooling; record the git SHA. Rationale:
   all existing decisions forward and only add/correct. Losing prior
   captured history is worse than capturing nothing.
 - **Copying tokens into DESIGN.md** — DESIGN.md is NOT a copy of
-  `.tokens.json`. It captures *usage decisions* ("8px radius on elevated
+  `tokens.json`. It captures *usage decisions* ("8px radius on elevated
   surfaces"), not primitive values ("gray-700 = #374151"). The
   distinction is what makes DESIGN.md actionable.
 - **Capturing feature-specific behavior** — PRODUCT.md is for patterns
@@ -321,7 +321,7 @@ rendered snapshot only with consumer tooling; record the git SHA. Rationale:
 
 - Do NOT overwrite DESIGN.md/PRODUCT.md without first reading and diffing
   the existing content — accumulated history is the value.
-- Do NOT make DESIGN.md a copy of `.tokens.json` — it captures decisions,
+- Do NOT make DESIGN.md a copy of `tokens.json` — it captures decisions,
   not token definitions.
 - Do NOT capture feature-specific behavior in PRODUCT.md — only patterns
   that repeat across multiple features.

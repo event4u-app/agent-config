@@ -11,14 +11,17 @@
  *
  * ## The filename defect this verb exposes
  *
- * The rule names `.tokens.json`, with a leading dot, four times. The only real
- * resolver in the tree — `BRAND_TOKEN_PATHS` in the UI scaffold directive —
+ * The authored surfaces once named `.tokens.json`, with a leading dot. The only
+ * real resolver in the tree — `BRAND_TOKEN_PATHS` in the UI scaffold directive —
  * looks for `tokens.json`, without one, in four conventional locations. A
- * consumer who followed the rule literally would author a file the resolver can
- * never find, and nothing would report it. So this verb searches the canonical
- * list AND separately reports a dot-prefixed file sitting beside it, because
- * "you have a brand file in the wrong place" is a different answer from "you
- * have no brand".
+ * consumer who followed the old wording authored a file the resolver can never
+ * find. So this verb searches the canonical list AND separately reports a
+ * dot-prefixed file sitting beside it, because "you have a brand file in the
+ * wrong place" is a different answer from "you have no brand".
+ *
+ * A file that merely exists is not a brand either: each hit is parsed, hashed
+ * and classified (`inspectBrand`), so a malformed or shadowed file is named as
+ * such rather than reported as the brand.
  *
  * The path list is IMPORTED from the resolver rather than restated. A probe with
  * its own copy of the search order is a second answer waiting to disagree with
@@ -28,6 +31,7 @@
  * legitimate answer (greenfield), not a failure.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -47,16 +51,128 @@ export interface BrandStatusResult {
     err: string[];
 }
 
-/** The first canonical path holding a tokens file under `root`, or `null`. */
-export function findBrandTokens(root: string): string | null {
+/** The source kinds `brand-token-consumption` names. Only `tokens` has a resolver path today. */
+export type BrandSourceKind = 'tokens' | 'voice' | 'design-system' | 'design-md';
+
+/**
+ * `valid` — the file the brand is read from. `invalid` — unparseable or not a
+ * DTCG document. `duplicate` — byte-identical to the winner. `shadowed` — a
+ * valid file with different content that loses to the winner on precedence.
+ */
+export type BrandSourceStatus = 'valid' | 'invalid' | 'duplicate' | 'shadowed';
+
+export interface BrandSource {
+    path: string;
+    kind: BrandSourceKind;
+    sha256: string;
+    status: BrandSourceStatus;
+    error?: string;
+    winner?: string;
+}
+
+/**
+ * The contract's set names, verbatim (`brand-token-consumption.md` § 2): `bare`
+ * is the greenfield case. One vocabulary — never a second one beside it.
+ */
+export type BrandState = 'bare' | 'mixed' | 'branded';
+export type BrandQualifier = 'invalid' | 'shadowed';
+
+export interface BrandInspection {
+    state: BrandState;
+    qualifiers: BrandQualifier[];
+    tokens_file: string | null;
+    sources: BrandSource[];
+}
+
+const DESIGN_MD = 'DESIGN.md';
+
+function _hasDtcgToken(node: unknown, depth = 0): boolean {
+    if (depth > 64 || typeof node !== 'object' || node === null || Array.isArray(node)) return false;
+    if ('$value' in node) return true;
+    return Object.values(node as Record<string, unknown>).some((v) => _hasDtcgToken(v, depth + 1));
+}
+
+/**
+ * Parse before present: `null` when the text is a DTCG token document, else the
+ * reason it is not one. A file that merely exists is not a brand.
+ */
+export function tokenDocumentError(text: string): string | null {
+    let doc: unknown;
+    try {
+        doc = JSON.parse(text);
+    } catch (exc) {
+        return `not JSON: ${exc instanceof Error ? exc.message : String(exc)}`;
+    }
+    if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) {
+        return 'not a DTCG document: the root is not an object';
+    }
+    if (!_hasDtcgToken(doc)) {
+        return 'not a DTCG document: no token carries a `$value`';
+    }
+    return null;
+}
+
+/**
+ * Every canonical path holding a tokens file, classified. Computed on every
+ * call and never persisted — a stored index would be a third brand truth.
+ * Nothing is merged by value: the first valid file in resolver order wins.
+ */
+export function inspectBrand(root: string): BrandInspection {
+    const sources: BrandSource[] = [];
+    let winner: BrandSource | null = null;
     for (const rel of BRAND_TOKEN_PATHS) {
+        let bytes: Buffer;
         try {
-            if (fs.statSync(path.join(root, rel)).isFile()) return rel;
+            const abs = path.join(root, rel);
+            if (!fs.statSync(abs).isFile()) continue;
+            bytes = fs.readFileSync(abs);
         } catch {
             continue;
         }
+        const sha256 = createHash('sha256').update(bytes).digest('hex');
+        const error = tokenDocumentError(bytes.toString('utf-8'));
+        if (error !== null) {
+            sources.push({ path: rel, kind: 'tokens', sha256, status: 'invalid', error });
+        } else if (winner === null) {
+            winner = { path: rel, kind: 'tokens', sha256, status: 'valid' };
+            sources.push(winner);
+        } else {
+            sources.push({
+                path: rel,
+                kind: 'tokens',
+                sha256,
+                status: sha256 === winner.sha256 ? 'duplicate' : 'shadowed',
+                winner: winner.path,
+            });
+        }
     }
-    return null;
+    // DESIGN.md sits at the project root (`design-system-capture`). It records
+    // usage decisions, not values, so it is listed and never decides the state.
+    // A `design-system.json` has no canonical location in the tree to search.
+    try {
+        const abs = path.join(root, DESIGN_MD);
+        if (fs.statSync(abs).isFile()) {
+            const sha256 = createHash('sha256').update(fs.readFileSync(abs)).digest('hex');
+            sources.push({ path: DESIGN_MD, kind: 'design-md', sha256, status: 'valid' });
+        }
+    } catch {
+        // absent — nothing to list
+    }
+    const qualifiers: BrandQualifier[] = [];
+    if (sources.some((s) => s.status === 'invalid')) qualifiers.push('invalid');
+    if (sources.some((s) => s.status === 'shadowed')) qualifiers.push('shadowed');
+    // The voice side has no slot yet, so it reads as absent and a valid tokens
+    // file alone is `mixed`; `branded` needs the voice slot.
+    const voicePresent = false;
+    const tokensPresent = winner !== null;
+    const state: BrandState =
+        tokensPresent && voicePresent ? 'branded' : tokensPresent || voicePresent ? 'mixed' : 'bare';
+    return { state, qualifiers, tokens_file: winner?.path ?? null, sources };
+}
+
+/** The canonical path the brand is read from — the first VALID tokens file — or `null`. */
+export function findBrandTokens(root: string): string | null {
+    return inspectBrand(root).tokens_file;
 }
 
 /**
@@ -79,10 +195,13 @@ export function findDottedNearMisses(root: string): string[] {
     return found;
 }
 
+const VOICE_NOT_READ = 'no brand-voice slot exists yet, so the voice side reads as absent';
+
 export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
     const out: string[] = [];
     const [projectRoot] = resolve_project_root(null, { cwd: opts.cwd });
-    const found = findBrandTokens(projectRoot);
+    const inspection = inspectBrand(projectRoot);
+    const found = inspection.tokens_file;
     const nearMisses = findDottedNearMisses(projectRoot);
 
     if (opts.json) {
@@ -91,6 +210,10 @@ export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
                 {
                     brand_layer_present: found !== null,
                     tokens_file: found,
+                    state: inspection.state,
+                    qualifiers: inspection.qualifiers,
+                    sources: inspection.sources,
+                    voice: { read: false, reason: VOICE_NOT_READ },
                     searched: [...BRAND_TOKEN_PATHS],
                     dotted_near_misses: nearMisses,
                     project_root: projectRoot,
@@ -102,6 +225,8 @@ export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
         return { code: 0, out, err: [] };
     }
 
+    const qualifierText = inspection.qualifiers.length > 0 ? ` (${inspection.qualifiers.join(', ')})` : '';
+    out.push(`brand state   ${inspection.state}${qualifierText}`);
     if (found !== null) {
         out.push(`brand layer   present — ${found}`);
         out.push('              brand-source-of-truth applies: these tokens outrank the corpus.');
@@ -112,6 +237,20 @@ export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
         out.push('              ground, and every emitted value is corpus-sourced — which is the');
         out.push('              greenfield branch of brand-source-of-truth, not a misconfiguration.');
     }
+
+    if (inspection.sources.length > 0) {
+        out.push('', 'sources');
+        for (const s of inspection.sources) {
+            const note =
+                s.status === 'invalid'
+                    ? ` — ${s.error ?? 'invalid'}`
+                    : s.winner !== undefined
+                      ? ` — loses to ${s.winner}`
+                      : '';
+            out.push(`  ${s.status.padEnd(9)} ${s.path}  sha256:${s.sha256.slice(0, 12)}${note}`);
+        }
+    }
+    out.push('', `voice         not read — ${VOICE_NOT_READ}`);
 
     if (nearMisses.length > 0) {
         out.push(

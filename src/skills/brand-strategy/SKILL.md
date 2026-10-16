@@ -74,7 +74,7 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 
 ## Gotcha
 
-- The corpus grounds pre-action selection, not validation. Post-production consistency checking belongs to brand-consistency, not here.
+- The corpus grounds pre-action selection, not validation. Output checking belongs to `brand-source-of-truth` § Iron Law 2, not here.
 - "Premium + approachable + innovative" is three briefs, not one. Force the trade-off before drafting a positioning statement.
 - An empty corpus result is legitimate signal — surface the gap and ask whether to proceed with a thin foundation or pause for more evidence.
 

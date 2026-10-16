@@ -307,13 +307,14 @@ Pure projection of what the repo already knows — the `enforced_by`
 resolution (`check_enforcement_coverage`) and the claims ledger
 (`docs/CLAIMS.md`). No new taxonomy, zero hand-written rows.
 
-**Axis 1 — enforcement level per rule.** 122 rules · 16 blocking (13.1%) · 10 observer · 0 local-only · 80 undeclared — of which 9 kernel-denied (`block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule, so no declaration is reachable for them at all) and 71 not declared yet.
+**Axis 1 — enforcement level per rule.** 122 rules · 16 blocking (13.1%) · 10 observer · 0 local-only · 79 undeclared — of which 9 kernel-denied (`block_kernel_rule_writes` refuses an `enforced_by` write on a kernel rule, so no declaration is reachable for them at all) and 70 not declared yet.
 
 `denominator: 122 rule(s), frame in-scope (src/rules/*.md) == governed-total 122`
 
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
 | `active-remediation` | none | `instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one` |
+| `brand-source-of-truth` | none | `instruction-only: no checker reads emitted output yet` |
 | `code-comment-discipline` | validator | `validator:src/scripts/lint_code_comments.ts`<br>`hook:comment-discipline` |
 | `code-provenance` | none | `instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation` |
 | `context-hygiene` | observer | `hook:context-hygiene` |
@@ -356,7 +357,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | `untrusted-input-defense` | none | `instruction-only: no deterministic gate inspects fetched content for injected instructions; injection_scan_hook is warn-only and default-OFF` |
 | `verify-before-complete` | observer | `hook:verify-before-complete` |
 
-Undeclared rules (80, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
+Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
 **Axis 2 — evidence form per public claim.** 110 ledger entries · 62 backed · 41 unbacked inventory · 7 resolved-null.
 
