@@ -206,9 +206,6 @@ nothing in it may be cited as a reason to.
 
 - [ ] **AC-1** Every row in the ledger carries a status that matches a live
       upstream read taken in the same change, with the reading's date.
-      *Open 2026-10-16:* row 3 (`mcpservers.org`) refuses automated reads with
-      HTTP 403; its status is the maintainer's 2026-06 word, recorded as such,
-      and it closes when a human reads the site.
 - [x] **AC-2** `grep -c 'Awaiting upstream review' docs/distribution/registry-submissions.md`
       returns 0, and both awesome-list attempts appear once each with dated
       outcomes.
@@ -257,3 +254,10 @@ and against the roadmap tree. The supplied plans proposed completing the
 submissions; verification found the ledger describing those submissions to be
 wrong about the one row it tracked as live, so the completion became Phase 4
 and the reconciliation became Phase 1.
+
+## Open after the 2026-10-16 drain
+
+- **AC-1** stays open: row 3 (`mcpservers.org`) answers HTTP 403 to automated
+  reads, so its status is the maintainer's 2026-06 word, recorded as such in the
+  ledger with an empty `Last read`. It closes when a human reads the site.
+- **AC-8** is discharged by the PR's CI, not by a local `task ci` run.
