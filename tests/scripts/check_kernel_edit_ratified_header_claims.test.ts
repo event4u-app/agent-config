@@ -9,6 +9,8 @@ import { check_envelope as plumbingGuard } from '../../src/scripts/hooks/block_p
  * exactly those two guards, and nothing wider: the header's broader sentence,
  * that no bound `pre_tool_use` concern denies either path, was verified once by
  * sending both edits through the built dispatcher and is not automated here.
+ * A new `pre_tool_use` concern therefore has to be checked against these two
+ * paths by hand, and the header changed if it denies either.
  */
 
 const UNGUARDED = ['src/scripts/hooks/dispatch_hook.ts', 'src/scripts/_lib/kernel_rules.ts'];
