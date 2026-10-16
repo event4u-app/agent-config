@@ -54,8 +54,11 @@ keep-beta-until: 2026-08-17
    What IS mechanical is narrower and says so: `check_agent_artifact_location`
    reports a roadmap-shaped file outside `agents/roadmaps/`, **in this
    repository only**. A consumer project never runs this package's CI, so the
-   gate protects the tree where the mistake is least likely; `agent-config
-   doctor --strict` is the surface that can carry such a finding outward.
+   gate protects the tree where the mistake is least likely. The outward half
+   is `agent-config doctor`'s `artifact-location` row, which runs the same
+   detector over the consumer's tree, reports a `warn` naming the target under
+   `agents/roadmaps/`, never moves the file, and fails only under
+   `doctor --strict --strict-level warn`.
 
 ---
 

@@ -49,17 +49,30 @@ consumer behaviour points at something that executes.
 
 ## Phase 1 — Count honestly, then name the harness
 
-- [ ] **1.1 Re-derive the consumer-path gate count.** A script that joins
+- [x] **1.1 Re-derive the consumer-path gate count.** A script that joins
       `src/scripts/hook_manifest.yaml` against the CLI surface and reports how
       many of the 353 gates run on a consumer's machine. The supplied figure
       of 21 is **not** carried forward until this reproduces it.
       verify: the script runs and prints a number; the number — whatever it
       is — is what gets written, not the one in the source.
-- [ ] **1.2 Enumerate the consumer-claim subset.** Mark every claim in
+      **Result:** `./scripts-run src/scripts/report_consumer_gate_reach`
+      prints 353 prefix entries, of which 345 are gate modules (the other 8
+      are allowlist data files and tests), and **13** of the 345 are
+      statically reachable from a consumer entry point (125 entry points
+      walked: hook dispatcher, every manifest `script:`, the node CLI, every
+      delegated `cmd_*` verb, the installer, the MCP server and every source
+      the bash dispatcher names). The supplied 21 did not reproduce; 13 is a
+      lower bound on reach through a supported surface, for the reasons the
+      script's header states.
+- [x] **1.2 Enumerate the consumer-claim subset.** Mark every claim in
       `docs/CLAIMS.md` whose subject is consumer behaviour rather than this
       repository's own tree.
       verify: the subset is a list of claim ids, not a count.
-- [ ] **1.3 Name `tests/install/` as the consumer harness.** One paragraph in
+      **Result:** 12 ids in `docs/contracts/consumer-harness.md`
+      § Consumer-facing claims (11 backed, 1 withdrawn), with the evidence
+      class each carries today; `consumer_harness_contract.test.ts` fails when
+      a listed id leaves the ledger or changes status.
+- [x] **1.3 Name `tests/install/` as the consumer harness.** One paragraph in
       `docs/contracts/` recording what it is, how a case is added, and the
       `env: { HOME }` injection rule the existing cases already follow.
       The matched lines are the new paragraph.
@@ -67,32 +80,67 @@ consumer behaviour points at something that executes.
 
 ## Phase 2 — Implement the check that is cited and absent
 
-- [ ] **2.1 Write the artifact-location check.** The consumer half
+- [x] **2.1 Write the artifact-location check.** The consumer half
       `check_agent_artifact_location.ts:15` already promises, reusing
       `is_roadmap_candidate` rather than a second detector — one detector is
       the file's own argument.
       verify: a fixture monorepo carrying
       `apps/x/docs/roadmaps/road-to-y.md` yields exactly one finding naming
       the target location under `agents/`.
-- [ ] **2.2 Advisory by default, `manual` under `--strict`. Report only.**
+      **Result:** `doctor`'s `artifact-location` row
+      (`src/scripts/_lib/install_reach_checks.ts`, so `cmd_doctor.ts` does not
+      grow). `tests/install/doctor_artifact_location.test.ts` runs the real
+      doctor against the fixture and reads one finding,
+      the fixture file named with its target under `agents/roadmaps/`.
+- [x] **2.2 Advisory by default, `manual` under `--strict`. Report only.**
       No auto-move: `doctor` is read-only, and moving a consumer's file
       without asking is the ownership break a sibling roadmap exists to end.
       verify: the fixture run leaves the tree byte-identical.
-- [ ] **2.3 One detector, two callers.** The package gate and the consumer
+      **Result:** the doctor's status vocabulary is `ok | warn | fail |
+      skipped` and has no `manual`, so "advisory, opt-in failing" is carried
+      as `warn`: a default run and `--strict` (level `fail`) exit 0 on it;
+      `--strict --strict-level warn` fails. The same harness case hashes every
+      path and byte of the fixture before and after and asserts equality.
+- [x] **2.3 One detector, two callers.** The package gate and the consumer
       check import the same function.
       verify: a test that changes the detector's behaviour fails both call
       sites, not one.
+      **Result:** the detector moved to `src/scripts/_lib/agent_artifact_location.ts`;
+      the gate re-exports it. `agent_artifact_location_two_callers.test.ts`
+      replaces `scan` once and sees the gate flip 0 → 1 and the doctor row
+      flip `ok` → `warn`.
 
 ## Phase 3 — Freeze the exit-code contract
 
-- [ ] **3.1 Generate the register.** A `docs/contracts/` table of exit codes
+- [x] **3.1 Generate the register.** A `docs/contracts/` table of exit codes
       for `init`, `sync`, `doctor` and `uninstall`, generated from the code
       rather than written beside it.
       verify: the generator runs in CI and the file is drift-checked.
+      **Result:** `src/scripts/build_exit_code_register.ts` scans each
+      command's sources for the codes it returns (literal, ternary,
+      `ArgparseExit`, bash `exit`, resolved `EXIT_*` constants, and a named
+      forwarding line for `sync` → `init`) and writes
+      `docs/contracts/exit-code-register.md`; only the one-line meanings are
+      hand-written, and a code without a meaning, or a meaning without a code,
+      fails the run. The drift check is
+      `tests/scripts/build_exit_code_register.test.ts`, which runs in the CI
+      vitest suite — no workflow or gate-coverage row was added for it.
 - [ ] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
       state — installer `rc=3` and `doctor --ci` — the register records the
       pair and a test asserts it.
       verify: the assertion fails if either side changes alone.
+      **Open, read 2026-10-16:** the pair does not exist yet, so there is
+      nothing to pin. No `doctor` check reads the preserved-sidecar state —
+      `.agent-config.new` / `SIDECAR_SUFFIX` occur only under `src/install/`,
+      `src/scripts/install.ts` and the wizard UI — so on a tree where the
+      installer returned `3`, `doctor --ci` exits `0`. Closing the step means
+      giving `doctor` a check that fails on that state, which changes what
+      `doctor --ci` returns for consumers already scripting against it; the
+      `doctor-exit-contract` decision of 2026-09-03 (recorded in
+      `src/scripts/_cli/_doctor_strict.ts`) kept that contract stable and put
+      new failing behaviour behind `--strict`. Whether the preserved state
+      fails `--ci`, fails only `--strict`, or warns is a consumer-facing exit
+      decision this lane did not take.
 
 ## Phase 4 — Point the claims at something that runs
 
@@ -101,12 +149,39 @@ consumer behaviour points at something that executes.
       repository is not evidence for a claim about a consumer's machine.
       The measured exec share is written from the run's output, never predicted.
       verify: `./scripts-run src/scripts/build_proof` -> 0
-- [ ] **4.2 Make a red harness case the entry point for a consumer bug.** A
+      **Open, read 2026-10-16.** Of the 11 backed ids in the 1.2 subset, one
+      already meets the bar (`host-agent-count`, `exec:` into
+      `tests/install/toolDetection.test.ts`). The other ten split three ways,
+      and none of the three is closed by editing the ledger alone:
+      (a) `surgical-uninstall`, `council-fallback-loses-zero-seats` and
+      `default-install-context-cost` carry `exec:` evidence that runs, but
+      into `tests/lib/`, `tests/scripts/` or a repository count — they need a
+      harness case, which this file's own scope note leaves to the sibling
+      roadmaps; `surgical-uninstall` is also the one of the ten markered in
+      `README.md`, so downgrading it would change public copy.
+      (b) `install-audit-clean` and `hook-dispatch-latency` point at CI jobs
+      that already run on a fresh install or on the installed invocation path.
+      Marking them `unbacked` would misstate them; wrapping each as an
+      `exec:` harness case is the honest fix and is the same harness work.
+      (c) `thin-inject-delivery-equivalence`,
+      `mcp-registered-server-standing-cost`,
+      `skill-tiering-h2-costs-more-by-default`, `scope-dedup-cold-start-reduction`
+      and `gated-platform-reads` are fixture or network measurements of a
+      consumer-facing mechanism. `unbacked` means "not yet bound" in
+      `docs/CLAIMS.md`, so flipping a finished measurement to it files a
+      reading as debt — the misfiling the ledger's own `resolved-null` and
+      `withdrawn` paragraphs exist to prevent, and Risk rank 1 below. D5's
+      revisit condition (a third evidence class) is the shape of the real fix.
+      Doing (c) by mass status change was declined in this lane for that
+      reason; doing (a) and (b) waits on harness cases.
+- [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
       verify: the paragraph exists and names the directory; the two sibling
       roadmaps in this round already follow it, which is the evidence it is
       workable rather than aspirational.
+      **Result:** landed with 1.3 as `docs/contracts/consumer-harness.md`
+      § The harness, paragraph "A consumer defect starts here".
 
 ## Blockers
 
@@ -142,6 +217,7 @@ consumer behaviour points at something that executes.
 | D3 | deterministic | agent | The supplied 21-of-353 figure is not carried forward unverified | 353 reproduced; 21 did not | 1.1 reproduces it |
 | D4 | product-owned | owner | Hold the ratchet question for the `consumer-gate-denominator` blocker; step 1.1 produces the figure either way | a ratchet floor set from the first reading of a metric nobody has watched move fixes a number before its variance is known | the blocker resolves, or three months of reported readings exist |
 | D5 | reversible-technical | agent | A pointer into this repository does not back a claim about a consumer machine | it is the distinction that makes the 18-of-62 figure meaningful rather than an accounting detail | the claim vocabulary gains a third evidence class |
+| D6 | reversible-technical | agent | Step 2.2's "advisory by default, `manual` under `--strict`" is carried as a `warn` row: `doctor` and `--strict` exit 0 on it, `--strict --strict-level warn` fails | the doctor's published status vocabulary is `ok \| warn \| fail \| skipped`; a `manual` value would not reach the MCP `doctor_report` contract | the status vocabulary gains a value that means "needs a human" |
 
 ## What this roadmap deliberately does not do
 
@@ -165,18 +241,18 @@ consumer behaviour points at something that executes.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** A script re-derives the consumer-path gate count from
+- [x] **AC-1** A script re-derives the consumer-path gate count from
       `hook_manifest.yaml` and the CLI surface, and the written figure is its
       output.
-- [ ] **AC-2** The consumer-claim subset of `docs/CLAIMS.md` is enumerated by
+- [x] **AC-2** The consumer-claim subset of `docs/CLAIMS.md` is enumerated by
       claim id.
-- [ ] **AC-3** A fixture monorepo with a roadmap outside `agents/` yields
+- [x] **AC-3** A fixture monorepo with a roadmap outside `agents/` yields
       exactly one advisory finding naming the target, and the tree is
       byte-identical afterwards.
-- [ ] **AC-4** The artifact-location detector has two callers and one
+- [x] **AC-4** The artifact-location detector has two callers and one
       implementation, asserted by a test that changes it once and sees both
       fail.
-- [ ] **AC-5** `docs/contracts/` carries a generated, drift-checked exit-code
+- [x] **AC-5** `docs/contracts/` carries a generated, drift-checked exit-code
       register for `init`, `sync`, `doctor` and `uninstall`.
 - [ ] **AC-6** `docs/proof.md`'s exec share is written from a `build_proof`
       run in the same change, and no consumer-facing claim is `backed` on a

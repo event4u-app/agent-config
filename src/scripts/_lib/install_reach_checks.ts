@@ -33,6 +33,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { ROADMAP_ROOT_REL, scan as scanArtifactLocation } from './agent_artifact_location.js';
 import type { WiringCheck } from './runtime_wiring_checks.js';
 import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
 
@@ -508,11 +509,58 @@ export function checkMcpConsentResidual(): WiringCheck {
     };
 }
 
+/**
+ * A roadmap-shaped file outside the roadmap root in the consumer's tree — the
+ * outward half `check_agent_artifact_location` names, running the same detector.
+ *
+ * A REPORT, never a move: `doctor` is read-only, and relocating a consumer's
+ * file without asking is the ownership break this package is ending elsewhere.
+ * `warn` rather than `fail` because a monorepo may keep roadmaps elsewhere on
+ * purpose — the finding names where this package's mechanisms would look, it
+ * does not assert the file is wrong. So a default run and `--strict` both exit
+ * 0 on it; only `--strict --strict-level warn` fails, which is the caller
+ * choosing that bar.
+ */
+export function checkArtifactLocation(projectRoot: string): WiringCheck {
+    const id = 'artifact-location';
+    const { findings, scanned } = scanArtifactLocation(projectRoot);
+    if (scanned === 0) {
+        return { id, status: 'skipped', message: 'no markdown file in this tree', remedy: '' };
+    }
+    if (findings.length === 0) {
+        return {
+            id,
+            status: 'ok',
+            message: `no roadmap-shaped file outside ${ROADMAP_ROOT_REL}/ (${scanned} markdown file(s) read)`,
+            remedy: '',
+        };
+    }
+    const lines = findings.map(
+        (f) => `${f.rel} → ${ROADMAP_ROOT_REL}/${path.posix.basename(f.rel)} (carries ${f.signals.join(', ')})`,
+    );
+    return {
+        id,
+        status: 'warn',
+        message:
+            `${findings.length} roadmap-shaped file(s) outside ${ROADMAP_ROOT_REL}/, where no roadmap ` +
+            `mechanism of this package reads them: ${lines.join(' · ')}`,
+        remedy:
+            `move each to the target named above if it is a roadmap; doctor never moves it for you. ` +
+            'If it is not a roadmap, it carries one of the three signals it should not',
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Wiring — the shape `cmd_doctor` consumes
 // ---------------------------------------------------------------------------
 
-export const REACH_CHECK_IDS = ['instruction-path-reach', 'version-axis', 'override-set', 'mcp-consent-residual'] as const;
+export const REACH_CHECK_IDS = [
+    'instruction-path-reach',
+    'version-axis',
+    'override-set',
+    'mcp-consent-residual',
+    'artifact-location',
+] as const;
 
 export function reachRunners(opts: {
     projectRoot: string;
@@ -523,5 +571,6 @@ export function reachRunners(opts: {
         'version-axis': () => checkVersionAxis(opts.projectRoot, opts.resolvableVersion),
         'override-set': () => checkOverrideSet(opts.projectRoot),
         'mcp-consent-residual': () => checkMcpConsentResidual(),
+        'artifact-location': () => checkArtifactLocation(opts.projectRoot),
     };
 }
