@@ -267,6 +267,20 @@ function selfTest(): number {
                 run: () => withDiff(header('tests/a.test.ts') + "-    it.skip('x', () => {});\n"),
             },
             {
+                name: 'an ADDED conditional skip without a skip-reason reds',
+                expect: 'reject',
+                run: () => withDiff(header('tests/a.test.ts') + "+    it.skipIf(c)('x', () => {});\n"),
+            },
+            {
+                name: '…and the same skip with a skip-reason on the line above is accepted',
+                expect: 'accept',
+                run: () =>
+                    withDiff(
+                        header('tests/a.test.ts') +
+                            "+    // skip-reason: tool absent\n+    it.skipIf(c)('x', () => {});\n",
+                    ),
+            },
+            {
                 name: 'a DIFF FIXTURE held as string data is not a suppression',
                 expect: 'accept',
                 run: () =>

@@ -212,11 +212,19 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       meta-case asserts `fetch('https://example.com')` is refused and a spawned
       `curl` exits non-zero. Neither needs the network.
       verify: `npx vitest run tests/_lib/network_guard.test.ts -t in-process-fetch-is-refused --reporter=verbose` -> /✓.*in-process-fetch-is-refused/
-- [ ] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
+- [x] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
       matches `.skipIf(` and `.runIf(`; an added one passes
       `check_test_weakening` only with a `// skip-reason:` on the same or
       preceding line. The 111 existing sites are untouched.
       verify: `npx vitest run tests/scripts/check_test_delta.test.ts -t conditional-skip-needs-reason --reporter=verbose` -> /✓.*conditional-skip-needs-reason/
+      *Done (2026-10-16):* counted beside `SUPPRESSION` in
+      `src/scripts/_lib/test_delta.ts` rather than inside its regex, because the
+      reason check needs the neighbouring line. "Preceding line" means the
+      preceding ADDED line: the diff parser keeps no context lines, so a reason
+      in an unchanged line above does not count. Removed lines are netted with
+      the same reason test, so editing an existing unreasoned site nets zero.
+      The case was seen red before the change, and the gate's `--self-test`
+      gained one reject and one accept case (13/13).
 
 *Exit: 5.1–5.4 green on the sharded run; suite wall time moves by < 2 %.*
 

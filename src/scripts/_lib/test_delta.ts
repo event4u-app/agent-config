@@ -132,6 +132,29 @@ const SUPPRESSION =
  */
 const DIFF_LINE_AS_DATA = /['"`][+-]/;
 
+/**
+ * A runtime-conditional skip (`it.skipIf(c)`, `describe.runIf(c)`).
+ *
+ * Counted apart from `SUPPRESSION` because it is legitimate far more often — a
+ * tool that is absent, a live flag that is off — and because it is also the
+ * shape that hid a happy path nothing ever ran. So an ADDED one is a
+ * suppression unless the same added line, or the added line right above it,
+ * carries `skip-reason:`. Diff-only by design: the sites already in the tree
+ * are never re-counted.
+ */
+const CONDITIONAL_SKIP = /\.\s*(skipIf|runIf)\s*\(/;
+const SKIP_REASON = /\bskip-reason:/;
+
+function unreasonedConditionalSkips(added: readonly string[]): number {
+    let n = 0;
+    added.forEach((line, i) => {
+        if (!CONDITIONAL_SKIP.test(line) || DIFF_LINE_AS_DATA.test(line)) return;
+        if (SKIP_REASON.test(line) || SKIP_REASON.test(added[i - 1] ?? '')) return;
+        n += 1;
+    });
+    return n;
+}
+
 /** Counted evidence about one test file's diff. */
 export interface WeakeningSignal {
     readonly path: string;
@@ -156,7 +179,11 @@ export function weakeningSignal(file: FileDiff): WeakeningSignal {
     return {
         path: file.path,
         assertionsLost: count(file.removed, ASSERTION) - count(file.added, ASSERTION),
-        suppressionsGained: count(file.added, SUPPRESSION) - count(file.removed, SUPPRESSION),
+        suppressionsGained:
+            count(file.added, SUPPRESSION) +
+            unreasonedConditionalSkips(file.added) -
+            count(file.removed, SUPPRESSION) -
+            unreasonedConditionalSkips(file.removed),
     };
 }
 
