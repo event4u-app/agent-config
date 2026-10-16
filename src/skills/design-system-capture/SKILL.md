@@ -297,10 +297,6 @@ handoff shape emitted alongside `design-system.json`
   mapping (design name → code component), responsive states, known caveats, and
   — when the artifact is a mock — an explicit "prototype, not production code"
   warning so a consumer never ships the reference verbatim.
-- **Beside the host's sync.** On a React stack, Claude Code's own
-  `/design-sync`, which only the user starts, projects components to the design
-  canvas; this floor stays the artefact for a manual projection on every other
-  stack or host.
 
 **What to capture FROM** a running project: sources first, SSR fetch second,
 rendered snapshot only with consumer tooling; record the git SHA. Rationale:

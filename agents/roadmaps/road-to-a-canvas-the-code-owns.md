@@ -262,10 +262,9 @@ deleted or left as a silent twin without a row the user has seen.
       human-editable conventions file between markers; text outside the markers
       stays byte-identical, and a drift check fails on a divergent block.
       verify: `npx tsx src/scripts/check_conventions_block.ts --root tests/fixtures/design-sync/drifted` -> 1
-- [x] **5.3 The extraction floor names its place.**
+- [ ] **5.3 The extraction floor names its place.**
       `design-system-capture` § Design-system extraction floor points React stacks
       at the host's own sync and stays the artefact for a manual projection.
-      (2026-10-16: done.)
       verify: `rg -n 'manual projection' src/skills/design-system-capture/SKILL.md` -> /manual projection/
 
 ## Phase 6 — Components through the existing owner
@@ -293,10 +292,9 @@ deleted or left as a silent twin without a row the user has seen.
       with the projection commit; `verify` reports a baseline older than the current
       projection as `stale`.
       verify: `npx vitest run tests/scripts/design_sync_verify.test.ts -t stale-baseline --reporter=verbose` -> /✓.*stale-baseline/
-- [x] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
+- [ ] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
       baseline updates are shown as a diff and land in a commit of their own, on the
       pinned renderer of `playwright-architect/SKILL.md:130-132`.
-      (2026-10-16: done.)
       verify: `rg -n 'commit of their own' src/skills/playwright-testing/SKILL.md` -> /commit of their own/
 
 ## Phase 8 — Review gates that read the projection
