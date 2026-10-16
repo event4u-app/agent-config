@@ -192,9 +192,10 @@ irreversible-external-action row of `non-destructive-by-default`).
       voice without tokens, nothing. Today the first two read "present".
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t state-fixtures --reporter=verbose` -> /✓.*state-fixtures/
       Done 2026-10-16: eight `state-fixtures` cases, seven red at the base (no `state`, `sources` or validity there); the two voice fixtures assert the voice side reads as absent, as 2.3 allows until 4.5.
-- [ ] **0.3 Object values and same-line skip, red.** 2025.10 colour, dimension
+- [x] **0.3 Object values and same-line skip, red.** 2025.10 colour, dimension
       and alias; `#ff0000` beside `var(--x)`.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t "dtcg-2025|same-line" --reporter=verbose` -> /✓.*dtcg-2025[\s\S]*✓.*same-line/
+      Done 2026-10-16: `dtcg-2025` and `same-line` cases in `skills_design_tokens_tokens.test.ts`, seen red against the base `tokens.ts` before 3.1 and 3.2 landed.
 - [ ] **0.4 Taboo and claim never checked, red.** A ghostwriter draft containing
       its own taboo and a brand draft containing "the number one platform"
       produce no finding from any tool. (new test file)
@@ -235,10 +236,11 @@ irreversible-external-action row of `non-destructive-by-default`).
       instead of declaring its own.
       verify: `rg -c 'export const BRAND_TOKEN_PATHS' src` -> 1 file
       Open 2026-10-16: a re-export is the edit `uiAudit.ts:35` records as tried and reverted — `dist/cli` is compiled by tsc and the work-engine template tree is not, so a runtime import from the CLI into the template fails to resolve in the published package, and the template stays self-contained the other way. Needs a home both trees may import at runtime.
-- [ ] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
+- [x] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
       § Iron Law 2; the rule gains `enforced_by: instruction-only`, and
       "Validation gate" reads "checklist" until Phase 5 names its checker.
       verify: `rg -n 'brand-consistency' src/skills src/domains docs/contracts/brand-token-consumption.md --glob '!**/evals/**' --glob '!**/README.md'` -> 1 (no match)
+      Done 2026-10-16: the eleven sites cite `brand-source-of-truth` § Iron Law 2; the rule carries `enforced_by: instruction-only: …` and says "checklist".
 - [x] **1.5 `/brand:voice` says what it makes today.** "Three attributes, tone
       matrix, consistency review"; the lexicon line returns with 4.3.
       verify: `rg -n 'do/don.t lexicon' src/domains/brand` -> 1 (no match)
@@ -271,26 +273,29 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 3 — The stable token format
 
-- [ ] **3.1 Read 2025.10.** Object colour → `hex` when present, else CSS Color 4
+- [x] **3.1 Read 2025.10.** Object colour → `hex` when present, else CSS Color 4
       for the named spaces, with `alpha`; dimension → `<value><unit>`; any other
       object, a non-finite component or an out-of-range value is a hard error
       naming the token path, non-zero exit (`folded-from-deep-dive`); string
       values stay accepted.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t dtcg-2025 --reporter=verbose` -> /✓.*dtcg-2025/
-- [ ] **3.2 Skip the span, not the line.** `validate` removes `var(--…)` spans
+      Done 2026-10-16: `tokenValueToCss` — colour `hex` (8-digit with alpha) or a CSS Color 4 function for 14 named spaces, `{value, unit}` for px/rem/ms/s, every other object or an out-of-range/non-finite value exits 1 naming the token path.
+- [x] **3.2 Skip the span, not the line.** `validate` removes `var(--…)` spans
       and still reports every other literal on the line.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t same-line --reporter=verbose` -> /✓.*same-line/
+      Done 2026-10-16: `validate` blanks each `var(--…)` span (nested fallbacks included) and scans the rest of the line.
 - [ ] **3.3 The reading canvas 8.2 consumes.** With a valid registered file,
       `validate --json` tags each literal `on-palette (<token>)` or
       `off-palette (nearest <token>, ΔE2000)`, each with a stable finding id
       canvas 8.2 can deduplicate on (`folded-from-deep-dive`). Blocks nothing; the finding and
       its baseline stay canvas 8.2's. Tokens are never combined by value.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t palette-tag --reporter=verbose` -> /✓.*palette-tag/
-- [ ] **3.4 The starter speaks the format it claims** (E3). It emits 2025.10
+- [x] **3.4 The starter speaks the format it claims** (E3). It emits 2025.10
       objects and drops its `$schema` key, whose value sits on a different host
       from the specification's own site and which nothing in `tokens.ts` reads
       (E12).
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t starter-shape --reporter=verbose` -> /✓.*starter-shape/
+      Done 2026-10-16: the starter carries colour, dimension and duration objects and no `$schema`; shadows stay strings (no composite-shadow serialiser here) and `0` became `0px`.
 - [ ] **3.5 One row for canvas 0.4** (after canvas 3.1). The object-valued alias
       target joins the canvas alias fixture, so a missing token and an existing
       but unmappable one stay distinct; no new import test.
