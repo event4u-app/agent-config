@@ -1,0 +1,13 @@
+{
+  "skill": "universal-project-analysis",
+  "last_eval": "2026-10-16",
+  "description": "3 should-trigger + 3 should-not-trigger. Should-trigger covers an explicit full project analysis, a deep architecture audit across layers, and a German phrasing. Should-not-trigger covers near-miss neighbours (a single-pass tech-stack scan, reviewing one small function) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "do a full project analysis of this codebase, every layer", "trigger": true, "class": "exemplar"},
+    {"q": "I want a deep codebase audit and a comprehensive architecture review", "trigger": true, "class": "exemplar"},
+    {"q": "mach eine vollständige, tiefe Analyse des ganzen Projekts", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "quickly detect which tech stack this project uses", "trigger": false, "class": "near-miss", "note": "a single-pass scan is project-analyzer"},
+    {"q": "review this one helper function for edge cases", "trigger": false, "class": "near-miss", "note": "a small isolated area goes to a specialist review"},
+    {"q": "bump the version in package.json", "trigger": false, "class": "counterexample"}
+  ]
+}

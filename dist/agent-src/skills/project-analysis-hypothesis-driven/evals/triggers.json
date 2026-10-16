@@ -1,0 +1,13 @@
+{
+  "skill": "project-analysis-hypothesis-driven",
+  "last_eval": "2026-10-16",
+  "description": "3 should-trigger + 3 should-not-trigger. Should-trigger covers a bug with several plausible causes across layers, competing hypotheses to validate, and a German phrasing. Should-not-trigger covers near-miss neighbours (a broad project overview, implementing an already-proven fix) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "orders are sometimes duplicated, could be the queue, the API or the database, why is this happening?", "trigger": true, "class": "exemplar"},
+    {"q": "list competing hypotheses for this cross-layer bug and validate each against evidence", "trigger": true, "class": "exemplar"},
+    {"q": "warum passiert das? Der Fehler kann mehrere Ursachen in verschiedenen Schichten haben", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "give me a broad overview of this project's architecture", "trigger": false, "class": "near-miss", "note": "a broad overview without a specific problem is discovery, not hypothesis testing"},
+    {"q": "the cause is proven, the null check is missing, add it", "trigger": false, "class": "near-miss", "note": "a proven cause needs implementation only"},
+    {"q": "translate the README into Spanish", "trigger": false, "class": "counterexample"}
+  ]
+}
