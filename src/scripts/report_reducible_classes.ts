@@ -10,6 +10,7 @@
  * Step 1.2, `--profile content`: results classed exactly as
  * `internal/bench/tool-results-content-profile-PREREG.md` registers them, read
  * over its D11 window only, beside the execution profile on the same window.
+ * The same run reports step 1.4's repeat share (`repeatShare`), with no bar.
  *
  * ```bash
  *   report_reducible_classes                      # human table
@@ -274,6 +275,57 @@ export function contentProfile(results: readonly ContentResult[], thresholdBytes
     return { classes, residue, selected: classes.filter((c) => c.verdict === 'selected').map((c) => c.class) };
 }
 
+export interface RepeatClassCount {
+    count: number;
+    bytes: number;
+    repeats: number;
+    repeat_bytes: number;
+}
+
+export interface RepeatShare {
+    content: { count: number; bytes: number };
+    /** Content results byte-identical to one delivered earlier in the same session; `advised` = a re-read advisory preceded it. */
+    repeats: { count: number; bytes: number; advised: number };
+    by_class: Record<(typeof CONTENT_CLASSES)[number], RepeatClassCount>;
+}
+
+export type RepeatInput = Pick<ToolResultRecord, 'tool' | 'command' | 'bytes' | 'timestamp' | 'session' | 'path' | 'range' | 'digest' | 'advised'>;
+
+/**
+ * Step 1.4: the share of content results that repeat an earlier delivery in
+ * the same session — same path and range for `Read`, same command for a
+ * content-class Bash call, same sha256 over the delivered payload. A `Read`
+ * and a `cat` of one file never match each other, so the share is a lower
+ * bound. Reported with no bar.
+ */
+export function repeatShare(records: readonly RepeatInput[]): RepeatShare {
+    const by_class = Object.fromEntries(CONTENT_CLASSES.map((c) => [c, { count: 0, bytes: 0, repeats: 0, repeat_bytes: 0 }])) as RepeatShare['by_class'];
+    const out: RepeatShare = { content: { count: 0, bytes: 0 }, repeats: { count: 0, bytes: 0, advised: 0 }, by_class };
+    const ordered = records
+        .map((r, i) => ({ r, i, t: r.timestamp === null ? Number.NaN : Date.parse(r.timestamp) }))
+        .sort((a, b) => (Number.isNaN(a.t) || Number.isNaN(b.t) || a.t === b.t ? a.i - b.i : a.t - b.t));
+    const delivered = new Set<string>();
+    for (const { r } of ordered) {
+        const c = classifyResult(r.tool, r.command);
+        if (!(CONTENT_CLASSES as readonly string[]).includes(c)) continue;
+        const k = by_class[c as (typeof CONTENT_CLASSES)[number]];
+        out.content.count += 1;
+        out.content.bytes += r.bytes;
+        k.count += 1;
+        k.bytes += r.bytes;
+        if (r.digest === null) continue;
+        const key = JSON.stringify([r.session, r.tool, r.tool === 'Read' ? [r.path, r.range] : r.command, r.digest]);
+        if (delivered.has(key)) {
+            out.repeats.count += 1;
+            out.repeats.bytes += r.bytes;
+            if (r.advised) out.repeats.advised += 1;
+            k.repeats += 1;
+            k.repeat_bytes += r.bytes;
+        } else delivered.add(key);
+    }
+    return out;
+}
+
 export interface CensusSummary {
     legacy: number;
     two_field: number;
@@ -332,6 +384,7 @@ function mainContent(argv: readonly string[], threshold: number, prefix: string,
     const peek = now.getTime() < endMs;
     const records = windowRecords(prefix, DEFAULT_PROJECTS_ROOT, startMs, endMs);
     const content = contentProfile(records, threshold);
+    const repeat = repeatShare(records);
     const byTool: Record<string, ClassInput> = {};
     for (const r of records) {
         const m = (byTool[r.tool] ??= { tool: r.tool, count: 0, payload_bytes: 0, payload_samples: [] });
@@ -343,7 +396,7 @@ function mainContent(argv: readonly string[], threshold: number, prefix: string,
     const window = { start: D11_WINDOW_START, end: d11WindowEnd(), results: records.length, peek };
     if (argv.includes('--json')) {
         const executionSelected = execution.filter((v) => v.selected).map((v) => v.tool);
-        process.stdout.write(`${JSON.stringify({ profile: 'content', threshold, prefix, window, content, execution, execution_selected: executionSelected }, null, 2)}\n`);
+        process.stdout.write(`${JSON.stringify({ profile: 'content', threshold, prefix, window, content, repeat_share: repeat, execution, execution_selected: executionSelected }, null, 2)}\n`);
         return 0;
     }
     const lines = [
@@ -353,6 +406,9 @@ function mainContent(argv: readonly string[], threshold: number, prefix: string,
     for (const c of content.classes) lines.push(`  ${c.verdict.padEnd(12)} ${c.class} n=${String(c.count)} bytes=${String(c.payload_bytes)} p95=${String(c.p95)}`);
     lines.push(`  residue      Bash n=${String(content.residue.count)} above ${String(threshold)} B: ${String(content.residue.above_threshold)}`);
     lines.push(`content selected: ${content.selected.length === 0 ? 'none' : content.selected.join(', ')}`);
+    lines.push(
+        `repeat share (step 1.4, no bar): ${String(repeat.repeats.count)} of ${String(repeat.content.count)} content results, ${String(repeat.repeats.bytes)} of ${String(repeat.content.bytes)} B, ${String(repeat.repeats.advised)} after a re-read advisory`,
+    );
     const executionSelected = execution.filter((v) => v.selected).map((v) => v.tool);
     lines.push(`execution selected (1.1 criterion, same window): ${executionSelected.length === 0 ? 'none' : executionSelected.join(', ')}`);
     process.stdout.write(`${lines.join('\n')}\n`);

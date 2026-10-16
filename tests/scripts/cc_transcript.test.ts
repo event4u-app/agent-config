@@ -10,6 +10,7 @@
 //
 // Every expected sum below is computed from the fixture record constants at
 // the top of the file, never copied from a run.
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -504,9 +505,62 @@ describe('scanToolResults - the payload bytes of a tool result, per tool class',
                 message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu_b', content: BASH_OUT }] },
             },
         ]);
+        const sha = (s: string): string => createHash('sha256').update(s, 'utf8').digest('hex');
+        const base = { session: 's', path: null, range: null, advised: false };
         expect(scanToolResultRecords({ root, projectDir })).toStrictEqual([
-            { tool: 'Bash', command: 'cat a.md', bytes: Buffer.byteLength(BASH_OUT, 'utf8'), timestamp: '2026-10-16T09:00:00.000Z' },
-            { tool: 'Write', command: null, bytes: Buffer.byteLength(CONFIRMATION, 'utf8'), timestamp: null },
+            { ...base, tool: 'Bash', command: 'cat a.md', bytes: Buffer.byteLength(BASH_OUT, 'utf8'), timestamp: '2026-10-16T09:00:00.000Z', digest: sha(BASH_OUT) },
+            { ...base, tool: 'Write', command: null, bytes: Buffer.byteLength(CONFIRMATION, 'utf8'), timestamp: null, digest: sha(CONFIRMATION) },
+        ]);
+    });
+
+    it('records-carry-session-read-range-digest-and-the-reread-advisory', () => {
+        const root = mkTmp();
+        const projectDir = path.join(root, 'proj');
+        const BODY = '1\tconst a = 1;\n2\tconst b = 2;';
+        appendJsonl(path.join(projectDir, 'f.jsonl'), [
+            {
+                type: 'assistant',
+                message: {
+                    id: 'm1',
+                    content: [
+                        { type: 'tool_use', id: 'tu_full', name: 'Read', input: { file_path: '/repo/a.ts' } },
+                        { type: 'tool_use', id: 'tu_rng', name: 'Read', input: { file_path: '/repo/a.ts', offset: 10, limit: 5 } },
+                        { type: 'tool_use', id: 'tu_img', name: 'Read', input: { file_path: '/repo/p.png' } },
+                    ],
+                },
+            },
+            {
+                type: 'attachment',
+                attachment: {
+                    type: 'hook_success',
+                    hookEvent: 'PreToolUse',
+                    toolUseID: 'tu_rng',
+                    stdout: JSON.stringify({ hookSpecificOutput: { additionalContext: 're-read guard: a.ts was already fully read this session' } }),
+                },
+            },
+            {
+                type: 'attachment',
+                attachment: { type: 'hook_success', hookEvent: 'PreToolUse', toolUseID: 'tu_full', stdout: '{"hookSpecificOutput":{}}' },
+            },
+            {
+                type: 'user',
+                sessionId: 'sess-1',
+                message: {
+                    role: 'user',
+                    content: [
+                        { type: 'tool_result', tool_use_id: 'tu_full', content: [{ type: 'text', text: BODY }] },
+                        { type: 'tool_result', tool_use_id: 'tu_rng', content: BODY },
+                        { type: 'tool_result', tool_use_id: 'tu_img', content: [{ type: 'image', source: { type: 'base64', data: 'AAAA' } }] },
+                    ],
+                },
+            },
+        ]);
+        const sha = createHash('sha256').update(BODY, 'utf8').digest('hex');
+        const records = scanToolResultRecords({ root, projectDir });
+        expect(records.map((r) => [r.tool, r.session, r.path, r.range, r.digest, r.advised])).toStrictEqual([
+            ['Read', 'sess-1', '/repo/a.ts', null, sha, false],
+            ['Read', 'sess-1', '/repo/a.ts', '10+5', sha, true],
+            ['Read:image', 'sess-1', '/repo/p.png', null, null, false],
         ]);
     });
 

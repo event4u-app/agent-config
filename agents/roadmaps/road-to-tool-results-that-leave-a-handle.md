@@ -109,7 +109,13 @@ retention; concurrent write, read and cleanup.
       the selection becomes row D14. No content class and no execution class
       selected → this roadmap closes on its second null (D10, D11).
       verify: `grep -c '^| D14 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
-- [ ] **1.4 Measure the repeat share in the same window.** For content results:
+- [ ] **1.4 Measure the repeat share in the same window.** *Instrument built
+      2026-10-16, reading still open: `repeatShare` in the report prints the
+      share in the same `--profile content` run as 1.3; `scanToolResultRecords`
+      now carries session, `Read` path and range, a sha256 over the payload,
+      and whether a `reread_guard_hook` advisory preceded the call. A `Read` and
+      a `cat` of one file never match each other, so the share is a lower bound.
+      Not run over the window.* For content results:
       how many, and how many bytes, are byte-identical to one delivered earlier in
       the same session (same path, same range, same digest over the delivered
       payload), and how many of those followed an advisory line from

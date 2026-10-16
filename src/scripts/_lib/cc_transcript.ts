@@ -28,6 +28,7 @@
  * or differently-configured transcript could carry only one.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { homedir } from 'node:os';
@@ -640,39 +641,100 @@ export interface ToolResultRecord {
     bytes: number;
     /** The result record's `timestamp`, or null when absent. */
     timestamp: string | null;
+    /** The result record's `sessionId`, else the transcript file's basename. */
+    session: string;
+    /** A `Read` call's `file_path`, else null. */
+    path: string | null;
+    /** A ranged `Read` as `offset+limit` (either side may be empty), null for a full read or another tool. */
+    range: string | null;
+    /** sha256 over the result's text payload; null for an image or a result with no text. */
+    digest: string | null;
+    /** A PreToolUse hook attachment for this call carried a `reread_guard_hook` advisory line. */
+    advised: boolean;
+}
+
+const REREAD_ADVISORY = 're-read guard: ';
+
+function textOf(block: RawBlock): string | null {
+    const c = block.content;
+    if (typeof c === 'string') return c;
+    if (!Array.isArray(c)) return null;
+    let text = '';
+    for (const item of c as unknown[]) {
+        const m = typeof item === 'object' && item !== null ? (item as RawBlock) : null;
+        if (m === null) continue;
+        if (m.type === 'image') return null;
+        if (m.type === 'text' && typeof m.text === 'string') text += m.text;
+    }
+    return text;
+}
+
+function rangeOf(input: Record<string, unknown>): string | null {
+    const part = (v: unknown): string => (typeof v === 'number' || typeof v === 'string' ? String(v) : '');
+    const offset = part(input['offset']);
+    const limit = part(input['limit']);
+    return offset === '' && limit === '' ? null : `${offset}+${limit}`;
+}
+
+function advisedCalls(line: string): string | null {
+    const raw = parseLine(line) as { attachment?: { toolUseID?: unknown; stdout?: unknown } } | null;
+    const a = raw?.attachment;
+    return typeof a?.toolUseID === 'string' && typeof a.stdout === 'string' && a.stdout.includes(REREAD_ADVISORY) ? a.toolUseID : null;
 }
 
 /** Per-result view of {@link scanToolResults}: same join, same dedup by `tool_use_id`, same `:image` split. */
 export function scanToolResultRecords(opts: ScanOptions = {}): ToolResultRecord[] {
     const files = listTranscriptFiles(opts);
-    const calls = new Map<string, { name: string; command: string | null }>();
+    const calls = new Map<string, { name: string; command: string | null; path: string | null; range: string | null }>();
+    const advised = new Set<string>();
     for (const file of files) {
         for (const line of readLines(file)) {
+            if (line.includes('"attachment"') && line.includes(REREAD_ADVISORY)) {
+                const id = advisedCalls(line);
+                if (id !== null) advised.add(id);
+                continue;
+            }
             if (!line.includes('"tool_use"')) continue;
             const raw = parseLine(line);
             if (!raw || raw.type !== 'assistant') continue;
-            for (const b of blocksOf(raw) as Array<RawBlock & { input?: { command?: unknown } }>) {
+            for (const b of blocksOf(raw) as Array<RawBlock & { input?: Record<string, unknown> }>) {
                 if (b.type !== 'tool_use' || typeof b.id !== 'string' || typeof b.name !== 'string') continue;
-                const command = b.name === 'Bash' && typeof b.input?.command === 'string' ? b.input.command : null;
-                calls.set(b.id, { name: b.name, command });
+                const input = typeof b.input === 'object' && b.input !== null ? b.input : {};
+                const command = b.name === 'Bash' && typeof input['command'] === 'string' ? input['command'] : null;
+                const filePath = b.name === 'Read' && typeof input['file_path'] === 'string' ? input['file_path'] : null;
+                calls.set(b.id, { name: b.name, command, path: filePath, range: filePath === null ? null : rangeOf(input) });
             }
         }
     }
     const out: ToolResultRecord[] = [];
     const seen = new Set<string>();
     for (const file of files) {
+        const fileSession = path.basename(file, '.jsonl');
         for (const line of readLines(file)) {
             if (!line.includes('"tool_result"')) continue;
             const raw = parseLine(line);
             if (!raw || raw.type !== 'user') continue;
             const timestamp = typeof raw.timestamp === 'string' ? raw.timestamp : null;
+            const sid = (raw as { sessionId?: unknown }).sessionId;
+            const session = typeof sid === 'string' ? sid : fileSession;
             for (const block of blocksOf(raw)) {
                 if (block.type !== 'tool_result' || typeof block.tool_use_id !== 'string' || seen.has(block.tool_use_id)) continue;
                 seen.add(block.tool_use_id);
                 const { bytes, image } = payloadOf(block);
                 const call = calls.get(block.tool_use_id);
                 const name = call?.name ?? 'unknown';
-                out.push({ tool: image ? `${name}:image` : name, command: call?.command ?? null, bytes, timestamp });
+                const text = image ? null : textOf(block);
+                out.push({
+                    tool: image ? `${name}:image` : name,
+                    command: call?.command ?? null,
+                    bytes,
+                    timestamp,
+                    session,
+                    path: call?.path ?? null,
+                    range: call?.range ?? null,
+                    digest: text === null ? null : createHash('sha256').update(text, 'utf8').digest('hex'),
+                    advised: advised.has(block.tool_use_id),
+                });
             }
         }
     }
