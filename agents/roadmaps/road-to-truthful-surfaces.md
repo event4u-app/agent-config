@@ -67,32 +67,32 @@ file can report an externally visible change as done.
 
 ## Phase 1 — The banner names the command that does what it says
 
-- [ ] **1.1 Make `_format_banner` origin-aware.** `update_check.ts:164-168`
+- [x] **1.1 Make `_format_banner` origin-aware.** `update_check.ts:164-168`
       reads the install origin from `src/scripts/_cli/doctor_install_mode.ts`
       — already shipped, no new detector — and emits `agent-config upgrade`
       for a global install, `agent-config update` for a project whose pin is
       behind latest, and no command line at all for an ephemeral `npx` run.
       One fixture per origin asserts the emitted command string.
       verify: `npx vitest run tests/scripts/update_check*` -> 0
-- [ ] **1.2 Fix the stale pointer in the banner entry point.**
+- [x] **1.2 Fix the stale pointer in the banner entry point.**
       `src/scripts/check_update_banner.ts:11` names `_lib/update_check.py`.
       verify: `grep -rn 'update_check\.py' src/` -> 1
 
 ## Phase 2 — A download badge that cannot corrupt the claim row
 
-- [ ] **2.1 Add the downloads badge outside the claim row.** A
+- [x] **2.1 Add the downloads badge outside the claim row.** A
       `https://img.shields.io/npm/dm/@event4u/agent-config` badge on
       `README.md:5`, linked to the npm page, labelled with its window
       (`downloads/month`) so the number is not read as an install base.
       verify: a `grep -n` for `npm/dm` in `README.md` returns a line number that
       is neither 7 nor 9.
-- [ ] **2.2 Scope the machine-checked promise to what is actually
+- [x] **2.2 Scope the machine-checked promise to what is actually
       re-derivable.** `README.md:3`, `package.json:5` and `.github/about.yml:13`
       say "the counts in these badges"; `update_counts` re-derives six artifact
       counts and nothing else. Narrow the phrase to "the artifact counts in
       these badges" on all three surfaces.
       verify: a `grep -c` for `artifact counts in these badges` over `package.json`, `.github/about.yml` and `README.md` returns 1 on each, and the same count for the unscoped phrase returns 0 on each.
-- [ ] **2.3 Give the claim row a positional guard.** Extend
+- [x] **2.3 Give the claim row a positional guard.** Extend
       `src/scripts/update_counts.ts` so that every badge on the line carrying
       `<!-- claim:published-artifact-counts -->` must match one of the six
       re-derivable URL patterns at `:282-292`; anything else is a finding.
@@ -104,33 +104,54 @@ file can report an externally visible change as done.
 
 ## Phase 3 — Pointers and metadata that resolve
 
-- [ ] **3.1 Correct `.github/about.yml:10-12`** to `src/scripts/lint_positioning.ts`
+- [x] **3.1 Correct `.github/about.yml:10-12`** to `src/scripts/lint_positioning.ts`
       — directory and extension.
       `./scripts-run src/scripts/lint_positioning` exits 0, and no `.py` pointer
       survives.
       verify: `grep -rn 'lint_positioning\.py' .github/ src/` -> 1
-- [ ] **3.2 Drop `python` from `.github/topics.yml`** — the entry at `:29`, its
+      Landed 2026-10-16: `about.yml:10` and the same stale pointer in the
+      `topics.yml` equivalents comment now name the `.ts` file. The port notes
+      in `lint_positioning.ts` and `update_check.ts` and the three usage strings
+      `lint_positioning` printed now name no `.py` file either, so the AC-2 grep
+      finds nothing. Usage strings that name a retired `.py` file recur in 42
+      more files under `src/scripts/`; that class is not owned here.
+- [x] **3.2 Drop `python` from `.github/topics.yml`** — the entry at `:29`, its
       description at `:48` and its synonym row. Add the search terms the file
       is missing: `claude-code-plugin`, `mcp-server`, `agent-rules`. Leave
       `cinematic-ai-video` alone; `:50` records why it is there.
       verify: `grep -n 'python' .github/topics.yml` -> 1
-- [ ] **3.3 Link Discussions from the issue chooser.** Add the two Discussions
+      Landed 2026-10-16 with one deviation, recorded as D6: `mcp-server` and
+      `agent-rules` were added with README equivalents so `lint_positioning`
+      still finds every topic; `claude-code-plugin` was not. There was no
+      synonym row for `python` to remove.
+- [x] **3.3 Link Discussions from the issue chooser.** Add the two Discussions
       contact links to `.github/ISSUE_TEMPLATE/config.yml` beside the existing
       contributing and troubleshooting entries.
       verify: `grep -c 'discussions' .github/ISSUE_TEMPLATE/config.yml` -> /^[1-9][0-9]*$/
-- [ ] **3.4 Record the push items against the stub that owns them.** Add an
+- [x] **3.4 Record the push items against the stub that owns them.** Add an
       arrivals line to
       `agents/roadmaps/stubs/road-to-a-visibility-sync-that-can-write.md`
       naming the homepage, description and topic-list push as blocked on the
       403, with this round's codename. Do **not** mark them done anywhere.
       verify: that file carries an `Arrivals:` line naming `inbox-2026-10-t`.
-- [ ] **3.5 Stage, do not flip, the registry tracking row.** Prepare the
+      Already true when this step was reached: the stub's arrivals line names
+      `inbox-2026-10-t` (2026-10-16) and the three pushes, and marks nothing done.
+- [x] **3.5 Stage, do not flip, the registry tracking row.** Prepare the
       corrected text for `docs/distribution/registry-submissions.md:37`, whose
       status reads `submitted` while the upstream pull request is closed. The
       flip needs an upstream read that is not available offline, so the step
       ships the text and names the read.
       verify: the row carries a dated status with a reason, or the PR body
       names the read as outstanding.
+      Read taken 2026-10-16 with `gh pr view 9607 -R punkpeye/awesome-mcp-servers`:
+      CLOSED 2026-09-07, never merged, closed for inactivity after the upstream
+      asked on 2026-07-13 for a language emoji tag and a Glama listing badge.
+      The row is left as it is because `road-to-a-distribution-ledger-that-is-true`
+      steps 1.1-1.3 own exactly this correction. Writing it here would do that
+      file's work without closing its boxes. Staged text for its step 1.2:
+      status `rejected`, date 2026-09-07, note "closed unmerged for inactivity,
+      not on merits; the upstream asked for an emoji tag and a Glama badge and
+      invites a re-open". The PR body carries the same reading.
 
 ## Decisions
 
@@ -141,6 +162,9 @@ file can report an externally visible change as done.
 | D3 | deterministic | evidence | The origin signal comes from `doctor_install_mode.ts`, not a new detector | it already classifies the install origin and `upgrade` consumes it | that module stops distinguishing global from project-pinned |
 | D4 | deterministic | agent | `cinematic-ai-video` stays in `topics.yml` | `:50` carries a recorded differentiator rationale; only `python` is stale | the rationale is withdrawn |
 | D5 | contested-technical | agent | The push half is recorded against the existing stub rather than carried as a blocker here | a blocker duplicating a stub the tree already holds grows the estate twice for one obligation | the stub is closed or cancelled |
+| D6 | deterministic | evidence | `claude-code-plugin` is not added as a topic, against step 3.2's list | `README.md` § Plugin-installed states the Claude Code marketplace plugin is deprecated, and `.claude-plugin/marketplace.json` calls itself a bootstrap shim deprecated as a content channel; advertising a deprecated channel is the defect this file exists to remove | the plugin stops being deprecated |
+| D7 | deterministic | evidence | Step 2.3's "six re-derivable patterns" needed a sixth count: an `advisors` kind was added to `update_counts` | the Advisors badge sat on the claim row with no pattern behind it while the README sub-note and `docs/CLAIMS.md` § published-artifact-counts both said all six badges are re-derived; the positional guard would have reported it on the first run | never — the alternative was moving a published count off the claim row |
+| D8 | deterministic | evidence | The banner's origin comes from three signals, and `doctor_install_mode.ts` is one of them, read unchanged | that module only answers "is this a global-only consumer project"; it cannot see an `npx` cache or a pin, so the classifier also reads the package root path and the `agent_config_version` key | the module grows an origin classifier of its own |
 
 ## What this roadmap deliberately does not do
 
@@ -169,20 +193,20 @@ file can report an externally visible change as done.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** On a global install the update banner names `upgrade`; in a
+- [x] **AC-1** On a global install the update banner names `upgrade`; in a
       project whose pin is behind latest it names `update`; under an ephemeral
       `npx` run it names no command. Asserted by fixture, one per origin.
-- [ ] **AC-2** `grep -rn 'update_check\.py\|lint_positioning\.py' src/ .github/`
+- [x] **AC-2** `grep -rn 'update_check\.py\|lint_positioning\.py' src/ .github/`
       returns 0.
-- [ ] **AC-3** A README whose claim line carries a non-re-derivable badge makes
+- [x] **AC-3** A README whose claim line carries a non-re-derivable badge makes
       `update_counts --check` exit non-zero; the same badge outside the row
       exits 0.
-- [ ] **AC-4** `README.md` carries a `downloads/month` badge that is not on a
+- [x] **AC-4** `README.md` carries a `downloads/month` badge that is not on a
       line bearing `claim:published-artifact-counts`.
-- [ ] **AC-5** `grep -n 'python' .github/topics.yml` returns 0 and
+- [x] **AC-5** `grep -n 'python' .github/topics.yml` returns 0 and
       `lint_positioning` exits 0.
-- [ ] **AC-6** `.github/ISSUE_TEMPLATE/config.yml` links Discussions.
-- [ ] **AC-7** No step in this file reports a change to the repository's own
+- [x] **AC-6** `.github/ISSUE_TEMPLATE/config.yml` links Discussions.
+- [x] **AC-7** No step in this file reports a change to the repository's own
       description, homepage or topic list as done; the visibility-sync stub
       carries this round in its arrivals line.
 - [ ] **AC-8** `task ci` green.

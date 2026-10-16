@@ -255,6 +255,36 @@ and in **no** workflow — checked against a control that did find
 
       **Evidence (2026-10-04) — still deferred, and the reason narrowed.** Moved to `agents/evidence/analysis/corpus-refresh-cadence-evidence-2026-10.md` (step 1.2d entry).
 
+      **RE-LOCATE FIRST — the anchors below are stale, and the reason matters
+      more than the line numbers. Measured 2026-10-16.** Both anchor lines moved
+      in `1696ac45b` (PR #2327, merged 2026-10-14), a change about
+      account-lifecycle threat rows and not about this step. It rewrote the
+      `sha` value and moved `last_checked` from `2026-09-18` to **`2026-10-13`**.
+
+      The step's own guard says to re-locate rather than edit blind, so this is
+      that re-location — and it found more than a moved line. **The stamp now
+      claims more than any recorded check supports.** 1.2d's upstream is four
+      sources: MITRE ATT&CK, CWE, the OWASP API Top 10 and ASVS 5.0. What
+      `1696ac45b` records reading on 2026-10-13 is **ASVS 5.0's chapter listing
+      only**; the ATT&CK verification in the same field is still dated
+      2026-09-27, and nothing in that change reads CWE or the OWASP API Top 10
+      as a freshness check. A quarterly stamp is a claim about all four.
+
+      This is Risk 2 of this roadmap arriving in the form it predicted — *"an
+      agent editing these stamps is the most convincing possible form of the
+      wrong answer"* — except that it arrived sideways, through a PR that had no
+      reason to think it was touching a cadence stamp at all.
+
+      **Not repaired here, deliberately.** Reverting the stamp to `2026-09-18`
+      would be correct about freshness and would red the corpus gate on
+      ~2026-12-27 as originally scheduled; leaving it stands a claim that
+      overstates. Which of those the maintainer wants is exactly the judgement
+      this blocker reserves, and `1696ac45b` did real upstream reading that a
+      blind revert would discard. Two honest options when 1.2d is run: run the
+      full four-source check and stamp that day, which supersedes the question;
+      or narrow the `sha` value to say what was actually verified on 2026-10-13
+      and move the stamp back.
+
       **Hand-over — exact anchors, read 2026-10-04.** In
       `src/skills/threat-modeling/data/manifest.json`, line **81** currently
       reads `    "last_checked": "2026-09-18"` and line **80** opens
@@ -360,18 +390,18 @@ and in **no** workflow — checked against a control that did find
   not-precedent, and 1.2b–d are held here for the maintainer. If the maintainer
   disagrees, the repair is to revert the one CSV citation and the one stamp,
   both one-line diffs.
-- **What to do:** run the remaining **two** occasions on two further separate
-  dates before ~2026-12-27, one corpus each, in either order — 1.2c and 1.2d
-  carry the upstream, the suggested window, the diff baseline, the exact
-  anchors (file, line number, current content quoted) and the verbatim change
-  for each. Neither may land on `2026-10-01` (1.2a) or `2026-10-04` (1.2b).
-  **Cost is not equal between them, measured 2026-10-04:** 1.2c must also write
-  `src/skills/database/evals/triggers.json` or it reds `check_routing_coverage`, <!-- ref-ignore -->
-  which does block the PR; 1.2d needs no such corpus and is the cheaper of the
-  two. **Keep their late-November and mid-December windows** rather than running
-  them early: 1.2a and 1.2b are now only three days apart, so the spread the
-  Goal asks for depends on the remaining two landing far from them and from each
-  other. For each occasion: verify that
+- **What to do:** run the **one** remaining occasion — 1.2d, `threat-modeling` —
+  on a date distinct from `2026-10-01`, `2026-10-04` and `2026-10-10`.
+  **Corrected 2026-10-16: this field said "two" and named 1.2c as outstanding.**
+  1.2c ran on 2026-10-10 under D6, which the `Blocks` field above already
+  recorded; only this field and `If you do nothing` were not updated with it, so
+  the 1.2c cost note about `check_routing_coverage` is spent and is dropped here.
+  1.2d carries the upstream, the suggested window, the diff baseline and the
+  verbatim change — **but read its re-locate note first: its anchors are stale,
+  for the reason recorded at the step.** Keep the mid-December window rather
+  than running early: 1.2a, 1.2b and 1.2c now sit within nine days of each
+  other, so the spread the Goal asks for rests entirely on the last occasion
+  landing far from them. For each occasion: verify that
   corpus against its upstream, then set only that manifest's
   `upstream.last_checked` to the date the check actually ran, and confirm with
   `./scripts-run src/scripts/check_corpus_staleness`. Separately, decide the
@@ -390,15 +420,21 @@ and in **no** workflow — checked against a control that did find
   reddens every PR at ~2026-12-27 whether or not the dashboard carries this
   file, so the deadline announces itself. Option (c) buys the same visibility as
   (b) at the cost of a wake condition nothing reads.
-- **If you do nothing:** the **two** stamps still reading `2026-09-18`
-  (`database`, `threat-modeling`) cross the 100-day bound together on
-  ~2026-12-27 and redden every open pull request at once — a two-way rerun of
-  the 2026-09-18 incident this roadmap exists to prevent, on a date that is
-  already known. `accessibility-auditor` left that cohort on 2026-10-01 (next
-  due ~2027-01-09) and `api-design` on 2026-10-04 (next due ~2027-01-12). **And the first red arrives
-  earlier than that, from outside this roadmap:** `design-intelligence`, the
-  sixth `quarterly` corpus, reds every PR on **2026-11-22**. Doing nothing here
-  does not buy quiet until December.
+- **If you do nothing:** **re-measured 2026-10-16, and the December cohort this
+  field described no longer exists.** No stamp in the four this roadmap covers
+  still reads `2026-09-18`: `accessibility-auditor` reads `2026-10-11`,
+  `api-design` `2026-10-04`, `database` `2026-10-10` and `threat-modeling`
+  `2026-10-13`. The ~2026-12-27 two-way red is therefore gone, and with it the
+  deadline every window in this roadmap was set against.
+
+  **The first red is `design-intelligence` on 2026-11-22** — the sixth
+  `quarterly` corpus, last stamped `2026-08-13`, out of this roadmap's scope and
+  five weeks earlier than the date this field used to announce. Doing nothing
+  buys quiet until late November, not until December.
+
+  And `threat-modeling`'s stamp reading `2026-10-13` is **not** 1.2d having run;
+  see the step's own note. Doing nothing there leaves a stamp asserting more
+  freshness than any recorded check supports.
 - **Resolved when:** the four `upstream.last_checked` values under
   `src/skills/{accessibility-auditor,api-design,database,threat-modeling}/data/manifest.json`
   are four *distinct* dates — not merely not-all-equal, per D3 — and

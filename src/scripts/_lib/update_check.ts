@@ -1,7 +1,7 @@
 /**
  * Daily update-check banner for the `agent-config` dispatcher.
  *
- * Ported from the retired Python `src/scripts/_lib/update_check.py` (ADR-200,
+ * Ported from its retired Python twin (ADR-200,
  * Phase 2 / Wave 1 batch B). Pure functions: `check_for_update()`
  * decides whether a banner should be emitted and returns the banner
  * string (or `null`). The dispatcher prints the returned string to
@@ -161,11 +161,58 @@ function _should_check(state: Record<string, unknown>, now: Date): boolean {
     return now.getTime() - last_ms >= CHECK_WINDOW_MS;
 }
 
-function _format_banner(latest: string, installed: string): string {
-    return (
-        `ℹ️  agent-config ${latest} available (you have ${installed}).\n` +
-        `    Update: npx ${PACKAGE_NAME} update`
-    );
+/**
+ * The install shape that is running. It decides which command the banner may
+ * name: `upgrade` replaces the global binary, `update` flips a project's
+ * `agent_config_version` pin, and an ephemeral `npx` run has nothing to update.
+ */
+export type InstallOrigin = 'global' | 'project-pin' | 'ephemeral' | 'unknown';
+
+const GLOBAL_TREE = /[\\/](?:lib|npm)[\\/]node_modules[\\/]@event4u[\\/]agent-config[\\/]?$/;
+
+/**
+ * Classify the running install from signals the caller gathers.
+ *
+ * Order matters: a pinned project also runs from the npx cache, so the pin is
+ * read before the `_npx` segment. `latest` is the registry version the banner
+ * announces; the pin is compared against it, never the running executable. An origin nobody enumerated is `unknown` and
+ * gets no command, because a guessed command is the defect this replaces.
+ */
+export function classify_install_origin(signals: {
+    package_root: string;
+    project_pin: string | null;
+    latest: string | null;
+    is_global_consumer: boolean;
+}): InstallOrigin {
+    const pin = signals.project_pin?.trim() ?? '';
+    if (pin !== '') {
+        // `update` moves the pin, not the running executable: a pin already at
+        // or past latest has nothing to move, and no other command is known
+        // to be right for a pinned project.
+        return signals.latest && _is_newer(signals.latest, pin) ? 'project-pin' : 'unknown';
+    }
+    if (signals.package_root.split(/[\\/]+/).includes('_npx')) {
+        return 'ephemeral';
+    }
+    if (signals.is_global_consumer || GLOBAL_TREE.test(signals.package_root)) {
+        return 'global';
+    }
+    return 'unknown';
+}
+
+export function _format_banner(
+    latest: string,
+    installed: string,
+    origin: InstallOrigin = 'unknown',
+): string {
+    const head = `ℹ️  agent-config ${latest} available (you have ${installed}).`;
+    if (origin === 'global') {
+        return `${head}\n    Update: agent-config upgrade`;
+    }
+    if (origin === 'project-pin') {
+        return `${head}\n    Update: agent-config update`;
+    }
+    return head;
 }
 
 /** Strict integer parse mirroring Python's `int(p)` (else 0). */
@@ -212,6 +259,13 @@ export function _is_newer(latest: string, installed: string): boolean {
     return false;
 }
 
+function _resolve_origin(
+    origin: InstallOrigin | ((latest: string) => InstallOrigin) | undefined,
+    latest: string,
+): InstallOrigin | undefined {
+    return typeof origin === 'function' ? origin(latest) : origin;
+}
+
 /** Format a Date as `%Y-%m-%dT%H:%M:%SZ` (UTC, no milliseconds). */
 function _format_utc(d: Date): string {
     return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
@@ -233,6 +287,7 @@ export async function check_for_update(
         is_tty?: boolean | null;
         settings_enabled?: boolean;
         fetcher?: Fetcher;
+        origin?: InstallOrigin | ((latest: string) => InstallOrigin);
     } = {},
 ): Promise<string | null> {
     const env = options.env ?? process.env;
@@ -264,7 +319,7 @@ export async function check_for_update(
     if (!_should_check(state, now)) {
         const latest = state.last_seen_version;
         if (typeof latest === 'string' && _is_newer(latest, installed_version)) {
-            return _format_banner(latest, installed_version);
+            return _format_banner(latest, installed_version, _resolve_origin(options.origin, latest));
         }
         return null;
     }
@@ -293,5 +348,5 @@ export async function check_for_update(
     if (!latest || !_is_newer(latest, installed_version)) {
         return null;
     }
-    return _format_banner(latest, installed_version);
+    return _format_banner(latest, installed_version, _resolve_origin(options.origin, latest));
 }

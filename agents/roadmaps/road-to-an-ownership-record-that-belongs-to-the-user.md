@@ -54,20 +54,33 @@ the same thing in all of them.
 
 ## Phase 0 — Resolve the lock, not the symptom
 
-- [ ] **0.1 Read the adjacent stub before citing it.**
+- [x] **0.1 Read the adjacent stub before citing it.**
       `agents/roadmaps/stubs/road-to-per-repository-install-verification.md`
       records this work as blocked on ADR-020 and that no manifest writer was
       ever added. Run `./scripts-run src/scripts/adr_cite_check ADR-020` and
       read its status, amendments and successors before treating it as a
       blocker.
       verify: the `adr_cite_check` output is quoted in the council question.
-- [ ] **0.2 Route the transition to the council.** The question is narrow:
+      Done 2026-10-16: ADR-020 reads `accepted`, **amended three times**
+      (2026-05-30 user-content exception, 2026-06-03 settings-scope correction
+      via ADR-049, 2026-07-13 bridge marker retired), no `review_trigger`, no
+      declared protected dimension, `reopen_policy` absent. The tool's closing
+      AMENDED line is why the user-content amendment carries weight in both
+      seats' reasoning. The stub's own blocked-on-ADR-020 state is unchanged by
+      the verdict — see its new § A council verdict on an adjacent ADR-020
+      reading.
+- [x] **0.2 Route the transition to the council.** The question is narrow:
       does a per-user ownership ledger **weaken** ADR-020's global-only
       invariant, or is it the mechanism that makes it safe? It is reversible
       and internal, so under `decision-revisit-gate` it is council-decidable;
       it reaches the owner only on a split.
       verify: a recorded verdict with a `revisit-if`, written at the stub and
       mirrored into `## Decisions` as D1. A verdict with no record is not one.
+      Done 2026-10-16: **(a)**, 2/2 concluded, no split, members `anthropic` +
+      `openai`, prompt mode, two rounds, $0.00 (subscription transport). Record
+      at `agents/evidence/council/ownership-ledger-adr020-20261016.md`, written
+      at the stub, mirrored as D1. Phase 2 proceeds under the four boundaries D1
+      carries.
 
 ## Phase 1 — Freeze the three losses, red first
 
@@ -144,8 +157,10 @@ the same thing in all of them.
 
 ### blocker: adr-020-ownership-ledger-reading
 
-- **Status:** open
-- **Owner:** AI council (reaches the owner only on a split)
+- **Status:** resolved — (a), AI council 2026-10-16, 2/2 concluded, no split. The
+  verdict and its four boundaries are in
+  `agents/evidence/council/ownership-ledger-adr020-20261016.md`; mirrored as D1.
+- **Owner:** AI council (reaches the owner only on a split — it did not split)
 - **Blocks:** Phase 2. Phases 0, 1 and step 3.1 run without it — the red tests
   and the doctor fix change no invariant.
 - **What to do:** pick exactly one — (a) the council records that a per-user
@@ -171,7 +186,7 @@ the same thing in all of them.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | contested-technical | agent | Route the ADR-020 reading to the council in step 0.2 rather than deciding it here, and gate only Phase 2 on the verdict | the transition is reversible and internal, which `decision-revisit-gate` makes council-decidable; it reaches the owner only on a split | ADR-020 is amended or superseded, or the council splits |
+| D1 | contested-technical | council:agents/evidence/council/ownership-ledger-adr020-20261016.md | **(a) — a per-user ownership ledger makes ADR-020's global-only invariant coherent; it does not weaken it.** Phase 2 proceeds, bounded: the ledger is user-global ownership metadata and not a scope, its treatment is independent of the invoking project and working directory, it carries no project key and drives no project-dependent artefact selection, and the two-digest requirement is core preservation logic rather than an implementation detail | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats read the project-conditioned write at `install.ts:3531-3537` as the actual scope violation: a global artefact's fate decided by a project-shaped condition | the ledger becomes project-keyed or encodes project preferences · it drives artefact **selection** rather than preservation · two projects demonstrably need different versions of one global artefact at once · the two-digest distinction proves insufficient · ADR-020 or an amendment is shown to require package-controlled content uniformity |
 | D2 | deterministic | evidence | The schema bump is additive and schema 1 keeps loading | the sibling roadmap's deletion allowlist reads the same file and must not wait on this one | the sibling lands schema 2 first |
 | D3 | critical-technical | evidence | `unknown` preserves only paths the ledger lists | a blanket preserve would keep every unrecorded pre-existing file forever, which is the noise `preserve.ts` already argues against | the ledger becomes complete enough that unrecorded means foreign |
 | D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |

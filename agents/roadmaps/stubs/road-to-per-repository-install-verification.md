@@ -155,6 +155,51 @@ artefact in every consumer repository is what "yes" introduces.
   decision record proposes otherwise; `agents/installed-tools.lock` is absent
   from every consumer repository inspected and from this worktree.
 
+## A council verdict on an adjacent ADR-020 reading — and what it does NOT answer
+
+**AI council 2026-10-16**, members `anthropic` + `openai`, prompt mode, two
+rounds, blind peer review, **2/2 concluded, no split**, $0.00 (subscription
+transport). Record:
+`agents/evidence/council/ownership-ledger-adr020-20261016.md`. Recorded here
+because `road-to-an-ownership-record-that-belongs-to-the-user` Phase 0 names
+this stub as the place its verdict lands.
+
+**The question asked:** does a **per-user ownership ledger** weaken ADR-020's
+global-only invariant, or is it the mechanism that makes it hold?
+
+**Verdict: (a)** — it makes the invariant *coherent*. ADR-020 plus its
+2026-05-30 user-content amendment already describe an architecture of global
+artefacts with preserved user modifications, and that architecture requires
+global-scoped knowledge of what is user content. The seats found the actual
+scope violation elsewhere: `install.ts:3531-3537` writes the ownership record
+only when the install ran from a directory carrying project settings, so a
+**global** artefact's fate is decided by a **project**-shaped condition.
+
+**Revisit-if:** the ledger becomes project-keyed, or drives artefact
+*selection* rather than preservation; two projects demonstrably need different
+versions of one global artefact at once; the two-digest distinction proves
+insufficient; or ADR-020 is shown to require package-controlled content
+uniformity.
+
+### Why this does not promote or close this stub
+
+The verdict is bounded by four conditions, and two of them are precisely the
+thing this stub asks for: **no project keys in the ledger**, and **no
+project-dependent artefact selection**. The ledger is user-global metadata by
+construction, so it cannot say what any particular repository received — which
+is § The gap, item 3, unchanged.
+
+The owner question in § The unresolved product decision stands exactly as
+written. A council answering a neighbouring question does not answer an
+owner-reserved one, and the distinction is recorded rather than left for a
+later reader to notice.
+
+One thing does change: the gap is now **narrower and better named**. Whether a
+human's edit to a globally installed artefact survives is about to stop
+depending on a working directory. What remains unreachable is per-repository
+projection state — not per-user ownership, which the parent roadmap's Phase 2
+delivers.
+
 ## The narrower phase that could be proposed separately
 
 Both seats named it explicitly so it is not lost: a **global-install

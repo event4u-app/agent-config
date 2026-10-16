@@ -168,9 +168,10 @@ deleted or left as a silent twin without a row the user has seen.
       withheld on Claude Code by the existing guard; 0.3 goes green.
       (2026-10-16: done.)
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts --reporter=verbose` -> /✓.*pinned-host-control/
-- [ ] <!-- blocked-by: maintainer-design-router-name | asked: no — authored from inbox round inbox-2026-10-m, which carried no owner turn on this question --> **1.3 The router keeps a reachable name.** Apply the owner's answer to the
-      blocker: rename the maintainer router with a `replaces:` alias, or record
-      that it is reachable on non-Claude hosts only.
+- [ ] **1.3 The router keeps a reachable name.** Apply the council's (a) of
+      2026-10-16: the maintainer router becomes `/agent-design` and carries
+      `replaces: [design]`. Sequences strictly after 1.2, which is what puts
+      `design` into the built-in set in the first place.
       verify: `npx tsx src/scripts/lint_no_new_atomic_commands.ts` -> 0
 
 ## Phase 2 — The tree sees the sync surface
@@ -382,13 +383,83 @@ deleted or left as a silent twin without a row the user has seen.
 - **What to do:** pick exactly one — (a) run `/design-sync` once on `tests/fixtures/design-sync/react-package/` with a canvas account and commit the resulting listing of `.design-sync/` and of the local build output into `tests/fixtures/design-sync/host-observed/`; or (b) narrow 3.2 to a user-exported snapshot directory only and drop 5.2, keeping to the names the 2.1.296 binary carries (`.design-sync/config.json`, `previews/`, `.render-check.json`).
 - **Resolved when:** `tests/fixtures/design-sync/host-observed/` exists, or 3.2 and 5.2 are rewritten per (b) and `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design` exits 0.
 - **Recommendation:** (a). The lane exists to read what the host writes; a fixture invented from an old extract would test the extract, not the host.
+
+  **An AI council split on this, 2026-10-16, and the split rests on a gap this
+  entry can close.** Record:
+  `agents/evidence/council/owner-blocker-routing-20261016.md`.
+
+  `anthropic` — **DECIDE, (b)**: the three names come from reading the 2.1.296
+  binary, so (b) makes a **smaller verified** claim rather than a larger
+  invented one, and (a) stays available as a later upgrade. It adds that the old
+  extract is itself the risk — using it would test obsolete behaviour whether or
+  not a fixture is "invented".
+
+  `openai` — **ESCALATE, (a)**: not on the merits, but because *"what step 5.2
+  delivers and what happens to 8.5 is absent, so the impact of (b) is
+  unknowable"* — the reserved row **cannot be bounded from the evidence
+  available**. It agrees the three-name scope is verified rather than invented.
+
+  **Both missing facts, read from this roadmap 2026-10-16 so the gap is closed
+  in writing rather than left for the next reader.**
+
+  - **5.2 delivers the conventions block**: `DESIGN.md` usage rules rendered
+    into the host's human-editable conventions file between markers, text
+    outside the markers byte-identical, with a drift check that reds on a
+    divergent block. That is the nameable capability (b) drops — not an
+    unspecified one.
+  - **8.5 is unaffected by this choice.** It is already `[~]` and already
+    human-run by its own text — *"Needs a canvas account and network; never run
+    by an agent"* — under **either** option. (b) does not change its state, and
+    the `Blocks` field listing it alongside 3.2 and 5.2 is what made it look
+    like it might.
+
+  With both facts in hand the escalating seat's stated row no longer obviously
+  applies, since the impact of (b) is now bounded: lose the conventions block,
+  keep everything else, 8.5 unchanged. Recorded rather than acted on — a seat's
+  escalation is not for the agent to withdraw on the agent's own reading.
 - **If you do nothing:** Phases 0–2, 4, 6–8 land unchanged; the lane reads only a user export, and the conventions block stays unbuilt.
 
 ### blocker: maintainer-design-router-name
-- **Status:** open — raised 2026-10-12 from inbox round `inbox-2026-10-m`, which carried no owner turn on this question.
-- **Owner:** owner — renaming a shipped command is a public-surface change.
+- **Status:** resolved — **(a)**, as `/agent-design` with `replaces: [design]`. AI
+  council 2026-10-16, 2/2 concluded, no split, both seats `DECIDE`: the router is
+  maintainer-facing, the change is reversible, and `replaces:` is the package's
+  own declared mechanism for exactly this move, so no reserved row is crossed.
+  Record: `agents/evidence/council/owner-blocker-routing-20261016.md`.
+- **Owner:** owner — a shipped command taking a different name is a public-surface change. **The council read the transition instead and found it maintainer-facing: the label records who raised it, not who must answer.**
 - **Blocks:** step 1.3.
-- **What to do:** pick exactly one — (a) rename `src/domains/engineering-base/design/command.md` to a name `is_claude_builtin_name` rejects as `false` and no command holds, with `replaces: [design]`; or (b) keep `/design` and record in its body that it is withheld on Claude Code after 1.2 and reachable on the other hosts only.
+- **What to do:** **(a), with the name settled: `/agent-design`.** Give
+  `src/domains/engineering-base/design/command.md` that name and
+  `replaces: [design]`. Superseded alternative, kept so the choice is legible:
+  (b) keep `/design` and record in its body that it is withheld on Claude Code
+  after 1.2 and reachable on the other hosts only — refused because the router
+  then *silently* disappears from the host the work happens on.
+
+  **Verified on this tree, 2026-10-16, so the pick is applicable rather than
+  plausible:** `agent-design` is held by no command and is absent from
+  `CLAUDE_CODE_BUILTIN_NAMES`, so the predicate returns `false` for it as (a)
+  requires.
+
+  **Step 1.2 landed while this was being written, and that settles the
+  sequencing rather than leaving it to be read.** The set now carries `design`,
+  `design-consent` and `design-revoke` beside `design-login` and `design-sync`
+  — 106 entries, up from the 103 measured hours earlier — so the flat `/design`
+  router is already withheld on Claude Code by the existing guard. 1.3 is
+  therefore unblocked in both senses: its blocker is answered and the step it
+  waits on is done.
+
+  **`/design:router` was considered and refused** (`openai`): colon portability
+  across every supported host is not established in this tree, and the name
+  describes implementation rather than intent.
+
+  **What the alias does and does not buy, checked rather than assumed.** Both
+  seats asked whether `replaces:` is metadata-only. It is not —
+  `src/cli/commands/commands.ts` reads it at runtime, printing
+  `<slug>  <-  absorbed: <names>` in the listing (`:248`) and a `replaces:` line
+  in the detail view (`:414`). The limit runs the other way: a maintainer who
+  types `/design` on Claude Code reaches **the host's own built-in**, which this
+  package cannot decorate, so the forward pointer exists in the package CLI and
+  cannot exist on the host's slash surface. That is the host's property, not a
+  gap in the migration — and it is the whole reason (b) was refused.
 - **Resolved when:** the command file carries (a)'s new name or (b)'s sentence, and `npx tsx src/scripts/lint_no_new_atomic_commands.ts` exits 0.
 - **Recommendation:** (a). After 1.2 the router silently disappears from Claude Code under (b), which is the host the transcript works in.
 - **If you do nothing:** 1.2 still lands and the host's `design` stops being shadowed; the maintainer router is unreachable on Claude Code.

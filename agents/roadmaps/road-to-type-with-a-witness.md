@@ -118,11 +118,17 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
 - **No Python under `src/`.** `.github/workflows/no-python-in-src.yml` fails on
   any `src/**/*.py`, permanently. `markitdown/SKILL.md:67-78` is the precedent
   for a pinned peer-side Python tool.
-- **No font binaries, no font bundler.** No tracked file anywhere ends in
-  `.ttf`, `.otf`, `.woff`, `.woff2` or `.ttc`;
+- **No font binaries, no font bundler — amended 2026-10-16 to bind published
+  artefacts.** At authoring time no tracked file anywhere ended in `.ttf`,
+  `.otf`, `.woff`, `.woff2` or `.ttc`;
   `design-system-capture/references/design-system-json.md:61-63` and the
   2026-06-28 council lock cited at
-  `agents/roadmaps/stubs/road-to-multi-host-screenshot-census.md:77-79`.
+  `agents/roadmaps/stubs/road-to-multi-host-screenshot-census.md:77-79`. The
+  council narrowed that lock to **published** artefacts on 2026-10-16 (A11), so
+  5.8's benchmark fixtures are tracked and 5.9 verifies the produced archive
+  rather than the exclusion list that is supposed to produce it. The sentence
+  the stub cites — *"no font-bundler is to be shipped"* — is unchanged by the
+  amendment; shipping is exactly what still binds.
 - **No new hook concern.** `concern_count` carries no allowance either
   (`estate-count-budget.json:27`), so the font build gets no turn-end
   obligation of its own; the proof goes through the existing asset witness.
@@ -372,14 +378,34 @@ failure message the agent can act on.
 - [ ] **5.7 Metric-matched fallback.** The skill emits the fallback
       `@font-face` overrides for the new family, which is what T12 asks for.
       verify: `grep -c "size-adjust" src/skills/type-design/references/gates.md` -> /^[1-9]/
-- [~] **5.8 Pre-registered reconstruction benchmark.** Held-out real families:
-      the harness renders a 5- to 7-letter word from each, gives the skill only
-      that image, asks for `latin-basic`, and compares the held-out glyphs with
-      the real family by per-glyph IoU, stem deviation, sidebearing deviation
-      and gate pass rate. Thresholds frozen before the first run; a null is a
-      valid result; the grader never sees the generating session's notes. A
-      claim enters `docs/CLAIMS.md` only from this run. Held by
-      `benchmark-fixture-fonts`.
+- [ ] **5.8 Pre-registered reconstruction benchmark — committed fixtures, per
+      the council's (a) of 2026-10-16.** Held-out real families live under
+      `tests/fixtures/fonts/` <!-- ref-ignore -->, each with its licence text
+      beside it and recorded in `docs/THIRD-PARTY-NOTICES.md`, outside the
+      `files` list in `package.json`. The harness renders a 5- to 7-letter word
+      from each, gives the skill **only that image** — never a fixture name, a
+      path or any metadata, which committing the set makes easier to leak by
+      accident than fetching it would have — asks for `latin-basic`, and
+      compares the held-out glyphs with the real family by per-glyph IoU, stem
+      deviation, sidebearing deviation and gate pass rate. Thresholds frozen
+      before the first run; a null is a valid result; the grader never sees the
+      generating session's notes. Raw measurements, the frozen thresholds and
+      the fixture identities are retained beside the verdict. A claim enters
+      `docs/CLAIMS.md` only from this run.
+      verify: the rendered proof exists for each family; a fixture's name does not appear in the input handed to the skill; the measurements and thresholds are committed with the verdict.
+- [ ] **5.9 The published archive carries no typeface binary.** The lock's one
+      bright line, verified against the produced archive rather than against the
+      configuration that is supposed to produce it. The check also covers
+      release archives, container build contexts and provenance bundles, because
+      an exclusion from `package.json#files` is necessary and not sufficient.
+      verify: the produced tarball carries no typeface binary and no fixture path — `npm pack --dry-run | grep -cE '[.](ttf|otf|woff2?|ttc)$'` -> /^0$/
+- [ ] **5.10 The fixture carve-out states its own bound.** The amendment covers
+      typeface families for this benchmark and nothing else: a later family
+      joins by an explicit decision, never drive-by, and "openly licensed" means
+      an OSI-approved SPDX identifier. Without the bound, "non-shipped binary
+      fixtures" becomes a category that drifts into audio samples and image
+      sets.
+      verify: the bound and the SPDX restriction are written where the fixtures live, and a family carrying a non-OSI identifier is refused by the same check as 5.9
 
 ## Phase 6 — Third-party registry items are audited before `add`
 
@@ -401,14 +427,15 @@ failure message the agent can act on.
 | A4 | reversible-technical | evidence | Six worked scales land as a reference file; the per-pairing line-height claim is dropped | a per-pairing line-height column would contradict the single authority 0.1 creates | a measured case where one pairing needs its own line-height |
 | A5 | reversible-technical | evidence | The page witness gets no blanket font wait; a bounded wait runs only on a face still loading | reproduction: a used face delayed 2,000 ms held `load` until 2,019 ms | WebKit or a script-injected face reproduces the flake |
 | A6 | reversible-technical | evidence | No weight-count tell | `road-to-design-craft-antislop` deferred font-weight-count as a design-system opinion; `lint_design_quality.ts:21-25` keeps it out; its revisit condition (a measured false-positive rate in real use) has not fired | that measurement exists |
-| A7 | reversible-technical | evidence | Witness fixtures use a TrueType face built in memory at test time; the proof page uses SVG `<text>` | no tracked font binary exists; the asset profile already reads `<text>` (`uiRenderAsset.ts:813-821`) | the council rules that test-only font files are outside the lock |
+| A7 | reversible-technical | evidence | Witness fixtures use a TrueType face built in memory at test time; the proof page uses SVG `<text>` | no tracked font binary exists; the asset profile already reads `<text>` (`uiRenderAsset.ts:813-821`) | **FIRED 2026-10-16** — the council ruled exactly this, see A11. The witness fixtures themselves are unchanged: A11 admits typeface binaries for the **benchmark** only, and an in-memory face remains the right shape for a unit test |
 | A8 | reversible-technical | evidence | The filled-counter finding starts advisory | a check proposed for enforcement needs a measured false-positive rate first; 3.3 measures it | 3.3 records zero false positives |
 | A9 | reversible-technical | agent | Coverage tiers are defined by this roadmap, not copied from an external glyph-set definition | own analysis: the German set is the stated need of the source | a project needs a script beyond Latin |
 | A10 | reversible-technical | agent | The skill is named `type-design` | neighbour names describe the activity (`typography-system`, `svg-authoring`) | the name collides in the trigger corpus |
+| A11 | contested-technical | council:agents/evidence/council/benchmark-fixture-fonts-20261016.md | **(a) — the 2026-06-28 no-typeface-bundler lock binds published artefacts, not the repository.** The benchmark commits openly licensed families with their licence texts under `tests/fixtures/fonts/` <!-- ref-ignore -->, outside `package.json#files`. Stated as an **amendment**, never as a reinterpretation, and bounded to typeface fixtures for this benchmark | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport) — **against this roadmap's own recommendation of (b)**, which is why the round was run. The deciding principle: this is the only run allowed to put a reconstruction claim into `docs/CLAIMS.md`, and a first-class claim should be re-derivable from the tree; a checksum authenticates a retrieved file but cannot make an unavailable one retrievable. No tracked record of the 2026-06-28 lock exists, so `agents/evidence/council/benchmark-fixture-fonts-20261016.md` is where the amendment lives | a typeface binary is found in any published artefact · licence review of the fixture set becomes a recurring chore · the exception is cited to admit a binary class other than typeface fixtures for this benchmark |
 
 ## Non-goals
 
-No font binary and no font fetcher in the package. No Python under `src/`. No
+No font binary in any published artefact and no font fetcher in the package — the fixtures 5.8 commits are repository-only and 5.9 verifies the produced archive carries none of them. No Python under `src/`. No
 hook concern and no turn-end obligation for fonts. No variable font, second
 master or interpolated weight. No machine-learning glyph generator. No
 weight-count tell. No moodboard, inspiration or font-browsing adapter. No editor
@@ -418,7 +445,7 @@ GPL system package as the default builder. No text copied from any external
 skill.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude-opus -->
+<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -429,12 +456,19 @@ skill.
 | 5 | The new finding fires on clean SVG | implementation | Nested same-winding subpaths that are meant to overlap read as filled counters | 3.3 measures it over the tracked SVGs before it can gate | Phase 3 — The SVG tooling learns fill rule and counters |
 | 6 | The face state flakes across hosts | implementation | macOS and ubuntu disagree on `loaded` for the in-memory face | 1.4 runs on both and the timeout is its own state | Phase 1 — The witness says which face painted |
 | 7 | One value returns in a third carrier | implementation | A later edit restates body line-height elsewhere | the drift test in 0.6 reads every carrier | Phase 0 — Typography truth |
+| 8 | The fixture carve-out drifts | product | A committed binary class, once admitted, is the path of least resistance for the next one — audio samples for a transcription benchmark, image sets for a vision test — and licence review of a growing fixture set becomes a recurring chore nobody owns | 5.10 bounds the amendment to typeface families for this benchmark, restricts "openly licensed" to OSI-approved SPDX identifiers and requires an explicit decision per addition; A11's revisit-if fires on the chore, not on a family count or a megabyte figure, both of which were floated in the council round and rejected as unsupported | Phase 5 — Gates, proof and the benchmark |
 
 ## Blockers
 
 ### blocker: benchmark-fixture-fonts
-- **Status:** open
-- **Owner:** council (maintainer if the council splits)
+- **Status:** resolved — (a), AI council 2026-10-16, 2/2 concluded, no split, so
+  it never reached the maintainer. The verdict runs **against this roadmap's
+  written recommendation of (b)**; 5.8 is rewritten and 5.9 / 5.10 carry the
+  bound the council made it conditional on. Record:
+  `agents/evidence/council/benchmark-fixture-fonts-20261016.md`, which is also
+  where the lock's amendment lives — no tracked record of the 2026-06-28 lock
+  exists to amend.
+- **Owner:** council (maintainer if the council splits — it did not split)
 - **Blocks:** 5.8 and AC-6.
 - **What to do:** pick exactly one — (a) the council rules that the 2026-06-28
   no-font-bundler lock covers shipped artefacts only, and the benchmark commits
