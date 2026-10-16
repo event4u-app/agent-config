@@ -195,11 +195,18 @@ No-op by construction while no ceiling is set; 3.4 proves it.
 
 ## Phase 5 — Tests that cannot spend and cannot quietly pass
 
-- [ ] **5.1 The production path is fixed, then the test runs it.**
+- [x] **5.1 The production path is fixed, then the test runs it.**
       `score_skill_selection.ts:51` reads the producer's path; the test imports
       the producer's constant; the crash branch becomes an always-running
       fixture-backed happy path (`reader-and-writer-share-the-clusters-path`).
       verify: `npx vitest run tests/scripts/score_skill_selection.test.ts -t reader-and-writer-share-the-clusters-path --reporter=verbose` -> /✓.*reader-and-writer-share-the-clusters-path/
+      *Done (2026-10-16):* the reader now imports `OUT_JSON` from
+      `skill_collision_clusters.ts`, so there is one path. The new case was seen
+      red first (reader path `agents/reports/…` against the producer's
+      `agents/runtime/reports/…`). It writes a fixture at the producer's path
+      under the global-state lock and restores what was there. The crash case
+      runs on every machine too, against a removed file. Neither case is
+      gated any more.
 - [ ] **5.2 The network is closed by default, children included (D5).** A setup
       file points `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` at a closed loopback
       port with `NO_PROXY=localhost,127.0.0.1,::1` in `process.env`, so every
@@ -214,11 +221,19 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       meta-case asserts `fetch('https://example.com')` is refused and a spawned
       `curl` exits non-zero. Neither needs the network.
       verify: `npx vitest run tests/_lib/network_guard.test.ts -t in-process-fetch-is-refused --reporter=verbose` -> /✓.*in-process-fetch-is-refused/
-- [ ] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
+- [x] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
       matches `.skipIf(` and `.runIf(`; an added one passes
       `check_test_weakening` only with a `// skip-reason:` on the same or
       preceding line. The 111 existing sites are untouched.
       verify: `npx vitest run tests/scripts/check_test_delta.test.ts -t conditional-skip-needs-reason --reporter=verbose` -> /✓.*conditional-skip-needs-reason/
+      *Done (2026-10-16):* counted beside `SUPPRESSION` in
+      `src/scripts/_lib/test_delta.ts` rather than inside its regex, because the
+      reason check needs the neighbouring line. "Preceding line" means the
+      preceding ADDED line: the diff parser keeps no context lines, so a reason
+      in an unchanged line above does not count. Removed lines are netted with
+      the same reason test, so editing an existing unreasoned site nets zero.
+      The case was seen red before the change, and the gate's `--self-test`
+      gained one reject and one accept case (13/13).
 
 *Exit: 5.1–5.4 green on the sharded run; suite wall time moves by < 2 %.*
 

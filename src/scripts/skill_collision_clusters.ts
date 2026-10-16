@@ -37,7 +37,7 @@ const SKILLS_DIR = SRC_SKILLS();
 // `agents/runtime/reports/`, as this file's own header has always declared. The
 // code said `agents/reports/` (tracked) — harmless while the gate read a dead
 // root and never got far enough to write, load-bearing the moment it did.
-const OUT_JSON = path.join(REPO_ROOT, 'agents', 'runtime', 'reports', 'skill-collision-clusters.json');
+export const OUT_JSON = path.join(REPO_ROOT, 'agents', 'runtime', 'reports', 'skill-collision-clusters.json');
 
 const KEYWORD_OVERLAP_THRESHOLD = 0.4;
 const MIN_SHARED_KEYWORDS = 3;

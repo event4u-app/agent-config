@@ -123,6 +123,46 @@ describe('check_test_weakening — NET counts, which is the whole gate', () => {
         ).toHaveLength(0);
     });
 
+    it('conditional-skip-needs-reason', () => {
+        // An added `skipIf` / `runIf` is a suppression unless it says why.
+        for (const line of [
+            '+it.skipIf(!hasFfprobe)(\'x\', () => {});\n',
+            '+describe.runIf(process.env.LIVE)(\'y\', () => {});\n',
+            '+test . skipIf(cond)(\'z\', () => {});\n',
+        ]) {
+            expect(analyse(d('tests/a.test.ts', line), []).signals[0]?.suppressionsGained).toBe(1);
+        }
+        // A reason on the same added line, or on the added line right above, discharges it.
+        expect(
+            analyse(
+                d('tests/a.test.ts', '+it.skipIf(!hasFfprobe)(\'x\', () => {}); // skip-reason: no ffprobe\n'),
+                [],
+            ).signals,
+        ).toHaveLength(0);
+        expect(
+            analyse(
+                d(
+                    'tests/a.test.ts',
+                    '+// skip-reason: needs the live network opt-in\n+describe.runIf(live)(\'y\', () => {});\n',
+                ),
+                [],
+            ).signals,
+        ).toHaveLength(0);
+        // A reason two lines away is not "the preceding line".
+        expect(
+            analyse(
+                d('tests/a.test.ts', '+// skip-reason: far away\n+const x = 1;\n+it.skipIf(c)(\'x\', () => {});\n'),
+                [],
+            ).signals,
+        ).toHaveLength(1);
+        // Diff-only: editing an existing site nets zero, removing one is never a signal.
+        expect(
+            analyse(d('tests/a.test.ts', '-it.skipIf(a)(\'x\', () => {});\n+it.skipIf(b)(\'x\', () => {});\n'), [])
+                .signals,
+        ).toHaveLength(0);
+        expect(analyse(d('tests/a.test.ts', '-it.skipIf(a)(\'x\', () => {});\n'), []).signals).toHaveLength(0);
+    });
+
     it('recognises suppressions outside vitest — the rule ships to other stacks', () => {
         for (const line of [
             '+@pytest.mark.skip\n',

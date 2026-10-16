@@ -43,12 +43,15 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { SRC_SKILLS } from './_lib/agent_src.js';
+import { OUT_JSON as CLUSTERS_OUT_JSON } from './skill_collision_clusters.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/score_skill_selection.ts → parents[2] is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const FIXTURES = path.join(REPO_ROOT, 'tests', 'fixtures', 'skill_selection', 'fixtures.yml');
-const CLUSTERS = path.join(REPO_ROOT, 'agents', 'reports', 'skill-collision-clusters.json');
+// Read from the producer's own constant: this was a second hand-written copy
+// (`agents/reports/`) that nothing writes, so `--baseline` crashed on every machine.
+export const CLUSTERS_JSON_PATH = CLUSTERS_OUT_JSON;
 const SKILLS_DIR = SRC_SKILLS();
 const DEFAULT_OUT = path.join(REPO_ROOT, 'agents', 'reports', 'skill-selection-accuracy.json');
 
@@ -287,7 +290,7 @@ export function main(argv: string[] | null = null): number {
     }
     const fixturesDoc = _yamlSafeLoad(_readText(FIXTURES)) as { fixtures: Fixture[] };
     const fixtures = fixturesDoc.fixtures;
-    const clustersDoc = JSON.parse(_readText(CLUSTERS)) as { clusters: Cluster[] };
+    const clustersDoc = JSON.parse(_readText(CLUSTERS_JSON_PATH)) as { clusters: Cluster[] };
     const clusters = clustersDoc.clusters;
     const skills = loadSkills();
     let preds: Record<string, string>;
