@@ -183,7 +183,7 @@ files as there were findings without an owner.
 
 ## Phase 5 — Three folds, each decided with a burial check
 
-- [ ] **5.1 Put the three pairs to the council.**
+- [x] **5.1 Put the three pairs to the council.**
       `road-to-an-installed-layer-that-is-thinned` →
       `road-to-a-setup-that-decides-itself` (its criterion already points
       there); `road-to-what-was-built-and-never-ran` →
@@ -192,11 +192,19 @@ files as there were findings without an owner.
       `road-to-type-with-a-witness` (same witness mechanism). One batched
       question; each verdict is recorded with its dissent at the pair.
       verify: `ls agents/evidence/council/ | grep -c 'intake-folds'` -> /^[1-9]/
-- [ ] **5.2 Fold what the council approves, losing nothing.** Each approved
+- [x] **5.2 Fold what the council approves, losing nothing.** Each approved
       fold moves every open step into the target, archives the source with a
       pointer, and passes the burial check: open checkboxes before equal open
       checkboxes after, across both files.
       verify: `./scripts-run src/scripts/check_estate_count` -> 0
+      > **Closed 2026-10-16 with nothing moved.** The council
+      > (`agents/evidence/council/intake-folds-2026-10-16.md`, 2/2) kept both
+      > live pairs apart: pair 1 on an undecided rollback-setting fork and a
+      > target under execution, pair 2 because shared use of one render
+      > command is not shared ownership. Pair 2 of the plan
+      > (`road-to-what-was-built-and-never-ran`) was already archived by
+      > #2352. No fold means the frontmatter's "net negative once it runs"
+      > does not hold: this file adds one active roadmap and offsets none.
 
 ## Phase 6 — Read the effect once
 
@@ -289,11 +297,11 @@ files as there were findings without an owner.
       every cross-file `blocked-by:` marker has a matching `depends` row.
 - [ ] **AC-2** The estate gate refuses an added `estate_offset_exempt` that
       quotes no owner search, and accepts one that does.
-- [ ] **AC-3** The dashboard shows two ages per active roadmap, read from git,
+- [x] **AC-3** The dashboard shows two ages per active roadmap, read from git,
       and lists every file with no ticked step after 21 days unless renewed.
-- [ ] **AC-4** No roadmap is moved, archived or deleted by any tool this file
+- [x] **AC-4** No roadmap is moved, archived or deleted by any tool this file
       adds.
-- [ ] **AC-5** Every fold that landed kept its open-step count, and each
+- [x] **AC-5** Every fold that landed kept its open-step count, and each
       council verdict is recorded at its pair.
 - [ ] **AC-6** A replay of three past rounds lands no more new top-level files
       than findings without an owner.

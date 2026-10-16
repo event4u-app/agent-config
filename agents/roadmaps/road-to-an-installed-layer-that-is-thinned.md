@@ -30,6 +30,10 @@ relates:
 > `main` @ `9bc8cd4f2` (16.2.0). Verified against `main` @ `a03f60c46` on
 > 2026-10-01. Council record:
 > `agents/evidence/council/inbox-2026-10-c-standing-form.md`.
+>
+> **Fold into `road-to-a-setup-that-decides-itself` declined 2026-10-16**
+> (council 2/2, `agents/evidence/council/intake-folds-2026-10-16.md`): the
+> rollback setting this file keeps and that file removes is an undecided fork.
 
 ## Goal
 
