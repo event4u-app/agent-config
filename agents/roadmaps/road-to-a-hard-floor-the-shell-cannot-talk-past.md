@@ -366,11 +366,55 @@ Clean-room, built from published bypass classes and this tree's own defects (K2)
 ## Blockers
 
 ### blocker: outside-tree-destruction-reading
-- **Status:** open
-- **Owner:** owner — whether the 2026-09-05 destructive list covers out-of-scope destruction outside the eleven ops is a reading of the owner's own ruling.
+- **Status:** resolved — **(a)**, AI council 2026-10-16, 2/2 concluded, no split.
+  Both seats routed it `DECIDE`: (a) **adds** a denial and leaves ADR-268 § 1's
+  eleven-operation set and ADR-260's zero-prompt criterion intact, so it
+  strengthens a floor rather than lowering one, and the `owner` label below
+  *"describes provenance, not decision authority"* (`openai`). Record:
+  `agents/evidence/council/owner-blocker-routing-20261016.md`.
+  **The rule is recorded by consequence, not by path shape** — see the
+  amendment under `What to do`.
+- **Owner:** owner — whether the 2026-09-05 destructive list covers out-of-scope destruction outside the eleven ops is a reading of the owner's own ruling. **The council read it instead, under the routing test, and the owner did not need to.**
 - **Blocks:** step 4.6 and AC-6.
-- **What to do:** pick exactly one — (a) record that destruction whose target resolves to `/`, `~` or a block device (`rm -rf ~`, `mkfs*`, `dd of=/dev/*`) is denied with a static alternative as a failed consequence proof, not an authority op, so ADR-268 § 1's eleven-op set is unchanged — written as an owner directive under `agents/evidence/owner-directives/`; or (b) record that it stays model-held and the concern only records it.
-- **Resolved when:** a file under `agents/evidence/owner-directives/` names this blocker slug and (a) or (b), and `grep -rl 'outside-tree-destruction-reading' agents/evidence/owner-directives` returns it.
+- **What to do:** **(a), as the council ruled — and the council amended how (a)
+  is written.** Record that destruction reaching outside the working tree is
+  denied with a static alternative as a **failed consequence proof**, not an
+  authority op, so ADR-268 § 1's eleven-op set is unchanged. Superseded
+  alternative, kept so the choice is legible: (b) leave it model-held with the
+  concern only recording it.
+
+  **Write the rule by the consequence, not by the path shape** (`openai`,
+  unchallenged by the second seat). The category *"target resolves to `/`, `~`
+  or a block device"* is simultaneously **too broad** — a read-only or
+  non-destructive write outside the tree matches it if the implementation
+  conflates location with destructive effect — and **too narrow**: a mounted
+  filesystem, a symlink escape, a raw device reached through an alias, or an
+  indirect operand all destroy without syntactically naming `/`, `~` or
+  `/dev/*`. So the recorded rule names the prohibited consequence;
+  `rm -rf ~`, `mkfs*` and `dd of=/dev/*` are examples of it, and path
+  resolution plus command recognition are the enforcement mechanism rather
+  than the rule.
+
+  **The record is the authority source, not a description of the guard**
+  (`anthropic`). A denial cites it — *"denied per <record>, implementing the
+  2026-09-05 ruling"* — so the chain from ruling to refusal is auditable
+  instead of reading as "the tool said no". It carries weight on four paths,
+  only one of which is the blocked command: a guard bug in path resolution
+  leaves the model a rule to refuse on; a plan is checked against it before a
+  command is even formed; a user asking *why* gets the rule rather than the
+  exit code; and a later change to the guard has a continuity anchor.
+- **Resolved when:** ~~a file under `agents/evidence/owner-directives/` names
+  this blocker slug and (a) or (b)~~ — **re-pointed 2026-10-16, because the
+  named container became the wrong one the moment the council answered.** That
+  directory holds orders the owner gave in their own session prompt; its single
+  existing record says so in its first row (`Ordered by | the repository owner,
+  in their own session prompt`). Writing (a) there would attribute to the owner
+  a decision the owner never made, which is the one thing a directive file must
+  never contain. The record goes where the decider is:
+  `agents/evidence/council/owner-blocker-routing-20261016.md` names this slug
+  and (a). Should the owner later wish to carry the rule under their own
+  authority rather than the council's, a directive may be added then — it would
+  strengthen the record, and nothing waits on it.
 - **Recommendation:** (a). It adds no question and no grant, so ADR-260's zero-prompt criterion and ADR-268 § 1 both stand, and it covers the incident class with the least recovery (a home directory or a device) that no snapshot can undo.
 - **If you do nothing:** the class is recorded only; every other phase proceeds and the floor for outside-tree destruction stays model-held, as today.
 

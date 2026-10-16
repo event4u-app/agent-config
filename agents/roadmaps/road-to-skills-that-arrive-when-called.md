@@ -316,6 +316,35 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 - **What to do:** pick exactly one — (a) presence: every skill installed on every host with native skills; (b) reach: every skill reachable in one deterministic step with its declared semantics, presence decided per host; or (c) today's pack-scoped install, recorded as the promise.
 - **Resolved when:** an ADR records the answer and `README.md:59` and ADR-267 § 5 cite it or are amended.
 - **Recommendation:** (b). It makes the minimal setup legal while keeping "no silent subset" as an invariant `doctor` can check (2.2), and it turns D1 into a defect under every reading rather than only under (a).
+
+  **Seconded by an AI council, 2026-10-16 — and the council confirmed the
+  escalation rather than lifting it.** Both seats (`anthropic`, `openai`, prompt
+  mode, two rounds, 2/2 concluded, no split) returned **ESCALATE** on the
+  routing test: choosing which reading becomes the binding promise *creates a
+  public commitment*, which is owner-reserved. Both then recommended **(b)**.
+  Record: `agents/evidence/council/owner-blocker-routing-20261016.md`.
+
+  **A drafted sentence for `README.md:59`**, so the resolution clause has
+  something to cite rather than a word (`openai`):
+
+  > Every skill included in this package is available with its documented
+  > behavior through one deterministic retrieval step on supported hosts; each
+  > host may decide which skills are installed locally.
+
+  **What (b) costs, and both seats were explicit that the word alone is not the
+  decision.** `anthropic`: (b) makes the query mechanism **a capability
+  requirement rather than optional infrastructure** — a host that cannot supply
+  it is *unsupported*, not broken, and that has to be written down before the
+  promise ships. `openai`: the owner ratifies an **operational definition** —
+  the authoritative skill set, which hosts are supported, what "one step" means,
+  version selection, failure behaviour, offline expectations, and what counts as
+  preserved semantics. Ratifying the word "reach" without those replaces one
+  ambiguous promise with an unverifiable one.
+
+  Both treated the measured host truncation as settling (a) against itself: a
+  default install on which the host stripped every description and dropped
+  hundreds of entries makes universal presence a promise this package cannot
+  keep, whatever it writes down.
 - **If you do nothing:** Phases 0–3, 2.x and the second host proceed; the first host keeps its full install indefinitely and `projection.mode` stays the last setting the setup roadmap cannot remove.
 
 ### blocker: listing-override-write-is-owner-owned
