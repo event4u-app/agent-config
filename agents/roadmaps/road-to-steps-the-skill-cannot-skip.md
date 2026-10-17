@@ -234,6 +234,16 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 4 — Three pilots, split without losing a line
 
+- [ ] **4.0 Re-pick the pilots before splitting (D15).** F3 fired on
+      2026-10-17: `design-review` (8 of 8 phases) and `memory-consolidation`
+      (at least 3 of 4) are judgement on any honest typing. Keep
+      `existing-ui-audit`, replace `memory-consolidation` with a skill whose
+      steps end in independently identifiable outputs at stable locations, at
+      least one of which step n+1 cannot do without, and decide whether
+      `design-review` stays as a judgement-heavy control. Record each candidate
+      against those properties before 4.1 runs; 4.1's three names follow this
+      step, not the other way round.
+      verify: `test -f agents/evidence/analysis/procedure-pilot-selection.md` -> 0
 - [ ] **4.1 The pilots.** `existing-ui-audit` (steps 0–9, 398 lines),
       `design-review` (phases 0–7, 399 lines) and `memory-consolidation`
       (phases 1–4, 400 lines). Each gets a sidecar and `references/steps/`.
@@ -244,6 +254,11 @@ A split multiplies links. The gate that checks them comes first.
       step table with links and the cursor sentence; the other four required
       sections stay in the head.
       verify: `npx vitest run tests/skills/procedure_conservation.test.ts --reporter=verbose` -> /✓/
+      *Amended (D14):* "appears" means in order and exactly once; a relative
+      link is compared by the path it resolves to from the skill root, and a
+      fenced block byte for byte, so moving a line under another heading or
+      dropping a duplicate is a failure, not a pass. The pre-split bodies are
+      committed as test fixtures, which also preserves arm A for Phase 6.
 - [ ] **4.3 Ceilings follow the split.** `check_skill_body_budget --update`
       lowers the three head ceilings; step files get their own shrink-only
       ceilings in `src/config/skill-body-budget.json`.
@@ -253,6 +268,11 @@ A split multiplies links. The gate that checks them comes first.
       step 3.4 measures; this file reports the three numbers and decides
       nothing about the tail.
       verify: `grep -cE '^\| (existing-ui-audit|design-review|memory-consolidation) \|' agents/evidence/analysis/procedure-pilot-heads.md` -> /^3$/
+
+- [ ] **4.5 The package ships what the head links (D14).** Every sidecar and
+      step file of a split pilot is in the published tarball and in each
+      projected tree, so no head links to a file a consumer lacks.
+      verify: `npx vitest run tests/skills/procedure_conservation.test.ts -t ships-step-files --reporter=verbose` -> /✓.*ships-step-files/
 
 ## Phase 5 — The cursor in the `/work` engine (default-off)
 
@@ -288,11 +308,27 @@ A split multiplies links. The gate that checks them comes first.
       of only pointing at it, so entry is not prose again. Undocumented in the
       public command reference until Phase 6 decides (D3).
       verify: `npx vitest run tests/scripts/work_engine/cli.test.ts -t procedure-flag --reporter=verbose` -> /✓.*procedure-flag/
+      *Amended (D14):* the pilots' existing commands keep their current path;
+      only the explicit `--procedure` flag creates or resumes procedure state.
+      "Start the cursor themselves" would make the cursor default-on for those
+      commands, which contradicts this phase's heading.
 - [ ] **5.6 Bounds.** Linear, finite, no repeat mode, no background run, no
       subagent start, no stop gate, no hook other than 5.4's line, no shell
       string from data. A single-question read of one step file stays allowed
       without the cursor.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t bounds-no-shell-no-subagent --reporter=verbose` -> /✓.*bounds-no-shell-no-subagent/
+- [ ] **5.7 A judgement exit has an adjudication protocol (D15), before 5.2.**
+      The design names who answers a `judgement` PARTIAL, which answer clears
+      it, what is recorded, and what happens when nobody answers. A judgement
+      step is a sequenced step, not a verified one, and the brief says so.
+      verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t judgement-adjudication --reporter=verbose` -> /✓.*judgement-adjudication/
+- [ ] **5.8 Kill switch and state integrity (D14), before 5.2.** A switch
+      independent of the flag refuses procedure activation; the sidecar and the
+      state file are read as untrusted input (closed versioned schema, paths
+      contained in the skill, no symlink escape, size limit, atomic write); a
+      state file bound to another skill, commit or engine version fails closed
+      and asks for an explicit restart.
+      verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t kill-switch-refuses --reporter=verbose` -> /✓.*kill-switch-refuses/
 
 ## Phase 6 — Measure before anything becomes a default
 
@@ -310,6 +346,9 @@ plans this round carried; no external source is cited for them.
       its own reopen, so both decisions speak one language. A fixed count, not a
       floor: the workload is the spend ceiling's input (D13).
       verify: `grep -cE '^- \*\*task-' agents/evidence/preregistration/procedure-cursor.md` -> /^30$/
+      *Amended (D15):* results are reported per pilot and per exit class
+      (verified vs sequenced), never only pooled; the per-pilot count is
+      revisited with 4.0's pick.
 - [ ] **6.3 Metrics.** Primary: exits met and task success. Secondary: API
       rounds against `src/config/turnaround-budget.json`, tokens, wall time,
       steps skipped without a reason (target 0 in arm C) and the cursor entry
@@ -362,6 +401,8 @@ plans this round carried; no external source is cited for them.
 | D7 | reversible-technical | agent | Pilots: `existing-ui-audit`, `design-review`, `memory-consolidation` | All three sit at 398–400 lines with numbered phases or steps | a pilot's steps turn out to be > 50 % `judgement` (F3) |
 | D8 | reversible-technical | agent | Bar for Phase 6: ≥ 20 % task success and added rounds ≤ step count | 20 % is the skill-DAG lock's own reopen figure; a step costs at least one round | the corpus is too small for 20 % to be distinguishable from noise |
 | D13 | spend-exhaustion | council:inbox-2026-10-pqr-residue | Phase 6's spend is not authorised as first written; the full three-arm design stays, rewritten as a fixed 3 × 3 × 30 workload with pinned model, retry policy, token and monetary maxima and an aggregation rule, and is put to the owner for authorisation of that stated maximum before any run. Arms A+B alone are declined: they cannot isolate the cursor | AI council 2026-10-14, anthropic + openai, 2/2, $0.00, both (c) on the open-ended version, both reject (b); not owner-reserved for refusing (`agents/runtime/council/responses/inbox-2026-10-pqr-residue`, local) | a delegated spend threshold is recorded and the stated maximum falls under it |
+| D14 | reversible-technical | council:steps-2425-phase45 | Phase 4 and Phase 5 are council-decidable, not owner-reserved, and need not wait for Phase 6. "Consumer-visible" alone is no reserved category. Both carry pre-merge conditions: 4.2 tightened to ordered, exactly-once, link-resolved conservation; 4.5 package shipping; 5.5's pilot commands keep their path; 5.8 kill switch and state integrity | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both (a) for both phases; an earlier run had called both owner-reserved on its own judgement without routing it | an existing public compatibility promise is found that skills are a single self-contained `SKILL.md` |
+| D15 | reversible-technical | council:steps-2425-d7 | D7's revisit-if fired: F3 is true for `design-review` and `memory-consolidation`. The pilot set is re-picked (4.0) before any split; `memory-consolidation` is replaced; a shape-only check (a key exists) does not count as a verified exit, only a check that corroborates the output against the repository; a judgement step is sequenced, not verified, and needs 5.7's adjudication protocol | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both reject keeping all three unchanged; one seat keeps `design-review` as a judgement control, the other asks to separate verified and sequenced step classes, and 4.0 decides between them | 4.0 finds no replacement that meets the properties |
 | D9 | reversible-technical | evidence | The stale `existing-ui-audit` link is deleted, not "fixed" by moving sections out | `skill_linter.ts:98`; `b3cc0ada6` | the linter stops requiring `Output format` or `Gotcha` in the body |
 | D10 | reversible-technical | evidence | The canon contradiction named in Context is this file's work, not an open question | Phase 2.1 replaces `skill-writing:104` and `:126-129` with one statement; the closure scan's `contradictory` hit is that finding | — |
 | D11 | reversible-technical | evidence | Closure-scan `typed-op` hits on the word "merge" are slug text, not an operation | Both hits are the slug `road-to-a-retro-the-merge-runs`; this file merges nothing | — |
@@ -398,7 +439,7 @@ plans this round carried; no external source is cited for them.
   names.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -408,6 +449,7 @@ plans this round carried; no external source is cited for them.
 | 4 | Widening the link gate reds unrelated skills | implementation | 1.1 surfaces 40 unresolved links at once. | 1.2 repairs them in the same change; `docs/` links are a reported class, not a failure. | Phase 1 — Links the gate can see |
 | 5 | The measurement is spend-bearing | product | Three arms × three runs × ≥ 30 tasks cost model calls. | Pre-registration fixes the size before the first run; the run is the operator's call and is not started by this roadmap's authoring. | Phase 6 — Measure before anything becomes a default |
 | 6 | A new lint and a new test file trip size and gate ratchets | implementation | New gates are counted by coverage ratchets. | Register each gate with its scanned count and self-test in the change that adds it. | Phase 3 — A procedure as data, with no runtime |
+| 7 | A shape check passes for work that was not done | implementation | A check that a state key exists proves the agent wrote something, not that the inventory is right, so the cursor would advance on a claim. | D15: only a check that corroborates the output against the repository counts as a verified exit; a judgement step is labelled sequenced and goes through 5.7's adjudication protocol. | Phase 4 — Three pilots, split without losing a line |
 
 ## Acceptance Criteria
 
