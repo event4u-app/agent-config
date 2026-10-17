@@ -6,10 +6,11 @@
  * about the tree shape this file:
  *
  *   1. **Savings are structurally 0 today.** `evaluateStop`
- *      (`src/scripts/ai_council/argument_exhaustion.ts:82`) has ZERO production
- *      callers — the module is imported only by its own test — so no run has
- *      ever stopped early and no call has ever been saved. A tracked number
- *      here would be a number about nothing.
+ *      (`src/scripts/ai_council/argument_exhaustion.ts:82`) has one production
+ *      caller, the analysis gain gate, which uses the verdict only to withhold
+ *      an extra round and reports no saved call — so no council run has ever
+ *      stopped early and no call has ever been saved. A tracked number here
+ *      would be a number about nothing.
  *   2. **The reporting surface that WOULD carry it already exists**:
  *      `StopRender` / `renderStop` (`:113`, `:121`). Its shape is therefore
  *      pinnable now, before a production caller lands, which is the cheapest
@@ -88,11 +89,15 @@ const SAMPLE: StopRender = {
 };
 
 describe('the zero-savings premise, and the tripwire on it', () => {
-    it('evaluateStop has no production caller, so early-stop savings are structurally 0', () => {
-        // RED the day Phase 6 wires the predicate into a council round — which
+    it('evaluateStop has no production caller that reports savings, so early-stop savings are structurally 0', () => {
+        // RED the day another caller wires the predicate into a council round — which
         // is precisely when this step's baseline stops being sufficient and the
-        // real separation must be verified against a live report.
-        expect(importersUnderSrc()).toEqual([]);
+        // real separation must be verified against a live report. The analysis
+        // gain gate reads the verdict to withhold an extra round; it renders no
+        // stop and counts no saved call, which the second assertion holds it to.
+        expect(importersUnderSrc()).toEqual(['src/scripts/analysis_gate.ts']);
+        const gate = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/analysis_gate.ts'), 'utf8');
+        expect(gate).not.toMatch(/renderStop|StopRender|savedCalls|savedCostUsd/);
     });
 
     it('the module is pure — it opens no file and issues no call', () => {
