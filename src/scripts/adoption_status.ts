@@ -540,14 +540,16 @@ function _readPullRequest(ref: string): UpstreamReading {
     return { ok: false, reason: `unknown pull-request state ${sanitize_text(String(d.state)).slice(0, 40)}` };
 }
 
-function _readUrl(kind: string, ref: string): UpstreamReading {
+/** The official MCP registry routinely takes 15-20 s to answer a search; a 20 s cap cut it off. */
+export const UPSTREAM_READ_TIMEOUT_S = 45;
+
+export function read_url(kind: string, ref: string, maxSeconds: number = UPSTREAM_READ_TIMEOUT_S): UpstreamReading {
     if (_which('curl') === null) {
         return { ok: false, reason: 'curl not on PATH' };
     }
-    // The official MCP registry routinely takes 15-20 s to answer a search; 20 s cut it off.
-    const proc = spawnSync('curl', ['-sL', '--max-time', '45', '-w', '\n%{http_code}', ref], {
+    const proc = spawnSync('curl', ['-sL', '--max-time', String(maxSeconds), '-w', '\n%{http_code}', ref], {
         encoding: 'utf8',
-        timeout: 50_000,
+        timeout: (maxSeconds + 5) * 1000,
     });
     const out = proc.stdout ?? '';
     const cut = out.lastIndexOf('\n');
@@ -579,7 +581,7 @@ export const live_upstream_reader: UpstreamReader = (row) => {
         return _readPullRequest(row.ref);
     }
     if (row.kind === 'listing-page' || row.kind === 'registry-query') {
-        return _readUrl(row.kind, row.ref);
+        return read_url(row.kind, row.ref);
     }
     return { ok: false, reason: `no reader for upstream kind ${row.kind}` };
 };
