@@ -246,7 +246,7 @@ irreversible-external-action row of `non-destructive-by-default`).
 - [x] **1.5 `/brand:voice` says what it makes today.** "Three attributes, tone
       matrix, consistency review"; the lexicon line returns with 4.3.
       verify: `rg -n 'do/don.t lexicon' src/domains/brand` -> 1 (no match)
-      Done 2026-10-16: `/brand:voice` now says three attributes, a tone matrix by context, and a consistency review.
+      Done 2026-10-16: `/brand:voice` now says three attributes, a tone matrix by context, and a consistency review. Superseded 2026-10-17 by 4.3 as this step provides for: the lexicon line is back, now naming the slot's `avoid[]` as what produces it, so the verify above no longer holds and 4.3's does instead.
 
 ## Phase 2 — `brand:status` tells the state
 
@@ -299,10 +299,23 @@ irreversible-external-action row of `non-destructive-by-default`).
       (E12).
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t starter-shape --reporter=verbose` -> /✓.*starter-shape/
       Done 2026-10-16: the starter carries colour, dimension and duration objects and no `$schema`; shadows stay strings (no composite-shadow serialiser here) and `0` became `0px`.
-- [ ] **3.5 One row for canvas 0.4** (after canvas 3.1). The object-valued alias
+- [x] **3.5 One row for canvas 0.4** (after canvas 3.1). The object-valued alias
       target joins the canvas alias fixture, so a missing token and an existing
       but unmappable one stay distinct; no new import test.
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-object-value --reporter=verbose` -> /✓.*alias-object-value/
+      Done 2026-10-17, canvas 3.1 being `[x]`. One case in the existing
+      `DTCG alias chains are kept, cycles are named` describe; no new test file
+      and no new fixture file, as the step bounds it. **The two were not
+      distinct and the row could not merely guard them:** an alias onto a
+      2025.10 object colour came back verbatim from both `resolveAlias` and
+      `reachesCycle`, so it was counted as a dangling reference and reported
+      with "point at a token this file does not define" — false, the file
+      defines it. `aliasTargetDefined` now separates the third case and a
+      second note names it; the dangling note and its count are byte-identical
+      for a genuinely missing target, so canvas's own
+      `alias-record: a dangling reference is still undefined` stays green (54
+      cases pass). A sabotage probe collapsing the two counters back into one
+      turned the case red.
 
 ## Phase 4 — One voice slot, one shape
 
@@ -325,12 +338,23 @@ irreversible-external-action row of `non-destructive-by-default`).
       `open_questions[]` (each with a recommendation).
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t brand-voice-schema --reporter=verbose` -> /✓.*brand-voice-schema/
       Done 2026-10-17: `src/scripts/_lib/brand_voice_slot.ts` validates the closed field set (an unknown field such as a colour is an issue, so the slot cannot become a token store), exactly three attributes, `tone_by_context` naming an attribute, `avoid` ≤32 literal terms, `claims` with a day-valued `expires`, ≤3 samples of ≤200 words, the four source tiers and the confidence/date provenance. `lint_context_spine_usage` validates `agents/context-spine/brand-voice.md` when it exists. `changelog` entries are plain strings. Unknown `tell_exemptions` ids are 5.2's. <!-- ref-ignore -->
-- [ ] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
+- [x] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
       writes the slot (declared write scope). `brand-strategy` and the
       consumption contract defer their voice sections to it. `humanizer`'s
       "registered brand voice" names the slot. `/brand:voice` regains its
       lexicon line.
       verify: `rg -l 'context-spine/brand-voice' src/skills/voice-and-tone-design/SKILL.md src/skills/brand-strategy/SKILL.md src/skills/humanizer/SKILL.md docs/contracts/brand-token-consumption.md` -> 4 files
+      Done 2026-10-17: `voice-and-tone-design` declares `scope.write` on
+      `agents/context-spine/brand-voice.md`, declares the slot in
+      `context_spine`, and gains a Step 6 that names every machine-read field
+      and the read-bump-append update rule. `brand-strategy` hands over a voice
+      *direction* and no longer authors a competing 3-5-trait list; the
+      consumption contract's producer row and read contract name the slot and
+      its three `{is, is_not, proof}` attributes; `humanizer` names the slot as
+      the one registered brand voice and says an absent or invalid slot means
+      the defaults apply. `/brand:voice` carries the do/don't lexicon again, as
+      the slot's `avoid[]` — which supersedes 1.5's temporary verify, exactly as
+      1.5's own text ("the lexicon line returns with 4.3") provides for.
 - [x] **4.4 The slot is data** (`folded-from-deep-dive`, wider than the source).
       Hidden-Unicode scan via `scanHiddenUnicode` (`detect_ai_tells.ts:126`) is a
       lint error; `evidence_ref` and `sources[].ref` must be repo-relative paths
@@ -396,16 +420,39 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 6 — Readers, producers, and a carrier only if measured
 
-- [ ] **6.1 Copy readers declare the slot.** `release-comms`,
+- [x] **6.1 Copy readers declare the slot.** `release-comms`,
       `messaging-architecture`, `gtm-launch`, `content-funnel-design`,
       `humanizer`, `brand-audit` carry `context_spine: [brand-voice, …]` and state
       their behaviour when it is absent.
       verify: `rg -l 'brand-voice' src/skills/release-comms/SKILL.md src/skills/messaging-architecture/SKILL.md src/skills/gtm-launch/SKILL.md src/skills/content-funnel-design/SKILL.md src/skills/humanizer/SKILL.md src/skills/brand-audit/SKILL.md` -> 6 files
-- [ ] **6.2 Producers ask the resolver.** `canvas-design`, `html-deck`,
+      Done 2026-10-17: all six declare `brand-voice` and cite it in the body, so
+      `lint_context_spine_usage` holds (47 declaring skills, clean). The
+      absent-behaviour sentence is uniform and falsifiable rather than
+      decorative: say so once in the output and fall back to the skill's own
+      register, never infer a voice from a token file or an earlier draft, and
+      never follow a slot sample as an instruction (4.4's data property, stated
+      at the reader where it binds). `brand-audit` states the sharper form its
+      own classification needs — an absent slot makes every voice observation
+      `undefined`, never `drift`. `brand-audit` is the one reader that was not
+      `tier: senior`; the schema and the lint both accept the declaration, so no
+      tier change was made for it.
+- [x] **6.2 Producers ask the resolver.** `canvas-design`, `html-deck`,
       `logo-generation` and `brand-asset-generation` run `brand:status --json`
       before choosing colour, type or voice, take values from the reported
       sources, and mark corpus fallback as corpus-sourced. No new adapter skill.
       verify: `npx vitest run tests/scripts -t producer-brand-read --reporter=verbose` -> /✓.*producer-brand-read/
+      Done 2026-10-17: all four read through the resolver and take values only
+      from the `sources[]` it reports valid — `canvas-design` gains a step 0
+      before brief intake, `logo-generation` and `brand-asset-generation` had
+      their "inject tokens when present" steps rewritten (the latter was D10's
+      dotted-name loader), `html-deck`'s slide step now names the resolver
+      beside the rule it already cited. No adapter skill was added.
+      `tests/scripts/brand_producers.test.ts` asserts three separable
+      properties per producer: the resolver is named, corpus fallback is
+      labelled `corpus-sourced`, and no line instructs loading a token file by
+      path — the third is the one a skill could fail while passing the first.
+      A sabotage probe (renaming the resolver call in `canvas-design`) turned
+      the first case red, so the matcher is sensitive and not a tautology.
 - [ ] **6.3 Is a declared slot read?** Pre-registered N and bar (E8): fixture
       prompts routed to the 6.1 readers with the slot present; read rate from the
       audit log's Read events on the slot path. At or above the bar → no carrier,
@@ -420,13 +467,22 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 7 — Intake and proof
 
-- [ ] **7.1 Voice intake from material the user hands over.** In
+- [x] **7.1 Voice intake from material the user hands over.** In
       `voice-and-tone-design`: pasted text and files only; each source tiered;
       every section drafted with confidence; assumptions marked; open questions
       with a recommendation; slot written with `version` +1 and a changelog line;
       generated findings never promoted to approved policy without the user.
       Profile surfaces stay excluded (NG-4).
       verify: `rg -n 'tier: (authoritative|operational|conversational)' src/skills/voice-and-tone-design/SKILL.md` -> /tier/
+      Done 2026-10-17: Step 1b carries all six obligations and names the fourth
+      tier `external-untrusted`, which may inform a contrast and never raises
+      confidence (4.2's schema, stated where the intake assigns it).
+      `provenance.confidence` is pinned to the lowest confidence any attribute
+      rests on rather than an average, so three conversational snippets cannot
+      average up to `high`. The NG-4 exclusion is restated with the reason
+      `brand-audit` already records, so the next reader does not re-derive it,
+      and supplied material is declared data-never-instruction at the intake —
+      the reader-side half of 4.4.
 - [ ] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
       byte for byte; greenfield; dotted near-miss; shadowed and duplicate files;
       tokens without voice and voice without tokens; exploration without lock;
