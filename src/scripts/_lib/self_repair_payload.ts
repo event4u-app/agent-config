@@ -1,7 +1,8 @@
 /**
- * The release's floor over the WHOLE outgoing payload — branch name, commit
- * identities and messages, every commit's patch, title and body — where
- * `egressBlockedReason` reads only the record's own text.
+ * The release's floor over the WHOLE outgoing payload — branch name, the
+ * synthesised commit (identity and message), every object the push adds to the
+ * base (paths and blob contents), title and body — where `egressBlockedReason`
+ * reads only the record's own text.
  *
  * Credentials come from the one detector table (`egress_rules`); no pattern is
  * defined here. Identifiers are the consumer project's own, passed in as a deny
@@ -10,14 +11,14 @@
  */
 import { detect } from './egress_rules.js';
 
-export type PayloadPart = 'branch' | 'commit' | 'diff' | 'title' | 'body';
+export type PayloadPart = 'branch' | 'commit' | 'object' | 'title' | 'body';
 
 export interface ReleasePayload {
     branch: string;
-    /** Author and committer identities plus every message, as one text. */
+    /** Every commit object the push adds, raw: tree, parents, identities, message. */
     commits: string;
-    /** Every commit's patch, so content added and later removed is still read. */
-    patches: string;
+    /** Every tree and blob the push adds: its path and, for a blob, its whole content. */
+    objects: string;
     title: string;
     body: string;
 }
@@ -58,7 +59,7 @@ export function scanPayload(payload: ReleasePayload, deny: readonly string[]): P
     const parts: Array<[PayloadPart, string]> = [
         ['branch', payload.branch],
         ['commit', payload.commits],
-        ['diff', payload.patches],
+        ['object', payload.objects],
         ['title', payload.title],
         ['body', payload.body],
     ];

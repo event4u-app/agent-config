@@ -1,38 +1,41 @@
 /**
- * The egress ladder's outgoing `gh pr create`, scripted through the injectable
- * runner (`ReleaseDeps.runner`) rather than shelled out.
+ * The egress ladder's outgoing bytes, against a real repository.
  *
- * F4 of road-to-one-upstream-that-checks-what-leaves: `prArgs` carried no
- * `--draft`, so every upstream finding arrived as a review request against a
- * maintainer who had not asked for one. The flag is one argument and nothing
- * watched it, which is how it was absent for the whole life of the ladder.
+ * Each case builds a throwaway "upstream" (a bare repository) and a checkout
+ * of it with an author branch, then runs the real `executeRelease`: git runs
+ * for real, so the commit the release synthesises, the objects it pushes and
+ * the identity they carry are read back out of the bare repository rather
+ * than asserted from a scripted argv. Only `gh` is scripted — it is the forge,
+ * and nothing here may reach one.
  *
- * Both rungs are asserted, not just the one the happy path takes. The two
- * share one `prArgs` array today, so one `--draft` does cover both — but the
- * fork rung reaches it down a different path (fork-ensure, whoami, a second
- * remote, then an extra `--head`), and a later split of that array would be
- * invisible to a test that only drove the direct-push rung. The fork route is
- * the one a contributor without push rights actually takes, which is the one
- * that must not quietly start opening ready-for-review.
+ * Road-to-one-upstream-that-checks-what-leaves, Phases 2–4: the release
+ * pushes ONE commit built from the author branch's net change on the base,
+ * under a noreply identity and a `retro/<fingerprint>` branch; the floor walks
+ * every object that commit adds; and nothing is sent without an approval of
+ * the exact bytes the dry run printed.
  */
-import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { gitEnv } from '../../src/scripts/_lib/git_env.js';
 import type { DefectRecord } from '../../src/scripts/_lib/self_repair.js';
-import type {
-    Probe,
-    ReleaseDeps,
-    ReleasePlan,
-    RunResult,
-    Runner,
+import { noreplyIdentity, outgoingDigest } from '../../src/scripts/_lib/self_repair_outgoing.js';
+import type { Probe, ReleaseDeps, ReleasePlan, RunResult, Runner } from '../../src/scripts/self_repair_cli.js';
+import {
+    collectOutgoing,
+    consumerDenyList,
+    executeRelease,
+    findAgentConfigCheckout,
+    renderDryRun,
+    runCommand,
 } from '../../src/scripts/self_repair_cli.js';
-import { consumerDenyList, executeRelease, renderDryRun } from '../../src/scripts/self_repair_cli.js';
 
-const OK: RunResult = { ok: true, out: '', timedOut: false };
-
-// Typed, not cast. An `as unknown as DefectRecord` would switch off exactly
-// the check that tells this fixture when the record shape moves under it —
-// a fixture that compiles against a type it does not satisfy is a fixture
-// that stops reporting drift.
+// Typed, not cast: a fixture that compiles against a type it does not
+// satisfy stops reporting drift when the record shape moves under it.
 function record(): DefectRecord {
     return {
         fingerprint: 'abc123def4567890',
@@ -47,86 +50,251 @@ function record(): DefectRecord {
     };
 }
 
-function plan(pushVia: 'upstream' | 'fork'): ReleasePlan {
-    return {
-        route: 'pull-request',
-        pushVia,
-        blocked: null,
-        patch_denied: null,
-        title: 'a title',
-        body: 'a body',
-    };
+function plan(pushVia: 'upstream' | 'fork', over: Partial<ReleasePlan> = {}): ReleasePlan {
+    return { route: 'pull-request', pushVia, blocked: null, patch_denied: null, title: 'a title', body: 'a body', ...over };
 }
 
-function probe(canFork: boolean): Probe {
-    return {
-        agentConfigCheckout: '/some/checkout',
-        ghAuthenticated: true,
-        canPushUpstream: true,
-        canFork,
-    };
+const LOGIN = 'some-login';
+const ACCOUNT_ID = '4242';
+const NOREPLY = `${ACCOUNT_ID}+${LOGIN}@users.noreply.github.com`;
+
+const dirs: string[] = [];
+afterEach(() => {
+    for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+});
+
+function git(cwd: string, ...args: string[]): string {
+    return execFileSync('git', args, { cwd, encoding: 'utf-8', env: gitEnv() });
+}
+
+interface Repo {
+    checkout: string;
+    origin: string;
+    /** Write a file and commit it on the current branch of the checkout. */
+    commit: (file: string, content: string | null, message?: string) => void;
 }
 
 /**
- * A runner that answers every command successfully and records the argv of
- * each `gh pr create`. `git branch --show-current` has to answer a real branch
- * name or the ladder refuses before it ever reaches the forge.
+ * A bare upstream with one commit on `main`, and a checkout of it on
+ * `fix/neutral` whose configured identity is a company address — the case
+ * the noreply identity exists for.
  */
-function scriptedRunner(): { runner: Runner; prCalls: string[][] } {
-    const prCalls: string[][] = [];
-    const runner: Runner = (cmd, args) => {
-        if (cmd === 'git' && args[0] === 'branch') {
-            return { ok: true, out: 'retro/abc123de\n', timedOut: false };
+function repo(): Repo {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'self-repair-release-'));
+    dirs.push(dir);
+    const origin = path.join(dir, 'origin.git');
+    const checkout = path.join(dir, 'checkout');
+    fs.mkdirSync(checkout);
+    git(dir, 'init', '-q', '--bare', '-b', 'main', origin);
+    git(checkout, 'init', '-q', '-b', 'main');
+    git(checkout, 'config', 'user.name', 'Jane Example');
+    git(checkout, 'config', 'user.email', 'jane@acme-corp.example');
+    git(checkout, 'config', 'commit.gpgsign', 'false');
+    const commit = (file: string, content: string | null, message = 'change'): void => {
+        const p = path.join(checkout, file);
+        if (content === null) {
+            fs.rmSync(p);
+        } else {
+            fs.mkdirSync(path.dirname(p), { recursive: true });
+            fs.writeFileSync(p, content);
         }
-        if (cmd === 'gh' && args[0] === 'api') {
-            return { ok: true, out: 'some-login\n', timedOut: false };
+        git(checkout, 'add', '-A', '--', file);
+        git(checkout, 'commit', '-q', '-m', message);
+    };
+    commit('README.md', 'base\n', 'base');
+    git(checkout, 'remote', 'add', 'origin', origin);
+    git(checkout, 'push', '-q', '-u', 'origin', 'main');
+    git(checkout, 'switch', '-q', '-c', 'fix/neutral');
+    return { checkout, origin, commit };
+}
+
+function probe(r: Repo, canFork = false): Probe {
+    return { agentConfigCheckout: r.checkout, ghAuthenticated: true, canPushUpstream: true, canFork };
+}
+
+/** Real git, scripted `gh`. Records every forge call. */
+function forge(opts: { identity?: string | null } = {}): { runner: Runner; pr: string[][]; issues: string[][]; pushes: string[][] } {
+    const state = { pr: [] as string[][], issues: [] as string[][], pushes: [] as string[][] };
+    const runner: Runner = (cmd, args, cwd, env) => {
+        if (cmd === 'git') {
+            if (args[0] === 'push') state.pushes.push([...args]);
+            // A fork remote is not reachable from a test: answer it as pushed.
+            if (args[0] === 'push' && args[1] === 'self-repair-fork') return { ok: true, out: '', timedOut: false };
+            return runCommand(cmd, args, cwd, env);
         }
-        if (cmd === 'gh' && args[0] === 'pr' && args[1] === 'create') {
-            prCalls.push([...args]);
+        if (args[0] === 'api' && args.includes('.login')) return { ok: true, out: `${LOGIN}\n`, timedOut: false };
+        if (args[0] === 'api') {
+            const id = opts.identity === undefined ? `${ACCOUNT_ID} ${LOGIN}` : opts.identity;
+            return id === null ? { ok: false, out: 'HTTP 401', timedOut: false } : { ok: true, out: `${id}\n`, timedOut: false };
+        }
+        if (args[0] === 'pr' && args[1] === 'create') {
+            state.pr.push([...args]);
             return { ok: true, out: 'https://example.invalid/pr/1\n', timedOut: false };
         }
-        return OK;
+        if (args[0] === 'issue') {
+            state.issues.push([...args]);
+            return { ok: true, out: 'https://example.invalid/issues/1\n', timedOut: false };
+        }
+        return { ok: true, out: '', timedOut: false } satisfies RunResult;
     };
-    return { runner, prCalls };
+    return { runner, pr: state.pr, issues: state.issues, pushes: state.pushes };
 }
 
-function deps(runner: Runner): ReleaseDeps {
-    return { runner, now: () => '2026-10-14T00:00:00.000Z' };
+/** Deps carrying the digest of exactly what the dry run would print now. */
+function approved(r: Repo, f: ReturnType<typeof forge>, p: ReleasePlan, deny: string[] = [], rec = record()): ReleaseDeps {
+    const collected = collectOutgoing(rec, p, probe(r, p.pushVia === 'fork'), f.runner);
+    return {
+        runner: f.runner,
+        now: () => '2026-10-17T00:00:00.000Z',
+        denyIdentifiers: deny,
+        approvedDigest: outgoingDigest(collected.outgoing),
+    };
 }
 
-describe('the upstream pull request is a draft', () => {
-    it('pr-is-draft — the direct-push rung passes --draft', () => {
-        const { runner, prCalls } = scriptedRunner();
-        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', deps(runner));
+const BRANCH = 'retro/abc123de';
+
+function pushedLog(r: Repo): string {
+    return git(r.origin, 'log', '-p', '--format=%an <%ae>%n%cn <%ce>%n%cd%n%B', `main..${BRANCH}`);
+}
+
+function hasPushedBranch(r: Repo): boolean {
+    return git(r.origin, 'branch', '--list', BRANCH).trim() !== '';
+}
+
+describe('the release builds one clean commit and scans every object it adds', () => {
+    it('release-scans-whole-object-graph — history added and removed on the branch never leaves', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'see the acmewidgets billing service\n', 'wip for acmewidgets');
+        r.commit('src/rules/x.md', 'a neutral sentence\n', 'tidy');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream'), ['acmewidgets']));
 
         expect(out.published).toBe('pull-request');
-        expect(prCalls).toHaveLength(1);
-        expect(prCalls[0]).toContain('--draft');
+        expect(git(r.origin, 'rev-list', '--count', `main..${BRANCH}`).trim()).toBe('1');
+        const log = pushedLog(r);
+        expect(log).toMatch(/a neutral sentence/);
+        expect(log).not.toMatch(/acmewidgets|wip|tidy|fix\/neutral/i);
     });
 
-    it('pr-is-draft — the fork rung passes --draft too', () => {
-        const { runner, prCalls } = scriptedRunner();
-        const out = executeRelease(record(), plan('fork'), probe(true), 'o/r', deps(runner));
+    it('release-scans-whole-object-graph — an identifier in a blob refuses, nothing is pushed', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'see the acmewidgets billing service\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream'), ['acmewidgets']));
+
+        expect(f.pr).toHaveLength(0);
+        expect(f.pushes).toHaveLength(0);
+        expect(hasPushedBranch(r)).toBe(false);
+        const scan = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
+        expect(scan).toMatch(/consumer-identifier in object/);
+        expect(scan).not.toMatch(/acmewidgets/i);
+        // Degrades to the issue, which carries only the floored record text.
+        expect(out.published).toBe('issue');
+    });
+
+    it('release-scans-whole-object-graph — a path, not only content, is an object the floor reads', () => {
+        const r = repo();
+        r.commit('docs/acmewidgets/notes.md', 'a neutral sentence\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream'), ['acmewidgets']));
+
+        expect(f.pushes).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(/object/);
+    });
+
+    it('release-scans-whole-object-graph — a credential from the detector table refuses with its rule named', () => {
+        const r = repo();
+        r.commit('src/scripts/k.ts', 'const k = "AKIAIOSFODNN7EXAMPLE";\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
+
+        expect(f.pushes).toHaveLength(0);
+        const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
+        expect(detail).toMatch(/aws-access-key/);
+        expect(detail).not.toMatch(/AKIAIOSFODNN7EXAMPLE/);
+    });
+
+    it('a branch with no change against the base sends nothing at all', () => {
+        const r = repo();
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
+
+        expect(out.published).toBeNull();
+        expect(f.issues).toHaveLength(0);
+        expect(out.attempts[0]?.detail).toMatch(/no change/);
+    });
+});
+
+describe('the identity the commit carries', () => {
+    it('company-identity-is-never-committed — author and committer are the noreply identity, dated in UTC', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
 
         expect(out.published).toBe('pull-request');
-        expect(prCalls).toHaveLength(1);
-        expect(prCalls[0]).toContain('--draft');
-        // The fork rung is the one that adds --head; asserting it here is what
-        // makes this a test of the fork path rather than a second copy of the
-        // one above.
-        expect(prCalls[0]).toContain('--head');
+        const raw = git(r.origin, 'cat-file', 'commit', BRANCH);
+        expect(raw).toMatch(new RegExp(`^author ${LOGIN} <${NOREPLY.replace(/[.+]/g, '\\$&')}> \\d+ \\+0000$`, 'm'));
+        expect(raw).toMatch(new RegExp(`^committer ${LOGIN} <${NOREPLY.replace(/[.+]/g, '\\$&')}> \\d+ \\+0000$`, 'm'));
+        expect(raw).not.toMatch(/acme-corp|Jane/);
+        expect(raw).not.toMatch(/gpgsig/);
+    });
+
+    it('company-identity-is-never-committed — no resolvable noreply identity means no push', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge({ identity: null });
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
+
+        expect(f.pushes).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'identity')?.detail).toMatch(/noreply/);
+        expect(out.published).toBe('issue');
+    });
+
+    it('a malformed login or id is refused rather than turned into an address', () => {
+        expect(noreplyIdentity('some-login', '4242')?.email).toBe(NOREPLY);
+        expect(noreplyIdentity('some login', '4242')).toBeNull();
+        expect(noreplyIdentity('some-login', 'x42')).toBeNull();
+        expect(noreplyIdentity('', '4242')).toBeNull();
+    });
+});
+
+describe('the upstream pull request is a draft on a neutral branch', () => {
+    it('pr-is-draft — the direct-push rung passes --draft and names the retro branch', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
+
+        expect(out.published).toBe('pull-request');
+        expect(f.pr).toHaveLength(1);
+        const args = f.pr[0] as string[];
+        expect(args).toContain('--draft');
+        expect(args[args.indexOf('--head') + 1]).toBe(BRANCH);
+        expect(f.pushes[0]).toEqual(['push', 'origin', expect.stringMatching(new RegExp(`^[0-9a-f]{40}:refs/heads/${BRANCH}$`))]);
+    });
+
+    it('pr-is-draft — the fork rung passes --draft too, with the fork owner in --head', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('fork'), probe(r, true), 'o/r', approved(r, f, plan('fork')));
+
+        expect(out.published).toBe('pull-request');
+        const args = f.pr[0] as string[];
+        expect(args).toContain('--draft');
+        expect(args[args.indexOf('--head') + 1]).toBe(`${LOGIN}:${BRANCH}`);
     });
 
     it('--draft precedes the title, so no value is read as the flag', () => {
-        const { runner, prCalls } = scriptedRunner();
-        executeRelease(record(), plan('upstream'), probe(false), 'o/r', deps(runner));
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
 
-        const args = prCalls[0] as string[];
-        // The -1 guard is not decoration. Written as `indexOf('--draft') <
-        // indexOf('--title')` alone, this case passed with the flag REMOVED —
-        // absent is -1, and -1 is less than everything. The sensitivity probe
-        // that removes the flag caught it; without this line the case would
-        // have shipped as a third assertion that asserts nothing.
+        const args = f.pr[0] as string[];
+        // The -1 guard is not decoration: absent is -1, and -1 is less than
+        // everything, so the index comparison alone passes with the flag gone.
         expect(args).toContain('--draft');
         expect(args.indexOf('--draft')).toBeLessThan(args.indexOf('--title'));
         expect(args[args.indexOf('--title') + 1]).toBe('a title');
@@ -134,110 +302,83 @@ describe('the upstream pull request is a draft', () => {
     });
 });
 
-/**
- * F2: the privacy floor scanned the record's text while the release pushed a
- * whole branch. These cases script the branch's bytes — its name, the commit
- * identities and messages, every commit's patch — and assert that a finding in
- * any of them refuses the pull request, names WHERE it was found, and never
- * prints the value it found.
- */
-interface Payload {
-    branch?: string;
-    log?: string;
-    patches?: string;
-    logOk?: boolean;
-}
+describe('the person approves the exact bytes', () => {
+    it('changed-bytes-void-approval — a commit after the dry run voids the approval, nothing leaves', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const deps = approved(r, f, plan('upstream'));
+        r.commit('src/rules/x.md', 'a different sentence\n');
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', deps);
 
-function payloadRunner(p: Payload): { runner: Runner; prCalls: string[][]; issueCalls: number } {
-    const state = { prCalls: [] as string[][], issueCalls: 0 };
-    const runner: Runner = (cmd, args) => {
-        if (cmd === 'git' && args[0] === 'branch') {
-            return { ok: true, out: `${p.branch ?? 'fix/neutral'}\n`, timedOut: false };
-        }
-        if (cmd === 'git' && args[0] === 'log' && args.includes('-p')) {
-            return { ok: p.logOk ?? true, out: p.patches ?? '', timedOut: false };
-        }
-        if (cmd === 'git' && args[0] === 'log') {
-            return { ok: p.logOk ?? true, out: p.log ?? '', timedOut: false };
-        }
-        if (cmd === 'gh' && args[0] === 'pr' && args[1] === 'create') {
-            state.prCalls.push([...args]);
-            return { ok: true, out: 'https://example.invalid/pr/1\n', timedOut: false };
-        }
-        if (cmd === 'gh' && args[0] === 'issue') {
-            state.issueCalls += 1;
-            return { ok: true, out: 'https://example.invalid/issues/1\n', timedOut: false };
-        }
-        return OK;
-    };
-    return {
-        runner,
-        get prCalls() {
-            return state.prCalls;
-        },
-        get issueCalls() {
-            return state.issueCalls;
-        },
-    };
-}
-
-function denyDeps(runner: Runner, deny: string[]): ReleaseDeps {
-    return { runner, now: () => '2026-10-17T00:00:00.000Z', denyIdentifiers: deny };
-}
-
-describe('the floor covers the whole payload, not only the record text', () => {
-    it('consumer-identifier-in-diff-refuses — a consumer identifier in a patch refuses the pull request', () => {
-        const r = payloadRunner({ patches: '+++ b/src/rules/x.md\n+see the acmewidgets billing service\n' });
-        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
-
-        expect(r.prCalls).toHaveLength(0);
-        const scan = out.attempts.find((a) => a.step === 'payload-scan');
-        expect(scan?.detail).toMatch(/diff/);
-        expect(scan?.detail).not.toMatch(/acmewidgets/i);
-        // Degrades to the issue, which carries only the floored record text.
-        expect(out.published).toBe('issue');
+        expect(out.published).toBeNull();
+        expect(f.pushes).toHaveLength(0);
+        expect(f.issues).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'approval')?.detail).toMatch(/not the text that would be sent/);
     });
 
-    it('consumer-identifier-in-diff-refuses — branch name, identity and message are scanned too', () => {
-        for (const [p, part] of [
-            [{ branch: 'fix/acmewidgets-thing' }, 'branch'],
-            [{ log: 'Jane <jane@acmewidgets.example>\nJane <jane@acmewidgets.example>\nfix: x\n\0' }, 'commit'],
-            [{ log: 'A <a@users.noreply.github.com>\nA <a@users.noreply.github.com>\nfix: the AcmeWidgets case\n\0' }, 'commit'],
-        ] as const) {
-            const r = payloadRunner(p);
-            const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
-            expect(r.prCalls).toHaveLength(0);
-            expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(new RegExp(part));
+    it('changed-bytes-void-approval — a changed body voids it too, on the issue route', () => {
+        const r = repo();
+        const f = forge();
+        const issuePlan = plan('upstream', { route: 'issue', pushVia: null });
+        const deps = approved(r, f, issuePlan);
+        const out = executeRelease(record(), { ...issuePlan, body: 'another body' }, probe(r), 'o/r', deps);
+
+        expect(out.published).toBeNull();
+        expect(f.issues).toHaveLength(0);
+    });
+
+    it('changed-bytes-void-approval — no approval at all refuses', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', { runner: f.runner, now: () => '2026-10-17T00:00:00.000Z' });
+
+        expect(out.published).toBeNull();
+        expect(f.pushes).toHaveLength(0);
+        expect(out.attempts[0]?.detail).toMatch(/--approve/);
+    });
+
+    it('the dry run prints every byte it digests — branch, identity, message, diff, title, body', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const collected = collectOutgoing(record(), plan('upstream'), probe(r), f.runner);
+        const text = renderDryRun(plan('upstream'), LOGIN, collected);
+
+        for (const needle of [BRANCH, NOREPLY, 'Self-repair fingerprint: abc123def4567890', '+a neutral sentence', 'a title', 'a body']) {
+            expect(text).toContain(needle);
         }
+        expect(text).toContain(`DIGEST ${outgoingDigest(collected.outgoing)}`);
+        expect(text).not.toMatch(/acme-corp|fix\/neutral/);
+        expect(f.pushes).toHaveLength(0);
+    });
+});
+
+describe('a refused title or body does not leave through the issue either', () => {
+    it('consumer-identifier-in-diff-refuses — an identifier in the body refuses the issue fallback too', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const p = plan('upstream', { body: 'seen in the acmewidgets checkout' });
+        const out = executeRelease(record(), p, probe(r), 'o/r', approved(r, f, p, ['acmewidgets']));
+
+        expect(f.pr).toHaveLength(0);
+        expect(f.issues).toHaveLength(0);
+        expect(f.pushes).toHaveLength(0);
+        expect(out.published).toBeNull();
+        expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).not.toMatch(/acmewidgets/i);
     });
 
-    it('consumer-identifier-in-diff-refuses — a credential from the detector table refuses with its rule named', () => {
-        const r = payloadRunner({ patches: '+const k = "AKIAIOSFODNN7EXAMPLE";\n' });
-        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, []));
+    it('consumer-identifier-in-diff-refuses — the re-rendered issue body of a degraded pull request is scanned too', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'see the acmewidgets billing service\n');
+        const f = forge();
+        const rec = { ...record(), evidence: 'seen in the acmewidgets checkout' };
+        const out = executeRelease(rec, plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream'), ['acmewidgets'], rec));
 
-        expect(r.prCalls).toHaveLength(0);
-        const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
-        expect(detail).toMatch(/aws-access-key/);
-        expect(detail).not.toMatch(/AKIAIOSFODNN7EXAMPLE/);
-    });
-
-    it('consumer-identifier-in-diff-refuses — a payload that cannot be read refuses (fail-closed)', () => {
-        const r = payloadRunner({ logOk: false });
-        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, []));
-
-        expect(r.prCalls).toHaveLength(0);
-        expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(/could not be read/);
-    });
-
-    it('a clean payload still opens the draft pull request', () => {
-        const r = payloadRunner({
-            log: 'A <a@users.noreply.github.com>\nA <a@users.noreply.github.com>\nfix: tighten a rule\n\0',
-            patches: '+++ b/src/rules/x.md\n+a neutral sentence\n',
-        });
-        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
-
-        expect(out.published).toBe('pull-request');
-        expect(r.prCalls).toHaveLength(1);
+        expect(f.issues).toHaveLength(0);
+        expect(out.published).toBeNull();
     });
 
     it('the deny list never contains the target repository itself', () => {
@@ -267,67 +408,27 @@ describe('the dry run says which account the send will carry', () => {
     });
 });
 
-describe('a refused title or body does not leave through the issue either', () => {
-    it('consumer-identifier-in-diff-refuses — an identifier in the body refuses the issue fallback too', () => {
-        const r = payloadRunner({});
-        const p = { ...plan('upstream'), body: 'seen in the acmewidgets checkout' };
-        const out = executeRelease(record(), p, probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+describe('a consumer project reaches the issue step, not a pull request (D5)', () => {
+    function packageCheckout(): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'self-repair-checkout-'));
+        dirs.push(dir);
+        fs.mkdirSync(path.join(dir, 'src', 'rules'), { recursive: true });
+        fs.mkdirSync(path.join(dir, 'src', 'scripts'), { recursive: true });
+        fs.writeFileSync(path.join(dir, 'src', 'scripts', 'hook_manifest.yaml'), '');
+        return dir;
+    }
 
-        expect(r.prCalls).toHaveLength(0);
-        expect(r.issueCalls).toBe(0);
-        expect(out.published).toBeNull();
+    it('AGENT_CONFIG_SOURCE set in a consumer project widens nothing', () => {
+        const checkout = packageCheckout();
+        const consumer = fs.mkdtempSync(path.join(os.tmpdir(), 'self-repair-consumer-'));
+        dirs.push(consumer);
+        expect(findAgentConfigCheckout({ AGENT_CONFIG_SOURCE: checkout }, consumer)).toBeNull();
+        expect(findAgentConfigCheckout({}, consumer)).toBeNull();
     });
 
-    it('an unreadable history does not skip the title and body scan', () => {
-        // The title and body are scanned before and independently of the git
-        // reads: an unreadable range once fell through to the issue unscanned.
-        const pushes: string[][] = [];
-        const r = payloadRunner({ logOk: false });
-        const runner: Runner = (cmd, args, cwd) => {
-            if (cmd === 'git' && args[0] === 'push') {
-                pushes.push([...args]);
-            }
-            return r.runner(cmd, args, cwd);
-        };
-        for (const p of [
-            { ...plan('upstream'), title: 'acmewidgets crash' },
-            { ...plan('upstream'), body: 'seen in the acmewidgets checkout' },
-            { ...plan('upstream'), title: 'acmewidgets crash', body: 'seen in the acmewidgets checkout' },
-        ]) {
-            const out = executeRelease(record(), p, probe(true), 'o/r', denyDeps(runner, ['acmewidgets']));
-            expect(out.published).toBeNull();
-            const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
-            expect(detail).toMatch(/title|body/);
-            expect(detail).not.toMatch(/acmewidgets/i);
-        }
-        expect(r.issueCalls).toBe(0);
-        expect(r.prCalls).toHaveLength(0);
-        expect(pushes).toHaveLength(0);
-    });
-
-    it('the re-rendered issue body of a degraded pull request is scanned too', () => {
-        const r = payloadRunner({ logOk: false });
-        const rec = { ...record(), evidence: 'seen in the acmewidgets checkout' };
-        const out = executeRelease(rec, plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
-
-        expect(r.issueCalls).toBe(0);
-        expect(out.published).toBeNull();
-    });
-
-    it('the patch read forces text and disables textconv and external diff drivers', () => {
-        const seen: string[][] = [];
-        const inner = payloadRunner({}).runner;
-        const runner: Runner = (cmd, args, cwd) => {
-            if (cmd === 'git' && args[0] === 'log' && args.includes('-p')) {
-                seen.push([...args]);
-            }
-            return inner(cmd, args, cwd);
-        };
-        executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(runner, []));
-
-        expect(seen).toHaveLength(1);
-        for (const flag of ['--text', '--no-textconv', '--no-ext-diff']) {
-            expect(seen[0]).toContain(flag);
-        }
+    it('AGENT_CONFIG_SOURCE names the checkout from inside it, and the checkout itself is found without it', () => {
+        const checkout = packageCheckout();
+        expect(findAgentConfigCheckout({ AGENT_CONFIG_SOURCE: checkout }, path.join(checkout, 'src', 'rules'))).toBe(checkout);
+        expect(findAgentConfigCheckout({}, checkout)).toBe(checkout);
     });
 });
