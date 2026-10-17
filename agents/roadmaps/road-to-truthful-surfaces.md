@@ -210,6 +210,38 @@ file can report an externally visible change as done.
       description, homepage or topic list as done; the visibility-sync stub
       carries this round in its arrivals line.
 - [ ] **AC-8** `task ci` green.
+      **Measured 2026-10-17 at `main@8c90aad26`, on a branch carrying no commit
+      of its own, and left open because the two reds the run found are both
+      older than this file and neither is reachable from it.** The run reached
+      `check-pack-size` and stopped there; the remaining chain was then walked
+      by hand for the two gates this package records as trunk-red.
+      - `check_pack_size` — the BUILT payload measures **14.4989 MB over 3568
+        entries** against the recorded built figure 12.4548 (3240 entries,
+        `src/config/pack-size-budget.json` ->
+        `built_surface_measurement_2026_09_10`), i.e. **+16.41 %** against a
+        10 % regression line, ceiling 13.700. Two independent pristine builds
+        of the same clean tree (`npm run build` after deleting every untracked
+        `dist/` subtree) produced **byte-identical** pack manifests — 3568
+        entries, 14,498,927 B — so the reading is a measurement and not one
+        observation. The same tree with `dist/mcp` and `dist/ui` absent reads
+        13.049 and passes, which is the incomplete-payload green that file's
+        own `built_surface_enforcement_2026_08_30` note warns against, not a
+        fix. The sanctioned repair is a new dated `built_surface_measurement_*`
+        key; the 2026-09-10 precedent set that key under an AI council on an
+        owner delegation, recorded in ADR-273, so it is a decision rather than
+        a drain edit.
+      - `check_gate_completeness` — **240 violations against a baseline of
+        214**, 26 new. Owned by `stubs/road-to-the-ledger-ratchet-that-drifted`
+        and named as trunk-red by
+        `road-to-local-gates-wired-while-they-are-green` § Context.
+      `lint_canonical_terms` was re-run in the same pass and is **green**,
+      so the third commonly cited trunk red does not apply here.
+      Nothing in Phases 1-3 of this file touches either surface: the diff of
+      this roadmap is `README.md`, `package.json`, `.github/`,
+      `src/scripts/update_check.ts`, `src/scripts/update_counts.ts` and
+      `src/scripts/lint_positioning.ts`, and the payload figure moves with the
+      whole tree. AC-8 therefore stays open against the trunk rather than
+      against this change, and closes when those two owners close.
 
 ## Provenance
 
