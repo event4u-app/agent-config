@@ -169,6 +169,13 @@ const FIXTURES: Record<string, { ext: string; positive: string; negative: string
     positive: "article p{letter-spacing:0.12em;font-size:16px}",
     negative: "article p{letter-spacing:0.01em;font-size:16px}",
   },
+  "slop-t12-swap-without-metric-fallback": {
+    ext: "css",
+    positive: '@font-face{font-family:"Brand";src:url(/f/brand.woff2) format("woff2");font-display:swap}',
+    negative:
+      '@font-face{font-family:"Brand";src:url(/f/brand.woff2) format("woff2");font-display:swap}\n' +
+      '@font-face{font-family:"Brand Fallback";src:local("Arial");size-adjust:104%;ascent-override:92%;descent-override:24%}',
+  },
   "slop-m1-bounce-easing": {
     ext: "css",
     // y1 = 1.56 overshoots the target and returns — the bounce signature

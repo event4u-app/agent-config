@@ -210,27 +210,30 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
 
 ## Phase 2 — Two delivery tells under the delivery owner
 
-- [ ] **2.1 T11 faux styles.** A row in `design-antipatterns.md` § Typography:
+- [x] **2.1 T11 faux styles.** A row in `design-antipatterns.md` § Typography:
       bold or italic requested of a family that lacks the face; remedy is to
       load the face or set `font-synthesis: none` on purpose. Detector:
       witness-backed through 1.2, with a fixture.
       verify: `grep -c "^| T11 " docs/guidelines/design-antipatterns.md` -> /^1$/
-- [ ] **2.2 T12 swap without a metric-matched fallback.** A self-hosted webfont
+      Done 2026-10-17: row T11; status `witness`, a sixth status the parity lint now checks against the witness source (the note must name `geometry/font-synthesised`, and that rule must exist there).
+- [x] **2.2 T12 swap without a metric-matched fallback.** A self-hosted webfont
       with `font-display: swap` and no fallback `@font-face` carrying
       `size-adjust`, `ascent-override` and `descent-override`. Detector: static
       CSS parse in `design_slop_rules.ts`, with a positive and a near-miss
       fixture. The derivation of the overrides from the font's vertical metrics
       lands as a mechanics row in `design-asset-discipline.md`.
       verify: `npx vitest run tests/scripts/design_slop_t12.test.ts` -> 0
+      Done 2026-10-17: `slop-t12-swap-without-metric-fallback` (P3), a size-adjust-only near miss pinned; the derivation is a bullet in `design-asset-discipline.md`.
 - [x] **2.3 Mechanics rows, no tells.** In `design-asset-discipline.md`:
       `unicode-range` subsetting for self-hosted files and `preload` for the one
       above-the-fold face. In `typography-system`: `tabular-nums` for aligned
       figures, `opsz` for optical-size families.
       verify: `grep -c "unicode-range" docs/guidelines/design-asset-discipline.md` -> /^[1-9]/
       Done 2026-10-16: subsetting + preload bullet in design-asset-discipline; tabular-nums + opsz in typography-system (step 3 points at `references/worked-scales.md`, which carries them).
-- [ ] **2.4 Parity holds.** The detector-status table lists T11 and T12 with
+- [x] **2.4 Parity holds.** The detector-status table lists T11 and T12 with
       their status, and no row reads backed without a test.
       verify: `./scripts-run src/scripts/lint_design_antipattern_parity` -> 0
+      Done 2026-10-17: T11 `witness`, T12 `backed`; parity green, 52 entries.
 
 ## Phase 3 — The SVG tooling learns fill rule and counters
 
