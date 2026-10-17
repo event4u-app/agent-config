@@ -24,10 +24,13 @@
  * 3.1 / 3.2): stable DTCG 2025.10 object values (colour, dimension, duration)
  * serialise to CSS and any other object value fails with its token path, and
  * `validate` blanks the `var(--…)` span instead of skipping the whole line.
+ * With `--tokens`, `validate --json` adds a palette tag per colour literal
+ * and a stable finding id (3.3); without it the output is unchanged.
  *
  * Pure stdlib (Node builtins only) · read-only except `generate -o` · no
  * network · no subprocess. A `.ts` MUST NOT import a `.py`.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -602,6 +605,153 @@ export function scanFile(p: string): Violation[] {
     return violations;
 }
 
+// ------------------------------------------------------ palette reading (3.3)
+
+type Rgb = readonly [number, number, number];
+
+/** `#rgb`, `#rrggbb`, `#rrggbbaa` or integer `rgb()/rgba()` → 0-255 channels. Alpha is ignored. */
+function _parseColor(s: string): Rgb | null {
+    const t = s.trim();
+    let m = /^#([0-9a-fA-F]{3})$/.exec(t);
+    if (m) {
+        const h = m[1] as string;
+        return [0, 1, 2].map((i) => parseInt(h[i]! + h[i]!, 16)) as unknown as Rgb;
+    }
+    m = /^#([0-9a-fA-F]{6})(?:[0-9a-fA-F]{2})?$/.exec(t);
+    if (m) {
+        const h = m[1] as string;
+        return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)) as unknown as Rgb;
+    }
+    m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*[\d.]+\s*)?\)$/i.exec(t);
+    if (m) {
+        const c = [m[1], m[2], m[3]].map(Number);
+        return c.every((n) => n <= 255) ? (c as unknown as Rgb) : null;
+    }
+    return null;
+}
+
+/** A resolved token value as sRGB, or null when it is no colour this reading compares. */
+function _tokenColor(v: Json): Rgb | null {
+    if (typeof v === 'string') return _parseColor(v);
+    if (!_isPlainObject(v)) return null;
+    if (typeof v['hex'] === 'string') return _parseColor(v['hex']);
+    const comps = v['components'];
+    if (v['colorSpace'] === 'srgb' && Array.isArray(comps) && comps.length === 3) {
+        if (!comps.every((c) => typeof c === 'number' && c >= 0 && c <= 1)) return null;
+        return (comps as number[]).map((c) => Math.round(c * 255)) as unknown as Rgb;
+    }
+    return null;
+}
+
+interface PaletteEntry {
+    token: string;
+    rgb: Rgb;
+}
+
+/** Every token whose resolved value is a comparable colour, in document order. Never merged by value. */
+export function readPalette(tokens: JsonObject): PaletteEntry[] {
+    const out: PaletteEntry[] = [];
+    const walk = (node: JsonObject, at: string[]): void => {
+        for (const key of Object.keys(node)) {
+            if (key.startsWith('$')) continue;
+            const value = node[key];
+            if (!_isPlainObject(value)) continue;
+            if ('$value' in value) {
+                const rgb = _tokenColor(resolveReference(value['$value'], tokens));
+                if (rgb !== null) out.push({ token: [...at, key].join('.'), rgb });
+            } else {
+                walk(value, [...at, key]);
+            }
+        }
+    };
+    walk(tokens, []);
+    return out;
+}
+
+function _lab(rgb: Rgb): [number, number, number] {
+    const lin = rgb.map((c) => {
+        const s = c / 255;
+        return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    }) as [number, number, number];
+    const [r, g, b] = lin;
+    const xyz = [
+        (0.4124564 * r + 0.3575761 * g + 0.1804375 * b) / 0.95047,
+        0.2126729 * r + 0.7151522 * g + 0.072175 * b,
+        (0.0193339 * r + 0.119192 * g + 0.9503041 * b) / 1.08883,
+    ].map((t) => (t > 216 / 24389 ? Math.cbrt(t) : (24389 / 27 * t + 16) / 116));
+    const [fx, fy, fz] = xyz as [number, number, number];
+    return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)];
+}
+
+/** CIEDE2000 colour difference between two sRGB colours (kL = kC = kH = 1). */
+export function deltaE2000(a: Rgb, b: Rgb): number {
+    const [L1, a1, b1] = _lab(a);
+    const [L2, a2, b2] = _lab(b);
+    const rad = Math.PI / 180;
+    const Cbar = (Math.hypot(a1, b1) + Math.hypot(a2, b2)) / 2;
+    const G = 0.5 * (1 - Math.sqrt(Cbar ** 7 / (Cbar ** 7 + 25 ** 7)));
+    const ap1 = (1 + G) * a1;
+    const ap2 = (1 + G) * a2;
+    const Cp1 = Math.hypot(ap1, b1);
+    const Cp2 = Math.hypot(ap2, b2);
+    const hue = (x: number, y: number): number => {
+        if (x === 0 && y === 0) return 0;
+        const h = Math.atan2(y, x) / rad;
+        return h < 0 ? h + 360 : h;
+    };
+    const hp1 = hue(ap1, b1);
+    const hp2 = hue(ap2, b2);
+    const dL = L2 - L1;
+    const dC = Cp2 - Cp1;
+    let dh = 0;
+    if (Cp1 * Cp2 !== 0) {
+        dh = hp2 - hp1;
+        if (dh > 180) dh -= 360;
+        else if (dh < -180) dh += 360;
+    }
+    const dH = 2 * Math.sqrt(Cp1 * Cp2) * Math.sin((dh / 2) * rad);
+    const Lbar = (L1 + L2) / 2;
+    const Cpbar = (Cp1 + Cp2) / 2;
+    let hbar = hp1 + hp2;
+    if (Cp1 * Cp2 !== 0) {
+        if (Math.abs(hp1 - hp2) <= 180) hbar /= 2;
+        else hbar = hbar < 360 ? (hbar + 360) / 2 : (hbar - 360) / 2;
+    }
+    const T =
+        1 -
+        0.17 * Math.cos((hbar - 30) * rad) +
+        0.24 * Math.cos(2 * hbar * rad) +
+        0.32 * Math.cos((3 * hbar + 6) * rad) -
+        0.2 * Math.cos((4 * hbar - 63) * rad);
+    const dTheta = 30 * Math.exp(-(((hbar - 275) / 25) ** 2));
+    const Rc = 2 * Math.sqrt(Cpbar ** 7 / (Cpbar ** 7 + 25 ** 7));
+    const Sl = 1 + (0.015 * (Lbar - 50) ** 2) / Math.sqrt(20 + (Lbar - 50) ** 2);
+    const Sc = 1 + 0.045 * Cpbar;
+    const Sh = 1 + 0.015 * Cpbar * T;
+    const Rt = -Math.sin(2 * dTheta * rad) * Rc;
+    return Math.sqrt((dL / Sl) ** 2 + (dC / Sc) ** 2 + (dH / Sh) ** 2 + Rt * (dC / Sc) * (dH / Sh));
+}
+
+/** `on-palette (<token>)`, `off-palette (nearest <token>, ΔE2000 n.nn)`, or null for a non-colour literal. */
+export function paletteTag(literal: string, palette: PaletteEntry[]): string | null {
+    const rgb = _parseColor(literal);
+    if (rgb === null || palette.length === 0) return null;
+    let best: { token: string; de: number } | null = null;
+    for (const entry of palette) {
+        const de = deltaE2000(rgb, entry.rgb);
+        if (best === null || de < best.de) best = { token: entry.token, de };
+    }
+    const nearest = best as { token: string; de: number };
+    return nearest.de === 0
+        ? `on-palette (${nearest.token})`
+        : `off-palette (nearest ${nearest.token}, ΔE2000 ${nearest.de.toFixed(2)})`;
+}
+
+/** Stable across unrelated line shifts: file, kind, literal and the line's own text — never its number. */
+function _findingId(v: Violation): string {
+    return createHash('sha256').update([v.file, v.type, v.value, v.context].join('\0')).digest('hex').slice(0, 16);
+}
+
 /** Mirror Python `s[:80]` over code points. */
 function _sliceCodePoints(s: string, n: number): string {
     let out = '';
@@ -791,6 +941,7 @@ interface ValidateArgs {
     dir: string;
     ignore: string[];
     json: boolean;
+    tokens: string | null;
 }
 interface EmbedArgs {
     op: 'embed';
@@ -863,6 +1014,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         let dir: string | null = null;
         const ignore: string[] = [];
         let json = false;
+        let tokens: string | null = null;
         let i = 0;
         while (i < rest.length) {
             const t = rest[i] as string;
@@ -878,6 +1030,10 @@ function _parseArgs(argv: string[]): ParsedArgs {
             } else if (base === '--json') {
                 json = true;
                 i += 1;
+            } else if (base === '--tokens') {
+                const r = _takeValue(rest, i, '--tokens');
+                tokens = r.value;
+                i = r.next;
             } else {
                 _usageError(`unrecognized arguments: ${t}`);
             }
@@ -885,7 +1041,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         if (dir === null) {
             _usageError('the following arguments are required: --dir/-d');
         }
-        return { op: 'validate', dir, ignore, json };
+        return { op: 'validate', dir, ignore, json, tokens };
     }
 
     if (op === 'embed') {
@@ -973,7 +1129,25 @@ export function main(argv: string[] | null = null): number {
         for (const file of _iterFiles(root, ignore)) {
             violations = violations.concat(scanFile(file));
         }
-        if (parsed.json) {
+        if (parsed.json && parsed.tokens !== null) {
+            let registered: Json;
+            try {
+                registered = JSON.parse(fs.readFileSync(parsed.tokens, 'utf-8'));
+            } catch (exc) {
+                process.stderr.write(`Error: tokens file unreadable: ${parsed.tokens}: ${(exc as Error).message}\n`);
+                return 1;
+            }
+            if (!_isPlainObject(registered)) {
+                process.stderr.write(`Error: tokens file is not a JSON object: ${parsed.tokens}\n`);
+                return 1;
+            }
+            const palette = readPalette(registered);
+            const tagged = violations.map((v) => {
+                const tag = paletteTag(v.value, palette);
+                return tag === null ? { ...v, id: _findingId(v) } : { ...v, palette: tag, id: _findingId(v) };
+            });
+            process.stdout.write(_pyDumpsIndent2(tagged) + '\n');
+        } else if (parsed.json) {
             process.stdout.write(_pyDumpsIndent2(violations) + '\n');
         } else {
             process.stdout.write(formatReport(violations) + '\n');

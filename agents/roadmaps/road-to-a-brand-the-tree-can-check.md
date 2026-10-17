@@ -284,12 +284,13 @@ irreversible-external-action row of `non-destructive-by-default`).
       and still reports every other literal on the line.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t same-line --reporter=verbose` -> /✓.*same-line/
       Done 2026-10-16: `validate` blanks each `var(--…)` span (nested fallbacks included) and scans the rest of the line.
-- [ ] **3.3 The reading canvas 8.2 consumes.** With a valid registered file,
+- [x] **3.3 The reading canvas 8.2 consumes.** With a valid registered file,
       `validate --json` tags each literal `on-palette (<token>)` or
       `off-palette (nearest <token>, ΔE2000)`, each with a stable finding id
       canvas 8.2 can deduplicate on (`folded-from-deep-dive`). Blocks nothing; the finding and
       its baseline stay canvas 8.2's. Tokens are never combined by value.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t palette-tag --reporter=verbose` -> /✓.*palette-tag/
+      Done 2026-10-17: `validate --json --tokens <file>` tags each hex/rgb literal `on-palette (<token>)` (ΔE2000 0) or `off-palette (nearest <token>, ΔE2000 n.nn)` and gives every finding a 16-hex `id` from file, kind, literal and the line's own text, so a line shift keeps it. The registered file is passed explicitly: the skill script is stdlib-only and cannot import the resolver list (same constraint as 1.3). Comparable colours are hex, integer `rgb()` and 2025.10 objects with `hex` or `srgb` components; other spaces are not compared. Exit code and the no-`--tokens` output are unchanged.
 - [x] **3.4 The starter speaks the format it claims** (E3). It emits 2025.10
       objects and drops its `$schema` key, whose value sits on a different host
       from the specification's own site and which nothing in `tokens.ts` reads
