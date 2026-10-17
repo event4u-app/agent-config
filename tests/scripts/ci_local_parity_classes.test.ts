@@ -193,7 +193,39 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
     check: [],
     final: true,
   },
+  {
+    // Five gates the 2026-10-11 reading did not hold. Four entered `task ci`
+    // after it was taken, so they were never inside a batch window;
+    // `lint_motion_authority_drift` was inside one and fell in the gap between
+    // 2.2c, which ended at lint_model_tier_coverage, and 2.2d, which began at
+    // lint_namespace. That gap is the reason this batch exists and the reason
+    // it is `final` at five rather than held to twenty: the window is empty
+    // again afterwards, and padding it would mean wiring a gate whose class
+    // nobody read.
+    id: "2.2g",
+    marker: "The local-only drain — step 2.2, sixth batch (2.2g)",
+    gates: [
+      "check_artefact_checksums",
+      "lint_featured_skills",
+      "lint_motion_authority_drift",
+      "lint_trust_coherence",
+      "validate_discovery_manifest",
+    ],
+    check: [],
+    final: true,
+  },
 ];
+
+/**
+ * The gates that stay in the local-only backlog with a recorded class instead
+ * of a caller. Each was provisionally listed `wire` by the 2026-10-11 reading
+ * and each carries a reason in the evidence page that describes a DIFFERENT
+ * class; 2.2f re-checked all three and all three still hold. The reclassify is
+ * the move step 1.2 prescribes for exactly this case — "otherwise it stays in
+ * the backlog with its class written down" — and it moves no number: all three
+ * are still counted by `check_ci_local_parity`, and `local_only:` is untouched.
+ */
+const BACKLOG_WITH_A_RECORDED_CLASS = ["check_hook_bundle_freshness", "check_quality_regression", "check_release_trunk_sync"];
 
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];
 
@@ -538,6 +570,59 @@ describe("every-wire-class-gate-has-a-workflow-caller", () => {
       for (const call of calls) expect(call).toMatch(/--baseline origin\/main\b/);
     },
   );
+
+  it("leaves no `wire`-class gate in the evidence page without a workflow caller", () => {
+    // AC-2, read off the two artefacts it is about rather than off a batch
+    // list: the class comes from the evidence page's own table, the caller
+    // from the workflows. A batch that wires a gate and forgets its row, or a
+    // row that claims `wire` for a gate nobody wired, both fail here — which
+    // the per-batch exact-set cases above cannot see, because they only know
+    // the names they were given.
+    const page = readFileSync(path.join(repoRoot, "agents", "evidence", "analysis", "local-only-gates-complete-reading.md"), "utf8");
+    const rows = [...page.matchAll(/^\| \d+ \| `([a-z0-9_]+)` \|[^\n]*?\| `(wire|calendar|machine|slow|red)` \|/gm)];
+    expect(rows.length, "the reading table did not parse").toBeGreaterThan(100);
+
+    const workflows = readdirSync(path.join(repoRoot, ".github", "workflows"))
+      .filter((f) => f.endsWith(".yml"))
+      .map((f) => readFileSync(path.join(repoRoot, ".github", "workflows", f), "utf8"))
+      .join("\n");
+
+    const uncalled = rows
+      .filter((m) => m[2] === "wire")
+      .map((m) => m[1] as string)
+      .filter((gate) => !workflows.includes(`src/scripts/${gate}`));
+    expect(uncalled, "`wire`-class gates with no workflow caller").toEqual([]);
+  });
+
+  it("keeps the backlog gates out of the drain AND out of the `wire` class", () => {
+    // The polarity partner of the case above, and the reason it is needed:
+    // moving these three out of `wire` is what makes that case pass, so
+    // without this one the cheap way to satisfy AC-2 would be to relabel any
+    // inconvenient gate. Both halves are asserted — no caller, and a class
+    // that is not `wire` — so a relabel that also wired them, or a wiring that
+    // left the label, is caught.
+    const page = readFileSync(path.join(repoRoot, "agents", "evidence", "analysis", "local-only-gates-complete-reading.md"), "utf8");
+    const workflows = readdirSync(path.join(repoRoot, ".github", "workflows"))
+      .filter((f) => f.endsWith(".yml"))
+      .map((f) => readFileSync(path.join(repoRoot, ".github", "workflows", f), "utf8"))
+      .join("\n");
+
+    for (const gate of BACKLOG_WITH_A_RECORDED_CLASS) {
+      expect(workflows.includes(`src/scripts/${gate}`), `${gate} must stay out of every workflow`).toBe(false);
+      const row = page.match(new RegExp(`^\\| \\d+ \\| \`${gate}\` \\|[^\\n]*?\\| \`([a-z]+)\` \\|`, "m"));
+      expect(row, `${gate} has no row in the reading table`).not.toBeNull();
+      expect(row?.[1], `${gate} is still labelled wire`).not.toBe("wire");
+    }
+
+    // And it stayed a backlog entry rather than becoming a declaration: the
+    // 2026-08-13 decision refuses growing this list to move a number.
+    const manifest = readFileSync(path.join(repoRoot, "src", "config", "ci-local-parity.yml"), "utf8");
+    const localOnly = manifest.slice(manifest.indexOf("\nlocal_only:"));
+    for (const gate of BACKLOG_WITH_A_RECORDED_CLASS) {
+      expect(localOnly, `${gate} must not be declared`).not.toContain(`id: ${gate}`);
+    }
+    expect([...localOnly.matchAll(/^ {2}- id: /gm)]).toHaveLength(7);
+  });
 
   it("never calls the same gate twice across the drain", () => {
     // Read from the workflow: a gate copied into a second batch would satisfy

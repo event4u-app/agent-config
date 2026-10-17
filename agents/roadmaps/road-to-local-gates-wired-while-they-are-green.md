@@ -171,6 +171,21 @@ with it and left alone.
       p50 **118 s** (77–137 s), its `Drain *` steps p50 **93 s**, against the
       70–74 s recorded with 2.2a in `docs/contracts/ci-cost-budget.md`. 2.2b–2.2f
       landed without that line. The ask does not stop the drain.
+      <br>**Closed 2026-10-17 with 2.2g, and the window is empty.** Five
+      `wire`-class gates were still without a caller and none of them was in the
+      reading's table: four entered `task ci` after the 2026-10-11 reading, and
+      `lint_motion_authority_drift` fell in the seam between 2.2c, which ended at
+      `lint_model_tier_coverage`, and 2.2d, which began at `lint_namespace`. All
+      five run as the step `Drain 2.2g` of the same required job. The three gates
+      2.2f left are re-checked, every reason still holds, and each is recorded
+      with the class its reason describes rather than left labelled `wire` — the
+      move step 1.2 prescribes. Nothing was declared: `local_only:` still holds
+      seven entries and all three are still in the parity count. Detail in the
+      evidence page's 2026-10-17 section.
+      <br>**The duration line step 2.2 asks for**, from CI rather than locally:
+      the host job's before-and-after readings are recorded in the pull request
+      that carries this batch, with the sample size, because neither can be taken
+      on a developer's machine.
 - [x] **2.2a The first twenty.** `audit_mcp_tools` through
       `check_score_contract`, four skipped with their reasons; steps
       `Drain 2.2a-1` and `Drain 2.2a-2` of the host job. Open until the

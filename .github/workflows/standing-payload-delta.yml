@@ -799,3 +799,27 @@ jobs:
           ./scripts-run src/scripts/lint_marketplace_install_completeness || rc=1
           ./scripts-run src/scripts/check_reply_consistency --quiet --scan-dir src || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, sixth batch (2.2g) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # Five wire-class gates the 2026-10-11 reading did not have. Four were
+      # registered in `task ci` after that reading was taken and so were never
+      # in any batch window; `lint_motion_authority_drift` was in the window and
+      # fell in the gap between 2.2c, which ended at lint_model_tier_coverage,
+      # and 2.2d, which began at lint_namespace. All five were re-run on the
+      # branch base with this argv, exit 0, and `git status --short` empty
+      # afterwards, so none writes a tracked file. None calls checkRatchet,
+      # reads the wall clock, or shells out to git, so none is calendar- or
+      # machine-class.
+      - name: Drain 2.2g — artefact checksums, featured skills, motion authority drift, trust coherence, discovery manifest
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/check_artefact_checksums --quiet || rc=1
+          ./scripts-run src/scripts/lint_featured_skills --quiet || rc=1
+          ./scripts-run src/scripts/lint_motion_authority_drift --quiet || rc=1
+          ./scripts-run src/scripts/lint_trust_coherence --quiet || rc=1
+          ./scripts-run src/scripts/validate_discovery_manifest --quiet || rc=1
+          exit "$rc"

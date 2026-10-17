@@ -225,7 +225,7 @@ is the finding that put that gate in the `machine` class.
 | 21 | `check_generated_artefact_headers` | `check-generated-artefact-headers` | `./scripts-run src/scripts/check_generated_artefact_headers --quiet` | 0 | 0.21 | `wire` | — |
 | 22 | `check_generator_output_coverage` | `check-generator-output-coverage` | `./scripts-run src/scripts/check_generator_output_coverage --quiet` | 0 | 0.20 | `wire` | — |
 | 23 | `check_gitignore_freshness` | `check-gitignore-freshness` | `./scripts-run src/scripts/check_gitignore_freshness --quiet` | 0 | 0.20 | `wire` | not_applicable_kind ×2 — the target is a kind of artifact this check does not apply to |
-| 24 | `check_hook_bundle_freshness` | `preflight` | `./scripts-run src/scripts/check_hook_bundle_freshness` | 0 | 0.21 | `wire` | ✅  OK  hook bundle: no self-hosted dist/hooks/dispatch.js — the installed package copy is in use, nothing to check |
+| 24 | `check_hook_bundle_freshness` | `preflight` | `./scripts-run src/scripts/check_hook_bundle_freshness` | 0 | 0.21 | `machine` | ✅  OK  hook bundle: no self-hosted dist/hooks/dispatch.js — the installed package copy is in use, nothing to check |
 | 25 | `check_installed_hooks_fresh` | — | — | — | — | `machine` | no task command |
 | 26 | `check_knowledge_cards` | `check-knowledge-cards` | `./scripts-run src/scripts/check_knowledge_cards` | 1 | 0.25 | `red` | 3 violation(s) across 1 card(s). |
 | 27 | `check_knowledge_pages` | `check-knowledge-pages` | `./scripts-run src/scripts/check_knowledge_pages` | 0 | 0.21 | `calendar` | check_knowledge_pages.ts: no warnings. |
@@ -237,10 +237,10 @@ is the finding that put that gate in the `machine` class.
 | 33 | `check_overlay_cascade_subdirs` | `check-overlay-cascade-subdirs` | `./scripts-run src/scripts/check_overlay_cascade_subdirs` | 0 | 0.24 | `wire` | ✅  agents/ overlay cascade in sync · 3 cascade-eligible, 1 user-global-eligible |
 | 34 | `check_public_catalog_links` | `check-public-catalog-links` | `./scripts-run src/scripts/check_public_catalog_links --quiet` | 0 | 0.21 | `wire` | — |
 | 35 | `check_public_links` | `check-public-links` | `./scripts-run src/scripts/check_public_links` | 1 | 0.22 | `red` | summary: 10 error(s), 21 warning(s) |
-| 36 | `check_quality_regression` | `check-quality-regression` | `./scripts-run src/scripts/check_quality_regression` | 0 | 0.26 | `wire` | ⚠️  no quality-run report (internal/bench/reports/quality-run.json) — gate inert. Produce it with a thin-vs-eager judge run (operator/cost gate). |
+| 36 | `check_quality_regression` | `check-quality-regression` | `./scripts-run src/scripts/check_quality_regression` | 0 | 0.26 | `machine` | ⚠️  no quality-run report (internal/bench/reports/quality-run.json) — gate inert. Produce it with a thin-vs-eager judge run (operator/cost gate). |
 | 37 | `check_reach_channels` | `check-reach-channels` | `./scripts-run src/scripts/check_reach_channels --quiet` | 0 | 0.25 | `wire` | — |
 | 38 | `check_reach_staleness` | `check-reach-staleness` | `./scripts-run src/scripts/check_reach_staleness --quiet` | 0 | 0.25 | `calendar` | ⚠️  as-of: unpinned run — using the wall clock (2026-10-13T05:38:12.199Z); this verdict is not reproducible. Pass --as-of <iso> or set AC_AS_OF to pin |
-| 39 | `check_release_trunk_sync` | `check-release-trunk-sync` | `./scripts-run src/scripts/check_release_trunk_sync` | 0 | 0.21 | `wire` | — |
+| 39 | `check_release_trunk_sync` | `check-release-trunk-sync` | `./scripts-run src/scripts/check_release_trunk_sync` | 0 | 0.21 | `machine` | — |
 | 40 | `check_reply_consistency` | `check-reply-consistency` | `./scripts-run src/scripts/check_reply_consistency --quiet --scan-dir .agent-src.uncondensed` | 0 | 0.26 | `wire` | — |
 | 41 | `check_review_prompt_binding` | `ci-fast:review-prompt-binding` | `./scripts-run src/scripts/check_review_prompt_binding` | 0 | 0.28 | `machine` | prompt bindings: 193 package(s) · 191 binding · 0 steered (0 acknowledged) · 2 broken (2 baselined) |
 | 42 | `check_roadmap_trackable` | `check-roadmap-trackable` | `./scripts-run src/scripts/check_roadmap_trackable --quiet` | 0 | 0.22 | `calendar` | — |
@@ -365,6 +365,11 @@ is the finding that put that gate in the `machine` class.
 | 161 | `validate_flow_teams` | `validate-flow-teams` | `./scripts-run src/scripts/validate_flow_teams --quiet` | 0 | 0.27 | `wire` | — |
 | 162 | `validate_pack_yaml` | `validate-pack-yaml` | `./scripts-run src/scripts/validate_pack_yaml` | 0 | 0.26 | `wire` | ✅  29 pack.yaml manifest(s) valid (schema + references resolve). |
 | 163 | `validate_reach_prescriptions` | `check-reach-prescriptions` | `./scripts-run src/scripts/validate_reach_prescriptions --quiet` | 0 | 0.28 | `wire` | — |
+| 164 | `check_artefact_checksums` | `check-artefact-checksums` | `./scripts-run src/scripts/check_artefact_checksums --quiet` | 0 | 0.27 | `wire` | — |
+| 165 | `lint_featured_skills` | `lint-featured-skills` | `./scripts-run src/scripts/lint_featured_skills --quiet` | 0 | 0.19 | `wire` | — |
+| 166 | `lint_motion_authority_drift` | `lint-motion-authority-drift` | `./scripts-run src/scripts/lint_motion_authority_drift --quiet` | 0 | 0.17 | `wire` | — |
+| 167 | `lint_trust_coherence` | `lint-trust-coherence` | `./scripts-run src/scripts/lint_trust_coherence --quiet` | 0 | 0.19 | `wire` | — |
+| 168 | `validate_discovery_manifest` | `validate-discovery-manifest` | `./scripts-run src/scripts/validate_discovery_manifest --quiet` | 0 | 0.44 | `wire` | — |
 
 ## 2026-10-14 — the six remaining unowned reds, fixed and wired (step 3.2)
 
@@ -717,3 +722,81 @@ can see what it is for.
 written above, as 2.2f says; none is declared under `local_only:` to move the
 number. AC-2 ("every `wire`-class gate has a pull-request caller") therefore does
 not hold yet for those three, and step 2.2 stays open with it.
+**Superseded by the 2026-10-17 section below**, which re-reads all three, finds
+every reason still standing, and records the class each reason describes instead
+of leaving the table saying `wire`. They stay in the backlog and in the count;
+what changes is the label, and AC-2 with it.
+
+## 2026-10-17 — step 2.2, the sixth batch (2.2g) and the end of the window
+
+Read on branch `drain/road-to-local-gates-wired-while-they-are-green-20261017`,
+off `origin/main` at `8c90aad26`. `check_ci_local_parity --format json` lists
+**23** undeclared local-only gates, which is the baseline, so the previous batch
+landed exactly what it said.
+
+**Five of the 23 were `wire`-class with no caller, and none of them was in this
+page's table.** Four entered `task ci` after the 2026-10-11 reading was taken,
+so they were never inside a batch window at all:
+`check_artefact_checksums`, `lint_featured_skills`, `lint_trust_coherence`,
+`validate_discovery_manifest`. The fifth, `lint_motion_authority_drift`, **was**
+inside the window and was missed: 2.2c ended at `lint_model_tier_coverage` and
+2.2d began at `lint_namespace`, and in name order `lint_motion_authority_drift`
+sits between them. The selection rule said "the 105 in name order, twenty at a
+time" and the batch boundaries were written from the list rather than recomputed
+from it, so one name fell through the seam. Recorded rather than quietly wired,
+because the lesson is about the seam and not about the gate.
+
+All five were run on the branch base with the argv their task passes, serially,
+with `git status --short` checked after each: **all five exit 0 and leave the
+tree clean**, so none writes a tracked file (the risk register's rank-5 check).
+Serial sum 1.26 s. None calls `checkRatchet`, reads the wall clock, or shells
+out to git — grepped per file for `checkRatchet`, `Date.now`, `new Date`,
+`as-of`, `execSync`, `origin/main` — so none is `calendar`- or `machine`-class.
+They are wired as the single step `Drain 2.2g` of
+`Standing payload delta + budget gate`. Their rows are 164-168 in the table
+above.
+
+**The batch is five, and it is `final`.** Twenty is the council's ceiling, not a
+quota, and the window is empty at five: padding it would mean wiring a gate
+whose class nobody read, which is the move the 2026-08-13 decision refuses in
+its other direction.
+
+### The three residue gates are reclassified, not declared
+
+2.2f left three `wire`-class gates in the backlog with their reasons. Each
+reason describes a class, and the class was never written back into the table —
+so the table said `wire` while the prose beside it said `machine`-shaped, and
+AC-2 read as unmet on a label rather than on a gap. Step 1.2 names the move for
+exactly this case: a gate whose reason does not have the structural shape the
+2026-08-13 decision requires for a `local_only:` declaration "stays in the
+backlog with its class written down". That is done here.
+
+| Gate | Re-checked 2026-10-17 | Class recorded | Still in the count? |
+|---|---|---|---|
+| `check_hook_bundle_freshness` | exit 0, `no self-hosted dist/hooks/dispatch.js — the installed package copy is in use` — the verdict depends on whether a self-hosted bundle was built, which a checkout and CI answer differently | `machine` | yes |
+| `check_release_trunk_sync` | exit 0; reads branch state | `machine` | yes |
+| `check_quality_regression` | exit 0 with `no quality-run report (internal/bench/reports/quality-run.json) — gate inert`; the file is still absent, and it is an operator artefact a checkout and CI answer differently | `machine` | yes |
+
+**Nothing was declared and no number moved by this.** All three are still
+counted by `check_ci_local_parity`, `local_only:` still holds seven entries, and
+the parity baseline falls by five — the five gates that gained a caller — not by
+eight.
+
+### What 2.2 leaves, and what closes with it
+
+After 2.2g the undeclared set is **18**, and **no gate in it is `wire`-class**:
+seven are red and owned by a named file (`audit_user_type_axis`,
+`check_gate_completeness`, `check_rule_invariants`, `check_trigger_evals`,
+`lint_agents_layout`, `lint_eval_freshness`,
+`lint_rule_enforcement_declaration`), one is the `slow` writer
+`audit_command_surface`, and ten are `machine`-class — the three above plus
+`check_branch_freshness`, `check_branch_work_committed`,
+`check_installed_hooks_fresh`, `check_review_prompt_binding`,
+`complexity_report`, `probe_projection_fidelity` and `sync_pr_branch`.
+`probe_projection_fidelity` exits 1 here for the reason the first reading gave:
+it reads generated tool directories a checkout and CI answer differently.
+
+AC-2 is therefore met: every `wire`-class gate has a pull-request caller, and
+the parity baseline is lower by the count that gained one. Step 2.2 closes with
+it. The sentence this section replaces said the opposite, and it is corrected
+rather than deleted — it was true of 2.2f's tree.
