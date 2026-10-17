@@ -20,7 +20,7 @@ relates:
 > **Source:** `agents/tmp.old/inbox-2026-10-t/topic-1/` — one transcript and
 > four supplied plans, re-verified at `main@5fa963cec` on 2026-10-16. This file
 > exists because of an owner ruling taken in the same round:
-> [`ADR-286`](../../docs/decisions/ADR-286-discoverability-is-a-goal-asking-is-not.md)
+> [`ADR-286`](../../../docs/decisions/ADR-286-discoverability-is-a-goal-asking-is-not.md)
 > § D1 declares discoverability a goal, so the work below is no longer refused
 > by `ADR-216`. Readings marked *(executed)* ran against this tree or against
 > the live upstream.
