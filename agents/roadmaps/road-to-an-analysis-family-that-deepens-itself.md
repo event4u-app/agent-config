@@ -337,7 +337,7 @@ today's analysis-only behaviour.
 
 ## Phase 4 — The source door and `analyze:and-optimize`
 
-- [ ] **4.1 Claim pin, not claim freeze.** The five mechanisms named in
+- [x] **4.1 Claim pin, not claim freeze.** The five mechanisms named in
       `reference-loop-upgrade-value` (`docs/CLAIMS.md:497`) are not byte-identical
       to their registration (F15). Record the pin of the command as it stands
       when this phase starts, list the post-registration edits (`f1d5f3f3a`,
@@ -350,15 +350,15 @@ today's analysis-only behaviour.
       verify: `git diff <recorded-pin>..HEAD --
       src/domains/analysis-workbench/analyze/repo/command.md` shows no hunk
       inside § 1b, § 2b, the interop probe, the convergence verdict or the
-      bound-claim gate, and the observation roadmap names the three commits.
-- [ ] **4.2 Local source adapters.** Local path (read in place, digest per
+      bound-claim gate, and the observation roadmap names the three commits. Done 2026-10-17: pin `835660b0d` recorded in the observation roadmap. `corrected-from-reproduction`: the file moved in five commits since registration, not three — `8488bf078` and `386266422` are listed too.
+- [x] **4.2 Local source adapters.** Local path (read in place, digest per
       file), archive (size cap, no `../`, no symlink out), an already-present
       local clone (pinned SHA, never executed) — each yielding one `SourceRef`
       (identity, kind, license, pin, digest, tier). Unsupported kinds fail with a
       diagnostic naming blocker `source-fetch-authorization`.
       verify: `npx vitest run tests/scripts/source_adapters.test.ts` -> 0 — pins each
       local kind, refuses an archive with a `../` entry, and fails a URL argument
-      with the blocker's name.
+      with the blocker's name. Done 2026-10-17 in `src/scripts/source_adapters.ts` (`../` and symlink refusals seen red).
 - [ ] **4.2b Network sources and the research step.** Repositories at depth 1 to
       a pinned SHA, URLs and articles (redirect and size caps, digest plus quoted
       anchor), and the research brief (code not README, other repositories,
