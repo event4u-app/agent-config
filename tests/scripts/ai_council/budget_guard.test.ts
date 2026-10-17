@@ -4,20 +4,29 @@
 // JSONL byte-parity differential against python3 (the ledger line is the
 // observable artefact). `now` is injected everywhere so nothing depends on
 // the wall clock.
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
     LEDGER_FILENAME,
     ROLLING_WINDOW_HOURS,
+    close_reservation,
     read_entries,
     record_spend,
+    reservation_states,
+    reserve_spend,
+    type SpendState,
     today_spend_summary,
     today_spend_usd,
     would_exceed,
 } from '../../../src/scripts/ai_council/budget_guard.js';
+import { CouncilResponse, type ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
+import type { CostEstimate } from '../../../src/scripts/ai_council/pricing.js';
+import { RoundReservations } from '../../../src/scripts/ai_council/round_reservations.js';
+import { CostBudget } from '../../../src/scripts/ai_council/spend_gate.js';
 import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
 const py3 = hasPython3();
@@ -276,5 +285,170 @@ describe.skipIf(!py3)('budget_guard — JSONL byte-parity vs python3', () => {
         const pyBytes = (ledger as Buffer).toString('utf-8');
 
         expect(tsBytes).toBe(pyBytes);
+    });
+});
+
+// ── Phase 3 of road-to-unknowns-that-say-so: reserve, then reconcile ──────
+describe('budget_guard — reservations under a set ceiling', () => {
+    const HOLD = 3_600_000;
+
+    it('concurrent-councils-cannot-both-pass', () => {
+        // Two councils against one $1.00 remainder, $0.60 each: the second
+        // reads the first's open reservation and is refused.
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        const a = reserve_spend(1.0, 0.6, 'anthropic', 'm', { path: p, now: NOW, run_id: 'run-a', hold_ms: HOLD });
+        const b = reserve_spend(1.0, 0.6, 'openai', 'm', { path: p, now: NOW, run_id: 'run-b', hold_ms: HOLD });
+        expect(a.ok).toBe(true);
+        expect(b).toEqual({ ok: false, reason: 'daily' });
+        expect(today_spend_usd({ path: p, now: NOW })).toBeCloseTo(0.6, 9);
+    });
+
+    it('concurrent-councils-cannot-both-pass across processes', async () => {
+        // Four processes released together against a remainder that holds one.
+        const dir = mkTmp();
+        const p = path.join(dir, 'council-spend.jsonl');
+        const go = path.join(dir, 'go');
+        const mod = path.resolve('src/scripts/ai_council/budget_guard.ts');
+        const script = [
+            `import * as fs from 'node:fs';`,
+            `const { reserve_spend } = await import(${JSON.stringify(mod)});`,
+            `while (!fs.existsSync(${JSON.stringify(go)})) await new Promise((r) => setTimeout(r, 5));`,
+            `const r = reserve_spend(1.0, 0.6, 'p', 'm', { path: ${JSON.stringify(p)}, run_id: process.argv[2], hold_ms: 3600000 });`,
+            `process.stdout.write(r.ok ? 'ok' : r.reason);`,
+        ].join('\n');
+        const scriptPath = path.join(dir, 'race.mts');
+        fs.writeFileSync(scriptPath, script, 'utf-8');
+        const tsx = path.resolve('node_modules', '.bin', 'tsx');
+        const runs = [0, 1, 2, 3].map(
+            (i) =>
+                new Promise<string>((resolve) => {
+                    const child = spawn(tsx, [scriptPath, `run-${i}`], { stdio: ['ignore', 'pipe', 'inherit'] });
+                    let out = '';
+                    child.stdout.on('data', (d: Buffer) => (out += d.toString()));
+                    child.on('close', () => resolve(out));
+                }),
+        );
+        await new Promise((r) => setTimeout(r, 2000));
+        fs.writeFileSync(go, '');
+        const outcomes = await Promise.all(runs);
+        expect(outcomes.filter((o) => o === 'ok')).toHaveLength(1);
+        expect(outcomes.filter((o) => o === 'daily')).toHaveLength(3);
+    }, 30_000);
+
+    it('a held lock refuses rather than checking the ceiling unlocked', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        fs.writeFileSync(`${p}.lock`, '');
+        const r = reserve_spend(1.0, 0.1, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD, lock_wait_ms: 100 });
+        expect(r).toEqual({ ok: false, reason: 'lock' });
+        expect(fs.existsSync(p)).toBe(false);
+    });
+
+    it('reservation-states-never-reopen', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        const done = reserve_spend(5.0, 0.5, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD });
+        const gone = reserve_spend(5.0, 0.5, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD });
+        const lost = reserve_spend(5.0, 0.5, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD });
+        if (!done.ok || !gone.ok || !lost.ok) throw new Error('setup: reservations refused');
+        expect(close_reservation(done.id, 'completed', { path: p, now: NOW, usd: 0.25 })).toBe(true);
+        expect(close_reservation(gone.id, 'released', { path: p, now: NOW })).toBe(true);
+        expect(close_reservation(lost.id, 'unreconciled', { path: p, now: NOW })).toBe(true);
+        // completed at the actual amount, released at zero, unreconciled at the estimate.
+        expect(today_spend_usd({ path: p, now: NOW })).toBeCloseTo(0.25 + 0 + 0.5, 9);
+        const before = fs.readFileSync(p, 'utf-8');
+        for (const id of [done.id, gone.id, lost.id]) {
+            for (const state of ['completed', 'released', 'unreconciled'] as const) {
+                expect(close_reservation(id, state, { path: p, now: NOW, usd: 9 })).toBe(false);
+            }
+        }
+        expect(close_reservation('no-such-id', 'completed', { path: p, now: NOW })).toBe(false);
+        expect(fs.readFileSync(p, 'utf-8')).toBe(before);
+        const states = reservation_states({ path: p, now: NOW });
+        expect([states.get(done.id), states.get(gone.id), states.get(lost.id)]).toEqual([
+            'completed',
+            'released',
+            'unreconciled',
+        ]);
+    });
+
+    it('stale-reservation-expires-at-estimate', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        const r = reserve_spend(5.0, 0.7, 'p', 'm', { path: p, now: NOW, run_id: 'killed', hold_ms: 60_000 });
+        if (!r.ok) throw new Error('setup: reservation refused');
+        const later = NOW + 61_000;
+        expect(reservation_states({ path: p, now: NOW }).get(r.id)).toBe('reserved');
+        expect(reservation_states({ path: p, now: later }).get(r.id)).toBe('unreconciled');
+        // The next locked read persists the closure; the killed run can no
+        // longer settle it, and it still counts at its estimate, never zero.
+        reserve_spend(5.0, 0.1, 'p', 'm', { path: p, now: later, run_id: 'next', hold_ms: 60_000 });
+        const rows = read_entries(p).filter((e) => e.reservation_id === r.id);
+        expect(rows.map((e) => [e.state, e.usd])).toEqual([
+            ['reserved', 0.7],
+            ['unreconciled', 0.7],
+        ]);
+        expect(close_reservation(r.id, 'completed', { path: p, now: later, usd: 0 })).toBe(false);
+        expect(today_spend_usd({ path: p, now: later })).toBeCloseTo(0.7 + 0.1, 9);
+    });
+
+    it('no-ceiling-no-reservation-rows', () => {
+        const dir = mkTmp();
+        const viaRound = path.join(dir, 'round.jsonl');
+        const direct = path.join(dir, 'direct.jsonl');
+        const member = { name: 'anthropic', model: 'claude-sonnet-4-5' } as unknown as ExternalAIClient;
+        const est: CostEstimate = {
+            provider: 'anthropic',
+            model: 'claude-sonnet-4-5',
+            input_tokens: 100,
+            output_tokens: 50,
+            input_usd: 0.01,
+            output_usd: 0.02,
+            priced: true,
+        };
+        const response = new CouncilResponse({ provider: 'anthropic', model: 'claude-sonnet-4-5', text: 'ok' });
+        vi.useFakeTimers();
+        vi.setSystemTime(NOW);
+        try {
+            const round = new RoundReservations(new CostBudget(), viaRound);
+            expect(round.reserve(est, member)).toBeNull();
+            expect(fs.existsSync(viaRound)).toBe(false);
+            round.settle(response, member, est);
+            round.finish([]);
+            record_spend(0.03, 'anthropic', 'claude-sonnet-4-5', {
+                path: direct,
+                cache_read_input_tokens: 0,
+                cache_creation_input_tokens: 0,
+                cache_ttl: '5m',
+            });
+        } finally {
+            vi.useRealTimers();
+        }
+        expect(fs.readFileSync(viaRound, 'utf-8')).toBe(fs.readFileSync(direct, 'utf-8'));
+        expect(fs.readFileSync(viaRound, 'utf-8')).not.toContain('"state"');
+    });
+
+    it('a set ceiling reserves through the round and reconciles by outcome', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        const member = { name: 'openai', model: 'gpt-x' } as unknown as ExternalAIClient;
+        const est: CostEstimate = {
+            provider: 'openai',
+            model: 'gpt-x',
+            input_tokens: 10,
+            output_tokens: 10,
+            input_usd: 0.1,
+            output_usd: 0.1,
+            priced: true,
+        };
+        const round = new RoundReservations(new CostBudget({ daily_limit_usd: 1.0 }), p);
+        const fail = (error: string): CouncilResponse =>
+            new CouncilResponse({ provider: 'openai', model: 'gpt-x', text: '', error });
+        // Refused auth with no tokens → released; a timeout → unknown until finish.
+        expect(round.reserve(est, member)).toBeNull();
+        round.settle(fail('Error: HTTP 401 unauthorized'), member, est);
+        expect(round.reserve(est, member)).toBeNull();
+        round.settle(fail('Error: request timed out'), member, est);
+        const states = (): SpendState[] => [...reservation_states({ path: p }).values()];
+        expect(states()).toEqual(['released', 'reserved']);
+        round.finish([]);
+        expect(states()).toEqual(['released', 'unreconciled']);
+        expect(today_spend_usd({ path: p })).toBeCloseTo(0.2, 9);
     });
 });

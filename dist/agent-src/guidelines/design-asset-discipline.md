@@ -32,6 +32,16 @@ brand evidence**. The design-surface instance of the no-invented-facts floor.
   crossorigin>` for the single face that paints above the fold, and for no
   other: every preload competes with the first render for bandwidth. These are
   mechanics, not tells — nothing here is detected.
+- **A swapped face gets a metric-matched fallback, derived from the font.**
+  With `font-display: swap`, declare a second `@font-face` over a `local()`
+  system face and set its overrides from the webfont's own tables (own analysis
+  of the CSS Fonts 5 descriptors): `size-adjust` = the webfont's average advance
+  over the fallback's for the same sample text; `ascent-override` =
+  ascender ÷ (unitsPerEm × size-adjust), `descent-override` =
+  |descender| ÷ (unitsPerEm × size-adjust), `line-gap-override` = lineGap ÷
+  (unitsPerEm × size-adjust). Read the `OS/2` typo values when the font sets
+  `USE_TYPO_METRICS`, the `hhea` values otherwise. The missing fallback is
+  catalogue tell T12 in [`design-antipatterns`](design-antipatterns.md).
 - **Real imagery where inspection matters.** On visual pages/decks, use actual
   product / place / object / state imagery where the image IS the proof (a
   product screenshot, a real dashboard state). Decorative atmosphere is not proof

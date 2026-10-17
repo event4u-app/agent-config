@@ -109,9 +109,22 @@ Every row is recorded in the shape of `src/config/host-injection-effect.json`
 (host, version, transcript pointer, date, state) with an expiry; `observed-true`
 needs a transcript.
 
-- [ ] **0.1 Skill census.** Per host and install path: entries installed,
+- [x] **0.1 Skill census.** Per host and install path: entries installed,
   listing characters with descriptions and names-only, omitted set. One
   deterministic report.
+  Done 2026-10-17: `./scripts-run src/scripts/report_skill_host_census` prints
+  one row per host whose global deploy writes `dist/agent-src/skills` (15) and
+  per install path (`default` = the installer's scoped projection, `full`).
+  At this commit: 229 / 300 installed on the default path; listing 44,004
+  characters with descriptions and 3,813 names-only (57,917 / 5,040 on full).
+  claude-code is modelled to keep 45 descriptions and list 184 names only on
+  the default path — the same 184 step 4.7's install wrote. codex exceeds its
+  documented 8,000-character budget on both paths, and its written root
+  `~/.codex/skills` is not the `$HOME/.agents/skills` its page names, so the row
+  reads `root_read: no`; which entries it omits stays unobserved (0.3). Every
+  other host is `unobserved`. Wrapped commands are not counted.
+  `tests/scripts/report_skill_host_census.test.ts` checks byte-equal runs and
+  that every row sums to the authored count.
   verify: two runs at one commit are byte-equal; totals equal
   `ls src/skills/*/SKILL.md | wc -l`.
 - [ ] **0.2 First-host probes:** (a) a skill written into the watched user
@@ -147,9 +160,17 @@ needs a transcript.
   it; an expired list warns. Re-adding `context` to the skill schema made the
   corpus run fail with `host-key-collision`; restored, it passes.
   verify: a colliding fixture fails; the corpus passes.
-- [ ] **1.3 Snapshot the projection per host.** Projected SKILL.md for the first
+- [x] **1.3 Snapshot the projection per host.** Projected SKILL.md for the first
   host, the second host and one unaffected host, so a host key is never rewritten
   silently.
+  Done 2026-10-17: `tests/install/host_skill_projection_snapshot.test.ts` copies
+  the six skills from `dist/agent-src/skills` through the installer's own
+  `_copy_dir_dereferencing_symlinks` into a scratch home for claude-code (plus
+  the `model_tier` → `model` render), codex (`~/.codex/skills`, the Claude
+  bundle) and augment, and pins the landed key order. It also asserts no
+  host-documented key is added, dropped or rewritten in deploy except the one
+  deliberate `model` write. With `dist/.../deep-reading-analyst/SKILL.md` set
+  back to `context: large` it failed 4 cases; restored, 37 pass.
   verify: snapshot test; the six skills' projected frontmatter carries
   `context_window`.
 
@@ -279,8 +300,17 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   Done 2026-10-16: the stub's arrivals line counts `inbox-2026-10-n` and quotes
   both from the host's skills page as read that day.
   verify: the stub carries the line with this round's codename.
-- [ ] **6.2 Watch the second host's skills page** in the host-docs digest watch
+- [x] **6.2 Watch the second host's skills page** in the host-docs digest watch
   the search roadmap's 0.2 adds for the first host.
+  Done 2026-10-17: `src/scripts/hooks/host_docs_pages.yaml` carries
+  `codex-skills` beside `claude-code-skills`, at the redirect target
+  `learn.chatgpt.com/docs/build-skills.md` (the old Codex URL answers 308),
+  digest taken that day. The page read surfaced one thing this file did not
+  know: Codex's user root is `$HOME/.agents/skills`, while a `--global` install
+  for `codex` deploys the Claude bundle to `~/.codex/skills`
+  (`GLOBAL_DEPLOY_SOURCES` + `USER_SCOPE_PATHS`), so D3's "receives none" holds
+  in effect even though files are written. Changing that root is a frozen
+  install-ABI change and stays with Phase 4.
   verify: the digest list names both pages.
 - [ ] **6.3 Close the declared-dependency hole the default projection opens.**
   Round `inbox-2026-10-t` reproduced it offline against
@@ -295,12 +325,20 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   `_prune_scoped_modules` (`src/install/install.ts:3302`) keep every skill a
   surviving artefact declares. Additive only: delivery grows, never shrinks.
   verify: `./scripts-run src/scripts/count_scoped_projection --json` -> 0
-- [ ] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
+- [x] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
   list. Measured population in the source tree at `5fa963cec`: **2**
   (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small
   enough to fix in the same change. The round's source claimed 26; that
   figure was taken over the INSTALLED tree and did not reproduce here, so the
   installed-tree count is re-measured before it is quoted anywhere.
+  Done 2026-10-17: the row lives in the existing `check_skill_requires` gate
+  (already run in CI), not a new gate. It reads every `skills:` list on a
+  SKILL.md or command.md and refuses a name that is a rule and not a skill. The
+  same two entries were still present — `/threat-model` and `/review:routing` —
+  and both are dropped from their `skills:` lists, which also removes them from
+  the generated `meta` pack manifest. The installed-tree figure was not
+  re-measured and is quoted nowhere. Three tests were red before the row
+  existed; the tree test stayed red until the two entries left.
   verify: a seeded rule-name entry makes the linter exit non-zero, and a
   seeded skill name does not. Both directions.
 

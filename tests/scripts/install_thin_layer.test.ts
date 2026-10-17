@@ -451,7 +451,8 @@ describe('rollback', () => {
             'utf-8',
         );
         const thinAt = installer.indexOf('thinInstalledRuleLayer({');
-        const recordAt = installer.indexOf('global_deploy_inventory.record_deploy(');
+        // The record is written inside `recordGlobalDeploy` (src/install/ownershipLedger.ts).
+        const recordAt = installer.indexOf('recordGlobalDeploy({');
         expect(thinAt).toBeGreaterThan(-1);
         expect(recordAt).toBeGreaterThan(-1);
         expect(thinAt).toBeLessThan(recordAt);

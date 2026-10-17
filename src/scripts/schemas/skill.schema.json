@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/skill.schema.json",
-  "x-schemaVersion": "2.0.0",
+  "x-schemaVersion": "2.1.0",
   "title": "Skill frontmatter",
   "$comment": "Source: agents/reference/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
   "type": "object",
@@ -254,12 +254,13 @@
           "channel-stage",
           "funnel-stage",
           "customer-segment",
+          "brand-voice",
           "fiscal-period",
           "org-stage",
           "regulatory-regime"
         ]
       },
-      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 (channel-stage, funnel-stage, customer-segment) authorized by docs/contracts/adr-gtm-context-spine.md; Wing-4 (fiscal-period, org-stage, regulatory-regime) authorized by docs/contracts/adr-wing4-context-spine.md."
+      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 (channel-stage, funnel-stage, customer-segment) authorized by docs/contracts/adr-gtm-context-spine.md, brand-voice by docs/contracts/adr-gtm-context-spine-brand-voice.md; Wing-4 (fiscal-period, org-stage, regulatory-regime) authorized by docs/contracts/adr-wing4-context-spine.md."
     },
     "recommended_for_user_types": {
       "type": "array",

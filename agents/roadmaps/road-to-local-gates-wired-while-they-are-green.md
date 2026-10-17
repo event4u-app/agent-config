@@ -162,6 +162,15 @@ with it and left alone.
       step a change can close. Order: the 105 by name, twenty a batch, a gate
       skipped only for a reason written in the evidence page's 2026-10-14
       step-2.2 section. 2.2 closes when the last batch does, and AC-2 with it.
+      <br>**Duration per batch, asked by road-to-agent-throughput-recovery
+      step 1.4 (2026-10-17).** Every further batch pull request carries one
+      line: the host job's duration before and after the batch, from CI, with
+      the sample size. Read from CI on 2026-10-17 so the next batch has a
+      "before": the last 25 successful runs of `Standing payload delta + budget
+      gate` (2026-10-16T20:00Z..2026-10-17T02:58Z, PR heads on mixed bases) ran
+      p50 **118 s** (77–137 s), its `Drain *` steps p50 **93 s**, against the
+      70–74 s recorded with 2.2a in `docs/contracts/ci-cost-budget.md`. 2.2b–2.2f
+      landed without that line. The ask does not stop the drain.
 - [x] **2.2a The first twenty.** `audit_mcp_tools` through
       `check_score_contract`, four skipped with their reasons; steps
       `Drain 2.2a-1` and `Drain 2.2a-2` of the host job. Open until the

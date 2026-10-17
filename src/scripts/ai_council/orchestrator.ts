@@ -30,7 +30,6 @@ export type { RunConsensusScoringOptions, RunPeerReviewOptions } from './orchest
 // existing importer of `run_consensus_scoring` is untouched.
 export { run_consensus_scoring } from './consensus_round.js';
 import {
-    record_spend as _record_daily_spend,
     today_spend_usd as _today_spend_usd,
     would_exceed as _would_exceed_daily,
 } from './budget_guard.js';
@@ -104,6 +103,7 @@ import {
     type Spent,
 } from './spend_gate.js';
 import { callMember, renderResponseMeta } from './response_render.js';
+import { RoundReservations } from './round_reservations.js';
 import {
     _excTag,
     _metaGet,
@@ -590,6 +590,7 @@ function _run_round(
     };
 
     const results: CouncilResponse[] = [];
+    const reservations = new RoundReservations(budget);
     const estimates: CostEstimate[] | null =
         table !== null
             ? estimate(question, members, table, {
@@ -662,7 +663,7 @@ function _run_round(
                 : estimates
                   ? (estimates[idx] as CostEstimate)
                   : null;
-        const breach = _breach(est, spent, budget);
+        const breach = _breach(est, spent, budget) ?? reservations.reserve(est, member);
         if (breach !== null) {
             const breach_kind = breach;
             const error_tag = breachErrorTag(breach_kind);
@@ -715,7 +716,7 @@ function _run_round(
                 for (const left of members.slice(idx)) {
                     results.push(_aborted(left, error_tag));
                 }
-                return results;
+                return reservations.finish(results);
             }
         }
 
@@ -802,19 +803,13 @@ function _run_round(
             spent.usd += _total_usd(actual);
             // Ledger every billable response, bounded or not (ADR-279): a cap
             // decides whether the total is compared, never whether it is kept.
-            if (!response.error) {
-                _record_daily_spend(_total_usd(actual), effective.name, effective.model, {
-                    cache_read_input_tokens: response.cache_read_input_tokens,
-                    cache_creation_input_tokens: response.cache_creation_input_tokens,
-                    cache_ttl: '5m',
-                    ...(actual.priced ? {} : { unpriced: true, input_tokens: actual.input_tokens, output_tokens: actual.output_tokens }),
-                });
-            }
+            // With a daily ceiling set the seat's reservation is reconciled instead.
+            reservations.settle(response, effective, actual);
         }
         _stamp_transport_metadata(response, effective, actual_usd);
     }
 
-    return results;
+    return reservations.finish(results);
 }
 
 function _aborted(member: ExternalAIClient, reason: string): CouncilResponse {
@@ -854,6 +849,9 @@ function _stamp_transport_metadata(
     if (cost_usd !== null) {
         meta['cost_usd'] = Number(cost_usd);
     }
+    // A size-fit downgrade (`council_cli._size_fit_gate`) leaves the configured
+    // model and the reason on the member; they ride into the response here.
+    Object.assign(meta, _getattr(member, 'size_fit', null));
     response.metadata = meta;
 }
 

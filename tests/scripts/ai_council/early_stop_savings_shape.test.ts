@@ -5,20 +5,23 @@
  * verifies *"cost and quality are never reported as one number"*. Two facts
  * about the tree shape this file:
  *
- *   1. **Savings are structurally 0 today.** `evaluateStop`
- *      (`src/scripts/ai_council/argument_exhaustion.ts:82`) has ZERO production
- *      callers — the module is imported only by its own test — so no run has
- *      ever stopped early and no call has ever been saved. A tracked number
- *      here would be a number about nothing.
+ *   1. **Early stops now happen, and nothing counts them.** `evaluateStop`
+ *      (`src/scripts/ai_council/argument_exhaustion.ts:82`) has one production
+ *      caller, the analysis gain gate (`src/scripts/analysis_gate.ts`), which
+ *      WITHHOLDS a further round when the verdict says the arguments are
+ *      exhausted. Whether a withheld round counts as a saved call — and where
+ *      it would be reported — is an OPEN OWNER DECISION, recorded under step
+ *      2.6 of the roadmap `road-to-an-analysis-family-that-deepens-itself`
+ *      (council test review of PR #2432, 2026-10-17). Until it is decided, this
+ *      file does not claim savings are zero; it pins only what the gate does.
  *   2. **The reporting surface that WOULD carry it already exists**:
- *      `StopRender` / `renderStop` (`:113`, `:121`). Its shape is therefore
- *      pinnable now, before a production caller lands, which is the cheapest
- *      moment to pin it.
+ *      `StopRender` / `renderStop` (`:113`, `:121`). The gate does not use it,
+ *      so its shape is pinned here on its own.
  *
  * So this file is a BASELINE, not a discharge. It asserts the separation holds
- * in the surface that exists, and it goes RED the day a production caller
- * arrives — which is exactly the recheck this step needs and is stronger than a
- * prose reminder to look again.
+ * in the surface that exists, pins what the gate does on an exhausted verdict,
+ * and goes RED the day a further production caller arrives — the recheck this
+ * step needs, stronger than a prose reminder to look again.
  *
  * Every assertion is over source text or a pure function. No provider call, no
  * network, no corpus.
@@ -29,7 +32,8 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { renderStop } from '../../../src/scripts/ai_council/argument_exhaustion.js';
-import type { StopRender } from '../../../src/scripts/ai_council/argument_exhaustion.js';
+import type { StopInputs, StopRender } from '../../../src/scripts/ai_council/argument_exhaustion.js';
+import { evaluateGate, type GateInput, type OpenItem } from '../../../src/scripts/analysis_gate.js';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const MODULE_REL = 'src/scripts/ai_council/argument_exhaustion.ts';
@@ -87,12 +91,35 @@ const SAMPLE: StopRender = {
     exhaustedMembers: ['anthropic/a', 'openai/b'],
 };
 
-describe('the zero-savings premise, and the tripwire on it', () => {
-    it('evaluateStop has no production caller, so early-stop savings are structurally 0', () => {
-        // RED the day Phase 6 wires the predicate into a council round — which
-        // is precisely when this step's baseline stops being sufficient and the
-        // real separation must be verified against a live report.
-        expect(importersUnderSrc()).toEqual([]);
+describe('the production caller, and the tripwire on it', () => {
+    it('evaluateStop has exactly the known production importers', () => {
+        // A dependency check, not a savings claim. RED the day another caller wires
+        // the predicate in — re-read this file's premise then, because every new
+        // caller is a new place an early stop can happen without being counted.
+        expect(importersUnderSrc()).toEqual(['src/scripts/analysis_gate.ts']);
+    });
+
+    it('the analysis gate withholds a round on an exhausted verdict and offers one otherwise', () => {
+        const stillArguing: StopInputs = { roundsCompleted: 1, dissentRepairAttempted: true, selfNearDuplicate: [false, false], unresolvedAdversarialTriggers: 0 };
+        const exhausted: StopInputs = { roundsCompleted: 2, dissentRepairAttempted: true, selfNearDuplicate: [true, true], unresolvedAdversarialTriggers: 0 };
+        const item: OpenItem = { id: 'c1', kind: 'conflict', plan: { executable: true, estimated_tokens: 100, step: 'run the fixture' } };
+        const base: GateInput = { roundsCompleted: 1, items: [item], remainingTokens: 10_000, stop: stillArguing };
+
+        const offered = evaluateGate(base);
+        expect(offered).toMatchObject({ offer: true, reason: 'offer', settleable: ['c1'] });
+
+        // This is the early stop: the same open item, a round withheld because of
+        // `evaluateStop`. Whether it is a saved call is the open owner decision.
+        const withheld = evaluateGate({ ...base, stop: exhausted });
+        expect(withheld).toMatchObject({ offer: false, reason: 'exhausted', settleable: [] });
+        expect(withheld.stop?.stop).toBe(true);
+
+        // What the gate reports today: no saved-call or saved-cost figure, in
+        // either case — absence of attribution, pinned so a change to it is seen.
+        const SAVINGS_FIELDS = ['savedCalls', 'savedCostUsd', 'saved_calls', 'saved_cost_usd'];
+        for (const r of [offered, withheld]) {
+            for (const f of SAVINGS_FIELDS) expect(Object.keys(r)).not.toContain(f);
+        }
     });
 
     it('the module is pure — it opens no file and issues no call', () => {

@@ -108,9 +108,93 @@ interface StatusJson {
     voice?: { read: boolean };
 }
 
-function statusJson(root: string): StatusJson {
-    return JSON.parse(runBrandStatus({ cwd: root, json: true }).out.join('\n')) as StatusJson;
+function statusJson(root: string, now?: Date): StatusJson {
+    const opts = now === undefined ? { cwd: root, json: true } : { cwd: root, json: true, now };
+    return JSON.parse(runBrandStatus(opts).out.join('\n')) as StatusJson;
 }
+
+const SECRET_TERM = 'zorbulate';
+
+function voiceSlot(reviewed = '2026-10-01', expires = '2027-03-01'): string {
+    return [
+        '---',
+        'version: 3',
+        'attributes:',
+        '  - { is: warm, is_not: gushing, proof: "thanks once" }',
+        '  - { is: precise, is_not: pedantic, proof: "units" }',
+        '  - { is: direct, is_not: curt, proof: "answer first" }',
+        'avoid:',
+        `  - { term: ${SECRET_TERM}, match: word }`,
+        '  - { term: synergy, match: substring }',
+        'claims:',
+        `  - { text: "fastest importer", evidence_ref: docs/bench.md, expires: ${expires} }`,
+        '  - { text: "zero downtime", evidence_ref: docs/uptime.md, expires: 2026-01-01 }',
+        '  - { text: "open source", evidence_ref: LICENSE }',
+        'provenance:',
+        '  sources: [{ ref: docs/voice.md, tier: authoritative }]',
+        '  confidence: high',
+        `  last_reviewed_at: ${reviewed}`,
+        '---',
+        '# Voice',
+        '',
+    ].join('\n');
+}
+
+// road-to-a-brand-the-tree-can-check 4.5: the voice side is reported with
+// counts and dates only — never the slot's content.
+describe('brand:status voice-slot', () => {
+    const SLOT = 'agents/context-spine/brand-voice.md';
+    const NOW = new Date('2026-10-17T12:00:00Z');
+
+    it('voice-slot: counts, confidence, review age and expired claims', () => {
+        const root = scratch();
+        writeAt(root, SLOT, voiceSlot());
+        const s = statusJson(root, NOW) as StatusJson & { voice: Record<string, unknown> };
+        expect(s.voice).toEqual({
+            read: true,
+            path: SLOT,
+            schema_valid: true,
+            avoid_count: 2,
+            claims_count: 3,
+            expired_claims: 1,
+            confidence: 'high',
+            last_reviewed_at: '2026-10-01',
+            days_since_review: 16,
+            stale: false,
+        });
+        expect(s.sources).toEqual([expect.objectContaining({ path: SLOT, kind: 'voice', status: 'valid' })]);
+    });
+
+    it('voice-slot: stale after 90 days without review', () => {
+        const root = scratch();
+        writeAt(root, SLOT, voiceSlot('2026-07-18'));
+        const s = statusJson(root, NOW) as StatusJson & { voice: Record<string, unknown> };
+        expect(s.voice['days_since_review']).toBe(91);
+        expect(s.voice['stale']).toBe(true);
+        expect(runBrandStatus({ cwd: root, json: false, now: NOW }).out.join('\n')).toMatch(/stale/);
+    });
+
+    it('voice-slot: neither output carries slot content', () => {
+        const root = scratch();
+        writeAt(root, SLOT, voiceSlot());
+        const all = [
+            ...runBrandStatus({ cwd: root, json: true, now: NOW }).out,
+            ...runBrandStatus({ cwd: root, json: false, now: NOW }).out,
+        ].join('\n');
+        for (const content of [SECRET_TERM, 'fastest importer', 'gushing', 'docs/bench.md']) {
+            expect(all).not.toContain(content);
+        }
+    });
+
+    it('voice-slot: an invalid slot names its failing fields, not their values', () => {
+        const root = scratch();
+        writeAt(root, SLOT, voiceSlot().replace('confidence: high', `confidence: ${SECRET_TERM}`));
+        const s = statusJson(root, NOW) as StatusJson & { voice: Record<string, unknown> };
+        expect(s.voice['schema_valid']).toBe(false);
+        expect(s.sources?.[0]?.error).toContain('provenance.confidence');
+        expect(JSON.stringify(s)).not.toContain(SECRET_TERM);
+    });
+});
 
 // road-to-a-brand-the-tree-can-check 0.2 / 2.1-2.3: a file that merely exists
 // is not a brand, and a second file at another canonical path is reported,
@@ -175,13 +259,24 @@ describe('brand:status state-fixtures', () => {
         expect(s.voice?.read).toBe(false);
     });
 
-    it('state-fixtures: voice without tokens reads as absent until the slot ships', () => {
+    it('state-fixtures: an invalid voice slot is listed as invalid and never makes the state', () => {
         const root = scratch();
         writeAt(root, 'agents/context-spine/brand-voice.md', '---\nversion: 1\n---\n');
         const s = statusJson(root);
         expect(s.state).toBe('bare');
-        expect(s.sources).toEqual([]);
-        expect(s.voice?.read).toBe(false);
+        expect(s.sources).toEqual([
+            expect.objectContaining({ path: 'agents/context-spine/brand-voice.md', kind: 'voice', status: 'invalid' }),
+        ]);
+        expect(s.qualifiers).toEqual(['invalid']);
+        expect(s.voice?.read).toBe(true);
+    });
+
+    it('state-fixtures: voice without tokens is mixed, voice with tokens is branded', () => {
+        const root = scratch();
+        writeAt(root, 'agents/context-spine/brand-voice.md', voiceSlot());
+        expect(statusJson(root).state).toBe('mixed');
+        writeAt(root, first);
+        expect(statusJson(root).state).toBe('branded');
     });
 
     it('state-fixtures: a DESIGN.md is listed with its hash and never decides the state', () => {

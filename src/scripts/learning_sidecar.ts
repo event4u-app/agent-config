@@ -43,7 +43,7 @@ const PROG = 'learning_sidecar.ts';
 
 /** Half-life of a signal's weight, in days. */
 export const HALF_LIFE_DAYS = 30;
-/** Distinct origins required before a lesson is promoted. */
+/** Distinct origins required before a lesson is promoted — the local row of the evidence threshold in docs/contracts/retro-v1.md. */
 export const MIN_CORROBORATIONS = 2;
 // cache-invalidation: regenerated wholesale from the intake JSONL on every run
 // (no incremental/partial state); the in-file `schema_version` field is the

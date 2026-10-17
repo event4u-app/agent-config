@@ -96,17 +96,16 @@ Nothing is sent without the person's word in that turn.
       rule keeps the seed's `path_prefix` trigger: a seed reappearing then
       arrives already under the floor instead of beneath it.
       verify: `grep -c 'low-impact-decisions-seed' src/domains/meta/memory/learn-low-impact/command.md` -> /^0$/
-- [ ] **1.4 The four threshold sites cite one table.** Each points at the
+- [x] **1.4 The four threshold sites cite one table.** Each points at the
       canonical evidence-threshold table in `docs/contracts/retro-v1.md`
       instead of restating its own.
-      **Open for a named reason, re-executed 2026-10-14:**
-      `docs/contracts/retro-v1.md` still does not exist, and
-      `road-to-a-retro-the-merge-runs` now measures **35 open, 0 closed** —
-      the count rose since 2026-10-13 rather than falling, so the contract is
-      further away, not nearer. Writing the citation would create exactly the
-      dangling reference AC-1 forbids — this step would break the acceptance
-      criterion the rest of Phase 1 was closed to satisfy. It opens when that
-      contract lands.
+      **Done 2026-10-17:** the contract landed (retro step 0.4, census at
+      current lines). The skill's principle and aggregate block, the command's
+      checkbox, the pipeline gate and `MIN_CORROBORATIONS` now cite it; the
+      skill and command no longer offer "clearly generalizable" as a route,
+      which the table rejects. Two further restatements of that phrase sit in
+      `learning-to-rule-or-skill` and `skill-improvement-pipeline`, where it
+      filters *capture* rather than establishment — left as they are.
       verify: `grep -c 'retro-v1.md' src/skills/upstream-contribute/SKILL.md` -> /[1-9]/
 
 ## Phase 2 — A floor over the whole payload
@@ -116,6 +115,8 @@ Nothing is sent without the person's word in that turn.
 > `road-to-one-detector-and-the-senders-we-own` Phase 2, and that roadmap
 > measures **24 open, 0 closed** — its detector table does not exist. K5 of this
 > file forbids building a second scanner, so 2.2 has nothing to scan against.
+> *(Superseded 2026-10-17: the table landed as `_lib/egress_rules.ts`, and 2.2
+> scans with it.)*
 >
 > The sharper finding is about 2.1 and 2.3, and it was not visible from the
 > step text: **the release makes no commit at all.** `executeRelease`
@@ -134,11 +135,25 @@ Nothing is sent without the person's word in that turn.
       reachable from it that is not on the base, plus branch name, commit
       identity, commit message, diff, title and body.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t release-scans-whole-object-graph --reporter=verbose` -> /✓.*release-scans-whole-object-graph/
-- [ ] **2.2 Against the detector table and the consumer's own identifiers.** The
+- [x] **2.2 Against the detector table and the consumer's own identifiers.** The
       scan uses the detector table of `road-to-one-detector-and-the-senders-we-own`
       and adds the consumer's identifiers from `_detect_project_identifiers`
       (`src/scripts/check_portability.ts:109`, `:230`) as a deny list. A finding
       refuses; the floor never rewrites.
+      **Done 2026-10-17, over the author's branch until 2.1 builds its own:**
+      `_lib/self_repair_payload.ts` scans branch name, commit identities and
+      messages, every commit's patch (`log -p --cc` over `origin/main..branch`,
+      so content added and later removed is read, forced to text with no
+      textconv or external driver), title and body; a finding or an unreadable
+      range skips every push rung and degrades to the issue — unless it sits in
+      the title or body, which the issue would carry too, so nothing is sent.
+      Rule and part are named, never the value. Not read: commit signatures,
+      and commits a stale or forked `origin/main` already holds; the dry run
+      does not run the scan. The deny list drops the target
+      repository's own tokens, so a release from this checkout is not refused
+      on its own name. The detector table's identifier class is its step 2.3
+      and still open, so a company e-mail whose domain is not a consumer
+      identifier passes — 2.3 here closes that.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t consumer-identifier-in-diff-refuses --reporter=verbose` -> /✓.*consumer-identifier-in-diff-refuses/
 - [ ] **2.3 Identity.** The commit uses a noreply identity; a configured identity
       with a company domain is never used.
@@ -184,7 +199,8 @@ Nothing is sent without the person's word in that turn.
 
 > **Phase state, executed 2026-10-14.** 4.1 and 4.3 both describe what the dry
 > run SHOWS, and the bytes they would show — the synthesised commit, its
-> identity, its branch — are 2.1's output. Until 2.1 exists the dry run has no
+> identity, its branch — are 2.1's output. *(Superseded for 4.3 on 2026-10-17:
+> the account needs none of those bytes.)* Until 2.1 exists the dry run has no
 > payload to render, so an approval bound to its digest would bind to nothing.
 >
 > **4.2's matrix is the one open item here with no code prerequisite, and it is
@@ -214,8 +230,12 @@ Nothing is sent without the person's word in that turn.
       if the fork PR adds no project linkage beyond the issue, D5 reopens toward
       an ephemeral-checkout pull request from consumers.
       verify: `ls agents/evidence/analysis/` -> /upstream-fork-pr-linkage/
-- [ ] **4.3 The remaining identity is said out loud.** The dry run states which
+- [x] **4.3 The remaining identity is said out loud.** The dry run states which
       account will appear on the pull request (blocker below).
+      **Done 2026-10-17:** unlike 4.1 it needs no 2.1 bytes — `renderDryRun`
+      names the login `gh` is signed in as for a pull request and an issue
+      alike, says so when it cannot be resolved, and names none for a
+      local-only plan.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t dry-run-names-the-account --reporter=verbose` -> /✓.*dry-run-names-the-account/
 
 ## Phase 5 — The retro may offer, never send

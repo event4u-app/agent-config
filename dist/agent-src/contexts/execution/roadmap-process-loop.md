@@ -801,9 +801,11 @@ A RESUMED RUN RE-VERIFIES THE CHECKPOINT BEFORE ACTING ON IT.
 RESUME BY EVIDENCE, NEVER BY BOOKKEEPING.
 ```
 
-The first act of a resumed run is to look its checkpoint up **by roadmap slug**
-— `latestCheckpointFor(repoRoot, slug)` — and then `verifyCheckpoint` it against
-the current tree. The slug, not the run id: a relaunched session has a NEW
+The first act of a resumed run is `agent-config run:supervise --verify <slug>`:
+it looks the checkpoint up **by roadmap slug**, re-verifies it against the
+current tree and prints the per-field report, naming any newer checkpoint file
+that does not read. Exit 1 means a field moved — a signal, not a halt (below).
+The slug, not the run id: a relaunched session has a NEW
 session id, so the run-id-keyed `readCheckpoint` cannot find the checkpoint the
 DYING session wrote, and this instruction named an unreachable path until the
 R2 review's finding 7. The slug is the one key a resumed run holds by
@@ -823,8 +825,8 @@ reported **repository** drift, so a run resumed after a long gap trusted a conte
 reading it never re-took — the exact staleness § 4's refresh exists to end,
 reappearing across the one boundary a mid-run cadence cannot see.
 
-A resumed run therefore re-probes and passes the fresh fingerprint into
-`verifyCheckpoint`. A disagreement forces a full re-probe and the § 5e reactions
+A resumed run therefore re-probes and passes the fresh fingerprint to the
+verification — `run:supervise --verify <slug> --fingerprint <value>`. A disagreement forces a full re-probe and the § 5e reactions
 **before the first step**. A `null` or absent value on either side reads as *not
 known* and never as a disagreement — the same rule `head` already follows, and for
 the same reason: a false alarm on the field whose job is to say whether anything

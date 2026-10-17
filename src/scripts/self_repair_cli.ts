@@ -18,12 +18,16 @@
  * authorized, failures degrade down the ladder WITHIN the same call (push/PR
  * failure or 30 s timeout → issue; issue failure → the record stays open with
  * the errors attached) — degrading never widens what leaves the machine, only
- * the vehicle. `--dry-run` prints the resolved route and the rendered body and
- * touches no network — that is the path the tests drive.
+ * the vehicle. `--dry-run` prints the resolved route, the GitHub account the
+ * send would carry and the rendered body, and creates nothing: it reads the forge
+ * (auth status, push rights, the signed-in login) and never writes to it.
  *
  * Fail-closed on privacy: the record's own text goes through the audited
  * privacy floor before anything leaves the machine, and a refusal downgrades
  * the record to local-only rather than scrubbing it into publishable shape.
+ * The pull-request route additionally scans the branch name, commit identities
+ * and messages, each commit's patch since `origin/main`, title and body; a
+ * finding skips every push rung. Commit signatures are not read.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -53,6 +57,15 @@ import {
     readOverflow,
     readRecord,
 } from './_lib/self_repair_store.js';
+import {
+    consumerDenyList,
+    describeFindings,
+    type ReleasePayload,
+    scanPayload,
+} from './_lib/self_repair_payload.js';
+import { _detect_project_identifiers } from './check_portability.js';
+
+export { consumerDenyList };
 
 export const UPSTREAM_REPO = 'event4u-app/agent-config';
 
@@ -261,6 +274,58 @@ export interface ReleaseOutcome {
 export interface ReleaseDeps {
     runner: Runner;
     now: () => string;
+    /** The consumer project's identifiers; none means only the detector table applies. */
+    denyIdentifiers?: readonly string[];
+}
+
+/** What the pushed branch is compared against: the objects it adds to it are what leaves. */
+export const PAYLOAD_BASE_REF = 'origin/main';
+
+/**
+ * Every byte the pull-request route would push, read before anything is pushed.
+ * Null when any part cannot be read — the caller refuses rather than send a
+ * payload nobody looked at.
+ */
+function readPayload(runner: Runner, checkout: string, branch: string, plan: ReleasePlan): ReleasePayload | null {
+    const range = `${PAYLOAD_BASE_REF}..${branch}`;
+    const commits = runner(
+        'git',
+        ['log', '--no-color', '--format=%an <%ae>%n%cn <%ce>%n%B%x00', range],
+        checkout,
+    );
+    // `--cc` shows a merge's own resolution hunks and nothing it merely
+    // carried from a parent, so content already on the base is not re-read.
+    // A push carries binary and attribute-masked blobs whole, so the patch is
+    // forced to text and no textconv or external driver may summarise it.
+    const patches = runner(
+        'git',
+        ['log', '-p', '--cc', '--text', '--no-textconv', '--no-ext-diff', '--no-color', '--format=', range],
+        checkout,
+    );
+    if (!commits.ok || !patches.ok) {
+        return null;
+    }
+    return { branch, commits: commits.out, patches: patches.out, title: plan.title, body: plan.body };
+}
+
+/** The account a send would carry: the login `gh` is authenticated as, or null. */
+export function resolveAccount(runner: Runner): string | null {
+    const who = runner('gh', ['api', 'user', '--jq', '.login']);
+    const login = who.out.trim();
+    return who.ok && login.length > 0 ? login : null;
+}
+
+/** The dry run: the account the send will carry, then the rendered text. */
+export function renderDryRun(plan: ReleasePlan, account: string | null): string {
+    let out = '';
+    if (plan.route === 'pull-request' || plan.route === 'issue') {
+        out +=
+            account !== null
+                ? `  ACCOUNT  the ${plan.route} will be opened as GitHub account '${account}'\n`
+                : `  ACCOUNT  the ${plan.route} will carry the GitHub account gh is signed in as; ` +
+                  'that account could not be resolved here\n';
+    }
+    return `${out}\n--- ${plan.title} ---\n${plan.body}\n`;
 }
 
 const FORK_REMOTE = 'self-repair-fork';
@@ -381,10 +446,37 @@ export function executeRelease(
             });
             return { published: null, attempts };
         }
-        const ladder: PushVia[] =
-            plan.pushVia === 'upstream' && probe.canFork
-                ? ['upstream', 'fork']
-                : [plan.pushVia ?? 'upstream'];
+        const deny = deps.denyIdentifiers ?? [];
+        // Branch, title and body are scanned before and independently of the
+        // history reads, so an unreadable range cannot skip them.
+        const headFindings = scanPayload({ branch, commits: '', patches: '', title: plan.title, body: plan.body }, deny);
+        // A finding in the title or body would leave through the issue too —
+        // its title is the same and its body is rendered from the same record.
+        if (headFindings.some((f) => f.part === 'title' || f.part === 'body')) {
+            attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(headFindings) });
+            return { published: null, attempts };
+        }
+        const payload = readPayload(deps.runner, checkout, branch, plan);
+        const findings =
+            payload === null ? null : [...headFindings, ...scanPayload({ ...payload, branch: '', title: '', body: '' }, deny)];
+        const refused = findings === null || findings.length > 0;
+        if (refused) {
+            attempts.push({
+                step: 'payload-scan',
+                ok: false,
+                detail:
+                    findings === null
+                        ? `payload floor refused the pull request: the commits on ${PAYLOAD_BASE_REF}..<branch> could not be read`
+                        : describeFindings(findings),
+            });
+        }
+        // Any other refusal skips every push rung and degrades to the issue,
+        // which carries none of the refused branch, commit or patch bytes.
+        const ladder: PushVia[] = refused
+            ? []
+            : plan.pushVia === 'upstream' && probe.canFork
+              ? ['upstream', 'fork']
+              : [plan.pushVia ?? 'upstream'];
         for (const via of ladder) {
             const failed = tryPullRequest(plan, probe, repo, branch, via, deps);
             if (failed === null) {
@@ -400,6 +492,17 @@ export function executeRelease(
         // `Route: pull-request` (R2 finding #4).
         const issueBody =
             plan.route === 'issue' ? plan.body : renderReport(record, 'issue');
+        if (plan.route === 'pull-request') {
+            // The degraded body is re-rendered, so it is scanned on its own.
+            const bodyFindings = scanPayload(
+                { branch: '', commits: '', patches: '', title: '', body: issueBody },
+                deps.denyIdentifiers ?? [],
+            );
+            if (bodyFindings.length > 0) {
+                attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(bodyFindings) });
+                return { published: null, attempts };
+            }
+        }
         const issue = deps.runner('gh', [
             'issue',
             'create',
@@ -490,7 +593,8 @@ function releaseCmd(root: string, argv: string[]): number {
         process.stdout.write(`  DENY  ${plan.patch_denied}\n`);
     }
     if (dryRun) {
-        process.stdout.write(`\n--- ${plan.title} ---\n${plan.body}\n`);
+        const account = plan.route === 'local-only' ? null : resolveAccount(run);
+        process.stdout.write(renderDryRun(plan, account));
         return EXIT_OK;
     }
     if (plan.route === 'local-only') {
@@ -500,7 +604,11 @@ function releaseCmd(root: string, argv: string[]): number {
         return EXIT_OK;
     }
 
-    const deps: ReleaseDeps = { runner: run, now: () => new Date().toISOString() };
+    const deps: ReleaseDeps = {
+        runner: run,
+        now: () => new Date().toISOString(),
+        denyIdentifiers: consumerDenyList(_detect_project_identifiers(root), repo),
+    };
     const outcome = executeRelease(record, plan, probe, repo, deps);
 
     for (const a of outcome.attempts) {

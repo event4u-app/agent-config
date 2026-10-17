@@ -86,9 +86,9 @@ export const PLATFORM_TO_HOST: Readonly<Record<string, string>> = Object.freeze(
 export function resumePrompt(roadmapSlug: string): string {
     return (
         `Resume the claimed roadmap \`${roadmapSlug}\`. ` +
-        `First act: look the checkpoint up by slug (latestCheckpointFor) and verify it ` +
-        `against the worktree before acting on any of it — resume by evidence, never by ` +
-        `bookkeeping. Then run /roadmap:process-full ${roadmapSlug}.`
+        `First act: run \`agent-config run:supervise --verify ${roadmapSlug}\`, which ` +
+        `re-verifies the newest checkpoint against the worktree, before acting on any of ` +
+        `it — resume by evidence, never by bookkeeping. Then run /roadmap:process-full ${roadmapSlug}.`
     );
 }
 
