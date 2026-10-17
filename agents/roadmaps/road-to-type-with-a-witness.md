@@ -206,7 +206,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       existing `svg-witness-tests` job (`.github/workflows/tests.yml:543`) on
       ubuntu and macOS.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*load-waited-for-delayed-face/
-      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and stand down on a runner without Chromium. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
+      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
 
 ## Phase 2 — Two delivery tells under the delivery owner
 
