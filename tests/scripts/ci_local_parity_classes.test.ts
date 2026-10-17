@@ -202,15 +202,15 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
     // it is `final` at five rather than held to twenty: the window is empty
     // again afterwards, and padding it would mean wiring a gate whose class
     // nobody read.
+    //
+    // It is ONE gate because CI reduced it from five. The other four read
+    // `dist/discovery/discovery-manifest.json`, a build output this job does
+    // not produce, and exited 1 on their first run here while exiting 0 on a
+    // developer's machine — they are `machine`-class and are in the backlog
+    // list below.
     id: "2.2g",
     marker: "The local-only drain — step 2.2, sixth batch (2.2g)",
-    gates: [
-      "check_artefact_checksums",
-      "lint_featured_skills",
-      "lint_motion_authority_drift",
-      "lint_trust_coherence",
-      "validate_discovery_manifest",
-    ],
+    gates: ["lint_motion_authority_drift"],
     check: [],
     final: true,
   },
@@ -225,7 +225,18 @@ const STEP_2_2_LATER_BATCHES: { id: string; marker: string; gates: string[]; che
  * the backlog with its class written down" — and it moves no number: all three
  * are still counted by `check_ci_local_parity`, and `local_only:` is untouched.
  */
-const BACKLOG_WITH_A_RECORDED_CLASS = ["check_hook_bundle_freshness", "check_quality_regression", "check_release_trunk_sync"];
+const BACKLOG_WITH_A_RECORDED_CLASS = [
+    "check_hook_bundle_freshness",
+    "check_quality_regression",
+    "check_release_trunk_sync",
+    // Added 2026-10-17 from CI's reading, not from a local one: all four read
+    // `dist/discovery/discovery-manifest.json`, which the required job does not
+    // build and the tree does not commit.
+    "check_artefact_checksums",
+    "lint_featured_skills",
+    "lint_trust_coherence",
+    "validate_discovery_manifest",
+];
 
 const UNOWNED_WIRED_IN_PHASE_3_2 = ["lint_readme_jargon", "lint_readme_serial_comma", "check_augment_description_cap", "check_token_quality_golden", "check_public_links", "check_council_layout"];
 

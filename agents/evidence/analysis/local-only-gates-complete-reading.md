@@ -365,11 +365,11 @@ is the finding that put that gate in the `machine` class.
 | 161 | `validate_flow_teams` | `validate-flow-teams` | `./scripts-run src/scripts/validate_flow_teams --quiet` | 0 | 0.27 | `wire` | — |
 | 162 | `validate_pack_yaml` | `validate-pack-yaml` | `./scripts-run src/scripts/validate_pack_yaml` | 0 | 0.26 | `wire` | ✅  29 pack.yaml manifest(s) valid (schema + references resolve). |
 | 163 | `validate_reach_prescriptions` | `check-reach-prescriptions` | `./scripts-run src/scripts/validate_reach_prescriptions --quiet` | 0 | 0.28 | `wire` | — |
-| 164 | `check_artefact_checksums` | `check-artefact-checksums` | `./scripts-run src/scripts/check_artefact_checksums --quiet` | 0 | 0.27 | `wire` | — |
-| 165 | `lint_featured_skills` | `lint-featured-skills` | `./scripts-run src/scripts/lint_featured_skills --quiet` | 0 | 0.19 | `wire` | — |
+| 164 | `check_artefact_checksums` | `check-artefact-checksums` | `./scripts-run src/scripts/check_artefact_checksums --quiet` | 0 | 0.27 | `machine` | — |
+| 165 | `lint_featured_skills` | `lint-featured-skills` | `./scripts-run src/scripts/lint_featured_skills --quiet` | 0 | 0.19 | `machine` | — |
 | 166 | `lint_motion_authority_drift` | `lint-motion-authority-drift` | `./scripts-run src/scripts/lint_motion_authority_drift --quiet` | 0 | 0.17 | `wire` | — |
-| 167 | `lint_trust_coherence` | `lint-trust-coherence` | `./scripts-run src/scripts/lint_trust_coherence --quiet` | 0 | 0.19 | `wire` | — |
-| 168 | `validate_discovery_manifest` | `validate-discovery-manifest` | `./scripts-run src/scripts/validate_discovery_manifest --quiet` | 0 | 0.44 | `wire` | — |
+| 167 | `lint_trust_coherence` | `lint-trust-coherence` | `./scripts-run src/scripts/lint_trust_coherence --quiet` | 0 | 0.19 | `machine` | — |
+| 168 | `validate_discovery_manifest` | `validate-discovery-manifest` | `./scripts-run src/scripts/validate_discovery_manifest --quiet` | 0 | 0.44 | `machine` | — |
 
 ## 2026-10-14 — the six remaining unowned reds, fixed and wired (step 3.2)
 
@@ -734,8 +734,8 @@ off `origin/main` at `8c90aad26`. `check_ci_local_parity --format json` lists
 **23** undeclared local-only gates, which is the baseline, so the previous batch
 landed exactly what it said.
 
-**Five of the 23 were `wire`-class with no caller, and none of them was in this
-page's table.** Four entered `task ci` after the 2026-10-11 reading was taken,
+**Five of the 23 LOOKED `wire`-class with no caller, and none of them was in
+this page's table. CI reduced that to one, and the reduction is the finding.** Four entered `task ci` after the 2026-10-11 reading was taken,
 so they were never inside a batch window at all:
 `check_artefact_checksums`, `lint_featured_skills`, `lint_trust_coherence`,
 `validate_discovery_manifest`. The fifth, `lint_motion_authority_drift`, **was**
@@ -748,18 +748,42 @@ because the lesson is about the seam and not about the gate.
 
 All five were run on the branch base with the argv their task passes, serially,
 with `git status --short` checked after each: **all five exit 0 and leave the
-tree clean**, so none writes a tracked file (the risk register's rank-5 check).
-Serial sum 1.26 s. None calls `checkRatchet`, reads the wall clock, or shells
-out to git — grepped per file for `checkRatchet`, `Date.now`, `new Date`,
-`as-of`, `execSync`, `origin/main` — so none is `calendar`- or `machine`-class.
-They are wired as the single step `Drain 2.2g` of
-`Standing payload delta + budget gate`. Their rows are 164-168 in the table
-above.
+tree clean** on a developer's machine, so none writes a tracked file (the risk
+register's rank-5 check). Serial sum 1.26 s. None calls `checkRatchet`, reads
+the wall clock, or shells out to git — grepped per file for `checkRatchet`,
+`Date.now`, `new Date`, `as-of`, `execSync`, `origin/main`.
 
-**The batch is five, and it is `final`.** Twenty is the council's ceiling, not a
-quota, and the window is empty at five: padding it would mean wiring a gate
-whose class nobody read, which is the move the 2026-08-13 decision refuses in
-its other direction.
+**Four of them are `machine`-class, and only CI could say so.** Wired as a
+five-gate step, `Drain 2.2g` failed on its first run
+(run 39012371929, job 117337430453) with
+
+```
+error: manifest not found at dist/discovery/discovery-manifest.json
+error: committed manifest not found at dist/discovery/discovery-manifest.json
+  — run `task build-discovery` and commit the output.
+```
+
+`check_artefact_checksums`, `lint_featured_skills`, `lint_trust_coherence` and
+`validate_discovery_manifest` all read
+`dist/discovery/discovery-manifest.json`. It is a **build output** that the
+tree does not commit and that `Standing payload delta + budget gate` does not
+produce — `tests.yml`'s Node Tests job builds it explicitly before its suites,
+and this job has no equivalent step. So the four exit 0 in any checkout that
+has run `npm run build` and exit 1 in the host job: a checkout and CI answer
+them differently, which is the `machine` class exactly. Their rows above are
+corrected from `wire` to `machine` and they stay in the backlog. **Nothing was
+declared.**
+
+This is the local-reading limit the page has recorded since 2026-10-13 arriving
+in the only way it can — a gate's class is a claim about two environments, and
+one machine can only ever see one of them. The grep for `execSync` and the
+clock would not have caught it: these four read a FILE, and the file is present
+on the machine that took the reading.
+
+**So the batch is one gate, `lint_motion_authority_drift`, and it is `final`.**
+Twenty is the council's ceiling, not a quota, and the window is empty at one:
+padding it would mean wiring a gate whose class nobody read, which is the move
+the 2026-08-13 decision refuses in its other direction.
 
 ### The three residue gates are reclassified, not declared
 
@@ -784,15 +808,16 @@ eight.
 
 ### What 2.2 leaves, and what closes with it
 
-After 2.2g the undeclared set is **18**, and **no gate in it is `wire`-class**:
+After 2.2g the undeclared set is **22**, and **no gate in it is `wire`-class**:
 seven are red and owned by a named file (`audit_user_type_axis`,
 `check_gate_completeness`, `check_rule_invariants`, `check_trigger_evals`,
 `lint_agents_layout`, `lint_eval_freshness`,
 `lint_rule_enforcement_declaration`), one is the `slow` writer
-`audit_command_surface`, and ten are `machine`-class — the three above plus
-`check_branch_freshness`, `check_branch_work_committed`,
-`check_installed_hooks_fresh`, `check_review_prompt_binding`,
-`complexity_report`, `probe_projection_fidelity` and `sync_pr_branch`.
+`audit_command_surface`, and fourteen are `machine`-class — the three residue
+gates and the four above, plus `check_branch_freshness`,
+`check_branch_work_committed`, `check_installed_hooks_fresh`,
+`check_review_prompt_binding`, `complexity_report`, `probe_projection_fidelity`
+and `sync_pr_branch`.
 `probe_projection_fidelity` exits 1 here for the reason the first reading gave:
 it reads generated tool directories a checkout and CI answer differently.
 
