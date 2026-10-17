@@ -231,6 +231,16 @@ file can report an externally visible change as done.
         key; the 2026-09-10 precedent set that key under an AI council on an
         owner delegation, recorded in ADR-273, so it is a decision rather than
         a drain edit.
+        **Put to the council on 2026-10-17 and answered 2/2: the transition is
+        owner-reserved.** Both seats converged that a re-measure is warranted
+        and that 14.4989 is the defensible number, and both said independently
+        that changing a baseline behind a required check needs the owner — one
+        of them naming the reason an agent cannot settle it, that the agent
+        proposing the reset is the one unblocked by it. They split only on
+        whether to align CI before or after, and on whether `max: 11.5` moves
+        in the same change. The record, with both readings and what the owner
+        is being asked for, is
+        `agents/evidence/council/pack-size-built-remeasure-20261017.md`.
       - `check_gate_completeness` — **240 violations against a baseline of
         214**, 26 new. Owned by `stubs/road-to-the-ledger-ratchet-that-drifted`
         and named as trunk-red by
