@@ -164,19 +164,26 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Phase 2 — `/retro` by hand
 
-- [ ] **2.1 Composition.** Facts → one synthesis step → at most one durable
+- [x] **2.1 Composition.** Facts → one synthesis step → at most one durable
       learning per unit, passing the durability test, else `none` with its
       reason. A trivial typo PR yields `none`; a learning readable from the diff
       itself is discarded.
       verify: `npx vitest run tests/scripts/retro.test.ts -t trivial-pr-yields-none --reporter=verbose` -> /✓.*trivial-pr-yields-none/
-- [ ] **2.2 Exactly one target.** The learning routes to one target from the
+      *Done 2026-10-17: `src/scripts/retro.ts` — triage from the pre-registered
+      start values, the durability test on the synthesis's candidate, `none`
+      with its reason. The synthesis itself stays the agent's.*
+- [x] **2.2 Exactly one target.** The learning routes to one target from the
       closed vocabulary; the intake origin is the local unit key (F3), so two PRs
       with one learning mint a lesson and two hosts in one PR do not.
       verify: `npx vitest run tests/scripts/retro.test.ts -t two-prs-mint-two-hosts-do-not --reporter=verbose` -> /✓.*two-prs-mint-two-hosts-do-not/
-- [ ] **2.3 The output per unit.** Facts, learning, target, counter-hypothesis,
+      *Done 2026-10-17: `unitKey` is the signal origin; a target outside the
+      closed vocabulary throws.*
+- [x] **2.3 The output per unit.** Facts, learning, target, counter-hypothesis,
       falsifier, and the recurrence state of earlier learnings with the same
       target.
       verify: `npx vitest run tests/scripts/retro.test.ts -t output-carries-falsifier --reporter=verbose` -> /✓.*output-carries-falsifier/
+      *Done 2026-10-17: recurrence is the per-target record count; the
+      held/recurred reading is 5.1.*
 - [ ] **2.4 The forms.** `/retro`, `/retro <N>`, `/retro --session [<tag>]`,
       `/retro --since <date>`, `/retro status`, `--dry-run`. A manual run never
       re-enables the automatic paths.
@@ -184,6 +191,9 @@ pre-registration in place, settings lint green with the new key.*
 - [ ] **2.5 `/retro status`.** Shows the queue and the last sweep's triage
       counts: analysed, skipped by reason, covered, deferred, expired.
       verify: `npx vitest run tests/scripts/retro.test.ts -t status-shows-skip-reasons --reporter=verbose` -> /✓.*status-shows-skip-reasons/
+      *2.4 and 2.5 open 2026-10-17: both are the visible `/retro` command,
+      which needs the verb from 0.2's ADR and is a new consumer command
+      (owner-reserved). The library they call exists.*
 
 ## Phase 3 — Three paths, one queue
 
