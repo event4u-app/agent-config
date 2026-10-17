@@ -39,6 +39,11 @@
  *   ./scripts-run src/scripts/probe_turnaround --json
  *   ./scripts-run src/scripts/probe_turnaround --against-baseline
  *   ./scripts-run src/scripts/probe_turnaround --workspace PATH --git 2026-09-28..2026-10-13 [--ref main]
+ *   ./scripts-run src/scripts/probe_turnaround --store PATH --against-baseline --queue-root CHECKOUT
+ *
+ * `--queue-root` gives an exit 1 of the gating mode a reader: it upserts one
+ * record into CHECKOUT's self-repair store, which the prompt-time hook injects
+ * as the queue line. The same verdict again, any day → the same record, folded.
  *
  * The MEASURING session is excluded by default — see `recentSessions`.
  *
@@ -70,6 +75,7 @@ import {
     TURN_END_CLASSES,
 } from './_lib/turnaround_throughput.js';
 import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
+import { upsertFinding } from './_lib/self_repair_store.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_FILE), '..', '..');
@@ -652,13 +658,32 @@ function render(t: Turnaround, store: string): string {
     ].join('\n');
 }
 
+/**
+ * One record per verdict shape. The evidence carries the metric NAMES, never
+ * values or a date: the store's fingerprint folds digits away, so a red reading
+ * on a later day increments the same record, reopens it and stamps `last_seen`
+ * — the date lives there, not in the text.
+ */
+export function queueRegression(root: string, verdict: string, now: Date): void {
+    const rec = upsertFinding(root, {
+        defect_class: 'model-noticed',
+        source: 'self-detected',
+        evidence: `probe_turnaround regression: ${verdict}`,
+        suggested_surface:
+            `road-to-agent-throughput-recovery owns the figures; re-run probe_turnaround --against-baseline and read ${BUDGET_REL}`,
+    }, now.toISOString());
+    if (rec === null) {
+        process.stderr.write('probe_turnaround: the self-repair creation cap dropped this verdict; the store counts it as overflow\n');
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const arg = (flag: string, dflt: string): string => {
         const i = argv.indexOf(flag);
         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
     };
     for (const a of argv) {
-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '-h', '--help'].includes(a)) {
+        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '-h', '--help'].includes(a)) {
             if (!argv.includes('--store') && !argv.includes('--limit')) {
                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
                 return 2;
@@ -668,11 +693,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (argv.includes('-h') || argv.includes('--help')) {
         process.stdout.write(
             'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
-                '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n',
+                '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n' +
+                '                        [--queue-root CHECKOUT]\n',
         );
         return 0;
     }
     const store = arg('--store', defaultStore(process.cwd()));
+    const qi = argv.indexOf('--queue-root');
+    const queueRoot = qi >= 0 ? argv[qi + 1] : undefined;
+    if (qi >= 0 && (queueRoot === undefined || queueRoot.startsWith('-'))) {
+        process.stderr.write('probe_turnaround: --queue-root needs the checkout whose self-repair store gets the record\n');
+        return 2;
+    }
+    const queue = (verdict: string): void => {
+        if (queueRoot !== undefined) queueRegression(queueRoot, verdict, new Date());
+    };
     const limit = Number(arg('--limit', '10'));
     if (!Number.isFinite(limit) || limit < 1) {
         process.stderr.write('probe_turnaround: --limit needs a positive integer\n');
@@ -728,6 +763,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     ].filter((x): x is string => x !== null);
     if (sumErrors.length > 0) {
         for (const err of sumErrors) process.stderr.write(`❌  probe_turnaround: ${err}\n`);
+        if (argv.includes('--against-baseline')) queue('class rows do not sum to their total, no verdict');
         return 1;
     }
 
@@ -747,6 +783,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const budget = readBudget();
     if (budget === null) {
         process.stderr.write(`❌  probe_turnaround: ${BUDGET_REL} is missing — nothing to compare against.\n`);
+        queue('baseline missing, no verdict');
         return 1;
     }
     if (files.length === 0) {
@@ -756,6 +793,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     'sessions certifies nothing, and the config records `empty_corpus: "fail"` so it ' +
                     'refuses rather than reporting green.\n',
             );
+            queue('empty corpus, no verdict');
             return 1;
         }
         process.stdout.write('probe:turnaround · empty corpus, `empty_corpus: "report"` — no verdict.\n');
@@ -768,6 +806,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stderr.write(
             `    → raising a baseline in ${BUDGET_REL} needs the reason as a sentence in the same commit.\n`,
         );
+        queue(regressions.map((r) => r.split(/ [<>] /)[0]).join(', '));
         return 1;
     }
     process.stdout.write('✅  probe_turnaround: within the recorded baseline on all four metrics.\n');

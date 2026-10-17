@@ -178,6 +178,15 @@ interface Counts {
      * the pointer that makes a human read possible ships with it.
      */
     dropped_sites: { session: string; turn: number; evidence: string }[];
+    /**
+     * C's fires split by what the turn edited (road-to-agent-throughput-recovery
+     * 4.2): whether a docs-only exemption is worth proposing turns on how many
+     * fires edited nothing but `agents/**` or `docs/**` markdown. The rows sum to
+     * `unverified_fires`; a fire with no recorded path is `unknown`.
+     */
+    unverified_by_path_class: Record<EditPathClass, number>;
+    /** Where C fired, with the class only — never the path. */
+    unverified_sites: { session: string; turn: number; path_class: EditPathClass }[];
     /** The independent scanner's own per-session language total, for context. */
     scanner_language: number;
     sessions: number;
@@ -207,6 +216,19 @@ const _SOURCE_EXT_RE =
 const _TEST_DIR_RE = /(?:^|\/)(?:tests?|specs?|__tests__|__specs__|e2e|cypress|playwright|features)\//i;
 const _TEST_FILE_RE =
     /(?:\.(?:test|spec)\.[a-z]+$)|(?:_test\.[a-z]+$)|(?:(?:^|\/)test_[^/]+$)|(?:Test\.php$)|(?:Spec\.php$)|(?:\.feature$)/i;
+
+export const EDIT_PATH_CLASSES = ['docs-md', 'code', 'mixed', 'unknown'] as const;
+export type EditPathClass = (typeof EDIT_PATH_CLASSES)[number];
+
+const _DOCS_MD_RE = /(?:^|\/)(?:agents|docs)\/.*\.md$/i;
+
+/** `docs-md` when every edited path is `agents/**` or `docs/**` markdown. */
+export function editPathClass(paths: readonly string[]): EditPathClass {
+    if (paths.length === 0) return 'unknown';
+    const docs = paths.filter((p) => _DOCS_MD_RE.test(p)).length;
+    if (docs === paths.length) return 'docs-md';
+    return docs === 0 ? 'code' : 'mixed';
+}
 
 function _looksTestPath(p: string): boolean {
     return _TEST_DIR_RE.test(p) || _TEST_FILE_RE.test(p);
@@ -254,6 +276,8 @@ export function measure(store: string, limit: number): Counts {
         e2_no_test_touched: 0,
         untested_sites: [],
         dropped_sites: [],
+        unverified_by_path_class: { 'docs-md': 0, code: 0, mixed: 0, unknown: 0 },
+        unverified_sites: [],
         scanner_language: 0,
         sessions: 0,
     };
@@ -329,7 +353,16 @@ export function measure(store: string, limit: number): Counts {
             // 2026-09-11, holding F's finding in a file that also names a
             // detector E — the same mislabel that reached a commit title.
             const fFinding = detectUntestedChange(pendingReply, pendingCalls);
-            if (cFired) c.unverified_fires += 1;
+            if (cFired) {
+                c.unverified_fires += 1;
+                const cls = editPathClass(
+                    pendingCalls
+                        .filter((call) => _EDIT_TOOL_NAMES.has(call.name) && call.path !== undefined)
+                        .map((call) => call.path as string),
+                );
+                c.unverified_by_path_class[cls] += 1;
+                c.unverified_sites.push({ session: sessionId, turn: sessionTurn, path_class: cls });
+            }
             if (fFinding !== null) {
                 c.untested_fires += 1;
                 if (!cFired) c.untested_c_silent += 1;
@@ -446,6 +479,14 @@ export function renderFires(c: Counts): string {
         .join('\n');
 }
 
+/** C's fires with their edited-path class, for the 4.2 table. */
+export function renderUnverifiedFires(c: Counts): string {
+    if (c.unverified_sites.length === 0) return '  detector C fired on no turn in this corpus.';
+    return c.unverified_sites
+        .map((site) => `  ${site.session} turn ${String(site.turn)} — ${site.path_class}`)
+        .join('\n');
+}
+
 /**
  * E's fires, as a separate function rather than a widened `renderFires`: the
  * two lists answer different questions and a caller printing one must not
@@ -466,6 +507,7 @@ export function render(c: Counts): string {
         `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
         `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
         `  detector C (unverified)  fires on ${c.unverified_fires} turns  (${pct(c.unverified_fires)}%)`,
+        ...EDIT_PATH_CLASSES.map((k) => `    by edited path: ${k.padEnd(10)}${String(c.unverified_by_path_class[k])}`),
         `  detector E (dropped)     fires on ${c.dropped_fires} turns  (${pct(c.dropped_fires)}%)`,
         `  detector F (untested)    fires on ${c.untested_fires} turns  (${pct(c.untested_fires)}%)`,
         '',
@@ -729,6 +771,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (showFires) {
         process.stdout.write(`\n  detector F fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
         process.stdout.write(`\n  detector E fired here — same reading, same reason:\n${renderDroppedFires(counts)}\n`);
+        process.stdout.write(`\n  detector C fired here, with the edited-path class:\n${renderUnverifiedFires(counts)}\n`);
     }
     return 0;
 }

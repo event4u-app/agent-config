@@ -25,7 +25,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { measure, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
+import { editPathClass, measure, render, renderUnverifiedFires, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
 import { emptyShadowStats, type ShadowStats } from '../../src/scripts/_lib/turn_end_refusals.js';
 
 let store: string;
@@ -316,6 +316,58 @@ describe('the C-silent overlap ADR-277 argues from', () => {
         expect(c.untested_fires).toBe(1);
         expect(c.unverified_fires).toBe(1);
         expect(c.untested_c_silent).toBe(0);
+    });
+});
+
+describe('detector C by edited-path class — road-to-agent-throughput-recovery 4.2', () => {
+    it('classifies agents/** and docs/** markdown apart from code', () => {
+        expect(editPathClass(['/repo/agents/notes/x.md', 'docs/a.md'])).toBe('docs-md');
+        expect(editPathClass(['src/a.ts'])).toBe('code');
+        expect(editPathClass(['src/rules/x.md'])).toBe('code');
+        expect(editPathClass(['agents/notes/x.md', 'src/a.ts'])).toBe('mixed');
+        expect(editPathClass([])).toBe('unknown');
+    });
+
+    it('splits every C fire into exactly one class, and the rows sum to the fires', () => {
+        writeSession('aaaaaaaa-1', [
+            userEntry('write the roadmap'),
+            toolEntry('Write', { file_path: '/repo/agents/notes/plan.md' }),
+            replyEntry('Written.'),
+            userEntry('fix the code'),
+            toolEntry('Edit', { file_path: '/repo/src/scripts/x.ts' }),
+            replyEntry('Fixed.'),
+            userEntry('both'),
+            toolEntry('Edit', { file_path: '/repo/docs/guide.md' }),
+            toolEntry('Edit', { file_path: '/repo/src/scripts/y.ts' }),
+            replyEntry('Both done.'),
+            userEntry('docs again, verified'),
+            toolEntry('Edit', { file_path: '/repo/docs/guide.md' }),
+            toolEntry('Bash', { command: 'npx vitest run tests/x.test.ts' }),
+            replyEntry('Verified.'),
+        ]);
+        const c = measure(store, 30);
+        expect(c.unverified_fires).toBe(3);
+        expect(c.unverified_by_path_class).toEqual({ 'docs-md': 1, code: 1, mixed: 1, unknown: 0 });
+        const sum = Object.values(c.unverified_by_path_class).reduce((a, b) => a + b, 0);
+        expect(sum).toBe(c.unverified_fires);
+        expect(c.unverified_sites.map((x) => [x.turn, x.path_class])).toEqual([
+            [1, 'docs-md'],
+            [2, 'code'],
+            [3, 'mixed'],
+        ]);
+    });
+
+    it('prints the split and a path-free pointer per fire', () => {
+        writeSession('aaaaaaaa-1', [
+            userEntry('write the roadmap'),
+            toolEntry('Write', { file_path: '/home/someone/repo/agents/notes/plan.md' }),
+            replyEntry('Written.'),
+        ]);
+        const c = measure(store, 30);
+        expect(render(c)).toMatch(/docs-md +1/);
+        const fires = renderUnverifiedFires(c);
+        expect(fires).toContain('aaaaaaaa turn 1 — docs-md');
+        expect(fires).not.toContain('someone');
     });
 });
 
