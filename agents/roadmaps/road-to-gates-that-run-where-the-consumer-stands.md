@@ -180,6 +180,28 @@ consumer behaviour points at something that executes.
       revisit condition (a third evidence class) is the shape of the real fix.
       Doing (c) by mass status change was declined in this lane for that
       reason; doing (a) and (b) waits on harness cases.
+      **Re-read 2026-10-17, still open, and the structure is unchanged.**
+      `./scripts-run src/scripts/build_proof` exits 0, so the verify line is
+      satisfied and the step is not: that line measures the ledger's internal
+      consistency, not whether a claim about a consumer's machine is backed by
+      something that runs there.
+      One candidate was examined and **declined**.
+      `tests/install/uninstall_purge_containment.test.ts` now exists in the
+      harness and proves that uninstall leaves every unrecorded file byte for
+      byte, so `surgical-uninstall` could be given an `exec:` into it and would
+      read as harness-backed. It was not: that suite proves the **file**-level
+      half, while the claim's load-bearing half is **key**-level — "removes only
+      its own keys from a shared host config … inside a shared `hooks.<event>`
+      array" — which only `tests/lib/json_pointers.test.ts` and
+      `host_hook_merge.test.ts` cover. Repointing it would have moved the id out
+      of this step's residue while leaving the claim backed by the wrong thing,
+      which is exactly the defect L2 names.
+      **The step is structurally unclosable by this file**, and that is an
+      authoring defect rather than undone work: (a) and (b) need harness cases
+      and this file's own scope note gives those to the sibling roadmaps; (c)
+      needs the third evidence class D5's `revisit if` already names. The honest
+      next move is one of those two, taken where it belongs — not a ledger edit
+      here.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
