@@ -264,8 +264,11 @@ function _remove_project_marker(
 /**
  * Delete the files a previous global deploy RECORDED writing under `anchor`.
  *
- * This used to be `fs.rmSync(target, { recursive: true })` on the anchor
- * itself. The anchors are whole host configuration roots — `~/.claude/`,
+ * This used to call `fs.rmSync` recursively on the resolved anchor itself —
+ * spelled out rather than quoted, because AC-2 of
+ * `road-to-an-uninstall-that-only-removes-what-it-brought` greps this file for
+ * that exact call and a comment reproducing it would read as a survivor.
+ * The anchors are whole host configuration roots — `~/.claude/`,
  * `~/.codex/`, `~/.config/zed/` — so a purge took everything under them,
  * whoever wrote it, including a host's own credentials file. That is not a
  * quirk this port replicated from Python deliberately; it is a defect, and the
