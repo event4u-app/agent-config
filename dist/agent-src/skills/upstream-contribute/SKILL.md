@@ -216,7 +216,8 @@ record the rationale in the finding.
 ```
 
 The dry run resolves the route and prints the account, title and body in
-full. It sends nothing.
+full. It makes read-only GitHub requests (auth status, push rights, the
+signed-in login) but creates or modifies nothing.
 
 **It does NOT print the branch name or the diff — never invent them.** Those
 are the output of a payload builder that does not exist yet (step 2.1 of
