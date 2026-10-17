@@ -114,12 +114,15 @@ a learning held is read from the recurrence count that already exists. With
       `learning_sidecar.ts:47`) and one canonical table in the contract (D4).
       verify: `grep -c 'Evidence threshold' docs/contracts/retro-v1.md` -> /[1-9]/
       *Done 2026-10-16: census re-read at current lines.*
-- [ ] **0.5 Pre-registration.** Before any code: triage start values with a
+- [x] **0.5 Pre-registration.** Before any code: triage start values with a
       weighted scoring table as a hypothesis, the daily model-retro budget (D7),
       the catch-up window (D8), a labelled gold set of the last 30 merged PRs and
       30 sessions (hand-labelled "worth a retro / not") for false-negative
       recall, and the Phase 5 measures. Filed under `agents/evidence/`.
       verify: `ls agents/evidence/analysis/` -> /retro-preregistration/
+      *Done 2026-10-17: `retro-preregistration.md`. Labelled by the agent that
+      wrote the scores, labels first; an independent relabel before 5.2 is
+      recommended there.*
 
 *Exit: directive filed, ADR merged with ratification, contract and
 pre-registration in place, settings lint green with the new key.*
