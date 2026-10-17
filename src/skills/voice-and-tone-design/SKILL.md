@@ -178,7 +178,7 @@ not a punitive list.
 The artefacts above are not finished until they are data. Write them to
 the **`brand-voice` context-spine slot**,
 [`agents/context-spine/brand-voice.md`](../../../docs/contracts/adr-gtm-context-spine-brand-voice.md)
-— this skill is the only writer, and the slot is the one place the brand's
+— no other skill writes it, and the slot is the one place the brand's
 voice lives (no second file, no copy in a skill body). Read the existing
 slot first: an update bumps `version` by one and appends a `changelog`
 line; it never silently replaces a field a human approved.
