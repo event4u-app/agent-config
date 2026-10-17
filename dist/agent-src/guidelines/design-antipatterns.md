@@ -135,6 +135,8 @@ Within-project invariants + repetition caps. Override = declare the value in
 | T8 | Single typeface for everything | Missed typographic contrast opportunity; in the **brand** register an unexamined single family reads as "I did not think about fonts" | **Register-scoped like T7.** Intentional mono-typeface aesthetic (e.g., terminal-inspired), stated in the brief — *or* the **product** register, where one reliable family is the sanctioned strategy ([`design-modes`](design-modes.md) § The two registers) and contrast is carried by weight and scale rather than by a second family. | reference-constraint | retune | judgment |
 | T9 | All-caps body paragraphs or field labels | Reduces legibility below WCAG AA for sustained reading; reads as flair over function | Short UI labels (e.g., button text in a brutalist layout); never for body paragraphs | floor | delete → retune | static |
 | T10 | Wide letter-spacing on body text (`letter-spacing` > 0.05em) | Reduces readability for sustained reading; reserved for display use | Display text (headlines, pull quotes) where intentional tracking is a brand element | craft-presumption | retune | static |
+| T11 | Faux bold or italic: a weight or style requested of a family that does not carry that face, so the renderer emboldens or slants the face it has | Synthesised strokes thicken unevenly and slant without the true italic's letterforms; reads as a missing font, not a style choice | Load the face that carries the weight or style, or set `font-synthesis: none` on purpose where the regular face is the intended look | floor | replace → retune | render |
+| T12 | Self-hosted webfont with `font-display: swap` and no metric-matched fallback `@font-face` (`size-adjust`, `ascent-override`, `descent-override`) | The fallback paints first at different metrics, so every line reflows when the webfont swaps in — measurable layout shift | `font-display: optional` or `block` on purpose, or a fallback face whose overrides are derived from the webfont's vertical metrics ([`design-asset-discipline`](design-asset-discipline.md)) | craft-presumption | retune | static |
 
 ---
 
@@ -241,6 +243,7 @@ are listed in § Quality floors.
 | `judgment-only` | needs structural or aesthetic judgment a text pass cannot make; `design-review` decides it |
 | `deferred` | pattern-detectable but a design-system opinion rather than a floor; deliberately not shipped |
 | `candidate` | a numeric threshold stated in the entry, not yet detected — a status that must resolve to `backed` or `judgment-only`, never persist |
+| `witness` | read from the rendered asset by `ui:render --profile asset`, not from text; the note names the witness rule, which must exist in the witness source |
 
 | Entry | Status | Note |
 |---|---|---|
@@ -270,6 +273,8 @@ are listed in § Quality floors.
 | T8 | deferred | typeface count is a design-system opinion, not a floor |
 | T9 | backed | |
 | T10 | backed | |
+| T11 | witness | `ui:render --profile asset` reports `geometry/font-synthesised`; fixture `missing-weight-reads-synthesised` |
+| T12 | backed | |
 | L1 | judgment-only | composite structural template |
 | L2 | judgment-only | three-identical-card grid; DOM-structure analysis |
 | L3 | deferred | spacing-multiple uniformity is a design-system opinion |

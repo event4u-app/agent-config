@@ -29,6 +29,7 @@
  */
 
 import { attrsOf, parseDocument, tagEnd, type XmlDocument, type XmlNode } from './svg_dom.js';
+import { ruleFilledCounter } from './svg_filled_counter.js';
 import { cssUnescape, isActiveUrl, localName, rawAttrs, resolvedUrl, svgPrefixes, URL_ATTRS } from './svg_urls.js';
 import {
     type Box,
@@ -1195,6 +1196,7 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
         ...ruleMissingXmlns(elements, relPath),
         ...ruleOutsideViewBox(elements, relPath),
         ...ruleUnparseablePath(elements, relPath),
+        ...ruleFilledCounter(elements, relPath),
         ...ruleUnusedDefs(text, elements, relPath),
         ...ruleDanglingReference(text, elements, relPath),
         ...ruleActiveContent(text, elements, relPath, mode),

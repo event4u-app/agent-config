@@ -8,6 +8,7 @@ import {
     REMEDIATION_VERBS,
     STATUSES,
     VERIFICATIONS,
+    WITNESS_SOURCES,
     catalogEntries,
     censusCells,
     parityFindings,
@@ -18,6 +19,7 @@ import {
 const REPO = path.resolve(__dirname, '..', '..');
 const CATALOG = fs.readFileSync(path.join(REPO, 'docs', 'guidelines', 'design-antipatterns.md'), 'utf-8');
 const REGISTRY = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'design_slop_rules.ts'), 'utf-8');
+const WITNESS = WITNESS_SOURCES.map((rel) => fs.readFileSync(path.join(REPO, rel), 'utf-8')).join('\n');
 
 /**
  * A minimal pair that satisfies the invariant, used as the base every negative
@@ -52,7 +54,7 @@ const OK_REGISTRY = ['    catalogId: "V1",'].join('\n');
 
 describe('parityFindings — the tree as it stands', () => {
     it('is clean on the real catalog and the real registry', () => {
-        expect(parityFindings(CATALOG, REGISTRY)).toEqual([]);
+        expect(parityFindings(CATALOG, REGISTRY, WITNESS)).toEqual([]);
     });
 
     it('classifies every catalog entry exactly once', () => {
@@ -68,7 +70,7 @@ describe('parityFindings — the tree as it stands', () => {
         expect(backed).toEqual(new Set(registryCatalogIds(REGISTRY)));
     });
 
-    it('uses only the five declared statuses', () => {
+    it('uses only the declared statuses', () => {
         for (const [, row] of statusRows(CATALOG)) {
             expect(STATUSES as readonly string[]).toContain(row.status);
         }
@@ -126,6 +128,41 @@ describe('parityFindings — it fails in both directions', () => {
     it('a status row for an entry no catalog table defines', () => {
         const findings = parityFindings(OK_CATALOG.replace('| V2 | judgment-only |', '| M9 | judgment-only |'), OK_REGISTRY);
         expect(findings.map((f) => f.kind)).toContain('orphan-status');
+    });
+
+    // `witness` (road-to-type-with-a-witness 2.1): an entry read from the
+    // rendered asset rather than from text. The note must name the witness
+    // rule, and that rule must exist in the witness source — otherwise
+    // `witness` is `backed` without a detector, which is the row this gate
+    // exists to refuse.
+    it('a witness row whose named rule the witness source emits passes', () => {
+        const cat = OK_CATALOG.replace(
+            '| V2 | judgment-only | intent is not greppable |',
+            '| V2 | witness | reports `geometry/glass-blur` |',
+        );
+        expect(parityFindings(cat, OK_REGISTRY, "rule: 'geometry/glass-blur',")).toEqual([]);
+    });
+
+    it('a witness row naming a rule the witness does not emit', () => {
+        const cat = OK_CATALOG.replace(
+            '| V2 | judgment-only | intent is not greppable |',
+            '| V2 | witness | reports `geometry/glass-blur` |',
+        );
+        expect(parityFindings(cat, OK_REGISTRY, "rule: 'geometry/other',").map((f) => f.kind)).toContain(
+            'witness-without-rule',
+        );
+        // Unread witness source is not a pass either.
+        expect(parityFindings(cat, OK_REGISTRY).map((f) => f.kind)).toContain('witness-without-rule');
+    });
+
+    it('a witness row whose note names no rule', () => {
+        const cat = OK_CATALOG.replace(
+            '| V2 | judgment-only | intent is not greppable |',
+            '| V2 | witness | the renderer sees it |',
+        );
+        expect(parityFindings(cat, OK_REGISTRY, "rule: 'geometry/glass-blur',").map((f) => f.kind)).toContain(
+            'witness-without-rule',
+        );
     });
 
     // A gate that scans nothing exits green; this is the guard against that.
