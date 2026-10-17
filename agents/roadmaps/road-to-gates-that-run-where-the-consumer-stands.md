@@ -142,11 +142,30 @@ consumer behaviour points at something that executes.
       above is spent. What was still missing was the register half, and that
       is what this step now lands: `build_exit_code_register` carries a
       `PAIRS` table, publishes a *Pairs that must agree* section, and
-      `checkPairs` fails the build when either verb stops returning its side
-      of the pair OR when the named test loses the assertion. The drift test
-      asserts `errors` is empty, so either drift reds CI. Sensitivity
-      observed: neutralising `checkPairs` turns three of the four new cases
-      red.
+      `checkPairs` fails the build when either verb stops documenting its side
+      of the pair OR when the named test loses that side's exact assertion —
+      read off `strip()`ped source, so an assertion surviving only inside a
+      comment fails too. The drift test asserts `errors` is empty, so either
+      drift reds CI.
+      **What the generator does NOT prove**, because the first draft of this
+      note claimed it did: a scan sees that `doctor` returns `1` somewhere,
+      not that it returns `1` for *this* state. The exact-code pin is the
+      test, which now asserts `doctor` → `1` rather than merely non-zero
+      (`expect(after.status).toBe(1)`, verified against a real install:
+      `doctor --ci` returns exactly 1 on a tree the installer left at rc=3).
+      A test that is *skipped* rather than deleted still satisfies the
+      generator; the vitest run is what catches that, and nothing here
+      replaces it.
+      Sensitivity re-measured after those corrections: neutralising
+      `checkPairs` turns **4 red of the 5 new cases that reach it** (7 new
+      cases in all; the suite went 7 → 14).
+      **Reviewed by a fresh R2 subagent**, which returned 5 findings
+      (3 medium, 2 low) — every one of them against this step's own diff, and
+      every one fixed here: the near-tautological code check and the
+      overclaiming prose, the unpinned doctor code, the unstripped fragment
+      match, the fixture-inherits-production-pairs trap, and this very
+      sensitivity denominator. Artifact:
+      `agents/evidence/reviews/gates-consumer-exit-pairs.findings.md`.
 
 ## Phase 4 — Point the claims at something that runs
 
