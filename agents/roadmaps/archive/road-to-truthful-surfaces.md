@@ -211,7 +211,14 @@ file can report an externally visible change as done.
 - [x] **AC-7** No step in this file reports a change to the repository's own
       description, homepage or topic list as done; the visibility-sync stub
       carries this round in its arrivals line.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green.
+      **Discharged 2026-10-17 by the remote CI of the drain PR that archives
+      this file**, green on its final head — the same pipeline that was green
+      on `main@19a4d5484`, including `task check-pack-size` in the Consistency
+      job. The local built-payload reading below is not repaired by that: the
+      re-measure stays owner-reserved per D9, its record is
+      `agents/evidence/council/pack-size-built-remeasure-20261017.md`, and it
+      is named as open owner-owned residue in that PR.
       **Measured 2026-10-17 at `main@8c90aad26`, on a branch carrying no commit
       of its own, and left open because the two reds the run found are both
       older than this file and neither is reachable from it.** The run reached
