@@ -321,17 +321,17 @@ describe('the C-silent overlap ADR-277 argues from', () => {
 
 describe('detector C by edited-path class — road-to-agent-throughput-recovery 4.2', () => {
     it('classifies agents/** and docs/** markdown apart from code', () => {
-        expect(editPathClass(['/repo/agents/roadmaps/x.md', 'docs/a.md'])).toBe('docs-md');
+        expect(editPathClass(['/repo/agents/notes/x.md', 'docs/a.md'])).toBe('docs-md');
         expect(editPathClass(['src/a.ts'])).toBe('code');
         expect(editPathClass(['src/rules/x.md'])).toBe('code');
-        expect(editPathClass(['agents/roadmaps/x.md', 'src/a.ts'])).toBe('mixed');
+        expect(editPathClass(['agents/notes/x.md', 'src/a.ts'])).toBe('mixed');
         expect(editPathClass([])).toBe('unknown');
     });
 
     it('splits every C fire into exactly one class, and the rows sum to the fires', () => {
         writeSession('aaaaaaaa-1', [
             userEntry('write the roadmap'),
-            toolEntry('Write', { file_path: '/repo/agents/roadmaps/road-to-x.md' }),
+            toolEntry('Write', { file_path: '/repo/agents/notes/plan.md' }),
             replyEntry('Written.'),
             userEntry('fix the code'),
             toolEntry('Edit', { file_path: '/repo/src/scripts/x.ts' }),
@@ -360,7 +360,7 @@ describe('detector C by edited-path class — road-to-agent-throughput-recovery 
     it('prints the split and a path-free pointer per fire', () => {
         writeSession('aaaaaaaa-1', [
             userEntry('write the roadmap'),
-            toolEntry('Write', { file_path: '/home/someone/repo/agents/roadmaps/road-to-x.md' }),
+            toolEntry('Write', { file_path: '/home/someone/repo/agents/notes/plan.md' }),
             replyEntry('Written.'),
         ]);
         const c = measure(store, 30);

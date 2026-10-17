@@ -42,8 +42,8 @@
  *   ./scripts-run src/scripts/probe_turnaround --store PATH --against-baseline --queue-root CHECKOUT
  *
  * `--queue-root` gives an exit 1 of the gating mode a reader: it upserts one
- * dated record into CHECKOUT's self-repair store, which the prompt-time hook
- * injects as the queue line. Same day, same verdict → one record, folded.
+ * record into CHECKOUT's self-repair store, which the prompt-time hook injects
+ * as the queue line. The same verdict again, any day → the same record, folded.
  *
  * The MEASURING session is excluded by default — see `recentSessions`.
  *
@@ -659,18 +659,22 @@ function render(t: Turnaround, store: string): string {
 }
 
 /**
- * One dated record per red verdict per day. The evidence carries the date and
- * the metric NAMES, never the values: values move between runs on the same
- * corpus window, and a value in the fingerprint would open a record per run.
+ * One record per verdict shape. The evidence carries the metric NAMES, never
+ * values or a date: the store's fingerprint folds digits away, so a red reading
+ * on a later day increments the same record, reopens it and stamps `last_seen`
+ * — the date lives there, not in the text.
  */
 export function queueRegression(root: string, verdict: string, now: Date): void {
-    upsertFinding(root, {
+    const rec = upsertFinding(root, {
         defect_class: 'model-noticed',
         source: 'self-detected',
-        evidence: `probe_turnaround regression ${now.toISOString().slice(0, 10)}: ${verdict}`,
+        evidence: `probe_turnaround regression: ${verdict}`,
         suggested_surface:
             `road-to-agent-throughput-recovery owns the figures; re-run probe_turnaround --against-baseline and read ${BUDGET_REL}`,
     }, now.toISOString());
+    if (rec === null) {
+        process.stderr.write('probe_turnaround: the self-repair creation cap dropped this verdict; the store counts it as overflow\n');
+    }
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
@@ -759,6 +763,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     ].filter((x): x is string => x !== null);
     if (sumErrors.length > 0) {
         for (const err of sumErrors) process.stderr.write(`❌  probe_turnaround: ${err}\n`);
+        if (argv.includes('--against-baseline')) queue('class rows do not sum to their total, no verdict');
         return 1;
     }
 

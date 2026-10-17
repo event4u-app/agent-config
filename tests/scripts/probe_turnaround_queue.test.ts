@@ -8,7 +8,7 @@ import * as path from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { main } from "../../src/scripts/probe_turnaround.js";
+import { main, queueRegression } from "../../src/scripts/probe_turnaround.js";
 import { listRecords } from "../../src/scripts/_lib/self_repair_store.js";
 
 const T0 = Date.parse("2026-10-01T10:00:00.000Z");
@@ -91,7 +91,7 @@ describe("probe_turnaround --queue-root — 1.3", () => {
     const rec = records[0]!;
     expect(rec.status).toBe("open");
     expect(rec.source).toBe("self-detected");
-    expect(rec.evidence).toMatch(/^probe_turnaround regression \d{4}-\d{2}-\d{2}: /);
+    expect(rec.evidence).toMatch(/^probe_turnaround regression: /);
     expect(rec.evidence).toContain("blocking share");
     expect(rec.suggested_surface).toContain("road-to-agent-throughput-recovery");
   });
@@ -105,6 +105,31 @@ describe("probe_turnaround --queue-root — 1.3", () => {
     const records = listRecords(queue);
     expect(records).toHaveLength(1);
     expect(records[0]!.occurrences).toBe(2);
+  });
+
+  it("folds a red verdict on a later day into the same record and stamps the new day", () => {
+    const queue = tmp("probe-queue-root-");
+    queueRegression(queue, "blocking share", new Date("2026-10-16T05:00:00Z"));
+    queueRegression(queue, "blocking share", new Date("2026-10-17T05:00:00Z"));
+    const records = listRecords(queue);
+    expect(records).toHaveLength(1);
+    expect(records[0]!.occurrences).toBe(2);
+    expect(records[0]!.first_seen.slice(0, 10)).toBe("2026-10-16");
+    expect(records[0]!.last_seen.slice(0, 10)).toBe("2026-10-17");
+  });
+
+  it("says so on stderr when the creation cap drops the record", () => {
+    const queue = tmp("probe-queue-root-");
+    const now = new Date("2026-10-17T05:00:00Z");
+    for (let i = 0; i < 20; i += 1) queueRegression(queue, `metric ${"x".repeat(i + 1)}`, now);
+    let err = "";
+    vi.spyOn(process.stderr, "write").mockImplementation((chunk: unknown) => {
+      err += String(chunk);
+      return true;
+    });
+    queueRegression(queue, "a different verdict", now);
+    vi.restoreAllMocks();
+    expect(err).toContain("creation cap");
   });
 
   it("queues nothing when the reading is within the baseline", () => {

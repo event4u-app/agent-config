@@ -49,8 +49,9 @@ envelope.
 | **total** | **32** | **25** |
 
 Read by one agent from the options text and the reply; a second reader may move
-single rows between owner-reserved and council-decidable. No row is moved by
-a reading of what the owner would have wanted.
+single rows between owner-reserved and council-decidable. Two rows (85, 86) are
+shown in the class the owner named in words, not the class the criteria gave;
+the criteria tally is beside it below, so neither reading is hidden.
 
 | # | session | class | basis | recommended taken |
 |---|---|---|---|---|
@@ -87,10 +88,12 @@ a reading of what the owner would have wanted.
 | 85 | `63f314f3` | council-decidable | whether a retro reads transcripts by default | yes |
 | 86 | `63f314f3` | council-decidable | how self-repair reports leave a consumer project | no — owner: "these were all council-suitable; why did you ask me?" |
 
-Asks 85 and 86 would be owner-reserved under the criteria above (a privacy
-default, an egress route). They are counted council-decidable because the owner
-said so in the reply to 86, about that session's questions — the owner's words
-outrank the criteria, and the disagreement says the criteria over-reserve.
+Asks 85 and 86 are owner-reserved under the criteria fixed above (a privacy
+default, an egress route): **by the criteria, 21 / 10 / 1**. The owner's reply
+to 86 called that session's questions council-suitable, so the table shows them
+council-decidable: **by the owner's words, 19 / 12 / 1**. The two tallies
+disagree on exactly these rows, and the disagreement says the criteria
+over-reserve; neither changes the cheap count.
 
 ## Reading
 

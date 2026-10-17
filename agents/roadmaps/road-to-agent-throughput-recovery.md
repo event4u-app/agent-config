@@ -187,7 +187,7 @@ the Acceptance Criteria held.
       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
       shape; no new baseline file.
       verify: the entry's figures recompute from its own corpus block.
-- [x] **1.3 Let a red reading reach a person.** Done 2026-10-17: `--queue-root CHECKOUT` upserts one dated `self-detected` record per red verdict per day (metric names in the evidence, never values, so a same-day re-run folds); an empty corpus queues as `empty corpus, no verdict`; the line the schedule runs is `regression_reader` in `src/config/turnaround-budget.json`. The schedule itself is machine-local, not tracked. `tests/scripts/probe_turnaround_queue.test.ts` went red with the queue call neutralised. `--against-baseline` stays out of
+- [x] **1.3 Let a red reading reach a person.** Done 2026-10-17: `--queue-root CHECKOUT` upserts one `self-detected` record per verdict shape (metric names, never values or a date; a later red reading increments it, reopens it and stamps `last_seen`); an empty corpus, a missing budget and a class-sum mismatch queue too, and a creation-cap drop is said on stderr; the line the schedule runs is `regression_reader` in `src/config/turnaround-budget.json`. The schedule itself is machine-local, not tracked. `tests/scripts/probe_turnaround_queue.test.ts` went red with the queue call neutralised. `--against-baseline` stays out of
       CI by design (an empty store would read green). Run from a lane worktree
       its default store resolves to that worktree's empty project directory and
       it fails as an empty corpus (reproduced 2026-10-15), so the scheduled run
@@ -235,7 +235,7 @@ the Acceptance Criteria held.
 
 ## Phase 3 — Take the CI wait out of the foreground, keep the settle
 
-- [x] **3.1 Put the archived blocking-time roadmap's D7 to the council.** Done 2026-10-17: D9 — (c), measure before moving the wait; record in `agents/evidence/council/ci-wait-foreground-2026-10-17.md`. The 2026-10-07 target for
+- [x] **3.1 Put the archived blocking-time roadmap's D7 to the council.** Done 2026-10-17: D9 — no transition (one seat (c), one abstained); the foreground wait stands until measured; record in `agents/evidence/council/ci-wait-foreground-2026-10-17.md`. The 2026-10-07 target for
       `ci-wait` ("no foreground wait ends without a verdict") was met; the new
       evidence is a different cost, a lane held while CI runs. Bring the
       foreground minutes per merged step, the 2026-10-15 cause split (where
@@ -254,7 +254,7 @@ the Acceptance Criteria held.
       verify: a two-roadmap fixture run shows work on B between A's push and A's
       verdict; a claim over an unsettled PR is still refused; an obligation
       resumed after a force-push to A reads the new head, never the old verdict.
-      <br>2026-10-17: the council did not agree (D9 reads (c)), so this step
+      <br>2026-10-17: the council did not adopt it (D9: no transition, one abstention), so this step
       waits on D9's measurement and a specified obligation lifecycle.
 
 ## Phase 4 — Remove the misfires, from the classes that actually fired
@@ -339,7 +339,7 @@ the Acceptance Criteria held.
 | D6 | reversible-technical | evidence | The closure scan's typed-op hits on "merge", "push" and "merged" in Context, Goal, 3.2 and 4.3 are measurement prose or guard names, not operations: no step here merges, pushes or force-pushes, and 3.2 waits on the council in 3.1 | `closure_scan` run 2026-10-15, eight `typed-op` hits, each read | a step is added that merges or pushes on its own authority |
 | D7 | reversible-technical | evidence | `/roadmap:next` keeps one invocation = one roadmap = one branch = one PR; no composite drain command and no bundling here | `roadmap/next/command.md:28`; merges per night are flat, work per merge fell | Phase 2 reads wall-clock-bound and lane conflicts are measured |
 | D8 | product-owned | owner | Harvest intake limit (5.3) → (a): a new inbox roadmap lands `draft` while more than 8 `ready` roadmaps sit at 0 ticked steps | owner answer 2026-10-15 to the PR #2373 report; 10 of 20 ready roadmaps at 0 that day | the 0-ticked share stays under 8 for a month, or the owner changes N |
-| D9 | reversible-technical | council:2026-10-17 | D7 revisited (3.1) → (c): the CI wait stays in the foreground until the share of `sleep-poll` that is CI polling, and how often a lane had a workable next step during a CI wait, are measured; 3.2 does not run before that | AI council 2026-10-17, anthropic + openai, 2/2 present, $0.00: anthropic (c); openai chose no option in its final round and named the obligation lifecycle (persistence, superseding push, cleanup, rollback) as unspecified; record `agents/evidence/council/ci-wait-foreground-2026-10-17.md` | more than 60 % of CI waits had a workable next step in the same lane, or `sleep-poll` is dominated by non-CI waits, or a mitigation without obligation state appears |
+| D9 | reversible-technical | council:2026-10-17 | D7 revisited (3.1): no transition — (b) is not adopted, one seat chose (c) and one abstained, and under `decision-revisit-gate` an abstention escalates any later adoption of (b) rather than settling it; today's foreground wait stands until the share of `sleep-poll` that is CI polling, and how often a lane had a workable next step during a CI wait, are measured; 3.2 does not run before that | AI council 2026-10-17, anthropic + openai, 2/2 present, $0.00: anthropic (c); openai chose no option in its final round and named the obligation lifecycle (persistence, superseding push, cleanup, rollback) as unspecified; record `agents/evidence/council/ci-wait-foreground-2026-10-17.md` | more than 60 % of CI waits had a workable next step in the same lane, or `sleep-poll` is dominated by non-CI waits, or a mitigation without obligation state appears |
 
 ## Kill register
 

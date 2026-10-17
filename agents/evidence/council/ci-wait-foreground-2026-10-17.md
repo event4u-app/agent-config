@@ -26,9 +26,12 @@ gitignored). For `road-to-agent-throughput-recovery` step 3.1, row D9.
   first-round text is not in the recorded response.
 
 Read together: no seat supports (b) in the final round; one chooses (c); the
-other names the lifecycle a (b) would have to specify first. **Recorded
-outcome: (c).** Keeping today's behaviour needs no further authority; adopting
-(b) needs the measurement and a specified lifecycle.
+other abstains and names the lifecycle a (b) would have to specify first. That
+is not a 2/2 verdict. **Recorded outcome: no transition.** Today's foreground
+wait stands, which needs no authority; under `decision-revisit-gate` an
+abstention is an escalation condition, so adopting (b) later needs the
+measurement, a specified lifecycle and a council that actually concludes —
+or the owner.
 
 ## Strongest argument against (c), from the seat that chose it
 

@@ -28,8 +28,8 @@
     "empty_corpus": "fail",
     "regression_reader": {
         "added_at": "2026-10-17",
-        "reason": "road-to-agent-throughput-recovery step 1.3 — `blocking_share` and `context_floor_max` read red from 2026-10-01 to 2026-10-15 with nobody reading the exit 1. `--queue-root` turns that exit 1 into one dated self-repair record, which the prompt-time hook injects as the queue line.",
-        "invocation": "./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10 --against-baseline --queue-root \"$(git rev-parse --path-format=absolute --git-common-dir)/..\"",
+        "reason": "road-to-agent-throughput-recovery step 1.3 — `blocking_share` and `context_floor_max` read red from 2026-10-01 to 2026-10-15 with nobody reading the exit 1. `--queue-root` turns that exit 1 into one self-repair record (one per verdict shape; a later red reading increments it and stamps `last_seen`), which the prompt-time hook injects as the queue line.",
+        "invocation": "./scripts-run src/scripts/probe_turnaround --store \"<the main checkout's transcript store under ~/.claude/projects/>\" --limit 10 --against-baseline --queue-root \"$(git rev-parse --path-format=absolute --git-common-dir)/..\"",
         "note": "Both paths are explicit because the run may start in a lane worktree: there the default store is the worktree's own empty project directory, which `empty_corpus: \"fail\"` reports as an empty corpus and queues as one, never as green. The schedule that runs this line daily is machine-local (cron, launchd or a routine on the measuring machine) and is not a tracked file; the CI exclusion in `_comment` is unchanged."
     },
     "instrument_vs_source": {
