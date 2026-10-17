@@ -11,13 +11,14 @@ review_by: 2026-12-24
 > awesome-list resubmission) and recorded them here rather than planning them,
 > per the council disposition below. Earlier: the 2026-08-20 drain transfer.
 >
-> **Staged by [`road-to-a-distribution-ledger-that-is-true.md`](../road-to-a-distribution-ledger-that-is-true.md)**
+> **Staged by [`road-to-a-distribution-ledger-that-is-true.md`](../archive/road-to-a-distribution-ledger-that-is-true.md)**
 > (2026-10-16): the text for each of those acts — a third awesome-list attempt,
-> the `mcpservers.org` check-then-form, the `mcp-publisher` publish, and both
+> the `mcp-publisher` publish, and both
 > Packagist paths — sits in `docs/distribution/registry-submissions.md`
 > § Staged owner actions and `docs/distribution/registries.md` § Packagist
 > deprecation. That is one queue entry, not five. All of it is **pending**; a
-> live read showed `mcp.so` already listed, so that form is no longer an act.
+> live read showed `mcp.so` already listed, and a 2026-10-17 headless-browser
+> read showed `mcpservers.org` listed too, so neither form is an act any more.
 
 
 > **Stub — not active work.** Drain-run transfer, 2026-08-20, from
