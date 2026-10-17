@@ -301,7 +301,7 @@ files as there were findings without an owner.
   H1 and H2 are offers in their form.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
