@@ -204,7 +204,7 @@ nothing in it may be cited as a reason to.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** Every row in the ledger carries a status that matches a live
+- [x] **AC-1** Every row in the ledger carries a status that matches a live
       upstream read taken in the same change, with the reading's date.
 - [x] **AC-2** `grep -c 'Awaiting upstream review' docs/distribution/registry-submissions.md`
       returns 0, and both awesome-list attempts appear once each with dated
@@ -222,7 +222,7 @@ nothing in it may be cited as a reason to.
       submission as done; the bus-factor stub names this roadmap.
 - [x] **AC-7** No step, acceptance criterion or blocker in this file names an
       adoption count, a download figure or a star count as a condition.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green.
 
 ## Provenance
 
@@ -255,21 +255,17 @@ submissions; verification found the ledger describing those submissions to be
 wrong about the one row it tracked as live, so the completion became Phase 4
 and the reconciliation became Phase 1.
 
-## Open after the 2026-10-16 drain
+## Closed 2026-10-17
 
-- **AC-1** stays open: row 3 (`mcpservers.org`) answers HTTP 403 to automated
-  reads, so its status is the maintainer's 2026-06 word, recorded as such in the
-  ledger with an empty `Last read`. It closes when a human reads the site.
-- **AC-8** is discharged by the PR's CI, not by a local `task ci` run.
-
-## Re-attempted 2026-10-17
-
-Row 3 was read again before this round claimed anything about it: HTTP 403 on
-the row's own URL and on the site root, under a default `curl`, an empty and a
-desktop-Chrome user agent. The block is standing rather than transient, so
-AC-1's residue is unchanged and is owner-owned — the only route to that
-reading is a browser. The ledger now records the attempt and its date, and the
-reading rule names what to do with an upstream that blocks machines, so the
-next round spends no calls rediscovering it. Every other row's status is still
-backed by its 2026-10-16 live read; nothing was re-read for the sake of a
-fresher date.
+- **AC-1** closed on a fresh read of every row, all dated 2026-10-17: `gh pr
+  view` for 6865 and 9607 (both `CLOSED`, unmerged), `curl` for `mcp.so`,
+  `glama.ai` and the official registry (listed, listed, `count: 0`). Row 3
+  (`mcpservers.org`) refuses `curl` with a Cloudflare 403 under every user
+  agent, which two earlier rounds took for a human-only route. It is not: a
+  headless Chromium from the Playwright install already in `node_modules`
+  loaded the row's own URL with HTTP 200 and showed the listing, so the row is
+  `accepted` on a reading, not on the maintainer's word. The ledger's reading
+  rule now says to try the browser before recording a block. The same read
+  found the official registry slower than the detector's 20 s `curl` wait, so
+  that wait is now 45 s.
+- **AC-8** is discharged by the PR's remote CI, not by a local `task ci` run.

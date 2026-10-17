@@ -544,9 +544,10 @@ function _readUrl(kind: string, ref: string): UpstreamReading {
     if (_which('curl') === null) {
         return { ok: false, reason: 'curl not on PATH' };
     }
-    const proc = spawnSync('curl', ['-sL', '--max-time', '20', '-w', '\n%{http_code}', ref], {
+    // The official MCP registry routinely takes 15-20 s to answer a search; 20 s cut it off.
+    const proc = spawnSync('curl', ['-sL', '--max-time', '45', '-w', '\n%{http_code}', ref], {
         encoding: 'utf8',
-        timeout: 25_000,
+        timeout: 50_000,
     });
     const out = proc.stdout ?? '';
     const cut = out.lastIndexOf('\n');
