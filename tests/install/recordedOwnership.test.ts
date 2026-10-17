@@ -15,7 +15,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     NO_RECORDED_HASHES,
+    classifyFileState,
     classifyOwnership,
+    ownershipOfState,
     readRecordedHashes,
     recordedHashesForRoot,
 } from '../../src/install/recordedOwnership.js';
@@ -159,5 +161,72 @@ describe('recordedHashesForRoot', () => {
 
     it('is empty for a root that holds no manifest', () => {
         expect(recordedHashesForRoot(join(tmp, 'nowhere')).size).toBe(0);
+    });
+});
+
+// Step 1.4 of road-to-an-ownership-record-that-belongs-to-the-user. Today's
+// `unknown` arm, pinned by name before Phase 2 changes what reaches it: a
+// globally deployed file installed from a directory that holds no project
+// manifest has NO recorded digest, classifies `unknown`, and is written over.
+// Phase 2 does not change this function's answer for these inputs — it stops
+// a ledger-recorded global target from arriving here with `undefined`.
+describe('the unknown arm a global target reaches with no project manifest', () => {
+    it('GLOBAL-TARGET-WITHOUT-PROJECT-MANIFEST: no recorded digest classifies unknown', () => {
+        const recorded = recordedHashesForRoot(join(tmp, 'no-settings-cwd'));
+        const target = join(homedir(), '.cursor', 'rules', 'a.md');
+        expect(recorded.get(target)).toBeUndefined();
+        expect(classifyOwnership(recorded.get(target), 'edited-on-disk')).toBe('unknown');
+    });
+});
+
+// Step 2.2 — the seven states, table-driven, each from its own three digests.
+// `outdated` and `customized-and-outdated` are the two the three-state type
+// could not express; the `retired-` pair needs the packaged digest to be null.
+describe('classifyFileState — two recorded digests and the bytes on disk', () => {
+    const WE = 'installed';
+    const NEW = 'packaged-now';
+    const EDIT = 'user-edit';
+    const cases: ReadonlyArray<
+        [string, string | null | undefined, string | null | undefined, string | null, string]
+    > = [
+        ['clean', WE, WE, WE, 'untouched, still shipped'],
+        ['outdated', WE, NEW, WE, 'untouched, a new version shipped'],
+        ['customized', WE, WE, EDIT, 'edited, still shipped'],
+        ['customized-and-outdated', WE, NEW, EDIT, 'edited, and a new version shipped'],
+        ['retired-unmodified', WE, null, WE, 'no longer shipped, untouched'],
+        ['retired-modified', WE, null, EDIT, 'no longer shipped, edited'],
+        ['unknown', undefined, NEW, EDIT, 'nothing recorded'],
+    ];
+    for (const [expected, installed, packaged, onDisk, why] of cases) {
+        it(`${expected} — ${why}`, () => {
+            expect(classifyFileState(installed, packaged, onDisk)).toBe(expected);
+        });
+    }
+
+    it('covers all seven states exactly once', () => {
+        expect(new Set(cases.map((c) => c[0])).size).toBe(7);
+    });
+
+    it('bytes already equal to what we ship are clean, whatever was recorded', () => {
+        expect(classifyFileState(WE, NEW, NEW)).toBe('clean');
+    });
+
+    it('is unknown when the bytes on disk are unreadable', () => {
+        expect(classifyFileState(WE, NEW, null)).toBe('unknown');
+    });
+
+    it('the three-state classifyOwnership is this classifier with the packaged digest unknown', () => {
+        const pairs: ReadonlyArray<[string | null | undefined, string | null]> = [
+            [WE, WE],
+            [WE, EDIT],
+            [undefined, EDIT],
+            [null, EDIT],
+            [WE, null],
+        ];
+        for (const [installed, onDisk] of pairs) {
+            expect(classifyOwnership(installed, onDisk)).toBe(
+                ownershipOfState(classifyFileState(installed, undefined, onDisk)),
+            );
+        }
     });
 });

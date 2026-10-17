@@ -30,7 +30,7 @@ import {
     sidecarPathFor,
     type DeployWriteDecision,
 } from './preserve.js';
-import { recordedHashesForRoot, type RecordedHashes } from './recordedOwnership.js';
+import { recordedHashesWithLedger, type RecordedHashes } from './recordedOwnership.js';
 
 /** The installer-owned reporting surface the tracker borrows. */
 export interface ConflictTrackerHost {
@@ -87,6 +87,8 @@ export interface ConflictTracker {
     begin(root: string | null): void;
     /** Decide what the writer does with one deploy target. */
     resolve(target: string, force: boolean): DeployWriteDecision;
+    /** The digest recorded before this run for `target` — what decided a preservation. */
+    recordedDigest(target: string): string | null | undefined;
     /** Stage package content beside a preserved target, then record and report it. */
     preserve(target: string, source: string, packageRoot: string | null): void;
     /** The same, for a managed file the installer generates rather than copies. */
@@ -129,7 +131,7 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
      */
     function recordedHashFor(target: string): string | null | undefined {
         if (conflictState.root === null) return undefined;
-        conflictState.recorded ??= recordedHashesForRoot(conflictState.root);
+        conflictState.recorded ??= recordedHashesWithLedger(conflictState.root);
         const plain = path.resolve(target);
         if (conflictState.recorded.has(plain)) return conflictState.recorded.get(plain);
         const real = resolvePath(target);
@@ -224,6 +226,8 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
 
     return {
         conflictState,
+
+        recordedDigest: recordedHashFor,
 
         begin(root: string | null): void {
             conflictState.root = root;

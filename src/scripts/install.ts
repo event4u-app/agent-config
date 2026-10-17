@@ -90,6 +90,7 @@ import { createConflictTracker } from '../install/conflictTracker.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
 import { filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
+import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
 import * as global_deploy_inventory from './_lib/global_deploy_inventory.js';
 import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
@@ -3045,25 +3046,14 @@ function _deploy_global_content(
         }
         _emit_progress({ type: 'verified', tool: tool_id });
 
-        const inventory = global_deploy_inventory.load_inventory();
-        let reaped: string[] = [];
-        const inv_tools = (inventory['tools'] as Record<string, unknown> | undefined) ?? {};
-        if (tool_id in inv_tools) {
-            reaped = reaped.concat(
-                global_deploy_inventory.reap_stale(tool_id, anchor, current_files, inventory),
-            );
-        }
-        reaped = reaped.concat(
-            global_deploy_inventory.reap_tagged_orphans(
-                anchor,
-                plan.map(([, dest_sub]) => dest_sub),
-                current_files,
-                PACKAGE_TAG_ID,
-            ),
-        );
-        reaped = [...new Set(reaped)].sort();
-        global_deploy_inventory.record_deploy(tool_id, anchor_raw, current_files, inventory);
-        global_deploy_inventory.save_inventory(inventory);
+        // Reap, then record the user-scoped ownership ledger — see the module.
+        const { reaped, retained } = recordGlobalDeploy({
+            toolId: tool_id, anchorRaw: anchor_raw, anchor, currentFiles: current_files,
+            destSubs: plan.map(([, dest_sub]) => dest_sub), packageTag: PACKAGE_TAG_ID,
+            preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged,
+            recordedFor: tracker.recordedDigest,
+        });
+        for (const p of retained) warn(retainedFileMessage(p));
         if (reaped.length > 0 && !state.QUIET) {
             info(
                 `  ${tool_id}: reaped ${reaped.length} stale deployed file(s) ` +
@@ -3149,6 +3139,8 @@ function _preview_global_reap(
                 current_files,
                 PACKAGE_TAG_ID,
                 true,
+                // The ledger spares an edited retired file, so the preview must too.
+                global_deploy_inventory.recorded_digests(tool_id, anchor, inventory),
             ),
         );
         const paths = [...new Set(would_reap.map((p) => String(p)))].sort();

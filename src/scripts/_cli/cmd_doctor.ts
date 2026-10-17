@@ -84,6 +84,7 @@ import * as YAML from 'yaml';
 
 import { _check_overrides } from './doctor_overrides.js';
 import { _is_global_only_consumer } from './doctor_install_mode.js';
+import { classifyOwnership, ledgerModifiedRecords } from './doctor_ownership_ledger.js';
 // Forwarded, not re-declared: both names moved to doctor_install_mode.ts and existing
 // importers of cmd_doctor.js keep resolving. `export ... from` rather than an import,
 // because INSTALL_MODE_MARKER_RELATIVE is not referenced here any more and an unused
@@ -594,9 +595,8 @@ function _collect_manifest_entries(
     const known = new Set<string>();
     const tools = (manifest['tools'] as Dict[] | undefined) || [];
     for (const tool of tools) {
-        if (tool['scope'] !== 'project') {
-            continue;
-        }
+        // Global scope is read from the user ledger (doctor_ownership_ledger.ts).
+        if (tool['scope'] !== 'project') continue;
         const tool_id = String(tool['name'] ?? '');
         const files = (tool['files'] as Dict[] | undefined) || [];
         for (const entry of files) {
@@ -659,11 +659,8 @@ function _classify(records: ManifestRecord[]): [Dict[], Dict[], Dict[]] {
                 fix: _fix_hint('tag-drift', kind),
             });
         }
-        if (expected === null) {
-            continue;
-        }
-        const actual = _sha256(target);
-        if (actual === null || actual === expected) {
+        // The installer's own classifier, so doctor cannot call a file modified the writer would not preserve.
+        if (classifyOwnership(expected, _sha256(target)) !== 'recorded-modified') {
             continue;
         }
         modified.push({
@@ -2943,9 +2940,10 @@ function _run_no_manifest(
     const skipped_requested =
         opts.check !== null &&
         checks.some((c) => c['id'] === opts.check && c['status'] === 'skipped');
+    const modified = ledgerModifiedRecords(); // global scope has no project lockfile to wait for
 
     if (opts.json) {
-        _emit_json(project_root, [], [], [], [], checks, origin, forgeDepsFor(opts));
+        _emit_json(project_root, [], modified, [], [], checks, origin, forgeDepsFor(opts));
     } else if (opts.check === null) {
         print(`  📍  project_root: ${project_root} (origin: ${origin})`);
         if (bridge_present) {
@@ -2966,6 +2964,7 @@ function _run_no_manifest(
         }
         _emit_checks_text(checks);
         _emit_detection_text(project_root, checks);
+        if (modified.length > 0) _emit_text(project_root, [], modified, [], []);
     } else {
         _emit_checks_text(checks);
         _emit_detection_text(project_root, checks);
@@ -2985,10 +2984,10 @@ function _run_no_manifest(
     const sx = strictExit(opts, checks, false); // no manifest: keep the 2, never soften to 1
     if (sx !== null) return bridge_present ? sx : 2;
     if (opts.ci && bridge_present) {
-        // Same fold as the manifest path: check failures are red under --ci.
-        return fail_check ? 1 : 0;
+        // Same fold as the manifest path: check failures and ledger drift are red under --ci.
+        return fail_check || modified.length > 0 ? 1 : 0;
     }
-    return bridge_present ? 0 : 2;
+    return bridge_present ? (modified.length > 0 ? 1 : 0) : 2;
 }
 
 function _emit_json(
@@ -3379,6 +3378,7 @@ function main(argv: string[] | null = null): number {
 
     const [records, known] = _collect_manifest_entries(project_root, manifest);
     const [missing, modified, tag_drift] = _classify(records);
+    modified.push(...ledgerModifiedRecords());
     const foreign = _foreign_records(project_root, _scan_foreign(project_root, manifest, known));
     const drift_groups: Record<string, Dict[]> = {
         missing,

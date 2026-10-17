@@ -87,6 +87,7 @@ tools:
 - **`bridge`** — team-pointer marker like `.cursorrules` or `.windsurf/PROJECT_MANAGED_BY_AGENT_CONFIG`. Existence-tracked, content-untracked.
 - **`deployed`** — bundle content the installer wrote (e.g. `.augment/rules/*.md`). Content-tracked via `sha256` so drift is detectable.
 - **`marker`** — one-off sentinel (e.g. `claude-desktop` install marker). Existence-only.
+- **`sidecar`** — package content staged beside a preserved user edit (`<target>.agent-config.new`), recorded with the digest of the staged bytes so a later version may refresh it. Not in `FILE_KINDS`; uninstall reports it as an unknown kind and leaves it in place. See [`install-layout.md`](install-layout.md) § Surgical-uninstall pointer schema.
 
 ### `merged_keys[]` entries
 
