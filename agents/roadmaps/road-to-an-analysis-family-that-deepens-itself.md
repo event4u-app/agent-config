@@ -255,16 +255,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       options *one more / focused on the named items / stop*. Cap: three rounds.
       verify: ledger fixtures — plateaued, conflict with a plan, conflict without
       a plan, exhausted arguments — produce no offer, one offer, no offer, no
-      offer; a one-seat fixture is labelled `single-voice`. Done 2026-10-17 in `src/scripts/analysis_gate.ts` (exhausted and critical-dissent cases seen red); the gate composes the instruments, the council call itself stays with the doors.
-      Open owner question (council test review of PR #2432, 2026-10-17, both
-      seats): the gate withholds a round when `evaluateStop` says the arguments
-      are exhausted, and reports no saved call or saved cost for it. Whether a
-      withheld round counts as a saved call, and where that figure is reported,
-      is owner policy and is not decided here; the early-stop savings test pins
-      today's behaviour and no longer claims savings are zero. The same review
-      fixed three gate defects: the round cap is checked before the predicate,
-      settleable items must fit the remaining budget together, and a conflict
-      with no sides is refused.
+      offer; a one-seat fixture is labelled `single-voice`. Done 2026-10-17 in `src/scripts/analysis_gate.ts` (exhausted and critical-dissent cases seen red); the gate composes the instruments, the council call itself stays with the doors. Open owner question (council test review of PR #2432, 2026-10-17, both seats): the gate withholds a round when `evaluateStop` says the arguments are exhausted and reports no saved call or saved cost for it; whether a withheld round counts as a saved call, and where that figure is reported, is owner policy and is not decided here. The early-stop savings test pins today's behaviour and no longer claims savings are zero. The same review fixed three gate defects: the round cap is checked before the predicate, settleable items must fit the remaining budget together, and a conflict with no sides is refused.
 - [x] **2.7 Questions: council first, owner once.** Each question is classified
       (`ai-council` classes): council-decidable → council; owner-reserved
       pre-action (gates a push, a destructive step, an unauthorised fetch, a
