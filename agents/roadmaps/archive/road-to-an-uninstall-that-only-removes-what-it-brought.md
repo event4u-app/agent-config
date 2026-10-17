@@ -253,7 +253,12 @@ safely.
       It already carried one, which 2.2 records as a correction to H4; the
       purge property is the new exec-backed entry, and `build_proof` wrote
       **19 of 63**.
-- [ ] **AC-6** `task ci` green.
+- [x] **AC-6** `task ci` green. Discharged by the remote run, which is the
+      authoritative gate: PR #2450 settled **GREEN on 50 of 50 checks at
+      `2fea377b7`** on 2026-10-17. Three checks were red on the first push and
+      all three were this plan's own README sentence — the frozen word budget,
+      the serial-comma rule, and a `\bexpect` match on the word "expectation"
+      in a reworded comment; each is recorded at the commit that fixed it.
 
 ## Provenance
 
