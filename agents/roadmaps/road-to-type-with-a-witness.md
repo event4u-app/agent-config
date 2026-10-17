@@ -320,6 +320,7 @@ no font; it runs a pinned toolchain in the consumer's environment.
       `references/toolchain.md` and taken through `supply-chain-intake` before
       the skill names it. Bumped by pull request, never floating.
       verify: `grep -cE "==[0-9]" src/skills/type-design/references/toolchain.md` -> /^[1-9]/
+      Open 2026-10-17: an exact pin is a registry fact, and the drain lane that took Phases 1-3 had no live registry read to confirm each version through `supply-chain-intake`; naming a version from memory would be the invented-package failure the intake exists to stop.
 - [ ] **4.11 Outputs land in the consumer tree.** UFO source, `font-spec.yaml`,
       built `woff2` and `ttf`, the proof page and the QA report, at the location
       `design-system-capture` conventions give; never inside the package. The
@@ -333,6 +334,7 @@ no font; it runs a pinned toolchain in the consumer's environment.
       payload, and an `estate_growth_exempt` claim naming why no existing skill
       can carry the capability.
       verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> 0
+      Open 2026-10-17: measured 135,908 tok against a 135,908 ceiling — zero headroom — so the skill needs a same-change reduction of its catalogue entry (~53 tok, the 2026-08-27 measurement) from the rules bucket; choosing which rule prose to cut is the A1 decision, not a drive-by.
 - [ ] **4.13 Trigger evals.** At least 5 should-trigger and 5 should-not
       queries, the latter naming the neighbours: choosing a font
       (`typography-system`), making a logo (`logo-generation`), tracing an icon
