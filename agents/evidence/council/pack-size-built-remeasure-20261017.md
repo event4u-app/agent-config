@@ -1,4 +1,4 @@
-<!-- evidence-type: council -->
+<!-- evidence-type: analysis -->
 
 # Council — should the BUILT payload figure be re-measured, and by whom?
 
