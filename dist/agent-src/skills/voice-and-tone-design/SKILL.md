@@ -10,7 +10,7 @@ scope:
   write:
     - pattern: "agents/context-spine/brand-voice.md" # <!-- ref-ignore -->
       access: "write"
-  verification_command: "npx tsx node_modules/@event4u/agent-config/src/scripts/lint_context_spine_usage.ts"
+  verification_reason: "The skill runs nothing of its own — the slot write is the calling agent's. Step 6 names the brand-status verb that reports the slot valid; pinning an invocation form here is what the consumer-invocation and framework-neutrality gates each refuse."
 recommended_for_user_types: [creator, consultant, gtm]
 workspaces:
   - gtm

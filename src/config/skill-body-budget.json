@@ -299,7 +299,7 @@
     "video-director": 5818,
     "vision-articulation": 10198,
     "voc-extract": 6506,
-    "voice-and-tone-design": 12063,
+    "voice-and-tone-design": 12228,
     "wireframe": 6196,
     "workspace-link": 5931,
     "worktree-lifecycle": 9515
@@ -548,8 +548,8 @@
     {
       "skill": "voice-and-tone-design",
       "old": 8182,
-      "new": 12063,
-      "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise."
+      "new": 12228,
+      "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise. The scope declaration's verification_reason is part of this figure: three gates refuse every invocation form a verification_command could take here, so the obligation is stated instead of pinned."
     }
   ]
 }
