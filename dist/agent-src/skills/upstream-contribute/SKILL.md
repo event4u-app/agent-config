@@ -47,32 +47,31 @@ THIS SKILL NEVER PUSHES, NEVER OPENS A PULL REQUEST, AND NEVER WRITES
 A SECOND, HAND-CONDENSED COPY OF AN ARTIFACT.
 EVERY BYTE THAT LEAVES — BRANCH NAME, COMMIT IDENTITY, COMMIT MESSAGE,
 DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`.
-TODAY THAT ROUTE SCANS THE RECORD TEXT ONLY. BRANCH NAME, COMMIT IDENTITY,
-COMMIT MESSAGE AND DIFF ARE UNSCANNED, AND SAYING SO IS THE POINT: AN
+TODAY THAT ROUTE SCANS THEM FOR CREDENTIALS AND THE CONSUMER'S OWN NAMES ONLY.
+AN E-MAIL OR NAME OUTSIDE THOSE PASSES, AND SAYING SO IS THE POINT: AN
 UNSCANNED BYTE A READER BELIEVES WAS SCANNED IS THE WORSE STATE.
 A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 ```
 
-`self-repair:release` carries the privacy floor over the record text, the
-may-not-modify deny list, the route ladder (pull request, then issue, then a
+`self-repair:release` carries the privacy floor over the record text, a
+payload floor over every pushed byte, the may-not-modify deny list, the route ladder (pull request, then issue, then a
 local record). The per-turn Hard-Floor word is the person's: `releaseCmd` has
 no prompt, and invoking it IS the confirmation. A checkbox in a skill
 carries none of them, which is why this skill asks a *worth it* question and
 nothing else.
 
-Widening that floor to the whole payload is Phase 2 of
-`road-to-one-upstream-that-checks-what-leaves` and is not built. The release
-pushes a branch the author committed, so read it before the send: a company
-e-mail in a commit identity has nothing else in front of it.
+The payload floor reads credentials from the detector table and the
+consumer's identifiers from `check_portability`; a finding skips the push. A
+company e-mail outside those passes: read the commit identity before the send.
 
 ## Core principles
 
 - **Consent first** — NEVER create a PR, branch, or any upstream action without explicit user approval
 - **Universality first** — the contribution must work for ALL consumers, not just one project
 - **Generalize when possible** — project-specific content CAN become universal with adaptation
-- **Evidence-based** — learnings must have occurred 2+ times or be clearly generalizable
+- **Evidence-based** — meets `docs/contracts/retro-v1.md` § Evidence threshold
 - **One source** — an artifact is authored in `src/` only; projections are regenerated, never hand-written
-- **The floor is a check, not a tick** — a privacy judgement a human ticks is not a privacy check, and today the check reaches the record text only
+- **The floor is a check, not a tick** — a privacy judgement a human ticks is not a privacy check, and today it sees credentials and consumer names only
 - **Local benefit immediately** — use override for instant project benefit while the contribution is pending
 
 ## A repeated override is a signal, and a signal is not evidence
@@ -91,8 +90,7 @@ channel and not a mandate — and the temptation to "just fix the default, we
 already know" is exactly how a general package becomes one organisation's house
 style.
 
-**What makes an aggregate admissible**, matching the *Evidence-based* and
-*Universality first* principles above:
+**What makes an aggregate admissible** (package row of `retro-v1.md`):
 
 - overrides from **independently operated** consumers, not several repositories
   of one team;
@@ -217,13 +215,13 @@ record the rationale in the finding.
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run resolves the route and prints the title and body in full. It
-touches no network.
+The dry run resolves the route and prints the account, title and body in
+full. It sends nothing.
 
-**It does NOT print the account, the branch name or the diff — never invent
-them.** Those are the output of a payload builder that does not exist yet
-(steps 2.1 and 4.3 of `road-to-one-upstream-that-checks-what-leaves`). Read
-the route, title and body with the user and say the rest is unshown.
+**It does NOT print the branch name or the diff — never invent them.** Those
+are the output of a payload builder that does not exist yet (step 2.1 of
+`road-to-one-upstream-that-checks-what-leaves`). Read what it printed with the
+user and say the rest is unshown.
 
 A refusal from the privacy floor is **final**: the finding stays local. There
 is no scrubbing pass, because a rewritten identifier is still a leaked one.
@@ -270,7 +268,7 @@ replaces the local override.
 
 1. Summary of what is being contributed (type, name, why)
 2. The source path under `src/` that the contribution targets
-3. The dry-run output verbatim — route, title, body. A field it did not print
+3. The dry-run output verbatim — route, account, title, body. A field it did not print
    is reported as unshown, never filled in
 4. The one command the user runs to send it, and nothing executed on their behalf
 5. Reminder to clean up the local override after the contribution merges

@@ -80,7 +80,8 @@ blocks — it does not hand a half-filled doc to the next stage.
   only after a `pass`.
 - **Gate checks (all must pass):**
   1. At least **2 independent evidence** entries (distinct PRs,
-     issues, or incidents).
+     issues, or incidents) — the local row of the evidence threshold
+     in [`retro-v1`](../../contracts/retro-v1.md#evidence-threshold).
   2. `skill_linter` zero errors on the draft body.
   3. `check_portability` zero violations (no project identifiers
      on `package`-scoped proposals).

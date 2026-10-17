@@ -21,11 +21,11 @@ packs:
 This command is a **front on one outward step**, not a second way out. It
 decides *what* is worth contributing and hands the finding to
 `self-repair:release`, which owns the branch, the commit identity, the privacy
-floor over the record text, and the pull-request or issue route. The floor does
-not yet reach the branch name, the commit identity, the commit message or the
-diff — Phase 2 of `road-to-one-upstream-that-checks-what-leaves` owes that, and
-until it lands the author is what stands between those bytes and a public
-forge.
+floor over the record text and every pushed byte, and the pull-request or
+issue route. Over the branch name, commit identity, message and diff that floor
+checks credentials and the consumer's own identifiers only — a company e-mail
+whose domain is neither still passes, and until the identifier class lands the
+author is what stands between it and a public forge.
 
 ```
 ONE WAY OUT. THIS COMMAND NEVER PUSHES, NEVER OPENS A PULL REQUEST,
@@ -75,7 +75,7 @@ floor over the record text runs in step 4 and cannot be satisfied by a checkbox
 here.
 
 - [ ] Benefits every consumer, not only this project
-- [ ] The learning occurred twice or more, or is clearly generalizable
+- [ ] The learning meets the evidence threshold in `docs/contracts/retro-v1.md`
 - [ ] A named mechanism explains why the shipped default is wrong
 
 Below that bar, record the signal and leave the shipped default alone.
