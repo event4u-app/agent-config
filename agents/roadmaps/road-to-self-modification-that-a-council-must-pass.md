@@ -906,6 +906,24 @@ gaps again; the binding closes replay, and nothing else.
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
 
+      **Attempted on its own 2026-10-17 and refused twice; still open.** The
+      writer was rebuilt against the Git-object subject (D13) with a reader for
+      the council's session record, and went to a modification review with
+      `deriveModificationOutcome` beside it. Round 1 split: anthropic ratified,
+      openai refused with a dealbreaker — the writer brands any object carrying a
+      `responses` array as an `ai-council` record, so a fabricated session reads
+      as more trustworthy than a typed one, and its parser keys numbered preamble
+      as answers. Narrowed to the split alone, round 2 split the same way: a
+      `requiredProviders` of zero or below makes an empty council `accepted`, a
+      `__proto__` seat name is mishandled, and the contract claimed an
+      enforcement the exported verdict function does not give. Both rounds are
+      reverted to `origin/main` (empty net diff per file). The record, both
+      prompts and the list the next attempt starts from are in
+      `agents/evidence/ratifications/drain-record-writer-20261017.md`: the split
+      first, with a validated threshold and a prototype-free seat map; the
+      writer only behind a session record bound to the reviewed revision and the
+      committed prompt package.
+
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
 > **Note, 2026-10-15** — `road-to-a-danger-gate-that-sees-what-governs`
