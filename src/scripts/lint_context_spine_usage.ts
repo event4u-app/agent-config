@@ -18,6 +18,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { validateBrandVoiceSlotFile } from './_lib/brand_voice_slot.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -43,6 +44,7 @@ const VALID_SLOTS = [
     'channel-stage',
     'funnel-stage',
     'customer-segment',
+    'brand-voice',
     'fiscal-period',
     'org-stage',
     'regulatory-regime',
@@ -116,6 +118,13 @@ function lint_skill(p: string): string[] {
     return problems;
 }
 
+/** The brand-voice slot is the one slot validated as data (adr-gtm-context-spine-brand-voice). */
+const BRAND_VOICE_SLOT = path.join('agents', 'context-spine', 'brand-voice.md');
+
+function lint_brand_voice_slot(p: string): string[] {
+    return validateBrandVoiceSlotFile(p).map((i) => `brand_voice_slot: ${i.field}: ${i.message}`);
+}
+
 /** Recursively list `SKILL.md` files under `dir`, sorted (mirrors sorted(rglob)). */
 function _rglobSkillSorted(dir: string): string[] {
     const out: string[] = [];
@@ -187,6 +196,17 @@ function main(): number {
             }
         }
     }
+    const slotPath = path.join(REPO_ROOT, BRAND_VOICE_SLOT);
+    if (fs.existsSync(slotPath)) {
+        const problems = lint_brand_voice_slot(slotPath);
+        if (problems.length) {
+            failed += 1;
+            process.stderr.write(`❌  ${_relPosix(slotPath, REPO_ROOT)}\n`);
+            for (const pb of problems) {
+                process.stderr.write(`    - ${pb}\n`);
+            }
+        }
+    }
     if (failed) {
         process.stderr.write(
             `\n❌  ${failed} skill(s) failed context-spine usage lint ` +
@@ -239,5 +259,6 @@ export {
     _read_spine,
     _slot_cited,
     lint_skill,
+    lint_brand_voice_slot,
     main,
 };
