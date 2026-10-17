@@ -197,10 +197,13 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Phase 3 — Three paths, one queue
 
-- [ ] **3.1 The queue.** In the git common dir via `_lib/git_common_dir.ts`, one
+- [x] **3.1 The queue.** In the git common dir via `_lib/git_common_dir.ts`, one
       file per unit, written atomically; two worktrees on one day produce one
       sweep and one queue.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t two-worktrees-one-queue --reporter=verbose` -> /✓.*two-worktrees-one-queue/
+      *Done 2026-10-17: `src/scripts/retro_queue.ts`; an existing entry is
+      never rewritten, so the first enqueue time stands. No path writes to it
+      yet — 3.2-3.4.*
 - [ ] **3.2 Path A — `/pr:merge`.** After `/pr:merge <N>` immediately; after
       `/pr:merge all` once, after the queue ends — never between two merges of a
       drain. `/roadmap:process-full --merge` inherits it.
@@ -216,21 +219,28 @@ pre-registration in place, settings lint green with the new key.*
       deterministically and writes one `<retro-queue>` line — no model, no spawn
       (K1, K7). With zero candidates it writes nothing.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t zero-candidates-is-silent --reporter=verbose` -> /✓.*zero-candidates-is-silent/
-- [ ] **3.5 Who does the model work.** The agent treats the queue line as work
+- [x] **3.5 Who does the model work.** The agent treats the queue line as work
       after the pattern of the self-repair queue — delegated to a subagent where
       the host can, otherwise after the first user task; the first user task is
       never deferred for it.
       verify: `grep -c 'never deferred' docs/contracts/retro-v1.md` -> /[1-9]/
-- [ ] **3.6 Dedupe and window.** The sweep skips sessions whose PR already has a
+      *Done 2026-10-17: contract § Who does the model work; the line it reads
+      arrives with 3.4.*
+- [x] **3.6 Dedupe and window.** The sweep skips sessions whose PR already has a
       retro (`covered`) and retro sessions themselves; catch-up reaches back at
       most the window from D8, older units count as `expired`. Day boundaries use
       the local IANA zone; a DST switch neither drops nor doubles a day.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t dst-switch-neither-drops-nor-doubles --reporter=verbose` -> /✓.*dst-switch-neither-drops-nor-doubles/
+      *Done 2026-10-17: `sweepDays` and `classifyUnit` on calendar dates, so a
+      23- or 25-hour day is one day. The sweep that calls them is 3.4.*
 - [ ] **3.7 The switch.** `retro.enabled: false` — project or user-global — turns
       off all three paths and the probe; the value survives a restart and an
       upgrade; CLI, hook and GUI resolve it through one resolver; an agent cannot
       set it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t disabled-globally-means-no-probe --reporter=verbose` -> /✓.*disabled-globally-means-no-probe/
+      *3.2, 3.3, 3.4 and 3.7 open 2026-10-17: 3.2 edits `/pr:merge`, a merge
+      carrier; 3.3 and 3.4 change hooks consumers receive and switch on an
+      automatic path (owner-reserved); 3.7 needs the key from 0.2's ADR.*
 
 ## Phase 4 — Local effect without automatic promotion
 
