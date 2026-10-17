@@ -116,9 +116,9 @@ Rules:
   continues the parent's task under identical tools and constraints (it then
   reads the parent's cache on its first request); a named subagent is
   preferred the moment isolation, a different tool set, or nested dispatch is
-  needed — a fork cannot nest and runs in background; whether it keeps the
-  parent's tools and prefix is host row `fork_shares_cache` (else: lost).
-  `do-in-parallel`-shaped fan-out from one parent has this shape by
+  needed — a fork cannot nest, and forking forces background mode, which
+  changes the tool set and invalidates the very prefix that motivated the
+  fork. `do-in-parallel`-shaped fan-out from one parent has this shape by
   construction (a known, unfixable upstream cost — see
   [`prompts/README.md`](prompts/README.md) § Prompt-cache discipline). NEVER
   encode "always fork" — that was proposed and cut (council 2026-07-30):
