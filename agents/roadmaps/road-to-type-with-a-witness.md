@@ -243,17 +243,19 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       directions, and overlap removal runs only after both are settled.
       verify: `grep -ci "fill-rule" src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
       Done 2026-10-16: counter rule in § Trace to measure step 2.
-- [ ] **3.2 An advisory finding, measured before it gates (decision A8).**
+- [x] **3.2 An advisory finding, measured before it gates (decision A8).**
       `svg-structure-filled-counter` in `src/scripts/_lib/svg_rules.ts`: a
       `path` under `nonzero` whose subpath sits inside another subpath with
       the same winding. Fixtures: the two-circle disc above and its even-odd
       twin, under `tests/fixtures/svg-filled-counter/` <!-- ref-ignore -->
       verify: `npx vitest run tests/scripts/svg_filled_counter.test.ts` -> 0
-- [ ] **3.3 False-positive census.** Run the finding over every SVG tracked in
+      Done 2026-10-17: `src/scripts/_lib/svg_filled_counter.ts`, wired into `scanSvg` at `warning`; fixtures add an opposite-winding twin and an inherited `evenodd` twin, each rendered (disc 196,282 px, rings 115,940 px).
+- [x] **3.3 False-positive census.** Run the finding over every SVG tracked in
       the repository and record hits and true hits in
       `agents/evidence/analysis/`; the finding stays advisory unless the
       false-positive count is zero.
       verify: `ls agents/evidence/analysis` -> /filled-counter/
+      Done 2026-10-17: `filled-counter-census-2026-10-17.md` — 0 hits, 0 false positives over 96 files, but no tracked multi-contour path is under `nonzero`, so the zero is vacuous and the finding stays advisory.
 
 ## Phase 4 — The type-design skill: contract and procedure
 
