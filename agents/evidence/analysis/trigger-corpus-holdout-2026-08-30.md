@@ -609,10 +609,45 @@ failure the 2026-10-16 section recorded.
 corpus grows on either side and cannot on its own distinguish "grew" from
 "edited a frozen file". The per-row table above is what distinguishes them.
 
+## Re-pin — 2026-10-17b, two train corpora re-hashed, on top of the five-corpus growth
+
+```
+THE ROWS ARE NOT NEW. BOTH ARE TRAIN-SIDE RE-HASHES, TAKEN AFTER THE GROWTH ABOVE.
+NO HOLDOUT FILE'S BYTES CHANGED; THE SEALED SET STAYS AT 35.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN ON THE COMBINED TREE.
+```
+
+**What changed.** `road-to-a-brand-the-tree-can-check` step 1.2 aligned every
+authored surface on `tokens.json`; its eval half was deferred on exactly this
+re-pin, and the same change now owns the corpus, so it lands here. Both corpora
+**keep** the dotted `.tokens.json` utterance and **gain** the plain one: the
+resolver reads `tokens.json`, and a consumer who followed this package's own
+earlier wording types the dotted name, so routing must answer both. Removing
+the dotted utterance would delete the near-miss the defect actually produces.
+`brand-to-tokens` goes 10 -> 11 queries, `brand-asset-generation` 10 -> 11.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `brand-asset-generation` | train | `0xc7` = 199 ≥ 51 | re-hashed |
+| `brand-to-tokens` | train | `0x4f` = 79 ≥ 51 | re-hashed |
+
+**Both train-side measurements were re-taken on that tree.**
+`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
+on the false-activation guard — false activation **6.14 pp** against +2.0,
+delta-recall 3.22 -> **3.38 pp** (still below the 5.0 pp bar), McNemar p 0.1783
+-> **0.1565**, cases 1160 -> **1162**, train corpora **121**, catalogue 300.
+`delivery-set-measurement-2026-08-31.json`: precision@5 81.00 -> **81.04 %**,
+recall@5 60.68 -> **60.64 %**, recall loss 39.32 -> **39.36 pp** — the ceiling
+stays **BREACHED** — false activation@5 **14.74 %**, context cost **229.9**
+tokens against the 500 target, still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**, for the reason the 2026-10-16
+section records: the pin test alone cannot see which table a row sits in.
+
 ## The set hash
 
 ```
-SET-SHA256  544fcd3308b0abfb0e67b4088090cf3ce36f281c5e8f0a595fe80a88c69752b9
+SET-SHA256  ba91cd8681234eb417c7b5a95090ecb2bb53ca815466f8defbb1e842058c8173
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -996,11 +1031,11 @@ open and which this file does not settle.
 | `blade-ui` | `4231ec1aed4180304c75e1b958a24703e9d9cf27d92a31c40c1bcbec92caf83a` |
 | `blameless-post-mortem` | `719dabb662d9937dabb178d097dc73e458c6b31210532b309896580aefd6c48c` |
 | `blast-radius-analyzer` | `353806c436295cd6e83c4e9e7ac0e4de61501e01cec65a9b0d57e2c183f9a391` |
-| `brand-asset-generation` | `ebbc94b7467f4240ec56d8b95ee2aae225540e8e51f665edfd7a9704be5dd731` |
+| `brand-asset-generation` | `9ba310ecfbc2139f668d340183fb82f03bec9bcfbb3a504739aeda2ed9dfb3ef` |
 | `brand-audit` | `77bbac810a28d2c0fba32c6ce75e38e50aff783ce8775e4bc215893e04a42a8c` |
 | `brand-identity` | `50be404a9317ca4321de6966c84815d23721bfb092bf90c4f24ae781b26c1caf` |
 | `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
-| `brand-to-tokens` | `b58dc2a919d0f8a242120e4b04853546c226c4e22645919f0bee39e799bcc094` |
+| `brand-to-tokens` | `71dc4144f00992edd94636bb4ab9aae59d03cb5e81fd2596474837c05fb55a96` |
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
