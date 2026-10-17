@@ -214,6 +214,18 @@ the Acceptance Criteria held.
       and Phase 3 runs in order. Read the two windows after Phase 1 lands.
       verify: the rule's commit predates the reading's commit; the verdict is a
       Decisions row.
+      <br>**Pre-registered 2026-10-17, before any reading of the windows.**
+      *Night:* a `nightKey` night (22:00–08:00 Europe/Berlin) with at least one
+      assistant turn in the main checkout's transcript store. *Ends in a
+      usage-limit pause:* the night holds a `Usage limit reached` banner
+      (`isUsageLimitPause`) whose timestamp `nightKey` maps to that night.
+      *Windows:* the two consecutive 14-calendar-night windows starting the
+      first night after the last Phase 1 step merges. *Rule:* tokens bind when
+      paused nights / active nights >= 1/3 in BOTH windows; wall-clock binds
+      when the ratio is < 1/3 in both; a split result is no verdict and a third
+      window is read. The probe today prints pause counts, not distinct paused
+      nights; the reading adds that count, and no threshold here moves once a
+      window has been looked at. Open: the windows start after 1.4 closes.
 - [ ] **2.2 Put the stalled thinning in front of the owner with its run cost.**
       Add the 2.1 verdict, the floor figures and a `config_cost_report` run
       (delivered payload per asset) to blocker
