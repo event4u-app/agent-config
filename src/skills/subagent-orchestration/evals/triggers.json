@@ -1,0 +1,52 @@
+{
+    "skill": "subagent-orchestration",
+    "last_eval": "2026-10-17",
+    "description": "4 exemplars + 2 near-misses + 2 counterexamples. Authored 2026-10-17 because road-to-a-cold-start-paid-once step 2.6 touched this skill and brought it into check_routing_coverage's touched-skill scope. Exemplars cover the skill's own when-to-use list: an implementer with a judge, independent slices run in parallel, competing candidates, and the German phrasing of a parallel fan-out. Near-misses share the dispatch vocabulary but go to a different owner. One asks for a decision from external models, which the ai-council skill owns. The other asks for an isolated worktree with no orchestration, which using-git-worktrees owns. Counterexamples guard the 'agent' homonym in an unrelated sense and the 'parallel' homonym in test execution.",
+    "queries": [
+        {
+            "q": "implement this migration with one subagent and have a second one judge the diff before we apply it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "these four bug fixes are independent — fan them out to subagents in parallel",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "have three subagents each draft a solution and pick the best one",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "verteil die unabhängigen Teilaufgaben auf parallele Subagenten und lass das Ergebnis prüfen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "ask the external models for a second opinion on this roadmap",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a neutral opinion from providers outside the host session, not dispatch of host subagents → ai-council"
+        },
+        {
+            "q": "set up a separate worktree so I can try this refactor on the side",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "isolation without any orchestration or judging → using-git-worktrees, even though one of this skill's modes uses worktrees"
+        },
+        {
+            "q": "update the user agent string our HTTP client sends",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'agent' homonym — an HTTP header, nothing to dispatch"
+        },
+        {
+            "q": "run the test suite in parallel to make CI faster",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'parallel' homonym — test-runner sharding, no subagents"
+        }
+    ]
+}
