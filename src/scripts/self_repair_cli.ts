@@ -19,7 +19,7 @@
  * failure or 30 s timeout → issue; issue failure → the record stays open with
  * the errors attached) — degrading never widens what leaves the machine, only
  * the vehicle. `--dry-run` prints the resolved route, the GitHub account the
- * send would carry and the rendered body, and sends nothing: it reads the forge
+ * send would carry and the rendered body, and creates nothing: it reads the forge
  * (auth status, push rights, the signed-in login) and never writes to it.
  *
  * Fail-closed on privacy: the record's own text goes through the audited
@@ -446,8 +446,19 @@ export function executeRelease(
             });
             return { published: null, attempts };
         }
+        const deny = deps.denyIdentifiers ?? [];
+        // Branch, title and body are scanned before and independently of the
+        // history reads, so an unreadable range cannot skip them.
+        const headFindings = scanPayload({ branch, commits: '', patches: '', title: plan.title, body: plan.body }, deny);
+        // A finding in the title or body would leave through the issue too —
+        // its title is the same and its body is rendered from the same record.
+        if (headFindings.some((f) => f.part === 'title' || f.part === 'body')) {
+            attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(headFindings) });
+            return { published: null, attempts };
+        }
         const payload = readPayload(deps.runner, checkout, branch, plan);
-        const findings = payload === null ? null : scanPayload(payload, deps.denyIdentifiers ?? []);
+        const findings =
+            payload === null ? null : [...headFindings, ...scanPayload({ ...payload, branch: '', title: '', body: '' }, deny)];
         const refused = findings === null || findings.length > 0;
         if (refused) {
             attempts.push({
@@ -458,11 +469,6 @@ export function executeRelease(
                         ? `payload floor refused the pull request: the commits on ${PAYLOAD_BASE_REF}..<branch> could not be read`
                         : describeFindings(findings),
             });
-        }
-        // A finding in the title or body would leave through the issue too —
-        // its title is the same and its body is rendered from the same record.
-        if (findings !== null && findings.some((f) => f.part === 'title' || f.part === 'body')) {
-            return { published: null, attempts };
         }
         // Any other refusal skips every push rung and degrades to the issue,
         // which carries none of the refused branch, commit or patch bytes.
@@ -486,6 +492,17 @@ export function executeRelease(
         // `Route: pull-request` (R2 finding #4).
         const issueBody =
             plan.route === 'issue' ? plan.body : renderReport(record, 'issue');
+        if (plan.route === 'pull-request') {
+            // The degraded body is re-rendered, so it is scanned on its own.
+            const bodyFindings = scanPayload(
+                { branch: '', commits: '', patches: '', title: '', body: issueBody },
+                deps.denyIdentifiers ?? [],
+            );
+            if (bodyFindings.length > 0) {
+                attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(bodyFindings) });
+                return { published: null, attempts };
+            }
+        }
         const issue = deps.runner('gh', [
             'issue',
             'create',

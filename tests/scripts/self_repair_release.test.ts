@@ -278,6 +278,42 @@ describe('a refused title or body does not leave through the issue either', () =
         expect(out.published).toBeNull();
     });
 
+    it('an unreadable history does not skip the title and body scan', () => {
+        // The title and body are scanned before and independently of the git
+        // reads: an unreadable range once fell through to the issue unscanned.
+        const pushes: string[][] = [];
+        const r = payloadRunner({ logOk: false });
+        const runner: Runner = (cmd, args, cwd) => {
+            if (cmd === 'git' && args[0] === 'push') {
+                pushes.push([...args]);
+            }
+            return r.runner(cmd, args, cwd);
+        };
+        for (const p of [
+            { ...plan('upstream'), title: 'acmewidgets crash' },
+            { ...plan('upstream'), body: 'seen in the acmewidgets checkout' },
+            { ...plan('upstream'), title: 'acmewidgets crash', body: 'seen in the acmewidgets checkout' },
+        ]) {
+            const out = executeRelease(record(), p, probe(true), 'o/r', denyDeps(runner, ['acmewidgets']));
+            expect(out.published).toBeNull();
+            const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
+            expect(detail).toMatch(/title|body/);
+            expect(detail).not.toMatch(/acmewidgets/i);
+        }
+        expect(r.issueCalls).toBe(0);
+        expect(r.prCalls).toHaveLength(0);
+        expect(pushes).toHaveLength(0);
+    });
+
+    it('the re-rendered issue body of a degraded pull request is scanned too', () => {
+        const r = payloadRunner({ logOk: false });
+        const rec = { ...record(), evidence: 'seen in the acmewidgets checkout' };
+        const out = executeRelease(rec, plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+
+        expect(r.issueCalls).toBe(0);
+        expect(out.published).toBeNull();
+    });
+
     it('the patch read forces text and disables textconv and external diff drivers', () => {
         const seen: string[][] = [];
         const inner = payloadRunner({}).runner;
