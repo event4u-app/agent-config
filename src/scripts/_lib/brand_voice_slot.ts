@@ -12,6 +12,7 @@ import * as fs from 'node:fs';
 
 import { parse as parseYaml } from 'yaml';
 
+import { ALL_TELL_RULES } from '../ai_tells_rules.js';
 import { scanHiddenUnicode } from '../detect_ai_tells.js';
 
 export interface SlotIssue {
@@ -192,6 +193,12 @@ export function validateBrandVoiceSlotText(text: string): SlotIssue[] {
     });
 
     stringList(data['tell_exemptions'], 'tell_exemptions', issues);
+    const knownTells = new Set(ALL_TELL_RULES.map((r) => r.id));
+    (Array.isArray(data['tell_exemptions']) ? data['tell_exemptions'] : []).forEach((id, i) => {
+        if (typeof id === 'string' && !knownTells.has(id)) {
+            issues.push({ field: `tell_exemptions[${i}]`, message: 'not a tell id in the detector registry' });
+        }
+    });
 
     const samples = data['samples'];
     if (samples !== undefined && (!Array.isArray(samples) || samples.length > MAX_SAMPLES)) {

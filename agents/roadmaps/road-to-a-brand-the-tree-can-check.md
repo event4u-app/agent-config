@@ -196,10 +196,11 @@ irreversible-external-action row of `non-destructive-by-default`).
       and alias; `#ff0000` beside `var(--x)`.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t "dtcg-2025|same-line" --reporter=verbose` -> /✓.*dtcg-2025[\s\S]*✓.*same-line/
       Done 2026-10-16: `dtcg-2025` and `same-line` cases in `skills_design_tokens_tokens.test.ts`, seen red against the base `tokens.ts` before 3.1 and 3.2 landed.
-- [ ] **0.4 Taboo and claim never checked, red.** A ghostwriter draft containing
+- [x] **0.4 Taboo and claim never checked, red.** A ghostwriter draft containing
       its own taboo and a brand draft containing "the number one platform"
       produce no finding from any tool. (new test file)
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t control --reporter=verbose` -> /✓.*control/
+      Done 2026-10-17: the `control` case in `tests/scripts/check_voice_lexicon.test.ts` ran red (no checker existed) and is green since 5.1/5.3: the ghostwriter draft's own taboo is an `error` finding (exit 1), the brand draft's "number one platform" an `unbacked-claim`.
 - [x] **0.5 Ghostwriter path, red.** The ignore block and the lint roots both
       cover the documented path; fails today.
       verify: `npx vitest run tests/scripts/lint_ghostwriter_source.test.ts -t documented-path --reporter=verbose` -> /✓.*documented-path/
@@ -349,16 +350,18 @@ irreversible-external-action row of `non-destructive-by-default`).
       only the user-schema half (5.5); the brand and ghostwriter halves stand on
       D5 (a declared check with no runner).
       verify: `test -f agents/evidence/analysis/voice-lexicon-spike.md` -> 0
-- [ ] **5.1 `check_voice_lexicon.ts`.** Escaped literal matcher (word or
+- [x] **5.1 `check_voice_lexicon.ts`.** Escaped literal matcher (word or
       substring, case-insensitive) on the detector's exemption and location core
       (`stripExempt`, `scanHiddenUnicode`, line/column, `MAX_SCAN_CHARS`).
       Sources: slot `avoid`, ghostwriter `taboos`, user `style.avoid` after 5.5.
       Empty lexicon → `SKIPPED` with reason via `assertScanned`
       (`scan_scope.ts:80`). Quoted, cited and code-fenced text exempt.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t lexicon --reporter=verbose` -> /✓.*lexicon/
-- [ ] **5.2 `tell_exemptions` reach the detector.** The slot's ids are passed as
+      Done 2026-10-17: `src/scripts/check_voice_lexicon.ts` — escaped literal matcher (Unicode word boundaries or substring, case-insensitive), slot `avoid` at `warning`, ghostwriter `taboos` at `error`, hidden-Unicode findings, `MAX_SCAN_CHARS` truncation, and an empty lexicon reported `skipped` with the `assertScanned` reason. Exemptions follow `stripExempt`'s classes but are blanked in place (a new position-preserving pass), because `stripExempt` deletes spans and would shift every line and column. User `style.avoid` is not wired; it waits on 5.5.
+- [x] **5.2 `tell_exemptions` reach the detector.** The slot's ids are passed as
       `exclude` to `analyzeText`; an unknown id is a lint error.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t tell-exemptions --reporter=verbose` -> /✓.*tell-exemptions/
+      Done 2026-10-17: the slot's ids go to `analyzeText` as `exclude`; an id outside `ALL_TELL_RULES` is a `brand_voice_slot` issue (`tell_exemptions[i]`), and the CLI refuses an invalid slot with exit 2. Tells are reported beside the findings and never change the exit code.
 - [ ] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
       registry of English and German claim *phrases* (superlative, comparative,
       absolute, certification, guarantee forms — never bare words). A hit not
@@ -368,6 +371,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       was not enumerated); bar: ≤ 0.1 hits per 10k words (E8). German phrases run
       at hint severity until a German negative corpus is registered.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t "claim-shapes|negative-corpus" --reporter=verbose` -> /✓.*claim-shapes[\s\S]*✓.*negative-corpus/
+      Open 2026-10-17: the registry (`src/scripts/_lib/claim_phrases.ts`) and the corpus list (`tests/fixtures/voice-lexicon/negative-corpus.txt`, 183 contract docs) were committed before the first run; the `claim-shapes` cases pass and the scan is live at `warning`/`hint`. The first measurement missed the bar — 8 hits over 283,204 words, 0.28 per 10k against 0.1, all false positives from three phrases (`unmatched`, `beats every`, `never fails`) — recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md`. E8 forbids tuning after the first run, so no registry edit and no bar test landed; closing needs a fresh pre-registration against a corpus the revision was not chosen on.
 - [ ] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
       `humanizer` and `/brand:review` run 5.1-5.3 on the finished draft. A
       ghostwriter taboo hit aborts as documented; brand findings are located,
