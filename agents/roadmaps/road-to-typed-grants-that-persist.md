@@ -132,6 +132,19 @@ moved, the corrected path is the one below.
   column belong to `road-to-adversarial-verification-and-long-runs`.
 - **Not the ownership routing table.** That is `road-to-decision-closure` Phase 0.
 
+> **Census received, 2026-10-17, from step 6.6 of `road-to-unknowns-that-say-so`
+> — input, not a step.** That round enumerated the approvals an agent can
+> produce for itself, which is this file's subject from the other side:
+> `council:run --confirm` (`src/scripts/ai_council/council_cli.ts:2534-2540`),
+> `gates --execute --confirm` (`src/agent-src/scripts/gate_execute.ts:364`),
+> `release --yes` (`src/scripts/release.ts:879`), `council:grant-billing`, and
+> the settings `source` field defaulting to `manual`. Under the owner rulings
+> of 2026-09-05 and 2026-09-08 **none of them is a defect by itself**, and the
+> round added no ask, no attestation field and no turn binding to any of them.
+> Recorded here so the grant object's design starts from the list of what can
+> already self-approve rather than rediscovering it; nothing in this file is
+> owed to that round, and no step is added for it.
+
 ## Phase 0 — ADR-268, and the guard that would deny it
 
 - [x] **0.1 Carry ADR-268 to accepted.** Done 2026-09-08, owner-directed in the drain session

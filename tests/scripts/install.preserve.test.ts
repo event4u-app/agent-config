@@ -189,14 +189,16 @@ describe('install — preserving a user-modified managed file', () => {
         fixture({ packaged: '# v2\n', recorded: '# v1\n', onDisk: '# v1\n' });
 
         // Reading 1 — the verdict a plan built at this moment would carry.
-        expect(inst.tracker.resolve(p.target, false)).toBe('write');
+        expect(inst.tracker.resolve(p.target, false, { from: p.source, packageRoot: null })).toBe('write');
 
         // The window a plan-time verdict would have carried straight through.
         fs.writeFileSync(p.target, '# v1\nedited between plan and write\n');
 
         // Reading 2 — same call, same arguments, different answer, because the
         // digest comes from disk here rather than from the earlier verdict.
-        expect(inst.tracker.resolve(p.target, false)).toBe('preserve');
+        expect(inst.tracker.resolve(p.target, false, { from: p.source, packageRoot: null })).toBe(
+            'preserve',
+        );
     });
 
     describe('exit code and conflict count', () => {

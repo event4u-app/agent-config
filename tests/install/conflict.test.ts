@@ -254,6 +254,11 @@ describe('conflict — computeConflicts', () => {
             existingSha256: hex('on-disk'),
             mergeable: false,
             ownership: 'unknown',
+            // Not ledger-listed, so not a migration candidate. Asserted
+            // rather than omitted: a `toEqual` over the whole entry is the
+            // thing that notices a field being added, and softening it to
+            // `objectContaining` would trade that away.
+            migration: false,
         });
     });
 
@@ -346,6 +351,7 @@ describe('conflict — expandBatchChoice', () => {
             existingSha256: 'e',
             mergeable,
             ownership: 'unknown',
+            migration: false,
         };
     }
 

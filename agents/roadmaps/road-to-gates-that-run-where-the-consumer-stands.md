@@ -125,22 +125,56 @@ consumer behaviour points at something that executes.
       fails the run. The drift check is
       `tests/scripts/build_exit_code_register.test.ts`, which runs in the CI
       vitest suite — no workflow or gate-coverage row was added for it.
-- [ ] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
+- [x] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
       state — installer `rc=3` and `doctor --ci` — the register records the
       pair and a test asserts it.
       verify: the assertion fails if either side changes alone.
-      **Open, read 2026-10-16:** the pair does not exist yet, so there is
-      nothing to pin. No `doctor` check reads the preserved-sidecar state —
-      `.agent-config.new` / `SIDECAR_SUFFIX` occur only under `src/install/`,
-      `src/scripts/install.ts` and the wizard UI — so on a tree where the
-      installer returned `3`, `doctor --ci` exits `0`. Closing the step means
-      giving `doctor` a check that fails on that state, which changes what
-      `doctor --ci` returns for consumers already scripting against it; the
-      `doctor-exit-contract` decision of 2026-09-03 (recorded in
-      `src/scripts/_cli/_doctor_strict.ts`) kept that contract stable and put
-      new failing behaviour behind `--strict`. Whether the preserved state
-      fails `--ci`, fails only `--strict`, or warns is a consumer-facing exit
-      decision this lane did not take.
+      **Was open, read 2026-10-16:** the pair did not exist, and no `doctor`
+      check read the preserved state, so on a tree where the installer
+      returned `3`, `doctor --ci` exited `0`. Giving `doctor` such a check was
+      a consumer-facing exit decision that lane did not take.
+      **Closed 2026-10-17: the sibling took it.** The ownership-record
+      roadmap's step 3.1 landed `src/scripts/_cli/doctor_ownership_ledger.ts`,
+      which reports every ledger file the installer would preserve as
+      `modified`, and
+      `tests/install/ownership_ledger_real_install.test.ts` § step 3.1 runs
+      both surfaces over one tree. The pair exists; the premise of the note
+      above is spent. What was still missing was the register half, and that
+      is what this step now lands: `build_exit_code_register` carries a
+      `PAIRS` table, publishes a *Pairs that must agree* section, and
+      `checkPairs` fails the build when either verb stops documenting its side
+      of the pair OR when the named test loses that side's exact assertion —
+      read off `strip()`ped source, so an assertion surviving only inside a
+      comment fails too. The drift test asserts `errors` is empty, so either
+      drift reds CI.
+      **What the generator does NOT prove**, because the first draft of this
+      note claimed it did: a scan sees that `doctor` returns `1` somewhere,
+      not that it returns `1` for *this* state. The exact-code pin is the
+      test, which now asserts `doctor` → `1` rather than merely non-zero
+      (`expect(after.status).toBe(1)`, verified against a real install:
+      `doctor --ci` returns exactly 1 on a tree the installer left at rc=3).
+      A test that is *skipped* rather than deleted still satisfies the
+      generator; the vitest run is what catches that, and nothing here
+      replaces it.
+      **Sensitivity, counted rather than reasoned about** — the two earlier
+      figures in this slot were both wrong, each caught by a review, so the
+      numbers below are read off a run and the run is named so the next reader
+      re-derives rather than trusts. Neutralise `checkPairs` with an early
+      `return errors`, then
+      `npx vitest run tests/scripts/build_exit_code_register.test.ts`:
+      **5 of the 8 cases this step adds go red**, and the suite is **15**
+      against 7 at `origin/main`
+      (`git diff origin/main -- tests/scripts/build_exit_code_register.test.ts
+      | grep -c '^+.*    it('` → 8, with 0 removed).
+      **Reviewed by three fresh R2 subagent rounds**, returning 5, 4 and 5
+      findings; all fourteen were against this step's own diff and all are
+      fixed. Rounds 1 and 2 corrected the mechanism — a near-tautological code
+      check, an unpinned doctor exit code, an unstripped fragment match, a
+      fail-open pairs default — and round 3 corrected what the artefacts
+      *claimed* about it: the two false sentences in the generated contract
+      (a skipped test is not caught by the test run either; the pair reads one
+      way only) and this sensitivity figure. Artifacts:
+      `agents/evidence/reviews/gates-consumer-exit-pairs{,-round2,-round3}.findings.md`.
 
 ## Phase 4 — Point the claims at something that runs
 
@@ -174,6 +208,28 @@ consumer behaviour points at something that executes.
       revisit condition (a third evidence class) is the shape of the real fix.
       Doing (c) by mass status change was declined in this lane for that
       reason; doing (a) and (b) waits on harness cases.
+      **Re-read 2026-10-17, still open, and the structure is unchanged.**
+      `./scripts-run src/scripts/build_proof` exits 0, so the verify line is
+      satisfied and the step is not: that line measures the ledger's internal
+      consistency, not whether a claim about a consumer's machine is backed by
+      something that runs there.
+      One candidate was examined and **declined**.
+      `tests/install/uninstall_purge_containment.test.ts` now exists in the
+      harness and proves that uninstall leaves every unrecorded file byte for
+      byte, so `surgical-uninstall` could be given an `exec:` into it and would
+      read as harness-backed. It was not: that suite proves the **file**-level
+      half, while the claim's load-bearing half is **key**-level — "removes only
+      its own keys from a shared host config … inside a shared `hooks.<event>`
+      array" — which only `tests/lib/json_pointers.test.ts` and
+      `host_hook_merge.test.ts` cover. Repointing it would have moved the id out
+      of this step's residue while leaving the claim backed by the wrong thing,
+      which is exactly the defect L2 names.
+      **The step is structurally unclosable by this file**, and that is an
+      authoring defect rather than undone work: (a) and (b) need harness cases
+      and this file's own scope note gives those to the sibling roadmaps; (c)
+      needs the third evidence class D5's `revisit if` already names. The honest
+      next move is one of those two, taken where it belongs — not a ledger edit
+      here.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.

@@ -236,6 +236,27 @@ export function recordedHashesForRoot(root: string, env?: EnvMap | null): Record
  * The one table the preview (`computeConflicts`) and the writer
  * (`conflictTracker`) both read, so the two cannot answer differently.
  */
+/**
+ * Every absolute path the user-scoped ledger LISTS, with or without a digest.
+ *
+ * {@link recordedHashesWithLedger} answers "what digest did we record"; this
+ * answers the strictly weaker "did we deploy here at all", which is the
+ * question an inventory written before digests existed can still answer. The
+ * write decision needs both: a listed path with no digest is not a file this
+ * tree has no record of, and treating the two alike is what let a pre-ledger
+ * global edit be overwritten silently.
+ *
+ * Here rather than in the tracker so the inventory stays read by the one
+ * module that already reads it, under the same `AGENT_CONFIG_DEPLOY_INVENTORY`
+ * override.
+ */
+export function ledgerListedPaths(env?: EnvMap | null): ReadonlySet<string> {
+    return global_deploy_inventory.recorded_absolute_files(
+        global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env)),
+        env?.['HOME'],
+    );
+}
+
 export function recordedHashesWithLedger(root: string, env?: EnvMap | null): RecordedHashes {
     const out = new Map<string, string | null>(recordedHashesForRoot(root, env));
     const ledger = global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env));

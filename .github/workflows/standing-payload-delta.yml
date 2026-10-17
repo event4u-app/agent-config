@@ -799,3 +799,25 @@ jobs:
           ./scripts-run src/scripts/lint_marketplace_install_completeness || rc=1
           ./scripts-run src/scripts/check_reply_consistency --quiet --scan-dir src || rc=1
           exit "$rc"
+
+      # ----------------------------------------------------------------------
+      # The local-only drain — step 2.2, sixth batch (2.2g) of
+      # road-to-local-gates-wired-while-they-are-green.
+      #
+      # ONE gate, and the batch was five until CI said otherwise. Five
+      # wire-class gates had no caller and none of them was in the 2026-10-11
+      # reading's table: four entered `task ci` after it was taken, and
+      # `lint_motion_authority_drift` fell in the gap between 2.2c, which ended
+      # at lint_model_tier_coverage, and 2.2d, which began at lint_namespace.
+      # All five exit 0 on a developer's machine. FOUR OF THEM READ
+      # `dist/discovery/discovery-manifest.json`, which is a build output this
+      # job does not produce and the tree does not commit, so they exited 1 the
+      # first time they ran here — the machine-class signal a local reading
+      # cannot see, which is the whole reason the class exists. They are
+      # recorded `machine` and stay in the backlog. Only this one is wired.
+      - name: Drain 2.2g — motion authority drift
+        if: always()
+        run: |
+          rc=0
+          ./scripts-run src/scripts/lint_motion_authority_drift --quiet || rc=1
+          exit "$rc"

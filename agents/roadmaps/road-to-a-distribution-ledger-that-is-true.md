@@ -261,3 +261,15 @@ and the reconciliation became Phase 1.
   reads, so its status is the maintainer's 2026-06 word, recorded as such in the
   ledger with an empty `Last read`. It closes when a human reads the site.
 - **AC-8** is discharged by the PR's CI, not by a local `task ci` run.
+
+## Re-attempted 2026-10-17
+
+Row 3 was read again before this round claimed anything about it: HTTP 403 on
+the row's own URL and on the site root, under a default `curl`, an empty and a
+desktop-Chrome user agent. The block is standing rather than transient, so
+AC-1's residue is unchanged and is owner-owned — the only route to that
+reading is a browser. The ledger now records the attempt and its date, and the
+reading rule names what to do with an upstream that blocks machines, so the
+next round spends no calls rediscovering it. Every other row's status is still
+backed by its 2026-10-16 live read; nothing was re-read for the sake of a
+fresher date.

@@ -219,6 +219,48 @@ escalation shape (5.2) were reverted to `origin/main` and are **open steps
 here**, not cancelled work. Each was verified by an empty net diff per file
 against `origin/main`, not by a revert command’s exit code.
 
+## Why no agent lane can close the rest — read 2026-10-17, not inferred
+
+A drain lane picked this file up on 2026-10-17, re-executed the premise behind
+the six remaining steps, and stopped. The finding is one sentence of this
+package's own accepted record, and it is written here so the next lane does not
+spend a twelfth council round discovering it.
+
+`docs/decisions/ADR-281-council-confirmed-self-modification.md` § Amendment —
+2026-10-07, on the owner's direction, `:224-231`, verbatim:
+
+> Every gated or learning-originated package self-modification requires a
+> digest-bound council review; a council refusal fails closed, while any
+> favourable council verdict is **advisory until authenticated owner
+> authorization is bound to the same digest**. Changes to the reviewer or its
+> trust chain are always owner-reserved. **Neither an agent nor a council may
+> waive that reservation.**
+
+Every one of the six open steps changes the reviewer or its trust chain, and
+the tree says so independently of the ADR:
+`src/scripts/check_kernel_edit_ratified.ts:120` sets
+`SELF_PATH = 'src/scripts/check_kernel_edit_ratified.ts'`, so 4.1, 4.2 and 5.2
+— each of which edits that file — are gated by the gate itself; 3.4 adds the
+record writer, which is what 4.1 then puts on the watch list; 6.1 edits
+`check_proposal` for the same surface. 6.2 is the only one that touches no
+gated path, and it cannot land alone either: AC-5 asks its proposal to name
+**the record that passed the change it ships**, and a change touching nothing
+gated produces no record to name.
+
+So the terminal state an agent can reach here is the one the file is already
+in. The eleven recorded rounds are not a sign that the work was approached
+badly — round 9 of the narrowed shape answered 2/2 in favour and was still
+advisory. What is missing is one act, named in `owner-permission-route` option
+(b) and in AC-4: an authenticated owner authorisation bound to the digest of
+the change, which ADR-281 § 5 makes a forge act the gate cannot authenticate
+and an agent cannot perform.
+
+**Nothing here is a request to relax that.** The reservation is the mechanism
+this roadmap exists to build, and an agent arguing its way past it would be the
+exact failure the file is about. Recorded as a stop, not as a blocker: the two
+blockers this file carries are both `resolved`, and the residue is an act
+rather than a decision.
+
 What this costs, stated rather than left to be discovered: until 4.1 lands, the
 modules that compute the digest and ask the review’s questions are **outside**
 the surface the gate watches, so the reviewer is not yet inside what it

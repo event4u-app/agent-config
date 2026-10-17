@@ -4,6 +4,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+/**
+ * The repository's own `tsx`, not `npx tsx`. Both cases below spawn with
+ * `cwd: tmp`, a scratch directory with no `node_modules`, so `npx` resolved
+ * nothing locally and asked the registry — a registry round-trip inside a test
+ * about a hook's default-off behaviour. It was invisible until the suite's
+ * network guard turned it into a 30 s timeout.
+ */
+const TSX_BIN = path.resolve('node_modules', '.bin', 'tsx');
+
 import {
     buildSettingsClassIndex,
     classOfPath,
@@ -247,8 +256,8 @@ describe('hook entry — default-off no-op, fail-open', { timeout: 30_000 }, () 
     it('exits 0 and prints nothing when the setting is off', () => {
         seedIntake(tmp);
         const out = execFileSync(
-            'npx',
-            ['tsx', path.resolve('src/scripts/memory_learn_hook.ts')],
+            TSX_BIN,
+            [path.resolve('src/scripts/memory_learn_hook.ts')],
             { cwd: tmp, encoding: 'utf8' },
         );
         expect(out).toBe('');
@@ -258,8 +267,8 @@ describe('hook entry — default-off no-op, fail-open', { timeout: 30_000 }, () 
         seedIntake(tmp);
         writeSettings(tmp, 'memory:\n  learn_on_session_end: true\n');
         const out = execFileSync(
-            'npx',
-            ['tsx', path.resolve('src/scripts/memory_learn_hook.ts')],
+            TSX_BIN,
+            [path.resolve('src/scripts/memory_learn_hook.ts')],
             { cwd: tmp, encoding: 'utf8' },
         );
         expect(out).toMatch(/🧠 Memory: sidecar refreshed/u);

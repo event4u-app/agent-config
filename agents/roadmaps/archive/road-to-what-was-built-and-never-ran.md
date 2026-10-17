@@ -17,6 +17,14 @@ estate_offset_exempt: "Offset in Phase 4 by archiving later/road-to-run-continua
 ---
 # Road to what was built and never ran
 
+> **Arrived after this file closed, and NOT re-opened here.** Step 6.6 of
+> `road-to-unknowns-that-say-so` carried two more instruments documented as
+> live and reached by nothing — `src/scripts/ai_council/probation_gate.ts` and
+> `src/scripts/lint_global_paths.ts` — for wire-or-withdraw. This file was
+> already archived with zero open steps, so they are held in
+> `agents/roadmaps/stubs/road-to-sentences-and-instruments-from-inbox-2026-10-o.md`
+> rather than re-opening it.
+
 > **Source:** `agents/tmp.old/inbox-2026-10-m/` (topic `s03`) — nineteen
 > external reviews of the 16.4.0 release in one transcript, a supplied 49-row
 > rescore that lists ten instruments reached only by tests or command prose,

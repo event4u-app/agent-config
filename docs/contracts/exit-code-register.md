@@ -47,3 +47,26 @@ keep-beta-until: 2027-01-14
 | `0` | removed what it owned, or there was nothing to remove | `src/scripts/_cli/cmd_uninstall.ts` |
 | `1` | no lockfile and no `--force`, or a removal was refused | `src/scripts/_cli/cmd_uninstall.ts` |
 | `2` | usage error | `src/scripts/_cli/cmd_uninstall.ts` |
+
+## Pairs that must agree
+
+> Two surfaces reporting on one state. The named test pins each exact
+> code by driving both surfaces over one tree; this generator checks
+> that the register still documents each paired code and that the test
+> still carries each assertion, so deleting or commenting one out fails
+> the build.
+
+> **Read each row one way only.** The pair licenses "this state ⇒ these
+> codes", never the converse. A code may have other causes — `doctor` 1
+> is "drift OR a failing check", and a tree can be at 1 for a reason the
+> pair says nothing about.
+
+> **What the generator does not catch:** a test skipped rather than
+> deleted (`vitest run` exits 0 on a skip; the diff gate
+> `check_test_weakening` is what sees one being added), and an assertion
+> that moved to another case in the same file, because the match is
+> file-wide.
+
+| State | Surfaces | Asserted in |
+|---|---|---|
+| the install preserved a user-modified managed file, so the active installation is stale | `init` → `3` · `doctor` → `1` | `tests/install/ownership_ledger_real_install.test.ts` |

@@ -10,7 +10,18 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { OUT_REL, build, main, render, scanCodes, type CommandSpec } from '../../src/scripts/build_exit_code_register.js';
+import {
+    OUT_REL,
+    PAIRS,
+    build,
+    checkPairs,
+    main,
+    render,
+    scanCodes,
+    type CommandSpec,
+    type Row,
+    type SurfacePair,
+} from '../../src/scripts/build_exit_code_register.js';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const made: string[] = [];
@@ -45,6 +56,122 @@ describe('exit-code register — drift', () => {
     });
 });
 
+describe('exit-code register — pairs that must agree', () => {
+    it('publishes the installer/doctor pair against the real tree', () => {
+        const reg = build(ROOT);
+        expect(reg.errors).toEqual([]);
+        const pair = reg.pairs.find((p) => p.surfaces.some((s) => s.verb === 'init' && s.code === 3));
+        expect(pair?.surfaces.map((s) => `${s.verb}:${s.code}`)).toEqual(['init:3', 'doctor:1']);
+        expect(fs.existsSync(path.join(ROOT, pair?.assertedIn ?? ''))).toBe(true);
+        expect(render(reg)).toContain('## Pairs that must agree');
+    });
+
+    const rows = (spec: Record<string, number[]>): ReadonlyMap<string, readonly Row[]> =>
+        new Map(
+            Object.entries(spec).map(([verb, codes]) => [
+                verb,
+                codes.map((code) => ({ code, meaning: '', emittedIn: [] })),
+            ]),
+        );
+
+    const pair: SurfacePair = {
+        state: 'one state',
+        surfaces: [
+            { verb: 'init', code: 3 },
+            { verb: 'doctor', code: 1 },
+        ],
+        assertedIn: 'the.test.ts',
+        assertions: ['expect(a.status).toBe(3)', 'expect(b.status).toBe(1)'],
+    };
+    const asserting = 'expect(a.status).toBe(3);\nexpect(b.status).toBe(1);\n';
+
+    it('fails when ONE side stops returning its code, and names which', () => {
+        const root = tree({ 'the.test.ts': asserting });
+        expect(checkPairs(root, rows({ init: [0, 3], doctor: [0, 1] }), [pair])).toEqual([]);
+        expect(checkPairs(root, rows({ init: [0], doctor: [0, 1] }), [pair])).toEqual([
+            'pair "one state": `init` no longer returns 3',
+        ]);
+        expect(checkPairs(root, rows({ init: [0, 3], doctor: [0] }), [pair])).toEqual([
+            'pair "one state": `doctor` no longer returns 1',
+        ]);
+    });
+
+    it('fails per surface when its assertion is deleted, naming the verb', () => {
+        const noDoctor = tree({ 'the.test.ts': 'expect(a.status).toBe(3);\n' });
+        expect(checkPairs(noDoctor, rows({ init: [3], doctor: [1] }), [pair])).toEqual([
+            'pair "one state": the.test.ts no longer asserts the `doctor` side — ' +
+                '`expect(b.status).toBe(1)` is gone',
+        ]);
+        const gone = tree({ 'other.ts': '' });
+        expect(checkPairs(gone, rows({ init: [3], doctor: [1] }), [pair])).toEqual([
+            'pair "one state": asserted in the.test.ts, which does not exist',
+        ]);
+    });
+
+    it('does not accept an assertion that survives only inside a comment', () => {
+        const commented = tree({
+            'the.test.ts': 'expect(a.status).toBe(3);\n// expect(b.status).toBe(1);\n',
+        });
+        expect(checkPairs(commented, rows({ init: [3], doctor: [1] }), [pair])).toEqual([
+            'pair "one state": the.test.ts no longer asserts the `doctor` side — ' +
+                '`expect(b.status).toBe(1)` is gone',
+        ]);
+        const blockCommented = tree({
+            'the.test.ts': 'expect(a.status).toBe(3);\n/* expect(b.status).toBe(1); */\n',
+        });
+        expect(checkPairs(blockCommented, rows({ init: [3], doctor: [1] }), [pair])).toHaveLength(1);
+    });
+
+    it('fails on a pair naming a verb the register does not cover', () => {
+        const root = tree({ 'the.test.ts': asserting });
+        expect(checkPairs(root, rows({ init: [3] }), [pair])).toEqual([
+            'pair "one state": names `doctor`, which the register does not cover',
+        ]);
+    });
+
+    it('every shipped pair asserts each surface`s exact code in a live test', () => {
+        for (const p of PAIRS) {
+            const abs = path.join(ROOT, p.assertedIn);
+            expect(fs.existsSync(abs), p.assertedIn).toBe(true);
+            const body = fs.readFileSync(abs, 'utf8');
+            p.assertions.forEach((assertion, i) => {
+                expect(body, `${p.assertedIn} :: ${p.surfaces[i]?.verb}`).toContain(assertion);
+                // The assertion must name the code the register publishes.
+                expect(assertion).toContain(String(p.surfaces[i]?.code));
+            });
+        }
+    });
+
+    it('`main``s path keeps the pair check — a fixture missing the test reds it', () => {
+        // Finding 2 of the second review: the first fix disabled the check
+        // when `commands` was not reference-identical to `COMMANDS`, which is
+        // fail-open. The default is unconditional now, and this is the pin
+        // that the production entry point still runs it — the property the
+        // identity default was silently providing and nothing was asserting.
+        const base = {
+            'src/scripts/install': 'exit 0\nexit 1\nexit 2\n',
+            'src/scripts/install.ts': '',
+            'src/install/conflictTracker.ts': 'return rc === 0 ? EXIT_COMPLETED_WITH_CONFLICTS : rc;\n',
+            'src/install/preserve.ts': 'export const EXIT_COMPLETED_WITH_CONFLICTS = 3;\n',
+            'src/scripts/_cli/cmd_sync.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\nreturn rc;\n',
+            'src/scripts/_cli/cmd_doctor.ts': 'return 0;\nreturn 1;\nreturn 2;\n',
+            'src/scripts/_cli/_doctor_strict.ts': '',
+            'src/scripts/_cli/cmd_uninstall.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\n',
+        };
+        const withoutTest = tree({ ...base, [OUT_REL]: 'whatever\n' });
+        vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        expect(main([], withoutTest)).toBe(1);
+        expect(build(withoutTest).errors.join(' ')).toContain('ownership_ledger_real_install.test.ts');
+    });
+
+    it('a fixture command set opts out of the pairs explicitly', () => {
+        const root = tree({ 'a.ts': 'return 0;\n' });
+        const only = [{ verb: 'a', sources: ['a.ts'], meanings: { 0: 'ok' } }];
+        expect(build(root, only, []).errors).toEqual([]);
+        expect(build(root, only, []).pairs).toEqual([]);
+    });
+});
+
 describe('exit-code register — the scan', () => {
     it('reads literal, ternary, argparse, bash and named-constant exits, not comments', () => {
         const constants = new Map([['EXIT_SEVEN', 7]]);
@@ -61,14 +188,14 @@ describe('exit-code register — the scan', () => {
 
     it('fails on a code the scan finds with no meaning', () => {
         const root = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\nreturn 6;\n' });
-        expect(build(root, spec({ 0: 'ok' })).errors).toEqual([
+        expect(build(root, spec({ 0: 'ok' }), []).errors).toEqual([
             'b: returns 6 (b.ts) but the register gives it no meaning',
         ]);
     });
 
     it('fails on a meaning for a code nothing returns', () => {
         const root = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\n' });
-        expect(build(root, spec({ 0: 'ok', 9: 'nine' })).errors).toEqual([
+        expect(build(root, spec({ 0: 'ok', 9: 'nine' }), []).errors).toEqual([
             'b: the register documents 9, which no scanned source returns',
         ]);
     });
@@ -76,9 +203,9 @@ describe('exit-code register — the scan', () => {
     it('unions an inherited command`s codes only while the forwarding line exists', () => {
         const inherits = [{ from: 'a', file: 'b.ts', fragment: 'return rc;' }];
         const forwarding = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\nreturn rc;\n' });
-        expect(build(forwarding, spec({ 0: 'ok', 4: 'forwarded' }, inherits)).errors).toEqual([]);
+        expect(build(forwarding, spec({ 0: 'ok', 4: 'forwarded' }, inherits), []).errors).toEqual([]);
         const gone = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\n' });
-        expect(build(gone, spec({ 0: 'ok', 4: 'forwarded' }, inherits)).errors).toContain(
+        expect(build(gone, spec({ 0: 'ok', 4: 'forwarded' }, inherits), []).errors).toContain(
             'b: inherits a through `return rc;` in b.ts, which is no longer there',
         );
     });
@@ -93,6 +220,14 @@ describe('exit-code register — the scan', () => {
             'src/scripts/_cli/cmd_doctor.ts': 'return 0;\nreturn 1;\nreturn 2;\n',
             'src/scripts/_cli/_doctor_strict.ts': '',
             'src/scripts/_cli/cmd_uninstall.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\n',
+            // The pair's asserting test is part of the shape `main` checks, so
+            // the fixture tree carries it too — otherwise this case would be
+            // measuring a missing file rather than register drift. The content
+            // is DERIVED from `PAIRS` rather than retyped: a third hand-written
+            // copy of the literals would turn a reworded assertion in the real
+            // test into a confusing pair error inside a drift case.
+            [PAIRS[0]?.assertedIn ?? 'unreachable']:
+                `${(PAIRS[0]?.assertions ?? []).join(';\n')};\n`,
             [OUT_REL]: 'stale\n',
         });
         vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
