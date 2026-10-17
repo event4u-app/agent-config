@@ -227,7 +227,7 @@ function lint_roadmap(
     }
     _check_execution_mode(fm, problems);
     _check_relates(fm, problems);
-    _check_cross_file_waits(text, fm, path.dirname(p), problems, warnings);
+    _check_cross_file_waits(text, fm, path.dirname(p), problems);
     if (warnings) {
         _check_autonomous_authoring(text, fm, warnings);
         _check_human_gate_steps(text, warnings);
@@ -530,15 +530,14 @@ function _is_archived(slug: string, roadmap_dir: string): boolean {
  * half warned rather than failed until 2026-10-17, while one active file still
  * carried such a row; that row is now `extends` and the active glob carries
  * none, so road-to-an-intake-the-queue-can-carry 1.2's flip condition is met.
- * `warnings` stays in the signature: callers pass it, and a later half of this
- * check may need it again.
+ * Neither half warns any more, so this check no longer takes a `warnings`
+ * sink; `lint_roadmap` still has one for the checks that do.
  */
 export function _check_cross_file_waits(
     text: string,
     fm: string,
     roadmap_dir: string,
     problems: string[],
-    warnings?: string[],
 ): void {
     const rows = _relates_rows(fm);
     const strip = (s: string): string => s.replace(/^(?:later|stubs|archive)\//, '');
