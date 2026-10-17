@@ -305,13 +305,14 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 4 — One voice slot, one shape
 
-- [ ] **4.1 ADR** (E6). `docs/contracts/adr-gtm-context-spine-brand-voice.md`
+- [x] **4.1 ADR** (E6). `docs/contracts/adr-gtm-context-spine-brand-voice.md`
       adds wing-scoped slot `brand-voice` (`agents/context-spine/brand-voice.md`)
       under § 5 and records that it is the first slot whose frontmatter is
       machine-read, limited to the fields Phase 5 consumes; the body stays prose
       under § 4.
       verify: `rg -n 'brand-voice' docs/contracts/context-spine.md` -> /brand-voice/
-- [ ] **4.2 Schema** (E4, E5, E7). `attributes` (three `{is, is_not, proof}`),
+      Done 2026-10-17: `adr-gtm-context-spine-brand-voice.md` adds the Wing-3 slot, records the § 4 machine-read exception and the E6 fallback; `context-spine.md` lists the slot, and the `skill.schema.json` enum plus the lint vocabulary carry it. Citations are prospective (4.3, 6.1), as § 5 allows for roadmap items in the same iteration. Not added to `skill_linter`'s Wing-3 vendor-check set: that set polices GTM tactics, which the copy readers declaring this slot are not.
+- [x] **4.2 Schema** (E4, E5, E7). `attributes` (three `{is, is_not, proof}`),
       `tone_by_context` (context, audience state, lead attribute, amplify/mute),
       `avoid[]` (`{term 1-64 chars, match: word|substring, note?}`, max 32, no
       regex), `claims[]` (`{text, evidence_ref, expires?}`), `tell_exemptions[]`
@@ -322,18 +323,20 @@ irreversible-external-action row of `non-destructive-by-default`).
       `confidence: low|med|high`, `last_reviewed_at`), `version`, `changelog[]`,
       `open_questions[]` (each with a recommendation).
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t brand-voice-schema --reporter=verbose` -> /✓.*brand-voice-schema/
+      Done 2026-10-17: `src/scripts/_lib/brand_voice_slot.ts` validates the closed field set (an unknown field such as a colour is an issue, so the slot cannot become a token store), exactly three attributes, `tone_by_context` naming an attribute, `avoid` ≤32 literal terms, `claims` with a day-valued `expires`, ≤3 samples of ≤200 words, the four source tiers and the confidence/date provenance. `lint_context_spine_usage` validates `agents/context-spine/brand-voice.md` when it exists. `changelog` entries are plain strings. Unknown `tell_exemptions` ids are 5.2's.
 - [ ] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
       writes the slot (declared write scope). `brand-strategy` and the
       consumption contract defer their voice sections to it. `humanizer`'s
       "registered brand voice" names the slot. `/brand:voice` regains its
       lexicon line.
       verify: `rg -l 'context-spine/brand-voice' src/skills/voice-and-tone-design/SKILL.md src/skills/brand-strategy/SKILL.md src/skills/humanizer/SKILL.md docs/contracts/brand-token-consumption.md` -> 4 files
-- [ ] **4.4 The slot is data** (`folded-from-deep-dive`, wider than the source).
+- [x] **4.4 The slot is data** (`folded-from-deep-dive`, wider than the source).
       Hidden-Unicode scan via `scanHiddenUnicode` (`detect_ai_tells.ts:126`) is a
       lint error; `evidence_ref` and `sources[].ref` must be repo-relative paths
       or URLs, never absolute paths; samples are never executed or followed as
       instructions by any reader.
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t slot-untrusted --reporter=verbose` -> /✓.*slot-untrusted/
+      Done 2026-10-17: `scanHiddenUnicode` over the whole file is an issue; `evidence_ref` and `sources[].ref` must be a repo-relative path without `..` or an http(s) URL; YAML aliases are refused (`maxAliasCount: 0`). The never-executed property belongs to the readers (5.x) and is stated in the ADR.
 - [ ] **4.5 `brand:status` reports the voice.** Present, schema-valid, `avoid`
       and `claims` counts, confidence, days since review, stale after 90 days,
       expired claims — counts and dates only, never slot content.
