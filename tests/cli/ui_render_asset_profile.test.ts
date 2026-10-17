@@ -1170,3 +1170,11 @@ describe('the asset under test is untrusted input (16.5.0 release review)', () =
         120_000,
     );
 });
+
+// The font witness suites (road-to-type-with-a-witness 1.3, 1.4). Imported, not
+// listed: the `svg-witness-tests` job names this file and the scenario suite on
+// its command line, and an import registers their cases here, in the one job
+// that installs Chromium, on ubuntu and macOS. On a sharded runner without the
+// binary their own files stand down (`tests/_lib/chromium_reachable.ts`).
+import './ui_render_asset_font_state.test.js';
+import './ui_render_painted_family.test.js';

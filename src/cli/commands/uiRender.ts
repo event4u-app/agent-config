@@ -233,6 +233,23 @@ export function collectPalette(styleRecords: ReadonlyArray<Record<string, string
     return [...out].sort();
 }
 
+/**
+ * The families that actually painted text, read from the `painted-family` each
+ * sampled node that carries its own text records in `<viewport>.styles.json`
+ * (step 1.3 of road-to-type-with-a-witness). Beside the declared list, never
+ * instead of it: the A1.5 threshold and the preserve check in `ui_authority.ts`
+ * keep reading `type_families`, and the manifest gains no key — its page-profile
+ * key set is pinned (E8), so the painted reading lives per node.
+ */
+export function collectPaintedFamilies(styleRecords: ReadonlyArray<Record<string, string>>): string[] {
+    const out = new Set<string>();
+    for (const rec of styleRecords) {
+        const fam = rec['painted-family'];
+        if (fam) out.add(fam);
+    }
+    return [...out].sort();
+}
+
 /** First-choice families only — the A1.5 threshold is about the family that wins. */
 export function collectTypeFamilies(styleRecords: ReadonlyArray<Record<string, string>>): string[] {
     const out = new Set<string>();
@@ -346,11 +363,59 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             fs.writeFileSync(domPath, dom);
 
             const styles = await page.evaluate((props: readonly string[]) => {
+                // The family that PAINTED, beside the one declared (step 1.3 of
+                // road-to-type-with-a-witness). Walked in stack order: a generic
+                // family always paints; a family registered through @font-face
+                // paints only when one of its faces loaded; any other family
+                // paints when it measures differently from an absent one.
+                const GENERIC = ['serif', 'sans-serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'math', 'emoji'];
+                const faces = Array.from((document as unknown as { fonts: Iterable<FontFace> }).fonts);
+                const ctx = document.createElement('canvas').getContext('2d');
+                const unquote = (f: string): string => f.trim().replace(/^["']|["']$/g, '').toLowerCase();
+                const painted = new Map<string, string>();
+                const paintedOf = (stack: string): string => {
+                    const cached = painted.get(stack);
+                    if (cached !== undefined) return cached;
+                    let out = '';
+                    for (const fam of stack.split(',').map(unquote)) {
+                        if (fam === '') continue;
+                        if (GENERIC.includes(fam) || fam.startsWith('ui-')) {
+                            out = fam;
+                            break;
+                        }
+                        const own = faces.filter((f) => unquote(f.family) === fam);
+                        if (own.length > 0) {
+                            if (own.some((f) => f.status === 'loaded')) {
+                                out = fam;
+                                break;
+                            }
+                            continue;
+                        }
+                        if (!ctx) continue;
+                        ctx.font = `32px "${fam}", monospace`;
+                        const a = ctx.measureText('Hamburgefonstiv').width;
+                        ctx.font = '32px "__agent_config_absent_family__", monospace';
+                        if (Math.abs(a - ctx.measureText('Hamburgefonstiv').width) > 0.01) {
+                            out = fam;
+                            break;
+                        }
+                    }
+                    painted.set(stack, out);
+                    return out;
+                };
                 const rows: Array<Record<string, string>> = [];
                 for (const el of Array.from(document.querySelectorAll('*')).slice(0, 1500)) {
                     const cs = window.getComputedStyle(el);
                     const rec: Record<string, string> = { selector: el.tagName.toLowerCase() };
                     for (const p of props) rec[p] = cs.getPropertyValue(p);
+                    // `<style>` and `<script>` carry text and paint none of it.
+                    const NO_PAINT = ['style', 'script', 'title', 'head', 'noscript', 'template'];
+                    const ownText =
+                        !NO_PAINT.includes(rec['selector'] ?? '') &&
+                        Array.from(el.childNodes).some(
+                            (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? '').trim() !== '',
+                        );
+                    if (ownText) rec['painted-family'] = paintedOf(cs.fontFamily);
                     rows.push(rec);
                 }
                 return rows;

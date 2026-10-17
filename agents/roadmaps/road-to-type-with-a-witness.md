@@ -177,7 +177,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
 
 ## Phase 1 — The witness says which face painted
 
-- [ ] **1.1 Face status per declared family** — `corrected-from-reproduction`.
+- [x] **1.1 Face status per declared family** — `corrected-from-reproduction`.
       In the asset profile's in-page reading next to the sentinel
       (`uiRenderAsset.ts:813-821`), read `document.fonts` for every declared
       family and report `loaded`, `error` or `unloaded` beside the existing
@@ -185,16 +185,19 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       bounded `document.fonts.ready` wait (3 s) runs only when a declared face
       still reads `loading`, and a timeout is its own state, never a fallback.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*face-error-reads-error/
-- [ ] **1.2 Synthesis is a state.** An SVG text element whose requested weight or style
+      Done 2026-10-17: `src/cli/commands/uiRenderAssetFonts.ts`, called right after the geometry reading (the 1,500-line ceiling keeps it out of `uiRenderAsset.ts`); `face_family`/`face_state` on each text reading, finding `geometry/font-face-error`.
+- [x] **1.2 Synthesis is a state.** An SVG text element whose requested weight or style
       no loaded face of its family carries, and whose `font-synthesis` is not
       `none`, reports `synthesised`.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*missing-weight-reads-synthesised/
-- [ ] **1.3 The page profile keeps declared and adds painted.**
+      Done 2026-10-17: matched on the `@font-face` descriptors; finding `geometry/font-synthesised`; `font-synthesis: none` and a 500 request are pinned near misses.
+- [x] **1.3 The page profile keeps declared and adds painted.**
       `collectTypeFamilies` gains a resolved family per sampled node beside the
       declared one; the A1.5 threshold and the preserve check in
       `ui_authority.ts` keep reading the declared list.
       verify: `npx vitest run tests/cli/ui_render_painted_family.test.ts` -> 0
-- [ ] **1.4 A test font made at test time (decision A7).** A small TrueType
+      Done 2026-10-17: a `painted-family` per sampled text node in `<viewport>.styles.json`, read by `collectPaintedFamilies`; the manifest gains no key, because its page key set is pinned (E8) by `page-manifest-unchanged-except-generated-at`.
+- [x] **1.4 A test font made at test time (decision A7).** A small TrueType
       writer under `tests/` builds a face with a handful of rectangle glyphs at
       weight 400 in memory; no font file is committed and nothing is downloaded.
       Three fixtures served through intercepted routes read `loaded`, `error`
@@ -203,6 +206,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       existing `svg-witness-tests` job (`.github/workflows/tests.yml:543`) on
       ubuntu and macOS.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*load-waited-for-delayed-face/
+      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and stand down on a runner without Chromium. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
 
 ## Phase 2 — Two delivery tells under the delivery owner
 
