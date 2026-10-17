@@ -46,6 +46,26 @@ The work emphasizes: visual expression over text · original direction (no artis
 
 ## Procedure
 
+### 0. Read the brand before choosing anything
+
+Before the first colour, typeface or voice decision, run the resolver —
+never a file test of your own, and never a remembered value:
+
+```bash
+./agent-config brand:status --json
+```
+
+Take values **only** from the `sources[]` it reports as valid: the
+registered `tokens.json` for colour, type and spacing, the `brand-voice`
+slot (`agents/context-spine/brand-voice.md`) for any text this asset
+carries. A file the resolver marks `invalid` or `shadowed` is not the
+brand; a file it never lists does not exist for this purpose.
+
+When the resolver reports `bare` — or reports nothing valid for the axis
+in hand — derive from the brief and the corpus, and **label every such
+value `corpus-sourced` in the output** so the reader can tell a brand
+decision from a gap-fill. Never present a corpus default as the brand.
+
 ### 1. Brief intake
 
 One numbered-options block surfaces: theme / occasion · target medium + dimensions (web 1200×630? print A3? square 1080×1080?) · color & mood direction · hard constraints (logo required? color to avoid?) · single page or series.
