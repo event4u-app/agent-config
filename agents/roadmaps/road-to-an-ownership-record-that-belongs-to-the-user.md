@@ -148,21 +148,42 @@ the same thing in all of them.
       The project-manifest write itself keeps its settings gate: that block also
       writes project anchors into the working directory, and moving it would put
       files into whatever directory an install ran from. Test 1.1 green.
-- [ ] **2.4 `unknown` preserves what the ledger proves we wrote.**
+- [x] **2.4 `unknown` preserves what the ledger proves we wrote.**
       `decideDeployWrite`'s `unknown` arm becomes `preserve` for a path the
       ledger lists, and stays `write` for a genuinely unrecorded pre-existing
       file — the noise argument in `preserve.ts`'s own comment still holds for
       those, and this change does not touch them.
       verify: tests 1.1–1.3 green; a pre-existing unrecorded file is still
       written, asserted as its own case.
-      Open 2026-10-16, deliberately: tests 1.1–1.3 are green and the unrecorded
-      file is asserted written (`ownershipLedger.test.ts`, AC-5), but without
-      this arm change. The ledger now records a digest for every path it lists,
-      so the only ledger-listed path that still reaches `unknown` is a schema-1
-      entry from an install that predates the ledger — and preserving those
-      would stage a sidecar beside every deployed file on the first upgraded
-      install and exit 3, the noise D3 itself argues against. D3 needs
-      re-deciding against that case before this arm changes.
+      Was open 2026-10-16, deliberately: preserving every ledger-listed
+      `unknown` would have staged a sidecar beside every deployed file on the
+      first upgraded install and exited 3 — the noise D3 itself argues
+      against — so D3 needed re-deciding against that case first.
+      **Closed 2026-10-17 under a fresh council round.** 2/2 concluded, no
+      split, verdict **(d)**: preserve a digest-less ledger path **unless
+      equality with what the run would write is provable**. Record and the
+      question it was asked:
+      `agents/evidence/council/ownership-unknown-arm-20261017{,.question}.md`;
+      D3 below is restated from it.
+      The branch is `isLedgerMigration` in `preserve.ts` — ledger-listed,
+      `unknown`, readable bytes — and it is the only place the packaged digest
+      is computed, so a tree whose ledger paths all carry digests pays nothing.
+      Red observed first: with the branch neutralised, the preserve-when-
+      different and preserve-when-undecidable cases both fail.
+      **Two downstream surfaces moved with it, and neither was optional.**
+      `preflight`'s `unknown` remedy told the operator to back the file up
+      because the installer would overwrite it — false the moment the branch
+      landed, so it has its own arm now. And `computeConflicts` would have
+      promised a write the writer then refused, which is the
+      two-surfaces-disagree shape 2.5 exists to stop, so `ConflictEntry` gains
+      a `migration` flag carrying the DECISION — `ownership` stays `unknown`,
+      because nobody proved an edit and labelling it otherwise would assert
+      the thing the branch exists because it cannot prove.
+      `doctor` is the one reader that cannot follow: it is not installing, so
+      it has no packaged digest, and `recorded_digests` does not even
+      enumerate a path without one. That gap is **named in its docstring and
+      asserted as a difference** in `ownership_parity.test.ts`, so doctor
+      learning to cover it reds the case rather than passing silently.
 - [x] **2.5 One table, three readers.** A parity fixture feeds the same
       ownership table to the preview (`computeConflicts`), the writer
       (`conflictTracker`) and `cmd_doctor`'s classifier, and asserts all three
@@ -217,6 +238,17 @@ the same thing in all of them.
       entries into that tracked lock. Now that the ledger carries global
       ownership, dropping those entries from the project lock is the candidate
       fix, and it changes a tracked consumer file, so it is the owner's call.
+      **Re-read 2026-10-17, unchanged and still owner-reserved.**
+      `grep -c installed-tools src/config/gitignore-block.txt` is 0 and must
+      stay 0 while `docs/contracts/agents-layout.md` records the lock as
+      tracked-durable and `README.md` tells teams to commit it: satisfying
+      this step's verify line as written would reverse a recorded contract
+      and a team workflow in one edit. The narrower residual gap — a global
+      install run from a project with settings writing `$HOME`-rooted
+      global-scope entries into that tracked lock — is now MORE tractable
+      than it was, because Phase 2 gives global ownership a home of its own,
+      so dropping those entries from the project lock loses nothing. It still
+      changes what consumers commit, so it stays the owner's.
 - [ ] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
       they attach to an existing command.
       verify: the output of `agent-config --help` lists no new top-level verb.
@@ -224,6 +256,18 @@ the same thing in all of them.
       ours?) and `reset` (restore one file, a scoped `--force`?) do is not
       specified anywhere in the tree, and inventing the semantics of a
       consumer-facing flag is not this drain's call.
+      **Re-read 2026-10-17 against ADR-041, which does not supply them.**
+      That ADR governs the controlled VERB vocabulary — which leading tokens
+      a visible command may use, and that a new one needs its own ADR. It
+      says nothing about what `adopt` or `reset` would do. So D4's "they ship
+      as flags" is a correct routing decision with no feature behind it, and
+      this step's verify line (`--help` lists no new top-level verb) passes
+      vacuously today: there is nothing to list.
+      The step belongs with whoever specifies the behaviour. Phase 2 sharpens
+      what `adopt` would have to mean — after the migration branch, the thing
+      a consumer most plausibly wants is "record the bytes I have as ours",
+      which is precisely the ownership assertion the council declined to make
+      automatically. That is a product decision, not a drain edit.
 
 ## Blockers
 
@@ -260,7 +304,7 @@ the same thing in all of them.
 |---|---|---|---|---|---|
 | D1 | contested-technical | council:agents/evidence/council/ownership-ledger-adr020-20261016.md | **(a) — a per-user ownership ledger makes ADR-020's global-only invariant coherent; it does not weaken it.** Phase 2 proceeds, bounded: the ledger is user-global ownership metadata and not a scope, its treatment is independent of the invoking project and working directory, it carries no project key and drives no project-dependent artefact selection, and the two-digest requirement is core preservation logic rather than an implementation detail | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats read the project-conditioned write at `install.ts:3531-3537` as the actual scope violation: a global artefact's fate decided by a project-shaped condition | the ledger becomes project-keyed or encodes project preferences · it drives artefact **selection** rather than preservation · two projects demonstrably need different versions of one global artefact at once · the two-digest distinction proves insufficient · ADR-020 or an amendment is shown to require package-controlled content uniformity |
 | D2 | deterministic | evidence | The schema bump is additive and schema 1 keeps loading | the sibling roadmap's deletion allowlist reads the same file and must not wait on this one | the sibling lands schema 2 first |
-| D3 | critical-technical | evidence | `unknown` preserves only paths the ledger lists | a blanket preserve would keep every unrecorded pre-existing file forever, which is the noise `preserve.ts` already argues against | the ledger becomes complete enough that unrecorded means foreign |
+| D3 | critical-technical | council:agents/evidence/council/ownership-unknown-arm-20261017.md | **(d) — `unknown` preserves a path the ledger lists UNLESS equality with what the run would write is provable.** Equality proves writing cannot destroy an edit; inequality proves nothing, because an edited file and an untouched older version are indistinguishable without a recorded digest, and overwriting on "proves nothing" accepts irreversible loss knowingly. A genuinely unrecorded path still writes — the noise `preserve.ts` argues against is real for files this tree has no record of, and a ledger listing IS a record | AI council 2026-10-17, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats also corrected the draft's claim that preservation resolves the ambiguity after one install: a preserved file was never installed, so the delay is one cycle at best and persists until the sidecar is merged | the package content for the affected files is shown not to have changed across the ledger-addition upgrade · a migration `rc=3` is shown to break supported automation and no message fixes it · conflict resolution gains a step that establishes ownership explicitly |
 | D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |
 | D5 | reversible-technical | agent | The doctor fix (3.1) is sequenced before Phase 2 lands | it makes the disagreement visible, and a visible disagreement is what makes Phase 2's parity test meaningful | 3.1 turns out to depend on the widened classifier |
 
@@ -274,15 +318,17 @@ the same thing in all of them.
   that record, which is a different question.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Preserving `unknown` keeps a stale file forever | implementation | A file the user never touched stops being updated because the ledger lost its record. | 2.1's two digests make "we shipped a new one" expressible, so `outdated` is a state rather than a guess; 2.4 preserves only ledger-listed paths. | Phase 2 — Two digests, one classifier |
+| 1 | Preserving `unknown` keeps a stale file forever | implementation | A file the user never touched stops being updated because the ledger lost its record. | 2.1's two digests make "we shipped a new one" expressible, so `outdated` is a state rather than a guess. 2.4 as landed narrows this further than the row anticipated: preservation needs the path to be ledger-listed AND the bytes to differ from what the run would write, so an untouched file that already matches the package is written rather than frozen. | Phase 2 — Two digests, one classifier |
 | 2 | The council round stalls and Phase 2 never starts | product | A blocked phase in a ready roadmap decays into a parked one. | Phases 0, 1 and 3.1 deliver value without it, and the blocker's "if you do nothing" names the resulting state plainly rather than implying the file is stuck. | Phase 0 — Resolve the lock, not the symptom |
 | 3 | The schema bump breaks the sibling's deletion allowlist | implementation | Two roadmaps read one file and one of them is a data-loss fix. | D2 makes the bump additive and 2.1 asserts a schema-1 fixture still loads; the sibling's containment test runs in the same suite. | Phase 2 — Two digests, one classifier |
 | 4 | The parity fixture is satisfied by three readers sharing one bug | implementation | Agreement is not correctness. | The parity test is a cross-check on top of 2.2's table-driven test, not instead of it; the table enumerates all seven states independently. | Phase 2 — Two digests, one classifier |
 | 5 | Gitignoring the manifest breaks a team that committed it deliberately | product | Someone relies on the committed lock for reproducibility. | 3.3 reconciles the two documents rather than picking a side silently; `installed-tools.lock` and the ownership manifest are different files and the change names which is which. | Phase 3 — Say the same thing on every surface |
+| 6 | The first install after the ledger ships is loud for people who edited nothing | product | For a consumer whose global files were deployed before digests existed, 2.4 cannot tell an untouched older version from an edit, so every such file that differs from the new package content is preserved with a sidecar and the run exits 3. | The equality test removes every file that provably matches, so the burst is bounded to files that genuinely differ; the report line is its own message naming the cause rather than claiming an edit; `--force` is the one-command escape and is named in it. The council weighed this against silent loss and took the recoverable direction — the cost is a confusing install, and the alternative is an unrecoverable one. | Phase 2 — Two digests, one classifier |
+| 7 | Preservation delays the ambiguity rather than resolving it | implementation | A preserved file was never installed, so the run records the STAGED digest for it. Until the consumer merges the sidecar, the path keeps classifying as divergent. | That is the designed behaviour and not a leak: from the second install the path is `recorded-modified` on the ordinary path rather than on the migration branch, so the one-off message appears once. Both council seats named this explicitly, and the record states it so a future reader does not mistake the delay for a bug. | Phase 2 — Two digests, one classifier |
 
 ## Acceptance Criteria
 
@@ -302,7 +348,15 @@ the same thing in all of them.
       containment test is green in the same run.
 - [ ] **AC-8** `grep -c installed-tools src/config/gitignore-block.txt` ≥ 1,
       and `grep -c sidecar docs/contracts/install-layout.md` ≥ 1.
-- [ ] **AC-9** `task ci` green.
+      Second half satisfied by 3.2. The first half is **owner-reserved and
+      arguably wrong as written**: it asks for a gitignore entry that
+      `docs/contracts/agents-layout.md` and `README.md` jointly forbid, so
+      meeting it would reverse a recorded contract. 3.3 states the narrower
+      gap that remains. This criterion closes by being re-cut or by an owner
+      decision, not by an edit.
+- [ ] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
+      run; `check_pack_size` and `check_gate_completeness` are red on
+      `main@8c90aad26` independently of this branch.
 
 ## Provenance
 

@@ -20,8 +20,8 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from './fsPrimitives.js';
-import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
-import { recordedHashesWithLedger } from './recordedOwnership.js';
+import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, isLedgerMigration, migrationPreservedMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
+import { ledgerListedPaths, recordedHashesWithLedger } from './recordedOwnership.js';
 /**
  * Build a tracker bound to one installer's reporting surface.
  *
@@ -35,7 +35,9 @@ export function createConflictTracker(host) {
     const conflictState = {
         root: null,
         recorded: null,
+        ledgerFiles: null,
         preserved: [],
+        migrated: new Set(),
         staged: new Map(),
     };
     /**
@@ -62,6 +64,57 @@ export function createConflictTracker(host) {
             return conflictState.recorded.get(plain);
         const real = resolvePath(target);
         return real === plain ? undefined : conflictState.recorded.get(real);
+    }
+    /**
+     * Does the ownership ledger list this path, under either spelling?
+     *
+     * Both keys are tried for the reason `recordedHashFor` documents: on macOS
+     * the temp and home trees sit behind a realpath symlink that rewrites a
+     * `/var` prefix onto its private twin, so a single spelling misses every
+     * entry on the platform this is developed on.
+     */
+    function ledgerLists(target) {
+        conflictState.ledgerFiles ??= ledgerListedPaths();
+        const files = conflictState.ledgerFiles;
+        return files.has(path.resolve(target)) || files.has(resolvePath(target));
+    }
+    /**
+     * The digest of the bytes this run would write to `target`.
+     *
+     * Built into a temp file rather than hashed off the package source,
+     * because a deployed file is the package bytes PLUS the install-time tag
+     * and the two differ — comparing against the untagged source would call
+     * every up-to-date file divergent. The temp name carries the TARGET's
+     * extension because `tagDeployed` keys on it, the same constraint
+     * `stageInto` works around.
+     *
+     * `null` on any failure, which preserves: this is consulted only where
+     * nothing can be proven, and failing toward the recoverable direction is
+     * the whole point of the branch that calls it.
+     */
+    function wouldWriteDigest(target, would) {
+        const tmp = path.join(path.dirname(target), `.${path.basename(target)}.would.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`);
+        try {
+            if ('content' in would) {
+                fs.writeFileSync(tmp, would.content, 'utf-8');
+            }
+            else {
+                fs.copyFileSync(would.from, tmp);
+                host.tagDeployed(tmp, would.from, would.packageRoot);
+            }
+            return sha256OfFile(tmp);
+        }
+        catch {
+            return null;
+        }
+        finally {
+            try {
+                fs.unlinkSync(tmp);
+            }
+            catch {
+                /* swallow — best-effort cleanup of our own temp file */
+            }
+        }
     }
     /**
      * Produce the bytes this run would have written, then reconcile them with
@@ -142,7 +195,9 @@ export function createConflictTracker(host) {
         if (conflictState.preserved.includes(target))
             return;
         conflictState.preserved.push(target);
-        host.warn(preservedFileMessage(target, sidecar));
+        host.warn(conflictState.migrated.has(path.resolve(target))
+            ? migrationPreservedMessage(target, sidecar)
+            : preservedFileMessage(target, sidecar));
     }
     return {
         conflictState,
@@ -150,7 +205,9 @@ export function createConflictTracker(host) {
         begin(root) {
             conflictState.root = root;
             conflictState.recorded = null;
+            conflictState.ledgerFiles = null;
             conflictState.preserved = [];
+            conflictState.migrated = new Set();
             conflictState.staged = new Map();
         },
         /**
@@ -159,14 +216,26 @@ export function createConflictTracker(host) {
          * so a file edited between planning and writing is still classified
          * from the bytes that are actually about to be destroyed.
          */
-        resolve(target, force) {
+        resolve(target, force, would) {
             const exists = pathExists(target);
-            return decideDeployWrite({
+            const base = {
                 exists,
                 recordedSha256: exists ? recordedHashFor(target) : undefined,
                 onDiskSha256: exists ? sha256OfFile(target) : null,
                 force,
-            });
+                ledgerListed: exists && ledgerLists(target),
+            };
+            // The packaged digest costs a temp write and a tag, so it is
+            // computed only for the targets that can consume it. On a tree
+            // where every ledger-listed path carries a digest — which is every
+            // tree the ledger itself has written — this is false throughout
+            // and the run pays nothing.
+            const migrating = isLedgerMigration(base);
+            const decision = decideDeployWrite(migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base);
+            if (decision === 'preserve' && migrating) {
+                conflictState.migrated.add(path.resolve(target));
+            }
+            return decision;
         },
         /**
          * Stage the package content beside a preserved target.

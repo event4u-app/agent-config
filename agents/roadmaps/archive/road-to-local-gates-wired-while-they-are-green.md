@@ -148,7 +148,7 @@ with it and left alone.
       with its sample size. The batch is twenty rather than the 119 the reading
       found wirable, on a 2/2 council verdict of 2026-10-13 that one pull
       request carrying all 119 is the sweep the 2026-08-13 decision declines.
-- [ ] **2.2 The rest of the class, twenty at a time.** Each further batch is
+- [x] **2.2 The rest of the class, twenty at a time.** Each further batch is
       one change: wire, lower the baseline, record the duration. A gate found
       red at wiring time is skipped, listed in the evidence page, and handled
       by Phase 3. A batch that would take the job past its ceiling goes into a
@@ -171,6 +171,54 @@ with it and left alone.
       p50 **118 s** (77–137 s), its `Drain *` steps p50 **93 s**, against the
       70–74 s recorded with 2.2a in `docs/contracts/ci-cost-budget.md`. 2.2b–2.2f
       landed without that line. The ask does not stop the drain.
+      <br>**Closed 2026-10-17 with 2.2g, and the window is empty.** Five
+      `wire`-class gates still had no caller and none of them was in the
+      reading's table: four entered `task ci` after the 2026-10-11 reading, and
+      `lint_motion_authority_drift` fell in the seam between 2.2c, which ended
+      at `lint_model_tier_coverage`, and 2.2d, which began at `lint_namespace`.
+      **CI reduced the batch from five to one, and that reduction is the
+      finding.** `check_artefact_checksums`, `lint_featured_skills`,
+      `lint_trust_coherence` and `validate_discovery_manifest` all read
+      `dist/discovery/discovery-manifest.json`, a build output the tree does
+      not commit and the host job does not produce — `tests.yml` builds it
+      explicitly before its suites and this job has no equivalent step — so
+      they exit 0 in any checkout that has run `npm run build` and exit 1
+      there. They are recorded `machine` and stay in the backlog. The
+      grep-for-the-clock-and-`execSync` screen could not have caught them:
+      they read a FILE, and the file is present on the machine that took the
+      reading.
+      <br>The three gates 2.2f left are re-checked, every reason still holds,
+      and each is recorded with the class its reason describes rather than
+      left labelled `wire` — the move step 1.2 prescribes. Nothing was
+      declared: `local_only:` still holds seven entries, and all seven
+      backlog gates are still in the parity count. The baseline falls 23 -> 22,
+      by the one gate that gained a caller, on CI's reading: the consistency
+      job at `86b3a1c6e` (run 39015140117) printed
+      `ci-parity:local-only: 22 violation(s), baseline 23` and named 22.
+      <br>**The duration line step 2.2 asks for, from CI.** Host job
+      `Standing payload delta + budget gate`, before: p50 **118 s** over the
+      last 25 successful runs (the reading already recorded above, taken
+      2026-10-17). After: **129 s** at `86b3a1c6e`, run 39015140143 —
+      **n=1**, which is what a one-gate batch on a fresh branch can honestly
+      report, and well under the 300 s per-job ceiling in
+      `docs/contracts/ci-cost-budget.md`. One gate at 0.17 s of work does not
+      explain an 11 s difference; run-to-run variance over the recorded 77-137 s
+      range does, and no claim is made that the batch caused it.
+      <br>**Closed 2026-10-17 with 2.2g, and the window is empty.** Five
+      `wire`-class gates were still without a caller and none of them was in the
+      reading's table: four entered `task ci` after the 2026-10-11 reading, and
+      `lint_motion_authority_drift` fell in the seam between 2.2c, which ended at
+      `lint_model_tier_coverage`, and 2.2d, which began at `lint_namespace`. All
+      five run as the step `Drain 2.2g` of the same required job. The three gates
+      2.2f left are re-checked, every reason still holds, and each is recorded
+      with the class its reason describes rather than left labelled `wire` — the
+      move step 1.2 prescribes. Nothing was declared: `local_only:` still holds
+      seven entries and all three are still in the parity count. Detail in the
+      evidence page's 2026-10-17 section.
+      <br>**The duration line step 2.2 asks for**, from CI rather than locally:
+      the host job's before-and-after readings are recorded in the pull request
+      that carries this batch, with the sample size, because neither can be taken
+      on a developer's machine.
 - [x] **2.2a The first twenty.** `audit_mcp_tools` through
       `check_score_contract`, four skipped with their reasons; steps
       `Drain 2.2a-1` and `Drain 2.2a-2` of the host job. Open until the
@@ -302,7 +350,7 @@ below the ~240 s point at which the overflow job becomes due. The four gates
 
 - [x] AC-1 — A dated page lists every undeclared local-only gate with exit
       code, seconds and class, at the commit it was read.
-- [ ] AC-2 — Every `wire`-class gate has a pull-request caller, and the
+- [x] AC-2 — Every `wire`-class gate has a pull-request caller, and the
       parity baseline is lower by that count.
 - [x] AC-3 — No gate whose verdict depends on the date is a step of a
       required job, and `check_council_pin_staleness` has a scheduled caller.

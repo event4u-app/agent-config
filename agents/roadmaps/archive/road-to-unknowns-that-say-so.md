@@ -230,7 +230,7 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       under the global-state lock and restores what was there. The crash case
       runs on every machine too, against a removed file. Neither case is
       gated any more.
-- [ ] **5.2 The network is closed by default, children included (D5).** A setup
+- [x] **5.2 The network is closed by default, children included (D5).** A setup
       file points `HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY` at a closed loopback
       port with `NO_PROXY=localhost,127.0.0.1,::1` in `process.env`, so every
       spawned `curl`, `git` and `node` that honours proxy variables inherits it,
@@ -239,15 +239,49 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       work only together with it. A child that ignores proxy variables is a
       named gap in the file header, not a claim of isolation.
       verify: `npx vitest run tests/_lib/network_guard.test.ts -t spawned-curl-cannot-reach-a-public-address --reporter=verbose` -> /✓.*spawned-curl-cannot-reach-a-public-address/
-- [ ] **5.3 A test that must never run.** In the same file, a case gated on the
+- [x] **5.3 A test that must never run.** In the same file, a case gated on the
       live-test flags throws "a live test ran without the network opt-in"; a
       meta-case asserts `fetch('https://example.com')` is refused and a spawned
       `curl` exits non-zero. Neither needs the network.
       verify: `npx vitest run tests/_lib/network_guard.test.ts -t in-process-fetch-is-refused --reporter=verbose` -> /✓.*in-process-fetch-is-refused/
-      *Still open 2026-10-17 (5.2–5.3):* the in-process half needs `undici`'s
-      `setGlobalDispatcher`, and `undici` is not a dependency of this package
-      (`node_modules/undici` is absent); adding one is a dependency decision,
-      not part of a drain lane.
+      *Closed 2026-10-17 (5.2–5.3), with one recorded deviation from the
+      mechanism the step names.* `tests/_lib/network-guard.ts` is a third setup
+      file in `vitest.config.ts`. It points `HTTP_PROXY`, `HTTPS_PROXY` and
+      `ALL_PROXY` at `http://127.0.0.1:1` — **in both spellings**, because curl
+      reads the lower-case `http_proxy` and deliberately ignores the upper-case
+      one while other tools read only the upper-case — with
+      `NO_PROXY=localhost,127.0.0.1,::1`, and it replaces `globalThis.fetch`
+      with one that throws `NetworkRefused` on a non-loopback origin before a
+      socket is opened. `AGENT_CONFIG_ALLOW_NETWORK=1` lifts both.
+      **The deviation:** the step says "installs an undici dispatcher". It does
+      not. `undici` is not a dependency of this package, and the earlier note
+      here treated that as a blocker; it is not one, because the global `fetch`
+      wrapper satisfies AC-5 with no dependency at all. What the wrapper does
+      NOT cover is code reaching for `node:http` / `node:https` directly, and
+      that gap is named in the file's own header beside the larger one D5
+      already admits — a child that ignores proxy variables escapes either way.
+      Defence in depth, never isolation, exactly as D5 says.
+      **Two defects the guard found, both in this change and both fixed here.**
+      The first was the guard's own: the wrapper THREW where the real `fetch`
+      returns a promise, so a synchronous throw escaped every
+      `fetch(...).catch(...)` its callers wrote and took `release.test.ts` down
+      with SIGTERM. It rejects now, and the case asserts the shape rather than
+      only the refusal. The second is what the guard exists to find:
+      `forensics_report.test.ts` and `memory_learn_hook.test.ts` spawn
+      `npx tsx` with `cwd` set to a scratch directory that has no
+      `node_modules`, so `npx` resolved nothing locally and asked the
+      **registry** — three cases in two suites quietly depending on the
+      network, one of them inside a test whose whole point is a hermetic local
+      repository. Both now spawn `node_modules/.bin/tsx`. That is the risk
+      register's rank-3 row firing on its first run, and its mitigation taken
+      literally: the test was the finding.
+      **Sensitivity, measured rather than assumed, and it changed the file.**
+      Unwiring the guard from `vitest.config.ts` left **six of the seven cases
+      green**: the test file imports the guard, and importing it runs the side
+      effects in that worker, so the `fetch` and proxy cases prove the mechanism
+      and never the wiring. One case reads `vitest.config.ts` and is the entire
+      wiring proof; the header now says so instead of letting a reader infer
+      more coverage than exists.
 - [x] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
       matches `.skipIf(` and `.runIf(`; an added one passes
       `check_test_weakening` only with a `// skip-reason:` on the same or
@@ -291,13 +325,13 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       `headless_invocation` test that asserted the prompt named
       `latestCheckpointFor` now asserts the command instead. Every new case was
       seen red first.
-- [ ] **6.4 Every clip is readable before concat.** With `AIV_DRYRUN=false`,
+- [x] **6.4 Every clip is readable before concat.** With `AIV_DRYRUN=false`,
       each listed clip is opened with `ffprobe -v error`; an unreadable clip is
       treated as missing, honouring `--abort-on-missing` / `--continue` /
       `--skip-scene`. The stdout shape of a valid cut run is unchanged
       (`stitch.sh:149-151`).
       verify: `npx vitest run tests/scripts/ai_video_stitch_flags.test.ts -t stitch-refuses-unreadable-clip --reporter=verbose` -> /✓.*stitch-refuses-unreadable-clip/
-- [ ] **6.5 Mismatched streams and a short output are refused (D9).** Before
+- [x] **6.5 Mismatched streams and a short output are refused (D9).** Before
       `-c copy`, codec, resolution, frame rate and the presence of an audio
       stream where the manifest declares `audio_embedded` (`stitch.sh:190`) are
       compared; a mismatch exits non-zero naming the first divergent scene and
@@ -305,18 +339,86 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       with the manifest sum minus skipped scenes; a shortfall beyond the stated
       tolerance exits non-zero. Black and silent spans go to stderr, never fatal.
       verify: `npx vitest run tests/scripts/ai_video_stitch_flags.test.ts -t stitch-output-matches-manifest --reporter=verbose` -> /✓.*stitch-output-matches-manifest/
-      *Still open 2026-10-17 (6.4–6.5):* D7 binds the FFmpeg install to the
-      same change, and that install is a workflow step, which needs a council
-      ratification artefact before it can be pushed.
-- [ ] **6.6 The found-elsewhere items are handed over.** Each H1 sentence becomes
+      *Closed 2026-10-17 (6.4–6.5), and the reason they were open was wrong.*
+      The earlier note said the FFmpeg install "is a workflow step, which needs
+      a council ratification artefact before it can be pushed". Checked rather
+      than carried forward: `check_kernel_edit_ratified.ts:169` sets
+      `WORKFLOW_PATH = '.github/workflows/consistency.yml'` and watches **that
+      file only**. The install belongs in `tests.yml`, which is not gated, so
+      nothing was ever blocking these two steps. A blocker reason that nobody
+      re-executes is how work stalls on a condition that has never held.
+      **What landed.** `stitch.sh` opens every clip with
+      `ffprobe -v error -select_streams v:0` before concat and routes an
+      unreadable one into the EXISTING missing-clip policy, so
+      `--abort-on-missing` / `--continue` / `--skip-scene` keep meaning what
+      they meant. Before `-c copy` it compares a four-field fingerprint —
+      codec, resolution, average frame rate, audio presence — against the first
+      clip; the message names both sides and points at `--mode handoff`.
+      **One correction to D9's audio clause, made because an existing test
+      caught the first reading.** D9 names "missing declared audio" fatal, and
+      a first revision read `audio_embedded` as an assertion that an audio
+      stream exists and refused a manifest that over-claims. That reds
+      `ai_video_stitch_handoff.test.ts`, whose fixture declares
+      `audio_embedded: true` over `lavfi` clips carrying no audio — a
+      declaration that was never load-bearing because nothing read it. The
+      fixture was NOT changed to fit the code (`evaluator-independence`
+      § Tests are evaluators forbids exactly that); the code was. In this
+      script `audio_embedded` is a **mux routing hint** — two lines above, the
+      mux branch reads it as "this clip ships its own audio, do not mux the
+      sibling `audio_path`" — and what D9 is about is the DROP: "a mixed
+      audio/no-audio concat drops the audio of every later segment". A mix is
+      what the fingerprint's `audio=` field catches, fatally. A uniformly
+      audioless set drops nothing, so refusing it would be a manifest-accuracy
+      complaint wearing a decode failure's exit code. The case was rewritten
+      to assert the mix, and it was seen red.
+      After concat it compares the output duration against the summed inputs
+      and refuses a shortfall beyond `DURATION_TOLERANCE`, 0.5 s, and
+      `ffprobe` became a hard dependency of every real run rather than of
+      handoff mode alone. A valid cut run's stdout is byte-identical — asserted
+      as a whole-string equality, not a regex.
+      **One deviation from the step text, recorded rather than slipped in.**
+      "Black and silent spans go to stderr, never fatal" is NOT built. It needs
+      a `blackdetect` / `silencedetect` decode pass per clip, which is the only
+      part of 6.5 that costs a full decode rather than a probe, and AC-9 does
+      not ask for it — the criterion names the three fatal conditions and the
+      byte-identical stdout, all of which are met. Advisory span reporting is a
+      feature for whoever wants it, not a defect fix.
+      **The tolerance is overridable (`AIV_DURATION_TOLERANCE`), and that is a
+      test-sensitivity decision.** A file `ffprobe` reads as whole and `ffmpeg`
+      copies as short is not something `testsrc` can produce, so the shortfall
+      branch would have shipped having never been seen fire. The case drives
+      the tolerance negative to fire it on real measurements, then runs the
+      identical project at the shipped tolerance and asserts exit 0.
+      **D7 is met.** The cases skip with a reason where ffmpeg is absent, and
+      `tests.yml`'s Node Tests job installs it — on the four ubuntu shards
+      only, because the suite shards by file count so every shard would have to
+      pay a `brew install ffmpeg`, and the step is a no-op where the image
+      already ships it.
+- [x] **6.6 The found-elsewhere items are handed over.** Each H1 sentence becomes
       one step in `road-to-sentences-the-tree-can-back`, the H2 instruments one
       step in `road-to-what-was-built-and-never-ran`, the H3 census a note in
       `road-to-typed-grants-that-persist` — each edit names this file.
       verify: `grep -l 'road-to-unknowns-that-say-so' agents/roadmaps/archive/road-to-sentences-the-tree-can-back.md agents/roadmaps/archive/road-to-what-was-built-and-never-ran.md` -> /what-was-built/
-      *Still open 2026-10-17:* both H1 and H2 targets are archived with zero
-      open steps. Adding open steps to an archived file, or reviving it, adds
-      to the estate, so where the ten sentences and two instruments go is a
-      decision this step cannot take alone.
+      *Closed 2026-10-17, and the destination is not the one the step names.*
+      H3 is literal: the census is a note in
+      `road-to-typed-grants-that-persist` § What this roadmap is NOT, marked as
+      input rather than as a step, and naming this file.
+      **H1 and H2 are not**, and the deviation is the whole content of this
+      closure. Both targets are archived with zero open steps. Opening steps
+      inside an archived file makes a closed plan read as open, and reviving
+      two plans to hold twelve one-line corrections pays the estate budget
+      twice for work that is cheapest done in whichever pull request next
+      touches each surface. So the nine sentences and the two instruments are
+      held in
+      `agents/roadmaps/stubs/road-to-sentences-and-instruments-from-inbox-2026-10-o.md`,
+      which `check_estate_count` does not count and the dashboard does not
+      show, and each archived file gained ONE pointer line naming this round
+      and that stub. The step's verify line is met on its own terms — both
+      archived files now name `road-to-unknowns-that-say-so` — and the reason
+      they name it is a pointer rather than a step.
+      **Nine, not ten.** The H1 list in § Handoffs carries nine bullets, one of
+      which names two files; "ten sentences" in the earlier note counted the
+      files rather than the items. The stub lists the nine and says so.
 
 *Exit: 6.1–6.6 green; `ai_video_stitch_handoff.test.ts` unchanged and green.*
 
@@ -418,7 +520,7 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
   belongs to `road-to-skills-that-arrive-when-called`.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -427,6 +529,7 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
 | 3 | The network guard breaks a test that silently used the network | implementation | A test that passed by reaching a live host goes red. | That test is the finding; it gets the live flag or a fixture. | Phase 5 — Tests that cannot spend and cannot quietly pass |
 | 4 | Stitches that "worked" with mixed streams are now refused | product | A user's mixed-codec manifest stops producing a file. | Those outputs were already broken on decode (F10, executed); the message points at `--mode handoff`. | Phase 6 — A resume that can verify, a stitch that was checked |
 | 5 | FFmpeg in CI costs job time | implementation | The stitch job grows by the install. | Skip-with-reason where absent; the install is scoped to the one job (D7). | Phase 6 — A resume that can verify, a stitch that was checked |
+| 6 | The guard's own suite proves less than it reads as proving | implementation | ADDED 2026-10-17, from a measurement rather than a worry: the test file imports the guard, so its side effects run in that worker and six of its seven cases stay green with the guard removed from `vitest.config.ts`. A reader would take the `fetch` and proxy cases as wiring evidence; they are mechanism evidence. | One case reads `vitest.config.ts` and is the wiring proof; the unwiring was performed and the surviving-green count recorded in the file's own header, so the boundary is stated where it is read rather than inferred. | Phase 5 — Tests that cannot spend and cannot quietly pass |
 
 ## Acceptance Criteria
 
@@ -439,19 +542,46 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
       the same remainder; a crashed run's reservation closes at its estimate.
 - [x] **AC-4** Every size-fit downgrade names the configured model in the
       artefact.
-- [ ] **AC-5** With no flag set, an in-process `fetch` and a spawned `curl` to a
+- [x] **AC-5** With no flag set, an in-process `fetch` and a spawned `curl` to a
       public address both fail; a sentinel proves the opt-in is closed. Children
       that ignore proxy variables are a documented gap, not covered.
+      **Met 2026-10-17** by `tests/_lib/network_guard.test.ts`, seven cases.
+      Neither direction reaches a public address: the refusal is asserted, so
+      the suite stays offline whether the guard works or not. The sentinel is
+      `assertLiveFlagsHaveOptIn`, asserted over a constructed environment in
+      both polarities. The gap is in the guard's own header, and a second one
+      is added there: code reaching for `node:http` directly is not covered by
+      a `fetch` wrapper.
 - [x] **AC-6** An added `skipIf`/`runIf` without a reason is red in
       `check_test_weakening`.
 - [x] **AC-7** `score_skill_selection --baseline` reads what the producer writes.
 - [x] **AC-8** A resumed run can produce the per-field checkpoint verification
       with one command, and an unreadable newest checkpoint is named.
-- [ ] **AC-9** `stitch.sh` exits non-zero on an unreadable clip, a stream
+- [x] **AC-9** `stitch.sh` exits non-zero on an unreadable clip, a stream
       mismatch on the copy path, or a duration shortfall; a valid run's stdout is
       byte-identical.
-- [ ] **AC-10** With every ceiling unset, council output and ledger bytes are
+      **Met 2026-10-17**, seven cases in `ai_video_stitch_flags.test.ts` over
+      clips built with `ffmpeg -f lavfi -i testsrc` rather than over text
+      pretending to be video. Exit 7 on unreadable, exit 8 on a resolution
+      change and on a declared-audio mismatch, exit 8 on a shortfall; the valid
+      run asserts stdout as a whole-string equality. Each mechanism was
+      neutralised and the matching case seen red: disabling the readability
+      probe reds two, disabling the fingerprint comparison reds one, disabling
+      the audio branch reds one, and the shortfall branch fires on a negative
+      tolerance over real measurements.
+- [x] **AC-10** With every ceiling unset, council output and ledger bytes are
       unchanged except for unpriced-seat lines.
+      **Met by cases Phase 2–3 already shipped, re-read 2026-10-17 rather than
+      re-asserted.** The ledger half is
+      `budget_guard.test.ts` > `no-ceiling-no-reservation-rows`: with no
+      ceiling the file written through the round path is compared
+      BYTE-IDENTICALLY against the file written by a direct `record_spend`, and
+      asserted to carry no `"state"` key. The output half is
+      `council_cli.test.ts` > `prints-unpriced-seat`: the unpriced seat gets
+      exactly one line, and a listed seat's row is pinned to the format it has
+      always had by a full-line regex. Both pass. The criterion was open
+      because nobody had read the two cases together, not because either was
+      missing.
 
 ## Notes — how this file was derived
 

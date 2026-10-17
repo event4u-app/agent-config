@@ -18,6 +18,15 @@ relates:
 ---
 # Road to sentences the tree can back
 
+> **Arrived after this file closed, and NOT re-opened here.** Step 6.6 of
+> `road-to-unknowns-that-say-so` carried nine more verified claim-versus-tree
+> contradictions addressed to this plan. It was already archived with zero open
+> steps, and adding steps to an archived file would make a closed plan read as
+> open, so they are held in
+> `agents/roadmaps/stubs/road-to-sentences-and-instruments-from-inbox-2026-10-o.md`
+> instead. This file stays closed; the pointer exists so the next reader of
+> either one finds the other.
+
 > **Source:** `agents/tmp.old/inbox-2026-10-k/` — an external harvest round's
 > list of fourteen immediate fixes and its loop-2 draft on sentences a check
 > can contradict, plus one defect this run found in its own instrument while

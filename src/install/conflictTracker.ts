@@ -26,11 +26,24 @@ import {
     conflictSummaryMessage,
     decideDeployWrite,
     foreignSidecarMessage,
+    isLedgerMigration,
+    migrationPreservedMessage,
     preservedFileMessage,
     sidecarPathFor,
     type DeployWriteDecision,
 } from './preserve.js';
-import { recordedHashesWithLedger, type RecordedHashes } from './recordedOwnership.js';
+import { ledgerListedPaths, recordedHashesWithLedger, type RecordedHashes } from './recordedOwnership.js';
+
+/**
+ * The bytes a run would write to one target, named rather than computed.
+ *
+ * A copy carries the package file plus its install-time tag; a generated
+ * marker carries its own content. The tracker turns either into a digest, and
+ * only when the migration branch needs one.
+ */
+export type WouldWrite =
+    | { readonly from: string; readonly packageRoot: string | null }
+    | { readonly content: string };
 
 /** The installer-owned reporting surface the tracker borrows. */
 export interface ConflictTrackerHost {
@@ -67,7 +80,23 @@ export interface ConflictTrackerHost {
 export interface ConflictState {
     root: string | null;
     recorded: RecordedHashes | null;
+    /**
+     * Paths the ownership ledger lists, read lazily and cached for the run.
+     *
+     * Same discipline as `recorded`, for the same reason: the ledger is
+     * rewritten at the end of the install, so re-reading it mid-run would
+     * compare a file against a listing this very run had just produced.
+     */
+    ledgerFiles: ReadonlySet<string> | null;
     preserved: string[];
+    /**
+     * Targets this run preserved on the migration branch.
+     *
+     * The report line differs there — the run cannot say the file was edited,
+     * only that it cannot tell — and the writer learns which is which from
+     * `resolve`, not from re-deriving the classification at report time.
+     */
+    migrated: Set<string>;
     /**
      * Sidecar path → the digest of the package content staged there this run.
      *
@@ -85,8 +114,15 @@ export interface ConflictTracker {
     readonly conflictState: ConflictState;
     /** Reset the tracker and point it at the tree whose manifest records ownership. */
     begin(root: string | null): void;
-    /** Decide what the writer does with one deploy target. */
-    resolve(target: string, force: boolean): DeployWriteDecision;
+    /**
+     * Decide what the writer does with one deploy target.
+     *
+     * `would` is required rather than optional: a call site that cannot say
+     * what it would write cannot be classified on the migration branch, and an
+     * optional argument would let a new one skip that branch silently instead
+     * of having to decide.
+     */
+    resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision;
     /** The digest recorded before this run for `target` — what decided a preservation. */
     recordedDigest(target: string): string | null | undefined;
     /** Stage package content beside a preserved target, then record and report it. */
@@ -110,7 +146,9 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
     const conflictState: ConflictState = {
         root: null,
         recorded: null,
+        ledgerFiles: null,
         preserved: [],
+        migrated: new Set(),
         staged: new Map(),
     };
 
@@ -136,6 +174,58 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         if (conflictState.recorded.has(plain)) return conflictState.recorded.get(plain);
         const real = resolvePath(target);
         return real === plain ? undefined : conflictState.recorded.get(real);
+    }
+
+    /**
+     * Does the ownership ledger list this path, under either spelling?
+     *
+     * Both keys are tried for the reason `recordedHashFor` documents: on macOS
+     * the temp and home trees sit behind a realpath symlink that rewrites a
+     * `/var` prefix onto its private twin, so a single spelling misses every
+     * entry on the platform this is developed on.
+     */
+    function ledgerLists(target: string): boolean {
+        conflictState.ledgerFiles ??= ledgerListedPaths();
+        const files = conflictState.ledgerFiles;
+        return files.has(path.resolve(target)) || files.has(resolvePath(target));
+    }
+
+    /**
+     * The digest of the bytes this run would write to `target`.
+     *
+     * Built into a temp file rather than hashed off the package source,
+     * because a deployed file is the package bytes PLUS the install-time tag
+     * and the two differ — comparing against the untagged source would call
+     * every up-to-date file divergent. The temp name carries the TARGET's
+     * extension because `tagDeployed` keys on it, the same constraint
+     * `stageInto` works around.
+     *
+     * `null` on any failure, which preserves: this is consulted only where
+     * nothing can be proven, and failing toward the recoverable direction is
+     * the whole point of the branch that calls it.
+     */
+    function wouldWriteDigest(target: string, would: WouldWrite): string | null {
+        const tmp = path.join(
+            path.dirname(target),
+            `.${path.basename(target)}.would.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`,
+        );
+        try {
+            if ('content' in would) {
+                fs.writeFileSync(tmp, would.content, 'utf-8');
+            } else {
+                fs.copyFileSync(would.from, tmp);
+                host.tagDeployed(tmp, would.from, would.packageRoot);
+            }
+            return sha256OfFile(tmp);
+        } catch {
+            return null;
+        } finally {
+            try {
+                fs.unlinkSync(tmp);
+            } catch {
+                /* swallow — best-effort cleanup of our own temp file */
+            }
+        }
     }
 
     /**
@@ -221,7 +311,11 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         // NDJSON frame and anything downstream reading either.
         if (conflictState.preserved.includes(target)) return;
         conflictState.preserved.push(target);
-        host.warn(preservedFileMessage(target, sidecar));
+        host.warn(
+            conflictState.migrated.has(path.resolve(target))
+                ? migrationPreservedMessage(target, sidecar)
+                : preservedFileMessage(target, sidecar),
+        );
     }
 
     return {
@@ -232,7 +326,9 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         begin(root: string | null): void {
             conflictState.root = root;
             conflictState.recorded = null;
+            conflictState.ledgerFiles = null;
             conflictState.preserved = [];
+            conflictState.migrated = new Set();
             conflictState.staged = new Map();
         },
 
@@ -242,14 +338,28 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
          * so a file edited between planning and writing is still classified
          * from the bytes that are actually about to be destroyed.
          */
-        resolve(target: string, force: boolean): DeployWriteDecision {
+        resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision {
             const exists = pathExists(target);
-            return decideDeployWrite({
+            const base = {
                 exists,
                 recordedSha256: exists ? recordedHashFor(target) : undefined,
                 onDiskSha256: exists ? sha256OfFile(target) : null,
                 force,
-            });
+                ledgerListed: exists && ledgerLists(target),
+            };
+            // The packaged digest costs a temp write and a tag, so it is
+            // computed only for the targets that can consume it. On a tree
+            // where every ledger-listed path carries a digest — which is every
+            // tree the ledger itself has written — this is false throughout
+            // and the run pays nothing.
+            const migrating = isLedgerMigration(base);
+            const decision = decideDeployWrite(
+                migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base,
+            );
+            if (decision === 'preserve' && migrating) {
+                conflictState.migrated.add(path.resolve(target));
+            }
+            return decision;
         },
 
         /**

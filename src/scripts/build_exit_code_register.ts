@@ -53,6 +53,81 @@ export interface CommandSpec {
     readonly inherits?: readonly Inherit[];
 }
 
+/** One surface's half of a pair: the command, and the code it gives that state. */
+export interface PairSurface {
+    readonly verb: string;
+    readonly code: number;
+}
+
+/**
+ * Two surfaces that report on ONE state, and the test that runs both over one
+ * tree.
+ *
+ * A consumer scripting against two commands needs to know which of their codes
+ * describe the same condition, because a pair that drifts apart is worse than
+ * either code being wrong alone: the install says the tree is stale and the
+ * doctor says it is fine, and the consumer believes whichever they happened to
+ * run. The register names the pair so the agreement is a published contract
+ * rather than a coincidence of two implementations.
+ *
+ * WHAT EACH HALF OF THE CHECK ACTUALLY PROVES, stated narrowly because the
+ * first version of this comment claimed more than the code delivered.
+ *
+ * The TEST is the pin on which code goes with which state: it drives both
+ * surfaces over one tree and asserts each exact code. The GENERATOR cannot
+ * know that — a scan sees that `doctor` returns `1` somewhere, not that it
+ * returns `1` for THIS state — so it checks the two things it can: that the
+ * register still documents each paired code for its verb, and that the named
+ * test still contains the exact assertion literal for each one. The second
+ * check runs over `strip()`ped source, so commenting an assertion out fails
+ * the build rather than passing it.
+ *
+ * What neither half catches, stated in full because a named blind spot is the
+ * only honest form of a check this narrow:
+ *
+ * - a test that is SKIPPED rather than deleted still contains its literals and
+ *   still documents its codes. The vitest run does NOT notice it either — a
+ *   skipped case is reported as skipped and `vitest run` still exits 0. The
+ *   gate that sees it is `check_test_weakening`, which reads the diff rather
+ *   than the tree, so it catches the commit that adds the skip and not a tree
+ *   that already carries one.
+ * - the assertion match is file-wide, so it proves each literal is SOMEWHERE in
+ *   the named file, not that both sit in one `it` driving one tree. Its
+ *   sensitivity rests on each literal being unique in that file, which is a
+ *   property of today's file rather than an invariant.
+ * - the pair reads as symmetric and is not. `init` 3 is state-specific; the
+ *   `doctor` side is the broad "drift or a failing check" 1, so the pair
+ *   licenses "preserved file ⇒ doctor 1" and NOT its converse. The published
+ *   section says so, because a reader of the table would otherwise supply the
+ *   reverse themselves.
+ */
+export interface SurfacePair {
+    /** The single state, in a phrase a consumer would recognise. */
+    readonly state: string;
+    readonly surfaces: readonly [PairSurface, PairSurface];
+    /** The test that exercises both surfaces against one tree. */
+    readonly assertedIn: string;
+    /**
+     * The exact assertion that pins each surface's code in that test, in the
+     * same order as {@link surfaces}. A title would not do: a title survives a
+     * gutted body, and these are the lines that carry the codes.
+     */
+    readonly assertions: readonly [string, string];
+}
+
+export const PAIRS: readonly SurfacePair[] = [
+    {
+        state:
+            'the install preserved a user-modified managed file, so the active installation is stale',
+        surfaces: [
+            { verb: 'init', code: 3 },
+            { verb: 'doctor', code: 1 },
+        ],
+        assertedIn: 'tests/install/ownership_ledger_real_install.test.ts',
+        assertions: ['expect(second.status, second.out).toBe(3)', 'expect(after.status).toBe(1)'],
+    },
+];
+
 export const COMMANDS: readonly CommandSpec[] = [
     {
         verb: 'init',
@@ -153,10 +228,73 @@ export interface Row {
 
 export interface Register {
     readonly rows: ReadonlyMap<string, readonly Row[]>;
+    readonly pairs: readonly SurfacePair[];
     readonly errors: readonly string[];
 }
 
-export function build(root: string, commands: readonly CommandSpec[] = COMMANDS): Register {
+/**
+ * Check each pair against what the scan found and against the test that
+ * asserts it. Errors, never silence: a pair whose halves have drifted is the
+ * condition the section exists to catch.
+ */
+export function checkPairs(
+    root: string,
+    rows: ReadonlyMap<string, readonly Row[]>,
+    pairs: readonly SurfacePair[],
+): string[] {
+    const errors: string[] = [];
+    for (const pair of pairs) {
+        for (const s of pair.surfaces) {
+            const codes = rows.get(s.verb);
+            if (codes === undefined) {
+                errors.push(`pair "${pair.state}": names \`${s.verb}\`, which the register does not cover`);
+            } else if (!codes.some((r) => r.code === s.code)) {
+                errors.push(`pair "${pair.state}": \`${s.verb}\` no longer returns ${s.code}`);
+            }
+        }
+        const abs = path.join(root, pair.assertedIn);
+        if (!fs.existsSync(abs)) {
+            errors.push(`pair "${pair.state}": asserted in ${pair.assertedIn}, which does not exist`);
+            continue;
+        }
+        // Stripped, like the `inherits` fragment check below: an assertion that
+        // survives only inside a comment is an assertion nobody runs, and the
+        // raw text would have called that intact.
+        const body = strip(fs.readFileSync(abs, 'utf8'));
+        pair.assertions.forEach((assertion, i) => {
+            if (!body.includes(assertion)) {
+                const verb = pair.surfaces[i]?.verb ?? '?';
+                errors.push(
+                    `pair "${pair.state}": ${pair.assertedIn} no longer asserts the \`${verb}\` side — ` +
+                        `\`${assertion}\` is gone`,
+                );
+            }
+        });
+    }
+    return errors;
+}
+
+/**
+ * `pairs` defaults to the production set, unconditionally.
+ *
+ * A fixture caller passing its own `commands` must also pass `pairs: []`, and
+ * the cost of forgetting is an error about a file the fixture never claimed to
+ * have — loud, and in the wrong place, but loud.
+ *
+ * That is deliberate, and it is the second answer to this question. The first
+ * scoped the default with `commands === COMMANDS ? PAIRS : []`, which spared
+ * fixture callers the confusing error and introduced a worse failure: a caller
+ * holding a non-identical array — `[...COMMANDS]`, a filtered set, a future
+ * `--only <verb>` — would have lost the pair check silently, with no error and
+ * no red case. A gate that disables itself on reference identity is fail-open,
+ * and a confusing error beats a silent one. `main`'s path keeping the check is
+ * pinned by a test rather than left to this default.
+ */
+export function build(
+    root: string,
+    commands: readonly CommandSpec[] = COMMANDS,
+    pairs: readonly SurfacePair[] = PAIRS,
+): Register {
     const constants = exitConstants(root);
     const errors: string[] = [];
     const own = new Map<string, Map<number, string[]>>();
@@ -204,7 +342,8 @@ export function build(root: string, commands: readonly CommandSpec[] = COMMANDS)
                 .map((code) => ({ code, meaning: cmd.meanings[code] as string, emittedIn: byCode.get(code) ?? [] })),
         );
     }
-    return { rows, errors };
+    errors.push(...checkPairs(root, rows, pairs));
+    return { rows, pairs, errors };
 }
 
 export function render(reg: Register): string {
@@ -230,6 +369,36 @@ export function render(reg: Register): string {
         out.push(`## \`${verb}\``, '', '| Code | Meaning | Emitted in |', '|---|---|---|');
         for (const r of rows) {
             out.push(`| \`${r.code}\` | ${r.meaning} | ${r.emittedIn.map((e) => (e.startsWith('via ') ? e : `\`${e}\``)).join(', ')} |`);
+        }
+        out.push('');
+    }
+    if (reg.pairs.length > 0) {
+        out.push(
+            '## Pairs that must agree',
+            '',
+            '> Two surfaces reporting on one state. The named test pins each exact',
+            '> code by driving both surfaces over one tree; this generator checks',
+            '> that the register still documents each paired code and that the test',
+            '> still carries each assertion, so deleting or commenting one out fails',
+            '> the build.',
+            '',
+            '> **Read each row one way only.** The pair licenses "this state ⇒ these',
+            '> codes", never the converse. A code may have other causes — `doctor` 1',
+            '> is "drift OR a failing check", and a tree can be at 1 for a reason the',
+            '> pair says nothing about.',
+            '',
+            '> **What the generator does not catch:** a test skipped rather than',
+            '> deleted (`vitest run` exits 0 on a skip; the diff gate',
+            '> `check_test_weakening` is what sees one being added), and an assertion',
+            '> that moved to another case in the same file, because the match is',
+            '> file-wide.',
+            '',
+            '| State | Surfaces | Asserted in |',
+            '|---|---|---|',
+        );
+        for (const p of reg.pairs) {
+            const surfaces = p.surfaces.map((s) => `\`${s.verb}\` → \`${s.code}\``).join(' · ');
+            out.push(`| ${p.state} | ${surfaces} | \`${p.assertedIn}\` |`);
         }
         out.push('');
     }
