@@ -292,9 +292,19 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   step also scoped itself to its own merge ("returns 0 at merge"), which it
  *   did. Its stated successor was to record the first observed row with its
  *   provenance — which is what this block now is.
+ *
+ * `fork_shares_cache: true` — OBSERVED. claude (Claude Code 2.1.302, a fork
+ *   spawned from a subagent leg, 2026-10-17): the fork's first own call read
+ *   248,334 of 248,939 input tokens from cache, and its tool list was the
+ *   parent's. Artifact:
+ *   `agents/evidence/investigations/host-continuation-observations-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol makes the artifact citation part of the row
+ *
+ * `worker_resume` — absent, deliberately. The same artifact records a resumed
+ *   leg reading 99.7 % from cache, but it was addressed by the host's per-run
+ *   id rather than a durable name, which the criterion requires.
  */
 const HOST_CAPABILITY_REGISTRY: Readonly<Record<string, Partial<HostCapabilityManifest>>> = {
-    claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true },
+    claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true, fork_shares_cache: true },
 };
 
 /**
