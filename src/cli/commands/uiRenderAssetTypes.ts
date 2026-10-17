@@ -10,8 +10,6 @@
  * `road-to-svg-with-a-witness` — before any checker existed — so a threshold
  * could not be chosen to fit what a rule already reported.
  */
-import * as path from 'node:path';
-
 import type { DeliveryMode, ViewBox } from '../../scripts/lint_svg_asset.js';
 // TYPE-ONLY, and that is what keeps it legal: `AssetReading` carries the
 // comparison's shape while the comparison needs the classes from here. A type
@@ -59,13 +57,14 @@ export const DEFAULT_GEOMETRY_TOLERANCES: Readonly<Record<AssetClass, GeometryTo
  */
 export const FALLBACK_BACKGROUNDS = { light: '#ffffff', dark: '#111111' } as const;
 
-/** The four paths the brand resolver searches, in its order. First hit wins. */
-export const BRAND_TOKEN_PATHS: readonly string[] = [
-    'tokens.json',
-    'assets/tokens.json',
-    'resources/tokens.json',
-    path.join('agents', 'settings', 'brand', 'tokens.json'),
-];
+/**
+ * The four paths the brand resolver searches, in its order. First hit wins.
+ *
+ * Re-exported from the one declaration. The copy that stood here built its last
+ * entry with `path.join`, so on Windows this module searched a back-slash path
+ * the scaffold never wrote — two answers to what counts as the project's brand.
+ */
+export { BRAND_TOKEN_PATHS } from '../../shared/brandTokenPaths.js';
 
 /** Icon sizes are the three the incumbent sets ship at. Other classes: 1x and 2x. */
 export const ICON_SIZES: readonly number[] = [16, 24, 48];

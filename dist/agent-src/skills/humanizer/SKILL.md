@@ -5,7 +5,7 @@ description: "Use when removing AI-writing tells from deliverable prose — post
 status: active
 tier: senior
 domain: product
-context_spine: [product, customer-segment]
+context_spine: [product, customer-segment, brand-voice]
 recommended_for_user_types: [creator, consultant, gtm]
 workspaces:
   - gtm
@@ -58,7 +58,13 @@ human voice there; do not inject personality or restructure it.
 2. **Draft rewrite.** Replace tells with plain alternatives; cover
    everything the original covers (five paragraphs in → five out), preserve
    meaning, and match the active voice source. Voice precedence is fixed:
-   profile fingerprint > registered brand voice > humanizer defaults. When
+   profile fingerprint > registered brand voice > humanizer defaults. The
+   **registered brand voice** is one named file — the `brand-voice`
+   context-spine slot at `agents/context-spine/brand-voice.md` <!-- ref-ignore -->
+   (`./agent-config brand:status --json` reports whether it is present and
+   schema-valid). No slot, or an invalid one, means there is no registered
+   brand voice and the defaults apply; never infer one from a skill body or
+   a token file. When
    the fingerprint legitimately uses a watched pattern (em dashes,
    `emoji_rules: allowed`), the fingerprint wins — suppress that pattern.
 3. **Audit.** Ask: "What still makes this draft read AI-generated?" List

@@ -1,0 +1,15 @@
+{
+  "skill": "release-comms",
+  "last_eval": "2026-10-17",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers turning a shipped release into user-facing comms, a changelog that reads like a commit log, several surfaces written by different people, and a German phrasing. Should-not covers the three the skill excludes (incident comms, pre-release discovery, a deprecation needing legal sign-off) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "we shipped this release — turn it into something a user can actually parse", "trigger": true, "class": "exemplar"},
+    {"q": "this changelog reads like a commit log, nobody outside the team can use it", "trigger": true, "class": "exemplar"},
+    {"q": "in-app, email, social and docs are being written by four people from one release", "trigger": true, "class": "exemplar"},
+    {"q": "schreib die Release-Kommunikation für das, was gestern live gegangen ist", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "the API has been down for twenty minutes — what do we tell customers right now", "trigger": false, "class": "near-miss", "note": "incident comms is incident-commander; this skill assumes the change shipped"},
+    {"q": "draft the deprecation notice for the v1 endpoint, legal has to sign it off", "trigger": false, "class": "near-miss", "note": "a deprecation needing legal sign-off is explicitly out of scope"},
+    {"q": "what should we build next quarter — talk to users first", "trigger": false, "class": "near-miss", "note": "pre-release discovery is customer-research, and nothing has shipped"},
+    {"q": "convert this spreadsheet into a pivot table by region", "trigger": false, "class": "counterexample"}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "skill": "voice-and-tone-design",
+  "last_eval": "2026-10-17",
+  "description": "5 should-trigger + 4 should-not-trigger. Should-trigger covers naming the voice when surfaces diverge, a tone matrix per audience cell, a senior persona asking for a defensible artefact, writing the brand-voice slot, and a German phrasing. Should-not covers the three the skill excludes (copy-editing one asset, the message stack, channel tactics) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "define our voice — the same segment hears three different brands from us per quarter", "trigger": true, "class": "exemplar"},
+    {"q": "build the tone matrix: error copy, onboarding and sales follow-up all read differently", "trigger": true, "class": "exemplar"},
+    {"q": "our CMO wants a voice artefact a writer on deadline can actually defend against", "trigger": true, "class": "exemplar"},
+    {"q": "write the brand-voice slot — three attributes, the terms we never use, and the claims we can back", "trigger": true, "class": "exemplar"},
+    {"q": "leg fest, wie wir klingen, und was wir nie sagen", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "tighten this one landing page paragraph, it reads flabby", "trigger": false, "class": "near-miss", "note": "copy-editing a single asset is a writer's job, not voice definition"},
+    {"q": "what is our primary message and which three support it", "trigger": false, "class": "near-miss", "note": "the message stack is messaging-architecture"},
+    {"q": "which subject line should the nurture email use", "trigger": false, "class": "near-miss", "note": "channel-specific tactics are out of scope for a channel-agnostic skill"},
+    {"q": "add a composite index on orders(customer_id, created_at)", "trigger": false, "class": "counterexample"}
+  ]
+}

@@ -44,9 +44,14 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    hand-authored one for simple geometric marks — authored under
    [`svg-authoring`](../svg-authoring/SKILL.md), never free-hand). Raster output
    is a concept only — not a shippable logo asset.
-3. **Inject brand tokens when a brand layer is present** (`pack-brand`) — pull the
-   registered palette, typeface, and spacing tokens. When no brand layer exists,
-   use the brief's palette and type choices directly.
+3. **Ask the resolver before choosing colour or type** — run
+   `./agent-config brand:status --json` and pull the palette, typeface and
+   spacing from the `sources[]` it reports as valid. Never test for a token
+   file yourself and never use a remembered value: a file the resolver marks
+   `invalid` or `shadowed` is not the brand. When it reports `bare`, or
+   nothing valid for the axis in hand, use the brief's palette and type
+   choices and **label those values `corpus-sourced` in the output**, so a
+   gap-fill is never read as a brand decision.
 4. **Route + prompt** via [`image-provider-routing`](../image-provider-routing/SKILL.md)
    and [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — apply
    provider-specific grammar (text-literal first for Ideogram, `style: vector` param
