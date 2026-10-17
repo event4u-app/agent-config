@@ -41,9 +41,15 @@ const SHARED_EXCLUDE = [
 // dependency of this package, so without that job these two files fail on
 // `browserType.launch: Executable doesn't exist` rather than on anything they
 // assert.
+//
+// The two font-witness suites drive a browser too. The dedicated job names its
+// files on the command line, so they reach it through an import at the foot of
+// `ui_render_asset_profile.test.ts`.
 const BROWSER_SUITES = [
     'tests/cli/ui_render_asset_profile.test.ts',
     'tests/design-artifacts/svg_scenarios.test.ts',
+    'tests/cli/ui_render_asset_font_state.test.ts',
+    'tests/cli/ui_render_painted_family.test.ts',
 ];
 const WITH_BROWSER = process.env['AGENT_CONFIG_BROWSER_SUITES'] === '1';
 const NODE_EXCLUDE = WITH_BROWSER ? SHARED_EXCLUDE : [...SHARED_EXCLUDE, ...BROWSER_SUITES];

@@ -49,15 +49,23 @@ const ALL_FALSE: HostCapabilityManifest = {
 
 describe('worker_resume / fork_shares_cache (road-to-a-cold-start-paid-once 2.1)', () => {
     it('worker-resume-defaults-false', () => {
-        // No Phase 1 observation row exists yet, so every host — including the
-        // one with a registry row — resolves both atoms to the safe default.
+        // `worker_resume` has no admissible row on any host: the 2026-10-17
+        // resume was addressed by the host's per-run id, not by a durable name,
+        // so it does not meet the criterion. `fork_shares_cache` is observed on
+        // `claude` only; every other host keeps the safe default.
         for (const host of ['claude', 'cursor', 'some-unrecognized-host', null]) {
             const { manifest, sources } = describeHostCapabilities(host);
             expect(manifest.worker_resume).toBe(false);
-            expect(manifest.fork_shares_cache).toBe(false);
             expect(sources.worker_resume).toBe('default');
+        }
+        for (const host of ['cursor', 'some-unrecognized-host', null]) {
+            const { manifest, sources } = describeHostCapabilities(host);
+            expect(manifest.fork_shares_cache).toBe(false);
             expect(sources.fork_shares_cache).toBe('default');
         }
+        const claude = describeHostCapabilities('claude');
+        expect(claude.manifest.fork_shares_cache).toBe(true);
+        expect(claude.sources.fork_shares_cache).toBe('registry');
         // Only a strict `true` survives normalization, and the two atoms never
         // derive from `worker_respawn` in either direction.
         expect(normalizeHostManifest({ worker_resume: 'yes', fork_shares_cache: 1 }).worker_resume).toBe(false);
@@ -163,6 +171,9 @@ describe('resolveHostCapabilities — registry hit', () => {
             // until 2026-10-05 on a subagent leg, which carries no picker
             // because a subagent has no user to ask.
             structured_ask: true,
+            // Observed 2026-10-17 on Claude Code 2.1.302: a fork's first call
+            // read 99.8 % of its input from cache with the parent tool list.
+            fork_shares_cache: true,
         });
     });
 
@@ -216,6 +227,7 @@ describe('resolveHostCapabilities — override beats registry', () => {
             subagent_spawn: true,
             parallel_spawn: true,
             structured_ask: true,
+            fork_shares_cache: true,
         });
     });
 });
@@ -231,12 +243,14 @@ describe('resolveHostCapabilities — strict-true coercion unchanged', () => {
             subagent_spawn: true,
             parallel_spawn: true,
             structured_ask: true,
+            fork_shares_cache: true,
         });
         expect(resolveHostCapabilities('claude', 42)).toEqual({
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
             structured_ask: true,
+            fork_shares_cache: true,
         });
     });
 });
@@ -248,6 +262,7 @@ describe('resolveHostCapabilities — array override treated as absent (F8)', ()
             subagent_spawn: true,
             parallel_spawn: true,
             structured_ask: true,
+            fork_shares_cache: true,
         });
     });
 
@@ -379,7 +394,7 @@ describe('describeHostCapabilities — per-field provenance', () => {
             agent_teams: 'default',
             worker_respawn: 'default',
             worker_resume: 'default',
-            fork_shares_cache: 'default',
+            fork_shares_cache: 'registry',
             structured_ask: 'registry',
             reads_project_mcp_config: 'default',
             mcp_needs_manual_activation: 'default',

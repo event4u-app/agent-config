@@ -14,8 +14,9 @@
  *   A. every non-`Q*` catalog entry appears exactly once in § Detector status
  *   B. every § Detector status row names a catalog entry that exists
  *   C. the set of `backed` rows equals the registry's `catalogId` set
- *   D. every status is one of the five allowed values
+ *   D. every status is one of the six allowed values
  *   E. every non-`backed` row carries a reason
+ *   H. every `witness` row names a rule the rendered witness emits
  *
  * `Q*` entries are out of scope by construction: they are objective floors owned
  * by `lint_design_quality`, not aesthetic tells, and the status table says so.
@@ -38,8 +39,21 @@ const REPO = path.resolve(path.dirname(_HERE), '..', '..');
 const CATALOG = path.join(REPO, 'docs', 'guidelines', 'design-antipatterns.md');
 const REGISTRY = path.join(REPO, 'src', 'scripts', 'design_slop_rules.ts');
 
-/** The five statuses § Detector status may use. */
-export const STATUSES = ['backed', 'floor', 'judgment-only', 'deferred', 'candidate'] as const;
+/** The six statuses § Detector status may use. */
+export const STATUSES = ['backed', 'floor', 'judgment-only', 'deferred', 'candidate', 'witness'] as const;
+
+/**
+ * Where a `witness` row's rule must exist: the asset witness's sources
+ * (road-to-type-with-a-witness 2.1). A `witness` entry is read from the
+ * rendered asset rather than from text, so its detector lives here and not in
+ * the slop registry.
+ */
+export const WITNESS_SOURCES = [
+    'src/cli/commands/uiRenderAsset.ts',
+    'src/cli/commands/uiRenderAssetFonts.ts',
+] as const;
+
+const WITNESS_RULE = /`((?:geometry|structure|accessibility|motion)\/[a-z0-9-]+)`/;
 export type Status = (typeof STATUSES)[number];
 
 export interface ParityFinding {
@@ -119,8 +133,12 @@ export function registryCatalogIds(registryTs: string): string[] {
     return [...registryTs.matchAll(CATALOG_ID)].map((m) => m[1] as string);
 }
 
-/** Pure invariant check over both documents. */
-export function parityFindings(catalogMd: string, registryTs: string): ParityFinding[] {
+/**
+ * Pure invariant check over both documents, plus the witness source text a
+ * `witness` row is checked against. Omitting it fails every `witness` row
+ * rather than passing it unread.
+ */
+export function parityFindings(catalogMd: string, registryTs: string, witnessTs = ''): ParityFinding[] {
     const out: ParityFinding[] = [];
 
     if (STATUS_SECTION.exec(catalogMd) === null) {
@@ -165,6 +183,19 @@ export function parityFindings(catalogMd: string, registryTs: string): ParityFin
         }
         if (row.status !== 'backed' && row.note === '') {
             out.push({ kind: 'missing-reason', id, msg: `${id}: status '${row.status}' carries no reason` });
+        }
+        // H — a witness row names its rendered rule, and the witness emits it.
+        if (row.status === 'witness') {
+            const rule = WITNESS_RULE.exec(row.note)?.[1];
+            if (rule === undefined || !witnessTs.includes(`'${rule}'`)) {
+                out.push({
+                    kind: 'witness-without-rule',
+                    id,
+                    msg: rule
+                        ? `${id}: marked witness on \`${rule}\`, which the witness source does not emit`
+                        : `${id}: marked witness but its note names no witness rule (\`geometry/...\`)`,
+                });
+            }
         }
     }
 
@@ -243,7 +274,7 @@ export function main(): number {
     try {
         assertWatchlistResolves({
             gate: 'lint_design_antipattern_parity',
-            candidates: [path.relative(REPO, CATALOG), path.relative(REPO, REGISTRY)],
+            candidates: [path.relative(REPO, CATALOG), path.relative(REPO, REGISTRY), ...WITNESS_SOURCES],
             repoRoot: REPO,
         });
     } catch (exc) {
@@ -256,7 +287,8 @@ export function main(): number {
 
     const catalogMd = fs.readFileSync(CATALOG, 'utf-8');
     const registryTs = fs.readFileSync(REGISTRY, 'utf-8');
-    const findings = parityFindings(catalogMd, registryTs);
+    const witnessTs = WITNESS_SOURCES.map((rel) => fs.readFileSync(path.join(REPO, rel), 'utf-8')).join('\n');
+    const findings = parityFindings(catalogMd, registryTs, witnessTs);
 
     const rows = statusRows(catalogMd);
     const entries = catalogEntries(catalogMd).length;

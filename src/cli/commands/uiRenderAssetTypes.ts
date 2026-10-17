@@ -142,7 +142,18 @@ export interface TextReading {
     first_family: string;
     resolved_family: string;
     first_family_resolved: boolean;
+    /**
+     * The first family of the computed stack that registers an `@font-face`,
+     * and which state its face is in (road-to-type-with-a-witness 1.1, 1.2).
+     * Absent when the stack names no registered family — a system or generic
+     * family, which `first_family_resolved` already covers.
+     */
+    face_family?: string;
+    face_state?: FaceState;
 }
+
+/** `timeout`: still loading when the bounded wait ended — its own state, never a fallback. */
+export type FaceState = 'loaded' | 'error' | 'unloaded' | 'timeout' | 'synthesised';
 
 export interface DrawOnReading {
     index: number;

@@ -134,10 +134,72 @@ function _collect_skills(): Record<string, SkillInfo> {
     return skills;
 }
 
+/** One artefact's `skills:` frontmatter list. */
+interface SkillsFieldRef {
+    path: string;
+    names: string[];
+}
+
+interface SkillsFieldScan {
+    refs: SkillsFieldRef[];
+    skills: Set<string>;
+    rules: Set<string>;
+}
+
+/**
+ * Every `skills:` list on a skill or command, with the suite's skill and rule
+ * names. The schema's slug pattern accepts a rule name there; only the name
+ * sets can tell the two types apart.
+ */
+function _collect_skills_field(): SkillsFieldScan {
+    const refs: SkillsFieldRef[] = [];
+    const skills = new Set<string>();
+    for (const p of iter_artefacts('.md')) {
+        const base = path.basename(p);
+        if (base !== 'SKILL.md' && base !== 'command.md') continue;
+        if (base === 'SKILL.md') skills.add(path.basename(path.dirname(p)));
+        const [fm] = parse_frontmatter(fs.readFileSync(p, 'utf-8'));
+        const val = fm === null ? undefined : (fm as Record<string, unknown>)['skills'];
+        if (!Array.isArray(val)) continue;
+        refs.push({
+            path: path.relative(ROOT(), p).split(path.sep).join('/'),
+            names: (val as unknown[]).filter((v): v is string => typeof v === 'string'),
+        });
+    }
+    const rulesDir = path.join(ROOT(), 'src', 'rules');
+    const rules = new Set(
+        fs.existsSync(rulesDir)
+            ? fs.readdirSync(rulesDir).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3))
+            : [],
+    );
+    return { refs, skills, rules };
+}
+
+/** A rule name in a `skills:` list is a type error; a skill of the same name is not. */
+function skills_field_type_errors(
+    refs: readonly SkillsFieldRef[],
+    skills: ReadonlySet<string>,
+    rules: ReadonlySet<string>,
+): string[] {
+    const errors: string[] = [];
+    for (const ref of [...refs].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))) {
+        for (const name of ref.names) {
+            if (rules.has(name) && !skills.has(name)) {
+                errors.push(
+                    `${ref.path}: skills: lists '${name}', which is a rule, not a skill. ` +
+                        'Rules load by their own triggers; drop it from skills:.',
+                );
+            }
+        }
+    }
+    return errors;
+}
+
 // Injectable hooks for test monkeypatch parity.
 const _hooks = {
     collect_skills: _collect_skills,
     load_pack_closure: _load_pack_closure,
+    collect_skills_field: _collect_skills_field,
 };
 
 function _set_hooks_for_test(overrides: Partial<typeof _hooks>): void {
@@ -165,7 +227,8 @@ function main(): number {
         }
         throw exc;
     }
-    const errors: string[] = [];
+    const field = _hooks.collect_skills_field();
+    const errors: string[] = skills_field_type_errors(field.refs, field.skills, field.rules);
 
     for (const skill_id of Object.keys(skills).sort()) {
         const info = skills[skill_id]!;
@@ -308,6 +371,8 @@ export {
     PACKS_YML,
     _load_pack_closure,
     _collect_skills,
+    _collect_skills_field,
+    skills_field_type_errors,
     main,
     _set_hooks_for_test,
     type SkillInfo,

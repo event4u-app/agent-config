@@ -1,0 +1,26 @@
+{
+  "_comment": "Pre-registered seed lexicon for the parked voice-negative-lexicon Phase 0 spike (brand-checkability roadmap 5.0). Frozen before the scan; plain case-insensitive word-bounded literal matching, no NLP. Corpus: the last 30 merged PR descriptions (title + body) and the last 100 commit messages on origin/main. Gate: >=5 distinct entries firing across >=10 items -> build; hits concentrated in <=2 entries -> schema field only; about 0 hits -> honest null.",
+  "entries": [
+    { "term": "basically", "class": "hedge" },
+    { "term": "simply", "class": "hedge" },
+    { "term": "actually", "class": "hedge" },
+    { "term": "essentially", "class": "hedge" },
+    { "term": "arguably", "class": "hedge" },
+    { "term": "it's worth noting", "class": "hedge" },
+    { "term": "needless to say", "class": "hedge" },
+    { "term": "seamless", "class": "hype" },
+    { "term": "seamlessly", "class": "hype" },
+    { "term": "robust", "class": "hype" },
+    { "term": "powerful", "class": "hype" },
+    { "term": "comprehensive", "class": "hype" },
+    { "term": "cutting-edge", "class": "hype" },
+    { "term": "game-changer", "class": "hype" },
+    { "term": "leverage", "class": "hype" },
+    { "term": "streamline", "class": "hype" },
+    { "term": "elevate", "class": "hype" },
+    { "term": "delve", "class": "hype" },
+    { "term": "🚀", "class": "emoji" },
+    { "term": "✨", "class": "emoji" },
+    { "term": "🎉", "class": "emoji" }
+  ]
+}

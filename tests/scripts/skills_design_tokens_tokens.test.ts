@@ -433,3 +433,85 @@ describe('tokens — starter-shape', () => {
         expect(r.stdout).toContain('--primitive-spacing-1: 0.25rem;');
     });
 });
+
+// road-to-a-brand-the-tree-can-check 3.3: with a registered token file,
+// `validate --json` tags each colour literal against the palette and gives
+// every finding a stable id. It blocks nothing new: the exit code is unchanged.
+describe('tokens — palette-tag', () => {
+    const TOKENS = {
+        primitive: {
+            color: {
+                $type: 'color',
+                brand: { $value: { colorSpace: 'srgb', components: [1, 0, 0], hex: '#ff0000' } },
+                ink: { $value: '#0000ff' },
+                shade: { $value: 'rgb(0, 128, 0)' },
+            },
+        },
+        semantic: { color: { primary: { $value: '{primitive.color.brand}' } } },
+    };
+
+    function setup(css: string): { dir: string; tokens: string } {
+        const dir = path.join(tmp, 'src');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'a.css'), css, 'utf-8');
+        const tokens = path.join(tmp, 'tokens.json');
+        fs.writeFileSync(tokens, JSON.stringify(TOKENS), 'utf-8');
+        return { dir, tokens };
+    }
+
+    type Finding = { line: number; type: string; value: string; palette?: string; id?: string };
+
+    it('palette-tag: on-palette names the token, off-palette names the nearest with ΔE2000', () => {
+        const { dir, tokens } = setup(
+            '.a { color: #ff0000; }\n.b { color: #fe0101; }\n.c { color: rgb(0, 128, 0); }\n.d { padding: 24px; }\n',
+        );
+        const r = runTs(['validate', '--dir', dir, '--json', '--tokens', tokens]);
+        expect(r.status, r.stderr).toBe(1);
+        const found = JSON.parse(r.stdout) as Finding[];
+        expect(found.map((f) => [f.line, f.palette])).toEqual([
+            [1, 'on-palette (primitive.color.brand)'],
+            [2, expect.stringMatching(/^off-palette \(nearest primitive\.color\.brand, ΔE2000 \d+\.\d{2}\)$/)],
+            [3, 'on-palette (primitive.color.shade)'],
+            [4, undefined],
+        ]);
+        const de = Number(/ΔE2000 (\d+\.\d{2})/.exec(found[1]!.palette!)![1]);
+        expect(de).toBeGreaterThan(0);
+        expect(de).toBeLessThan(2);
+        for (const f of found) expect(f.id).toMatch(/^[0-9a-f]{16}$/);
+        expect(new Set(found.map((f) => f.id)).size).toBe(found.length);
+    });
+
+    it('palette-tag: ΔE2000 matches reference values (red/blue 52.88, black/white 100)', async () => {
+        const { deltaE2000 } = (await import(TS_SCRIPT)) as {
+            deltaE2000: (a: readonly number[], b: readonly number[]) => number;
+        };
+        expect(deltaE2000([255, 0, 0], [0, 0, 255]).toFixed(2)).toBe('52.88');
+        expect(deltaE2000([0, 0, 0], [255, 255, 255]).toFixed(2)).toBe('100.00');
+        expect(deltaE2000([12, 34, 56], [12, 34, 56])).toBe(0);
+    });
+
+    it('palette-tag: the id survives an unrelated line shift', () => {
+        const { dir, tokens } = setup('.a { color: #fe0101; }\n');
+        const before = JSON.parse(runTs(['validate', '--dir', dir, '--json', '--tokens', tokens]).stdout) as Finding[];
+        fs.writeFileSync(path.join(dir, 'a.css'), '/* moved */\n\n.a { color: #fe0101; }\n', 'utf-8');
+        const after = JSON.parse(runTs(['validate', '--dir', dir, '--json', '--tokens', tokens]).stdout) as Finding[];
+        expect(after[0]!.line).toBe(3);
+        expect(after[0]!.id).toBe(before[0]!.id);
+    });
+
+    it('palette-tag: without --tokens the findings carry no palette and no id', () => {
+        const { dir } = setup('.a { color: #fe0101; }\n');
+        const found = JSON.parse(runTs(['validate', '--dir', dir, '--json']).stdout) as Finding[];
+        expect('palette' in found[0]!).toBe(false);
+        expect('id' in found[0]!).toBe(false);
+    });
+
+    it('palette-tag: an unreadable token file fails with exit 1 and names the file', () => {
+        const { dir } = setup('.a { color: #fe0101; }\n');
+        const bad = path.join(tmp, 'bad.json');
+        fs.writeFileSync(bad, 'not json {', 'utf-8');
+        const r = runTs(['validate', '--dir', dir, '--json', '--tokens', bad]);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toContain('bad.json');
+    });
+});

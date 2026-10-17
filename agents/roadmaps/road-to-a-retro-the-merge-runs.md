@@ -114,53 +114,78 @@ a learning held is read from the recurrence count that already exists. With
       `learning_sidecar.ts:47`) and one canonical table in the contract (D4).
       verify: `grep -c 'Evidence threshold' docs/contracts/retro-v1.md` -> /[1-9]/
       *Done 2026-10-16: census re-read at current lines.*
-- [ ] **0.5 Pre-registration.** Before any code: triage start values with a
+- [x] **0.5 Pre-registration.** Before any code: triage start values with a
       weighted scoring table as a hypothesis, the daily model-retro budget (D7),
       the catch-up window (D8), a labelled gold set of the last 30 merged PRs and
       30 sessions (hand-labelled "worth a retro / not") for false-negative
       recall, and the Phase 5 measures. Filed under `agents/evidence/`.
       verify: `ls agents/evidence/analysis/` -> /retro-preregistration/
+      *Done 2026-10-17: `retro-preregistration.md`. Labelled by the agent that
+      wrote the scores, labels first; an independent relabel before 5.2 is
+      recommended there.*
 
 *Exit: directive filed, ADR merged with ratification, contract and
 pre-registration in place, settings lint green with the new key.*
 
 ## Phase 1 — Facts first (deterministic, no model)
 
-- [ ] **1.1 Facts for a PR.** `retro_facts --pr <N>` reads the drain summary
+- [x] **1.1 Facts for a PR.** `retro_facts --pr <N>` reads the drain summary
       line, CI runs and red-to-green iterations, review threads, repair commits
       and a later revert, via `forge_reader`. Every field is
       `measured | missing | not-applicable`; never 0 for missing.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t pr-facts-never-invent-a-number --reporter=verbose` -> /✓.*pr-facts-never-invent-a-number/
+      *Done 2026-10-17: `src/scripts/retro_facts.ts --pr <N>`. A later revert
+      matches the merge SHA only; in-PR reverts count separately. More runs than
+      one page read as `missing`, not as a short count.*
 - [ ] **1.2 Facts for a session.** The same for a session tag: end-of-life
       counters, interruptions, self-repair records in its time window, its
       branch and PR when known.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t session-facts-join-on-tag --reporter=verbose` -> /✓.*session-facts-join-on-tag/
+      *Reopened 2026-10-17 after the lane's neutral review held that "when known" is unmet while branch and PR are never recorded; the implementer flipped it against that review, which an implementer may not settle. Built so far: `--session <id>` or `--tag <tag>`. End-of-life state is
+      keyed by a hash of the id, so a tag alone reports it `missing`. Branch
+      stays `missing`: nothing in the tree records a session's branch; the PR is
+      not joined either until a queue pointer (1.3) carries it. Self-repair
+      records count by time window, not by session: a parallel session's record
+      in the same window counts too, until records carry a session tag.*
 - [ ] **1.3 Worktree sessions are not lost (F7).** The fact reader enumerates
       every worktree of the repository (`git worktree list`) and reads its
       session state; the session-end hook additionally appends a one-line
       pointer to the git-common-dir queue, so a removed worktree leaves its unit
       behind.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t worktree-session-is-seen-from-main --reporter=verbose` -> /✓.*worktree-session-is-seen-from-main/
-- [ ] **1.4 Review and transcript text is data.** It passes the existing
+      *Open 2026-10-17: the reader half is built and its test is green. The
+      session-end hook half stays open: it changes a hook consumers receive
+      (owner-reserved) and writes into the queue of 3.1, which does not exist
+      yet.*
+- [x] **1.4 Review and transcript text is data.** It passes the existing
       injection scan before any model sees it; an instruction to the agent inside
       a review comment appears as a quoted datum and changes no routing.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t review-instruction-is-data --reporter=verbose` -> /✓.*review-instruction-is-data/
+      *Done 2026-10-17: review comments and bodies are quoted (500 chars) with
+      the scanner's verdict; no transcript is read (D12).*
 
 ## Phase 2 — `/retro` by hand
 
-- [ ] **2.1 Composition.** Facts → one synthesis step → at most one durable
+- [x] **2.1 Composition.** Facts → one synthesis step → at most one durable
       learning per unit, passing the durability test, else `none` with its
       reason. A trivial typo PR yields `none`; a learning readable from the diff
       itself is discarded.
       verify: `npx vitest run tests/scripts/retro.test.ts -t trivial-pr-yields-none --reporter=verbose` -> /✓.*trivial-pr-yields-none/
-- [ ] **2.2 Exactly one target.** The learning routes to one target from the
+      *Done 2026-10-17: `src/scripts/retro.ts` — triage from the pre-registered
+      start values, the durability test on the synthesis's candidate, `none`
+      with its reason. The synthesis itself stays the agent's.*
+- [x] **2.2 Exactly one target.** The learning routes to one target from the
       closed vocabulary; the intake origin is the local unit key (F3), so two PRs
       with one learning mint a lesson and two hosts in one PR do not.
       verify: `npx vitest run tests/scripts/retro.test.ts -t two-prs-mint-two-hosts-do-not --reporter=verbose` -> /✓.*two-prs-mint-two-hosts-do-not/
-- [ ] **2.3 The output per unit.** Facts, learning, target, counter-hypothesis,
+      *Done 2026-10-17: `unitKey` is the signal origin; a target outside the
+      closed vocabulary throws.*
+- [x] **2.3 The output per unit.** Facts, learning, target, counter-hypothesis,
       falsifier, and the recurrence state of earlier learnings with the same
       target.
       verify: `npx vitest run tests/scripts/retro.test.ts -t output-carries-falsifier --reporter=verbose` -> /✓.*output-carries-falsifier/
+      *Done 2026-10-17: recurrence is the per-target record count; the
+      held/recurred reading is 5.1.*
 - [ ] **2.4 The forms.** `/retro`, `/retro <N>`, `/retro --session [<tag>]`,
       `/retro --since <date>`, `/retro status`, `--dry-run`. A manual run never
       re-enables the automatic paths.
@@ -168,13 +193,19 @@ pre-registration in place, settings lint green with the new key.*
 - [ ] **2.5 `/retro status`.** Shows the queue and the last sweep's triage
       counts: analysed, skipped by reason, covered, deferred, expired.
       verify: `npx vitest run tests/scripts/retro.test.ts -t status-shows-skip-reasons --reporter=verbose` -> /✓.*status-shows-skip-reasons/
+      *2.4 and 2.5 open 2026-10-17: both are the visible `/retro` command,
+      which needs the verb from 0.2's ADR and is a new consumer command
+      (owner-reserved). The library they call exists.*
 
 ## Phase 3 — Three paths, one queue
 
-- [ ] **3.1 The queue.** In the git common dir via `_lib/git_common_dir.ts`, one
+- [x] **3.1 The queue.** In the git common dir via `_lib/git_common_dir.ts`, one
       file per unit, written atomically; two worktrees on one day produce one
       sweep and one queue.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t two-worktrees-one-queue --reporter=verbose` -> /✓.*two-worktrees-one-queue/
+      *Done 2026-10-17: `src/scripts/retro_queue.ts`; an existing entry is
+      never rewritten, so the first enqueue time stands. No path writes to it
+      yet — 3.2-3.4.*
 - [ ] **3.2 Path A — `/pr:merge`.** After `/pr:merge <N>` immediately; after
       `/pr:merge all` once, after the queue ends — never between two merges of a
       drain. `/roadmap:process-full --merge` inherits it.
@@ -190,32 +221,48 @@ pre-registration in place, settings lint green with the new key.*
       deterministically and writes one `<retro-queue>` line — no model, no spawn
       (K1, K7). With zero candidates it writes nothing.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t zero-candidates-is-silent --reporter=verbose` -> /✓.*zero-candidates-is-silent/
-- [ ] **3.5 Who does the model work.** The agent treats the queue line as work
+- [x] **3.5 Who does the model work.** The agent treats the queue line as work
       after the pattern of the self-repair queue — delegated to a subagent where
       the host can, otherwise after the first user task; the first user task is
       never deferred for it.
       verify: `grep -c 'never deferred' docs/contracts/retro-v1.md` -> /[1-9]/
-- [ ] **3.6 Dedupe and window.** The sweep skips sessions whose PR already has a
+      *Done 2026-10-17: contract § Who does the model work; the line it reads
+      arrives with 3.4.*
+- [x] **3.6 Dedupe and window.** The sweep skips sessions whose PR already has a
       retro (`covered`) and retro sessions themselves; catch-up reaches back at
       most the window from D8, older units count as `expired`. Day boundaries use
       the local IANA zone; a DST switch neither drops nor doubles a day.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t dst-switch-neither-drops-nor-doubles --reporter=verbose` -> /✓.*dst-switch-neither-drops-nor-doubles/
+      *Done 2026-10-17: `sweepDays` and `classifyUnit` on calendar dates, so a
+      23- or 25-hour day is one day. The sweep that calls them is 3.4.*
 - [ ] **3.7 The switch.** `retro.enabled: false` — project or user-global — turns
       off all three paths and the probe; the value survives a restart and an
       upgrade; CLI, hook and GUI resolve it through one resolver; an agent cannot
       set it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t disabled-globally-means-no-probe --reporter=verbose` -> /✓.*disabled-globally-means-no-probe/
+      *3.2, 3.3, 3.4 and 3.7 open 2026-10-17: 3.2 edits `/pr:merge`, a merge
+      carrier; 3.3 and 3.4 change hooks consumers receive and switch on an
+      automatic path (owner-reserved); 3.7 needs the key from 0.2's ADR.*
 
 ## Phase 4 — Local effect without automatic promotion
 
-- [ ] **4.1 Intake signals carry the unit key** as their origin and are written
+- [x] **4.1 Intake signals carry the unit key** as their origin and are written
       without a question (gitignored, decaying, behaviour-neutral until a human
       promotes them).
       verify: `npx vitest run tests/scripts/retro.test.ts -t intake-origin-is-unit-key --reporter=verbose` -> /✓.*intake-origin-is-unit-key/
-- [ ] **4.2 The retro aggregates the sidecar itself** at the end of each run
+      *Done 2026-10-17: `writeIntakeSignals`, entry type `historical-patterns`
+      with `source: retro`, through the project-provenance gate. The origin is
+      the unit's identity part `{repo, pr|session}` (`unitOrigin`), so a failed
+      merge-SHA lookup or a policy bump cannot make one PR corroborate itself;
+      the body is the canonical claim, so differently worded retros on one claim
+      corroborate. Signals land in the running workspace's intake, not the
+      common dir.*
+- [x] **4.2 The retro aggregates the sidecar itself** at the end of each run
       through the library function, independent of
       `memory.learn_on_session_end` (D6).
       verify: `npx vitest run tests/scripts/retro.test.ts -t retro-aggregates-sidecar --reporter=verbose` -> /✓.*retro-aggregates-sidecar/
+      *Done 2026-10-17: `aggregateSidecar`; it never reads
+      `memory.learn_on_session_end`.*
 - [ ] **4.3 Proposals as files.** Override, test and project no-go proposals land
       under `agents/proposals/`; `/memory:propose` lists retro learnings with
       their unit keys. Promotion stays human.
@@ -224,6 +271,9 @@ pre-registration in place, settings lint green with the new key.*
       `target`/`proposes` and the retro's unit key; whether one leaves the
       machine is `road-to-one-upstream-that-checks-what-leaves`'s question.
       verify: `npx vitest run tests/scripts/retro.test.ts -t package-finding-is-a-record --reporter=verbose` -> /✓.*package-finding-is-a-record/
+      *4.3 and 4.4 open 2026-10-17: 4.3 changes what `/memory:propose` lists
+      (a consumer command); 4.4 needs a unit-key field on the self-repair
+      record, whose shape the privacy floor and the release path read.*
 
 ## Phase 5 — Effect, not volume
 

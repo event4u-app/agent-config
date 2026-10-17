@@ -72,8 +72,8 @@ node <skills-root>/design-tokens/scripts/tokens.mjs generate \
 # tokens.json → Tailwind theme.extend.colors snippet
 node …/tokens.mjs generate --config tokens.json --format tailwind
 
-# token-discipline lint: hardcoded hex/rgb/px/rem outside token files
-node …/tokens.mjs validate --dir src/ [--json]
+# lint hex/rgb/px/rem; --tokens: palette tags
+node …/tokens.mjs validate --dir src/ [--json [--tokens tokens.json]]
 
 # embeddable inline CSS for standalone HTML artifacts
 node …/tokens.mjs embed --tokens assets/design-tokens.css --minimal --style

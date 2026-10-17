@@ -676,6 +676,36 @@ export const SLOP_RULES: SlopRule[] = [
         .map((b) => ({ line: b.line, snippet: b.selector.slice(0, 80) })),
   },
   {
+    id: "slop-t12-swap-without-metric-fallback",
+    catalogId: "T12",
+    severity: "P3",
+    engines: ["css"],
+    description: "Self-hosted webfont with font-display: swap and no metric-matched fallback @font-face",
+    message:
+      "swap paints the fallback first; without a local() fallback carrying size-adjust, ascent-override and descent-override, every line reflows at the swap (T12).",
+    gated: (ctx) => ctx.has("size-adjust", "metric-matched fallback"),
+    detect: ({ content }) => {
+      const faces = cssBlocks(content).filter((b) => /^@font-face$/i.test(b.selector));
+      // Self-hosted: a url() that is not an absolute http(s) address. A
+      // third-party delivery is owned by the webfont-delivery section.
+      const swapped = faces.filter(
+        (b) =>
+          /font-display\s*:\s*swap/i.test(b.body) &&
+          /url\(/i.test(b.body) &&
+          !/url\(\s*["']?https?:\/\//i.test(b.body),
+      );
+      if (swapped.length === 0) return [];
+      const matched = faces.some(
+        (b) =>
+          /local\(/i.test(b.body) &&
+          /size-adjust\s*:/i.test(b.body) &&
+          /ascent-override\s*:/i.test(b.body) &&
+          /descent-override\s*:/i.test(b.body),
+      );
+      return matched ? [] : swapped.map((b) => ({ line: b.line, snippet: b.body.trim().split("\n")[0]?.slice(0, 80) ?? "" }));
+    },
+  },
+  {
     id: "slop-m1-bounce-easing",
     catalogId: "M1",
     severity: "P2",

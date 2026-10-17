@@ -25,7 +25,7 @@ import type {
     RunResult,
     Runner,
 } from '../../src/scripts/self_repair_cli.js';
-import { executeRelease } from '../../src/scripts/self_repair_cli.js';
+import { consumerDenyList, executeRelease, renderDryRun } from '../../src/scripts/self_repair_cli.js';
 
 const OK: RunResult = { ok: true, out: '', timedOut: false };
 
@@ -131,5 +131,203 @@ describe('the upstream pull request is a draft', () => {
         expect(args.indexOf('--draft')).toBeLessThan(args.indexOf('--title'));
         expect(args[args.indexOf('--title') + 1]).toBe('a title');
         expect(args[args.indexOf('--body') + 1]).toBe('a body');
+    });
+});
+
+/**
+ * F2: the privacy floor scanned the record's text while the release pushed a
+ * whole branch. These cases script the branch's bytes — its name, the commit
+ * identities and messages, every commit's patch — and assert that a finding in
+ * any of them refuses the pull request, names WHERE it was found, and never
+ * prints the value it found.
+ */
+interface Payload {
+    branch?: string;
+    log?: string;
+    patches?: string;
+    logOk?: boolean;
+}
+
+function payloadRunner(p: Payload): { runner: Runner; prCalls: string[][]; issueCalls: number } {
+    const state = { prCalls: [] as string[][], issueCalls: 0 };
+    const runner: Runner = (cmd, args) => {
+        if (cmd === 'git' && args[0] === 'branch') {
+            return { ok: true, out: `${p.branch ?? 'fix/neutral'}\n`, timedOut: false };
+        }
+        if (cmd === 'git' && args[0] === 'log' && args.includes('-p')) {
+            return { ok: p.logOk ?? true, out: p.patches ?? '', timedOut: false };
+        }
+        if (cmd === 'git' && args[0] === 'log') {
+            return { ok: p.logOk ?? true, out: p.log ?? '', timedOut: false };
+        }
+        if (cmd === 'gh' && args[0] === 'pr' && args[1] === 'create') {
+            state.prCalls.push([...args]);
+            return { ok: true, out: 'https://example.invalid/pr/1\n', timedOut: false };
+        }
+        if (cmd === 'gh' && args[0] === 'issue') {
+            state.issueCalls += 1;
+            return { ok: true, out: 'https://example.invalid/issues/1\n', timedOut: false };
+        }
+        return OK;
+    };
+    return {
+        runner,
+        get prCalls() {
+            return state.prCalls;
+        },
+        get issueCalls() {
+            return state.issueCalls;
+        },
+    };
+}
+
+function denyDeps(runner: Runner, deny: string[]): ReleaseDeps {
+    return { runner, now: () => '2026-10-17T00:00:00.000Z', denyIdentifiers: deny };
+}
+
+describe('the floor covers the whole payload, not only the record text', () => {
+    it('consumer-identifier-in-diff-refuses — a consumer identifier in a patch refuses the pull request', () => {
+        const r = payloadRunner({ patches: '+++ b/src/rules/x.md\n+see the acmewidgets billing service\n' });
+        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+
+        expect(r.prCalls).toHaveLength(0);
+        const scan = out.attempts.find((a) => a.step === 'payload-scan');
+        expect(scan?.detail).toMatch(/diff/);
+        expect(scan?.detail).not.toMatch(/acmewidgets/i);
+        // Degrades to the issue, which carries only the floored record text.
+        expect(out.published).toBe('issue');
+    });
+
+    it('consumer-identifier-in-diff-refuses — branch name, identity and message are scanned too', () => {
+        for (const [p, part] of [
+            [{ branch: 'fix/acmewidgets-thing' }, 'branch'],
+            [{ log: 'Jane <jane@acmewidgets.example>\nJane <jane@acmewidgets.example>\nfix: x\n\0' }, 'commit'],
+            [{ log: 'A <a@users.noreply.github.com>\nA <a@users.noreply.github.com>\nfix: the AcmeWidgets case\n\0' }, 'commit'],
+        ] as const) {
+            const r = payloadRunner(p);
+            const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+            expect(r.prCalls).toHaveLength(0);
+            expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(new RegExp(part));
+        }
+    });
+
+    it('consumer-identifier-in-diff-refuses — a credential from the detector table refuses with its rule named', () => {
+        const r = payloadRunner({ patches: '+const k = "AKIAIOSFODNN7EXAMPLE";\n' });
+        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, []));
+
+        expect(r.prCalls).toHaveLength(0);
+        const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
+        expect(detail).toMatch(/aws-access-key/);
+        expect(detail).not.toMatch(/AKIAIOSFODNN7EXAMPLE/);
+    });
+
+    it('consumer-identifier-in-diff-refuses — a payload that cannot be read refuses (fail-closed)', () => {
+        const r = payloadRunner({ logOk: false });
+        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, []));
+
+        expect(r.prCalls).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(/could not be read/);
+    });
+
+    it('a clean payload still opens the draft pull request', () => {
+        const r = payloadRunner({
+            log: 'A <a@users.noreply.github.com>\nA <a@users.noreply.github.com>\nfix: tighten a rule\n\0',
+            patches: '+++ b/src/rules/x.md\n+a neutral sentence\n',
+        });
+        const out = executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+
+        expect(out.published).toBe('pull-request');
+        expect(r.prCalls).toHaveLength(1);
+    });
+
+    it('the deny list never contains the target repository itself', () => {
+        expect(consumerDenyList(['acmewidgets', 'event4u', 'agent-config', 'event4u-app'], 'event4u-app/agent-config')).toEqual([
+            'acmewidgets',
+        ]);
+    });
+});
+
+describe('the dry run says which account the send will carry', () => {
+    it('dry-run-names-the-account — a pull request and an issue both name the account', () => {
+        for (const route of ['pull-request', 'issue'] as const) {
+            const text = renderDryRun({ ...plan('upstream'), route }, 'some-login');
+            expect(text).toMatch(/some-login/);
+            expect(text).toMatch(/a title/);
+        }
+    });
+
+    it('dry-run-names-the-account — an unresolvable account is said out loud, not omitted', () => {
+        const text = renderDryRun({ ...plan('upstream'), route: 'issue' }, null);
+        expect(text).toMatch(/account.*could not be resolved/i);
+    });
+
+    it('dry-run-names-the-account — a local-only plan names no account, since nothing leaves', () => {
+        const text = renderDryRun({ ...plan('upstream'), route: 'local-only' }, 'some-login');
+        expect(text).not.toMatch(/some-login/);
+    });
+});
+
+describe('a refused title or body does not leave through the issue either', () => {
+    it('consumer-identifier-in-diff-refuses — an identifier in the body refuses the issue fallback too', () => {
+        const r = payloadRunner({});
+        const p = { ...plan('upstream'), body: 'seen in the acmewidgets checkout' };
+        const out = executeRelease(record(), p, probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+
+        expect(r.prCalls).toHaveLength(0);
+        expect(r.issueCalls).toBe(0);
+        expect(out.published).toBeNull();
+    });
+
+    it('an unreadable history does not skip the title and body scan', () => {
+        // The title and body are scanned before and independently of the git
+        // reads: an unreadable range once fell through to the issue unscanned.
+        const pushes: string[][] = [];
+        const r = payloadRunner({ logOk: false });
+        const runner: Runner = (cmd, args, cwd) => {
+            if (cmd === 'git' && args[0] === 'push') {
+                pushes.push([...args]);
+            }
+            return r.runner(cmd, args, cwd);
+        };
+        for (const p of [
+            { ...plan('upstream'), title: 'acmewidgets crash' },
+            { ...plan('upstream'), body: 'seen in the acmewidgets checkout' },
+            { ...plan('upstream'), title: 'acmewidgets crash', body: 'seen in the acmewidgets checkout' },
+        ]) {
+            const out = executeRelease(record(), p, probe(true), 'o/r', denyDeps(runner, ['acmewidgets']));
+            expect(out.published).toBeNull();
+            const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
+            expect(detail).toMatch(/title|body/);
+            expect(detail).not.toMatch(/acmewidgets/i);
+        }
+        expect(r.issueCalls).toBe(0);
+        expect(r.prCalls).toHaveLength(0);
+        expect(pushes).toHaveLength(0);
+    });
+
+    it('the re-rendered issue body of a degraded pull request is scanned too', () => {
+        const r = payloadRunner({ logOk: false });
+        const rec = { ...record(), evidence: 'seen in the acmewidgets checkout' };
+        const out = executeRelease(rec, plan('upstream'), probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+
+        expect(r.issueCalls).toBe(0);
+        expect(out.published).toBeNull();
+    });
+
+    it('the patch read forces text and disables textconv and external diff drivers', () => {
+        const seen: string[][] = [];
+        const inner = payloadRunner({}).runner;
+        const runner: Runner = (cmd, args, cwd) => {
+            if (cmd === 'git' && args[0] === 'log' && args.includes('-p')) {
+                seen.push([...args]);
+            }
+            return inner(cmd, args, cwd);
+        };
+        executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(runner, []));
+
+        expect(seen).toHaveLength(1);
+        for (const flag of ['--text', '--no-textconv', '--no-ext-diff']) {
+            expect(seen[0]).toContain(flag);
+        }
     });
 });

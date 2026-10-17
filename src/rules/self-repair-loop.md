@@ -47,7 +47,7 @@ work, not a notification:
    the release can be a pull request; otherwise the report alone becomes an
    issue.
 4. **Offer the release** — `agent-config self-repair:release <fingerprint>`;
-   `--dry-run` shows route and body without touching the network. Running it is
+   `--dry-run` shows route, account, body, and only reads GitHub. Running it is
    the user's call, per
    [`non-destructive-by-default`](non-destructive-by-default.md).
 

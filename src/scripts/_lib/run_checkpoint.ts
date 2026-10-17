@@ -31,6 +31,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { write_atomic } from './fs_atomic.js';
 import { CHECKBOX_LINE, phaseLines } from './roadmap_checkboxes.js';
 
 export const CHECKPOINT_DIR_REL = path.join('agents', 'runtime', 'state', 'checkpoints');
@@ -239,12 +240,15 @@ export function buildCheckpoint(
     };
 }
 
-/** Write a checkpoint. Best-effort: a failed write must never break a Stop. */
+/**
+ * Write a checkpoint. Best-effort: a failed write must never break a Stop.
+ * Atomic, because a session killed mid-write left a torn newest file that the
+ * lookup then skipped in favour of an older one.
+ */
 export function writeCheckpoint(repoRoot: string, cp: RunCheckpoint): string | null {
     const file = checkpointFile(repoRoot, cp.run_id);
     try {
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.writeFileSync(file, `${JSON.stringify(cp, null, 2)}\n`, 'utf-8');
+        write_atomic(file, `${JSON.stringify(cp, null, 2)}\n`);
         return file;
     } catch {
         return null;
@@ -459,4 +463,57 @@ export function renderVerification(cp: RunCheckpoint, res: VerifyResult): string
         lines.push('  the tree still matches the checkpoint.');
     }
     return lines.join('\n');
+}
+
+/** Checkpoint files that do not parse as a checkpoint, with their mtime. */
+function unreadableCheckpoints(repoRoot: string): Array<{ name: string; mtimeMs: number }> {
+    const dir = path.join(repoRoot, CHECKPOINT_DIR_REL);
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.json'));
+    } catch {
+        return [];
+    }
+    const out: Array<{ name: string; mtimeMs: number }> = [];
+    for (const name of names.sort()) {
+        const file = path.join(dir, name);
+        let ok = false;
+        try {
+            const o: unknown = JSON.parse(fs.readFileSync(file, 'utf-8'));
+            ok = o !== null && typeof o === 'object' && !Array.isArray(o) && typeof (o as Record<string, unknown>)['run_id'] === 'string';
+        } catch {
+            ok = false;
+        }
+        if (ok) continue;
+        try {
+            out.push({ name, mtimeMs: fs.statSync(file).mtimeMs });
+        } catch {
+            // Gone between the listing and the stat — nothing left to name.
+        }
+    }
+    return out;
+}
+
+/**
+ * The resumed run's first act, as one call: find the roadmap's newest readable
+ * checkpoint, recompute it, render the per-field report — and name every
+ * unreadable checkpoint file newer than the one used. Such a file cannot say
+ * which roadmap it belonged to, so it is named rather than guessed at; the
+ * lookup still skips it, because a torn file must not block a resume.
+ */
+export function verifyLatestCheckpoint(
+    repoRoot: string,
+    roadmap: string,
+    currentFingerprint?: string | null,
+): { report: string; agrees: boolean } {
+    const cp = latestCheckpointFor(repoRoot, roadmap);
+    const usedAt = cp === null ? Number.NEGATIVE_INFINITY : Date.parse(String(cp.written_at ?? ''));
+    const torn = unreadableCheckpoints(repoRoot)
+        .filter((f) => Number.isNaN(usedAt) || f.mtimeMs > usedAt)
+        .map((f) => `  unreadable: ${f.name} — newer than the checkpoint used, its roadmap cannot be read`);
+    if (cp === null) {
+        return { report: [`no checkpoint for '${roadmap}' — nothing to verify against.`, ...torn].join('\n'), agrees: false };
+    }
+    const res = verifyCheckpoint(repoRoot, cp, currentFingerprint);
+    return { report: [renderVerification(cp, res), ...torn].join('\n'), agrees: res.agrees };
 }

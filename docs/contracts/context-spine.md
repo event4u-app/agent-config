@@ -51,6 +51,7 @@ locks the cross-wing slot count at 3. Per-wing extensions follow § 5.
 | `channel-stage` | `channel-stage.md` | GTM / Marketing wing | Which channels the GTM motion uses (awareness · consideration · decision · retention · expansion), per-channel maturity, channel-cost band. Read by `positioning-strategy`, `messaging-architecture`, `gtm-launch`, `editorial-calendar`. |
 | `funnel-stage` | `funnel-stage.md` | Growth / RevOps wing | Funnel topology (top / mid / bottom / activation / retention), per-stage definition, exit-criteria for each. Read by `pipeline-strategy`, `funnel-analysis`, `activation-design`, `onboarding-design`. |
 | `customer-segment` | `customer-segment.md` | Sales / CS wing | ICP, persona-by-segment, ARR-band-by-segment. Read by `ICP`, `pipeline-strategy`, `MEDDIC`, `retention-loops`. |
+| `brand-voice` | `brand-voice.md` | Brand / Marketing wing | The brand's voice as data: three "is, not" attributes, tone by context, terms to avoid, claims with evidence, up to three samples. Added 2026-10-17 per [`adr-gtm-context-spine-brand-voice.md`](adr-gtm-context-spine-brand-voice.md) — the first slot whose frontmatter is machine-read (§ 4 exception recorded there). Written by `voice-and-tone-design`. |
 
 ### Wing-4 slots (Money / Strategy / Ops — added 2026-05-13 per [`adr-wing4-context-spine.md`](adr-wing4-context-spine.md))
 
@@ -85,7 +86,8 @@ Rules:
   default (`[]`) means the skill does not read the spine.
 - Values are restricted to the slot names in § 2: cross-wing
   (`product`, `team`, `repo`) plus wing-scoped extensions
-  (`channel-stage`, `funnel-stage`, `customer-segment`). Unknown
+  (`channel-stage`, `funnel-stage`, `customer-segment`, `brand-voice`,
+  `fiscal-period`, `org-stage`, `regulatory-regime`). Unknown
   values fail `task lint-skills` with `unknown_context_spine_slot`.
 - Reads MUST be opt-in and explicit. A skill body that says *"reads
   `agents/context-spine/product.md` if present"* without declaring

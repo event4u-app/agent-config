@@ -177,7 +177,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
 
 ## Phase 1 — The witness says which face painted
 
-- [ ] **1.1 Face status per declared family** — `corrected-from-reproduction`.
+- [x] **1.1 Face status per declared family** — `corrected-from-reproduction`.
       In the asset profile's in-page reading next to the sentinel
       (`uiRenderAsset.ts:813-821`), read `document.fonts` for every declared
       family and report `loaded`, `error` or `unloaded` beside the existing
@@ -185,16 +185,19 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       bounded `document.fonts.ready` wait (3 s) runs only when a declared face
       still reads `loading`, and a timeout is its own state, never a fallback.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*face-error-reads-error/
-- [ ] **1.2 Synthesis is a state.** An SVG text element whose requested weight or style
+      Done 2026-10-17: `src/cli/commands/uiRenderAssetFonts.ts`, called right after the geometry reading (the 1,500-line ceiling keeps it out of `uiRenderAsset.ts`); `face_family`/`face_state` on each text reading, finding `geometry/font-face-error`.
+- [x] **1.2 Synthesis is a state.** An SVG text element whose requested weight or style
       no loaded face of its family carries, and whose `font-synthesis` is not
       `none`, reports `synthesised`.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*missing-weight-reads-synthesised/
-- [ ] **1.3 The page profile keeps declared and adds painted.**
+      Done 2026-10-17: matched on the `@font-face` descriptors; finding `geometry/font-synthesised`; `font-synthesis: none` and a 500 request are pinned near misses.
+- [x] **1.3 The page profile keeps declared and adds painted.**
       `collectTypeFamilies` gains a resolved family per sampled node beside the
       declared one; the A1.5 threshold and the preserve check in
       `ui_authority.ts` keep reading the declared list.
       verify: `npx vitest run tests/cli/ui_render_painted_family.test.ts` -> 0
-- [ ] **1.4 A test font made at test time (decision A7).** A small TrueType
+      Done 2026-10-17: a `painted-family` per sampled text node in `<viewport>.styles.json`, read by `collectPaintedFamilies`; the manifest gains no key, because its page key set is pinned (E8) by `page-manifest-unchanged-except-generated-at`.
+- [x] **1.4 A test font made at test time (decision A7).** A small TrueType
       writer under `tests/` builds a face with a handful of rectangle glyphs at
       weight 400 in memory; no font file is committed and nothing is downloaded.
       Three fixtures served through intercepted routes read `loaded`, `error`
@@ -203,30 +206,34 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       existing `svg-witness-tests` job (`.github/workflows/tests.yml:543`) on
       ubuntu and macOS.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*load-waited-for-delayed-face/
+      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
 
 ## Phase 2 — Two delivery tells under the delivery owner
 
-- [ ] **2.1 T11 faux styles.** A row in `design-antipatterns.md` § Typography:
+- [x] **2.1 T11 faux styles.** A row in `design-antipatterns.md` § Typography:
       bold or italic requested of a family that lacks the face; remedy is to
       load the face or set `font-synthesis: none` on purpose. Detector:
       witness-backed through 1.2, with a fixture.
       verify: `grep -c "^| T11 " docs/guidelines/design-antipatterns.md` -> /^1$/
-- [ ] **2.2 T12 swap without a metric-matched fallback.** A self-hosted webfont
+      Done 2026-10-17: row T11; status `witness`, a sixth status the parity lint now checks against the witness source (the note must name `geometry/font-synthesised`, and that rule must exist there).
+- [x] **2.2 T12 swap without a metric-matched fallback.** A self-hosted webfont
       with `font-display: swap` and no fallback `@font-face` carrying
       `size-adjust`, `ascent-override` and `descent-override`. Detector: static
       CSS parse in `design_slop_rules.ts`, with a positive and a near-miss
       fixture. The derivation of the overrides from the font's vertical metrics
       lands as a mechanics row in `design-asset-discipline.md`.
       verify: `npx vitest run tests/scripts/design_slop_t12.test.ts` -> 0
+      Done 2026-10-17: `slop-t12-swap-without-metric-fallback` (P3), a size-adjust-only near miss pinned; the derivation is a bullet in `design-asset-discipline.md`.
 - [x] **2.3 Mechanics rows, no tells.** In `design-asset-discipline.md`:
       `unicode-range` subsetting for self-hosted files and `preload` for the one
       above-the-fold face. In `typography-system`: `tabular-nums` for aligned
       figures, `opsz` for optical-size families.
       verify: `grep -c "unicode-range" docs/guidelines/design-asset-discipline.md` -> /^[1-9]/
       Done 2026-10-16: subsetting + preload bullet in design-asset-discipline; tabular-nums + opsz in typography-system (step 3 points at `references/worked-scales.md`, which carries them).
-- [ ] **2.4 Parity holds.** The detector-status table lists T11 and T12 with
+- [x] **2.4 Parity holds.** The detector-status table lists T11 and T12 with
       their status, and no row reads backed without a test.
       verify: `./scripts-run src/scripts/lint_design_antipattern_parity` -> 0
+      Done 2026-10-17: T11 `witness`, T12 `backed`; parity green, 52 entries.
 
 ## Phase 3 — The SVG tooling learns fill rule and counters
 
@@ -236,17 +243,19 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       directions, and overlap removal runs only after both are settled.
       verify: `grep -ci "fill-rule" src/skills/svg-authoring/SKILL.md` -> /^[1-9]/
       Done 2026-10-16: counter rule in § Trace to measure step 2.
-- [ ] **3.2 An advisory finding, measured before it gates (decision A8).**
+- [x] **3.2 An advisory finding, measured before it gates (decision A8).**
       `svg-structure-filled-counter` in `src/scripts/_lib/svg_rules.ts`: a
       `path` under `nonzero` whose subpath sits inside another subpath with
       the same winding. Fixtures: the two-circle disc above and its even-odd
       twin, under `tests/fixtures/svg-filled-counter/` <!-- ref-ignore -->
       verify: `npx vitest run tests/scripts/svg_filled_counter.test.ts` -> 0
-- [ ] **3.3 False-positive census.** Run the finding over every SVG tracked in
+      Done 2026-10-17: `src/scripts/_lib/svg_filled_counter.ts`, wired into `scanSvg` at `warning`; fixtures add an opposite-winding twin and an inherited `evenodd` twin, each rendered (disc 196,282 px, rings 115,940 px).
+- [x] **3.3 False-positive census.** Run the finding over every SVG tracked in
       the repository and record hits and true hits in
       `agents/evidence/analysis/`; the finding stays advisory unless the
       false-positive count is zero.
       verify: `ls agents/evidence/analysis` -> /filled-counter/
+      Done 2026-10-17: `filled-counter-census-2026-10-17.md` — 0 hits, 0 false positives over 96 files, but no tracked multi-contour path is under `nonzero`, so the zero is vacuous and the finding stays advisory.
 
 ## Phase 4 — The type-design skill: contract and procedure
 
@@ -311,6 +320,7 @@ no font; it runs a pinned toolchain in the consumer's environment.
       `references/toolchain.md` and taken through `supply-chain-intake` before
       the skill names it. Bumped by pull request, never floating.
       verify: `grep -cE "==[0-9]" src/skills/type-design/references/toolchain.md` -> /^[1-9]/
+      Open 2026-10-17: an exact pin is a registry fact, and the drain lane that took Phases 1-3 had no live registry read to confirm each version through `supply-chain-intake`; naming a version from memory would be the invented-package failure the intake exists to stop.
 - [ ] **4.11 Outputs land in the consumer tree.** UFO source, `font-spec.yaml`,
       built `woff2` and `ttf`, the proof page and the QA report, at the location
       `design-system-capture` conventions give; never inside the package. The
@@ -324,6 +334,7 @@ no font; it runs a pinned toolchain in the consumer's environment.
       payload, and an `estate_growth_exempt` claim naming why no existing skill
       can carry the capability.
       verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> 0
+      Open 2026-10-17: measured 135,908 tok against a 135,908 ceiling — zero headroom — so the skill needs a same-change reduction of its catalogue entry (~53 tok, the 2026-08-27 measurement) from the rules bucket; choosing which rule prose to cut is the A1 decision, not a drive-by.
 - [ ] **4.13 Trigger evals.** At least 5 should-trigger and 5 should-not
       queries, the latter naming the neighbours: choosing a font
       (`typography-system`), making a logo (`logo-generation`), tracing an icon

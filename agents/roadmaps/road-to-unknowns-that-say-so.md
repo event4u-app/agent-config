@@ -159,37 +159,60 @@ byte-identical to today apart from the unpriced line.*
 
 No-op by construction while no ceiling is set; 3.4 proves it.
 
-- [ ] **3.1 Reserve before the call, under a lock.** With a ceiling set, a
+- [x] **3.1 Reserve before the call, under a lock.** With a ceiling set, a
       billable seat takes the ledger lock (`src/scripts/_lib/fs_atomic.ts`
       family), re-reads, appends a `reserved` row with its estimate and `run_id`,
       and releases; `would_exceed` counts reservations without a terminal row.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t concurrent-councils-cannot-both-pass --reporter=verbose` -> /✓.*concurrent-councils-cannot-both-pass/
-- [ ] **3.2 Reconcile after it.** `completed` with the actual amount;
+      *Done 2026-10-17:* "a ceiling set" is read as `daily_limit_usd > 0` — the
+      session cap `max_total_usd` is per-process and never reads the shared
+      ledger, so it has no remainder two councils could share. The lock is a
+      new `O_EXCL` `<ledger>.lock` in `budget_guard.ts` rather than
+      `cli_call_budget.withStateLock`, because that one proceeds unlocked after
+      its wait; here a lock that cannot be taken refuses the seat. The wiring
+      lives in `ai_council/round_reservations.ts`, and `orchestrator.ts` shrank
+      by five lines. The code came before the cases; sensitivity was shown
+      afterwards by neutralising the open-reservation count, which turned both
+      `concurrent-councils-cannot-both-pass` cases red.
+- [x] **3.2 Reconcile after it.** `completed` with the actual amount;
       `released` when the call failed before the provider accepted it; an unknown
       outcome keeps its reservation until run end, then closes as `unreconciled`
       at the estimate — never zero. Terminal states never reopen.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t reservation-states-never-reopen --reporter=verbose` -> /✓.*reservation-states-never-reopen/
-- [ ] **3.3 A crashed run's reservation expires (D8).** A `reserved` row with no
+- [x] **3.3 A crashed run's reservation expires (D8).** A `reserved` row with no
       terminal row older than the hold window closes as `unreconciled` at its
       estimate on the next ledger read, so a killed run cannot hold budget
       forever and is never counted as zero.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t stale-reservation-expires-at-estimate --reporter=verbose` -> /✓.*stale-reservation-expires-at-estimate/
-- [ ] **3.4 No ceiling, no rows.** With every ceiling at 0 the ledger after a
+- [x] **3.4 No ceiling, no rows.** With every ceiling at 0 the ledger after a
       council run is byte-identical to today's.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t no-ceiling-no-reservation-rows --reporter=verbose` -> /✓.*no-ceiling-no-reservation-rows/
+      *Done 2026-10-17 (3.2–3.4):* "an unknown outcome" is an error matching a
+      timeout, reset or 5xx pattern with no tokens back; any other tokenless
+      error is `released`. "Run end" is the end of the round, the unit
+      `_run_round` owns. The hold is the seat's call timeout plus one hour.
+      `ledger_without_limit.test.ts`'s ceiling-set twin now asserts the
+      `reserved` → `completed` pair instead of one row.
 
 ## Phase 4 — A downgrade is on the record
 
-- [ ] **4.1 The response carries what was configured.** Applied size-fit
+- [x] **4.1 The response carries what was configured.** Applied size-fit
       decisions attach to each affected member; its response metadata carries
       `configured_model` and `size_fit_reason`. Case
       `size-fit-downgrade-is-recorded` is seen red first.
       verify: `npx vitest run tests/scripts/council_cli.test.ts -t size-fit-downgrade-is-recorded --reporter=verbose` -> /✓.*size-fit-downgrade-is-recorded/
-- [ ] **4.2 The artefact says so.** `response_render` adds
+- [x] **4.2 The artefact says so.** `response_render` adds
       `model: <answered> (downgraded from <configured>: <reason>)` beside the
       transport note. No test imports `response_render` today; this step creates
       `tests/scripts/ai_council/response_render.test.ts`.
       verify: `npx vitest run tests/scripts/ai_council/response_render.test.ts -t renders-size-fit-downgrade --reporter=verbose` -> /✓.*renders-size-fit-downgrade/
+      *Done 2026-10-17 (4.1–4.2):* `_size_fit_gate` leaves
+      `size_fit: { configured_model, size_fit_reason }` on the member it
+      downgrades, and the orchestrator's metadata stamp copies it into the
+      response; the gate is exported for the test. Both cases were seen red
+      first — 4.1 again by removing the stamp after it passed. The three
+      over-ceiling lines this cost are paid by the five Phase 3 freed in
+      `orchestrator.ts`, so the source-size total stays at its baseline.
 
 *Exit: 4.1–4.2 green. Auto-apply stays the default (D4).*
 
@@ -221,6 +244,10 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       meta-case asserts `fetch('https://example.com')` is refused and a spawned
       `curl` exits non-zero. Neither needs the network.
       verify: `npx vitest run tests/_lib/network_guard.test.ts -t in-process-fetch-is-refused --reporter=verbose` -> /✓.*in-process-fetch-is-refused/
+      *Still open 2026-10-17 (5.2–5.3):* the in-process half needs `undici`'s
+      `setGlobalDispatcher`, and `undici` is not a dependency of this package
+      (`node_modules/undici` is absent); adding one is a dependency decision,
+      not part of a drain lane.
 - [x] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
       matches `.skipIf(` and `.runIf(`; an added one passes
       `check_test_weakening` only with a `// skip-reason:` on the same or
@@ -239,21 +266,31 @@ No-op by construction while no ceiling is set; 3.4 proves it.
 
 ## Phase 6 — A resume that can verify, a stitch that was checked
 
-- [ ] **6.1 The verification has a command (no new verb, ADR-041).**
+- [x] **6.1 The verification has a command (no new verb, ADR-041).**
       `run:supervise --verify <slug>` runs `latestCheckpointFor` then
       `verifyCheckpoint` and prints `renderVerification`, exit 0 on agreement and
       1 on a disagreement — "a disagreement is not an error" for the run
       (`roadmap-process-loop.md:806-811`), so the exit is a signal, not a halt.
       verify: `npx vitest run tests/scripts/run_supervise.test.ts -t verify-flag-renders-per-field-report --reporter=verbose` -> /✓.*verify-flag-renders-per-field-report/
-- [ ] **6.2 The two instructions name the command.**
+- [x] **6.2 The two instructions name the command.**
       `roadmap-process-loop.md:793-799` and `headless_invocation.ts:86-92` say
       `run:supervise --verify <slug>` instead of the function names.
       verify: `grep -c 'run:supervise --verify' src/agent-src/contexts/execution/roadmap-process-loop.md src/scripts/_lib/headless_invocation.ts` -> /:[1-9]/
-- [ ] **6.3 A torn checkpoint is not an absent one.** `writeCheckpoint` writes
+- [x] **6.3 A torn checkpoint is not an absent one.** `writeCheckpoint` writes
       through `write_atomic` (`src/scripts/_lib/fs_atomic.ts:70`);
       `latestCheckpointFor` still skips an unreadable file but the `--verify`
       report names it (`unreadable: <file>`).
       verify: `npx vitest run tests/scripts/run_checkpoint.test.ts -t unreadable-newest-is-named --reporter=verbose` -> /✓.*unreadable-newest-is-named/
+      *Done 2026-10-17 (6.1–6.3):* the three calls live in one library function,
+      `verifyLatestCheckpoint`, which the flag prints. An unreadable file cannot
+      say which roadmap it belonged to, so the report names every one whose
+      mtime is newer than the checkpoint used, never an older one. The flag also
+      takes `--fingerprint FP`, because the same section of the loop contract
+      told a resumed run to pass a fresh fingerprint into `verifyCheckpoint`,
+      which no command could do either; that sentence now names the flag. The
+      `headless_invocation` test that asserted the prompt named
+      `latestCheckpointFor` now asserts the command instead. Every new case was
+      seen red first.
 - [ ] **6.4 Every clip is readable before concat.** With `AIV_DRYRUN=false`,
       each listed clip is opened with `ffprobe -v error`; an unreadable clip is
       treated as missing, honouring `--abort-on-missing` / `--continue` /
@@ -268,11 +305,18 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       with the manifest sum minus skipped scenes; a shortfall beyond the stated
       tolerance exits non-zero. Black and silent spans go to stderr, never fatal.
       verify: `npx vitest run tests/scripts/ai_video_stitch_flags.test.ts -t stitch-output-matches-manifest --reporter=verbose` -> /✓.*stitch-output-matches-manifest/
+      *Still open 2026-10-17 (6.4–6.5):* D7 binds the FFmpeg install to the
+      same change, and that install is a workflow step, which needs a council
+      ratification artefact before it can be pushed.
 - [ ] **6.6 The found-elsewhere items are handed over.** Each H1 sentence becomes
       one step in `road-to-sentences-the-tree-can-back`, the H2 instruments one
       step in `road-to-what-was-built-and-never-ran`, the H3 census a note in
       `road-to-typed-grants-that-persist` — each edit names this file.
       verify: `grep -l 'road-to-unknowns-that-say-so' agents/roadmaps/archive/road-to-sentences-the-tree-can-back.md agents/roadmaps/archive/road-to-what-was-built-and-never-ran.md` -> /what-was-built/
+      *Still open 2026-10-17:* both H1 and H2 targets are archived with zero
+      open steps. Adding open steps to an archived file, or reviving it, adds
+      to the estate, so where the ten sentences and two instruments go is a
+      decision this step cannot take alone.
 
 *Exit: 6.1–6.6 green; `ai_video_stitch_handoff.test.ts` unchanged and green.*
 
@@ -386,22 +430,22 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** No CLI failure whose stderr matches a timeout pattern is
+- [x] **AC-1** No CLI failure whose stderr matches a timeout pattern is
       replay-eligible, whatever else it contains, and the metered transport is
       not dispatched for it.
 - [x] **AC-2** No council run passes a person-set USD ceiling with an unpriced
       billable seat; every such seat appears in output and ledger.
-- [ ] **AC-3** Two concurrent councils under one set ceiling cannot both spend
+- [x] **AC-3** Two concurrent councils under one set ceiling cannot both spend
       the same remainder; a crashed run's reservation closes at its estimate.
-- [ ] **AC-4** Every size-fit downgrade names the configured model in the
+- [x] **AC-4** Every size-fit downgrade names the configured model in the
       artefact.
 - [ ] **AC-5** With no flag set, an in-process `fetch` and a spawned `curl` to a
       public address both fail; a sentinel proves the opt-in is closed. Children
       that ignore proxy variables are a documented gap, not covered.
-- [ ] **AC-6** An added `skipIf`/`runIf` without a reason is red in
+- [x] **AC-6** An added `skipIf`/`runIf` without a reason is red in
       `check_test_weakening`.
-- [ ] **AC-7** `score_skill_selection --baseline` reads what the producer writes.
-- [ ] **AC-8** A resumed run can produce the per-field checkpoint verification
+- [x] **AC-7** `score_skill_selection --baseline` reads what the producer writes.
+- [x] **AC-8** A resumed run can produce the per-field checkpoint verification
       with one command, and an unreadable newest checkpoint is named.
 - [ ] **AC-9** `stitch.sh` exits non-zero on an unreadable clip, a stream
       mismatch on the copy path, or a duration shortfall; a valid run's stdout is

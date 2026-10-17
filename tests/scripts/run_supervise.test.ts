@@ -22,10 +22,12 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { buildCheckpoint, writeCheckpoint } from '../../src/scripts/_lib/run_checkpoint.js';
 import { iso_now, type SessionRecord } from '../../src/scripts/_lib/session_register.js';
 import {
+    main,
     MAX_RELAUNCHES_PER_RUN,
     SUPERVISE_STATE_REL,
     classify,
@@ -494,5 +496,67 @@ describe('resumePlans — only what the scan classified as relaunchable', () => 
         const plans = resumePlans(root(), [cand({ platform: 'gemini' })], NOW);
         expect(plans[0]?.command).toContain('gemini');
         expect(plans[0]?.command).not.toContain('claude');
+    });
+});
+
+// road-to-unknowns-that-say-so 6.1 — the loop contract told a resumed run to
+// call two functions nothing could call. `--verify <slug>` is that call.
+describe('run:supervise --verify <slug>', () => {
+    function capture(argv: string[]): { code: number; out: string; err: string } {
+        let out = '';
+        let err = '';
+        const o = vi.spyOn(process.stdout, 'write').mockImplementation((s) => ((out += String(s)), true));
+        const e = vi.spyOn(process.stderr, 'write').mockImplementation((s) => ((err += String(s)), true));
+        try {
+            return { code: main(argv), out, err };
+        } finally {
+            o.mockRestore();
+            e.mockRestore();
+        }
+    }
+    const LINES = ['# R', '', '- [x] **1.1** one', '- [ ] **1.2** two', '- [ ] **1.3** three'];
+
+    it('verify-flag-renders-per-field-report', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', LINES);
+        const cp = buildCheckpoint(r, 'run-dead', 'road-to-x', { head: null });
+        if (cp === null) throw new Error('setup: checkpoint not built');
+        writeCheckpoint(r, cp);
+
+        const same = capture(['--verify', 'road-to-x', '--root', r]);
+        expect(same.code).toBe(0);
+        expect(same.out).toContain('checkpoint run-dead · roadmap road-to-x');
+        expect(same.out).toContain('ok       open_steps: 2');
+
+        // A step landed after the checkpoint: reported per field, exit 1, no halt.
+        writeRoadmap(r, 'road-to-x', LINES.map((l) => l.replace('- [ ] **1.2**', '- [x] **1.2**')));
+        const moved = capture(['--verify', 'road-to-x', '--root', r]);
+        expect(moved.code).toBe(1);
+        expect(moved.out).toContain('CHANGED  open_steps: claimed 2 → actual 1');
+        expect(moved.out).toContain('CHANGED  done_steps: claimed 1 → actual 2');
+    });
+
+    it('a fresh fingerprint passed with --fingerprint is compared', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', LINES);
+        const cp = buildCheckpoint(r, 'run-dead', 'road-to-x', { contextFingerprint: 'fp-then' });
+        if (cp === null) throw new Error('setup: checkpoint not built');
+        writeCheckpoint(r, cp);
+        const drifted = capture(['--verify', 'road-to-x', '--fingerprint', 'fp-now', '--root', r]);
+        expect(drifted.code).toBe(1);
+        expect(drifted.out).toContain('CHANGED  context_fingerprint: claimed fp-then → actual fp-now');
+    });
+
+    it('a roadmap with no checkpoint says so and does not claim agreement', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-x', LINES);
+        const res = capture(['--verify', 'road-to-x', '--root', r]);
+        expect(res.code).toBe(1);
+        expect(res.out).toContain("no checkpoint for 'road-to-x'");
+    });
+
+    it('needs a slug, and is exclusive with the other report shapes', () => {
+        expect(capture(['--verify']).code).toBe(2);
+        expect(capture(['--verify', 'road-to-x', '--digest']).code).toBe(2);
     });
 });

@@ -35,16 +35,28 @@
  * Schema (JSON):
  *
  *     {
- *       "schema_version": 1,
+ *       "schema_version": 2,
  *       "tools": {
  *         "<tool_id>": {
  *           "anchor": "/abs/path/to/anchor",
- *           "files": ["skills/foo/SKILL.md", ...]   // anchor-relative, sorted
+ *           "files": ["skills/foo/SKILL.md", ...],  // anchor-relative, sorted
+ *           "digests": {                             // schema 2, additive
+ *             "skills/foo/SKILL.md": {
+ *               "installed_sha256": "…",             // the bytes we wrote
+ *               "packaged_sha256": "…"               // the bytes we ship now; null = retired
+ *             }
+ *           }
  *         }
  *       }
  *     }
+ *
+ * Schema 2 is ADDITIVE: `files` keeps its schema-1 meaning, so every reader that treats it
+ * as a path allowlist works unchanged on either schema, and a schema-1 file
+ * loads as an inventory without digests. The digests are the user-scoped
+ * ownership ledger: written on every global deploy whatever directory the
+ * install ran from, and read by the reaper so an edit is seen before an unlink.
  */
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -56,7 +68,7 @@ export type EnvMap = Record<string, string | undefined>;
 /** Loosely-typed inventory dict, mirroring Python's `dict`. */
 export type Inventory = Record<string, unknown>;
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const INVENTORY_BASENAME = "deployed-files.json";
 export const INVENTORY_ENV = "AGENT_CONFIG_DEPLOY_INVENTORY";
 
@@ -374,6 +386,13 @@ function as_posix(p: string): string {
  * directories — the preview surface for `agent-config install --dry-run`. The selection
  * logic (orphan diff, containment proof, directory guard) is identical to the
  * live path, so the preview is exact.
+ *
+ * An orphan whose bytes differ from the digest the ledger recorded writing is
+ * NOT deleted: the user edited a file the package retired, and an unlink would
+ * destroy that edit without it ever being seen. Its absolute path is pushed to
+ * `retained` instead, so the caller can say so and keep the record. Orphans are
+ * read from `files` AND from the recorded digests, because a retained file is
+ * no longer shipped and stays recorded only there.
  */
 export function reap_stale(
   tool_id: string,
@@ -381,6 +400,7 @@ export function reap_stale(
   current_files: Set<string>,
   inventory: Inventory,
   dry_run = false,
+  retained: string[] | null = null,
 ): string[] {
   const tools = (inventory["tools"] as Record<string, unknown> | undefined) ?? {};
   const entry = tools[tool_id];
@@ -402,7 +422,11 @@ export function reap_stale(
 
   const deleted: string[] = [];
   const prune_candidates = new Set<string>();
-  const orphans = difference(prev_files as unknown[], current_files);
+  const digests = digests_of_entry(e);
+  // A preview cannot know which sidecars the real run stages again, and a
+  // staged sidecar is kept — so the preview never names one as would-delete.
+  const recorded = [...digests].filter(([, d]) => !(dry_run && d.kind === "sidecar")).map(([rel]) => rel);
+  const orphans = difference([...(prev_files as unknown[]), ...recorded], current_files);
   for (const rel of sorted_strings(orphans)) {
     if (typeof rel !== "string" || !rel || rel.startsWith("/") || rel.startsWith("..")) {
       continue;
@@ -423,6 +447,10 @@ export function reap_stale(
     }
     if (lst && lst.isDirectory() && !lst.isSymbolicLink()) {
       continue; // never delete directories
+    }
+    if (lst !== null && edited_since_install(target, digests.get(rel))) {
+      retained?.push(target);
+      continue;
     }
     if (dry_run) {
       // Preview: report only what is actually on disk and would go.
@@ -472,6 +500,12 @@ export function reap_stale(
  * `dry_run=true` returns the would-delete set (tagged orphans actually present
  * on disk) WITHOUT unlinking or pruning — the preview surface for
  * `agent-config install --dry-run`. Selection logic is identical to the live path.
+ *
+ * The tag survives a user's edit, so it proves we WROTE the file, never that it
+ * is still what we wrote. A tagged orphan the ledger (`digests`) recorded with
+ * a digest its bytes no longer match is pushed to `retained` and kept, exactly
+ * as {@link reap_stale} keeps it. A tagged orphan with no recorded digest — an
+ * install older than the ledger — is still reaped: there is nothing to compare.
  */
 export function reap_tagged_orphans(
   anchor: string,
@@ -479,6 +513,8 @@ export function reap_tagged_orphans(
   current_files: Set<string>,
   package_tag: string,
   dry_run = false,
+  digests: ReadonlyMap<string, LedgerDigest> = new Map(),
+  retained: string[] | null = null,
 ): string[] {
   const anchor_resolved = resolve_path(expanduser(anchor));
   const deleted: string[] = [];
@@ -529,6 +565,10 @@ export function reap_tagged_orphans(
       if (!hit) {
         continue;
       }
+      if (edited_since_install(md, digests.get(rel))) {
+        retained?.push(md);
+        continue;
+      }
       if (dry_run) {
         deleted.push(md);
         continue;
@@ -559,6 +599,7 @@ export function record_deploy(
   anchor: string,
   current_files: Set<string>,
   inventory: Inventory,
+  digests: ReadonlyMap<string, LedgerDigest> | null = null,
 ): Inventory {
   if (
     typeof inventory["tools"] !== "object" ||
@@ -568,12 +609,117 @@ export function record_deploy(
     inventory["tools"] = {};
   }
   const tools = inventory["tools"] as Record<string, unknown>;
-  tools[tool_id] = {
+  const record: Record<string, unknown> = {
     anchor: String(anchor),
     files: sorted_strings([...current_files]),
   };
+  // Omitted rather than emptied when the caller has none: an entry written by a
+  // caller that computes no digests reads exactly as a schema-1 entry did.
+  if (digests !== null && digests.size > 0) {
+    record["digests"] = Object.fromEntries(
+      sorted_strings([...digests.keys()]).map((rel) => [rel, { ...digests.get(rel) }]),
+    );
+  }
+  tools[tool_id] = record;
   inventory["schema_version"] = SCHEMA_VERSION;
   return inventory;
+}
+
+/**
+ * One file's ledger record. `kind: "sidecar"` marks package content staged
+ * beside a preserved edit; absent means a deployed file.
+ */
+export interface LedgerDigest {
+  installed_sha256: string;
+  packaged_sha256: string | null;
+  kind?: "sidecar";
+}
+
+/** SHA-256 of the bytes at `p`, or `null` when they cannot be read. */
+export function file_sha256(p: string): string | null {
+  try {
+    return createHash("sha256").update(fs.readFileSync(p)).digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+/** True when `target` is readable and its bytes differ from the recorded installed digest. */
+function edited_since_install(target: string, rec: LedgerDigest | undefined): boolean {
+  if (rec === undefined) return false;
+  const on_disk = file_sha256(target);
+  return on_disk !== null && on_disk !== rec.installed_sha256;
+}
+
+/** Parse a tool entry's `digests` map; a malformed record contributes nothing. */
+function digests_of_entry(e: Record<string, unknown>): Map<string, LedgerDigest> {
+  const out = new Map<string, LedgerDigest>();
+  const raw = e["digests"];
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return out;
+  for (const [rel, rec] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof rec !== "object" || rec === null || Array.isArray(rec)) continue;
+    const r = rec as Record<string, unknown>;
+    const installed = r["installed_sha256"];
+    const packaged = r["packaged_sha256"];
+    if (typeof installed !== "string" || installed === "") continue;
+    out.set(rel, {
+      installed_sha256: installed,
+      packaged_sha256: typeof packaged === "string" && packaged !== "" ? packaged : null,
+      ...(r["kind"] === "sidecar" ? { kind: "sidecar" as const } : {}),
+    });
+  }
+  return out;
+}
+
+/**
+ * The ledger records of `tool_id`, keyed anchor-relative. Empty under the same
+ * "not provably ours anymore" conditions as {@link recorded_rel_files} (no
+ * entry, moved anchor, malformed entry), and empty for a schema-1 entry.
+ */
+export function recorded_digests(
+  tool_id: string,
+  anchor: string,
+  inventory?: Inventory | null,
+): Map<string, LedgerDigest> {
+  const inv = inventory ?? load_inventory();
+  const tools = (inv["tools"] as Record<string, unknown> | undefined) ?? {};
+  const entry = tools[tool_id];
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return new Map();
+  const e = entry as Record<string, unknown>;
+  const recorded_anchor = e["anchor"];
+  if (typeof recorded_anchor !== "string") return new Map();
+  if (resolve_path(expanduser(recorded_anchor)) !== resolve_path(expanduser(anchor))) {
+    return new Map();
+  }
+  return digests_of_entry(e);
+}
+
+/**
+ * Every recorded INSTALLED digest across all tools, keyed by absolute path in
+ * both spellings — the lookup the install conflict tracker needs, emitted in
+ * both spellings for the reason {@link recorded_absolute_files} gives.
+ */
+export function recorded_absolute_digests(
+  inventory?: Inventory | null,
+  home?: string | null,
+): Map<string, string> {
+  const inv = inventory ?? load_inventory();
+  const tools = (inv["tools"] as Record<string, unknown> | undefined) ?? {};
+  const out = new Map<string, string>();
+  if (typeof tools !== "object" || tools === null || Array.isArray(tools)) return out;
+  for (const entry of Object.values(tools)) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
+    const e = entry as Record<string, unknown>;
+    const anchor = e["anchor"];
+    if (typeof anchor !== "string") continue;
+    const expanded = expanduser_at(anchor, home);
+    for (const [rel, rec] of digests_of_entry(e)) {
+      const lexical = path.resolve(expanded, rel);
+      out.set(lexical, rec.installed_sha256);
+      out.set(resolve_path(lexical), rec.installed_sha256);
+    }
+  }
+  return out;
 }
 
 // --- helpers ---------------------------------------------------------------

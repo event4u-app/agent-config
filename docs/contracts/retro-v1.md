@@ -28,6 +28,15 @@ on one day produce one sweep and one queue. Hooks and probes only write markers,
 count and enqueue; no model ever runs inside a hook. A merge is an event, never
 a permission — nothing here reads or writes a merge setting.
 
+## Who does the model work
+
+The queue line is work for the agent, read the way the self-repair queue line
+is read — not a notification. Where the host can spawn a subagent, the agent
+delegates the retro to one and carries on with the user's task. Where it cannot,
+the retro runs after the first user task of the session is finished. **The first
+user task is never deferred for a retro**: a probe that delays the user's own
+work has spent the one moment this package is not allowed to spend.
+
 ## The unit key
 
 A unit is one piece of finished work, identified locally by
@@ -130,3 +139,4 @@ a hypothesis, recorded as a signal and nothing more.
 | Version | Date | Change |
 |---|---|---|
 | v1 | 2026-10-16 | Initial contract, written before any implementation. |
+| v1 | 2026-10-17 | Who does the model work: delegated or after the first task, never before it. |

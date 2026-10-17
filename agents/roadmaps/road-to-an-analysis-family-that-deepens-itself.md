@@ -207,7 +207,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0 — rejects a
       loop without top-tier evidence, never stops before the three lenses ran,
       and stops loop 4 after a plateaued loop 3. Done 2026-10-16 (seen red).
-- [ ] **2.4 The analyst class (directive c).** Reads the scope (the web once
+- [x] **2.4 The analyst class (directive c).** Reads the scope (the web once
       `source-fetch-authorization` allows), writes only into its own round
       folder, never runs project scripts, never pushes. Modes: `subagent` (same
       family, fresh context) and `external` (a `handoff-v1` file the owner drops
@@ -220,13 +220,13 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: a fixture round with two `subagent` analysts and one `external`
       drop yields three independence-stamped outputs with identical brief
       digests, none referencing another before the exchange; a `--quick` run
-      records one analyst and no exchange.
+      records one analyst and no exchange. Done 2026-10-17 in `src/scripts/analysis_analysts.ts` (consulted and unknown-family cases seen red); `--quick` and the size threshold are inputs, the threshold value waits on 1.4.
 - [ ] **2.4b `cli:<provider>` analysts.** Cross-family read-only analysts reusing
       the council's binaries under a separate analyst bound in
       `cli_agency_bounds.ts`.
       verify: a probed binary runs a fixture analysis read-only and its output is
       stamped `cross-family`.
-- [ ] **2.5 Exchange that deepens instead of agreeing (directive c).** Each
+- [x] **2.5 Exchange that deepens instead of agreeing (directive c).** Each
       analyst receives the others' final analysis and roadmap, relabelled A/B/C,
       and runs three reconcile loops: **Inventory** (every foreign claim checked
       at the pin — `still-true / never-true / unverifiable`, with tier),
@@ -237,8 +237,8 @@ the ADR moves to `superseded`; nothing else exists yet.
       or rejected with a reason, never dropped.
       verify: a fixture exchange records the cross-exam targets verbatim, a
       disagreement ledger per analyst and a minority audit with zero silent
-      drops.
-- [ ] **2.6 Council as judge, then the gain gate (directive d).** The council
+      drops. Done 2026-10-17 in `src/scripts/analysis_exchange.ts` (tier settlement and silent-drop cases seen red).
+- [x] **2.6 Council as judge, then the gain gate (directive d).** The council
       receives the converged outputs (host unmarked, `council run --input-mode
       roadmap --peer-review`, prompts stored beside the verdict) and judges only
       what stays contested: priorities, integration risk, judgement calls.
@@ -255,22 +255,22 @@ the ADR moves to `superseded`; nothing else exists yet.
       options *one more / focused on the named items / stop*. Cap: three rounds.
       verify: ledger fixtures — plateaued, conflict with a plan, conflict without
       a plan, exhausted arguments — produce no offer, one offer, no offer, no
-      offer; a one-seat fixture is labelled `single-voice`.
-- [ ] **2.7 Questions: council first, owner once.** Each question is classified
+      offer; a one-seat fixture is labelled `single-voice`. Done 2026-10-17 in `src/scripts/analysis_gate.ts` (exhausted and critical-dissent cases seen red); the gate composes the instruments, the council call itself stays with the doors. Open owner question (council test review of PR #2432, 2026-10-17, both seats): the gate withholds a round when `evaluateStop` says the arguments are exhausted and reports no saved call or saved cost for it; whether a withheld round counts as a saved call, and where that figure is reported, is owner policy and is not decided here. The early-stop savings test pins today's behaviour and no longer claims savings are zero. The same review fixed three gate defects: the round cap is checked before the predicate, settleable items must fit the remaining budget together, and a conflict with no sides is refused.
+- [x] **2.7 Questions: council first, owner once.** Each question is classified
       (`ai-council` classes): council-decidable → council; owner-reserved
       pre-action (gates a push, a destructive step, an unauthorised fetch, a
       Hard-Floor trigger) → asked before that action, alone; owner-reserved
       post-action → one batch at the end with a recommendation each, while the
       run continues on everything unblocked.
       verify: a fixture question set routes council-decidable items to the
-      council, asks the pre-action item before the push, batches the rest.
+      council, asks the pre-action item before the push, batches the rest. Done 2026-10-17 in `src/scripts/analysis_questions.ts`, routing by the ownership classes of `ai_council/ownership_classes.ts` (seen red).
 
 **Exit:** 2.1–2.7 green on fixtures, read-only, no network. **Rollback:** the
 two new scripts and the context file are additive; deleting them restores today.
 
 ## Phase 3 — The final stage: emit, validate, publish, and `analyze:inbox`
 
-- [ ] **3.1 Emit locally (directive e).** Roadmaps via `roadmap-writing`,
+- [x] **3.1 Emit locally (directive e).** Roadmaps via `roadmap-writing`,
       `status: ready` (`draft` above the D18 intake limit, said in one line); blocked work stays `ready` with a body `> Blocked until …`
       note (`src/skills/roadmap-writing/SKILL.md:250-251`); English per
       `language-and-tone`; `relates:` with slug and relation; `ENC1:`
@@ -281,8 +281,8 @@ two new scripts and the context file are additive; deleting them restores today.
       (D4). Output per door: inbox, source, and-optimize → roadmaps; pr → a
       verdict.
       verify: an emitter fixture produces `ready` roadmaps, an `Arrivals:` line
-      on an owned fixture finding, and one central roadmap for a multi-file run.
-- [ ] **3.2 Validate deterministically, before anything leaves the machine.**
+      on an owned fixture finding, and one central roadmap for a multi-file run. Done 2026-10-17 in `src/scripts/analysis_emit.ts` (owner-first and intake-limit cases seen red); `ENC1:` provenance, Phase 4c recurrence and the `pr` verdict stay with the door wiring of 3.4 and 5.2.
+- [x] **3.2 Validate deterministically, before anything leaves the machine.**
       Every claim carries an anchor and a tier; every step a `verify:` line;
       dissent present when the council recorded any; the emitted files pass
       `lint_roadmap_complexity`, `lint_roadmap_blockers`,
@@ -290,7 +290,7 @@ two new scripts and the context file are additive; deleting them restores today.
       fixture findings recovered without invented ones. A failure stops the run
       in `emitted`. No model judge is the gate (K9).
       verify: a fixture with one unanchored claim and one step without `verify:`
-      stops in `emitted` naming both.
+      stops in `emitted` naming both. Done 2026-10-17 in `src/scripts/analysis_validate.ts` (seen red); the complexity and risk-register gates run on the emitted file itself, the other three read this package's tree.
 - [ ] **3.3 Publish (directive f).** Worktree, opaque branch, chunked commits,
       `/create-pr :ready` — never the silent-draft default — then `ci_settle`,
       at most three fix rounds, then `handed-back` naming the red. Before every
@@ -337,7 +337,7 @@ today's analysis-only behaviour.
 
 ## Phase 4 — The source door and `analyze:and-optimize`
 
-- [ ] **4.1 Claim pin, not claim freeze.** The five mechanisms named in
+- [x] **4.1 Claim pin, not claim freeze.** The five mechanisms named in
       `reference-loop-upgrade-value` (`docs/CLAIMS.md:497`) are not byte-identical
       to their registration (F15). Record the pin of the command as it stands
       when this phase starts, list the post-registration edits (`f1d5f3f3a`,
@@ -350,15 +350,15 @@ today's analysis-only behaviour.
       verify: `git diff <recorded-pin>..HEAD --
       src/domains/analysis-workbench/analyze/repo/command.md` shows no hunk
       inside § 1b, § 2b, the interop probe, the convergence verdict or the
-      bound-claim gate, and the observation roadmap names the three commits.
-- [ ] **4.2 Local source adapters.** Local path (read in place, digest per
+      bound-claim gate, and the observation roadmap names the three commits. Done 2026-10-17: pin `835660b0d` recorded in the observation roadmap. `corrected-from-reproduction`: the file moved in five commits since registration, not three — `8488bf078` and `386266422` are listed too.
+- [x] **4.2 Local source adapters.** Local path (read in place, digest per
       file), archive (size cap, no `../`, no symlink out), an already-present
       local clone (pinned SHA, never executed) — each yielding one `SourceRef`
       (identity, kind, license, pin, digest, tier). Unsupported kinds fail with a
       diagnostic naming blocker `source-fetch-authorization`.
       verify: `npx vitest run tests/scripts/source_adapters.test.ts` -> 0 — pins each
       local kind, refuses an archive with a `../` entry, and fails a URL argument
-      with the blocker's name.
+      with the blocker's name. Done 2026-10-17 in `src/scripts/source_adapters.ts` (`../` and symlink refusals seen red).
 - [ ] **4.2b Network sources and the research step.** Repositories at depth 1 to
       a pinned SHA, URLs and articles (redirect and size caps, digest plus quoted
       anchor), and the research brief (code not README, other repositories,

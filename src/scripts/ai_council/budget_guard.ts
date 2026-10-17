@@ -21,6 +21,8 @@
  *   on every entry recorded before this extension shipped. A billable call
  *   with no price row is written as `"usd": null, …, "unpriced": true,
  *   "input_tokens": int, "output_tokens": int` (TS-only; reads as 0 in the sum).
+ *   With a daily ceiling set, rows also carry `"state"`, `"reservation_id"`,
+ *   `"run_id"` (and `"expires_at"` on `reserved`); see `reserve_spend`.
  * - `today_spend_usd()` sums entries within the last 24h from "now".
  * - `would_exceed(limit_usd, next_call_usd)` returns true iff the next call
  *   would push the rolling window past the limit.
@@ -40,6 +42,7 @@
  *   tz-aware comparison.
  */
 
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -91,7 +94,24 @@ export interface SpendEntry {
     unpriced?: true;
     input_tokens?: number;
     output_tokens?: number;
+    /**
+     * Reservation rows (road-to-unknowns-that-say-so Phase 3), written only
+     * while a daily ceiling is set. Absent on every plain spend row.
+     */
+    state?: SpendState;
+    reservation_id?: string;
+    run_id?: string;
+    /** Epoch ms after which an open `reserved` row closes as `unreconciled`. */
+    expires_at?: number;
 }
+
+/**
+ * `reserved` → one of the three terminal states, never back. `unreconciled`
+ * is a reservation whose outcome nobody learned — it keeps its estimate,
+ * because an unknown is never a zero.
+ */
+export type SpendState = 'reserved' | 'completed' | 'released' | 'unreconciled';
+export type TerminalSpendState = Exclude<SpendState, 'reserved'>;
 
 function _nowUtcMs(): number {
     return Date.now();
@@ -291,6 +311,7 @@ function _dumpEntry(
     cacheWrite?: number,
     cacheTtl?: '5m' | '1h',
     unpricedTokens?: { input: number; output: number },
+    reservation?: { state: SpendState; id: string; run_id: string; expires_at?: number },
 ): string {
     let body =
         `${_pyJsonString('ts')}: ${_pyJsonString(ts)}, ` +
@@ -311,6 +332,15 @@ function _dumpEntry(
             `, ${_pyJsonString('unpriced')}: true` +
             `, ${_pyJsonString('input_tokens')}: ${Math.trunc(unpricedTokens.input)}` +
             `, ${_pyJsonString('output_tokens')}: ${Math.trunc(unpricedTokens.output)}`;
+    }
+    if (reservation !== undefined) {
+        body +=
+            `, ${_pyJsonString('state')}: ${_pyJsonString(reservation.state)}` +
+            `, ${_pyJsonString('reservation_id')}: ${_pyJsonString(reservation.id)}` +
+            `, ${_pyJsonString('run_id')}: ${_pyJsonString(reservation.run_id)}`;
+        if (reservation.expires_at !== undefined) {
+            body += `, ${_pyJsonString('expires_at')}: ${_pyJsonString(nowUtcIso(reservation.expires_at))}`;
+        }
     }
     return `{${body}}`;
 }
@@ -440,6 +470,14 @@ export function read_entries(p: string | null = null): SpendEntry[] {
             const outTok = _toOptionalNonNegInt(record.output_tokens);
             if (outTok !== undefined) entry.output_tokens = outTok;
         }
+        const state = _toSpendState(record.state);
+        if (state !== undefined && typeof record.reservation_id === 'string') {
+            entry.state = state;
+            entry.reservation_id = record.reservation_id;
+            entry.run_id = _toStr(record.run_id, '');
+            const expires = parseIso(_rawStr(record.expires_at));
+            if (expires !== null) entry.expires_at = expires;
+        }
         out.push(entry);
     }
     return out;
@@ -452,6 +490,12 @@ function _toOptionalNonNegInt(v: unknown): number | undefined {
     }
     const n = _toFloat(v);
     return n === null || n < 0 ? undefined : n;
+}
+
+function _toSpendState(v: unknown): SpendState | undefined {
+    return v === 'reserved' || v === 'completed' || v === 'released' || v === 'unreconciled'
+        ? v
+        : undefined;
 }
 
 /** `'5m' | '1h'`, or `undefined` for anything else (including absent). */
@@ -480,8 +524,12 @@ export function today_spend_summary(
     const cutoff = nowMs - windowHours * 3600 * 1000;
     let total = 0;
     let unpriced = 0;
-    for (const e of read_entries(path_)) {
-        if (e.ts >= cutoff) {
+    const entries = read_entries(path_);
+    const closed = _terminalIds(entries);
+    for (const e of entries) {
+        // An open reservation counts at its estimate; once a terminal row
+        // exists that row carries the amount, so the reservation drops out.
+        if (e.ts >= cutoff && !(e.state === 'reserved' && closed.has(e.reservation_id ?? ''))) {
             total += e.usd;
             if (e.unpriced) unpriced += 1;
         }
@@ -565,6 +613,206 @@ export function record_spend(
     }
     _ensureLedgerFileMode(p);
     return true;
+}
+
+/** Reservation ids that already have a terminal row. */
+function _terminalIds(entries: readonly SpendEntry[]): Set<string> {
+    const out = new Set<string>();
+    for (const e of entries) {
+        if (e.state !== undefined && e.state !== 'reserved' && e.reservation_id !== undefined) {
+            out.add(e.reservation_id);
+        }
+    }
+    return out;
+}
+
+/** How long a reservation lock is waited for, and when a held lock counts as crashed. */
+export const RESERVATION_LOCK_WAIT_MS = 3000;
+const RESERVATION_LOCK_STALE_MS = 10_000;
+
+function _sleepMs(ms: number): void {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+/**
+ * Run `fn` holding `<ledger>.lock`, created `O_EXCL`. Unlike the counter lock
+ * in `cli_call_budget.ts`, a wait that runs out returns `null` instead of
+ * proceeding unlocked: a ceiling checked without the lock is the race this
+ * exists to close, so the caller refuses rather than guesses.
+ */
+function _withLedgerLock<T>(p: string, waitMs: number, fn: () => T): T | null {
+    if (!_ensureLedgerDir(p)) {
+        return null;
+    }
+    const lockPath = `${p}.lock`;
+    const started = Date.now();
+    let fd: number | null = null;
+    while (fd === null) {
+        try {
+            fd = fs.openSync(lockPath, 'wx', 0o600);
+            break;
+        } catch {
+            try {
+                if (Date.now() - fs.statSync(lockPath).mtimeMs > RESERVATION_LOCK_STALE_MS) {
+                    fs.unlinkSync(lockPath);
+                }
+            } catch {
+                // Released between the failed create and the stat — retry.
+            }
+        }
+        if (Date.now() - started >= waitMs) {
+            return null;
+        }
+        _sleepMs(15);
+    }
+    try {
+        return fn();
+    } finally {
+        fs.closeSync(fd);
+        try {
+            fs.unlinkSync(lockPath);
+        } catch {
+            // Already gone is the end state wanted.
+        }
+    }
+}
+
+function _appendLine(p: string, line: string): boolean {
+    try {
+        fs.appendFileSync(p, `${line}\n`, { encoding: 'utf-8' });
+    } catch (exc) {
+        process.stderr.write(`[council:budget_guard] write failed: ${_errStr(exc)}\n`);
+        return false;
+    }
+    _ensureLedgerFileMode(p);
+    return true;
+}
+
+/**
+ * Close every open reservation whose hold ran out as `unreconciled` at its
+ * estimate (D8). Caller holds the lock. A killed run never reaches its own
+ * close, so without this its reservation would hold budget forever.
+ */
+function _expireStale(p: string, entries: readonly SpendEntry[], nowMs: number): void {
+    const closed = _terminalIds(entries);
+    for (const e of entries) {
+        if (
+            e.state === 'reserved' &&
+            e.reservation_id !== undefined &&
+            !closed.has(e.reservation_id) &&
+            e.expires_at !== undefined &&
+            e.expires_at <= nowMs
+        ) {
+            closed.add(e.reservation_id);
+            _appendLine(
+                p,
+                _dumpEntry(nowUtcIso(nowMs), _pyRound6(e.usd), e.provider, e.model,
+                    undefined, undefined, undefined, undefined,
+                    { state: 'unreconciled', id: e.reservation_id, run_id: e.run_id ?? '' }),
+            );
+        }
+    }
+}
+
+/**
+ * The effective state of every reservation in the ledger. An open one past
+ * its hold reads `unreconciled` here even before a locked writer persists it.
+ */
+export function reservation_states(
+    options: { path?: string | null; now?: number | null } = {},
+): Map<string, SpendState> {
+    const nowMs = options.now ?? _nowUtcMs();
+    const out = new Map<string, SpendState>();
+    for (const e of read_entries(options.path ?? null)) {
+        if (e.state === undefined || e.reservation_id === undefined) continue;
+        if (e.state !== 'reserved') {
+            out.set(e.reservation_id, e.state);
+        } else if (!out.has(e.reservation_id)) {
+            const stale = e.expires_at !== undefined && e.expires_at <= nowMs;
+            out.set(e.reservation_id, stale ? 'unreconciled' : 'reserved');
+        }
+    }
+    return out;
+}
+
+export type ReserveResult = { ok: true; id: string } | { ok: false; reason: 'daily' | 'lock' };
+
+/**
+ * Check a daily ceiling and claim the estimate in ONE locked step.
+ *
+ * `would_exceed` reads the ledger and compares; two councils started together
+ * both read the same remainder and both pass. Here the read, the comparison and
+ * the `reserved` row happen under the ledger lock, and every later read counts
+ * the open reservation at its estimate, so the second council sees the first.
+ * Only meaningful with a ceiling set — the orchestrator never calls it otherwise.
+ */
+export function reserve_spend(
+    limitUsd: number,
+    estimateUsd: number,
+    provider: string,
+    model: string,
+    options: {
+        path?: string | null;
+        now?: number | null;
+        run_id: string;
+        hold_ms: number;
+        windowHours?: number;
+        lock_wait_ms?: number;
+    },
+): ReserveResult {
+    const p = options.path ?? LEDGER_PATH;
+    const nowMs = options.now ?? _nowUtcMs();
+    const verdict = _withLedgerLock(p, options.lock_wait_ms ?? RESERVATION_LOCK_WAIT_MS, (): ReserveResult => {
+        _expireStale(p, read_entries(p), nowMs);
+        const window = options.windowHours ?? ROLLING_WINDOW_HOURS;
+        const spent = today_spend_usd({ path: p, now: nowMs, windowHours: window });
+        if (limitUsd > 0 && spent + estimateUsd > limitUsd) {
+            return { ok: false, reason: 'daily' };
+        }
+        const id = randomUUID();
+        const line = _dumpEntry(nowUtcIso(nowMs), _pyRound6(estimateUsd), provider, model,
+            undefined, undefined, undefined, undefined,
+            { state: 'reserved', id, run_id: options.run_id, expires_at: nowMs + options.hold_ms });
+        return _appendLine(p, line) ? { ok: true, id } : { ok: false, reason: 'lock' };
+    });
+    return verdict ?? { ok: false, reason: 'lock' };
+}
+
+/**
+ * Append the terminal row for a reservation. `completed` carries the actual
+ * amount, `released` zero, `unreconciled` the reservation's own estimate.
+ * Returns false — and writes nothing — when the reservation is unknown or
+ * already terminal: a terminal state never reopens.
+ */
+export function close_reservation(
+    id: string,
+    state: TerminalSpendState,
+    options: {
+        path?: string | null;
+        now?: number | null;
+        usd?: number;
+        provider?: string;
+        model?: string;
+        lock_wait_ms?: number;
+    } = {},
+): boolean {
+    const p = options.path ?? LEDGER_PATH;
+    const nowMs = options.now ?? _nowUtcMs();
+    const done = _withLedgerLock(p, options.lock_wait_ms ?? RESERVATION_LOCK_WAIT_MS, (): boolean => {
+        _expireStale(p, read_entries(p), nowMs);
+        const entries = read_entries(p);
+        if (_terminalIds(entries).has(id)) return false;
+        const reserved = entries.find((e) => e.state === 'reserved' && e.reservation_id === id);
+        if (reserved === undefined) return false;
+        const usd = state === 'completed' ? (options.usd ?? 0) : state === 'released' ? 0 : reserved.usd;
+        return _appendLine(
+            p,
+            _dumpEntry(nowUtcIso(nowMs), _pyRound6(usd), options.provider ?? reserved.provider,
+                options.model ?? reserved.model, undefined, undefined, undefined, undefined,
+                { state, id, run_id: reserved.run_id ?? '' }),
+        );
+    });
+    return done === true;
 }
 
 /**

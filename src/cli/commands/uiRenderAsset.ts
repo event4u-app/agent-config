@@ -46,6 +46,7 @@ import { elementExtent, parseElements, readViewBox, vectorVerdict } from '../../
 import type { DeliveryMode, SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
 import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js';
 import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
+import { applyFaceStates, faceFindings } from './uiRenderAssetFonts.js';
 import { readGrounds, type OpenPage } from './uiRenderAssetGrounds.js';
 import { gradeIconGrid } from './uiRenderAssetGrid.js';
 import { confinePage, fileRootsFor, injectStyle } from './uiRenderAssetIsolation.js';
@@ -564,6 +565,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         if (!isHost) {
             const raw = await page.evaluate(readAssetInPage, { nearWhite: NEAR_WHITE_CHANNEL });
             applyGeometry(reading, raw, vb);
+            await applyFaceStates(page, reading);
         }
 
         // Accessible names across every graphic on the page (R7).
@@ -1180,7 +1182,7 @@ function applyGeometry(reading: AssetReading, raw: RawAssetReading, vb: ViewBox 
 }
 
 function deriveFindings(r: AssetReading): AssetFinding[] {
-    const out: AssetFinding[] = [];
+    const out: AssetFinding[] = faceFindings(r);
 
     if (r.fill_ratio !== null && r.fill_ratio < r.fill_ratio_threshold) {
         out.push({

@@ -62,6 +62,14 @@ export function renderResponseMeta(r: CouncilResponse, deps: MetaRenderDeps): st
                 : `transport: api (fell back from ${fallback_from}${why})`,
         );
     }
+    // Same reasoning for a size-fit downgrade: the model that answered is not
+    // the one configured, and only the artefact outlives the stdout line.
+    const configured = _metaGet(meta_dict, 'configured_model', null);
+    if (typeof configured === 'string' && configured !== '' && configured !== r.model) {
+        const reason = _metaGet(meta_dict, 'size_fit_reason', null);
+        const why = typeof reason === 'string' && reason !== '' ? `: ${reason}` : '';
+        parts.push(`model: ${r.model} (downgraded from ${configured}${why})`);
+    }
     return `*${parts.join(' · ')}*`;
 }
 

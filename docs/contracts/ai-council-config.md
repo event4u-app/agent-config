@@ -301,6 +301,18 @@ Implications:
   seat is. With both at zero nothing is refused; the cost table still prints
   `unpriced: <provider>/<model>` and the call is ledgered as
   `"usd": null, "unpriced": true` with its token counts.
+- **A set daily ceiling reserves before each billable call.** With
+  `daily_limit_usd` above zero, the ceiling check and a `"state": "reserved"`
+  ledger row with the seat's estimate are one step under
+  `council-spend.jsonl.lock`, so two councils started together cannot both
+  spend the same remainder; a lock that cannot be taken refuses the seat as
+  `daily_budget_exceeded`. The call then closes its reservation as
+  `completed` (actual amount), `released` (failed before the provider accepted
+  it, $0), or — when the outcome is unknown, e.g. a timeout — `unreconciled`
+  at the estimate at round end. A reservation left open by a killed run closes
+  as `unreconciled` once its hold (call timeout plus one hour) runs out. A
+  terminal row is never reopened. With `daily_limit_usd` at zero no
+  reservation row is written and the ledger is unchanged.
 - **`api_key_ref` is required for enabled members whose effective mode
   is `api`, AND for `xai` / `perplexity` even in `mode: cli`** — the
   community CLI reads the key from its own env, but the agent still

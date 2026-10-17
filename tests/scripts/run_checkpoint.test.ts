@@ -28,6 +28,7 @@ import {
     readCheckpoint,
     renderVerification,
     verifyCheckpoint,
+    verifyLatestCheckpoint,
     writeCheckpoint,
     type RunCheckpoint,
 } from '../../src/scripts/_lib/run_checkpoint.js';
@@ -741,5 +742,54 @@ describe('context_fingerprint — repository drift, which no other field reporte
             verifyCheckpoint(r, withFp).fields.find((x) => x.field === 'context_fingerprint')
                 ?.agrees,
         ).toBe(true);
+    });
+});
+
+// road-to-unknowns-that-say-so 6.3 — an unreadable newest checkpoint used to be
+// skipped silently, so a resume verified against an older one unannounced.
+describe('a torn checkpoint is not an absent one', () => {
+    const dirOf = (r: string): string => path.join(r, CHECKPOINT_DIR_REL);
+
+    it('unreadable-newest-is-named', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-thing', ROADMAP);
+        const cp = buildCheckpoint(r, 'r-good', 'road-to-thing', {
+            now: () => new Date('2026-08-19T01:00:00Z'),
+        });
+        if (cp === null) throw new Error('setup: checkpoint not built');
+        writeCheckpoint(r, cp);
+        // A torn write newer than the readable one, and a stale torn file older than it.
+        fs.writeFileSync(path.join(dirOf(r), 'r-torn.json'), '{"schema_version": 1, "run_id": "r-to', 'utf-8');
+        const old = path.join(dirOf(r), 'r-ancient.json');
+        fs.writeFileSync(old, '{ not json', 'utf-8');
+        fs.utimesSync(old, new Date('2026-08-01T00:00:00Z'), new Date('2026-08-01T00:00:00Z'));
+
+        const res = verifyLatestCheckpoint(r, 'road-to-thing');
+        expect(res.report).toContain('checkpoint r-good');
+        expect(res.report).toContain('unreadable: r-torn.json');
+        expect(res.report).not.toContain('r-ancient.json');
+        // The lookup itself still skips it — naming is the report's job.
+        expect(latestCheckpointFor(r, 'road-to-thing')?.run_id).toBe('r-good');
+    });
+
+    it('with no readable checkpoint at all, an unreadable one is still named', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-thing', ROADMAP);
+        fs.mkdirSync(dirOf(r), { recursive: true });
+        fs.writeFileSync(path.join(dirOf(r), 'r-torn.json'), '{"run_id": "r', 'utf-8');
+        const res = verifyLatestCheckpoint(r, 'road-to-thing');
+        expect(res.agrees).toBe(false);
+        expect(res.report).toContain("no checkpoint for 'road-to-thing'");
+        expect(res.report).toContain('unreadable: r-torn.json');
+    });
+
+    it('writeCheckpoint leaves only the finished file behind', () => {
+        const r = root();
+        writeRoadmap(r, 'road-to-thing', ROADMAP);
+        const cp = buildCheckpoint(r, 'r-1', 'road-to-thing');
+        if (cp === null) throw new Error('setup: checkpoint not built');
+        expect(writeCheckpoint(r, cp)).toBe(checkpointFile(r, 'r-1'));
+        expect(fs.readdirSync(dirOf(r))).toEqual(['r-1.json']);
+        expect(readCheckpoint(r, 'r-1')?.open_steps).toBe(cp.open_steps);
     });
 });

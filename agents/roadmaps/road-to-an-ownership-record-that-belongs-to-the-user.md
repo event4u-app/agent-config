@@ -84,43 +84,70 @@ the same thing in all of them.
 
 ## Phase 1 — Freeze the three losses, red first
 
-- [ ] **1.1 Install without project settings.** A test that installs from a
+- [x] **1.1 Install without project settings.** A test that installs from a
       directory with no settings file, edits a deployed file, re-installs, and
       asserts the edit survives.
       verify: **red**, with `install.ts:3531` named in the failure.
-- [ ] **1.2 A second project under the same HOME.** Install from project A,
+      Done 2026-10-16: `tests/install/ownership_ledger_real_install.test.ts`
+      case 1.1, observed red (edited digest `e7f6d00b…` replaced by `4141eda3…`).
+- [x] **1.2 A second project under the same HOME.** Install from project A,
       then from project B, and assert the record from A is still the record.
       verify: **red**, with the sidecar object named.
-- [ ] **1.3 A retired-but-edited file.** Deploy, edit, retire the file from
+      Done 2026-10-16: case 1.2, observed red at the same digest swap; the case
+      asserts the `.agent-config.new` sidecar by digest once the edit survives.
+- [x] **1.3 A retired-but-edited file.** Deploy, edit, retire the file from
       the package, re-install, and assert the edit is not deleted silently.
       verify: **red**, with `global_deploy_inventory.ts` named.
-- [ ] **1.4 Pin the current `unknown` arm as a named case.** Extend
+      Done 2026-10-16: case 1.3, observed red (`expected null` — the edited
+      retired file was unlinked).
+- [x] **1.4 Pin the current `unknown` arm as a named case.** Extend
       `tests/install/recordedOwnership.test.ts` so today's behaviour is
       asserted explicitly before it changes.
       verify: green now, and the case that changes in Phase 2 is the one this
       step names.
-- [ ] **1.5 Assert bytes and exit codes, not output text.** Every assertion
+      Done 2026-10-16: `GLOBAL-TARGET-WITHOUT-PROJECT-MANIFEST`, green.
+- [x] **1.5 Assert bytes and exit codes, not output text.** Every assertion
       above compares digests.
       verify: a fixture whose file is recreated empty fails.
+      Done 2026-10-16: the step-1.5 case in the same file asserts it.
 
 ## Phase 2 — Two digests, one classifier
 
-- [ ] **2.1 Inventory schema 2.** `deployed-files.json` records
+- [x] **2.1 Inventory schema 2.** `deployed-files.json` records
       `{path, installed_sha256, packaged_sha256}` per file. Additive: a
       reader tolerating schema 1 keeps the sibling roadmap's deletion
       allowlist working unchanged.
       verify: a schema-1 fixture still loads, and the sibling's containment
       test stays green.
-- [ ] **2.2 Widen the classifier.** `classifyOwnership`
+      Done 2026-10-16: `deployed-files.json` schema 2 adds a per-tool `digests`
+      map beside an unchanged `files` list (`global_deploy_inventory.ts`);
+      `tests/install/ownershipLedger.test.ts` loads a schema-1 fixture, and
+      `tests/install/uninstall_purge_containment.test.ts` is green in the same
+      run. Honest limit: at record time both digests are what was just
+      deployed, so they diverge only for a retired file (`packaged: null`);
+      `outdated` is reachable through the classifier when a caller passes the
+      current package digest, and no caller does yet.
+- [x] **2.2 Widen the classifier.** `classifyOwnership`
       (`recordedOwnership.ts:72-78`) takes the packaged digest and returns
       `clean | outdated | customized | customized-and-outdated |
       retired-unmodified | retired-modified | unknown`.
       verify: a table-driven test covers all seven, including the two the old
       three-value type could not express.
-- [ ] **2.3 Write the record from anywhere.** The manifest write at
+      Done 2026-10-16: added as `classifyFileState` in `recordedOwnership.ts`,
+      and `classifyOwnership` is now that classifier with the packaged digest
+      unknown (one classifier, its callers unchanged). Table test in
+      `tests/install/recordedOwnership.test.ts`, seen red under a mutation.
+- [x] **2.3 Write the record from anywhere.** The manifest write at
       `install.ts:3531` stops depending on
       `_resolve_settings_read(project_root)`; the record is user-scoped.
       verify: test 1.1 green.
+      Done 2026-10-16: the record that decides a global target is the
+      user-scoped ledger, written on every global deploy
+      (`src/install/ownershipLedger.ts`) and laid over the project manifest by
+      `recordedHashesWithLedger`, which the writer and the preview both read.
+      The project-manifest write itself keeps its settings gate: that block also
+      writes project anchors into the working directory, and moving it would put
+      files into whatever directory an install ran from. Test 1.1 green.
 - [ ] **2.4 `unknown` preserves what the ledger proves we wrote.**
       `decideDeployWrite`'s `unknown` arm becomes `preserve` for a path the
       ledger lists, and stays `write` for a genuinely unrecorded pre-existing
@@ -128,30 +155,75 @@ the same thing in all of them.
       those, and this change does not touch them.
       verify: tests 1.1–1.3 green; a pre-existing unrecorded file is still
       written, asserted as its own case.
-- [ ] **2.5 One table, three readers.** A parity fixture feeds the same
+      Open 2026-10-16, deliberately: tests 1.1–1.3 are green and the unrecorded
+      file is asserted written (`ownershipLedger.test.ts`, AC-5), but without
+      this arm change. The ledger now records a digest for every path it lists,
+      so the only ledger-listed path that still reaches `unknown` is a schema-1
+      entry from an install that predates the ledger — and preserving those
+      would stage a sidecar beside every deployed file on the first upgraded
+      install and exit 3, the noise D3 itself argues against. D3 needs
+      re-deciding against that case before this arm changes.
+- [x] **2.5 One table, three readers.** A parity fixture feeds the same
       ownership table to the preview (`computeConflicts`), the writer
       (`conflictTracker`) and `cmd_doctor`'s classifier, and asserts all three
       agree.
       verify: the parity test fails if any one of the three is changed alone.
+      Done 2026-10-16: `tests/install/ownership_parity.test.ts`, one table fed
+      through a project manifest and through the ledger; seen red when the
+      preview alone was pointed at a different ledger. `cmd_doctor`'s manifest
+      classifier now calls `classifyOwnership`.
+      **Open defect found by this step, not yet a checkbox** (this plan's risk
+      review is stamped today and a new step reds `lint-plan-risk-register`
+      until a later re-review can record it): `cmd_doctor` reads the manifest
+      through `installed_tools.read_manifest`, whose hand-rolled parser drops
+      every nested `files[]` entry, so `_collect_manifest_entries` receives no
+      files and project-scope `missing` / `modified` / `tag_drift` are never
+      reported on a real tree. The parity test pins today's empty read; the
+      fix flips that assertion and makes `doctor --ci` name a project-scope
+      edit. Not fixed here: it turns a consumer's `doctor --ci` red on drift it
+      has silently passed until now — a consumer-visible exit-code change that
+      ships on its own with that stated.
 
 ## Phase 3 — Say the same thing on every surface
 
-- [ ] **3.1 `doctor` stops skipping global scope.** `cmd_doctor.ts:597` reads
+- [x] **3.1 `doctor` stops skipping global scope.** `cmd_doctor.ts:597` reads
       the ledger instead of returning early for non-project tools.
       verify: installer `rc=3` and `doctor --ci` non-zero on the same tree,
       asserted by one test that runs both.
-- [ ] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
+      Done 2026-10-16: `src/scripts/_cli/doctor_ownership_ledger.ts` reports
+      every ledger file the installer would preserve as `modified`, on both
+      the manifest and the no-manifest path (`cmd_doctor.ts` net zero lines).
+      `ownership_ledger_real_install.test.ts` step-3.1 case runs both, observed
+      red first (`modified` empty after an rc=3 install).
+- [x] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
       `docs/contracts/install-layout.md:206` with its uninstall semantics.
       verify: `grep -c sidecar docs/contracts/install-layout.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-16: named with today's uninstall semantics (reported as
+      skipped, left in place), plus the ledger file in the runtime-root table
+      and the kind in `installed-tools-lockfile.md`.
 - [ ] **3.3 Close the `$HOME`-leak gap.** Add the manifest to
       `src/config/gitignore-block.txt`, and reconcile `README.md:357` with
       `docs/contracts/agents-layout.md:71` so the consumer case is governed by
       one sentence rather than by neither.
       The two documents state the same rule for the consumer tree.
       verify: `grep -c installed-tools src/config/gitignore-block.txt` -> /^[1-9][0-9]*$/
+      Open 2026-10-16 — the step's premise moved. `docs/contracts/agents-layout.md`
+      (the `installed-tools.lock` row) now governs the consumer case explicitly:
+      tracked-durable, deliberately absent from the gitignore block, because
+      `README.md` tells teams to commit it. The two documents already agree, so
+      this verify line would reverse a recorded contract and a team workflow —
+      owner-reserved (Risk 5). The residual gap is narrower: a global install
+      run from a project with settings writes `$HOME`-rooted global-scope
+      entries into that tracked lock. Now that the ledger carries global
+      ownership, dropping those entries from the project lock is the candidate
+      fix, and it changes a tracked consumer file, so it is the owner's call.
 - [ ] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
       they attach to an existing command.
       verify: the output of `agent-config --help` lists no new top-level verb.
+      Open 2026-10-16: no flag implemented. What `adopt` (record an edit as
+      ours?) and `reset` (restore one file, a scoped `--force`?) do is not
+      specified anywhere in the tree, and inventing the semantics of a
+      consumer-facing flag is not this drain's call.
 
 ## Blockers
 
@@ -214,19 +286,19 @@ the same thing in all of them.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** All three Phase 1 tests were observed **red** before Phase 2,
+- [x] **AC-1** All three Phase 1 tests were observed **red** before Phase 2,
       and the observation is recorded in the PR.
-- [ ] **AC-2** An edit to a globally deployed file survives a re-install run
+- [x] **AC-2** An edit to a globally deployed file survives a re-install run
       from a directory with no project settings.
-- [ ] **AC-3** An edit survives an install run from a second project under the
+- [x] **AC-3** An edit survives an install run from a second project under the
       same HOME.
-- [ ] **AC-4** A file the package retires while the user has edited it is not
+- [x] **AC-4** A file the package retires while the user has edited it is not
       deleted silently.
-- [ ] **AC-5** A genuinely unrecorded pre-existing file is still written, as
+- [x] **AC-5** A genuinely unrecorded pre-existing file is still written, as
       its own asserted case.
-- [ ] **AC-6** Installer `rc=3` and `doctor --ci` non-zero on the same tree,
+- [x] **AC-6** Installer `rc=3` and `doctor --ci` non-zero on the same tree,
       asserted by one test.
-- [ ] **AC-7** A schema-1 inventory still loads, and the sibling roadmap's
+- [x] **AC-7** A schema-1 inventory still loads, and the sibling roadmap's
       containment test is green in the same run.
 - [ ] **AC-8** `grep -c installed-tools src/config/gitignore-block.txt` ≥ 1,
       and `grep -c sidecar docs/contracts/install-layout.md` ≥ 1.

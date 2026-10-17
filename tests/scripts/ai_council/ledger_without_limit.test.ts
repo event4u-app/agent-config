@@ -98,7 +98,12 @@ describe('the ledger is written without a daily limit', () => {
             new CostBudget({ daily_limit_usd: 100 }),
             { table: load_prices() },
         );
-        expect(read_entries(LEDGER_PATH)).toHaveLength(1);
+        // Under a set ceiling the call is reserved first, then reconciled
+        // (road-to-unknowns-that-say-so Phase 3): two rows, one amount.
+        const entries = read_entries(LEDGER_PATH);
+        expect(entries.map((e) => e.state)).toEqual(['reserved', 'completed']);
+        expect(entries[1]!.usd).toBeGreaterThan(0);
+        expect(entries[1]!.provider).toBe('anthropic');
     });
 
     it('appends one line per billable seat', () => {

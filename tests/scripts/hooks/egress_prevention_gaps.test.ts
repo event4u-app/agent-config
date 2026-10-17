@@ -21,7 +21,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { countEnvelope } from '../../../src/scripts/hooks/egress_stage.js';
+import { countEnvelope, OBSERVATION_FILE } from '../../../src/scripts/hooks/egress_stage.js';
+import type { EgressObservationLine } from '../../../src/scripts/hooks/egress_stage.js';
 import type { JsonObject } from '../../../src/scripts/hooks/payload_stub.js';
 import { feedback_dir } from '../../../src/scripts/hooks/state_io.js';
 
@@ -30,6 +31,7 @@ const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'egress-prevention
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const REPORT_VIEW = 'tests/hooks/fixtures/concern_report_egress_view.ts';
+const CLOSING_ROADMAP = path.join(REPO_ROOT, 'agents', 'roadmaps', 'road-to-placeholders-on-the-wire.md');
 
 const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
 
@@ -107,6 +109,53 @@ function dispatch(fixture: GapFixture): { status: number | null; stdout: string;
 
 const NAMES = Object.keys(VALUES);
 
+/**
+ * The dispatcher's stdout as the host reads it: nothing, or one JSON object. A
+ * non-empty stdout that does not parse fails the test instead of being searched.
+ */
+function hostOutput(stdout: string): JsonObject {
+    const text = stdout.trim();
+    if (text === '') return {};
+    const parsed: unknown = JSON.parse(text);
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('dispatcher stdout is not a JSON object');
+    }
+    return parsed as JsonObject;
+}
+
+/** Every key at any depth, so a rewrite field nested under `hookSpecificOutput` is seen. */
+function keysDeep(value: unknown, into: Set<string> = new Set()): Set<string> {
+    if (value !== null && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+            into.add(k);
+            keysDeep(v, into);
+        }
+    }
+    return into;
+}
+
+/** The observation lines the stage appended in this workspace — a fresh one per test. */
+function observations(ws: string): EgressObservationLine[] {
+    const file = path.join(ws, OBSERVATION_FILE);
+    if (!fs.existsSync(file)) return [];
+    return fs
+        .readFileSync(file, 'utf8')
+        .split('\n')
+        .filter((l) => l.trim() !== '')
+        .map((l) => JSON.parse(l) as EgressObservationLine);
+}
+
+/** The body of one numbered step: its checkbox line up to the next step or heading. */
+function roadmapStep(markdown: string, step: string): string | null {
+    const lines = markdown.split('\n');
+    const head = new RegExp(`^- \\[[ x~-]\\] (?:<!--.*?--> )?\\*\\*${step.replace('.', '\\.')} `);
+    const start = lines.findIndex((l) => head.test(l));
+    if (start < 0) return null;
+    let end = start + 1;
+    while (end < lines.length && !/^(- \[|#)/.test(lines[end] ?? '')) end++;
+    return lines.slice(start, end).join('\n');
+}
+
 describe('egress prevention gaps', () => {
     it('the fixture directory holds exactly the named gaps, each with a closing step', () => {
         const files = fs.readdirSync(FIXTURE_DIR).filter((f) => f.endsWith('.json')).map((f) => f.replace(/\.json$/, ''));
@@ -115,6 +164,16 @@ describe('egress prevention gaps', () => {
             const f = load(name);
             expect(f.closed_by).toMatch(/^road-to-placeholders-on-the-wire \d+\.\d+$/);
             expect(f.gap.length).toBeGreaterThan(20);
+        }
+    });
+
+    it('each closed_by names a step of the closing roadmap, and that step names the fixture back', () => {
+        const markdown = fs.readFileSync(CLOSING_ROADMAP, 'utf8');
+        for (const name of NAMES) {
+            const step = load(name).closed_by.replace(/^road-to-placeholders-on-the-wire /, '');
+            const body = roadmapStep(markdown, step);
+            expect(body, `${name}: step ${step} exists`).not.toBeNull();
+            expect(body?.includes(`${name}.json`), `${name}: step ${step} names the fixture`).toBe(true);
         }
     });
 
@@ -135,8 +194,20 @@ describe('egress prevention gaps', () => {
             const sid = String(f.payload['session_id']);
             const dir = feedback_dir(path.join(ws, 'agents', 'runtime', 'state'), sid);
             expect(fs.existsSync(path.join(dir, 'recorder.json'))).toBe(true);
-            for (const field of REWRITE_FIELDS) expect(stdout.includes(field)).toBe(false);
-            expect(/"decision"\s*:\s*"block"/.test(stdout)).toBe(false);
+            // The stage ran in this same invocation and counted the credential: its
+            // observation line is the only one in this fresh workspace.
+            const lines = observations(ws);
+            expect(lines.length).toBe(1);
+            const [line] = lines;
+            expect(line?.event).toBe(f.event);
+            expect(line?.mode).toBe('strict');
+            const counted = (line?.counts ?? []).filter((c) => c.class === 'credential').reduce((n, c) => n + c.count, 0);
+            expect(counted).toBeGreaterThan(0);
+            // What the host reads: no rewrite field anywhere, and no block.
+            const out = hostOutput(stdout);
+            const keys = keysDeep(out);
+            for (const field of REWRITE_FIELDS) expect(keys.has(field)).toBe(false);
+            expect(out['decision']).not.toBe('block');
         });
     }
 });

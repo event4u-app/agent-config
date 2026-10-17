@@ -7,9 +7,9 @@ relates:
   - slug: road-to-a-canvas-the-code-owns
     relation: extends
     note: "Active (ready). Owns the visual off-brand finding (8.2 Lock carrier, flags-not-blocks, brownfield baseline) and the DTCG import lane (0.4 alias control, 3.1 alias record and cycles). This roadmap owns the generator and validator in design-tokens/scripts/tokens.ts, which canvas does not touch; Phase 3 hands canvas 8.2 the palette reading it consumes and adds one object-valued alias row to canvas's 0.4 fixture only after canvas 3.1 lands. No visual gate is planned here."
-  - slug: later/road-to-voice-negative-lexicon
+  - slug: archive/road-to-voice-negative-lexicon
     relation: supersedes
-    note: "Parked 2026-08-05 on a capacity slot only (its own header). Its validator design is kept verbatim and generalised from one voice primitive to three plus a claim-phrase list (Phase 5). Its pre-registered spike still decides the user-schema half (5.5). Archived by step 5.7 once 5.1 ships."
+    note: "Parked 2026-08-05 on a capacity slot only (its own header). Its validator design is kept verbatim and generalised from one voice primitive to three plus a claim-phrase list (Phase 5). Its pre-registered spike decided the user-schema half (5.0: schema field only). Archived by step 5.7 with 5.1."
   - slug: road-to-type-with-a-witness
     relation: disjoint
     note: "Active. Font construction and the font witness; nothing here touches type carriers or font licensing."
@@ -196,18 +196,20 @@ irreversible-external-action row of `non-destructive-by-default`).
       and alias; `#ff0000` beside `var(--x)`.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t "dtcg-2025|same-line" --reporter=verbose` -> /✓.*dtcg-2025[\s\S]*✓.*same-line/
       Done 2026-10-16: `dtcg-2025` and `same-line` cases in `skills_design_tokens_tokens.test.ts`, seen red against the base `tokens.ts` before 3.1 and 3.2 landed.
-- [ ] **0.4 Taboo and claim never checked, red.** A ghostwriter draft containing
+- [x] **0.4 Taboo and claim never checked, red.** A ghostwriter draft containing
       its own taboo and a brand draft containing "the number one platform"
       produce no finding from any tool. (new test file)
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t control --reporter=verbose` -> /✓.*control/
+      Done 2026-10-17: the `control` case in `tests/scripts/check_voice_lexicon.test.ts` ran red (no checker existed) and is green since 5.1/5.3: the ghostwriter draft's own taboo is an `error` finding (exit 1), the brand draft's "number one platform" an `unbacked-claim`.
 - [x] **0.5 Ghostwriter path, red.** The ignore block and the lint roots both
       cover the documented path; fails today.
       verify: `npx vitest run tests/scripts/lint_ghostwriter_source.test.ts -t documented-path --reporter=verbose` -> /✓.*documented-path/
       Done 2026-10-16: `documented-path` checks the managed block with `check-ignore --no-index` in a scratch repository and the lint roots; six of ten cases red at the base.
-- [ ] **0.6 Zero brand bytes off-brand, guard.** A backend prompt in a project
+- [x] **0.6 Zero brand bytes off-brand, guard.** A backend prompt in a project
       with a full brand produces no brand emission; green today, kept as the
       floor every later phase must hold.
       verify: `npx vitest run tests/scripts/hooks -t no-brand-bytes --reporter=verbose` -> /✓.*no-brand-bytes/
+      Done 2026-10-17: `tests/scripts/hooks/no_brand_bytes.test.ts` runs every concern bound to the `claude` `session_start` and `user_prompt_submit` slots in-process against a backend prompt in a fixture project carrying `tokens.json`, `DESIGN.md` and a `brand-voice` slot, and finds none of the brand-only markers in any output. A non-vacuity case proves the capture sees emitted text; a sabotage probe (a marker every run emits) turned both slot cases red.
 - [x] **0.7 Profile exposure check** (`folded-from-deep-dive`). Before 1.1 lands,
       report how many files under either ghostwriter path are tracked in this
       repository and in its test fixtures — counts only, never names or content.
@@ -284,12 +286,13 @@ irreversible-external-action row of `non-destructive-by-default`).
       and still reports every other literal on the line.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t same-line --reporter=verbose` -> /✓.*same-line/
       Done 2026-10-16: `validate` blanks each `var(--…)` span (nested fallbacks included) and scans the rest of the line.
-- [ ] **3.3 The reading canvas 8.2 consumes.** With a valid registered file,
+- [x] **3.3 The reading canvas 8.2 consumes.** With a valid registered file,
       `validate --json` tags each literal `on-palette (<token>)` or
       `off-palette (nearest <token>, ΔE2000)`, each with a stable finding id
       canvas 8.2 can deduplicate on (`folded-from-deep-dive`). Blocks nothing; the finding and
       its baseline stay canvas 8.2's. Tokens are never combined by value.
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t palette-tag --reporter=verbose` -> /✓.*palette-tag/
+      Done 2026-10-17: `validate --json --tokens <file>` tags each hex/rgb literal `on-palette (<token>)` (ΔE2000 0) or `off-palette (nearest <token>, ΔE2000 n.nn)` and gives every finding a 16-hex `id` from file, kind, literal and the line's own text, so a line shift keeps it. The registered file is passed explicitly: the skill script is stdlib-only and cannot import the resolver list (same constraint as 1.3). Comparable colours are hex, integer `rgb()` and 2025.10 objects with `hex` or `srgb` components; other spaces are not compared. Exit code and the no-`--tokens` output are unchanged.
 - [x] **3.4 The starter speaks the format it claims** (E3). It emits 2025.10
       objects and drops its `$schema` key, whose value sits on a different host
       from the specification's own site and which nothing in `tokens.ts` reads
@@ -303,13 +306,14 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 4 — One voice slot, one shape
 
-- [ ] **4.1 ADR** (E6). `docs/contracts/adr-gtm-context-spine-brand-voice.md`
-      adds wing-scoped slot `brand-voice` (`agents/context-spine/brand-voice.md`)
+- [x] **4.1 ADR** (E6). `docs/contracts/adr-gtm-context-spine-brand-voice.md`
+      adds wing-scoped slot `brand-voice` (`agents/context-spine/brand-voice.md`) <!-- ref-ignore -->
       under § 5 and records that it is the first slot whose frontmatter is
       machine-read, limited to the fields Phase 5 consumes; the body stays prose
       under § 4.
       verify: `rg -n 'brand-voice' docs/contracts/context-spine.md` -> /brand-voice/
-- [ ] **4.2 Schema** (E4, E5, E7). `attributes` (three `{is, is_not, proof}`),
+      Done 2026-10-17: `adr-gtm-context-spine-brand-voice.md` adds the Wing-3 slot, records the § 4 machine-read exception and the E6 fallback; `context-spine.md` lists the slot, and the `skill.schema.json` enum plus the lint vocabulary carry it. Citations are prospective (4.3, 6.1), as § 5 allows for roadmap items in the same iteration. Not added to `skill_linter`'s Wing-3 vendor-check set: that set polices GTM tactics, which the copy readers declaring this slot are not.
+- [x] **4.2 Schema** (E4, E5, E7). `attributes` (three `{is, is_not, proof}`),
       `tone_by_context` (context, audience state, lead attribute, amplify/mute),
       `avoid[]` (`{term 1-64 chars, match: word|substring, note?}`, max 32, no
       regex), `claims[]` (`{text, evidence_ref, expires?}`), `tell_exemptions[]`
@@ -320,39 +324,45 @@ irreversible-external-action row of `non-destructive-by-default`).
       `confidence: low|med|high`, `last_reviewed_at`), `version`, `changelog[]`,
       `open_questions[]` (each with a recommendation).
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t brand-voice-schema --reporter=verbose` -> /✓.*brand-voice-schema/
+      Done 2026-10-17: `src/scripts/_lib/brand_voice_slot.ts` validates the closed field set (an unknown field such as a colour is an issue, so the slot cannot become a token store), exactly three attributes, `tone_by_context` naming an attribute, `avoid` ≤32 literal terms, `claims` with a day-valued `expires`, ≤3 samples of ≤200 words, the four source tiers and the confidence/date provenance. `lint_context_spine_usage` validates `agents/context-spine/brand-voice.md` when it exists. `changelog` entries are plain strings. Unknown `tell_exemptions` ids are 5.2's. <!-- ref-ignore -->
 - [ ] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
       writes the slot (declared write scope). `brand-strategy` and the
       consumption contract defer their voice sections to it. `humanizer`'s
       "registered brand voice" names the slot. `/brand:voice` regains its
       lexicon line.
       verify: `rg -l 'context-spine/brand-voice' src/skills/voice-and-tone-design/SKILL.md src/skills/brand-strategy/SKILL.md src/skills/humanizer/SKILL.md docs/contracts/brand-token-consumption.md` -> 4 files
-- [ ] **4.4 The slot is data** (`folded-from-deep-dive`, wider than the source).
+- [x] **4.4 The slot is data** (`folded-from-deep-dive`, wider than the source).
       Hidden-Unicode scan via `scanHiddenUnicode` (`detect_ai_tells.ts:126`) is a
       lint error; `evidence_ref` and `sources[].ref` must be repo-relative paths
       or URLs, never absolute paths; samples are never executed or followed as
       instructions by any reader.
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t slot-untrusted --reporter=verbose` -> /✓.*slot-untrusted/
-- [ ] **4.5 `brand:status` reports the voice.** Present, schema-valid, `avoid`
+      Done 2026-10-17: `scanHiddenUnicode` over the whole file is an issue; `evidence_ref` and `sources[].ref` must be a repo-relative path without `..` or an http(s) URL; YAML aliases are refused (`maxAliasCount: 0`). The never-executed property belongs to the readers (5.x) and is stated in the ADR.
+- [x] **4.5 `brand:status` reports the voice.** Present, schema-valid, `avoid`
       and `claims` counts, confidence, days since review, stale after 90 days,
       expired claims — counts and dates only, never slot content.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t voice-slot --reporter=verbose` -> /✓.*voice-slot/
+      Done 2026-10-17: `brand:status` reads `agents/context-spine/brand-voice.md`, lists it as a `voice` source (valid, or invalid with the failing field names only), and reports `schema_valid`, `avoid_count`, `claims_count`, `expired_claims`, `confidence`, `last_reviewed_at`, `days_since_review` and `stale` (> 90 days or never reviewed). Only a valid slot counts toward `mixed`/`branded`; the 0.2 voice fixture now asserts that an invalid slot is listed and never makes the state. `brand-token-consumption.md` says so. <!-- ref-ignore -->
 
 ## Phase 5 — One checker for three voices and for claims
 
-- [ ] **5.0 The parked spike, as written.** Its pre-registered Phase 0 decides
+- [x] **5.0 The parked spike, as written.** Its pre-registered Phase 0 decides
       only the user-schema half (5.5); the brand and ghostwriter halves stand on
       D5 (a declared check with no runner).
       verify: `test -f agents/evidence/analysis/voice-lexicon-spike.md` -> 0
-- [ ] **5.1 `check_voice_lexicon.ts`.** Escaped literal matcher (word or
+      Done 2026-10-17: seed lexicon committed first (`tests/fixtures/voice-lexicon/spike-seed-lexicon.json`, 21 entries), then the scan over the last 30 merged PR descriptions and 100 commits at `origin/main` 835660b0d: 42 hits in 22 items from 2 entries (`actually` 38, `simply` 4). Verdict by the spike's own gate: schema field only, not build — so 5.5 ("only if 5.0 says build") does not proceed on this reading.
+- [x] **5.1 `check_voice_lexicon.ts`.** Escaped literal matcher (word or
       substring, case-insensitive) on the detector's exemption and location core
       (`stripExempt`, `scanHiddenUnicode`, line/column, `MAX_SCAN_CHARS`).
       Sources: slot `avoid`, ghostwriter `taboos`, user `style.avoid` after 5.5.
       Empty lexicon → `SKIPPED` with reason via `assertScanned`
       (`scan_scope.ts:80`). Quoted, cited and code-fenced text exempt.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t lexicon --reporter=verbose` -> /✓.*lexicon/
-- [ ] **5.2 `tell_exemptions` reach the detector.** The slot's ids are passed as
+      Done 2026-10-17: `src/scripts/check_voice_lexicon.ts` — escaped literal matcher (Unicode word boundaries or substring, case-insensitive), slot `avoid` at `warning`, ghostwriter `taboos` at `error`, hidden-Unicode findings, `MAX_SCAN_CHARS` truncation, and an empty lexicon reported `skipped` with the `assertScanned` reason. Exemptions follow `stripExempt`'s classes but are blanked in place (a new position-preserving pass), because `stripExempt` deletes spans and would shift every line and column. User `style.avoid` is not wired; it waits on 5.5.
+- [x] **5.2 `tell_exemptions` reach the detector.** The slot's ids are passed as
       `exclude` to `analyzeText`; an unknown id is a lint error.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t tell-exemptions --reporter=verbose` -> /✓.*tell-exemptions/
+      Done 2026-10-17: the slot's ids go to `analyzeText` as `exclude`; an id outside `ALL_TELL_RULES` is a `brand_voice_slot` issue (`tell_exemptions[i]`), and the CLI refuses an invalid slot with exit 2. Tells are reported beside the findings and never change the exit code.
 - [ ] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
       registry of English and German claim *phrases* (superlative, comparative,
       absolute, certification, guarantee forms — never bare words). A hit not
@@ -362,6 +372,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       was not enumerated); bar: ≤ 0.1 hits per 10k words (E8). German phrases run
       at hint severity until a German negative corpus is registered.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t "claim-shapes|negative-corpus" --reporter=verbose` -> /✓.*claim-shapes[\s\S]*✓.*negative-corpus/
+      Open 2026-10-17: the registry (`src/scripts/_lib/claim_phrases.ts`) and the corpus list (`tests/fixtures/voice-lexicon/negative-corpus.txt`, 183 contract docs) were committed before the first run; the `claim-shapes` cases pass and the scan is live at `warning`/`hint`. The first measurement missed the bar — 8 hits over 283,204 words, 0.28 per 10k against 0.1, all false positives from three phrases (`unmatched`, `beats every`, `never fails`) — recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md`. E8 forbids tuning after the first run, so no registry edit and no bar test landed; closing needs a fresh pre-registration against a corpus the revision was not chosen on.
 - [ ] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
       `humanizer` and `/brand:review` run 5.1-5.3 on the finished draft. A
       ghostwriter taboo hit aborts as documented; brand findings are located,
@@ -369,15 +380,19 @@ irreversible-external-action row of `non-destructive-by-default`).
       blocking. `/brand:review` runs these and `validate` (3.3) before any model
       judgement. The rule names the checker; `enforced_by` changes accordingly.
       verify: `rg -l 'check_voice_lexicon' src/domains/gtm-marketing/ghostwriter/write/command.md src/skills/humanizer/SKILL.md src/domains/brand/brand/review/command.md` -> 3 files
+      Open 2026-10-17: the checker exists (5.1); wiring it into `/ghostwriter:write`, `/post-as:*`, `humanizer` and `/brand:review` changes what those consumer-facing commands do on every draft, which this drain lane treats as owner-reserved. The `enforced_by` change waits with it.
 - [ ] **5.5 User schema v2** — only if 5.0 says build.
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
+      Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
 - [ ] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
       branch commits; not in default CI.
       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
-- [ ] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
+      Open 2026-10-17: the persisted-prose target checks agent-authored PR text against the user's own `style.avoid` (the parked design's Phase 2), which does not exist until 5.5.
+- [x] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
       `later/road-to-voice-negative-lexicon.md` moves to `archive/` with a
       pointer to this file.
       verify: `test -f agents/roadmaps/archive/road-to-voice-negative-lexicon.md` -> 0
+      Done 2026-10-17: moved with `git mv` beside 5.1, `status: archived`, and a header pointing here, at the 5.0 spike and at 5.5/5.6 for the halves still open. It carried no open checkbox, so nothing is dropped. The `relates` row now names `archive/road-to-voice-negative-lexicon`.
 
 ## Phase 6 — Readers, producers, and a carrier only if measured
 

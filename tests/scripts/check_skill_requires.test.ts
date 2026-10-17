@@ -139,3 +139,73 @@ describe('check_skill_requires — reference link across a pack boundary (roadma
     });
 });
 
+
+// road-to-skills-that-arrive-when-called 6.4 — one field, one type. A `skills:`
+// list on a skill or command names skills; a RULE name there is a type error the
+// schema's slug pattern cannot see.
+describe('check_skill_requires — skills: carries skills, never rules (6.4)', () => {
+    const skills = new Set(['threat-modeling', 'authz-review']);
+    const rules = new Set(['security-sensitive-stop', 'reviewer-awareness']);
+
+    it('rejects a seeded rule name and names the file and the rule', () => {
+        const errs = mod.skills_field_type_errors(
+            [{ path: 'src/domains/p/c/command.md', names: ['threat-modeling', 'security-sensitive-stop'] }],
+            skills,
+            rules,
+        );
+        expect(errs).toHaveLength(1);
+        expect(errs[0]).toContain('src/domains/p/c/command.md');
+        expect(errs[0]).toContain("'security-sensitive-stop'");
+        expect(errs[0]).toContain('rule');
+    });
+
+    it('accepts a seeded skill name', () => {
+        expect(
+            mod.skills_field_type_errors([{ path: 'skills/x/SKILL.md', names: ['authz-review'] }], skills, rules),
+        ).toEqual([]);
+    });
+
+    it('main() exits non-zero on a seeded rule name and zero once it is a skill', () => {
+        const base = { collect_skills: () => ({ only: skill() }), load_pack_closure: () => ({}) };
+        const out: string[] = [];
+        const orig = process.stdout.write.bind(process.stdout);
+        (process.stdout as { write: unknown }).write = (s: string): boolean => (out.push(String(s)), true);
+        let bad: number;
+        let good: number;
+        try {
+            mod._set_hooks_for_test({
+                ...base,
+                collect_skills_field: () => ({
+                    refs: [{ path: 'a/command.md', names: ['reviewer-awareness'] }],
+                    skills,
+                    rules,
+                }),
+            });
+            bad = mod.main();
+            mod._set_hooks_for_test({
+                collect_skills_field: () => ({
+                    refs: [{ path: 'a/command.md', names: ['threat-modeling'] }],
+                    skills,
+                    rules,
+                }),
+            });
+            good = mod.main();
+        } finally {
+            process.stdout.write = orig;
+            mod._set_hooks_for_test({
+                collect_skills: mod._collect_skills,
+                load_pack_closure: mod._load_pack_closure,
+                collect_skills_field: mod._collect_skills_field,
+            });
+        }
+        expect(bad).toBe(1);
+        expect(out.join('')).toContain("'reviewer-awareness'");
+        expect(good).toBe(0);
+    });
+
+    it('the source tree carries no rule name in any skills: list', () => {
+        const { refs, skills: s, rules: r } = mod._collect_skills_field();
+        expect(refs.length).toBeGreaterThan(50);
+        expect(mod.skills_field_type_errors(refs, s, r)).toEqual([]);
+    });
+});
