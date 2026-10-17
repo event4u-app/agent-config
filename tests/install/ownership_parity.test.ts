@@ -37,15 +37,22 @@ interface Row {
     readonly digest: boolean;
 }
 
+const PLANNED = '# the next package version\n';
+
 /** The table. Exactly one row is an edit the user made to a file we wrote. */
 const TABLE: readonly Row[] = [
     { name: 'ours.md', wrote: '# ours\n', onDisk: '# ours\n', digest: true },
     { name: 'edited.md', wrote: '# edited\n', onDisk: '# edited\nmy own note\n', digest: true },
     { name: 'no-digest.md', wrote: '# nd\n', onDisk: '# nd\nchanged\n', digest: false },
+    // THE CASE THAT MAKES THE CONTAINMENT ASSERTION ABLE TO FAIL. Its bytes
+    // equal the UNTAGGED planned content, so the preview's `onDisk ===
+    // entry.sha256` short-circuit would drop it, while the writer — which
+    // tags before hashing — finds a difference and preserves. Without this
+    // row the invariant below is satisfied by a table that never exercises
+    // the gap between the two comparisons.
+    { name: 'untagged-match.md', wrote: '# um\n', onDisk: PLANNED, digest: false },
 ];
 const EDITED = TABLE.filter((r) => r.digest && r.wrote !== r.onDisk).map((r) => r.name);
-
-const PLANNED = '# the next package version\n';
 
 let tmp: string;
 let root: string;
@@ -100,18 +107,26 @@ function plan(): InstallPlan {
 }
 
 /**
- * What the preview says will be PRESERVED — which is the question all three
- * readers are being compared on, and it is not the same as `ownership`.
- * A ledger-migration entry stays `unknown` on purpose (nobody proved an edit)
- * and is preserved all the same, so filtering on the label alone would make
- * the preview disagree with the writer by construction.
+ * What the preview can say about one plan, split by how much it knows.
+ *
+ * `decided` is the set it can settle on its own: a recorded digest diverged.
+ * `candidates` is the set whose outcome belongs to the writer — ledger-listed,
+ * no recorded digest — because settling it needs a comparison against the
+ * bytes the install WOULD write, tag included, and `plannedSha256` is the
+ * digest of the untagged source.
  */
-function previewSays(): string[] {
-    return computeConflicts(plan())
-        .filter((c) => c.ownership === 'recorded-modified' || c.migration)
-        .map((c) => path.basename(c.path))
-        .sort();
+function previewSays(): { decided: string[]; candidates: string[] } {
+    const conflicts = computeConflicts(plan());
+    const names = (f: (c: (typeof conflicts)[number]) => boolean): string[] =>
+        conflicts.filter(f).map((c) => path.basename(c.path)).sort();
+    return {
+        decided: names((c) => c.ownership === 'recorded-modified'),
+        candidates: names((c) => c.migration),
+    };
 }
+
+/** The install-time tag, as a byte change the writer applies and the plan does not. */
+const TAG = '\n<!-- package: test -->\n';
 
 function writerSays(): string[] {
     const tracker = createConflictTracker({
@@ -121,16 +136,24 @@ function writerSays(): string[] {
         },
         logWrite: () => undefined,
         emitProgress: () => undefined,
-        tagDeployed: () => undefined,
+        // A REAL tag, not a no-op. Stubbing this to nothing collapsed the
+        // writer's "would write" onto the raw planned bytes — exactly what the
+        // preview compares against — so the two agreed by construction and the
+        // one test asserting the invariant could not see them drift apart.
+        tagDeployed: (target: string) => {
+            fs.appendFileSync(target, TAG);
+        },
     });
     tracker.begin(root);
-    return TABLE.filter((r) => {
-        const target = path.join(dir, r.name);
-        // The writer is the one reader that can compute the packaged digest,
-        // so it is handed the planned bytes the same way the installer hands
-        // it the package source.
-        return tracker.resolve(target, false, { content: PLANNED }) === 'preserve';
-    })
+    // A real package source on disk, because the writer is handed one. The
+    // COPY shape (`{ from }`) is the one these rows model, and it is the shape
+    // that tags; `{ content }` is the generated-marker path, which writes
+    // verbatim and would quietly make the tag disappear from this fixture.
+    const src = path.join(tmp, 'package-source.md');
+    fs.writeFileSync(src, PLANNED);
+    return TABLE.filter(
+        (r) => tracker.resolve(path.join(dir, r.name), false, { from: src, packageRoot: null }) === 'preserve',
+    )
         .map((r) => r.name)
         .sort();
 }
@@ -159,9 +182,14 @@ describe('step 2.5 — preview, writer and doctor agree on one table', () => {
         const [, modified] = doctor._classify(records);
         const doctorSays = modified.map((m) => path.basename(String(m['path']))).sort();
 
-        expect(previewSays()).toEqual(EDITED);
+        const preview = previewSays();
+        expect(preview.decided).toEqual(EDITED);
         expect(writerSays()).toEqual(EDITED);
         expect(doctorSays).toEqual(EDITED);
+        // No ledger here at all, so nothing is a migration candidate — the
+        // project-manifest route is unchanged by that branch, and asserting
+        // it says so rather than leaving it to be assumed.
+        expect(preview.candidates).toEqual([]);
 
         // Pinned as it is today: the read `cmd_doctor` actually uses
         // hands the classifier no files at all. Flip this when that is fixed.
@@ -182,22 +210,38 @@ describe('step 2.5 — preview, writer and doctor agree on one table', () => {
             .map((m) => path.basename(String(m['path'])))
             .sort();
 
-        // The two readers that can compute the packaged digest agree, and they
-        // agree on MORE than the edited file: `no-digest.md` is listed by the
-        // ledger without a digest, so the installer preserves it rather than
-        // overwriting bytes it cannot classify.
-        const PRESERVED = [...EDITED, 'no-digest.md'].sort();
-        expect(previewSays()).toEqual(PRESERVED);
-        expect(writerSays()).toEqual(PRESERVED);
+        const preview = previewSays();
+        const writer = writerSays();
 
-        // Doctor is the reader that cannot, and the gap is asserted rather
-        // than hidden: it is not installing, so it has no packaged digest to
-        // compare `no-digest.md` against, and `recorded_digests` does not even
-        // enumerate a path without one. Reporting it `modified` anyway would
-        // assert an edit nobody proved. The assertion is written as the
-        // difference so that doctor LEARNING to cover it reds this case and
-        // forces the claim in its docstring to be re-read.
+        // On what all three CAN decide, all three agree.
+        expect(preview.decided).toEqual(EDITED);
         expect(doctorSays).toEqual(EDITED);
-        expect(PRESERVED.filter((n) => !doctorSays.includes(n))).toEqual(['no-digest.md']);
+        expect(writer).toContain('edited.md');
+
+        // The two paths with no recorded digest are CANDIDATES: the preview
+        // names them and stops, because settling them needs the tag it cannot
+        // apply. `untagged-match.md` is the one that matters — its bytes equal
+        // the untagged planned content, so the preview's own equality
+        // short-circuit would have dropped it, and the writer preserves it.
+        const CANDIDATES = ['no-digest.md', 'untagged-match.md'];
+        expect(preview.candidates).toEqual(CANDIDATES);
+        expect(writer).toEqual([...EDITED, ...CANDIDATES].sort());
+
+        // THE CONTAINMENT THAT MATTERS, and it is the honest form of the
+        // invariant: everything the writer preserves was either decided or
+        // flagged by the preview, so the preview never stays silent about a
+        // file the install is about to keep. The reverse does not hold and is
+        // not asserted — a candidate may still be written.
+        for (const name of writer) {
+            expect([...preview.decided, ...preview.candidates], name).toContain(name);
+        }
+
+        // Doctor is the reader that cannot follow at all, and the gap is
+        // asserted rather than hidden: it is not installing, so it has no
+        // packaged digest, and `recorded_digests` does not even enumerate a
+        // path without one. Reporting it `modified` anyway would assert an
+        // edit nobody proved. Written as the difference, so doctor LEARNING
+        // to cover it reds this case and forces its docstring to be re-read.
+        expect(writer.filter((n) => !doctorSays.includes(n))).toEqual(CANDIDATES);
     });
 });
