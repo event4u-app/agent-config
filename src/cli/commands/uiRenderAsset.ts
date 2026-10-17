@@ -45,6 +45,7 @@ import type { Browser, Page } from '@playwright/test';
 import { elementExtent, parseElements, readViewBox, vectorVerdict } from '../../scripts/lint_svg_asset.js';
 import type { DeliveryMode, SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
 import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js';
+import { tokenDocumentError } from '../../shared/brandTokenDocument.js';
 import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
 import { applyFaceStates, faceFindings } from './uiRenderAssetFonts.js';
 import { readGrounds, type OpenPage } from './uiRenderAssetGrounds.js';
@@ -282,7 +283,13 @@ export function readBackgroundTokens(projectRoot: string): AssetReading['backgro
         if (!fs.existsSync(abs)) continue;
         let doc: unknown;
         try {
-            doc = JSON.parse(fs.readFileSync(abs, 'utf8'));
+            const text = fs.readFileSync(abs, 'utf8');
+            // The same validity `brand:status` reports with, not merely
+            // parseable JSON: a `{}` or an array at one path would otherwise
+            // be searched for backgrounds, find none, and let the renderer
+            // skip a valid file further down the resolver order.
+            if (tokenDocumentError(text) !== null) continue;
+            doc = JSON.parse(text);
         } catch {
             continue;
         }

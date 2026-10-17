@@ -234,10 +234,28 @@ irreversible-external-action row of `non-destructive-by-default`).
       "Recorded, not resolved" section is deleted. 0.1 goes green.
       verify: `rg -n '\.tokens\.json' src/skills src/domains docs/contracts --glob '!**/evals/**' | rg -v 'NEVER|nothing reads|near-miss'` -> 1 (no output)
       Open 2026-10-16: the authored half landed — 14 files say `tokens.json`, the "Recorded, not resolved" section is gone, catalogues regenerated, ADR-061 untouched, the verify passes and 0.1 is green. The eval half did not: adding the plain utterance to the `brand-to-tokens` and `brand-asset-generation` trigger evals changes the pinned trigger-corpus holdout (`trigger_corpus_holdout_pin`), whose published SET-SHA256 and the measurements built on it would need re-pinning; that is left for a change that owns the corpus.
-- [ ] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
+- [x] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
       instead of declaring its own.
       verify: `rg -c 'export const BRAND_TOKEN_PATHS' src` -> 1 file
       Open 2026-10-16: a re-export is the edit `uiAudit.ts:35` records as tried and reverted — `dist/cli` is compiled by tsc and the work-engine template tree is not, so a runtime import from the CLI into the template fails to resolve in the published package, and the template stays self-contained the other way. Needs a home both trees may import at runtime.
+      Done 2026-10-17: that home is `src/shared/brandTokenPaths.ts`, and it works
+      because the SAME relative specifier resolves in both projections — the
+      CLI compiles under `rootDir: src` so `../../shared/…` lands on
+      `dist/shared/`, and the work-engine tree is projected byte-identically, so
+      `../../../../../../shared/…` is `src/shared/*.ts` under tsx and
+      `dist/shared/*.js` in the copy. All three were exercised rather than
+      argued: `dist/cli/commands/uiRenderAssetTypes.js`,
+      `dist/agent-src/templates/.../scaffold.js` and
+      `src/agent-src/templates/.../scaffold.ts` each imported and printed the
+      list, `dist/cli-delegate/cmd_brand_status.js` imports clean, and
+      `agent-config roadmap:progress` — the command whose ERR_MODULE_NOT_FOUND
+      caught the reverted attempt — runs. The copies had already diverged: the
+      renderer built its last entry with `path.join`, so on Windows it searched
+      a path the scaffold never wrote. `one-resolver-list` in
+      `brand_status.test.ts` asserts array IDENTITY, not deep equality (equal
+      contents today is exactly the state that drifted) and that no entry
+      carries a platform separator; restoring the renderer's own copy turns it
+      red.
 - [x] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
       § Iron Law 2; the rule gains `enforced_by: instruction-only`, and
       "Validation gate" reads "checklist" until Phase 5 names its checker.
@@ -268,10 +286,23 @@ irreversible-external-action row of `non-destructive-by-default`).
       step ships the tokens half first.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t state-fixtures --reporter=verbose` -> /✓.*state-fixtures/
       Done 2026-10-16: `brand:status --json` adds `state`, `qualifiers` and `sources[]` (path, sha256, kind, status), computed per call. The contract table's set names are `branded | bare | mixed` — `bare`, not `greenfield`, so `bare` is emitted (E9: one vocabulary). Voice reads as absent until 4.5; `DESIGN.md` is listed as `design-md`; `design-system.json` has no canonical path to search, so that kind is typed and not yet emitted.
-- [ ] **2.4 Readers ask the resolver.** The scaffold seed line and the asset
+- [x] **2.4 Readers ask the resolver.** The scaffold seed line and the asset
       renderer use the 2.1 validity, not file existence.
       verify: `npx vitest run tests/scripts -t token-seed-invalid --reporter=verbose` -> /✓.*token-seed-invalid/
       Open 2026-10-16: same constraint as 1.3 — the 2.1 validity lives in `src/scripts/_cli/cmd_brand_status.ts`, which neither the template-side scaffold nor the compiled asset renderer can import at runtime.
+      Done 2026-10-17 by the 1.3 route: `tokenDocumentError` moved to
+      `src/shared/brandTokenDocument.ts` and `cmd_brand_status` re-exports it,
+      so its public surface is unchanged and there is still one predicate. It
+      takes TEXT, not a path, so each reader keeps its own read and its own
+      notion of a root. `_brand_token_source` now parses before seeding, and
+      the renderer's background read asks the same question instead of "did
+      `JSON.parse` throw". `brand_readers_validity.test.ts` pairs a broken file
+      at the FIRST canonical path with a valid one further down, which is the
+      only ordering that makes the two predicates disagree. The renderer's own
+      discriminating case is a file with a bare `value` key and no `$value`
+      anywhere: `findToken` accepts it, so it used to be reported as `tokens`
+      while `brand:status` called it invalid. Removing either guard turns the
+      matching cases red.
 
 ## Phase 3 — The stable token format
 

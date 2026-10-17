@@ -19,6 +19,8 @@ import {
     runBrandStatus,
 } from '../../src/scripts/_cli/cmd_brand_status.js';
 import { BRAND_TOKEN_PATHS } from '../../src/agent-src/templates/scripts/work_engine/directives/ui/scaffold.js';
+import { BRAND_TOKEN_PATHS as RENDERER_PATHS } from '../../src/cli/commands/uiRenderAssetTypes.js';
+import { BRAND_TOKEN_PATHS as SHARED_PATHS } from '../../src/shared/brandTokenPaths.js';
 
 function scratch(): string {
     return mkdtempSync(join(tmpdir(), 'brand-status-'));
@@ -61,6 +63,23 @@ describe('brand token discovery', () => {
         writeAt(root, second as string);
         writeAt(root, first as string);
         expect(findBrandTokens(root)).toBe(first);
+    });
+});
+
+describe('one-resolver-list', () => {
+    // D11: the list was declared twice and the copies had already diverged —
+    // the renderer built its last entry with `path.join`, so on Windows it
+    // searched a path the scaffold never wrote. Identity, not deep equality:
+    // two arrays with equal contents today is exactly the state that drifted.
+    it('one-resolver-list: every reader holds the same array, not a copy of it', () => {
+        expect(BRAND_TOKEN_PATHS).toBe(SHARED_PATHS);
+        expect(RENDERER_PATHS).toBe(SHARED_PATHS);
+    });
+
+    it('one-resolver-list: no entry is built with a platform separator', () => {
+        for (const rel of SHARED_PATHS) {
+            expect(rel).not.toContain('\\');
+        }
     });
 });
 
