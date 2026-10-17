@@ -207,7 +207,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0 — rejects a
       loop without top-tier evidence, never stops before the three lenses ran,
       and stops loop 4 after a plateaued loop 3. Done 2026-10-16 (seen red).
-- [ ] **2.4 The analyst class (directive c).** Reads the scope (the web once
+- [x] **2.4 The analyst class (directive c).** Reads the scope (the web once
       `source-fetch-authorization` allows), writes only into its own round
       folder, never runs project scripts, never pushes. Modes: `subagent` (same
       family, fresh context) and `external` (a `handoff-v1` file the owner drops
@@ -220,13 +220,13 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: a fixture round with two `subagent` analysts and one `external`
       drop yields three independence-stamped outputs with identical brief
       digests, none referencing another before the exchange; a `--quick` run
-      records one analyst and no exchange.
+      records one analyst and no exchange. Done 2026-10-17 in `src/scripts/analysis_analysts.ts` (consulted and unknown-family cases seen red); `--quick` and the size threshold are inputs, the threshold value waits on 1.4.
 - [ ] **2.4b `cli:<provider>` analysts.** Cross-family read-only analysts reusing
       the council's binaries under a separate analyst bound in
       `cli_agency_bounds.ts`.
       verify: a probed binary runs a fixture analysis read-only and its output is
       stamped `cross-family`.
-- [ ] **2.5 Exchange that deepens instead of agreeing (directive c).** Each
+- [x] **2.5 Exchange that deepens instead of agreeing (directive c).** Each
       analyst receives the others' final analysis and roadmap, relabelled A/B/C,
       and runs three reconcile loops: **Inventory** (every foreign claim checked
       at the pin — `still-true / never-true / unverifiable`, with tier),
@@ -237,8 +237,8 @@ the ADR moves to `superseded`; nothing else exists yet.
       or rejected with a reason, never dropped.
       verify: a fixture exchange records the cross-exam targets verbatim, a
       disagreement ledger per analyst and a minority audit with zero silent
-      drops.
-- [ ] **2.6 Council as judge, then the gain gate (directive d).** The council
+      drops. Done 2026-10-17 in `src/scripts/analysis_exchange.ts` (tier settlement and silent-drop cases seen red).
+- [x] **2.6 Council as judge, then the gain gate (directive d).** The council
       receives the converged outputs (host unmarked, `council run --input-mode
       roadmap --peer-review`, prompts stored beside the verdict) and judges only
       what stays contested: priorities, integration risk, judgement calls.
@@ -255,15 +255,15 @@ the ADR moves to `superseded`; nothing else exists yet.
       options *one more / focused on the named items / stop*. Cap: three rounds.
       verify: ledger fixtures — plateaued, conflict with a plan, conflict without
       a plan, exhausted arguments — produce no offer, one offer, no offer, no
-      offer; a one-seat fixture is labelled `single-voice`.
-- [ ] **2.7 Questions: council first, owner once.** Each question is classified
+      offer; a one-seat fixture is labelled `single-voice`. Done 2026-10-17 in `src/scripts/analysis_gate.ts` (exhausted and critical-dissent cases seen red); the gate composes the instruments, the council call itself stays with the doors.
+- [x] **2.7 Questions: council first, owner once.** Each question is classified
       (`ai-council` classes): council-decidable → council; owner-reserved
       pre-action (gates a push, a destructive step, an unauthorised fetch, a
       Hard-Floor trigger) → asked before that action, alone; owner-reserved
       post-action → one batch at the end with a recommendation each, while the
       run continues on everything unblocked.
       verify: a fixture question set routes council-decidable items to the
-      council, asks the pre-action item before the push, batches the rest.
+      council, asks the pre-action item before the push, batches the rest. Done 2026-10-17 in `src/scripts/analysis_questions.ts`, routing by the ownership classes of `ai_council/ownership_classes.ts` (seen red).
 
 **Exit:** 2.1–2.7 green on fixtures, read-only, no network. **Rollback:** the
 two new scripts and the context file are additive; deleting them restores today.
