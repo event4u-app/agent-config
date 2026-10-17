@@ -376,7 +376,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       lexicon line.
       verify: `rg -l 'context-spine/brand-voice' src/skills/voice-and-tone-design/SKILL.md src/skills/brand-strategy/SKILL.md src/skills/humanizer/SKILL.md docs/contracts/brand-token-consumption.md` -> 4 files
       Done 2026-10-17: `voice-and-tone-design` declares `scope.write` on
-      `agents/context-spine/brand-voice.md`, declares the slot in
+      `agents/context-spine/brand-voice.md`, declares the slot in <!-- ref-ignore -->
       `context_spine`, and gains a Step 6 that names every machine-read field
       and the read-bump-append update rule. `brand-strategy` hands over a voice
       *direction* and no longer authors a competing 3-5-trait list; the

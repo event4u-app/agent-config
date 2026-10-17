@@ -8,9 +8,9 @@ domain: product
 context_spine: [product, customer-segment, brand-voice]
 scope:
   write:
-    - pattern: "agents/context-spine/brand-voice.md"
+    - pattern: "agents/context-spine/brand-voice.md" # <!-- ref-ignore -->
       access: "write"
-  verification_command: "./scripts-run src/scripts/lint_context_spine_usage"
+  verification_command: "npx tsx node_modules/@event4u/agent-config/src/scripts/lint_context_spine_usage.ts"
 recommended_for_user_types: [creator, consultant, gtm]
 workspaces:
   - gtm
@@ -157,14 +157,15 @@ not a punitive list.
 ### Step 6: Write the slot
 
 The artefacts above are not finished until they are data. Write them to the
-**`brand-voice` context-spine slot**, `agents/context-spine/brand-voice.md`
+**`brand-voice` context-spine slot**, `agents/context-spine/brand-voice.md` <!-- ref-ignore -->
 ([ADR](../../../docs/contracts/adr-gtm-context-spine-brand-voice.md)) — no
 other skill writes it, and no second file holds the voice. Read the existing
 slot first: an update bumps `version` by one and appends a `changelog` line,
 and never silently replaces a field a human approved.
 
 The frontmatter is machine-read and schema-checked
-(`src/scripts/_lib/brand_voice_slot.ts`): a closed field set, so an unknown
+(`node_modules/@event4u/agent-config/src/scripts/_lib/brand_voice_slot.ts`): a
+closed field set, so an unknown
 field such as a colour is a lint error and the slot cannot become a second
 token store.
 

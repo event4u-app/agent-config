@@ -55,7 +55,7 @@ adapters — not a second image-gen stack.
    `./agent-config brand:status --json` before any colour, type or voice
    decision. Take hex values and font names from the `tokens.json` entry it
    reports as valid, and tone keywords from the `brand-voice` slot
-   (`agents/context-spine/brand-voice.md`) when that is valid too; feed those
+   (`agents/context-spine/brand-voice.md`) when that is valid too; feed those <!-- ref-ignore -->
    into the prompt. Never load a token file by path on your own — a file the
    resolver marks `invalid` or `shadowed` is not the brand, and a dotted
    near-miss is not the brand either. When the resolver reports `bare`, or

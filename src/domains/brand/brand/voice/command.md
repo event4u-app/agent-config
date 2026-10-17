@@ -22,7 +22,7 @@ packs:
 Run the [`voice-and-tone-design`](../../skills/voice-and-tone-design/SKILL.md)
 skill — three attributes, a tone matrix by context, a do/don't lexicon, and a
 consistency review. The skill writes all four to the `brand-voice` context-spine
-slot (`agents/context-spine/brand-voice.md`); the lexicon is the slot's `avoid[]`
+slot (`agents/context-spine/brand-voice.md`); the lexicon is the slot's `avoid[]` <!-- ref-ignore -->
 list, literal terms that `check_voice_lexicon` reads on a finished draft. The
 resulting voice profile is what `/brand:review` and the `brand-source-of-truth`
 § Iron Law 2 checklist read emitted copy against. Args: `"<brand/strategy ref>"`.

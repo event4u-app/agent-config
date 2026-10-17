@@ -60,7 +60,7 @@ human voice there; do not inject personality or restructure it.
    meaning, and match the active voice source. Voice precedence is fixed:
    profile fingerprint > registered brand voice > humanizer defaults. The
    **registered brand voice** is one named file — the `brand-voice`
-   context-spine slot at `agents/context-spine/brand-voice.md`
+   context-spine slot at `agents/context-spine/brand-voice.md` <!-- ref-ignore -->
    (`./agent-config brand:status --json` reports whether it is present and
    schema-valid). No slot, or an invalid one, means there is no registered
    brand voice and the defaults apply; never infer one from a skill body or

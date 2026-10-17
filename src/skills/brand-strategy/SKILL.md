@@ -49,7 +49,7 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 
 4. **Draft the constraint set.** Produce:
    - An **opposable positioning statement** naming the audience AND a difference a competitor could legitimately claim the opposite of.
-   - A **voice direction** — the register the archetype implies, as input only. The voice itself is three `"X, not Y"` attributes owned by `voice-and-tone-design` and recorded in the `brand-voice` slot (`agents/context-spine/brand-voice.md`); author no competing trait list here, and never write the slot from this skill.
+   - A **voice direction** — the register the archetype implies, as input only. The voice itself is three `"X, not Y"` attributes owned by `voice-and-tone-design` and recorded in the `brand-voice` slot (`agents/context-spine/brand-voice.md`); author no competing trait list here, and never write the slot from this skill. <!-- ref-ignore -->
    - A **chosen messaging framework** (problem-solution, jobs-to-be-done, category creation, etc.) with a rationale sentence.
 
 5. **Surface gaps and low-confidence calls.** Name every evidence gap and every row below the confidence threshold. Flag where the corpus was thin.
