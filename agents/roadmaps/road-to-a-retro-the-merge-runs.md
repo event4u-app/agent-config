@@ -277,10 +277,24 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Phase 5 — Effect, not volume
 
-- [ ] **5.1 Held or recurred.** Every retro reports "held / recurred" for earlier
+- [x] **5.1 Held or recurred.** Every retro reports "held / recurred" for earlier
       learnings of the same target, from `targetCounts`; a revert of a landed fix
       reopens its record.
       verify: `npx vitest run tests/scripts/retro.test.ts -t revert-reopens-record --reporter=verbose` -> /✓.*revert-reopens-record/
+      *Done 2026-10-17: `readRecurrence` adds `verdict` (`first | held |
+      recurred`) and the active fingerprints to what 2.3 left as a bare count,
+      and the contract gains the section. **The verdict reads record STATUS,
+      never the occurrence count** — occurrences accumulate across a record's
+      whole life, so a high count on a closed record says the defect was
+      frequent before the fix, not that the fix failed; that is the
+      volume-as-effect error Phase 5 exists to avoid, and a case pins it.
+      `reopenOnRevert` is the one status a retro writes: a measured
+      `later_revert` puts every `actioned` record naming the target back to
+      `open` with the reason recorded, it never closes or declines one, it
+      touches no other target, and `missing` is not `false` — an unread revert
+      fact reopens nothing. 2.3's assertion was extended to the fuller object
+      rather than loosened. A sabotage probe (dropping the `setStatus` call
+      while still reporting the fingerprint) turned the first case red.*
 - [ ] **5.2 Thirty days of dogfood in this repository.** With the triage's own
       denominators: units seen, analysed, skipped by reason, `none` share, landed
       learnings, recurrence after landing per comparable exposure, time and token

@@ -134,9 +134,34 @@ A single retro is evidence #1, never a mandate. "Clearly generalizable" is not a
 third route: a generalization without a second unit key or a named mechanism is
 a hypothesis, recorded as a signal and nothing more.
 
+## Held or recurred — the effect reading
+
+Every retro that names an asset target reports whether the EARLIER learning on
+that target held. Three verdicts, read from record **status** in the self-repair
+store:
+
+| Verdict | When | What it means |
+|---|---|---|
+| `first` | no record names the target | nothing earlier to have held |
+| `held` | every record naming it is in a terminal status | the fix landed and the defect has not come back |
+| `recurred` | at least one record naming it is active again | it was never closed, or something reopened it |
+
+**The verdict never reads the occurrence count.** Occurrences accumulate across
+a record's whole life, so a high count on a closed record says the defect was
+frequent *before* the fix, not that the fix failed. Reading volume as recurrence
+is the measurement error Phase 5 exists to avoid, and it is stated here because
+the count sits beside the verdict in the same object.
+
+**A revert reopens.** A fix the base later reverted is not a fix, so a measured
+`later_revert` on the unit puts every `actioned` record naming that target back
+to `open` with the reason recorded. This is the one status the retro writes; it
+never closes, declines or supersedes a record, and an unmeasured revert fact
+reopens nothing — `missing` is not `false`.
+
 ## Version history
 
 | Version | Date | Change |
 |---|---|---|
 | v1 | 2026-10-16 | Initial contract, written before any implementation. |
 | v1 | 2026-10-17 | Who does the model work: delegated or after the first task, never before it. |
+| v1 | 2026-10-17 | Held or recurred: three verdicts read from record status, never from the occurrence count; a measured revert reopens. |

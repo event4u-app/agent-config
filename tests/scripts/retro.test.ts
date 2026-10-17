@@ -11,6 +11,8 @@ import {
     aggregateSidecar,
     composeRetro,
     intakeSignals,
+    readRecurrence,
+    reopenOnRevert,
     triagePr,
     triageSession,
     unitKey,
@@ -18,6 +20,11 @@ import {
     writeIntakeSignals,
     type Candidate,
 } from '../../src/scripts/retro.js';
+import {
+    readRecord,
+    setStatus,
+    upsertFinding,
+} from '../../src/scripts/_lib/self_repair_store.js';
 
 const tmpDirs: string[] = [];
 function tmp(): string {
@@ -175,7 +182,15 @@ describe('retro — composition', () => {
         expect(out.counter_hypothesis).toBe(learning.counter_hypothesis);
         expect(out.falsifier).toBe(learning.falsifier);
         expect(out.facts.unit).toBe('pr');
-        expect(out.recurrence).toEqual({ target: 'rule:drain-baseline', occurrences: 3, records: 1 });
+        // 5.1 added the reading 2.3 left out: the record is `actioned`, so the
+        // earlier learning HELD even though it had three occurrences before it.
+        expect(out.recurrence).toEqual({
+            target: 'rule:drain-baseline',
+            occurrences: 3,
+            records: 1,
+            verdict: 'held',
+            active: [],
+        });
     });
 
     it('one durable learning yields exactly one intake signal', () => {
@@ -257,5 +272,101 @@ describe('retro — local effect', () => {
         expect(sidecar.lessons).toHaveLength(1);
         expect(sidecar.lessons[0]!.corroborations).toBe(2);
         expect(fs.existsSync(path.join(root, 'agents', 'memory', SIDECAR_NAME))).toBe(true);
+    });
+});
+
+describe('retro — held or recurred', () => {
+    const NOW = '2026-10-17T10:00:00.000Z';
+    const TARGET = 'rule:scope-control';
+
+    /** A record naming TARGET, landed (`actioned`) unless told otherwise. */
+    function landed(root: string, evidence: string, status: 'actioned' | 'open' = 'actioned'): string {
+        const rec = upsertFinding(
+            root,
+            {
+                defect_class: 'model-noticed',
+                source: 'model-noticed',
+                evidence,
+                suggested_surface: 'state the gap',
+                target: [TARGET],
+            },
+            NOW,
+            { treeRoot: path.resolve(__dirname, '..', '..') },
+        );
+        expect(rec).not.toBeNull();
+        const fp = (rec as { fingerprint: string }).fingerprint;
+        if (status !== 'open') setStatus(root, fp, status, NOW);
+        return fp;
+    }
+
+    it('revert-reopens-record: a reverted fix puts its record back in the queue', () => {
+        const root = tmp();
+        const fp = landed(root, 'the gate passed on a tree it never scanned');
+        // Held while the fix stands.
+        expect(readRecurrence(root, TARGET).verdict).toBe('held');
+
+        const facts = prFacts({ later_revert: m(true) });
+        expect(reopenOnRevert(root, facts, TARGET, NOW)).toEqual([fp]);
+
+        const back = readRecord(root, fp);
+        expect(back?.status).toBe('open');
+        expect(back?.resolution).toMatch(/reverted/);
+
+        const after = readRecurrence(root, TARGET);
+        expect(after.verdict).toBe('recurred');
+        expect(after.active).toEqual([fp]);
+    });
+
+    it('revert-reopens-record: no revert, no write — and `missing` is not `false`', () => {
+        const root = tmp();
+        const fp = landed(root, 'the gate passed on a tree it never scanned');
+
+        expect(reopenOnRevert(root, prFacts({ later_revert: m(false) }), TARGET, NOW)).toEqual([]);
+        expect(reopenOnRevert(root, prFacts({ later_revert: miss }), TARGET, NOW)).toEqual([]);
+        expect(readRecord(root, fp)?.status).toBe('actioned');
+        expect(readRecurrence(root, TARGET).verdict).toBe('held');
+    });
+
+    it('revert-reopens-record: a revert touches only the target it names', () => {
+        const root = tmp();
+        const mine = landed(root, 'the gate passed on a tree it never scanned');
+        const other = upsertFinding(
+            root,
+            {
+                defect_class: 'model-noticed',
+                source: 'model-noticed',
+                evidence: 'a different defect on a different surface',
+                suggested_surface: 'state the gap',
+                target: ['rule:commit-policy'],
+            },
+            NOW,
+            { treeRoot: path.resolve(__dirname, '..', '..') },
+        );
+        const otherFp = (other as { fingerprint: string }).fingerprint;
+        setStatus(root, otherFp, 'actioned', NOW);
+
+        expect(reopenOnRevert(root, prFacts({ later_revert: m(true) }), TARGET, NOW)).toEqual([mine]);
+        expect(readRecord(root, otherFp)?.status).toBe('actioned');
+    });
+
+    it('revert-reopens-record: nothing earlier named the target, so nothing held', () => {
+        const root = tmp();
+        const first = readRecurrence(root, TARGET);
+        expect(first.verdict).toBe('first');
+        expect(first.records).toBe(0);
+        expect(reopenOnRevert(root, prFacts({ later_revert: m(true) }), TARGET, NOW)).toEqual([]);
+    });
+
+    it('revert-reopens-record: the verdict reads status, never the occurrence count', () => {
+        const root = tmp();
+        const fp = landed(root, 'the gate passed on a tree it never scanned');
+        // Same evidence again: the store increments occurrences on one record.
+        landed(root, 'the gate passed on a tree it never scanned');
+        setStatus(root, fp, 'actioned', NOW);
+
+        const r = readRecurrence(root, TARGET);
+        expect(r.occurrences).toBeGreaterThan(1);
+        // A frequent defect that was then fixed still HELD — volume is not recurrence.
+        expect(r.verdict).toBe('held');
     });
 });
