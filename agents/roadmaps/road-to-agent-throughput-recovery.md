@@ -187,7 +187,7 @@ the Acceptance Criteria held.
       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
       shape; no new baseline file.
       verify: the entry's figures recompute from its own corpus block.
-- [ ] **1.3 Let a red reading reach a person.** `--against-baseline` stays out of
+- [x] **1.3 Let a red reading reach a person.** Done 2026-10-17: `--queue-root CHECKOUT` upserts one dated `self-detected` record per red verdict per day (metric names in the evidence, never values, so a same-day re-run folds); an empty corpus queues as `empty corpus, no verdict`; the line the schedule runs is `regression_reader` in `src/config/turnaround-budget.json`. The schedule itself is machine-local, not tracked. `tests/scripts/probe_turnaround_queue.test.ts` went red with the queue call neutralised. `--against-baseline` stays out of
       CI by design (an empty store would read green). Run from a lane worktree
       its default store resolves to that worktree's empty project directory and
       it fails as an empty corpus (reproduced 2026-10-15), so the scheduled run
