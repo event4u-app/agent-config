@@ -7,9 +7,9 @@ relates:
   - slug: road-to-a-canvas-the-code-owns
     relation: extends
     note: "Active (ready). Owns the visual off-brand finding (8.2 Lock carrier, flags-not-blocks, brownfield baseline) and the DTCG import lane (0.4 alias control, 3.1 alias record and cycles). This roadmap owns the generator and validator in design-tokens/scripts/tokens.ts, which canvas does not touch; Phase 3 hands canvas 8.2 the palette reading it consumes and adds one object-valued alias row to canvas's 0.4 fixture only after canvas 3.1 lands. No visual gate is planned here."
-  - slug: later/road-to-voice-negative-lexicon
+  - slug: archive/road-to-voice-negative-lexicon
     relation: supersedes
-    note: "Parked 2026-08-05 on a capacity slot only (its own header). Its validator design is kept verbatim and generalised from one voice primitive to three plus a claim-phrase list (Phase 5). Its pre-registered spike still decides the user-schema half (5.5). Archived by step 5.7 once 5.1 ships."
+    note: "Parked 2026-08-05 on a capacity slot only (its own header). Its validator design is kept verbatim and generalised from one voice primitive to three plus a claim-phrase list (Phase 5). Its pre-registered spike decided the user-schema half (5.0: schema field only). Archived by step 5.7 with 5.1."
   - slug: road-to-type-with-a-witness
     relation: disjoint
     note: "Active. Font construction and the font witness; nothing here touches type carriers or font licensing."
@@ -346,10 +346,11 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 5 — One checker for three voices and for claims
 
-- [ ] **5.0 The parked spike, as written.** Its pre-registered Phase 0 decides
+- [x] **5.0 The parked spike, as written.** Its pre-registered Phase 0 decides
       only the user-schema half (5.5); the brand and ghostwriter halves stand on
       D5 (a declared check with no runner).
       verify: `test -f agents/evidence/analysis/voice-lexicon-spike.md` -> 0
+      Done 2026-10-17: seed lexicon committed first (`tests/fixtures/voice-lexicon/spike-seed-lexicon.json`, 21 entries), then the scan over the last 30 merged PR descriptions and 100 commits at `origin/main` 835660b0d: 42 hits in 22 items from 2 entries (`actually` 38, `simply` 4). Verdict by the spike's own gate: schema field only, not build — so 5.5 ("only if 5.0 says build") does not proceed on this reading.
 - [x] **5.1 `check_voice_lexicon.ts`.** Escaped literal matcher (word or
       substring, case-insensitive) on the detector's exemption and location core
       (`stripExempt`, `scanHiddenUnicode`, line/column, `MAX_SCAN_CHARS`).
@@ -379,15 +380,19 @@ irreversible-external-action row of `non-destructive-by-default`).
       blocking. `/brand:review` runs these and `validate` (3.3) before any model
       judgement. The rule names the checker; `enforced_by` changes accordingly.
       verify: `rg -l 'check_voice_lexicon' src/domains/gtm-marketing/ghostwriter/write/command.md src/skills/humanizer/SKILL.md src/domains/brand/brand/review/command.md` -> 3 files
+      Open 2026-10-17: the checker exists (5.1); wiring it into `/ghostwriter:write`, `/post-as:*`, `humanizer` and `/brand:review` changes what those consumer-facing commands do on every draft, which this drain lane treats as owner-reserved. The `enforced_by` change waits with it.
 - [ ] **5.5 User schema v2** — only if 5.0 says build.
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
+      Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
 - [ ] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
       branch commits; not in default CI.
       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
-- [ ] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
+      Open 2026-10-17: the persisted-prose target checks agent-authored PR text against the user's own `style.avoid` (the parked design's Phase 2), which does not exist until 5.5.
+- [x] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
       `later/road-to-voice-negative-lexicon.md` moves to `archive/` with a
       pointer to this file.
       verify: `test -f agents/roadmaps/archive/road-to-voice-negative-lexicon.md` -> 0
+      Done 2026-10-17: moved with `git mv` beside 5.1, `status: archived`, and a header pointing here, at the 5.0 spike and at 5.5/5.6 for the halves still open. It carried no open checkbox, so nothing is dropped. The `relates` row now names `archive/road-to-voice-negative-lexicon`.
 
 ## Phase 6 — Readers, producers, and a carrier only if measured
 
