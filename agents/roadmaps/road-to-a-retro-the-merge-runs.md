@@ -244,14 +244,18 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Phase 4 — Local effect without automatic promotion
 
-- [ ] **4.1 Intake signals carry the unit key** as their origin and are written
+- [x] **4.1 Intake signals carry the unit key** as their origin and are written
       without a question (gitignored, decaying, behaviour-neutral until a human
       promotes them).
       verify: `npx vitest run tests/scripts/retro.test.ts -t intake-origin-is-unit-key --reporter=verbose` -> /✓.*intake-origin-is-unit-key/
-- [ ] **4.2 The retro aggregates the sidecar itself** at the end of each run
+      *Done 2026-10-17: `writeIntakeSignals`, entry type `historical-patterns`
+      with `source: retro`, through the project-provenance gate.*
+- [x] **4.2 The retro aggregates the sidecar itself** at the end of each run
       through the library function, independent of
       `memory.learn_on_session_end` (D6).
       verify: `npx vitest run tests/scripts/retro.test.ts -t retro-aggregates-sidecar --reporter=verbose` -> /✓.*retro-aggregates-sidecar/
+      *Done 2026-10-17: `aggregateSidecar`; it never reads
+      `memory.learn_on_session_end`.*
 - [ ] **4.3 Proposals as files.** Override, test and project no-go proposals land
       under `agents/proposals/`; `/memory:propose` lists retro learnings with
       their unit keys. Promotion stays human.
@@ -260,6 +264,9 @@ pre-registration in place, settings lint green with the new key.*
       `target`/`proposes` and the retro's unit key; whether one leaves the
       machine is `road-to-one-upstream-that-checks-what-leaves`'s question.
       verify: `npx vitest run tests/scripts/retro.test.ts -t package-finding-is-a-record --reporter=verbose` -> /✓.*package-finding-is-a-record/
+      *4.3 and 4.4 open 2026-10-17: 4.3 changes what `/memory:propose` lists
+      (a consumer command); 4.4 needs a unit-key field on the self-repair
+      record, whose shape the privacy floor and the release path read.*
 
 ## Phase 5 — Effect, not volume
 

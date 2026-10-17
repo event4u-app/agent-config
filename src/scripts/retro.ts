@@ -14,8 +14,18 @@
  */
 
 import { createHash } from 'node:crypto';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
-import type { Signal } from './learning_sidecar.js';
+import {
+    LESSONS_NAME,
+    SIDECAR_NAME,
+    buildSidecar,
+    renderLessonsMd,
+    type Sidecar,
+    type Signal,
+} from './learning_sidecar.js';
+import { _assert_project_writable } from './memory_signal.js';
 import type { Fact, PrFacts, SessionFacts } from './retro_facts.js';
 import { targetCounts } from './_lib/self_repair_store.js';
 
@@ -199,8 +209,11 @@ export function composeRetro(input: ComposeInput): RetroOutput {
     };
 }
 
-/** Entry type the retro writes into the intake stream. */
-export const RETRO_ENTRY_TYPE = 'retro-learning';
+/**
+ * Entry type the retro writes into the intake stream — one of the types the
+ * memory reader accepts, so a retro signal is read like any other.
+ */
+export const RETRO_ENTRY_TYPE = 'historical-patterns';
 
 /**
  * Intake signals for one output, origin = unit key, at most
@@ -221,4 +234,50 @@ export function intakeSignals(out: RetroOutput, nowIso: string, bodies?: readonl
         body,
         polarity: 'preferred' as const,
     }));
+}
+
+export const INTAKE_REL = path.join('agents', 'memory', 'intake');
+export const SIDECAR_OUT_REL = path.join('agents', 'memory');
+
+/**
+ * Append the signals to this month's intake file. Gitignored and decaying, so
+ * it is written without a question; the project-provenance gate still applies.
+ * Returns how many were written.
+ */
+export function writeIntakeSignals(root: string, signals: readonly Signal[]): number {
+    if (signals.length === 0) return 0;
+    const dir = path.join(root, INTAKE_REL);
+    fs.mkdirSync(dir, { recursive: true });
+    const lines: string[] = [];
+    for (const s of signals) {
+        const record = {
+            id: s.id,
+            ts: s.ts,
+            origin: s.origin,
+            entry_type: s.entryType,
+            path: s.path,
+            body: s.body,
+            subject: 'project',
+            source: 'retro',
+        };
+        _assert_project_writable(record);
+        lines.push(JSON.stringify(record));
+    }
+    const month = signals[0]!.ts.slice(0, 7);
+    fs.appendFileSync(path.join(dir, `signals-${month}.jsonl`), `${lines.join('\n')}\n`, 'utf-8');
+    return lines.length;
+}
+
+/**
+ * Rebuild the learning sidecar at the end of a retro run. Called by the retro
+ * itself, so it does not depend on `memory.learn_on_session_end` — that key
+ * stays class B with a conservative default and this never reads it.
+ */
+export function aggregateSidecar(root: string, nowIso: string): Sidecar {
+    const sidecar = buildSidecar(path.join(root, INTAKE_REL), nowIso);
+    const out = path.join(root, SIDECAR_OUT_REL);
+    fs.mkdirSync(out, { recursive: true });
+    fs.writeFileSync(path.join(out, SIDECAR_NAME), `${JSON.stringify(sidecar, null, 2)}\n`);
+    fs.writeFileSync(path.join(out, LESSONS_NAME), renderLessonsMd(sidecar));
+    return sidecar;
 }

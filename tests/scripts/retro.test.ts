@@ -4,13 +4,16 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { aggregate } from '../../src/scripts/learning_sidecar.js';
+import { SIDECAR_NAME, aggregate, readSignals } from '../../src/scripts/learning_sidecar.js';
+import { VALID_TYPES } from '../../src/scripts/memory_signal.js';
 import type { PrFacts } from '../../src/scripts/retro_facts.js';
 import {
+    aggregateSidecar,
     composeRetro,
     intakeSignals,
     triagePr,
     unitKey,
+    writeIntakeSignals,
     type Candidate,
 } from '../../src/scripts/retro.js';
 
@@ -165,5 +168,49 @@ describe('retro — composition', () => {
         const signals = intakeSignals(out, '2026-10-17T00:00:00Z', ['one', 'two', 'three', 'four']);
         expect(signals.length).toBeLessThanOrEqual(3);
         expect(new Set(signals.map((s) => s.origin))).toEqual(new Set([key]));
+    });
+});
+
+describe('retro — local effect', () => {
+    const now = '2026-10-17T00:00:00Z';
+
+    it('intake-origin-is-unit-key', () => {
+        const root = tmp();
+        const key = unitKey({ repo: 'acme/widget', pr: 1, merge_sha: 'a'.repeat(40) });
+        const out = composeRetro({ key, facts: prFacts({ red_heads: m(2) }), candidate: learning, root });
+        expect(writeIntakeSignals(root, intakeSignals(out, now))).toBe(1);
+
+        const signals = readSignals(path.join(root, 'agents', 'memory', 'intake'));
+        expect(signals).toHaveLength(1);
+        expect(signals[0]!.origin).toBe(key);
+        expect(signals[0]!.path).toBe(learning.subject);
+        expect(VALID_TYPES.has(signals[0]!.entryType)).toBe(true);
+    });
+
+    it('a learning routed to a proposal writes no intake signal', () => {
+        const root = tmp();
+        const key = unitKey({ repo: 'acme/widget', pr: 1, merge_sha: 'a'.repeat(40) });
+        const out = composeRetro({
+            key,
+            facts: prFacts({ red_heads: m(2) }),
+            candidate: { ...learning, target: 'override-proposal' },
+            root,
+        });
+        expect(writeIntakeSignals(root, intakeSignals(out, now))).toBe(0);
+        expect(fs.existsSync(path.join(root, 'agents', 'memory', 'intake'))).toBe(false);
+    });
+
+    it('retro-aggregates-sidecar', () => {
+        const root = tmp();
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'memory:\n  learn_on_session_end: false\n');
+        for (const pr of [1, 2]) {
+            const key = unitKey({ repo: 'acme/widget', pr, merge_sha: String(pr).repeat(40) });
+            const out = composeRetro({ key, facts: prFacts({ red_heads: m(2) }), candidate: learning, root });
+            writeIntakeSignals(root, intakeSignals(out, now));
+        }
+        const sidecar = aggregateSidecar(root, now);
+        expect(sidecar.lessons).toHaveLength(1);
+        expect(sidecar.lessons[0]!.corroborations).toBe(2);
+        expect(fs.existsSync(path.join(root, 'agents', 'memory', SIDECAR_NAME))).toBe(true);
     });
 });
