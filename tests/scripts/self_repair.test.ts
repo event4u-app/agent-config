@@ -42,8 +42,10 @@ import {
     upsertFinding,
 } from '../../src/scripts/_lib/self_repair_store.js';
 import { buildQueueLine, readTurn } from '../../src/scripts/self_repair_hook.js';
+import { outgoingDigest } from '../../src/scripts/_lib/self_repair_outgoing.js';
 import {
     capabilityOf,
+    collectOutgoing,
     executeRelease,
     planRelease,
     type Probe,
@@ -392,6 +394,46 @@ function fullProbe(overrides: Partial<Probe> = {}): Probe {
     };
 }
 
+const COMMIT_SHA = 'c'.repeat(40);
+const NOREPLY = '7+consumer-login@users.noreply.github.com';
+
+/**
+ * Plausible answers for the plumbing a pull-request release runs before it
+ * pushes — identity, base, net diff, the synthesised commit and its object
+ * walk. The ladder tests here are about what happens AFTER that; the bytes
+ * themselves are exercised against a real repository in
+ * `self_repair_release.test.ts`.
+ */
+function plumbing(cmd: string, args: string[]): Partial<RunResult> | undefined {
+    if (cmd === 'gh' && args[0] === 'api' && args[1] === 'user') {
+        return { out: args.includes('.login') ? 'consumer-login\n' : '7 consumer-login\n' };
+    }
+    if (cmd !== 'git') return undefined;
+    switch (args[0]) {
+        case 'rev-parse':
+            return { out: `${'b'.repeat(40)}\n` };
+        case 'diff':
+            return { out: 'diff --git a/src/rules/x.md b/src/rules/x.md\n+a fix\n' };
+        case 'write-tree':
+            return { out: `${'d'.repeat(40)}\n` };
+        case 'commit-tree':
+            return { out: `${COMMIT_SHA}\n` };
+        case 'rev-list':
+            return { out: `${COMMIT_SHA}\n` };
+        case 'cat-file':
+            return args[1] === '-t'
+                ? { out: 'commit\n' }
+                : {
+                      out:
+                          `tree ${'d'.repeat(40)}\nparent ${'b'.repeat(40)}\n` +
+                          `author consumer-login <${NOREPLY}> 1 +0000\n` +
+                          `committer consumer-login <${NOREPLY}> 1 +0000\n\nfix\n`,
+                  };
+        default:
+            return undefined;
+    }
+}
+
 /** Scripted runner: matches each call against a step table, records the log. */
 function scriptedRunner(
     script: (cmd: string, args: string[]) => Partial<RunResult> | undefined,
@@ -399,7 +441,7 @@ function scriptedRunner(
 ): Runner {
     return (cmd, args) => {
         log.push(`${cmd} ${args.join(' ')}`);
-        const hit = script(cmd, args) ?? {};
+        const hit = script(cmd, args) ?? plumbing(cmd, args) ?? {};
         return { ok: true, out: '', timedOut: false, ...hit };
     };
 }
@@ -456,7 +498,13 @@ describe('self-repair — probe of actual push rights', () => {
 });
 
 describe('self-repair — egress ladder', () => {
-    const deps = (runner: Runner): ReleaseDeps => ({ runner, now: () => LATER });
+    // The digest of exactly what the dry run would print for this plan: the
+    // release refuses anything else, so a ladder test approves first.
+    const deps = (runner: Runner, rec: DefectRecord, plan: ReleasePlan, probe: Probe): ReleaseDeps => ({
+        runner,
+        now: () => LATER,
+        approvedDigest: outgoingDigest(collectOutgoing(rec, plan, probe, runner).outgoing),
+    });
 
     it('a failed upstream push degrades to an issue attempt in the same invocation', () => {
         const log: string[] = [];
@@ -475,7 +523,7 @@ describe('self-repair — egress ladder', () => {
         }, log);
         const probe = fullProbe({ canFork: true });
         const { rec, plan } = recAndPlan(probe);
-        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner, rec, plan, probe));
         expect(outcome.published).toBe('issue');
         expect(log.some((l) => l.startsWith('gh issue create'))).toBe(true);
         expect(outcome.attempts.map((a) => a.step)).toEqual(['push-upstream', 'fork-ensure']);
@@ -498,7 +546,7 @@ describe('self-repair — egress ladder', () => {
         }, log);
         const probe = fullProbe();
         const { rec, plan } = recAndPlan(probe);
-        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner, rec, plan, probe));
         expect(outcome.published).toBe('issue');
         expect(outcome.attempts[0]?.detail).toContain('timed out after 30s');
     });
@@ -510,7 +558,7 @@ describe('self-repair — egress ladder', () => {
             if (b) {
                 return b;
             }
-            if (cmd === 'gh' && args[0] === 'api' && args[1] === 'user') {
+            if (cmd === 'gh' && args[0] === 'api' && args[1] === 'user' && args.includes('.login')) {
                 return { out: 'consumer-login\n' };
             }
             if (cmd === 'git' && args[0] === 'remote' && args[1] === 'get-url') {
@@ -520,12 +568,16 @@ describe('self-repair — egress ladder', () => {
         }, log);
         const probe = fullProbe({ canPushUpstream: false });
         const { rec, plan } = recAndPlan(probe);
-        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner, rec, plan, probe));
         expect(outcome.published).toBe('pull-request');
         expect(log.some((l) => l.startsWith('gh repo fork up/stream'))).toBe(true);
         expect(log.some((l) => l.includes('remote add self-repair-fork'))).toBe(true);
-        expect(log.some((l) => l.startsWith('git push -u self-repair-fork'))).toBe(true);
-        expect(log.some((l) => l.includes('--head consumer-login:fix/some-defect'))).toBe(true);
+        // The synthesised commit is pushed by sha onto the neutral branch; the
+        // author's branch name never leaves.
+        const branch = `retro/${rec.fingerprint.slice(0, 8)}`;
+        expect(log.some((l) => l === `git push self-repair-fork ${COMMIT_SHA}:refs/heads/${branch}`)).toBe(true);
+        expect(log.some((l) => l.includes(`--head consumer-login:${branch}`))).toBe(true);
+        expect(log.some((l) => l.startsWith('git push') && l.includes('fix/some-defect'))).toBe(false);
     });
 
     it('a triple failure (push → fork → issue) leaves all three errors recorded', () => {
@@ -549,7 +601,7 @@ describe('self-repair — egress ladder', () => {
         }, []);
         const probe = fullProbe();
         const plan = planRelease(rec, probe, tmp);
-        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner, rec, plan, probe));
         expect(outcome.published).toBeNull();
         expect(outcome.attempts).toHaveLength(3);
         expect(outcome.attempts.map((a) => a.step)).toEqual([
@@ -586,7 +638,7 @@ describe('self-repair — egress ladder', () => {
         }, log);
         const probe = fullProbe();
         const { rec, plan } = recAndPlan(probe);
-        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner, rec, plan, probe));
         expect(outcome.published).toBe('issue');
         const issueCall = log.find((l) => l.startsWith('gh issue create'))!;
         expect(issueCall).toContain('**Route:** issue');
@@ -602,7 +654,7 @@ describe('self-repair — egress ladder', () => {
         }, []);
         const probe = fullProbe();
         const { rec, plan } = recAndPlan(probe);
-        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner));
+        const outcome = executeRelease(rec, plan, probe, 'up/stream', deps(runner, rec, plan, probe));
         expect(outcome.published).toBeNull();
         expect(outcome.attempts.map((a) => a.step)).toEqual(['branch-check']);
     });

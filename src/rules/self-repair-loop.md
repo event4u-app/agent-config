@@ -46,8 +46,8 @@ work, not a notification:
 3. **Author the fix against agent-config** — in a checkout if one exists, so
    the release can be a pull request; otherwise the report alone becomes an
    issue.
-4. **Offer the release** — `agent-config self-repair:release <fingerprint>`;
-   `--dry-run` shows route, account, body, and only reads GitHub. Running it is
+4. **Offer the release** — `self-repair:release <fingerprint> --dry-run`
+   shows every byte and a digest; `--approve <digest>` sends them. Sending is
    the user's call, per
    [`non-destructive-by-default`](non-destructive-by-default.md).
 
