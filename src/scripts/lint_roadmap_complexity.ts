@@ -227,7 +227,7 @@ function lint_roadmap(
     }
     _check_execution_mode(fm, problems);
     _check_relates(fm, problems);
-    _check_cross_file_waits(text, fm, path.dirname(p), problems, warnings);
+    _check_cross_file_waits(text, fm, path.dirname(p), problems);
     if (warnings) {
         _check_autonomous_authoring(text, fm, warnings);
         _check_human_gate_steps(text, warnings);
@@ -526,16 +526,18 @@ function _is_archived(slug: string, roadmap_dir: string): boolean {
  * A step that waits on another roadmap says so twice or not at all: an inline
  * `blocked-by: road-to-X#…` marker needs a `relates:` row for X with
  * `relation: depends`, and a `depends` row may not name an archived file,
- * which can no longer land the thing waited on. The archived half warns rather
- * than fails while active files still carry such rows; see
- * road-to-an-intake-the-queue-can-carry 1.2 for the flip condition.
+ * which can no longer land the thing waited on. Both halves fail. The archived
+ * half warned rather than failed until 2026-10-17, while one active file still
+ * carried such a row; that row is now `extends` and the active glob carries
+ * none, so road-to-an-intake-the-queue-can-carry 1.2's flip condition is met.
+ * Neither half warns any more, so this check no longer takes a `warnings`
+ * sink; `lint_roadmap` still has one for the checks that do.
  */
 export function _check_cross_file_waits(
     text: string,
     fm: string,
     roadmap_dir: string,
     problems: string[],
-    warnings?: string[],
 ): void {
     const rows = _relates_rows(fm);
     const strip = (s: string): string => s.replace(/^(?:later|stubs|archive)\//, '');
@@ -553,8 +555,8 @@ export function _check_cross_file_waits(
         );
     }
     for (const r of rows) {
-        if (warnings && r.relation === 'depends' && _is_archived(r.slug, roadmap_dir)) {
-            warnings.push(
+        if (r.relation === 'depends' && _is_archived(r.slug, roadmap_dir)) {
+            problems.push(
                 `depends row names '${r.slug}', which is under archive/ — an archived ` +
                     'file lands nothing; drop the row or depend on its successor',
             );

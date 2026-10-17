@@ -309,23 +309,29 @@ describe('blocked-by-needs-depends — a cross-file marker needs a live depends 
         expect(mod.lint_roadmap(p, 0)).toEqual([]);
     });
 
-    it('blocked-by-needs-depends: a depends row naming an archived file is flagged', () => {
+    it('blocked-by-needs-depends: a depends row naming an archived file is red', () => {
         const p = write(
             'depends: [road-to-gone]\nrelates:\n  - slug: road-to-gone\n    relation: depends\n    note: "n"',
         );
         const warnings: string[] = [];
-        expect(mod.lint_roadmap(p, 0, warnings)).toEqual([]);
-        expect(warnings.filter((w) => w.includes("depends row names 'road-to-gone', which is under archive/"))).toHaveLength(1);
+        const problems = mod.lint_roadmap(p, 0, warnings);
+        expect(problems.filter((w) => w.includes("depends row names 'road-to-gone', which is under archive/"))).toHaveLength(1);
+        expect(warnings.filter((w) => w.includes('under archive/'))).toEqual([]);
     });
 
-    it('blocked-by-needs-depends: an explicit archive/ slug is flagged too, a live one is not', () => {
+    it('blocked-by-needs-depends: an explicit archive/ slug is red too, a live one is not', () => {
         const p = write(
             'depends: [archive/road-to-gone, road-to-live]\nrelates:\n  - slug: archive/road-to-gone\n    relation: depends\n    note: "n"\n  - slug: road-to-live\n    relation: depends\n    note: "n"',
         );
-        const warnings: string[] = [];
-        mod.lint_roadmap(p, 0, warnings);
-        const hits = warnings.filter((w) => w.includes('under archive/'));
+        const hits = mod.lint_roadmap(p, 0).filter((w) => w.includes('under archive/'));
         expect(hits).toHaveLength(1);
         expect(hits[0]).toContain("'archive/road-to-gone'");
+    });
+
+    it('blocked-by-needs-depends: an extends row naming an archived file stays green', () => {
+        const p = write(
+            'relates:\n  - slug: road-to-gone\n    relation: extends\n    note: "n"',
+        );
+        expect(mod.lint_roadmap(p, 0)).toEqual([]);
     });
 });
