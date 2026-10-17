@@ -624,22 +624,25 @@ re-pin, and the same change now owns the corpus, so it lands here. Both corpora
 resolver reads `tokens.json`, and a consumer who followed this package's own
 earlier wording types the dotted name, so routing must answer both. Removing
 the dotted utterance would delete the near-miss the defect actually produces.
-`brand-to-tokens` goes 10 -> 11 queries, `brand-asset-generation` 10 -> 11.
+`brand-to-tokens` goes 10 -> 12 queries (the lint asks a diff-touched corpus for a declared class on every case, a German positive and a counterexample, so the whole file is annotated rather than only the new line), `brand-asset-generation` 10 -> 11.
 
 | Row | Partition | `sha256(name)[0:2]` | Now |
 |---|---|---|---|
 | `brand-asset-generation` | train | `0xc7` = 199 ≥ 51 | re-hashed |
 | `brand-to-tokens` | train | `0x4f` = 79 ≥ 51 | re-hashed |
 
-**Both train-side measurements were re-taken on that tree.**
+**Both train-side measurements were re-taken on that tree**, and re-taken
+again after the full class annotation the lint asked for, so the figures below
+are the final ones rather than the first pass.
 `routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
 on the false-activation guard — false activation **6.14 pp** against +2.0,
-delta-recall 3.22 -> **3.38 pp** (still below the 5.0 pp bar), McNemar p 0.1783
--> **0.1565**, cases 1160 -> **1162**, train corpora **121**, catalogue 300.
-`delivery-set-measurement-2026-08-31.json`: precision@5 81.00 -> **81.04 %**,
-recall@5 60.68 -> **60.64 %**, recall loss 39.32 -> **39.36 pp** — the ceiling
-stays **BREACHED** — false activation@5 **14.74 %**, context cost **229.9**
-tokens against the 500 target, still **MET**. Neither verdict changes in kind.
+delta-recall 3.22 -> **3.204 pp** (still below the 5.0 pp bar), McNemar p
+0.1783 -> **0.1808**, cases 1160 -> **1163**, train corpora **121**, catalogue
+300. `delivery-set-measurement-2026-08-31.json`: precision@5 81.00 ->
+**81.264 %**, recall@5 60.68 -> **60.708 %**, recall loss 39.32 ->
+**39.292 pp** — the ceiling stays **BREACHED** — false activation@5 14.74 ->
+**14.561 %**, context cost **229.9** tokens against the 500 target, still
+**MET**. Neither verdict changes in kind.
 
 **Both gates were run after the final edit**, for the reason the 2026-10-16
 section records: the pin test alone cannot see which table a row sits in.
@@ -647,7 +650,7 @@ section records: the pin test alone cannot see which table a row sits in.
 ## The set hash
 
 ```
-SET-SHA256  ba91cd8681234eb417c7b5a95090ecb2bb53ca815466f8defbb1e842058c8173
+SET-SHA256  e40c3f3b73dc4e2d82fc46eb2061848fe0731a34937bce6b0f29eaeccb50e4c8
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1035,7 +1038,7 @@ open and which this file does not settle.
 | `brand-audit` | `77bbac810a28d2c0fba32c6ce75e38e50aff783ce8775e4bc215893e04a42a8c` |
 | `brand-identity` | `50be404a9317ca4321de6966c84815d23721bfb092bf90c4f24ae781b26c1caf` |
 | `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
-| `brand-to-tokens` | `71dc4144f00992edd94636bb4ab9aae59d03cb5e81fd2596474837c05fb55a96` |
+| `brand-to-tokens` | `b4a6926a805c848bf94ee9b6a037b796c0ac416077d0a5474bafcf63f1ded411` |
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
