@@ -238,6 +238,17 @@ the same thing in all of them.
       entries into that tracked lock. Now that the ledger carries global
       ownership, dropping those entries from the project lock is the candidate
       fix, and it changes a tracked consumer file, so it is the owner's call.
+      **Re-read 2026-10-17, unchanged and still owner-reserved.**
+      `grep -c installed-tools src/config/gitignore-block.txt` is 0 and must
+      stay 0 while `docs/contracts/agents-layout.md` records the lock as
+      tracked-durable and `README.md` tells teams to commit it: satisfying
+      this step's verify line as written would reverse a recorded contract
+      and a team workflow in one edit. The narrower residual gap — a global
+      install run from a project with settings writing `$HOME`-rooted
+      global-scope entries into that tracked lock — is now MORE tractable
+      than it was, because Phase 2 gives global ownership a home of its own,
+      so dropping those entries from the project lock loses nothing. It still
+      changes what consumers commit, so it stays the owner's.
 - [ ] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
       they attach to an existing command.
       verify: the output of `agent-config --help` lists no new top-level verb.
@@ -245,6 +256,18 @@ the same thing in all of them.
       ours?) and `reset` (restore one file, a scoped `--force`?) do is not
       specified anywhere in the tree, and inventing the semantics of a
       consumer-facing flag is not this drain's call.
+      **Re-read 2026-10-17 against ADR-041, which does not supply them.**
+      That ADR governs the controlled VERB vocabulary — which leading tokens
+      a visible command may use, and that a new one needs its own ADR. It
+      says nothing about what `adopt` or `reset` would do. So D4's "they ship
+      as flags" is a correct routing decision with no feature behind it, and
+      this step's verify line (`--help` lists no new top-level verb) passes
+      vacuously today: there is nothing to list.
+      The step belongs with whoever specifies the behaviour. Phase 2 sharpens
+      what `adopt` would have to mean — after the migration branch, the thing
+      a consumer most plausibly wants is "record the bytes I have as ours",
+      which is precisely the ownership assertion the council declined to make
+      automatically. That is a product decision, not a drain edit.
 
 ## Blockers
 
@@ -323,7 +346,15 @@ the same thing in all of them.
       containment test is green in the same run.
 - [ ] **AC-8** `grep -c installed-tools src/config/gitignore-block.txt` ≥ 1,
       and `grep -c sidecar docs/contracts/install-layout.md` ≥ 1.
-- [ ] **AC-9** `task ci` green.
+      Second half satisfied by 3.2. The first half is **owner-reserved and
+      arguably wrong as written**: it asks for a gitignore entry that
+      `docs/contracts/agents-layout.md` and `README.md` jointly forbid, so
+      meeting it would reverse a recorded contract. 3.3 states the narrower
+      gap that remains. This criterion closes by being re-cut or by an owner
+      decision, not by an edit.
+- [ ] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
+      run; `check_pack_size` and `check_gate_completeness` are red on
+      `main@8c90aad26` independently of this branch.
 
 ## Provenance
 
