@@ -230,7 +230,9 @@ describe('buildResumeArgv', () => {
         // never by bookkeeping (roadmap-process-loop § 5d).
         const p = resumePrompt('road-to-x');
         expect(p).toContain('verify');
-        expect(p).toContain('latestCheckpointFor');
+        // A command the resumed session can run, not a function name it cannot call.
+        expect(p).toContain('agent-config run:supervise --verify road-to-x');
+        expect(p).not.toContain('latestCheckpointFor');
         expect(p).toContain('/roadmap:process-full road-to-x');
     });
 });
