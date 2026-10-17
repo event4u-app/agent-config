@@ -125,22 +125,28 @@ consumer behaviour points at something that executes.
       fails the run. The drift check is
       `tests/scripts/build_exit_code_register.test.ts`, which runs in the CI
       vitest suite — no workflow or gate-coverage row was added for it.
-- [ ] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
+- [x] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
       state — installer `rc=3` and `doctor --ci` — the register records the
       pair and a test asserts it.
       verify: the assertion fails if either side changes alone.
-      **Open, read 2026-10-16:** the pair does not exist yet, so there is
-      nothing to pin. No `doctor` check reads the preserved-sidecar state —
-      `.agent-config.new` / `SIDECAR_SUFFIX` occur only under `src/install/`,
-      `src/scripts/install.ts` and the wizard UI — so on a tree where the
-      installer returned `3`, `doctor --ci` exits `0`. Closing the step means
-      giving `doctor` a check that fails on that state, which changes what
-      `doctor --ci` returns for consumers already scripting against it; the
-      `doctor-exit-contract` decision of 2026-09-03 (recorded in
-      `src/scripts/_cli/_doctor_strict.ts`) kept that contract stable and put
-      new failing behaviour behind `--strict`. Whether the preserved state
-      fails `--ci`, fails only `--strict`, or warns is a consumer-facing exit
-      decision this lane did not take.
+      **Was open, read 2026-10-16:** the pair did not exist, and no `doctor`
+      check read the preserved state, so on a tree where the installer
+      returned `3`, `doctor --ci` exited `0`. Giving `doctor` such a check was
+      a consumer-facing exit decision that lane did not take.
+      **Closed 2026-10-17: the sibling took it.** The ownership-record
+      roadmap's step 3.1 landed `src/scripts/_cli/doctor_ownership_ledger.ts`,
+      which reports every ledger file the installer would preserve as
+      `modified`, and
+      `tests/install/ownership_ledger_real_install.test.ts` § step 3.1 runs
+      both surfaces over one tree. The pair exists; the premise of the note
+      above is spent. What was still missing was the register half, and that
+      is what this step now lands: `build_exit_code_register` carries a
+      `PAIRS` table, publishes a *Pairs that must agree* section, and
+      `checkPairs` fails the build when either verb stops returning its side
+      of the pair OR when the named test loses the assertion. The drift test
+      asserts `errors` is empty, so either drift reds CI. Sensitivity
+      observed: neutralising `checkPairs` turns three of the four new cases
+      red.
 
 ## Phase 4 — Point the claims at something that runs
 
