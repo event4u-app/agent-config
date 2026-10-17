@@ -181,7 +181,7 @@ file can report an externally visible change as done.
   tracked files; the externally visible push stays with the stub.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -190,6 +190,7 @@ file can report an externally visible change as done.
 | 3 | Narrowing the headline reads as weakening a published claim | product | "artifact counts" is a smaller promise than "the counts", and the diff makes that visible. | It is the promise the code already keeps; the alternative is a claim the tree cannot check. D2 records the trade. | Phase 2 — A download badge that cannot corrupt the claim row |
 | 4 | A `downloads/month` badge is read as an install base | product | Downloads count fetches, including CI and mirrors, not users. | The badge carries its window in the label and links to the source; no total counter and no derived rate is published anywhere. | Phase 2 — A download badge that cannot corrupt the claim row |
 | 5 | Dropping the `python` topic loses incoming search traffic | product | The topic may be carrying discovery the file cannot measure. | Three accurate terms are added in the same step; the inaccurate one is the only removal. | Phase 3 — Pointers and metadata that resolve |
+| 6 | The AC-8 measurement reads as a closure | product | AC-8 now carries a long dated note explaining why it is open, and a long note under an open box is easy to skim as a done one; a reader could archive the file on it. | The box stays `- [ ]`, the note names the two owning surfaces rather than this file, and it states the condition that closes it. `lint_ticked_unmet_criteria` refuses the other direction. | Acceptance Criteria |
 
 ## Acceptance Criteria
 
