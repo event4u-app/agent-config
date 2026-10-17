@@ -2716,7 +2716,7 @@ function _copy_dir_dereferencing_symlinks(
             return [0, 0, written_paths];
         }
         mkdirp(path.dirname(dest));
-        const decision = tracker.resolve(dest, force);
+        const decision = tracker.resolve(dest, force, { from: resolved_src, packageRoot: package_root });
         if (decision === 'preserve') {
             tracker.preserve(dest, resolved_src, package_root);
             _log_tx_entry('skip', dest);
@@ -2791,7 +2791,7 @@ function _copy_dir_dereferencing_symlinks(
         if (file_filter !== null && !file_filter(entry)) {
             continue;
         }
-        const decision = tracker.resolve(target, force);
+        const decision = tracker.resolve(target, force, { from: resolved, packageRoot: package_root });
         if (decision === 'preserve') {
             tracker.preserve(target, resolved, package_root);
             skipped += 1;
@@ -2825,7 +2825,7 @@ function _write_claude_desktop_marker(
     // Generated, but manifest-recorded with a digest — so it is in the class the
     // preservation ruling covers, and it used to write unconditionally, ignoring
     // even `--force`, because the tracker was wired only into the copy loop.
-    if (tracker.resolve(target, force) === 'preserve') {
+    if (tracker.resolve(target, force, { content: body }) === 'preserve') {
         tracker.preserveContent(target, body);
         return [0, 1, []];
     }
