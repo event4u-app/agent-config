@@ -942,6 +942,23 @@ tasks:
   check-pack-size:
     silent: true
     desc: "Published-tarball payload budget — compressed size (absolute + >10% creep) and per-skill share of the skills subtree, with named exceptions. The UNPACKED size stays owned by evaluator-budgets; this gate covers the two axes nothing measured before (road-to-zero-ceremony-install Phase 4)"
+    # `deps: [build-ts]` since 2026-10-17, and the dependency is the gate's
+    # correctness rather than a convenience. `check_pack_size` routes on
+    # `payloadIsBuilt`, which keys on `dist/cli/**` ALONE: a tree carrying
+    # `dist/cli` but not `dist/mcp` and `dist/ui` is classified BUILT and then
+    # compared against a figure recorded from a FULL build. The required
+    # Consistency job was exactly that tree — it runs no build, yet reached
+    # this gate with `dist/cli` present — so it measured 3,455 entries /
+    # 13.703 MB against a 13.700 ceiling derived from a 3,568-entry reading
+    # and reddened `main` itself at 8c90aad26. The 113-entry difference is a
+    # blind spot, not headroom.
+    #
+    # Building here rather than in the workflow puts the fix where the
+    # divergence is: every caller of this gate — CI, `task ci`, a maintainer
+    # at a prompt — now measures the one surface
+    # `built_surface_measurement_2026_10_17.built.command` names, instead of
+    # whatever its checkout happened to carry.
+    deps: [build-ts]
     cmd: ./scripts-run src/scripts/check_pack_size
 
   report-pack-delta:
