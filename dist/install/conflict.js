@@ -16,7 +16,8 @@
  */
 import { existsSync } from 'node:fs';
 import { sha256File } from './plan.js';
-import { classifyOwnership, recordedHashesWithLedger, } from './recordedOwnership.js';
+import { isLedgerMigration } from './preserve.js';
+import { classifyOwnership, ledgerListedPaths, recordedHashesWithLedger, } from './recordedOwnership.js';
 /**
  * Decide what to do with a single planned target.
  *
@@ -168,6 +169,12 @@ export function computeConflicts(plan, recordedOverride) {
     if (plan.policy.force)
         return [];
     const recorded = recordedOverride ?? recordedHashesWithLedger(plan.root);
+    // Read once for the whole pass: the preview answers the same question the
+    // writer does, and a path the ledger merely LISTS is one the writer will
+    // preserve on the migration branch. Without this the preview would promise
+    // a write the writer then refuses — the two-surfaces-disagree shape this
+    // module's parity test exists to stop.
+    const ledgerFiles = ledgerListedPaths();
     const out = [];
     for (const entries of Object.values(plan.filesByTool)) {
         for (const entry of entries) {
@@ -192,6 +199,17 @@ export function computeConflicts(plan, recordedOverride) {
                 continue;
             if (onDisk === entry.sha256)
                 continue;
+            // Reaching here means the on-disk bytes already differ from the
+            // planned ones, so the equality half of the migration test is
+            // settled; what is left is whether the ledger lists the path.
+            const migration = ownership === 'unknown' &&
+                isLedgerMigration({
+                    exists: true,
+                    recordedSha256: recorded.get(entry.path),
+                    onDiskSha256: onDisk,
+                    force: false,
+                    ledgerListed: ledgerFiles.has(entry.path),
+                });
             out.push({
                 path: entry.path,
                 kind: entry.kind,
@@ -199,6 +217,7 @@ export function computeConflicts(plan, recordedOverride) {
                 existingSha256: onDisk,
                 mergeable: isJsonTarget(entry),
                 ownership,
+                migration,
             });
         }
     }

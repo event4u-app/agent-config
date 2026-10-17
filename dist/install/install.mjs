@@ -10020,6 +10020,12 @@ function expanduser5(p) {
 function recordedHashesForRoot(root, env) {
   return readRecordedHashes(manifest_path(root, env), root);
 }
+function ledgerListedPaths(env) {
+  return recorded_absolute_files(
+    load_inventory(inventory_path(env)),
+    env?.["HOME"]
+  );
+}
 function recordedHashesWithLedger(root, env) {
   const out = new Map(recordedHashesForRoot(root, env));
   const ledger = load_inventory(inventory_path(env));
@@ -10032,17 +10038,30 @@ function recordedHashesWithLedger(root, env) {
 // src/install/preserve.ts
 var SIDECAR_SUFFIX = ".agent-config.new";
 var EXIT_COMPLETED_WITH_CONFLICTS = 3;
+function isLedgerMigration(inputs) {
+  if (!inputs.exists || inputs.force) return false;
+  if (inputs.ledgerListed !== true) return false;
+  if (inputs.onDiskSha256 === null) return false;
+  return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === "unknown";
+}
 function decideDeployWrite(inputs) {
   if (!inputs.exists) return "write";
   if (inputs.force) return "write";
   const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
-  return ownership === "recorded-modified" ? "preserve" : "write";
+  if (ownership === "recorded-modified") return "preserve";
+  if (ownership === "unknown" && isLedgerMigration(inputs)) {
+    return inputs.packagedSha256 != null && inputs.packagedSha256 === inputs.onDiskSha256 ? "write" : "preserve";
+  }
+  return "write";
 }
 function sidecarPathFor(target) {
   return `${target}${SIDECAR_SUFFIX}`;
 }
 function preservedFileMessage(target, sidecar) {
   return `Preserved user-modified ${target}. Package content was written to ${sidecar}; the active installation is not current. Review and merge it, or rerun with --force to replace the managed file.`;
+}
+function migrationPreservedMessage(target, sidecar) {
+  return `Preserved ${target} without being able to classify it: this package deployed it before it began recording digests, so an edit and an older version look the same here. Package content was written to ${sidecar}; the active installation is not current. Review and merge it, or rerun with --force to replace the managed file. Once resolved, this file is classified normally on every later install.`;
 }
 function conflictSummaryMessage(count) {
   const noun = count === 1 ? "file" : "files";
@@ -10057,7 +10076,9 @@ function createConflictTracker(host) {
   const conflictState = {
     root: null,
     recorded: null,
+    ledgerFiles: null,
     preserved: [],
+    migrated: /* @__PURE__ */ new Set(),
     staged: /* @__PURE__ */ new Map()
   };
   function recordedHashFor(target) {
@@ -10067,6 +10088,33 @@ function createConflictTracker(host) {
     if (conflictState.recorded.has(plain)) return conflictState.recorded.get(plain);
     const real = resolvePath(target);
     return real === plain ? void 0 : conflictState.recorded.get(real);
+  }
+  function ledgerLists(target) {
+    conflictState.ledgerFiles ??= ledgerListedPaths();
+    const files = conflictState.ledgerFiles;
+    return files.has(path11.resolve(target)) || files.has(resolvePath(target));
+  }
+  function wouldWriteDigest(target, would) {
+    const tmp = path11.join(
+      path11.dirname(target),
+      `.${path11.basename(target)}.would.${process.pid}.${crypto2.randomBytes(6).toString("hex")}${path11.extname(target)}`
+    );
+    try {
+      if ("content" in would) {
+        fs12.writeFileSync(tmp, would.content, "utf-8");
+      } else {
+        fs12.copyFileSync(would.from, tmp);
+        host.tagDeployed(tmp, would.from, would.packageRoot);
+      }
+      return sha256OfFile(tmp);
+    } catch {
+      return null;
+    } finally {
+      try {
+        fs12.unlinkSync(tmp);
+      } catch {
+      }
+    }
   }
   function stageInto(target, sidecar, produce) {
     mkdirp(path11.dirname(sidecar));
@@ -10116,7 +10164,9 @@ function createConflictTracker(host) {
   function record(target, sidecar) {
     if (conflictState.preserved.includes(target)) return;
     conflictState.preserved.push(target);
-    host.warn(preservedFileMessage(target, sidecar));
+    host.warn(
+      conflictState.migrated.has(path11.resolve(target)) ? migrationPreservedMessage(target, sidecar) : preservedFileMessage(target, sidecar)
+    );
   }
   return {
     conflictState,
@@ -10124,7 +10174,9 @@ function createConflictTracker(host) {
     begin(root) {
       conflictState.root = root;
       conflictState.recorded = null;
+      conflictState.ledgerFiles = null;
       conflictState.preserved = [];
+      conflictState.migrated = /* @__PURE__ */ new Set();
       conflictState.staged = /* @__PURE__ */ new Map();
     },
     /**
@@ -10133,14 +10185,23 @@ function createConflictTracker(host) {
      * so a file edited between planning and writing is still classified
      * from the bytes that are actually about to be destroyed.
      */
-    resolve(target, force) {
+    resolve(target, force, would) {
       const exists = pathExists(target);
-      return decideDeployWrite({
+      const base = {
         exists,
         recordedSha256: exists ? recordedHashFor(target) : void 0,
         onDiskSha256: exists ? sha256OfFile(target) : null,
-        force
-      });
+        force,
+        ledgerListed: exists && ledgerLists(target)
+      };
+      const migrating = isLedgerMigration(base);
+      const decision = decideDeployWrite(
+        migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base
+      );
+      if (decision === "preserve" && migrating) {
+        conflictState.migrated.add(path11.resolve(target));
+      }
+      return decision;
     },
     /**
      * Stage the package content beside a preserved target.
@@ -22587,7 +22648,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
       return [0, 0, written_paths];
     }
     mkdirp(path34.dirname(dest));
-    const decision = tracker.resolve(dest, force);
+    const decision = tracker.resolve(dest, force, { from: resolved_src, packageRoot: package_root });
     if (decision === "preserve") {
       tracker.preserve(dest, resolved_src, package_root);
       _log_tx_entry("skip", dest);
@@ -22650,7 +22711,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
     if (file_filter !== null && !file_filter(entry)) {
       continue;
     }
-    const decision = tracker.resolve(target, force);
+    const decision = tracker.resolve(target, force, { from: resolved, packageRoot: package_root });
     if (decision === "preserve") {
       tracker.preserve(target, resolved, package_root);
       skipped += 1;
@@ -22674,7 +22735,7 @@ function _write_claude_desktop_marker(force, lockfile_path2, bundles_dir, bundle
   const target = path34.join(anchor, "agent-config.md");
   mkdirp(anchor);
   const body = claudeDesktopMarkerBody(lockfile_path2, anchor, bundles_dir, bundle_count);
-  if (tracker.resolve(target, force) === "preserve") {
+  if (tracker.resolve(target, force, { content: body }) === "preserve") {
     tracker.preserveContent(target, body);
     return [0, 1, []];
   }
