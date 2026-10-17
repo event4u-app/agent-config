@@ -9,6 +9,7 @@ import { derive_session_tag } from '../../src/scripts/chat_history.js';
 import { eolSessionKey, eolStateFile, emptyCounters } from '../../src/scripts/_lib/session_eol.js';
 import type { ForgeApi } from '../../src/scripts/_lib/forge_reader.js';
 import {
+    readDrainRow,
     readPrFacts,
     readSessionFacts,
     type Fact,
@@ -157,6 +158,40 @@ describe('retro_facts — PR', () => {
         const row = measured(facts.drain_row);
         expect(row['CI iters']).toBe('2');
         expect(row['Disposition']).toBe('twice-exhausted');
+    });
+});
+
+describe('retro_facts — drain row shapes', () => {
+    function summary(root: string, name: string, lines: string[]): void {
+        fs.mkdirSync(path.join(root, 'agents', 'evidence'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'agents', 'evidence', name), lines.join('\n'));
+    }
+
+    it('finds the PR in a second column, in backticks or a link', () => {
+        const root = tmp();
+        summary(root, 'drain-run-summary-run-1.md', [
+            '| Pos | PR | Conflicts | Disposition |',
+            '|---|---|---|---|',
+            '| 1 | `#1891` | none | merged |',
+            '| 2 | [2004](https://example.invalid/pull/2004) | generated file | twice-exhausted |',
+        ]);
+        expect(readDrainRow(root, 1891)?.['Disposition']).toBe('merged');
+        expect(readDrainRow(root, 2004)?.['Disposition']).toBe('twice-exhausted');
+    });
+
+    it('a small PR number does not match a queue position or another table', () => {
+        const root = tmp();
+        summary(root, 'drain-run-summary-run-1.md', [
+            '| Pos | PR | Conflicts | Disposition |',
+            '|---|---|---|---|',
+            '| 1 | #1891 | none | merged |',
+            '',
+            '| # | Question | Verdict |',
+            '|---|---|---|',
+            '| 2 | Is it safe? | yes |',
+        ]);
+        expect(readDrainRow(root, 1)).toBeNull();
+        expect(readDrainRow(root, 2)).toBeNull();
     });
 });
 

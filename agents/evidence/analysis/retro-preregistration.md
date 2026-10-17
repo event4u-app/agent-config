@@ -126,13 +126,13 @@ where the two disagree, 5.2 reports recall against both rather than choosing one
 ## 3. Triage score — start values (hypothesis)
 
 `missing` never scores and never subtracts (contract: a missing field never lowers a
-score). Size alone never scores: a large PR is not a friction signal.
+score). PR size alone never scores: a large PR is not a friction signal.
 
 **PR units** — `analyse` at **score ≥ 3**, else `skip:low-signal`:
 
 | Signal | Points |
 |---|---|
-| each red head after the first push, capped at 3 | +2 |
+| each red head (the first push included), capped at 3 | +2 |
 | three or more CI heads | +1 |
 | a commit inside the PR that reverts another commit of the PR | +3 |
 | a later revert of the merge commit on the base | +5 |

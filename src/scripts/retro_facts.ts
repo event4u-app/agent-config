@@ -141,7 +141,7 @@ function runFacts(runsResponse: unknown): RunFacts {
         const sha = r['head_sha'];
         if (typeof sha !== 'string') continue;
         const at = typeof r['created_at'] === 'string' ? r['created_at'] : '';
-        const red = r['conclusion'] === 'failure';
+        const red = RED_CONCLUSIONS.has(String(r['conclusion']));
         const h = heads.get(sha);
         if (h === undefined) heads.set(sha, { first: at, red });
         else heads.set(sha, { first: at < h.first ? at : h.first, red: h.red || red });
@@ -162,18 +162,46 @@ function runFacts(runsResponse: unknown): RunFacts {
 
 const REVERT_RE = /This reverts commit [0-9a-f]{7,40}/;
 
-/** Every drain summary the evidence directory holds, newest name last. */
+const RED_CONCLUSIONS = new Set(['failure', 'timed_out', 'startup_failure']);
+
+/** Every drain summary the evidence directory holds, oldest modification first. */
 function drainSummaries(root: string): string[] {
     const dir = path.join(root, 'agents', 'evidence');
+    const out: { file: string; mtime: number }[] = [];
+    let names: string[];
     try {
-        return fs
-            .readdirSync(dir)
-            .filter((n) => /drain.*summary.*\.md$/.test(n))
-            .sort()
-            .map((n) => path.join(dir, n));
+        names = fs.readdirSync(dir);
     } catch {
         return [];
     }
+    for (const n of names) {
+        if (!/drain.*summary.*\.md$/.test(n)) continue;
+        const file = path.join(dir, n);
+        try {
+            const st = fs.statSync(file);
+            if (st.isFile()) out.push({ file, mtime: st.mtimeMs });
+        } catch {
+            continue;
+        }
+    }
+    return out.sort((a, b) => a.mtime - b.mtime || (a.file < b.file ? -1 : 1)).map((x) => x.file);
+}
+
+/**
+ * A drain table is one whose header names a disposition or a conflict column;
+ * any other table in the file (questions, verdicts) is not a PR ledger and a
+ * small PR number would collide with its row numbers.
+ */
+function prColumn(header: readonly string[]): number | null {
+    if (!header.some((h) => /disposition|conflict/i.test(h))) return null;
+    const i = header.findIndex((h) => /^(#|pr\b|pull)/i.test(h));
+    return i === -1 ? null : i;
+}
+
+/** The PR number in a cell, through `#`, backtick and markdown-link wrappers. */
+function prInCell(cell: string): number | null {
+    const m = /#?(\d+)/.exec(cell.replace(/`/g, ''));
+    return m === null ? null : Number(m[1]);
 }
 
 function cells(line: string): string[] {
@@ -185,12 +213,19 @@ function cells(line: string): string[] {
         .map((c) => c.trim());
 }
 
-/** The PR's row, keyed by the table's own header. Latest summary wins. */
+/** The PR's row, keyed by the table's own header. The most recently modified summary wins. */
 export function readDrainRow(root: string, pr: number): Record<string, string> | null {
     let found: Record<string, string> | null = null;
     for (const file of drainSummaries(root)) {
+        let text: string;
+        try {
+            text = fs.readFileSync(file, 'utf-8');
+        } catch {
+            continue;
+        }
         let header: string[] | null = null;
-        for (const line of fs.readFileSync(file, 'utf-8').split('\n')) {
+        let col: number | null = null;
+        for (const line of text.split('\n')) {
             if (!line.trim().startsWith('|')) {
                 header = null;
                 continue;
@@ -199,9 +234,10 @@ export function readDrainRow(root: string, pr: number): Record<string, string> |
             if (c.every((x) => /^:?-+:?$/.test(x))) continue;
             if (header === null) {
                 header = c;
+                col = prColumn(c);
                 continue;
             }
-            if (c[0]?.replace(/^#/, '') === String(pr)) {
+            if (col !== null && prInCell(c[col] ?? '') === pr) {
                 found = Object.fromEntries(header.map((h, i) => [h, c[i] ?? '']));
             }
         }
@@ -216,7 +252,7 @@ export function readPrFacts(input: PrFactsInput): PrFacts {
 
     let mergeSha: Fact<string>;
     if (pull === null) mergeSha = missing('pull request not read');
-    else if (typeof pull['merge_commit_sha'] === 'string' && pull['merged_at'] !== null) {
+    else if (typeof pull['merge_commit_sha'] === 'string' && typeof pull['merged_at'] === 'string') {
         mergeSha = measured(pull['merge_commit_sha']);
     } else mergeSha = notApplicable('pull request is not merged');
 
@@ -231,7 +267,7 @@ export function readPrFacts(input: PrFactsInput): PrFacts {
               )
             : runFacts(null);
 
-    const commits = list(api.get(`${base}/commits?per_page=100`));
+    const commits = list(api.get(`${base}/commits?per_page=100`, true));
     const inPrReverts: Fact<number> =
         commits === null
             ? missing('commits not read')
@@ -243,7 +279,7 @@ export function readPrFacts(input: PrFactsInput): PrFacts {
               );
 
     const untrusted: UntrustedDatum[] = [];
-    const comments = list(api.get(`${base}/comments?per_page=100`));
+    const comments = list(api.get(`${base}/comments?per_page=100`, true));
     let reviewThreads: Fact<number> = missing('review comments not read');
     if (comments !== null) {
         reviewThreads = measured(comments.filter((c) => c['in_reply_to_id'] === undefined || c['in_reply_to_id'] === null).length);
@@ -251,7 +287,7 @@ export function readPrFacts(input: PrFactsInput): PrFacts {
             if (typeof c['body'] === 'string' && c['body'].trim() !== '') untrusted.push(datum('review-comment', c['body']));
         }
     }
-    for (const r of list(api.get(`${base}/reviews?per_page=100`)) ?? []) {
+    for (const r of list(api.get(`${base}/reviews?per_page=100`, true)) ?? []) {
         if (typeof r['body'] === 'string' && r['body'].trim() !== '') untrusted.push(datum('review', r['body']));
     }
 
@@ -290,6 +326,7 @@ export interface SessionFacts {
     /** The workspace whose end-of-life state carried the session. */
     found_in: Fact<string>;
     turns: Fact<number>;
+    assistant_records: Fact<number>;
     tool_calls: Fact<number>;
     compactions: Fact<number>;
     final_context_tokens: Fact<number>;
@@ -311,7 +348,10 @@ export interface SessionFactsInput {
 const liveGit =
     (cwd: string): GitRun =>
     (args) => {
-        const r = spawnSync('git', [...args], { cwd, encoding: 'utf8', timeout: 5_000 });
+        // An inherited GIT_DIR (a hook runs inside git) would point every call
+        // at another repository than the one at `cwd`.
+        const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+        const r = spawnSync('git', [...args], { cwd, env, encoding: 'utf8', timeout: 5_000 });
         return r.status === 0 && typeof r.stdout === 'string' ? r.stdout : null;
     };
 
@@ -402,7 +442,10 @@ export function readSessionFacts(input: SessionFactsInput): SessionFacts {
         const seen = new Set<string>();
         for (const ws of dirs) {
             for (const rec of listRecords(ws)) {
-                if (rec.first_seen >= from && rec.first_seen <= to) seen.add(rec.fingerprint);
+                // A record first seen earlier and seen again inside the window is
+                // a recurrence during the session, so either stamp counts.
+                const inside = (t: string): boolean => t >= from && t <= to;
+                if (inside(rec.first_seen) || inside(rec.last_seen)) seen.add(rec.fingerprint);
             }
         }
         selfRepair = measured(seen.size);
@@ -414,6 +457,7 @@ export function readSessionFacts(input: SessionFactsInput): SessionFacts {
         workspaces,
         found_in: foundIn,
         turns: counters === null ? missing(eolGone) : num(counters.turns),
+        assistant_records: counters === null ? missing(eolGone) : num(counters.assistant_records),
         tool_calls: counters === null ? missing(eolGone) : num(counters.tool_calls),
         compactions:
             counters === null

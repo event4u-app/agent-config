@@ -64,9 +64,8 @@ export interface UnitKeyInput {
 }
 
 /**
- * `{repo, pr|session, merge_sha|tag, policy}` as one string. It is the origin
- * of every intake signal, so its shape is what decides corroboration: anything
- * not in it (host, model, run) must not separate two examinations of one unit.
+ * `{repo, pr|session, merge_sha|tag, policy}` as one string — the queue and
+ * disposition key. Corroboration uses {@link unitOrigin}, never this string.
  */
 export function unitKey(k: UnitKeyInput): string {
     const policy = k.policy ?? TRIAGE_POLICY;
@@ -75,7 +74,23 @@ export function unitKey(k: UnitKeyInput): string {
     throw new Error('unitKey: a unit is a PR or a session');
 }
 
+/**
+ * The intake origin of a unit: `{repo, pr|session}` only. A failed merge-sha
+ * lookup or a policy bump re-keys a disposition, but must never let one PR
+ * corroborate itself. The slash is replaced so the provenance gate does not
+ * read the origin as a filesystem path.
+ */
+export function unitOrigin(key: string): string {
+    const m = /^retro:([^#]+)#(pr\d+|session)(?:@([^/]+))?\/p\d+$/.exec(key);
+    if (m === null) throw new Error(`unitOrigin: not a unit key: ${key}`);
+    const unit = m[2] === 'session' ? `session:${m[3] ?? ''}` : m[2];
+    return `retro:${m[1]!.replace(/\//g, ':')}#${unit}`;
+}
+
 const val = (f: Fact<number>): number | null => (f.status === 'measured' ? f.value : null);
+
+/** Drain-summary conflict cells that say there was none, in the shapes real summaries use. */
+const NO_CONFLICT_RE = /^(none|—|–|-+|0(\s|$)|clean|no (content )?conflicts?)/i;
 
 export function triagePr(f: PrFacts): Triage {
     let score = 0;
@@ -96,7 +111,7 @@ export function triagePr(f: PrFacts): Triage {
     if (f.drain_row.status === 'measured') {
         const row = Object.entries(f.drain_row.value);
         const conflicts = row.find(([h]) => /conflict/i.test(h))?.[1] ?? '';
-        if (conflicts !== '' && !/^(none|—|-)\b/i.test(conflicts)) add(1, 'a drain conflict class');
+        if (conflicts !== '' && !NO_CONFLICT_RE.test(conflicts)) add(1, 'a drain conflict class');
         if (row.some(([h, v]) => /disposition/i.test(h) && /twice-exhausted/.test(v))) add(3, 'twice-exhausted');
     }
     return { class: score >= ANALYSE_AT ? 'analyse' : 'skip:low-signal', score, signals };
@@ -105,6 +120,9 @@ export function triagePr(f: PrFacts): Triage {
 export function triageSession(f: SessionFacts): Triage {
     let score = 0;
     const signals: string[] = [];
+    if (f.assistant_records.status === 'measured' && f.assistant_records.value === 0) {
+        return { class: 'skip:low-signal', score: 0, signals: ['no assistant record'] };
+    }
     const add = (points: number, why: string): void => {
         score += points;
         signals.push(`${why} +${points}`);
@@ -132,7 +150,11 @@ export interface Candidate {
     would_recur: boolean;
     counter_hypothesis: string;
     falsifier: string;
-    /** Stable subject the learning is about; the sidecar groups claims by it. */
+    /**
+     * The canonical claim, short and stable (`drain/baseline-drift`). Two
+     * syntheses that agree on the claim must produce the same string; it is
+     * what corroborates, the wording of `learning` is not.
+     */
     subject: string;
     /** A self-repair target (`rule:<id>` …) whose earlier record count this reports. */
     asset_target?: string;
@@ -216,24 +238,30 @@ export function composeRetro(input: ComposeInput): RetroOutput {
 export const RETRO_ENTRY_TYPE = 'historical-patterns';
 
 /**
- * Intake signals for one output, origin = unit key, at most
- * {@link MAX_INTAKE_SIGNALS_PER_UNIT}. Only an `intake-signal` learning yields
- * any; every other target is a proposal or a record, never a signal.
+ * The intake signal for one output: exactly the learning that passed the
+ * durability test, origin = {@link unitOrigin}. Only an `intake-signal`
+ * learning yields one; every other target is a proposal or a record.
+ *
+ * The sidecar corroborates claims by body, so the body is the canonical claim
+ * (the subject), not the synthesis's wording: two independent retros that
+ * agree on the claim must corroborate even when they phrase it differently.
  */
-export function intakeSignals(out: RetroOutput, nowIso: string, bodies?: readonly string[]): Signal[] {
+export function intakeSignals(out: RetroOutput, nowIso: string): Signal[] {
     if (out.target !== 'intake-signal' || out.learning === null || out.subject === null) return [];
-    const tsMs = Date.parse(nowIso);
-    const subject = out.subject;
-    return (bodies ?? [out.learning]).slice(0, MAX_INTAKE_SIGNALS_PER_UNIT).map((body) => ({
-        id: createHash('sha256').update(`${out.unit_key}\0${body}`).digest('hex').slice(0, 16),
-        ts: nowIso,
-        tsMs,
-        origin: out.unit_key,
-        entryType: RETRO_ENTRY_TYPE,
-        path: subject,
-        body,
-        polarity: 'preferred' as const,
-    }));
+    const origin = unitOrigin(out.unit_key);
+    const body = `retro claim: ${out.subject}`;
+    return [
+        {
+            id: createHash('sha256').update(`${origin}\0${body}`).digest('hex').slice(0, 16),
+            ts: nowIso,
+            tsMs: Date.parse(nowIso),
+            origin,
+            entryType: RETRO_ENTRY_TYPE,
+            path: out.subject,
+            body,
+            polarity: 'preferred' as const,
+        },
+    ].slice(0, MAX_INTAKE_SIGNALS_PER_UNIT);
 }
 
 export const INTAKE_REL = path.join('agents', 'memory', 'intake');

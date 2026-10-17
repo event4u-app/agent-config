@@ -144,7 +144,9 @@ pre-registration in place, settings lint green with the new key.*
       *Done 2026-10-17: `--session <id>` or `--tag <tag>`. End-of-life state is
       keyed by a hash of the id, so a tag alone reports it `missing`. Branch
       stays `missing`: nothing in the tree records a session's branch; the PR is
-      not joined either until a queue pointer (1.3) carries it.*
+      not joined either until a queue pointer (1.3) carries it. Self-repair
+      records count by time window, not by session: a parallel session's record
+      in the same window counts too, until records carry a session tag.*
 - [ ] **1.3 Worktree sessions are not lost (F7).** The fact reader enumerates
       every worktree of the repository (`git worktree list`) and reads its
       session state; the session-end hook additionally appends a one-line
@@ -249,7 +251,12 @@ pre-registration in place, settings lint green with the new key.*
       promotes them).
       verify: `npx vitest run tests/scripts/retro.test.ts -t intake-origin-is-unit-key --reporter=verbose` -> /✓.*intake-origin-is-unit-key/
       *Done 2026-10-17: `writeIntakeSignals`, entry type `historical-patterns`
-      with `source: retro`, through the project-provenance gate.*
+      with `source: retro`, through the project-provenance gate. The origin is
+      the unit's identity part `{repo, pr|session}` (`unitOrigin`), so a failed
+      merge-SHA lookup or a policy bump cannot make one PR corroborate itself;
+      the body is the canonical claim, so differently worded retros on one claim
+      corroborate. Signals land in the running workspace's intake, not the
+      common dir.*
 - [x] **4.2 The retro aggregates the sidecar itself** at the end of each run
       through the library function, independent of
       `memory.learn_on_session_end` (D6).

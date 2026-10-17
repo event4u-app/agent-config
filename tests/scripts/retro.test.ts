@@ -12,7 +12,9 @@ import {
     composeRetro,
     intakeSignals,
     triagePr,
+    triageSession,
     unitKey,
+    unitOrigin,
     writeIntakeSignals,
     type Candidate,
 } from '../../src/scripts/retro.js';
@@ -105,7 +107,13 @@ describe('retro — composition', () => {
         const root = tmp();
 
         const fromA = composeRetro({ key: keyA, facts, candidate: learning, root });
-        const fromB = composeRetro({ key: keyB, facts, candidate: learning, root });
+        // A second, independent synthesis words the same claim differently.
+        const fromB = composeRetro({
+            key: keyB,
+            facts,
+            candidate: { ...learning, learning: 'Two same-day drains drift the generated baseline.' },
+            root,
+        });
         const twoPrs = aggregate([...intakeSignals(fromA, now), ...intakeSignals(fromB, now)], Date.parse(now));
         expect(twoPrs).toHaveLength(1);
         expect(twoPrs[0]!.corroborations).toBe(2);
@@ -114,6 +122,14 @@ describe('retro — composition', () => {
         const again = composeRetro({ key: keyA, facts, candidate: learning, root });
         const twoHosts = aggregate([...intakeSignals(fromA, now), ...intakeSignals(again, now)], Date.parse(now));
         expect(twoHosts).toHaveLength(0);
+
+        // Nor does a failed merge-sha lookup or a policy bump make it a second origin.
+        const keyAUnknown = unitKey({ repo: 'acme/widget', pr: 1 });
+        const keyANewPolicy = unitKey({ repo: 'acme/widget', pr: 1, merge_sha: 'a'.repeat(40), policy: 2 });
+        const rekeyed = [keyAUnknown, keyANewPolicy].flatMap((key) =>
+            intakeSignals(composeRetro({ key, facts, candidate: learning, root }), now),
+        );
+        expect(aggregate([...intakeSignals(fromA, now), ...rekeyed], Date.parse(now))).toHaveLength(0);
     });
 
     it('a target outside the closed vocabulary is refused', () => {
@@ -162,12 +178,40 @@ describe('retro — composition', () => {
         expect(out.recurrence).toEqual({ target: 'rule:drain-baseline', occurrences: 3, records: 1 });
     });
 
-    it('caps intake signals at three per unit', () => {
+    it('one durable learning yields exactly one intake signal', () => {
         const key = unitKey({ repo: 'acme/widget', pr: 1, merge_sha: 'a'.repeat(40) });
         const out = composeRetro({ key, facts: prFacts({ red_heads: m(2) }), candidate: learning, root: tmp() });
-        const signals = intakeSignals(out, '2026-10-17T00:00:00Z', ['one', 'two', 'three', 'four']);
-        expect(signals.length).toBeLessThanOrEqual(3);
-        expect(new Set(signals.map((s) => s.origin))).toEqual(new Set([key]));
+        const signals = intakeSignals(out, '2026-10-17T00:00:00Z');
+        expect(signals).toHaveLength(1);
+        expect(signals[0]!.origin).toBe(unitOrigin(key));
+    });
+
+    it('drain conflict cells that say none do not score', () => {
+        for (const cell of ['—', '-', 'none', 'No content conflict.', 'Clean.', '0 (base already integrated)']) {
+            const t = triagePr(prFacts({ drain_row: m({ '#': '1', 'Sync conflicts': cell, Disposition: 'merged' }) }));
+            expect(t.score, cell).toBe(0);
+        }
+        const hit = triagePr(prFacts({ drain_row: m({ '#': '1', 'Sync conflicts': 'generated file', Disposition: 'merged' }) }));
+        expect(hit.score).toBe(1);
+    });
+
+    it('a session with no assistant record is skipped whatever else it carries', () => {
+        const t = triageSession({
+            unit: 'session',
+            tag: 't',
+            workspaces: m(['/w']),
+            found_in: m('/w'),
+            turns: m(40),
+            assistant_records: m(0),
+            tool_calls: m(0),
+            compactions: m(2),
+            final_context_tokens: m(0),
+            interruptions: m({ ask: 3, handback: 0, none: 0 }),
+            self_repair_in_window: m(1),
+            roadmap: miss,
+            branch: miss,
+        });
+        expect(t.class).toBe('skip:low-signal');
     });
 });
 
@@ -182,7 +226,8 @@ describe('retro — local effect', () => {
 
         const signals = readSignals(path.join(root, 'agents', 'memory', 'intake'));
         expect(signals).toHaveLength(1);
-        expect(signals[0]!.origin).toBe(key);
+        expect(signals[0]!.origin).toBe(unitOrigin(key));
+        expect(signals[0]!.origin).not.toContain('/');
         expect(signals[0]!.path).toBe(learning.subject);
         expect(VALID_TYPES.has(signals[0]!.entryType)).toBe(true);
     });

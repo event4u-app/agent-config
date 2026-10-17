@@ -88,6 +88,22 @@ describe('retro_queue — window and dedupe', () => {
         expect(localDay('2026-10-25T22:30:00Z', BERLIN)).toBe('2026-10-25');
     });
 
+    it('a sweep driven by the clock across the switch sees each finished day once', () => {
+        // First session of the day, an hour after local midnight, on each side of the fall-back night.
+        const before = localDay('2026-10-24T22:00:00Z', BERLIN); // 25th, 00:00 CEST
+        const after = localDay('2026-10-26T00:00:00Z', BERLIN); // 26th, 01:00 CET
+        expect(before).toBe('2026-10-25');
+        expect(after).toBe('2026-10-26');
+        expect(sweepDays('2026-10-24', before)).toEqual(['2026-10-24']);
+        expect(sweepDays(before, after)).toEqual(['2026-10-25']);
+        const spring = localDay('2026-03-29T23:00:00Z', BERLIN); // 30th, 01:00 CEST
+        expect(sweepDays('2026-03-29', spring)).toEqual(['2026-03-29']);
+    });
+
+    it('a malformed day is refused, never read as an empty sweep', () => {
+        expect(() => sweepDays('yesterday', '2026-10-27')).toThrow(/not a calendar day/);
+    });
+
     it('older than the window is expired, inside it is not', () => {
         const today = '2026-10-27';
         const edge = `2026-10-${27 - CATCH_UP_WINDOW_DAYS}`;

@@ -3,7 +3,7 @@
  *
  * One file per unit in the git common directory, so every worktree of a
  * repository sees one queue and a unit enqueued from two of them is one unit.
- * Writes are temp-file-then-rename, and an existing entry is never rewritten:
+ * Writes are temp-file-then-hard-link, and an existing entry is never rewritten:
  * the first enqueue's timestamp is the discovery time a later measurement reads.
  *
  * Days are local calendar days in an IANA zone, and all arithmetic is on the
@@ -55,11 +55,13 @@ export function enqueue(workspaceRoot: string, entry: QueueEntry, nowIso: string
     const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
     fs.writeFileSync(tmp, `${JSON.stringify(stored)}\n`, { flag: 'wx' });
     try {
-        // A concurrent enqueue of the same unit may have won; theirs stands.
         fs.linkSync(tmp, file);
         return 'enqueued';
-    } catch {
-        return 'exists';
+    } catch (err) {
+        // A concurrent enqueue of the same unit won; theirs stands. Any other
+        // failure would lose the unit, so it is not reported as `exists`.
+        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return 'exists';
+        throw err;
     } finally {
         fs.rmSync(tmp, { force: true });
     }
@@ -102,7 +104,11 @@ export function localDay(iso: string, timeZone: string): string {
 }
 
 const DAY_MS = 86_400_000;
-const dayNumber = (day: string): number => Math.round(Date.parse(`${day}T00:00:00Z`) / DAY_MS);
+function dayNumber(day: string): number {
+    const ms = /^\d{4}-\d{2}-\d{2}$/.test(day) ? Date.parse(`${day}T00:00:00Z`) : NaN;
+    if (!Number.isFinite(ms)) throw new Error(`retro_queue: not a calendar day: ${day}`);
+    return Math.round(ms / DAY_MS);
+}
 const dayString = (n: number): string => new Date(n * DAY_MS).toISOString().slice(0, 10);
 
 /**
