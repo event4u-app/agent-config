@@ -96,7 +96,7 @@ files as there were findings without an owner.
       > files, and turned them into `extends`:
       > `road-to-skills-that-arrive-when-called`,
       > `road-to-tool-results-that-leave-a-handle`.
-- [ ] **1.2 A rule that keeps them true.** *corrected-from-reproduction:* the
+- [x] **1.2 A rule that keeps them true.** *corrected-from-reproduction:* the
       supplied plans put this in `lint_blocker_citations`, which checks
       line-number citations, not relations; the rule belongs to
       `_check_relates`. A `blocked-by: road-to-X#…` marker requires a
@@ -104,15 +104,19 @@ files as there were findings without an owner.
       name a file under `archive/`. Test first: a fixture with the marker and no
       row is red before the change.
       verify: `npx vitest run tests/scripts/lint_roadmap_complexity.test.ts -t blocked-by-needs-depends --reporter=verbose` -> /✓.*blocked-by-needs-depends/
-      > **Partly landed 2026-10-16; left open on purpose.** `_check_cross_file_waits`
-      > in `lint_roadmap_complexity.ts` fails a `<!-- blocked-by: road-to-X#… -->`
-      > marker without a `depends` row for X (seen red first). The archived
-      > half reports as a **warning**, not a failure, because one active file —
-      > `road-to-a-setup-that-decides-itself`, held by a parallel drain lane
-      > this run — still depends on the complete, archived
-      > `road-to-a-release-that-reads-its-settings-delta`. Closes when that row
-      > becomes `extends` and the `warnings.push` for the archived half turns
-      > into `problems.push`.
+      > **Closed 2026-10-17.** The marker half landed 2026-10-16:
+      > `_check_cross_file_waits` in `lint_roadmap_complexity.ts` fails a
+      > `<!-- blocked-by: road-to-X#… -->` marker without a `depends` row for
+      > X (seen red first). The archived half reported as a warning because
+      > one active file still carried such a row. That row —
+      > `road-to-a-setup-that-decides-itself` → the archived
+      > `road-to-a-release-that-reads-its-settings-delta` — is now `extends`,
+      > and the slug is out of that file's top-level `depends:` list. A sweep
+      > over the active glob finds no other `depends` row naming an archived
+      > file, so the `warnings.push` is now `problems.push`, seen red first in
+      > `tests/scripts/lint_roadmap_complexity.test.ts`. Eleven such rows
+      > remain under `later/`, which this gate does not walk; they fail when
+      > their file is promoted, which is the right moment to repair them.
 
 ## Phase 2 — An addition shows the owner search it ran
 
@@ -134,6 +138,12 @@ files as there were findings without an owner.
       > `unsearched` as a warning without failing. Closes when a report-only
       > window over real additions (Phase 6) shows the warning's false-refusal
       > rate and the warning becomes a refusal, with its own council round.
+      > **Re-screened 2026-10-17: still open, and both of its two conditions
+      > are unmet.** 6.2's window opens four weeks after the report-only half
+      > landed, so 2026-11-13 at the earliest, and the council round cannot
+      > run — both seats returned `0/2 present — INCONCLUSIVE` on 2026-10-17.
+      > Nothing here is blocked on work; it is blocked on elapsed time and on
+      > a seat.
 - [x] **2.2 A finding with an owner lands on the owner.** `/analyze:inbox`
       Phase 5 and `/analyze:roadmap-repos` gain one rule: a verified finding
       whose subject an active, parked or stub roadmap already owns becomes a
@@ -176,6 +186,16 @@ files as there were findings without an owner.
       > gate read as the active tree; it would be judged as a roadmap unless
       > each gate's exclusion list gains it, or the digest lives outside that
       > glob. Either choice belongs with the D6 reopen, not with a drain.
+      > **Re-screened 2026-10-17, and (1) is now measured rather than
+      > estimated.** The row set at this commit is 33 active and 103 `later/`
+      > files, 136 rows; the 136 slugs alone are ~1,460 tokens, and 136
+      > descriptions at the 20-word cap add ~3,540, so the pair already exceeds
+      > the 4,000-token budget before status and paths. Counting the 132
+      > `stubs/` files as parked too takes slugs alone to ~2,870. The reopen is
+      > therefore unavoidable, and it is **not taken here**: it is
+      > reversible-technical and so council-decidable, and both council seats
+      > returned `0/2 present — INCONCLUSIVE` on 2026-10-17, which routes the
+      > decision to the owner rather than to the drain.
 - [ ] **4.2 The intake reads it before deep work.** `/analyze:inbox` Phase 2
       consults the digest for the `recurrence` column before the Phase 4c grep,
       so a re-arrived subject is visible in the triage table at the first look.
@@ -293,8 +313,11 @@ files as there were findings without an owner.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** No `relates:` row names a file under `archive/` as `depends`, and
+- [x] **AC-1** No `relates:` row names a file under `archive/` as `depends`, and
       every cross-file `blocked-by:` marker has a matching `depends` row.
+      Both halves now fail the lint rather than warn, and
+      `./scripts-run src/scripts/lint_roadmap_complexity` is clean over all 33
+      active files at 2026-10-17.
 - [ ] **AC-2** The estate gate refuses an added `estate_offset_exempt` that
       quotes no owner search, and accepts one that does.
 - [x] **AC-3** The dashboard shows two ages per active roadmap, read from git,
