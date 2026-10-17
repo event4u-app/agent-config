@@ -73,7 +73,6 @@ import {
 import {
     consumerDenyList,
     describeFindings,
-    type ReleasePayload,
     scanPayload,
 } from './_lib/self_repair_payload.js';
 import {
