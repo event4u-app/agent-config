@@ -47,7 +47,7 @@ work, not a notification:
    the release can be a pull request; otherwise the report alone becomes an
    issue.
 4. **Offer the release** — `agent-config self-repair:release <fingerprint>`;
-   `--dry-run` shows route, account and body, and sends nothing. Running it is
+   `--dry-run` shows route, account and body, and sends no bytes. Running it is
    the user's call, per
    [`non-destructive-by-default`](non-destructive-by-default.md).
 
