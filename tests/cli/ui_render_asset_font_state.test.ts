@@ -7,10 +7,11 @@
  * directory beside the SVG that declares them, or served through an
  * intercepted route where the test needs control over timing.
  *
- * A real Chromium is launched, so this file is a browser suite: it runs in the
- * `svg-witness-tests` job, on ubuntu and macOS, through the import at the foot
- * of `ui_render_asset_profile.test.ts`, and stands down on a runner with no
- * Chromium binary (`chromiumReachable`).
+ * A real Chromium is launched, so this file is a browser suite: it is
+ * excluded from the sharded matrix in `vitest.config.ts` (run it locally with
+ * `AGENT_CONFIG_BROWSER_SUITES=1`) and runs in the `svg-witness-tests` job, on
+ * ubuntu and macOS, through the import at the foot of
+ * `ui_render_asset_profile.test.ts`.
  */
 
 import * as fs from 'node:fs';
@@ -24,7 +25,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runUiRender } from '../../src/cli/commands/uiRender.js';
 import type { RenderManifest } from '../../src/cli/commands/uiRender.js';
 import { readFaceStates } from '../../src/cli/commands/uiRenderAssetFonts.js';
-import { chromiumReachable } from '../_lib/chromium_reachable.js';
 import { buildTestFace } from '../_lib/test_truetype_face.js';
 
 const BROWSER_BUDGET_MS = 90_000;
@@ -52,7 +52,7 @@ async function renderTexts(slug: string, svg: string): Promise<NonNullable<Rende
     return manifest.asset as NonNullable<RenderManifest['asset']>;
 }
 
-describe.skipIf(!chromiumReachable())('ui:render --profile asset — the face that painted', () => {
+describe('ui:render --profile asset — the face that painted', () => {
     beforeAll(async () => {
         tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ui-render-font-state-'));
         fs.writeFileSync(path.join(tmpRoot, 'witness-400.ttf'), buildTestFace({ family: 'Witness Face', weight: 400 }));

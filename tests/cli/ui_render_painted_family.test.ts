@@ -8,11 +8,10 @@
  * is the same on every host: the first family is not installed, the second is
  * a webfont whose file is missing, the third is a webfont that loads.
  *
- * A real Chromium is launched, so this is a browser suite: it runs in the
- * `svg-witness-tests` job through the import at the foot of
- * `ui_render_asset_profile.test.ts`, and stands down on a runner with no
- * Chromium binary (`chromiumReachable`). The collector case needs no browser
- * and runs everywhere.
+ * A real Chromium is launched, so this is a browser suite: it is excluded from
+ * the sharded matrix in `vitest.config.ts` (run it locally with
+ * `AGENT_CONFIG_BROWSER_SUITES=1`) and runs in the `svg-witness-tests` job
+ * through the import at the foot of `ui_render_asset_profile.test.ts`.
  */
 
 import * as fs from 'node:fs';
@@ -23,7 +22,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { collectPaintedFamilies, collectTypeFamilies, runUiRender } from '../../src/cli/commands/uiRender.js';
 import type { RenderManifest } from '../../src/cli/commands/uiRender.js';
-import { chromiumReachable } from '../_lib/chromium_reachable.js';
 import { buildTestFace } from '../_lib/test_truetype_face.js';
 
 let tmpRoot: string;
@@ -58,7 +56,7 @@ describe('ui:render page profile — declared and painted', () => {
         expect(collectPaintedFamilies([{ 'font-family': 'Inter' }])).toEqual([]);
     });
 
-    it.skipIf(!chromiumReachable())(
+    it(
         'the first declared family is kept and the family that painted is added',
         async () => {
             const file = path.join(tmpRoot, 'page.html');
