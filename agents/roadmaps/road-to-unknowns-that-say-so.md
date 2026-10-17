@@ -244,6 +244,10 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       meta-case asserts `fetch('https://example.com')` is refused and a spawned
       `curl` exits non-zero. Neither needs the network.
       verify: `npx vitest run tests/_lib/network_guard.test.ts -t in-process-fetch-is-refused --reporter=verbose` -> /✓.*in-process-fetch-is-refused/
+      *Still open 2026-10-17 (5.2–5.3):* the in-process half needs `undici`'s
+      `setGlobalDispatcher`, and `undici` is not a dependency of this package
+      (`node_modules/undici` is absent); adding one is a dependency decision,
+      not part of a drain lane.
 - [x] **5.4 A new conditional skip is counted (D6).** `SUPPRESSION` also
       matches `.skipIf(` and `.runIf(`; an added one passes
       `check_test_weakening` only with a `// skip-reason:` on the same or
@@ -301,11 +305,18 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       with the manifest sum minus skipped scenes; a shortfall beyond the stated
       tolerance exits non-zero. Black and silent spans go to stderr, never fatal.
       verify: `npx vitest run tests/scripts/ai_video_stitch_flags.test.ts -t stitch-output-matches-manifest --reporter=verbose` -> /✓.*stitch-output-matches-manifest/
+      *Still open 2026-10-17 (6.4–6.5):* D7 binds the FFmpeg install to the
+      same change, and that install is a workflow step, which needs a council
+      ratification artefact before it can be pushed.
 - [ ] **6.6 The found-elsewhere items are handed over.** Each H1 sentence becomes
       one step in `road-to-sentences-the-tree-can-back`, the H2 instruments one
       step in `road-to-what-was-built-and-never-ran`, the H3 census a note in
       `road-to-typed-grants-that-persist` — each edit names this file.
       verify: `grep -l 'road-to-unknowns-that-say-so' agents/roadmaps/archive/road-to-sentences-the-tree-can-back.md agents/roadmaps/archive/road-to-what-was-built-and-never-ran.md` -> /what-was-built/
+      *Still open 2026-10-17:* both H1 and H2 targets are archived with zero
+      open steps. Adding open steps to an archived file, or reviving it, adds
+      to the estate, so where the ten sentences and two instruments go is a
+      decision this step cannot take alone.
 
 *Exit: 6.1–6.6 green; `ai_video_stitch_handoff.test.ts` unchanged and green.*
 
