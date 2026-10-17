@@ -719,7 +719,7 @@ describe('council_cli size-fit — a downgrade is on the record', () => {
                 this.billable = false;
                 this.transport = 'cli';
             }
-            override ask(): CouncilResponse {
+            override ask(): InstanceType<typeof CouncilResponse> {
                 return new CouncilResponse({ provider: this.name, model: this.model, text: 'ok', error: null });
             }
         }
