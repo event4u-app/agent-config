@@ -204,10 +204,11 @@ irreversible-external-action row of `non-destructive-by-default`).
       cover the documented path; fails today.
       verify: `npx vitest run tests/scripts/lint_ghostwriter_source.test.ts -t documented-path --reporter=verbose` -> /✓.*documented-path/
       Done 2026-10-16: `documented-path` checks the managed block with `check-ignore --no-index` in a scratch repository and the lint roots; six of ten cases red at the base.
-- [ ] **0.6 Zero brand bytes off-brand, guard.** A backend prompt in a project
+- [x] **0.6 Zero brand bytes off-brand, guard.** A backend prompt in a project
       with a full brand produces no brand emission; green today, kept as the
       floor every later phase must hold.
       verify: `npx vitest run tests/scripts/hooks -t no-brand-bytes --reporter=verbose` -> /✓.*no-brand-bytes/
+      Done 2026-10-17: `tests/scripts/hooks/no_brand_bytes.test.ts` runs every concern bound to the `claude` `session_start` and `user_prompt_submit` slots in-process against a backend prompt in a fixture project carrying `tokens.json`, `DESIGN.md` and a `brand-voice` slot, and finds none of the brand-only markers in any output. A non-vacuity case proves the capture sees emitted text; a sabotage probe (a marker every run emits) turned both slot cases red.
 - [x] **0.7 Profile exposure check** (`folded-from-deep-dive`). Before 1.1 lands,
       report how many files under either ghostwriter path are tracked in this
       repository and in its test fixtures — counts only, never names or content.
