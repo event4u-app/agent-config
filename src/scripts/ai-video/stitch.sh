@@ -99,6 +99,10 @@ case "${DRYRUN}" in
   *) DRYRUN_FLAG=1 ;;
 esac
 [ "${DRYRUN_FLAG}" -eq 0 ] && aiv_require_cmd ffmpeg
+# ffprobe is now a hard dependency of EVERY real run, not only of handoff mode:
+# steps 6.4 and 6.5 open each clip before concat and measure the output after
+# it, and both need it. The dry-run path still needs neither.
+[ "${DRYRUN_FLAG}" -eq 0 ] && aiv_require_cmd ffprobe
 
 MANIFEST="${1:-}"
 OUTPUT="${2:-}"
@@ -156,6 +160,33 @@ if [ "${MODE}" = "handoff" ]; then
   [ "${DRYRUN_FLAG}" -eq 0 ] && aiv_require_cmd ffprobe
 fi
 
+# --- 6.4 / 6.5 -------------------------------------------------------------
+# Reading a clip before trusting it. `-c copy` never decodes, so a truncated or
+# zero-byte file concatenates without complaint and the run reports success over
+# an output no player can open — measured, and the defect these two functions
+# exist to close.
+
+# Exit 0 when ffprobe can read a video stream out of "$1".
+clip_is_readable() {
+  ffprobe -v error -select_streams v:0 -show_entries stream=codec_name \
+    -of csv=p=0 "$1" >/dev/null 2>&1
+}
+
+# `<codec>|<width>x<height>|<avg_frame_rate>|<audio:0|1>` for "$1".
+# The four fields the concat demuxer's copy path cannot reconcile between
+# inputs. Printed on one line so a mismatch is one string comparison and the
+# message can name both sides.
+clip_fingerprint() {
+  local v a
+  v="$(ffprobe -v error -select_streams v:0 \
+        -show_entries stream=codec_name,width,height,avg_frame_rate \
+        -of csv=p=0:nk=1 "$1" 2>/dev/null | head -1 | tr '\n' ',')"
+  a="$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_type \
+        -of csv=p=0 "$1" 2>/dev/null | head -1)"
+  [ -n "${a}" ] && a=1 || a=0
+  printf '%s|audio=%s' "${v%,}" "${a}"
+}
+
 skip_match() {
   local id="$1" s
   for s in ${SKIP_IDS}; do
@@ -174,6 +205,14 @@ CONCAT_LIST="${WORK_DIR}/concat.txt"
 # Written only in handoff mode, so the cut path is untouched.
 SEQ_LIST="${WORK_DIR}/seq.tsv"
 : > "${SEQ_LIST}"
+# 6.5: `<scene_id>\t<fingerprint>\t<declared audio_embedded>\t<path>` per kept
+# clip, written on every real run. The concat demuxer's copy path cannot
+# reconcile a codec, resolution or frame-rate change between inputs — it emits a
+# file whose later segments are undecodable — so the inputs are compared before
+# ffmpeg is asked to copy them. Not written in dry-run mode, where no clip is
+# opened at all.
+FP_LIST="${WORK_DIR}/fp.tsv"
+: > "${FP_LIST}"
 
 # Accept both bare-array manifests and the documented object shape
 # (`{ "scenes": [...] }`). Field names tolerate the legacy
@@ -214,7 +253,16 @@ while IFS= read -r row; do
     continue
   fi
 
-  if [ ! -f "${clip_path}" ]; then
+  # 6.4: unreadable counts as missing. A file that exists but cannot be
+  # decoded is not a usable clip, and the copy path would never find out.
+  clip_unreadable=0
+  if [ -f "${clip_path}" ] && ! clip_is_readable "${clip_path}"; then
+    clip_unreadable=1
+    printf 'stitch: scene=%s clip exists but ffprobe cannot read a video stream from it: %s\n' \
+      "${scene_id}" "${clip_path}" >&2
+  fi
+
+  if [ ! -f "${clip_path}" ] || [ "${clip_unreadable}" -eq 1 ]; then
     err_json="${PROJECT_DIR}/scenes/${scene_id}/error.json"
     if [ -f "${err_json}" ]; then
       printf 'stitch: scene=%s adapter-error: ' "${scene_id}" >&2
@@ -225,6 +273,9 @@ while IFS= read -r row; do
         "${scene_id}" "${clip_path}" >&2
       missing=$((missing + 1))
       continue
+    fi
+    if [ "${clip_unreadable}" -eq 1 ]; then
+      aiv_die 7 "unreadable clip for scene=${scene_id} at ${clip_path} — the file exists but ffprobe found no video stream in it (re-render the scene, pass --skip-scene ${scene_id}, or use --continue)"
     fi
     aiv_die 7 "missing clip for scene=${scene_id} at ${clip_path} (re-render the scene, pass --skip-scene ${scene_id}, or use --continue)"
   fi
@@ -245,11 +296,13 @@ while IFS= read -r row; do
       -c:v copy -c:a aac -shortest "${muxed}" >/dev/null \
       || aiv_die 8 "ffmpeg mux failed for scene=${scene_id}"
     printf "file '%s'\n" "${muxed}" >> "${CONCAT_LIST}"
+    printf '%s\t%s\t%s\t%s\n' "${scene_id}" "$(clip_fingerprint "${muxed}")" "${audio_embedded}" "${muxed}" >> "${FP_LIST}"
     if [ "${MODE}" = "handoff" ]; then
       printf '%s\t%s\n' "${continuity}" "${muxed}" >> "${SEQ_LIST}"
     fi
   else
     printf "file '%s'\n" "${clip_path}" >> "${CONCAT_LIST}"
+    printf '%s\t%s\t%s\t%s\n' "${scene_id}" "$(clip_fingerprint "${clip_path}")" "${audio_embedded}" "${clip_path}" >> "${FP_LIST}"
     if [ "${MODE}" = "handoff" ]; then
       printf '%s\t%s\n' "${continuity}" "${clip_path}" >> "${SEQ_LIST}"
     fi
@@ -271,6 +324,14 @@ fi
 
 # The re-encode settings are one constant, used by both handoff branches, so a
 # port cannot drift them apart.
+# Seconds of shortfall tolerated between the summed inputs and the output.
+# Container rounding and a trailing partial frame are not a defect; half a
+# second is well above both and well below any dropped scene. Overridable
+# because a shortfall is the one failure in 6.5 that cannot be provoked with a
+# fixture — a file ffprobe reads as whole and ffmpeg copies as short is not
+# something `testsrc` can produce — so the branch would otherwise ship having
+# never been seen fire. The test drives it to a negative tolerance and back.
+DURATION_TOLERANCE="${AIV_DURATION_TOLERANCE:-0.5}"
 HANDOFF_VCODEC="libx264"
 HANDOFF_ARGS="-crf 20 -g 8 -pix_fmt yuv420p -movflags +faststart -an"
 
@@ -351,9 +412,49 @@ if [ "${MODE}" = "handoff" ]; then
       || aiv_die 8 "ffmpeg handoff xfade failed (manifest=${MANIFEST}, output=${OUTPUT})"
   fi
 else
+  # 6.5, BEFORE the copy. `-c copy` never decodes, so a codec / resolution /
+  # frame-rate change between inputs produces a file that plays the first
+  # segment and then falls apart, with exit 0 and the success JSON. The first
+  # clip is the reference; the first divergent scene is named, with both sides,
+  # and the message points at the path that CAN reconcile them.
+  ref_fp=""
+  ref_id=""
+  while IFS="$(printf '\t')" read -r fp_id fp fp_audio fp_path; do
+    [ -n "${fp_id}" ] || continue
+    if [ "${fp_audio}" = "true" ]; then
+      case "${fp}" in
+        *'|audio=1') ;;
+        *) aiv_die 8 "stitch: scene=${fp_id} declares audio_embedded: true and ${fp_path} carries no audio stream. The concat copy path cannot invent one, and a mixed audio/no-audio concat drops the audio of every later segment. Fix the manifest row or re-render the scene." ;;
+      esac
+    fi
+    if [ -z "${ref_fp}" ]; then
+      ref_fp="${fp}"
+      ref_id="${fp_id}"
+    elif [ "${fp}" != "${ref_fp}" ]; then
+      aiv_die 8 "stitch: scene=${fp_id} does not match scene=${ref_id} on the copy path — ${fp} vs ${ref_fp}. 'ffmpeg -f concat -c copy' cannot reconcile a codec, resolution, frame-rate or audio-presence change and would emit a file that decodes only as far as the first divergence. Re-run with --mode handoff, which re-encodes every input to one shape, or re-render the divergent scene to match."
+    fi
+  done < "${FP_LIST}"
+
   ffmpeg -loglevel error -y -f concat -safe 0 -i "${CONCAT_LIST}" \
     -c copy "${OUTPUT}" >/dev/null \
     || aiv_die 8 "ffmpeg concat failed (manifest=${MANIFEST}, output=${OUTPUT})"
+
+  # 6.5, AFTER the copy. The sum of what went in, against what came out. A
+  # short output is the failure mode a copy-path concat reaches silently; the
+  # tolerance is stated rather than implied, and it is generous on purpose —
+  # container rounding and a trailing partial frame are not a defect.
+  expected_dur=0
+  while IFS="$(printf '\t')" read -r _fp_id _fp _fp_audio fp_path; do
+    [ -n "${fp_path}" ] || continue
+    d="$(_probe_duration "${fp_path}")"
+    [ -n "${d}" ] || aiv_die 8 "stitch: cannot read duration of ${fp_path} after concat"
+    expected_dur="$(awk -v a="${expected_dur}" -v d="${d}" 'BEGIN { printf "%.6f", a + d }')"
+  done < "${FP_LIST}"
+  actual_dur="$(_probe_duration "${OUTPUT}")"
+  [ -n "${actual_dur}" ] || aiv_die 8 "stitch: wrote ${OUTPUT} and cannot read its duration back"
+  awk -v e="${expected_dur}" -v a="${actual_dur}" -v t="${DURATION_TOLERANCE}" \
+    'BEGIN { exit !(e - a > t) }' \
+    && aiv_die 8 "stitch: output is short — ${actual_dur}s against ${expected_dur}s of input (tolerance ${DURATION_TOLERANCE}s, missing=${missing} scene(s) already excluded). The concat reported success and produced less video than it was given, which is what an unreadable or mid-file-truncated input does on the copy path."
 fi
 
 printf '{"output":"%s","scenes":%d,"missing":%d%s}\n' \

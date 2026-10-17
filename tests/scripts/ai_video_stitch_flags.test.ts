@@ -129,3 +129,188 @@ describe('stitch.sh — --crossfade is refused, never downgraded', () => {
         expect(r.stderr).toMatch(/unknown flag/);
     });
 });
+
+/**
+ * Steps 6.4 and 6.5 of `road-to-unknowns-that-say-so`, and AC-9.
+ *
+ * The defect, executed before these cases existed: `-c copy` never decodes, so
+ * `stitch.sh` reported `{"output":…,"scenes":2,"missing":0}` and exit 0 over an
+ * input it had never opened. A truncated file, a zero-byte file, and a second
+ * clip at a different resolution all produced a success line and a file whose
+ * later segments no player can decode.
+ *
+ * Every case here builds its clips with `ffmpeg -f lavfi -i testsrc`, so the
+ * fixtures are real video rather than text pretending to be video — the
+ * distinction matters because the whole point is what `ffprobe` says about the
+ * bytes. They skip with a reason where ffmpeg is absent; the CI job that runs
+ * them installs it (decision D7).
+ */
+const HAS_FFPROBE = spawnSync('ffprobe', ['-version'], { encoding: 'utf-8' }).status === 0;
+// skip-reason: these cases decode real video; without ffmpeg/ffprobe there is
+// nothing to decode and the script dies on the missing dependency before any
+// assertion is reached.
+const MEDIA = HAS_FFMPEG && HAS_FFPROBE;
+
+/** A real clip at `size`, `seconds` long, written to `file`. */
+function makeClip(file: string, size: string, seconds: number): void {
+    const r = spawnSync(
+        'ffmpeg',
+        ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i',
+         `testsrc=duration=${seconds}:size=${size}:rate=10`, '-pix_fmt', 'yuv420p', file],
+        { encoding: 'utf-8' },
+    );
+    if (r.status !== 0) throw new Error(`fixture clip failed: ${r.stderr}`);
+}
+
+function mediaProject(scenes: { id: string; file: string; audio?: boolean }[]): {
+    manifest: string;
+    output: string;
+    dir: string;
+} {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'stitch-media-'));
+    const manifest = path.join(dir, 'manifest.json');
+    fs.writeFileSync(
+        manifest,
+        JSON.stringify(
+            scenes.map((s) => ({
+                scene_id: s.id,
+                clip_path: path.join(dir, s.file),
+                audio_embedded: s.audio ?? false,
+            })),
+        ),
+    );
+    return { manifest, output: path.join(dir, 'out.mp4'), dir };
+}
+
+describe('stitch.sh — a clip nobody opened is not a clip', () => {
+    it.skipIf(!MEDIA)('stitch-refuses-unreadable-clip', () => {
+        const { manifest, output, dir } = mediaProject([
+            { id: 's1', file: 'a.mp4' },
+            { id: 's2', file: 'broken.mp4' },
+        ]);
+        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+        fs.writeFileSync(path.join(dir, 'broken.mp4'), 'not a video, and 11 bytes of it');
+
+        const r = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
+
+        expect(r.status, r.stderr).toBe(7);
+        expect(r.stderr).toMatch(/unreadable clip for scene=s2/);
+        expect(r.stderr).toMatch(/ffprobe found no video stream/);
+        // Never the success line. This is what the old path printed.
+        expect(r.stdout).not.toMatch(/"output"/);
+        expect(fs.existsSync(output)).toBe(false);
+    });
+
+    it.skipIf(!MEDIA)('honours --continue over an unreadable clip, exactly as over a missing one', () => {
+        // The polarity partner. An unreadable clip is routed into the EXISTING
+        // missing-clip policy rather than into a new fatal path of its own, so
+        // the operator's three flags keep meaning what they meant.
+        const { manifest, output, dir } = mediaProject([
+            { id: 's1', file: 'a.mp4' },
+            { id: 's2', file: 'broken.mp4' },
+        ]);
+        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+        fs.writeFileSync(path.join(dir, 'broken.mp4'), 'not a video');
+
+        const r = runStitch([manifest, output, '--continue'], { AIV_DRYRUN: 'false' });
+
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toMatch(/"scenes":1/);
+        expect(r.stdout).toMatch(/"missing":1/);
+    });
+
+    it.skipIf(!MEDIA)('stitch-output-matches-manifest', () => {
+        // The valid run: two clips of one shape. Both halves of 6.5 pass over
+        // it — every fingerprint matches, and the output duration is within
+        // tolerance of the summed inputs — and the stdout is byte-identical to
+        // what this path printed before either check existed.
+        const { manifest, output, dir } = mediaProject([
+            { id: 's1', file: 'a.mp4' },
+            { id: 's2', file: 'b.mp4' },
+        ]);
+        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+        makeClip(path.join(dir, 'b.mp4'), '320x240', 2);
+
+        const r = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
+
+        expect(r.status, r.stderr).toBe(0);
+        expect(r.stdout).toBe(`{"output":"${output}","scenes":2,"missing":0}\n`);
+        expect(fs.existsSync(output)).toBe(true);
+
+        const dur = spawnSync(
+            'ffprobe',
+            ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', output],
+            { encoding: 'utf-8' },
+        ).stdout.trim();
+        expect(Number(dur)).toBeGreaterThan(3.5);
+    });
+
+    it.skipIf(!MEDIA)('refuses a resolution change on the copy path and names the first divergent scene', () => {
+        const { manifest, output, dir } = mediaProject([
+            { id: 's1', file: 'a.mp4' },
+            { id: 's2', file: 'big.mp4' },
+        ]);
+        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+        makeClip(path.join(dir, 'big.mp4'), '640x480', 2);
+
+        const r = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
+
+        expect(r.status, r.stderr).toBe(8);
+        expect(r.stderr).toMatch(/scene=s2 does not match scene=s1/);
+        expect(r.stderr).toMatch(/640,480/);
+        expect(r.stderr).toMatch(/320,240/);
+        // The message points at the path that CAN reconcile them.
+        expect(r.stderr).toMatch(/--mode handoff/);
+        expect(r.stdout).not.toMatch(/"output"/);
+    });
+
+    it.skipIf(!MEDIA)('refuses a scene that declares audio_embedded over a clip with no audio stream', () => {
+        const { manifest, output, dir } = mediaProject([{ id: 's1', file: 'a.mp4', audio: true }]);
+        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+
+        const r = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
+
+        expect(r.status, r.stderr).toBe(8);
+        expect(r.stderr).toMatch(/declares audio_embedded: true/);
+        expect(r.stdout).not.toMatch(/"output"/);
+    });
+
+    it.skipIf(!MEDIA)('reports a short output, and the same run passes at the shipped tolerance', () => {
+        // The one branch of 6.5 no fixture can provoke: a file ffprobe reads
+        // as whole and ffmpeg copies as short is not something `testsrc` can
+        // produce. Driving the tolerance negative makes a correct run look
+        // short, which fires the branch on real measurements rather than on a
+        // stub — and the second half runs the IDENTICAL project at the shipped
+        // tolerance, so this cannot pass by the check being broken.
+        const { manifest, output, dir } = mediaProject([
+            { id: 's1', file: 'a.mp4' },
+            { id: 's2', file: 'b.mp4' },
+        ]);
+        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+        makeClip(path.join(dir, 'b.mp4'), '320x240', 2);
+
+        const forced = runStitch([manifest, output], {
+            AIV_DRYRUN: 'false',
+            AIV_DURATION_TOLERANCE: '-99',
+        });
+        expect(forced.status, forced.stderr).toBe(8);
+        expect(forced.stderr).toMatch(/output is short/);
+        expect(forced.stderr).toMatch(/4\.0+s against 4\.0+s of input/);
+        expect(forced.stdout).not.toMatch(/"output"/);
+
+        const shipped = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
+        expect(shipped.status, shipped.stderr).toBe(0);
+    });
+
+    it('leaves the dry-run path untouched — it opens no clip and checks nothing', () => {
+        // Runs everywhere, ffmpeg or not, and that is the point: the dry-run
+        // contract is that no clip is opened, so neither 6.4 nor 6.5 may reach
+        // it. A fake clip is enough precisely because nothing reads it.
+        const { manifest, output } = fixtureProject();
+        const r = runStitch([manifest, output]);
+
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/"dry_run":\s*true/);
+        expect(r.stderr).not.toMatch(/ffprobe/);
+    });
+});
