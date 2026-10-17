@@ -5,6 +5,7 @@
 // layer that runs python3 vs tsx on the REAL REPO (skipped without python3).
 // Live `gh` invocations are not exercised — the CI color resolution exits
 // via the `unknown` branch when `gh` is absent, identically in both.
+import { spawn, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -213,4 +214,38 @@ describe('adoption_status — a detector that notices an answer, not a calendar'
         expect(as_.parse_args(['--check-upstream']).checkUpstream).toBe(true);
         expect(as_.parse_args([]).checkUpstream).toBe(false);
     });
+});
+
+describe('adoption_status — an upstream read waits as long as a slow registry needs', () => {
+    // The official MCP registry answered its search in 15-20 s on 2026-10-17; a 20 s cap
+    // reported it unreachable. The wait must clear that with room to spare.
+    it('waits clearly longer than the registry was measured to take', () => {
+        expect(as_.UPSTREAM_READ_TIMEOUT_S).toBeGreaterThanOrEqual(30);
+    });
+
+    it.skipIf(spawnSync('curl', ['--version']).status !== 0)(
+        'honours the wait in both directions against a slow server',
+        async () => {
+            const server = spawn(
+                process.execPath,
+                [
+                    '-e',
+                    "const s=require('http').createServer((q,r)=>setTimeout(()=>{r.writeHead(200);r.end('ok')},2000));" +
+                        "s.listen(0,'127.0.0.1',()=>console.log(s.address().port));",
+                ],
+                { stdio: ['ignore', 'pipe', 'inherit'] },
+            );
+            try {
+                const port = await new Promise<string>((resolve) =>
+                    server.stdout.once('data', (d: Buffer) => resolve(d.toString().trim())),
+                );
+                const url = `http://127.0.0.1:${port}/listing`;
+                expect(as_.read_url('listing-page', url, 1).ok).toBe(false);
+                expect(as_.read_url('listing-page', url, 5)).toEqual({ ok: true, state: 'listed' });
+            } finally {
+                server.kill();
+            }
+        },
+        20_000,
+    );
 });

@@ -43,11 +43,14 @@ does not get to be believed on its own word.
 | `registry-query` | a registry search URL returning `metadata.count` | one fetch; a count above 0 is `listed` |
 
 **An upstream that blocks automated reads** is a standing condition, not a
-failed attempt to retry. Record the attempt, its date and what it returned in
-the notes, leave `Last read` empty, and say in the notes that the route is a
-browser. The row keeps reporting `unread`, which is correct: nobody has read
-it. What the note buys is that the next reader spends no calls rediscovering
-the block.
+failed attempt to retry. Before recording it as unread, try a real headless
+browser (Playwright's Chromium is already in `node_modules`): a bot check that
+refuses `curl` under every user agent can still serve the page to a browser, as
+`mcpservers.org` did on 2026-10-17. A browser read is a reading — set
+`Last read` and the status from it, and say in the notes that the route was a
+browser, because `--check-upstream` uses `curl` and will keep reporting the row
+`unreachable`. Only when the browser is refused too, leave `Last read` empty and
+record the attempt, its date and what it returned in the notes.
 
 `./scripts-run src/scripts/adoption_status --check-upstream` performs those
 reads and reports `answered-closed`, `answered-merged`, `stalled`, `open`,
@@ -58,12 +61,12 @@ nothing, reports from this sheet only, and says so on stderr.
 
 | # | Registry | Submission shape | Status | Upstream kind | Upstream ref | Last read | Date | Maintainer notes |
 |---|---|---|---|---|---|---|---|---|
-| 1a | `punkpeye/awesome-mcp-servers` — attempt 1 | One-line entry under the Developer-Tools section + Glama score badge | `rejected` | `github-pr` | `punkpeye/awesome-mcp-servers#6865` | 2026-10-16 | 2026-05-25 | Closed unmerged 2026-06-11 by the upstream maintainer: the Glama quality score had not been evaluated yet ("shows '?' — no grade yet"). Not a review rejection of the entry. Read 2026-10-16: `CLOSED`, `mergedAt: null`. |
-| 1b | `punkpeye/awesome-mcp-servers` — attempt 2 | One-line entry; PR via `scripts/mcp_registry_submit.sh` | `rejected` | `github-pr` | `punkpeye/awesome-mcp-servers#9607` | 2026-10-16 | 2026-07-07 | Closed unmerged 2026-09-07 for inactivity ("The author has not responded or updated the PR since July 7, 2026"). Outstanding at closing: Glama listing badge and a permitted language emoji tag after the link. **This row read `submitted`, noted as still waiting on review, for 39 days after the close**; corrected 2026-10-16 from a live `gh pr view` (`CLOSED`, `closedAt: 2026-09-07`, `mergedAt: null`). |
-| 2 | `mcp.so` | Directory form submission (web form, no programmatic API) | `accepted` | `listing-page` | <https://mcp.so/server/agent-config/event4u-app> | 2026-10-16 | 2026-06 | Server page live: HTTP 200, title "@event4u/agent Config MCP Server", links `event4u-app/agent-config`. `registries.md` recorded this form as submitted (maintainer-confirmed 2026-06) while this sheet said `pending`; the live page settles it. |
-| 3 | `mcpservers.org` | Directory form submission (web form) | `submitted` | `listing-page` | <https://mcpservers.org/servers/event4u-app/agent-config> | — | 2026-06 | `registries.md` recorded this form as submitted (maintainer-confirmed 2026-06); this sheet said `pending`. The 2026-10-16 read returned HTTP 403 to both an automated and a browser user agent, so the status is the maintainer's word, **not** a reading — the row stays `unread` until a human checks the site. Re-attempted 2026-10-17: HTTP 403 again, on the row's own URL and on the site root, under a default `curl`, an empty and a desktop-Chrome user agent. The block is the site's and it is standing, not a transient failure; this upstream is readable only from a browser. |
-| 4 | Official MCP Registry (`registry.modelcontextprotocol.io`) | `server.json` publish via `mcp-publisher` CLI (GitHub-auth'd) | `pending` | `registry-query` | <https://registry.modelcontextprotocol.io/v0/servers?search=io.github.event4u-app> | 2026-10-16 | — | Not published: the 2026-10-16 query for `io.github.event4u-app` returned `"count":0`. Paperwork complete 2026-07-27: `mcpName` in package.json, `mcp-name:` README marker, `dist/mcp/server.json` emitted by `build:mcp-manifest`, version- and name-equality gated in `lint_mcp_registry_manifest`. **Blocker:** the publish needs the maintainer's interactive GitHub login. |
-| 5 | `glama.ai` | Server page; score badge used by the awesome-list entry | `accepted` | `listing-page` | <https://glama.ai/mcp/servers/event4u-app/agent-config> | 2026-10-16 | 2026-06-08 | Server page live: HTTP 200, title "@event4u/agent-config by event4u-app". Moved here from `registries.md`, which recorded it listed on 2026-06-08. |
+| 1a | `punkpeye/awesome-mcp-servers` — attempt 1 | One-line entry under the Developer-Tools section + Glama score badge | `rejected` | `github-pr` | `punkpeye/awesome-mcp-servers#6865` | 2026-10-17 | 2026-05-25 | Closed unmerged 2026-06-11 by the upstream maintainer: the Glama quality score had not been evaluated yet ("shows '?' — no grade yet"). Not a review rejection of the entry. Read 2026-10-16 and again 2026-10-17: `CLOSED`, `closedAt: 2026-06-11`, `mergedAt: null`. |
+| 1b | `punkpeye/awesome-mcp-servers` — attempt 2 | One-line entry; PR via `scripts/mcp_registry_submit.sh` | `rejected` | `github-pr` | `punkpeye/awesome-mcp-servers#9607` | 2026-10-17 | 2026-07-07 | Closed unmerged 2026-09-07 for inactivity ("The author has not responded or updated the PR since July 7, 2026"). Outstanding at closing: Glama listing badge and a permitted language emoji tag after the link. **This row read `submitted`, noted as still waiting on review, for 39 days after the close**; corrected 2026-10-16 from a live `gh pr view` (`CLOSED`, `closedAt: 2026-09-07`, `mergedAt: null`). Re-read 2026-10-17: unchanged. |
+| 2 | `mcp.so` | Directory form submission (web form, no programmatic API) | `accepted` | `listing-page` | <https://mcp.so/server/agent-config/event4u-app> | 2026-10-17 | 2026-06 | Server page live: HTTP 200, title "@event4u/agent Config MCP Server", links `event4u-app/agent-config`. `registries.md` recorded this form as submitted (maintainer-confirmed 2026-06) while this sheet said `pending`; the live page settles it. Re-read 2026-10-17: the ref now redirects (HTTP 301) to <https://mcp.so/servers/agent-config>, which answers HTTP 200 with the same title and links `event4u-app/agent-config`. |
+| 3 | `mcpservers.org` | Directory form submission (web form) | `accepted` | `listing-page` | <https://mcpservers.org/servers/event4u-app/agent-config> | 2026-10-17 | 2026-06 | Listed. Read 2026-10-17 with a headless Chromium (Playwright): the row's own URL answered HTTP 200, title "event4u Agent Config MCP Server | Awesome MCP Servers", page filed under Development and linking GitHub. A plain `curl` gets HTTP 403 from the site's Cloudflare bot check (2026-10-16 and 2026-10-17, any user agent), and the site root stays behind the challenge even in the headless browser — so `adoption_status --check-upstream` reports this row `unreachable`, and that is the curl route failing, not the listing. `registries.md` had recorded the form as submitted (maintainer-confirmed 2026-06) while this sheet said `pending`; the browser read settles it. |
+| 4 | Official MCP Registry (`registry.modelcontextprotocol.io`) | `server.json` publish via `mcp-publisher` CLI (GitHub-auth'd) | `pending` | `registry-query` | <https://registry.modelcontextprotocol.io/v0/servers?search=io.github.event4u-app> | 2026-10-17 | — | Not published: the 2026-10-16 query, and again the 2026-10-17 one, for `io.github.event4u-app` returned `"count":0`. Paperwork complete 2026-07-27: `mcpName` in package.json, `mcp-name:` README marker, `dist/mcp/server.json` emitted by `build:mcp-manifest`, version- and name-equality gated in `lint_mcp_registry_manifest`. **Blocker:** the publish needs the maintainer's interactive GitHub login. The registry's search answers slowly (15 s on 2026-10-17); `adoption_status` waited 20 s and could report the row `unreachable`, so its `curl` wait is now 45 s. |
+| 5 | `glama.ai` | Server page; score badge used by the awesome-list entry | `accepted` | `listing-page` | <https://glama.ai/mcp/servers/event4u-app/agent-config> | 2026-10-17 | 2026-06-08 | Server page live: HTTP 200, title "@event4u/agent-config by event4u-app". Moved here from `registries.md`, which recorded it listed on 2026-06-08. Re-read 2026-10-17: HTTP 200. |
 
 Two attempts at the awesome list exist, 1a and 1b. Neither was declined on its
 content; both closed on upstream listing requirements (a Glama quality score,
@@ -123,15 +126,10 @@ it renders a grade, not `?`, before pasting.
 
 The live read shows the listing exists. Nothing to submit.
 
-### Row 3 — `mcpservers.org` — pending (check first)
+### Row 3 — `mcpservers.org` — no act needed
 
-First open <https://mcpservers.org/> in a browser and search for
-`agent-config`. If the package is listed, record the date in `Last read` and
-set `accepted`. If it is not, submit the form with this description:
-
-```text
-event4u/agent-config — Universal AI Agent OS. Audited skills, governance rules, commands, and templates for Claude Code, Cursor, Windsurf, Copilot. Bring your own provider. https://github.com/event4u-app/agent-config
-```
+A headless-browser read on 2026-10-17 shows the listing exists. Nothing to
+submit.
 
 ### Row 4 — Official MCP Registry — pending
 
