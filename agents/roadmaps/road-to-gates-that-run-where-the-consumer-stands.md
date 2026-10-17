@@ -156,16 +156,25 @@ consumer behaviour points at something that executes.
       A test that is *skipped* rather than deleted still satisfies the
       generator; the vitest run is what catches that, and nothing here
       replaces it.
-      Sensitivity re-measured after those corrections: neutralising
-      `checkPairs` turns **4 red of the 5 new cases that reach it** (7 new
-      cases in all; the suite went 7 → 14).
-      **Reviewed by a fresh R2 subagent**, which returned 5 findings
-      (3 medium, 2 low) — every one of them against this step's own diff, and
-      every one fixed here: the near-tautological code check and the
-      overclaiming prose, the unpinned doctor code, the unstripped fragment
-      match, the fixture-inherits-production-pairs trap, and this very
-      sensitivity denominator. Artifact:
-      `agents/evidence/reviews/gates-consumer-exit-pairs.findings.md`.
+      **Sensitivity, counted rather than reasoned about** — the two earlier
+      figures in this slot were both wrong, each caught by a review, so the
+      numbers below are read off a run and the run is named so the next reader
+      re-derives rather than trusts. Neutralise `checkPairs` with an early
+      `return errors`, then
+      `npx vitest run tests/scripts/build_exit_code_register.test.ts`:
+      **5 of the 8 cases this step adds go red**, and the suite is **15**
+      against 7 at `origin/main`
+      (`git diff origin/main -- tests/scripts/build_exit_code_register.test.ts
+      | grep -c '^+.*    it('` → 8, with 0 removed).
+      **Reviewed by three fresh R2 subagent rounds**, returning 5, 4 and 5
+      findings; all fourteen were against this step's own diff and all are
+      fixed. Rounds 1 and 2 corrected the mechanism — a near-tautological code
+      check, an unpinned doctor exit code, an unstripped fragment match, a
+      fail-open pairs default — and round 3 corrected what the artefacts
+      *claimed* about it: the two false sentences in the generated contract
+      (a skipped test is not caught by the test run either; the pair reads one
+      way only) and this sensitivity figure. Artifacts:
+      `agents/evidence/reviews/gates-consumer-exit-pairs{,-round2,-round3}.findings.md`.
 
 ## Phase 4 — Point the claims at something that runs
 

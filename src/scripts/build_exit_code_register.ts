@@ -86,11 +86,20 @@ export interface PairSurface {
  * only honest form of a check this narrow:
  *
  * - a test that is SKIPPED rather than deleted still contains its literals and
- *   still documents its codes. The vitest run notices that; nothing here does.
+ *   still documents its codes. The vitest run does NOT notice it either — a
+ *   skipped case is reported as skipped and `vitest run` still exits 0. The
+ *   gate that sees it is `check_test_weakening`, which reads the diff rather
+ *   than the tree, so it catches the commit that adds the skip and not a tree
+ *   that already carries one.
  * - the assertion match is file-wide, so it proves each literal is SOMEWHERE in
  *   the named file, not that both sit in one `it` driving one tree. Its
  *   sensitivity rests on each literal being unique in that file, which is a
  *   property of today's file rather than an invariant.
+ * - the pair reads as symmetric and is not. `init` 3 is state-specific; the
+ *   `doctor` side is the broad "drift or a failing check" 1, so the pair
+ *   licenses "preserved file ⇒ doctor 1" and NOT its converse. The published
+ *   section says so, because a reader of the table would otherwise supply the
+ *   reverse themselves.
  */
 export interface SurfacePair {
     /** The single state, in a phrase a consumer would recognise. */
@@ -367,15 +376,22 @@ export function render(reg: Register): string {
         out.push(
             '## Pairs that must agree',
             '',
-            '> Two surfaces reporting on one state. A consumer who runs only one of',
-            '> them is entitled to the same answer, so the pair is a published',
-            '> contract rather than a coincidence. The named test is what pins each',
-            '> exact code, by driving both surfaces over one tree; this generator',
-            '> checks that the register still documents each paired code and that',
-            '> the test still carries each assertion, so deleting or commenting one',
-            '> out fails the build. Two things it does not catch: a test that is',
-            '> skipped rather than deleted, and an assertion that moved to another',
-            '> case in the same file. The test run covers the first.',
+            '> Two surfaces reporting on one state. The named test pins each exact',
+            '> code by driving both surfaces over one tree; this generator checks',
+            '> that the register still documents each paired code and that the test',
+            '> still carries each assertion, so deleting or commenting one out fails',
+            '> the build.',
+            '',
+            '> **Read each row one way only.** The pair licenses "this state ⇒ these',
+            '> codes", never the converse. A code may have other causes — `doctor` 1',
+            '> is "drift OR a failing check", and a tree can be at 1 for a reason the',
+            '> pair says nothing about.',
+            '',
+            '> **What the generator does not catch:** a test skipped rather than',
+            '> deleted (`vitest run` exits 0 on a skip; the diff gate',
+            '> `check_test_weakening` is what sees one being added), and an assertion',
+            '> that moved to another case in the same file, because the match is',
+            '> file-wide.',
             '',
             '| State | Surfaces | Asserted in |',
             '|---|---|---|',

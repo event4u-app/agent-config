@@ -50,15 +50,22 @@ keep-beta-until: 2027-01-14
 
 ## Pairs that must agree
 
-> Two surfaces reporting on one state. A consumer who runs only one of
-> them is entitled to the same answer, so the pair is a published
-> contract rather than a coincidence. The named test is what pins each
-> exact code, by driving both surfaces over one tree; this generator
-> checks that the register still documents each paired code and that
-> the test still carries each assertion, so deleting or commenting one
-> out fails the build. Two things it does not catch: a test that is
-> skipped rather than deleted, and an assertion that moved to another
-> case in the same file. The test run covers the first.
+> Two surfaces reporting on one state. The named test pins each exact
+> code by driving both surfaces over one tree; this generator checks
+> that the register still documents each paired code and that the test
+> still carries each assertion, so deleting or commenting one out fails
+> the build.
+
+> **Read each row one way only.** The pair licenses "this state ⇒ these
+> codes", never the converse. A code may have other causes — `doctor` 1
+> is "drift OR a failing check", and a tree can be at 1 for a reason the
+> pair says nothing about.
+
+> **What the generator does not catch:** a test skipped rather than
+> deleted (`vitest run` exits 0 on a skip; the diff gate
+> `check_test_weakening` is what sees one being added), and an assertion
+> that moved to another case in the same file, because the match is
+> file-wide.
 
 | State | Surfaces | Asserted in |
 |---|---|---|

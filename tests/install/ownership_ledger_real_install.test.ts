@@ -116,7 +116,7 @@ function projectWithSettings(prefix: string): string {
 function doctor(
     home: string,
     cwd: string,
-): { status: number | null; modified: string[]; failing: string[]; raw: string } {
+): { status: number | null; modified: string[]; drift: number; failing: string[]; raw: string } {
     const r = spawnSync(TSX, [DOCTOR, '--ci'], {
         cwd,
         encoding: 'utf8',
@@ -132,6 +132,7 @@ function doctor(
         },
     });
     let modified: string[] = [];
+    let drift = 0;
     // `--ci` exits 1 on drift OR on any check at `fail`, so the exit code alone
     // cannot say WHICH of the two fired. The failing-check names are what lets
     // a case assert that the preserved file is the reason rather than a
@@ -139,17 +140,28 @@ function doctor(
     let failing: string[] = [];
     try {
         const payload = JSON.parse(r.stdout) as {
+            missing?: unknown[];
             modified?: Array<{ path?: string }>;
+            foreign?: unknown[];
+            tag_drift?: unknown[];
             checks?: Array<{ name?: string; id?: string; status?: string }>;
         };
         modified = (payload.modified ?? []).map((m) => String(m.path ?? ''));
+        // `bridge-drift` fails on the SUM of the four drift lists, so a case
+        // reading only `modified` cannot tell its own signal from a baseline
+        // carrying a `missing` or `foreign` item.
+        drift =
+            (payload.missing ?? []).length +
+            (payload.modified ?? []).length +
+            (payload.foreign ?? []).length +
+            (payload.tag_drift ?? []).length;
         failing = (payload.checks ?? [])
             .filter((c) => c.status === 'fail')
             .map((c) => String(c.id ?? c.name ?? '?'));
     } catch {
         /* an unparseable payload leaves both lists empty and fails the case loudly */
     }
-    return { status: r.status, modified, failing, raw: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
+    return { status: r.status, modified, drift, failing, raw: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
 }
 
 describe('step 1.5 — the assertions compare bytes, not existence or text', () => {
@@ -289,13 +301,24 @@ describe('step 3.1 — the installer and doctor say the same thing about one tre
             // 1 on this tree anyway", and `1` is a code the register gives a
             // deliberately broad meaning.
             //
-            // The discriminating facts are therefore captured explicitly: the
+            // The discriminating fact is therefore captured explicitly: the
             // `modified` list gains the target, and the failing-CHECK set gains
             // exactly `bridge-drift` while losing nothing. That delta is what
             // says doctor noticed THIS edit, which an exit code of 1 against a
             // baseline of 1 cannot say on its own.
+            //
+            // ONE FACT, STATED TWICE — not two witnesses. `_check_bridge_drift`
+            // fails on the SUM of missing + modified + foreign + tag_drift, so
+            // its status is a function of the same drift the `modified`
+            // assertion reads. What the pair adds is ATTRIBUTION: the 1 after
+            // the edit is traceable to drift rather than to another check
+            // tripping. The whole drift total is asserted zero at baseline for
+            // that reason — reading only `modified` would let a baseline
+            // `missing` item swallow the delta and red the case for an
+            // unrelated reason.
             const before = doctor(home, project);
             expect(before.modified, before.raw).toEqual([]);
+            expect(before.drift, before.raw).toBe(0);
             const baselineFailing = [...before.failing].sort();
 
             fs.writeFileSync(target, `${fs.readFileSync(target, 'utf8')}\nmy own note\n`);

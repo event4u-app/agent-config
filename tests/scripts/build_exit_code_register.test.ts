@@ -221,11 +221,13 @@ describe('exit-code register — the scan', () => {
             'src/scripts/_cli/_doctor_strict.ts': '',
             'src/scripts/_cli/cmd_uninstall.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\n',
             // The pair's asserting test is part of the shape `main` checks, so
-            // the fixture tree carries it too — with the two assertion literals
-            // the real one carries. Otherwise this case would be measuring a
-            // missing file rather than register drift.
-            'tests/install/ownership_ledger_real_install.test.ts':
-                'expect(second.status, second.out).toBe(3);\nexpect(after.status).toBe(1);\n',
+            // the fixture tree carries it too — otherwise this case would be
+            // measuring a missing file rather than register drift. The content
+            // is DERIVED from `PAIRS` rather than retyped: a third hand-written
+            // copy of the literals would turn a reworded assertion in the real
+            // test into a confusing pair error inside a drift case.
+            [PAIRS[0]?.assertedIn ?? 'unreachable']:
+                `${(PAIRS[0]?.assertions ?? []).join(';\n')};\n`,
             [OUT_REL]: 'stale\n',
         });
         vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
