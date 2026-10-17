@@ -270,7 +270,7 @@ the Acceptance Criteria held.
       stub's class, the fix promotes and closes
       `stubs/road-to-language-pin-short-lead.md`.
       verify: the split table is committed; the fixture is red before the fix.
-- [ ] **4.2 Measure detector C's false positives by edited-path class** with
+- [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
       code.
       verify: a table with every sampled refusal and its class; a docs-only
