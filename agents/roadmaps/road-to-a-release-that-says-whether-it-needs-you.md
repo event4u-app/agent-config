@@ -82,15 +82,36 @@ output. It is the classifier and the data behind it.
       the span carries `action`, or touches a surface `CONTRIBUTING.md:331`
       already lists as major. An internal `!` becomes a minor.
       verify: unit tests over the two branches.
-- [ ] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
+      Open (2026-10-17): still held by blocker `impact-numbering-model`
+      option (a). The rule exists as the pure, uncalled `impact_bump` in
+      `src/scripts/_lib/impact_bump.ts` so 2.2 could score it; wiring it into
+      `infer_bump` is the owner-reserved part.
+- [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
       rule against the recorded rows.
       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
       come out **major**. A replay that reproduces the old classification has
       changed nothing and is the failure, not the pass.
-- [ ] **2.3 Backfill the record.** Add a `Consumer impact` column to
+      Landed (2026-10-17): `replay_majors` reads the 2.3 column from the live
+      `BREAKING_CHANGES.md`. Result over 10.0.0 → 16.0.0: 12.0.0 and 15.0.0
+      major; 10.0.0, 11.0.0, 13.0.0, 14.0.0 and 16.0.0 minor — five of seven
+      majors would have been minors. The surface half of the rule is not
+      scored: the record has no surface column, and inferring one would
+      re-judge history. Accuracy on this window is 7/7 with zero false
+      negatives on `action`, but the window is the same seven rows that
+      supplied the expected values, so it is a consistency check, not an
+      independent measurement. Test: `tests/lib/impact_bump.test.ts`, seen
+      red before the column existed.
+- [x] **2.3 Backfill the record.** Add a `Consumer impact` column to
       `BREAKING_CHANGES.md` for 2.0.0 → 16.5.0, taken from each row's existing
       Migration prose rather than re-judged.
       verify: every row in that table carries a value from the enum.
+      Landed (2026-10-17): all 17 rows (1.0.0 → 16.0.0, two for 6.0.0)
+      carry a value; the table has no row for a non-major, so 16.5.0 adds
+      none. Prose that says "no consumer action" → `none`; "Automatic" →
+      `automatic`; an instruction to change something → `action`; 9.0.0
+      (an opt-out rollback, nothing breaks) → `notice`. No row needed the
+      undecided-prose fallback. The column carries the blocker's
+      experimental, non-normative disclaimer.
 
 ## Phase 3 — Publish the map, and read versions correctly
 
@@ -197,6 +218,10 @@ output. It is the classifier and the data behind it.
   compatibility commitment, because version numbers govern consumer dependency
   resolution. Record:
   `agents/evidence/council/owner-blocker-routing-20261016.md`.
+  **2026-10-17:** the evidence (a) waits on now exists. Step 2.2 replayed
+  10.0.0 → 16.0.0 and scored 12.0.0 and 15.0.0 major and the other five
+  minor, with no `action` row scored as a minor. The decision itself is
+  still open.
 - **Owner:** repository owner, **for (a) alone.**
 - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
@@ -287,7 +312,7 @@ direct check named in the revisit column.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** Replaying 10.0.0 → 16.0.0 through the new bump rule yields minor
+- [x] **AC-1** Replaying 10.0.0 → 16.0.0 through the new bump rule yields minor
       for 13.0.0, 14.0.0 and 16.0.0 and major for 12.0.0 and 15.0.0.
 - [x] **AC-2** A release-span commit carrying `!` with no `Consumer-Impact:`
       trailer fails the release check; the same commit with a trailer passes.
@@ -301,7 +326,7 @@ direct check named in the revisit column.
       asserted by a test that calls it with a frozen input.
 - [ ] **AC-6** The banner, `upgrade` and `update` produce byte-identical
       recorded stdout before and after the whole change.
-- [ ] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
+- [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
 - [ ] **AC-8** `task ci` green.
 
