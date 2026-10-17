@@ -272,6 +272,13 @@ the Acceptance Criteria held.
       stub's class, the fix promotes and closes
       `stubs/road-to-language-pin-short-lead.md`.
       verify: the split table is committed; the fixture is red before the fix.
+      <br>2026-10-17, read before classifying: the refusal store holds 86
+      `language` refusals in 31 sessions (2026-08-12..10-16), but pin state is
+      kept 7 days (`STATE_RETENTION_DAYS`), so only 3 of those sessions (5
+      refusals) still have a pin record — all `source: prompt`, `de`. The
+      split by source therefore needs a join from refusal digests to
+      transcripts (`statePathFor` keys both on the session id), not the pin
+      store. Open; the fix itself is a hook change and carries its own review.
 - [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
       code.
