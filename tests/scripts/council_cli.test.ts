@@ -703,3 +703,43 @@ describe('council_cli cost table — an unpriced seat says so', () => {
         expect(lines[0]).toMatch(/^ {2}anthropic\/claude-opus-4-1: ~1000 in \+ 1000 out {2}= {2}\$\d+\.\d{4}$/);
     });
 });
+
+// road-to-unknowns-that-say-so 4.1 — the size-fit downgrade used to be a
+// stdout line only; the seat's response now names the model that was configured.
+describe('council_cli size-fit — a downgrade is on the record', () => {
+    it('size-fit-downgrade-is-recorded', async () => {
+        const { _size_fit_gate } = await import('../../src/scripts/council_cli.js');
+        const { consult, CostBudget, CouncilQuestion } = await import('../../src/scripts/ai_council/orchestrator.js');
+        const { CouncilResponse, ExternalAIClient } = await import('../../src/scripts/ai_council/clients.js');
+        class Seat extends ExternalAIClient {
+            constructor() {
+                super();
+                this.name = 'anthropic';
+                this.model = 'claude-big';
+                this.billable = false;
+                this.transport = 'cli';
+            }
+            override ask(): CouncilResponse {
+                return new CouncilResponse({ provider: this.name, model: this.model, text: 'ok', error: null });
+            }
+        }
+        const seat = new Seat();
+        const kept = new Seat();
+        const lines: string[] = [];
+        const decisions = _size_fit_gate({
+            prompt: 'Is two bigger than one?',
+            lens: 'analysis',
+            members: [seat],
+            ai_cfg: { members: { anthropic: { model_ladder: ['claude-small', 'claude-big'] } } },
+            stdout: (s: string) => lines.push(s),
+        });
+        expect(decisions.map(([, , applied]) => applied)).toEqual([true]);
+        expect(seat.model).toBe('claude-small');
+        const question = new CouncilQuestion({ mode: 'prompt', user_prompt: 'Is two bigger than one?' });
+        const [downgraded, untouched] = consult([seat, kept], question, new CostBudget());
+        expect(downgraded?.model).toBe('claude-small');
+        expect(downgraded?.metadata['configured_model']).toBe('claude-big');
+        expect(downgraded?.metadata['size_fit_reason']).toBe(decisions[0]?.[1].reason);
+        expect(untouched?.metadata).not.toHaveProperty('configured_model');
+    });
+});

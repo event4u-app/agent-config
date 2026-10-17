@@ -849,6 +849,9 @@ function _stamp_transport_metadata(
     if (cost_usd !== null) {
         meta['cost_usd'] = Number(cost_usd);
     }
+    // A size-fit downgrade (`council_cli._size_fit_gate`) leaves the configured
+    // model and the reason on the member; they ride into the response here.
+    Object.assign(meta, _getattr(member, 'size_fit', null));
     response.metadata = meta;
 }
 

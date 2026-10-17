@@ -2049,6 +2049,7 @@ function _size_fit_gate(opts: {
                         `\`${member.model}\` → \`${verdict.suggested_model}\` · ` +
                         `${verdict.reason}\n`,
                 );
+                Object.assign(member, { size_fit: { configured_model: member.model, size_fit_reason: verdict.reason } });
                 member.model = verdict.suggested_model;
                 applied = true;
             } else {
@@ -3951,5 +3952,6 @@ export {
     // (the pre-run print is gated on `build_members` having populated
     // `quorum_out`), and constructing a real roster would spend money.
     _format_quorum_line,
+    _size_fit_gate,
     CouncilDisabledError,
 };

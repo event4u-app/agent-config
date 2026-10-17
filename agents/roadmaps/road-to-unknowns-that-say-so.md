@@ -196,16 +196,23 @@ No-op by construction while no ceiling is set; 3.4 proves it.
 
 ## Phase 4 — A downgrade is on the record
 
-- [ ] **4.1 The response carries what was configured.** Applied size-fit
+- [x] **4.1 The response carries what was configured.** Applied size-fit
       decisions attach to each affected member; its response metadata carries
       `configured_model` and `size_fit_reason`. Case
       `size-fit-downgrade-is-recorded` is seen red first.
       verify: `npx vitest run tests/scripts/council_cli.test.ts -t size-fit-downgrade-is-recorded --reporter=verbose` -> /✓.*size-fit-downgrade-is-recorded/
-- [ ] **4.2 The artefact says so.** `response_render` adds
+- [x] **4.2 The artefact says so.** `response_render` adds
       `model: <answered> (downgraded from <configured>: <reason>)` beside the
       transport note. No test imports `response_render` today; this step creates
       `tests/scripts/ai_council/response_render.test.ts`.
       verify: `npx vitest run tests/scripts/ai_council/response_render.test.ts -t renders-size-fit-downgrade --reporter=verbose` -> /✓.*renders-size-fit-downgrade/
+      *Done 2026-10-17 (4.1–4.2):* `_size_fit_gate` leaves
+      `size_fit: { configured_model, size_fit_reason }` on the member it
+      downgrades, and the orchestrator's metadata stamp copies it into the
+      response; the gate is exported for the test. Both cases were seen red
+      first — 4.1 again by removing the stamp after it passed. The three
+      over-ceiling lines this cost are paid by the five Phase 3 freed in
+      `orchestrator.ts`, so the source-size total stays at its baseline.
 
 *Exit: 4.1–4.2 green. Auto-apply stays the default (D4).*
 
@@ -409,7 +416,7 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
       billable seat; every such seat appears in output and ledger.
 - [x] **AC-3** Two concurrent councils under one set ceiling cannot both spend
       the same remainder; a crashed run's reservation closes at its estimate.
-- [ ] **AC-4** Every size-fit downgrade names the configured model in the
+- [x] **AC-4** Every size-fit downgrade names the configured model in the
       artefact.
 - [ ] **AC-5** With no flag set, an in-process `fetch` and a spawned `curl` to a
       public address both fail; a sentinel proves the opt-in is closed. Children
