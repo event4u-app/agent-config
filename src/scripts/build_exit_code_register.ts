@@ -70,11 +70,21 @@ export interface PairSurface {
  * run. The register names the pair so the agreement is a published contract
  * rather than a coincidence of two implementations.
  *
- * Both halves are checked against the scan, so a verb that stops returning its
- * side of the pair fails the build; and the asserting test is checked for a
- * literal of its own, so deleting the assertion fails it too. That is what
- * makes "the assertion fails if either side changes alone" true of the
- * generator and not only of the test.
+ * WHAT EACH HALF OF THE CHECK ACTUALLY PROVES, stated narrowly because the
+ * first version of this comment claimed more than the code delivered.
+ *
+ * The TEST is the pin on which code goes with which state: it drives both
+ * surfaces over one tree and asserts each exact code. The GENERATOR cannot
+ * know that — a scan sees that `doctor` returns `1` somewhere, not that it
+ * returns `1` for THIS state — so it checks the two things it can: that the
+ * register still documents each paired code for its verb, and that the named
+ * test still contains the exact assertion literal for each one. The second
+ * check runs over `strip()`ped source, so commenting an assertion out fails
+ * the build rather than passing it.
+ *
+ * What neither half catches: a test that is SKIPPED rather than deleted still
+ * contains its literals and still documents its codes. The vitest run is what
+ * notices that, and nothing here is a substitute for it.
  */
 export interface SurfacePair {
     /** The single state, in a phrase a consumer would recognise. */
@@ -82,8 +92,12 @@ export interface SurfacePair {
     readonly surfaces: readonly [PairSurface, PairSurface];
     /** The test that exercises both surfaces against one tree. */
     readonly assertedIn: string;
-    /** A literal from that test, so its removal is a build failure. */
-    readonly fragment: string;
+    /**
+     * The exact assertion that pins each surface's code in that test, in the
+     * same order as {@link surfaces}. A title would not do: a title survives a
+     * gutted body, and these are the lines that carry the codes.
+     */
+    readonly assertions: readonly [string, string];
 }
 
 export const PAIRS: readonly SurfacePair[] = [
@@ -95,7 +109,7 @@ export const PAIRS: readonly SurfacePair[] = [
             { verb: 'doctor', code: 1 },
         ],
         assertedIn: 'tests/install/ownership_ledger_real_install.test.ts',
-        fragment: 'installer rc=3 and doctor --ci non-zero naming the preserved file, on the same tree',
+        assertions: ['expect(second.status, second.out).toBe(3)', 'expect(after.status).toBe(1)'],
     },
 ];
 
@@ -204,9 +218,9 @@ export interface Register {
 }
 
 /**
- * Check each pair against what the scan actually found and against the test
- * that asserts it. Errors, never silence: a pair whose halves have drifted is
- * the condition the section exists to catch.
+ * Check each pair against what the scan found and against the test that
+ * asserts it. Errors, never silence: a pair whose halves have drifted is the
+ * condition the section exists to catch.
  */
 export function checkPairs(
     root: string,
@@ -226,17 +240,38 @@ export function checkPairs(
         const abs = path.join(root, pair.assertedIn);
         if (!fs.existsSync(abs)) {
             errors.push(`pair "${pair.state}": asserted in ${pair.assertedIn}, which does not exist`);
-        } else if (!fs.readFileSync(abs, 'utf8').includes(pair.fragment)) {
-            errors.push(`pair "${pair.state}": ${pair.assertedIn} no longer contains \`${pair.fragment}\``);
+            continue;
         }
+        // Stripped, like the `inherits` fragment check below: an assertion that
+        // survives only inside a comment is an assertion nobody runs, and the
+        // raw text would have called that intact.
+        const body = strip(fs.readFileSync(abs, 'utf8'));
+        pair.assertions.forEach((assertion, i) => {
+            if (!body.includes(assertion)) {
+                const verb = pair.surfaces[i]?.verb ?? '?';
+                errors.push(
+                    `pair "${pair.state}": ${pair.assertedIn} no longer asserts the \`${verb}\` side — ` +
+                        `\`${assertion}\` is gone`,
+                );
+            }
+        });
     }
     return errors;
 }
 
+/**
+ * `pairs` defaults to the production set ONLY for the production command set.
+ *
+ * A caller that supplies its own `commands` is working against a fixture tree
+ * that cannot satisfy a real pair, and inheriting `PAIRS` there made every
+ * such call fail with an error about a file the fixture never claimed to have.
+ * The default is scoped rather than removed so the production path still gets
+ * the pairs without naming them.
+ */
 export function build(
     root: string,
     commands: readonly CommandSpec[] = COMMANDS,
-    pairs: readonly SurfacePair[] = PAIRS,
+    pairs: readonly SurfacePair[] = commands === COMMANDS ? PAIRS : [],
 ): Register {
     const constants = exitConstants(root);
     const errors: string[] = [];
@@ -321,9 +356,12 @@ export function render(reg: Register): string {
             '',
             '> Two surfaces reporting on one state. A consumer who runs only one of',
             '> them is entitled to the same answer, so the pair is a published',
-            '> contract rather than a coincidence: the generator checks both codes',
-            '> against the scan and checks that the named test still asserts them',
-            '> together, and fails if either side changes alone.',
+            '> contract rather than a coincidence. The named test is what pins each',
+            '> exact code, by driving both surfaces over one tree; this generator',
+            '> checks that the register still documents each paired code and that',
+            '> the test still carries each assertion, so deleting or commenting one',
+            '> out fails the build. A test that is skipped rather than deleted is',
+            '> caught by the test run, not here.',
             '',
             '| State | Surfaces | Asserted in |',
             '|---|---|---|',

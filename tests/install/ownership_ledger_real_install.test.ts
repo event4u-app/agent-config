@@ -277,7 +277,10 @@ describe('step 3.1 — the installer and doctor say the same thing about one tre
             // installer had just called not-current was invisible to it.
             const after = doctor(home, project);
             expect(after.modified, after.raw).toContain(target);
-            expect(after.status).not.toBe(0);
+            // The exact code, not merely non-zero: `docs/contracts/exit-code-register.md`
+            // publishes this pair as `init` 3 / `doctor` 1, and a published
+            // code nothing pins is a code that can drift to 2 unnoticed.
+            expect(after.status).toBe(1);
         },
     );
 });

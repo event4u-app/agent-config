@@ -52,9 +52,12 @@ keep-beta-until: 2027-01-14
 
 > Two surfaces reporting on one state. A consumer who runs only one of
 > them is entitled to the same answer, so the pair is a published
-> contract rather than a coincidence: the generator checks both codes
-> against the scan and checks that the named test still asserts them
-> together, and fails if either side changes alone.
+> contract rather than a coincidence. The named test is what pins each
+> exact code, by driving both surfaces over one tree; this generator
+> checks that the register still documents each paired code and that
+> the test still carries each assertion, so deleting or commenting one
+> out fails the build. A test that is skipped rather than deleted is
+> caught by the test run, not here.
 
 | State | Surfaces | Asserted in |
 |---|---|---|
