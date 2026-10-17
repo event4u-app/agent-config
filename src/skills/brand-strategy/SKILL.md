@@ -49,7 +49,12 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 
 4. **Draft the constraint set.** Produce:
    - An **opposable positioning statement** naming the audience AND a difference a competitor could legitimately claim the opposite of.
-   - A **voice profile**: 3-5 traits, each with a do and a don't.
+   - A **voice direction** — the register the archetype implies, as input
+     only. The voice itself is three `"X, not Y"` attributes owned by
+     [`voice-and-tone-design`](../voice-and-tone-design/SKILL.md) and
+     recorded in the `brand-voice` context-spine slot
+     (`agents/context-spine/brand-voice.md`); do not author a competing
+     3-5-trait list here, and do not write the slot from this skill.
    - A **chosen messaging framework** (problem-solution, jobs-to-be-done, category creation, etc.) with a rationale sentence.
 
 5. **Surface gaps and low-confidence calls.** Name every evidence gap and every row below the confidence threshold. Flag where the corpus was thin.
@@ -62,7 +67,9 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 
 1. Named archetype cited to the corpus row (domain, row id, confidence).
 2. One-line opposable positioning statement (audience + difference).
-3. Voice profile: 3-5 traits, each with a do/don't pair, plus chosen messaging framework with rationale.
+3. Voice direction (the register the archetype implies, handed to
+   `voice-and-tone-design`, which owns the three attributes and the
+   `brand-voice` slot), plus chosen messaging framework with rationale.
 4. Confidence label (High / Medium / Low) and every `evidence_gap` from the corpus verbatim.
 
 ## Do NOT
@@ -84,3 +91,7 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 - [`brand-identity`](../brand-identity/SKILL.md) — consumes the confirmed strategy.
 - [`brand-to-tokens`](../brand-to-tokens/SKILL.md) — emits the DTCG token source of truth.
 - [`corpus-grounding`](../corpus-grounding/SKILL.md) — the shared engine.
+- [`voice-and-tone-design`](../voice-and-tone-design/SKILL.md) — owns the
+  voice and writes it to the `brand-voice` context-spine slot
+  (`agents/context-spine/brand-voice.md`); this skill hands it a direction,
+  never a finished voice profile.
