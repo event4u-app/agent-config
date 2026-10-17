@@ -266,3 +266,32 @@ describe('the dry run says which account the send will carry', () => {
         expect(text).not.toMatch(/some-login/);
     });
 });
+
+describe('a refused title or body does not leave through the issue either', () => {
+    it('consumer-identifier-in-diff-refuses — an identifier in the body refuses the issue fallback too', () => {
+        const r = payloadRunner({});
+        const p = { ...plan('upstream'), body: 'seen in the acmewidgets checkout' };
+        const out = executeRelease(record(), p, probe(false), 'o/r', denyDeps(r.runner, ['acmewidgets']));
+
+        expect(r.prCalls).toHaveLength(0);
+        expect(r.issueCalls).toBe(0);
+        expect(out.published).toBeNull();
+    });
+
+    it('the patch read forces text and disables textconv and external diff drivers', () => {
+        const seen: string[][] = [];
+        const inner = payloadRunner({}).runner;
+        const runner: Runner = (cmd, args, cwd) => {
+            if (cmd === 'git' && args[0] === 'log' && args.includes('-p')) {
+                seen.push([...args]);
+            }
+            return inner(cmd, args, cwd);
+        };
+        executeRelease(record(), plan('upstream'), probe(false), 'o/r', denyDeps(runner, []));
+
+        expect(seen).toHaveLength(1);
+        for (const flag of ['--text', '--no-textconv', '--no-ext-diff']) {
+            expect(seen[0]).toContain(flag);
+        }
+    });
+});

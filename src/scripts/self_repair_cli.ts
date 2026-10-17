@@ -25,9 +25,9 @@
  * Fail-closed on privacy: the record's own text goes through the audited
  * privacy floor before anything leaves the machine, and a refusal downgrades
  * the record to local-only rather than scrubbing it into publishable shape.
- * The pull-request route additionally scans every byte the push would carry —
- * branch name, commit identities and messages, each commit's patch, title and
- * body — and a finding skips every push rung.
+ * The pull-request route additionally scans the branch name, commit identities
+ * and messages, each commit's patch since `origin/main`, title and body; a
+ * finding skips every push rung. Commit signatures are not read.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -295,7 +295,13 @@ function readPayload(runner: Runner, checkout: string, branch: string, plan: Rel
     );
     // `--cc` shows a merge's own resolution hunks and nothing it merely
     // carried from a parent, so content already on the base is not re-read.
-    const patches = runner('git', ['log', '-p', '--cc', '--no-color', '--format=', range], checkout);
+    // A push carries binary and attribute-masked blobs whole, so the patch is
+    // forced to text and no textconv or external driver may summarise it.
+    const patches = runner(
+        'git',
+        ['log', '-p', '--cc', '--text', '--no-textconv', '--no-ext-diff', '--no-color', '--format=', range],
+        checkout,
+    );
     if (!commits.ok || !patches.ok) {
         return null;
     }
@@ -453,8 +459,13 @@ export function executeRelease(
                         : describeFindings(findings),
             });
         }
-        // A refused payload skips every push rung and degrades to the issue,
-        // which carries only the record text the privacy floor already passed.
+        // A finding in the title or body would leave through the issue too —
+        // its title is the same and its body is rendered from the same record.
+        if (findings !== null && findings.some((f) => f.part === 'title' || f.part === 'body')) {
+            return { published: null, attempts };
+        }
+        // Any other refusal skips every push rung and degrades to the issue,
+        // which carries none of the refused branch, commit or patch bytes.
         const ladder: PushVia[] = refused
             ? []
             : plan.pushVia === 'upstream' && probe.canFork

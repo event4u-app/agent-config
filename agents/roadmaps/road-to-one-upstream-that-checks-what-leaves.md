@@ -143,9 +143,13 @@ Nothing is sent without the person's word in that turn.
       **Done 2026-10-17, over the author's branch until 2.1 builds its own:**
       `_lib/self_repair_payload.ts` scans branch name, commit identities and
       messages, every commit's patch (`log -p --cc` over `origin/main..branch`,
-      so content added and later removed is read), title and body; a finding or
-      an unreadable range skips every push rung and degrades to the issue,
-      naming rule and part, never the value. The deny list drops the target
+      so content added and later removed is read, forced to text with no
+      textconv or external driver), title and body; a finding or an unreadable
+      range skips every push rung and degrades to the issue — unless it sits in
+      the title or body, which the issue would carry too, so nothing is sent.
+      Rule and part are named, never the value. Not read: commit signatures,
+      and commits a stale or forked `origin/main` already holds; the dry run
+      does not run the scan. The deny list drops the target
       repository's own tokens, so a release from this checkout is not refused
       on its own name. The detector table's identifier class is its step 2.3
       and still open, so a company e-mail whose domain is not a consumer
@@ -195,7 +199,8 @@ Nothing is sent without the person's word in that turn.
 
 > **Phase state, executed 2026-10-14.** 4.1 and 4.3 both describe what the dry
 > run SHOWS, and the bytes they would show — the synthesised commit, its
-> identity, its branch — are 2.1's output. Until 2.1 exists the dry run has no
+> identity, its branch — are 2.1's output. *(Superseded for 4.3 on 2026-10-17:
+> the account needs none of those bytes.)* Until 2.1 exists the dry run has no
 > payload to render, so an approval bound to its digest would bind to nothing.
 >
 > **4.2's matrix is the one open item here with no code prerequisite, and it is

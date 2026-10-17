@@ -54,7 +54,7 @@ A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 ```
 
 `self-repair:release` carries the privacy floor over the record text, a
-payload floor over every pushed byte, the may-not-modify deny list, the route ladder (pull request, then issue, then a
+payload floor over the pushed commits, the may-not-modify deny list, the route ladder (pull request, then issue, then a
 local record). The per-turn Hard-Floor word is the person's: `releaseCmd` has
 no prompt, and invoking it IS the confirmation. A checkbox in a skill
 carries none of them, which is why this skill asks a *worth it* question and

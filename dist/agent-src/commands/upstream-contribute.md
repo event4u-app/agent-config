@@ -21,7 +21,7 @@ packs:
 This command is a **front on one outward step**, not a second way out. It
 decides *what* is worth contributing and hands the finding to
 `self-repair:release`, which owns the branch, the commit identity, the privacy
-floor over the record text and every pushed byte, and the pull-request or
+floor over the record text and the pushed commits, and the pull-request or
 issue route. Over the branch name, commit identity, message and diff that floor
 checks credentials and the consumer's own identifiers only — a company e-mail
 whose domain is neither still passes, and until the identifier class lands the
