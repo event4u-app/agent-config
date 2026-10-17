@@ -130,6 +130,7 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       cache. Also record the cache-read share after a gap longer than five
       minutes, which is the run the plan expects to be cold.
       verify: `grep -c 'worker_resume' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
+      Partial 2026-10-17, left open: on Claude Code 2.1.302 a resumed leg kept its ledger `ref` and read 99.7 % of its first call from cache; after a 6 min 51 s gap the resumed run read 0 % and rewrote the whole transcript. The resume was addressed by the host's per-run id, not by a durable name — the dispatch surface offered no name at spawn — so the by-name half is unobserved and `worker_resume` stays out of the registry row.
 - [ ] **1.5 Observe the resume admission point.** Whether `PreToolUse` fires on
       the `SendMessage` call that resumes a worker, and whether a deny there is
       honoured; and whether a resumed worker counts against
@@ -137,10 +138,11 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       it. One supplied plan reads the host documentation as saying the cap
       checks new spawns only; that is the claim this row settles.
       verify: `grep -c 'SendMessage pre_tool_use' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
-- [ ] **1.6 Observe fork cache sharing.** A fork's first call reads the parent
+- [x] **1.6 Observe fork cache sharing.** A fork's first call reads the parent
       prefix (share above half) and keeps the parent tool pool. Decides the D5
       correction text and nothing else.
       verify: `grep -c 'fork_shares_cache' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-17: a fork's first own call read 99.8 % of its input from cache and reported the parent's tool list, on Claude Code 2.1.302; `fork_shares_cache: true` written into the `claude` registry row with that citation.
 - [ ] **1.7 Observe what skipping project instructions sheds.** Paired spawns,
       same task and model, with and without the host's skip flag: first-call
       written-or-uncached tokens **net of** the kernel floor and verbatim
