@@ -165,6 +165,7 @@ file can report an externally visible change as done.
 | D6 | deterministic | evidence | `claude-code-plugin` is not added as a topic, against step 3.2's list | `README.md` § Plugin-installed states the Claude Code marketplace plugin is deprecated, and `.claude-plugin/marketplace.json` calls itself a bootstrap shim deprecated as a content channel; advertising a deprecated channel is the defect this file exists to remove | the plugin stops being deprecated |
 | D7 | deterministic | evidence | Step 2.3's "six re-derivable patterns" needed a sixth count: an `advisors` kind was added to `update_counts` | the Advisors badge sat on the claim row with no pattern behind it while the README sub-note and `docs/CLAIMS.md` § published-artifact-counts both said all six badges are re-derived; the positional guard would have reported it on the first run | never — the alternative was moving a published count off the claim row |
 | D8 | deterministic | evidence | The banner's origin comes from three signals, and `doctor_install_mode.ts` is one of them, read unchanged | that module only answers "is this a global-only consumer project"; it cannot see an `npx` cache or a pin, so the classifier also reads the package root path and the `agent_config_version` key | the module grows an origin classifier of its own |
+| D9 | contested-technical | evidence | The pack-size red AC-8 names is **not** repaired here; the re-measure is owner-reserved | an AI council of 2026-10-17, two seats over two rounds, converged 2/2 that a re-measure is warranted and that the reproducible pristine reading of 14.4989 MB over 3568 entries is the defensible figure, and converged independently that changing a baseline behind a required check needs the owner — one seat naming the reason an agent cannot settle it, that the agent proposing the reset is the one the reset unblocks. They split only on whether CI is aligned to the full-build command before or after, and on whether the latent `max: 11.5` breach moves in the same change. Record: `agents/evidence/council/pack-size-built-remeasure-20261017.md` | the owner answers it, the payload drops back under the ceiling on its own, or the required job changes what it packs |
 
 ## What this roadmap deliberately does not do
 
@@ -181,7 +182,7 @@ file can report an externally visible change as done.
   tracked files; the externally visible push stays with the stub.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -190,6 +191,7 @@ file can report an externally visible change as done.
 | 3 | Narrowing the headline reads as weakening a published claim | product | "artifact counts" is a smaller promise than "the counts", and the diff makes that visible. | It is the promise the code already keeps; the alternative is a claim the tree cannot check. D2 records the trade. | Phase 2 — A download badge that cannot corrupt the claim row |
 | 4 | A `downloads/month` badge is read as an install base | product | Downloads count fetches, including CI and mirrors, not users. | The badge carries its window in the label and links to the source; no total counter and no derived rate is published anywhere. | Phase 2 — A download badge that cannot corrupt the claim row |
 | 5 | Dropping the `python` topic loses incoming search traffic | product | The topic may be carrying discovery the file cannot measure. | Three accurate terms are added in the same step; the inaccurate one is the only removal. | Phase 3 — Pointers and metadata that resolve |
+| 6 | The AC-8 measurement reads as a closure | product | AC-8 now carries a long dated note explaining why it is open, and a long note under an open box is easy to skim as a done one; a reader could archive the file on it. | The box stays `- [ ]`, the note names the two owning surfaces rather than this file, and it states the condition that closes it. `lint_ticked_unmet_criteria` refuses the other direction. | Acceptance Criteria |
 
 ## Acceptance Criteria
 
@@ -210,6 +212,38 @@ file can report an externally visible change as done.
       description, homepage or topic list as done; the visibility-sync stub
       carries this round in its arrivals line.
 - [ ] **AC-8** `task ci` green.
+      **Measured 2026-10-17 at `main@8c90aad26`, on a branch carrying no commit
+      of its own, and left open because the two reds the run found are both
+      older than this file and neither is reachable from it.** The run reached
+      `check-pack-size` and stopped there; the remaining chain was then walked
+      by hand for the two gates this package records as trunk-red.
+      - `check_pack_size` — the BUILT payload measures **14.4989 MB over 3568
+        entries** against the recorded built figure 12.4548 (3240 entries,
+        `src/config/pack-size-budget.json` ->
+        `built_surface_measurement_2026_09_10`), i.e. **+16.41 %** against a
+        10 % regression line, ceiling 13.700. Two independent pristine builds
+        of the same clean tree (`npm run build` after deleting every untracked
+        `dist/` subtree) produced **byte-identical** pack manifests — 3568
+        entries, 14,498,927 B — so the reading is a measurement and not one
+        observation. The same tree with `dist/mcp` and `dist/ui` absent reads
+        13.049 and passes, which is the incomplete-payload green that file's
+        own `built_surface_enforcement_2026_08_30` note warns against, not a
+        fix. The sanctioned repair is a new dated `built_surface_measurement_*`
+        key; the 2026-09-10 precedent set that key under an AI council on an
+        owner delegation, recorded in ADR-273, so it is a decision rather than
+        a drain edit.
+      - `check_gate_completeness` — **240 violations against a baseline of
+        214**, 26 new. Owned by `stubs/road-to-the-ledger-ratchet-that-drifted`
+        and named as trunk-red by
+        `road-to-local-gates-wired-while-they-are-green` § Context.
+      `lint_canonical_terms` was re-run in the same pass and is **green**,
+      so the third commonly cited trunk red does not apply here.
+      Nothing in Phases 1-3 of this file touches either surface: the diff of
+      this roadmap is `README.md`, `package.json`, `.github/`,
+      `src/scripts/update_check.ts`, `src/scripts/update_counts.ts` and
+      `src/scripts/lint_positioning.ts`, and the payload figure moves with the
+      whole tree. AC-8 therefore stays open against the trunk rather than
+      against this change, and closes when those two owners close.
 
 ## Provenance
 
