@@ -169,12 +169,14 @@ export function computeConflicts(plan, recordedOverride) {
     if (plan.policy.force)
         return [];
     const recorded = recordedOverride ?? recordedHashesWithLedger(plan.root);
-    // Read once for the whole pass: the preview answers the same question the
-    // writer does, and a path the ledger merely LISTS is one the writer will
-    // preserve on the migration branch. Without this the preview would promise
-    // a write the writer then refuses — the two-surfaces-disagree shape this
-    // module's parity test exists to stop.
-    const ledgerFiles = ledgerListedPaths();
+    // Read lazily and once: a pass over a tree whose ledger paths all carry
+    // digests never reaches the branch that needs this, and an unconditional
+    // read would charge every plan for an answer most of them discard.
+    let ledgerFiles = null;
+    const ledgerLists = (p) => {
+        ledgerFiles ??= ledgerListedPaths();
+        return ledgerFiles.has(p);
+    };
     const out = [];
     for (const entries of Object.values(plan.filesByTool)) {
         for (const entry of entries) {
@@ -197,19 +199,28 @@ export function computeConflicts(plan, recordedOverride) {
                 continue;
             if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path))
                 continue;
-            if (onDisk === entry.sha256)
-                continue;
-            // Reaching here means the on-disk bytes already differ from the
-            // planned ones, so the equality half of the migration test is
-            // settled; what is left is whether the ledger lists the path.
+            // CANDIDACY, not the verdict, and it is computed BEFORE the
+            // equality short-circuit below rather than after. The migration
+            // branch preserves when the bytes differ from what the run WOULD
+            // write — source plus the install-time tag — while `entry.sha256`
+            // is the digest of the UNTAGGED source. The two comparisons are
+            // not the same for any tagged `.md`, which is most of the deployed
+            // tree, so a file that matches the untagged source can still be
+            // preserved by the writer. Short-circuiting first would make the
+            // preview silent about exactly those, and silence is the one
+            // answer a preview must not give about a file the install is
+            // going to keep. Only the writer can tag before hashing, so only
+            // the writer decides; this reports which entries take that path.
             const migration = ownership === 'unknown' &&
                 isLedgerMigration({
                     exists: true,
                     recordedSha256: recorded.get(entry.path),
                     onDiskSha256: onDisk,
                     force: false,
-                    ledgerListed: ledgerFiles.has(entry.path),
+                    ledgerListed: ledgerLists(entry.path),
                 });
+            if (onDisk === entry.sha256 && !migration)
+                continue;
             out.push({
                 path: entry.path,
                 kind: entry.kind,

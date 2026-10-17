@@ -156,8 +156,17 @@ function conflictMessage(c) {
  * preserved like an edited one, but the reason is not an edit anyone proved.
  */
 function conflictRemedy(c) {
-    if (c.ownership === 'recorded-modified' || c.migration) {
-        return 'installing preserves this file and stages package content as <path>.agent-config.new; --force replaces it instead';
+    if (c.ownership === 'recorded-modified') {
+        return 'installing preserves your edit and stages package content as <path>.agent-config.new; --force replaces it instead';
+    }
+    if (c.migration) {
+        // MAY, not WILL, and the hedge is the accurate word rather than a
+        // soft one. The branch preserves only when the bytes differ from
+        // what the install would write, and that comparison needs the
+        // install-time tag, which this surface cannot apply — so a preflight
+        // that promised either outcome would be guessing at the one the
+        // writer settles.
+        return 'installing may preserve this file and stage package content as <path>.agent-config.new rather than overwriting it; the install run says which';
     }
     return 'back up this file — installing writes the planned content over it';
 }
