@@ -165,6 +165,7 @@ file can report an externally visible change as done.
 | D6 | deterministic | evidence | `claude-code-plugin` is not added as a topic, against step 3.2's list | `README.md` § Plugin-installed states the Claude Code marketplace plugin is deprecated, and `.claude-plugin/marketplace.json` calls itself a bootstrap shim deprecated as a content channel; advertising a deprecated channel is the defect this file exists to remove | the plugin stops being deprecated |
 | D7 | deterministic | evidence | Step 2.3's "six re-derivable patterns" needed a sixth count: an `advisors` kind was added to `update_counts` | the Advisors badge sat on the claim row with no pattern behind it while the README sub-note and `docs/CLAIMS.md` § published-artifact-counts both said all six badges are re-derived; the positional guard would have reported it on the first run | never — the alternative was moving a published count off the claim row |
 | D8 | deterministic | evidence | The banner's origin comes from three signals, and `doctor_install_mode.ts` is one of them, read unchanged | that module only answers "is this a global-only consumer project"; it cannot see an `npx` cache or a pin, so the classifier also reads the package root path and the `agent_config_version` key | the module grows an origin classifier of its own |
+| D9 | contested-technical | evidence | The pack-size red AC-8 names is **not** repaired here; the re-measure is owner-reserved | an AI council of 2026-10-17, two seats over two rounds, converged 2/2 that a re-measure is warranted and that the reproducible pristine reading of 14.4989 MB over 3568 entries is the defensible figure, and converged independently that changing a baseline behind a required check needs the owner — one seat naming the reason an agent cannot settle it, that the agent proposing the reset is the one the reset unblocks. They split only on whether CI is aligned to the full-build command before or after, and on whether the latent `max: 11.5` breach moves in the same change. Record: `agents/evidence/council/pack-size-built-remeasure-20261017.md` | the owner answers it, the payload drops back under the ceiling on its own, or the required job changes what it packs |
 
 ## What this roadmap deliberately does not do
 
@@ -231,16 +232,6 @@ file can report an externally visible change as done.
         key; the 2026-09-10 precedent set that key under an AI council on an
         owner delegation, recorded in ADR-273, so it is a decision rather than
         a drain edit.
-        **Put to the council on 2026-10-17 and answered 2/2: the transition is
-        owner-reserved.** Both seats converged that a re-measure is warranted
-        and that 14.4989 is the defensible number, and both said independently
-        that changing a baseline behind a required check needs the owner — one
-        of them naming the reason an agent cannot settle it, that the agent
-        proposing the reset is the one unblocked by it. They split only on
-        whether to align CI before or after, and on whether `max: 11.5` moves
-        in the same change. The record, with both readings and what the owner
-        is being asked for, is
-        `agents/evidence/council/pack-size-built-remeasure-20261017.md`.
       - `check_gate_completeness` — **240 violations against a baseline of
         214**, 26 new. Owned by `stubs/road-to-the-ledger-ratchet-that-drifted`
         and named as trunk-red by
