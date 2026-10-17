@@ -18,8 +18,10 @@
 import { existsSync } from 'node:fs';
 
 import { sha256File } from './plan.js';
+import { isLedgerMigration } from './preserve.js';
 import {
     classifyOwnership,
+    ledgerListedPaths,
     recordedHashesWithLedger,
     type RecordedHashes,
 } from './recordedOwnership.js';
@@ -208,6 +210,14 @@ export function computeConflicts(
     // force-mode plan paid a read and a YAML parse for nothing.
     if (plan.policy.force) return [];
     const recorded = recordedOverride ?? recordedHashesWithLedger(plan.root);
+    // Read lazily and once: a pass over a tree whose ledger paths all carry
+    // digests never reaches the branch that needs this, and an unconditional
+    // read would charge every plan for an answer most of them discard.
+    let ledgerFiles: ReadonlySet<string> | null = null;
+    const ledgerLists = (p: string): boolean => {
+        ledgerFiles ??= ledgerListedPaths();
+        return ledgerFiles.has(p);
+    };
     const out: ConflictEntry[] = [];
     for (const entries of Object.values(plan.filesByTool)) {
         for (const entry of entries) {
@@ -225,7 +235,28 @@ export function computeConflicts(
             const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
             if (ownership === 'recorded-unchanged') continue;
             if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path)) continue;
-            if (onDisk === entry.sha256) continue;
+            // CANDIDACY, not the verdict, and it is computed BEFORE the
+            // equality short-circuit below rather than after. The migration
+            // branch preserves when the bytes differ from what the run WOULD
+            // write — source plus the install-time tag — while `entry.sha256`
+            // is the digest of the UNTAGGED source. The two comparisons are
+            // not the same for any tagged `.md`, which is most of the deployed
+            // tree, so a file that matches the untagged source can still be
+            // preserved by the writer. Short-circuiting first would make the
+            // preview silent about exactly those, and silence is the one
+            // answer a preview must not give about a file the install is
+            // going to keep. Only the writer can tag before hashing, so only
+            // the writer decides; this reports which entries take that path.
+            const migration =
+                ownership === 'unknown' &&
+                isLedgerMigration({
+                    exists: true,
+                    recordedSha256: recorded.get(entry.path),
+                    onDiskSha256: onDisk,
+                    force: false,
+                    ledgerListed: ledgerLists(entry.path),
+                });
+            if (onDisk === entry.sha256 && !migration) continue;
             out.push({
                 path: entry.path,
                 kind: entry.kind,
@@ -233,6 +264,7 @@ export function computeConflicts(
                 existingSha256: onDisk,
                 mergeable: isJsonTarget(entry),
                 ownership,
+                migration,
             });
         }
     }

@@ -1,0 +1,1740 @@
+diff --git a/agents/evidence/council/ownership-unknown-arm-20261017.md b/agents/evidence/council/ownership-unknown-arm-20261017.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..9e1e7ade3c77270b131fd24d52a430d9f6675755
+--- /dev/null
++++ b/agents/evidence/council/ownership-unknown-arm-20261017.md
+@@ -0,0 +1,97 @@
++<!-- evidence-type: analysis -->
++
++# Preserve a digest-less ledger path unless equality with the package is provable
++
++**Date:** 2026-10-17 · **Members:** `anthropic`, `openai`
++**Mode:** prompt, 2 rounds, peer review, blind chairman · **Cost:** $0.00 (subscription transport)
++**Quorum:** 2/2 concluded · **Verdict: `(d)` — convergent, no split**
++
++Re-decides D3 of `road-to-an-ownership-record-that-belongs-to-the-user` so its
++step 2.4 can be implemented. The step had been left open deliberately on
++2026-10-16: changing `decideDeployWrite`'s `unknown` arm to preserve every
++ledger-listed path would have staged a sidecar beside every affected file on
++the first install after the schema bump and exited `3`, which is the noise D3
++itself argues against. The question put to the seats was what the arm should
++do instead.
++
++## The population, stated exactly
++
++A path reaches the `unknown` arm while the ledger lists it only when **both**
++hold: it was deployed globally by an install predating the ledger (schema 1,
++no digest), and no project manifest records a digest for it either — which
++means that install ran from a directory carrying no project settings. That is
++exactly the K1/K2 population: the consumers whose global edits are overwritten
++silently today.
++
++| Seat | Pick | Formulation | Confidence |
++|---|---|---|---|
++| `anthropic` | `(d)` | preserve when ambiguous, write when equality with the package is provable; frame the delay honestly | high |
++| `openai` | `(d)` | equality is the only available proof; inequality proves nothing, so overwriting knowingly accepts irreversible loss | high |
++
++## What both seats held
++
++**Ledger membership changes what `unknown` means.** `preserve.ts`'s own header
++argues that preserving an unrecorded file is noise rather than protection, and
++both seats accepted that argument — for *genuinely* unrecorded files. A
++schema-1 ledger entry is different in kind: it is this package's own record
++that it deployed that path. The header's reasoning does not reach it.
++
++**Equality with the current package is the only available proof.** If the
++bytes on disk equal what this run would write, writing cannot destroy an edit,
++whatever the history. If they differ, nothing is proven: the file may carry a
++user's edit or merely an older package version, and those two states are
++observationally indistinguishable without a recorded digest. Overwriting the
++differing file therefore accepts irreversible loss knowingly.
++
++**Recoverability is asymmetric.** A preserved file plus a sidecar is
++recoverable by the consumer in a minute; an overwritten edit is not
++recoverable at all.
++
++## The correction both seats made to disposition (a)
++
++Disposition (a) as drafted claimed that "from the second install onward the
++ledger carries digests and the behaviour is exact". Both seats rejected that
++sentence, and the rejection is load-bearing enough to record: a **preserved**
++file was never installed, so recording either the packaged digest or the
++on-disk digest as its installed digest would assert an ownership this run did
++not establish. Preservation therefore **delays** the ambiguity by one install
++cycle rather than resolving it.
++
++Where they differed slightly is in how to read that delay. `anthropic` reads
++it as useful — it converts a silent immediate loss into a visible delayed one,
++and gives the consumer one cycle to notice a file they care about before the
++next run treats an untouched file as `recorded-unmodified` and updates it.
++`openai` reads it as a real operational cost that could persist until the
++conflict is explicitly resolved, and holds that the cost still does not make
++silent destruction the safer default. Neither reading changes the pick.
++
++## The rule, as both seats stated it
++
++1. The target does not exist, or the run carries `--force` → `write`.
++2. `recorded-modified` → `preserve`, unchanged.
++3. `unknown` **and** the ledger lists the path:
++   - on-disk digest equals the digest this run would write → `write`;
++   - otherwise → `preserve`, with a message naming the migration rather than
++     reusing the ordinary preserved-file text.
++4. Everything else → `write`, unchanged.
++
++## What a consumer loses under this verdict
++
++Nothing that this package can prove it wrote. The equality check writes every
++file provably unedited. An ambiguous file is preserved, and the consumer sees
++a message saying why.
++
++Under the alternatives both seats declined — (b) close the step as already
++satisfied, (c) backfill and state the loss — a pre-upgrade edit made from a
++settings-less directory is silently overwritten on the first post-upgrade
++install, and is not recoverable.
++
++## Revisit if
++
++- The package content for the affected files is shown not to have changed
++  across the ledger-addition upgrade, which would make the equality check
++  decisive in most cases rather than in the best case.
++- A migration-generated `rc=3` is shown to break supported automation, and no
++  improvement to the message resolves it.
++- Conflict resolution gains an explicit step that establishes ownership, which
++  would turn the one-cycle delay into a resolution.
+diff --git a/agents/evidence/council/ownership-unknown-arm-20261017.question.md b/agents/evidence/council/ownership-unknown-arm-20261017.question.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..f9db318cd5c4e50ce5b5d5d77616e39423f6333e
+--- /dev/null
++++ b/agents/evidence/council/ownership-unknown-arm-20261017.question.md
+@@ -0,0 +1,111 @@
++<!-- evidence-type: analysis -->
++
++# Does `decideDeployWrite`'s `unknown` arm preserve a ledger-listed path with no recorded digest?
++
++You are deciding one narrow question in the installer of `event4u/agent-config`,
++a package that deploys managed files into a consumer's `$HOME` and into their
++project. Decide it on the evidence below. Report findings; do not assume any
++particular outcome is wanted.
++
++## The code as it stands
++
++`src/install/preserve.ts`:
++
++```ts
++export function decideDeployWrite(inputs: DeployWriteInputs): DeployWriteDecision {
++    if (!inputs.exists) return 'write';
++    if (inputs.force) return 'write';
++    const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
++    return ownership === 'recorded-modified' ? 'preserve' : 'write';
++}
++```
++
++`classifyOwnership` returns `unknown` when no digest was recorded for the path,
++and `unknown` therefore **writes** — i.e. overwrites whatever is on disk. The
++module's own header argues for that: "Preserving there would stage a sidecar
++beside every pre-existing file on a first install, which is not protection, it
++is noise."
++
++A preserved file costs the consumer three things: the managed file is left
++alone, the package content is staged beside it as `<path>.agent-config.new`,
++and the whole run exits `3` ("completed with conflicts") instead of `0`.
++
++## What changed around it
++
++A user-scoped ownership ledger now exists (`global_deploy_inventory`, schema 2).
++It is written on **every** global deploy, wherever the install ran from, and it
++records `{path, installed_sha256, packaged_sha256}` per file. `recordedHashesWithLedger`
++lays the ledger's digest map over the project manifest's, so a path recorded in
++either one classifies correctly and reaches `recorded-modified` when edited.
++
++Schema 1 of the same file listed paths in a `files[]` array and recorded **no
++digest at all**. The schema bump is additive; schema-1 files still load.
++
++## The question
++
++A roadmap step (2.4) proposes: the `unknown` arm becomes `preserve` for a path
++the **ledger lists**, and stays `write` for a genuinely unrecorded pre-existing
++file.
++
++The set that change actually reaches is narrow and worth stating exactly. A
++path is ledger-listed-but-digest-less only when **all** of these hold:
++
++- it was deployed globally by an install that predates the ledger (schema 1), and
++- no project manifest records a digest for it either — which means that install
++  ran from a directory carrying no project settings, because an install from a
++  project with settings wrote a manifest that does record those digests.
++
++That is precisely the population the roadmap's K1/K2 defect describes: the
++consumers whose global edits are currently overwritten silently.
++
++For them, on the **first** install after upgrading across the schema bump,
++every such file is listed without a digest. The install cannot tell an edited
++file from an untouched one, because nothing recorded what was written.
++
++## Candidate dispositions
++
++**(a) Preserve.** `unknown` + ledger-listed → `preserve`. The first post-upgrade
++install for that population stages a sidecar beside every affected file and
++exits 3. From the second install onward the ledger carries digests and the
++behaviour is exact. Edits are never lost; the cost is one loud, confusing
++install for people who had edited nothing.
++
++**(b) Close the step as already satisfied.** Argue that 2.3 did the work: the
++ledger now records a digest for every path it writes, so a ledger-listed path
++with a digest already reaches `recorded-modified`. Restricting the preserve arm
++to digest-bearing ledger paths is a no-op, so the arm stays as it is and the
++roadmap records why. Pre-ledger global edits made from a settings-less
++directory are lost once, on the next install, and the roadmap says so.
++
++**(c) Backfill and state the loss.** Keep `write` for the digest-less case, but
++have that install record the digest of what it wrote, closing the ambiguity
++window after exactly one install. Same outcome as (b) for the consumer — one
++lost edit — but the window is explicitly bounded and documented rather than
++left implicit. (Note: 2.3 may already do this; verify before preferring it on
++that ground alone.)
++
++**(d) Something else you can name and defend.**
++
++## Considerations that are in scope
++
++- Which direction is recoverable. A preserved file is recoverable by the
++  consumer; an overwritten edit is not.
++- Whether a one-time noisy install is an acceptable price, and whether it can
++  be made legible (e.g. a distinct message for the migration case) rather than
++  merely tolerated.
++- Whether `rc=3` on a migration install breaks anything downstream — CI, a
++  wrapper script, the GUI wizard (`installCompleted` already treats 3 as a
++  completion).
++- Whether a decision here should be bounded by a `revisit-if`.
++
++## What is out of scope
++
++- Changing `--force` semantics.
++- Adding a CLI verb, a prompt, or any interactive question to the installer.
++- Project-scope behaviour: this is about globally deployed files.
++
++## Output asked for
++
++A verdict naming one of (a)–(d), the reasoning behind it, the condition that
++should reopen it, and — if your verdict is not (a) — a plain statement of what
++a consumer loses under it.
+diff --git a/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md b/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md
+index ad82eada4a1263cf74f7f6bb6f79c0f118e183cc..9e66bdee89b6cd00a9c5c19b481568c8fb40a9c3 100644
+--- a/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md
++++ b/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md
+@@ -148,21 +148,42 @@ the same thing in all of them.
+       The project-manifest write itself keeps its settings gate: that block also
+       writes project anchors into the working directory, and moving it would put
+       files into whatever directory an install ran from. Test 1.1 green.
+-- [ ] **2.4 `unknown` preserves what the ledger proves we wrote.**
++- [x] **2.4 `unknown` preserves what the ledger proves we wrote.**
+       `decideDeployWrite`'s `unknown` arm becomes `preserve` for a path the
+       ledger lists, and stays `write` for a genuinely unrecorded pre-existing
+       file — the noise argument in `preserve.ts`'s own comment still holds for
+       those, and this change does not touch them.
+       verify: tests 1.1–1.3 green; a pre-existing unrecorded file is still
+       written, asserted as its own case.
+-      Open 2026-10-16, deliberately: tests 1.1–1.3 are green and the unrecorded
+-      file is asserted written (`ownershipLedger.test.ts`, AC-5), but without
+-      this arm change. The ledger now records a digest for every path it lists,
+-      so the only ledger-listed path that still reaches `unknown` is a schema-1
+-      entry from an install that predates the ledger — and preserving those
+-      would stage a sidecar beside every deployed file on the first upgraded
+-      install and exit 3, the noise D3 itself argues against. D3 needs
+-      re-deciding against that case before this arm changes.
++      Was open 2026-10-16, deliberately: preserving every ledger-listed
++      `unknown` would have staged a sidecar beside every deployed file on the
++      first upgraded install and exited 3 — the noise D3 itself argues
++      against — so D3 needed re-deciding against that case first.
++      **Closed 2026-10-17 under a fresh council round.** 2/2 concluded, no
++      split, verdict **(d)**: preserve a digest-less ledger path **unless
++      equality with what the run would write is provable**. Record and the
++      question it was asked:
++      `agents/evidence/council/ownership-unknown-arm-20261017{,.question}.md`;
++      D3 below is restated from it.
++      The branch is `isLedgerMigration` in `preserve.ts` — ledger-listed,
++      `unknown`, readable bytes — and it is the only place the packaged digest
++      is computed, so a tree whose ledger paths all carry digests pays nothing.
++      Red observed first: with the branch neutralised, the preserve-when-
++      different and preserve-when-undecidable cases both fail.
++      **Two downstream surfaces moved with it, and neither was optional.**
++      `preflight`'s `unknown` remedy told the operator to back the file up
++      because the installer would overwrite it — false the moment the branch
++      landed, so it has its own arm now. And `computeConflicts` would have
++      promised a write the writer then refused, which is the
++      two-surfaces-disagree shape 2.5 exists to stop, so `ConflictEntry` gains
++      a `migration` flag carrying the DECISION — `ownership` stays `unknown`,
++      because nobody proved an edit and labelling it otherwise would assert
++      the thing the branch exists because it cannot prove.
++      `doctor` is the one reader that cannot follow: it is not installing, so
++      it has no packaged digest, and `recorded_digests` does not even
++      enumerate a path without one. That gap is **named in its docstring and
++      asserted as a difference** in `ownership_parity.test.ts`, so doctor
++      learning to cover it reds the case rather than passing silently.
+ - [x] **2.5 One table, three readers.** A parity fixture feeds the same
+       ownership table to the preview (`computeConflicts`), the writer
+       (`conflictTracker`) and `cmd_doctor`'s classifier, and asserts all three
+@@ -217,6 +238,17 @@ the same thing in all of them.
+       entries into that tracked lock. Now that the ledger carries global
+       ownership, dropping those entries from the project lock is the candidate
+       fix, and it changes a tracked consumer file, so it is the owner's call.
++      **Re-read 2026-10-17, unchanged and still owner-reserved.**
++      `grep -c installed-tools src/config/gitignore-block.txt` is 0 and must
++      stay 0 while `docs/contracts/agents-layout.md` records the lock as
++      tracked-durable and `README.md` tells teams to commit it: satisfying
++      this step's verify line as written would reverse a recorded contract
++      and a team workflow in one edit. The narrower residual gap — a global
++      install run from a project with settings writing `$HOME`-rooted
++      global-scope entries into that tracked lock — is now MORE tractable
++      than it was, because Phase 2 gives global ownership a home of its own,
++      so dropping those entries from the project lock loses nothing. It still
++      changes what consumers commit, so it stays the owner's.
+ - [ ] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
+       they attach to an existing command.
+       verify: the output of `agent-config --help` lists no new top-level verb.
+@@ -224,6 +256,18 @@ the same thing in all of them.
+       ours?) and `reset` (restore one file, a scoped `--force`?) do is not
+       specified anywhere in the tree, and inventing the semantics of a
+       consumer-facing flag is not this drain's call.
++      **Re-read 2026-10-17 against ADR-041, which does not supply them.**
++      That ADR governs the controlled VERB vocabulary — which leading tokens
++      a visible command may use, and that a new one needs its own ADR. It
++      says nothing about what `adopt` or `reset` would do. So D4's "they ship
++      as flags" is a correct routing decision with no feature behind it, and
++      this step's verify line (`--help` lists no new top-level verb) passes
++      vacuously today: there is nothing to list.
++      The step belongs with whoever specifies the behaviour. Phase 2 sharpens
++      what `adopt` would have to mean — after the migration branch, the thing
++      a consumer most plausibly wants is "record the bytes I have as ours",
++      which is precisely the ownership assertion the council declined to make
++      automatically. That is a product decision, not a drain edit.
+ 
+ ## Blockers
+ 
+@@ -260,7 +304,7 @@ the same thing in all of them.
+ |---|---|---|---|---|---|
+ | D1 | contested-technical | council:agents/evidence/council/ownership-ledger-adr020-20261016.md | **(a) — a per-user ownership ledger makes ADR-020's global-only invariant coherent; it does not weaken it.** Phase 2 proceeds, bounded: the ledger is user-global ownership metadata and not a scope, its treatment is independent of the invoking project and working directory, it carries no project key and drives no project-dependent artefact selection, and the two-digest requirement is core preservation logic rather than an implementation detail | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats read the project-conditioned write at `install.ts:3531-3537` as the actual scope violation: a global artefact's fate decided by a project-shaped condition | the ledger becomes project-keyed or encodes project preferences · it drives artefact **selection** rather than preservation · two projects demonstrably need different versions of one global artefact at once · the two-digest distinction proves insufficient · ADR-020 or an amendment is shown to require package-controlled content uniformity |
+ | D2 | deterministic | evidence | The schema bump is additive and schema 1 keeps loading | the sibling roadmap's deletion allowlist reads the same file and must not wait on this one | the sibling lands schema 2 first |
+-| D3 | critical-technical | evidence | `unknown` preserves only paths the ledger lists | a blanket preserve would keep every unrecorded pre-existing file forever, which is the noise `preserve.ts` already argues against | the ledger becomes complete enough that unrecorded means foreign |
++| D3 | critical-technical | council:agents/evidence/council/ownership-unknown-arm-20261017.md | **(d) — `unknown` preserves a path the ledger lists UNLESS equality with what the run would write is provable.** Equality proves writing cannot destroy an edit; inequality proves nothing, because an edited file and an untouched older version are indistinguishable without a recorded digest, and overwriting on "proves nothing" accepts irreversible loss knowingly. A genuinely unrecorded path still writes — the noise `preserve.ts` argues against is real for files this tree has no record of, and a ledger listing IS a record | AI council 2026-10-17, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats also corrected the draft's claim that preservation resolves the ambiguity after one install: a preserved file was never installed, so the delay is one cycle at best and persists until the sidecar is merged | the package content for the affected files is shown not to have changed across the ledger-addition upgrade · a migration `rc=3` is shown to break supported automation and no message fixes it · conflict resolution gains a step that establishes ownership explicitly |
+ | D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |
+ | D5 | reversible-technical | agent | The doctor fix (3.1) is sequenced before Phase 2 lands | it makes the disagreement visible, and a visible disagreement is what makes Phase 2's parity test meaningful | 3.1 turns out to depend on the widened classifier |
+ 
+@@ -302,7 +346,15 @@ the same thing in all of them.
+       containment test is green in the same run.
+ - [ ] **AC-8** `grep -c installed-tools src/config/gitignore-block.txt` ≥ 1,
+       and `grep -c sidecar docs/contracts/install-layout.md` ≥ 1.
+-- [ ] **AC-9** `task ci` green.
++      Second half satisfied by 3.2. The first half is **owner-reserved and
++      arguably wrong as written**: it asks for a gitignore entry that
++      `docs/contracts/agents-layout.md` and `README.md` jointly forbid, so
++      meeting it would reverse a recorded contract. 3.3 states the narrower
++      gap that remains. This criterion closes by being re-cut or by an owner
++      decision, not by an edit.
++- [ ] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
++      run; `check_pack_size` and `check_gate_completeness` are red on
++      `main@8c90aad26` independently of this branch.
+ 
+ ## Provenance
+ 
+diff --git a/dist/install/conflict.js b/dist/install/conflict.js
+index 9f22abbbc93850a39897a0f04ca419100c28c08d..85832848554b921f813e332418708aac5264718b 100644
+--- a/dist/install/conflict.js
++++ b/dist/install/conflict.js
+@@ -16,7 +16,8 @@
+  */
+ import { existsSync } from 'node:fs';
+ import { sha256File } from './plan.js';
+-import { classifyOwnership, recordedHashesWithLedger, } from './recordedOwnership.js';
++import { isLedgerMigration } from './preserve.js';
++import { classifyOwnership, ledgerListedPaths, recordedHashesWithLedger, } from './recordedOwnership.js';
+ /**
+  * Decide what to do with a single planned target.
+  *
+@@ -168,6 +169,12 @@ export function computeConflicts(plan, recordedOverride) {
+     if (plan.policy.force)
+         return [];
+     const recorded = recordedOverride ?? recordedHashesWithLedger(plan.root);
++    // Read once for the whole pass: the preview answers the same question the
++    // writer does, and a path the ledger merely LISTS is one the writer will
++    // preserve on the migration branch. Without this the preview would promise
++    // a write the writer then refuses — the two-surfaces-disagree shape this
++    // module's parity test exists to stop.
++    const ledgerFiles = ledgerListedPaths();
+     const out = [];
+     for (const entries of Object.values(plan.filesByTool)) {
+         for (const entry of entries) {
+@@ -192,6 +199,17 @@ export function computeConflicts(plan, recordedOverride) {
+                 continue;
+             if (onDisk === entry.sha256)
+                 continue;
++            // Reaching here means the on-disk bytes already differ from the
++            // planned ones, so the equality half of the migration test is
++            // settled; what is left is whether the ledger lists the path.
++            const migration = ownership === 'unknown' &&
++                isLedgerMigration({
++                    exists: true,
++                    recordedSha256: recorded.get(entry.path),
++                    onDiskSha256: onDisk,
++                    force: false,
++                    ledgerListed: ledgerFiles.has(entry.path),
++                });
+             out.push({
+                 path: entry.path,
+                 kind: entry.kind,
+@@ -199,6 +217,7 @@ export function computeConflicts(plan, recordedOverride) {
+                 existingSha256: onDisk,
+                 mergeable: isJsonTarget(entry),
+                 ownership,
++                migration,
+             });
+         }
+     }
+diff --git a/dist/install/conflict.js.map b/dist/install/conflict.js.map
+index 0146dc2541f6b914505b4484ba653b671c41a3b4..f1dac33992444bba17aeeaccebadf0ac3bdb065a 100644
+--- a/dist/install/conflict.js.map
++++ b/dist/install/conflict.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"conflict.js","sourceRoot":"","sources":["../../src/install/conflict.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"conflict.js","sourceRoot":"","sources":["../../src/install/conflict.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/conflictTracker.js b/dist/install/conflictTracker.js
+index 44e09f4959067a88130a45db196d015097b80231..4871b77aae3ba847a9b3a60024b79e711fa442ba 100644
+--- a/dist/install/conflictTracker.js
++++ b/dist/install/conflictTracker.js
+@@ -20,8 +20,8 @@ import * as crypto from 'node:crypto';
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { mkdirp, pathExists, resolvePath, sha256OfFile } from './fsPrimitives.js';
+-import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
+-import { recordedHashesWithLedger } from './recordedOwnership.js';
++import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, isLedgerMigration, migrationPreservedMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
++import { ledgerListedPaths, recordedHashesWithLedger } from './recordedOwnership.js';
+ /**
+  * Build a tracker bound to one installer's reporting surface.
+  *
+@@ -35,7 +35,9 @@ export function createConflictTracker(host) {
+     const conflictState = {
+         root: null,
+         recorded: null,
++        ledgerFiles: null,
+         preserved: [],
++        migrated: new Set(),
+         staged: new Map(),
+     };
+     /**
+@@ -63,6 +65,57 @@ export function createConflictTracker(host) {
+         const real = resolvePath(target);
+         return real === plain ? undefined : conflictState.recorded.get(real);
+     }
++    /**
++     * Does the ownership ledger list this path, under either spelling?
++     *
++     * Both keys are tried for the reason `recordedHashFor` documents: on macOS
++     * the temp and home trees sit behind a realpath symlink that rewrites a
++     * `/var` prefix onto its private twin, so a single spelling misses every
++     * entry on the platform this is developed on.
++     */
++    function ledgerLists(target) {
++        conflictState.ledgerFiles ??= ledgerListedPaths();
++        const files = conflictState.ledgerFiles;
++        return files.has(path.resolve(target)) || files.has(resolvePath(target));
++    }
++    /**
++     * The digest of the bytes this run would write to `target`.
++     *
++     * Built into a temp file rather than hashed off the package source,
++     * because a deployed file is the package bytes PLUS the install-time tag
++     * and the two differ — comparing against the untagged source would call
++     * every up-to-date file divergent. The temp name carries the TARGET's
++     * extension because `tagDeployed` keys on it, the same constraint
++     * `stageInto` works around.
++     *
++     * `null` on any failure, which preserves: this is consulted only where
++     * nothing can be proven, and failing toward the recoverable direction is
++     * the whole point of the branch that calls it.
++     */
++    function wouldWriteDigest(target, would) {
++        const tmp = path.join(path.dirname(target), `.${path.basename(target)}.would.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`);
++        try {
++            if ('content' in would) {
++                fs.writeFileSync(tmp, would.content, 'utf-8');
++            }
++            else {
++                fs.copyFileSync(would.from, tmp);
++                host.tagDeployed(tmp, would.from, would.packageRoot);
++            }
++            return sha256OfFile(tmp);
++        }
++        catch {
++            return null;
++        }
++        finally {
++            try {
++                fs.unlinkSync(tmp);
++            }
++            catch {
++                /* swallow — best-effort cleanup of our own temp file */
++            }
++        }
++    }
+     /**
+      * Produce the bytes this run would have written, then reconcile them with
+      * whatever already sits at the sidecar path.
+@@ -142,7 +195,9 @@ export function createConflictTracker(host) {
+         if (conflictState.preserved.includes(target))
+             return;
+         conflictState.preserved.push(target);
+-        host.warn(preservedFileMessage(target, sidecar));
++        host.warn(conflictState.migrated.has(path.resolve(target))
++            ? migrationPreservedMessage(target, sidecar)
++            : preservedFileMessage(target, sidecar));
+     }
+     return {
+         conflictState,
+@@ -150,7 +205,9 @@ export function createConflictTracker(host) {
+         begin(root) {
+             conflictState.root = root;
+             conflictState.recorded = null;
++            conflictState.ledgerFiles = null;
+             conflictState.preserved = [];
++            conflictState.migrated = new Set();
+             conflictState.staged = new Map();
+         },
+         /**
+@@ -159,14 +216,26 @@ export function createConflictTracker(host) {
+          * so a file edited between planning and writing is still classified
+          * from the bytes that are actually about to be destroyed.
+          */
+-        resolve(target, force) {
++        resolve(target, force, would) {
+             const exists = pathExists(target);
+-            return decideDeployWrite({
++            const base = {
+                 exists,
+                 recordedSha256: exists ? recordedHashFor(target) : undefined,
+                 onDiskSha256: exists ? sha256OfFile(target) : null,
+                 force,
+-            });
++                ledgerListed: exists && ledgerLists(target),
++            };
++            // The packaged digest costs a temp write and a tag, so it is
++            // computed only for the targets that can consume it. On a tree
++            // where every ledger-listed path carries a digest — which is every
++            // tree the ledger itself has written — this is false throughout
++            // and the run pays nothing.
++            const migrating = isLedgerMigration(base);
++            const decision = decideDeployWrite(migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base);
++            if (decision === 'preserve' && migrating) {
++                conflictState.migrated.add(path.resolve(target));
++            }
++            return decision;
+         },
+         /**
+          * Stage the package content beside a preserved target.
+diff --git a/dist/install/conflictTracker.js.map b/dist/install/conflictTracker.js.map
+index 322ed8d2a36048e21217d1e4cfede4f0b32e9da4..33cc9aa6a7f94278390522a02b21ec506c1f6976 100644
+--- a/dist/install/conflictTracker.js.map
++++ b/dist/install/conflictTracker.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"conflictTracker.js","sourceRoot":"","sources":["../../src/install/conflictTracker.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"conflictTracker.js","sourceRoot":"","sources":["../../src/install/conflictTracker.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index ef92cf47287a51a83edcfdf3bbb9469dca64fb09..1dec5dc2c03b03e6e3ded6bb758e5a21d1d8d33f 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -10020,6 +10020,12 @@ function expanduser5(p) {
+ function recordedHashesForRoot(root, env) {
+   return readRecordedHashes(manifest_path(root, env), root);
+ }
++function ledgerListedPaths(env) {
++  return recorded_absolute_files(
++    load_inventory(inventory_path(env)),
++    env?.["HOME"]
++  );
++}
+ function recordedHashesWithLedger(root, env) {
+   const out = new Map(recordedHashesForRoot(root, env));
+   const ledger = load_inventory(inventory_path(env));
+@@ -10032,11 +10038,21 @@ function recordedHashesWithLedger(root, env) {
+ // src/install/preserve.ts
+ var SIDECAR_SUFFIX = ".agent-config.new";
+ var EXIT_COMPLETED_WITH_CONFLICTS = 3;
++function isLedgerMigration(inputs) {
++  if (!inputs.exists || inputs.force) return false;
++  if (inputs.ledgerListed !== true) return false;
++  if (inputs.onDiskSha256 === null) return false;
++  return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === "unknown";
++}
+ function decideDeployWrite(inputs) {
+   if (!inputs.exists) return "write";
+   if (inputs.force) return "write";
+   const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
+-  return ownership === "recorded-modified" ? "preserve" : "write";
++  if (ownership === "recorded-modified") return "preserve";
++  if (ownership === "unknown" && isLedgerMigration(inputs)) {
++    return inputs.packagedSha256 != null && inputs.packagedSha256 === inputs.onDiskSha256 ? "write" : "preserve";
++  }
++  return "write";
+ }
+ function sidecarPathFor(target) {
+   return `${target}${SIDECAR_SUFFIX}`;
+@@ -10044,6 +10060,9 @@ function sidecarPathFor(target) {
+ function preservedFileMessage(target, sidecar) {
+   return `Preserved user-modified ${target}. Package content was written to ${sidecar}; the active installation is not current. Review and merge it, or rerun with --force to replace the managed file.`;
+ }
++function migrationPreservedMessage(target, sidecar) {
++  return `Preserved ${target} without being able to classify it: this package deployed it before it began recording digests, so an edit and an older version look the same here. Package content was written to ${sidecar}; the active installation is not current. Review and merge it, or rerun with --force to replace the managed file. Once resolved, this file is classified normally on every later install.`;
++}
+ function conflictSummaryMessage(count) {
+   const noun = count === 1 ? "file" : "files";
+   return `Completed with conflicts: ${count} user-modified ${noun} preserved. Package content is staged alongside as *${SIDECAR_SUFFIX}; the active installation is not current until you merge it, or rerun with --force to replace the managed ${noun}.`;
+@@ -10057,7 +10076,9 @@ function createConflictTracker(host) {
+   const conflictState = {
+     root: null,
+     recorded: null,
++    ledgerFiles: null,
+     preserved: [],
++    migrated: /* @__PURE__ */ new Set(),
+     staged: /* @__PURE__ */ new Map()
+   };
+   function recordedHashFor(target) {
+@@ -10068,6 +10089,33 @@ function createConflictTracker(host) {
+     const real = resolvePath(target);
+     return real === plain ? void 0 : conflictState.recorded.get(real);
+   }
++  function ledgerLists(target) {
++    conflictState.ledgerFiles ??= ledgerListedPaths();
++    const files = conflictState.ledgerFiles;
++    return files.has(path11.resolve(target)) || files.has(resolvePath(target));
++  }
++  function wouldWriteDigest(target, would) {
++    const tmp = path11.join(
++      path11.dirname(target),
++      `.${path11.basename(target)}.would.${process.pid}.${crypto2.randomBytes(6).toString("hex")}${path11.extname(target)}`
++    );
++    try {
++      if ("content" in would) {
++        fs12.writeFileSync(tmp, would.content, "utf-8");
++      } else {
++        fs12.copyFileSync(would.from, tmp);
++        host.tagDeployed(tmp, would.from, would.packageRoot);
++      }
++      return sha256OfFile(tmp);
++    } catch {
++      return null;
++    } finally {
++      try {
++        fs12.unlinkSync(tmp);
++      } catch {
++      }
++    }
++  }
+   function stageInto(target, sidecar, produce) {
+     mkdirp(path11.dirname(sidecar));
+     const tmp = path11.join(
+@@ -10116,7 +10164,9 @@ function createConflictTracker(host) {
+   function record(target, sidecar) {
+     if (conflictState.preserved.includes(target)) return;
+     conflictState.preserved.push(target);
+-    host.warn(preservedFileMessage(target, sidecar));
++    host.warn(
++      conflictState.migrated.has(path11.resolve(target)) ? migrationPreservedMessage(target, sidecar) : preservedFileMessage(target, sidecar)
++    );
+   }
+   return {
+     conflictState,
+@@ -10124,7 +10174,9 @@ function createConflictTracker(host) {
+     begin(root) {
+       conflictState.root = root;
+       conflictState.recorded = null;
++      conflictState.ledgerFiles = null;
+       conflictState.preserved = [];
++      conflictState.migrated = /* @__PURE__ */ new Set();
+       conflictState.staged = /* @__PURE__ */ new Map();
+     },
+     /**
+@@ -10133,14 +10185,23 @@ function createConflictTracker(host) {
+      * so a file edited between planning and writing is still classified
+      * from the bytes that are actually about to be destroyed.
+      */
+-    resolve(target, force) {
++    resolve(target, force, would) {
+       const exists = pathExists(target);
+-      return decideDeployWrite({
++      const base = {
+         exists,
+         recordedSha256: exists ? recordedHashFor(target) : void 0,
+         onDiskSha256: exists ? sha256OfFile(target) : null,
+-        force
+-      });
++        force,
++        ledgerListed: exists && ledgerLists(target)
++      };
++      const migrating = isLedgerMigration(base);
++      const decision = decideDeployWrite(
++        migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base
++      );
++      if (decision === "preserve" && migrating) {
++        conflictState.migrated.add(path11.resolve(target));
++      }
++      return decision;
+     },
+     /**
+      * Stage the package content beside a preserved target.
+@@ -22587,7 +22648,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
+       return [0, 0, written_paths];
+     }
+     mkdirp(path34.dirname(dest));
+-    const decision = tracker.resolve(dest, force);
++    const decision = tracker.resolve(dest, force, { from: resolved_src, packageRoot: package_root });
+     if (decision === "preserve") {
+       tracker.preserve(dest, resolved_src, package_root);
+       _log_tx_entry("skip", dest);
+@@ -22650,7 +22711,7 @@ function _copy_dir_dereferencing_symlinks(src, dest, force, package_root = null,
+     if (file_filter !== null && !file_filter(entry)) {
+       continue;
+     }
+-    const decision = tracker.resolve(target, force);
++    const decision = tracker.resolve(target, force, { from: resolved, packageRoot: package_root });
+     if (decision === "preserve") {
+       tracker.preserve(target, resolved, package_root);
+       skipped += 1;
+@@ -22674,7 +22735,7 @@ function _write_claude_desktop_marker(force, lockfile_path2, bundles_dir, bundle
+   const target = path34.join(anchor, "agent-config.md");
+   mkdirp(anchor);
+   const body = claudeDesktopMarkerBody(lockfile_path2, anchor, bundles_dir, bundle_count);
+-  if (tracker.resolve(target, force) === "preserve") {
++  if (tracker.resolve(target, force, { content: body }) === "preserve") {
+     tracker.preserveContent(target, body);
+     return [0, 1, []];
+   }
+diff --git a/dist/install/preflight.js b/dist/install/preflight.js
+index 4d0b044849d059e6ac1d3b8300ea6be0d92da10c..08443cf44bcb04dabf1f621ae3ac4019190ff47d 100644
+--- a/dist/install/preflight.js
++++ b/dist/install/preflight.js
+@@ -123,22 +123,44 @@ export function checkConflicts(inputs) {
+         id: 'conflicts',
+         severity: 'warning',
+         path: c.path,
+-        message: c.ownership === 'recorded-modified'
+-            ? `managed ${c.kind} file has been edited since we wrote it`
+-            : `existing file conflicts with planned ${c.kind} content`,
++        message: conflictMessage(c),
+         // A remedy here may only describe what an install actually does. Before
+         // the owner ruling of 2026-09-21 the writer overwrote every deployed
+         // file unconditionally, so the `recorded-modified` arm told the
+         // operator to back their edit up. It now preserves that file and stages
+         // the package content beside it, so the same sentence would be false in
+         // the opposite direction — it would understate a protection that ships.
+-        // The `unknown` arm is unchanged: nothing is recorded for that path, so
+-        // the writer still writes over it.
+-        remedy: c.ownership === 'recorded-modified'
+-            ? 'installing preserves your edit and stages package content as <path>.agent-config.new; --force replaces it instead'
+-            : 'back up this file — installing writes the planned content over it',
++        // The `unknown` arm is NO LONGER one arm. A path the ownership ledger
++        // lists but holds no digest for is preserved too, so the back-up
++        // sentence would be false for it in the same direction the
++        // `recorded-modified` one was — it would tell the operator to save a
++        // file the installer is about to leave alone.
++        remedy: conflictRemedy(c),
+     }));
+ }
++/** What the operator is being told has happened to one conflicting file. */
++function conflictMessage(c) {
++    if (c.ownership === 'recorded-modified') {
++        return `managed ${c.kind} file has been edited since we wrote it`;
++    }
++    if (c.migration) {
++        return `managed ${c.kind} file predates digest tracking — an edit and an older version look alike here`;
++    }
++    return `existing file conflicts with planned ${c.kind} content`;
++}
++/**
++ * What an install will actually do to it.
++ *
++ * A remedy here may only describe what an install actually does, which is why
++ * the migration arm exists rather than reusing either neighbour: the file is
++ * preserved like an edited one, but the reason is not an edit anyone proved.
++ */
++function conflictRemedy(c) {
++    if (c.ownership === 'recorded-modified' || c.migration) {
++        return 'installing preserves this file and stages package content as <path>.agent-config.new; --force replaces it instead';
++    }
++    return 'back up this file — installing writes the planned content over it';
++}
+ /** Probe 4 — host-detection sanity: report what the target tree looks like. */
+ export function checkHostDetection(inputs) {
+     const presence = detectToolPresence(inputs.root);
+diff --git a/dist/install/preflight.js.map b/dist/install/preflight.js.map
+index 5227702a0697f900553dca359c2a69cb8d60de4f..eedfd5b237e4bdb42c76a954f4d14bf606e51515 100644
+--- a/dist/install/preflight.js.map
++++ b/dist/install/preflight.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"preflight.js","sourceRoot":"","sources":["../../src/install/preflight.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"preflight.js","sourceRoot":"","sources":["../../src/install/preflight.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/preserve.js b/dist/install/preserve.js
+index fdb024534738da87e0af24c1892da8c722fa9db6..2d4d0a8fa7e1b10ce519432f0f1ac47da3cff950 100644
+--- a/dist/install/preserve.js
++++ b/dist/install/preserve.js
+@@ -58,21 +58,60 @@ export const SIDECAR_SUFFIX = '.agent-config.new';
+  * `2` is already argparse's usage-error code, so this is `3`.
+  */
+ export const EXIT_COMPLETED_WITH_CONFLICTS = 3;
++/**
++ * Does this target reach the migration branch at all?
++ *
++ * Cheap on purpose — it hashes nothing. The migration branch needs the digest
++ * of what the run WOULD write, and computing that means staging the package
++ * content into a temp file and tagging it. Asking this first means a normal
++ * install pays nothing: on a tree where every ledger-listed path carries a
++ * digest, this is false everywhere and no extra byte is written.
++ *
++ * The set it selects is narrow and worth stating exactly. A path is
++ * ledger-listed but digest-less only when it was deployed globally by an
++ * install that predates the ledger (inventory schema 1, which recorded paths
++ * and no digests) AND no project manifest records a digest for it either —
++ * which means that install ran from a directory carrying no project settings.
++ * That is precisely the population whose global edits this roadmap found being
++ * overwritten silently.
++ *
++ * `onDiskSha256 === null` is excluded deliberately: with bytes that cannot be
++ * read, equality is undecidable in both directions, so the pre-ledger
++ * behaviour stands rather than being changed on a case nobody reasoned about.
++ */
++export function isLedgerMigration(inputs) {
++    if (!inputs.exists || inputs.force)
++        return false;
++    if (inputs.ledgerListed !== true)
++        return false;
++    if (inputs.onDiskSha256 === null)
++        return false;
++    return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === 'unknown';
++}
+ /**
+  * Decide whether the writer may replace one managed file.
+  *
+  * A target that does not exist is written. A forced run writes. Otherwise the
+- * recorded-ownership verdict decides: `recorded-modified` preserves, and both
+- * `recorded-unchanged` and `unknown` write.
+- *
+- * The `unknown` arm is the one worth stating out loud, because it is what
+- * keeps this change from being a regression. No recorded digest means no
+- * divergence to measure — a tree with no manifest, a global anchor that holds
+- * none, or a bridge entry recorded without a hash. Preserving there would
+- * stage a sidecar beside every pre-existing file on a first install, which is
+- * not protection, it is noise. The ruling covers a file this tree can show it
+- * wrote and can show has changed since; everything else keeps the behavior it
+- * had, and `recordedOwnership` already documents that floor.
++ * recorded-ownership verdict decides: `recorded-modified` preserves, and
++ * `recorded-unchanged` writes.
++ *
++ * The `unknown` arm is the one worth stating out loud. No recorded digest
++ * means no divergence to measure — a tree with no manifest, a global anchor
++ * that holds none, or a bridge entry recorded without a hash. Preserving every
++ * such file would stage a sidecar beside every pre-existing file on a first
++ * install, which is not protection, it is noise, and that is still the answer
++ * for a file this tree has no record of.
++ *
++ * THE MIGRATION BRANCH, and why `unknown` is not one thing. A path the
++ * ledger LISTS is not a file this tree has no record of: the listing is this
++ * package's own record that it deployed that path. The noise argument above
++ * was made about genuinely unrecorded files and does not reach it. For that
++ * narrow set — see {@link isLedgerMigration} — the only available proof is
++ * equality with what the run would write: equal means writing cannot destroy
++ * an edit, whatever the history; unequal proves nothing, because an edited
++ * file and an untouched older version are indistinguishable without a
++ * recorded digest. Overwriting on "proves nothing" accepts irreversible loss
++ * knowingly, so the unequal case preserves.
+  */
+ export function decideDeployWrite(inputs) {
+     if (!inputs.exists)
+@@ -80,7 +119,14 @@ export function decideDeployWrite(inputs) {
+     if (inputs.force)
+         return 'write';
+     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
+-    return ownership === 'recorded-modified' ? 'preserve' : 'write';
++    if (ownership === 'recorded-modified')
++        return 'preserve';
++    if (ownership === 'unknown' && isLedgerMigration(inputs)) {
++        return inputs.packagedSha256 != null && inputs.packagedSha256 === inputs.onDiskSha256
++            ? 'write'
++            : 'preserve';
++    }
++    return 'write';
+ }
+ /** Path of the sidecar staged beside `target`. */
+ export function sidecarPathFor(target) {
+@@ -99,6 +145,22 @@ export function preservedFileMessage(target, sidecar) {
+         'the active installation is not current. Review and merge it, or rerun with ' +
+         '--force to replace the managed file.');
+ }
++/**
++ * Per-file report line for a target preserved on the migration branch.
++ *
++ * Distinct wording because the cause is distinct and the ordinary message
++ * would mislead. "Preserved user-modified" asserts an edit; here the run
++ * cannot tell an edit from an older version, and saying otherwise would be
++ * the kind of unproven claim the preservation path exists to avoid. What the
++ * reader needs is why it happened and that it is a one-off.
++ */
++export function migrationPreservedMessage(target, sidecar) {
++    return (`Preserved ${target} without being able to classify it: this package deployed it before ` +
++        'it began recording digests, so an edit and an older version look the same here. ' +
++        `Package content was written to ${sidecar}; the active installation is not current. ` +
++        'Review and merge it, or rerun with --force to replace the managed file. ' +
++        'Once resolved, this file is classified normally on every later install.');
++}
+ /** End-of-run summary naming the conflict count and what it means. */
+ export function conflictSummaryMessage(count) {
+     const noun = count === 1 ? 'file' : 'files';
+diff --git a/dist/install/preserve.js.map b/dist/install/preserve.js.map
+index 3ae8907b27bb36ce6c5a98b0c7c0a3cf07313b3a..c6b4a79dd74fe1278d6d44227964ec72cf8e54dc 100644
+--- a/dist/install/preserve.js.map
++++ b/dist/install/preserve.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"preserve.js","sourceRoot":"","sources":["../../src/install/preserve.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GAwCG;AAEH,OAAO,EAAE,iBAAiB,EAAE,MAAM,wBAAwB,CAAC;AAE3D;;;;;;GAMG;AACH,MAAM,CAAC,MAAM,cAAc,GAAG,mBAAmB,CAAC;AAElD;;;;;;;;GAQG;AACH,MAAM,CAAC,MAAM,6BAA6B,GAAG,CAAC,CAAC;AAiC/C;;;;;;;;;;;;;;;GAeG;AACH,MAAM,UAAU,iBAAiB,CAAC,MAAyB;IACvD,IAAI,CAAC,MAAM,CAAC,MAAM;QAAE,OAAO,OAAO,CAAC;IACnC,IAAI,MAAM,CAAC,KAAK;QAAE,OAAO,OAAO,CAAC;IACjC,MAAM,SAAS,GAAG,iBAAiB,CAAC,MAAM,CAAC,cAAc,EAAE,MAAM,CAAC,YAAY,CAAC,CAAC;IAChF,OAAO,SAAS,KAAK,mBAAmB,CAAC,CAAC,CAAC,UAAU,CAAC,CAAC,CAAC,OAAO,CAAC;AACpE,CAAC;AAED,kDAAkD;AAClD,MAAM,UAAU,cAAc,CAAC,MAAc;IACzC,OAAO,GAAG,MAAM,GAAG,cAAc,EAAE,CAAC;AACxC,CAAC;AAED;;;;;;;GAOG;AACH,MAAM,UAAU,oBAAoB,CAAC,MAAc,EAAE,OAAe;IAChE,OAAO,CACH,2BAA2B,MAAM,oCAAoC,OAAO,IAAI;QAChF,6EAA6E;QAC7E,sCAAsC,CACzC,CAAC;AACN,CAAC;AAED,sEAAsE;AACtE,MAAM,UAAU,sBAAsB,CAAC,KAAa;IAChD,MAAM,IAAI,GAAG,KAAK,KAAK,CAAC,CAAC,CAAC,CAAC,MAAM,CAAC,CAAC,CAAC,OAAO,CAAC;IAC5C,OAAO,CACH,6BAA6B,KAAK,kBAAkB,IAAI,cAAc;QACtE,2CAA2C,cAAc,4BAA4B;QACrF,mFAAmF,IAAI,GAAG,CAC7F,CAAC;AACN,CAAC;AAED;;;;;;;GAOG;AACH,MAAM,UAAU,qBAAqB,CAAC,MAAc,EAAE,OAAe;IACjE,OAAO,CACH,uBAAuB,OAAO,sDAAsD;QACpF,wDAAwD,MAAM,mBAAmB;QACjF,iGAAiG,CACpG,CAAC;AACN,CAAC;AAED;;;;;;;;;;;;;GAaG;AACH;;;;;;;;;;;;;GAaG;AACH,MAAM,UAAU,gBAAgB,CAAC,QAAgB;IAC7C,OAAO,QAAQ,KAAK,CAAC,IAAI,QAAQ,KAAK,6BAA6B,CAAC;AACxE,CAAC;AAED,MAAM,UAAU,kBAAkB,CAC9B,KAA8B,EAC9B,OAAe,EACf,KAAa;IAEb,MAAM,SAAS,GAAG,OAAO,KAAK,CAAC,SAAS,KAAK,QAAQ,CAAC,CAAC,CAAC,KAAK,CAAC,SAAS,CAAC,CAAC,CAAC,CAAC,CAAC;IAC5E,OAAO,SAAS,GAAG,CAAC,CAAC,CAAC,CAAC,EAAE,OAAO,EAAE,KAAK,EAAE,SAAS,EAAE,CAAC,CAAC,CAAC,EAAE,OAAO,EAAE,KAAK,EAAE,CAAC;AAC9E,CAAC"}
+\ No newline at end of file
++{"version":3,"file":"preserve.js","sourceRoot":"","sources":["../../src/install/preserve.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/dist/install/recordedOwnership.js b/dist/install/recordedOwnership.js
+index 2e01a915b9b3176947c935a0b5882de4942d357c..95124544877583f8a8cdb458cbd2aae926062845 100644
+--- a/dist/install/recordedOwnership.js
++++ b/dist/install/recordedOwnership.js
+@@ -187,6 +187,23 @@ export function recordedHashesForRoot(root, env) {
+  * The one table the preview (`computeConflicts`) and the writer
+  * (`conflictTracker`) both read, so the two cannot answer differently.
+  */
++/**
++ * Every absolute path the user-scoped ledger LISTS, with or without a digest.
++ *
++ * {@link recordedHashesWithLedger} answers "what digest did we record"; this
++ * answers the strictly weaker "did we deploy here at all", which is the
++ * question an inventory written before digests existed can still answer. The
++ * write decision needs both: a listed path with no digest is not a file this
++ * tree has no record of, and treating the two alike is what let a pre-ledger
++ * global edit be overwritten silently.
++ *
++ * Here rather than in the tracker so the inventory stays read by the one
++ * module that already reads it, under the same `AGENT_CONFIG_DEPLOY_INVENTORY`
++ * override.
++ */
++export function ledgerListedPaths(env) {
++    return global_deploy_inventory.recorded_absolute_files(global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env)), env?.['HOME']);
++}
+ export function recordedHashesWithLedger(root, env) {
+     const out = new Map(recordedHashesForRoot(root, env));
+     const ledger = global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env));
+diff --git a/dist/install/recordedOwnership.js.map b/dist/install/recordedOwnership.js.map
+index f72af70afe001b047964f6b14327b3d0c84b4bf9..09af772c07379bc578637b3c45851867929b3572 100644
+--- a/dist/install/recordedOwnership.js.map
++++ b/dist/install/recordedOwnership.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"recordedOwnership.js","sourceRoot":"","sources":["../../src/install/recordedOwnership.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"recordedOwnership.js","sourceRoot":"","sources":["../../src/install/recordedOwnership.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/src/install/conflict.ts b/src/install/conflict.ts
+index bf39f51feafb1436ad3b2d0dcfd5c83f59c1dc56..0859162705a650ff47c2bf028d59e03bb1f080ff 100644
+--- a/src/install/conflict.ts
++++ b/src/install/conflict.ts
+@@ -18,8 +18,10 @@
+ import { existsSync } from 'node:fs';
+ 
+ import { sha256File } from './plan.js';
++import { isLedgerMigration } from './preserve.js';
+ import {
+     classifyOwnership,
++    ledgerListedPaths,
+     recordedHashesWithLedger,
+     type RecordedHashes,
+ } from './recordedOwnership.js';
+@@ -208,6 +210,12 @@ export function computeConflicts(
+     // force-mode plan paid a read and a YAML parse for nothing.
+     if (plan.policy.force) return [];
+     const recorded = recordedOverride ?? recordedHashesWithLedger(plan.root);
++    // Read once for the whole pass: the preview answers the same question the
++    // writer does, and a path the ledger merely LISTS is one the writer will
++    // preserve on the migration branch. Without this the preview would promise
++    // a write the writer then refuses — the two-surfaces-disagree shape this
++    // module's parity test exists to stop.
++    const ledgerFiles = ledgerListedPaths();
+     const out: ConflictEntry[] = [];
+     for (const entries of Object.values(plan.filesByTool)) {
+         for (const entry of entries) {
+@@ -226,6 +234,18 @@ export function computeConflicts(
+             if (ownership === 'recorded-unchanged') continue;
+             if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path)) continue;
+             if (onDisk === entry.sha256) continue;
++            // Reaching here means the on-disk bytes already differ from the
++            // planned ones, so the equality half of the migration test is
++            // settled; what is left is whether the ledger lists the path.
++            const migration =
++                ownership === 'unknown' &&
++                isLedgerMigration({
++                    exists: true,
++                    recordedSha256: recorded.get(entry.path),
++                    onDiskSha256: onDisk,
++                    force: false,
++                    ledgerListed: ledgerFiles.has(entry.path),
++                });
+             out.push({
+                 path: entry.path,
+                 kind: entry.kind,
+@@ -233,6 +253,7 @@ export function computeConflicts(
+                 existingSha256: onDisk,
+                 mergeable: isJsonTarget(entry),
+                 ownership,
++                migration,
+             });
+         }
+     }
+diff --git a/src/install/conflictTracker.ts b/src/install/conflictTracker.ts
+index 57d61e7ec83b70b1e7fad47aed5970e9edace75c..232620f15922737b6834c10689630f34dfe1fef6 100644
+--- a/src/install/conflictTracker.ts
++++ b/src/install/conflictTracker.ts
+@@ -26,11 +26,24 @@ import {
+     conflictSummaryMessage,
+     decideDeployWrite,
+     foreignSidecarMessage,
++    isLedgerMigration,
++    migrationPreservedMessage,
+     preservedFileMessage,
+     sidecarPathFor,
+     type DeployWriteDecision,
+ } from './preserve.js';
+-import { recordedHashesWithLedger, type RecordedHashes } from './recordedOwnership.js';
++import { ledgerListedPaths, recordedHashesWithLedger, type RecordedHashes } from './recordedOwnership.js';
++
++/**
++ * The bytes a run would write to one target, named rather than computed.
++ *
++ * A copy carries the package file plus its install-time tag; a generated
++ * marker carries its own content. The tracker turns either into a digest, and
++ * only when the migration branch needs one.
++ */
++export type WouldWrite =
++    | { readonly from: string; readonly packageRoot: string | null }
++    | { readonly content: string };
+ 
+ /** The installer-owned reporting surface the tracker borrows. */
+ export interface ConflictTrackerHost {
+@@ -67,7 +80,23 @@ export interface ConflictTrackerHost {
+ export interface ConflictState {
+     root: string | null;
+     recorded: RecordedHashes | null;
++    /**
++     * Paths the ownership ledger lists, read lazily and cached for the run.
++     *
++     * Same discipline as `recorded`, for the same reason: the ledger is
++     * rewritten at the end of the install, so re-reading it mid-run would
++     * compare a file against a listing this very run had just produced.
++     */
++    ledgerFiles: ReadonlySet<string> | null;
+     preserved: string[];
++    /**
++     * Targets this run preserved on the migration branch.
++     *
++     * The report line differs there — the run cannot say the file was edited,
++     * only that it cannot tell — and the writer learns which is which from
++     * `resolve`, not from re-deriving the classification at report time.
++     */
++    migrated: Set<string>;
+     /**
+      * Sidecar path → the digest of the package content staged there this run.
+      *
+@@ -85,8 +114,15 @@ export interface ConflictTracker {
+     readonly conflictState: ConflictState;
+     /** Reset the tracker and point it at the tree whose manifest records ownership. */
+     begin(root: string | null): void;
+-    /** Decide what the writer does with one deploy target. */
+-    resolve(target: string, force: boolean): DeployWriteDecision;
++    /**
++     * Decide what the writer does with one deploy target.
++     *
++     * `would` is required rather than optional: a call site that cannot say
++     * what it would write cannot be classified on the migration branch, and an
++     * optional argument would let a new one skip that branch silently instead
++     * of having to decide.
++     */
++    resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision;
+     /** The digest recorded before this run for `target` — what decided a preservation. */
+     recordedDigest(target: string): string | null | undefined;
+     /** Stage package content beside a preserved target, then record and report it. */
+@@ -110,7 +146,9 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
+     const conflictState: ConflictState = {
+         root: null,
+         recorded: null,
++        ledgerFiles: null,
+         preserved: [],
++        migrated: new Set(),
+         staged: new Map(),
+     };
+ 
+@@ -138,6 +176,58 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
+         return real === plain ? undefined : conflictState.recorded.get(real);
+     }
+ 
++    /**
++     * Does the ownership ledger list this path, under either spelling?
++     *
++     * Both keys are tried for the reason `recordedHashFor` documents: on macOS
++     * the temp and home trees sit behind a realpath symlink that rewrites a
++     * `/var` prefix onto its private twin, so a single spelling misses every
++     * entry on the platform this is developed on.
++     */
++    function ledgerLists(target: string): boolean {
++        conflictState.ledgerFiles ??= ledgerListedPaths();
++        const files = conflictState.ledgerFiles;
++        return files.has(path.resolve(target)) || files.has(resolvePath(target));
++    }
++
++    /**
++     * The digest of the bytes this run would write to `target`.
++     *
++     * Built into a temp file rather than hashed off the package source,
++     * because a deployed file is the package bytes PLUS the install-time tag
++     * and the two differ — comparing against the untagged source would call
++     * every up-to-date file divergent. The temp name carries the TARGET's
++     * extension because `tagDeployed` keys on it, the same constraint
++     * `stageInto` works around.
++     *
++     * `null` on any failure, which preserves: this is consulted only where
++     * nothing can be proven, and failing toward the recoverable direction is
++     * the whole point of the branch that calls it.
++     */
++    function wouldWriteDigest(target: string, would: WouldWrite): string | null {
++        const tmp = path.join(
++            path.dirname(target),
++            `.${path.basename(target)}.would.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`,
++        );
++        try {
++            if ('content' in would) {
++                fs.writeFileSync(tmp, would.content, 'utf-8');
++            } else {
++                fs.copyFileSync(would.from, tmp);
++                host.tagDeployed(tmp, would.from, would.packageRoot);
++            }
++            return sha256OfFile(tmp);
++        } catch {
++            return null;
++        } finally {
++            try {
++                fs.unlinkSync(tmp);
++            } catch {
++                /* swallow — best-effort cleanup of our own temp file */
++            }
++        }
++    }
++
+     /**
+      * Produce the bytes this run would have written, then reconcile them with
+      * whatever already sits at the sidecar path.
+@@ -221,7 +311,11 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
+         // NDJSON frame and anything downstream reading either.
+         if (conflictState.preserved.includes(target)) return;
+         conflictState.preserved.push(target);
+-        host.warn(preservedFileMessage(target, sidecar));
++        host.warn(
++            conflictState.migrated.has(path.resolve(target))
++                ? migrationPreservedMessage(target, sidecar)
++                : preservedFileMessage(target, sidecar),
++        );
+     }
+ 
+     return {
+@@ -232,7 +326,9 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
+         begin(root: string | null): void {
+             conflictState.root = root;
+             conflictState.recorded = null;
++            conflictState.ledgerFiles = null;
+             conflictState.preserved = [];
++            conflictState.migrated = new Set();
+             conflictState.staged = new Map();
+         },
+ 
+@@ -242,14 +338,28 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
+          * so a file edited between planning and writing is still classified
+          * from the bytes that are actually about to be destroyed.
+          */
+-        resolve(target: string, force: boolean): DeployWriteDecision {
++        resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision {
+             const exists = pathExists(target);
+-            return decideDeployWrite({
++            const base = {
+                 exists,
+                 recordedSha256: exists ? recordedHashFor(target) : undefined,
+                 onDiskSha256: exists ? sha256OfFile(target) : null,
+                 force,
+-            });
++                ledgerListed: exists && ledgerLists(target),
++            };
++            // The packaged digest costs a temp write and a tag, so it is
++            // computed only for the targets that can consume it. On a tree
++            // where every ledger-listed path carries a digest — which is every
++            // tree the ledger itself has written — this is false throughout
++            // and the run pays nothing.
++            const migrating = isLedgerMigration(base);
++            const decision = decideDeployWrite(
++                migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base,
++            );
++            if (decision === 'preserve' && migrating) {
++                conflictState.migrated.add(path.resolve(target));
++            }
++            return decision;
+         },
+ 
+         /**
+diff --git a/src/install/preflight.ts b/src/install/preflight.ts
+index 3f85812f96f05cc1115e98b8405f39c9be363b39..5e963088c7cb6fe2588af14d6707b5deda806fe6 100644
+--- a/src/install/preflight.ts
++++ b/src/install/preflight.ts
+@@ -21,6 +21,7 @@ import { dirname } from 'node:path';
+ import type { PlanInputs } from './plan.js';
+ import { buildInstallPlan } from './plan.js';
+ import { computeConflicts } from './conflict.js';
++import type { ConflictEntry } from './types.js';
+ import { detectToolPresence } from './detect.js';
+ 
+ /** Stable identifiers for the four pre-flight probes. */
+@@ -155,25 +156,47 @@ export function checkConflicts(inputs: PlanInputs): PreflightFinding[] {
+         id: 'conflicts' as const,
+         severity: 'warning' as const,
+         path: c.path,
+-        message:
+-            c.ownership === 'recorded-modified'
+-                ? `managed ${c.kind} file has been edited since we wrote it`
+-                : `existing file conflicts with planned ${c.kind} content`,
++        message: conflictMessage(c),
+         // A remedy here may only describe what an install actually does. Before
+         // the owner ruling of 2026-09-21 the writer overwrote every deployed
+         // file unconditionally, so the `recorded-modified` arm told the
+         // operator to back their edit up. It now preserves that file and stages
+         // the package content beside it, so the same sentence would be false in
+         // the opposite direction — it would understate a protection that ships.
+-        // The `unknown` arm is unchanged: nothing is recorded for that path, so
+-        // the writer still writes over it.
+-        remedy:
+-            c.ownership === 'recorded-modified'
+-                ? 'installing preserves your edit and stages package content as <path>.agent-config.new; --force replaces it instead'
+-                : 'back up this file — installing writes the planned content over it',
++        // The `unknown` arm is NO LONGER one arm. A path the ownership ledger
++        // lists but holds no digest for is preserved too, so the back-up
++        // sentence would be false for it in the same direction the
++        // `recorded-modified` one was — it would tell the operator to save a
++        // file the installer is about to leave alone.
++        remedy: conflictRemedy(c),
+     }));
+ }
+ 
++/** What the operator is being told has happened to one conflicting file. */
++function conflictMessage(c: ConflictEntry): string {
++    if (c.ownership === 'recorded-modified') {
++        return `managed ${c.kind} file has been edited since we wrote it`;
++    }
++    if (c.migration) {
++        return `managed ${c.kind} file predates digest tracking — an edit and an older version look alike here`;
++    }
++    return `existing file conflicts with planned ${c.kind} content`;
++}
++
++/**
++ * What an install will actually do to it.
++ *
++ * A remedy here may only describe what an install actually does, which is why
++ * the migration arm exists rather than reusing either neighbour: the file is
++ * preserved like an edited one, but the reason is not an edit anyone proved.
++ */
++function conflictRemedy(c: ConflictEntry): string {
++    if (c.ownership === 'recorded-modified' || c.migration) {
++        return 'installing preserves this file and stages package content as <path>.agent-config.new; --force replaces it instead';
++    }
++    return 'back up this file — installing writes the planned content over it';
++}
++
+ /** Probe 4 — host-detection sanity: report what the target tree looks like. */
+ export function checkHostDetection(inputs: PlanInputs): PreflightFinding[] {
+     const presence = detectToolPresence(inputs.root);
+diff --git a/src/install/preserve.ts b/src/install/preserve.ts
+index 2b04fbace749e8036bc2b186e0dd392dd4169cd5..ae236f480f2996c822942dc4cee7900af5ed275d 100644
+--- a/src/install/preserve.ts
++++ b/src/install/preserve.ts
+@@ -77,6 +77,26 @@ export interface DeployWriteInputs {
+      * whether the bytes on disk are ours.
+      */
+     readonly recordedSha256: string | null | undefined;
++    /**
++     * True when the user-scoped ownership ledger LISTS this path, whatever
++     * digest it carries — including none.
++     *
++     * Absent means false, so every caller that does not pass it keeps exactly
++     * the behaviour it had. Only the writer, which can read the ledger, sets
++     * it.
++     */
++    readonly ledgerListed?: boolean;
++    /**
++     * The SHA-256 of the bytes this run WOULD write to the target — the
++     * package file plus its install-time tag, not the raw source.
++     *
++     * Consulted only on the migration branch below, so a caller computes it
++     * only when {@link isLedgerMigration} says it is needed. `undefined` means
++     * the caller did not compute it and `null` means it could not be; on that
++     * branch both preserve, because the branch exists for the case where
++     * nothing can be proven.
++     */
++    readonly packagedSha256?: string | null;
+     /**
+      * The SHA-256 of the bytes on disk, computed immediately before the caller
+      * mutates the file — not at plan time.
+@@ -93,27 +113,70 @@ export interface DeployWriteInputs {
+     readonly force: boolean;
+ }
+ 
++/**
++ * Does this target reach the migration branch at all?
++ *
++ * Cheap on purpose — it hashes nothing. The migration branch needs the digest
++ * of what the run WOULD write, and computing that means staging the package
++ * content into a temp file and tagging it. Asking this first means a normal
++ * install pays nothing: on a tree where every ledger-listed path carries a
++ * digest, this is false everywhere and no extra byte is written.
++ *
++ * The set it selects is narrow and worth stating exactly. A path is
++ * ledger-listed but digest-less only when it was deployed globally by an
++ * install that predates the ledger (inventory schema 1, which recorded paths
++ * and no digests) AND no project manifest records a digest for it either —
++ * which means that install ran from a directory carrying no project settings.
++ * That is precisely the population whose global edits this roadmap found being
++ * overwritten silently.
++ *
++ * `onDiskSha256 === null` is excluded deliberately: with bytes that cannot be
++ * read, equality is undecidable in both directions, so the pre-ledger
++ * behaviour stands rather than being changed on a case nobody reasoned about.
++ */
++export function isLedgerMigration(inputs: Omit<DeployWriteInputs, 'packagedSha256'>): boolean {
++    if (!inputs.exists || inputs.force) return false;
++    if (inputs.ledgerListed !== true) return false;
++    if (inputs.onDiskSha256 === null) return false;
++    return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === 'unknown';
++}
++
+ /**
+  * Decide whether the writer may replace one managed file.
+  *
+  * A target that does not exist is written. A forced run writes. Otherwise the
+- * recorded-ownership verdict decides: `recorded-modified` preserves, and both
+- * `recorded-unchanged` and `unknown` write.
+- *
+- * The `unknown` arm is the one worth stating out loud, because it is what
+- * keeps this change from being a regression. No recorded digest means no
+- * divergence to measure — a tree with no manifest, a global anchor that holds
+- * none, or a bridge entry recorded without a hash. Preserving there would
+- * stage a sidecar beside every pre-existing file on a first install, which is
+- * not protection, it is noise. The ruling covers a file this tree can show it
+- * wrote and can show has changed since; everything else keeps the behavior it
+- * had, and `recordedOwnership` already documents that floor.
++ * recorded-ownership verdict decides: `recorded-modified` preserves, and
++ * `recorded-unchanged` writes.
++ *
++ * The `unknown` arm is the one worth stating out loud. No recorded digest
++ * means no divergence to measure — a tree with no manifest, a global anchor
++ * that holds none, or a bridge entry recorded without a hash. Preserving every
++ * such file would stage a sidecar beside every pre-existing file on a first
++ * install, which is not protection, it is noise, and that is still the answer
++ * for a file this tree has no record of.
++ *
++ * THE MIGRATION BRANCH, and why `unknown` is not one thing. A path the
++ * ledger LISTS is not a file this tree has no record of: the listing is this
++ * package's own record that it deployed that path. The noise argument above
++ * was made about genuinely unrecorded files and does not reach it. For that
++ * narrow set — see {@link isLedgerMigration} — the only available proof is
++ * equality with what the run would write: equal means writing cannot destroy
++ * an edit, whatever the history; unequal proves nothing, because an edited
++ * file and an untouched older version are indistinguishable without a
++ * recorded digest. Overwriting on "proves nothing" accepts irreversible loss
++ * knowingly, so the unequal case preserves.
+  */
+ export function decideDeployWrite(inputs: DeployWriteInputs): DeployWriteDecision {
+     if (!inputs.exists) return 'write';
+     if (inputs.force) return 'write';
+     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
+-    return ownership === 'recorded-modified' ? 'preserve' : 'write';
++    if (ownership === 'recorded-modified') return 'preserve';
++    if (ownership === 'unknown' && isLedgerMigration(inputs)) {
++        return inputs.packagedSha256 != null && inputs.packagedSha256 === inputs.onDiskSha256
++            ? 'write'
++            : 'preserve';
++    }
++    return 'write';
+ }
+ 
+ /** Path of the sidecar staged beside `target`. */
+@@ -137,6 +200,25 @@ export function preservedFileMessage(target: string, sidecar: string): string {
+     );
+ }
+ 
++/**
++ * Per-file report line for a target preserved on the migration branch.
++ *
++ * Distinct wording because the cause is distinct and the ordinary message
++ * would mislead. "Preserved user-modified" asserts an edit; here the run
++ * cannot tell an edit from an older version, and saying otherwise would be
++ * the kind of unproven claim the preservation path exists to avoid. What the
++ * reader needs is why it happened and that it is a one-off.
++ */
++export function migrationPreservedMessage(target: string, sidecar: string): string {
++    return (
++        `Preserved ${target} without being able to classify it: this package deployed it before ` +
++        'it began recording digests, so an edit and an older version look the same here. ' +
++        `Package content was written to ${sidecar}; the active installation is not current. ` +
++        'Review and merge it, or rerun with --force to replace the managed file. ' +
++        'Once resolved, this file is classified normally on every later install.'
++    );
++}
++
+ /** End-of-run summary naming the conflict count and what it means. */
+ export function conflictSummaryMessage(count: number): string {
+     const noun = count === 1 ? 'file' : 'files';
+diff --git a/src/install/recordedOwnership.ts b/src/install/recordedOwnership.ts
+index 4a138f4c283bec1afaa08f9cd102671eeeecd2f9..677a7aaed5c9b77d2674d4748012ce13180fed8a 100644
+--- a/src/install/recordedOwnership.ts
++++ b/src/install/recordedOwnership.ts
+@@ -236,6 +236,27 @@ export function recordedHashesForRoot(root: string, env?: EnvMap | null): Record
+  * The one table the preview (`computeConflicts`) and the writer
+  * (`conflictTracker`) both read, so the two cannot answer differently.
+  */
++/**
++ * Every absolute path the user-scoped ledger LISTS, with or without a digest.
++ *
++ * {@link recordedHashesWithLedger} answers "what digest did we record"; this
++ * answers the strictly weaker "did we deploy here at all", which is the
++ * question an inventory written before digests existed can still answer. The
++ * write decision needs both: a listed path with no digest is not a file this
++ * tree has no record of, and treating the two alike is what let a pre-ledger
++ * global edit be overwritten silently.
++ *
++ * Here rather than in the tracker so the inventory stays read by the one
++ * module that already reads it, under the same `AGENT_CONFIG_DEPLOY_INVENTORY`
++ * override.
++ */
++export function ledgerListedPaths(env?: EnvMap | null): ReadonlySet<string> {
++    return global_deploy_inventory.recorded_absolute_files(
++        global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env)),
++        env?.['HOME'],
++    );
++}
++
+ export function recordedHashesWithLedger(root: string, env?: EnvMap | null): RecordedHashes {
+     const out = new Map<string, string | null>(recordedHashesForRoot(root, env));
+     const ledger = global_deploy_inventory.load_inventory(global_deploy_inventory.inventory_path(env));
+diff --git a/src/install/types.ts b/src/install/types.ts
+index 13122722209945a6777d00b5e7033b9ee650b23f..4aa0aaa9d09c75160b271a3b1df59262d3f34053 100644
+--- a/src/install/types.ts
++++ b/src/install/types.ts
+@@ -159,6 +159,19 @@ export interface ConflictEntry {
+      * a readable manifest reports.
+      */
+     readonly ownership: RecordedOwnership;
++    /**
++     * True when this entry's fate is decided by the ledger-migration branch
++     * rather than by a recorded digest.
++     *
++     * `ownership` is `unknown` for such a path and will stay `unknown`: the
++     * tree genuinely cannot say whether the bytes are an edit or an older
++     * version, and labelling it `recorded-modified` would assert the edit the
++     * whole branch exists because it cannot prove. What the flag carries is
++     * the DECISION — the writer will preserve this file — so a reader that
++     * needs to know what happens next stops inferring it from a label that
++     * means something else.
++     */
++    readonly migration: boolean;
+ }
+ 
+ /**
+diff --git a/src/scripts/_cli/doctor_ownership_ledger.ts b/src/scripts/_cli/doctor_ownership_ledger.ts
+index aed134a99bc3b2023013235e4ed3d51c2435a9b4..bbe970f73fa3f84176f3e1a54de63e74460465af 100644
+--- a/src/scripts/_cli/doctor_ownership_ledger.ts
++++ b/src/scripts/_cli/doctor_ownership_ledger.ts
+@@ -8,11 +8,27 @@
+  * construction. The ledger is the record of what every global deploy wrote,
+  * wherever it ran from, so it is what doctor reads for global scope.
+  *
+- * A file is reported `modified` exactly when the installer would preserve it:
+- * the shared classifier says `recorded-modified` and the package still ships
+- * it. A retired file the user edited is kept by the installer without failing
+- * the run, so doctor does not fail on it either — reporting it here would make
+- * the two surfaces disagree in the other direction.
++ * A file is reported `modified` exactly when the installer would preserve it
++ * ON THE EVIDENCE DOCTOR HAS: the shared classifier says `recorded-modified`
++ * and the package still ships it. A retired file the user edited is kept by
++ * the installer without failing the run, so doctor does not fail on it either
++ * — reporting it here would make the two surfaces disagree in the other
++ * direction.
++ *
++ * THE ONE CASE THIS CANNOT COVER, named rather than left to be discovered.
++ * The installer also preserves a path the ledger LISTS but holds no digest
++ * for — an install predating the ledger — when the bytes on disk differ from
++ * what it would write. Doctor cannot reach that verdict, and the reason is
++ * structural rather than an omission: the test is "does this differ from what
++ * we WOULD write", and doctor is not installing, so it has no packaged digest
++ * to compare against. `recorded_digests` returns only paths carrying a digest,
++ * so such a path is not even enumerated here.
++ *
++ * It is left uncovered rather than guessed at. Reporting every digest-less
++ * ledger path as `modified` would assert an edit nobody proved, which is the
++ * claim the installer's own migration branch exists because it cannot make.
++ * The divergence is asserted in `tests/install/ownership_parity.test.ts` so it
++ * stays a known gap instead of becoming a surprise.
+  *
+  * Its own module because `cmd_doctor.ts` sits far above the 1,500-line source
+  * ceiling `check_source_size_budget` ratchets.
+diff --git a/src/scripts/install.ts b/src/scripts/install.ts
+index 7705b6f1a1d308366fdc024e2ff2520718763a7e..66a6ae22d23cdce8b83c3d218b4df8391266eabd 100644
+--- a/src/scripts/install.ts
++++ b/src/scripts/install.ts
+@@ -2716,7 +2716,7 @@ function _copy_dir_dereferencing_symlinks(
+             return [0, 0, written_paths];
+         }
+         mkdirp(path.dirname(dest));
+-        const decision = tracker.resolve(dest, force);
++        const decision = tracker.resolve(dest, force, { from: resolved_src, packageRoot: package_root });
+         if (decision === 'preserve') {
+             tracker.preserve(dest, resolved_src, package_root);
+             _log_tx_entry('skip', dest);
+@@ -2791,7 +2791,7 @@ function _copy_dir_dereferencing_symlinks(
+         if (file_filter !== null && !file_filter(entry)) {
+             continue;
+         }
+-        const decision = tracker.resolve(target, force);
++        const decision = tracker.resolve(target, force, { from: resolved, packageRoot: package_root });
+         if (decision === 'preserve') {
+             tracker.preserve(target, resolved, package_root);
+             skipped += 1;
+@@ -2825,7 +2825,7 @@ function _write_claude_desktop_marker(
+     // Generated, but manifest-recorded with a digest — so it is in the class the
+     // preservation ruling covers, and it used to write unconditionally, ignoring
+     // even `--force`, because the tracker was wired only into the copy loop.
+-    if (tracker.resolve(target, force) === 'preserve') {
++    if (tracker.resolve(target, force, { content: body }) === 'preserve') {
+         tracker.preserveContent(target, body);
+         return [0, 1, []];
+     }
+diff --git a/src/server/routes/install.ts b/src/server/routes/install.ts
+index 49dcf7acd102645a6d39bdd90b51bfafb48423c2..dadd32ac77fa604cc13990d163a1acb591a9c943 100644
+--- a/src/server/routes/install.ts
++++ b/src/server/routes/install.ts
+@@ -116,6 +116,10 @@ const ConflictEntrySchema: z.ZodType<ConflictEntry, z.ZodTypeDef, unknown> = z.o
+     ownership: z
+         .enum(['recorded-unchanged', 'recorded-modified', 'unknown'])
+         .default('unknown'),
++    // Additive for the same reason and on the same terms: an older client
++    // omits it, and `false` is the answer every tree gave before the
++    // ledger-migration branch existed.
++    migration: z.boolean().default(false),
+ });
+ 
+ /**
+diff --git a/tests/install/ownershipLedger.test.ts b/tests/install/ownershipLedger.test.ts
+index 2b66dc2d084d8db6a5cc2a9bee85af7c9aef6aa0..468f5d936f80c38bd8dbf45294c0178960b41c13 100644
+--- a/tests/install/ownershipLedger.test.ts
++++ b/tests/install/ownershipLedger.test.ts
+@@ -13,8 +13,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+ 
+ import * as inv from '../../src/scripts/_lib/global_deploy_inventory.js';
+ import { recordGlobalDeploy } from '../../src/install/ownershipLedger.js';
+-import { decideDeployWrite, sidecarPathFor } from '../../src/install/preserve.js';
+-import { recordedHashesWithLedger } from '../../src/install/recordedOwnership.js';
++import { decideDeployWrite, isLedgerMigration, sidecarPathFor } from '../../src/install/preserve.js';
++import { ledgerListedPaths, recordedHashesWithLedger } from '../../src/install/recordedOwnership.js';
+ 
+ const TAG = 'event4u/agent-config';
+ 
+@@ -192,6 +192,98 @@ describe('a retired file — spared when edited, reaped when not', () => {
+     });
+ });
+ 
++describe('step 2.4 — a ledger path the ledger has no digest for', () => {
++    // A schema-1 entry: the ledger LISTS the path and records no digest for
++    // it, which is what an install predating the ledger left behind. With no
++    // project manifest either, the write decision used to read `unknown` and
++    // overwrite — the K1/K2 loss this step closes.
++    const env = (): Record<string, string> => ({ [inv.INVENTORY_ENV]: inventoryFile });
++
++    function schema1Entry(rel: string, body: string): string {
++        const target = write(rel, body);
++        record({ currentFiles: new Set([rel]), recordedFor: () => undefined });
++        // Strip the digests the recorder wrote, leaving the listing alone —
++        // this is the shape a pre-ledger inventory actually has on disk.
++        const inventory = inv.load_inventory(inventoryFile);
++        const tools = inventory['tools'] as Record<string, Record<string, unknown>>;
++        delete (tools['cursor'] as Record<string, unknown>)['digests'];
++        inv.save_inventory(inventory, inventoryFile);
++        return target;
++    }
++
++    function decide(target: string, onDisk: string, packaged: string | null): string {
++        const recorded = recordedHashesWithLedger(path.join(tmp, 'no-project-here'), env());
++        const base = {
++            exists: true,
++            recordedSha256: recorded.get(target),
++            onDiskSha256: sha(onDisk),
++            force: false,
++            ledgerListed: ledgerListedPaths(env()).has(target),
++        };
++        expect(isLedgerMigration(base), 'the case must reach the migration branch').toBe(true);
++        return decideDeployWrite(packaged === null ? base : { ...base, packagedSha256: sha(packaged) });
++    }
++
++    it('preserves when the bytes differ from what the run would write', () => {
++        const target = schema1Entry('rules/legacy.md', 'ours v1\nmy own note\n');
++        expect(decide(target, 'ours v1\nmy own note\n', 'ours v2\n')).toBe('preserve');
++    });
++
++    it('writes when the bytes provably equal what the run would write', () => {
++        const target = schema1Entry('rules/legacy.md', 'ours v2\n');
++        expect(decide(target, 'ours v2\n', 'ours v2\n')).toBe('write');
++    });
++
++    it('preserves when the packaged digest could not be computed at all', () => {
++        const target = schema1Entry('rules/legacy.md', 'ours v1\n');
++        expect(decide(target, 'ours v1\n', null)).toBe('preserve');
++    });
++
++    it('does not reach the branch for a path the ledger never listed', () => {
++        schema1Entry('rules/legacy.md', 'ours v1\n');
++        const foreign = write('rules/foreign.md', 'someone else\n');
++        const base = {
++            exists: true,
++            recordedSha256: undefined,
++            onDiskSha256: sha('someone else\n'),
++            force: false,
++            ledgerListed: ledgerListedPaths(env()).has(foreign),
++        };
++        expect(base.ledgerListed).toBe(false);
++        expect(isLedgerMigration(base)).toBe(false);
++        expect(decideDeployWrite(base)).toBe('write');
++    });
++
++    it('does not reach the branch when the bytes on disk cannot be read', () => {
++        const target = schema1Entry('rules/legacy.md', 'ours v1\n');
++        const base = {
++            exists: true,
++            recordedSha256: undefined,
++            onDiskSha256: null,
++            force: false,
++            ledgerListed: ledgerListedPaths(env()).has(target),
++        };
++        expect(base.ledgerListed).toBe(true);
++        expect(isLedgerMigration(base), 'unreadable bytes keep the pre-ledger answer').toBe(false);
++        expect(decideDeployWrite(base)).toBe('write');
++    });
++
++    it('--force still writes, and a digest-bearing ledger path is unaffected', () => {
++        const target = schema1Entry('rules/legacy.md', 'ours v1\nedited\n');
++        const recorded = recordedHashesWithLedger(path.join(tmp, 'no-project-here'), env());
++        expect(
++            decideDeployWrite({
++                exists: true,
++                recordedSha256: recorded.get(target),
++                onDiskSha256: sha('ours v1\nedited\n'),
++                force: true,
++                ledgerListed: true,
++                packagedSha256: sha('ours v2\n'),
++            }),
++        ).toBe('write');
++    });
++});
++
+ describe('step 2.4 / AC-5 — a genuinely unrecorded pre-existing file is still written', () => {
+     it('no ledger record and no manifest record: write, not preserve', () => {
+         const target = write('rules/foreign.md', 'someone else\n');
+diff --git a/tests/install/ownership_parity.test.ts b/tests/install/ownership_parity.test.ts
+index 1f7fa1abbebfe943d868e68d97dd1b378078c3ce..77623675159cc0b451d9fca2e44b74cd33aa5291 100644
+--- a/tests/install/ownership_parity.test.ts
++++ b/tests/install/ownership_parity.test.ts
+@@ -99,9 +99,16 @@ function plan(): InstallPlan {
+     };
+ }
+ 
++/**
++ * What the preview says will be PRESERVED — which is the question all three
++ * readers are being compared on, and it is not the same as `ownership`.
++ * A ledger-migration entry stays `unknown` on purpose (nobody proved an edit)
++ * and is preserved all the same, so filtering on the label alone would make
++ * the preview disagree with the writer by construction.
++ */
+ function previewSays(): string[] {
+     return computeConflicts(plan())
+-        .filter((c) => c.ownership === 'recorded-modified')
++        .filter((c) => c.ownership === 'recorded-modified' || c.migration)
+         .map((c) => path.basename(c.path))
+         .sort();
+ }
+@@ -117,7 +124,13 @@ function writerSays(): string[] {
+         tagDeployed: () => undefined,
+     });
+     tracker.begin(root);
+-    return TABLE.filter((r) => tracker.resolve(path.join(dir, r.name), false) === 'preserve')
++    return TABLE.filter((r) => {
++        const target = path.join(dir, r.name);
++        // The writer is the one reader that can compute the packaged digest,
++        // so it is handed the planned bytes the same way the installer hands
++        // it the package source.
++        return tracker.resolve(target, false, { content: PLANNED }) === 'preserve';
++    })
+         .map((r) => r.name)
+         .sort();
+ }
+@@ -169,8 +182,22 @@ describe('step 2.5 — preview, writer and doctor agree on one table', () => {
+             .map((m) => path.basename(String(m['path'])))
+             .sort();
+ 
+-        expect(previewSays()).toEqual(EDITED);
+-        expect(writerSays()).toEqual(EDITED);
++        // The two readers that can compute the packaged digest agree, and they
++        // agree on MORE than the edited file: `no-digest.md` is listed by the
++        // ledger without a digest, so the installer preserves it rather than
++        // overwriting bytes it cannot classify.
++        const PRESERVED = [...EDITED, 'no-digest.md'].sort();
++        expect(previewSays()).toEqual(PRESERVED);
++        expect(writerSays()).toEqual(PRESERVED);
++
++        // Doctor is the reader that cannot, and the gap is asserted rather
++        // than hidden: it is not installing, so it has no packaged digest to
++        // compare `no-digest.md` against, and `recorded_digests` does not even
++        // enumerate a path without one. Reporting it `modified` anyway would
++        // assert an edit nobody proved. The assertion is written as the
++        // difference so that doctor LEARNING to cover it reds this case and
++        // forces the claim in its docstring to be re-read.
+         expect(doctorSays).toEqual(EDITED);
++        expect(PRESERVED.filter((n) => !doctorSays.includes(n))).toEqual(['no-digest.md']);
+     });
+ });
+diff --git a/tests/scripts/install.preserve.test.ts b/tests/scripts/install.preserve.test.ts
+index f289c15e842935eb790fa4e37e122d4a40457d60..2f0af9510361a9a4332112bafe544020fc67a6d8 100644
+--- a/tests/scripts/install.preserve.test.ts
++++ b/tests/scripts/install.preserve.test.ts
+@@ -189,14 +189,16 @@ describe('install — preserving a user-modified managed file', () => {
+         fixture({ packaged: '# v2\n', recorded: '# v1\n', onDisk: '# v1\n' });
+ 
+         // Reading 1 — the verdict a plan built at this moment would carry.
+-        expect(inst.tracker.resolve(p.target, false)).toBe('write');
++        expect(inst.tracker.resolve(p.target, false, { from: p.source, packageRoot: null })).toBe('write');
+ 
+         // The window a plan-time verdict would have carried straight through.
+         fs.writeFileSync(p.target, '# v1\nedited between plan and write\n');
+ 
+         // Reading 2 — same call, same arguments, different answer, because the
+         // digest comes from disk here rather than from the earlier verdict.
+-        expect(inst.tracker.resolve(p.target, false)).toBe('preserve');
++        expect(inst.tracker.resolve(p.target, false, { from: p.source, packageRoot: null })).toBe(
++            'preserve',
++        );
+     });
+ 
+     describe('exit code and conflict count', () => {

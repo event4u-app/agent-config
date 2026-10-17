@@ -432,6 +432,15 @@ export interface ConflictEntryWire {
      * collision. Optional on the wire: older servers omit it.
      */
     readonly ownership?: 'recorded-unchanged' | 'recorded-modified' | 'unknown';
+    /**
+     * The path is a ledger-migration candidate: this package deployed it
+     * before it recorded digests, so an edit and an older version are
+     * indistinguishable until the install compares against the bytes it would
+     * write. The screen should not call such a file a foreign collision, and
+     * should not promise either outcome. Optional on the wire for the same
+     * reason as `ownership`: older servers omit it.
+     */
+    readonly migration?: boolean;
 }
 
 /**

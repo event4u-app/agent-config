@@ -59,20 +59,59 @@ export const SIDECAR_SUFFIX = '.agent-config.new';
  */
 export const EXIT_COMPLETED_WITH_CONFLICTS = 3;
 /**
+ * Does this target reach the migration branch at all?
+ *
+ * Cheap on purpose — it hashes nothing. The migration branch needs the digest
+ * of what the run WOULD write, and computing that means staging the package
+ * content into a temp file and tagging it. Asking this first means a normal
+ * install pays nothing: on a tree where every ledger-listed path carries a
+ * digest, this is false everywhere and no extra byte is written.
+ *
+ * The set it selects is narrow and worth stating exactly. A path is
+ * ledger-listed but digest-less only when it was deployed globally by an
+ * install that predates the ledger (inventory schema 1, which recorded paths
+ * and no digests) AND no project manifest records a digest for it either —
+ * which means that install ran from a directory carrying no project settings.
+ * That is precisely the population whose global edits this roadmap found being
+ * overwritten silently.
+ *
+ * `onDiskSha256 === null` is excluded deliberately: with bytes that cannot be
+ * read, equality is undecidable in both directions, so the pre-ledger
+ * behaviour stands rather than being changed on a case nobody reasoned about.
+ */
+export function isLedgerMigration(inputs) {
+    if (!inputs.exists || inputs.force)
+        return false;
+    if (inputs.ledgerListed !== true)
+        return false;
+    if (inputs.onDiskSha256 === null)
+        return false;
+    return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === 'unknown';
+}
+/**
  * Decide whether the writer may replace one managed file.
  *
  * A target that does not exist is written. A forced run writes. Otherwise the
- * recorded-ownership verdict decides: `recorded-modified` preserves, and both
- * `recorded-unchanged` and `unknown` write.
+ * recorded-ownership verdict decides: `recorded-modified` preserves, and
+ * `recorded-unchanged` writes.
  *
- * The `unknown` arm is the one worth stating out loud, because it is what
- * keeps this change from being a regression. No recorded digest means no
- * divergence to measure — a tree with no manifest, a global anchor that holds
- * none, or a bridge entry recorded without a hash. Preserving there would
- * stage a sidecar beside every pre-existing file on a first install, which is
- * not protection, it is noise. The ruling covers a file this tree can show it
- * wrote and can show has changed since; everything else keeps the behavior it
- * had, and `recordedOwnership` already documents that floor.
+ * The `unknown` arm is the one worth stating out loud. No recorded digest
+ * means no divergence to measure — a tree with no manifest, a global anchor
+ * that holds none, or a bridge entry recorded without a hash. Preserving every
+ * such file would stage a sidecar beside every pre-existing file on a first
+ * install, which is not protection, it is noise, and that is still the answer
+ * for a file this tree has no record of.
+ *
+ * THE MIGRATION BRANCH, and why `unknown` is not one thing. A path the
+ * ledger LISTS is not a file this tree has no record of: the listing is this
+ * package's own record that it deployed that path. The noise argument above
+ * was made about genuinely unrecorded files and does not reach it. For that
+ * narrow set — see {@link isLedgerMigration} — the only available proof is
+ * equality with what the run would write: equal means writing cannot destroy
+ * an edit, whatever the history; unequal proves nothing, because an edited
+ * file and an untouched older version are indistinguishable without a
+ * recorded digest. Overwriting on "proves nothing" accepts irreversible loss
+ * knowingly, so the unequal case preserves.
  */
 export function decideDeployWrite(inputs) {
     if (!inputs.exists)
@@ -80,7 +119,14 @@ export function decideDeployWrite(inputs) {
     if (inputs.force)
         return 'write';
     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
-    return ownership === 'recorded-modified' ? 'preserve' : 'write';
+    if (ownership === 'recorded-modified')
+        return 'preserve';
+    if (ownership === 'unknown' && isLedgerMigration(inputs)) {
+        return inputs.packagedSha256 != null && inputs.packagedSha256 === inputs.onDiskSha256
+            ? 'write'
+            : 'preserve';
+    }
+    return 'write';
 }
 /** Path of the sidecar staged beside `target`. */
 export function sidecarPathFor(target) {
@@ -98,6 +144,22 @@ export function preservedFileMessage(target, sidecar) {
     return (`Preserved user-modified ${target}. Package content was written to ${sidecar}; ` +
         'the active installation is not current. Review and merge it, or rerun with ' +
         '--force to replace the managed file.');
+}
+/**
+ * Per-file report line for a target preserved on the migration branch.
+ *
+ * Distinct wording because the cause is distinct and the ordinary message
+ * would mislead. "Preserved user-modified" asserts an edit; here the run
+ * cannot tell an edit from an older version, and saying otherwise would be
+ * the kind of unproven claim the preservation path exists to avoid. What the
+ * reader needs is why it happened and that it is a one-off.
+ */
+export function migrationPreservedMessage(target, sidecar) {
+    return (`Preserved ${target} without being able to classify it: this package deployed it before ` +
+        'it began recording digests, so an edit and an older version look the same here. ' +
+        `Package content was written to ${sidecar}; the active installation is not current. ` +
+        'Review and merge it, or rerun with --force to replace the managed file. ' +
+        'Once resolved, this file is classified normally on every later install.');
 }
 /** End-of-run summary naming the conflict count and what it means. */
 export function conflictSummaryMessage(count) {

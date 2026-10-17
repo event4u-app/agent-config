@@ -13,8 +13,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as inv from '../../src/scripts/_lib/global_deploy_inventory.js';
 import { recordGlobalDeploy } from '../../src/install/ownershipLedger.js';
-import { decideDeployWrite, sidecarPathFor } from '../../src/install/preserve.js';
-import { recordedHashesWithLedger } from '../../src/install/recordedOwnership.js';
+import { decideDeployWrite, isLedgerMigration, sidecarPathFor } from '../../src/install/preserve.js';
+import { ledgerListedPaths, recordedHashesWithLedger } from '../../src/install/recordedOwnership.js';
 
 const TAG = 'event4u/agent-config';
 
@@ -189,6 +189,98 @@ describe('a retired file — spared when edited, reaped when not', () => {
             fs.realpathSync(path.dirname(orphan)),
         ]);
         expect(fs.existsSync(orphan)).toBe(false);
+    });
+});
+
+describe('step 2.4 — a ledger path the ledger has no digest for', () => {
+    // A schema-1 entry: the ledger LISTS the path and records no digest for
+    // it, which is what an install predating the ledger left behind. With no
+    // project manifest either, the write decision used to read `unknown` and
+    // overwrite — the K1/K2 loss this step closes.
+    const env = (): Record<string, string> => ({ [inv.INVENTORY_ENV]: inventoryFile });
+
+    function schema1Entry(rel: string, body: string): string {
+        const target = write(rel, body);
+        record({ currentFiles: new Set([rel]), recordedFor: () => undefined });
+        // Strip the digests the recorder wrote, leaving the listing alone —
+        // this is the shape a pre-ledger inventory actually has on disk.
+        const inventory = inv.load_inventory(inventoryFile);
+        const tools = inventory['tools'] as Record<string, Record<string, unknown>>;
+        delete (tools['cursor'] as Record<string, unknown>)['digests'];
+        inv.save_inventory(inventory, inventoryFile);
+        return target;
+    }
+
+    function decide(target: string, onDisk: string, packaged: string | null): string {
+        const recorded = recordedHashesWithLedger(path.join(tmp, 'no-project-here'), env());
+        const base = {
+            exists: true,
+            recordedSha256: recorded.get(target),
+            onDiskSha256: sha(onDisk),
+            force: false,
+            ledgerListed: ledgerListedPaths(env()).has(target),
+        };
+        expect(isLedgerMigration(base), 'the case must reach the migration branch').toBe(true);
+        return decideDeployWrite(packaged === null ? base : { ...base, packagedSha256: sha(packaged) });
+    }
+
+    it('preserves when the bytes differ from what the run would write', () => {
+        const target = schema1Entry('rules/legacy.md', 'ours v1\nmy own note\n');
+        expect(decide(target, 'ours v1\nmy own note\n', 'ours v2\n')).toBe('preserve');
+    });
+
+    it('writes when the bytes provably equal what the run would write', () => {
+        const target = schema1Entry('rules/legacy.md', 'ours v2\n');
+        expect(decide(target, 'ours v2\n', 'ours v2\n')).toBe('write');
+    });
+
+    it('preserves when the packaged digest could not be computed at all', () => {
+        const target = schema1Entry('rules/legacy.md', 'ours v1\n');
+        expect(decide(target, 'ours v1\n', null)).toBe('preserve');
+    });
+
+    it('does not reach the branch for a path the ledger never listed', () => {
+        schema1Entry('rules/legacy.md', 'ours v1\n');
+        const foreign = write('rules/foreign.md', 'someone else\n');
+        const base = {
+            exists: true,
+            recordedSha256: undefined,
+            onDiskSha256: sha('someone else\n'),
+            force: false,
+            ledgerListed: ledgerListedPaths(env()).has(foreign),
+        };
+        expect(base.ledgerListed).toBe(false);
+        expect(isLedgerMigration(base)).toBe(false);
+        expect(decideDeployWrite(base)).toBe('write');
+    });
+
+    it('does not reach the branch when the bytes on disk cannot be read', () => {
+        const target = schema1Entry('rules/legacy.md', 'ours v1\n');
+        const base = {
+            exists: true,
+            recordedSha256: undefined,
+            onDiskSha256: null,
+            force: false,
+            ledgerListed: ledgerListedPaths(env()).has(target),
+        };
+        expect(base.ledgerListed).toBe(true);
+        expect(isLedgerMigration(base), 'unreadable bytes keep the pre-ledger answer').toBe(false);
+        expect(decideDeployWrite(base)).toBe('write');
+    });
+
+    it('--force still writes, and a digest-bearing ledger path is unaffected', () => {
+        const target = schema1Entry('rules/legacy.md', 'ours v1\nedited\n');
+        const recorded = recordedHashesWithLedger(path.join(tmp, 'no-project-here'), env());
+        expect(
+            decideDeployWrite({
+                exists: true,
+                recordedSha256: recorded.get(target),
+                onDiskSha256: sha('ours v1\nedited\n'),
+                force: true,
+                ledgerListed: true,
+                packagedSha256: sha('ours v2\n'),
+            }),
+        ).toBe('write');
     });
 });
 

@@ -123,21 +123,52 @@ export function checkConflicts(inputs) {
         id: 'conflicts',
         severity: 'warning',
         path: c.path,
-        message: c.ownership === 'recorded-modified'
-            ? `managed ${c.kind} file has been edited since we wrote it`
-            : `existing file conflicts with planned ${c.kind} content`,
+        message: conflictMessage(c),
         // A remedy here may only describe what an install actually does. Before
         // the owner ruling of 2026-09-21 the writer overwrote every deployed
         // file unconditionally, so the `recorded-modified` arm told the
         // operator to back their edit up. It now preserves that file and stages
         // the package content beside it, so the same sentence would be false in
         // the opposite direction — it would understate a protection that ships.
-        // The `unknown` arm is unchanged: nothing is recorded for that path, so
-        // the writer still writes over it.
-        remedy: c.ownership === 'recorded-modified'
-            ? 'installing preserves your edit and stages package content as <path>.agent-config.new; --force replaces it instead'
-            : 'back up this file — installing writes the planned content over it',
+        // The `unknown` arm is NO LONGER one arm. A path the ownership ledger
+        // lists but holds no digest for is preserved too, so the back-up
+        // sentence would be false for it in the same direction the
+        // `recorded-modified` one was — it would tell the operator to save a
+        // file the installer is about to leave alone.
+        remedy: conflictRemedy(c),
     }));
+}
+/** What the operator is being told has happened to one conflicting file. */
+function conflictMessage(c) {
+    if (c.ownership === 'recorded-modified') {
+        return `managed ${c.kind} file has been edited since we wrote it`;
+    }
+    if (c.migration) {
+        return `managed ${c.kind} file predates digest tracking — an edit and an older version look alike here`;
+    }
+    return `existing file conflicts with planned ${c.kind} content`;
+}
+/**
+ * What an install will actually do to it.
+ *
+ * A remedy here may only describe what an install actually does, which is why
+ * the migration arm exists rather than reusing either neighbour: the file is
+ * preserved like an edited one, but the reason is not an edit anyone proved.
+ */
+function conflictRemedy(c) {
+    if (c.ownership === 'recorded-modified') {
+        return 'installing preserves your edit and stages package content as <path>.agent-config.new; --force replaces it instead';
+    }
+    if (c.migration) {
+        // MAY, not WILL, and the hedge is the accurate word rather than a
+        // soft one. The branch preserves only when the bytes differ from
+        // what the install would write, and that comparison needs the
+        // install-time tag, which this surface cannot apply — so a preflight
+        // that promised either outcome would be guessing at the one the
+        // writer settles.
+        return 'installing may preserve this file and stage package content as <path>.agent-config.new rather than overwriting it; the install run says which';
+    }
+    return 'back up this file — installing writes the planned content over it';
 }
 /** Probe 4 — host-detection sanity: report what the target tree looks like. */
 export function checkHostDetection(inputs) {

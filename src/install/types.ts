@@ -159,6 +159,27 @@ export interface ConflictEntry {
      * a readable manifest reports.
      */
     readonly ownership: RecordedOwnership;
+    /**
+     * True when this entry is a CANDIDATE for the ledger-migration branch: the
+     * ownership ledger lists the path and holds no digest for it.
+     *
+     * A candidate, not a verdict, and the difference is load-bearing. The
+     * branch preserves only when the bytes on disk differ from what the run
+     * WOULD write — source plus the install-time tag — and this surface cannot
+     * compute that: `plannedSha256` is the digest of the UNTAGGED source
+     * (`plan.ts` hashes `srcFile` before overriding `path` to the target), so
+     * for the tagged `.md` files that make up most of the deployed tree it is
+     * not the digest of anything that ever lands on disk. Only the writer,
+     * which tags a temp copy before hashing it, can settle the equality half.
+     *
+     * `ownership` stays `unknown` for such a path: the tree genuinely cannot
+     * say whether the bytes are an edit or an older version, and labelling it
+     * `recorded-modified` would assert the edit the branch exists because it
+     * cannot prove. The flag says "this one goes down the migration path",
+     * which is what a reader needs in order to stop inferring a decision from
+     * a label that means something else.
+     */
+    readonly migration: boolean;
 }
 
 /**
