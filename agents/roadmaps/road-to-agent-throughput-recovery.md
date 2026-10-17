@@ -201,6 +201,10 @@ the Acceptance Criteria held.
       `road-to-local-gates-wired-while-they-are-green` to record, per batch, the
       change in the required job's duration. Do not stop the drain.
       verify: the next batch PR carries a before/after duration line.
+      <br>2026-10-17: the ask is written under step 2.2 of that roadmap, with a
+      CI "before" of p50 118 s over 25 runs (drain steps 93 s) against 70–74 s
+      with 2.2a; 2.2b–2.2f landed without a line. Open until the next batch PR
+      carries one.
 
 ## Phase 2 — Decide what binds a night, before adding lanes
 
