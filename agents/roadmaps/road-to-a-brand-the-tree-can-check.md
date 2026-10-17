@@ -337,10 +337,11 @@ irreversible-external-action row of `non-destructive-by-default`).
       instructions by any reader.
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t slot-untrusted --reporter=verbose` -> /✓.*slot-untrusted/
       Done 2026-10-17: `scanHiddenUnicode` over the whole file is an issue; `evidence_ref` and `sources[].ref` must be a repo-relative path without `..` or an http(s) URL; YAML aliases are refused (`maxAliasCount: 0`). The never-executed property belongs to the readers (5.x) and is stated in the ADR.
-- [ ] **4.5 `brand:status` reports the voice.** Present, schema-valid, `avoid`
+- [x] **4.5 `brand:status` reports the voice.** Present, schema-valid, `avoid`
       and `claims` counts, confidence, days since review, stale after 90 days,
       expired claims — counts and dates only, never slot content.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t voice-slot --reporter=verbose` -> /✓.*voice-slot/
+      Done 2026-10-17: `brand:status` reads `agents/context-spine/brand-voice.md`, lists it as a `voice` source (valid, or invalid with the failing field names only), and reports `schema_valid`, `avoid_count`, `claims_count`, `expired_claims`, `confidence`, `last_reviewed_at`, `days_since_review` and `stale` (> 90 days or never reviewed). Only a valid slot counts toward `mixed`/`branded`; the 0.2 voice fixture now asserts that an invalid slot is listed and never makes the state. `brand-token-consumption.md` says so.
 
 ## Phase 5 — One checker for three voices and for claims
 

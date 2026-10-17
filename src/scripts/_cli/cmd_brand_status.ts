@@ -38,11 +38,14 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
+import { parseBrandVoiceSlot, slotDay, validateBrandVoiceSlotText } from '../_lib/brand_voice_slot.js';
 import { BRAND_TOKEN_PATHS } from '../../agent-src/templates/scripts/work_engine/directives/ui/scaffold.js';
 
 export interface BrandStatusOptions {
     cwd: string;
     json: boolean;
+    /** The day review age is measured against; tests pin it. */
+    now?: Date;
 }
 
 export interface BrandStatusResult {
@@ -82,6 +85,82 @@ export interface BrandInspection {
     qualifiers: BrandQualifier[];
     tokens_file: string | null;
     sources: BrandSource[];
+    voice: VoiceReport;
+}
+
+/**
+ * The voice side in counts and dates only. Nothing from the slot's content —
+ * no term, claim text, attribute or reference — is ever reported.
+ */
+export type VoiceReport =
+    | { read: false; path: string }
+    | {
+          read: true;
+          path: string;
+          schema_valid: boolean;
+          avoid_count: number;
+          claims_count: number;
+          expired_claims: number;
+          confidence: string | null;
+          last_reviewed_at: string | null;
+          days_since_review: number | null;
+          stale: boolean;
+      };
+
+/** `adr-gtm-context-spine-brand-voice`: the slot the voice side is read from. */
+export const VOICE_SLOT = 'agents/context-spine/brand-voice.md';
+/** A voice not reviewed for longer than this many days is stale (D12). */
+export const VOICE_STALE_DAYS = 90;
+const DAY_MS = 86_400_000;
+
+function _utcDay(d: Date): number {
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+function _list(v: unknown): unknown[] {
+    return Array.isArray(v) ? v : [];
+}
+
+function inspectVoice(root: string, now: Date, sources: BrandSource[]): VoiceReport {
+    let text: string;
+    try {
+        const abs = path.join(root, VOICE_SLOT);
+        if (!fs.statSync(abs).isFile()) return { read: false, path: VOICE_SLOT };
+        text = fs.readFileSync(abs, 'utf-8');
+    } catch {
+        return { read: false, path: VOICE_SLOT };
+    }
+    const sha256 = createHash('sha256').update(text).digest('hex');
+    const issues = validateBrandVoiceSlotText(text);
+    const fields = [...new Set(issues.map((i) => i.field))];
+    sources.push(
+        issues.length === 0
+            ? { path: VOICE_SLOT, kind: 'voice', sha256, status: 'valid' }
+            : { path: VOICE_SLOT, kind: 'voice', sha256, status: 'invalid', error: `schema: ${fields.join(', ')}` },
+    );
+    const data = parseBrandVoiceSlot(text).data ?? {};
+    const prov = typeof data['provenance'] === 'object' && data['provenance'] !== null ? (data['provenance'] as Record<string, unknown>) : {};
+    const today = _utcDay(now);
+    const claims = _list(data['claims']);
+    const expired = claims.filter((c) => {
+        const day = typeof c === 'object' && c !== null ? slotDay((c as Record<string, unknown>)['expires']) : null;
+        return day !== null && Date.parse(`${day}T00:00:00Z`) < today;
+    }).length;
+    const reviewed = slotDay(prov['last_reviewed_at']);
+    const days = reviewed === null ? null : Math.round((today - Date.parse(`${reviewed}T00:00:00Z`)) / DAY_MS);
+    const confidence = prov['confidence'];
+    return {
+        read: true,
+        path: VOICE_SLOT,
+        schema_valid: issues.length === 0,
+        avoid_count: _list(data['avoid']).length,
+        claims_count: claims.length,
+        expired_claims: expired,
+        confidence: issues.some((i) => i.field === 'provenance.confidence') || typeof confidence !== 'string' ? null : confidence,
+        last_reviewed_at: reviewed,
+        days_since_review: days,
+        stale: days === null || days > VOICE_STALE_DAYS,
+    };
 }
 
 const DESIGN_MD = 'DESIGN.md';
@@ -117,7 +196,7 @@ export function tokenDocumentError(text: string): string | null {
  * call and never persisted — a stored index would be a third brand truth.
  * Nothing is merged by value: the first valid file in resolver order wins.
  */
-export function inspectBrand(root: string): BrandInspection {
+export function inspectBrand(root: string, now: Date = new Date()): BrandInspection {
     const sources: BrandSource[] = [];
     let winner: BrandSource | null = null;
     for (const rel of BRAND_TOKEN_PATHS) {
@@ -158,16 +237,16 @@ export function inspectBrand(root: string): BrandInspection {
     } catch {
         // absent — nothing to list
     }
+    const voice = inspectVoice(root, now, sources);
     const qualifiers: BrandQualifier[] = [];
     if (sources.some((s) => s.status === 'invalid')) qualifiers.push('invalid');
     if (sources.some((s) => s.status === 'shadowed')) qualifiers.push('shadowed');
-    // The voice side has no slot yet, so it reads as absent and a valid tokens
-    // file alone is `mixed`; `branded` needs the voice slot.
-    const voicePresent = false;
+    // Only a schema-valid voice slot counts; an invalid one is listed and qualifies.
+    const voicePresent = voice.read && voice.schema_valid;
     const tokensPresent = winner !== null;
     const state: BrandState =
         tokensPresent && voicePresent ? 'branded' : tokensPresent || voicePresent ? 'mixed' : 'bare';
-    return { state, qualifiers, tokens_file: winner?.path ?? null, sources };
+    return { state, qualifiers, tokens_file: winner?.path ?? null, sources, voice };
 }
 
 /** The canonical path the brand is read from — the first VALID tokens file — or `null`. */
@@ -195,12 +274,10 @@ export function findDottedNearMisses(root: string): string[] {
     return found;
 }
 
-const VOICE_NOT_READ = 'no brand-voice slot exists yet, so the voice side reads as absent';
-
 export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
     const out: string[] = [];
     const [projectRoot] = resolve_project_root(null, { cwd: opts.cwd });
-    const inspection = inspectBrand(projectRoot);
+    const inspection = inspectBrand(projectRoot, opts.now ?? new Date());
     const found = inspection.tokens_file;
     const nearMisses = findDottedNearMisses(projectRoot);
 
@@ -213,7 +290,7 @@ export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
                     state: inspection.state,
                     qualifiers: inspection.qualifiers,
                     sources: inspection.sources,
-                    voice: { read: false, reason: VOICE_NOT_READ },
+                    voice: inspection.voice,
                     searched: [...BRAND_TOKEN_PATHS],
                     dotted_near_misses: nearMisses,
                     project_root: projectRoot,
@@ -250,7 +327,20 @@ export function runBrandStatus(opts: BrandStatusOptions): BrandStatusResult {
             out.push(`  ${s.status.padEnd(9)} ${s.path}  sha256:${s.sha256.slice(0, 12)}${note}`);
         }
     }
-    out.push('', `voice         not read — ${VOICE_NOT_READ}`);
+    const v = inspection.voice;
+    if (!v.read) {
+        out.push('', `voice         none — no ${VOICE_SLOT}`);
+    } else {
+        const review =
+            v.days_since_review === null
+                ? 'never reviewed (stale)'
+                : `reviewed ${v.days_since_review} day(s) ago${v.stale ? ' (stale)' : ''}`;
+        out.push(
+            '',
+            `voice         ${v.schema_valid ? 'present' : 'invalid'} — ${VOICE_SLOT}`,
+            `              ${v.avoid_count} avoid term(s), ${v.claims_count} claim(s), ${v.expired_claims} expired; confidence ${v.confidence ?? 'unset'}; ${review}`,
+        );
+    }
 
     if (nearMisses.length > 0) {
         out.push(
