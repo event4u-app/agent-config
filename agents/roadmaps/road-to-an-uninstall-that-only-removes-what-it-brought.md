@@ -67,26 +67,14 @@ safely.
 > all. Pre-existing, not caused by the fix — the script's own expectation line
 > predicted `purge_after_rc=1` before it.
 >
-> **It is recorded here as prose and not yet as a checkbox, and that is a gate
-> limitation rather than a judgement.** `lint_plan_risk_register` compares a
-> plan against the blob at the commit that introduced its current `reviewed:`
-> date, and its marker grammar accepts only a bare date — so a plan created
-> and stamped today cannot record a same-day re-review, and adding a checkbox
-> reds the push. The step below goes in as **1.5** on the next touch of this
-> file, at which point the marker can carry a later date honestly:
->
-> > **1.5 Stop the plain uninstall consuming the record the purge needs.**
-> > *(executed 2026-10-16)* `uninstall --global` then `uninstall --global
-> > --purge` yields `plain_rc=0 purge_after_rc=1 files_left=892`: the first
-> > call deletes the lockfile, the second finds no tools and exits before the
-> > purge runs, and 892 deployed files stay on disk with no command left that
-> > will remove them. Either the plain uninstall keeps the lockfile while
-> > recorded content is still on disk, or it says in one line that `--purge`
-> > must come first. Verify at **CLI level**, not function level — that
-> > distinction is what 0.2 got wrong.
->
-> Phase 2 is also still open: the published claim and its `exec:` pointer are
-> not corrected yet.
+> **The step that finding produced is now **1.5** below.** It could not be a
+> checkbox on 2026-10-16 and that was a gate limitation rather than a
+> judgement: `lint_plan_risk_register` compares a plan against the blob at
+> the commit that introduced its current `reviewed:` date, and its marker
+> grammar accepts only a bare date, so a plan created and stamped the same
+> day cannot record a same-day re-review. The next touch of this file is
+> 2026-10-17, the marker carries that date honestly, and the step is in its
+> proper place.
 
 ## Phase 0 — Freeze the loss before changing it
 
@@ -132,6 +120,34 @@ safely.
       scope rather than offering a recursive delete.
       verify: the string no longer reads as an instruction to delete the
       anchor.
+- [x] **1.5 Stop the plain uninstall consuming the record the purge needs.**
+      `uninstall --global` then `uninstall --global --purge` yielded
+      `plain_rc=0 purge_after_rc=1 files_left=892`: the first call deleted the
+      lockfile, the second found no tools and exited before the purge ran, and
+      892 deployed files stayed on disk with no command left that would remove
+      them. Either the plain uninstall keeps the lockfile while recorded
+      content is still on disk, or it says in one line that `--purge` must come
+      first. Verify at **CLI level**, not function level — that distinction is
+      what 0.2 got wrong.
+      verify: `npx vitest run tests/install/uninstall_lockfile_retention.test.ts` -> 0
+      > **Landed 2026-10-17, both allowed outcomes taken.** The lockfile is
+      > kept whenever a tool's anchor still holds a file the inventory records
+      > — `_tools_with_recorded_content_left` in `cmd_uninstall.ts` — and the
+      > kept-lockfile line names `--purge` as what removes the rest. Nothing
+      > widened what may be deleted: a purge without a record still refuses,
+      > which is risk 5's condition.
+      >
+      > The same block held a second instance of the identical defect, found
+      > while fixing this one and fixed with it: a purge that REFUSED still
+      > reached the lockfile delete, so the one state in which the record
+      > matters most destroyed it. A refusal now keeps the lockfile too.
+      >
+      > Four CLI-level cases in
+      > `tests/install/uninstall_lockfile_retention.test.ts`, three of them
+      > seen red first; the fourth is the polarity case — the lockfile IS
+      > deleted once nothing recorded is left on disk — which passed before
+      > and after, so the fix cannot be "never delete it".
+
 ## Phase 2 — Make the published promise match the behaviour
 
 - [ ] **2.1 Scope the README claim.** `README.md:58` states what the uninstall

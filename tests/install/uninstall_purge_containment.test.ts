@@ -244,14 +244,14 @@ describe('uninstall --purge — containment', () => {
         // FUNCTION can run twice: a `purge: false` call does not consume the
         // record a later `purge: true` call needs.
         //
-        // It does NOT prove the two-step CLI flow works, and an end-to-end run
-        // on 2026-10-16 showed it does not: `uninstall --global` deletes the
-        // LOCKFILE (`cmd_uninstall.ts` global path, final block), so a second
-        // invocation finds no tools and exits 1 before reaching this function
-        // at all. That is pre-existing — the behaviour predates the inventory
-        // fix and the source round's own expectation line predicted `rc=1`
-        // for it — and it is tracked as step 1.5 of
-        // `road-to-an-uninstall-that-only-removes-what-it-brought`.
+        // It does NOT prove the two-step CLI flow works. That flow was broken
+        // when this case was written: `uninstall --global` deleted the
+        // LOCKFILE, so a second invocation found no tools and exited before
+        // reaching this function at all. Fixed 2026-10-17 as step 1.5 of
+        // `road-to-an-uninstall-that-only-removes-what-it-brought`, and
+        // pinned at CLI level in `uninstall_lockfile_retention.test.ts` —
+        // which is where any future regression of the flow will show, not
+        // here.
         const fx = makeFixture({ record: true });
         const foreignBefore = new Map(fx.foreign.map((f) => [f, digest(f)]));
 
