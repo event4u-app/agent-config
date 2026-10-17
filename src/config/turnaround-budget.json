@@ -26,6 +26,12 @@
         "context_floor_max": "DOWN"
     },
     "empty_corpus": "fail",
+    "regression_reader": {
+        "added_at": "2026-10-17",
+        "reason": "road-to-agent-throughput-recovery step 1.3 — `blocking_share` and `context_floor_max` read red from 2026-10-01 to 2026-10-15 with nobody reading the exit 1. `--queue-root` turns that exit 1 into one self-repair record (one per verdict shape; a later red reading increments it and stamps `last_seen`), which the prompt-time hook injects as the queue line.",
+        "invocation": "./scripts-run src/scripts/probe_turnaround --store \"<the main checkout's transcript store under ~/.claude/projects/>\" --limit 10 --against-baseline --queue-root \"$(git rev-parse --path-format=absolute --git-common-dir)/..\"",
+        "note": "Both paths are explicit because the run may start in a lane worktree: there the default store is the worktree's own empty project directory, which `empty_corpus: \"fail\"` reports as an empty corpus and queues as one, never as green. The schedule that runs this line daily is machine-local (cron, launchd or a routine on the measuring machine) and is not a tracked file; the CI exclusion in `_comment` is unchanged."
+    },
     "instrument_vs_source": {
         "context_floor": "AGREES. Instrument 217,385–230,705; source analysis 218,705–230,705. The upper bound is identical and the lower differs by 0.6 %, which is the strongest available evidence that the two readers parse the same store the same way.",
         "blocking_share": "AGREES within the window difference: 60 % here, 64 % in the source.",

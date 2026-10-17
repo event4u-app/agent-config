@@ -187,7 +187,7 @@ the Acceptance Criteria held.
       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
       shape; no new baseline file.
       verify: the entry's figures recompute from its own corpus block.
-- [ ] **1.3 Let a red reading reach a person.** `--against-baseline` stays out of
+- [x] **1.3 Let a red reading reach a person.** Done 2026-10-17: `--queue-root CHECKOUT` upserts one `self-detected` record per verdict shape (metric names, never values or a date; a later red reading increments it, reopens it and stamps `last_seen`); an empty corpus, a missing budget and a class-sum mismatch queue too, and a creation-cap drop is said on stderr; the line the schedule runs is `regression_reader` in `src/config/turnaround-budget.json`. The schedule itself is machine-local, not tracked. `tests/scripts/probe_turnaround_queue.test.ts` went red with the queue call neutralised. `--against-baseline` stays out of
       CI by design (an empty store would read green). Run from a lane worktree
       its default store resolves to that worktree's empty project directory and
       it fails as an empty corpus (reproduced 2026-10-15), so the scheduled run
@@ -201,6 +201,10 @@ the Acceptance Criteria held.
       `road-to-local-gates-wired-while-they-are-green` to record, per batch, the
       change in the required job's duration. Do not stop the drain.
       verify: the next batch PR carries a before/after duration line.
+      <br>2026-10-17: the ask is written under step 2.2 of that roadmap, with a
+      CI "before" of p50 118 s over 25 runs (drain steps 93 s) against 70–74 s
+      with 2.2a; 2.2b–2.2f landed without a line. Open until the next batch PR
+      carries one.
 
 ## Phase 2 — Decide what binds a night, before adding lanes
 
@@ -210,6 +214,18 @@ the Acceptance Criteria held.
       and Phase 3 runs in order. Read the two windows after Phase 1 lands.
       verify: the rule's commit predates the reading's commit; the verdict is a
       Decisions row.
+      <br>**Pre-registered 2026-10-17, before any reading of the windows.**
+      *Night:* a `nightKey` night (22:00–08:00 Europe/Berlin) with at least one
+      assistant turn in the main checkout's transcript store. *Ends in a
+      usage-limit pause:* the night holds a `Usage limit reached` banner
+      (`isUsageLimitPause`) whose timestamp `nightKey` maps to that night.
+      *Windows:* the two consecutive 14-calendar-night windows starting the
+      first night after the last Phase 1 step merges. *Rule:* tokens bind when
+      paused nights / active nights >= 1/3 in BOTH windows; wall-clock binds
+      when the ratio is < 1/3 in both; a split result is no verdict and a third
+      window is read. The probe today prints pause counts, not distinct paused
+      nights; the reading adds that count, and no threshold here moves once a
+      window has been looked at. Open: the windows start after 1.4 closes.
 - [ ] **2.2 Put the stalled thinning in front of the owner with its run cost.**
       Add the 2.1 verdict, the floor figures and a `config_cost_report` run
       (delivered payload per asset) to blocker
@@ -219,7 +235,7 @@ the Acceptance Criteria held.
 
 ## Phase 3 — Take the CI wait out of the foreground, keep the settle
 
-- [ ] **3.1 Put the archived blocking-time roadmap's D7 to the council.** The 2026-10-07 target for
+- [x] **3.1 Put the archived blocking-time roadmap's D7 to the council.** Done 2026-10-17: D9 — no transition (one seat (c), one abstained); the foreground wait stands until measured; record in `agents/evidence/council/ci-wait-foreground-2026-10-17.md`. The 2026-10-07 target for
       `ci-wait` ("no foreground wait ends without a verdict") was met; the new
       evidence is a different cost, a lane held while CI runs. Bring the
       foreground minutes per merged step, the 2026-10-15 cause split (where
@@ -238,6 +254,8 @@ the Acceptance Criteria held.
       verify: a two-roadmap fixture run shows work on B between A's push and A's
       verdict; a claim over an unsettled PR is still refused; an obligation
       resumed after a force-push to A reads the new head, never the old verdict.
+      <br>2026-10-17: the council did not adopt it (D9: no transition, one abstention), so this step
+      waits on D9's measurement and a specified obligation lifecycle.
 
 ## Phase 4 — Remove the misfires, from the classes that actually fired
 
@@ -254,7 +272,14 @@ the Acceptance Criteria held.
       stub's class, the fix promotes and closes
       `stubs/road-to-language-pin-short-lead.md`.
       verify: the split table is committed; the fixture is red before the fix.
-- [ ] **4.2 Measure detector C's false positives by edited-path class** with
+      <br>2026-10-17, read before classifying: the refusal store holds 86
+      `language` refusals in 31 sessions (2026-08-12..10-16), but pin state is
+      kept 7 days (`STATE_RETENTION_DAYS`), so only 3 of those sessions (5
+      refusals) still have a pin record — all `source: prompt`, `de`. The
+      split by source therefore needs a join from refusal digests to
+      transcripts (`statePathFor` keys both on the session id), not the pin
+      store. Open; the fix itself is a hook change and carries its own review.
+- [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
       code.
       verify: a table with every sampled refusal and its class; a docs-only
@@ -278,7 +303,7 @@ the Acceptance Criteria held.
 
 ## Phase 5 — Make the existing no-cheap-question law visible
 
-- [ ] **5.1 Count violations, not asks.** With 1.1, classify each ask as
+- [x] **5.1 Count violations, not asks.** Done 2026-10-17: 86 structured asks over the probe's 10-session window, 54 of them re-presentations after a background wake and 32 owner-answered; of the 32, owner-reserved 19, council-decidable 12, cheap 1; the recommendation was taken 25 of 32. Table and criteria in `agents/evidence/analysis/structured-asks-by-class-2026-10-17.md`. With 1.1, classify each ask as
       owner-reserved, council-decidable, or cheap under `no-cheap-questions`
       (Iron Law 4 continuation prompt; one option dominates). Count how often
       the recommended option is the one taken — the draft asserted it without a
@@ -290,6 +315,10 @@ the Acceptance Criteria held.
       reads it as `user-wait`, per claim (5).
       verify: replayed asks — reserved ones still reach the owner; cheap ones do
       not stop the run.
+      <br>2026-10-17: 5.1 reads the cheap class at 1 of 32 owner-answered asks,
+      so the precondition does not hold; the larger classes are re-presentation
+      after a wake (54 of 86) and council-decidable asks put to the owner (12 of
+      32). Left open for a disposition, not executed.
 - [x] **5.3 Owner: an intake limit for harvest roadmaps.** Answered 2026-10-15: (a), N = 8 (D8); encoded where roadmaps land by step 3.1 of `road-to-an-analysis-family-that-deepens-itself`. The
       question: does a new inbox roadmap land `draft` while more than N `ready`
       roadmaps sit at 0 ticked steps (10 of 20 on 2026-10-15)? Options: (a) yes,
@@ -310,6 +339,7 @@ the Acceptance Criteria held.
 | D6 | reversible-technical | evidence | The closure scan's typed-op hits on "merge", "push" and "merged" in Context, Goal, 3.2 and 4.3 are measurement prose or guard names, not operations: no step here merges, pushes or force-pushes, and 3.2 waits on the council in 3.1 | `closure_scan` run 2026-10-15, eight `typed-op` hits, each read | a step is added that merges or pushes on its own authority |
 | D7 | reversible-technical | evidence | `/roadmap:next` keeps one invocation = one roadmap = one branch = one PR; no composite drain command and no bundling here | `roadmap/next/command.md:28`; merges per night are flat, work per merge fell | Phase 2 reads wall-clock-bound and lane conflicts are measured |
 | D8 | product-owned | owner | Harvest intake limit (5.3) → (a): a new inbox roadmap lands `draft` while more than 8 `ready` roadmaps sit at 0 ticked steps | owner answer 2026-10-15 to the PR #2373 report; 10 of 20 ready roadmaps at 0 that day | the 0-ticked share stays under 8 for a month, or the owner changes N |
+| D9 | reversible-technical | council:2026-10-17 | D7 revisited (3.1): no transition — (b) is not adopted, one seat chose (c) and one abstained, and under `decision-revisit-gate` an abstention escalates any later adoption of (b) rather than settling it; today's foreground wait stands until the share of `sleep-poll` that is CI polling, and how often a lane had a workable next step during a CI wait, are measured; 3.2 does not run before that | AI council 2026-10-17, anthropic + openai, 2/2 present, $0.00: anthropic (c); openai chose no option in its final round and named the obligation lifecycle (persistence, superseding push, cleanup, rollback) as unspecified; record `agents/evidence/council/ci-wait-foreground-2026-10-17.md` | more than 60 % of CI waits had a workable next step in the same lane, or `sleep-poll` is dominated by non-CI waits, or a mitigation without obligation state appears |
 
 ## Kill register
 

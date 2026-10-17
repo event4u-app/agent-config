@@ -1,0 +1,958 @@
+diff --git a/agents/evidence/analysis/structured-asks-by-class-2026-10-17.md b/agents/evidence/analysis/structured-asks-by-class-2026-10-17.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..6e8a3d78c557256683cd752e38f99130a030211e
+--- /dev/null
++++ b/agents/evidence/analysis/structured-asks-by-class-2026-10-17.md
+@@ -0,0 +1,107 @@
++<!-- evidence-type: analysis -->
++# Structured asks by class — 2026-10-17
++
++Step 5.1 of `road-to-agent-throughput-recovery`: count violations of
++`no-cheap-questions`, not asks, and count how often the recommended option is
++the one taken.
++
++## Corpus
++
++The same window `probe_turnaround` reads: the 10 most recently modified
++sessions of the main checkout's transcript store, measuring session excluded,
++read 2026-10-17. **266 turn ends, 86 structured asks** (numbered options plus a
++recommendation line, `classifyTurnEnd`). Each ask was paired with the next
++genuine user-role entry (`userText`, `isInjectedBody` — the probe's own filters).
++
++## First split: who answered
++
++| reply after the ask | asks |
++|---|---|
++| a background-task notification, a stop-hook message or a subagent message | 54 |
++| the owner | 32 |
++| **total** | **86** |
++
++The 54 are not new questions. Each is a decision already put to the owner and
++re-presented because the agent ran again before the owner answered — the
++behaviour `user-interaction` Iron Law 3 prescribes on every wake. In one
++session a single retroactive-approval question was re-presented eight times
++(asks 75–82) and a host-config question fourteen times (asks 43–56). **Most of
++the ask count is re-presentation volume, not question volume.**
++
++## Second split: the 32 owner-answered asks, three ways
++
++Criteria, fixed before classifying. *Owner-reserved*: the owner-reserved set of
++`decision-revisit-gate` (purpose, public or compatibility commitment, lowering a
++floor, irreversible, spend above a threshold, governance self-amendment) plus
++the Hard Floor (merge, push, deploy, acting on a file outside the repository),
++the owner's own content, a retroactive approval of an agent action, and any
++roadmap disposition that drops an item (`roadmap-progress-sync` preservation
++test). *Cheap*: a `no-cheap-questions` violation — a continuation prompt under a
++mandate (Iron Law 4), pure sequencing or format, or one dominant option.
++*Council-decidable*: everything else — a reversible technical choice inside the
++envelope.
++
++| class | asks | recommended option taken |
++|---|---|---|
++| owner-reserved | 19 | 15 |
++| council-decidable | 12 | 10 |
++| cheap | 1 | 0 |
++| **total** | **32** | **25** |
++
++Read by one agent from the options text and the reply; a second reader may move
++single rows between owner-reserved and council-decidable. No row is moved by
++a reading of what the owner would have wanted.
++
++| # | session | class | basis | recommended taken |
++|---|---|---|---|---|
++| 2 | `4ab274a5` | owner-reserved | distribution goal of the package (purpose, public commitment) | yes |
++| 3 | `4ab274a5` | owner-reserved | estate cap, which roadmaps reach the estate | no — owner rejected all options |
++| 4 | `4ab274a5` | owner-reserved | push a PR now | yes, with "try the council first" for the bundled questions |
++| 5 | `a670a1b7` | owner-reserved | spelling of the owner's own string | no |
++| 6 | `6ea9dba3` | owner-reserved | close a phase as an unmeasured null (drops an item) | yes |
++| 7 | `6ea9dba3` | owner-reserved | separate PR, bundled PR, or no push | yes |
++| 8 | `6ea9dba3` | council-decidable | approve or reject an ADR addendum adding one config line | yes |
++| 9 | `6ea9dba3` | council-decidable | a timeout: host default or one hour | yes |
++| 10 | `6ea9dba3` | council-decidable | keep measuring, reopen, or narrow a precompilation | yes |
++| 11 | `6ea9dba3` | council-decidable | how the plugin gets its dispatcher | no — owner: "try the council first" |
++| 12 | `6ea9dba3` | council-decidable | the same question after the council | yes |
++| 15 | `6ea9dba3` | owner-reserved | revert commits that attributed a decision to the owner | yes |
++| 16 | `6ea9dba3` | owner-reserved | raise a paid-replay ceiling (spend) | yes |
++| 18 | `6ea9dba3` | owner-reserved | land a step or have the owner bypass branch protection | yes |
++| 21 | `6ea9dba3` | council-decidable | a taxonomy reassignment in a finding | yes |
++| 28 | `dbc2e8b1` | owner-reserved | merge with a red check, or force-push a reword | yes |
++| 29 | `dbc2e8b1` | owner-reserved | merge a pre-registered revert | no — owner took option 3 |
++| 31 | `dbc2e8b1` | owner-reserved | raise a paid-replay ceiling (spend) | yes |
++| 40 | `dbc2e8b1` | owner-reserved | semver policy for removing a settings key (compatibility) | yes |
++| 41 | `dbc2e8b1` | council-decidable | fix review findings in a 4th round, approve directly, or park | yes |
++| 42 | `dbc2e8b1` | owner-reserved | the package writing a host override into the user's config | yes |
++| 57 | `dbc2e8b1` | owner-reserved | the agent editing a file outside the repository | yes |
++| 58 | `dbc2e8b1` | council-decidable | correct a sentence or migrate frontmatter | yes |
++| 66 | `dbc2e8b1` | council-decidable | wait for a quota reset or review in the council now | yes |
++| 69 | `dbc2e8b1` | owner-reserved | replan, close as null, or park a roadmap (drop option) | yes |
++| 71 | `dbc2e8b1` | owner-reserved | owner reviews and merges a PR | no — owner took option 2 |
++| 74 | `dbc2e8b1` | council-decidable | scope of a two-stage watch | yes |
++| 82 | `dbc2e8b1` | owner-reserved | retroactive approval of a PR merged without the owner | yes |
++| 83 | `2d77e486` | owner-reserved | new branch, cherry-pick, push, open PR | yes |
++| 84 | `6da9a8d7` | cheap | a command's own sub-command menu, no trade-off | no — owner wrote about something else |
++| 85 | `63f314f3` | council-decidable | whether a retro reads transcripts by default | yes |
++| 86 | `63f314f3` | council-decidable | how self-repair reports leave a consumer project | no — owner: "these were all council-suitable; why did you ask me?" |
++
++Asks 85 and 86 would be owner-reserved under the criteria above (a privacy
++default, an egress route). They are counted council-decidable because the owner
++said so in the reply to 86, about that session's questions — the owner's words
++outrank the criteria, and the disagreement says the criteria over-reserve.
++
++## Reading
++
++- **The cheap class is 1 of 32.** `no-cheap-questions` violations, as that rule
++  defines them, are not where the asks are; step 5.2's precondition ("the cheap
++  class holds most ask minutes") does not hold.
++- **The recommendation was taken 25 of 32 times (78 %).** The draft's assertion
++  that the recommended option is nearly always taken holds in direction, not as
++  "always": 7 replies took another option, rejected all, or redirected.
++- **12 of 32 owner-answered asks were council-decidable**, and the owner said so
++  in words for two of them. That is the class a fix would target, under
++  `ai-council`'s council-first rule, not under `no-cheap-questions`.
++- **54 of 86 structured asks are re-presentations** triggered by background
++  wakes. Each costs a turn end, not an owner decision.
+diff --git a/agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md b/agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b2e7f24e95832c84a84747addf8b47bfeda32b15
+--- /dev/null
++++ b/agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md
+@@ -0,0 +1,127 @@
++<!-- evidence-type: analysis -->
++# Detector C by edited-path class — 2026-10-17
++
++Step 4.2 of `road-to-agent-throughput-recovery`. Detector C (`verification`)
++is the largest class in the turn-end refusal store: **182 of 307** refusals,
++2026-08-12..2026-10-16 (`probe_turnaround`'s refusal section, read at the main
++checkout). A refusal record carries no path, so the split below is taken where
++the paths are: a transcript replay of the shipped detector.
++
++## How it was read
++
++```
++./scripts-run src/scripts/measure_turn_end_gate --store ~/.claude/projects/<main checkout slug> --limit 30 --show-fires
++```
++
++30 sessions, 590 turns, 134 turns that edited a file. `measure_turn_end_gate`
++replays `detectUnverifiedEdit` on the transcript path (no run-state record), so
++every row is a turn the gate's transcript path would refuse — an upper bound on
++refusals, not a list of refusals that happened. `editPathClass` puts each fire
++in exactly one class: `docs-md` when every edited path is `agents/**` or
++`docs/**` markdown, `code` when none is, `mixed` when both occur, `unknown`
++when no path was recorded. The four rows sum to the fires.
++
++## Split
++
++| class | fires | share |
++|---|---|---|
++| docs-md | 15 | 20.5 % |
++| code | 42 | 57.5 % |
++| mixed | 16 | 21.9 % |
++| unknown | 0 | 0.0 % |
++| **total** | **73** | 100 % |
++
++## Reading
++
++- A docs-only exemption would remove at most **15 of 73** replayed C fires
++  (20.5 %). `mixed` turns edited code too and stay in scope under any docs
++  exemption. Whether the 15 were wrong refusals is not decided here: a markdown
++  edit under `agents/` can still carry a gate (roadmap shape, evidence type,
++  language), so a docs-md fire is a candidate false positive, not a measured
++  one. The count goes to 4.4's demotion contract; no exemption is proposed here.
++- The `code` class is the majority. Those are the refusals the detector exists
++  for, and nothing here argues they misfire.
++- The window includes the drain's orchestrating session (`9cc9825f`, rows
++  1–7: 1 code, 5 mixed, 1 docs-md), which was still running when read;
++  without it the split is 14 / 41 / 11 of 66.
++
++## Every sampled fire
++
++Session is the transcript file's first eight characters; turn is the
++per-session ordinal.
++
++| # | session | turn | edited-path class |
++|---|---|---|---|
++| 1 | `9cc9825f` | 5 | code |
++| 2 | `9cc9825f` | 8 | mixed |
++| 3 | `9cc9825f` | 9 | mixed |
++| 4 | `9cc9825f` | 12 | mixed |
++| 5 | `9cc9825f` | 13 | docs-md |
++| 6 | `9cc9825f` | 14 | mixed |
++| 7 | `9cc9825f` | 21 | mixed |
++| 8 | `4ab274a5` | 1 | code |
++| 9 | `4ab274a5` | 2 | docs-md |
++| 10 | `a670a1b7` | 1 | code |
++| 11 | `a670a1b7` | 3 | code |
++| 12 | `6ea9dba3` | 1 | docs-md |
++| 13 | `6ea9dba3` | 17 | code |
++| 14 | `6ea9dba3` | 23 | code |
++| 15 | `6ea9dba3` | 27 | mixed |
++| 16 | `dbc2e8b1` | 2 | code |
++| 17 | `dbc2e8b1` | 12 | code |
++| 18 | `dbc2e8b1` | 53 | code |
++| 19 | `dbc2e8b1` | 70 | code |
++| 20 | `dbc2e8b1` | 97 | code |
++| 21 | `0cb10022` | 5 | docs-md |
++| 22 | `0cb10022` | 7 | docs-md |
++| 23 | `f3c5c62b` | 1 | code |
++| 24 | `b8500215` | 3 | docs-md |
++| 25 | `a0b1788e` | 3 | mixed |
++| 26 | `a0b1788e` | 4 | code |
++| 27 | `d144bbe6` | 1 | mixed |
++| 28 | `01fdd537` | 1 | code |
++| 29 | `01fdd537` | 6 | mixed |
++| 30 | `01fdd537` | 10 | code |
++| 31 | `01fdd537` | 13 | code |
++| 32 | `01fdd537` | 19 | code |
++| 33 | `01fdd537` | 21 | code |
++| 34 | `01fdd537` | 28 | code |
++| 35 | `0fe2e6d6` | 2 | code |
++| 36 | `0fe2e6d6` | 4 | code |
++| 37 | `4d0cb74a` | 1 | code |
++| 38 | `4d0cb74a` | 3 | code |
++| 39 | `4d0cb74a` | 5 | code |
++| 40 | `4d0cb74a` | 6 | code |
++| 41 | `4d0cb74a` | 7 | code |
++| 42 | `4d0cb74a` | 9 | code |
++| 43 | `4d0cb74a` | 14 | code |
++| 44 | `4d0cb74a` | 32 | code |
++| 45 | `f484d60d` | 14 | docs-md |
++| 46 | `f484d60d` | 21 | mixed |
++| 47 | `f484d60d` | 24 | docs-md |
++| 48 | `414ef243` | 2 | mixed |
++| 49 | `414ef243` | 4 | code |
++| 50 | `414ef243` | 5 | code |
++| 51 | `414ef243` | 8 | code |
++| 52 | `414ef243` | 9 | code |
++| 53 | `414ef243` | 10 | code |
++| 54 | `414ef243` | 11 | code |
++| 55 | `414ef243` | 12 | code |
++| 56 | `414ef243` | 13 | code |
++| 57 | `414ef243` | 20 | code |
++| 58 | `43d1efd2` | 6 | docs-md |
++| 59 | `43d1efd2` | 8 | mixed |
++| 60 | `43d1efd2` | 28 | docs-md |
++| 61 | `43d1efd2` | 31 | code |
++| 62 | `43d1efd2` | 44 | code |
++| 63 | `43d1efd2` | 46 | code |
++| 64 | `43d1efd2` | 61 | code |
++| 65 | `b037b94a` | 1 | mixed |
++| 66 | `b037b94a` | 3 | mixed |
++| 67 | `b037b94a` | 5 | mixed |
++| 68 | `b037b94a` | 7 | mixed |
++| 69 | `3da0c55b` | 40 | docs-md |
++| 70 | `12f68244` | 1 | docs-md |
++| 71 | `12f68244` | 8 | docs-md |
++| 72 | `12f68244` | 11 | docs-md |
++| 73 | `807294b2` | 10 | docs-md |
+diff --git a/agents/evidence/council/ci-wait-foreground-2026-10-17.md b/agents/evidence/council/ci-wait-foreground-2026-10-17.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..65264db1c67572080ec2d5b0d174af692d6db5aa
+--- /dev/null
++++ b/agents/evidence/council/ci-wait-foreground-2026-10-17.md
+@@ -0,0 +1,49 @@
++<!-- evidence-type: analysis -->
++
++# The CI wait stays in the foreground until it is measured
++
++AI council, 2026-10-17. anthropic/claude-sonnet-4-5 + openai/codex-default,
++2/2 present before and after the run, two rounds, blind review, `$0.00` (both
++seats subscription-authed). The prompt is committed verbatim beside this file as
++`ci-wait-foreground-2026-10-17.question.md`. Raw response:
++`agents/runtime/council/responses/ci-wait-foreground-2026-10-17.md` (local,
++gitignored). For `road-to-agent-throughput-recovery` step 3.1, row D9.
++
++## Verdict
++
++- **anthropic — (c).** Measure first: what share of `sleep-poll` minutes is CI
++  polling, and how often a lane had a workable next step during a CI wait.
++  Until then keep the foreground settle. Its reading of the evidence: 212 min
++  of `sleep-poll` and an unmeasured overlap mean the benefit of a background
++  settle is unproven, while its cost (obligation state, stale-head
++  reconciliation, background process management) is not.
++- **openai — no option in the final round.** It reviewed the prompt as a pull
++  request without a code diff and returned REQUEST_CHANGES: the obligation's
++  lifecycle (persistence, concurrent PRs, a superseding push, launch failure,
++  cancellation, cleanup) is unspecified, and "reverting the reminder text
++  restores today's behaviour" is unsupported if obligation state persists. The
++  other seat's final text summarises its first round as recommending (b); that
++  first-round text is not in the recorded response.
++
++Read together: no seat supports (b) in the final round; one chooses (c); the
++other names the lifecycle a (b) would have to specify first. **Recorded
++outcome: (c).** Keeping today's behaviour needs no further authority; adopting
++(b) needs the measurement and a specified lifecycle.
++
++## Strongest argument against (c), from the seat that chose it
++
++Delaying a plausible optimisation: if the measurement shows little parallel
++work, the time went into proving there was nothing to win.
++
++## revisit-if
++
++The measurement shows more than 60 % of CI waits had a workable next step in
++the same lane, or `sleep-poll` turns out dominated by non-CI waits, or a
++cheaper mitigation without obligation state appears.
++
++## The mode mismatch, stated
++
++The run used `--prompt-mode pr`, which frames the artefact as a pull-request
++diff. One seat answered the frame instead of the question. The prompt itself
++asked for one option; the next council on this subject should use a decision
++mode.
+diff --git a/agents/evidence/council/ci-wait-foreground-2026-10-17.question.md b/agents/evidence/council/ci-wait-foreground-2026-10-17.question.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8b4175a90549063cb902729d2627f45ee2490885
+--- /dev/null
++++ b/agents/evidence/council/ci-wait-foreground-2026-10-17.question.md
+@@ -0,0 +1,79 @@
++<!-- evidence-type: analysis -->
++
++<!-- The prompt given to the council on 2026-10-17, committed verbatim so the
++     verdict beside it can be checked against what was actually asked
++     (evaluator-independence: a recorded verdict whose prompt is not
++     recoverable is not evidence). Not edited after the run. -->
++
++# Should the CI wait after a push stay in the foreground?
++
++You are deciding one question for a roadmap in a repository that ships rules,
++skills and hooks for AI coding agents. Answer on the evidence below. Do not
++summarise the evidence back. Name the option you choose, the strongest argument
++against it, and a `revisit-if` condition that would reverse it.
++
++## The current behaviour
++
++After every `git push`, a PostToolUse hook injects this instruction into the
++agent's context (abridged, verbatim where quoted):
++
++> "Before this turn ends: 1. Settle it: `ci_settle <PR>` … Exit 0 = settled
++> green … 1 = settled, something failed · 2 = NOT a verdict … 2. Red? Read only
++> the failing part … then fix it and push again."
++
++A skill (`git-workflow`) repeats it. `ci_settle` blocks until every check on the
++PR's head settles or a timeout expires, and on its last line already names how
++to run the next wait in the background. Agents follow the louder instruction:
++they wait in the foreground. A separate turn-end detector ("D") refuses a
++completion or delivery claim about a PR whose CI verdict was not read; that
++detector is not in question here.
++
++## The earlier decision being revisited
++
++On 2026-10-07 a council (2/2) set the target for the `ci-wait` cause as: "no
++foreground wait ends without a verdict". The mitigation chosen was to name the
++still-pending checks and a background next wait on the waiter's last line,
++rather than failing fast on the first red. Evidence then: 20 of 44 CI waits
++ended with no verdict (184 min); 3 ended red (20 min). That target was met.
++
++## The new evidence
++
++- Unattended night runs ("drains") process roadmaps in up to two parallel
++  lanes, each lane one roadmap → one branch → one PR. Merged changes per night
++  were 10.6 (2026-08-10..23), 7.0 (2026-08-24..09-06) and 6.8
++  (2026-09-28..10-13); net ticked roadmap steps per night fell 56.7 → 30.0 →
++  19.1 over the same windows. Merges per night are roughly flat; work per merge
++  fell.
++- Over the 10 most recent sessions (read 2026-10-16), tool calls that blocked
++  over 60 s took 555 of 686 tool minutes (blocking share 0.81, against a
++  recorded baseline of 0.62). By cause, in minutes: sleep-poll 212, ci-wait
++  186, network 115, unknown 38, test 3, build 1, subagent-wait 0, mcp 0,
++  user-wait 0.
++- A required CI run takes about 14 min at p50. During it the lane does nothing
++  else; the next roadmap step in the same lane, or the next roadmap, waits.
++- Nobody has measured how much of the `sleep-poll` minutes are hand-written
++  CI-polling loops rather than other waits.
++
++## The proposed change
++
++Replace "settle before the turn ends" with a settle **obligation**: after a
++push the agent starts `ci_settle` in the background and records an open
++obligation; it takes the next workable step meanwhile; a completion or
++delivery claim about that PR still needs the settled verdict (detector D
++unchanged); the obligation reuses `ci_settle`'s head/branch-tip check, so a
++verdict for a superseded head is never read as current. The hook ships to
++consumer installs, so the change carries a changelog line, and reverting the
++reminder text restores today's behaviour. Nothing merges on its own; a
++background wait never becomes a background merge.
++
++## Options
++
++- **(a) Keep the foreground settle.** The 2026-10-07 target holds; the cost of
++  a held lane is accepted.
++- **(b) Adopt the settle obligation as proposed.**
++- **(c) Adopt it only after measuring** what share of `sleep-poll` minutes are
++  CI polling and how often a lane had a workable next step while waiting; until
++  then keep (a).
++
++Answer with one option, the strongest argument against your choice, and a
++`revisit-if`.
+diff --git a/agents/roadmaps/road-to-agent-throughput-recovery.md b/agents/roadmaps/road-to-agent-throughput-recovery.md
+index 30a4c4b93191d5f471efac1db984603bfdb29fd5..d9e1ecd2ee228961871599749bb5afef7482479b 100644
+--- a/agents/roadmaps/road-to-agent-throughput-recovery.md
++++ b/agents/roadmaps/road-to-agent-throughput-recovery.md
+@@ -187,7 +187,7 @@ the Acceptance Criteria held.
+       2026-09-28..10-13 reading as a `subsequent_readings` entry with its window
+       shape; no new baseline file.
+       verify: the entry's figures recompute from its own corpus block.
+-- [ ] **1.3 Let a red reading reach a person.** `--against-baseline` stays out of
++- [x] **1.3 Let a red reading reach a person.** Done 2026-10-17: `--queue-root CHECKOUT` upserts one dated `self-detected` record per red verdict per day (metric names in the evidence, never values, so a same-day re-run folds); an empty corpus queues as `empty corpus, no verdict`; the line the schedule runs is `regression_reader` in `src/config/turnaround-budget.json`. The schedule itself is machine-local, not tracked. `tests/scripts/probe_turnaround_queue.test.ts` went red with the queue call neutralised. `--against-baseline` stays out of
+       CI by design (an empty store would read green). Run from a lane worktree
+       its default store resolves to that worktree's empty project directory and
+       it fails as an empty corpus (reproduced 2026-10-15), so the scheduled run
+@@ -201,6 +201,10 @@ the Acceptance Criteria held.
+       `road-to-local-gates-wired-while-they-are-green` to record, per batch, the
+       change in the required job's duration. Do not stop the drain.
+       verify: the next batch PR carries a before/after duration line.
++      <br>2026-10-17: the ask is written under step 2.2 of that roadmap, with a
++      CI "before" of p50 118 s over 25 runs (drain steps 93 s) against 70–74 s
++      with 2.2a; 2.2b–2.2f landed without a line. Open until the next batch PR
++      carries one.
+ 
+ ## Phase 2 — Decide what binds a night, before adding lanes
+ 
+@@ -210,6 +214,18 @@ the Acceptance Criteria held.
+       and Phase 3 runs in order. Read the two windows after Phase 1 lands.
+       verify: the rule's commit predates the reading's commit; the verdict is a
+       Decisions row.
++      <br>**Pre-registered 2026-10-17, before any reading of the windows.**
++      *Night:* a `nightKey` night (22:00–08:00 Europe/Berlin) with at least one
++      assistant turn in the main checkout's transcript store. *Ends in a
++      usage-limit pause:* the night holds a `Usage limit reached` banner
++      (`isUsageLimitPause`) whose timestamp `nightKey` maps to that night.
++      *Windows:* the two consecutive 14-calendar-night windows starting the
++      first night after the last Phase 1 step merges. *Rule:* tokens bind when
++      paused nights / active nights >= 1/3 in BOTH windows; wall-clock binds
++      when the ratio is < 1/3 in both; a split result is no verdict and a third
++      window is read. The probe today prints pause counts, not distinct paused
++      nights; the reading adds that count, and no threshold here moves once a
++      window has been looked at. Open: the windows start after 1.4 closes.
+ - [ ] **2.2 Put the stalled thinning in front of the owner with its run cost.**
+       Add the 2.1 verdict, the floor figures and a `config_cost_report` run
+       (delivered payload per asset) to blocker
+@@ -219,7 +235,7 @@ the Acceptance Criteria held.
+ 
+ ## Phase 3 — Take the CI wait out of the foreground, keep the settle
+ 
+-- [ ] **3.1 Put the archived blocking-time roadmap's D7 to the council.** The 2026-10-07 target for
++- [x] **3.1 Put the archived blocking-time roadmap's D7 to the council.** Done 2026-10-17: D9 — (c), measure before moving the wait; record in `agents/evidence/council/ci-wait-foreground-2026-10-17.md`. The 2026-10-07 target for
+       `ci-wait` ("no foreground wait ends without a verdict") was met; the new
+       evidence is a different cost, a lane held while CI runs. Bring the
+       foreground minutes per merged step, the 2026-10-15 cause split (where
+@@ -238,6 +254,8 @@ the Acceptance Criteria held.
+       verify: a two-roadmap fixture run shows work on B between A's push and A's
+       verdict; a claim over an unsettled PR is still refused; an obligation
+       resumed after a force-push to A reads the new head, never the old verdict.
++      <br>2026-10-17: the council did not agree (D9 reads (c)), so this step
++      waits on D9's measurement and a specified obligation lifecycle.
+ 
+ ## Phase 4 — Remove the misfires, from the classes that actually fired
+ 
+@@ -254,7 +272,14 @@ the Acceptance Criteria held.
+       stub's class, the fix promotes and closes
+       `stubs/road-to-language-pin-short-lead.md`.
+       verify: the split table is committed; the fixture is red before the fix.
+-- [ ] **4.2 Measure detector C's false positives by edited-path class** with
++      <br>2026-10-17, read before classifying: the refusal store holds 86
++      `language` refusals in 31 sessions (2026-08-12..10-16), but pin state is
++      kept 7 days (`STATE_RETENTION_DAYS`), so only 3 of those sessions (5
++      refusals) still have a pin record — all `source: prompt`, `de`. The
++      split by source therefore needs a join from refusal digests to
++      transcripts (`statePathFor` keys both on the session id), not the pin
++      store. Open; the fix itself is a hook change and carries its own review.
++- [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
+       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
+       code.
+       verify: a table with every sampled refusal and its class; a docs-only
+@@ -278,7 +303,7 @@ the Acceptance Criteria held.
+ 
+ ## Phase 5 — Make the existing no-cheap-question law visible
+ 
+-- [ ] **5.1 Count violations, not asks.** With 1.1, classify each ask as
++- [x] **5.1 Count violations, not asks.** Done 2026-10-17: 86 structured asks over the probe's 10-session window, 54 of them re-presentations after a background wake and 32 owner-answered; of the 32, owner-reserved 19, council-decidable 12, cheap 1; the recommendation was taken 25 of 32. Table and criteria in `agents/evidence/analysis/structured-asks-by-class-2026-10-17.md`. With 1.1, classify each ask as
+       owner-reserved, council-decidable, or cheap under `no-cheap-questions`
+       (Iron Law 4 continuation prompt; one option dominates). Count how often
+       the recommended option is the one taken — the draft asserted it without a
+@@ -290,6 +315,10 @@ the Acceptance Criteria held.
+       reads it as `user-wait`, per claim (5).
+       verify: replayed asks — reserved ones still reach the owner; cheap ones do
+       not stop the run.
++      <br>2026-10-17: 5.1 reads the cheap class at 1 of 32 owner-answered asks,
++      so the precondition does not hold; the larger classes are re-presentation
++      after a wake (54 of 86) and council-decidable asks put to the owner (12 of
++      32). Left open for a disposition, not executed.
+ - [x] **5.3 Owner: an intake limit for harvest roadmaps.** Answered 2026-10-15: (a), N = 8 (D8); encoded where roadmaps land by step 3.1 of `road-to-an-analysis-family-that-deepens-itself`. The
+       question: does a new inbox roadmap land `draft` while more than N `ready`
+       roadmaps sit at 0 ticked steps (10 of 20 on 2026-10-15)? Options: (a) yes,
+@@ -310,6 +339,7 @@ the Acceptance Criteria held.
+ | D6 | reversible-technical | evidence | The closure scan's typed-op hits on "merge", "push" and "merged" in Context, Goal, 3.2 and 4.3 are measurement prose or guard names, not operations: no step here merges, pushes or force-pushes, and 3.2 waits on the council in 3.1 | `closure_scan` run 2026-10-15, eight `typed-op` hits, each read | a step is added that merges or pushes on its own authority |
+ | D7 | reversible-technical | evidence | `/roadmap:next` keeps one invocation = one roadmap = one branch = one PR; no composite drain command and no bundling here | `roadmap/next/command.md:28`; merges per night are flat, work per merge fell | Phase 2 reads wall-clock-bound and lane conflicts are measured |
+ | D8 | product-owned | owner | Harvest intake limit (5.3) → (a): a new inbox roadmap lands `draft` while more than 8 `ready` roadmaps sit at 0 ticked steps | owner answer 2026-10-15 to the PR #2373 report; 10 of 20 ready roadmaps at 0 that day | the 0-ticked share stays under 8 for a month, or the owner changes N |
++| D9 | reversible-technical | council:2026-10-17 | D7 revisited (3.1) → (c): the CI wait stays in the foreground until the share of `sleep-poll` that is CI polling, and how often a lane had a workable next step during a CI wait, are measured; 3.2 does not run before that | AI council 2026-10-17, anthropic + openai, 2/2 present, $0.00: anthropic (c); openai chose no option in its final round and named the obligation lifecycle (persistence, superseding push, cleanup, rollback) as unspecified; record `agents/evidence/council/ci-wait-foreground-2026-10-17.md` | more than 60 % of CI waits had a workable next step in the same lane, or `sleep-poll` is dominated by non-CI waits, or a mitigation without obligation state appears |
+ 
+ ## Kill register
+ 
+diff --git a/agents/roadmaps/road-to-local-gates-wired-while-they-are-green.md b/agents/roadmaps/road-to-local-gates-wired-while-they-are-green.md
+index 9e25a8c4dfbbc91b7debcd772ab8753922e62a2e..2d91f1a94eb7fe56d04338f0d484aa38ef0e3b43 100644
+--- a/agents/roadmaps/road-to-local-gates-wired-while-they-are-green.md
++++ b/agents/roadmaps/road-to-local-gates-wired-while-they-are-green.md
+@@ -162,6 +162,15 @@ with it and left alone.
+       step a change can close. Order: the 105 by name, twenty a batch, a gate
+       skipped only for a reason written in the evidence page's 2026-10-14
+       step-2.2 section. 2.2 closes when the last batch does, and AC-2 with it.
++      <br>**Duration per batch, asked by road-to-agent-throughput-recovery
++      step 1.4 (2026-10-17).** Every further batch pull request carries one
++      line: the host job's duration before and after the batch, from CI, with
++      the sample size. Read from CI on 2026-10-17 so the next batch has a
++      "before": the last 25 successful runs of `Standing payload delta + budget
++      gate` (2026-10-16T20:00Z..2026-10-17T02:58Z, PR heads on mixed bases) ran
++      p50 **118 s** (77–137 s), its `Drain *` steps p50 **93 s**, against the
++      70–74 s recorded with 2.2a in `docs/contracts/ci-cost-budget.md`. 2.2b–2.2f
++      landed without that line. The ask does not stop the drain.
+ - [x] **2.2a The first twenty.** `audit_mcp_tools` through
+       `check_score_contract`, four skipped with their reasons; steps
+       `Drain 2.2a-1` and `Drain 2.2a-2` of the host job. Open until the
+diff --git a/src/config/turnaround-budget.json b/src/config/turnaround-budget.json
+index 9402e19036abb325cdc5054f8d185595c19d37f1..c5460db5c49013fd30c834ea31b8ddaed822f8df 100644
+--- a/src/config/turnaround-budget.json
++++ b/src/config/turnaround-budget.json
+@@ -26,6 +26,12 @@
+         "context_floor_max": "DOWN"
+     },
+     "empty_corpus": "fail",
++    "regression_reader": {
++        "added_at": "2026-10-17",
++        "reason": "road-to-agent-throughput-recovery step 1.3 — `blocking_share` and `context_floor_max` read red from 2026-10-01 to 2026-10-15 with nobody reading the exit 1. `--queue-root` turns that exit 1 into one dated self-repair record, which the prompt-time hook injects as the queue line.",
++        "invocation": "./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10 --against-baseline --queue-root \"$(git rev-parse --path-format=absolute --git-common-dir)/..\"",
++        "note": "Both paths are explicit because the run may start in a lane worktree: there the default store is the worktree's own empty project directory, which `empty_corpus: \"fail\"` reports as an empty corpus and queues as one, never as green. The schedule that runs this line daily is machine-local (cron, launchd or a routine on the measuring machine) and is not a tracked file; the CI exclusion in `_comment` is unchanged."
++    },
+     "instrument_vs_source": {
+         "context_floor": "AGREES. Instrument 217,385–230,705; source analysis 218,705–230,705. The upper bound is identical and the lower differs by 0.6 %, which is the strongest available evidence that the two readers parse the same store the same way.",
+         "blocking_share": "AGREES within the window difference: 60 % here, 64 % in the source.",
+diff --git a/src/scripts/measure_turn_end_gate.ts b/src/scripts/measure_turn_end_gate.ts
+index 802a94fb489af2adc93ac6e7f7f4827a7c385e41..10826f20a6523335f9aae916492b2ed14cce1245 100644
+--- a/src/scripts/measure_turn_end_gate.ts
++++ b/src/scripts/measure_turn_end_gate.ts
+@@ -178,6 +178,15 @@ interface Counts {
+      * the pointer that makes a human read possible ships with it.
+      */
+     dropped_sites: { session: string; turn: number; evidence: string }[];
++    /**
++     * C's fires split by what the turn edited (road-to-agent-throughput-recovery
++     * 4.2): whether a docs-only exemption is worth proposing turns on how many
++     * fires edited nothing but `agents/**` or `docs/**` markdown. The rows sum to
++     * `unverified_fires`; a fire with no recorded path is `unknown`.
++     */
++    unverified_by_path_class: Record<EditPathClass, number>;
++    /** Where C fired, with the class only — never the path. */
++    unverified_sites: { session: string; turn: number; path_class: EditPathClass }[];
+     /** The independent scanner's own per-session language total, for context. */
+     scanner_language: number;
+     sessions: number;
+@@ -208,6 +217,19 @@ const _TEST_DIR_RE = /(?:^|\/)(?:tests?|specs?|__tests__|__specs__|e2e|cypress|p
+ const _TEST_FILE_RE =
+     /(?:\.(?:test|spec)\.[a-z]+$)|(?:_test\.[a-z]+$)|(?:(?:^|\/)test_[^/]+$)|(?:Test\.php$)|(?:Spec\.php$)|(?:\.feature$)/i;
+ 
++export const EDIT_PATH_CLASSES = ['docs-md', 'code', 'mixed', 'unknown'] as const;
++export type EditPathClass = (typeof EDIT_PATH_CLASSES)[number];
++
++const _DOCS_MD_RE = /(?:^|\/)(?:agents|docs)\/.*\.md$/i;
++
++/** `docs-md` when every edited path is `agents/**` or `docs/**` markdown. */
++export function editPathClass(paths: readonly string[]): EditPathClass {
++    if (paths.length === 0) return 'unknown';
++    const docs = paths.filter((p) => _DOCS_MD_RE.test(p)).length;
++    if (docs === paths.length) return 'docs-md';
++    return docs === 0 ? 'code' : 'mixed';
++}
++
+ function _looksTestPath(p: string): boolean {
+     return _TEST_DIR_RE.test(p) || _TEST_FILE_RE.test(p);
+ }
+@@ -254,6 +276,8 @@ export function measure(store: string, limit: number): Counts {
+         e2_no_test_touched: 0,
+         untested_sites: [],
+         dropped_sites: [],
++        unverified_by_path_class: { 'docs-md': 0, code: 0, mixed: 0, unknown: 0 },
++        unverified_sites: [],
+         scanner_language: 0,
+         sessions: 0,
+     };
+@@ -329,7 +353,16 @@ export function measure(store: string, limit: number): Counts {
+             // 2026-09-11, holding F's finding in a file that also names a
+             // detector E — the same mislabel that reached a commit title.
+             const fFinding = detectUntestedChange(pendingReply, pendingCalls);
+-            if (cFired) c.unverified_fires += 1;
++            if (cFired) {
++                c.unverified_fires += 1;
++                const cls = editPathClass(
++                    pendingCalls
++                        .filter((call) => _EDIT_TOOL_NAMES.has(call.name) && call.path !== undefined)
++                        .map((call) => call.path as string),
++                );
++                c.unverified_by_path_class[cls] += 1;
++                c.unverified_sites.push({ session: sessionId, turn: sessionTurn, path_class: cls });
++            }
+             if (fFinding !== null) {
+                 c.untested_fires += 1;
+                 if (!cFired) c.untested_c_silent += 1;
+@@ -446,6 +479,14 @@ export function renderFires(c: Counts): string {
+         .join('\n');
+ }
+ 
++/** C's fires with their edited-path class, for the 4.2 table. */
++export function renderUnverifiedFires(c: Counts): string {
++    if (c.unverified_sites.length === 0) return '  detector C fired on no turn in this corpus.';
++    return c.unverified_sites
++        .map((site) => `  ${site.session} turn ${String(site.turn)} — ${site.path_class}`)
++        .join('\n');
++}
++
+ /**
+  * E's fires, as a separate function rather than a widened `renderFires`: the
+  * two lists answer different questions and a caller printing one must not
+@@ -466,6 +507,7 @@ export function render(c: Counts): string {
+         `  detector A (promissory)  fires on ${c.promissory_fires} turns  (${pct(c.promissory_fires)}%)`,
+         `  detector B (language)    fires on ${c.language_fires} turns  (${pct(c.language_fires)}%)`,
+         `  detector C (unverified)  fires on ${c.unverified_fires} turns  (${pct(c.unverified_fires)}%)`,
++        ...EDIT_PATH_CLASSES.map((k) => `    by edited path: ${k.padEnd(10)}${String(c.unverified_by_path_class[k])}`),
+         `  detector E (dropped)     fires on ${c.dropped_fires} turns  (${pct(c.dropped_fires)}%)`,
+         `  detector F (untested)    fires on ${c.untested_fires} turns  (${pct(c.untested_fires)}%)`,
+         '',
+@@ -729,6 +771,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     if (showFires) {
+         process.stdout.write(`\n  detector F fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
+         process.stdout.write(`\n  detector E fired here — same reading, same reason:\n${renderDroppedFires(counts)}\n`);
++        process.stdout.write(`\n  detector C fired here, with the edited-path class:\n${renderUnverifiedFires(counts)}\n`);
+     }
+     return 0;
+ }
+diff --git a/src/scripts/probe_turnaround.ts b/src/scripts/probe_turnaround.ts
+index 5b1ad9cef90145c9a7c8fb8a787bc935670600b3..e29b3d567f313f144d8efe1dc46cd1eb343b09a9 100644
+--- a/src/scripts/probe_turnaround.ts
++++ b/src/scripts/probe_turnaround.ts
+@@ -39,6 +39,11 @@
+  *   ./scripts-run src/scripts/probe_turnaround --json
+  *   ./scripts-run src/scripts/probe_turnaround --against-baseline
+  *   ./scripts-run src/scripts/probe_turnaround --workspace PATH --git 2026-09-28..2026-10-13 [--ref main]
++ *   ./scripts-run src/scripts/probe_turnaround --store PATH --against-baseline --queue-root CHECKOUT
++ *
++ * `--queue-root` gives an exit 1 of the gating mode a reader: it upserts one
++ * dated record into CHECKOUT's self-repair store, which the prompt-time hook
++ * injects as the queue line. Same day, same verdict → one record, folded.
+  *
+  * The MEASURING session is excluded by default — see `recentSessions`.
+  *
+@@ -70,6 +75,7 @@ import {
+     TURN_END_CLASSES,
+ } from './_lib/turnaround_throughput.js';
+ import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
++import { upsertFinding } from './_lib/self_repair_store.js';
+ 
+ const _FILE = fileURLToPath(import.meta.url);
+ const REPO_ROOT = path.resolve(path.dirname(_FILE), '..', '..');
+@@ -652,13 +658,28 @@ function render(t: Turnaround, store: string): string {
+     ].join('\n');
+ }
+ 
++/**
++ * One dated record per red verdict per day. The evidence carries the date and
++ * the metric NAMES, never the values: values move between runs on the same
++ * corpus window, and a value in the fingerprint would open a record per run.
++ */
++export function queueRegression(root: string, verdict: string, now: Date): void {
++    upsertFinding(root, {
++        defect_class: 'model-noticed',
++        source: 'self-detected',
++        evidence: `probe_turnaround regression ${now.toISOString().slice(0, 10)}: ${verdict}`,
++        suggested_surface:
++            `road-to-agent-throughput-recovery owns the figures; re-run probe_turnaround --against-baseline and read ${BUDGET_REL}`,
++    }, now.toISOString());
++}
++
+ export function main(argv: string[] = process.argv.slice(2)): number {
+     const arg = (flag: string, dflt: string): string => {
+         const i = argv.indexOf(flag);
+         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
+     };
+     for (const a of argv) {
+-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '-h', '--help'].includes(a)) {
++        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '-h', '--help'].includes(a)) {
+             if (!argv.includes('--store') && !argv.includes('--limit')) {
+                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
+                 return 2;
+@@ -668,11 +689,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     if (argv.includes('-h') || argv.includes('--help')) {
+         process.stdout.write(
+             'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
+-                '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n',
++                '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n' +
++                '                        [--queue-root CHECKOUT]\n',
+         );
+         return 0;
+     }
+     const store = arg('--store', defaultStore(process.cwd()));
++    const qi = argv.indexOf('--queue-root');
++    const queueRoot = qi >= 0 ? argv[qi + 1] : undefined;
++    if (qi >= 0 && (queueRoot === undefined || queueRoot.startsWith('-'))) {
++        process.stderr.write('probe_turnaround: --queue-root needs the checkout whose self-repair store gets the record\n');
++        return 2;
++    }
++    const queue = (verdict: string): void => {
++        if (queueRoot !== undefined) queueRegression(queueRoot, verdict, new Date());
++    };
+     const limit = Number(arg('--limit', '10'));
+     if (!Number.isFinite(limit) || limit < 1) {
+         process.stderr.write('probe_turnaround: --limit needs a positive integer\n');
+@@ -747,6 +778,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     const budget = readBudget();
+     if (budget === null) {
+         process.stderr.write(`❌  probe_turnaround: ${BUDGET_REL} is missing — nothing to compare against.\n`);
++        queue('baseline missing, no verdict');
+         return 1;
+     }
+     if (files.length === 0) {
+@@ -756,6 +788,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+                     'sessions certifies nothing, and the config records `empty_corpus: "fail"` so it ' +
+                     'refuses rather than reporting green.\n',
+             );
++            queue('empty corpus, no verdict');
+             return 1;
+         }
+         process.stdout.write('probe:turnaround · empty corpus, `empty_corpus: "report"` — no verdict.\n');
+@@ -768,6 +801,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+         process.stderr.write(
+             `    → raising a baseline in ${BUDGET_REL} needs the reason as a sentence in the same commit.\n`,
+         );
++        queue(regressions.map((r) => r.split(/ [<>] /)[0]).join(', '));
+         return 1;
+     }
+     process.stdout.write('✅  probe_turnaround: within the recorded baseline on all four metrics.\n');
+diff --git a/tests/scripts/measure_turn_end_gate.test.ts b/tests/scripts/measure_turn_end_gate.test.ts
+index 48df97a008d111706c60339b4646024642f99b7d..1142e3f28a4500b60b8c111229667c2474ff7ff8 100644
+--- a/tests/scripts/measure_turn_end_gate.test.ts
++++ b/tests/scripts/measure_turn_end_gate.test.ts
+@@ -25,7 +25,7 @@ import path from 'node:path';
+ 
+ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+ 
+-import { measure, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
++import { editPathClass, measure, render, renderUnverifiedFires, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
+ import { emptyShadowStats, type ShadowStats } from '../../src/scripts/_lib/turn_end_refusals.js';
+ 
+ let store: string;
+@@ -319,6 +319,58 @@ describe('the C-silent overlap ADR-277 argues from', () => {
+     });
+ });
+ 
++describe('detector C by edited-path class — road-to-agent-throughput-recovery 4.2', () => {
++    it('classifies agents/** and docs/** markdown apart from code', () => {
++        expect(editPathClass(['/repo/agents/roadmaps/x.md', 'docs/a.md'])).toBe('docs-md');
++        expect(editPathClass(['src/a.ts'])).toBe('code');
++        expect(editPathClass(['src/rules/x.md'])).toBe('code');
++        expect(editPathClass(['agents/roadmaps/x.md', 'src/a.ts'])).toBe('mixed');
++        expect(editPathClass([])).toBe('unknown');
++    });
++
++    it('splits every C fire into exactly one class, and the rows sum to the fires', () => {
++        writeSession('aaaaaaaa-1', [
++            userEntry('write the roadmap'),
++            toolEntry('Write', { file_path: '/repo/agents/roadmaps/road-to-x.md' }),
++            replyEntry('Written.'),
++            userEntry('fix the code'),
++            toolEntry('Edit', { file_path: '/repo/src/scripts/x.ts' }),
++            replyEntry('Fixed.'),
++            userEntry('both'),
++            toolEntry('Edit', { file_path: '/repo/docs/guide.md' }),
++            toolEntry('Edit', { file_path: '/repo/src/scripts/y.ts' }),
++            replyEntry('Both done.'),
++            userEntry('docs again, verified'),
++            toolEntry('Edit', { file_path: '/repo/docs/guide.md' }),
++            toolEntry('Bash', { command: 'npx vitest run tests/x.test.ts' }),
++            replyEntry('Verified.'),
++        ]);
++        const c = measure(store, 30);
++        expect(c.unverified_fires).toBe(3);
++        expect(c.unverified_by_path_class).toEqual({ 'docs-md': 1, code: 1, mixed: 1, unknown: 0 });
++        const sum = Object.values(c.unverified_by_path_class).reduce((a, b) => a + b, 0);
++        expect(sum).toBe(c.unverified_fires);
++        expect(c.unverified_sites.map((x) => [x.turn, x.path_class])).toEqual([
++            [1, 'docs-md'],
++            [2, 'code'],
++            [3, 'mixed'],
++        ]);
++    });
++
++    it('prints the split and a path-free pointer per fire', () => {
++        writeSession('aaaaaaaa-1', [
++            userEntry('write the roadmap'),
++            toolEntry('Write', { file_path: '/home/someone/repo/agents/roadmaps/road-to-x.md' }),
++            replyEntry('Written.'),
++        ]);
++        const c = measure(store, 30);
++        expect(render(c)).toMatch(/docs-md +1/);
++        const fires = renderUnverifiedFires(c);
++        expect(fires).toContain('aaaaaaaa turn 1 — docs-md');
++        expect(fires).not.toContain('someone');
++    });
++});
++
+ describe('renderQ1 — step 2.2, the reader the contract was waiting on', () => {
+     function stats(over: Partial<ShadowStats> = {}): ShadowStats {
+         return { ...emptyShadowStats(), ...over };
+diff --git a/tests/scripts/probe_turnaround_queue.test.ts b/tests/scripts/probe_turnaround_queue.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..246aa1b80530b9d93ee0f283f015cd62ed132b9d
+--- /dev/null
++++ b/tests/scripts/probe_turnaround_queue.test.ts
+@@ -0,0 +1,153 @@
++// Tests for `--queue-root` on src/scripts/probe_turnaround.ts —
++// road-to-agent-throughput-recovery step 1.3: a red `--against-baseline`
++// reading reaches the self-repair queue as one dated record, and a run whose
++// store resolves to an empty project directory is reported empty, never green.
++import * as fs from "node:fs";
++import * as os from "node:os";
++import * as path from "node:path";
++
++import { afterEach, describe, expect, it, vi } from "vitest";
++
++import { main } from "../../src/scripts/probe_turnaround.js";
++import { listRecords } from "../../src/scripts/_lib/self_repair_store.js";
++
++const T0 = Date.parse("2026-10-01T10:00:00.000Z");
++const at = (s: number): string => new Date(T0 + s * 1000).toISOString();
++
++/** One request, one tool call that waits `seconds`; 600 s is a regression, 5 s is not. */
++function writeStore(seconds: number): string {
++  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-queue-store-"));
++  const rows: unknown[] = [
++    { type: "user", timestamp: at(0), message: { role: "user", content: "do the thing" } },
++  ];
++  const calls = [seconds, 1, 1];
++  let clock = 1;
++  calls.forEach((s, i) => {
++    const id = `toolu_${String(i)}`;
++    rows.push({
++      type: "assistant",
++      requestId: `req_${String(i)}`,
++      timestamp: at(clock),
++      message: {
++        role: "assistant",
++        usage: { input_tokens: 10, cache_read_input_tokens: 1000, cache_creation_input_tokens: 0 },
++        content: [
++          { type: "tool_use", id, name: "Bash", input: { command: "ls" } },
++          { type: "tool_use", id: `${id}b`, name: "Bash", input: { command: "ls" } },
++        ],
++      },
++    });
++    clock += s;
++    rows.push({
++      type: "user",
++      timestamp: at(clock),
++      message: {
++        role: "user",
++        content: [
++          { type: "tool_result", tool_use_id: id, content: "ok" },
++          { type: "tool_result", tool_use_id: `${id}b`, content: "ok" },
++        ],
++      },
++    });
++    clock += 1;
++  });
++  fs.writeFileSync(path.join(dir, "session-a.jsonl"), rows.map((r) => JSON.stringify(r)).join("\n") + "\n");
++  return dir;
++}
++
++const dirs: string[] = [];
++afterEach(() => {
++  for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
++  vi.restoreAllMocks();
++});
++
++function tmp(prefix: string): string {
++  const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
++  dirs.push(d);
++  return d;
++}
++
++function run(argv: string[]): { code: number; err: string } {
++  let err = "";
++  vi.spyOn(process.stdout, "write").mockImplementation(() => true);
++  vi.spyOn(process.stderr, "write").mockImplementation((chunk: unknown) => {
++    err += String(chunk);
++    return true;
++  });
++  const code = main(argv);
++  vi.restoreAllMocks();
++  return { code, err };
++}
++
++describe("probe_turnaround --queue-root — 1.3", () => {
++  it("routes a planted regression into the self-repair queue as one dated record", () => {
++    const store = writeStore(600);
++    dirs.push(store);
++    const queue = tmp("probe-queue-root-");
++    const { code } = run(["--store", store, "--include-current", "--against-baseline", "--queue-root", queue]);
++    expect(code).toBe(1);
++    const records = listRecords(queue);
++    expect(records).toHaveLength(1);
++    const rec = records[0]!;
++    expect(rec.status).toBe("open");
++    expect(rec.source).toBe("self-detected");
++    expect(rec.evidence).toMatch(/^probe_turnaround regression \d{4}-\d{2}-\d{2}: /);
++    expect(rec.evidence).toContain("blocking share");
++    expect(rec.suggested_surface).toContain("road-to-agent-throughput-recovery");
++  });
++
++  it("folds a second red run on the same day into the same record", () => {
++    const store = writeStore(600);
++    dirs.push(store);
++    const queue = tmp("probe-queue-root-");
++    run(["--store", store, "--include-current", "--against-baseline", "--queue-root", queue]);
++    run(["--store", store, "--include-current", "--against-baseline", "--queue-root", queue]);
++    const records = listRecords(queue);
++    expect(records).toHaveLength(1);
++    expect(records[0]!.occurrences).toBe(2);
++  });
++
++  it("queues nothing when the reading is within the baseline", () => {
++    const store = writeStore(5);
++    dirs.push(store);
++    const queue = tmp("probe-queue-root-");
++    const { code } = run(["--store", store, "--include-current", "--against-baseline", "--queue-root", queue]);
++    expect(code).toBe(0);
++    expect(listRecords(queue)).toHaveLength(0);
++  });
++
++  it("queues nothing without --against-baseline, even over a red corpus", () => {
++    const store = writeStore(600);
++    dirs.push(store);
++    const queue = tmp("probe-queue-root-");
++    expect(run(["--store", store, "--include-current", "--queue-root", queue]).code).toBe(0);
++    expect(listRecords(queue)).toHaveLength(0);
++  });
++
++  it("reports a worktree run without --store as an empty corpus, not green, and queues it as such", () => {
++    const worktree = tmp("probe-queue-worktree-");
++    const home = tmp("probe-queue-home-");
++    const queue = tmp("probe-queue-root-");
++    vi.stubEnv("HOME", home);
++    const cwd = vi.spyOn(process, "cwd").mockReturnValue(worktree);
++    let err = "";
++    vi.spyOn(process.stdout, "write").mockImplementation(() => true);
++    vi.spyOn(process.stderr, "write").mockImplementation((chunk: unknown) => {
++      err += String(chunk);
++      return true;
++    });
++    const code = main(["--against-baseline", "--queue-root", queue]);
++    cwd.mockRestore();
++    vi.unstubAllEnvs();
++    vi.restoreAllMocks();
++    expect(code).toBe(1);
++    expect(err).toContain("empty corpus");
++    const records = listRecords(queue);
++    expect(records).toHaveLength(1);
++    expect(records[0]!.evidence).toContain("empty corpus");
++  });
++
++  it("rejects --queue-root without a value", () => {
++    expect(run(["--against-baseline", "--queue-root"]).code).toBe(2);
++  });
++});
