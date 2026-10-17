@@ -526,9 +526,12 @@ function _is_archived(slug: string, roadmap_dir: string): boolean {
  * A step that waits on another roadmap says so twice or not at all: an inline
  * `blocked-by: road-to-X#…` marker needs a `relates:` row for X with
  * `relation: depends`, and a `depends` row may not name an archived file,
- * which can no longer land the thing waited on. The archived half warns rather
- * than fails while active files still carry such rows; see
- * road-to-an-intake-the-queue-can-carry 1.2 for the flip condition.
+ * which can no longer land the thing waited on. Both halves fail. The archived
+ * half warned rather than failed until 2026-10-17, while one active file still
+ * carried such a row; that row is now `extends` and the active glob carries
+ * none, so road-to-an-intake-the-queue-can-carry 1.2's flip condition is met.
+ * `warnings` stays in the signature: callers pass it, and a later half of this
+ * check may need it again.
  */
 export function _check_cross_file_waits(
     text: string,
@@ -553,8 +556,8 @@ export function _check_cross_file_waits(
         );
     }
     for (const r of rows) {
-        if (warnings && r.relation === 'depends' && _is_archived(r.slug, roadmap_dir)) {
-            warnings.push(
+        if (r.relation === 'depends' && _is_archived(r.slug, roadmap_dir)) {
+            problems.push(
                 `depends row names '${r.slug}', which is under archive/ — an archived ` +
                     'file lands nothing; drop the row or depend on its successor',
             );
