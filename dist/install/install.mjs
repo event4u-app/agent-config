@@ -8463,7 +8463,7 @@ function normalizeHostManifest(input) {
   };
 }
 var HOST_CAPABILITY_REGISTRY = {
-  claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true }
+  claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true, fork_shares_cache: true }
 };
 function resolveHostCapabilities(hostId, override) {
   if (override !== void 0 && override !== null && typeof override === "object" && !Array.isArray(override)) {
