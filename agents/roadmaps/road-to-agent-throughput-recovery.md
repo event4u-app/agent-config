@@ -294,7 +294,7 @@ the Acceptance Criteria held.
 
 ## Phase 5 — Make the existing no-cheap-question law visible
 
-- [ ] **5.1 Count violations, not asks.** With 1.1, classify each ask as
+- [x] **5.1 Count violations, not asks.** Done 2026-10-17: 86 structured asks over the probe's 10-session window, 54 of them re-presentations after a background wake and 32 owner-answered; of the 32, owner-reserved 19, council-decidable 12, cheap 1; the recommendation was taken 25 of 32. Table and criteria in `agents/evidence/analysis/structured-asks-by-class-2026-10-17.md`. With 1.1, classify each ask as
       owner-reserved, council-decidable, or cheap under `no-cheap-questions`
       (Iron Law 4 continuation prompt; one option dominates). Count how often
       the recommended option is the one taken — the draft asserted it without a
@@ -306,6 +306,10 @@ the Acceptance Criteria held.
       reads it as `user-wait`, per claim (5).
       verify: replayed asks — reserved ones still reach the owner; cheap ones do
       not stop the run.
+      <br>2026-10-17: 5.1 reads the cheap class at 1 of 32 owner-answered asks,
+      so the precondition does not hold; the larger classes are re-presentation
+      after a wake (54 of 86) and council-decidable asks put to the owner (12 of
+      32). Left open for a disposition, not executed.
 - [x] **5.3 Owner: an intake limit for harvest roadmaps.** Answered 2026-10-15: (a), N = 8 (D8); encoded where roadmaps land by step 3.1 of `road-to-an-analysis-family-that-deepens-itself`. The
       question: does a new inbox roadmap land `draft` while more than N `ready`
       roadmaps sit at 0 ticked steps (10 of 20 on 2026-10-15)? Options: (a) yes,
