@@ -1042,6 +1042,34 @@ decision, and `fetch-is-owner-reserved` needs the owner. Reading the trigger
 set alone would suggest this roadmap becomes workable when three observations
 line up; it does not.
 
+### Claim pin for the analysis family — recorded 2026-10-17
+
+Step 4.1 of `road-to-an-analysis-family-that-deepens-itself` builds new doors
+next to the engine this claim measures. A byte-identical freeze from
+registration (`5bee62a58`, 2026-08-12) is already impossible, so that roadmap
+records a **pin** instead and keeps its own changes outside the five
+mechanisms' sections from the pin on. This is not the shadow pin above and does
+not touch it.
+
+- **Pin:** commit `835660b0d`, blob
+  `d6921d4cdaa4de52acf91d48fbc723e514d81d9f` of
+  `src/domains/analysis-workbench/analyze/repo/command.md`.
+- **Known deltas between registration and the pin** — five commits, not the
+  three the analysis-family roadmap named (`git log --since=2026-08-12` on the
+  file, read at the pin):
+
+| Commit | Date | What moved | Inside a claimed section |
+|---|---|---|---|
+| `8488bf078` | 2026-09-07 | rename `reference-repo` → `repo`, three-lens loop rewrite (276 lines) | yes — the loop and convergence verdict were rewritten |
+| `386266422` | 2026-09-07 | `argument-hint` frontmatter line | no |
+| `f1d5f3f3a` | 2026-09-07 | bound-claim gate field name (§ 5) | yes — bound-claim gate |
+| `26dd1905e` | 2026-10-15 | read ceiling, § 2a, § 2b `--deep`, output template | yes — § 2b |
+| `7c728f35b` | 2026-10-15 | the same four places | yes — § 2b |
+
+Whether these deltas change what an observation run measures is this file's
+blockers' question, not the analysis family's; the pin only makes later drift
+checkable with `git diff 835660b0d..HEAD -- <the file>`.
+
 **Superseded as the operative wake condition, 2026-09-08 — and left standing as
 the record.** The three conditions above belong to the authorizing seat's trigger
 set and this lane holds no authority to redraw them, so they are not edited. What
