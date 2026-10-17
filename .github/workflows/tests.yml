@@ -251,6 +251,26 @@ jobs:
         # (scripts-run → tsx); needs node_modules, so it runs after npm ci.
         run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
 
+      # FFmpeg, for `tests/scripts/ai_video_stitch_flags.test.ts`. Steps 6.4
+      # and 6.5 of road-to-unknowns-that-say-so open every clip before concat
+      # and measure the output after it, so those cases decode real video and
+      # skip with a reason where ffmpeg is absent. Decision D7 binds the
+      # install to the same change as the checks, and this is it.
+      #
+      # LINUX ONLY, and that is a cost decision rather than an oversight: the
+      # matrix is 2 OSes x 4 shards, `brew install ffmpeg` is minutes on a
+      # macOS runner, and the suite shards by file count so the stitch file
+      # lands on an unpredictable shard — every shard would have to pay it.
+      # The cases skip on macOS with their recorded reason and run on all four
+      # ubuntu shards, which is coverage of the behaviour on every pull
+      # request at roughly no cost.
+      #
+      # The guard makes it free when the image already ships ffmpeg, which is
+      # not assumed either way here.
+      - name: FFmpeg (stitch suite decodes real video; skipped where present)
+        if: runner.os == 'Linux'
+        run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+
       # ── Root TS CLI + UI ───────────────────────────────────────────
       # ESLint / typecheck / prepack are whole-tree gates with nothing to
       # shard — they live in the dedicated `static-checks` job (runs once,

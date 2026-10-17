@@ -22,6 +22,7 @@ const REPO_ROOT = process.cwd();
 const FIXTURE_LOG = 'internal/bench/forensics/fixture-log.txt';
 const FIXTURE_METRICS = 'internal/bench/forensics/fixture-metrics.json';
 const EXPECTED = join(REPO_ROOT, 'internal/bench/forensics/expected-report.json');
+const TSX_BIN = join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 
 function runCli(args: string[]): { stdout: string; stderr: string; status: number | null } {
     const r = spawnSync(
@@ -166,9 +167,15 @@ describe('forensics_report — live git path smoke (hermetic synthetic repo)', (
         writeFileSync(join(dir, 'a.ts'), 'const a = 2;\n');
         git('add', '.');
         git('commit', '-q', '-m', 'c2');
+        // `node_modules/.bin/tsx`, not `npx`. `cwd` is a scratch directory
+        // with no `node_modules`, so `npx tsx` resolves nothing locally and
+        // asks the registry — which made this case depend on the network for
+        // a test whose whole point is a hermetic local repository. The
+        // network guard turned that dependency from invisible into a 60 s
+        // timeout, which is the guard doing its job.
         const r = spawnSync(
-            'npx',
-            ['tsx', join(REPO_ROOT, 'src/scripts/forensics_report.ts'), '--range', 'HEAD~1..HEAD'],
+            TSX_BIN,
+            [join(REPO_ROOT, 'src/scripts/forensics_report.ts'), '--range', 'HEAD~1..HEAD'],
             { encoding: 'utf8', cwd: dir },
         );
         expect(r.status).toBe(0);
