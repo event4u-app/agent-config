@@ -262,21 +262,31 @@ No-op by construction while no ceiling is set; 3.4 proves it.
 
 ## Phase 6 — A resume that can verify, a stitch that was checked
 
-- [ ] **6.1 The verification has a command (no new verb, ADR-041).**
+- [x] **6.1 The verification has a command (no new verb, ADR-041).**
       `run:supervise --verify <slug>` runs `latestCheckpointFor` then
       `verifyCheckpoint` and prints `renderVerification`, exit 0 on agreement and
       1 on a disagreement — "a disagreement is not an error" for the run
       (`roadmap-process-loop.md:806-811`), so the exit is a signal, not a halt.
       verify: `npx vitest run tests/scripts/run_supervise.test.ts -t verify-flag-renders-per-field-report --reporter=verbose` -> /✓.*verify-flag-renders-per-field-report/
-- [ ] **6.2 The two instructions name the command.**
+- [x] **6.2 The two instructions name the command.**
       `roadmap-process-loop.md:793-799` and `headless_invocation.ts:86-92` say
       `run:supervise --verify <slug>` instead of the function names.
       verify: `grep -c 'run:supervise --verify' src/agent-src/contexts/execution/roadmap-process-loop.md src/scripts/_lib/headless_invocation.ts` -> /:[1-9]/
-- [ ] **6.3 A torn checkpoint is not an absent one.** `writeCheckpoint` writes
+- [x] **6.3 A torn checkpoint is not an absent one.** `writeCheckpoint` writes
       through `write_atomic` (`src/scripts/_lib/fs_atomic.ts:70`);
       `latestCheckpointFor` still skips an unreadable file but the `--verify`
       report names it (`unreadable: <file>`).
       verify: `npx vitest run tests/scripts/run_checkpoint.test.ts -t unreadable-newest-is-named --reporter=verbose` -> /✓.*unreadable-newest-is-named/
+      *Done 2026-10-17 (6.1–6.3):* the three calls live in one library function,
+      `verifyLatestCheckpoint`, which the flag prints. An unreadable file cannot
+      say which roadmap it belonged to, so the report names every one whose
+      mtime is newer than the checkpoint used, never an older one. The flag also
+      takes `--fingerprint FP`, because the same section of the loop contract
+      told a resumed run to pass a fresh fingerprint into `verifyCheckpoint`,
+      which no command could do either; that sentence now names the flag. The
+      `headless_invocation` test that asserted the prompt named
+      `latestCheckpointFor` now asserts the command instead. Every new case was
+      seen red first.
 - [ ] **6.4 Every clip is readable before concat.** With `AIV_DRYRUN=false`,
       each listed clip is opened with `ffprobe -v error`; an unreadable clip is
       treated as missing, honouring `--abort-on-missing` / `--continue` /
@@ -409,7 +419,7 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** No CLI failure whose stderr matches a timeout pattern is
+- [x] **AC-1** No CLI failure whose stderr matches a timeout pattern is
       replay-eligible, whatever else it contains, and the metered transport is
       not dispatched for it.
 - [x] **AC-2** No council run passes a person-set USD ceiling with an unpriced
@@ -421,10 +431,10 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
 - [ ] **AC-5** With no flag set, an in-process `fetch` and a spawned `curl` to a
       public address both fail; a sentinel proves the opt-in is closed. Children
       that ignore proxy variables are a documented gap, not covered.
-- [ ] **AC-6** An added `skipIf`/`runIf` without a reason is red in
+- [x] **AC-6** An added `skipIf`/`runIf` without a reason is red in
       `check_test_weakening`.
-- [ ] **AC-7** `score_skill_selection --baseline` reads what the producer writes.
-- [ ] **AC-8** A resumed run can produce the per-field checkpoint verification
+- [x] **AC-7** `score_skill_selection --baseline` reads what the producer writes.
+- [x] **AC-8** A resumed run can produce the per-field checkpoint verification
       with one command, and an unreadable newest checkpoint is named.
 - [ ] **AC-9** `stitch.sh` exits non-zero on an unreadable clip, a stream
       mismatch on the copy path, or a duration shortfall; a valid run's stdout is

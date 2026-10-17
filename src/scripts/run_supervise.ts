@@ -49,6 +49,7 @@ import {
     readCheckpoint,
     readHead,
     roadmapPath,
+    verifyLatestCheckpoint,
 } from './_lib/run_checkpoint.js';
 import { readBudget } from './_lib/unattended_guard.js';
 import { findQuotaParked, type QuotaParkedMarker } from './_lib/quota_parked.js';
@@ -535,13 +536,22 @@ export function digest(repoRoot: string, candidates: readonly Candidate[], now: 
 }
 
 const USAGE = `usage: run_supervise [--root PATH] [--once] [--digest] [--interval SECONDS]
-                    [--print-relaunch] [--relaunch]
+                    [--print-relaunch] [--relaunch] [--verify SLUG [--fingerprint FP]]
 
 Watches the session register for runs whose session died with open steps left.
 
   --root PATH        repository root (default: cwd)
   --once             one scan, then exit. REQUIRED today: looping is not
                      implemented, so omitting this exits 2 with that message.
+  --verify SLUG      a resumed run's first act: re-verify the roadmap's newest
+                     checkpoint against the tree and print the per-field
+                     report, naming any newer checkpoint file that does not
+                     read. --fingerprint FP is a fresh
+                     \`roadmap:context --fingerprint\` to compare; without it
+                     that field reads "not known". Exit 0 when every field
+                     agrees, 1 when one moved —
+                     a signal, not a halt: progress since the checkpoint is
+                     the normal case.
   --digest           the morning report instead of the per-session list:
                      dead runs, decision memos written, budget consumed.
                      Reports state; schedules nothing, starts nothing.
@@ -593,7 +603,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // word, and `--print-relaunch --relaunch` returned 0 without ever emitting
     // the refusal — success as the exit code of the one flag whose entire
     // purpose is to refuse.
-    const shapes = ['--digest', '--print-relaunch', '--relaunch'].filter((f) => argv.includes(f));
+    const shapes = ['--digest', '--print-relaunch', '--relaunch', '--verify'].filter((f) => argv.includes(f));
     if (shapes.length > 1) {
         process.stderr.write(
             `run:supervise: ${shapes.join(' and ')} are mutually exclusive — each is a ` +
@@ -603,6 +613,18 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     }
 
     const repoRoot = argValue(argv, '--root') ?? process.cwd();
+    if (argv.includes('--verify')) {
+        const slug = argValue(argv, '--verify');
+        if (slug === null || slug.startsWith('--')) {
+            process.stderr.write('run:supervise: --verify needs a roadmap slug.\n');
+            return 2;
+        }
+        // Exit 1 on a disagreement is a signal, not a halt: work landing
+        // after the checkpoint is the normal case (roadmap-process-loop.md).
+        const res = verifyLatestCheckpoint(repoRoot, slug, argValue(argv, '--fingerprint'));
+        process.stdout.write(`${res.report}\n`);
+        return res.agrees ? 0 : 1;
+    }
     const now = new Date();
     const candidates = scan(repoRoot, { now });
     if (argv.includes('--digest')) {
