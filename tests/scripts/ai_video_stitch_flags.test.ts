@@ -183,6 +183,7 @@ function mediaProject(scenes: { id: string; file: string; audio?: boolean }[]): 
 }
 
 describe('stitch.sh — a clip nobody opened is not a clip', () => {
+    // skip-reason: decodes a real clip; without ffmpeg/ffprobe stitch.sh dies on the missing dependency before the assertion.
     it.skipIf(!MEDIA)('stitch-refuses-unreadable-clip', () => {
         const { manifest, output, dir } = mediaProject([
             { id: 's1', file: 'a.mp4' },
@@ -201,6 +202,7 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(fs.existsSync(output)).toBe(false);
     });
 
+    // skip-reason: decodes a real clip; without ffmpeg/ffprobe stitch.sh dies on the missing dependency before the assertion.
     it.skipIf(!MEDIA)('honours --continue over an unreadable clip, exactly as over a missing one', () => {
         // The polarity partner. An unreadable clip is routed into the EXISTING
         // missing-clip policy rather than into a new fatal path of its own, so
@@ -219,6 +221,7 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(r.stdout).toMatch(/"missing":1/);
     });
 
+    // skip-reason: builds two real clips and probes the output duration; neither is possible without ffmpeg/ffprobe.
     it.skipIf(!MEDIA)('stitch-output-matches-manifest', () => {
         // The valid run: two clips of one shape. Both halves of 6.5 pass over
         // it — every fingerprint matches, and the output duration is within
@@ -245,6 +248,7 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(Number(dur)).toBeGreaterThan(3.5);
     });
 
+    // skip-reason: needs two real clips at different resolutions, which only ffmpeg can produce.
     it.skipIf(!MEDIA)('refuses a resolution change on the copy path and names the first divergent scene', () => {
         const { manifest, output, dir } = mediaProject([
             { id: 's1', file: 'a.mp4' },
@@ -264,6 +268,7 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(r.stdout).not.toMatch(/"output"/);
     });
 
+    // skip-reason: needs a real clip with no audio stream, which only ffmpeg can produce.
     it.skipIf(!MEDIA)('refuses a scene that declares audio_embedded over a clip with no audio stream', () => {
         const { manifest, output, dir } = mediaProject([{ id: 's1', file: 'a.mp4', audio: true }]);
         makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
@@ -275,6 +280,7 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(r.stdout).not.toMatch(/"output"/);
     });
 
+    // skip-reason: drives the duration check over real measurements; without ffprobe there is nothing to measure.
     it.skipIf(!MEDIA)('reports a short output, and the same run passes at the shipped tolerance', () => {
         // The one branch of 6.5 no fixture can provoke: a file ffprobe reads
         // as whole and ffmpeg copies as short is not something `testsrc` can
