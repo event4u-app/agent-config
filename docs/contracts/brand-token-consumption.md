@@ -52,8 +52,11 @@ is one of the three names above, `qualifiers` adds `invalid` (a canonical
 path holds a file that is not a DTCG document) and `shadowed` (a second valid
 file with different content loses to the first on precedence), and `sources[]`
 lists every hit with its path, `sha256`, kind and status. Nothing is
-persisted. Until the brand-voice slot exists the voice side reads as absent, so
-a valid tokens file alone is `mixed`.
+persisted. The voice side is the `brand-voice` context-spine slot
+(`agents/context-spine/brand-voice.md`): only a schema-valid slot counts, an
+invalid one is listed with `invalid`, and `voice` reports counts and dates
+only — `avoid` and claim counts, expired claims, confidence, days since review,
+`stale` after 90 days — never the slot's content.
 
 The `mixed` path is the load-bearing one: it prevents a scaffold from either
 ignoring a partial brand or hard-failing on an incomplete one. The sibling
