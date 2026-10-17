@@ -116,6 +116,10 @@ const ConflictEntrySchema: z.ZodType<ConflictEntry, z.ZodTypeDef, unknown> = z.o
     ownership: z
         .enum(['recorded-unchanged', 'recorded-modified', 'unknown'])
         .default('unknown'),
+    // Additive for the same reason and on the same terms: an older client
+    // omits it, and `false` is the answer every tree gave before the
+    // ledger-migration branch existed.
+    migration: z.boolean().default(false),
 });
 
 /**

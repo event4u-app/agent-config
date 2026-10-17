@@ -99,9 +99,16 @@ function plan(): InstallPlan {
     };
 }
 
+/**
+ * What the preview says will be PRESERVED — which is the question all three
+ * readers are being compared on, and it is not the same as `ownership`.
+ * A ledger-migration entry stays `unknown` on purpose (nobody proved an edit)
+ * and is preserved all the same, so filtering on the label alone would make
+ * the preview disagree with the writer by construction.
+ */
 function previewSays(): string[] {
     return computeConflicts(plan())
-        .filter((c) => c.ownership === 'recorded-modified')
+        .filter((c) => c.ownership === 'recorded-modified' || c.migration)
         .map((c) => path.basename(c.path))
         .sort();
 }
@@ -117,7 +124,13 @@ function writerSays(): string[] {
         tagDeployed: () => undefined,
     });
     tracker.begin(root);
-    return TABLE.filter((r) => tracker.resolve(path.join(dir, r.name), false) === 'preserve')
+    return TABLE.filter((r) => {
+        const target = path.join(dir, r.name);
+        // The writer is the one reader that can compute the packaged digest,
+        // so it is handed the planned bytes the same way the installer hands
+        // it the package source.
+        return tracker.resolve(target, false, { content: PLANNED }) === 'preserve';
+    })
         .map((r) => r.name)
         .sort();
 }
@@ -169,8 +182,22 @@ describe('step 2.5 — preview, writer and doctor agree on one table', () => {
             .map((m) => path.basename(String(m['path'])))
             .sort();
 
-        expect(previewSays()).toEqual(EDITED);
-        expect(writerSays()).toEqual(EDITED);
+        // The two readers that can compute the packaged digest agree, and they
+        // agree on MORE than the edited file: `no-digest.md` is listed by the
+        // ledger without a digest, so the installer preserves it rather than
+        // overwriting bytes it cannot classify.
+        const PRESERVED = [...EDITED, 'no-digest.md'].sort();
+        expect(previewSays()).toEqual(PRESERVED);
+        expect(writerSays()).toEqual(PRESERVED);
+
+        // Doctor is the reader that cannot, and the gap is asserted rather
+        // than hidden: it is not installing, so it has no packaged digest to
+        // compare `no-digest.md` against, and `recorded_digests` does not even
+        // enumerate a path without one. Reporting it `modified` anyway would
+        // assert an edit nobody proved. The assertion is written as the
+        // difference so that doctor LEARNING to cover it reds this case and
+        // forces the claim in its docstring to be re-read.
         expect(doctorSays).toEqual(EDITED);
+        expect(PRESERVED.filter((n) => !doctorSays.includes(n))).toEqual(['no-digest.md']);
     });
 });

@@ -159,6 +159,19 @@ export interface ConflictEntry {
      * a readable manifest reports.
      */
     readonly ownership: RecordedOwnership;
+    /**
+     * True when this entry's fate is decided by the ledger-migration branch
+     * rather than by a recorded digest.
+     *
+     * `ownership` is `unknown` for such a path and will stay `unknown`: the
+     * tree genuinely cannot say whether the bytes are an edit or an older
+     * version, and labelling it `recorded-modified` would assert the edit the
+     * whole branch exists because it cannot prove. What the flag carries is
+     * the DECISION — the writer will preserve this file — so a reader that
+     * needs to know what happens next stops inferring it from a label that
+     * means something else.
+     */
+    readonly migration: boolean;
 }
 
 /**
