@@ -47,3 +47,15 @@ keep-beta-until: 2027-01-14
 | `0` | removed what it owned, or there was nothing to remove | `src/scripts/_cli/cmd_uninstall.ts` |
 | `1` | no lockfile and no `--force`, or a removal was refused | `src/scripts/_cli/cmd_uninstall.ts` |
 | `2` | usage error | `src/scripts/_cli/cmd_uninstall.ts` |
+
+## Pairs that must agree
+
+> Two surfaces reporting on one state. A consumer who runs only one of
+> them is entitled to the same answer, so the pair is a published
+> contract rather than a coincidence: the generator checks both codes
+> against the scan and checks that the named test still asserts them
+> together, and fails if either side changes alone.
+
+| State | Surfaces | Asserted in |
+|---|---|---|
+| the install preserved a user-modified managed file, so the active installation is stale | `init` → `3` · `doctor` → `1` | `tests/install/ownership_ledger_real_install.test.ts` |

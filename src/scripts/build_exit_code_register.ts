@@ -53,6 +53,52 @@ export interface CommandSpec {
     readonly inherits?: readonly Inherit[];
 }
 
+/** One surface's half of a pair: the command, and the code it gives that state. */
+export interface PairSurface {
+    readonly verb: string;
+    readonly code: number;
+}
+
+/**
+ * Two surfaces that report on ONE state, and the test that runs both over one
+ * tree.
+ *
+ * A consumer scripting against two commands needs to know which of their codes
+ * describe the same condition, because a pair that drifts apart is worse than
+ * either code being wrong alone: the install says the tree is stale and the
+ * doctor says it is fine, and the consumer believes whichever they happened to
+ * run. The register names the pair so the agreement is a published contract
+ * rather than a coincidence of two implementations.
+ *
+ * Both halves are checked against the scan, so a verb that stops returning its
+ * side of the pair fails the build; and the asserting test is checked for a
+ * literal of its own, so deleting the assertion fails it too. That is what
+ * makes "the assertion fails if either side changes alone" true of the
+ * generator and not only of the test.
+ */
+export interface SurfacePair {
+    /** The single state, in a phrase a consumer would recognise. */
+    readonly state: string;
+    readonly surfaces: readonly [PairSurface, PairSurface];
+    /** The test that exercises both surfaces against one tree. */
+    readonly assertedIn: string;
+    /** A literal from that test, so its removal is a build failure. */
+    readonly fragment: string;
+}
+
+export const PAIRS: readonly SurfacePair[] = [
+    {
+        state:
+            'the install preserved a user-modified managed file, so the active installation is stale',
+        surfaces: [
+            { verb: 'init', code: 3 },
+            { verb: 'doctor', code: 1 },
+        ],
+        assertedIn: 'tests/install/ownership_ledger_real_install.test.ts',
+        fragment: 'installer rc=3 and doctor --ci non-zero naming the preserved file, on the same tree',
+    },
+];
+
 export const COMMANDS: readonly CommandSpec[] = [
     {
         verb: 'init',
@@ -153,10 +199,45 @@ export interface Row {
 
 export interface Register {
     readonly rows: ReadonlyMap<string, readonly Row[]>;
+    readonly pairs: readonly SurfacePair[];
     readonly errors: readonly string[];
 }
 
-export function build(root: string, commands: readonly CommandSpec[] = COMMANDS): Register {
+/**
+ * Check each pair against what the scan actually found and against the test
+ * that asserts it. Errors, never silence: a pair whose halves have drifted is
+ * the condition the section exists to catch.
+ */
+export function checkPairs(
+    root: string,
+    rows: ReadonlyMap<string, readonly Row[]>,
+    pairs: readonly SurfacePair[],
+): string[] {
+    const errors: string[] = [];
+    for (const pair of pairs) {
+        for (const s of pair.surfaces) {
+            const codes = rows.get(s.verb);
+            if (codes === undefined) {
+                errors.push(`pair "${pair.state}": names \`${s.verb}\`, which the register does not cover`);
+            } else if (!codes.some((r) => r.code === s.code)) {
+                errors.push(`pair "${pair.state}": \`${s.verb}\` no longer returns ${s.code}`);
+            }
+        }
+        const abs = path.join(root, pair.assertedIn);
+        if (!fs.existsSync(abs)) {
+            errors.push(`pair "${pair.state}": asserted in ${pair.assertedIn}, which does not exist`);
+        } else if (!fs.readFileSync(abs, 'utf8').includes(pair.fragment)) {
+            errors.push(`pair "${pair.state}": ${pair.assertedIn} no longer contains \`${pair.fragment}\``);
+        }
+    }
+    return errors;
+}
+
+export function build(
+    root: string,
+    commands: readonly CommandSpec[] = COMMANDS,
+    pairs: readonly SurfacePair[] = PAIRS,
+): Register {
     const constants = exitConstants(root);
     const errors: string[] = [];
     const own = new Map<string, Map<number, string[]>>();
@@ -204,7 +285,8 @@ export function build(root: string, commands: readonly CommandSpec[] = COMMANDS)
                 .map((code) => ({ code, meaning: cmd.meanings[code] as string, emittedIn: byCode.get(code) ?? [] })),
         );
     }
-    return { rows, errors };
+    errors.push(...checkPairs(root, rows, pairs));
+    return { rows, pairs, errors };
 }
 
 export function render(reg: Register): string {
@@ -230,6 +312,25 @@ export function render(reg: Register): string {
         out.push(`## \`${verb}\``, '', '| Code | Meaning | Emitted in |', '|---|---|---|');
         for (const r of rows) {
             out.push(`| \`${r.code}\` | ${r.meaning} | ${r.emittedIn.map((e) => (e.startsWith('via ') ? e : `\`${e}\``)).join(', ')} |`);
+        }
+        out.push('');
+    }
+    if (reg.pairs.length > 0) {
+        out.push(
+            '## Pairs that must agree',
+            '',
+            '> Two surfaces reporting on one state. A consumer who runs only one of',
+            '> them is entitled to the same answer, so the pair is a published',
+            '> contract rather than a coincidence: the generator checks both codes',
+            '> against the scan and checks that the named test still asserts them',
+            '> together, and fails if either side changes alone.',
+            '',
+            '| State | Surfaces | Asserted in |',
+            '|---|---|---|',
+        );
+        for (const p of reg.pairs) {
+            const surfaces = p.surfaces.map((s) => `\`${s.verb}\` → \`${s.code}\``).join(' · ');
+            out.push(`| ${p.state} | ${surfaces} | \`${p.assertedIn}\` |`);
         }
         out.push('');
     }
