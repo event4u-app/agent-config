@@ -307,7 +307,7 @@ irreversible-external-action row of `non-destructive-by-default`).
 ## Phase 4 — One voice slot, one shape
 
 - [x] **4.1 ADR** (E6). `docs/contracts/adr-gtm-context-spine-brand-voice.md`
-      adds wing-scoped slot `brand-voice` (`agents/context-spine/brand-voice.md`)
+      adds wing-scoped slot `brand-voice` (`agents/context-spine/brand-voice.md`) <!-- ref-ignore -->
       under § 5 and records that it is the first slot whose frontmatter is
       machine-read, limited to the fields Phase 5 consumes; the body stays prose
       under § 4.
@@ -324,7 +324,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       `confidence: low|med|high`, `last_reviewed_at`), `version`, `changelog[]`,
       `open_questions[]` (each with a recommendation).
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t brand-voice-schema --reporter=verbose` -> /✓.*brand-voice-schema/
-      Done 2026-10-17: `src/scripts/_lib/brand_voice_slot.ts` validates the closed field set (an unknown field such as a colour is an issue, so the slot cannot become a token store), exactly three attributes, `tone_by_context` naming an attribute, `avoid` ≤32 literal terms, `claims` with a day-valued `expires`, ≤3 samples of ≤200 words, the four source tiers and the confidence/date provenance. `lint_context_spine_usage` validates `agents/context-spine/brand-voice.md` when it exists. `changelog` entries are plain strings. Unknown `tell_exemptions` ids are 5.2's.
+      Done 2026-10-17: `src/scripts/_lib/brand_voice_slot.ts` validates the closed field set (an unknown field such as a colour is an issue, so the slot cannot become a token store), exactly three attributes, `tone_by_context` naming an attribute, `avoid` ≤32 literal terms, `claims` with a day-valued `expires`, ≤3 samples of ≤200 words, the four source tiers and the confidence/date provenance. `lint_context_spine_usage` validates `agents/context-spine/brand-voice.md` when it exists. `changelog` entries are plain strings. Unknown `tell_exemptions` ids are 5.2's. <!-- ref-ignore -->
 - [ ] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
       writes the slot (declared write scope). `brand-strategy` and the
       consumption contract defer their voice sections to it. `humanizer`'s
@@ -342,7 +342,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       and `claims` counts, confidence, days since review, stale after 90 days,
       expired claims — counts and dates only, never slot content.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t voice-slot --reporter=verbose` -> /✓.*voice-slot/
-      Done 2026-10-17: `brand:status` reads `agents/context-spine/brand-voice.md`, lists it as a `voice` source (valid, or invalid with the failing field names only), and reports `schema_valid`, `avoid_count`, `claims_count`, `expired_claims`, `confidence`, `last_reviewed_at`, `days_since_review` and `stale` (> 90 days or never reviewed). Only a valid slot counts toward `mixed`/`branded`; the 0.2 voice fixture now asserts that an invalid slot is listed and never makes the state. `brand-token-consumption.md` says so.
+      Done 2026-10-17: `brand:status` reads `agents/context-spine/brand-voice.md`, lists it as a `voice` source (valid, or invalid with the failing field names only), and reports `schema_valid`, `avoid_count`, `claims_count`, `expired_claims`, `confidence`, `last_reviewed_at`, `days_since_review` and `stale` (> 90 days or never reviewed). Only a valid slot counts toward `mixed`/`branded`; the 0.2 voice fixture now asserts that an invalid slot is listed and never makes the state. `brand-token-consumption.md` says so. <!-- ref-ignore -->
 
 ## Phase 5 — One checker for three voices and for claims
 

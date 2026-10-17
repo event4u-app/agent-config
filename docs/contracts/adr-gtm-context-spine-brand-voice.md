@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2027-01-17
+keep-beta-until: 2027-01-15
 ---
 
 # ADR — GTM context-spine: the `brand-voice` slot

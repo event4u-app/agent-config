@@ -3,8 +3,8 @@
 //
 // The 5.3 negative-corpus bar is not asserted here: its pre-registered first
 // measurement read 0.28 hits per 10k words against a bar of 0.1, and the
-// registry may not be tuned after that run (E8). The reading is recorded in
-// agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md.
+// registry may not be tuned after that run (E8); the reading is kept with the
+// roadmap step rather than in this file.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
