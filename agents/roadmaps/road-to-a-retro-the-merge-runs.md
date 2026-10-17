@@ -137,11 +137,11 @@ pre-registration in place, settings lint green with the new key.*
       *Done 2026-10-17: `src/scripts/retro_facts.ts --pr <N>`. A later revert
       matches the merge SHA only; in-PR reverts count separately. More runs than
       one page read as `missing`, not as a short count.*
-- [x] **1.2 Facts for a session.** The same for a session tag: end-of-life
+- [ ] **1.2 Facts for a session.** The same for a session tag: end-of-life
       counters, interruptions, self-repair records in its time window, its
       branch and PR when known.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t session-facts-join-on-tag --reporter=verbose` -> /✓.*session-facts-join-on-tag/
-      *Done 2026-10-17: `--session <id>` or `--tag <tag>`. End-of-life state is
+      *Reopened 2026-10-17 after the lane's neutral review held that "when known" is unmet while branch and PR are never recorded; the implementer flipped it against that review, which an implementer may not settle. Built so far: `--session <id>` or `--tag <tag>`. End-of-life state is
       keyed by a hash of the id, so a tag alone reports it `missing`. Branch
       stays `missing`: nothing in the tree records a session's branch; the PR is
       not joined either until a queue pointer (1.3) carries it. Self-repair
