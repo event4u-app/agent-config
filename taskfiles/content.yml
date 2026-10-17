@@ -5,6 +5,7 @@ tasks:
     silent: true
     desc: Sync .agent-src.uncondensed/ → dist/agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
     cmds:
+      - ./scripts-run src/scripts/generate_reference_toc
       - bash src/scripts/condense.sh --sync
       - ./scripts-run src/scripts/update_counts
       - ./scripts-run src/scripts/generate_pack_manifests
