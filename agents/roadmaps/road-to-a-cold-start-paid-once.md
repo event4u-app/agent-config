@@ -200,10 +200,11 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
       missing, it ships off with the reading attached.
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
-- [ ] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
+- [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.
       verify: `grep -c 'fork_shares_cache' src/skills/subagent-orchestration/SKILL.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-17: the "changes the tool set and invalidates the very prefix" premise now reads as the `fork_shares_cache` host row, with the 1.6 reading; the ordering and the "never always fork" cut are unchanged.
 
 ## Phase 3 — One decision function, recorded in shadow
 

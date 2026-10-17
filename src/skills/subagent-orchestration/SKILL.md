@@ -116,9 +116,12 @@ Rules:
   continues the parent's task under identical tools and constraints (it then
   reads the parent's cache on its first request); a named subagent is
   preferred the moment isolation, a different tool set, or nested dispatch is
-  needed — a fork cannot nest, and forking forces background mode, which
-  changes the tool set and invalidates the very prefix that motivated the
-  fork. `do-in-parallel`-shaped fan-out from one parent has this shape by
+  needed — a fork cannot nest, and forking forces background mode. Whether
+  background mode also changes the tool set and invalidates the inherited
+  prefix is a host row, `fork_shares_cache`, never a premise: on Claude Code
+  2.1.302 a fork's first call read 99.8 % of its input from cache and kept the
+  parent's tool list (`agents/evidence/investigations/host-continuation-observations-2026-10.md`);
+  where the row is `false` or absent, assume the prefix is lost. `do-in-parallel`-shaped fan-out from one parent has this shape by
   construction (a known, unfixable upstream cost — see
   [`prompts/README.md`](prompts/README.md) § Prompt-cache discipline). NEVER
   encode "always fork" — that was proposed and cut (council 2026-07-30):
