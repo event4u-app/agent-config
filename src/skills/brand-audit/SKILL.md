@@ -34,17 +34,7 @@ Method skill. Inventories current brand expression across touchpoints and flags 
 
 ## Procedure
 
-1. **Gather the source of truth.** Run `./agent-config brand:status --json`
-   and take the sources it reports: the registered `tokens.json` (palette,
-   type scale, spacing) and the **`brand-voice`** context-spine slot at
-   `agents/context-spine/brand-voice.md` — three `{is, is_not, proof}`
-   attributes, the tone matrix, `avoid[]` and `claims[]`. Only a
-   schema-valid slot counts. Add the logo rules and strategy doc if they
-   exist. Consumer brand definition is authoritative; corpus defaults are
-   gap-fill only. **When the slot is absent or invalid, every voice
-   observation is `undefined`, never `drift`** — there is nothing to
-   diverge from, and the audit says so rather than auditing copy against
-   an invented voice.
+1. **Gather the source of truth.** Run `brand:status --json` and take the sources it reports: the registered `tokens.json` and the **`brand-voice`** slot (`agents/context-spine/brand-voice.md`) — three `{is, is_not, proof}` attributes, the tone matrix, `avoid[]`, `claims[]`; only a schema-valid slot counts. Add logo rules and the strategy doc if they exist. Consumer brand definition is authoritative; corpus defaults are gap-fill only. **No valid slot makes every voice observation `undefined`, never `drift`** — there is nothing to diverge from.
 2. **Inventory current expression per touchpoint.** Cover logo usage, colour palette, typography, voice/copy tone, imagery style, and iconography across the relevant surfaces (site, app, decks, marketing, docs).
 
    **Personal and company profile surfaces, including LinkedIn, X, and GitHub

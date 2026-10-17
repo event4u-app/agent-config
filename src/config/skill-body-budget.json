@@ -1,7 +1,7 @@
 {
   "owner": "maintainer",
   "review_by": "2027-04-12",
-  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
+  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down \u2014 check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
   "ceilings": {
     "accessibility-auditor": 11064,
     "activation-design": 8513,
@@ -27,14 +27,14 @@
     "blameless-post-mortem": 7809,
     "blast-radius-analyzer": 9668,
     "brand": 5866,
-    "brand-asset-generation": 5813,
-    "brand-audit": 6760,
+    "brand-asset-generation": 6287,
+    "brand-audit": 7103,
     "brand-identity": 5849,
-    "brand-strategy": 4554,
+    "brand-strategy": 5052,
     "brand-to-tokens": 5678,
     "bug-analyzer": 13634,
     "build-buy-partner": 9814,
-    "canvas-design": 7395,
+    "canvas-design": 7971,
     "character-consistency": 8555,
     "check-refs": 4188,
     "churn-prevention": 8014,
@@ -49,7 +49,7 @@
     "complexity-first-planning": 6243,
     "composer-packages": 4858,
     "condense-memory": 11220,
-    "content-funnel-design": 8627,
+    "content-funnel-design": 9037,
     "context-authoring": 9194,
     "context-document": 9921,
     "contract-review": 8685,
@@ -108,12 +108,12 @@
     "git-workflow": 20699,
     "github-ci": 4853,
     "grafana": 6477,
-    "gtm-launch": 8664,
+    "gtm-launch": 9074,
     "guideline-writing": 7015,
     "hiring-loop-design": 12107,
     "history-design": 4758,
-    "html-deck": 7747,
-    "humanizer": 14774,
+    "html-deck": 8141,
+    "humanizer": 15167,
     "iconography": 8205,
     "image-analyser": 6133,
     "image-creator": 5784,
@@ -159,7 +159,7 @@
     "livewire-architect": 6631,
     "llm-provider-knowledge": 7434,
     "logging-monitoring": 12016,
-    "logo-generation": 5313,
+    "logo-generation": 5650,
     "market-entry-analysis": 10016,
     "markitdown": 14433,
     "mcp": 9204,
@@ -167,7 +167,7 @@
     "md-language-check": 5084,
     "memory-consolidation": 21606,
     "merge-conflicts": 10878,
-    "messaging-architecture": 8363,
+    "messaging-architecture": 8773,
     "migration-architect": 4207,
     "mobile-e2e-strategy": 9361,
     "module-detect-on-the-fly": 8738,
@@ -231,7 +231,7 @@
     "recursive-verification": 9376,
     "refine-prompt": 13022,
     "refine-ticket": 17500,
-    "release-comms": 7789,
+    "release-comms": 8178,
     "repomix-packer": 5417,
     "requesting-code-review": 7845,
     "retention-loops": 8227,
@@ -299,7 +299,7 @@
     "video-director": 5818,
     "vision-articulation": 10198,
     "voc-extract": 6506,
-    "voice-and-tone-design": 8182,
+    "voice-and-tone-design": 11954,
     "wireframe": 6196,
     "workspace-link": 5931,
     "worktree-lifecycle": 9515
@@ -417,7 +417,7 @@
       "skill": "test-case-discovery",
       "old": 12325,
       "new": 12862,
-      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
+      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies \u2014 not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
     },
     {
       "skill": "security",
@@ -429,7 +429,7 @@
       "skill": "svg-authoring",
       "old": 17525,
       "new": 17818,
-      "reason": "The counter rule in § Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
+      "reason": "The counter rule in \u00a7 Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
     },
     {
       "skill": "deep-reading-analyst",
@@ -478,6 +478,78 @@
       "old": 9177,
       "new": 9286,
       "reason": "Killer 5 repeated the removed word-count split trigger; it now points at the single split statement in skill-writing. road-to-steps-the-skill-cannot-skip 2.1."
+    },
+    {
+      "skill": "brand-asset-generation",
+      "old": 5813,
+      "new": 6287,
+      "reason": "Step 2 stopped loading a token file by path and now takes colour, type and voice from the resolver's reported sources, labelling corpus fallback. road-to-a-brand-the-tree-can-check 6.2."
+    },
+    {
+      "skill": "brand-audit",
+      "old": 6760,
+      "new": 7103,
+      "reason": "Step 1 reads the brand through `brand:status --json` and the `brand-voice` slot, and states that no valid slot makes a voice observation `undefined`, never `drift`. road-to-a-brand-the-tree-can-check 6.1."
+    },
+    {
+      "skill": "brand-strategy",
+      "old": 4554,
+      "new": 5052,
+      "reason": "The voice section defers to `voice-and-tone-design` and the `brand-voice` slot instead of authoring a competing 3-5-trait list, which was the incompatible shape claim D4 records. road-to-a-brand-the-tree-can-check 4.3."
+    },
+    {
+      "skill": "canvas-design",
+      "old": 7395,
+      "new": 7971,
+      "reason": "A step 0 that reads the brand before the first colour or typeface choice; the skill carried no brand reference at all, which is defect D10. road-to-a-brand-the-tree-can-check 6.2."
+    },
+    {
+      "skill": "content-funnel-design",
+      "old": 8627,
+      "new": 9037,
+      "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
+    },
+    {
+      "skill": "gtm-launch",
+      "old": 8664,
+      "new": 9074,
+      "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
+    },
+    {
+      "skill": "html-deck",
+      "old": 7747,
+      "new": 8141,
+      "reason": "The slide step names the resolver beside the precedence rule it already cited, so the deck's tokens come from a reported source rather than a located file. road-to-a-brand-the-tree-can-check 6.2."
+    },
+    {
+      "skill": "humanizer",
+      "old": 14774,
+      "new": 15167,
+      "reason": "\"Registered brand voice\" in the fixed precedence now names the one file it means, and says the defaults apply when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 4.3 and 6.1."
+    },
+    {
+      "skill": "logo-generation",
+      "old": 5313,
+      "new": 5650,
+      "reason": "Step 3 asks the resolver for palette and type instead of testing for a token layer, and labels brief-derived values corpus-sourced. road-to-a-brand-the-tree-can-check 6.2."
+    },
+    {
+      "skill": "messaging-architecture",
+      "old": 8363,
+      "new": 8773,
+      "reason": "Declares the `brand-voice` slot and states what it does when the slot is absent or invalid. road-to-a-brand-the-tree-can-check 6.1."
+    },
+    {
+      "skill": "release-comms",
+      "old": 7789,
+      "new": 8178,
+      "reason": "Gains the spine read it had no voice reference for at all (D4) and states the absent case. road-to-a-brand-the-tree-can-check 6.1."
+    },
+    {
+      "skill": "voice-and-tone-design",
+      "old": 8182,
+      "new": 11954,
+      "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise."
     }
   ]
 }

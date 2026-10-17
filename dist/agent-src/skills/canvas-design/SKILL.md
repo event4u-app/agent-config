@@ -48,23 +48,13 @@ The work emphasizes: visual expression over text · original direction (no artis
 
 ### 0. Read the brand before choosing anything
 
-Before the first colour, typeface or voice decision, run the resolver —
-never a file test of your own, and never a remembered value:
-
-```bash
-./agent-config brand:status --json
-```
-
-Take values **only** from the `sources[]` it reports as valid: the
-registered `tokens.json` for colour, type and spacing, the `brand-voice`
-slot (`agents/context-spine/brand-voice.md`) for any text this asset
-carries. A file the resolver marks `invalid` or `shadowed` is not the
-brand; a file it never lists does not exist for this purpose.
-
-When the resolver reports `bare` — or reports nothing valid for the axis
-in hand — derive from the brief and the corpus, and **label every such
-value `corpus-sourced` in the output** so the reader can tell a brand
-decision from a gap-fill. Never present a corpus default as the brand.
+Before the first colour, typeface or voice decision run `./agent-config
+brand:status --json` — never a file test of your own, never a remembered
+value. Take values only from the `sources[]` it reports valid: `tokens.json`
+for colour, type and spacing, the `brand-voice` slot for any text the asset
+carries. A source it marks `invalid` or `shadowed` is not the brand. On a
+`bare` reading, or none valid for the axis in hand, derive from the brief and
+**label those values `corpus-sourced`** — a gap-fill is never the brand.
 
 ### 1. Brief intake
 

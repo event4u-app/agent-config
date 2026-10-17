@@ -284,10 +284,8 @@ export function readBackgroundTokens(projectRoot: string): AssetReading['backgro
         let doc: unknown;
         try {
             const text = fs.readFileSync(abs, 'utf8');
-            // The same validity `brand:status` reports with, not merely
-            // parseable JSON: a `{}` or an array at one path would otherwise
-            // be searched for backgrounds, find none, and let the renderer
-            // skip a valid file further down the resolver order.
+            // The validity `brand:status` reports, not merely parseable JSON:
+            // `findToken` takes a bare `value`, so a non-DTCG file would win.
             if (tokenDocumentError(text) !== null) continue;
             doc = JSON.parse(text);
         } catch {
