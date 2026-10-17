@@ -159,24 +159,40 @@ byte-identical to today apart from the unpriced line.*
 
 No-op by construction while no ceiling is set; 3.4 proves it.
 
-- [ ] **3.1 Reserve before the call, under a lock.** With a ceiling set, a
+- [x] **3.1 Reserve before the call, under a lock.** With a ceiling set, a
       billable seat takes the ledger lock (`src/scripts/_lib/fs_atomic.ts`
       family), re-reads, appends a `reserved` row with its estimate and `run_id`,
       and releases; `would_exceed` counts reservations without a terminal row.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t concurrent-councils-cannot-both-pass --reporter=verbose` -> /✓.*concurrent-councils-cannot-both-pass/
-- [ ] **3.2 Reconcile after it.** `completed` with the actual amount;
+      *Done 2026-10-17:* "a ceiling set" is read as `daily_limit_usd > 0` — the
+      session cap `max_total_usd` is per-process and never reads the shared
+      ledger, so it has no remainder two councils could share. The lock is a
+      new `O_EXCL` `<ledger>.lock` in `budget_guard.ts` rather than
+      `cli_call_budget.withStateLock`, because that one proceeds unlocked after
+      its wait; here a lock that cannot be taken refuses the seat. The wiring
+      lives in `ai_council/round_reservations.ts`, and `orchestrator.ts` shrank
+      by five lines. The code came before the cases; sensitivity was shown
+      afterwards by neutralising the open-reservation count, which turned both
+      `concurrent-councils-cannot-both-pass` cases red.
+- [x] **3.2 Reconcile after it.** `completed` with the actual amount;
       `released` when the call failed before the provider accepted it; an unknown
       outcome keeps its reservation until run end, then closes as `unreconciled`
       at the estimate — never zero. Terminal states never reopen.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t reservation-states-never-reopen --reporter=verbose` -> /✓.*reservation-states-never-reopen/
-- [ ] **3.3 A crashed run's reservation expires (D8).** A `reserved` row with no
+- [x] **3.3 A crashed run's reservation expires (D8).** A `reserved` row with no
       terminal row older than the hold window closes as `unreconciled` at its
       estimate on the next ledger read, so a killed run cannot hold budget
       forever and is never counted as zero.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t stale-reservation-expires-at-estimate --reporter=verbose` -> /✓.*stale-reservation-expires-at-estimate/
-- [ ] **3.4 No ceiling, no rows.** With every ceiling at 0 the ledger after a
+- [x] **3.4 No ceiling, no rows.** With every ceiling at 0 the ledger after a
       council run is byte-identical to today's.
       verify: `npx vitest run tests/scripts/ai_council/budget_guard.test.ts -t no-ceiling-no-reservation-rows --reporter=verbose` -> /✓.*no-ceiling-no-reservation-rows/
+      *Done 2026-10-17 (3.2–3.4):* "an unknown outcome" is an error matching a
+      timeout, reset or 5xx pattern with no tokens back; any other tokenless
+      error is `released`. "Run end" is the end of the round, the unit
+      `_run_round` owns. The hold is the seat's call timeout plus one hour.
+      `ledger_without_limit.test.ts`'s ceiling-set twin now asserts the
+      `reserved` → `completed` pair instead of one row.
 
 ## Phase 4 — A downgrade is on the record
 
@@ -391,7 +407,7 @@ no dispatcher resolves. That roadmap owns the fallthrough and its repair.
       not dispatched for it.
 - [x] **AC-2** No council run passes a person-set USD ceiling with an unpriced
       billable seat; every such seat appears in output and ledger.
-- [ ] **AC-3** Two concurrent councils under one set ceiling cannot both spend
+- [x] **AC-3** Two concurrent councils under one set ceiling cannot both spend
       the same remainder; a crashed run's reservation closes at its estimate.
 - [ ] **AC-4** Every size-fit downgrade names the configured model in the
       artefact.
