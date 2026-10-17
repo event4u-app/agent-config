@@ -246,12 +246,12 @@ describe('uninstall --purge — containment', () => {
         //
         // It does NOT prove the two-step CLI flow works. That flow was broken
         // when this case was written: `uninstall --global` deleted the
-        // LOCKFILE, so a second invocation found no tools and exited before
-        // reaching this function at all. Fixed 2026-10-17 as step 1.5 of
-        // `road-to-an-uninstall-that-only-removes-what-it-brought`, and
-        // pinned at CLI level in `uninstall_lockfile_retention.test.ts` —
-        // which is where any future regression of the flow will show, not
-        // here.
+        // LOCKFILE, so a second invocation found no tools and exited 1 before
+        // reaching this function at all — the source round's own expectation
+        // line predicted that `rc=1`. Fixed 2026-10-17 as step 1.5 of
+        // `road-to-an-uninstall-that-only-removes-what-it-brought` and pinned
+        // at CLI level in `uninstall_lockfile_retention.test.ts`, which is
+        // where a future regression of the flow will show, not here.
         const fx = makeFixture({ record: true });
         const foreignBefore = new Map(fx.foreign.map((f) => [f, digest(f)]));
 
