@@ -150,16 +150,27 @@ A split multiplies links. The gate that checks them comes first.
       `SKILL.md:350`, so delete that line and keep both sections in the body.
       *Done 2026-10-16.*
       verify: `grep -c 'output-and-pitfalls' src/skills/existing-ui-audit/SKILL.md` -> /^0$/
-- [ ] **1.4 A reference link into another pack declares it.** A link from one
+- [x] **1.4 A reference link into another pack declares it.** A link from one
       skill into another skill's `references/` across a pack boundary requires
       the target in `requires_skills`; the two cases in Context are resolved by
       the owner of each target file — add `requires_skills`, or move the shared
       file to where both packs ship it. `check_skill_requires` then holds the
       rest.
+      *Done 2026-10-17:* `check_skill_requires` now collects every link into
+      another skill's `references/` (from `SKILL.md` and `references/*.md`) and
+      fails one whose target pack the linking pack does not reach unless it is
+      a declared edge. `design-intelligence` → `fe-design` needs no edge:
+      `frontend-design` requires `engineering-base`. `design-review` →
+      `wireframe` could not take an edge (`engineering-base` does not reach
+      `frontend-design`), so the ledger schema — linked from nothing inside
+      `wireframe` — moved to `design-review/references/`, shipped by both packs.
       verify: `./scripts-run src/scripts/check_skill_requires` -> 0
-- [ ] **1.5 A table of contents is generated, not written.** A generator adds a
+- [x] **1.5 A table of contents is generated, not written.** A generator adds a
       heading index to every reference file over 100 lines and its `--check`
       mode is the drift check — zero author cost, warn-only.
+      *Done 2026-10-17:* `task sync` runs the generator first; 22 of 45
+      reference files got an index (three more over 100 lines carry fewer than
+      two `##` headings and need none).
       <!-- harvest:reference-file-table-of-contents -->
       verify: `./scripts-run src/scripts/generate_reference_toc --check` -> 0
 
@@ -190,29 +201,35 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 3 — A procedure as data, with no runtime
 
-- [ ] **3.1 The sidecar.** `src/skills/<skill>/procedure.yaml` beside `SKILL.md`
+- [x] **3.1 The sidecar.** `src/skills/<skill>/procedure.yaml` beside `SKILL.md`
       (the skill schema stays `additionalProperties: false`):
       `schema_version`, `brief` (goal, inputs, done_when) and an ordered list of
       `steps`, each with `id`, `file` (under `references/steps/`) and `exit`.
       No field names another skill — a `skill:` key per step would be the chain
       the skill-DAG lock rejects.
       verify: `npx vitest run tests/scripts/lint_skill_procedures.test.ts -t rejects-skill-field --reporter=verbose` -> /✓.*rejects-skill-field/
-- [ ] **3.2 Typed exits, never a command string.** `exit` is exactly one of
+- [x] **3.2 Typed exits, never a command string.** `exit` is exactly one of
       `exists: <path>`, `schema: <path>#<schema-id>`, `check: <id>` or
       `judgement`. A `check:` id names a deterministic, read-only, offline
       TypeScript function registered in `src/scripts/_lib/procedure_checks.ts`;
       a manifest can name only ids that exist there. No string from a manifest
       is ever executed.
       verify: `npx vitest run tests/scripts/lint_skill_procedures.test.ts -t rejects-command-string-exit --reporter=verbose` -> /✓.*rejects-command-string-exit/
-- [ ] **3.3 Skipping is a stated state.** An optional `when:` takes a predicate
+- [x] **3.3 Skipping is a stated state.** An optional `when:` takes a predicate
       from a closed vocabulary; a step not taken is recorded as
       `skipped: <reason>`, never silently.
       verify: `npx vitest run tests/scripts/lint_skill_procedures.test.ts -t unknown-when-predicate --reporter=verbose` -> /✓.*unknown-when-predicate/
-- [ ] **3.4 The lint.** `lint_skill_procedures`: every `file` exists under
+- [x] **3.4 The lint.** `lint_skill_procedures`: every `file` exists under
       `references/steps/` and is linked from the head; ids are unique; exit
       types are valid; `when:` predicates are known; no path escapes the skill
       directory. It also reports — never fails on — the share of steps whose exit
       is `judgement`.
+      *Done 2026-10-17:* `lint_skill_procedures` + `_lib/procedure_checks.ts`
+      (registry starts empty; a check lands with the pilot step that needs it).
+      `when:` vocabulary is `file-exists: <path>` and `file-absent: <path>`.
+      Not yet a CI step: no sidecar exists before Phase 4, and registering a
+      gate in `gate-coverage.yml` needs a ratification record — registration
+      lands with the first sidecar.
       verify: `./scripts-run src/scripts/lint_skill_procedures` -> 0
 
 ## Phase 4 — Three pilots, split without losing a line
@@ -239,10 +256,13 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 5 — The cursor in the `/work` engine (default-off)
 
-- [ ] **5.1 An order per input kind.** `dispatch()` takes an optional step
+- [x] **5.1 An order per input kind.** `dispatch()` takes an optional step
       order; the default stays `STEP_ORDER`, so every existing directive set and
       the resume contract are untouched. This is the roadmap-level decision
       `dispatcher.ts:64-67` asks for.
+      *Done 2026-10-17:* a fourth optional `order` parameter, refused when empty
+      or repeated; the full `tests/scripts/work_engine` suite (92 files, 1,001
+      tests) passes unchanged.
       verify: `npx vitest run tests/scripts/work_engine/dispatcher.test.ts --reporter=verbose` -> /✓/
 - [ ] **5.2 `input.kind: procedure`.** Added to `KNOWN_INPUT_KINDS`; its
       directive set is built from the sidecar. One call checks the exit of step
