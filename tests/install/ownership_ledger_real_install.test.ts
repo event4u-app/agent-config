@@ -113,7 +113,10 @@ function projectWithSettings(prefix: string): string {
 }
 
 /** `doctor --ci` run from `cwd` against `home`: exit code and parsed payload. */
-function doctor(home: string, cwd: string): { status: number | null; modified: string[]; raw: string } {
+function doctor(
+    home: string,
+    cwd: string,
+): { status: number | null; modified: string[]; failing: string[]; raw: string } {
     const r = spawnSync(TSX, [DOCTOR, '--ci'], {
         cwd,
         encoding: 'utf8',
@@ -129,13 +132,24 @@ function doctor(home: string, cwd: string): { status: number | null; modified: s
         },
     });
     let modified: string[] = [];
+    // `--ci` exits 1 on drift OR on any check at `fail`, so the exit code alone
+    // cannot say WHICH of the two fired. The failing-check names are what lets
+    // a case assert that the preserved file is the reason rather than a
+    // coincidence on the same tree.
+    let failing: string[] = [];
     try {
-        const payload = JSON.parse(r.stdout) as { modified?: Array<{ path?: string }> };
+        const payload = JSON.parse(r.stdout) as {
+            modified?: Array<{ path?: string }>;
+            checks?: Array<{ name?: string; id?: string; status?: string }>;
+        };
         modified = (payload.modified ?? []).map((m) => String(m.path ?? ''));
+        failing = (payload.checks ?? [])
+            .filter((c) => c.status === 'fail')
+            .map((c) => String(c.id ?? c.name ?? '?'));
     } catch {
-        /* an unparseable payload leaves `modified` empty and fails the case loudly */
+        /* an unparseable payload leaves both lists empty and fails the case loudly */
     }
-    return { status: r.status, modified, raw: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
+    return { status: r.status, modified, failing, raw: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
 }
 
 describe('step 1.5 — the assertions compare bytes, not existence or text', () => {
@@ -258,7 +272,7 @@ describe('ownership record — a global install from anywhere keeps a user edit'
 
 describe('step 3.1 — the installer and doctor say the same thing about one tree', () => {
     it(
-        'installer rc=3 and doctor --ci non-zero naming the preserved file, on the same tree',
+        'installer rc=3 and doctor --ci exit 1 naming the preserved file, on the same tree',
         { timeout: 600_000 },
         () => {
             const home = mkTmp('own-ledger-home-');
@@ -266,8 +280,23 @@ describe('step 3.1 — the installer and doctor say the same thing about one tre
             const first = install(home, project);
             expect(first.status, first.out).toBe(0);
             const target = aDeployedRule(home);
+            // THE BASELINE IS HALF THE PIN, and measuring it corrected what
+            // this case was taken to prove. `doctor --ci` already exits 1 on
+            // this freshly installed throwaway HOME, because the `hook-wiring`
+            // check fails there — a temp HOME carries no host configuration to
+            // wire into. So `after.status === 1` on its own cannot tell
+            // "doctor exits 1 BECAUSE of the preserved file" from "doctor exits
+            // 1 on this tree anyway", and `1` is a code the register gives a
+            // deliberately broad meaning.
+            //
+            // The discriminating facts are therefore captured explicitly: the
+            // `modified` list gains the target, and the failing-CHECK set gains
+            // exactly `bridge-drift` while losing nothing. That delta is what
+            // says doctor noticed THIS edit, which an exit code of 1 against a
+            // baseline of 1 cannot say on its own.
             const before = doctor(home, project);
             expect(before.modified, before.raw).toEqual([]);
+            const baselineFailing = [...before.failing].sort();
 
             fs.writeFileSync(target, `${fs.readFileSync(target, 'utf8')}\nmy own note\n`);
             const second = install(home, project);
@@ -277,9 +306,15 @@ describe('step 3.1 — the installer and doctor say the same thing about one tre
             // installer had just called not-current was invisible to it.
             const after = doctor(home, project);
             expect(after.modified, after.raw).toContain(target);
+            const gained = [...after.failing].sort().filter((c) => !baselineFailing.includes(c));
+            const lost = baselineFailing.filter((c) => !after.failing.includes(c));
+            expect(gained, after.raw).toEqual(['bridge-drift']);
+            expect(lost, after.raw).toEqual([]);
             // The exact code, not merely non-zero: `docs/contracts/exit-code-register.md`
             // publishes this pair as `init` 3 / `doctor` 1, and a published
-            // code nothing pins is a code that can drift to 2 unnoticed.
+            // code nothing pins is a code that can drift to 2 unnoticed. On
+            // this fixture it corroborates rather than discriminates; the two
+            // assertions above are what carry the causation.
             expect(after.status).toBe(1);
         },
     );

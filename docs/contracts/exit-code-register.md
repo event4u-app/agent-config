@@ -56,8 +56,9 @@ keep-beta-until: 2027-01-14
 > exact code, by driving both surfaces over one tree; this generator
 > checks that the register still documents each paired code and that
 > the test still carries each assertion, so deleting or commenting one
-> out fails the build. A test that is skipped rather than deleted is
-> caught by the test run, not here.
+> out fails the build. Two things it does not catch: a test that is
+> skipped rather than deleted, and an assertion that moved to another
+> case in the same file. The test run covers the first.
 
 | State | Surfaces | Asserted in |
 |---|---|---|

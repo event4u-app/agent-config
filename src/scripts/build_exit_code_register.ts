@@ -82,9 +82,15 @@ export interface PairSurface {
  * check runs over `strip()`ped source, so commenting an assertion out fails
  * the build rather than passing it.
  *
- * What neither half catches: a test that is SKIPPED rather than deleted still
- * contains its literals and still documents its codes. The vitest run is what
- * notices that, and nothing here is a substitute for it.
+ * What neither half catches, stated in full because a named blind spot is the
+ * only honest form of a check this narrow:
+ *
+ * - a test that is SKIPPED rather than deleted still contains its literals and
+ *   still documents its codes. The vitest run notices that; nothing here does.
+ * - the assertion match is file-wide, so it proves each literal is SOMEWHERE in
+ *   the named file, not that both sit in one `it` driving one tree. Its
+ *   sensitivity rests on each literal being unique in that file, which is a
+ *   property of today's file rather than an invariant.
  */
 export interface SurfacePair {
     /** The single state, in a phrase a consumer would recognise. */
@@ -260,18 +266,25 @@ export function checkPairs(
 }
 
 /**
- * `pairs` defaults to the production set ONLY for the production command set.
+ * `pairs` defaults to the production set, unconditionally.
  *
- * A caller that supplies its own `commands` is working against a fixture tree
- * that cannot satisfy a real pair, and inheriting `PAIRS` there made every
- * such call fail with an error about a file the fixture never claimed to have.
- * The default is scoped rather than removed so the production path still gets
- * the pairs without naming them.
+ * A fixture caller passing its own `commands` must also pass `pairs: []`, and
+ * the cost of forgetting is an error about a file the fixture never claimed to
+ * have — loud, and in the wrong place, but loud.
+ *
+ * That is deliberate, and it is the second answer to this question. The first
+ * scoped the default with `commands === COMMANDS ? PAIRS : []`, which spared
+ * fixture callers the confusing error and introduced a worse failure: a caller
+ * holding a non-identical array — `[...COMMANDS]`, a filtered set, a future
+ * `--only <verb>` — would have lost the pair check silently, with no error and
+ * no red case. A gate that disables itself on reference identity is fail-open,
+ * and a confusing error beats a silent one. `main`'s path keeping the check is
+ * pinned by a test rather than left to this default.
  */
 export function build(
     root: string,
     commands: readonly CommandSpec[] = COMMANDS,
-    pairs: readonly SurfacePair[] = commands === COMMANDS ? PAIRS : [],
+    pairs: readonly SurfacePair[] = PAIRS,
 ): Register {
     const constants = exitConstants(root);
     const errors: string[] = [];
@@ -360,8 +373,9 @@ export function render(reg: Register): string {
             '> exact code, by driving both surfaces over one tree; this generator',
             '> checks that the register still documents each paired code and that',
             '> the test still carries each assertion, so deleting or commenting one',
-            '> out fails the build. A test that is skipped rather than deleted is',
-            '> caught by the test run, not here.',
+            '> out fails the build. Two things it does not catch: a test that is',
+            '> skipped rather than deleted, and an assertion that moved to another',
+            '> case in the same file. The test run covers the first.',
             '',
             '| State | Surfaces | Asserted in |',
             '|---|---|---|',

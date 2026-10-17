@@ -142,11 +142,33 @@ describe('exit-code register — pairs that must agree', () => {
         }
     });
 
-    it('a fixture command set does not inherit the production pairs', () => {
+    it('`main``s path keeps the pair check — a fixture missing the test reds it', () => {
+        // Finding 2 of the second review: the first fix disabled the check
+        // when `commands` was not reference-identical to `COMMANDS`, which is
+        // fail-open. The default is unconditional now, and this is the pin
+        // that the production entry point still runs it — the property the
+        // identity default was silently providing and nothing was asserting.
+        const base = {
+            'src/scripts/install': 'exit 0\nexit 1\nexit 2\n',
+            'src/scripts/install.ts': '',
+            'src/install/conflictTracker.ts': 'return rc === 0 ? EXIT_COMPLETED_WITH_CONFLICTS : rc;\n',
+            'src/install/preserve.ts': 'export const EXIT_COMPLETED_WITH_CONFLICTS = 3;\n',
+            'src/scripts/_cli/cmd_sync.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\nreturn rc;\n',
+            'src/scripts/_cli/cmd_doctor.ts': 'return 0;\nreturn 1;\nreturn 2;\n',
+            'src/scripts/_cli/_doctor_strict.ts': '',
+            'src/scripts/_cli/cmd_uninstall.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\n',
+        };
+        const withoutTest = tree({ ...base, [OUT_REL]: 'whatever\n' });
+        vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        expect(main([], withoutTest)).toBe(1);
+        expect(build(withoutTest).errors.join(' ')).toContain('ownership_ledger_real_install.test.ts');
+    });
+
+    it('a fixture command set opts out of the pairs explicitly', () => {
         const root = tree({ 'a.ts': 'return 0;\n' });
         const only = [{ verb: 'a', sources: ['a.ts'], meanings: { 0: 'ok' } }];
-        expect(build(root, only).errors).toEqual([]);
-        expect(build(root, only).pairs).toEqual([]);
+        expect(build(root, only, []).errors).toEqual([]);
+        expect(build(root, only, []).pairs).toEqual([]);
     });
 });
 
@@ -166,14 +188,14 @@ describe('exit-code register — the scan', () => {
 
     it('fails on a code the scan finds with no meaning', () => {
         const root = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\nreturn 6;\n' });
-        expect(build(root, spec({ 0: 'ok' })).errors).toEqual([
+        expect(build(root, spec({ 0: 'ok' }), []).errors).toEqual([
             'b: returns 6 (b.ts) but the register gives it no meaning',
         ]);
     });
 
     it('fails on a meaning for a code nothing returns', () => {
         const root = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\n' });
-        expect(build(root, spec({ 0: 'ok', 9: 'nine' })).errors).toEqual([
+        expect(build(root, spec({ 0: 'ok', 9: 'nine' }), []).errors).toEqual([
             'b: the register documents 9, which no scanned source returns',
         ]);
     });
@@ -181,9 +203,9 @@ describe('exit-code register — the scan', () => {
     it('unions an inherited command`s codes only while the forwarding line exists', () => {
         const inherits = [{ from: 'a', file: 'b.ts', fragment: 'return rc;' }];
         const forwarding = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\nreturn rc;\n' });
-        expect(build(forwarding, spec({ 0: 'ok', 4: 'forwarded' }, inherits)).errors).toEqual([]);
+        expect(build(forwarding, spec({ 0: 'ok', 4: 'forwarded' }, inherits), []).errors).toEqual([]);
         const gone = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\n' });
-        expect(build(gone, spec({ 0: 'ok', 4: 'forwarded' }, inherits)).errors).toContain(
+        expect(build(gone, spec({ 0: 'ok', 4: 'forwarded' }, inherits), []).errors).toContain(
             'b: inherits a through `return rc;` in b.ts, which is no longer there',
         );
     });
