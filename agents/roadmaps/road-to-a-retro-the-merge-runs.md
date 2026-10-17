@@ -129,25 +129,38 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Phase 1 — Facts first (deterministic, no model)
 
-- [ ] **1.1 Facts for a PR.** `retro_facts --pr <N>` reads the drain summary
+- [x] **1.1 Facts for a PR.** `retro_facts --pr <N>` reads the drain summary
       line, CI runs and red-to-green iterations, review threads, repair commits
       and a later revert, via `forge_reader`. Every field is
       `measured | missing | not-applicable`; never 0 for missing.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t pr-facts-never-invent-a-number --reporter=verbose` -> /✓.*pr-facts-never-invent-a-number/
-- [ ] **1.2 Facts for a session.** The same for a session tag: end-of-life
+      *Done 2026-10-17: `src/scripts/retro_facts.ts --pr <N>`. A later revert
+      matches the merge SHA only; in-PR reverts count separately. More runs than
+      one page read as `missing`, not as a short count.*
+- [x] **1.2 Facts for a session.** The same for a session tag: end-of-life
       counters, interruptions, self-repair records in its time window, its
       branch and PR when known.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t session-facts-join-on-tag --reporter=verbose` -> /✓.*session-facts-join-on-tag/
+      *Done 2026-10-17: `--session <id>` or `--tag <tag>`. End-of-life state is
+      keyed by a hash of the id, so a tag alone reports it `missing`. Branch
+      stays `missing`: nothing in the tree records a session's branch; the PR is
+      not joined either until a queue pointer (1.3) carries it.*
 - [ ] **1.3 Worktree sessions are not lost (F7).** The fact reader enumerates
       every worktree of the repository (`git worktree list`) and reads its
       session state; the session-end hook additionally appends a one-line
       pointer to the git-common-dir queue, so a removed worktree leaves its unit
       behind.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t worktree-session-is-seen-from-main --reporter=verbose` -> /✓.*worktree-session-is-seen-from-main/
-- [ ] **1.4 Review and transcript text is data.** It passes the existing
+      *Open 2026-10-17: the reader half is built and its test is green. The
+      session-end hook half stays open: it changes a hook consumers receive
+      (owner-reserved) and writes into the queue of 3.1, which does not exist
+      yet.*
+- [x] **1.4 Review and transcript text is data.** It passes the existing
       injection scan before any model sees it; an instruction to the agent inside
       a review comment appears as a quoted datum and changes no routing.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t review-instruction-is-data --reporter=verbose` -> /✓.*review-instruction-is-data/
+      *Done 2026-10-17: review comments and bodies are quoted (500 chars) with
+      the scanner's verdict; no transcript is read (D12).*
 
 ## Phase 2 — `/retro` by hand
 
