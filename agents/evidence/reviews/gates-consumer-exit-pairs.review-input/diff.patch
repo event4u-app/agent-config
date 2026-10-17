@@ -1,0 +1,373 @@
+diff --git a/agents/roadmaps/road-to-gates-that-run-where-the-consumer-stands.md b/agents/roadmaps/road-to-gates-that-run-where-the-consumer-stands.md
+index dada9faff26759afedf90bc928483cbfb93995da..e666dbcd6644f3acea132cd7015cb9409baff3d5 100644
+--- a/agents/roadmaps/road-to-gates-that-run-where-the-consumer-stands.md
++++ b/agents/roadmaps/road-to-gates-that-run-where-the-consumer-stands.md
+@@ -125,22 +125,28 @@ consumer behaviour points at something that executes.
+       fails the run. The drift check is
+       `tests/scripts/build_exit_code_register.test.ts`, which runs in the CI
+       vitest suite — no workflow or gate-coverage row was added for it.
+-- [ ] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
++- [x] **3.2 Pin the pairs that must agree.** Where two surfaces report on one
+       state — installer `rc=3` and `doctor --ci` — the register records the
+       pair and a test asserts it.
+       verify: the assertion fails if either side changes alone.
+-      **Open, read 2026-10-16:** the pair does not exist yet, so there is
+-      nothing to pin. No `doctor` check reads the preserved-sidecar state —
+-      `.agent-config.new` / `SIDECAR_SUFFIX` occur only under `src/install/`,
+-      `src/scripts/install.ts` and the wizard UI — so on a tree where the
+-      installer returned `3`, `doctor --ci` exits `0`. Closing the step means
+-      giving `doctor` a check that fails on that state, which changes what
+-      `doctor --ci` returns for consumers already scripting against it; the
+-      `doctor-exit-contract` decision of 2026-09-03 (recorded in
+-      `src/scripts/_cli/_doctor_strict.ts`) kept that contract stable and put
+-      new failing behaviour behind `--strict`. Whether the preserved state
+-      fails `--ci`, fails only `--strict`, or warns is a consumer-facing exit
+-      decision this lane did not take.
++      **Was open, read 2026-10-16:** the pair did not exist, and no `doctor`
++      check read the preserved state, so on a tree where the installer
++      returned `3`, `doctor --ci` exited `0`. Giving `doctor` such a check was
++      a consumer-facing exit decision that lane did not take.
++      **Closed 2026-10-17: the sibling took it.** The ownership-record
++      roadmap's step 3.1 landed `src/scripts/_cli/doctor_ownership_ledger.ts`,
++      which reports every ledger file the installer would preserve as
++      `modified`, and
++      `tests/install/ownership_ledger_real_install.test.ts` § step 3.1 runs
++      both surfaces over one tree. The pair exists; the premise of the note
++      above is spent. What was still missing was the register half, and that
++      is what this step now lands: `build_exit_code_register` carries a
++      `PAIRS` table, publishes a *Pairs that must agree* section, and
++      `checkPairs` fails the build when either verb stops returning its side
++      of the pair OR when the named test loses the assertion. The drift test
++      asserts `errors` is empty, so either drift reds CI. Sensitivity
++      observed: neutralising `checkPairs` turns three of the four new cases
++      red.
+ 
+ ## Phase 4 — Point the claims at something that runs
+ 
+@@ -174,6 +180,28 @@ consumer behaviour points at something that executes.
+       revisit condition (a third evidence class) is the shape of the real fix.
+       Doing (c) by mass status change was declined in this lane for that
+       reason; doing (a) and (b) waits on harness cases.
++      **Re-read 2026-10-17, still open, and the structure is unchanged.**
++      `./scripts-run src/scripts/build_proof` exits 0, so the verify line is
++      satisfied and the step is not: that line measures the ledger's internal
++      consistency, not whether a claim about a consumer's machine is backed by
++      something that runs there.
++      One candidate was examined and **declined**.
++      `tests/install/uninstall_purge_containment.test.ts` now exists in the
++      harness and proves that uninstall leaves every unrecorded file byte for
++      byte, so `surgical-uninstall` could be given an `exec:` into it and would
++      read as harness-backed. It was not: that suite proves the **file**-level
++      half, while the claim's load-bearing half is **key**-level — "removes only
++      its own keys from a shared host config … inside a shared `hooks.<event>`
++      array" — which only `tests/lib/json_pointers.test.ts` and
++      `host_hook_merge.test.ts` cover. Repointing it would have moved the id out
++      of this step's residue while leaving the claim backed by the wrong thing,
++      which is exactly the defect L2 names.
++      **The step is structurally unclosable by this file**, and that is an
++      authoring defect rather than undone work: (a) and (b) need harness cases
++      and this file's own scope note gives those to the sibling roadmaps; (c)
++      needs the third evidence class D5's `revisit if` already names. The honest
++      next move is one of those two, taken where it belongs — not a ledger edit
++      here.
+ - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
+       one-paragraph rule: a reported consumer defect lands as a failing case
+       in `tests/install/` before its fix.
+diff --git a/docs/contracts/exit-code-register.md b/docs/contracts/exit-code-register.md
+index a82decc39b871d1ba0a76d40ad1f6557097f0ff6..d654befff785b7d3d13f5274af5bc19045c6c70b 100644
+--- a/docs/contracts/exit-code-register.md
++++ b/docs/contracts/exit-code-register.md
+@@ -47,3 +47,15 @@ keep-beta-until: 2027-01-14
+ | `0` | removed what it owned, or there was nothing to remove | `src/scripts/_cli/cmd_uninstall.ts` |
+ | `1` | no lockfile and no `--force`, or a removal was refused | `src/scripts/_cli/cmd_uninstall.ts` |
+ | `2` | usage error | `src/scripts/_cli/cmd_uninstall.ts` |
++
++## Pairs that must agree
++
++> Two surfaces reporting on one state. A consumer who runs only one of
++> them is entitled to the same answer, so the pair is a published
++> contract rather than a coincidence: the generator checks both codes
++> against the scan and checks that the named test still asserts them
++> together, and fails if either side changes alone.
++
++| State | Surfaces | Asserted in |
++|---|---|---|
++| the install preserved a user-modified managed file, so the active installation is stale | `init` → `3` · `doctor` → `1` | `tests/install/ownership_ledger_real_install.test.ts` |
+diff --git a/src/scripts/build_exit_code_register.ts b/src/scripts/build_exit_code_register.ts
+index 9abc04c343cd13b66df0f13591eb4532e731dfb6..249440a365bcba7e24bd1ed003715e7f4094b58d 100644
+--- a/src/scripts/build_exit_code_register.ts
++++ b/src/scripts/build_exit_code_register.ts
+@@ -53,6 +53,52 @@ export interface CommandSpec {
+     readonly inherits?: readonly Inherit[];
+ }
+ 
++/** One surface's half of a pair: the command, and the code it gives that state. */
++export interface PairSurface {
++    readonly verb: string;
++    readonly code: number;
++}
++
++/**
++ * Two surfaces that report on ONE state, and the test that runs both over one
++ * tree.
++ *
++ * A consumer scripting against two commands needs to know which of their codes
++ * describe the same condition, because a pair that drifts apart is worse than
++ * either code being wrong alone: the install says the tree is stale and the
++ * doctor says it is fine, and the consumer believes whichever they happened to
++ * run. The register names the pair so the agreement is a published contract
++ * rather than a coincidence of two implementations.
++ *
++ * Both halves are checked against the scan, so a verb that stops returning its
++ * side of the pair fails the build; and the asserting test is checked for a
++ * literal of its own, so deleting the assertion fails it too. That is what
++ * makes "the assertion fails if either side changes alone" true of the
++ * generator and not only of the test.
++ */
++export interface SurfacePair {
++    /** The single state, in a phrase a consumer would recognise. */
++    readonly state: string;
++    readonly surfaces: readonly [PairSurface, PairSurface];
++    /** The test that exercises both surfaces against one tree. */
++    readonly assertedIn: string;
++    /** A literal from that test, so its removal is a build failure. */
++    readonly fragment: string;
++}
++
++export const PAIRS: readonly SurfacePair[] = [
++    {
++        state:
++            'the install preserved a user-modified managed file, so the active installation is stale',
++        surfaces: [
++            { verb: 'init', code: 3 },
++            { verb: 'doctor', code: 1 },
++        ],
++        assertedIn: 'tests/install/ownership_ledger_real_install.test.ts',
++        fragment: 'installer rc=3 and doctor --ci non-zero naming the preserved file, on the same tree',
++    },
++];
++
+ export const COMMANDS: readonly CommandSpec[] = [
+     {
+         verb: 'init',
+@@ -153,10 +199,45 @@ export interface Row {
+ 
+ export interface Register {
+     readonly rows: ReadonlyMap<string, readonly Row[]>;
++    readonly pairs: readonly SurfacePair[];
+     readonly errors: readonly string[];
+ }
+ 
+-export function build(root: string, commands: readonly CommandSpec[] = COMMANDS): Register {
++/**
++ * Check each pair against what the scan actually found and against the test
++ * that asserts it. Errors, never silence: a pair whose halves have drifted is
++ * the condition the section exists to catch.
++ */
++export function checkPairs(
++    root: string,
++    rows: ReadonlyMap<string, readonly Row[]>,
++    pairs: readonly SurfacePair[],
++): string[] {
++    const errors: string[] = [];
++    for (const pair of pairs) {
++        for (const s of pair.surfaces) {
++            const codes = rows.get(s.verb);
++            if (codes === undefined) {
++                errors.push(`pair "${pair.state}": names \`${s.verb}\`, which the register does not cover`);
++            } else if (!codes.some((r) => r.code === s.code)) {
++                errors.push(`pair "${pair.state}": \`${s.verb}\` no longer returns ${s.code}`);
++            }
++        }
++        const abs = path.join(root, pair.assertedIn);
++        if (!fs.existsSync(abs)) {
++            errors.push(`pair "${pair.state}": asserted in ${pair.assertedIn}, which does not exist`);
++        } else if (!fs.readFileSync(abs, 'utf8').includes(pair.fragment)) {
++            errors.push(`pair "${pair.state}": ${pair.assertedIn} no longer contains \`${pair.fragment}\``);
++        }
++    }
++    return errors;
++}
++
++export function build(
++    root: string,
++    commands: readonly CommandSpec[] = COMMANDS,
++    pairs: readonly SurfacePair[] = PAIRS,
++): Register {
+     const constants = exitConstants(root);
+     const errors: string[] = [];
+     const own = new Map<string, Map<number, string[]>>();
+@@ -204,7 +285,8 @@ export function build(root: string, commands: readonly CommandSpec[] = COMMANDS)
+                 .map((code) => ({ code, meaning: cmd.meanings[code] as string, emittedIn: byCode.get(code) ?? [] })),
+         );
+     }
+-    return { rows, errors };
++    errors.push(...checkPairs(root, rows, pairs));
++    return { rows, pairs, errors };
+ }
+ 
+ export function render(reg: Register): string {
+@@ -233,6 +315,25 @@ export function render(reg: Register): string {
+         }
+         out.push('');
+     }
++    if (reg.pairs.length > 0) {
++        out.push(
++            '## Pairs that must agree',
++            '',
++            '> Two surfaces reporting on one state. A consumer who runs only one of',
++            '> them is entitled to the same answer, so the pair is a published',
++            '> contract rather than a coincidence: the generator checks both codes',
++            '> against the scan and checks that the named test still asserts them',
++            '> together, and fails if either side changes alone.',
++            '',
++            '| State | Surfaces | Asserted in |',
++            '|---|---|---|',
++        );
++        for (const p of reg.pairs) {
++            const surfaces = p.surfaces.map((s) => `\`${s.verb}\` → \`${s.code}\``).join(' · ');
++            out.push(`| ${p.state} | ${surfaces} | \`${p.assertedIn}\` |`);
++        }
++        out.push('');
++    }
+     return `${out.join('\n').trimEnd()}\n`;
+ }
+ 
+diff --git a/tests/scripts/build_exit_code_register.test.ts b/tests/scripts/build_exit_code_register.test.ts
+index 888a42d7b4cd6d311743e2eeeb0fcf6e04fb0d06..4918f1e902ff9c6d4ec24fb4532230eca75ee73b 100644
+--- a/tests/scripts/build_exit_code_register.test.ts
++++ b/tests/scripts/build_exit_code_register.test.ts
+@@ -10,7 +10,18 @@ import * as path from 'node:path';
+ 
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+ 
+-import { OUT_REL, build, main, render, scanCodes, type CommandSpec } from '../../src/scripts/build_exit_code_register.js';
++import {
++    OUT_REL,
++    PAIRS,
++    build,
++    checkPairs,
++    main,
++    render,
++    scanCodes,
++    type CommandSpec,
++    type Row,
++    type SurfacePair,
++} from '../../src/scripts/build_exit_code_register.js';
+ 
+ const ROOT = path.resolve(__dirname, '..', '..');
+ const made: string[] = [];
+@@ -45,6 +56,72 @@ describe('exit-code register — drift', () => {
+     });
+ });
+ 
++describe('exit-code register — pairs that must agree', () => {
++    it('publishes the installer/doctor pair against the real tree', () => {
++        const reg = build(ROOT);
++        expect(reg.errors).toEqual([]);
++        const pair = reg.pairs.find((p) => p.surfaces.some((s) => s.verb === 'init' && s.code === 3));
++        expect(pair?.surfaces.map((s) => `${s.verb}:${s.code}`)).toEqual(['init:3', 'doctor:1']);
++        expect(fs.existsSync(path.join(ROOT, pair?.assertedIn ?? ''))).toBe(true);
++        expect(render(reg)).toContain('## Pairs that must agree');
++    });
++
++    const rows = (spec: Record<string, number[]>): ReadonlyMap<string, readonly Row[]> =>
++        new Map(
++            Object.entries(spec).map(([verb, codes]) => [
++                verb,
++                codes.map((code) => ({ code, meaning: '', emittedIn: [] })),
++            ]),
++        );
++
++    const pair: SurfacePair = {
++        state: 'one state',
++        surfaces: [
++            { verb: 'init', code: 3 },
++            { verb: 'doctor', code: 1 },
++        ],
++        assertedIn: 'the.test.ts',
++        fragment: 'both surfaces on one tree',
++    };
++
++    it('fails when ONE side stops returning its code, and names which', () => {
++        const root = tree({ 'the.test.ts': 'both surfaces on one tree\n' });
++        expect(checkPairs(root, rows({ init: [0, 3], doctor: [0, 1] }), [pair])).toEqual([]);
++        expect(checkPairs(root, rows({ init: [0], doctor: [0, 1] }), [pair])).toEqual([
++            'pair "one state": `init` no longer returns 3',
++        ]);
++        expect(checkPairs(root, rows({ init: [0, 3], doctor: [0] }), [pair])).toEqual([
++            'pair "one state": `doctor` no longer returns 1',
++        ]);
++    });
++
++    it('fails when the asserting test loses the assertion, or the file', () => {
++        const emptied = tree({ 'the.test.ts': 'it asserts something else now\n' });
++        expect(checkPairs(emptied, rows({ init: [3], doctor: [1] }), [pair])).toEqual([
++            'pair "one state": the.test.ts no longer contains `both surfaces on one tree`',
++        ]);
++        const gone = tree({ 'other.ts': '' });
++        expect(checkPairs(gone, rows({ init: [3], doctor: [1] }), [pair])).toEqual([
++            'pair "one state": asserted in the.test.ts, which does not exist',
++        ]);
++    });
++
++    it('fails on a pair naming a verb the register does not cover', () => {
++        const root = tree({ 'the.test.ts': 'both surfaces on one tree\n' });
++        expect(checkPairs(root, rows({ init: [3] }), [pair])).toEqual([
++            'pair "one state": names `doctor`, which the register does not cover',
++        ]);
++    });
++
++    it('every shipped pair names a test that exists and still asserts it', () => {
++        for (const p of PAIRS) {
++            const abs = path.join(ROOT, p.assertedIn);
++            expect(fs.existsSync(abs), p.assertedIn).toBe(true);
++            expect(fs.readFileSync(abs, 'utf8'), p.assertedIn).toContain(p.fragment);
++        }
++    });
++});
++
+ describe('exit-code register — the scan', () => {
+     it('reads literal, ternary, argparse, bash and named-constant exits, not comments', () => {
+         const constants = new Map([['EXIT_SEVEN', 7]]);
+@@ -61,14 +138,14 @@ describe('exit-code register — the scan', () => {
+ 
+     it('fails on a code the scan finds with no meaning', () => {
+         const root = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\nreturn 6;\n' });
+-        expect(build(root, spec({ 0: 'ok' })).errors).toEqual([
++        expect(build(root, spec({ 0: 'ok' }), []).errors).toEqual([
+             'b: returns 6 (b.ts) but the register gives it no meaning',
+         ]);
+     });
+ 
+     it('fails on a meaning for a code nothing returns', () => {
+         const root = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\n' });
+-        expect(build(root, spec({ 0: 'ok', 9: 'nine' })).errors).toEqual([
++        expect(build(root, spec({ 0: 'ok', 9: 'nine' }), []).errors).toEqual([
+             'b: the register documents 9, which no scanned source returns',
+         ]);
+     });
+@@ -76,9 +153,9 @@ describe('exit-code register — the scan', () => {
+     it('unions an inherited command`s codes only while the forwarding line exists', () => {
+         const inherits = [{ from: 'a', file: 'b.ts', fragment: 'return rc;' }];
+         const forwarding = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\nreturn rc;\n' });
+-        expect(build(forwarding, spec({ 0: 'ok', 4: 'forwarded' }, inherits)).errors).toEqual([]);
++        expect(build(forwarding, spec({ 0: 'ok', 4: 'forwarded' }, inherits), []).errors).toEqual([]);
+         const gone = tree({ 'a.ts': 'return 0;\nreturn 4;\n', 'b.ts': 'return 0;\n' });
+-        expect(build(gone, spec({ 0: 'ok', 4: 'forwarded' }, inherits)).errors).toContain(
++        expect(build(gone, spec({ 0: 'ok', 4: 'forwarded' }, inherits), []).errors).toContain(
+             'b: inherits a through `return rc;` in b.ts, which is no longer there',
+         );
+     });
+@@ -93,6 +170,11 @@ describe('exit-code register — the scan', () => {
+             'src/scripts/_cli/cmd_doctor.ts': 'return 0;\nreturn 1;\nreturn 2;\n',
+             'src/scripts/_cli/_doctor_strict.ts': '',
+             'src/scripts/_cli/cmd_uninstall.ts': 'return 0;\nreturn 1;\nArgparseExit(2)\n',
++            // The pair's asserting test is part of the shape `main` checks, so
++            // the fixture tree carries it too — otherwise this case would be
++            // measuring a missing file rather than register drift.
++            'tests/install/ownership_ledger_real_install.test.ts':
++                'installer rc=3 and doctor --ci non-zero naming the preserved file, on the same tree\n',
+             [OUT_REL]: 'stale\n',
+         });
+         vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
