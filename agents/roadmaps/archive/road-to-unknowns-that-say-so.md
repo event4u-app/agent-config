@@ -353,8 +353,24 @@ No-op by construction while no ceiling is set; 3.4 proves it.
       `--abort-on-missing` / `--continue` / `--skip-scene` keep meaning what
       they meant. Before `-c copy` it compares a four-field fingerprint —
       codec, resolution, average frame rate, audio presence — against the first
-      clip, and refuses a declared `audio_embedded` over a clip with no audio
-      stream; the message names both sides and points at `--mode handoff`.
+      clip; the message names both sides and points at `--mode handoff`.
+      **One correction to D9's audio clause, made because an existing test
+      caught the first reading.** D9 names "missing declared audio" fatal, and
+      a first revision read `audio_embedded` as an assertion that an audio
+      stream exists and refused a manifest that over-claims. That reds
+      `ai_video_stitch_handoff.test.ts`, whose fixture declares
+      `audio_embedded: true` over `lavfi` clips carrying no audio — a
+      declaration that was never load-bearing because nothing read it. The
+      fixture was NOT changed to fit the code (`evaluator-independence`
+      § Tests are evaluators forbids exactly that); the code was. In this
+      script `audio_embedded` is a **mux routing hint** — two lines above, the
+      mux branch reads it as "this clip ships its own audio, do not mux the
+      sibling `audio_path`" — and what D9 is about is the DROP: "a mixed
+      audio/no-audio concat drops the audio of every later segment". A mix is
+      what the fingerprint's `audio=` field catches, fatally. A uniformly
+      audioless set drops nothing, so refusing it would be a manifest-accuracy
+      complaint wearing a decode failure's exit code. The case was rewritten
+      to assert the mix, and it was seen red.
       After concat it compares the output duration against the summed inputs
       and refuses a shortfall beyond `DURATION_TOLERANCE`, 0.5 s, and
       `ffprobe` became a hard dependency of every real run rather than of

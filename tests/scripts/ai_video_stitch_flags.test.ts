@@ -268,15 +268,37 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(r.stdout).not.toMatch(/"output"/);
     });
 
-    // skip-reason: needs a real clip with no audio stream, which only ffmpeg can produce.
-    it.skipIf(!MEDIA)('refuses a scene that declares audio_embedded over a clip with no audio stream', () => {
-        const { manifest, output, dir } = mediaProject([{ id: 's1', file: 'a.mp4', audio: true }]);
-        makeClip(path.join(dir, 'a.mp4'), '320x240', 2);
+    // skip-reason: needs one clip with audio and one without, which only ffmpeg can produce.
+    it.skipIf(!MEDIA)('refuses a mix of clips with and without audio on the copy path', () => {
+        // The audio half of D9, and it is about the DROP rather than about the
+        // manifest: a mixed audio/no-audio concat loses the audio of every
+        // later segment. An earlier revision of this case asserted something
+        // else — that a manifest declaring `audio_embedded: true` over a
+        // silent clip is refused — and that reading broke
+        // `ai_video_stitch_handoff.test.ts`, whose fixture declares exactly
+        // that over `lavfi` clips. The field is a mux routing hint in this
+        // script, not an existence claim, so the check follows the real
+        // failure instead of the manifest's wording.
+        const { manifest, output, dir } = mediaProject([
+            { id: 's1', file: 'loud.mp4' },
+            { id: 's2', file: 'silent.mp4' },
+        ]);
+        const withAudio = spawnSync(
+            'ffmpeg',
+            ['-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc=duration=2:size=320x240:rate=10',
+             '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2',
+             '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-shortest', path.join(dir, 'loud.mp4')],
+            { encoding: 'utf-8' },
+        );
+        if (withAudio.status !== 0) throw new Error(`fixture clip failed: ${withAudio.stderr}`);
+        makeClip(path.join(dir, 'silent.mp4'), '320x240', 2);
 
         const r = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
 
         expect(r.status, r.stderr).toBe(8);
-        expect(r.stderr).toMatch(/declares audio_embedded: true/);
+        expect(r.stderr).toMatch(/scene=s2 does not match scene=s1/);
+        expect(r.stderr).toMatch(/audio=1/);
+        expect(r.stderr).toMatch(/audio=0/);
         expect(r.stdout).not.toMatch(/"output"/);
     });
 

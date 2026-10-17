@@ -419,14 +419,24 @@ else
   # and the message points at the path that CAN reconcile them.
   ref_fp=""
   ref_id=""
-  while IFS="$(printf '\t')" read -r fp_id fp fp_audio fp_path; do
+  while IFS="$(printf '\t')" read -r fp_id fp _fp_audio fp_path; do
     [ -n "${fp_id}" ] || continue
-    if [ "${fp_audio}" = "true" ]; then
-      case "${fp}" in
-        *'|audio=1') ;;
-        *) aiv_die 8 "stitch: scene=${fp_id} declares audio_embedded: true and ${fp_path} carries no audio stream. The concat copy path cannot invent one, and a mixed audio/no-audio concat drops the audio of every later segment. Fix the manifest row or re-render the scene." ;;
-      esac
-    fi
+    # NO standalone check on `audio_embedded` here, and the reason is the
+    # field's established meaning in this script rather than a convenience.
+    # Two lines above, the mux branch reads it as a ROUTING HINT — "this clip
+    # ships its own audio, do not mux the sibling audio_path" — never as an
+    # assertion that an audio stream exists. A first revision of this check
+    # read it as an assertion and refused a manifest that over-claims, which
+    # reds `ai_video_stitch_handoff.test.ts`: its fixture declares
+    # `audio_embedded: true` over `lavfi` clips that carry no audio, and that
+    # declaration was never load-bearing because nothing read it.
+    #
+    # What D9 is actually about is the DROP: "a mixed audio/no-audio concat
+    # drops the audio of every later segment". A mix is exactly what the
+    # fingerprint's `audio=` field catches below, fatally. A uniformly
+    # audioless set drops nothing — the output simply has no audio, which is
+    # what the inputs had — so refusing it would be a manifest-accuracy
+    # complaint wearing a decode failure's exit code.
     if [ -z "${ref_fp}" ]; then
       ref_fp="${fp}"
       ref_id="${fp_id}"
