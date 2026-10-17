@@ -270,7 +270,7 @@ two new scripts and the context file are additive; deleting them restores today.
 
 ## Phase 3 — The final stage: emit, validate, publish, and `analyze:inbox`
 
-- [ ] **3.1 Emit locally (directive e).** Roadmaps via `roadmap-writing`,
+- [x] **3.1 Emit locally (directive e).** Roadmaps via `roadmap-writing`,
       `status: ready` (`draft` above the D18 intake limit, said in one line); blocked work stays `ready` with a body `> Blocked until …`
       note (`src/skills/roadmap-writing/SKILL.md:250-251`); English per
       `language-and-tone`; `relates:` with slug and relation; `ENC1:`
@@ -281,8 +281,8 @@ two new scripts and the context file are additive; deleting them restores today.
       (D4). Output per door: inbox, source, and-optimize → roadmaps; pr → a
       verdict.
       verify: an emitter fixture produces `ready` roadmaps, an `Arrivals:` line
-      on an owned fixture finding, and one central roadmap for a multi-file run.
-- [ ] **3.2 Validate deterministically, before anything leaves the machine.**
+      on an owned fixture finding, and one central roadmap for a multi-file run. Done 2026-10-17 in `src/scripts/analysis_emit.ts` (owner-first and intake-limit cases seen red); `ENC1:` provenance, Phase 4c recurrence and the `pr` verdict stay with the door wiring of 3.4 and 5.2.
+- [x] **3.2 Validate deterministically, before anything leaves the machine.**
       Every claim carries an anchor and a tier; every step a `verify:` line;
       dissent present when the council recorded any; the emitted files pass
       `lint_roadmap_complexity`, `lint_roadmap_blockers`,
@@ -290,7 +290,7 @@ two new scripts and the context file are additive; deleting them restores today.
       fixture findings recovered without invented ones. A failure stops the run
       in `emitted`. No model judge is the gate (K9).
       verify: a fixture with one unanchored claim and one step without `verify:`
-      stops in `emitted` naming both.
+      stops in `emitted` naming both. Done 2026-10-17 in `src/scripts/analysis_validate.ts` (seen red); the complexity and risk-register gates run on the emitted file itself, the other three read this package's tree.
 - [ ] **3.3 Publish (directive f).** Worktree, opaque branch, chunked commits,
       `/create-pr :ready` — never the silent-draft default — then `ci_settle`,
       at most three fix rounds, then `handed-back` naming the red. Before every
