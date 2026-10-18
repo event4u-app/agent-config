@@ -10376,9 +10376,9 @@ function preservedIndex(preservedTargets, staged) {
   }
   return out;
 }
-function dropGlobalScopeFiles(entries) {
+function dropGlobalScopeFiles(entries, deployed) {
   for (const entry of entries) {
-    if (entry["scope"] === "global") entry["files"] = [];
+    if (entry["scope"] === "global" && deployed.has(String(entry["name"]))) entry["files"] = [];
   }
   return entries;
 }
@@ -22697,7 +22697,7 @@ function _update_installed_tools_manifest(project_root, tools, scope, force, fil
       throw exc;
     }
   }
-  write_manifest(target, version, dropGlobalScopeFiles(entries));
+  write_manifest(target, version, dropGlobalScopeFiles(entries, scope === "global" ? tools : /* @__PURE__ */ new Set()));
   if (!state.QUIET) {
     const rel = isRelativeTo(target, project_root) ? path36.relative(project_root, target) : target;
     info(`Manifest updated: ${rel}`);

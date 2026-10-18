@@ -486,3 +486,18 @@ describe('a global skill the user-scoped ledger lists is ours, not a neighbour',
         expect(c.skills.map((s) => s.id)).toStrictEqual(['user:theirs']);
     });
 });
+
+describe('a census about a stated home claims by that home\'s ledger', () => {
+    it('reads <home>/.event4u/agent-config/deployed-files.json, not the asking user\'s', () => {
+        const project = tmp();
+        const home = plantedHome();
+        write(project, 'agents/installed-tools.lock', 'schema_version: 2\ntools:\n  - name: claude-code\n    scope: global\n');
+        write(home, '.claude/skills/ours/SKILL.md', '---\nname: ours\ndescription: x\n---\n');
+        write(
+            home,
+            '.event4u/agent-config/deployed-files.json',
+            JSON.stringify({ tools: { 'claude-code': { anchor: `${home}/.claude/`, files: ['skills/ours/SKILL.md'] } } }),
+        );
+        expect(census(project, { homeRoot: home }).skills).toStrictEqual([]);
+    });
+});

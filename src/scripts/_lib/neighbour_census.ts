@@ -537,13 +537,23 @@ export interface CensusOptions {
     inventoryFile?: string;
 }
 
+/**
+ * The deploy inventory of a home that is not this process's own, at the
+ * default layout; `undefined` (the env-aware default) otherwise. A census about
+ * another home must not claim by the asking user's ledger.
+ */
+function statedHomeInventory(home: string | undefined): string | undefined {
+    if (home === undefined || path.resolve(home) === path.resolve(os.homedir())) return undefined;
+    return path.join(home, '.event4u', 'agent-config', 'deployed-files.json');
+}
+
 /** Run the whole census for one consumer root. */
 export function census(projectRoot: string, opts: CensusOptions = {}): NeighbourCensus {
     const gated = opts.gatedEvents ?? new Set<string>();
     // The ledger half: a global entry in the lock records no files[].
     const owned = new Set([
         ...readRecordedHashes(manifest_path(projectRoot), projectRoot).keys(),
-        ...(packageClaimedPaths(projectRoot, opts.inventoryFile) ?? []),
+        ...(packageClaimedPaths(projectRoot, opts.inventoryFile ?? statedHomeInventory(opts.homeRoot)) ?? []),
     ]);
     const home = opts.homeRoot ?? os.homedir();
 

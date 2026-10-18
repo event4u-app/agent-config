@@ -270,8 +270,9 @@ the same thing in all of them.
       the owner's pick is the blocker below.
       **Done 2026-10-18 under (b′).** `files` is **omitted** on every
       `scope: global` entry (`dropGlobalScopeFiles` in `manifestFiles.ts`, run
-      on every lock write, so a lock committed earlier loses its absolute paths
-      on the next install). Reader audit: `sync` and `validate` read no
+      on a global install for the tools it deployed, after the ledger records
+      them, so a lock committed earlier loses its absolute paths on that tool's
+      next global install). Reader audit: `sync` and `validate` read no
       `files[]`; `prune` skips global entries; `install_drift` and `doctor`'s
       manifest reader lose nothing the ledger reader (3.1) does not cover;
       `recordedOwnership` already overlays the ledger. Three readers did need a

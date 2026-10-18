@@ -257,7 +257,7 @@ export function preservedIndex(preservedTargets, staged) {
     return out;
 }
 /**
- * Clear `files[]` on every global-scope entry, in place.
+ * Clear `files[]` on the global-scope entries of `deployed`, in place.
  *
  * A consumer commits this lock (`README.md` § Team reproducibility), and a
  * global entry's files are `$HOME`-rooted absolute paths of whoever installed.
@@ -265,10 +265,14 @@ export function preservedIndex(preservedTargets, staged) {
  * `sync` replays a global entry from `name`, `scope` and `bridge_marker` alone,
  * so the entry stays and its files go. An empty list is written as no `files`
  * key at all, which is also how a lock committed earlier loses its paths.
+ *
+ * Only for tools whose global deploy ran this install: that run just recorded
+ * their digests in the ledger. A lock-only digest of any other tool is the one
+ * record of a pre-ledger edit, and dropping it first would re-arm the overwrite.
  */
-export function dropGlobalScopeFiles(entries) {
+export function dropGlobalScopeFiles(entries, deployed) {
     for (const entry of entries) {
-        if (entry['scope'] === 'global')
+        if (entry['scope'] === 'global' && deployed.has(String(entry['name'])))
             entry['files'] = [];
     }
     return entries;

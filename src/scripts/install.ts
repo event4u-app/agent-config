@@ -2313,7 +2313,7 @@ function _update_installed_tools_manifest(
         }
     }
 
-    installed_tools.write_manifest(target, version, dropGlobalScopeFiles(entries));
+    installed_tools.write_manifest(target, version, dropGlobalScopeFiles(entries, scope === 'global' ? tools : new Set()));
     if (!state.QUIET) {
         const rel = isRelativeTo(target, project_root) ? path.relative(project_root, target) : target;
         info(`Manifest updated: ${rel}`);

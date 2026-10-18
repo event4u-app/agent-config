@@ -197,3 +197,35 @@ describe('cmd_uninstall — project scope, global entry without files[]', () => 
         expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
     });
 });
+
+describe('cmd_uninstall — project scope, a global entry still carrying $HOME files[]', () => {
+    // A lock committed before global files[] left it: a project uninstall must
+    // not delete those paths either, and a dry-run must say "would".
+    it('touches no recorded file, and the dry-run reports what it would do', () => {
+        const root = freshRoot();
+        const home = freshRoot();
+        const deployed = path.join(home, '.cursor', 'rules', 'a.md');
+        fs.mkdirSync(path.dirname(deployed), { recursive: true });
+        fs.writeFileSync(deployed, 'ours\n');
+        const marker = path.join(home, '.cursor', 'marker');
+        fs.writeFileSync(marker, 'm\n');
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        const lock = path.join(root, 'agents', 'installed-tools.lock');
+        fs.writeFileSync(
+            lock,
+            'schema_version: 2\nagent_config_version: "0.0.0"\ntools:\n' +
+                '  - name: cursor\n    scope: global\n    bridge_marker: ~/.cursor/\n' +
+                '    installed_at: "2026-10-18"\n    files:\n' +
+                `      - path: ${deployed}\n        kind: deployed\n        sha256: null\n` +
+                `      - path: ${marker}\n        kind: marker\n        sha256: null\n`,
+        );
+        const env = { AGENT_CONFIG_ROOT_OVERRIDE: '1', AGENT_CONFIG_PROJECT_ROOT: root };
+        const dry = runInProc(main, ['--tools=cursor', '--dry-run'], { cwd: root, env });
+        expect(dry.stdout).toContain('cursor: would remove global-scope entry');
+        const real = runInProc(main, ['--tools=cursor', '--purge'], { cwd: root, env });
+        expect(real.status, real.stdout + real.stderr).toBe(0);
+        expect(fs.existsSync(deployed)).toBe(true);
+        expect(fs.existsSync(marker)).toBe(true);
+        expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
+    });
+});
