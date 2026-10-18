@@ -1,9 +1,0 @@
-{
-  "session_id": "fixture-instructions-loaded-001",
-  "hook_event_name": "InstructionsLoaded",
-  "file_path": "/workspace/.claude/rules/scope-control.md",
-  "memory_type": "Project",
-  "load_reason": "session_start",
-  "cwd": "/workspace",
-  "platform_hint": "claude"
-}

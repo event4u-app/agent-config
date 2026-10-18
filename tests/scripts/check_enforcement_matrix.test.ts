@@ -255,7 +255,6 @@ describe('one row per host and bound slot', () => {
             'pre_compact',
             'subagent_start',
             'subagent_stop',
-            'instructions_loaded',
         ]);
     });
 

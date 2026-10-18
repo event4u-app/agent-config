@@ -1337,22 +1337,6 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: telemetry
-  # road-to-a-setup-that-decides-itself step 1.1 — the host instruction-load
-  # observer, absorbing step 3.0 of stubs/road-to-instructions-loaded-observer.md
-  # (owner answer (a), 2026-10-15). CAPTURE ONLY: appends one classified line
-  # per host load event to `<machine root>/runtime/arrivals/<session>.jsonl`; emits
-  # nothing to the model, so it carries no hook-token-budget row. Bound on
-  # `claude` alone, the one host where the event was measured present.
-  # KILL SWITCH, required by the council and not optional:
-  # `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off`, or delete the one
-  # `instructions_loaded:` binding below — on hook failures, duplicate events,
-  # a session-start regression or an unexplained test break. fail_closed: false.
-  instructions-observer:
-    script: src/scripts/hooks/instructions_observer_hook.ts
-    args: []
-    fail_closed: false
-    severity: advisory
-    effect: telemetry
   # road-to-inbox-harvest-2026-08-d-context-ledger Phase 1 Step 1.1 — the
   # tool-result byte counter. `hook-token-budget.json` registers the gap it
   # closes in its own words: bytes-into-context from tool RESULTS are
@@ -1605,8 +1589,6 @@ platforms:
     # binary (2.1.229 — see the evidence page cited on the alias rows below).
     subagent_start:   [subagent-ledger, journal-record]
     subagent_stop:    [subagent-ledger, journal-record]
-    # road-to-a-setup-that-decides-itself step 1.1 — see the concern's entry.
-    instructions_loaded: [instructions-observer]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -1763,10 +1745,6 @@ native_event_aliases:
     # agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
     SubagentStart:     subagent_start
     SubagentStop:      subagent_stop
-    # Measured present on the installed binary (exact-token count 9, payload
-    # fields load_reason / trigger_file_path / parent_file_path) — see
-    # agents/evidence/investigations/standing-context-40k-host-and-machine-probes.md § 1.
-    InstructionsLoaded: instructions_loaded
   # Cowork shares Claude Code's PascalCase event vocabulary verbatim
   # (Cowork is Claude Code under the hood). Native names are duplicated
   # here rather than aliased so dispatcher logs / feedback carry the

@@ -37,6 +37,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { build_claude_hook_matrix } from '../scripts/_lib/claude_settings_hooks.js';
 import { event4u_root } from '../scripts/_lib/user_global_paths.js';
+import { describeUserPin, readUserPin, writeUserPin } from './userPin.js';
 export const RUNTIME_DIRNAME = 'runtime';
 export const CLAUDE_LAYER_DIRNAME = 'claude-rules';
 export const THINNED_MARKER = 'thinned';
@@ -274,19 +275,21 @@ export function probeHookCommand(command, env = process.env) {
 export function recordCarrierProbe(runtimeRoot, host, outcome, version, now = new Date()) {
     fs.mkdirSync(runtimeRoot, { recursive: true });
     const file = path.join(runtimeRoot, CARRIER_RECORD);
-    let hosts = {};
+    let receipt = {};
     try {
-        hosts = JSON.parse(fs.readFileSync(file, 'utf8')).hosts ?? {};
+        receipt = JSON.parse(fs.readFileSync(file, 'utf8'));
     }
     catch {
-        hosts = {};
+        receipt = {};
     }
+    const hosts = receipt.hosts ?? {};
     const date = now.toISOString().slice(0, 10);
     const previous = hosts[host];
     const since = previous !== undefined && previous.outcome === outcome ? (previous.since ?? previous.date) : date;
     const record = { host, outcome, date, version, since };
     hosts[host] = record;
-    fs.writeFileSync(file, `${JSON.stringify({ hosts }, null, 2)}\n`);
+    // Other receipt fields — the `install --full` pin among them — survive a probe.
+    fs.writeFileSync(file, `${JSON.stringify({ ...receipt, hosts }, null, 2)}\n`);
     return record;
 }
 /** One receipt / doctor line per probe outcome, including the never-probed one. */
@@ -332,7 +335,10 @@ export function prepareClaudeCarrier(opts) {
     catch (e) {
         warnings.push(`claude-code: runtime not staged under ${runtimeRoot} — ${String(e)}`);
     }
-    const wantsThin = opts.wantsThin && staged !== null;
+    if (opts.userPin === true)
+        writeUserPin(runtimeRoot);
+    const pin = readUserPin(runtimeRoot);
+    const wantsThin = opts.wantsThin && staged !== null && pin === null;
     const probe = process.platform === 'win32' || opts.sessionStartCommand === null
         ? null
         : probeHookCommand(opts.sessionStartCommand, env);
@@ -343,6 +349,9 @@ export function prepareClaudeCarrier(opts) {
     if (next === 'full')
         markClaudeLayer(runtimeRoot, { thinned: false, rulesDir: opts.rulesDir });
     const lines = describeCarrierProbe(readCarrierState(runtimeRoot).probe);
+    const pinLine = describeUserPin(pin);
+    if (pinLine !== null)
+        lines.push(pinLine);
     if (next === 'demoted') {
         lines.push('hook carrier (claude): machine demoted — the rule layer stays full until the probe passes');
     }
@@ -396,6 +405,7 @@ export function deployClaudeCarrier(opts) {
         rulesDir: opts.rulesDir,
         sessionStartCommand: sessionStartCommandFor(opts.packageRoot),
         wantsThin: opts.wantsThin,
+        ...(opts.userPin === true ? { userPin: true } : {}),
     });
     for (const w of carrier.warnings)
         opts.warn(w);
