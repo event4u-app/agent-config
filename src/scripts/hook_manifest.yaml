@@ -1340,7 +1340,7 @@ concerns:
   # road-to-a-setup-that-decides-itself step 1.1 — the host instruction-load
   # observer, absorbing step 3.0 of stubs/road-to-instructions-loaded-observer.md
   # (owner answer (a), 2026-10-15). CAPTURE ONLY: appends one classified line
-  # per host load event to `<machine root>/runtime/arrivals.jsonl` and emits
+  # per host load event to `<machine root>/runtime/arrivals/<session>.jsonl`; emits
   # nothing to the model, so it carries no hook-token-budget row. Bound on
   # `claude` alone, the one host where the event was measured present.
   # KILL SWITCH, required by the council and not optional:

@@ -10,32 +10,38 @@
 import * as path from 'node:path';
 import process from 'node:process';
 
-import { buildArrivalRecord, readObserverLines, validateArrivalRecord, type ArrivalRecord } from './_lib/arrival_record.js';
+import {
+    arrivalsDirUnder,
+    buildArrivalRecord,
+    readObserverLines,
+    validateArrivalRecord,
+    type ArrivalRecord,
+} from './_lib/arrival_record.js';
 import { event4u_root } from './_lib/user_global_paths.js';
 
 interface Args {
-    readonly file: string;
+    readonly dir: string;
     readonly json: boolean;
     readonly limit: number;
 }
 
 export function parseArgs(argv: readonly string[], env: NodeJS.ProcessEnv = process.env): Args | null {
-    let file = path.join(event4u_root(env), 'runtime', 'arrivals.jsonl');
+    let dir = arrivalsDirUnder(path.join(event4u_root(env), 'runtime'));
     let json = false;
     let limit = 10;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i];
         if (a === '--json') json = true;
-        else if (a === '--file' && argv[i + 1] !== undefined) file = argv[++i] as string;
+        else if (a === '--dir' && argv[i + 1] !== undefined) dir = argv[++i] as string;
         else if (a === '--limit' && /^\d+$/.test(argv[i + 1] ?? '')) limit = Number(argv[++i]);
         else return null;
     }
-    return { file, json, limit };
+    return { dir, json, limit };
 }
 
 /** One record per session, newest session first. */
-export function recordsIn(file: string, limit: number): ArrivalRecord[] {
-    const lines = readObserverLines(file);
+export function recordsIn(dir: string, limit: number): ArrivalRecord[] {
+    const lines = readObserverLines(dir);
     const lastTs = new Map<string, string>();
     for (const l of lines) {
         if (l.session !== null && (lastTs.get(l.session) ?? '') <= l.ts) lastTs.set(l.session, l.ts);
@@ -60,16 +66,16 @@ export function renderRecord(r: ArrivalRecord): string[] {
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const args = parseArgs(argv);
     if (args === null) {
-        process.stderr.write('usage: arrival_report [--file <arrivals.jsonl>] [--limit <n>] [--json]\n');
+        process.stderr.write('usage: arrival_report [--dir <arrivals dir>] [--limit <n>] [--json]\n');
         return 2;
     }
-    const records = recordsIn(args.file, args.limit);
+    const records = recordsIn(args.dir, args.limit);
     for (const r of records) {
         const errs = validateArrivalRecord(r);
         if (errs.length > 0) process.stderr.write(`arrival_report: ${r.session}: ${errs.join('; ')}\n`);
     }
     if (args.json) process.stdout.write(`${JSON.stringify(records, null, 2)}\n`);
-    else if (records.length === 0) process.stdout.write(`no arrival record in ${args.file} — the observer has not seen a session\n`);
+    else if (records.length === 0) process.stdout.write(`no arrival record in ${args.dir} — the observer has not seen a session\n`);
     else process.stdout.write(`${records.flatMap(renderRecord).join('\n')}\n`);
     process.stdout.write(`scanned: ${String(records.length)}\n`);
     return 0;

@@ -14,7 +14,7 @@ import {
     validateArrivalRecord,
 } from '../../src/scripts/_lib/arrival_record.js';
 import { rungState } from '../../src/scripts/_lib/activation_ladder.js';
-import { processEnvelope, arrivalsPath, KILL_SWITCH_ENV } from '../../src/scripts/hooks/instructions_observer_hook.js';
+import { processEnvelope, arrivalsDir, KEEP_SESSIONS, KILL_SWITCH_ENV } from '../../src/scripts/hooks/instructions_observer_hook.js';
 import { recordsIn, renderRecord } from '../../src/scripts/arrival_report.js';
 
 const HOME = '/home/dev';
@@ -71,8 +71,7 @@ describe('the arrival record and its negative controls (step 1.2)', () => {
         'event unavailable on the host version': [],
         'malformed payload': [load(USER_RULE('a')), line({ session_id: 's1', file_path: 7 })],
         'duplicate call': [load(USER_RULE('a')), load(USER_RULE('a'))],
-        'events reordered': [load(USER_RULE('a'), 'path_glob_match'), load(USER_RULE('b'))],
-        'no session-start load at all': [load(USER_RULE('a'), 'compact')],
+        'start-up events lost: no session-start load at all': [load(USER_RULE('a'), 'compact')],
     };
     for (const [name, lines] of Object.entries(controls)) {
         it(`${name} → unknown, never an arrival`, () => {
@@ -81,6 +80,15 @@ describe('the arrival record and its negative controls (step 1.2)', () => {
             expect(arrivalEvidence(r, new Set(['a']))).toBeNull();
         });
     }
+
+    it('events reordered → the same record as in order; order can neither create nor remove an arrival', () => {
+        // The host runs this hook asynchronously, so disk order is scheduler order.
+        const ordered = [load(USER_RULE('a')), load(USER_RULE('b')), load(USER_RULE('c'), 'path_glob_match')];
+        const shuffled = [ordered[2]!, ordered[0]!, ordered[1]!];
+        const norm = (r: ReturnType<typeof buildArrivalRecord>) => ({ ...r, files: [...r.files].sort((x, y) => (x.file < y.file ? -1 : 1)) });
+        expect(norm(buildArrivalRecord(shuffled, 's1'))).toEqual(norm(buildArrivalRecord(ordered, 's1')));
+        expect(buildArrivalRecord([ordered[2]!], 's1').status, 'only a lazy load arrived').toBe('unknown');
+    });
 
     it('a session mixing host versions is unknown', () => {
         const other = classifyInstructionsLoaded(
@@ -143,35 +151,50 @@ describe('the observer concern', () => {
     const envelope = (payload: unknown) =>
         JSON.stringify({ schema_version: 1, platform: 'claude', event: 'instructions_loaded', payload });
 
-    it('appends one line per event and a record can be built from the file', () => {
+    it('appends one line per event to its session file, and a record can be built from the directory', () => {
         expect(processEnvelope(envelope({ session_id: 's9', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
         expect(processEnvelope('{not json', env)).toBe(0);
-        const lines = readObserverLines(arrivalsPath(env));
+        expect(fs.readdirSync(arrivalsDir(env)).sort()).toEqual(['_no-session.jsonl', 's9.jsonl']);
+        const lines = readObserverLines(arrivalsDir(env));
         expect(lines).toHaveLength(2);
-        expect(latestArrivalRecord(lines.filter((l) => l.session !== null))?.status).toBe('visible');
+        expect(latestArrivalRecord(lines)?.status).toBe('visible');
+    });
+
+    it('keeps only the newest sessions when a new one starts', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < KEEP_SESSIONS + 5; i += 1) {
+            const f = path.join(dir, `old-${String(i)}.jsonl`);
+            fs.writeFileSync(f, '');
+            fs.utimesSync(f, 1_000 + i, 1_000 + i);
+        }
+        processEnvelope(envelope({ session_id: 'new', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        const left = fs.readdirSync(dir);
+        expect(left).toHaveLength(KEEP_SESSIONS);
+        expect(left).toContain('new.jsonl');
+        expect(left).not.toContain('old-0.jsonl');
     });
 
     it('the kill switch writes nothing', () => {
         processEnvelope(envelope({ session_id: 's9', file_path: USER_RULE('a'), load_reason: 'session_start' }), { ...env, [KILL_SWITCH_ENV]: 'off' });
-        expect(fs.existsSync(arrivalsPath(env))).toBe(false);
+        expect(fs.existsSync(arrivalsDir(env))).toBe(false);
     });
 
-    it('ignores an envelope for another event', () => {
-        processEnvelope(JSON.stringify({ event: 'stop', payload: {} }), env);
-        expect(fs.existsSync(arrivalsPath(env))).toBe(false);
+    it('an envelope carrying another event is classified, not trusted: no file path means an unknown line', () => {
+        processEnvelope(JSON.stringify({ event: 'stop', payload: { session_id: 'x', hook_event_name: 'Stop' } }), env);
+        expect(readObserverLines(arrivalsDir(env))).toMatchObject([{ event: 'unknown', why: 'event-mismatch' }]);
     });
 });
 
 describe('arrival_report', () => {
-    it('prints one block per session, newest first, and nothing for an empty file', () => {
+    it('prints one block per session, newest first, and nothing for an empty directory', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrival-report-'));
-        const file = path.join(dir, 'arrivals.jsonl');
-        const lines = [load(USER_RULE('a'), 'session_start', 'old'), load(USER_RULE('a'), 'session_start', 'new')];
-        fs.writeFileSync(file, lines.map((l) => JSON.stringify(l)).join('\n'));
-        const records = recordsIn(file, 10);
+        fs.writeFileSync(path.join(dir, 'old.jsonl'), JSON.stringify(load(USER_RULE('a'), 'session_start', 'old')));
+        fs.writeFileSync(path.join(dir, 'new.jsonl'), JSON.stringify(load(USER_RULE('a'), 'session_start', 'new')));
+        const records = recordsIn(dir, 10);
         expect(records.map((r) => r.session)).toEqual(['new', 'old']);
         expect(renderRecord(records[0]!).join('\n')).toContain('host version 2.1.299');
-        expect(recordsIn(path.join(dir, 'missing.jsonl'), 10)).toEqual([]);
+        expect(recordsIn(path.join(dir, 'missing'), 10)).toEqual([]);
         fs.rmSync(dir, { recursive: true, force: true });
     });
 });

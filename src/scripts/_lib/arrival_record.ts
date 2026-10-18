@@ -12,9 +12,14 @@
  *   · no line for the session — the host did not send the event;
  *   · a line the observer could not classify — a malformed payload;
  *   · the same file loaded twice for the same reason — a duplicate call;
- *   · a `session_start` load after a later-reason load, or no `session_start`
- *     load at all — events reordered or lost;
+ *   · no `session_start` load at all — the start-up events were lost;
  *   · more than one host version within one session.
+ *
+ * ORDER IS NOT EVIDENCE, IN EITHER DIRECTION. The host runs these hooks
+ * asynchronously and in parallel, so the order lines reach disk is the
+ * scheduler's, not the host's. The record is therefore built as a set: a
+ * reordered sequence yields exactly the record the ordered one does, and no
+ * ordering can create an arrival the set does not contain.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -27,7 +32,7 @@ export type ArrivalUnknownReason =
     | 'event-unavailable'
     | 'malformed'
     | 'duplicate-events'
-    | 'reordered'
+    | 'no-session-start'
     | 'host-version-mixed';
 
 export interface ArrivalFile {
@@ -50,11 +55,13 @@ export interface ArrivalRecord {
     readonly counts: { readonly loaded: number; readonly unknown: number; readonly duplicates: number };
 }
 
-/** Parse the observer file; lines that are not observer lines are dropped. */
-export function readObserverLines(file: string): ObserverLine[] {
+/** Parse every session file under the observer directory; lines that are not observer lines are dropped. */
+export function readObserverLines(dir: string): ObserverLine[] {
     let text = '';
     try {
-        text = fs.readFileSync(file, 'utf8');
+        for (const f of fs.readdirSync(dir)) {
+            if (f.endsWith('.jsonl')) text += `${fs.readFileSync(path.join(dir, f), 'utf8')}\n`;
+        }
     } catch {
         return [];
     }
@@ -94,11 +101,7 @@ export function buildArrivalRecord(lines: readonly ObserverLine[], session: stri
     else if (unknownCount > 0) reason = 'malformed';
     else if (duplicates > 0) reason = 'duplicate-events';
     else if (versions.size > 1) reason = 'host-version-mixed';
-    else {
-        const firstLater = loaded.findIndex((l) => l.reason !== 'session_start');
-        const lastStart = loaded.map((l) => l.reason).lastIndexOf('session_start');
-        if (lastStart === -1 || (firstLater !== -1 && lastStart > firstLater)) reason = 'reordered';
-    }
+    else if (!loaded.some((l) => l.reason === 'session_start')) reason = 'no-session-start';
     return {
         v: 1,
         session,
@@ -195,6 +198,6 @@ export function arrivalReceipts(record: ArrivalRecord, expected: readonly string
     }));
 }
 
-export function arrivalsFileUnder(runtimeRoot: string): string {
-    return path.join(runtimeRoot, 'arrivals.jsonl');
+export function arrivalsDirUnder(runtimeRoot: string): string {
+    return path.join(runtimeRoot, 'arrivals');
 }

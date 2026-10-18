@@ -19,7 +19,7 @@ import * as path from 'node:path';
 
 import { readCarrierState, runtimeRootFor, type CarrierState } from '../../install/stagedRuntime.js';
 import { readUserPin } from '../../install/userPin.js';
-import { arrivalEvidence, arrivalsFileUnder, latestArrivalRecord, readObserverLines, type ArrivalRecord } from './arrival_record.js';
+import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLines, type ArrivalRecord } from './arrival_record.js';
 import { hostVersionFromEnv } from './instructions_loaded_event.js';
 import { THINNABLE_HOSTS } from './lean_projection_mode.js';
 import { decideLayerForm, gatherShippedEvidence, type LayerFormDecision, type LayerFormInput } from './layer_form_decision.js';
@@ -43,7 +43,7 @@ export function readMachineEvidence(packageRoot: string, env: NodeJS.ProcessEnv 
         standingLaws = new Set(['<consequence-class unreadable>']);
     }
     return {
-        arrival: latestArrivalRecord(readObserverLines(arrivalsFileUnder(runtimeRoot))),
+        arrival: latestArrivalRecord(readObserverLines(arrivalsDirUnder(runtimeRoot))),
         carrier: readCarrierState(runtimeRoot),
         userPin: readUserPin(runtimeRoot) !== null,
         hostVersion: hostVersionFromEnv(env),
