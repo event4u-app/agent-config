@@ -13,7 +13,6 @@
  *    engine unavailable, `off` never loads it, `observe` records the miss and
  *    changes no view, and `protect` and `strict` withhold every body.
  */
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -31,9 +30,9 @@ import { ENGINE_UNAVAILABLE, runEgressStage, WITHHELD_MARKER, type EgressMode } 
 import type { JsonObject } from '../../../src/scripts/hooks/payload_stub.js';
 import { buildMetafile } from '../../../src/scripts/check_hook_bundle_composition.js';
 import { sidecarPathFor } from '../../../src/scripts/hooks/bundle_integrity.js';
+import { buildChunk } from '../../../src/scripts/hook_chunks.mjs';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const ESBUILD = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
 
 let tmp: string;
 let goodChunk: Buffer;
@@ -55,12 +54,8 @@ function writeChunk(dir: string, body: Buffer | string, sidecar: 'match' | 'mism
 beforeAll(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'egress-chunk-'));
     const out = path.join(tmp, 'built.cjs');
-    const r = spawnSync(
-        ESBUILD,
-        [path.join(REPO_ROOT, 'src/scripts/_lib/egress_engine.ts'), '--bundle', '--platform=node', '--format=cjs', '--target=node20', `--outfile=${out}`],
-        { encoding: 'utf-8' },
-    );
-    expect(r.status, r.stderr).toBe(0);
+    // The chunk build the shipped package uses (hook_chunks.mjs), to a temp path.
+    buildChunk(REPO_ROOT, 'src/scripts/_lib/egress_engine.ts', out);
     goodChunk = fs.readFileSync(out);
 });
 

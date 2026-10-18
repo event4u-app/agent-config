@@ -69,6 +69,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { buildScript } from './check_hook_bundle_content.js';
+import { buildChunk, HOOK_CHUNKS } from './hook_chunks.mjs';
 import { rewriteOutfile } from './rebuild_hook_bundle.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -184,55 +185,20 @@ export function readChunkBudgets(root: string): ChunkBudget[] {
 }
 
 /**
- * The argv of the esbuild invocation `build:hook-chunks` uses for `entry`.
- *
- * The script is the one definition of how a chunk is built; this reads it
- * rather than restating its flags. A segment is accepted only as a plain
- * `esbuild` call — words with no quote, variable, redirect, pipe or `cd` — so
- * the gate runs it as an argv with no shell, on every platform, and a segment
- * that grew shell semantics is a loud refusal rather than a build measured under
- * different conditions.
- */
-export function chunkBuildArgv(scripts: Readonly<Record<string, string>>, entry: string): string[] {
-    const segments = (scripts['build:hook-chunks'] ?? '').split('&&').map((x) => x.trim());
-    // Only builds and digest writes: a `cd` or any other step could change the
-    // conditions the chunk is built under without touching its own segment.
-    const foreign = segments.find((x) => !x.startsWith('esbuild ') && !x.startsWith('node '));
-    if (foreign !== undefined) {
-        throw new Error(`\`build:hook-chunks\` carries a step other than an esbuild build or a node digest (\`${foreign}\`)`);
-    }
-    const matches = segments.filter((x) => x.startsWith('esbuild ') && x.split(/\s+/).includes(entry));
-    if (matches.length !== 1) {
-        throw new Error(`\`build:hook-chunks\` must build ${entry} in exactly one esbuild segment, found ${String(matches.length)}`);
-    }
-    const segment = matches[0] as string;
-    if (/["'`$|;<>()\\]|\bcd\b/.test(segment)) {
-        throw new Error(`the esbuild segment for ${entry} is not a plain argv — refusing to measure a build it cannot reproduce`);
-    }
-    const words = segment.split(/\s+/).slice(1);
-    if (words.filter((w) => w.startsWith('--outfile=')).length !== 1) {
-        throw new Error(`the esbuild segment for ${entry} must name exactly one --outfile`);
-    }
-    return words;
-}
-
-/**
- * Build the chunk for `entry` with that argv, to a throwaway path, and return its
- * size. Throws when the script carries no plain segment for the entry — a
- * ceiling on a chunk nothing builds bounds nothing.
+ * Build the chunk for `entry` from the one chunk definition (`hook_chunks.mjs`,
+ * which `build:hook-chunks` runs) to a throwaway path, and return its size. The
+ * gate and the shipped build call the same function with the same options, so
+ * what is measured is what ships. Throws when no chunk is defined for the entry
+ * — a ceiling on a chunk nothing builds bounds nothing.
  */
 export function buildChunkBytes(root: string, entry: string): number {
-    const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')) as { scripts?: Record<string, string> };
-    const argv = chunkBuildArgv(pkg.scripts ?? {}, entry);
+    if (!HOOK_CHUNKS.some((c) => c.entry === entry)) {
+        throw new Error(`hook_chunks.mjs defines no chunk built from ${entry}`);
+    }
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-chunk-composition-'));
     const out = path.join(dir, 'chunk.cjs');
     try {
-        const args = argv.map((w) => (w.startsWith('--outfile=') ? `--outfile=${out}` : w));
-        const bin = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
-        const built = spawnSync(bin, args, { cwd: root, encoding: 'utf-8' });
-        if (built.status !== 0 || !fs.existsSync(out)) {
-            throw new Error(`esbuild failed for chunk ${entry} (exit ${String(built.status)})\n${built.stderr ?? ''}`);
-        }
+        buildChunk(root, entry, out);
         return fs.statSync(out).size;
     } finally {
         fs.rmSync(dir, { recursive: true, force: true });

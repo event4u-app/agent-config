@@ -8,17 +8,19 @@
 // `{ to }` entry with no reason — what the ratification review refused the
 // first version on — does not count as a recorded reason.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 import {
-    chunkBuildArgv,
+    buildChunkBytes,
     chunkFindings,
     chunkRaiseFindings,
     raiseEntryProblems,
     raiseFindings,
 } from '../../src/scripts/check_hook_bundle_composition.js';
+import { buildChunk, HOOK_CHUNKS } from '../../src/scripts/hook_chunks.mjs';
 
 const OLD_ENTRY = { date: '2026-10-01', from: 1500000, to: 1550000 };
 
@@ -122,32 +124,30 @@ describe('chunk ceilings', () => {
     });
 });
 
-describe('chunkBuildArgv — the one definition of a chunk build, read as an argv', () => {
+describe('chunk builds — one definition, used by the build and by the gate', () => {
     const ENTRY = 'src/scripts/_lib/egress_engine.ts';
-    const plain = `esbuild ${ENTRY} --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/e.cjs`;
 
-    it('reads a plain esbuild segment into its flags', () => {
-        const argv = chunkBuildArgv({ 'build:hook-chunks': `${plain} && node digest.mjs dist/hooks/e.cjs` }, ENTRY);
-        expect(argv[0]).toBe(ENTRY);
-        expect(argv).toContain('--format=cjs');
-    });
-
-    it('refuses a segment with shell semantics, a missing or doubled entry, and a missing outfile', () => {
-        const bad = [
-            `cd sub && ${plain}`,
-            plain.replace('--target=node20', '--target="node20"'),
-            `${plain} > log.txt`,
-            `${plain} && ${plain}`,
-            plain.replace(/ --outfile=\S+/, ''),
-            'esbuild other.ts --outfile=x.cjs',
-        ];
-        for (const script of bad) {
-            expect(() => chunkBuildArgv({ 'build:hook-chunks': script }, ENTRY), script).toThrow();
-        }
-    });
-
-    it('the shipped package.json builds the engine chunk in one plain segment', () => {
+    it('every budgeted chunk is a defined chunk, and package.json builds through the definition', () => {
+        const budget = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/config/hook-bundle-budget.json'), 'utf-8')) as {
+            chunks: Array<{ entry: string }>;
+        };
+        for (const c of budget.chunks) expect(HOOK_CHUNKS.some((h) => h.entry === c.entry), c.entry).toBe(true);
         const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')) as { scripts: Record<string, string> };
-        expect(chunkBuildArgv(pkg.scripts, ENTRY)[0]).toBe(ENTRY);
+        expect(pkg.scripts['build:hook-chunks']).toBe('node src/scripts/hook_chunks.mjs');
+    });
+
+    it('measures the bytes the definition builds', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-measure-'));
+        try {
+            const out = path.join(dir, 'c.cjs');
+            buildChunk(process.cwd(), ENTRY, out);
+            expect(buildChunkBytes(process.cwd(), ENTRY)).toBe(fs.statSync(out).size);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 60_000);
+
+    it('refuses to measure an entry no chunk is defined for', () => {
+        expect(() => buildChunkBytes(process.cwd(), 'src/scripts/_lib/no_such_chunk.ts')).toThrow(/defines no chunk/);
     });
 });
