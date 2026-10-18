@@ -202,3 +202,48 @@ describe('handoff_context_hook — the session_start source gate (3.3)', () => {
         expect(fs.readFileSync(handoffFile, 'utf-8')).toBe(before);
     });
 });
+
+describe('handoff_context_hook — the procedure position after compaction', () => {
+    function writeProcedureState(status: string): void {
+        const state = {
+            version: 1,
+            input: {
+                kind: 'procedure',
+                data: {
+                    schema: 'procedure/v1',
+                    skill: 'existing-ui-audit',
+                    sidecar_sha: 'a'.repeat(64),
+                    engine_version: 1,
+                    started_head: '0123456789abcdef0123',
+                    current: 'enumerate-components',
+                    order: ['inspect-stack-and-input', 'enumerate-components', 'validate-and-write'],
+                    steps: { 'enumerate-components': { status, failed_approaches: [] } },
+                },
+            },
+        };
+        fs.writeFileSync(path.join(tmpDir, '.work-state.json'), JSON.stringify(state));
+    }
+
+    it('procedure-position-on-compact: one state line, read from disk, phrased as state', () => {
+        writeProcedureState('stale');
+        const { stdout, status } = runHook('session_start', { source: 'compact' });
+        expect(status).toBe(0);
+        const context = String((JSON.parse(stdout.trim()) as { context: string }).context);
+        const lines = context.split('\n').filter((l) => l.startsWith('procedure '));
+        expect(lines).toEqual([
+            'procedure existing-ui-audit@0123456789ab · step 2 of 3 (enumerate-components) · last exit stale',
+        ]);
+        expect(context).not.toMatch(/\b(run|do|execute|continue)\b.*step 2/i);
+    });
+
+    it('procedure-position-on-compact: no state file, no line; another kind of run, no line', () => {
+        expect(runHook('session_start', { source: 'compact' }).stdout.trim()).toBe('');
+        fs.writeFileSync(path.join(tmpDir, '.work-state.json'), JSON.stringify({ version: 1, input: { kind: 'prompt', data: {} } }));
+        expect(runHook('session_start', { source: 'compact' }).stdout.trim()).toBe('');
+    });
+
+    it('procedure-position-on-compact: only the compact source carries the line', () => {
+        writeProcedureState('partial');
+        expect(runHook('session_start', { source: 'startup' }).stdout.trim()).toBe('');
+    });
+});

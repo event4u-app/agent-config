@@ -18,6 +18,19 @@ import { AUDIT_KINDS, buildArtefact, isBarrel, shadcnUiDirs } from '../../src/cl
 
 const NOW = '2026-08-26T00:00:00.000Z';
 
+/**
+ * The skill's head plus its procedure step files: the `kind:` line moved into
+ * `references/steps/` when the procedure was split (road-to-steps-the-skill-cannot-skip 4.1).
+ */
+function skillText(skillMd: string): string {
+    const steps = skillMd.replace(/SKILL\.md$/, 'references/steps');
+    const parts = [fs.readFileSync(skillMd, 'utf8')];
+    if (fs.existsSync(steps)) {
+        for (const f of fs.readdirSync(steps).sort()) parts.push(fs.readFileSync(`${steps}/${f}`, 'utf8'));
+    }
+    return parts.join('\n');
+}
+
 function markers(files: ReadonlyArray<readonly [string, string]>): string[] {
     return buildArtefact('/repo', files, NOW).design_system_markers.map((m) => m.marker);
 }
@@ -192,7 +205,7 @@ describe('the audit kind enum has ONE definition', () => {
     const SKILL = 'src/skills/existing-ui-audit/SKILL.md';
 
     it('the skill states exactly the kinds the code emits', () => {
-        const text = fs.readFileSync(SKILL, 'utf8');
+        const text = skillText(SKILL);
         const m = text.match(/kind:\s*([a-z|]+)\s*,/);
         expect(m, `${SKILL} must declare a \`kind: a|b|c\` list`).not.toBeNull();
         const declared = (m as RegExpMatchArray)[1]!.split('|');
@@ -200,7 +213,7 @@ describe('the audit kind enum has ONE definition', () => {
     });
 
     it('the skill does not resurrect the two values with no operational definition', () => {
-        const text = fs.readFileSync(SKILL, 'utf8');
+        const text = skillText(SKILL);
         const m = text.match(/kind:\s*([a-z|]+)\s*,/);
         const declared = (m as RegExpMatchArray)[1]!.split('|');
         for (const dead of ['partial', 'layout']) {
@@ -254,7 +267,7 @@ describe('the emitted vocabulary carries no five-level taxonomy name', () => {
     });
 
     it('the skill declares none of them', () => {
-        const text = fs.readFileSync(SKILL, 'utf8');
+        const text = skillText(SKILL);
         const m = text.match(/kind:\s*([a-z|]+)\s*,/);
         expect(m, `${SKILL} must declare a \`kind: a|b|c\` list`).not.toBeNull();
         const declared = (m as RegExpMatchArray)[1]!.split('|');

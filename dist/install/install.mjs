@@ -7659,9 +7659,11 @@ function sweepReservedNames(commandsDir, currentFiles, isBuiltinName, recordedFi
 var YAML = __toESM(require_dist(), 1);
 import * as fs2 from "node:fs";
 import * as path2 from "node:path";
+var MAX_CONCURRENT_SUBAGENTS = 64;
 var WRITABLE_HOST_ENV = [
-  { variable: "BASH_MAX_OUTPUT_LENGTH", settingsKey: "bash_max_output_length" },
-  { variable: "MAX_MCP_OUTPUT_TOKENS", settingsKey: "max_mcp_output_tokens" }
+  { variable: "BASH_MAX_OUTPUT_LENGTH", settingsKey: "host_environment.request_size_caps.bash_max_output_length" },
+  { variable: "MAX_MCP_OUTPUT_TOKENS", settingsKey: "host_environment.request_size_caps.max_mcp_output_tokens" },
+  { variable: "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS", settingsKey: "subagents.max_parallel", max: MAX_CONCURRENT_SUBAGENTS }
 ];
 var SETTINGS_CANDIDATES = [
   ["agents", "settings", ".agent-settings.yml"],
@@ -7687,21 +7689,22 @@ function readSettingsDoc(projectRoot) {
   return null;
 }
 function hostEnvBlock(settings) {
-  const root = settings;
-  const he = root?.["host_environment"];
-  const caps = he?.["request_size_caps"];
-  if (caps === void 0) return null;
   const out = {};
-  for (const { variable, settingsKey } of WRITABLE_HOST_ENV) {
-    const v = caps[settingsKey];
-    if (typeof v === "number" && Number.isInteger(v) && v > 0) out[variable] = String(v);
+  for (const { variable, settingsKey, max } of WRITABLE_HOST_ENV) {
+    let v = settings;
+    for (const part of settingsKey.split(".")) {
+      v = v !== null && typeof v === "object" ? v[part] : void 0;
+    }
+    if (typeof v !== "number" || !Number.isSafeInteger(v) || v <= 0) continue;
+    if (max !== void 0 && v > max) continue;
+    out[variable] = String(v);
   }
   return Object.keys(out).length === 0 ? null : out;
 }
 function withHostEnv(bridge, projectRoot, announce) {
   const env = hostEnvBlock(readSettingsDoc(projectRoot));
   if (env === null) return bridge;
-  announce(`.claude/settings.json: wrote ${Object.keys(env).join(", ")} (request-size caps)`);
+  announce(`.claude/settings.json: wrote ${Object.keys(env).join(", ")} (request-size and concurrency caps)`);
   return { ...bridge, env };
 }
 
@@ -18651,8 +18654,8 @@ var settingsSchema = external_exports.object({
     model_ceiling: external_exports.string().default("").describe(
       "Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one."
     ),
-    max_parallel: external_exports.number().int().min(1).default(3).describe(
-      "Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs \u2014 a value the model reads from settings; no code counts spawns against it. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
+    max_parallel: external_exports.number().int().min(1).max(64).default(3).describe(
+      "Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns; whether that cap also bounds a resumed worker is unobserved. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
     ),
     adversarial_council: external_exports.enum(["off", "ask", "on"]).default("off").describe(
       "Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only \u2014 a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed."

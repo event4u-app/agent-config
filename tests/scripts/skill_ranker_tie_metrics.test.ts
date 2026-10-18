@@ -105,7 +105,9 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
         // routing matrix, which is why a bigger catalogue moved no tie. The
         // labelled-row count is untouched at 390 — the branch added no fixture.
         expect(whole.length, 'routing-matrix labelled rows moved since 2026-10-01').toBe(390);
-        expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-11').toBe(300);
+        // 300 -> 301 on 2026-10-18: `type-design` landed. The tie pins below
+        // reproduce unchanged at 301 (69/315 tuning, 14/75 sealed).
+        expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-18').toBe(301);
     });
 
     // 67/15 -> 69/14 on 2026-10-13: the TOKENIZER moved, not the corpus and not

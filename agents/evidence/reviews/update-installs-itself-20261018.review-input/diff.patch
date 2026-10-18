@@ -1,0 +1,1347 @@
+diff --git a/agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md b/agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..5173c05a3353f493f5cff7083ff5438e362e26a9
+--- /dev/null
++++ b/agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md
+@@ -0,0 +1,154 @@
++<!-- evidence-type: analysis -->
++
++# Mid-session swap probe — what an `upgrade` does to a session that is running
++
++> Evidence for steps **1.1**, **1.2** and **1.3** of
++> `road-to-an-update-that-installs-itself-only-when-it-is-safe`. Measured
++> 2026-10-18 on `main@fbc8e7c42`, macOS 26.6.2, Node v26.7.0, npm 11.19.0,
++> against the two newest published releases, **16.4.0** and **16.5.0**.
++
++## Result
++
++**Error count: 490** hook invocations failed out of **4,190** fired while an
++`upgrade` activation ran, across four swap rounds. The sequential baseline
++before any swap: **0** failures out of **100**.
++
++The count is non-zero, so step 1.2 takes its second branch: activation waits on
++a live-session register, and no unattended swap ships until one exists.
++
++## How it was measured
++
++Everything ran inside one scratch directory outside the repository: `HOME`, the
++npm global prefix, the npm cache and the consumer project all lived under it,
++so neither the real global install nor the real `~/.claude/settings.json` was
++read or written.
++
++1. Install 16.4.0 globally into the sandbox prefix and run
++   `agent-config global --no-ui`, which writes the sandbox's
++   `~/.claude/settings.json` with the same hook wrapper a real install gets.
++2. **Baseline:** fire each of `session_start`, `user_prompt_submit`,
++   `pre_tool_use` (`Bash: ls`, so the fail-closed guards run), `post_tool_use`
++   and `stop` twenty times, sequentially, through
++   `agent-config dispatch:hook --platform claude --event <e> --native-event <N>`.
++3. **Swap rounds:** two concurrent loops — two sessions — fire the same five
++   events round-robin while the foreground runs the activation the `upgrade`
++   verb runs: `npm install -g @event4u/agent-config@<v>` then
++   `agent-config global --no-ui`. Rounds alternate 16.4.0 → 16.5.0 → 16.4.0 →
++   16.5.0 → 16.4.0, so two are upgrades and two are downgrades.
++4. Every invocation records event, exit code, wall time in ms, stdout bytes and
++   stderr bytes. An error is any non-zero exit; the baseline establishes that
++   every event's expected exit is 0.
++
++## Swap rounds
++
++| Round | Direction | Invocations | Errors | By exit code | By event |
++|---|---|---|---|---|---|
++| r1 | 16.4.0 → 16.5.0 | 2,040 | 144 | 127 × 144 | 28–30 per event |
++| r2 | 16.5.0 → 16.4.0 | 180 | 120 | 127 × 118, 1 × 2 | 24 per event |
++| r3 | 16.4.0 → 16.5.0 | 1,830 | 128 | 127 × 127, 1 × 1 | 25–26 per event |
++| r4 | 16.5.0 → 16.4.0 | 140 | 98 | 127 × 98 | 18–20 per event |
++| **total** | | **4,190** | **490** | 127 × 487, 1 × 3 | every event, `pre_tool_use` included |
++
++The three exit-1 failures were the new code reading a half-written tree:
++
++- `Error: Cannot find module './compose/composer.js'` (`post_tool_use`, r2)
++- `Error: ENOENT: no such file or directory, open …` (`post_tool_use`, r2)
++- `Error: Cannot find module '../common/null.js'` (`user_prompt_submit`, r3)
++
++## What the 487 exit-127 failures mean in a real session
++
++Exit 127 is the `agent-config` binary missing from `PATH` while npm replaces
++the global package and its bin link. The hook wrapper `global` writes resolves
++the binary first — `command -v "$BIN" >/dev/null 2>&1 || exit 0` — so in a real
++session the same window has two outcomes:
++
++- the binary is gone when the wrapper checks → the hook **exits 0 and does
++  nothing**, which for a fail-closed `pre_tool_use` guard means the guard
++  silently did not run;
++- the binary is gone between the check and the exec → exit 127, a hook error
++  the host shows.
++
++Neither is a crash of the host, and neither is harmless: the first is a
++silent hole in every fail-closed guard for the length of the swap.
++
++## Step 1.2 — the branch taken
++
++Non-zero. Activation of an unattended install waits on a live-session register,
++which requires lifting `src/scripts/session_register_hook.ts` from repository
++scope to global scope. That lift is its own step and nothing in this change
++assumes it. Until it lands, the production wiring of `upgrade --unattended`
++evaluates every gate and then refuses to swap, saying why.
++
++## Step 1.3 — hook budget baseline, before any new concern
++
++Sequential, 20 invocations per event, on the sandbox's 16.4.0 install. Wall time
++includes process start of the dispatcher.
++
++| Event | n | p50 ms | p95 ms | stdout bytes p50 | stdout bytes p95 | stderr bytes max | failures |
++|---|---|---|---|---|---|---|---|
++| session_start | 20 | 133 | 160 | 739 | 739 | 0 | 0 |
++| user_prompt_submit | 20 | 149 | 169 | 0 | 0 | 0 | 0 |
++| pre_tool_use | 20 | 115 | 125 | 209 | 209 | 0 | 0 |
++| post_tool_use | 20 | 127 | 152 | 0 | 0 | 0 | 0 |
++| stop | 20 | 213 | 238 | 0 | 0 | 0 | 0 |
++| **all** | 100 | 137 | 232 | 0 | 739 | 0 | 0 |
++
++Phase 3's `session_start` concern is measured against the `session_start` row:
++p95 **160 ms**, **739** bytes.
++
++## Limits of this reading
++
++- One host, one machine, one pair of releases. A host with different hook
++  timing, or a slower disk, moves the window; decision D6 names that as its
++  revisit condition.
++- The two loops are tighter than a real session, which fires hooks per turn,
++  not continuously. That changes how many invocations land in the window, not
++  whether the window exists.
++- The probe fires through the binary on `PATH`. A project with a local
++  `node_modules/@event4u/agent-config` takes the wrapper's first branch and is
++  not exposed to a global swap at all.
++
++## The probe
++
++```bash
++#!/bin/bash
++# usage: probe.sh <S> <from-version> <to-version> <rounds>
++set -u
++S="$1"; FROM="$2"; TO="$3"; ROUNDS="${4:-3}"
++export HOME="$S/home" npm_config_cache="$S/cache" npm_config_prefix="$S/prefix"
++export PATH="$S/prefix/bin:$PATH"
++unset CI AGENT_CONFIG_NO_UPDATE_CHECK CLAUDE_PROJECT_DIR
++LOG="$S/probe.tsv"; : > "$LOG"
++now_ms() { perl -MTime::HiRes=time -e 'printf "%d\n", time*1000'; }
++payload() {
++  case "$1" in
++    pre_tool_use|post_tool_use) printf '{"session_id":"probe","hook_event_name":"x","tool_name":"Bash","tool_input":{"command":"ls"},"cwd":"%s"}' "$S/proj" ;;
++    user_prompt_submit) printf '{"session_id":"probe","prompt":"list files","cwd":"%s"}' "$S/proj" ;;
++    *) printf '{"session_id":"probe","cwd":"%s"}' "$S/proj" ;;
++  esac
++}
++native() { case "$1" in session_start) echo SessionStart;; user_prompt_submit) echo UserPromptSubmit;; pre_tool_use) echo PreToolUse;; post_tool_use) echo PostToolUse;; stop) echo Stop;; esac; }
++fire() { # phase event -> one TSV row: phase event rc ms stdout-bytes stderr-bytes stderr-head
++  local phase="$1" ev="$2" t0 t1 rc out="$S/o.$$.$RANDOM" err="$S/e.$$.$RANDOM"
++  t0=$(now_ms)
++  payload "$ev" | agent-config dispatch:hook --platform claude --event "$ev" --native-event "$(native "$ev")" --project-dir "$S/proj" --min-version 1 >"$out" 2>"$err"
++  rc=$?; t1=$(now_ms)
++  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$phase" "$ev" "$rc" "$((t1-t0))" "$(wc -c <"$out" | tr -d ' ')" "$(wc -c <"$err" | tr -d ' ')" "$(tr '\n\t' '  ' < "$err" | cut -c1-200)" >> "$LOG"
++  rm -f "$out" "$err"
++}
++EVENTS="session_start user_prompt_submit pre_tool_use post_tool_use stop"
++install_v() { npm install -g "@event4u/agent-config@$1" --no-audit --no-fund >/dev/null 2>&1; agent-config global --no-ui >/dev/null 2>&1; }
++install_v "$FROM"
++for i in $(seq 1 20); do for ev in $EVENTS; do fire baseline "$ev"; done; done
++session_loop() { while [ -f "$S/swapping" ]; do for ev in $EVENTS; do fire "swap-$1" "$ev"; done; done; }
++for r in $(seq 1 "$ROUNDS"); do
++  if [ $((r % 2)) -eq 1 ]; then V="$TO"; else V="$FROM"; fi
++  touch "$S/swapping"
++  session_loop "r$r-a" & A=$!
++  session_loop "r$r-b" & B=$!
++  sleep 1; install_v "$V"; rm -f "$S/swapping"; wait $A $B
++done
++```
++
++Run as `probe.sh <scratch-dir> 16.4.0 16.5.0 4`. The script above is the run's
++script with line breaks folded; no step was changed.
+diff --git a/agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md b/agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
+index 7e063e79b3ddc9a0758cd2bb827b3219a56ad39f..b361fde94f1b241508442d33e9b63cfd57ed5e9b 100644
+--- a/agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
++++ b/agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md
+@@ -72,13 +72,13 @@ None of this is rebuilt here.
+ 
+ ## Phase 1 — Measure the hazard before building on it
+ 
+-- [ ] **1.1 Probe the mid-session swap.** Run an `upgrade` activation while a
++- [x] **1.1 Probe the mid-session swap.** Run an `upgrade` activation while a
+       second session fires hooks, including the fail-closed guards. Record
+       every error, with its event and its exit code.
+       verify: the probe log is committed under `agents/evidence/` with a
+       numeric error count and an `evidence-type` marker. A probe with no
+       recorded count has not measured anything.
+-- [ ] **1.2 Branch on the count.** Zero errors → stage-and-activate-at-a-
++- [x] **1.2 Branch on the count.** Zero errors → stage-and-activate-at-a-
+       boundary ships as Phase 2 describes. Non-zero → activation waits on a
+       live-session register, which requires lifting
+       `src/scripts/session_register_hook.ts` from repository scope to global
+@@ -86,35 +86,52 @@ None of this is rebuilt here.
+       below.
+       verify: the branch taken is recorded in `## Decisions` as D6 with the
+       count that chose it.
+-- [ ] **1.3 Baseline the hook budget.** p50 and p95 hook latency and bytes
++- [x] **1.3 Baseline the hook budget.** p50 and p95 hook latency and bytes
+       before any new concern lands, so Phase 3 has something to be measured
+       against.
+       verify: the figures are in the same evidence file as 1.1.
++- [ ] **1.4 Lift the live-session register to global scope.** 1.2 took the
++      non-zero branch (D6: 490 failed hook invocations of 4,190 during four
++      swap rounds), so activation waits on a register that can say no session
++      is live on this machine. Today `src/scripts/session_register_hook.ts`
++      registers sessions per repository only. Until this lands,
++      `ACTIVATION_BLOCKED` in `src/scripts/_cli/upgrade_unattended.ts` keeps the
++      production wiring of `upgrade --unattended` from swapping anything.
++      verify: a fixture with a live session registered from a second
++      repository makes the unattended run refuse, and one with none lets it
++      reach the swap.
++
++> **Measured 2026-10-18:** `agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md`.
++> The 487 exit-127 failures are the binary missing from `PATH` while npm
++> replaces it; under the real hook wrapper that window also makes a
++> fail-closed `pre_tool_use` guard silently exit 0. Steps 3.2, 4.2 and 4.3
++> activate or install, so they wait on 1.4; 3.1, 3.3–3.5 and 4.1 do not swap
++> anything and can land before it.
+ 
+ ## Phase 2 — A safety envelope on the verb that already exists
+ 
+-- [ ] **2.1 `upgrade --unattended`, no new verb.** ADR-041 is accepted; this
++- [x] **2.1 `upgrade --unattended`, no new verb.** ADR-041 is accepted; this
+       is a flag on `cmd_upgrade.ts`. It refuses unless every gate passes: a
+       72 h release age, a provenance check against the OIDC publish
+       (`publish-npm.yml:62`), a `deprecated` check in the same fetch, and the
+       `engines` comparison from the sibling roadmap.
+       verify: a fixture per gate shows the refusal and its reason.
+-- [ ] **2.2 Single-flight.** A lock with a TTL and an owner PID under
++- [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
+       `~/.event4u/agent-config/`; the previous version read from
+       `installed_lock.ts:42-45`.
+       verify: two concurrent invocations produce exactly one install and one
+       recorded refusal.
+-- [ ] **2.3 Failure restores and degrades.** Any failure restores the
++- [x] **2.3 Failure restores and degrades.** Any failure restores the
+       previous version and drops to `notify` with the reason. `EACCES` prints
+       the exact command to run and never invokes `sudo`.
+       verify: fault injection for offline, 403, 404, disk full, SIGTERM,
+       partial settings sync and a concurrent caller — after each, the
+       installed version equals the version before.
+-- [ ] **2.4 Global surfaces only.** The unattended path never touches
++- [x] **2.4 Global surfaces only.** The unattended path never touches
+       `agent_config_version` (`cmd_update.ts:11-13`) and never writes into a
+       project.
+       verify: a project carrying a pin is byte-identical before and after.
+-- [ ] **2.5 Add `--skip <version>`, and do not add `--to`.** `update --to`
++- [x] **2.5 Add `--skip <version>`, and do not add `--to`.** `update --to`
+       already exists (`cmd_update.ts:412`); a second near-identical flag on
+       the confusable verb is the defect its sibling roadmap is fixing.
+       verify: `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` -> /^0$/
+@@ -164,7 +181,7 @@ None of this is rebuilt here.
+       **asked**, never flipped.
+       verify: a fixture asserts zero prompts under CI, non-TTY, headless,
+       `--json` output and a subagent run.
+-- [ ] **4.4 A pin advisor for teams.** `update --check` in a pinned project
++- [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
+       lists what lies between the pin and latest, read from the impact map.
+       It proposes; it never moves the pin.
+       verify: the command's exit code and the pin are unchanged by it.
+@@ -274,7 +291,7 @@ None of this is rebuilt here.
+ | D3 | critical-technical | evidence | Remote release-note text never enters model context | it is attacker-influenceable input on a path that would otherwise reach the model | never |
+ | D4 | contested-technical | evidence | Ring 0 is the existing `next` dist-tag, not a new voluntary diagnostic ring | the channel already exists at `publish-npm.yml:154-168`; a second ring is a second thing to maintain | the channel is retired |
+ | D5 | critical-technical | evidence | Uncertainty never resolves to `auto` | inherited from the classifier's own rule; an updater that guesses is the failure this file exists to avoid | never |
+-| D6 | contested-technical | agent | Let the Phase 1.1 probe's error count decide whether activation needs a global live-session register, and design nothing on either assumption before it | the hazard is unmeasured, and a design built on a guess about it is the failure this phase exists to prevent | the probe is re-run on a host with different hook timing |
++| D6 | contested-technical | agent | Let the Phase 1.1 probe's error count decide whether activation needs a global live-session register, and design nothing on either assumption before it | the hazard is unmeasured, and a design built on a guess about it is the failure this phase exists to prevent. **Branch taken 2026-10-18: non-zero.** The 1.1 probe counted **490** failed hook invocations of **4,190** fired during four swap rounds (16.4.0 ⇄ 16.5.0; 487 exit-127, 3 exit-1), against 0 of 100 in the baseline — so activation waits on a global live-session register (step 1.4) | the probe is re-run on a host with different hook timing |
+ 
+ D6 closes a deferral, not a design: what was decided is that the register
+ question is settled by the Phase 1.1 probe's error count rather than by
+@@ -295,11 +312,11 @@ had already happened.
+   the blocker above is why that is a decision rather than an omission.
+ 
+ ## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
++<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
+ 
+ | Rank | Item | Risk type | Description | Mitigation | Anchored under |
+ |------|------|-----------|-------------|------------|----------------|
+-| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. | Phase 1 measures it before anything is built on it, and 1.2 makes a non-zero count block the design rather than annotate it; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
++| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. **Measured 2026-10-18: 490 of 4,190 hook invocations failed during four swaps**, and the missing-binary window also makes a fail-closed guard exit 0 unseen. | The count was non-zero, so 1.2 took the blocking branch: the production wiring of `upgrade --unattended` refuses to swap until step 1.4 lifts the session register to global scope; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
+ | 2 | A version that cannot start is installed | implementation | An `engines` floor the local runtime does not satisfy takes every hook down at once. | The engines comparison is a refusal gate in 2.1, inherited from the sibling's classifier; 2.3 restores the previous version on any failure. | Phase 2 — A safety envelope on the verb that already exists |
+ | 3 | The new session concern costs latency on every session | product | A per-session probe on a surface that currently costs nothing. | 1.3 baselines before, 3.1 budgets to 1 s and fails open, and the day throttle already exists. | Phase 3 — Delivery into the session, without entering the model |
+ | 4 | A user is silently moved onto a default they did not pick | product | The opt-in becomes a default by momentum rather than by decision. | 4.1 makes an absent key behave as today, asserted against recorded output; the second blocker makes the flip an owner decision with a recorded answer. | Phase 4 — Consent and rollout, nothing flipped silently |
+@@ -308,18 +325,18 @@ had already happened.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] **AC-1** The Phase 1 probe log exists under `agents/evidence/` with a
++- [x] **AC-1** The Phase 1 probe log exists under `agents/evidence/` with a
+       numeric error count, and `auto` ships nowhere while that count is
+       non-zero and the session register is repository-scoped.
+ - [ ] **AC-2** Under `CI=1`, a non-TTY stdout, a source checkout and
+       `AGENT_CONFIG_NO_UPDATE_CHECK=1`, an end-to-end run produces zero
+       filesystem writes outside the state file, asserted by a tree diff.
+-- [ ] **AC-3** A project carrying `agent_config_version` is byte-identical
++- [x] **AC-3** A project carrying `agent_config_version` is byte-identical
+       before and after an unattended run.
+-- [ ] **AC-4** For each of offline, 403, 404, disk-full, SIGTERM and EACCES,
++- [x] **AC-4** For each of offline, 403, 404, disk-full, SIGTERM and EACCES,
+       the installed version after the run equals the version before, and a
+       reason is printed.
+-- [ ] **AC-5** A release published less than 72 h ago, or carrying
++- [x] **AC-5** A release published less than 72 h ago, or carrying
+       `deprecated`, or with unmet `engines`, or with missing provenance, is
+       never installed unattended.
+ - [ ] **AC-6** A settings file with no `update:` block produces byte-identical
+@@ -327,7 +344,7 @@ had already happened.
+ - [ ] **AC-7** The ring-0 exit record is committed before step 4.3 lands.
+ - [ ] **AC-8** No fetched release-note text reaches model context, asserted by
+       a fixture with a hostile remote changelog.
+-- [ ] **AC-9** `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
++- [x] **AC-9** `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
+ - [ ] **AC-10** `task ci` green.
+ 
+ ## Provenance
+diff --git a/docs/getting-started.md b/docs/getting-started.md
+index 72ddd885f5c9c54f24bbebfc48d4c627675c3e84..cb2af7bcea96a773f38a92b7714d9d44746e78b7 100644
+--- a/docs/getting-started.md
++++ b/docs/getting-started.md
+@@ -49,6 +49,17 @@ agent-config config --project   # open the project configuration surface
+ agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge presence
+ ```
+ 
++`agent-config upgrade --unattended --dry-run` reports whether the latest
++release would pass the unattended gates — at least 72 h old, not deprecated,
++an `engines.node` this machine satisfies, an npm provenance attestation, and no
++release in range that needs consumer action. Without `--dry-run` it still
++installs nothing today: swapping a global install under a running session
++breaks that session's hooks, and nothing yet can tell whether a session is
++running. `agent-config upgrade --skip <version>` keeps one release out of every
++unattended run. In a project that pins `agent_config_version`,
++`agent-config update --check` lists what lies between the pin and latest; it
++never moves the pin.
++
+ Claude Code is single-surface: the file projection carries content AND the
+ managed hooks in `~/.claude/settings.json` — there is no marketplace plugin
+ to keep in sync anymore. A leftover plugin from an older install is flagged
+diff --git a/src/scripts/_cli/cmd_update.ts b/src/scripts/_cli/cmd_update.ts
+index 5fdb696eb4c8025123333e842103885883cef9b6..ea94f7b6fa8afb4a5ac11f108f58450207dbad8b 100644
+--- a/src/scripts/_cli/cmd_update.ts
++++ b/src/scripts/_cli/cmd_update.ts
+@@ -14,7 +14,9 @@
+  *
+  * Flags:
+  *
+- * - `--check` — print the available latest version + return; no write.
++ * - `--check` — print the available latest version + return; no write. In a
++ *   project that pins a version, also list what the latest release's impact
++ *   map records between the pin and latest (skipped with `--offline`).
+  * - `--to <version>` — pin to an exact version (registry-existence checked).
+  *   Downgrades are allowed; the pin is a project decision.
+  * - (no flag) — pin to the registry's `latest` tag.
+@@ -68,6 +70,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
+ import * as installed_lock from '../_lib/installed_lock.js';
+ import * as update_check from '../_lib/update_check.js';
+ import { resolvePackageRoot } from '../_lib/package_root.js';
++import { pin_advice_lines } from '../_lib/pin_advice.js';
+ import {
+     DEFAULT_PROJECT_FILE,
+     LOCAL_PROJECT_FILE,
+@@ -291,6 +294,30 @@ function _read_pin_line(p: string): number | null {
+     return null;
+ }
+ 
++/** The pinned version in `p`, unquoted; `null` when the file carries no pin. */
++function _read_pin_value(p: string): string | null {
++    const idx = _read_pin_line(p);
++    if (idx === null) return null;
++    const line = _splitlinesKeepends(fs.readFileSync(p, { encoding: 'utf-8' }))[idx] as string;
++    const raw = (PIN_LINE_RE.exec(line)?.[2] ?? '').replace(/\s+#.*$/, '').trim().replace(/^["']|["']$/g, '');
++    return raw === '' ? null : _normalize(raw);
++}
++
++/** The latest release's `agentConfig.impact`; `null` when it cannot be read. */
++async function _fetch_impact_map(version: string, timeout = 1.0): Promise<unknown> {
++    try {
++        const resp = await fetch(REGISTRY_VERSION_URL.replace('{version}', _normalize(version)), {
++            headers: { Accept: 'application/json' },
++            signal: AbortSignal.timeout(timeout * 1000),
++        });
++        if (resp.status !== 200) return null;
++        const doc = (await resp.json()) as { agentConfig?: { impact?: unknown } } | null;
++        return doc?.agentConfig?.impact ?? null;
++    } catch {
++        return null;
++    }
++}
++
+ /** Rewrite the pin in `path`; return `true` if the file changed. */
+ function _write_pin(p: string, new_version: string): boolean {
+     const target = `agent_config_version: "${_normalize(new_version)}"\n`;
+@@ -374,6 +401,7 @@ interface MainOptions {
+     fetcher?: () => string | null | Promise<string | null>;
+     version_checker?: (version: string) => boolean | Promise<boolean>;
+     cache_warmer?: (version: string) => void;
++    impact_fetcher?: (version: string) => unknown;
+     state_path?: string | null;
+     out?: OutSink;
+     err?: OutSink;
+@@ -490,6 +518,11 @@ export async function main(argv: string[] | null = null, options: MainOptions =
+         } else {
+             _print(out, `agent-config is up to date (${installed_version}).`);
+         }
++        const pin = _read_pin_value(_find_pin_file(cwd));
++        if (pin !== null && !offline) {
++            const fetch_impact = options.impact_fetcher ?? _fetch_impact_map;
++            for (const line of pin_advice_lines(pin, latest, await fetch_impact(latest))) _print(out, line);
++        }
+         return 0;
+     }
+ 
+diff --git a/src/scripts/_cli/cmd_upgrade.ts b/src/scripts/_cli/cmd_upgrade.ts
+index 4e4408e1a9f9ac44036f88ddcb465765a3b16050..dbc416222989e91cfee3f33530b392d435bc8ae4 100644
+--- a/src/scripts/_cli/cmd_upgrade.ts
++++ b/src/scripts/_cli/cmd_upgrade.ts
+@@ -409,10 +409,12 @@ interface Args {
+     check: boolean;
+     dry_run: boolean;
+     converge: boolean;
++    unattended: boolean;
++    skip: string | null;
+ }
+ 
+ const PROG = 'agent-config upgrade';
+-const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--converge]\n`;
++const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--converge] [--unattended] [--skip VERSION]\n`;
+ 
+ function _argError(msg: string): never {
+     _stderr.write(USAGE);
+@@ -421,7 +423,7 @@ function _argError(msg: string): never {
+ }
+ 
+ function _parse(argv: string[]): Args {
+-    const args: Args = { check: false, dry_run: false, converge: false };
++    const args: Args = { check: false, dry_run: false, converge: false, unattended: false, skip: null };
+     const positionals: string[] = [];
+     let i = 0;
+     while (i < argv.length) {
+@@ -457,6 +459,23 @@ function _parse(argv: string[]): Args {
+             i += 1;
+             continue;
+         }
++        if (flag === '--unattended') {
++            if (inlineVal !== null) {
++                _argError(`argument --unattended: ignored explicit argument '${inlineVal}'`);
++            }
++            args.unattended = true;
++            i += 1;
++            continue;
++        }
++        if (flag === '--skip') {
++            const value = inlineVal ?? argv[i + 1];
++            if (value === undefined || value === '' || (inlineVal === null && value.startsWith('-'))) {
++                _argError('argument --skip: expected one argument');
++            }
++            args.skip = lstripV(value.trim());
++            i += inlineVal === null ? 2 : 1;
++            continue;
++        }
+         if (a.startsWith('-') && a !== '-') {
+             _argError(`unrecognized arguments: ${a}`);
+         }
+@@ -466,6 +485,9 @@ function _parse(argv: string[]): Args {
+     if (positionals.length > 0) {
+         _argError(`unrecognized arguments: ${positionals.join(' ')}`);
+     }
++    if (args.unattended && (args.check || args.converge || args.skip !== null)) {
++        _argError('argument --unattended: not allowed with --check, --converge or --skip');
++    }
+     return args;
+ }
+ 
+@@ -485,6 +507,13 @@ export async function main(argv: string[] | null = null, options: MainOptions =
+     const err = options.err ?? _stderr;
+     const args = _parse(argv ?? process.argv.slice(2));
+ 
++    if (args.skip !== null || args.unattended) {
++        const unattended = await import('./upgrade_unattended.js');
++        return args.skip !== null
++            ? unattended.skip_version(args.skip, out)
++            : unattended.run_unattended_default({ dryRun: args.dry_run, out, err, agentConfigBin: _agent_config_bin() });
++    }
++
+     const installed =
+         options.installed !== undefined && options.installed !== null
+             ? options.installed
+diff --git a/src/scripts/_cli/upgrade_unattended.ts b/src/scripts/_cli/upgrade_unattended.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..0c4df11a4e50abfe1ee3a85592ee27189accc64f
+--- /dev/null
++++ b/src/scripts/_cli/upgrade_unattended.ts
+@@ -0,0 +1,359 @@
++/**
++ * `agent-config upgrade --unattended` — the safety envelope around the global
++ * upgrade, for a run nobody is watching.
++ *
++ * It installs only when every gate in `_lib/unattended_gates` passes, only one
++ * run at a time (a lock with a TTL and an owner PID), and only on the global
++ * surfaces: the binary, the global projection, the global settings file. It
++ * never reads the working directory, so it cannot move a project's
++ * `agent_config_version` pin or write into a repository.
++ *
++ * Any failed step restores the version that was installed before and reports
++ * the reason; the run then counts as a notification, not an install. `EACCES`
++ * prints the exact command for the user to run and never escalates.
++ *
++ * The production wiring never swaps today: `ACTIVATION_BLOCKED` stands until a
++ * global live-session register exists, because the measured mid-session swap
++ * breaks running hooks. Gates, lock
++ * and restore are exercised through the injected seams and by `--dry-run`.
++ *
++ * Exit codes: `0` installed or nothing newer · `3` refused (a gate, the lock, the
++ * registry) · `1` a step failed and the previous version was restored · `4` a
++ * step failed and the restore did not reach the previous version.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { spawnSync } from 'node:child_process';
++import process from 'node:process';
++
++import { read_candidate, unattended_decision, type RegistryCandidate } from '../_lib/unattended_gates.js';
++import type { InstallOrigin } from '../_lib/classify_update.js';
++import * as installed_lock from '../_lib/installed_lock.js';
++import { classify_install_origin } from '../_lib/update_check.js';
++import { event4u_root, write_target } from '../_lib/user_global_paths.js';
++import { resolvePackageRoot } from '../_lib/package_root.js';
++import { _is_source_repo } from './cmd_refresh.js';
++
++export const PACKAGE_NAME = '@event4u/agent-config';
++export const PACKUMENT_URL = `https://registry.npmjs.org/${PACKAGE_NAME}`;
++export const LOCK_TTL_MS = 30 * 60 * 1000;
++export const EXIT_REFUSED = 3;
++export const EXIT_RESTORE_FAILED = 4;
++export const LOCK_FILE = 'upgrade-unattended.lock';
++export const SKIP_FILE = 'upgrade-skip.json';
++/**
++ * The production wiring's answer until a global live-session register exists:
++ * the mid-session swap probe of 2026-10-18 recorded hook failures, so no
++ * unattended swap is safe without knowing that no session is running.
++ */
++export const ACTIVATION_BLOCKED =
++    'swapping the global install under a running session breaks its hooks, and no global ' +
++    'live-session register exists yet to say none is running — run `agent-config upgrade` ' +
++    'yourself once no session is open';
++
++interface OutSink {
++    write(text: string): void;
++}
++
++export interface StepResult {
++    readonly rc: number;
++    readonly stderr: string;
++}
++
++export type Packument = { readonly ok: true; readonly doc: unknown } | { readonly ok: false; readonly reason: string };
++
++export interface UnattendedDeps {
++    readonly fetchPackument: () => Promise<Packument>;
++    readonly run: (cmd: string[]) => StepResult;
++    /** The version recorded in `installed.lock`; `''` when unknown. */
++    readonly readInstalled: () => string;
++    readonly origin: InstallOrigin;
++    readonly agentConfigBin: string;
++    /** Existing GLOBAL settings files only — never a project file. */
++    readonly globalSettings: readonly string[];
++    readonly lockPath: string;
++    readonly skipPath: string;
++    readonly env: { readonly ci: boolean; readonly noUpdateCheck: boolean; readonly nodeVersion: string };
++    readonly now: () => Date;
++    readonly pid: number;
++    readonly isAlive: (pid: number) => boolean;
++    readonly dryRun: boolean;
++    /**
++     * Why the swap may not happen now, or `null` when it may. A global install
++     * swapped under a live session breaks that session's hooks (Phase 1 probe),
++     * so activation waits until a register can say no session is live.
++     */
++    readonly activationBlocked: string | null;
++    readonly out: OutSink;
++    readonly err: OutSink;
++}
++
++const PREFIX = 'agent-config upgrade --unattended';
++
++function say(sink: OutSink, line: string): void {
++    sink.write(line + '\n');
++}
++
++// --- skip list -------------------------------------------------------------
++
++export function read_skips(skipPath: string): string[] {
++    try {
++        const data: unknown = JSON.parse(fs.readFileSync(skipPath, 'utf-8'));
++        const list = (data as { skip?: unknown } | null)?.skip;
++        return Array.isArray(list) ? list.filter((v): v is string => typeof v === 'string') : [];
++    } catch {
++        return [];
++    }
++}
++
++export function record_skip(skipPath: string, version: string): void {
++    const skips = read_skips(skipPath);
++    if (!skips.includes(version)) skips.push(version);
++    fs.mkdirSync(path.dirname(skipPath), { recursive: true });
++    fs.writeFileSync(skipPath, JSON.stringify({ skip: skips.sort() }, null, 2) + '\n', 'utf-8');
++}
++
++// --- single-flight lock ------------------------------------------------------
++
++interface LockRecord {
++    readonly pid: number;
++    readonly started_at: string;
++    readonly ttl_ms: number;
++}
++
++/** `null` when the lock is ours now; otherwise the reason it is not. */
++export function acquire_lock(deps: Pick<UnattendedDeps, 'lockPath' | 'pid' | 'now' | 'isAlive'>): string | null {
++    const record: LockRecord = { pid: deps.pid, started_at: deps.now().toISOString(), ttl_ms: LOCK_TTL_MS };
++    for (let attempt = 0; attempt < 2; attempt += 1) {
++        try {
++            fs.mkdirSync(path.dirname(deps.lockPath), { recursive: true });
++            fs.writeFileSync(deps.lockPath, JSON.stringify(record) + '\n', { flag: 'wx' });
++            return null;
++        } catch (exc) {
++            if ((exc as NodeJS.ErrnoException).code !== 'EEXIST') return `cannot write the lock: ${String(exc)}`;
++        }
++        let held: Partial<LockRecord> = {};
++        try {
++            held = JSON.parse(fs.readFileSync(deps.lockPath, 'utf-8')) as Partial<LockRecord>;
++        } catch {
++            // An unreadable lock is treated as stale, never as ours.
++        }
++        const age = deps.now().getTime() - Date.parse(String(held.started_at));
++        const live = typeof held.pid === 'number' && deps.isAlive(held.pid) && age >= 0 && age < (held.ttl_ms ?? LOCK_TTL_MS);
++        if (live) return `another unattended upgrade holds the lock (pid ${held.pid})`;
++        try {
++            fs.unlinkSync(deps.lockPath);
++        } catch {
++            // Raced with another caller clearing it; the retry decides.
++        }
++    }
++    return 'the lock could not be taken';
++}
++
++function release_lock(deps: Pick<UnattendedDeps, 'lockPath' | 'pid'>): void {
++    try {
++        const held = JSON.parse(fs.readFileSync(deps.lockPath, 'utf-8')) as Partial<LockRecord>;
++        if (held.pid === deps.pid) fs.unlinkSync(deps.lockPath);
++    } catch {
++        // Nothing to release.
++    }
++}
++
++// --- the run -----------------------------------------------------------------
++
++function install_steps(version: string, deps: UnattendedDeps): string[][] {
++    return [
++        ['npm', 'install', '-g', `${PACKAGE_NAME}@${version}`],
++        [deps.agentConfigBin, 'global', '--no-ui'],
++        ...deps.globalSettings.map((target) => [deps.agentConfigBin, 'settings:sync', '--path', target]),
++    ];
++}
++
++function run_steps(steps: string[][], deps: UnattendedDeps): { ok: true } | { ok: false; cmd: string[]; result: StepResult } {
++    for (const cmd of steps) {
++        say(deps.out, '→ ' + cmd.join(' '));
++        const result = deps.run(cmd);
++        if (result.rc !== 0) return { ok: false, cmd, result };
++    }
++    return { ok: true };
++}
++
++function restore(previous: string, deps: UnattendedDeps): number {
++    const back = run_steps(install_steps(previous, deps).slice(0, 2), deps);
++    const now = deps.readInstalled();
++    if (back.ok && now === previous) {
++        say(deps.err, `${PREFIX}: restored ${previous}. Run \`agent-config upgrade\` to retry by hand.`);
++        return 1;
++    }
++    if (now === previous) {
++        say(
++            deps.err,
++            `⚠️  ${PREFIX}: installed.lock still records ${previous}, but a restore step failed — ` +
++                'run `agent-config doctor` before trusting this install.',
++        );
++        return 1;
++    }
++    say(
++        deps.err,
++        `❌  ${PREFIX}: the restore did not reach ${previous} (installed: ${now || 'unknown'}). ` +
++            `Run \`npm install -g ${PACKAGE_NAME}@${previous}\` then \`agent-config global --no-ui\`.`,
++    );
++    return EXIT_RESTORE_FAILED;
++}
++
++async function decide(installed: string, deps: UnattendedDeps): Promise<{ candidate: RegistryCandidate } | { refused: string[] }> {
++    const fetched = await deps.fetchPackument();
++    if (!fetched.ok) return { refused: [`registry unavailable: ${fetched.reason}`] };
++    const candidate = read_candidate(fetched.doc);
++    if (candidate === null) return { refused: ['registry document carries no latest version'] };
++    const decision = unattended_decision({
++        installed,
++        candidate,
++        origin: deps.origin,
++        skipped: read_skips(deps.skipPath),
++        env: { ...deps.env, now: deps.now().toISOString() },
++    });
++    return decision.install ? { candidate } : { refused: [...decision.reasons] };
++}
++
++/** Contexts where even the registry fetch and the lock file are side effects nobody asked for. */
++function quiet_context(deps: UnattendedDeps): string | null {
++    if (deps.env.ci) return 'suppressed: CI';
++    if (deps.env.noUpdateCheck) return 'suppressed: AGENT_CONFIG_NO_UPDATE_CHECK=1';
++    if (deps.origin === 'source-checkout') return 'suppressed: source checkout';
++    return null;
++}
++
++export async function run_unattended(deps: UnattendedDeps): Promise<number> {
++    const quiet = quiet_context(deps);
++    if (quiet !== null) {
++        say(deps.out, `ℹ️  ${PREFIX}: not installing — ${quiet}.`);
++        return EXIT_REFUSED;
++    }
++    const previous = deps.readInstalled();
++    if (previous === '') {
++        say(deps.err, `${PREFIX}: not installing — the installed version is unknown, so nothing could be restored.`);
++        return EXIT_REFUSED;
++    }
++    const locked = acquire_lock(deps);
++    if (locked !== null) {
++        say(deps.err, `${PREFIX}: not installing — ${locked}.`);
++        return EXIT_REFUSED;
++    }
++    try {
++        const verdict = await decide(previous, deps);
++        if ('refused' in verdict) {
++            say(deps.out, `ℹ️  ${PREFIX}: not installing (installed: ${previous}) — ${verdict.refused.join('; ')}.`);
++            return EXIT_REFUSED;
++        }
++        const target = verdict.candidate.version;
++        const steps = install_steps(target, deps);
++        if (deps.dryRun) {
++            say(deps.out, `${PREFIX} — dry run, every gate passed for ${target}; would execute:`);
++            for (const cmd of steps) say(deps.out, '  ' + cmd.join(' '));
++            return 0;
++        }
++        if (deps.activationBlocked !== null) {
++            say(deps.out, `ℹ️  ${PREFIX}: every gate passed for ${target}, but not installing — ${deps.activationBlocked}.`);
++            return EXIT_REFUSED;
++        }
++        const ran = run_steps(steps, deps);
++        if (ran.ok) {
++            say(deps.out, `✅  agent-config upgraded unattended: ${previous} → ${target}.`);
++            return 0;
++        }
++        const what = `${ran.cmd.join(' ')} (exit ${ran.result.rc})`;
++        if (/\bEACCES\b/.test(ran.result.stderr)) {
++            say(
++                deps.err,
++                `❌  ${PREFIX}: permission denied on ${what}. agent-config never runs sudo; ` +
++                    `run this yourself with the right permissions: npm install -g ${PACKAGE_NAME}@${target}`,
++            );
++            if (deps.readInstalled() === previous) return 1;
++            return restore(previous, deps);
++        }
++        say(deps.err, `❌  ${PREFIX}: step failed: ${what} — restoring ${previous}.`);
++        return restore(previous, deps);
++    } finally {
++        release_lock(deps);
++    }
++}
++
++// --- production wiring ---------------------------------------------------------
++
++export async function fetch_packument(fetch_impl: typeof fetch = fetch, timeoutMs = 10_000): Promise<Packument> {
++    try {
++        const resp = await fetch_impl(PACKUMENT_URL, {
++            headers: { Accept: 'application/json', 'User-Agent': 'agent-config-upgrade-unattended' },
++            signal: AbortSignal.timeout(timeoutMs),
++        });
++        if (!resp.ok) return { ok: false, reason: `HTTP ${resp.status}` };
++        return { ok: true, doc: await resp.json() };
++    } catch (exc) {
++        return { ok: false, reason: exc instanceof Error ? exc.message : String(exc) };
++    }
++}
++
++export function default_run(cmd: string[], err: OutSink): StepResult {
++    const r = spawnSync(cmd[0] as string, cmd.slice(1), { stdio: ['ignore', 'inherit', 'pipe'], encoding: 'utf-8' });
++    const stderr = r.stderr ?? '';
++    if (stderr) err.write(stderr);
++    if (r.error) return { rc: 127, stderr: stderr + String(r.error) };
++    return { rc: r.status ?? (r.signal === 'SIGTERM' ? 143 : 1), stderr };
++}
++
++export function is_alive(pid: number): boolean {
++    try {
++        process.kill(pid, 0);
++        return true;
++    } catch (exc) {
++        return (exc as NodeJS.ErrnoException).code === 'EPERM';
++    }
++}
++
++function running_origin(): InstallOrigin {
++    const root = resolvePackageRoot(import.meta.url);
++    if (_is_source_repo(root)) return 'source-checkout';
++    return classify_install_origin({ package_root: root, project_pin: null, latest: null, is_global_consumer: false });
++}
++
++/** `upgrade --skip <version>` — never install that version unattended. */
++export function skip_version(version: string, out: OutSink): number {
++    record_skip(write_target(SKIP_FILE), version);
++    say(out, `ℹ️  agent-config upgrade --unattended will never install ${version}.`);
++    return 0;
++}
++
++export async function run_unattended_default(options: {
++    dryRun: boolean;
++    out: OutSink;
++    err: OutSink;
++    agentConfigBin: string;
++}): Promise<number> {
++    const globalSettings = path.join(event4u_root(), 'settings', '.agent-settings.yml');
++    return run_unattended({
++        fetchPackument: () => fetch_packument(),
++        run: (cmd) => default_run(cmd, options.err),
++        readInstalled: () => {
++            const v = installed_lock.read_lockfile()?.agent_config_version;
++            return typeof v === 'string' ? v.trim().replace(/^v+/, '') : '';
++        },
++        origin: running_origin(),
++        agentConfigBin: options.agentConfigBin,
++        globalSettings: fs.existsSync(globalSettings) ? [globalSettings] : [],
++        lockPath: write_target(LOCK_FILE),
++        skipPath: write_target(SKIP_FILE),
++        env: {
++            ci: Boolean(process.env['CI']),
++            noUpdateCheck: process.env['AGENT_CONFIG_NO_UPDATE_CHECK'] === '1',
++            nodeVersion: process.version,
++        },
++        now: () => new Date(),
++        pid: process.pid,
++        isAlive: is_alive,
++        dryRun: options.dryRun,
++        activationBlocked: ACTIVATION_BLOCKED,
++        out: options.out,
++        err: options.err,
++    });
++}
+diff --git a/src/scripts/_lib/pin_advice.ts b/src/scripts/_lib/pin_advice.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..df8a78184b6fbb5291b75bb4d21a895e6a748cf8
+--- /dev/null
++++ b/src/scripts/_lib/pin_advice.ts
+@@ -0,0 +1,42 @@
++/**
++ * What lies between a project's `agent_config_version` pin and the latest
++ * release, read from the latest release's impact map. It proposes; moving the
++ * pin stays a team decision taken with `agent-config update`.
++ *
++ * Pure: the caller reads the pin and fetches the map. The map is registry input
++ * and untrusted, so an entry that does not parse is reported, never trusted.
++ */
++import { CONSUMER_IMPACT_VALUES } from './consumer_impact';
++import { compare_versions, parse_version } from './version_order';
++
++export function pin_advice_lines(pin: string, latest: string, impactMap: unknown): string[] {
++    if (compare_versions(latest, pin) !== 1) return [];
++    const head = `Pinned at ${pin}; latest is ${latest}.`;
++    const tail = 'Moving the pin is a team decision: `agent-config update` rewrites it, this check never does.';
++    if (impactMap === null || typeof impactMap !== 'object' || Array.isArray(impactMap)) {
++        return [head, `  The releases in between cannot be read: ${latest} carries no impact map.`, tail];
++    }
++    const rows: Array<[string, string]> = [];
++    for (const [version, entry] of Object.entries(impactMap as Record<string, unknown>)) {
++        if (parse_version(version) === null) return [head, `  The impact map is not trustworthy: key '${version}' is not a version.`, tail];
++        if (compare_versions(version, pin) !== 1 || compare_versions(version, latest) === 1) continue;
++        const impact = (entry as Record<string, unknown> | null)?.['impact'];
++        if (!(CONSUMER_IMPACT_VALUES as readonly unknown[]).includes(impact)) {
++            return [head, `  The impact map is not trustworthy: ${version} has impact '${String(impact)}'.`, tail];
++        }
++        const security = (entry as Record<string, unknown>)['security'] === true ? ', security fix' : '';
++        rows.push([version, `${String(impact)}${security}`]);
++    }
++    rows.sort((a, b) => compare_versions(a[0], b[0]) ?? 0);
++    const body = rows.length === 0
++        ? ['  No release in between records a consumer impact.']
++        : rows.map(([v, what]) => `  ${v}  ${what}`);
++    const keys = Object.keys(impactMap as Record<string, unknown>).sort((a, b) => compare_versions(a, b) ?? 0);
++    const first = keys[0];
++    const uncovered = first === undefined
++        ? ['  The impact map is empty; the releases in between are not described.']
++        : compare_versions(pin, first) === -1
++            ? [`  The impact map's first entry is ${first}; releases between ${pin} and it may predate the map.`]
++            : [];
++    return [head, ...body, ...uncovered, tail];
++}
+diff --git a/src/scripts/_lib/unattended_gates.ts b/src/scripts/_lib/unattended_gates.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad9b238e068db244ac4bebf5f96d592ab97a1640
+--- /dev/null
++++ b/src/scripts/_lib/unattended_gates.ts
+@@ -0,0 +1,87 @@
++/**
++ * The refusal gates of `agent-config upgrade --unattended`.
++ *
++ * Pure: the caller fetches the registry document and gathers the machine facts,
++ * this only decides. A candidate is installed unattended only when the result
++ * is `{ install: true }`; every other outcome carries the reasons it refused.
++ *
++ * The verdict itself is `classifyUpdate`'s — the 72 h release age, the
++ * `deprecated` field, the `engines.node` comparison, the provenance attestation
++ * and the impact map are all decided there, and this module adds nothing to
++ * them. What it adds is only what an unattended run knows that the classifier
++ * cannot: the explicit flag is the consent (`mode: auto`, interactivity not
++ * required), and a version the user skipped is never installed.
++ */
++import { classifyUpdate, type InstallOrigin } from './classify_update';
++
++export const UNATTENDED_MIN_RELEASE_AGE_HOURS = 72;
++
++export interface RegistryCandidate {
++    readonly version: string;
++    readonly publishedAt: string | null;
++    readonly deprecated: unknown;
++    readonly engines: unknown;
++    readonly provenance: boolean | null;
++    readonly impactMap: unknown;
++}
++
++function asRecord(v: unknown): Record<string, unknown> | null {
++    return v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
++}
++
++/** Read the `latest` candidate out of a full registry packument; `null` when the document does not carry one. */
++export function read_candidate(packument: unknown): RegistryCandidate | null {
++    const doc = asRecord(packument);
++    const version = asRecord(doc?.['dist-tags'])?.['latest'];
++    if (typeof version !== 'string' || version === '') return null;
++    const manifest = asRecord(asRecord(doc?.['versions'])?.[version]);
++    if (manifest === null) return null;
++    const published = asRecord(doc?.['time'])?.[version];
++    const attestations = asRecord(asRecord(manifest['dist'])?.['attestations']);
++    return {
++        version,
++        publishedAt: typeof published === 'string' ? published : null,
++        deprecated: manifest['deprecated'],
++        engines: manifest['engines'],
++        provenance: attestations === null ? false : asRecord(attestations['provenance']) !== null,
++        impactMap: asRecord(manifest['agentConfig'])?.['impact'] ?? null,
++    };
++}
++
++export interface UnattendedInput {
++    readonly installed: string;
++    readonly candidate: RegistryCandidate;
++    readonly origin: InstallOrigin;
++    readonly skipped: readonly string[];
++    readonly env: {
++        readonly ci: boolean;
++        readonly noUpdateCheck: boolean;
++        readonly nodeVersion: string;
++        readonly now: string;
++    };
++}
++
++export type UnattendedDecision =
++    | { readonly install: true; readonly reasons: readonly string[] }
++    | { readonly install: false; readonly reasons: readonly string[] };
++
++export function unattended_decision(input: UnattendedInput): UnattendedDecision {
++    if (input.skipped.includes(input.candidate.version)) {
++        return { install: false, reasons: [`${input.candidate.version} is on the skip list`] };
++    }
++    const verdict = classifyUpdate({
++        installed: input.installed,
++        candidate: input.candidate.version,
++        origin: input.origin,
++        env: { ...input.env, interactive: true },
++        impactMap: input.candidate.impactMap,
++        engines: input.candidate.engines,
++        publishedAt: input.candidate.publishedAt,
++        deprecated: input.candidate.deprecated,
++        provenance: input.candidate.provenance,
++        settings: { mode: 'auto', projectPin: null, minReleaseAgeHours: UNATTENDED_MIN_RELEASE_AGE_HOURS },
++    });
++    return verdict.action === 'auto'
++        ? { install: true, reasons: verdict.reasons }
++        : { install: false, reasons: verdict.reasons };
++}
+diff --git a/tests/lib/pin_advice.test.ts b/tests/lib/pin_advice.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad645407c02dad1d900e19cb737790c5d6430a58
+--- /dev/null
++++ b/tests/lib/pin_advice.test.ts
+@@ -0,0 +1,66 @@
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { describe, expect, it } from 'vitest';
++
++import { pin_advice_lines } from '../../src/scripts/_lib/pin_advice';
++import { main as updateMain } from '../../src/scripts/_cli/cmd_update';
++
++const MAP = {
++    '16.6.0': { impact: 'automatic' },
++    '16.7.0': { impact: 'notice', security: true },
++    '17.0.0': { impact: 'action' },
++    '17.1.0': { impact: 'automatic' },
++};
++
++describe('pin_advice_lines', () => {
++    it('lists the releases strictly after the pin up to latest, in order', () => {
++        const lines = pin_advice_lines('16.6.0', '17.0.0', MAP);
++        expect(lines[0]).toBe('Pinned at 16.6.0; latest is 17.0.0.');
++        expect(lines.slice(1, 3)).toEqual(['  16.7.0  notice, security fix', '  17.0.0  action']);
++        expect(lines.at(-1)).toMatch(/never does/);
++    });
++
++    it('says nothing when the pin is at or past latest', () => {
++        expect(pin_advice_lines('17.0.0', '17.0.0', MAP)).toEqual([]);
++        expect(pin_advice_lines('18.0.0', '17.0.0', MAP)).toEqual([]);
++    });
++
++    it('names an absent or forged map instead of trusting it', () => {
++        expect(pin_advice_lines('16.0.0', '17.0.0', null).join('\n')).toMatch(/carries no impact map/);
++        expect(pin_advice_lines('16.0.0', '17.0.0', { 'not-a-version': {} }).join('\n')).toMatch(/not trustworthy/);
++        expect(pin_advice_lines('16.0.0', '17.0.0', { '16.9.0': { impact: 'urgent' } }).join('\n')).toMatch(/not trustworthy/);
++    });
++
++    it('says when the pin predates the first map entry', () => {
++        expect(pin_advice_lines('16.0.0', '17.0.0', MAP).join('\n')).toMatch(/first entry is 16\.6\.0; releases between 16\.0\.0/);
++    });
++});
++
++describe('update --check in a pinned project (4.4)', () => {
++    it('proposes, never moves the pin, and exits 0', async () => {
++        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pin-advice-'));
++        try {
++            fs.mkdirSync(path.join(dir, '.git'));
++            const pinFile = path.join(dir, '.agent-settings.yml');
++            fs.writeFileSync(pinFile, 'agent_config_version: "16.6.0"  # team pin\n');
++            const before = fs.readFileSync(pinFile);
++            let out = '';
++            const rc = await updateMain(['--check'], {
++                cwd: dir,
++                installed_version: '16.6.0',
++                fetcher: () => '17.0.0',
++                impact_fetcher: () => MAP,
++                state_path: path.join(dir, 'state.json'),
++                out: { write: (t: string) => (out += t) },
++                err: { write: () => undefined },
++            });
++            expect(rc).toBe(0);
++            expect(fs.readFileSync(pinFile).equals(before)).toBe(true);
++            expect(out).toContain('Pinned at 16.6.0; latest is 17.0.0.');
++            expect(out).toContain('  17.0.0  action');
++        } finally {
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    });
++});
+diff --git a/tests/scripts/_cli/upgrade_unattended.test.ts b/tests/scripts/_cli/upgrade_unattended.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..fc319099e6012462e8d5f310ec9b6feecfbbe872
+--- /dev/null
++++ b/tests/scripts/_cli/upgrade_unattended.test.ts
+@@ -0,0 +1,289 @@
++import { createHash } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    ACTIVATION_BLOCKED,
++    EXIT_REFUSED,
++    acquire_lock,
++    read_skips,
++    record_skip,
++    run_unattended,
++    type Packument,
++    type StepResult,
++    type UnattendedDeps,
++} from '../../../src/scripts/_cli/upgrade_unattended';
++
++const NOW = new Date('2026-10-18T12:00:00Z');
++const HOURS = 3_600_000;
++
++function packument(over: { version?: string; ageHours?: number; deprecated?: string; node?: string; provenance?: boolean; impact?: unknown } = {}): unknown {
++    const version = over.version ?? '16.6.0';
++    const manifest: Record<string, unknown> = {
++        version,
++        engines: { node: over.node ?? '>=20.11.0' },
++        dist: over.provenance === false ? {} : { attestations: { provenance: { predicateType: 'https://slsa.dev/provenance/v1' } } },
++        agentConfig: { impact: 'impact' in over ? over.impact : { [version]: { impact: 'automatic' } } },
++    };
++    if (over.deprecated !== undefined) manifest['deprecated'] = over.deprecated;
++    return {
++        'dist-tags': { latest: version },
++        versions: { '16.5.0': { version: '16.5.0' }, [version]: manifest },
++        time: { [version]: new Date(NOW.getTime() - (over.ageHours ?? 100) * HOURS).toISOString() },
++    };
++}
++
++/** A machine with a global binary and an `installed.lock`, mutated only by the steps the run executes. */
++class World {
++    binary = '16.5.0';
++    lock = '16.5.0';
++    readonly cmds: string[][] = [];
++    fault: ((cmd: string[], w: World) => StepResult | null) | null = null;
++
++    run = (cmd: string[]): StepResult => {
++        this.cmds.push(cmd);
++        const injected = this.fault?.(cmd, this) ?? null;
++        if (injected !== null) return injected;
++        if (cmd[0] === 'npm') this.binary = (cmd[3] as string).split('@').pop() as string;
++        if (cmd[1] === 'global') this.lock = this.binary;
++        return { rc: 0, stderr: '' };
++    };
++}
++
++let tmp: string;
++let out: string;
++let err: string;
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'unattended-'));
++    out = '';
++    err = '';
++});
++afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
++
++function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fetched?: Packument } = {}): UnattendedDeps {
++    const fetched: Packument = over.fetched ?? { ok: true, doc: over.doc ?? packument() };
++    return {
++        fetchPackument: async () => fetched,
++        run: world.run,
++        readInstalled: () => world.lock,
++        origin: 'global',
++        agentConfigBin: '/global/bin/agent-config',
++        globalSettings: [path.join(tmp, 'global', '.agent-settings.yml')],
++        lockPath: path.join(tmp, 'state', 'upgrade-unattended.lock'),
++        skipPath: path.join(tmp, 'state', 'upgrade-skip.json'),
++        env: { ci: false, noUpdateCheck: false, nodeVersion: 'v22.11.0' },
++        now: () => NOW,
++        pid: 4242,
++        isAlive: () => true,
++        dryRun: false,
++        activationBlocked: null,
++        out: { write: (t) => (out += t) },
++        err: { write: (t) => (err += t) },
++        ...over,
++    };
++}
++
++describe('upgrade --unattended — the happy path', () => {
++    it('installs the exact candidate on the global surfaces and releases the lock', async () => {
++        const w = new World();
++        expect(await run_unattended(deps(w))).toBe(0);
++        expect(w.lock).toBe('16.6.0');
++        expect(w.cmds[0]).toEqual(['npm', 'install', '-g', '@event4u/agent-config@16.6.0']);
++        expect(fs.existsSync(path.join(tmp, 'state', 'upgrade-unattended.lock'))).toBe(false);
++    });
++
++    it('a blocked activation passes the gates, names why, and installs nothing (D6)', async () => {
++        const w = new World();
++        expect(await run_unattended(deps(w, { activationBlocked: ACTIVATION_BLOCKED }))).toBe(EXIT_REFUSED);
++        expect(w.cmds).toEqual([]);
++        expect(out).toContain('every gate passed for 16.6.0, but not installing');
++        expect(ACTIVATION_BLOCKED).toMatch(/live-session register/);
++    });
++
++    it('a dry run passes the gates and installs nothing', async () => {
++        const w = new World();
++        expect(await run_unattended(deps(w, { dryRun: true }))).toBe(0);
++        expect(w.cmds).toEqual([]);
++        expect(out).toContain('every gate passed for 16.6.0');
++    });
++});
++
++describe('upgrade --unattended — one refusal per gate (2.1)', () => {
++    const cases: Array<[string, Partial<UnattendedDeps> & { doc?: unknown }, RegExp]> = [
++        ['a release younger than 72 h', { doc: packument({ ageHours: 10 }) }, /published less than 72 h ago/],
++        ['a deprecated release', { doc: packument({ deprecated: 'broken, use 16.6.1' }) }, /deprecated/],
++        ['an unmet engines.node', { doc: packument({ node: '>=99.0.0' }) }, /engines\.node '>=99\.0\.0' is not satisfied/],
++        ['a missing provenance attestation', { doc: packument({ provenance: false }) }, /provenance attestation missing/],
++        ['a release in range that needs action', { doc: packument({ impact: { '16.6.0': { impact: 'action' } } }) }, /needs consumer action/],
++        ['an unavailable impact map', { doc: packument({ impact: null }) }, /impact map unavailable/],
++        ['a CI run', { env: { ci: true, noUpdateCheck: false, nodeVersion: 'v22.11.0' } }, /suppressed: CI/],
++        ['the update-check kill switch', { env: { ci: false, noUpdateCheck: true, nodeVersion: 'v22.11.0' } }, /AGENT_CONFIG_NO_UPDATE_CHECK/],
++        ['a source checkout', { origin: 'source-checkout' }, /source checkout/],
++        ['an unknown install origin', { origin: 'unknown' }, /install origin unknown/],
++        ['a candidate that is not newer', { doc: packument({ version: '16.5.0' }) }, /not newer/],
++    ];
++    for (const [name, over, reason] of cases) {
++        it(`refuses ${name}, names the reason, and runs no step`, async () => {
++            const w = new World();
++            expect(await run_unattended(deps(w, over))).toBe(EXIT_REFUSED);
++            expect(out + err).toMatch(reason);
++            expect(w.cmds).toEqual([]);
++            expect(w.lock).toBe('16.5.0');
++        });
++    }
++
++    it('under CI, the kill switch or a source checkout it fetches nothing and writes nothing', async () => {
++        for (const over of [
++            { env: { ci: true, noUpdateCheck: false, nodeVersion: 'v22.11.0' } },
++            { env: { ci: false, noUpdateCheck: true, nodeVersion: 'v22.11.0' } },
++            { origin: 'source-checkout' as const },
++        ]) {
++            let fetches = 0;
++            const w = new World();
++            const rc = await run_unattended(deps(w, { ...over, fetchPackument: async () => ((fetches += 1), { ok: true, doc: packument() }) }));
++            expect(rc).toBe(EXIT_REFUSED);
++            expect(fetches).toBe(0);
++            expect(fs.existsSync(path.join(tmp, 'state'))).toBe(false);
++        }
++    });
++
++    it('refuses a version the user skipped (2.5)', async () => {
++        const w = new World();
++        const d = deps(w);
++        record_skip(d.skipPath, '16.6.0');
++        expect(read_skips(d.skipPath)).toEqual(['16.6.0']);
++        expect(await run_unattended(d)).toBe(EXIT_REFUSED);
++        expect(out).toMatch(/16\.6\.0 is on the skip list/);
++        expect(w.cmds).toEqual([]);
++    });
++
++    it('refuses when the installed version is unknown, because nothing could be restored', async () => {
++        const w = new World();
++        w.lock = '';
++        expect(await run_unattended(deps(w))).toBe(EXIT_REFUSED);
++        expect(w.cmds).toEqual([]);
++    });
++});
++
++describe('upgrade --unattended — single flight (2.2)', () => {
++    it('two concurrent invocations produce exactly one install and one recorded refusal', async () => {
++        const w = new World();
++        const results = await Promise.all([run_unattended(deps(w, { pid: 1 })), run_unattended(deps(w, { pid: 2 }))]);
++        expect(results.sort()).toEqual([0, EXIT_REFUSED]);
++        expect(w.cmds.filter((c) => c[0] === 'npm')).toHaveLength(1);
++        expect(err).toMatch(/another unattended upgrade holds the lock \(pid 1\)/);
++    });
++
++    it('a lock left by a dead owner, or past its TTL, is taken over', () => {
++        const lockPath = path.join(tmp, 'state', 'l.lock');
++        const base = { lockPath, now: () => NOW, isAlive: () => false };
++        expect(acquire_lock({ ...base, pid: 1 })).toBeNull();
++        expect(acquire_lock({ ...base, pid: 2 })).toBeNull();
++        const stale = { lockPath, pid: 3, isAlive: () => true, now: () => new Date(NOW.getTime() + 31 * 60_000) };
++        expect(acquire_lock(stale)).toBeNull();
++        expect(acquire_lock({ lockPath, pid: 4, isAlive: () => true, now: () => new Date(NOW.getTime() + 31 * 60_000) })).toMatch(/pid 3/);
++    });
++});
++
++describe('upgrade --unattended — every failure restores the previous version (2.3)', () => {
++    const faults: Array<[string, Partial<UnattendedDeps> & { fetched?: Packument }, ((cmd: string[], w: World) => StepResult | null) | null]> = [
++        ['offline', { fetched: { ok: false, reason: 'getaddrinfo ENOTFOUND registry.npmjs.org' } }, null],
++        ['registry 403', { fetched: { ok: false, reason: 'HTTP 403' } }, null],
++        ['registry 404', { fetched: { ok: false, reason: 'HTTP 404' } }, null],
++        ['npm 404 on the tarball', {}, (cmd, w) => (cmd[0] === 'npm' && w.binary === '16.5.0' && cmd[3]!.endsWith('16.6.0') ? { rc: 1, stderr: 'npm error code E404' } : null)],
++        [
++            'disk full mid-extract',
++            {},
++            (cmd, w) => {
++                if (cmd[0] === 'npm' && cmd[3]!.endsWith('16.6.0')) {
++                    w.binary = 'half-written';
++                    return { rc: 1, stderr: 'npm error code ENOSPC' };
++                }
++                return null;
++            },
++        ],
++        [
++            'SIGTERM during the global step',
++            {},
++            (cmd, w) => (cmd[1] === 'global' && w.binary === '16.6.0' ? { rc: 143, stderr: '' } : null),
++        ],
++        [
++            'a partial settings sync',
++            {},
++            (cmd, w) => {
++                if (cmd[1] === 'settings:sync' && w.lock === '16.6.0') return { rc: 1, stderr: 'yaml error' };
++                return null;
++            },
++        ],
++        ['EACCES', {}, (cmd) => (cmd[0] === 'npm' && cmd[3]!.endsWith('16.6.0') ? { rc: 243, stderr: 'npm error code EACCES' } : null)],
++    ];
++    for (const [name, over, fault] of faults) {
++        it(`${name}: the installed version after equals the version before, with a reason printed`, async () => {
++            const w = new World();
++            w.fault = fault;
++            const rc = await run_unattended(deps(w, over));
++            expect(rc).not.toBe(0);
++            expect(w.lock).toBe('16.5.0');
++            expect(w.binary).toBe('16.5.0');
++            expect((out + err).trim()).not.toBe('');
++        });
++    }
++
++    it('EACCES prints the exact command and never escalates', async () => {
++        const w = new World();
++        w.fault = (cmd) => (cmd[0] === 'npm' ? { rc: 243, stderr: 'npm error code EACCES' } : null);
++        await run_unattended(deps(w));
++        expect(err).toContain('npm install -g @event4u/agent-config@16.6.0');
++        expect(w.cmds.flat()).not.toContain('sudo');
++    });
++
++    it('a restore that cannot reach the previous version is reported, not hidden', async () => {
++        const w = new World();
++        w.fault = (cmd, world) => {
++            if (cmd[1] === 'global' && world.binary === '16.6.0') {
++                world.lock = '16.6.0';
++                return { rc: 1, stderr: 'boom' };
++            }
++            if (cmd[0] === 'npm' && cmd[3]!.endsWith('16.5.0')) return { rc: 1, stderr: 'offline' };
++            return null;
++        };
++        expect(await run_unattended(deps(w))).toBe(4);
++        expect(err).toMatch(/the restore did not reach 16\.5\.0/);
++    });
++});
++
++describe('upgrade --unattended — global surfaces only (2.4)', () => {
++    it('a project carrying a pin is byte-identical before and after, and no step names it', async () => {
++        const project = path.join(tmp, 'project');
++        fs.mkdirSync(project);
++        fs.writeFileSync(path.join(project, '.agent-settings.yml'), 'agent_config_version: 16.0.0\n');
++        fs.writeFileSync(path.join(project, 'agent-config'), '#!/bin/sh\n', { mode: 0o755 });
++        const digest = (): string => {
++            const h = createHash('sha256');
++            for (const f of fs.readdirSync(project).sort()) h.update(f).update(fs.readFileSync(path.join(project, f)));
++            return h.digest('hex');
++        };
++        const before = digest();
++        const w = new World();
++        const cwd = process.cwd();
++        expect(await run_unattended(deps(w))).toBe(0);
++        expect(process.cwd()).toBe(cwd);
++        expect(digest()).toBe(before);
++        expect(w.cmds.flat().some((a) => a.includes(project))).toBe(false);
++    });
++});
++
++describe('upgrade — the flags (2.1, 2.5)', () => {
++    it('parses --unattended and --skip, and carries no --to', async () => {
++        const { _parse } = await import('../../../src/scripts/_cli/cmd_upgrade');
++        expect(_parse(['--unattended']).unattended).toBe(true);
++        expect(_parse(['--unattended', '--dry-run']).dry_run).toBe(true);
++        expect(_parse(['--skip', 'v16.6.0']).skip).toBe('16.6.0');
++        expect(_parse(['--skip=16.6.0']).skip).toBe('16.6.0');
++        const src = fs.readFileSync(path.join(__dirname, '../../../src/scripts/_cli/cmd_upgrade.ts'), 'utf-8');
++        expect(src.split("'--to'").length - 1).toBe(0);
++    });
++});

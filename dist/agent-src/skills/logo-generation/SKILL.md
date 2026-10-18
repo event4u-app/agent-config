@@ -108,3 +108,4 @@ PNG as the final logo file.
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
 - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the brief into provider-specific prompt grammar.
 - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before generating brand marks or likenesses.
+- `type-design` — "make this a font": the rest of the alphabet in a wordmark's lettering. Named, not linked — it ships in another pack.

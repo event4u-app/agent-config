@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **747 artefacts** in this package.
+Maintainer-facing index of all **749 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (300)
+## Skills (301)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -294,6 +294,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`throughput-vs-morale-tradeoff`](../src/skills/throughput-vs-morale-tradeoff/SKILL.md) | official | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
 | skill | [`traefik`](../src/skills/traefik/SKILL.md) | official | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
+| skill | [`type-design`](../src/skills/type-design/SKILL.md) | official | Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font. |
 | skill | [`typography-system`](../src/skills/typography-system/SKILL.md) | official | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
 | skill | [`ui-apply-generic`](../src/skills/ui-apply-generic/SKILL.md) | official | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus. |
 | skill | [`ui-component-architect`](../src/skills/ui-component-architect/SKILL.md) | official | Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui. |
@@ -438,10 +439,11 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (205)
+## Commands (206)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
+| command | [`agent-design`](../src/domains/engineering-base/agent-design/command.md) | cluster: agent-design | Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation |
 | command | [`agent-handoff`](../src/domains/meta/agent-handoff/command.md) |  | Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste. |
 | command | [`agent-status`](../src/domains/meta/agent-status/command.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
 | command | [`agents`](../src/domains/meta/agents/command.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
@@ -503,7 +505,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`design-system-capture`](../src/domains/engineering-base/design-system/capture/command.md) | cluster: design-system | Inventory this repo's own components and tokens and emit them in the design-system.json shape, so the import path is identical to an external extraction. |
 | command | [`design-system-generate`](../src/domains/engineering-base/design-system/generate/command.md) | cluster: design-system | Ground a design system in the curated design corpus from a product or industry brief, then optionally persist it as MASTER.md or seed DESIGN.md. |
 | command | [`design-system-import`](../src/domains/engineering-base/design-system/import/command.md) | cluster: design-system | Run an extraction tool's output through the three-lane adapter into the design-system.json contract, then hand it to the per-field confirmation import. |
-| command | [`design`](../src/domains/engineering-base/design/command.md) | cluster: design | Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation |
+| command | [`design-system-sync`](../src/domains/engineering-base/design-system/sync/command.md) | cluster: design-system | Reconcile a design system that already exists on the host's canvas into the code through one ledger the user sees, before the user runs the host's own sync. |
 | command | [`estimate-ticket`](../src/domains/product-basic/estimate-ticket/command.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`explain-run`](../src/domains/meta/explain-run/command.md) |  | Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'. |
 | command | [`feature`](../src/domains/engineering-base/feature/command.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |

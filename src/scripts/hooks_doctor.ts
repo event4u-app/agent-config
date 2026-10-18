@@ -46,6 +46,12 @@ import {
   type RefusalStats,
 } from "./_lib/turn_end_refusals.js";
 import { ledgerWritable, readDelivered } from "./_lib/obligations.js";
+import {
+  defaultFloorPostureDeps,
+  readFloorPosture,
+  renderFloorPosture,
+  type FloorPosture,
+} from "./_lib/floor_posture.js";
 
 // src/scripts/hooks_doctor.ts → parents[2] (../../..) is the repo root,
 // mirroring the Python `Path(__file__).resolve().parents[2]`.
@@ -205,6 +211,12 @@ export interface DoctorPayload {
   obligation_ledger: ObligationLedgerStats;
   /** The machine's install stamp, for reading the version split below it. */
   install_boundary: InstallBoundary;
+  /**
+   * What carries the destructive-action floor here: whether the hook runtime
+   * resolves at all, the host sandbox keys, and any neighbour PreToolUse hook.
+   * Report only — it never changes the exit code and never writes a setting.
+   */
+  floor_posture: FloorPosture;
 }
 
 /** What the doctor can say about the ledger without interpreting a single row. */
@@ -316,6 +328,7 @@ export function collect(
     turn_end_refusals,
     obligation_ledger: collectLedgerStats(project_root),
     install_boundary: readInstallBoundary(),
+    floor_posture: readFloorPosture(defaultFloorPostureDeps(project_root)),
   };
 }
 
@@ -500,6 +513,10 @@ export function _render_table(payload: DoctorPayload): string {
   lines.push(..._render_refusals(payload));
   lines.push("");
   lines.push(..._render_ledger(payload));
+  lines.push("");
+  lines.push("Floor posture");
+  lines.push("-".repeat(60));
+  lines.push(...renderFloorPosture(payload.floor_posture));
   // Dispatch-issues detail — last 20 grouped by concern.
   if (payload.dispatch_issues.length > 0) {
     lines.push("");

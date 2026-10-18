@@ -20,7 +20,7 @@ relates:
     relation: disjoint
     note: "Active. Owns the bundled-script contract; the new skill bundles no script and runs a pinned peer-side toolchain, so that contract is not touched."
 estate_offset_exempt: "Adds one active roadmap with nothing to offset: no active, later or stub roadmap owns font construction, the font states of the asset witness, or the typography carriers (swept agents/roadmaps/ for font, glyph, typography, line-height and document.fonts on 2026-10-12). Merging into road-to-svg-witness-provenance would bind a typography programme to a three-finding security follow-up."
-estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with this file: the reconstruction benchmark needs real font families as held-out truth, and whether the 2026-06-28 no-font-bundler council lock covers a maintainer-run benchmark is a lock interpretation the council owns, not a step an agent can take."
+estate_growth_exempt: "2026-10-18 change: one skill (`type-design`) and its description tokens — no existing skill can carry a twelve-step font-construction pipeline behind its own trigger (decision A1), and the description cost is paid by a same-change rules reduction, so the per-spawn payload falls. Earlier change: one open blocker (benchmark-fixture-fonts) is added with this file: the reconstruction benchmark needs real font families as held-out truth, and whether the 2026-06-28 no-font-bundler council lock covers a maintainer-run benchmark is a lock interpretation the council owns, not a step an agent can take."
 ---
 # Road to type with a witness
 
@@ -206,7 +206,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with 
       existing `svg-witness-tests` job (`.github/workflows/tests.yml:543`) on
       ubuntu and macOS.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*load-waited-for-delayed-face/
-      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
+      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed. Checked 2026-10-18 for AC-1: `SVG Witness Tests` on ubuntu-latest and macos-latest passed on PR #2430 (run 38987233705), and both job logs carry the font-state cases.
 
 ## Phase 2 — Two delivery tells under the delivery owner
 
@@ -263,34 +263,39 @@ One skill, `execution: manual`, pack `frontend-design`. The model perceives,
 decides and judges; code does every coordinate. The skill bundles no script and
 no font; it runs a pinned toolchain in the consumer's environment.
 
-- [ ] **4.1 Scope and honest limit.** Two entry paths, one core. Path A starts
+- [x] **4.1 Scope and honest limit.** Two entry paths, one core. Path A starts
       from lettering (raster or SVG, including a wordmark the agent just made
       with `logo-generation` or `image-generation`). Path B starts from a brief.
       The body states that a coherent display or brand family is in reach and
       text-grade optical refinement is a type designer's work.
       verify: `grep -c "type designer" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.2 Rights gate before any trace.** Own or commissioned lettering
+      Done 2026-10-18: § The honest limit.
+- [x] **4.2 Rights gate before any trace.** Own or commissioned lettering
       proceeds. Lettering set in an existing typeface is named, and licensing
       that typeface is recommended instead of reconstructing it. A third party's
       mark stops until its owner's rights are stated. An origin the agent cannot
       establish is treated as not owned and asked about.
       verify: `grep -ci "rights gate" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.3 No default output licence (decision A3).** The skill asks which
+      Done 2026-10-18: § Rights gate, five rights classes recorded in the spec's source block.
+- [x] **4.3 No default output licence (decision A3).** The skill asks which
       licence the new font carries, records it in the spec and the name table,
       and writes `unknown` when none is given; it never stamps one on its own.
-      verify: `grep -ci "licence" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.4 Freehand outlines are not a deliverable.** The model never writes
+      verify: `grep -ci "license" src/skills/type-design/SKILL.md` -> /^[1-9]/
+      Done 2026-10-18: § License — asked, never stamped. The verify spells `license`: lint_canonical_terms gates the tree on that spelling, so the step's original `licence` would have required a new canonical-term violation.
+- [x] **4.4 Freehand outlines are not a deliverable.** The model never writes
       path data for a glyph by hand and never ships a freehand SVG glyph; it
       changes spec parameters and lets code rebuild.
       verify: `grep -ci "freehand" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.5 `font-spec.yaml`, documented in `references/font-spec.md`.** Units
+      Done 2026-10-18: § No freehand outlines.
+- [x] **4.5 `font-spec.yaml`, documented in `references/font-spec.md`.** Units
       per em; baseline, x-height, cap height, ascender, descender; stems
       (lowercase and capitals, vertical and horizontal), contrast, stress angle,
       overshoot, aperture, terminal and serif style; spacing values; coverage
       tier; licence block; source block (path, rights class from 4.2, digest
       of the source image, locked glyphs).
       verify: `grep -c "stress angle" src/skills/type-design/references/font-spec.md` -> /^[1-9]/
-- [ ] **4.6 Path A.** Ingest (SVG parse, or threshold and deskew a raster) →
+      Done 2026-10-18: `references/font-spec.md`.
+- [x] **4.6 Path A.** Ingest (SVG parse, or threshold and deskew a raster) →
       code segments and the model labels a numbered contact sheet → trace with
       the fill rule declared (Phase 3) → measure the spec from the traced
       letters → normalise the present letters to it → extend per 4.8. A
@@ -299,48 +304,54 @@ no font; it runs a pinned toolchain in the consumer's environment.
       whose drift fails 5.6. A source below a stated resolution is reported
       as low confidence and cannot reach `validated-static` on fidelity.
       verify: `grep -ci "contact sheet" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.7 Path B.** Brief → spec with numbers → `n o H O` built → proof
+      Done 2026-10-18: procedure step 2; the low-resolution floor is a stated default (600 px cap height / 1,000 units), labelled as such.
+- [x] **4.7 Path B.** Brief → spec with numbers → `n o H O` built → proof
       sheet rendered → the four control glyphs approved by the person asking
       before anything else is built.
       verify: `grep -c "n o H O" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.8 Construction order.** `n o H O` → derivation chains (n to h m u r;
+      Done 2026-10-18: procedure step 3.
+- [x] **4.8 Construction order.** `n o H O` → derivation chains (n to h m u r;
       o to c e b d p q; H to E F I L T; O to C D G Q) → diagonals → free shapes
       (a g s S f t z and the figures) → composites for diacritics through
       anchors, the German set included.
       verify: `grep -ci "derivation chain" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.9 Coverage tiers, defined here (decision A9).** `wordmark` (the
+      Done 2026-10-18: procedure step 4.
+- [x] **4.9 Coverage tiers, defined here (decision A9).** `wordmark` (the
       letters present plus alternates), `latin-basic` (A-Z, a-z, 0-9, basic
       punctuation, space, `.notdef`), `latin-de` (adds the umlauts, both forms
       of sharp s and the German quotation marks). The tier is written into the
       spec and the QA report, and nothing claims a tier it does not cover.
       verify: `grep -c "latin-de" src/skills/type-design/references/font-spec.md` -> /^[1-9]/
-- [ ] **4.10 Toolchain manifest.** A pip-installable outline library, a path
+      Done 2026-10-18: § Coverage tiers in `references/font-spec.md`.
+- [x] **4.10 Toolchain manifest.** A pip-installable outline library, a path
       boolean library, a UFO library, a font compiler, a shaping binding and a
       raster tracer, each pinned to an exact version in
       `references/toolchain.md` and taken through `supply-chain-intake` before
       the skill names it. Bumped by pull request, never floating.
       verify: `grep -cE "==[0-9]" src/skills/type-design/references/toolchain.md` -> /^[1-9]/
-      Open 2026-10-17: an exact pin is a registry fact, and the drain lane that took Phases 1-3 had no live registry read to confirm each version through `supply-chain-intake`; naming a version from memory would be the invented-package failure the intake exists to stop.
-- [ ] **4.11 Outputs land in the consumer tree.** UFO source, `font-spec.yaml`,
+      Done 2026-10-18: six exact pins, each the newest release at least two weeks old, with an intake record (registry JSON, publish date, downloads, OSV: no advisory). The raster tracer is MIT (`vtracer`); the GPL candidates were rejected per the non-goal.
+- [x] **4.11 Outputs land in the consumer tree.** UFO source, `font-spec.yaml`,
       built `woff2` and `ttf`, the proof page and the QA report, at the location
       `design-system-capture` conventions give; never inside the package. The
       QA report carries one maturity label — `concept`, `prototype` or
       `validated-static` (every Phase 5 gate green) — and never a claim the run
       cannot show.
       verify: `grep -c "design-system-capture" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **4.12 The skill lands within the payload ceiling (decision A1).** The
+      Done 2026-10-18: § Outputs and § Maturity; `design-system-capture` is where the family is recorded.
+- [x] **4.12 The skill lands within the payload ceiling (decision A1).** The
       change that adds `src/skills/type-design/SKILL.md` carries a reduction of
       at least the new catalogue entry's tokens elsewhere in the preamble
       payload, and an `estate_growth_exempt` claim naming why no existing skill
       can carry the capability.
       verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> 0
-      Open 2026-10-17: measured 135,908 tok against a 135,908 ceiling — zero headroom — so the skill needs a same-change reduction of its catalogue entry (~53 tok, the 2026-08-27 measurement) from the rules bucket; choosing which rule prose to cut is the A1 decision, not a drive-by.
-- [ ] **4.13 Trigger evals.** At least 5 should-trigger and 5 should-not
+      Done 2026-10-18: 135,880 tok against the 135,907 ceiling (net -27). The reduction is two See-also bullets that repeated a link the same rule's "Body migrated to" line already carries (`context-hygiene`, `roadmap-ci-steps-policy`) — duplicates, so no load-bearing line was cut and A1's fallback did not fire. The estate claim is the amended `estate_growth_exempt` above.
+- [x] **4.13 Trigger evals.** At least 5 should-trigger and 5 should-not
       queries, the latter naming the neighbours: choosing a font
       (`typography-system`), making a logo (`logo-generation`), tracing an icon
       (`svg-authoring`), an icon font (`iconography`).
       verify: `./scripts-run src/scripts/lint_new_skill_gate` -> 0
-- [ ] **4.14 Route it in.** `logo-generation`, `brand-identity` and
+      Done 2026-10-18: `evals/triggers.json`, 6 exemplars, 5 near-misses naming the four neighbours and 1 counterexample; the gate cleared it against origin/main.
+- [x] **4.14 Route it in.** `logo-generation`, `brand-identity` and
       `svg-authoring` hand "the rest of the alphabet / make this a font" to
       `type-design`. `typography-system` gains a `custom` source beside its CSV
       pairing path (spec path, licence, fallback overrides),
@@ -348,30 +359,35 @@ no font; it runs a pinned toolchain in the consumer's environment.
       records a custom family with its source and licence; `bundled_local`
       stays a flag. The neighbours' trigger evals stay green.
       verify: `grep -c "type-design" src/skills/logo-generation/SKILL.md` -> /^[1-9]/
+      Done 2026-10-18: logo-generation, svg-authoring and brand-identity hand off by name; typography-system § Custom source; `design-system-json.md` records a `custom` block beside `bundled_local`.
 
 ## Phase 5 — Gates, proof and the benchmark
 
 Each gate is a peer-side command in the skill's procedure with a threshold and a
 failure message the agent can act on.
 
-- [ ] **5.1 Outline hygiene, in `references/gates.md`.** Every contour closed; counters per glyph equal an
+- [x] **5.1 Outline hygiene, in `references/gates.md`.** Every contour closed; counters per glyph equal an
       expected table (o 1, e 1, a 1, B 2, 8 2, g 1 or 2); points at extrema; no
       contour under the size threshold; direction correct for the outline
       format; fill rule declared before overlap removal.
       verify: `grep -ci "counters per glyph" src/skills/type-design/references/gates.md` -> /^[1-9]/
-- [ ] **5.2 Vertical metrics.** Typo and hhea agree, both line gaps 0,
+      Done 2026-10-18: `references/gates.md` § 1, coverage included.
+- [x] **5.2 Vertical metrics.** Typo and hhea agree, both line gaps 0,
       `USE_TYPO_METRICS` set, win values cover the family's extremes.
       verify: `grep -c "USE_TYPO_METRICS" src/skills/type-design/references/gates.md` -> /^[1-9]/
-- [ ] **5.3 System consistency.** Stems by ray-cast at half x-height across
+      Done 2026-10-18: gates § 2.
+- [x] **5.3 System consistency.** Stems by ray-cast at half x-height across
       n h m u l i within 3 %; overshoot 1 to 3 % on o O e c s; ink area per
       glyph group within a stated band.
       verify: `grep -ci "ray-cast" src/skills/type-design/references/gates.md` -> /^[1-9]/
-- [ ] **5.4 Spacing before kerning.** Sidebearings from edge classes (straight,
+      Done 2026-10-18: gates § 3; thresholds labelled stated defaults the benchmark may move.
+- [x] **5.4 Spacing before kerning.** Sidebearings from edge classes (straight,
       round, diagonal) set on H, n, O, o first; kerning classes from edge groups
       only afterwards; a collision check on the kerning strings; `kern`,
       `mark`, `liga` and, where figures exist, `tnum` built; shaping confirms the features apply.
       verify: `grep -ci "sidebearing" src/skills/type-design/references/gates.md` -> /^[1-9]/
-- [ ] **5.5 Rendered proof through the existing witness (decision A7).** A
+      Done 2026-10-18: gates § 4.
+- [x] **5.5 Rendered proof through the existing witness (decision A7).** A
       generated host page whose specimens are SVG text elements: waterfall 12 to
       72 px, `HHOHH nnonn`, every letter between n and n and between o and o,
       the kerning strings, the wordmark text. `ui:render --profile asset` must
@@ -380,15 +396,18 @@ failure message the agent can act on.
       three repair rounds; after that the QA report names the gate and the
       label stays below `validated-static`.
       verify: `grep -c "profile asset" src/skills/type-design/SKILL.md` -> /^[1-9]/
-- [ ] **5.6 Source fidelity, path A.** The wordmark text set in the new font,
+      Done 2026-10-18: procedure steps 7 and 10, gates § 5.
+- [x] **5.6 Source fidelity, path A.** The wordmark text set in the new font,
       aligned by baseline and cap height, compared with the source by
       silhouette IoU with the method `svg-authoring` already uses: 0.90 per
       glyph, 0.85 per word, and a locked signature glyph at 0.95. The diff
       overlay is produced and looked at.
       verify: `grep -c "0.95" src/skills/type-design/references/gates.md` -> /^[1-9]/
-- [ ] **5.7 Metric-matched fallback.** The skill emits the fallback
+      Done 2026-10-18: gates § 6.
+- [x] **5.7 Metric-matched fallback.** The skill emits the fallback
       `@font-face` overrides for the new family, which is what T12 asks for.
       verify: `grep -c "size-adjust" src/skills/type-design/references/gates.md` -> /^[1-9]/
+      Done 2026-10-18: gates § 7, deriving from the `design-asset-discipline` bullet rather than restating it.
 - [ ] **5.8 Pre-registered reconstruction benchmark — committed fixtures, per
       the council's (a) of 2026-10-16.** Held-out real families live under
       `tests/fixtures/fonts/` <!-- ref-ignore -->, each with its licence text
@@ -404,12 +423,14 @@ failure message the agent can act on.
       the fixture identities are retained beside the verdict. A claim enters
       `docs/CLAIMS.md` only from this run.
       verify: the rendered proof exists for each family; a fixture's name does not appear in the input handed to the skill; the measurements and thresholds are committed with the verdict.
+      Open 2026-10-18 (screen): not executable in a drain lane. The run is a full path-A execution of `type-design` per family — the pinned peer-side toolchain installed, the construction and every gate run — by a generating session that is not the grader, after thresholds are frozen in a commit of their own. No fixture family is committed yet, so nothing here is half-done.
 - [ ] **5.9 The published archive carries no typeface binary.** The lock's one
       bright line, verified against the produced archive rather than against the
       configuration that is supposed to produce it. The check also covers
       release archives, container build contexts and provenance bundles, because
       an exclusion from `package.json#files` is necessary and not sufficient.
       verify: the produced tarball carries no typeface binary and no fixture path — `npm pack --dry-run | grep -cE '[.](ttf|otf|woff2?|ttc)$'` -> /^0$/
+      Open 2026-10-18 (screen): gated on 5.8. The check binds the fixtures 5.8 commits; run today it reads 0 over a tree with no typeface binary at all, which is the vacuous zero this step exists to avoid claiming. It lands in the change that adds the first fixture.
 - [ ] **5.10 The fixture carve-out states its own bound.** The amendment covers
       typeface families for this benchmark and nothing else: a later family
       joins by an explicit decision, never drive-by, and "openly licensed" means
@@ -417,6 +438,7 @@ failure message the agent can act on.
       fixtures" becomes a category that drifts into audio samples and image
       sets.
       verify: the bound and the SPDX restriction are written where the fixtures live, and a family carrying a non-OSI identifier is refused by the same check as 5.9
+      Open 2026-10-18 (screen): gated on 5.8 and 5.9 — "where the fixtures live" does not exist until 5.8 creates it, and the refusal is part of 5.9's check.
 
 ## Phase 6 — Third-party registry items are audited before `add`
 
@@ -499,18 +521,18 @@ skill.
 
 ## Acceptance Criteria
 
-- [ ] AC-0 — Body line-height and the control font-size floor have one value
+- [x] AC-0 — Body line-height and the control font-size floor have one value
       each across the carriers, the drift test was seen red first, and
       `typography-system` claims only content it carries.
-- [ ] AC-1 — The asset witness reports `loaded`, `error` and `synthesised` for
+- [x] AC-1 — The asset witness reports `loaded`, `error` and `synthesised` for
       the three in-memory fixtures on ubuntu and macOS, and the page profile
       reports a painted family beside the declared one.
-- [ ] AC-2 — T11 and T12 sit in the catalogue with fixtures, and the parity
+- [x] AC-2 — T11 and T12 sit in the catalogue with fixtures, and the parity
       lint is green.
-- [ ] AC-3 — `svg-structure-filled-counter` flags the two-circle disc and not
+- [x] AC-3 — `svg-structure-filled-counter` flags the two-circle disc and not
       its even-odd twin, and its false-positive count over the tracked SVGs is
       recorded.
-- [ ] AC-4 — `type-design` passes the new-skill gate, the payload ceiling holds
+- [x] AC-4 — `type-design` passes the new-skill gate, the payload ceiling holds
       in the change that adds it, and the rights gate, the licence question and
       the no-freehand rule are in its body.
 - [ ] AC-5 — A path A run on a wordmark produces a font whose proof page reads
@@ -520,5 +542,5 @@ skill.
       name the coverage tier and the maturity label.
 - [ ] AC-6 — The reconstruction benchmark has run once with frozen thresholds,
       and its verdict is recorded, a null included.
-- [ ] AC-7 — A third-party registry item is routed through
+- [x] AC-7 — A third-party registry item is routed through
       `supply-chain-intake` before `add`.

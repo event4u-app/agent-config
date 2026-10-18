@@ -112,7 +112,7 @@ describe('the token dimension is independent of the count', () => {
 });
 
 describe('the live corpus', () => {
-    it('reads 300 maintained skills and an exact token total', () => {
+    it('reads 301 maintained skills and an exact token total', () => {
         // Pinned so a later reader can tell movement from a re-derivation. If
         // this fails after a legitimate change, the gate has already said so.
         //
@@ -163,9 +163,13 @@ describe('the live corpus', () => {
         // 11456 -> 11455 on 2026-10-16: `brand-to-tokens` names the file the
         // resolver reads (`tokens.json`, not `.tokens.json`), one character
         // shorter (road-to-a-brand-the-tree-can-check 1.2). Shrink direction.
+        //
+        // 300 -> 301 and 11455 -> 11489 on 2026-10-18: `type-design` landed
+        // (road-to-type-with-a-witness Phase 4), claimed by estate_growth_exempt;
+        // its catalogue cost was paid by a same-change rules reduction instead.
         const e = measureSkillEstate(REPO);
-        expect(e.skill_count).toBe(300);
-        expect(e.skill_description_tokens).toBe(11455);
+        expect(e.skill_count).toBe(301);
+        expect(e.skill_description_tokens).toBe(11489);
         expect(e.deprecated_count).toBe(0);
     });
 

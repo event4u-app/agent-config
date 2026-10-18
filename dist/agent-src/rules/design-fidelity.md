@@ -166,11 +166,10 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 
 ## Honest enforcement — `instruction-only`
 
-Nothing records a fidelity comparison, so the proof clause in the Iron Law is
-model-carried and the committed matrix is the control. Which two linters exist,
-what each measures and why neither can tell a proven 1:1 from an asserted one:
-`design-fidelity-enforcement`,
-named in `load_context` above.
+The proof clause is model-carried and the committed matrix is the control —
+except a canvas-synced system, whose mechanical leg is the `sync-ledger` plus
+`/design-system:sync verify`. The two linters and their limits:
+`design-fidelity-enforcement` (`load_context`).
 
 ## See also
 

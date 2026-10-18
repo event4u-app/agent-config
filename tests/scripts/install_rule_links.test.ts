@@ -275,7 +275,7 @@ describe("the real install plan", () => {
   }
 
   it("the deployable share of claude-code's unresolved links is exactly the blocker's subject", () => {
-    // 112 of the 115 would resolve by adding two directories to the deploy
+    // 110 of the 113 would resolve by adding two directories to the deploy
     // plan; the other 3 would not, and that split is what the blocker's
     // recommendation rests on. Pinned so a future reader can tell the two
     // populations apart without re-deriving them — and so the blocker cannot
@@ -288,6 +288,11 @@ describe("the real install plan", () => {
     // the link went with the prose. The pin moves DOWN with the tree — a
     // smaller deployable share is the blocker's subject shrinking, never the
     // ratchet loosening, and `UNRESOLVED_BASELINE` is untouched at 160.
+    //
+    // contexts 62 -> 61 on 2026-10-18: `roadmap-ci-steps-policy` dropped a
+    // See-also bullet that repeated the `contexts/execution/` link its
+    // "Body migrated to" line already carries, and guidelines 50 -> 49 for the
+    // same duplicate in `context-hygiene` (road-to-type-with-a-witness 4.12).
     const pairs = GLOBAL_DEPLOY_SOURCES["claude-code"];
     expect(pairs).toBeDefined();
     const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
@@ -295,8 +300,8 @@ describe("the real install plan", () => {
       (d) => d.directory === "contexts" || d.directory === "guidelines",
     );
     expect(deployable.map((d) => [d.directory, d.count, d.verdict])).toEqual([
-      ["contexts", 62, "directory-not-deployed"],
-      ["guidelines", 50, "directory-not-deployed"],
+      ["contexts", 61, "directory-not-deployed"],
+      ["guidelines", 49, "directory-not-deployed"],
     ]);
   });
 

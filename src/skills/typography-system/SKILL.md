@@ -100,6 +100,17 @@ Consumer brand tokens outrank the corpus filter
 ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)) — if the
 brand already registers fonts, use them and skip the filter.
 
+## Custom source — a family built for the project
+
+Beside the CSV pairing path: when the project has its own family (built with
+`type-design`, or commissioned), take it as the heading or body font instead of
+a CSV row, and record three things — the **spec path** (`font-spec.yaml`), the
+**license** as stated (or `unknown`), and the **fallback overrides**
+(`size-adjust`, `ascent-override`, `descent-override`, `line-gap-override`)
+the build emitted. A
+stated custom family is the stated reason T7 asks for. Steps 3–5 run unchanged;
+step 5's availability check is the built `woff2` existing, not a Google Fonts URL.
+
 ## Delivery — hosting mode (self-hosted by default)
 
 The delivery policy is **owned** by

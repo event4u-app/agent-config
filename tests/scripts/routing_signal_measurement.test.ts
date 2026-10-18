@@ -319,8 +319,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         //
         // 151 -> 156 on 2026-10-17: the five brand-roadmap skills gain a corpus;
         // `gtm-launch` seals (34 -> 35) and four train (117 -> 121).
+        //
+        // 156 -> 157 on 2026-10-18: `type-design` (0x43 = 67) trains (121 -> 122).
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(156);
+        expect(all.length).toBe(157);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(35);
     });
 });
@@ -381,7 +383,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 117 -> 121 on 2026-10-17: `content-funnel-design`, `messaging-architecture`,
         // `release-comms` and `voice-and-tone-design` train; `gtm-launch` seals
         // and is absent here.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(121);
+        // 121 -> 122 on 2026-10-18: `type-design` (0x43 = 67) trains.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(122);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

@@ -36,6 +36,7 @@ import * as path from 'node:path';
 import { ROADMAP_ROOT_REL, scan as scanArtifactLocation } from './agent_artifact_location.js';
 import type { WiringCheck } from './runtime_wiring_checks.js';
 import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
+import { checkSkillReach } from './skill_reach.js';
 
 /**
  * Root agent-instruction files, as a multi-vendor ecosystem convention rather
@@ -560,6 +561,7 @@ export const REACH_CHECK_IDS = [
     'override-set',
     'mcp-consent-residual',
     'artifact-location',
+    'skill-reach',
 ] as const;
 
 export function reachRunners(opts: {
@@ -572,5 +574,6 @@ export function reachRunners(opts: {
         'override-set': () => checkOverrideSet(opts.projectRoot),
         'mcp-consent-residual': () => checkMcpConsentResidual(),
         'artifact-location': () => checkArtifactLocation(opts.projectRoot),
+        'skill-reach': () => checkSkillReach(),
     };
 }
