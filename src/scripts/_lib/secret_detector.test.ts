@@ -125,7 +125,6 @@ describe('the scanner applies every field of a table row', () => {
         pattern: /\b\d{6}\b/g,
         context: { words: /\bpin\b/i, window: 12 },
         exclusions: [/^000000$/],
-        linearity: 'Fixed six-digit run between word boundaries.',
         replacement: 'detection',
     };
 

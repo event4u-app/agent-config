@@ -18,7 +18,7 @@ review_by: 2026-12-03
 The residue of a thesis that was otherwise entirely overtaken: *this package
 simulates in prose what the host now offers as deterministic frontmatter.*
 Roughly 85 % of the source unit is already shipped or parked with a named owner.
-Three items are verified-open and held by nothing.
+Three items are verified-open and held by nothing; a fourth, a re-probe spec, was handed over later.
 
 ### 1. The emitter drops AC's own tool scoping
 
@@ -50,6 +50,25 @@ returns nothing. The refusal names a remedy the tree does not provide.
 The rule tells the reader to use `ci_settle <pr>` rather than a hand-written
 loop. That is still right, and it names no background form, so the rule pins the
 shape the script has since capped by default.
+
+### 4. Re-probe spec for the second CLI host's `PreToolUse` refusal
+
+Handed over 2026-10-18 by `road-to-a-hard-floor-the-shell-cannot-talk-past` 7.4
+(its defect D14), recorded here and **not executed**. The 2026-10-01 live probe
+in `src/scripts/hooks/host_lowering.yaml` (the `codex` row) bound `PreToolUse`
+to a script that wrote to stderr and exited 2, and the shell call was not
+refused. What that probe did not test is whether the host refuses only on a
+**structured deny on stdout**. The re-probe:
+
+1. An isolated `CODEX_HOME` with a `hooks.json` binding `PreToolUse`,
+   `matcher: "Bash"`, to a script that prints
+   `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"probe"}}`
+   on stdout and exits 0.
+2. The same `codex exec --sandbox read-only "Run the shell command: echo …"`
+   invocation as the first probe, on a pinned CLI version.
+3. Recorded result either way, dated and pinned to the build: refused with the
+   reason shown, or executed. Only a refusal may move the row's `block_exit`
+   off `null`; an execution keeps the row `manual-only`.
 
 ## Why this is a stub and not a roadmap
 

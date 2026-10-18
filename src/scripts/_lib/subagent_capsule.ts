@@ -27,7 +27,7 @@
  * Wire format: `src/skills/subagent-orchestration/schemas/subagent-status.json`
  */
 
-import { scanText } from './secret_detector.js';
+import { loadEgressEngine } from '../hooks/egress_engine_loader.js';
 
 /**
  * Epistemic vocabulary for `assumptions[].epistemic_state` — pinned ONCE, here,
@@ -588,8 +588,14 @@ function envelopeStrings(value: unknown, out: string[] = []): string[] {
  */
 export function scanEnvelopeSecrets(envelope: unknown): string[] {
     const errors: string[] = [];
+    // The detector is loaded on demand; when it cannot load, the envelope is
+    // invalid rather than unscanned.
+    const load = loadEgressEngine();
+    if (!load.ok) {
+        return [`credential scan unavailable (${load.reason}) — an envelope that cannot be scanned is rejected, not passed`];
+    }
     for (const text of envelopeStrings(envelope)) {
-        for (const finding of scanText(text)) {
+        for (const finding of load.engine.scanText(text)) {
             if (finding.confidence !== 'high') continue;
             errors.push(
                 `credential-shaped content is schema-invalid in an envelope ` +

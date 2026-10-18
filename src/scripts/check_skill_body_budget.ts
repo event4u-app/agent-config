@@ -65,7 +65,7 @@ export interface Budget {
     rest?: Record<string, unknown>;
 }
 
-/** Byte size of every `src/skills/<name>/SKILL.md`, by directory name. */
+/** Byte size of every `src/skills/<name>/SKILL.md` by directory name, and of every procedure step file. */
 export function measureBodies(root = REPO_ROOT): Record<string, number> {
     const dir = path.join(root, 'src', 'skills');
     const out: Record<string, number> = {};
@@ -77,6 +77,16 @@ export function measureBodies(root = REPO_ROOT): Record<string, number> {
             if (st.isFile()) out[name] = st.size;
         } catch {
             continue;
+        }
+        // A procedure's step files are the body split in order
+        // (road-to-steps-the-skill-cannot-skip 4.3), so each carries its own
+        // shrink-only ceiling under `<skill>/references/steps/<file>`.
+        const steps = path.join(dir, name, 'references', 'steps');
+        if (!fs.existsSync(steps)) continue;
+        for (const file of fs.readdirSync(steps).sort()) {
+            if (!file.endsWith('.md')) continue;
+            const st = fs.statSync(path.join(steps, file));
+            if (st.isFile()) out[`${name}/references/steps/${file}`] = st.size;
         }
     }
     return out;

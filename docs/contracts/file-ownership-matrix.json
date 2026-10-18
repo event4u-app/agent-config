@@ -2076,6 +2076,78 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/00-inspect-stack-and-input.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01-enumerate-components.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01b-detect-component-taxonomy.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/02-identify-design-system.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04-detect-shadcn-inventory.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04b-live-storybook-read.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/05-list-reusable-patterns.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/06-match-candidates.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/07-greenfield-branch.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/08-a11y-baseline.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/expansion-playbook/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2923,6 +2995,66 @@
       "load_context_eager": []
     },
     ".agent-src.uncondensed/skills/project-analyzer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/01-project-overview.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/02-architecture.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/03-data-layer.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/04-business-domains.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/05-api-surface.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/06-service-map.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/07-module-inventory.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/08-infrastructure-and-testing.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/09-agent-docs-audit.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/project-analyzer/references/steps/10-gap-analysis.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -12742,20 +12874,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/brand-source-of-truth.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
-      "target": ".agent-src.uncondensed/rules/design-fidelity.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
       "target": ".agent-src.uncondensed/skills/design-intelligence/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -12784,7 +12902,84 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/storybook-workshop/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/00-inspect-stack-and-input.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01-enumerate-components.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01b-detect-component-taxonomy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/02-identify-design-system.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04-detect-shadcn-inventory.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04b-live-storybook-read.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/05-list-reusable-patterns.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/06-match-candidates.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/07-greenfield-branch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/08-a11y-baseline.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -12806,6 +13001,118 @@
     {
       "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/component-taxonomy-detection.md",
       "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/component-taxonomy-detection.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/00-inspect-stack-and-input.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/00-inspect-stack-and-input.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01-enumerate-components.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01-enumerate-components.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01b-detect-component-taxonomy.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/component-taxonomy-detection.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01b-detect-component-taxonomy.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/01b-detect-component-taxonomy.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/02-identify-design-system.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/02-identify-design-system.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md",
+      "target": ".agent-src.uncondensed/rules/brand-source-of-truth.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04-detect-shadcn-inventory.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04-detect-shadcn-inventory.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04b-live-storybook-read.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04b-live-storybook-read.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/04b-live-storybook-read.md",
+      "target": ".agent-src.uncondensed/skills/storybook-workshop/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/05-list-reusable-patterns.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/05-list-reusable-patterns.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/06-match-candidates.md",
+      "target": ".agent-src.uncondensed/rules/design-fidelity.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/06-match-candidates.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/06-match-candidates.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/07-greenfield-branch.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/07-greenfield-branch.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/08-a11y-baseline.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/08-a11y-baseline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md",
+      "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -16187,6 +16494,146 @@
     {
       "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
       "target": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/01-project-overview.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/02-architecture.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/03-data-layer.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/04-business-domains.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/05-api-surface.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/06-service-map.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/07-module-inventory.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/08-infrastructure-and-testing.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/09-agent-docs-audit.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/10-gap-analysis.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/01-project-overview.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/01-project-overview.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/02-architecture.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/02-architecture.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/03-data-layer.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/03-data-layer.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/04-business-domains.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/04-business-domains.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/05-api-surface.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/05-api-surface.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/06-service-map.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/06-service-map.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/07-module-inventory.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/07-module-inventory.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/08-infrastructure-and-testing.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/08-infrastructure-and-testing.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/09-agent-docs-audit.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/09-agent-docs-audit.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/project-analyzer/references/steps/10-gap-analysis.md",
+      "target": ".agent-src.uncondensed/skills/project-analyzer/references/steps/10-gap-analysis.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

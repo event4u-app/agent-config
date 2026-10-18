@@ -42,6 +42,26 @@ more sensitive class wins (`credential` over `identifier`), then the span a
 validator confirmed, then the longer span. Only the rule table
 (`src/scripts/_lib/egress_rules.ts`) defines a pattern for either class.
 
+A credential row may also declare its literal vendor **prefixes**. Surfaces
+that act on shape alone — a council `api_key_ref`, a masked `explain last`
+value, the low-impact corpus redactor — read those prefixes
+(`CREDENTIAL_PREFIXES`, `rawKeyPrefixPattern`) instead of spelling a list of
+their own; every other consumer runs the rows. Each consumer keeps its own
+policy for a hit (refuse, mask, report, redact a line); only detection is
+shared, and `egress_drift_matrix.test.ts` runs a positive fixture for every
+credential row against every consumer. Moving a consumer must not narrow it:
+`egress_legacy_superset.test.ts` freezes every pre-move pattern and runs an
+adversarial corpus through old and new, and a consumer whose own reading was
+looser than the row (an OpenAI key glued to a word, a GitHub token past 36
+characters, a key block whose END label differs) keeps that reading over the
+table's prefixes. `rawKeyPrefixPattern` holds a prefix to a token start only
+where its own row is anchored. `check_credential_spelling` fails a second
+spelling of a declared prefix under `src/scripts` and `src/cli`. Not yet moved: the keyword-assignment
+variants (`password =`, `api_key:`) that several consumers read at their own,
+looser threshold, and one prefix spelled through a character class in
+`check_reach_channels.ts`; neither carries a vendor literal, so the
+single-spelling test cannot see them.
+
 ## Detection span and replacement span
 
 A rule's **detection span** is what the commit-time scanner reports: enough
@@ -175,7 +195,7 @@ None. The credential rows match everything the commit-time scanner matched
 before they moved into the rule table. `jwt` and `db-connection-uri`, whose
 unbounded pre-move forms were quadratic on a hostile input, now make one
 attempt per character run and consume the run up to its first possible start
-atomically; their `linearity` fields state why that loses nothing.
+atomically; their `LINEARITY` entries state why that loses nothing.
 `DETECTION_CEILINGS` stays as the place a future ceiling would be declared; a
 test fails when a listed ceiling no longer loses its case, and the parity suite
 fails on any loss that is not listed.
@@ -186,9 +206,14 @@ replacement therefore sees at least what the scanner sees, and more — an
 assignment split across lines (`password =` then the value on the next line)
 is replaced but not reported at commit time. A test pins both directions.
 
-Every other rule states in its `linearity` field why it runs in linear time
-without a bound, and matches a value of any length whole, so a replacement never
-leaves a suffix in plaintext.
+Every other rule states in its `LINEARITY` entry (`_lib/egress_rules_linearity.ts`,
+kept out of the shipped engine because no runtime path reads it) why it runs in
+linear time without a bound. A rule whose vendor format has a variable length
+matches a value of any length whole, so a replacement never leaves a suffix in
+plaintext. Three shapes are fixed-length by vendor format (`aws-access-key`,
+`google-api-key`, the classic `github-pat`) and match exactly that length; a
+masking consumer whose own reading was a longer run keeps it
+(`workspace_secrets`, pinned by `egress_legacy_superset.test.ts`).
 
 ## The egress stage and its two views
 
@@ -215,6 +240,33 @@ of one envelope through the payload-shape planner:
   replaced; any other failure of the stage withholds every body and is
   recorded as a `stage-error` refusal.
 
+**The engine is a conditional chunk.** The rule table, the token grammar and the
+commit scanner are not part of `dist/hooks/dispatch.js`: `build:hook-chunks`
+runs `src/scripts/hook_chunks.mjs`, the one definition of every chunk's entry,
+output and build options, which emits them as `dist/hooks/egress_engine.chunk.cjs`
+with a digest sidecar, and
+`hooks/egress_engine_loader.ts` loads the chunk only when a caller needs
+detection — the stage when its mode is not `off`, the subagent capsule when it
+validates an envelope. The loader refuses a chunk that is missing, that does not
+match its sidecar or has none, whose `ENGINE_SCHEMA` is not the one it was built
+against, or that does not load; each is a value, never a throw. What an
+unavailable engine means is fixed per mode:
+
+| Mode | Engine unavailable |
+|---|---|
+| `off` | the engine is never loaded |
+| `observe` | no view changes; the record carries an `engine-unavailable` refusal per scanned field |
+| `protect`, `strict` | every body is withheld from the placeholder view, recorded as `engine-unavailable` |
+
+The subagent capsule rejects an envelope it cannot scan. Every chunk carries its
+own byte ceiling in `src/config/hook-bundle-budget.json` (`chunks`), raised only
+with a `raise_log` entry that names it; the composition gate builds each with the
+same `buildChunk` the shipped build uses and refuses a defined chunk without a
+ceiling, a ceiling without a chunk, and a doubled entry on either side. The one bundled module that needs the
+raw-key prefix list (`ai_council/config.ts`) reads `_lib/egress_prefixes.ts`, a
+generated projection of the table that a test and `check_credential_spelling`
+both hold equal to it.
+
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and
 the permission verdict) and builds the host emission from those alone, so a
@@ -223,8 +275,24 @@ one through the dispatcher and asserts the emission carries none. The lint rule
 `rewrite-concern-refused` is the authoring-time half and reads source text only.
 
 The token scope is one dispatch: a token in a local store cannot be resolved
-later, which is the intended state until the `identifier-table-at-rest` decision
-says how a scope may outlive a process. Byte lengths in a payload stub are
+later. The `identifier-table-at-rest` decision (option (b), council 2026-10-16)
+says how a scope may outlive a process, and its table exists as a module the
+stage does not call yet (`src/scripts/_lib/egress_session_table.ts`): one table
+per session under the user-global root (`runtime/egress-sessions/`, outside the
+workspace, `0600`, named by a digest of the session id), removed after seven
+idle days. It holds a per-session key and, per token, a keyed digest of the
+value, the type, the number and MAC-authenticated origin descriptors — **no
+value of any class**. A restoration names a destination, re-derives the value
+from the origin bound to that destination, matches the digest first even for
+the same destination, and otherwise fails closed as `ORIGIN_CHANGED`,
+`ORIGIN_UNAVAILABLE`, `ORIGIN_AMBIGUOUS`, `DESTINATION_MISMATCH` or
+`SESSION_EXPIRED`, each with a message that names no value and one recovery:
+explicit confirmation with the value shown. A token the session never issued is
+`UNRESOLVED` and has no recovery. Text carried into another session is
+re-issued under that session's key, or becomes the dead form
+`[expired TYPE placeholder]`, which the recogniser never parses. The key rests
+beside the digests, so the table is data minimisation, not a defence against a
+reader running as the same user. Byte lengths in a payload stub are
 measured on the received envelope whichever view the stub is cut from.
 
 **What the placeholder view does not reach.** A concern that opens the host's
@@ -287,7 +355,8 @@ Scanned: `src/scripts/`, `src/cli/`, `src/install/`, `src/shared/`, TypeScript a
 A module whose endpoint is computed at runtime **and** whose send shape the
 scanner does not recognise is absent from this table; that residual is why
 `unclassified` exists. `content` stays `undeclared` until the module carries an
-`egress-content:` marker, and `engine` counts a direct import only.
+`egress-content:` marker, and `engine` counts a direct import of a function that detects or replaces
+(`detect`, `findSpans`, `replaceSpans`, `replaceValues`); importing a table constant does not count.
 
 | module | endpoint | content | engine | status | evidence |
 |---|---|---|---|---|---|

@@ -234,7 +234,7 @@ A split multiplies links. The gate that checks them comes first.
 
 ## Phase 4 — Three pilots, split without losing a line
 
-- [ ] **4.0 Re-pick the pilots before splitting (D15).** F3 fired on
+- [x] **4.0 Re-pick the pilots before splitting (D15).** F3 fired on
       2026-10-17: `design-review` (8 of 8 phases) and `memory-consolidation`
       (at least 3 of 4) are judgement on any honest typing. Keep
       `existing-ui-audit`, replace `memory-consolidation` with a skill whose
@@ -243,12 +243,17 @@ A split multiplies links. The gate that checks them comes first.
       `design-review` stays as a judgement-heavy control. Record each candidate
       against those properties before 4.1 runs; 4.1's three names follow this
       step, not the other way round.
+      *Done 2026-10-18 (D16):* `existing-ui-audit` and `project-analyzer`;
+      `design-review` dropped rather than kept as a control; `design-system-capture`
+      failed the council's condition, so the set is two.
       verify: `test -f agents/evidence/analysis/procedure-pilot-selection.md` -> 0
-- [ ] **4.1 The pilots.** `existing-ui-audit` (steps 0–9, 398 lines),
-      `design-review` (phases 0–7, 399 lines) and `memory-consolidation`
-      (phases 1–4, 400 lines). Each gets a sidecar and `references/steps/`.
-      verify: `ls src/skills/existing-ui-audit/procedure.yaml src/skills/design-review/procedure.yaml src/skills/memory-consolidation/procedure.yaml | wc -l` -> /^\s*3$/
-- [ ] **4.2 Conservation is a test, not a judgement.** Every non-blank line of
+- [x] **4.1 The pilots.** *Amended (D16):* `existing-ui-audit` (steps 0–9
+      with 1b and 4b, 396 lines) and `project-analyzer` (phases 1–10, 367
+      lines). Each gets a sidecar and `references/steps/`.
+      *Done 2026-10-18:* 12 and 10 steps; seven `check:` exits registered in
+      `_lib/procedure_checks.ts`, each corroborating its output against the tree.
+      verify: `ls src/skills/existing-ui-audit/procedure.yaml src/skills/project-analyzer/procedure.yaml | wc -l` -> /^\s*2$/
+- [x] **4.2 Conservation is a test, not a judgement.** Every non-blank line of
       the old body appears verbatim in head ∪ step files; only heading levels and
       link lines may change. The `Procedure` section of the head becomes the
       step table with links and the cursor sentence; the other four required
@@ -259,19 +264,28 @@ A split multiplies links. The gate that checks them comes first.
       fenced block byte for byte, so moving a line under another heading or
       dropping a duplicate is a failure, not a pass. The pre-split bodies are
       committed as test fixtures, which also preserves arm A for Phase 6.
-- [ ] **4.3 Ceilings follow the split.** `check_skill_body_budget --update`
+      *Done 2026-10-18:* fixtures under `tests/skills/fixtures/procedure_conservation/`;
+      seven self-cases prove the check fails a dropped duplicate, a reordered
+      step, a moved line, a re-pointed link, a changed fence byte and a new line
+      outside `## Procedure`.
+- [x] **4.3 Ceilings follow the split.** `check_skill_body_budget --update`
       lowers the three head ceilings; step files get their own shrink-only
       ceilings in `src/config/skill-body-budget.json`.
+      *Done 2026-10-18:* the check measures each `references/steps/*.md` under
+      `<skill>/references/steps/<file>`; the two heads fell to 10,076 and 16,777
+      bytes. Only the pilot rows were re-recorded, not the whole file.
       verify: `./scripts-run src/scripts/check_skill_body_budget` -> 0
-- [ ] **4.4 Report the head against the compaction tail.** Record each pilot
+- [x] **4.4 Report the head against the compaction tail.** Record each pilot
       head's size against the tail `road-to-skills-that-arrive-when-called`
-      step 3.4 measures; this file reports the three numbers and decides
-      nothing about the tail.
-      verify: `grep -cE '^\| (existing-ui-audit|design-review|memory-consolidation) \|' agents/evidence/analysis/procedure-pilot-heads.md` -> /^3$/
+      step 3.4 measures; this file reports the numbers and decides
+      nothing about the tail. *Amended (D16):* two pilots, two rows.
+      verify: `grep -cE '^\| (existing-ui-audit|project-analyzer) \|' agents/evidence/analysis/procedure-pilot-heads.md` -> /^2$/
 
-- [ ] **4.5 The package ships what the head links (D14).** Every sidecar and
+- [x] **4.5 The package ships what the head links (D14).** Every sidecar and
       step file of a split pilot is in the published tarball and in each
       projected tree, so no head links to a file a consumer lacks.
+      *Done 2026-10-18:* asserted for `dist/agent-src`, `files[]` and every
+      host's skills deploy through the installer's own copy function.
       verify: `npx vitest run tests/skills/procedure_conservation.test.ts -t ships-step-files --reporter=verbose` -> /✓.*ships-step-files/
 
 ## Phase 5 — The cursor in the `/work` engine (default-off)
@@ -284,50 +298,81 @@ A split multiplies links. The gate that checks them comes first.
       or repeated; the full `tests/scripts/work_engine` suite (92 files, 1,001
       tests) passes unchanged.
       verify: `npx vitest run tests/scripts/work_engine/dispatcher.test.ts --reporter=verbose` -> /✓/
-- [ ] **5.2 `input.kind: procedure`.** Added to `KNOWN_INPUT_KINDS`; its
+- [x] **5.2 `input.kind: procedure`.** Added to `KNOWN_INPUT_KINDS`; its
       directive set is built from the sidecar. One call checks the exit of step
       n and, on success, emits step n+1 with the brief (goal, "step k of n",
       `remaining`, `failed_approaches` — the capsule field names that already
       exist). A failed exit returns `PARTIAL` with the reason; `judgement`
       returns `PARTIAL` with the question.
+      *Done 2026-10-18:* `work_engine/procedure/run.ts` builds the step map from
+      the sidecar and runs `dispatch` once over its order. A step is handed out
+      the first time it is reached and its exit is checked on every later call;
+      the brief carries goal, "step k of n", `remaining` and `failed_approaches`.
+      The `check:` registry moved beside the engine (`procedure/checks.ts`);
+      `src/scripts/_lib/procedure_checks.ts` re-exports it for the lint.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t one-call-per-step --reporter=verbose` -> /✓.*one-call-per-step/
-- [ ] **5.3 A resumed step is revalidated.** Each `SUCCESS` stores HEAD and the
+- [x] **5.3 A resumed step is revalidated.** Each `SUCCESS` stores HEAD and the
       content hash of the step file and its exit inputs; on resume a mismatch
       marks the step `stale` and re-checks the exit only — the step is not run
       again.
+      *Done 2026-10-18:* HEAD is read from the repository files, not a process.
+      A met exit re-checked after a change is reported `revalidated`; an unmet one
+      leaves the step `stale` and current. A confirmed judgement goes stale when
+      its step file changes.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t stale-after-input-change --reporter=verbose` -> /✓.*stale-after-input-change/
-- [ ] **5.4 The position survives compaction without a new concern.**
+- [x] **5.4 The position survives compaction without a new concern.**
       `handoff-context` already injects on `compact`; it adds one line read from
       `.work-state.json` on disk — `procedure <skill>@<commit> · step k of n
       (<id>) · last exit <ok|stale|partial>` — phrased as state, never as an
       instruction. No state file, no line.
+      *Done 2026-10-18:* on `compact` only; the state file carries the step
+      order so the line needs no sidecar read. Hook bundle 1,547,451 of
+      1,550,000 bytes after the change.
       verify: `npx vitest run tests/scripts/handoff_context_hook.test.ts -t procedure-position-on-compact --reporter=verbose` -> /✓.*procedure-position-on-compact/
-- [ ] **5.5 Entry is a flag, and the pilots' commands use it.** `agent-config
+- [x] **5.5 Entry is a flag, and the pilots' commands use it.** `agent-config
       work --procedure <skill>` (a flag on an existing verb, ADR-041). The
       commands that invoke the three pilots start the cursor themselves instead
       of only pointing at it, so entry is not prose again. Undocumented in the
       public command reference until Phase 6 decides (D3).
+      *Done 2026-10-18:* `--procedure`, `--procedure-confirm`, `--procedure-restart`;
+      set only when passed, so every existing invocation parses as before. The
+      ordinary path refuses a procedure state file. Not in the public command
+      reference (D3).
       verify: `npx vitest run tests/scripts/work_engine/cli.test.ts -t procedure-flag --reporter=verbose` -> /✓.*procedure-flag/
       *Amended (D14):* the pilots' existing commands keep their current path;
       only the explicit `--procedure` flag creates or resumes procedure state.
       "Start the cursor themselves" would make the cursor default-on for those
       commands, which contradicts this phase's heading.
-- [ ] **5.6 Bounds.** Linear, finite, no repeat mode, no background run, no
+- [x] **5.6 Bounds.** Linear, finite, no repeat mode, no background run, no
       subagent start, no stop gate, no hook other than 5.4's line, no shell
       string from data. A single-question read of one step file stays allowed
       without the cursor.
+      *Done 2026-10-18:* asserted on the module source (no process, thread,
+      timer or eval) and on behaviour (a command-string exit is refused and never
+      runs; one call hands out at most one step).
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t bounds-no-shell-no-subagent --reporter=verbose` -> /✓.*bounds-no-shell-no-subagent/
-- [ ] **5.7 A judgement exit has an adjudication protocol (D15), before 5.2.**
+- [x] **5.7 A judgement exit has an adjudication protocol (D15), before 5.2.**
       The design names who answers a `judgement` PARTIAL, which answer clears
       it, what is recorded, and what happens when nobody answers. A judgement
       step is a sequenced step, not a verified one, and the brief says so.
+      *Done 2026-10-18:* the operator answers with `--procedure-confirm <id>`;
+      only that confirmation of the current judgement step clears it, recorded as
+      `{answer: confirmed, by: operator, at, step_sha}`. Unanswered, the step stays
+      current on every call and never times out.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t judgement-adjudication --reporter=verbose` -> /✓.*judgement-adjudication/
-- [ ] **5.8 Kill switch and state integrity (D14), before 5.2.** A switch
+- [x] **5.8 Kill switch and state integrity (D14), before 5.2.** A switch
       independent of the flag refuses procedure activation; the sidecar and the
       state file are read as untrusted input (closed versioned schema, paths
       contained in the skill, no symlink escape, size limit, atomic write); a
       state file bound to another skill, commit or engine version fails closed
       and asks for an explicit restart.
+      *Done 2026-10-18:* `AGENT_CONFIG_PROCEDURE_OFF=1` refuses before anything
+      is read. The sidecar is capped at 64 KiB with closed keys and refuses
+      symlinked or escaping step files; the state file is capped at 1 MiB, its
+      procedure record has a closed versioned shape, and it is written through a
+      temporary file and a rename. Another skill, sidecar or engine version fails
+      closed until `--procedure-restart`; a state file of another kind is never
+      overwritten.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t kill-switch-refuses --reporter=verbose` -> /✓.*kill-switch-refuses/
 
 ## Phase 6 — Measure before anything becomes a default
@@ -348,7 +393,9 @@ plans this round carried; no external source is cited for them.
       verify: `grep -cE '^- \*\*task-' agents/evidence/preregistration/procedure-cursor.md` -> /^30$/
       *Amended (D15):* results are reported per pilot and per exit class
       (verified vs sequenced), never only pooled; the per-pilot count is
-      revisited with 4.0's pick.
+      revisited with 4.0's pick. *Amended (D16):* two pilots, so the fixed
+      count is 20 and the workload 3 × 3 × 20; the verify above follows when
+      6.1 is written.
 - [ ] **6.3 Metrics.** Primary: exits met and task success. Secondary: API
       rounds against `src/config/turnaround-budget.json`, tokens, wall time,
       steps skipped without a reason (target 0 in arm C) and the cursor entry
@@ -403,6 +450,7 @@ plans this round carried; no external source is cited for them.
 | D13 | spend-exhaustion | council:inbox-2026-10-pqr-residue | Phase 6's spend is not authorised as first written; the full three-arm design stays, rewritten as a fixed 3 × 3 × 30 workload with pinned model, retry policy, token and monetary maxima and an aggregation rule, and is put to the owner for authorisation of that stated maximum before any run. Arms A+B alone are declined: they cannot isolate the cursor | AI council 2026-10-14, anthropic + openai, 2/2, $0.00, both (c) on the open-ended version, both reject (b); not owner-reserved for refusing (`agents/runtime/council/responses/inbox-2026-10-pqr-residue`, local) | a delegated spend threshold is recorded and the stated maximum falls under it |
 | D14 | reversible-technical | council:steps-2425-phase45 | Phase 4 and Phase 5 are council-decidable, not owner-reserved, and need not wait for Phase 6. "Consumer-visible" alone is no reserved category. Both carry pre-merge conditions: 4.2 tightened to ordered, exactly-once, link-resolved conservation; 4.5 package shipping; 5.5's pilot commands keep their path; 5.8 kill switch and state integrity | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both (a) for both phases; an earlier run had called both owner-reserved on its own judgement without routing it | an existing public compatibility promise is found that skills are a single self-contained `SKILL.md` |
 | D15 | reversible-technical | council:steps-2425-d7 | D7's revisit-if fired: F3 is true for `design-review` and `memory-consolidation`. The pilot set is re-picked (4.0) before any split; `memory-consolidation` is replaced; a shape-only check (a key exists) does not count as a verified exit, only a check that corroborates the output against the repository; a judgement step is sequenced, not verified, and needs 5.7's adjudication protocol | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both reject keeping all three unchanged; one seat keeps `design-review` as a judgement control, the other asks to separate verified and sequenced step classes, and 4.0 decides between them | 4.0 finds no replacement that meets the properties |
+| D16 | reversible-technical | council:steps-4-0-pilots | Pilots are `existing-ui-audit` and `project-analyzer`. `design-review` is dropped, not kept as a control: verified and sequenced exits are reported separately inside each pilot instead. `design-system-capture` was admitted only if a later step depends on an earlier artefact, an exit corroborates it against the repository, and its prerequisite run of another skill is resolved; its step 2 needs `existing-ui-audit` first (a skill-to-skill chain, K1) and a hard dependency means rewriting the procedure (K5), so the set is two | AI council 2026-10-18, anthropic + openai, 2/2, $0.00, both name the same two and condition the third identically (local council session `steps-4-0-pilots`); record `agents/evidence/analysis/procedure-pilot-selection.md` | a third skill meets P1–P3 without a content change |
 | D9 | reversible-technical | evidence | The stale `existing-ui-audit` link is deleted, not "fixed" by moving sections out | `skill_linter.ts:98`; `b3cc0ada6` | the linter stops requiring `Output format` or `Gotcha` in the body |
 | D10 | reversible-technical | evidence | The canon contradiction named in Context is this file's work, not an open question | Phase 2.1 replaces `skill-writing:104` and `:126-129` with one statement; the closure scan's `contradictory` hit is that finding | — |
 | D11 | reversible-technical | evidence | Closure-scan `typed-op` hits on the word "merge" are slug text, not an operation | Both hits are the slug `road-to-a-retro-the-merge-runs`; this file merges nothing | — |
@@ -439,7 +487,7 @@ plans this round carried; no external source is cited for them.
   names.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -447,7 +495,7 @@ plans this round carried; no external source is cited for them.
 | 2 | The cursor costs more rounds than it saves | product | Each step adds at least one round; the gain may not cover it. | One call per step (5.2); rounds are a pre-registered metric; D8's bar includes them. | Phase 5 — The cursor in the `/work` engine (default-off) |
 | 3 | The compaction line re-runs a finished step | implementation | A position line read as an instruction executes a `SUCCESS` step again. | State phrasing, disk-only source, provenance in the line; F5 removes the line on any occurrence. | Phase 5 — The cursor in the `/work` engine (default-off) |
 | 4 | Widening the link gate reds unrelated skills | implementation | 1.1 surfaces 40 unresolved links at once. | 1.2 repairs them in the same change; `docs/` links are a reported class, not a failure. | Phase 1 — Links the gate can see |
-| 5 | The measurement is spend-bearing | product | Three arms × three runs × ≥ 30 tasks cost model calls. | Pre-registration fixes the size before the first run; the run is the operator's call and is not started by this roadmap's authoring. | Phase 6 — Measure before anything becomes a default |
+| 5 | The measurement is spend-bearing | product | Three arms × three runs × 20 tasks (two pilots, D16) cost model calls. | Pre-registration fixes the size before the first run; the run is the operator's call and is not started by this roadmap's authoring. | Phase 6 — Measure before anything becomes a default |
 | 6 | A new lint and a new test file trip size and gate ratchets | implementation | New gates are counted by coverage ratchets. | Register each gate with its scanned count and self-test in the change that adds it. | Phase 3 — A procedure as data, with no runtime |
 | 7 | A shape check passes for work that was not done | implementation | A check that a state key exists proves the agent wrote something, not that the inventory is right, so the cursor would advance on a claim. | D15: only a check that corroborates the output against the repository counts as a verified exit; a judgement step is labelled sequenced and goes through 5.7's adjudication protocol. | Phase 4 — Three pilots, split without losing a line |
 
@@ -456,22 +504,25 @@ plans this round carried; no external source is cited for them.
 - [ ] **AC-1** Every relative link in a delivered `SKILL.md` or
       `references/*.md` resolves, or is reported by a gate as a named
       non-delivered class; a link one `../` short fails CI.
-- [ ] **AC-2** The order of a pilot's procedure is held by code: with the
+- [x] **AC-2** The order of a pilot's procedure is held by code: with the
       cursor, step n+1 is not emitted until step n's exit is met, recorded
       `judgement`, or recorded `skipped: <reason>`.
-- [ ] **AC-3** Every non-blank line of each pilot's pre-split body is present
+- [x] **AC-3** Every non-blank line of each pilot's pre-split body is present
       in its head or step files, and each head still carries the five required
       sections.
-- [ ] **AC-4** A resumed procedure whose step file or exit inputs changed marks
+- [x] **AC-4** A resumed procedure whose step file or exit inputs changed marks
       that step `stale` and re-checks its exit instead of trusting `SUCCESS`.
-- [ ] **AC-5** Every existing `/work` test passes unchanged, and no existing
-      input kind changes behaviour.
-- [ ] **AC-6** No string from a skill file is executed by the cursor or the
+- [x] **AC-5** Every existing `/work` test passes unchanged, and no existing
+      input kind changes behaviour. *Met 2026-10-18 with one stated exception:*
+      the pin in `tests/scripts/work_engine/state.test.ts` that lists
+      `KNOWN_INPUT_KINDS` gained `procedure`, the addition 5.2 itself requires;
+      the other 1,019 tests in the directory pass untouched.
+- [x] **AC-6** No string from a skill file is executed by the cursor or the
       lint.
 - [ ] **AC-7** A pre-registered three-arm result is published, the verdict
       follows the frozen rule, and nothing is default-on before it — an honest
       null included.
-- [ ] **AC-8** `skill_count` and `concern_count` are unchanged by this roadmap.
+- [x] **AC-8** `skill_count` and `concern_count` are unchanged by this roadmap.
 
 ## Notes — how this file was derived
 

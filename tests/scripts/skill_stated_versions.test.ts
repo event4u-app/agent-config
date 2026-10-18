@@ -118,7 +118,8 @@ describe('the v3/v4 branch is keyed on the css axis in both skills', () => {
     it('react-shadcn-ui and existing-ui-audit both name both axis values', () => {
         for (const p of [
             'src/skills/react-shadcn-ui/SKILL.md',
-            'src/skills/existing-ui-audit/SKILL.md',
+            // The token step of the split procedure carries the branch.
+            'src/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md',
         ]) {
             const body = read(p);
             for (const value of ['tailwind-v3', 'tailwind-v4']) {

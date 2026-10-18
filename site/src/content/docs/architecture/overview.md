@@ -14,7 +14,7 @@ read.
 |---|---|---|
 | **Skills** | 301 | Intent-matched capabilities and executable procedures |
 | **Rules** | 122 | Always-active behaviour constraints, auto-loaded per conversation |
-| **Commands** | 205 | Slash-command orchestrators that compose skills + gates |
+| **Commands** | 206 | Slash-command orchestrators that compose skills + gates |
 | **Guidelines** | 121 | Reference conventions, read on demand |
 | **Personas** | 29 (+5 advisors) | Review lenses dispatched during code/design review |
 

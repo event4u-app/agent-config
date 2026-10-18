@@ -7,9 +7,22 @@
 // fresh raise, a new entry naming a different `to` does not either, and a bare
 // `{ to }` entry with no reason — what the ratification review refused the
 // first version on — does not count as a recorded reason.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import { raiseEntryProblems, raiseFindings } from '../../src/scripts/check_hook_bundle_composition.js';
+import {
+    buildChunkBytes,
+    chunkCoverageFindings,
+    chunkFindings,
+    chunkRaiseFindings,
+    raiseEntryProblems,
+    raiseFindings,
+} from '../../src/scripts/check_hook_bundle_composition.js';
+import { buildChunk, HOOK_CHUNKS, main as hookChunksMain } from '../../src/scripts/hook_chunks.mjs';
+import { verifyBundle } from '../../src/scripts/hooks/bundle_integrity.js';
 
 const OLD_ENTRY = { date: '2026-10-01', from: 1500000, to: 1550000 };
 
@@ -82,5 +95,93 @@ describe('raiseEntryProblems', () => {
             why_it_could_not_be_avoided: 'The bytes are deliberately merged capability, not an accident.',
         };
         expect(raiseEntryProblems(shipped, 1500000)).toEqual([]);
+    });
+});
+
+describe('chunk ceilings', () => {
+    const ENTRY = 'src/scripts/_lib/egress_engine.ts';
+    const chunked = (max: number, log: object[]): string =>
+        JSON.stringify({ max_bytes: 1550000, max_yaml_packages: 1, chunks: [{ entry: ENTRY, max_bytes: max }], raise_log: log });
+    const chunkEntry = (from: number, to: number): object => ({ ...entry(from, to), chunk: ENTRY });
+
+    it('a chunk over its ceiling is a finding, at or under it is not', () => {
+        const budgets = [{ entry: ENTRY, maxBytes: 100 }];
+        expect(chunkFindings(new Map([[ENTRY, 100]]), budgets)).toEqual([]);
+        expect(chunkFindings(new Map([[ENTRY, 101]]), budgets)).toHaveLength(1);
+    });
+
+    it('a ceiling nothing measured is a finding, never a pass', () => {
+        expect(chunkFindings(new Map(), [{ entry: ENTRY, maxBytes: 100 }])).toHaveLength(1);
+    });
+
+    it('a chunk raise needs a new entry naming the chunk and the new ceiling', () => {
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(30000, []))).toHaveLength(1);
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(30000, [entry(28000, 30000)]))).toHaveLength(1);
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(30000, [chunkEntry(28000, 30000)]))).toEqual([]);
+    });
+
+    it('a chunk lowering or a newly registered chunk needs no entry', () => {
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(20000, []))).toEqual([]);
+        expect(chunkRaiseFindings(budget(1550000, []), chunked(28000, []))).toEqual([]);
+    });
+});
+
+describe('chunk builds — one definition, used by the build and by the gate', () => {
+    const ENTRY = 'src/scripts/_lib/egress_engine.ts';
+
+    it('the budgeted chunks and the defined chunks are the same set, and package.json builds through the definition', () => {
+        const budget = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/config/hook-bundle-budget.json'), 'utf-8')) as {
+            chunks: Array<{ entry: string; max_bytes: number }>;
+        };
+        const budgets = budget.chunks.map((c) => ({ entry: c.entry, maxBytes: c.max_bytes }));
+        expect(chunkCoverageFindings(HOOK_CHUNKS.map((h) => h.entry), budgets)).toEqual([]);
+        const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')) as { scripts: Record<string, string> };
+        expect(pkg.scripts['build:hook-chunks']).toBe('node src/scripts/hook_chunks.mjs');
+    });
+
+    it('measures the bytes the definition builds', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-measure-'));
+        try {
+            const out = path.join(dir, 'c.cjs');
+            buildChunk(process.cwd(), ENTRY, out);
+            expect(buildChunkBytes(process.cwd(), ENTRY)).toBe(fs.statSync(out).size);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 60_000);
+
+    it('a defined chunk without a ceiling, and a ceiling without a chunk, are both findings', () => {
+        const findings = chunkCoverageFindings(['a.ts', 'b.ts'], [{ entry: 'a.ts', maxBytes: 1 }, { entry: 'c.ts', maxBytes: 1 }]);
+        expect(findings).toHaveLength(2);
+        expect(findings.some((f) => f.includes('b.ts') && f.includes('no ceiling'))).toBe(true);
+        expect(findings.some((f) => f.includes('c.ts') && f.includes('names no chunk'))).toBe(true);
+    });
+
+    it('a chunk defined twice, and a chunk with two ceilings, are findings', () => {
+        expect(chunkCoverageFindings(['a.ts', 'a.ts', 'a.ts'], [{ entry: 'a.ts', maxBytes: 1 }])).toEqual([
+            'chunk a.ts is defined more than once in hook_chunks.mjs',
+        ]);
+        expect(chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }, { entry: 'a.ts', maxBytes: 2 }])).toEqual([
+            'chunk a.ts has more than one ceiling in src/config/hook-bundle-budget.json',
+        ]);
+        expect(chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }])).toEqual([]);
+    });
+
+    it('the build script writes every defined chunk and a matching digest sidecar', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-main-'));
+        try {
+            expect(hookChunksMain(['--out-dir', dir])).toBe(0);
+            for (const c of HOOK_CHUNKS) {
+                const out = path.join(dir, c.outfile);
+                expect(fs.existsSync(out), c.outfile).toBe(true);
+                expect(verifyBundle(out).state, c.outfile).toBe('ok');
+            }
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 60_000);
+
+    it('refuses to measure an entry no chunk is defined for', () => {
+        expect(() => buildChunkBytes(process.cwd(), 'src/scripts/_lib/no_such_chunk.ts')).toThrow(/defines no chunk/);
     });
 });

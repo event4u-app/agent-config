@@ -17,8 +17,6 @@ export interface EgressRule {
     readonly kind?: string;
     /** MUST carry the global flag. */
     readonly pattern: RegExp;
-    /** Why the pattern runs in linear time on any input; required, reviewed with the pattern. */
-    readonly linearity: string;
     /**
      * Which bytes a replacement must remove. `'detection'`: the detection span is
      * the whole secret. A `through` function returns the end of the secret for a
@@ -32,6 +30,19 @@ export interface EgressRule {
     /** The rule fires only when `words` matches within `window` chars of the value. */
     readonly context?: { readonly words: RegExp; readonly window: number };
     readonly exclusions?: readonly RegExp[];
+    /**
+     * Literal vendor prefixes that mark a raw key by construction. Surfaces that
+     * act on shape alone (a config ref, a masked log value) read these instead of
+     * spelling their own list.
+     */
+    readonly prefixes?: readonly string[];
+    /**
+     * The row matches only at a token start (its pattern opens with a lookbehind
+     * for a key character). A shape-only surface reading the prefixes holds them
+     * to a token start exactly when this is set; a test checks it against what the
+     * row actually matches.
+     */
+    readonly tokenStart?: true;
 }
 
 export interface SpanBounds {
@@ -97,66 +108,128 @@ export function pemBlockEnd(text: string, span: SpanBounds): number | null {
     return m.index + m[0].length;
 }
 
-const PREFIX_RUN =
-    'Starts only where the literal prefix occurs; the single class after it either reaches its minimum and consumes the whole run (the global scan resumes past it) or fails within the minimum, so each character is read a bounded number of times.';
-const FIXED_RUN =
-    'Fixed-length class after a literal prefix: every attempt reads at most the prefix plus the fixed count.';
+/**
+ * End of the first key-end marker of any label after the header, or null. For a
+ * masking surface that cannot refuse: when the block's extent is unproven it
+ * masks too much rather than leaving the key body behind.
+ */
+export function pemMaskEnd(text: string, span: SpanBounds): number | null {
+    KEY_MARKER.lastIndex = span.end;
+    for (let m = KEY_MARKER.exec(text); m !== null; m = KEY_MARKER.exec(text)) {
+        if (m[1] === 'END') return m.index + m[0].length;
+    }
+    return null;
+}
 
 // Quantifiers are unbounded where the pattern is linear without a bound, so a
-// long value is matched whole and no suffix survives a replacement. Each rule
-// states why it is linear; a bound remains only where the unbounded form was
-// quadratic, and what that bound loses is published in DETECTION_CEILINGS.
+// long value is matched whole and no suffix survives a replacement. Each rule's
+// argument for why it is linear lives in `egress_rules_linearity.ts`, kept out
+// of this module because no runtime path reads it; a test refuses a row without
+// one. A bound remains only where the unbounded form was quadratic, and what
+// that bound loses is published in DETECTION_CEILINGS.
 export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'anthropic-api-key',
         type: 'APIKEY',
+        prefixes: ['sk-ant-'],
         class: 'credential',
         replacement: 'detection',
         kind: 'anthropic-api-key',
         pattern: /sk-ant-[A-Za-z0-9_-]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'anthropic-project-key',
         type: 'APIKEY',
+        prefixes: ['sk-proj-'],
         class: 'credential',
         replacement: 'detection',
         kind: 'anthropic-api-key',
         pattern: /sk-proj-[A-Za-z0-9_-]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'aws-access-key',
         type: 'APIKEY',
+        prefixes: ['AKIA'],
         class: 'credential',
         replacement: 'detection',
         pattern: /AKIA[0-9A-Z]{16}/g,
-        linearity: FIXED_RUN,
     },
     {
         rule: 'google-api-key',
         type: 'APIKEY',
+        prefixes: ['AIza'],
         class: 'credential',
         replacement: 'detection',
         pattern: /AIza[0-9A-Za-z_-]{35}/g,
-        linearity: FIXED_RUN,
     },
     {
         rule: 'github-pat',
         type: 'TOKEN',
+        prefixes: ['ghp_'],
         class: 'credential',
         replacement: 'detection',
         pattern: /ghp_[0-9A-Za-z]{36}/g,
-        linearity: FIXED_RUN,
     },
     {
         rule: 'github-fine-grained-pat',
         type: 'TOKEN',
+        prefixes: ['github_pat_'],
         class: 'credential',
         replacement: 'detection',
         kind: 'github-pat',
         pattern: /github_pat_[0-9A-Za-z_]{22,}/g,
-        linearity: PREFIX_RUN,
+    },
+    {
+        rule: 'openai-api-key',
+        type: 'APIKEY',
+        prefixes: ['sk-'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])sk-[A-Za-z0-9]{20,}/g,
+    },
+    {
+        rule: 'google-oauth-token',
+        type: 'TOKEN',
+        prefixes: ['ya29.'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])ya29\.[0-9A-Za-z_-]{20,}/g,
+    },
+    {
+        rule: 'github-app-token',
+        type: 'TOKEN',
+        prefixes: ['gho_', 'ghu_', 'ghs_', 'ghr_'],
+        class: 'credential',
+        replacement: 'detection',
+        pattern: /gh[ousr]_[A-Za-z0-9]{36,}/g,
+    },
+    {
+        rule: 'xai-api-key',
+        type: 'APIKEY',
+        prefixes: ['xai-'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])xai-[A-Za-z0-9]{20,}/g,
+    },
+    {
+        rule: 'perplexity-api-key',
+        type: 'APIKEY',
+        prefixes: ['pplx-'],
+        class: 'credential',
+        replacement: 'detection',
+        pattern: /pplx-[A-Za-z0-9]{20,}/g,
+    },
+    {
+        rule: 'groq-api-key',
+        type: 'APIKEY',
+        prefixes: ['gsk_'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])gsk_[A-Za-z0-9]{20,}/g,
     },
     {
         rule: 'jwt',
@@ -166,24 +239,22 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         pattern:
             /(?<![A-Za-z0-9_-])(?=((?:(?!eyJ)[A-Za-z0-9_-])*))\1(eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})/dg,
         valueGroup: 2,
-        linearity:
-            'One attempt per base64url run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first eyJ atomically, so the engine never retries a later eyJ in the same run. That loses nothing: every eyJ in one run reaches the same run end, so the first one, which has the most characters after it, matches whenever any later one would. An attempt spans at most three dot-separated runs, so each character is read a bounded number of times.',
     },
     {
         rule: 'stripe-secret-key',
         type: 'APIKEY',
+        prefixes: ['sk_live_', 'sk_test_'],
         class: 'credential',
         replacement: 'detection',
         pattern: /sk_(?:live|test)_[0-9A-Za-z]{16,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'slack-token',
         type: 'TOKEN',
+        prefixes: ['xoxb-', 'xoxp-', 'xoxa-', 'xoxr-', 'xoxs-'],
         class: 'credential',
         replacement: 'detection',
         pattern: /xox[baprs]-[0-9A-Za-z-]{10,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'pem-private-key',
@@ -192,8 +263,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
 
         pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
         replacement: { through: pemBlockEnd },
-        linearity:
-            'Starts only at the literal header; the label class excludes the dash, so label runs of different headers are disjoint, and backtracking over one run tries the fixed 16-character suffix at each position: linear with a constant factor of 16.',
     },
     {
         rule: 'db-connection-uri',
@@ -202,8 +271,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         pattern: /(?<![a-z0-9+.-])(?=((?:(?!\b[a-z])[a-z0-9+.-])*))\1(\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:[^\s:/@]+@)/dg,
         valueGroup: 2,
-        linearity:
-            'One attempt per scheme-character run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first word-boundary letter atomically. Every such start in one run reaches the same :// at the same run end, so the first one matches whenever any later one would, and nothing the unbounded scheme matched is lost. The userinfo classes exclude : and /, so each userinfo run is read by one attempt per side.',
     },
     {
         rule: 'generic-assignment',
@@ -214,10 +281,82 @@ export const EGRESS_RULES: readonly EgressRule[] = [
             /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
         valueGroup: 1,
         validator: looksLikeSecretValue,
-        linearity:
-            'Starts only at a keyword; the whitespace runs end at the first non-space and the value run at the first quote or space, and a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops at the first character after the whitespace.',
     },
 ];
+
+/** Every raw-key prefix the table declares, longest first. */
+export const CREDENTIAL_PREFIXES: readonly string[] = EGRESS_RULES.flatMap((r) => r.prefixes ?? []).sort(
+    (a, b) => b.length - a.length,
+);
+
+/** The prefixes one row declares; throws on an unknown rule so a rename cannot go silent. */
+export function prefixesOf(rule: string): readonly string[] {
+    const row = EGRESS_RULES.find((r) => r.rule === rule);
+    if (row === undefined) throw new Error(`egress rule ${rule}: no such row`);
+    return row.prefixes ?? [];
+}
+
+/** A row's first declared prefix — the shape a key file of that vendor starts with. */
+export function vendorPrefix(rule: string): string {
+    const first = prefixesOf(rule)[0];
+    if (first === undefined) throw new Error(`egress rule ${rule}: declares no prefix`);
+    return first;
+}
+
+const TOKEN_START_PREFIXES: ReadonlySet<string> = new Set(
+    EGRESS_RULES.filter((r) => r.tokenStart === true).flatMap((r) => r.prefixes ?? []),
+);
+
+/**
+ * A raw-key prefix followed by at least `minTail` key characters. Coarser than
+ * the rows on purpose: it is for surfaces that refuse or mask on shape alone,
+ * where a short or truncated key must still be caught.
+ *
+ * `boundary: 'row'` (the default) holds a prefix to a token start exactly where
+ * its own row declares `tokenStart`, so the pattern never misses what the row
+ * would catch and a short prefix (`sk-`) does not fire inside a word.
+ * `boundary: 'never'` drops the token start for every prefix: it is for a
+ * consumer whose own pre-table reading matched mid-word, and dropping it there
+ * is what keeps that consumer from narrowing. `tail` narrows the key class.
+ */
+export function rawKeyPrefixPattern(
+    minTail: number,
+    prefixes: readonly string[] = CREDENTIAL_PREFIXES,
+    opts: { readonly boundary?: 'row' | 'never'; readonly tail?: string } = {},
+): RegExp {
+    const alt = [...prefixes]
+        .sort((a, b) => b.length - a.length)
+        .map((p) => {
+            const lit = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return opts.boundary !== 'never' && TOKEN_START_PREFIXES.has(p) ? `(?<![A-Za-z0-9])${lit}` : lit;
+        })
+        .join('|');
+    return new RegExp(`(?:${alt})[${opts.tail ?? 'A-Za-z0-9_-'}]{${minTail},}`, 'g');
+}
+
+/**
+ * End of the bytes a replacement of `span` must remove, or null when the row
+ * cannot prove it (the caller then decides: a refusing surface refuses, a
+ * masking surface masks the detection span).
+ */
+export function replacementEnd(text: string, span: EgressSpan): number | null {
+    const row = EGRESS_RULES.find((r) => r.rule === span.rule);
+    if (row === undefined) return null;
+    if (row.replacement === 'detection') return span.end;
+    const end = row.replacement.through(text, span);
+    return end === null || end < span.end ? null : end;
+}
+
+/**
+ * End of the bytes a MASKING surface removes for `span`. A surface that cannot
+ * refuse must not leave key material behind when the row cannot prove the extent:
+ * an unproven key block is masked through the nearest END marker of any label,
+ * and only a span with nothing better falls back to its detection span. Every
+ * masking consumer reads this, so the fallback is decided once.
+ */
+export function maskingEnd(text: string, span: EgressSpan): number {
+    return replacementEnd(text, span) ?? (span.rule === 'pem-private-key' ? pemMaskEnd(text, span) : null) ?? span.end;
+}
 
 /**
  * Returns a description of the first unbounded quantifier (`+`, `*`, `{n,}`)

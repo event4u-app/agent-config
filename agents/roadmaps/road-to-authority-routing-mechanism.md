@@ -487,6 +487,20 @@ what the gate attests."*
       abstention. No item on D22's still-required list has landed. No council
       round was run, because the inputs D22 named have not changed.
       Measurement: `agents/evidence/analysis/live-tree-check-remeasure-20261017.md`.
+      **Screened 2026-10-18 on `6194e2769`, still open, no round run.** AC-3
+      does not put Phase 7 behind the blocked Phases 2, 3 or 6. Its only
+      ordering clause is that Phase 7 must come before live-tree checks are
+      restored as required gates. So the step is not held by
+      `external-bootstrap-boundary-for-phases-2-3`. It is held by D22's ordered
+      list, and the first item on that list has not landed:
+      `git ls-files src/config | grep -c gate-classification` returns 0. That
+      first item, the schema, cannot be written yet. It needs the TWO-objects
+      taxonomy choice D22 left open (multi-valued class, aspect-level rows, or
+      splitting the check), and that is a design question. No active or stub
+      roadmap owns D22's list: `grep -rl gate-classification agents/roadmaps`
+      matches only this file. Re-running 7.1 without it would be the verdict
+      shopping the 2026-10-12 screen ruled out. 7.2 follows from 7.1, and its
+      demotions weaken gates, so it does not start either.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
@@ -690,7 +704,7 @@ before 8.3 gates anything.*
 
 ### blocker: external-bootstrap-boundary-for-phases-2-3
 
-- **Status:** open — opened 2026-10-10 by the step 1.1 council verdict (D11). The hold that verdict selected is a forge-side approval outside the candidate branch; the agent may prepare everything around it and may not turn it on
+- **Status:** open — re-checked 2026-10-18, still unmet: `agent-config doctor --online --json` reports `authority_surface_external_approval: unsatisfied — no covering ruleset requires an approving review`, and ruleset `17749383` still reads `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []`. Owner-reserved by D11/D16/D20 (the council has already ruled; this needs a forge setting and a qualified second principal only the owner can supply). Opened 2026-10-10 by the step 1.1 council verdict (D11). The hold that verdict selected is a forge-side approval outside the candidate branch; the agent may prepare everything around it and may not turn it on
 - **Owner:** owner — D3 reserves bootstrap approval to the owner, and both seats required the protection configuration itself to stay subject to that same higher approval. A protection an agent can add is one an agent can remove, which is not a boundary
 - **Class:** 3
 - **Ownership:** destructive-owned

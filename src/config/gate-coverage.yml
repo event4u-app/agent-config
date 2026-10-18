@@ -3368,3 +3368,21 @@ gates:
     note: >-
       road-to-what-was-built-and-never-ran 1.3. Same history as the row above —
       written, tested, and named by no caller until this change.
+
+  - id: check_credential_spelling
+    argv: []
+    min_scanned: 1200
+    corpus: "every non-test `*.ts` / `*.mts` file under `src/scripts` and `src/cli`, read from the filesystem so an unstaged file is seen — 1485 on 2026-10-18. The floor is 1200: the two roots lose files only to deliberate deletions, while a walk that stopped descending (a moved root, a renamed directory) collapses to a handful."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    canary:
+      class: contract-violation
+      path: src/scripts/zz-canary-credential-spelling.ts
+      content: |
+        // Canary planted by check_gate_coverage --canary; never ships.
+        export const RE = /ghp_[A-Za-z0-9]{36}/;
+    note: >-
+      road-to-one-detector-and-the-senders-we-own 2.2. The rule table is the only
+      place a raw-key prefix is spelled; this gate fails a second spelling. It
+      does not see a prefix spelled through a character class or a keyword
+      assignment, which carry no vendor literal.

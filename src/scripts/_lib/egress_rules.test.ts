@@ -20,6 +20,7 @@ import {
     replaceSpans,
     resolveOverlaps,
 } from './egress_rules.js';
+import { LINEARITY } from './egress_rules_linearity.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
@@ -53,8 +54,10 @@ describe('rule table shape', () => {
 
     it('every rule states why it is linear, and every unbounded rule says so explicitly', () => {
         for (const r of EGRESS_RULES) {
-            expect(r.linearity.length).toBeGreaterThan(40);
+            expect(LINEARITY[r.rule]?.length ?? 0).toBeGreaterThan(40);
         }
+        // No argument outlives its row.
+        expect(Object.keys(LINEARITY).sort()).toEqual(EGRESS_RULES.map((r) => r.rule).sort());
         const unbounded = EGRESS_RULES.filter((r) => findUnboundedQuantifier(r.pattern) !== null);
         expect(unbounded.length).toBeGreaterThan(0);
     });
@@ -74,7 +77,7 @@ describe('rule table shape', () => {
     });
 });
 
-// Timing is a smoke check, not the proof: each rule's `linearity` field carries
+// Timing is a smoke check, not the proof: each rule's `LINEARITY` entry carries
 // the argument. The restart-heavy inputs are the shapes that made the pre-move
 // jwt and db-connection-uri patterns quadratic; the calibration test shows they
 // are adversarial for those patterns, so a green reading here is not vacuous.
@@ -166,7 +169,6 @@ describe('context words, validators and exclusions', () => {
         context: { words: /\b(?:account|konto)\b/i, window: 20 },
         validator: (v) => v.endsWith('0'),
         exclusions: [/^1234560$/],
-        linearity: 'Bounded digit run between word boundaries; each attempt reads at most ten characters.',
         replacement: 'detection',
     };
 
