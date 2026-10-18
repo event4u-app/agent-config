@@ -108,6 +108,16 @@ export function prompt_files(dir: string): string[] {
 }
 
 /**
+ * Package worker definitions that carry the floor in their own body
+ * (`ac-worker`, `ac-researcher`). Only a definition that already holds a span
+ * is in scope: `apply_span`'s append path targets a prompt template, and on a
+ * definition it would land inside the frontmatter.
+ */
+export function definitions_with_span(dir: string = path.join(REPO_ROOT, 'src', 'subagents')): string[] {
+    return prompt_files(dir).filter((f) => fs.readFileSync(f, 'utf-8').includes(BEGIN));
+}
+
+/**
  * Replace an existing span, or append one after the mode-reference line.
  *
  * Placement is deliberate: the floor sits ahead of the mode-specific prompt so
@@ -130,7 +140,7 @@ export function apply_span(text: string, span: string): string {
 
 function main(argv: string[]): number {
     const check = argv.includes('--check');
-    const files = PROMPT_DIRS.flatMap((d) => prompt_files(d));
+    const files = [...PROMPT_DIRS.flatMap((d) => prompt_files(d)), ...definitions_with_span()];
     if (files.length === 0) {
         process.stderr.write(
             `❌  generate_subagent_floor: no prompt templates under ${PROMPT_DIRS.join(' or ')}\n`,
