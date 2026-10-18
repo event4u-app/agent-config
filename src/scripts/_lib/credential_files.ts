@@ -69,27 +69,20 @@ const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> = 
 const PROC_ENVIRON = /^\/proc\/[^/]+\/environ$/;
 
 /**
- * Whether a backslash separates path segments. On Windows it does; on a POSIX
- * host a backslash the shell keeps is a filename character (`'dir\.env'` is one
- * file), so reading it as a separator there refuses a file that is not a
- * credential file. A drive-letter or UNC path is read as a Windows path on any
- * host: its syntax says what it is.
+ * The host whose filesystem decides what a path names. A backslash separates
+ * path segments on Windows only: on a POSIX host it is a filename character, so
+ * `'dir\\.env'` — and `'C:\\project\\.env'` too — is one file there, not `.env`.
+ * Read from the platform, never from the path's spelling; callers that judge a
+ * path for another host pass it.
  */
-let backslashSeparates = process.platform === 'win32';
-const WINDOWS_PATH = /^(?:[A-Za-z]:\\|\\\\)/;
+export type PathHost = 'posix' | 'windows';
+export const HOST: PathHost = process.platform === 'win32' ? 'windows' : 'posix';
 
-/** Test seam: force the host's backslash reading, or `null` to restore it. */
-export function _setBackslashSeparatesForTest(value: boolean | null): void {
-    backslashSeparates = value ?? process.platform === 'win32';
-}
-
-function separated(p: string): string {
-    return backslashSeparates || WINDOWS_PATH.test(p) ? p.replace(/\\/g, '/') : p;
-}
+const separated = (p: string, host: PathHost): string => (host === 'windows' ? p.replace(/\\/g, '/') : p);
 
 /** The credential class of a path, or null. Decided from the path alone. */
-export function credentialFileClass(rawPath: string): CredentialFileClass | null {
-    const trimmed = separated(rawPath.trim()).replace(/\/+$/, '');
+export function credentialFileClass(rawPath: string, host: PathHost = HOST): CredentialFileClass | null {
+    const trimmed = separated(rawPath.trim(), host).replace(/\/+$/, '');
     if (trimmed === '') return null;
     // `.` and `..` segments resolved, so `/proc/self/../self/environ` is the file it names.
     const p = path.posix.normalize(trimmed);
@@ -202,30 +195,30 @@ const base = (w: string): string => w.replace(/^.*\//, '');
  * a path cannot hold unquoted — whitespace, quotes, redirections, pipes,
  * separators, parentheses, `=`, `,`, backticks — so `cat<.env`, `--config=.env`
  * and `<(cat .env)` all expose the path, and an attached short option
- * (`xargs -a.env`) is read both whole and without its `-x` prefix. A Windows
- * path is a path: `credentialFileClass` reads its backslashes as separators.
+ * (`xargs -a.env`) is read both whole and without its `-x` prefix. On a Windows
+ * host a backslash path is a path: `credentialFileClass` separates on it there.
  */
-export function credentialMention(text: string): Verdict {
+export function credentialMention(text: string, host: PathHost = HOST): Verdict {
     // Two readings of one segment, because neither alone matches the shell: the
     // raw text (a Windows path, an attached `cat<.env`), and each word the shell
     // would build — quotes joined, escapes applied only where the shell applies
     // them (`cat .e''nv`, an unquoted `cat .e\nv`) — each cut at the same
-    // characters. Whether a backslash separates is the path's decision, not the
-    // reading's (see `separated`).
+    // characters. Whether a backslash separates is the host's decision, not the
+    // reading's (see `PathHost`).
     const readings = [text, ...commandWords(text)];
     for (const reading of readings) {
-        const v = mentionIn(reading);
+        const v = mentionIn(reading, host);
         if (v !== null) return v;
     }
     return null;
 }
 
-function mentionIn(text: string): Verdict {
+function mentionIn(text: string, host: PathHost): Verdict {
     for (const raw of text.split(/[\s'"<>|;&()`=,]+/)) {
         if (raw === '') continue;
         const candidates = raw.startsWith('-') ? [raw, raw.replace(/^-+[A-Za-z]?/, '')] : [raw];
         for (const c of candidates) {
-            const cls = c === '' ? null : credentialFileClass(c);
+            const cls = c === '' ? null : credentialFileClass(c, host);
             if (cls !== null) return named(cls, c);
         }
     }
@@ -233,9 +226,9 @@ function mentionIn(text: string): Verdict {
 }
 
 /** The first credential path among words the shell already built — judged as data, never re-parsed. */
-function credentialAmong(words: readonly string[]): Verdict {
+function credentialAmong(words: readonly string[], host: PathHost): Verdict {
     for (const w of words) {
-        const v = mentionIn(w);
+        const v = mentionIn(w, host);
         if (v !== null) return v;
     }
     return null;
@@ -308,7 +301,7 @@ export function copySources(args: readonly string[]): string[] {
 }
 
 /** Why a command segment is refused, or null. `segment` starts at its command word. */
-export function segmentVerdict(segment: string, depth = 0): Verdict {
+export function segmentVerdict(segment: string, host: PathHost = HOST, depth = 0): Verdict {
     const words = commandWords(segment);
     let i = 0;
     while (i < words.length && ASSIGNMENT.test(words[i] as string)) i += 1;
@@ -319,13 +312,13 @@ export function segmentVerdict(segment: string, depth = 0): Verdict {
         if (args.some((a) => base(a) === 'env' || base(a) === 'printenv')) {
             return { class: 'process-environment', what: `\`${cmd} … env\`` };
         }
-        return credentialMention(segment);
+        return credentialMention(segment, host);
     }
     if (cmd === 'env') {
         const ran = envCommand(args);
         if (ran.length === 0) return { class: 'process-environment', what: '`env`' };
-        if (depth >= 3) return credentialAmong(ran);
-        return segmentVerdict(ran.map((w) => (/\s/.test(w) ? `'${w}'` : w)).join(' '), depth + 1) ?? credentialAmong(args);
+        if (depth >= 3) return credentialAmong(ran, host);
+        return segmentVerdict(ran.map((w) => (/\s/.test(w) ? `'${w}'` : w)).join(' '), host, depth + 1) ?? credentialAmong(args, host);
     }
 
     const operands = args.filter((a) => !a.startsWith('-'));
@@ -342,8 +335,8 @@ export function segmentVerdict(segment: string, depth = 0): Verdict {
     // A copy or a rename reads its sources and only writes its destination:
     // `cp .env.example .env` creates the file, while `cp .env /dev/stdout` prints
     // it and `cp .env x` or `mv .env x` launders it for the next command.
-    if (cmd === 'cp' || cmd === 'mv') return credentialAmong(copySources(args));
+    if (cmd === 'cp' || cmd === 'mv') return credentialAmong(copySources(args), host);
 
     const reads = !(NON_READING_COMMANDS.has(cmd) || (cmd === 'git' && NON_READING_GIT.has(operands[0] ?? '')));
-    return reads ? credentialMention(segment) : null;
+    return reads ? credentialMention(segment, host) : null;
 }

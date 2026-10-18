@@ -50,8 +50,10 @@ import {
     CREDENTIAL_CLASS_LABEL,
     credentialBasename,
     credentialFileClass,
+    HOST,
     segmentVerdict,
     type CredentialFileClass,
+    type PathHost,
 } from '../_lib/credential_files.js';
 import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
 import { invokedSegments } from './git_command_classifier.js';
@@ -90,19 +92,19 @@ export interface Refusal {
     readonly what: string;
 }
 
-/** The refusal for one tool call, or null. Pure. */
-export function verdictFor(toolName: string, input: JsonObject): Refusal | null {
+/** The refusal for one tool call, or null. Pure: the host whose paths are judged is an argument. */
+export function verdictFor(toolName: string, input: JsonObject, host: PathHost = HOST): Refusal | null {
     const tool = toolName.trim().toLowerCase();
     if (!NON_READING_TOOLS.has(tool)) {
         for (const v of pathValues(input, false, [])) {
-            const cls = credentialFileClass(v);
+            const cls = credentialFileClass(v, host);
             if (cls !== null) return { class: cls, what: `\`${credentialBasename(v)}\`` };
         }
     }
     const cmd = input['command'];
     if (typeof cmd === 'string' && cmd !== '') {
         for (const segment of invokedSegments(cmd)) {
-            const r = segmentVerdict(segment);
+            const r = segmentVerdict(segment, host);
             if (r !== null) return r;
         }
     }
