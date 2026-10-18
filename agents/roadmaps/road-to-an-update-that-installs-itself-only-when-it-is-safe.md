@@ -10,8 +10,8 @@ relates:
     relation: depends
     note: "Consumes the impact map, the comparator and `classifyUpdate` built there. This file builds no classifier of its own and changes no release logic."
   - slug: road-to-truthful-surfaces
-    relation: depends
-    note: "Phase 3 keeps the CLI banner as the fallback for hosts with no session slot; that banner must name the right command first."
+    relation: extends
+    note: "Phase 3 keeps the CLI banner as the fallback for hosts with no session slot; that banner must name the right command first. It now does — that file closed AC-8 and archived on 2026-10-17 (#2446), so this is no longer a wait. Relation moved from `depends` to `extends` because an archived file lands nothing and a `depends` row naming one is a failure since this batch."
   - slug: road-to-a-hook-carrier-that-is-never-silent
     relation: disjoint
     note: "Owns whether a hook carrier that cannot reach the dispatcher says so. Phase 3 adds a concern that runs when the carrier works; it changes no fallthrough behaviour."

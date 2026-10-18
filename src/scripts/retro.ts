@@ -27,7 +27,8 @@ import {
 } from './learning_sidecar.js';
 import { _assert_project_writable } from './memory_signal.js';
 import type { Fact, PrFacts, SessionFacts } from './retro_facts.js';
-import { targetCounts } from './_lib/self_repair_store.js';
+import { ACTIVE_STATUSES } from './_lib/self_repair.js';
+import { listRecords, setStatus, targetCounts } from './_lib/self_repair_store.js';
 
 /** The triage policy version; part of every unit key. */
 export const TRIAGE_POLICY = 1;
@@ -170,8 +171,34 @@ export interface RetroOutput {
     subject: string | null;
     counter_hypothesis: string | null;
     falsifier: string | null;
-    /** Earlier records naming the same asset target — the held/recurred input. */
-    recurrence: { target: string; occurrences: number; records: number } | null;
+    /** Earlier records naming the same asset target — the held/recurred reading. */
+    recurrence: Recurrence | null;
+}
+
+/**
+ * Whether an earlier learning on this target HELD.
+ *
+ * `first` — nothing earlier named it, so there is nothing to have held.
+ * `held` — every record naming it reached a terminal status and none is back
+ *   in the queue. The fix landed and the defect has not returned.
+ * `recurred` — at least one record naming it is active again. Either it was
+ *   never closed, or something reopened it (a revert, per
+ *   {@link reopenOnRevert}).
+ *
+ * The verdict is read from record STATUS, never from the occurrence count:
+ * occurrences accumulate across a record's whole life, so a high count on a
+ * closed record says the defect was frequent before the fix, not that the fix
+ * failed. Reading volume as recurrence is the mistake Phase 5 exists to avoid.
+ */
+export type RecurrenceVerdict = 'first' | 'held' | 'recurred';
+
+export interface Recurrence {
+    target: string;
+    occurrences: number;
+    records: number;
+    verdict: RecurrenceVerdict;
+    /** Fingerprints that are active again — empty unless the verdict is `recurred`. */
+    active: string[];
 }
 
 export interface ComposeInput {
@@ -212,12 +239,7 @@ export function composeRetro(input: ComposeInput): RetroOutput {
 
     let recurrence: RetroOutput['recurrence'] = null;
     if (candidate.asset_target !== undefined) {
-        const hit = targetCounts(root).find((t) => t.target === candidate.asset_target);
-        recurrence = {
-            target: candidate.asset_target,
-            occurrences: hit?.occurrences ?? 0,
-            records: hit?.records.length ?? 0,
-        };
+        recurrence = readRecurrence(root, candidate.asset_target);
     }
     return {
         ...base,
@@ -229,6 +251,59 @@ export function composeRetro(input: ComposeInput): RetroOutput {
         falsifier: candidate.falsifier,
         recurrence,
     };
+}
+
+/**
+ * The held/recurred reading for one asset target.
+ *
+ * Exported because `/retro status` and the per-unit output both need it and
+ * neither should re-derive the rule — two readings of "did it hold" is the
+ * same defect class as two readings of "what is the brand".
+ */
+export function readRecurrence(root: string, target: string): Recurrence {
+    const hit = targetCounts(root).find((t) => t.target === target);
+    const active = listRecords(root)
+        .filter((r) => (r.target ?? []).includes(target) && ACTIVE_STATUSES.includes(r.status))
+        .map((r) => r.fingerprint)
+        .sort();
+    const records = hit?.records.length ?? 0;
+    const verdict: RecurrenceVerdict =
+        records === 0 ? 'first' : active.length > 0 ? 'recurred' : 'held';
+    return { target, occurrences: hit?.occurrences ?? 0, records, verdict, active };
+}
+
+/**
+ * A revert of a landed fix reopens its record.
+ *
+ * A fix that was reverted is not a fix, and leaving its record `actioned`
+ * would let the next retro report `held` about a defect that is live again.
+ * This is the one place a retro writes a STATUS rather than a proposal: it
+ * restores a record the tree's own history contradicts, and it never closes,
+ * declines or supersedes one.
+ *
+ * Returns the fingerprints it reopened, sorted. A no-op when the facts carry no
+ * measured revert — `missing` is not `false`, so an unread revert fact reopens
+ * nothing rather than guessing in either direction.
+ */
+export function reopenOnRevert(
+    root: string,
+    facts: PrFacts | SessionFacts,
+    target: string,
+    now: string,
+): string[] {
+    if (facts.unit !== 'pr') return [];
+    const revert = facts.later_revert;
+    if (revert.status !== 'measured' || revert.value !== true) return [];
+    const reopened: string[] = [];
+    for (const rec of listRecords(root)) {
+        if (!(rec.target ?? []).includes(target)) continue;
+        if (rec.status !== 'actioned') continue;
+        setStatus(root, rec.fingerprint, 'open', now, {
+            resolution: `reopened: the landed fix was reverted (${facts.unit} ${facts.pr})`,
+        });
+        reopened.push(rec.fingerprint);
+    }
+    return reopened.sort();
 }
 
 /**
