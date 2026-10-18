@@ -1,0 +1,1460 @@
+diff --git a/README.md b/README.md
+index b79d7fdb44430e22cbe70b525a1c8fdff2a625d1..5b223ed49e4cc72650c8a7ed9a114910d132cc04 100644
+--- a/README.md
++++ b/README.md
+@@ -354,7 +354,7 @@ Three classes of install/runtime behaviour look like package bugs and are host-h
+ 
+ ✅ native &nbsp; ☑️ text reference (in AGENTS.md, not invokable as native slash-command) &nbsp; 📌 marker only &nbsp; — not available
+ 
+-> **Team reproducibility:** every tool you `init` is recorded in `agents/installed-tools.lock` (committed, machine-managed). New team members run `npx @event4u/agent-config sync` after cloning; CI gates drift with `agent-config validate`. Schema: [`installed-tools-manifest`](docs/guidelines/agent-infra/installed-tools-manifest.md).
++> **Team reproducibility:** every tool you `init` is recorded in `agents/installed-tools.lock` (committed, machine-managed; global-scope entries carry no home-directory paths). New team members run `npx @event4u/agent-config sync` after cloning; CI gates drift with `agent-config validate`. Schema: [`installed-tools-manifest`](docs/guidelines/agent-infra/installed-tools-manifest.md).
+ 
+ ### Plugin-installed (optional, global)
+ 
+diff --git a/agents/roadmaps/archive/road-to-an-ownership-record-that-belongs-to-the-user.md b/agents/roadmaps/archive/road-to-an-ownership-record-that-belongs-to-the-user.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e70c9fade2197ebbe236d064ce6b7df0c5849831
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-an-ownership-record-that-belongs-to-the-user.md
+@@ -0,0 +1,465 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: phase-checkpoints
++estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that the global deploy manifest is written only when the install ran from a directory carrying project settings (install.ts:3531-3537), that an absent record classifies as `unknown` and `decideDeployWrite` returns `write` for it (preserve.ts, recordedOwnership.ts:57-78), so whether a consumer's edit to a globally installed file survives depends on the working directory the install was run from; that the deploy inventory records relative paths and no digest (global_deploy_inventory.ts, 0 hash hits), so the reaper deletes an edited file the package retires; and that `cmd_doctor.ts:597` skips every non-project-scoped tool, so doctor reports green while the installer reports not-current. No active, parked or stub roadmap owns this: the one adjacent stub, road-to-per-repository-install-verification, is itself blocked on ADR-020 and records that no manifest writer was added. Archiving or parking costs more because the loss is a consumer's own edit and is silent; merging into road-to-an-uninstall-that-only-removes-what-it-brought would put that file's data-loss fix behind this file's council round."
++estate_growth_exempt: "2026-10-18: adds one open blocker, global-entries-in-the-consumer-lock. It is a newly classified decision, not a repaired undercount: step 3.3 was already open and owner-labelled in prose, and an AI council round that day split on its venue, so the escalation now has the structured form roadmap:resolve-blockers and stubs:due read instead of living only in a step note."
++relates:
++  - slug: road-to-an-uninstall-that-only-removes-what-it-brought
++    relation: extends
++    note: "That file reads the deploy inventory as a deletion allowlist at schema 1. Phase 2 here bumps that schema to two digests; it must not block the data-loss fix, so the schema bump is additive and the reader tolerates schema 1."
++  - slug: road-to-gates-that-run-where-the-consumer-stands
++    relation: extends
++    note: "Phase 1's red tests are consumer-scenario cases; that file generalises the harness they live in. Neither builds a second harness."
++  - slug: road-to-an-installed-layer-that-is-thinned
++    relation: disjoint
++    note: "Owns which artefacts the default projection carries. This file owns what happens to a file after it is deployed, whichever projection put it there."
++  - slug: road-to-typed-grants-that-persist
++    relation: disjoint
++    note: "Owns who may authorise what. This file records who WROTE a file; it adds no grant, no ask and no authority path."
++---
++# Road to an ownership record that belongs to the user
++
++> **Source:** `agents/tmp.old/inbox-2026-10-t/topic-2/` — two transcripts and
++> ten supplied plans, pinned at `main@9a43fabe5`, `main@9b6ff1a5b` and
++> `main@73eb69439`, all ancestors of HEAD. Re-read at `main@5fa963cec` on
++> 2026-10-16.
++
++## Goal
++
++Whether a consumer's edit to a globally installed file survives the next
++install stops depending on the directory the install was run from. The record
++of what this package wrote, and of what the user changed afterwards, lives
++with the **user**, is readable by every surface that reports on it, and says
++the same thing in all of them.
++
++## Prerequisites
++
++- Phase 0's council round is closed before Phase 2 changes any classifier.
++  Phases 1 and 3's doctor fix do not wait on it.
++- `npx vitest` runs locally; the tests drive the real installer through
++  `spawnSync` with an injected `HOME`.
++
++## Context — read at `main@5fa963cec`
++
++| # | Defect | Evidence |
++|---|---|---|
++| K1 | **The ownership record is written only from a project that has settings.** `src/install/install.ts:3531-3537` gates the manifest write on `pathExists(_resolve_settings_read(project_root))`. Install from a directory with no project settings and no record is written at all. |
++| K2 | **No record means overwrite.** With no recorded digest, `classifyOwnership` returns `unknown` (`src/install/recordedOwnership.ts:57`, `:72-78`), and `decideDeployWrite` in `src/install/preserve.ts` returns `preserve` only for `recorded-modified` — so `unknown` is written over. K1 and K2 together mean a user edit survives or dies according to the working directory of a later install. |
++| K3 | **There is one digest where there need to be two.** `RecordedOwnership` is `recorded-unchanged \| recorded-modified \| unknown` and `classifyOwnership(recordedSha256, onDiskSha256)` takes no **packaged** digest. The record therefore cannot distinguish "the user changed it" from "we shipped a new version of it", which is the distinction every later decision needs. |
++| K4 | **The reaper deletes an edited file the package retires.** `src/scripts/_lib/global_deploy_inventory.ts` records relative paths; a grep for a hash or digest over that module returns **0**. A file the user edited and the package later withdraws is removed without the edit ever being seen. |
++| K5 | **`doctor` is green while the installer says not-current.** `src/scripts/_cli/cmd_doctor.ts:597` — `if (tool['scope'] !== 'project') continue;` — so a global-scope tool is skipped entirely. The two surfaces that report on the same install disagree by construction. |
++| K6 | **The manifest is stageable in a consumer repository.** `grep -c installed-tools src/config/gitignore-block.txt` returns **0**, so a manifest full of `$HOME`-rooted paths can be committed. `README.md:357` calls the lock "committed, machine-managed"; `docs/contracts/agents-layout.md:71` says it must never be committed **in the source repo**. The qualifier means the two are not flatly contradictory — and the consumer case is then governed by nothing, which is the actual gap. |
++| K7 | **The contract has no word for a sidecar.** `docs/contracts/install-layout.md:206` fixes `kind ∈ {deployed, bridge, marker}`; a grep for `sidecar` over that file and the manifest contract returns 0/0. A second project under the same HOME produces exactly that object and the contract cannot name it. |
++
++## Phase 0 — Resolve the lock, not the symptom
++
++- [x] **0.1 Read the adjacent stub before citing it.**
++      `agents/roadmaps/stubs/road-to-per-repository-install-verification.md`
++      records this work as blocked on ADR-020 and that no manifest writer was
++      ever added. Run `./scripts-run src/scripts/adr_cite_check ADR-020` and
++      read its status, amendments and successors before treating it as a
++      blocker.
++      verify: the `adr_cite_check` output is quoted in the council question.
++      Done 2026-10-16: ADR-020 reads `accepted`, **amended three times**
++      (2026-05-30 user-content exception, 2026-06-03 settings-scope correction
++      via ADR-049, 2026-07-13 bridge marker retired), no `review_trigger`, no
++      declared protected dimension, `reopen_policy` absent. The tool's closing
++      AMENDED line is why the user-content amendment carries weight in both
++      seats' reasoning. The stub's own blocked-on-ADR-020 state is unchanged by
++      the verdict — see its new § A council verdict on an adjacent ADR-020
++      reading.
++- [x] **0.2 Route the transition to the council.** The question is narrow:
++      does a per-user ownership ledger **weaken** ADR-020's global-only
++      invariant, or is it the mechanism that makes it safe? It is reversible
++      and internal, so under `decision-revisit-gate` it is council-decidable;
++      it reaches the owner only on a split.
++      verify: a recorded verdict with a `revisit-if`, written at the stub and
++      mirrored into `## Decisions` as D1. A verdict with no record is not one.
++      Done 2026-10-16: **(a)**, 2/2 concluded, no split, members `anthropic` +
++      `openai`, prompt mode, two rounds, $0.00 (subscription transport). Record
++      at `agents/evidence/council/ownership-ledger-adr020-20261016.md`, written
++      at the stub, mirrored as D1. Phase 2 proceeds under the four boundaries D1
++      carries.
++
++## Phase 1 — Freeze the three losses, red first
++
++- [x] **1.1 Install without project settings.** A test that installs from a
++      directory with no settings file, edits a deployed file, re-installs, and
++      asserts the edit survives.
++      verify: **red**, with `install.ts:3531` named in the failure.
++      Done 2026-10-16: `tests/install/ownership_ledger_real_install.test.ts`
++      case 1.1, observed red (edited digest `e7f6d00b…` replaced by `4141eda3…`).
++- [x] **1.2 A second project under the same HOME.** Install from project A,
++      then from project B, and assert the record from A is still the record.
++      verify: **red**, with the sidecar object named.
++      Done 2026-10-16: case 1.2, observed red at the same digest swap; the case
++      asserts the `.agent-config.new` sidecar by digest once the edit survives.
++- [x] **1.3 A retired-but-edited file.** Deploy, edit, retire the file from
++      the package, re-install, and assert the edit is not deleted silently.
++      verify: **red**, with `global_deploy_inventory.ts` named.
++      Done 2026-10-16: case 1.3, observed red (`expected null` — the edited
++      retired file was unlinked).
++- [x] **1.4 Pin the current `unknown` arm as a named case.** Extend
++      `tests/install/recordedOwnership.test.ts` so today's behaviour is
++      asserted explicitly before it changes.
++      verify: green now, and the case that changes in Phase 2 is the one this
++      step names.
++      Done 2026-10-16: `GLOBAL-TARGET-WITHOUT-PROJECT-MANIFEST`, green.
++- [x] **1.5 Assert bytes and exit codes, not output text.** Every assertion
++      above compares digests.
++      verify: a fixture whose file is recreated empty fails.
++      Done 2026-10-16: the step-1.5 case in the same file asserts it.
++
++## Phase 2 — Two digests, one classifier
++
++- [x] **2.1 Inventory schema 2.** `deployed-files.json` records
++      `{path, installed_sha256, packaged_sha256}` per file. Additive: a
++      reader tolerating schema 1 keeps the sibling roadmap's deletion
++      allowlist working unchanged.
++      verify: a schema-1 fixture still loads, and the sibling's containment
++      test stays green.
++      Done 2026-10-16: `deployed-files.json` schema 2 adds a per-tool `digests`
++      map beside an unchanged `files` list (`global_deploy_inventory.ts`);
++      `tests/install/ownershipLedger.test.ts` loads a schema-1 fixture, and
++      `tests/install/uninstall_purge_containment.test.ts` is green in the same
++      run. Honest limit: at record time both digests are what was just
++      deployed, so they diverge only for a retired file (`packaged: null`);
++      `outdated` is reachable through the classifier when a caller passes the
++      current package digest, and no caller does yet.
++- [x] **2.2 Widen the classifier.** `classifyOwnership`
++      (`recordedOwnership.ts:72-78`) takes the packaged digest and returns
++      `clean | outdated | customized | customized-and-outdated |
++      retired-unmodified | retired-modified | unknown`.
++      verify: a table-driven test covers all seven, including the two the old
++      three-value type could not express.
++      Done 2026-10-16: added as `classifyFileState` in `recordedOwnership.ts`,
++      and `classifyOwnership` is now that classifier with the packaged digest
++      unknown (one classifier, its callers unchanged). Table test in
++      `tests/install/recordedOwnership.test.ts`, seen red under a mutation.
++- [x] **2.3 Write the record from anywhere.** The manifest write at
++      `install.ts:3531` stops depending on
++      `_resolve_settings_read(project_root)`; the record is user-scoped.
++      verify: test 1.1 green.
++      Done 2026-10-16: the record that decides a global target is the
++      user-scoped ledger, written on every global deploy
++      (`src/install/ownershipLedger.ts`) and laid over the project manifest by
++      `recordedHashesWithLedger`, which the writer and the preview both read.
++      The project-manifest write itself keeps its settings gate: that block also
++      writes project anchors into the working directory, and moving it would put
++      files into whatever directory an install ran from. Test 1.1 green.
++- [x] **2.4 `unknown` preserves what the ledger proves we wrote.**
++      `decideDeployWrite`'s `unknown` arm becomes `preserve` for a path the
++      ledger lists, and stays `write` for a genuinely unrecorded pre-existing
++      file — the noise argument in `preserve.ts`'s own comment still holds for
++      those, and this change does not touch them.
++      verify: tests 1.1–1.3 green; a pre-existing unrecorded file is still
++      written, asserted as its own case.
++      Was open 2026-10-16, deliberately: preserving every ledger-listed
++      `unknown` would have staged a sidecar beside every deployed file on the
++      first upgraded install and exited 3 — the noise D3 itself argues
++      against — so D3 needed re-deciding against that case first.
++      **Closed 2026-10-17 under a fresh council round.** 2/2 concluded, no
++      split, verdict **(d)**: preserve a digest-less ledger path **unless
++      equality with what the run would write is provable**. Record and the
++      question it was asked:
++      `agents/evidence/council/ownership-unknown-arm-20261017{,.question}.md`;
++      D3 below is restated from it.
++      The branch is `isLedgerMigration` in `preserve.ts` — ledger-listed,
++      `unknown`, readable bytes — and it is the only place the packaged digest
++      is computed, so a tree whose ledger paths all carry digests pays nothing.
++      Red observed first: with the branch neutralised, the preserve-when-
++      different and preserve-when-undecidable cases both fail.
++      **Two downstream surfaces moved with it, and neither was optional.**
++      `preflight`'s `unknown` remedy told the operator to back the file up
++      because the installer would overwrite it — false the moment the branch
++      landed, so it has its own arm now. And `computeConflicts` would have
++      promised a write the writer then refused, which is the
++      two-surfaces-disagree shape 2.5 exists to stop, so `ConflictEntry` gains
++      a `migration` flag carrying the DECISION — `ownership` stays `unknown`,
++      because nobody proved an edit and labelling it otherwise would assert
++      the thing the branch exists because it cannot prove.
++      `doctor` is the one reader that cannot follow: it is not installing, so
++      it has no packaged digest, and `recorded_digests` does not even
++      enumerate a path without one. That gap is **named in its docstring and
++      asserted as a difference** in `ownership_parity.test.ts`, so doctor
++      learning to cover it reds the case rather than passing silently.
++- [x] **2.5 One table, three readers.** A parity fixture feeds the same
++      ownership table to the preview (`computeConflicts`), the writer
++      (`conflictTracker`) and `cmd_doctor`'s classifier, and asserts all three
++      agree.
++      verify: the parity test fails if any one of the three is changed alone.
++      Done 2026-10-16: `tests/install/ownership_parity.test.ts`, one table fed
++      through a project manifest and through the ledger; seen red when the
++      preview alone was pointed at a different ledger. `cmd_doctor`'s manifest
++      classifier now calls `classifyOwnership`.
++      **Open defect found by this step, not yet a checkbox** (this plan's risk
++      review is stamped today and a new step reds `lint-plan-risk-register`
++      until a later re-review can record it): `cmd_doctor` reads the manifest
++      through `installed_tools.read_manifest`, whose hand-rolled parser drops
++      every nested `files[]` entry, so `_collect_manifest_entries` receives no
++      files and project-scope `missing` / `modified` / `tag_drift` are never
++      reported on a real tree. The parity test pins today's empty read; the
++      fix flips that assertion and makes `doctor --ci` name a project-scope
++      edit. Not fixed here: it turns a consumer's `doctor --ci` red on drift it
++      has silently passed until now — a consumer-visible exit-code change that
++      ships on its own with that stated.
++
++## Phase 3 — Say the same thing on every surface
++
++- [x] **3.1 `doctor` stops skipping global scope.** `cmd_doctor.ts:597` reads
++      the ledger instead of returning early for non-project tools.
++      verify: installer `rc=3` and `doctor --ci` non-zero on the same tree,
++      asserted by one test that runs both.
++      Done 2026-10-16: `src/scripts/_cli/doctor_ownership_ledger.ts` reports
++      every ledger file the installer would preserve as `modified`, on both
++      the manifest and the no-manifest path (`cmd_doctor.ts` net zero lines).
++      `ownership_ledger_real_install.test.ts` step-3.1 case runs both, observed
++      red first (`modified` empty after an rc=3 install).
++- [x] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
++      `docs/contracts/install-layout.md:206` with its uninstall semantics.
++      verify: `grep -c sidecar docs/contracts/install-layout.md` -> /^[1-9][0-9]*$/
++      Done 2026-10-16: named with today's uninstall semantics (reported as
++      skipped, left in place), plus the ledger file in the runtime-root table
++      and the kind in `installed-tools-lockfile.md`.
++- [x] **3.3 Close the `$HOME`-leak gap.** Re-cut 2026-10-18 to blocker
++      `global-entries-consumer-lock` option (b′): a consumer's
++      `agents/installed-tools.lock` keeps its global-scope entries (so `sync`
++      still replays them for a new team member) but no longer records their
++      absolute `files[]`; the user-scoped ledger holds global ownership. The
++      lock stays tracked-durable and out of `src/config/gitignore-block.txt`,
++      and `README.md:357` and `docs/contracts/agents-layout.md` keep stating one
++      rule. The change states whether `files` is omitted or empty for a global
++      entry, audits every reader of the lock (`validate`, uninstall, migration,
++      drift checks), and handles existing committed global entries that carry
++      absolute paths.
++      verify: a test runs a global install from a project with settings and asserts the lock's global-scope entries carry no `$HOME`-rooted path, `sync` still replays them, the ledger still holds their paths and digests, and `validate` accepts the lock
++      Open 2026-10-16 — the step's premise moved. `docs/contracts/agents-layout.md`
++      (the `installed-tools.lock` row) now governs the consumer case explicitly:
++      tracked-durable, deliberately absent from the gitignore block, because
++      `README.md` tells teams to commit it. The two documents already agree, so
++      this verify line would reverse a recorded contract and a team workflow —
++      owner-reserved (Risk 5). The residual gap is narrower: a global install
++      run from a project with settings writes `$HOME`-rooted global-scope
++      entries into that tracked lock. Now that the ledger carries global
++      ownership, dropping those entries from the project lock is the candidate
++      fix, and it changes a tracked consumer file, so it is the owner's call.
++      **Re-read 2026-10-17, unchanged and still owner-reserved.**
++      `grep -c installed-tools src/config/gitignore-block.txt` is 0 and must
++      stay 0 while `docs/contracts/agents-layout.md` records the lock as
++      tracked-durable and `README.md` tells teams to commit it: satisfying
++      this step's verify line as written would reverse a recorded contract
++      and a team workflow in one edit. The narrower residual gap — a global
++      install run from a project with settings writing `$HOME`-rooted
++      global-scope entries into that tracked lock — is now MORE tractable
++      than it was, because Phase 2 gives global ownership a home of its own,
++      so dropping those entries from the project lock loses nothing. It still
++      changes what consumers commit, so it stays the owner's.
++      **Put to the AI council 2026-10-18 — split, so it escalates.** Both seats
++      recommend the narrow fix (stop writing global-scope entries into a
++      consumer's lock); `anthropic` read it as council-decidable, `openai` as a
++      change to a public compatibility commitment. A reader audit after the
++      round found the commitment is real: `cmd_sync.ts:166-182, :343-355`
++      replays a `--scope=global` install from the lock's global entries — the
++      new-team-member workflow `README.md:357` promises, which a per-user
++      ledger cannot serve. `sync` reads `name`, `scope` and `bridge_marker` and
++      never the per-entry `files[]`, so a narrower variant that keeps global
++      entries and drops their absolute `files[]` would close the leak without
++      breaking it. Record: `agents/evidence/council/ownership-record-residue-20261018.md`;
++      the owner's pick is the blocker below.
++      **Done 2026-10-18 under (b′).** `files` is **omitted** on every
++      `scope: global` entry (`dropGlobalScopeFiles` in `manifestFiles.ts`, run
++      on every lock write, so a lock committed earlier loses its absolute paths
++      on the next install). Reader audit: `sync` and `validate` read no
++      `files[]`; `prune` skips global entries; `install_drift` and `doctor`'s
++      manifest reader lose nothing the ledger reader (3.1) does not cover;
++      `recordedOwnership` already overlays the ledger. Three readers did need a
++      change: project `uninstall` sent a global entry without `files[]` to the
++      project-marker map and deleted a PROJECT file the global install never
++      wrote (now: entry dropped, no file touched); `skill_origin` and the
++      neighbour census claimed global skills only through the lock (now also
++      through the deploy inventory); and the `claude-desktop` marker's digest
++      lived only in the lock (now recorded in the ledger). Test:
++      `ownership_ledger_real_install.test.ts` step-3.3 case, observed red first.
++- [x] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
++      they attach to an existing command.
++      verify: the output of `agent-config --help` lists no new top-level verb.
++      Open 2026-10-16: no flag implemented. What `adopt` (record an edit as
++      ours?) and `reset` (restore one file, a scoped `--force`?) do is not
++      specified anywhere in the tree, and inventing the semantics of a
++      consumer-facing flag is not this drain's call.
++      **Re-read 2026-10-17 against ADR-041, which does not supply them.**
++      That ADR governs the controlled VERB vocabulary — which leading tokens
++      a visible command may use, and that a new one needs its own ADR. It
++      says nothing about what `adopt` or `reset` would do. So D4's "they ship
++      as flags" is a correct routing decision with no feature behind it, and
++      this step's verify line (`--help` lists no new top-level verb) passes
++      vacuously today: there is nothing to list.
++      The step belongs with whoever specifies the behaviour. Phase 2 sharpens
++      what `adopt` would have to mean — after the migration branch, the thing
++      a consumer most plausibly wants is "record the bytes I have as ours",
++      which is precisely the ownership assertion the council declined to make
++      automatically. That is a product decision, not a drain edit.
++      **Closed 2026-10-18 by AI council verdict (b)**, 2/2, no split, $0.00
++      (`agents/evidence/council/ownership-record-residue-20261018.md`, D6):
++      the step is satisfied by its verify line plus the routing decision, and
++      the unspecified behaviour moves to
++      `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md`.
++      Both seats held that implementing the flags with agent-chosen semantics
++      is owner-reserved (*cannot be bounded from available evidence*).
++      `agent-config --help` re-run 2026-10-18: no `adopt` or `reset` verb.
++
++## Blockers
++
++### blocker: adr-020-ownership-ledger-reading
++
++- **Status:** resolved — (a), AI council 2026-10-16, 2/2 concluded, no split. The
++  verdict and its four boundaries are in
++  `agents/evidence/council/ownership-ledger-adr020-20261016.md`; mirrored as D1.
++- **Owner:** AI council (reaches the owner only on a split — it did not split)
++- **Blocks:** Phase 2. Phases 0, 1 and step 3.1 run without it — the red tests
++  and the doctor fix change no invariant.
++- **What to do:** pick exactly one — (a) the council records that a per-user
++  ownership ledger is the mechanism that makes ADR-020's global-only
++  invariant safe, and Phase 2 proceeds; or (b) the council records that it
++  weakens the invariant, Phase 2 is cancelled, and Phase 1's red tests become
++  the documented behaviour with a reason; or (c) the council splits and the
++  transition escalates to the owner with both readings attached.
++- **Resolved when:** a verdict with a `revisit-if` is recorded at
++  `agents/roadmaps/stubs/road-to-per-repository-install-verification.md` and
++  mirrored into this file's `## Decisions` as D1, and this blocker's Status
++  reads `resolved — <verdict>`.
++- **Recommendation:** (a). ADR-020 makes consumption global-only; a record
++  that is written only when a *project* has settings is the thing actually in
++  tension with that, and the ledger removes the tension rather than creating
++  it. The council round exists because that reading should be checked by
++  somebody who did not write this file, not because the direction is unclear.
++- **If you do nothing:** Phase 1's three tests stay red in the tree, which is
++  an honest state and a bad one — the losses are pinned and unfixed, and the
++  next install still decides a user's edits by working directory.
++
++### blocker: global-entries-in-the-consumer-lock
++
++- **Status:** resolved — (b′): keep global entries in a consumer's lock, stop
++  recording their absolute `files[]`. Decided by: AI council (2/2, 2026-10-18),
++  under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record
++  `agents/evidence/council/global-entries-consumer-lock-20261018.md`. Step 3.3's
++  verify line and AC-8's first half are re-cut to it. Was: escalated
++  2026-10-18 after an earlier round split on the venue (`anthropic` DECIDE (b),
++  `openai` ESCALATE (b); `agents/evidence/council/ownership-record-residue-20261018.md`).
++- **Owner:** owner — the transition changes what consumers commit to
++  `agents/installed-tools.lock`, which the council could not agree is internal.
++- **Blocks:** step 3.3 and the first half of AC-8.
++- **What to do:** pick one —
++  (a) add the lock to `src/config/gitignore-block.txt` as 3.3 is written,
++  reversing the tracked-durable row in `docs/contracts/agents-layout.md` and the
++  team workflow in `README.md:357`;
++  (b) stop writing global-scope entries into a consumer's lock, which also
++  stops `agent-config sync` replaying global installs for a new team member
++  (`src/scripts/_cli/cmd_sync.ts:343-355`);
++  (b′) keep global entries but stop recording their absolute `files[]` in the
++  consumer's lock, since the user-scoped ledger now holds global ownership and
++  `sync` never reads `files[]`;
++  (c) keep today's behaviour and re-cut 3.3 and AC-8 to the agreed rule the two
++  documents already state.
++- **Resolved when:** the owner's pick is recorded here as `Status: resolved —
++  <pick>`, and 3.3's verify line and AC-8's first half are re-cut to that pick.
++- **Recommendation:** (b′). It closes the `$HOME` leak the step exists for,
++  keeps the `sync` capability both seats wanted preserved, and relies on the
++  ledger exactly as D1 bounds it — ownership metadata, not artefact selection.
++- **If you do nothing:** a global install run from a consumer project with
++  settings keeps writing the installing user's absolute home paths into a file
++  that team commits; nothing is lost, and the leak stays.
++
++## Decisions
++
++| ID | ownership | resolved by | decision | evidence | revisit if |
++|---|---|---|---|---|---|
++| D1 | contested-technical | council:agents/evidence/council/ownership-ledger-adr020-20261016.md | **(a) — a per-user ownership ledger makes ADR-020's global-only invariant coherent; it does not weaken it.** Phase 2 proceeds, bounded: the ledger is user-global ownership metadata and not a scope, its treatment is independent of the invoking project and working directory, it carries no project key and drives no project-dependent artefact selection, and the two-digest requirement is core preservation logic rather than an implementation detail | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats read the project-conditioned write at `install.ts:3531-3537` as the actual scope violation: a global artefact's fate decided by a project-shaped condition | the ledger becomes project-keyed or encodes project preferences · it drives artefact **selection** rather than preservation · two projects demonstrably need different versions of one global artefact at once · the two-digest distinction proves insufficient · ADR-020 or an amendment is shown to require package-controlled content uniformity |
++| D2 | deterministic | evidence | The schema bump is additive and schema 1 keeps loading | the sibling roadmap's deletion allowlist reads the same file and must not wait on this one | the sibling lands schema 2 first |
++| D3 | critical-technical | council:agents/evidence/council/ownership-unknown-arm-20261017.md | **(d) — `unknown` preserves a path the ledger lists UNLESS equality with what the run would write is provable.** Equality proves writing cannot destroy an edit; inequality proves nothing, because an edited file and an untouched older version are indistinguishable without a recorded digest, and overwriting on "proves nothing" accepts irreversible loss knowingly. A genuinely unrecorded path still writes — the noise `preserve.ts` argues against is real for files this tree has no record of, and a ledger listing IS a record | AI council 2026-10-17, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats also corrected the draft's claim that preservation resolves the ambiguity after one install: a preserved file was never installed, so the delay is one cycle at best and persists until the sidecar is merged | the package content for the affected files is shown not to have changed across the ledger-addition upgrade · a migration `rc=3` is shown to break supported automation and no message fixes it · conflict resolution gains a step that establishes ownership explicitly |
++| D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |
++| D5 | reversible-technical | agent | The doctor fix (3.1) is sequenced before Phase 2 lands | it makes the disagreement visible, and a visible disagreement is what makes Phase 2's parity test meaningful | 3.1 turns out to depend on the widened classifier |
++| D6 | reversible-technical | council:agents/evidence/council/ownership-record-residue-20261018.md | **3.4 closes on its routing; the flags' behaviour moves to a stub.** If `adopt` / `reset` ship they ship as flags, and what they do is specified in `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md` before any implementation | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00. Both seats: implementing with agent-chosen semantics is owner-reserved (cannot be bounded from available evidence) | approved semantics and acceptance tests make either flag bounded and implementation-ready |
++| D7 | product-owned | council:agents/evidence/council/global-entries-consumer-lock-20261018.md | Blocker `global-entries-consumer-lock` → (b′): a consumer's lock keeps global-scope entries for `sync` replay and stops recording their absolute `files[]`; the lock stays tracked-durable and out of the gitignore block | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); `sync` reads `name`, `scope`, `bridge_marker` and never `files[]` (`cmd_sync.ts:166-182, :343-355`) | a reader of the lock other than `sync` is found that needs a global entry's `files[]` |
++
++## What this roadmap deliberately does not do
++
++- It does not change which artefacts the install projects.
++- It does not add a CLI verb, a grant, an ask or an authority path.
++- It does not touch the uninstall path; its sibling owns that and must not be
++  held behind this file's council round.
++- It does not reopen ADR-020. Phase 0 asks whether this mechanism sits inside
++  that record, which is a different question.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Preserving `unknown` keeps a stale file forever | implementation | A file the user never touched stops being updated because the ledger lost its record. | 2.1's two digests make "we shipped a new one" expressible, so `outdated` is a state rather than a guess. 2.4 as landed narrows this further than the row anticipated: preservation needs the path to be ledger-listed AND the bytes to differ from what the run would write, so an untouched file that already matches the package is written rather than frozen. | Phase 2 — Two digests, one classifier |
++| 2 | The council round stalls and Phase 2 never starts | product | A blocked phase in a ready roadmap decays into a parked one. | Phases 0, 1 and 3.1 deliver value without it, and the blocker's "if you do nothing" names the resulting state plainly rather than implying the file is stuck. | Phase 0 — Resolve the lock, not the symptom |
++| 3 | The schema bump breaks the sibling's deletion allowlist | implementation | Two roadmaps read one file and one of them is a data-loss fix. | D2 makes the bump additive and 2.1 asserts a schema-1 fixture still loads; the sibling's containment test runs in the same suite. | Phase 2 — Two digests, one classifier |
++| 4 | The parity fixture is satisfied by three readers sharing one bug | implementation | Agreement is not correctness. | The parity test is a cross-check on top of 2.2's table-driven test, not instead of it; the table enumerates all seven states independently. | Phase 2 — Two digests, one classifier |
++| 5 | Gitignoring the manifest breaks a team that committed it deliberately | product | Someone relies on the committed lock for reproducibility. | Re-cut 2026-10-18 to option (b′): the lock is not gitignored and keeps its global entries, so `sync` replay survives; only the absolute `files[]` of global entries leave it, and 3.3 audits every reader of the lock before they do. | Phase 3 — Say the same thing on every surface |
++| 6 | The first install after the ledger ships is loud for people who edited nothing | product | For a consumer whose global files were deployed before digests existed, 2.4 cannot tell an untouched older version from an edit, so every such file that differs from the new package content is preserved with a sidecar and the run exits 3. | The equality test removes every file that provably matches, so the burst is bounded to files that genuinely differ; the report line is its own message naming the cause rather than claiming an edit; `--force` is the one-command escape and is named in it. The council weighed this against silent loss and took the recoverable direction — the cost is a confusing install, and the alternative is an unrecoverable one. | Phase 2 — Two digests, one classifier |
++| 7 | Preservation delays the ambiguity rather than resolving it | implementation | A preserved file was never installed, so the run records the STAGED digest for it. Until the consumer merges the sidecar, the path keeps classifying as divergent. | That is the designed behaviour and not a leak: from the second install the path is `recorded-modified` on the ordinary path rather than on the migration branch, so the one-off message appears once. Both council seats named this explicitly, and the record states it so a future reader does not mistake the delay for a bug. | Phase 2 — Two digests, one classifier |
++
++## Acceptance Criteria
++
++- [x] **AC-1** All three Phase 1 tests were observed **red** before Phase 2,
++      and the observation is recorded in the PR.
++- [x] **AC-2** An edit to a globally deployed file survives a re-install run
++      from a directory with no project settings.
++- [x] **AC-3** An edit survives an install run from a second project under the
++      same HOME.
++- [x] **AC-4** A file the package retires while the user has edited it is not
++      deleted silently.
++- [x] **AC-5** A genuinely unrecorded pre-existing file is still written, as
++      its own asserted case.
++- [x] **AC-6** Installer `rc=3` and `doctor --ci` non-zero on the same tree,
++      asserted by one test.
++- [x] **AC-7** A schema-1 inventory still loads, and the sibling roadmap's
++      containment test is green in the same run.
++- [x] **AC-8** A global install run from a consumer project with settings
++      writes no `$HOME`-rooted path into that project's
++      `agents/installed-tools.lock` while `sync` still replays its global
++      entries (3.3, re-cut 2026-10-18 to option (b′)), and
++      `grep -c sidecar docs/contracts/install-layout.md` ≥ 1 (satisfied by 3.2).
++- [x] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
++      run; `check_pack_size` and `check_gate_completeness` are red on
++      `main@8c90aad26` independently of this branch. Flipped in the PR that
++      closes 3.3, whose merge is gated on its CI being green.
++
++## Provenance
++
++Source-derived under template rule 19. The source set compares this package
++against several external references; none is named here per
++`source-confidentiality`, links `ENC1`-encrypted in the round's intake note.
++No code, prompt or text from any of them is adopted — every item above is a
++defect in this tree, verified at HEAD.
++
++| Proposed | Verdict | Why |
++|---|---|---|
++| Per-user ownership ledger | KEEP | K1/K2 verified; the working directory currently decides. |
++| Two digests in the record | KEEP | K3: the type has no packaged-digest parameter. |
++| Ownership hash in the deploy inventory | KEEP | K4: zero hash hits in that module. |
++| Doctor reads global scope | KEEP | K5 verified verbatim at `cmd_doctor.ts:597`. |
++| `kind: sidecar` in the contract | KEEP | K7: absent from both contracts. |
++| "Customizations are already protected" | CUT | Refuted at HEAD by K1–K3; the source asserted it and the tree contradicts it. |
++| A second manifest format alongside the existing one | CUT | The existing inventory is bumped, not duplicated. |
++| New `adopt` / `reset` verbs | FOLD | Flags on an existing verb; ADR-041. |
++| "Multi-host 9.5/10" and other numeric grades | CUT | No measurement basis; the source withdraws them itself. |
++
++## Notes — how this file was derived
++
++Three extraction passes over a twelve-file source set, converging at pass 3
++with one re-grade and no new rows. K1–K5 were re-verified line by line at HEAD
++by this file's author. One of the source's claims in this area —
++"customizations are already protected" — is **never-true** at HEAD and is
++recorded as a CUT rather than dropped, because it is the assumption that made
++the rest of the source under-read this surface. The contract contradiction in
++K6 is narrower than the source stated: the layout contract carries a
++source-repo qualifier the source's quote omitted, and the real gap is that the
++consumer case is then unaddressed.
+diff --git a/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md b/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md
+deleted file mode 100644
+index 45e24e75f89cde39c0fc669f183354f723e53038..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-an-ownership-record-that-belongs-to-the-user.md
++++ /dev/null
+@@ -1,450 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that the global deploy manifest is written only when the install ran from a directory carrying project settings (install.ts:3531-3537), that an absent record classifies as `unknown` and `decideDeployWrite` returns `write` for it (preserve.ts, recordedOwnership.ts:57-78), so whether a consumer's edit to a globally installed file survives depends on the working directory the install was run from; that the deploy inventory records relative paths and no digest (global_deploy_inventory.ts, 0 hash hits), so the reaper deletes an edited file the package retires; and that `cmd_doctor.ts:597` skips every non-project-scoped tool, so doctor reports green while the installer reports not-current. No active, parked or stub roadmap owns this: the one adjacent stub, road-to-per-repository-install-verification, is itself blocked on ADR-020 and records that no manifest writer was added. Archiving or parking costs more because the loss is a consumer's own edit and is silent; merging into road-to-an-uninstall-that-only-removes-what-it-brought would put that file's data-loss fix behind this file's council round."
+-estate_growth_exempt: "2026-10-18: adds one open blocker, global-entries-in-the-consumer-lock. It is a newly classified decision, not a repaired undercount: step 3.3 was already open and owner-labelled in prose, and an AI council round that day split on its venue, so the escalation now has the structured form roadmap:resolve-blockers and stubs:due read instead of living only in a step note."
+-relates:
+-  - slug: road-to-an-uninstall-that-only-removes-what-it-brought
+-    relation: extends
+-    note: "That file reads the deploy inventory as a deletion allowlist at schema 1. Phase 2 here bumps that schema to two digests; it must not block the data-loss fix, so the schema bump is additive and the reader tolerates schema 1."
+-  - slug: road-to-gates-that-run-where-the-consumer-stands
+-    relation: extends
+-    note: "Phase 1's red tests are consumer-scenario cases; that file generalises the harness they live in. Neither builds a second harness."
+-  - slug: road-to-an-installed-layer-that-is-thinned
+-    relation: disjoint
+-    note: "Owns which artefacts the default projection carries. This file owns what happens to a file after it is deployed, whichever projection put it there."
+-  - slug: road-to-typed-grants-that-persist
+-    relation: disjoint
+-    note: "Owns who may authorise what. This file records who WROTE a file; it adds no grant, no ask and no authority path."
+----
+-# Road to an ownership record that belongs to the user
+-
+-> **Source:** `agents/tmp.old/inbox-2026-10-t/topic-2/` — two transcripts and
+-> ten supplied plans, pinned at `main@9a43fabe5`, `main@9b6ff1a5b` and
+-> `main@73eb69439`, all ancestors of HEAD. Re-read at `main@5fa963cec` on
+-> 2026-10-16.
+-
+-## Goal
+-
+-Whether a consumer's edit to a globally installed file survives the next
+-install stops depending on the directory the install was run from. The record
+-of what this package wrote, and of what the user changed afterwards, lives
+-with the **user**, is readable by every surface that reports on it, and says
+-the same thing in all of them.
+-
+-## Prerequisites
+-
+-- Phase 0's council round is closed before Phase 2 changes any classifier.
+-  Phases 1 and 3's doctor fix do not wait on it.
+-- `npx vitest` runs locally; the tests drive the real installer through
+-  `spawnSync` with an injected `HOME`.
+-
+-## Context — read at `main@5fa963cec`
+-
+-| # | Defect | Evidence |
+-|---|---|---|
+-| K1 | **The ownership record is written only from a project that has settings.** `src/install/install.ts:3531-3537` gates the manifest write on `pathExists(_resolve_settings_read(project_root))`. Install from a directory with no project settings and no record is written at all. |
+-| K2 | **No record means overwrite.** With no recorded digest, `classifyOwnership` returns `unknown` (`src/install/recordedOwnership.ts:57`, `:72-78`), and `decideDeployWrite` in `src/install/preserve.ts` returns `preserve` only for `recorded-modified` — so `unknown` is written over. K1 and K2 together mean a user edit survives or dies according to the working directory of a later install. |
+-| K3 | **There is one digest where there need to be two.** `RecordedOwnership` is `recorded-unchanged \| recorded-modified \| unknown` and `classifyOwnership(recordedSha256, onDiskSha256)` takes no **packaged** digest. The record therefore cannot distinguish "the user changed it" from "we shipped a new version of it", which is the distinction every later decision needs. |
+-| K4 | **The reaper deletes an edited file the package retires.** `src/scripts/_lib/global_deploy_inventory.ts` records relative paths; a grep for a hash or digest over that module returns **0**. A file the user edited and the package later withdraws is removed without the edit ever being seen. |
+-| K5 | **`doctor` is green while the installer says not-current.** `src/scripts/_cli/cmd_doctor.ts:597` — `if (tool['scope'] !== 'project') continue;` — so a global-scope tool is skipped entirely. The two surfaces that report on the same install disagree by construction. |
+-| K6 | **The manifest is stageable in a consumer repository.** `grep -c installed-tools src/config/gitignore-block.txt` returns **0**, so a manifest full of `$HOME`-rooted paths can be committed. `README.md:357` calls the lock "committed, machine-managed"; `docs/contracts/agents-layout.md:71` says it must never be committed **in the source repo**. The qualifier means the two are not flatly contradictory — and the consumer case is then governed by nothing, which is the actual gap. |
+-| K7 | **The contract has no word for a sidecar.** `docs/contracts/install-layout.md:206` fixes `kind ∈ {deployed, bridge, marker}`; a grep for `sidecar` over that file and the manifest contract returns 0/0. A second project under the same HOME produces exactly that object and the contract cannot name it. |
+-
+-## Phase 0 — Resolve the lock, not the symptom
+-
+-- [x] **0.1 Read the adjacent stub before citing it.**
+-      `agents/roadmaps/stubs/road-to-per-repository-install-verification.md`
+-      records this work as blocked on ADR-020 and that no manifest writer was
+-      ever added. Run `./scripts-run src/scripts/adr_cite_check ADR-020` and
+-      read its status, amendments and successors before treating it as a
+-      blocker.
+-      verify: the `adr_cite_check` output is quoted in the council question.
+-      Done 2026-10-16: ADR-020 reads `accepted`, **amended three times**
+-      (2026-05-30 user-content exception, 2026-06-03 settings-scope correction
+-      via ADR-049, 2026-07-13 bridge marker retired), no `review_trigger`, no
+-      declared protected dimension, `reopen_policy` absent. The tool's closing
+-      AMENDED line is why the user-content amendment carries weight in both
+-      seats' reasoning. The stub's own blocked-on-ADR-020 state is unchanged by
+-      the verdict — see its new § A council verdict on an adjacent ADR-020
+-      reading.
+-- [x] **0.2 Route the transition to the council.** The question is narrow:
+-      does a per-user ownership ledger **weaken** ADR-020's global-only
+-      invariant, or is it the mechanism that makes it safe? It is reversible
+-      and internal, so under `decision-revisit-gate` it is council-decidable;
+-      it reaches the owner only on a split.
+-      verify: a recorded verdict with a `revisit-if`, written at the stub and
+-      mirrored into `## Decisions` as D1. A verdict with no record is not one.
+-      Done 2026-10-16: **(a)**, 2/2 concluded, no split, members `anthropic` +
+-      `openai`, prompt mode, two rounds, $0.00 (subscription transport). Record
+-      at `agents/evidence/council/ownership-ledger-adr020-20261016.md`, written
+-      at the stub, mirrored as D1. Phase 2 proceeds under the four boundaries D1
+-      carries.
+-
+-## Phase 1 — Freeze the three losses, red first
+-
+-- [x] **1.1 Install without project settings.** A test that installs from a
+-      directory with no settings file, edits a deployed file, re-installs, and
+-      asserts the edit survives.
+-      verify: **red**, with `install.ts:3531` named in the failure.
+-      Done 2026-10-16: `tests/install/ownership_ledger_real_install.test.ts`
+-      case 1.1, observed red (edited digest `e7f6d00b…` replaced by `4141eda3…`).
+-- [x] **1.2 A second project under the same HOME.** Install from project A,
+-      then from project B, and assert the record from A is still the record.
+-      verify: **red**, with the sidecar object named.
+-      Done 2026-10-16: case 1.2, observed red at the same digest swap; the case
+-      asserts the `.agent-config.new` sidecar by digest once the edit survives.
+-- [x] **1.3 A retired-but-edited file.** Deploy, edit, retire the file from
+-      the package, re-install, and assert the edit is not deleted silently.
+-      verify: **red**, with `global_deploy_inventory.ts` named.
+-      Done 2026-10-16: case 1.3, observed red (`expected null` — the edited
+-      retired file was unlinked).
+-- [x] **1.4 Pin the current `unknown` arm as a named case.** Extend
+-      `tests/install/recordedOwnership.test.ts` so today's behaviour is
+-      asserted explicitly before it changes.
+-      verify: green now, and the case that changes in Phase 2 is the one this
+-      step names.
+-      Done 2026-10-16: `GLOBAL-TARGET-WITHOUT-PROJECT-MANIFEST`, green.
+-- [x] **1.5 Assert bytes and exit codes, not output text.** Every assertion
+-      above compares digests.
+-      verify: a fixture whose file is recreated empty fails.
+-      Done 2026-10-16: the step-1.5 case in the same file asserts it.
+-
+-## Phase 2 — Two digests, one classifier
+-
+-- [x] **2.1 Inventory schema 2.** `deployed-files.json` records
+-      `{path, installed_sha256, packaged_sha256}` per file. Additive: a
+-      reader tolerating schema 1 keeps the sibling roadmap's deletion
+-      allowlist working unchanged.
+-      verify: a schema-1 fixture still loads, and the sibling's containment
+-      test stays green.
+-      Done 2026-10-16: `deployed-files.json` schema 2 adds a per-tool `digests`
+-      map beside an unchanged `files` list (`global_deploy_inventory.ts`);
+-      `tests/install/ownershipLedger.test.ts` loads a schema-1 fixture, and
+-      `tests/install/uninstall_purge_containment.test.ts` is green in the same
+-      run. Honest limit: at record time both digests are what was just
+-      deployed, so they diverge only for a retired file (`packaged: null`);
+-      `outdated` is reachable through the classifier when a caller passes the
+-      current package digest, and no caller does yet.
+-- [x] **2.2 Widen the classifier.** `classifyOwnership`
+-      (`recordedOwnership.ts:72-78`) takes the packaged digest and returns
+-      `clean | outdated | customized | customized-and-outdated |
+-      retired-unmodified | retired-modified | unknown`.
+-      verify: a table-driven test covers all seven, including the two the old
+-      three-value type could not express.
+-      Done 2026-10-16: added as `classifyFileState` in `recordedOwnership.ts`,
+-      and `classifyOwnership` is now that classifier with the packaged digest
+-      unknown (one classifier, its callers unchanged). Table test in
+-      `tests/install/recordedOwnership.test.ts`, seen red under a mutation.
+-- [x] **2.3 Write the record from anywhere.** The manifest write at
+-      `install.ts:3531` stops depending on
+-      `_resolve_settings_read(project_root)`; the record is user-scoped.
+-      verify: test 1.1 green.
+-      Done 2026-10-16: the record that decides a global target is the
+-      user-scoped ledger, written on every global deploy
+-      (`src/install/ownershipLedger.ts`) and laid over the project manifest by
+-      `recordedHashesWithLedger`, which the writer and the preview both read.
+-      The project-manifest write itself keeps its settings gate: that block also
+-      writes project anchors into the working directory, and moving it would put
+-      files into whatever directory an install ran from. Test 1.1 green.
+-- [x] **2.4 `unknown` preserves what the ledger proves we wrote.**
+-      `decideDeployWrite`'s `unknown` arm becomes `preserve` for a path the
+-      ledger lists, and stays `write` for a genuinely unrecorded pre-existing
+-      file — the noise argument in `preserve.ts`'s own comment still holds for
+-      those, and this change does not touch them.
+-      verify: tests 1.1–1.3 green; a pre-existing unrecorded file is still
+-      written, asserted as its own case.
+-      Was open 2026-10-16, deliberately: preserving every ledger-listed
+-      `unknown` would have staged a sidecar beside every deployed file on the
+-      first upgraded install and exited 3 — the noise D3 itself argues
+-      against — so D3 needed re-deciding against that case first.
+-      **Closed 2026-10-17 under a fresh council round.** 2/2 concluded, no
+-      split, verdict **(d)**: preserve a digest-less ledger path **unless
+-      equality with what the run would write is provable**. Record and the
+-      question it was asked:
+-      `agents/evidence/council/ownership-unknown-arm-20261017{,.question}.md`;
+-      D3 below is restated from it.
+-      The branch is `isLedgerMigration` in `preserve.ts` — ledger-listed,
+-      `unknown`, readable bytes — and it is the only place the packaged digest
+-      is computed, so a tree whose ledger paths all carry digests pays nothing.
+-      Red observed first: with the branch neutralised, the preserve-when-
+-      different and preserve-when-undecidable cases both fail.
+-      **Two downstream surfaces moved with it, and neither was optional.**
+-      `preflight`'s `unknown` remedy told the operator to back the file up
+-      because the installer would overwrite it — false the moment the branch
+-      landed, so it has its own arm now. And `computeConflicts` would have
+-      promised a write the writer then refused, which is the
+-      two-surfaces-disagree shape 2.5 exists to stop, so `ConflictEntry` gains
+-      a `migration` flag carrying the DECISION — `ownership` stays `unknown`,
+-      because nobody proved an edit and labelling it otherwise would assert
+-      the thing the branch exists because it cannot prove.
+-      `doctor` is the one reader that cannot follow: it is not installing, so
+-      it has no packaged digest, and `recorded_digests` does not even
+-      enumerate a path without one. That gap is **named in its docstring and
+-      asserted as a difference** in `ownership_parity.test.ts`, so doctor
+-      learning to cover it reds the case rather than passing silently.
+-- [x] **2.5 One table, three readers.** A parity fixture feeds the same
+-      ownership table to the preview (`computeConflicts`), the writer
+-      (`conflictTracker`) and `cmd_doctor`'s classifier, and asserts all three
+-      agree.
+-      verify: the parity test fails if any one of the three is changed alone.
+-      Done 2026-10-16: `tests/install/ownership_parity.test.ts`, one table fed
+-      through a project manifest and through the ledger; seen red when the
+-      preview alone was pointed at a different ledger. `cmd_doctor`'s manifest
+-      classifier now calls `classifyOwnership`.
+-      **Open defect found by this step, not yet a checkbox** (this plan's risk
+-      review is stamped today and a new step reds `lint-plan-risk-register`
+-      until a later re-review can record it): `cmd_doctor` reads the manifest
+-      through `installed_tools.read_manifest`, whose hand-rolled parser drops
+-      every nested `files[]` entry, so `_collect_manifest_entries` receives no
+-      files and project-scope `missing` / `modified` / `tag_drift` are never
+-      reported on a real tree. The parity test pins today's empty read; the
+-      fix flips that assertion and makes `doctor --ci` name a project-scope
+-      edit. Not fixed here: it turns a consumer's `doctor --ci` red on drift it
+-      has silently passed until now — a consumer-visible exit-code change that
+-      ships on its own with that stated.
+-
+-## Phase 3 — Say the same thing on every surface
+-
+-- [x] **3.1 `doctor` stops skipping global scope.** `cmd_doctor.ts:597` reads
+-      the ledger instead of returning early for non-project tools.
+-      verify: installer `rc=3` and `doctor --ci` non-zero on the same tree,
+-      asserted by one test that runs both.
+-      Done 2026-10-16: `src/scripts/_cli/doctor_ownership_ledger.ts` reports
+-      every ledger file the installer would preserve as `modified`, on both
+-      the manifest and the no-manifest path (`cmd_doctor.ts` net zero lines).
+-      `ownership_ledger_real_install.test.ts` step-3.1 case runs both, observed
+-      red first (`modified` empty after an rc=3 install).
+-- [x] **3.2 Name the sidecar in the contract.** `kind: sidecar` enters
+-      `docs/contracts/install-layout.md:206` with its uninstall semantics.
+-      verify: `grep -c sidecar docs/contracts/install-layout.md` -> /^[1-9][0-9]*$/
+-      Done 2026-10-16: named with today's uninstall semantics (reported as
+-      skipped, left in place), plus the ledger file in the runtime-root table
+-      and the kind in `installed-tools-lockfile.md`.
+-- [ ] **3.3 Close the `$HOME`-leak gap.** Re-cut 2026-10-18 to blocker
+-      `global-entries-consumer-lock` option (b′): a consumer's
+-      `agents/installed-tools.lock` keeps its global-scope entries (so `sync`
+-      still replays them for a new team member) but no longer records their
+-      absolute `files[]`; the user-scoped ledger holds global ownership. The
+-      lock stays tracked-durable and out of `src/config/gitignore-block.txt`,
+-      and `README.md:357` and `docs/contracts/agents-layout.md` keep stating one
+-      rule. The change states whether `files` is omitted or empty for a global
+-      entry, audits every reader of the lock (`validate`, uninstall, migration,
+-      drift checks), and handles existing committed global entries that carry
+-      absolute paths.
+-      verify: a test runs a global install from a project with settings and asserts the lock's global-scope entries carry no `$HOME`-rooted path, `sync` still replays them, the ledger still holds their paths and digests, and `validate` accepts the lock
+-      Open 2026-10-16 — the step's premise moved. `docs/contracts/agents-layout.md`
+-      (the `installed-tools.lock` row) now governs the consumer case explicitly:
+-      tracked-durable, deliberately absent from the gitignore block, because
+-      `README.md` tells teams to commit it. The two documents already agree, so
+-      this verify line would reverse a recorded contract and a team workflow —
+-      owner-reserved (Risk 5). The residual gap is narrower: a global install
+-      run from a project with settings writes `$HOME`-rooted global-scope
+-      entries into that tracked lock. Now that the ledger carries global
+-      ownership, dropping those entries from the project lock is the candidate
+-      fix, and it changes a tracked consumer file, so it is the owner's call.
+-      **Re-read 2026-10-17, unchanged and still owner-reserved.**
+-      `grep -c installed-tools src/config/gitignore-block.txt` is 0 and must
+-      stay 0 while `docs/contracts/agents-layout.md` records the lock as
+-      tracked-durable and `README.md` tells teams to commit it: satisfying
+-      this step's verify line as written would reverse a recorded contract
+-      and a team workflow in one edit. The narrower residual gap — a global
+-      install run from a project with settings writing `$HOME`-rooted
+-      global-scope entries into that tracked lock — is now MORE tractable
+-      than it was, because Phase 2 gives global ownership a home of its own,
+-      so dropping those entries from the project lock loses nothing. It still
+-      changes what consumers commit, so it stays the owner's.
+-      **Put to the AI council 2026-10-18 — split, so it escalates.** Both seats
+-      recommend the narrow fix (stop writing global-scope entries into a
+-      consumer's lock); `anthropic` read it as council-decidable, `openai` as a
+-      change to a public compatibility commitment. A reader audit after the
+-      round found the commitment is real: `cmd_sync.ts:166-182, :343-355`
+-      replays a `--scope=global` install from the lock's global entries — the
+-      new-team-member workflow `README.md:357` promises, which a per-user
+-      ledger cannot serve. `sync` reads `name`, `scope` and `bridge_marker` and
+-      never the per-entry `files[]`, so a narrower variant that keeps global
+-      entries and drops their absolute `files[]` would close the leak without
+-      breaking it. Record: `agents/evidence/council/ownership-record-residue-20261018.md`;
+-      the owner's pick is the blocker below.
+-- [x] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
+-      they attach to an existing command.
+-      verify: the output of `agent-config --help` lists no new top-level verb.
+-      Open 2026-10-16: no flag implemented. What `adopt` (record an edit as
+-      ours?) and `reset` (restore one file, a scoped `--force`?) do is not
+-      specified anywhere in the tree, and inventing the semantics of a
+-      consumer-facing flag is not this drain's call.
+-      **Re-read 2026-10-17 against ADR-041, which does not supply them.**
+-      That ADR governs the controlled VERB vocabulary — which leading tokens
+-      a visible command may use, and that a new one needs its own ADR. It
+-      says nothing about what `adopt` or `reset` would do. So D4's "they ship
+-      as flags" is a correct routing decision with no feature behind it, and
+-      this step's verify line (`--help` lists no new top-level verb) passes
+-      vacuously today: there is nothing to list.
+-      The step belongs with whoever specifies the behaviour. Phase 2 sharpens
+-      what `adopt` would have to mean — after the migration branch, the thing
+-      a consumer most plausibly wants is "record the bytes I have as ours",
+-      which is precisely the ownership assertion the council declined to make
+-      automatically. That is a product decision, not a drain edit.
+-      **Closed 2026-10-18 by AI council verdict (b)**, 2/2, no split, $0.00
+-      (`agents/evidence/council/ownership-record-residue-20261018.md`, D6):
+-      the step is satisfied by its verify line plus the routing decision, and
+-      the unspecified behaviour moves to
+-      `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md`.
+-      Both seats held that implementing the flags with agent-chosen semantics
+-      is owner-reserved (*cannot be bounded from available evidence*).
+-      `agent-config --help` re-run 2026-10-18: no `adopt` or `reset` verb.
+-
+-## Blockers
+-
+-### blocker: adr-020-ownership-ledger-reading
+-
+-- **Status:** resolved — (a), AI council 2026-10-16, 2/2 concluded, no split. The
+-  verdict and its four boundaries are in
+-  `agents/evidence/council/ownership-ledger-adr020-20261016.md`; mirrored as D1.
+-- **Owner:** AI council (reaches the owner only on a split — it did not split)
+-- **Blocks:** Phase 2. Phases 0, 1 and step 3.1 run without it — the red tests
+-  and the doctor fix change no invariant.
+-- **What to do:** pick exactly one — (a) the council records that a per-user
+-  ownership ledger is the mechanism that makes ADR-020's global-only
+-  invariant safe, and Phase 2 proceeds; or (b) the council records that it
+-  weakens the invariant, Phase 2 is cancelled, and Phase 1's red tests become
+-  the documented behaviour with a reason; or (c) the council splits and the
+-  transition escalates to the owner with both readings attached.
+-- **Resolved when:** a verdict with a `revisit-if` is recorded at
+-  `agents/roadmaps/stubs/road-to-per-repository-install-verification.md` and
+-  mirrored into this file's `## Decisions` as D1, and this blocker's Status
+-  reads `resolved — <verdict>`.
+-- **Recommendation:** (a). ADR-020 makes consumption global-only; a record
+-  that is written only when a *project* has settings is the thing actually in
+-  tension with that, and the ledger removes the tension rather than creating
+-  it. The council round exists because that reading should be checked by
+-  somebody who did not write this file, not because the direction is unclear.
+-- **If you do nothing:** Phase 1's three tests stay red in the tree, which is
+-  an honest state and a bad one — the losses are pinned and unfixed, and the
+-  next install still decides a user's edits by working directory.
+-
+-### blocker: global-entries-in-the-consumer-lock
+-
+-- **Status:** resolved — (b′): keep global entries in a consumer's lock, stop
+-  recording their absolute `files[]`. Decided by: AI council (2/2, 2026-10-18),
+-  under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record
+-  `agents/evidence/council/global-entries-consumer-lock-20261018.md`. Step 3.3's
+-  verify line and AC-8's first half are re-cut to it. Was: escalated
+-  2026-10-18 after an earlier round split on the venue (`anthropic` DECIDE (b),
+-  `openai` ESCALATE (b); `agents/evidence/council/ownership-record-residue-20261018.md`).
+-- **Owner:** owner — the transition changes what consumers commit to
+-  `agents/installed-tools.lock`, which the council could not agree is internal.
+-- **Blocks:** step 3.3 and the first half of AC-8.
+-- **What to do:** pick one —
+-  (a) add the lock to `src/config/gitignore-block.txt` as 3.3 is written,
+-  reversing the tracked-durable row in `docs/contracts/agents-layout.md` and the
+-  team workflow in `README.md:357`;
+-  (b) stop writing global-scope entries into a consumer's lock, which also
+-  stops `agent-config sync` replaying global installs for a new team member
+-  (`src/scripts/_cli/cmd_sync.ts:343-355`);
+-  (b′) keep global entries but stop recording their absolute `files[]` in the
+-  consumer's lock, since the user-scoped ledger now holds global ownership and
+-  `sync` never reads `files[]`;
+-  (c) keep today's behaviour and re-cut 3.3 and AC-8 to the agreed rule the two
+-  documents already state.
+-- **Resolved when:** the owner's pick is recorded here as `Status: resolved —
+-  <pick>`, and 3.3's verify line and AC-8's first half are re-cut to that pick.
+-- **Recommendation:** (b′). It closes the `$HOME` leak the step exists for,
+-  keeps the `sync` capability both seats wanted preserved, and relies on the
+-  ledger exactly as D1 bounds it — ownership metadata, not artefact selection.
+-- **If you do nothing:** a global install run from a consumer project with
+-  settings keeps writing the installing user's absolute home paths into a file
+-  that team commits; nothing is lost, and the leak stays.
+-
+-## Decisions
+-
+-| ID | ownership | resolved by | decision | evidence | revisit if |
+-|---|---|---|---|---|---|
+-| D1 | contested-technical | council:agents/evidence/council/ownership-ledger-adr020-20261016.md | **(a) — a per-user ownership ledger makes ADR-020's global-only invariant coherent; it does not weaken it.** Phase 2 proceeds, bounded: the ledger is user-global ownership metadata and not a scope, its treatment is independent of the invoking project and working directory, it carries no project key and drives no project-dependent artefact selection, and the two-digest requirement is core preservation logic rather than an implementation detail | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats read the project-conditioned write at `install.ts:3531-3537` as the actual scope violation: a global artefact's fate decided by a project-shaped condition | the ledger becomes project-keyed or encodes project preferences · it drives artefact **selection** rather than preservation · two projects demonstrably need different versions of one global artefact at once · the two-digest distinction proves insufficient · ADR-020 or an amendment is shown to require package-controlled content uniformity |
+-| D2 | deterministic | evidence | The schema bump is additive and schema 1 keeps loading | the sibling roadmap's deletion allowlist reads the same file and must not wait on this one | the sibling lands schema 2 first |
+-| D3 | critical-technical | council:agents/evidence/council/ownership-unknown-arm-20261017.md | **(d) — `unknown` preserves a path the ledger lists UNLESS equality with what the run would write is provable.** Equality proves writing cannot destroy an edit; inequality proves nothing, because an edited file and an untouched older version are indistinguishable without a recorded digest, and overwriting on "proves nothing" accepts irreversible loss knowingly. A genuinely unrecorded path still writes — the noise `preserve.ts` argues against is real for files this tree has no record of, and a ledger listing IS a record | AI council 2026-10-17, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats also corrected the draft's claim that preservation resolves the ambiguity after one install: a preserved file was never installed, so the delay is one cycle at best and persists until the sidecar is merged | the package content for the affected files is shown not to have changed across the ledger-addition upgrade · a migration `rc=3` is shown to break supported automation and no message fixes it · conflict resolution gains a step that establishes ownership explicitly |
+-| D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |
+-| D5 | reversible-technical | agent | The doctor fix (3.1) is sequenced before Phase 2 lands | it makes the disagreement visible, and a visible disagreement is what makes Phase 2's parity test meaningful | 3.1 turns out to depend on the widened classifier |
+-| D6 | reversible-technical | council:agents/evidence/council/ownership-record-residue-20261018.md | **3.4 closes on its routing; the flags' behaviour moves to a stub.** If `adopt` / `reset` ship they ship as flags, and what they do is specified in `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md` before any implementation | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00. Both seats: implementing with agent-chosen semantics is owner-reserved (cannot be bounded from available evidence) | approved semantics and acceptance tests make either flag bounded and implementation-ready |
+-| D7 | product-owned | council:agents/evidence/council/global-entries-consumer-lock-20261018.md | Blocker `global-entries-consumer-lock` → (b′): a consumer's lock keeps global-scope entries for `sync` replay and stops recording their absolute `files[]`; the lock stays tracked-durable and out of the gitignore block | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); `sync` reads `name`, `scope`, `bridge_marker` and never `files[]` (`cmd_sync.ts:166-182, :343-355`) | a reader of the lock other than `sync` is found that needs a global entry's `files[]` |
+-
+-## What this roadmap deliberately does not do
+-
+-- It does not change which artefacts the install projects.
+-- It does not add a CLI verb, a grant, an ask or an authority path.
+-- It does not touch the uninstall path; its sibling owns that and must not be
+-  held behind this file's council round.
+-- It does not reopen ADR-020. Phase 0 asks whether this mechanism sits inside
+-  that record, which is a different question.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Preserving `unknown` keeps a stale file forever | implementation | A file the user never touched stops being updated because the ledger lost its record. | 2.1's two digests make "we shipped a new one" expressible, so `outdated` is a state rather than a guess. 2.4 as landed narrows this further than the row anticipated: preservation needs the path to be ledger-listed AND the bytes to differ from what the run would write, so an untouched file that already matches the package is written rather than frozen. | Phase 2 — Two digests, one classifier |
+-| 2 | The council round stalls and Phase 2 never starts | product | A blocked phase in a ready roadmap decays into a parked one. | Phases 0, 1 and 3.1 deliver value without it, and the blocker's "if you do nothing" names the resulting state plainly rather than implying the file is stuck. | Phase 0 — Resolve the lock, not the symptom |
+-| 3 | The schema bump breaks the sibling's deletion allowlist | implementation | Two roadmaps read one file and one of them is a data-loss fix. | D2 makes the bump additive and 2.1 asserts a schema-1 fixture still loads; the sibling's containment test runs in the same suite. | Phase 2 — Two digests, one classifier |
+-| 4 | The parity fixture is satisfied by three readers sharing one bug | implementation | Agreement is not correctness. | The parity test is a cross-check on top of 2.2's table-driven test, not instead of it; the table enumerates all seven states independently. | Phase 2 — Two digests, one classifier |
+-| 5 | Gitignoring the manifest breaks a team that committed it deliberately | product | Someone relies on the committed lock for reproducibility. | Re-cut 2026-10-18 to option (b′): the lock is not gitignored and keeps its global entries, so `sync` replay survives; only the absolute `files[]` of global entries leave it, and 3.3 audits every reader of the lock before they do. | Phase 3 — Say the same thing on every surface |
+-| 6 | The first install after the ledger ships is loud for people who edited nothing | product | For a consumer whose global files were deployed before digests existed, 2.4 cannot tell an untouched older version from an edit, so every such file that differs from the new package content is preserved with a sidecar and the run exits 3. | The equality test removes every file that provably matches, so the burst is bounded to files that genuinely differ; the report line is its own message naming the cause rather than claiming an edit; `--force` is the one-command escape and is named in it. The council weighed this against silent loss and took the recoverable direction — the cost is a confusing install, and the alternative is an unrecoverable one. | Phase 2 — Two digests, one classifier |
+-| 7 | Preservation delays the ambiguity rather than resolving it | implementation | A preserved file was never installed, so the run records the STAGED digest for it. Until the consumer merges the sidecar, the path keeps classifying as divergent. | That is the designed behaviour and not a leak: from the second install the path is `recorded-modified` on the ordinary path rather than on the migration branch, so the one-off message appears once. Both council seats named this explicitly, and the record states it so a future reader does not mistake the delay for a bug. | Phase 2 — Two digests, one classifier |
+-
+-## Acceptance Criteria
+-
+-- [x] **AC-1** All three Phase 1 tests were observed **red** before Phase 2,
+-      and the observation is recorded in the PR.
+-- [x] **AC-2** An edit to a globally deployed file survives a re-install run
+-      from a directory with no project settings.
+-- [x] **AC-3** An edit survives an install run from a second project under the
+-      same HOME.
+-- [x] **AC-4** A file the package retires while the user has edited it is not
+-      deleted silently.
+-- [x] **AC-5** A genuinely unrecorded pre-existing file is still written, as
+-      its own asserted case.
+-- [x] **AC-6** Installer `rc=3` and `doctor --ci` non-zero on the same tree,
+-      asserted by one test.
+-- [x] **AC-7** A schema-1 inventory still loads, and the sibling roadmap's
+-      containment test is green in the same run.
+-- [ ] **AC-8** A global install run from a consumer project with settings
+-      writes no `$HOME`-rooted path into that project's
+-      `agents/installed-tools.lock` while `sync` still replays its global
+-      entries (3.3, re-cut 2026-10-18 to option (b′)), and
+-      `grep -c sidecar docs/contracts/install-layout.md` ≥ 1 (satisfied by 3.2).
+-- [ ] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
+-      run; `check_pack_size` and `check_gate_completeness` are red on
+-      `main@8c90aad26` independently of this branch.
+-
+-## Provenance
+-
+-Source-derived under template rule 19. The source set compares this package
+-against several external references; none is named here per
+-`source-confidentiality`, links `ENC1`-encrypted in the round's intake note.
+-No code, prompt or text from any of them is adopted — every item above is a
+-defect in this tree, verified at HEAD.
+-
+-| Proposed | Verdict | Why |
+-|---|---|---|
+-| Per-user ownership ledger | KEEP | K1/K2 verified; the working directory currently decides. |
+-| Two digests in the record | KEEP | K3: the type has no packaged-digest parameter. |
+-| Ownership hash in the deploy inventory | KEEP | K4: zero hash hits in that module. |
+-| Doctor reads global scope | KEEP | K5 verified verbatim at `cmd_doctor.ts:597`. |
+-| `kind: sidecar` in the contract | KEEP | K7: absent from both contracts. |
+-| "Customizations are already protected" | CUT | Refuted at HEAD by K1–K3; the source asserted it and the tree contradicts it. |
+-| A second manifest format alongside the existing one | CUT | The existing inventory is bumped, not duplicated. |
+-| New `adopt` / `reset` verbs | FOLD | Flags on an existing verb; ADR-041. |
+-| "Multi-host 9.5/10" and other numeric grades | CUT | No measurement basis; the source withdraws them itself. |
+-
+-## Notes — how this file was derived
+-
+-Three extraction passes over a twelve-file source set, converging at pass 3
+-with one re-grade and no new rows. K1–K5 were re-verified line by line at HEAD
+-by this file's author. One of the source's claims in this area —
+-"customizations are already protected" — is **never-true** at HEAD and is
+-recorded as a CUT rather than dropped, because it is the assumption that made
+-the rest of the source under-read this surface. The contract contradiction in
+-K6 is narrower than the source stated: the layout contract carries a
+-source-repo qualifier the source's quote omitted, and the real gap is that the
+-consumer case is then unaddressed.
+diff --git a/dist/install/install.mjs b/dist/install/install.mjs
+index 788aa3b7f607c0547a3a2834243c66a0f3aca533..b2a41cc04b07c670b4d1dcb8caa59ae58c6f2246 100755
+--- a/dist/install/install.mjs
++++ b/dist/install/install.mjs
+@@ -10376,6 +10376,12 @@ function preservedIndex(preservedTargets, staged) {
+   }
+   return out;
+ }
++function dropGlobalScopeFiles(entries) {
++  for (const entry of entries) {
++    if (entry["scope"] === "global") entry["files"] = [];
++  }
++  return entries;
++}
+ 
+ // src/install/ownershipLedger.ts
+ import * as fs13 from "node:fs";
+@@ -22691,7 +22697,7 @@ function _update_installed_tools_manifest(project_root, tools, scope, force, fil
+       throw exc;
+     }
+   }
+-  write_manifest(target, version, entries);
++  write_manifest(target, version, dropGlobalScopeFiles(entries));
+   if (!state.QUIET) {
+     const rel = isRelativeTo(target, project_root) ? path36.relative(project_root, target) : target;
+     info(`Manifest updated: ${rel}`);
+@@ -23069,6 +23075,18 @@ function _deploy_claude_desktop(force, package_root, lockfile_path2) {
+     bundles_dir,
+     bundle_count
+   );
++  const anchor_raw = USER_SCOPE_PATHS["claude-desktop"];
++  recordGlobalDeploy({
++    toolId: "claude-desktop",
++    anchorRaw: anchor_raw,
++    anchor: expanduser8(anchor_raw),
++    currentFiles: /* @__PURE__ */ new Set(["agent-config.md"]),
++    destSubs: [],
++    packageTag: PACKAGE_TAG_ID,
++    preserved: tracker.conflictState.preserved,
++    staged: tracker.conflictState.staged,
++    recordedFor: tracker.recordedDigest
++  });
+   return [bundle_count, 0, "deployed", [bundles_dir, ...marker_paths]];
+ }
+ var _CLAUDE_FLAT_WRAPPER_EXTRA = /* @__PURE__ */ new Set(["commit"]);
+diff --git a/dist/install/manifestFiles.js b/dist/install/manifestFiles.js
+index 2b1ac4f07ade02b4017cbefeae847c961b60612c..d154b9c5952fa92204d4aed19c7217624b1cded9 100644
+--- a/dist/install/manifestFiles.js
++++ b/dist/install/manifestFiles.js
+@@ -256,4 +256,21 @@ export function preservedIndex(preservedTargets, staged) {
+     }
+     return out;
+ }
++/**
++ * Clear `files[]` on every global-scope entry, in place.
++ *
++ * A consumer commits this lock (`README.md` § Team reproducibility), and a
++ * global entry's files are `$HOME`-rooted absolute paths of whoever installed.
++ * The user-scoped ledger (`ownershipLedger.ts`) holds global ownership, and
++ * `sync` replays a global entry from `name`, `scope` and `bridge_marker` alone,
++ * so the entry stays and its files go. An empty list is written as no `files`
++ * key at all, which is also how a lock committed earlier loses its paths.
++ */
++export function dropGlobalScopeFiles(entries) {
++    for (const entry of entries) {
++        if (entry['scope'] === 'global')
++            entry['files'] = [];
++    }
++    return entries;
++}
+ //# sourceMappingURL=manifestFiles.js.map
+\ No newline at end of file
+diff --git a/dist/install/manifestFiles.js.map b/dist/install/manifestFiles.js.map
+index 87afed6bd36ee899dbedbd2ce476aab81fe6d592..6e322d08b0cd168540119d91f0bfd05d8ac486d9 100644
+--- a/dist/install/manifestFiles.js.map
++++ b/dist/install/manifestFiles.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"manifestFiles.js","sourceRoot":"","sources":["../../src/install/manifestFiles.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GA8CG;AAEH,OAAO,EAAE,UAAU,EAAE,YAAY,EAAE,MAAM,SAAS,CAAC;AACnD,OAAO,EAAE,OAAO,EAAE,MAAM,SAAS,CAAC;AAClC,OAAO,EAAE,UAAU,EAAE,IAAI,EAAE,OAAO,EAAE,MAAM,WAAW,CAAC;AAEtD,OAAO,KAAK,IAAI,MAAM,MAAM,CAAC;AAE7B,OAAO,EAAE,YAAY,EAAE,MAAM,mBAAmB,CAAC;AACjD,OAAO,EAAE,cAAc,EAAE,MAAM,eAAe,CAAC;AAsB/C,0CAA0C;AAC1C,MAAM,UAAU,SAAS,CAAC,CAAS,EAAE,IAAY,EAAE,WAAoB;IACnE,OAAO,EAAE,IAAI,EAAE,CAAC,EAAE,IAAI,EAAE,MAAM,EAAE,WAAW,CAAC,CAAC,CAAC,YAAY,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,IAAI,EAAE,CAAC;AAC3E,CAAC;AAKD;;;;;;;;GAQG;AACH,MAAM,UAAU,qBAAqB,CACjC,aAA0C;IAE1C,MAAM,GAAG,GAA+C,EAAE,CAAC;IAC3D,KAAK,MAAM,MAAM,IAAI,MAAM,CAAC,IAAI,CAAC,aAAa,CAAC,EAAE,CAAC;QAC9C,MAAM,CAAC,EAAE,AAAD,EAAG,MAAM,EAAE,KAAK,CAAC,GAAG,aAAa,CAAC,MAAM,CAAgB,CAAC;QACjE,IAAI,MAAM,KAAK,UAAU,EAAE,CAAC;YACxB,GAAG,CAAC,MAAM,CAAC,GAAG,KAAK,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,SAAS,CAAC,CAAC,EAAE,UAAU,EAAE,IAAI,CAAC,CAAC,CAAC;QACnE,CAAC;aAAM,IAAI,MAAM,KAAK,QAAQ,EAAE,CAAC;YAC7B,GAAG,CAAC,MAAM,CAAC,GAAG,KAAK,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,SAAS,CAAC,CAAC,EAAE,QAAQ,EAAE,IAAI,CAAC,CAAC,CAAC;QACjE,CAAC;aAAM,CAAC;YACJ,GAAG,CAAC,MAAM,CAAC,GAAG,IAAI,CAAC;QACvB,CAAC;IACL,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAED;;;;;;;;;GASG;AACH,MAAM,UAAU,sBAAsB,CAClC,KAAkB,EAClB,WAAmB,EACnB,KAAa,EACb,YAAuD;IAEvD,MAAM,GAAG,GAAwC,EAAE,CAAC;IACpD,KAAK,MAAM,MAAM,IAAI,CAAC,GAAG,KAAK,CAAC,CAAC,IAAI,EAAE,EAAE,CAAC;QACrC,MAAM,MAAM,GAAG,YAAY,CAAC,MAAM,EAAE,KAAK,CAAC,CAAC;QAC3C,IAAI,CAAC,MAAM;YAAE,SAAS;QACtB,MAAM,UAAU,GAAG,UAAU,CAAC,MAAM,CAAC,CAAC,CAAC,CAAC,MAAM,CAAC,CAAC,CAAC,IAAI,CAAC,WAAW,EAAE,MAAM,CAAC,CAAC;QAC3E,GAAG,CAAC,MAAM,CAAC,GAAG,CAAC,SAAS,CAAC,UAAU,EAAE,QAAQ,EAAE,KAAK,CAAC,CAAC,CAAC;IAC3D,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAED,mEAAmE;AACnE,SAAS,UAAU,CAAC,CAAS;IACzB,IAAI,CAAC,KAAK,GAAG;QAAE,OAAO,OAAO,EAAE,CAAC;IAChC,IAAI,CAAC,CAAC,UAAU,CAAC,IAAI,CAAC,IAAI,CAAC,OAAO,CAAC,QAAQ,KAAK,OAAO,IAAI,CAAC,CAAC,UAAU,CAAC,KAAK,CAAC,CAAC,EAAE,CAAC;QAC9E,OAAO,IAAI,CAAC,OAAO,EAAE,EAAE,CAAC,CAAC,KAAK,CAAC,CAAC,CAAC,CAAC,CAAC;IACvC,CAAC;IACD,OAAO,CAAC,CAAC;AACb,CAAC;AAED,qFAAqF;AACrF,SAAS,eAAe,CAAC,GAAW,EAAE,WAAmB;IACrD,MAAM,QAAQ,GAAG,UAAU,CAAC,GAAG,CAAC,CAAC;IACjC,OAAO,UAAU,CAAC,QAAQ,CAAC,CAAC,CAAC,CAAC,OAAO,CAAC,QAAQ,CAAC,CAAC,CAAC,CAAC,OAAO,CAAC,WAAW,EAAE,QAAQ,CAAC,CAAC;AACrF,CAAC;AAED;;;;;;GAMG;AACH,MAAM,UAAU,kBAAkB,CAAC,YAAoB,EAAE,WAAmB;IACxE,MAAM,GAAG,GAAG,IAAI,GAAG,EAAiC,CAAC;IACrD,IAAI,CAAC,UAAU,CAAC,YAAY,CAAC;QAAE,OAAO,GAAG,CAAC;IAC1C,IAAI,GAAY,CAAC;IACjB,IAAI,CAAC;QACD,GAAG,GAAG,IAAI,CAAC,KAAK,CAAC,YAAY,CAAC,YAAY,EAAE,MAAM,CAAC,CAAC,CAAC;IACzD,CAAC;IAAC,MAAM,CAAC;QACL,OAAO,GAAG,CAAC;IACf,CAAC;IACD,IAAI,GAAG,KAAK,IAAI,IAAI,OAAO,GAAG,KAAK,QAAQ,IAAI,KAAK,CAAC,OAAO,CAAC,GAAG,CAAC;QAAE,OAAO,GAAG,CAAC;IAC9E,MAAM,KAAK,GAAI,GAA+B,CAAC,OAAO,CAAC,CAAC;IACxD,IAAI,CAAC,KAAK,CAAC,OAAO,CAAC,KAAK,CAAC;QAAE,OAAO,GAAG,CAAC;IAEtC,KAAK,MAAM,IAAI,IAAI,KAAK,EAAE,CAAC;QACvB,IAAI,IAAI,KAAK,IAAI,IAAI,OAAO,IAAI,KAAK,QAAQ,IAAI,KAAK,CAAC,OAAO,CAAC,IAAI,CAAC;YAAE,SAAS;QAC/E,MAAM,GAAG,GAAG,IAA+B,CAAC;QAC5C,MAAM,IAAI,GAAG,GAAG,CAAC,MAAM,CAAC,CAAC;QACzB,IAAI,OAAO,IAAI,KAAK,QAAQ,IAAI,IAAI,CAAC,MAAM,KAAK,CAAC;YAAE,SAAS;QAC5D,MAAM,KAAK,GAAmB,EAAE,CAAC;QACjC,MAAM,QAAQ,GAAG,GAAG,CAAC,OAAO,CAAC,CAAC;QAC9B,IAAI,KAAK,CAAC,OAAO,CAAC,QAAQ,CAAC,EAAE,CAAC;YAC1B,KAAK,MAAM,KAAK,IAAI,QAAQ,EAAE,CAAC;gBAC3B,IAAI,KAAK,KAAK,IAAI,IAAI,OAAO,KAAK,KAAK,QAAQ,IAAI,KAAK,CAAC,OAAO,CAAC,KAAK,CAAC;oBAAE,SAAS;gBAClF,MAAM,GAAG,GAAI,KAAiC,CAAC,MAAM,CAAC,CAAC;gBACvD,IAAI,OAAO,GAAG,KAAK,QAAQ,IAAI,GAAG,CAAC,MAAM,KAAK,CAAC;oBAAE,SAAS;gBAC1D,KAAK,CAAC,IAAI,CAAC;oBACP,KAAK,EAAE,KAA0B;oBACjC,QAAQ,EAAE,eAAe,CAAC,GAAG,EAAE,WAAW,CAAC;iBAC9C,CAAC,CAAC;YACP,CAAC;QACL,CAAC;QACD,MAAM,SAAS,GAAG,GAAG,CAAC,aAAa,CAAC,CAAC;QACrC,MAAM,UAAU,GAAG,KAAK,CAAC,OAAO,CAAC,SAAS,CAAC,CAAC,CAAC,CAAE,SAAiC,CAAC,CAAC,CAAC,EAAE,CAAC;QACtF,GAAG,CAAC,GAAG,CAAC,IAAI,EAAE,EAAE,KAAK,EAAE,UAAU,EAAE,CAAC,CAAC;IACzC,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAED;;;;;;;;;;;;GAYG;AACH,MAAM,UAAU,0BAA0B,CACtC,OAA4B,EAC5B,KAAqB;IAErB,KAAK,MAAM,KAAK,IAAI,OAAO,EAAE,CAAC;QAC1B,MAAM,IAAI,GAAG,KAAK,CAAC,MAAM,CAAC,CAAC;QAC3B,IAAI,OAAO,IAAI,KAAK,QAAQ;YAAE,SAAS;QACvC,MAAM,QAAQ,GAAG,KAAK,CAAC,GAAG,CAAC,IAAI,CAAC,CAAC;QACjC,IAAI,QAAQ,KAAK,SAAS;YAAE,SAAS;QACrC,IAAI,KAAK,CAAC,OAAO,CAAC,KAAK,CAAC,OAAO,CAAC,CAAC,IAAK,KAAK,CAAC,OAAO,CAAe,CAAC,MAAM,KAAK,CAAC,EAAE,CAAC;YAC9E,KAAK,CAAC,OAAO,CAAC,GAAG,QAAQ,CAAC,KAAK,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC,CAAC,KAAK,CAAC,CAAC;QACxD,CAAC;QACD,IAAI,KAAK,CAAC,OAAO,CAAC,KAAK,CAAC,aAAa,CAAC,CAAC,IAAK,KAAK,CAAC,aAAa,CAAe,CAAC,MAAM,KAAK,CAAC,EAAE,CAAC;YAC1F,KAAK,CAAC,aAAa,CAAC,GAAG,CAAC,GAAG,QAAQ,CAAC,UAAU,CAAC,CAAC;QACpD,CAAC;IACL,CAAC;IACD,OAAO,OAAO,CAAC;AACnB,CAAC;AAED;;;;;;;;;;;;;;;;;;;;;;;GAuBG;AACH,MAAM,UAAU,kBAAkB,CAC9B,KAAsD,EACtD,KAAwC,EACxC,SAAyB;IAEzB,IAAI,KAAK,KAAK,IAAI,IAAI,KAAK,KAAK,SAAS,EAAE,CAAC;QACxC,OAAO,KAAK,KAAK,SAAS,CAAC,CAAC,CAAC,IAAI,CAAC,CAAC,CAAC,KAAK,CAAC,KAAK,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,CAAC,CAAC,KAAK,CAAC,CAAC;IACxE,CAAC;IACD,IAAI,KAAK,KAAK,SAAS,IAAI,SAAS,CAAC,IAAI,KAAK,CAAC;QAAE,OAAO,CAAC,GAAG,KAAK,CAAC,CAAC;IACnE,MAAM,IAAI,GAAG,IAAI,GAAG,EAAU,CAAC;IAC/B,KAAK,MAAM,KAAK,IAAI,KAAK,EAAE,CAAC;QACxB,MAAM,GAAG,GAAG,KAAK,CAAC,MAAM,CAAC,CAAC;QAC1B,IAAI,OAAO,GAAG,KAAK,QAAQ;YAAE,IAAI,CAAC,GAAG,CAAC,OAAO,CAAC,UAAU,CAAC,GAAG,CAAC,CAAC,CAAC,CAAC;IACpE,CAAC;IACD,MAAM,GAAG,GAAG,CAAC,GAAG,KAAK,CAAC,CAAC;IACvB,KAAK,MAAM,IAAI,IAAI,KAAK,CAAC,KAAK,EAAE,CAAC;QAC7B,MAAM,MAAM,GAAG,SAAS,CAAC,GAAG,CAAC,IAAI,CAAC,QAAQ,CAAC,CAAC;QAC5C,IAAI,MAAM,KAAK,SAAS,IAAI,IAAI,CAAC,GAAG,CAAC,IAAI,CAAC,QAAQ,CAAC;YAAE,SAAS;QAC9D,GAAG,CAAC,IAAI,CAAC,MAAM,CAAC,MAAM,KAAK,IAAI,CAAC,CAAC,CAAC,IAAI,CAAC,KAAK,CAAC,CAAC,CAAC,EAAE,GAAG,IAAI,CAAC,KAAK,EAAE,MAAM,EAAE,MAAM,CAAC,MAAM,EAAE,CAAC,CAAC;QACzF,IAAI,MAAM,CAAC,OAAO,KAAK,IAAI;YAAE,GAAG,CAAC,IAAI,CAAC,MAAM,CAAC,OAAO,CAAC,CAAC;IAC1D,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAqBD,yEAAyE;AACzE,MAAM,UAAU,cAAc,CAC1B,gBAAmC,EACnC,MAA0C;IAE1C,MAAM,GAAG,GAAG,IAAI,GAAG,EAA2B,CAAC;IAC/C,KAAK,MAAM,MAAM,IAAI,gBAAgB,EAAE,CAAC;QACpC,MAAM,OAAO,GAAG,cAAc,CAAC,MAAM,CAAC,CAAC;QACvC,MAAM,GAAG,GAAG,MAAM,CAAC,GAAG,CAAC,OAAO,CAAC,IAAI,IAAI,CAAC;QACxC,GAAG,CAAC,GAAG,CAAC,OAAO,CAAC,MAAM,CAAC,EAAE;YACrB,MAAM,EAAE,GAAG;YACX,OAAO,EAAE,GAAG,KAAK,IAAI,CAAC,CAAC,CAAC,IAAI,CAAC,CAAC,CAAC,EAAE,IAAI,EAAE,OAAO,EAAE,IAAI,EAAE,SAAS,EAAE,MAAM,EAAE,GAAG,EAAE;SACjF,CAAC,CAAC;IACP,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC"}
+\ No newline at end of file
++{"version":3,"file":"manifestFiles.js","sourceRoot":"","sources":["../../src/install/manifestFiles.ts"],"names":[],"mappings":"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"}
+\ No newline at end of file
+diff --git a/docs/contracts/agents-layout.md b/docs/contracts/agents-layout.md
+index fa98cf8a1a2c213aa4049882f083f1882ef868ac..fd00af3cbd80d2776e4613400853227f45a30f7e 100644
+--- a/docs/contracts/agents-layout.md
++++ b/docs/contracts/agents-layout.md
+@@ -71,7 +71,7 @@ keep-beta-until: 2026-08-17
+ | `.agent-tools.yml` | tracked-durable | maintainer | Declares which tool projections `task generate-tools` builds |
+ | `.maintainer-workspace.md` | tracked-durable | maintainer | Maintainer-facing workspace notes; source-repo only |
+ | `.gitkeep` | tracked-durable | — | Keeps `agents/` in the tree even when all other files are ignored |
+-| `installed-tools.lock` | **source repo: local-only** (gitignored at `.gitignore:290`) · **consumer repo: tracked-durable** | installer (`scripts/install.py`) | Scoped per repo, because the two halves of this file serve different purposes and the unqualified word "gitignored" sent readers the wrong way. In the SOURCE repo it is a global-scope inventory carrying the maintainer's own absolute paths — it leaks `$HOME` and must never be committed. In a CONSUMER repo it is the project's tool manifest and team-reproducibility surface: `README.md:357` tells teams to commit it and to run `sync` after cloning, so it is deliberately absent from `src/config/gitignore-block.txt` and adding it there would break that workflow. |
++| `installed-tools.lock` | **source repo: local-only** (gitignored at `.gitignore:290`) · **consumer repo: tracked-durable** | installer (`scripts/install.py`) | Scoped per repo, because the two halves of this file serve different purposes and the unqualified word "gitignored" sent readers the wrong way. In the SOURCE repo it is a global-scope inventory carrying the maintainer's own absolute paths — it leaks `$HOME` and must never be committed. In a CONSUMER repo it is the project's tool manifest and team-reproducibility surface: `README.md:357` tells teams to commit it and to run `sync` after cloning, so it is deliberately absent from `src/config/gitignore-block.txt` and adding it there would break that workflow. Its global-scope entries record no `files[]` — the user-scoped deploy inventory holds global ownership — so a global install run from a consumer project writes no `$HOME`-rooted path into it. |
+ 
+ ---
+ 
+diff --git a/docs/contracts/install-layout.md b/docs/contracts/install-layout.md
+index e9de10657c7519ef80e1d72f2b5b272d5510d9ca..b491a91fc92879757c16fd15b4447569385ffd4f 100644
+--- a/docs/contracts/install-layout.md
++++ b/docs/contracts/install-layout.md
+@@ -214,7 +214,10 @@ foreign keys and files intact. The pointers it follows:
+    HOME produces one just as an install from the first does. Uninstall does not
+    delete a sidecar: it is reported as skipped and left in place, because it may
+    be half-merged into the user's file. Changing that belongs to the uninstall
+-   flow, not to this record.
++   flow, not to this record. A `scope: global` entry carries no `files[]`: its
++   paths and digests live in the user-scoped deploy inventory, and a project
++   `uninstall` drops the entry without touching any file — `uninstall --global`
++   removes global content.
+ 3. **`merged_keys[]`** (per tool) — objects with `file` + `json_pointer` (+ optional
+    `value_hash`). Uninstall removes only these keys.
+ 4. **`status`** — `installed` (default) or `uninstalling`; the two-phase uninstall
+diff --git a/docs/contracts/installed-tools-lockfile.md b/docs/contracts/installed-tools-lockfile.md
+index 52635fce82f539dcbaff0943ccba8929c6866f01..0c83e25d8eb9c3097182e398b9cc4de2c115f27e 100644
+--- a/docs/contracts/installed-tools-lockfile.md
++++ b/docs/contracts/installed-tools-lockfile.md
+@@ -71,14 +71,14 @@ tools:
+ | `bridge_marker` | str | yes | absolute / `~`-prefixed for global; repo-relative for project |
+ | `installed_at` | str | yes | ISO date; informational only |
+ | `status` | str | no | `installed` (default when absent) or `uninstalling`; two-phase uninstall (P2.2). A crashed uninstall leaves the entry in `uninstalling` — `agent-config prune --resume-uninstall` sweeps only those entries' `files[]` without touching healthy tools or unmanaged drift. |
+-| `files` | list[obj] | no | content the installer deployed for this tool |
++| `files` | list[obj] | no | content the installer deployed for this tool. **Omitted on every `scope: global` entry**: those paths are `$HOME`-rooted and the lock is committed in a consumer repo, so global ownership lives in the user-scoped deploy inventory (`deployed-files.json`, see [`install-layout.md`](install-layout.md)) instead. The entry itself stays, because `sync` replays a global install from `name`, `scope` and `bridge_marker` alone. A lock written before this rule loses its global `files[]` on the next install. |
+ | `merged_keys` | list[obj] | no | named keys this tool inserted into shared JSON files |
+ 
+ ### `files[]` entries
+ 
+ | Field | Type | Notes |
+ |---|---|---|
+-| `path` | str | repo-relative for project-scope, `~`-prefixed for global |
++| `path` | str | repo-relative (or absolute) for project-scope; never written for a global entry — see `files` above |
+ | `kind` | str | one of `FILE_KINDS = {bridge, deployed, marker}` |
+ | `sha256` | str / null | 64 hex chars of the file's SHA-256 at install time, or `null` for markers / pointers without content |
+ 
+diff --git a/src/install/manifestFiles.ts b/src/install/manifestFiles.ts
+index 9a5c5b11e8b7f3cbc6425bb8f4d144d8254b0686..dac3f3f8586a631ccddda0cf925f908507739fe6 100644
+--- a/src/install/manifestFiles.ts
++++ b/src/install/manifestFiles.ts
+@@ -310,3 +310,20 @@ export function preservedIndex(
+     }
+     return out;
+ }
++
++/**
++ * Clear `files[]` on every global-scope entry, in place.
++ *
++ * A consumer commits this lock (`README.md` § Team reproducibility), and a
++ * global entry's files are `$HOME`-rooted absolute paths of whoever installed.
++ * The user-scoped ledger (`ownershipLedger.ts`) holds global ownership, and
++ * `sync` replays a global entry from `name`, `scope` and `bridge_marker` alone,
++ * so the entry stays and its files go. An empty list is written as no `files`
++ * key at all, which is also how a lock committed earlier loses its paths.
++ */
++export function dropGlobalScopeFiles(entries: ManifestFileEntry[]): ManifestFileEntry[] {
++    for (const entry of entries) {
++        if (entry['scope'] === 'global') entry['files'] = [];
++    }
++    return entries;
++}
+diff --git a/src/scripts/_cli/cmd_uninstall.ts b/src/scripts/_cli/cmd_uninstall.ts
+index 5ce3255ee5d4c3bf06019936c5d6ae5cdb85b810..73f5749527f6b29037c962352ed9d804ea95b89f 100644
+--- a/src/scripts/_cli/cmd_uninstall.ts
++++ b/src/scripts/_cli/cmd_uninstall.ts
+@@ -755,6 +755,14 @@ function _uninstall_project(opts: Options): number {
+             continue;
+         }
+ 
++        if (!_is_v2_entry(entry) && entry['scope'] === 'global') {
++            // A global entry records no files[] (the user-scoped ledger owns
++            // them), and the project-marker map below names a PROJECT file the
++            // global install never wrote. `uninstall --global` removes its content.
++            _print(_stdout, `  · ${tool}: global-scope entry removed (content: \`uninstall --global\`)`);
++            if (!opts.dry_run) removed_names.push(tool);
++            continue;
++        }
+         if (!_is_v2_entry(entry)) {
+             // v1 entry — keep the legacy single-marker behaviour.
+             const [line, removed] = _remove_project_marker(project_root, tool, {
+diff --git a/src/scripts/_lib/neighbour_census.ts b/src/scripts/_lib/neighbour_census.ts
+index 478fe0faaaea46c163969ed14d51f19ca9f1d4cd..4c35b5d90167df96e964bfb97f4ca015881bbbcd 100644
+--- a/src/scripts/_lib/neighbour_census.ts
++++ b/src/scripts/_lib/neighbour_census.ts
+@@ -39,6 +39,7 @@ import {
+     classifyCompat,
+     fileDigest,
+     makeSkillOriginResolver,
++    packageClaimedPaths,
+     qualifiedSkillName,
+     scanVerdict,
+     type Compat,
+@@ -532,12 +533,18 @@ export interface CensusOptions {
+     scanCache?: ScanCache | null;
+     /** Clock, for the MCP use window. Injected so a fixture can pin the day. */
+     now?: Date;
++    /** Deploy-inventory location override (fixtures); default the user-scoped ledger. */
++    inventoryFile?: string;
+ }
+ 
+ /** Run the whole census for one consumer root. */
+ export function census(projectRoot: string, opts: CensusOptions = {}): NeighbourCensus {
+     const gated = opts.gatedEvents ?? new Set<string>();
+-    const owned = new Set(readRecordedHashes(manifest_path(projectRoot), projectRoot).keys());
++    // The ledger half: a global entry in the lock records no files[].
++    const owned = new Set([
++        ...readRecordedHashes(manifest_path(projectRoot), projectRoot).keys(),
++        ...(packageClaimedPaths(projectRoot, opts.inventoryFile) ?? []),
++    ]);
+     const home = opts.homeRoot ?? os.homedir();
+ 
+     const hosts: HostCensus[] = [];
+diff --git a/src/scripts/_lib/skill_origin.ts b/src/scripts/_lib/skill_origin.ts
+index 89ca479c0ae32570a620a34cd7301324f77d3c0c..c8ec195c3ec05da0b33c4777b11760d38e452033 100644
+--- a/src/scripts/_lib/skill_origin.ts
++++ b/src/scripts/_lib/skill_origin.ts
+@@ -9,6 +9,7 @@
+  * loads on every dispatch, under a ceiling `check_hook_bundle_composition` holds.
+  * So the primitives live here, importing only the manifest reader, and the census
+  * re-exports them — one definition, two call sites, no second module graph.
++ * (`user_global_paths` is the one other import: it locates the deploy inventory.)
+  *
+  * ORIGIN IS READ FROM A CLAIM RECORD, NEVER INFERRED FROM A ROOT. The temptation
+  * is to call `~/.claude/skills` foreign and the workspace ours. That is wrong in
+@@ -26,6 +27,7 @@ import * as path from 'node:path';
+ import { parse as parseYaml } from 'yaml';
+ 
+ import { manifest_path } from './installed_tools.js';
++import { write_target } from './user_global_paths.js';
+ 
+ /**
+  * Where a RANKED skill came from — a question about AUTHORSHIP.
+@@ -94,7 +96,10 @@ export function splitQualifiedName(qualified: string): { origin: SkillOrigin; na
+  * budget this whole module was split out to protect. The `~` expansion below is
+  * the same one all three use.
+  */
+-export function packageClaimedPaths(projectRoot: string): ReadonlySet<string> | null {
++export function packageClaimedPaths(
++    projectRoot: string,
++    inventoryFile: string = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] || write_target('deployed-files.json'),
++): ReadonlySet<string> | null {
+     const manifest = manifest_path(projectRoot);
+     let doc: unknown;
+     try {
+@@ -118,6 +123,21 @@ export function packageClaimedPaths(projectRoot: string): ReadonlySet<string> |
+             out.add(path.resolve(projectRoot, _expanduser(raw)));
+         }
+     }
++    // A global entry records no files[]: the user-scoped deploy inventory is
++    // where its paths live (`global_deploy_inventory.ts`), so it claims them.
++    try {
++        const inv = JSON.parse(fs.readFileSync(_expanduser(inventoryFile), 'utf-8')) as {
++            tools?: Record<string, { anchor?: unknown; files?: unknown }>;
++        };
++        for (const t of Object.values(inv.tools ?? {})) {
++            if (typeof t?.anchor !== 'string' || !Array.isArray(t.files)) continue;
++            for (const rel of t.files) {
++                if (typeof rel === 'string') out.add(path.resolve(_expanduser(t.anchor), rel));
++            }
++        }
++    } catch {
++        // No inventory: the lock's own claims are the whole answer.
++    }
+     return out;
+ }
+ 
+diff --git a/src/scripts/install.ts b/src/scripts/install.ts
+index c1e9877df84ba23f533edaa93cc616f56672f1ae..7800aa04185f561326f808c2744797204241cb29 100644
+--- a/src/scripts/install.ts
++++ b/src/scripts/install.ts
+@@ -88,7 +88,7 @@ import * as mcp_consent from './_lib/mcp_consent_residual.js';
+ import * as scoped_projection from './_lib/scoped_projection.js';
+ import { createConflictTracker } from '../install/conflictTracker.js';
+ import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
+-import { filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
++import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
+ import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
+ import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
+ import * as surface_tiers from './_lib/surface_tiers.js';
+@@ -2313,7 +2313,7 @@ function _update_installed_tools_manifest(
+         }
+     }
+ 
+-    installed_tools.write_manifest(target, version, entries);
++    installed_tools.write_manifest(target, version, dropGlobalScopeFiles(entries));
+     if (!state.QUIET) {
+         const rel = isRelativeTo(target, project_root) ? path.relative(project_root, target) : target;
+         info(`Manifest updated: ${rel}`);
+@@ -2854,6 +2854,15 @@ function _deploy_claude_desktop(
+         bundles_dir,
+         bundle_count,
+     );
++    // The marker's digest lived only in a project lock's files[], which a
++    // global entry no longer records; the user-scoped ledger holds it instead.
++    const anchor_raw = USER_SCOPE_PATHS['claude-desktop'] as string;
++    recordGlobalDeploy({
++        toolId: 'claude-desktop', anchorRaw: anchor_raw, anchor: expanduser(anchor_raw),
++        currentFiles: new Set(['agent-config.md']), destSubs: [], packageTag: PACKAGE_TAG_ID,
++        preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged,
++        recordedFor: tracker.recordedDigest,
++    });
+     return [bundle_count, 0, 'deployed', [bundles_dir, ...marker_paths]];
+ }
+ 
+diff --git a/tests/install/ownership_ledger_real_install.test.ts b/tests/install/ownership_ledger_real_install.test.ts
+index f940159989627f051cbb38580db37da3f38add6a..da1aa3aac9baf6f6c4a00031d063b8de2dd740ff 100644
+--- a/tests/install/ownership_ledger_real_install.test.ts
++++ b/tests/install/ownership_ledger_real_install.test.ts
+@@ -32,6 +32,8 @@ import { SIDECAR_SUFFIX } from '../../src/install/preserve.js';
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+ const ORCHESTRATOR = path.join(REPO_ROOT, 'src', 'scripts', 'install');
+ const DOCTOR = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_doctor.ts');
++const SYNC = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_sync.ts');
++const VALIDATE = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_validate.ts');
+ const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+ const TOOL = 'cursor';
+ const TAG = 'event4u/agent-config';
+@@ -61,9 +63,9 @@ function digestOf(p: string): string | null {
+     }
+ }
+ 
+-/** Run one global install of {@link TOOL} from `cwd` into `home`. */
+-function install(home: string, cwd: string): { status: number | null; out: string } {
+-    const r = spawnSync('bash', [ORCHESTRATOR, '--global', `--tools=${TOOL}`, '--yes'], {
++/** Run one global install of {@link TOOL} (or `tools`) from `cwd` into `home`. */
++function install(home: string, cwd: string, tools: string = TOOL): { status: number | null; out: string } {
++    const r = spawnSync('bash', [ORCHESTRATOR, '--global', `--tools=${tools}`, '--yes'], {
+         cwd,
+         encoding: 'utf8',
+         timeout: 240_000,
+@@ -342,3 +344,84 @@ describe('step 3.1 — the installer and doctor say the same thing about one tre
+         },
+     );
+ });
++
++/** A lock-reading CLI (`sync`, `validate`) run from `cwd` against `home`. */
++function cli(script: string, args: string[], home: string, cwd: string): { status: number | null; out: string } {
++    const r = spawnSync(TSX, [script, ...args], {
++        cwd,
++        encoding: 'utf8',
++        timeout: 240_000,
++        env: {
++            ...process.env,
++            HOME: home,
++            EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
++            AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
++            AGENT_CONFIG_INSTALLED_TOOLS: undefined,
++            AGENT_CONFIG_PROJECT_ROOT: cwd,
++            AGENT_CONFIG_ROOT_OVERRIDE: '1',
++            AGENT_CONFIG_NO_UI: '1',
++            CI: '1',
++        },
++    });
++    return { status: r.status, out: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
++}
++
++describe('step 3.3 — the consumer lock keeps global entries and leaks no $HOME path', () => {
++    it(
++        'global entries carry no files[], sync still replays them, the ledger holds the paths, validate accepts the lock',
++        { timeout: 900_000 },
++        () => {
++            const home = mkTmp('own-ledger-home-');
++            const project = projectWithSettings('own-ledger-lock-');
++            const lock = path.join(project, 'agents', 'installed-tools.lock');
++            const tools = `${TOOL},claude-desktop`;
++            const first = install(home, project, tools);
++            expect(first.status, first.out).toBe(0);
++
++            const text = fs.readFileSync(lock, 'utf8');
++            const real = fs.realpathSync(home);
++            expect(text, 'a global entry recorded the installing user\'s absolute home').not.toContain(home);
++            expect(text).not.toContain(real);
++            expect(text).not.toMatch(/^\s+files:/m);
++            for (const name of [TOOL, 'claude-desktop']) {
++                expect(text).toMatch(new RegExp(`- name: ${name}\\n\\s+scope: global`));
++            }
++
++            // The user-scoped ledger holds what the lock no longer records.
++            const inv = JSON.parse(fs.readFileSync(inventoryPath(home), 'utf8')) as {
++                tools: Record<string, { files: string[]; digests?: Record<string, { installed_sha256?: string }> }>;
++            };
++            const cursor = inv.tools[TOOL];
++            expect(cursor?.files.length ?? 0).toBeGreaterThan(0);
++            const rule = path.relative(path.join(home, '.cursor'), aDeployedRule(home)).split(path.sep).join('/');
++            expect(cursor?.digests?.[rule]?.installed_sha256).toBe(digestOf(aDeployedRule(home)));
++            const desktopMarker = path.join(home, 'Library', 'Application Support', 'Claude', 'agent-config.md');
++            expect(inv.tools['claude-desktop']?.digests?.['agent-config.md']?.installed_sha256).toBe(
++                digestOf(desktopMarker),
++            );
++
++            const valid = cli(VALIDATE, [], home, project);
++            expect(valid.status, valid.out).toBe(0);
++
++            // A new team member: same committed lock, a HOME with nothing installed.
++            const newcomer = mkTmp('own-ledger-newcomer-');
++            const replay = cli(SYNC, ['--dry-run'], newcomer, project);
++            expect(replay.status, replay.out).toBe(0);
++            expect(replay.out).toMatch(new RegExp(`${TOOL}\\s+→ ~/\\.cursor/ \\(missing\\)`));
++
++            // A lock committed before this change carries absolute files[] on a
++            // global entry; the next install rewrites it without them.
++            const legacy = fs
++                .readFileSync(lock, 'utf8')
++                .replace(
++                    /(- name: cursor\n(?:\s{4}\S.*\n)*)/,
++                    `$1    files:\n      - path: ${aDeployedRule(home)}\n        kind: deployed\n        sha256: null\n`,
++                );
++            fs.writeFileSync(lock, legacy);
++            expect(fs.readFileSync(lock, 'utf8')).toContain(home);
++            const second = install(home, project);
++            expect(second.status, second.out).toBe(0);
++            expect(fs.readFileSync(lock, 'utf8')).not.toContain(home);
++        },
++    );
++});
+diff --git a/tests/scripts/_cli/cmd_uninstall.test.ts b/tests/scripts/_cli/cmd_uninstall.test.ts
+index 0f507550b24c0b474bf5d40ad57c082714c7c199..3589b732afc70474f1127840a5dcb291e368ec34 100644
+--- a/tests/scripts/_cli/cmd_uninstall.test.ts
++++ b/tests/scripts/_cli/cmd_uninstall.test.ts
+@@ -187,3 +187,36 @@ describe('cmd_uninstall — global scope', () => {
+         expect(t.status).toBe(0);
+     });
+ });
++
++// ---------------------------------------------------------------------------
++// project scope — a global-scope entry recorded without files[]
++// ---------------------------------------------------------------------------
++
++// Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a consumer
++// lock keeps its global-scope entries but no longer records their files[]. An
++// entry without files[] used to fall through to the legacy project-marker map,
++// which for a global entry deletes a PROJECT file the global install never
++// wrote — `.cursor/hooks.json` here.
++describe('cmd_uninstall — project scope, global entry without files[]', () => {
++    it('removes the entry and leaves the project bridge marker alone', () => {
++        const root = freshRoot();
++        fs.mkdirSync(path.join(root, '.cursor'), { recursive: true });
++        const marker = path.join(root, '.cursor', 'hooks.json');
++        fs.writeFileSync(marker, '{"theirs": true}\n');
++        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
++        const lock = path.join(root, 'agents', 'installed-tools.lock');
++        fs.writeFileSync(
++            lock,
++            'schema_version: 2\nagent_config_version: "0.0.0"\ntools:\n' +
++                '  - name: cursor\n    scope: global\n    bridge_marker: ~/.cursor/\n' +
++                '    installed_at: "2026-10-18"\n',
++        );
++        const t = runInProc(main, ['--tools=cursor'], {
++            cwd: root,
++            env: { AGENT_CONFIG_ROOT_OVERRIDE: '1', AGENT_CONFIG_PROJECT_ROOT: root },
++        });
++        expect(t.status, t.stdout + t.stderr).toBe(0);
++        expect(fs.readFileSync(marker, 'utf8')).toBe('{"theirs": true}\n');
++        expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
++    });
++});
+diff --git a/tests/scripts/neighbour_census.test.ts b/tests/scripts/neighbour_census.test.ts
+index 201f4ddb0f5ccc14ae66616e6d49e01508bee3e8..9d4ab28ba8c70edd28cd9b9aaa7808a89b8e063b 100644
+--- a/tests/scripts/neighbour_census.test.ts
++++ b/tests/scripts/neighbour_census.test.ts
+@@ -465,3 +465,24 @@ describe('the doctor surfaces (2.1 verify, 2.6)', () => {
+         expect(text).toContain('no label here refuses anything');
+     });
+ });
++
++describe('a global skill the user-scoped ledger lists is ours, not a neighbour', () => {
++    // Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a
++    // consumer lock no longer records a global entry's files[], so the deploy
++    // inventory is the only record that the skill under ~/.claude/skills is ours.
++    it('excludes the ledger-listed skill and keeps the unlisted one', () => {
++        const project = tmp();
++        const home = plantedHome();
++        write(project, 'agents/installed-tools.lock', 'schema_version: 2\ntools:\n  - name: claude-code\n    scope: global\n');
++        write(home, '.claude/skills/ours/SKILL.md', '---\nname: ours\ndescription: x\n---\n');
++        write(home, '.claude/skills/theirs/SKILL.md', '---\nname: theirs\ndescription: y\n---\n');
++        const inventoryFile = path.join(home, 'deployed-files.json');
++        write(
++            home,
++            'deployed-files.json',
++            JSON.stringify({ tools: { 'claude-code': { anchor: `${home}/.claude/`, files: ['skills/ours/SKILL.md'] } } }),
++        );
++        const c = census(project, { homeRoot: home, inventoryFile });
++        expect(c.skills.map((s) => s.id)).toStrictEqual(['user:theirs']);
++    });
++});
+diff --git a/tests/scripts/neighbour_route_origin.test.ts b/tests/scripts/neighbour_route_origin.test.ts
+index c04dbcf936086191eea6eff36f4a7d1791700d5d..2deb88fe0cab132e93e01e3f888b9cf6d1c2cf8d 100644
+--- a/tests/scripts/neighbour_route_origin.test.ts
++++ b/tests/scripts/neighbour_route_origin.test.ts
+@@ -138,6 +138,35 @@ describe('1.1 — origin comes from the lockfile, and both same-named skills ran
+     });
+ });
+ 
++describe('a global entry with no files[] is claimed through the user-scoped ledger', () => {
++    // Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a
++    // consumer lock no longer records a global entry's files[], so a skill
++    // this package deployed into the host-global root must be claimed by the
++    // deploy inventory or it reads as a neighbour's.
++    it('a ledger-listed global skill is package, an unlisted one is still home', () => {
++        const project = tmp('nb-ledger-proj-');
++        const home = tmp('nb-ledger-home-');
++        write(
++            project,
++            'agents/installed-tools.lock',
++            'schema_version: 2\ntools:\n  - name: claude-code\n    scope: global\n    bridge_marker: ~/.claude/\n',
++        );
++        const inventory = path.join(home, 'deployed-files.json');
++        write(
++            home,
++            'deployed-files.json',
++            JSON.stringify({
++                schema_version: 2,
++                tools: { 'claude-code': { anchor: `${home}/.claude/`, files: ['skills/ours/SKILL.md'] } },
++            }),
++        );
++        const claims = packageClaimedPaths(project, inventory);
++        const originOf = makeSkillOriginResolver(project, { claims });
++        expect(originOf(path.join(home, '.claude/skills/ours/SKILL.md'))).toBe('package');
++        expect(originOf(path.join(home, '.claude/skills/theirs/SKILL.md'))).toBe('home');
++    });
++});
++
+ describe('1.2 — overlap from the two-root mode of the existing audit', () => {
+     it('a near-duplicate foreign skill yields also: and compat: overlapping; a disjoint one unclassified', () => {
+         const project = tmp('nb-ov-project-');
