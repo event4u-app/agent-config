@@ -73,7 +73,7 @@ describe('run.json (step 6.3)', () => {
         expect(first[2]).toMatchObject({ status: 'no-external-signal', top_tier: { added: 0, changed: 0, killed: 0 } });
         expect(doc.tokens).toBe(3000);
         expect(doc.wall_clock_seconds).toBe(5400);
-        expect(doc.exchange.already_fixed_rate).toBe(0.25);
+        expect(doc.exchange).toMatchObject({ already_fixed_rate: 0.25 });
     });
 
     it('validates its own output and round-trips through the round folder', () => {
