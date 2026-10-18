@@ -48,9 +48,11 @@
  * owning a dependency graph over `src/`, which the build tools already own and
  * which would rebuild on every run.
  *
- * In CI this is a NO-OP by construction: `.github/workflows/tests.yml` runs
- * `npm run build` before `npm run test:ts`, so the artefacts always exist and
- * nothing here fires. A genuinely broken build therefore still fails at the CI
+ * In `tests.yml` this is a NO-OP by construction: it runs `npm run build`
+ * before `npm run test:ts`, so the artefacts always exist and nothing here
+ * fires. `proof-demo.yml` builds nothing, and its `check-claims` re-runs
+ * `exec:` evidence through vitest — the hook bundle row is what lets the
+ * `hook-dispatch-latency` case run there. A genuinely broken build therefore still fails at the CI
  * build step — it cannot hide behind this shim. Locally a broken build now
  * surfaces as this script's own build error, which names the failing target
  * instead of reporting a missing file four files later.
@@ -64,6 +66,7 @@ const TARGETS: ReadonlyArray<readonly [string, string, string]> = [
     ['dist/cli/agent-config.js', 'build:cli', 'tests/cli/*.e2e.test.ts, tests/cli/cli-e2e.test.ts'],
     ['dist/ui/index.html', 'build:ui', 'tests/ui/build.test.ts, tests/cli/settings.e2e.test.ts'],
     ['dist/mcp/server.mjs', 'build:mcp-bundle', 'tests/cli/mcp-server.e2e.test.ts'],
+    ['dist/hooks/dispatch.js', 'build:hooks', 'tests/install/hook_dispatch_invocation_path_real_install.test.ts'],
 ];
 
 export default function setup(): void {

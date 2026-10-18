@@ -56,7 +56,7 @@ The subset, by claim id, read against the ledger on 2026-10-16:
 | `surgical-uninstall` | backed | `exec:` — `tests/install/uninstall_shared_host_config_real_install.test.ts`, this harness, plus the `tests/lib/` unit suites |
 | `host-agent-count` | backed | `exec:` — `tests/install/toolDetection.test.ts`, this harness |
 | `install-audit-clean` | backed | pointer — a workflow step |
-| `hook-dispatch-latency` | backed | pointer — `docs/hook-latency.json` |
+| `hook-dispatch-latency` | backed | `exec:` — `tests/install/hook_dispatch_invocation_path_real_install.test.ts`, this harness; the millisecond figures stay CI-gate readings |
 | `default-install-context-cost` | backed | `exec:` — `tests/install/default_install_skill_count_real_install.test.ts`, this harness |
 | `thin-inject-delivery-equivalence` | backed | pointer — a bench report |
 | `mcp-registered-server-standing-cost` | backed | pointer — a metrics file |

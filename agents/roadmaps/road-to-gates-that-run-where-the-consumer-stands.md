@@ -269,6 +269,25 @@ consumer behaviour points at something that executes.
       reach them; the seat's answer for them was `unbacked`, the same owner-
       reserved downgrade. `./scripts-run src/scripts/build_proof` exits 0 and
       `docs/proof.md` now reads **19 of 63** exec-backed, written from that run.
+      **Second pass 2026-10-18, narrowed by one, still open.**
+      `hook-dispatch-latency` now carries `exec:` into
+      `tests/install/hook_dispatch_invocation_path_real_install.test.ts` — the
+      harness wrapper the (b) row asked for. A real global `claude-code` install
+      into a throwaway HOME is held to the gate on both halves: every timed
+      event's installed `settings.json` command is byte-identical to the command
+      `bench_hook_latency --via-cli` runs, and the staged dispatcher is
+      byte-identical to the bundle the gate reaches, with the installed command
+      observed dispatching through it. Seen red twice — staged bundle removed,
+      timed command changed by one byte. The millisecond figures stay CI-gate
+      readings; a vitest wall-clock bound would time the shard, not the path.
+      The residue is unchanged otherwise and none of it is closable here:
+      `install-audit-clean` (the preserving fix is a network pack-install-audit
+      case on every PR, the weakening fix is owner-reserved),
+      `council-fallback-loses-zero-seats` (a harness wrapper needs a transport
+      seam in shipped code) and the four bench/fixture rows (the only answer on
+      record is the owner-reserved `unbacked` downgrade).
+      `./scripts-run src/scripts/build_proof` exits 0 and `docs/proof.md` now
+      reads **20 of 63** exec-backed, written from that run.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
