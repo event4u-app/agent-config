@@ -1,12 +1,12 @@
 # Findings: ownership-record-consumer-lock
-<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: df67641b8466f3f5039b84b473743e8a0ed9545e940951fafccfd01f28f85e01 | diff: 5a8089b934fe882f3b68fa87ec3bd40730bd17d1 | reviewer: r2-fresh-subagent-ownership-record-consumer-lock | prompt_hash: c5302a91a108cb96e00b64a6074dac7e3c99b403c3017ab0b0a98a3e20c88821 -->
+<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: 64a388e0cebe831f37ad78990b9557103116249852d7503dfaf1406491ac45a1 | diff: 926ab856aa6bff758041b23845de45e7b0c27558 | reviewer: r2-fresh-subagent-ownership-record-consumer-lock | prompt_hash: c5302a91a108cb96e00b64a6074dac7e3c99b403c3017ab0b0a98a3e20c88821 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-ownership-record-consumer-lock"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 5a8089b934fe882f3b68fa87ec3bd40730bd17d1
-  scope_hash: df67641b8466f3f5039b84b473743e8a0ed9545e940951fafccfd01f28f85e01
+  diff_sha: 926ab856aa6bff758041b23845de45e7b0c27558
+  scope_hash: 64a388e0cebe831f37ad78990b9557103116249852d7503dfaf1406491ac45a1
   roadmap: agents/roadmaps/archive/road-to-an-ownership-record-that-belongs-to-the-user.md
   roadmap_hash: 34e79bfec384901ffb6635c4d21ef69dc3e09942911abd7922f5fa724d6c79b9
   ac_hash: 92ef417c3c5a627b54dda38297f13839104a380260598be013fd5fd9761174ee
