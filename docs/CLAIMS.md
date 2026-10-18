@@ -307,6 +307,24 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: backed
 - last_verified: 2026-10-17
 
+### claim: brand-voice-lexicon-recall
+- claim: The brand-voice lexicon check finds every planted `avoid` term in running text of a finished draft and none of the same terms inside quoted, cited, fenced or linked text.
+- kind: quant
+- evidence: exec:vitest run tests/scripts/brand_scenarios.test.ts tests/scripts/check_voice_lexicon.test.ts -> 0
+- note: Registered `unbacked` by road-to-a-brand-the-tree-can-check 7.3 and backed by its 7.2 scenario fixtures. Recall is 5 of 5 planted terms over word and substring modes, English and German; false positives are 0 of 6 exempt twins (straight, curly and German low-high quotes, a blockquote, inline code, a URL, a fenced block). Writing the leg found the German low-high quote case unexempted, and it was fixed in the same change.
+- non_inference: Literal matching only — an inflected German form is a documented miss (E5), so 100 % recall holds for the planted spellings and says nothing about morphology, paraphrase, or any term not in the lexicon.
+- status: backed
+- last_verified: 2026-10-19
+
+### claim: brand-status-state-truth
+- claim: `brand:status` classifies every brand-state fixture correctly — a malformed or non-DTCG file is invalid and never the brand, a second differing file is shadowed with its winner, an identical one a duplicate, and the state is bare, mixed or branded from valid sources only.
+- kind: quant
+- evidence: exec:vitest run tests/scripts/brand_status.test.ts tests/scripts/brand_scenarios.test.ts -> 0
+- note: Registered `unbacked` by road-to-a-brand-the-tree-can-check 7.3 and backed by the 0.2 `state-fixtures` cases plus the 7.2 scenario legs (greenfield, dotted near-miss, shadowed, duplicate, tokens without voice, voice without tokens, profile excluded, project switch).
+- non_inference: Fixture classification only — it does not show that a consumer's brand files are well-formed, that the reported winner is the one the consumer intended, or anything about a source kind the resolver does not search.
+- status: backed
+- last_verified: 2026-10-19
+
 ### claim: discipline-lift-weak-host
 - claim: On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence.
 - kind: quant
