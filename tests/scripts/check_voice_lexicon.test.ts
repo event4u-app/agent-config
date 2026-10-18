@@ -83,8 +83,8 @@ function write(name: string, body: string): string {
     return p;
 }
 
-function run(args: string[]): { status: number | null; stdout: string; stderr: string } {
-    const r = spawnSync(TSX, [SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+function run(args: string[], input?: string): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX, [SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT, input });
     return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
 
@@ -261,5 +261,27 @@ describe('check_voice_lexicon — negative-corpus', () => {
         }
         expect(words).toBeGreaterThan(50_000);
         expect((hits / words) * 10_000).toBeLessThanOrEqual(0.1);
+    });
+});
+
+describe('check_voice_lexicon — draft-surfaces', () => {
+    it('draft-surfaces: --draft - reads the finished draft from stdin, so no surface writes it to disk', () => {
+        const gw = write('gw.md', GHOSTWRITER_PROFILE);
+        const r = run(['--draft', '-', '--ghostwriter', gw], 'A real game-changer.\n');
+        expect(r.status).toBe(1);
+        expect(r.stdout).toMatch(/^-:1:\d+ error avoid "game-changer"/mu);
+    });
+
+    it('draft-surfaces: every drafting surface runs the checker on its finished draft', () => {
+        const surfaces = [
+            'src/domains/gtm-marketing/ghostwriter/write/command.md',
+            'src/domains/gtm-marketing/post-as/me/command.md',
+            'src/skills/humanizer/SKILL.md',
+            'src/domains/brand/brand/review/command.md',
+        ];
+        for (const rel of surfaces) {
+            const body = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+            expect(body, rel).toContain('check_voice_lexicon.ts --draft -');
+        }
     });
 });

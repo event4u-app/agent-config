@@ -27,7 +27,7 @@
  * as SKIPPED with its reason, never as a clean pass.
  *
  * Usage:
- *   ./scripts-run src/scripts/check_voice_lexicon --draft <file>
+ *   ./scripts-run src/scripts/check_voice_lexicon --draft <file | ->
  *     [--slot agents/context-spine/brand-voice.md] [--ghostwriter <profile.md>]
  *     [--json] [--now YYYY-MM-DD]
  */
@@ -328,7 +328,7 @@ function parseArgs(argv: readonly string[]): Args | string {
     return { draft, slot, ghostwriter, json, now };
 }
 
-function readOrNull(p: string): string | null {
+function readOrNull(p: string | number): string | null {
     try {
         return fs.readFileSync(p, 'utf-8');
     } catch {
@@ -342,7 +342,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stderr.write(`${args}\n`);
         return 2;
     }
-    const draft = readOrNull(args.draft);
+    // `-` reads stdin: a drafting command that prints only must not write its draft to disk.
+    const draft = readOrNull(args.draft === '-' ? 0 : args.draft);
     if (draft === null) {
         process.stderr.write(`draft not readable: ${args.draft}\n`);
         return 2;
