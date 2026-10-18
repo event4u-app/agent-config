@@ -205,6 +205,19 @@ export function buildChunkBytes(root: string, entry: string): number {
     }
 }
 
+/**
+ * Every defined chunk carries exactly one ceiling and every ceiling names a
+ * defined chunk — so a chunk added to `hook_chunks.mjs` cannot ship unmeasured,
+ * and a ceiling cannot outlive the chunk it bounded.
+ */
+export function chunkCoverageFindings(defined: readonly string[], budgets: readonly ChunkBudget[]): string[] {
+    const out: string[] = [];
+    const budgeted = new Set(budgets.map((b) => b.entry));
+    for (const d of defined) if (!budgeted.has(d)) out.push(`chunk ${d} is built by hook_chunks.mjs but has no ceiling in ${BUDGET_REL}`);
+    for (const b of budgets) if (!defined.includes(b.entry)) out.push(`ceiling for ${b.entry} names no chunk hook_chunks.mjs builds`);
+    return out;
+}
+
 /** Over-ceiling findings for measured chunks. */
 export function chunkFindings(measured: ReadonlyMap<string, number>, budgets: readonly ChunkBudget[]): string[] {
     const out: string[] = [];
@@ -530,7 +543,10 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     if (fixture === undefined) {
         try {
             const budgets = readChunkBudgets(root);
-            for (const b of budgets) chunkSizes.set(b.entry, buildChunkBytes(root, b.entry));
+            findings.push(...chunkCoverageFindings(HOOK_CHUNKS.map((c) => c.entry), budgets));
+            for (const b of budgets) {
+                if (HOOK_CHUNKS.some((c) => c.entry === b.entry)) chunkSizes.set(b.entry, buildChunkBytes(root, b.entry));
+            }
             findings.push(...chunkFindings(chunkSizes, budgets));
         } catch (e) {
             process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);

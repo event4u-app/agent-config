@@ -15,12 +15,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
     buildChunkBytes,
+    chunkCoverageFindings,
     chunkFindings,
     chunkRaiseFindings,
     raiseEntryProblems,
     raiseFindings,
 } from '../../src/scripts/check_hook_bundle_composition.js';
-import { buildChunk, HOOK_CHUNKS } from '../../src/scripts/hook_chunks.mjs';
+import { buildChunk, HOOK_CHUNKS, main as hookChunksMain } from '../../src/scripts/hook_chunks.mjs';
+import { verifyBundle } from '../../src/scripts/hooks/bundle_integrity.js';
 
 const OLD_ENTRY = { date: '2026-10-01', from: 1500000, to: 1550000 };
 
@@ -127,11 +129,12 @@ describe('chunk ceilings', () => {
 describe('chunk builds — one definition, used by the build and by the gate', () => {
     const ENTRY = 'src/scripts/_lib/egress_engine.ts';
 
-    it('every budgeted chunk is a defined chunk, and package.json builds through the definition', () => {
+    it('the budgeted chunks and the defined chunks are the same set, and package.json builds through the definition', () => {
         const budget = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/config/hook-bundle-budget.json'), 'utf-8')) as {
-            chunks: Array<{ entry: string }>;
+            chunks: Array<{ entry: string; max_bytes: number }>;
         };
-        for (const c of budget.chunks) expect(HOOK_CHUNKS.some((h) => h.entry === c.entry), c.entry).toBe(true);
+        const budgets = budget.chunks.map((c) => ({ entry: c.entry, maxBytes: c.max_bytes }));
+        expect(chunkCoverageFindings(HOOK_CHUNKS.map((h) => h.entry), budgets)).toEqual([]);
         const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')) as { scripts: Record<string, string> };
         expect(pkg.scripts['build:hook-chunks']).toBe('node src/scripts/hook_chunks.mjs');
     });
@@ -142,6 +145,27 @@ describe('chunk builds — one definition, used by the build and by the gate', (
             const out = path.join(dir, 'c.cjs');
             buildChunk(process.cwd(), ENTRY, out);
             expect(buildChunkBytes(process.cwd(), ENTRY)).toBe(fs.statSync(out).size);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    }, 60_000);
+
+    it('a defined chunk without a ceiling, and a ceiling without a chunk, are both findings', () => {
+        const findings = chunkCoverageFindings(['a.ts', 'b.ts'], [{ entry: 'a.ts', maxBytes: 1 }, { entry: 'c.ts', maxBytes: 1 }]);
+        expect(findings).toHaveLength(2);
+        expect(findings.some((f) => f.includes('b.ts') && f.includes('no ceiling'))).toBe(true);
+        expect(findings.some((f) => f.includes('c.ts') && f.includes('names no chunk'))).toBe(true);
+    });
+
+    it('the build script writes every defined chunk and a matching digest sidecar', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-main-'));
+        try {
+            expect(hookChunksMain(['--out-dir', dir])).toBe(0);
+            for (const c of HOOK_CHUNKS) {
+                const out = path.join(dir, c.outfile);
+                expect(fs.existsSync(out), c.outfile).toBe(true);
+                expect(verifyBundle(out).state, c.outfile).toBe('ok');
+            }
         } finally {
             fs.rmSync(dir, { recursive: true, force: true });
         }

@@ -32,14 +32,22 @@ export const CHUNK_OPTIONS = Object.freeze({ bundle: true, platform: 'node', for
 
 /** Build one chunk from `root` to `outfile` (absolute). Throws when esbuild reports an error. */
 export function buildChunk(root, entry, outfile) {
-    buildSync({ ...CHUNK_OPTIONS, absWorkingDir: root, entryPoints: [entry], outfile, logLevel: 'error' });
+    const result = buildSync({ ...CHUNK_OPTIONS, absWorkingDir: root, entryPoints: [entry], outfile, logLevel: 'error' });
+    if (result.errors.length > 0) throw new Error(`esbuild reported ${String(result.errors.length)} error(s) building ${entry}`);
 }
 
-function main() {
+/**
+ * Build every chunk and write its digest sidecar. `--out-dir DIR` writes the
+ * outputs under DIR instead of the repository, for a test that must not touch
+ * the live `dist/`.
+ */
+export function main(args = argv.slice(2)) {
     const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+    const at = args.indexOf('--out-dir');
+    const outRoot = at >= 0 && args[at + 1] !== undefined ? path.resolve(args[at + 1]) : root;
     const digest = path.join(root, 'src', 'scripts', 'write_bundle_digest.mjs');
     for (const chunk of HOOK_CHUNKS) {
-        const out = path.join(root, chunk.outfile);
+        const out = path.join(outRoot, chunk.outfile);
         buildChunk(root, chunk.entry, out);
         const r = spawnSync(process.execPath, [digest, out], { stdio: 'inherit' });
         if (r.status !== 0) return r.status ?? 1;

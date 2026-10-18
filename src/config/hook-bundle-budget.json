@@ -21,6 +21,12 @@
     ],
     "chunks": [
         {
+            "entry": "src/scripts/_lib/svg_rules.ts",
+            "max_bytes": 64000,
+            "registered_at": "2026-10-18",
+            "derivation": "Measured 60,718 bytes on 2026-10-18, the SVG rule set the council moved out of the dispatch bundle on 2026-10-11. Registered when the composition gate began requiring a ceiling for every defined chunk (council round 4b, 2026-10-18), so a chunk added to hook_chunks.mjs cannot ship unmeasured. The ceiling is that reading plus about 5 %, rounded, with no growth queued for it."
+        },
+        {
             "entry": "src/scripts/_lib/egress_engine.ts",
             "max_bytes": 28000,
             "registered_at": "2026-10-18",
