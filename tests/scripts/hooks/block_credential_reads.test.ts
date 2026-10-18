@@ -165,6 +165,23 @@ describe('the tool and command surface', () => {
         }
     });
 
+    it('reads escapes and quote joins the way the shell does (council round 4c, fifth pass)', () => {
+        for (const cmd of [
+            'cat .e\\nv',
+            'cat /tmp/private\\.key',
+            "cat .e''nv",
+            'cat .e"n"v',
+            'cat<.e\\nv',
+            'cat ".e\\\nnv"',
+            'cat .e\\\nnv',
+        ]) {
+            expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(1);
+        }
+        for (const cmd of ["cat .e''nv.example", 'cat notes\\.txt']) {
+            expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(0);
+        }
+    });
+
     it('a .pem counts only when a name token says key, and only an absolute /proc path is the environment', () => {
         expect(credentialFileClass('certs/monkey.pem')).toBeNull();
         expect(credentialFileClass('certs/secretary-ca.pem')).toBeNull();
