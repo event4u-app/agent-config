@@ -217,8 +217,9 @@ record the rationale in the finding.
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run prints the route, the account, every byte that may leave and
-their digest. It creates nothing. Read it with the user.
+The dry run prints the destination (repository, account, route, remote, base)
+and every byte that may leave except the commit date, then their digest. It
+creates nothing. Read it with the user.
 
 A refusal from the privacy floor is **final**: the finding stays local. There
 is no scrubbing pass, because a rewritten identifier is still a leaked one.
@@ -265,7 +266,7 @@ replaces the local override.
 
 1. Summary of what is being contributed (type, name, why)
 2. The source path under `src/` that the contribution targets
-3. The dry-run output verbatim — route, account, every byte, digest. A field it did
+3. The dry-run output verbatim — destination, payload, digest. A field it did
    not print is reported as unshown, never filled in
 4. The one command the user runs to send it, and nothing executed on their behalf
 5. Reminder to clean up the local override after the contribution merges

@@ -47,7 +47,7 @@ work, not a notification:
    the release can be a pull request; otherwise the report alone becomes an
    issue.
 4. **Offer the release** — `self-repair:release <fingerprint> --dry-run`
-   shows every byte and their digest; `--approve <digest>` then sends them. That is
+   shows payloads, target and digest; `--approve <digest>` then sends them. That is
    the user's call, per
    [`non-destructive-by-default`](non-destructive-by-default.md).
 

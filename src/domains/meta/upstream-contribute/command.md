@@ -103,10 +103,12 @@ Show the user what would leave the machine, before anything leaves it:
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run prints the resolved route, the account, and every byte that may
-leave — branch name, commit identity and message, diff, title, body, and the
-issue the ladder falls back to — then their digest. It reads GitHub and the
-local repository and writes to neither. Read it with the user; a refusal from
+The dry run prints where the send goes — repository, account, route and its
+fallback rungs, push remote, base commit — and what it carries — branch name,
+commit identity and message, diff, title, body, and the issue the ladder falls
+back to — then the digest of all of it. The one byte outside the digest is the
+commit date, set at send time in UTC. A blob that is not UTF-8 text is refused,
+not scanned. It reads GitHub and the local repository and writes to neither. Read it with the user; a refusal from
 the privacy floor is final and the finding stays local.
 
 **No record yet?** Then there is nothing to release, and no command here
