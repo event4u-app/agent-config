@@ -23,7 +23,7 @@ Turns the gitignored, in-flight typed-observation events
 `context_stale` — see `src/scripts/_lib/knowledge_events.ts`) into
 committed `agents/knowledge/` pages. This is the ONLY path from intake
 to a tracked page — no skill or rule writes a tracked knowledge page
-mid-task (see [`knowledge-pages`](../../../agent-src/templates/contexts/knowledge-pages.md)
+mid-task (see [`knowledge-pages`](../../templates/contexts/knowledge-pages.md)
 § Storage location).
 
 ## Steps
@@ -60,7 +60,7 @@ events before deciding.
 ### 3. Draft and present the batch
 
 For every `NEW` / `EXTEND` / `CONFLICT` aggregate, draft the page
-content (following [`knowledge-pages`](../../../agent-src/templates/contexts/knowledge-pages.md) —
+content (following [`knowledge-pages`](../../templates/contexts/knowledge-pages.md) —
 `date + what + why` for session entries, ≤ 200 lines per page) and
 present the full batch to the user:
 

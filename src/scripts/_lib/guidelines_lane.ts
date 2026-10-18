@@ -122,7 +122,8 @@ export function rewriteProjectedBodyLinks(body: string, prefix: string): string 
     return body
         .replace(BODY_DOCS_RE, (_m, t: string) => prefix + t.replace(/^docs\/guidelines\//, 'guidelines/'))
         .replace(BODY_SRC_FLAT_RE, (_m, t: string) => prefix + t)
-        .replace(BODY_SRC_AGENT_RE, (_m, t: string) => prefix + t);
+        .replace(BODY_SRC_AGENT_RE, (_m, t: string) => prefix + t)
+        .replace(LINK_AGENT_SRC_RE, (_m, t: string) => '](' + prefix + t);
 }
 
 /**
@@ -162,3 +163,13 @@ const BODY_DOCS_RE = /(?:\.\.\/)+(docs\/(?:guidelines|contracts)\/[^)\s]+\.md)/g
 const BODY_SRC_FLAT_RE = /(?:\.\.\/)+src\/((?:rules|skills)\/[^)\s]+\.md)/g;
 const BODY_SRC_AGENT_RE =
     /(?:\.\.\/)+src\/agent-src\/((?:commands|contexts|personas|user-types|templates|scripts)\/[^)\s]+\.md)/g;
+
+/**
+ * A link written from inside `src/` that climbs to `src/agent-src/` without
+ * naming `src/` — `](../../agent-src/contexts/x.md)` from `src/skills/<slug>/`.
+ * It resolves in the source tree and to nothing in the projection, where the
+ * `agent-src/` segment does not exist. Anchored on `](` so only a link target
+ * moves, never a path mentioned in prose or an inline code span.
+ */
+const LINK_AGENT_SRC_RE =
+    /\]\((?:\.\.\/)+agent-src\/((?:commands|contexts|personas|user-types|templates|scripts)\/[^)\s]*)/g;

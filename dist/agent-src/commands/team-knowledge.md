@@ -26,7 +26,7 @@ packs:
 Top-level orchestrator for the `/team-knowledge` family — the
 consolidation gate over the typed knowledge-observation events
 captured during normal task work (see
-[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
+[`knowledge-pages`](../templates/contexts/knowledge-pages.md)
 and the event schema in `src/scripts/_lib/knowledge_events.ts`).
 
 Not to be confused with the pre-existing [`/knowledge`](../../product-discovery/knowledge/command.md)
