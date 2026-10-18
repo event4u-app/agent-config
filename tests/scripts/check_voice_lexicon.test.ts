@@ -3,8 +3,8 @@
 //
 // The 5.3 negative-corpus bar is asserted over corpus v2 only: v1's first
 // measurement missed (0.28 per 10k), so registry v2 and a corpus it was not
-// revised against were pre-registered before v2 was scanned (E8). Readings:
-// agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md and -10-19.
+// revised against were pre-registered before v2 was scanned, so the bar is not
+// tuned to the corpus that measures it.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
