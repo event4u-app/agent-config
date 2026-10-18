@@ -303,18 +303,8 @@ two new scripts and the context file are additive; deleting them restores today.
       hand-back were seen red by neutralising each check. The isDraft read is the
       port's `gh pr view --json isDraft`; its first live exercise is the first
       publication after 3.5, which itself runs `--no-pr`.
-      2026-10-18: a 2/2 council review of the merged #2461 found the stage
-      trusted its caller — a free branch string (a refspec such as
-      `:refs/heads/main` reached `git push`), a push that ignored the expected
-      head and an unchecked base SHA, a caller-supplied allowed set, any
-      readable `bodyFile`, and a clone that followed redirects the URL check
-      never saw. Fixed before any caller exists: `PublicationTarget.forRun`
-      derives `analysis/<run-id>` and refuses refspec syntax; each push is
-      `--force-with-lease=<ref>:<expected>` behind an ancestry check, and the
-      base SHA must be a full id and an ancestor of the run head; the allowed
-      set comes from `publication.json` and the body from `pr-body.md` in the
-      run directory (no symbolic or hard link); the clone runs with
-      `http.followRedirects=false`. Each check seen red with it neutralised.
+      2026-10-18: council review of #2461 (2/2) found the stage trusted its caller (branch, lease, base SHA, allowed set, body,
+      clone redirects); fixed before any caller exists via `PublicationTarget`, a leased push and run-directory inputs.
 - [ ] **3.4 `analyze:inbox` becomes the final stage.** Replace the
       branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
       engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The

@@ -388,6 +388,9 @@ describe('gitGhPort against a real bare remote (findings 1 and 2)', () => {
         fs.mkdirSync(work);
         git(['init', '-q', '-b', 'main'], work);
         git(['remote', 'add', 'origin', origin], work);
+        // The port commits with plain `git commit`; a CI runner has no global identity.
+        git(['config', 'user.email', 't@example.com'], work);
+        git(['config', 'user.name', 't'], work);
         fs.writeFileSync(path.join(work, 'a.md'), 'a\n');
         git(['add', 'a.md'], work);
         git(['commit', '-q', '-m', 'base'], work);
