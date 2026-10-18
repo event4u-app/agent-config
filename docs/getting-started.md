@@ -49,6 +49,17 @@ agent-config config --project   # open the project configuration surface
 agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge presence
 ```
 
+`agent-config upgrade --unattended --dry-run` reports whether the latest
+release would pass the unattended gates — at least 72 h old, not deprecated,
+an `engines.node` this machine satisfies, an npm provenance attestation, and no
+release in range that needs consumer action. Without `--dry-run` it still
+installs nothing today: swapping a global install under a running session
+breaks that session's hooks, and nothing yet can tell whether a session is
+running. `agent-config upgrade --skip <version>` keeps one release out of every
+unattended run. In a project that pins `agent_config_version`,
+`agent-config update --check` lists what lies between the pin and latest; it
+never moves the pin.
+
 Claude Code is single-surface: the file projection carries content AND the
 managed hooks in `~/.claude/settings.json` — there is no marketplace plugin
 to keep in sync anymore. A leftover plugin from an older install is flagged
