@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "No active, parked or stub roadmap owns what session content carries toward a model provider: the seven active roadmaps cover authority, routing, install thinning, blocking time, corpus cadence, decision closure and self-modification, and the two nearest archived owners (road-to-a-sanitize-list-that-is-generated, inbound codepoints; road-to-hooks-on-every-host, slot bindings) are closed. Archiving an unrelated roadmap to make room would retire live work and leave the outbound path as open as it is."
-estate_growth_exempt: "Grows active_roadmaps by one, as the first of a two-roadmap set landed from one inbox round: this file holds everything this package can prove on bytes it writes itself, and road-to-placeholders-on-the-wire holds the host-carrier half that depends on it. Adds no blocker."
+estate_growth_exempt: "Grows open_blockers by one and concern_count by one, both owned by this roadmap's Phase 1. The concern is block-credential-reads (step 1.1), the only fail-closed layer of the egress work, admitted in agents/decisions/concern-admissions.jsonl. The blocker is native-deny-is-a-host-setting-write: step 1.2 would add a second exception to the published promise that this package writes no host setting, which only the owner may decide, so it is recorded rather than built or dropped. The roadmap itself was added as the first of a two-roadmap set, its host-carrier half being road-to-placeholders-on-the-wire."
 relates:
   - slug: road-to-a-sanitize-list-that-is-generated
     relation: disjoint
@@ -165,13 +165,27 @@ is open.
 Prevention goes first because it is the only fail-closed layer: a value never
 read cannot leak through any later bug.
 
-- [ ] **1.1 Refuse reads of credential-class files at `pre_tool_use`** — `.env*`
+- [x] **1.1 Refuse reads of credential-class files at `pre_tool_use`** — `.env*`
       except `.env.example`, private keys, cloud and package-registry credential
       files — and refuse commands that dump the environment. One blocking concern
       in the shape of the `block_*` guards, reusing their command parser, with
       an admission row and a kill-switch row. The reason names the file class and
       the alternative (reference the variable by name).
       verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 0 — the file holds a red and a green case per file class on a deny-capable slot (`isBlockCapable`, `src/scripts/hooks/host_semantics.ts:113`) and a warn assertion on a slot that is not.
+      **Done 2026-10-18:** `src/scripts/hooks/block_credential_reads.ts`, bound on the
+      three `pre_tool_use` rows the other `block-*` guards bind, with the class list
+      in `src/scripts/_lib/credential_files.ts` for 1.2 to read. It refuses a file tool
+      on an env file (the template names pass), a private key, a cloud/CLI or a
+      package-registry credential file; a shell command handing such a path to
+      anything but a short list that does not print it; and `env`, `printenv`, a
+      bare `export`/`set`, `declare -x`. `npx vitest run
+      tests/scripts/hooks/block_credential_reads.test.ts` -> 0, 16 cases including
+      every allow branch. Admission row in `agents/decisions/concern-admissions.jsonl`,
+      kill switch `AGENT_CONFIG_ALLOW_CREDENTIAL_READS` in the contract's table,
+      execution-view grant in the egress stage. Bundle +6,999 B (1,537,695 of
+      1,550,000), stated beside a `null` SLA row in `src/config/hook-latency-budget.json`
+      until both machine classes are measured. A program that opens the file
+      itself is not caught; that residue is the fixture set of 1.3.
 - [ ] **1.2 Lower the same list to the host's own primitives at install.** On
       Claude Code, `permissions.deny Read(…)` entries recorded in the install
       manifest so uninstall removes exactly those. The stronger sandbox and
@@ -372,6 +386,35 @@ response, with no host contract in between and no hook budget to spend — so
 - [ ] **3.5 What this package injects into a session goes through the engine
       too** — hot context, handoff and memory recall re-inject stored text.
       verify: a stored entry containing a listed value is injected as its token.
+
+## Blockers
+
+### blocker: native-deny-is-a-host-setting-write
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** step 1.2 and the installer half of AC-4.
+- **What to do:** pick exactly one —
+  1. **write the deny tier** — a global Claude Code install appends `Read(…)` rows
+     for the classes of `src/scripts/_lib/credential_files.ts` to
+     `permissions.deny` in `~/.claude/settings.json` (via the splice in
+     `src/install/noGoDenyRows.ts`), records exactly what it wrote in a sidecar
+     the way `src/scripts/_lib/skill_listing_overrides.ts` does, and
+     `agent-config uninstall` removes exactly those rows; `docs/mcp-server.md`
+     § "One exception" gains a second exception;
+  2. **offer, never write** — `hooks:doctor` reports the tier in force and prints
+     the rows for the user to paste, and nothing is written; or
+  3. **neither** — prevention stays the `pre_tool_use` guard of 1.1 alone.
+- **Resolved when:** this section records the choice and the date, and 1.2's
+  wording names it.
+- **Recommendation:** 2 — it reaches the same rows on the same host without a
+  second exception to a public commitment, and the guard of 1.1 already refuses
+  on the one host that honours a deny. Its cost is that a user who never runs
+  `hooks:doctor` never sees the rows.
+- **If you do nothing:** 1.2 stays open; the guard of 1.1 is the only prevention.
+- **Why this is the owner's:** `docs/mcp-server.md` publishes that this package
+  writes no host setting, with one owner-decided exception (`skillOverrides`,
+  2026-10-14). Option 1 adds a second exception to that public commitment, which
+  the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude -->
