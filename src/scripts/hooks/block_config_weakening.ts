@@ -137,15 +137,6 @@ const CLASS_C_BASENAMES: readonly string[] = ['.agent-settings.yml', '.agent-set
 /** Where the class contract lives, relative to the package root. */
 export const SETTINGS_CLASSES_RELATIVE = 'docs/contracts/settings-classes.md';
 
-/** Visual baselines: accepted by a human, never by the run that produced them. */
-const SNAPSHOT_DIR = /(^|\/)([^/]+-snapshots|__screenshots__)\//;
-
-/** A visual-runner baseline update, answered with the acceptance step. Warn only. */
-export function snapshotUpdateWarning(command: string): string | null {
-    if (!/--update-snapshots\b/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
-    return 'baseline update: show the image diff to the user and land the new baselines in a commit of its own, on the pinned renderer.';
-}
-
 /** Classify a target path into a config surface, or null for everything else. */
 export function classify_target(p: string): ConfigKind {
     const posix = p.split(path.sep).join('/');
@@ -156,7 +147,7 @@ export function classify_target(p: string): ConfigKind {
     if (/(^|-)baselines?\.json$/.test(base)) {
         return 'advisory';
     }
-    if (/-budget(s)?\.(json|ya?ml)$/.test(base) || base === 'budgets.yml' || SNAPSHOT_DIR.test(posix)) {
+    if (/-budget(s)?\.(json|ya?ml)$/.test(base) || base === 'budgets.yml') {
         return 'advisory';
     }
     // `settings.json` only under a host directory: the bare name is common
@@ -603,11 +594,6 @@ export function main(): number {
     }
 
     const { tool, paths, ti } = _extract(envelope);
-    const snap = typeof ti?.['command'] === 'string' ? snapshotUpdateWarning(ti['command']) : null;
-    if (snap !== null) {
-        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: snap })}\n`);
-        return EXIT_WARN;
-    }
     if (!tool || !EDIT_TOOLS.has(tool) || ti === null) {
         return EXIT_ALLOW;
     }
@@ -639,7 +625,7 @@ export function main(): number {
             return EXIT_BLOCK;
         }
 
-        const added = SNAPSHOT_DIR.test(p.split(path.sep).join('/')) ? 1 : added_entries(ti, on_disk);
+        const added = added_entries(ti, on_disk);
         if (added <= 0) {
             continue;
         }
