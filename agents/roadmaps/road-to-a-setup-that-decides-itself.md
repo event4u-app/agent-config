@@ -148,6 +148,7 @@ with that file.
   Open 2026-10-18 — the observer is built, its binding is not shipped. The concern `instructions-observer` (`src/scripts/hooks/instructions_observer_hook.ts`, kill switch `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off`) writes one capture line per event to `<machine root>/runtime/arrivals/<session>.jsonl` through one `O_NOFOLLOW|O_NONBLOCK` descriptor, owner-only, 50 sessions × 256 KiB retained; classification runs at read time (`_lib/instructions_loaded_classify.ts`). It is in no manifest row and not in the concern registry, so the probe still reads `0` and `0`. The binding (vocabulary, alias, platform row, registry entry) was written and then taken out of this change, for two reasons that are both recorded here rather than worked around:
   (1) **Council modification review, 2026-10-18, anthropic + openai, seven rounds (the first two attempts timed out on both seats), all subscription-authed, nothing billed — no round reached a pass.** Each round closed real defects and raised new ones: a racy shared rotation file (→ one file per session), an order-sensitive record under asynchronous delivery (→ a set, D7), an unsanitised session id, an all-or-nothing reader, a recreated file skipping its prune, a check-then-append symlink race (→ one no-follow descriptor), a fail-open boundary that had slipped, a FIFO that could stall the open. Round 7's open items — verify the `arrivals` directory itself (not a symlink, owned, `0700`) before opening anything in it; give the `arrivals.last-error` marker the same no-follow, non-blocking, owner-only treatment as the session files; a test that a torn trailing line is skipped — are done in this change, outside the bundle, so round 8 reviews them with the binding instead of re-deriving them.
   (2) **The dispatcher bundle has no room for them.** With the binding in and before the round-7 items, it measured 1,549,991 B against its 1,550,000 B ceiling (`src/config/hook-bundle-budget.json`); the round-7 items cost more than the 9 B left. Raising `max_bytes` is a ratchet move recorded in that file's `raise_log` and is the owner's, and a sibling change moving the egress engine into a conditional chunk would free room without one. Either unblocks this step; the review then resumes at round 8.
+  **Decided 2026-10-18 (D8): no raise first.** AI council 2/2, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"), chose to make room before raising: a per-module byte ranking from the esbuild metafile, then the largest narrow-event module — this observer is the candidate both seats named — behind a conditional import, proven inside `hook-latency-budget.json`. A raise of `max_bytes` is the evidence-backed fallback only, sized from all blocked work. Record: `agents/evidence/council/hook-bundle-ceiling-20261018.md`. Measured at `f55e5a760`: 1,547,451 B of 1,550,000 B.
 - [x] **1.2 Negative controls for the observer.** Event unavailable on
   the host version, events reordered, malformed payload, duplicate call: each is
   recorded as `unknown`, never as arrival.
@@ -200,6 +201,7 @@ with that file.
   verify: fresh-`HOME` fixture — session 1 full, session 2 thinned, only with
   the record present; a record missing a standing law yields `demoted`.
   Open 2026-10-18, screened: two independent stops. (1) Its latency budget is "fixed from 0.1's measurement", and 0.1 is open. (2) The promotion runs in the `session_start` concern, inside the dispatcher bundle, whose ceiling 1.1's binding alone already exhausts (1,549,991 B of 1,550,000 with it in, see 1.1). A thin pass in that concern needs either a raised `max_bytes` (a ratchet move recorded in `hook-bundle-budget.json`'s `raise_log`, an owner decision) or bytes removed elsewhere first. Nothing promotes before 5.3 in any case, so leaving it open costs no behaviour.
+  Stop (2) is now governed by D8: room is made before any raise.
 - [x] **3.4 A release brake the maintainer owns.** A shipped table row forces
   `full` for a host version or a package version. It is the operator rollback,
   not a consumer surface.
@@ -233,6 +235,15 @@ with that file.
 > owner-reserved; the owner's 2026-10-12 directive orders the removal, not its
 > release class or timing. 4.1's ADR carries that choice and is not written ahead
 > of it.
+>
+> **Put to the AI council 2026-10-18 — split, still open.** Both seats agree
+> Phase 4 ships as a major; `anthropic` chose to hold it until a major is cut for
+> another reason (the Node floor) and land both together, `openai` to land it
+> when ready, since waiting couples it to an unrelated release. Under the owner's
+> delegation of 2026-10-18 a split resolves nothing. New input for a second round:
+> ADR-290 (2/2 the same day) makes the Node-floor raise a semver-major, which
+> removes the hold option's main uncertainty. Record:
+> `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
 
 - [ ] **4.1 One ADR.** It records the key removal and the computed decision, and
   supersedes ADR-267 decision 3 (rollback is one setting), ADR-278 (the
@@ -263,6 +274,9 @@ with that file.
   to visibility; elsewhere the active profile decides, reversing the template's
   "never inferred from profile.id" deliberately in the 4.1 ADR.
   verify: until then it is the only remaining key, documented as such.
+  The completeness question is answered (ADR-289, reach, 2026-10-18), with one
+  condition that binds this step: `projection.mode` stays until the reach
+  mechanism and its tests exist.
 - [ ] **4.8 Downgrade stays safe.** A machine downgraded to a release that still
   reads the keys resolves the absent key to its full form.
   verify: mixed-version fixture — removal release, then the previous release —
@@ -321,6 +335,7 @@ with that file.
 | D5 | reversible-technical | agent | Thinnable hosts stay `THINNABLE_HOSTS` (claude-code, cursor, cline); each needs its own observed row before 3.1 can thin it | Binding and effect are separate axes (`host-injection-effect.json` `_comment`) | — |
 | D6 | product-owned | owner | Blocker `instruction-load-observer-has-no-scheduled-owner` → (a): this file schedules the `InstructionsLoaded` binding as steps 1.1–2.2, absorbing stub step 3.0 with its kill switch | owner answer 2026-10-15 to the PR #2373 report, the subject's eighth arrival | the kill switch fires, or the host drops the event |
 | D7 | reversible-technical | agent | The arrival record is a set per session: reordered events are not `unknown`, lost start-up events are | The host documents `InstructionsLoaded` as asynchronous; parallel hooks reach disk in scheduler order; council openai seat, 2026-10-18 round 1, refused the order-sensitive form | the host starts delivering the event synchronously with a sequence number |
+| D8 | reversible-technical | council:agents/evidence/council/hook-bundle-ceiling-20261018.md | The hook-bundle ceiling is not raised for 1.1 or 3.3: room is made first (per-module byte ranking, then the largest narrow-event module behind a conditional import, latency proven inside `hook-latency-budget.json`); a raise only as the evidence-backed fallback, sized from all blocked work | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); no sibling roadmap schedules a move out of the bundle | no extraction frees meaningful room within the latency and reliability budgets |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->

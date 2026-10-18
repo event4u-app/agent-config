@@ -187,6 +187,17 @@ routed rule body with nothing in the session saying so.
   takes no hand entries, so it is verifiable only at the release that ships 2.1.
   The PR that ships 2.1 carries `Consumer-Impact: notice` and names the three
   concerns for that release head.
+  *Corrected 2026-10-18:* the release will **not** see that trailer. #2455 was
+  squash-merged (`3f8c98e74`), its `Consumer-Impact: notice` sits in an inner
+  paragraph, and `parse_impact_trailers` reads only the body's final paragraph,
+  which GitHub's squash body makes a `Co-authored-by:` line — measured over
+  `16.5.0..origin/main`, 5 squash commits lose their trailer this way, 2 of them
+  `notice`. So the changelog half needs the three concerns named in the release
+  head by hand, whatever the class. An AI council round the same day split on
+  that class (`anthropic`: a `notice` in the curated head; `openai`: a
+  `BREAKING_CHANGES.md` Pending row), so no note is placed yet; both seats agree
+  a note is owed and the trailer loss is a release-tooling defect. Record:
+  `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
 
 ## Phase 5 — The plugin channel says what it carries
 
