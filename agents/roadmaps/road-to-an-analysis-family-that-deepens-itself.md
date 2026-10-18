@@ -399,7 +399,7 @@ today's analysis-only behaviour.
       verify: a run against a consumer fixture without `docs/CLAIMS.md` produces
       a non-empty typed anchor table or states feature mode, and
       `./scripts-run src/scripts/lint_framework_leakage` passes on the door files.
-- [ ] **4.4 Several sources, one gap one roadmap; prompts for external
+- [x] **4.4 Several sources, one gap one roadmap; prompts for external
       analysts (directive i).** `<door> <a> <b> …` runs one lane per source and
       folds so one gap is one roadmap; `analyze:roadmap-repos` keeps dispatching
       into the door. `--emit-prompts` prints the analyst brief and the exchange
@@ -407,7 +407,10 @@ today's analysis-only behaviour.
       sessions outside this host, replacing the re-typed one.
       verify: a two-source fixture yields one roadmap for a shared gap, and
       `--emit-prompts` output contains the `handoff: v1` frontmatter block and
-      all three lens questions.
+      all three lens questions. Done 2026-10-18 in `src/scripts/analysis_prompts.ts`
+      (`foldLanes` keyed by tree anchor, seen red keyed by finding id;
+      `emitPrompts` and its CLI), wired into the `analyze:repo` door text and
+      argument hint; the emitted frontmatter parses through `parseHandoff`.
 - [ ] **4.5 `analyze:and-optimize` (directive a).** `optimize:deep` moves to
       `analyze/and-optimize/` with `replaces: [optimize-deep, optimize:deep]`;
       its `limits:` block and `tests/scripts/optimize_deep_limits.test.ts` carry

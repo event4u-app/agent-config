@@ -8,7 +8,7 @@ cluster: analyze
 replaces: [analyze-reference-repo, analyze:reference-repo]
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-argument-hint: "<repo-url|owner/repo|archive> [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
+argument-hint: "<repo-url|owner/repo|archive> [<more sources>…] [--emit-prompts] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
 limits:
   mode_default: plan
   max_iterations: 3
@@ -36,6 +36,17 @@ Scope boundaries: § When **not** to use. One of the four analysis doors
 (ADR-288);
 shared vocabulary, lenses and tiers:
 [`analysis-loop`](../../contexts/execution/analysis-loop.md).
+
+**Several sources, and analysts outside this host.** `<door> <a> <b> …` runs
+one lane per source, coded S1, S2, …, and folds them with `foldLanes`
+(`src/scripts/analysis_prompts.ts`): two sources pointing at the same tree
+anchor are one gap and land as one phase. `--emit-prompts` prints the analyst
+and exchange prompts for a session outside this host, with the `handoff-v1`
+frontmatter embedded so the returned file parses:
+
+```bash
+./scripts-run src/scripts/analysis_prompts --pin <sha> --round <round-id>
+```
 
 ## Inputs
 
