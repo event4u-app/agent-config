@@ -7,7 +7,7 @@ sub: and-optimize
 cluster: analyze
 replaces: [optimize-deep, optimize:deep]
 skills: [ai-council, roadmap-writing, subagent-orchestration, decision-review]
-description: "Analyse this project, repository or module and improve it — independent analysts reading code, an exchange, the council, validated ready roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'."
+description: "Analyse and improve this project, repository or module — analysts reading code, exchange, council, ready roadmaps, PR, N refinement loops (default 3). E.g. 'run a deep optimization pass'."
 argument-hint: "[--mode=plan|execute] [--loops=N] [--scope=<path>|repo] [--project=<path>] [--quick] [--no-external]"
 limits:
   mode_default: plan

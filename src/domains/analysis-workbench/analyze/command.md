@@ -8,7 +8,7 @@ intent: "Analysis dispatcher — classify input by keywords, propose a weighted 
 routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-repo, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr]
 replaces: []
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, roadmap-repos, inbox-artifact, conformance, this-project or pull-request analysis.
+description: Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project or a PR.
 cluster: analyze
 type: orchestrator
 suggestion:
