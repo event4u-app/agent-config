@@ -7,6 +7,7 @@
  * REPORT-ONLY. It never fails on a number — exit 0 whenever it could read, 2 on
  * usage — and is not named `check_*`, because it is an instrument, not a gate.
  */
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 
@@ -37,6 +38,16 @@ export function parseArgs(argv: readonly string[], env: NodeJS.ProcessEnv = proc
         else return null;
     }
     return { dir, json, limit };
+}
+
+/** The observer's last recorded write failure (`<date> <error code>`), or `null`. */
+export function lastObserverError(dir: string): string | null {
+    try {
+        const text = fs.readFileSync(`${dir}.last-error`, 'utf8').trim();
+        return /^[0-9T:.Z-]+ [A-Za-z0-9_]{1,32}$/.test(text) ? text : null;
+    } catch {
+        return null;
+    }
 }
 
 /** One record per session, newest session first. */
@@ -74,6 +85,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const errs = validateArrivalRecord(r);
         if (errs.length > 0) process.stderr.write(`arrival_report: ${r.session}: ${errs.join('; ')}\n`);
     }
+    const lastError = lastObserverError(args.dir);
+    if (lastError !== null) process.stdout.write(`observer's last write failure: ${lastError}\n`);
     if (args.json) process.stdout.write(`${JSON.stringify(records, null, 2)}\n`);
     else if (records.length === 0) process.stdout.write(`no arrival record in ${args.dir} — the observer has not seen a session\n`);
     else process.stdout.write(`${records.flatMap(renderRecord).join('\n')}\n`);

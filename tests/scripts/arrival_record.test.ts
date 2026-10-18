@@ -16,7 +16,7 @@ import {
 } from '../../src/scripts/_lib/arrival_record.js';
 import { rungState } from '../../src/scripts/_lib/activation_ladder.js';
 import { processEnvelope, arrivalsDir, KEEP_SESSIONS, KILL_SWITCH_ENV, MAX_SESSION_BYTES } from '../../src/scripts/hooks/instructions_observer_hook.js';
-import { recordsIn, renderRecord } from '../../src/scripts/arrival_report.js';
+import { lastObserverError, recordsIn, renderRecord } from '../../src/scripts/arrival_report.js';
 
 const HOME = '/home/dev';
 const ENV = { AI_AGENT: 'claude-code_2-1-299_agent', CLAUDE_CODE_ENTRYPOINT: 'cli' } as NodeJS.ProcessEnv;
@@ -272,6 +272,22 @@ describe('the observer concern', () => {
         fs.symlinkSync(target, path.join(dir, 'link.jsonl'));
         processEnvelope(envelope({ session_id: 'link', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         expect(fs.readFileSync(target, 'utf8')).toBe('');
+        expect(lastObserverError(dir), 'the refusal leaves a mark').toMatch(/ ELOOP$/);
+    });
+
+    it('the placeholder file is outside the fifty, and a non-regular entry is never pruned', () => {
+        const dir = arrivalsDir(env);
+        processEnvelope(envelope({ file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        fs.utimesSync(path.join(dir, '_.jsonl'), 1, 1);
+        fs.mkdirSync(path.join(dir, 'adir.jsonl'));
+        fs.utimesSync(path.join(dir, 'adir.jsonl'), 1, 1);
+        for (let i = 0; i < KEEP_SESSIONS + 3; i += 1) {
+            processEnvelope(envelope({ session_id: `s${String(i).padStart(2, '0')}`, file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        }
+        const left = fs.readdirSync(dir);
+        expect(left).toContain('_.jsonl');
+        expect(left).toContain('adir.jsonl');
+        expect(left.filter((f) => /^s\d\d\.jsonl$/.test(f))).toHaveLength(KEEP_SESSIONS);
     });
 
     it('lines without a session id never form a record, however many there are', () => {
