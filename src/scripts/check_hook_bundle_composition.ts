@@ -167,7 +167,7 @@ export function readChunkBudgets(root: string): ChunkBudget[] {
     const list = raw['chunks'];
     if (list === undefined) return [];
     if (!Array.isArray(list)) throw new Error(`${BUDGET_REL}: chunks must be a list`);
-    return list.map((c, i) => {
+    const budgets = list.map((c, i) => {
         const entry = isRecord(c) ? c['entry'] : undefined;
         const max = isRecord(c) ? c['max_bytes'] : undefined;
         if (typeof entry !== 'string' || typeof max !== 'number' || !Number.isInteger(max) || max <= 0) {
@@ -175,31 +175,61 @@ export function readChunkBudgets(root: string): ChunkBudget[] {
         }
         return { entry, maxBytes: max };
     });
+    const seen = new Set<string>();
+    for (const b of budgets) {
+        if (seen.has(b.entry)) throw new Error(`${BUDGET_REL}: chunks lists ${b.entry} twice`);
+        seen.add(b.entry);
+    }
+    return budgets;
 }
 
 /**
- * Build the chunk for `entry` with the exact esbuild segment `build:hook-chunks`
- * uses for it, to a throwaway path, and return its size. Throws when the script
- * carries no segment for the entry — a ceiling on a chunk nothing builds bounds
- * nothing.
+ * The argv of the esbuild invocation `build:hook-chunks` uses for `entry`.
+ *
+ * The script is the one definition of how a chunk is built; this reads it
+ * rather than restating its flags. A segment is accepted only as a plain
+ * `esbuild` call — words with no quote, variable, redirect, pipe or `cd` — so
+ * the gate runs it as an argv with no shell, on every platform, and a segment
+ * that grew shell semantics is a loud refusal rather than a build measured under
+ * different conditions.
+ */
+export function chunkBuildArgv(scripts: Readonly<Record<string, string>>, entry: string): string[] {
+    const segments = (scripts['build:hook-chunks'] ?? '').split('&&').map((x) => x.trim());
+    // Only builds and digest writes: a `cd` or any other step could change the
+    // conditions the chunk is built under without touching its own segment.
+    const foreign = segments.find((x) => !x.startsWith('esbuild ') && !x.startsWith('node '));
+    if (foreign !== undefined) {
+        throw new Error(`\`build:hook-chunks\` carries a step other than an esbuild build or a node digest (\`${foreign}\`)`);
+    }
+    const matches = segments.filter((x) => x.startsWith('esbuild ') && x.split(/\s+/).includes(entry));
+    if (matches.length !== 1) {
+        throw new Error(`\`build:hook-chunks\` must build ${entry} in exactly one esbuild segment, found ${String(matches.length)}`);
+    }
+    const segment = matches[0] as string;
+    if (/["'`$|;<>()\\]|\bcd\b/.test(segment)) {
+        throw new Error(`the esbuild segment for ${entry} is not a plain argv — refusing to measure a build it cannot reproduce`);
+    }
+    const words = segment.split(/\s+/).slice(1);
+    if (words.filter((w) => w.startsWith('--outfile=')).length !== 1) {
+        throw new Error(`the esbuild segment for ${entry} must name exactly one --outfile`);
+    }
+    return words;
+}
+
+/**
+ * Build the chunk for `entry` with that argv, to a throwaway path, and return its
+ * size. Throws when the script carries no plain segment for the entry — a
+ * ceiling on a chunk nothing builds bounds nothing.
  */
 export function buildChunkBytes(root: string, entry: string): number {
     const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')) as { scripts?: Record<string, string> };
-    const script = pkg.scripts?.['build:hook-chunks'] ?? '';
-    const segment = script
-        .split('&&')
-        .map((x) => x.trim())
-        .find((x) => x.startsWith('esbuild ') && x.split(/\s+/).includes(entry));
-    if (segment === undefined) throw new Error(`\`build:hook-chunks\` builds no chunk from ${entry}`);
+    const argv = chunkBuildArgv(pkg.scripts ?? {}, entry);
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-chunk-composition-'));
     const out = path.join(dir, 'chunk.cjs');
     try {
-        const cmd = segment.replace(/--outfile=\S+/, `--outfile=${out}`);
-        const built = spawnSync('sh', ['-c', cmd], {
-            cwd: root,
-            encoding: 'utf-8',
-            env: { ...process.env, PATH: `${path.join(root, 'node_modules', '.bin')}:${process.env['PATH'] ?? ''}` },
-        });
+        const args = argv.map((w) => (w.startsWith('--outfile=') ? `--outfile=${out}` : w));
+        const bin = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
+        const built = spawnSync(bin, args, { cwd: root, encoding: 'utf-8' });
         if (built.status !== 0 || !fs.existsSync(out)) {
             throw new Error(`esbuild failed for chunk ${entry} (exit ${String(built.status)})\n${built.stderr ?? ''}`);
         }

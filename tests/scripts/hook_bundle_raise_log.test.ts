@@ -7,9 +7,13 @@
 // fresh raise, a new entry naming a different `to` does not either, and a bare
 // `{ to }` entry with no reason — what the ratification review refused the
 // first version on — does not count as a recorded reason.
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
+    chunkBuildArgv,
     chunkFindings,
     chunkRaiseFindings,
     raiseEntryProblems,
@@ -115,5 +119,35 @@ describe('chunk ceilings', () => {
     it('a chunk lowering or a newly registered chunk needs no entry', () => {
         expect(chunkRaiseFindings(chunked(28000, []), chunked(20000, []))).toEqual([]);
         expect(chunkRaiseFindings(budget(1550000, []), chunked(28000, []))).toEqual([]);
+    });
+});
+
+describe('chunkBuildArgv — the one definition of a chunk build, read as an argv', () => {
+    const ENTRY = 'src/scripts/_lib/egress_engine.ts';
+    const plain = `esbuild ${ENTRY} --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/e.cjs`;
+
+    it('reads a plain esbuild segment into its flags', () => {
+        const argv = chunkBuildArgv({ 'build:hook-chunks': `${plain} && node digest.mjs dist/hooks/e.cjs` }, ENTRY);
+        expect(argv[0]).toBe(ENTRY);
+        expect(argv).toContain('--format=cjs');
+    });
+
+    it('refuses a segment with shell semantics, a missing or doubled entry, and a missing outfile', () => {
+        const bad = [
+            `cd sub && ${plain}`,
+            plain.replace('--target=node20', '--target="node20"'),
+            `${plain} > log.txt`,
+            `${plain} && ${plain}`,
+            plain.replace(/ --outfile=\S+/, ''),
+            'esbuild other.ts --outfile=x.cjs',
+        ];
+        for (const script of bad) {
+            expect(() => chunkBuildArgv({ 'build:hook-chunks': script }, ENTRY), script).toThrow();
+        }
+    });
+
+    it('the shipped package.json builds the engine chunk in one plain segment', () => {
+        const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8')) as { scripts: Record<string, string> };
+        expect(chunkBuildArgv(pkg.scripts, ENTRY)[0]).toBe(ENTRY);
     });
 });
