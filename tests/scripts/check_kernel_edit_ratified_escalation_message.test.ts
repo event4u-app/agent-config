@@ -8,9 +8,12 @@ import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import {
     ESCALATION_HEADING,
     escalationMessage,
+    isMechanismPath,
     printable,
     SELF_PATH,
+    UNPRINTABLE_RE,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
+import { classifyChanges } from '../../src/scripts/classify_merge_risk.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 import { commitAll } from './ratification_git_fixture.js';
 
@@ -126,21 +129,45 @@ describe('escalationMessage — the shape of the one question', () => {
         expect(msg).toContain('needs-owner');
     });
 
-    it('never emits a control or bidi character from a record field', () => {
-        const forged = escalationMessage({
-            triggers: ['refused'],
-            records: [
-                {
-                    path: 'r.md\n✅  forged pass',
-                    verdict: 'refused\u001b[32m',
-                    seats: { 'openai\u202e': 'refused' },
-                },
-            ],
-            gatedPaths: ['a\rb'],
-        }).join('\n');
-        expect(forged).not.toMatch(/[\u0000-\u0009\u000b-\u001f\u202e]/u);
-        expect(forged).not.toContain('\n✅  forged pass');
-        expect(printable('a\nb')).toBe('a\\u{a}b');
+    // Chosen from OUTSIDE the implementation's own list: C0, DEL, C1, the
+    // Arabic letter mark, the line and paragraph separators, an embedding, an
+    // override, every isolate, a zero-width joiner and a BOM.
+    const ADVERSARIAL = [
+        0x0a, 0x0d, 0x1b, 0x7f, 0x85, 0x9b, 0x061c, 0x200b, 0x200d, 0x200e, 0x2028, 0x2029,
+        0x202a, 0x202e, 0x2066, 0x2067, 0x2068, 0x2069, 0xfeff,
+    ];
+
+    it('never emits a control, format or separator character from a record field', () => {
+        for (const cp of ADVERSARIAL) {
+            const c = String.fromCodePoint(cp);
+            const out = escalationMessage({
+                triggers: ['refused'],
+                records: [
+                    { path: `r${c}.md`, verdict: `refused${c}`, seats: { [`o${c}`]: 'refused' } },
+                ],
+                gatedPaths: [`a${c}b`],
+            });
+            for (const line of out) {
+                expect(line.includes(c), `U+${cp.toString(16)} leaked`).toBe(false);
+            }
+            expect(printable(c)).toBe(`\\u{${cp.toString(16)}}`);
+        }
+        // The checked set is the whole class, not only the sample above.
+        for (let cp = 0; cp <= 0x10ffff; cp += 1) {
+            if (cp >= 0xd800 && cp <= 0xdfff) continue;
+            const c = String.fromCodePoint(cp);
+            UNPRINTABLE_RE.lastIndex = 0;
+            if (UNPRINTABLE_RE.test(c)) {
+                expect(printable(c).includes(c)).toBe(false);
+            }
+        }
+    });
+
+    it('leaves ordinary text, including non-Latin letters, alone', () => {
+        expect(printable('agents/evidence/ratifications/x.md')).toBe(
+            'agents/evidence/ratifications/x.md',
+        );
+        expect(printable('Größe — العربية')).toBe('Größe — العربية');
     });
 
     it('is empty when nothing triggers it', () => {
@@ -227,6 +254,18 @@ describe('evaluate — when the user decides, the gate says so', () => {
         expect(text(r)).toContain('a seat refused the change');
     });
 
+    it('a `confirmed-non-expanding` record on the reviewer escalates too (passing or not)', () => {
+        const rel = writeRecord(
+            'sc.md',
+            { ...GOOD, verdict: 'confirmed-non-expanding' },
+            { anthropic: 'confirmed-non-expanding', openai: 'confirmed-non-expanding' },
+            [SELF_PATH],
+        );
+        const r = evaluate([SELF_PATH, rel]);
+        expect(r.exitCode).toBe(0);
+        expect(text(r)).toContain('the reviewer itself');
+    });
+
     it('polarity: a passing record over an ordinary gated surface does not escalate', () => {
         const rel = writeRecord('ok.md', GOOD, BOTH_RATIFIED);
         const r = evaluate([KERNEL, rel]);
@@ -262,5 +301,28 @@ describe('evaluate — when the user decides, the gate says so', () => {
         const r = evaluate([KERNEL, rel]);
         expect(r.exitCode).toBe(1);
         expect(text(r)).not.toContain(ESCALATION_HEADING);
+    });
+});
+
+describe('the advisory line is true: the merge gate holds the mechanism as needs-owner', () => {
+    it('every mechanism path this gate escalates on is needs-owner at merge', () => {
+        const mechanism = [
+            gate.SELF_PATH,
+            gate.READER_PATH,
+            gate.CLOSURE_READER_PATH,
+            gate.POLICY_PATH,
+            gate.WORKFLOW_PATH,
+            ...gate.ANCHOR_PATHS,
+            ...gate.MECHANISM_IMPORT_PATHS,
+        ];
+        for (const p of mechanism) {
+            expect(isMechanismPath(p), p).toBe(true);
+            const verdict = classifyChanges([{ status: 'M', path: p }], {
+                dirExistsInHead: () => true,
+                decisionPolicy: () => 'other',
+                consequenceMembers: new Set(),
+            }).verdict;
+            expect(verdict, p).toBe('needs-owner');
+        }
     });
 });

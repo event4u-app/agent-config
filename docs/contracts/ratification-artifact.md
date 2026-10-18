@@ -732,14 +732,16 @@ council answer, passing or not. It fills in the verdict, the dissenting seats
 and the gated paths, and asks for the expected gain, the risk and the rollback,
 which it does not know. It stays silent on an authoring defect — no record, a
 self-ratified one, a stale `subject` — on the mechanism's own files too,
-because that is not the user's question. Record fields are printed with
-control and bidirectional characters escaped.
+because that is not the user's question. Record fields are printed with every
+control, format and line/paragraph-separator character (`Cc`, `Cf`, `Zl`,
+`Zp`) escaped.
 
 **The printed question is advisory, and says so.** The gate's exit code does
 not carry the user's decision: a failing record fails already, and a passing
 record over the mechanism passes here and is held at merge, where
-`classify_merge_risk` classes the same paths `needs-owner` and the owner's
-forge act is the approval (ADR-281 § 5). A blocking status in this gate would
+`classify_merge_risk` classes the same paths `needs-owner` — pinned path by
+path in `check_kernel_edit_ratified_escalation_message.test.ts` — and the
+owner's forge act is the approval (ADR-281 § 5). A blocking status in this gate would
 need an owner acknowledgment it could authenticate, and none exists.
 Whether a different provider was tried (condition 1) and whether a row of
 the owner-reserved table is touched (condition 3) are judgements the gate

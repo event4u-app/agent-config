@@ -541,15 +541,22 @@ const ESCALATION_ADVISORY =
 export type EscalationTrigger = 'refused' | 'non-convergent' | 'diversity-short' | 'reviewer';
 
 /**
+ * Every character `printable` refuses to emit: controls (`Cc`), format
+ * characters (`Cf`, which holds every `Bidi_Control` and the invisible marks),
+ * and the line and paragraph separators (`Zl`, `Zp`). Unicode properties
+ * rather than ranges, so a code point added to a class is covered without an
+ * edit here.
+ */
+export const UNPRINTABLE_RE = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
+
+/**
  * Record text and paths are candidate-controlled, and this block lands in a CI
- * log a person reads: C0/C1 controls and the bidirectional overrides are shown
- * as `\u{…}` escapes, never emitted, so a field cannot forge a line or recolour one.
+ * log a person reads: every {@link UNPRINTABLE_RE} character is shown as a
+ * `\u{…}` escape, never emitted, so a field cannot forge a line, recolour one,
+ * or reorder what is shown.
  */
 export function printable(s: string): string {
-    return s.replace(
-        /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu,
-        (c) => `\\u{${(c.codePointAt(0) ?? 0).toString(16)}}`,
-    );
+    return s.replace(UNPRINTABLE_RE, (c) => `\\u{${(c.codePointAt(0) ?? 0).toString(16)}}`);
 }
 
 export interface EscalationRecord {

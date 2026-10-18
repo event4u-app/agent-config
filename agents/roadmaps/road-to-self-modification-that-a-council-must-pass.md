@@ -1289,8 +1289,12 @@ gaps again; the binding closes replay, and nothing else.
       fields print with control and bidi characters escaped. Round 1 of the
       review refused 2/2 on exactly those three points (an unqualified "the user
       decides" on an exit 0, `gated.self` escalating authoring defects, raw
-      record text in a CI log); round 2 reviewed the fix. The contract's § When the user decides now says what the gate
-      prints and which two conditions it cannot see from a diff. 18 tests;
+      record text in a CI log). Round 2 refused 2/2 on the sanitizer alone —
+      a range list missed U+061C, U+2028 and U+2029 — so it now escapes the
+      Unicode classes `Cc`, `Cf`, `Zl` and `Zp`, tested against code points
+      chosen outside its own list and over the whole class; the advisory
+      line's `needs-owner` claim is pinned for every mechanism path. The contract's § When the user decides now says what the gate
+      prints and which two conditions it cannot see from a diff. 21 tests;
       sensitivity seen by removing the two `lines.push(...escalation)` calls
       (4 cases red), and by reverting each round-1 fix (3 red), then restored. Content decided by the council under the
       owner's standing delegation of 2026-10-16; the merge is the owner's
