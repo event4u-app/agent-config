@@ -145,7 +145,9 @@ export function isInsideWorkingTree(candidate: string, root: string): boolean {
     const abs = path.resolve(root, candidate);
     const rel = path.relative(path.resolve(root), abs);
     if (rel === "") return true;
-    return !rel.startsWith("..") && !path.isAbsolute(rel);
+    // `..` as a whole first segment escapes; `...` or `..cache` is a name.
+    const escapes = rel === ".." || rel.startsWith(`..${path.sep}`);
+    return !escapes && !path.isAbsolute(rel);
 }
 
 /** Split a command on whitespace; the caller has already refused metacharacters. */
@@ -182,7 +184,7 @@ const GIT_VALUE_FLAGS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * The `git` subcommand, with global options skipped.
+ * The `git` subcommand and its argv index, with global options skipped.
  *
  * Returns `""` when a global option's VALUE escapes the working tree — an
  * absolute path or a `..` traversal. The check is textual rather than resolved
@@ -190,20 +192,142 @@ const GIT_VALUE_FLAGS: ReadonlySet<string> = new Set([
  * can decide is exactly the property that matters, and a relative path with no
  * `..` cannot escape.
  */
-function _gitSubcommand(argv: readonly string[]): string {
+function _gitSubcommandAt(argv: readonly string[]): { sub: string; index: number } {
     for (let i = 1; i < argv.length; i++) {
         const token = argv[i] as string;
-        if (!_isFlag(token)) return token;
+        if (!_isFlag(token)) return { sub: token, index: i };
         const [flag, inlineValue] = token.includes("=")
             ? [token.slice(0, token.indexOf("=")), token.slice(token.indexOf("=") + 1)]
             : [token, null];
         const value = inlineValue ?? (GIT_VALUE_FLAGS.has(flag) ? argv[++i] : undefined);
         if (value !== undefined && (path.isAbsolute(value) || value.split("/").includes(".."))) {
-            return "";
+            return { sub: "", index: -1 };
         }
     }
-    return "";
+    return { sub: "", index: -1 };
 }
+
+/**
+ * `git branch` options that can lose a ref: delete, force-reset, and the
+ * move/copy forms that overwrite an existing name.
+ *
+ * `-m`/`--move` onto a NEW name loses nothing, but whether the target exists
+ * is a fact about the repository, and this classifier is decidable from the
+ * envelope alone. So every move is withdrawn: the cost is the host's own
+ * confirmation on a rename, never a skipped one on a lost ref.
+ */
+const GIT_BRANCH_REF_LOSS_LONG: ReadonlySet<string> = new Set(["--delete", "--force", "--move"]);
+const GIT_BRANCH_REF_LOSS_SHORT = /^-[a-zA-Z]*[dDfMCm]/;
+
+function _gitBranchLosesARef(argv: readonly string[], index: number): boolean {
+    for (const token of argv.slice(index + 1)) {
+        if (token.startsWith("--")) {
+            if (GIT_BRANCH_REF_LOSS_LONG.has(token.split("=")[0] as string)) return true;
+        } else if (GIT_BRANCH_REF_LOSS_SHORT.test(token)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Heads that never open their arguments, so a path-shaped argument is a string
+ * and confining it would only put a prompt on `echo /tmp`.
+ */
+const NON_OPENING_HEADS: ReadonlySet<string> = new Set([
+    "pwd", "echo", "basename", "dirname", "date", "which",
+]);
+
+/**
+ * Output-writing flags (0.3). Their target is a path like any other, and
+ * the walk below already confines all three spellings that need no table:
+ * a separate token (`--output x`, `-fprint x`, `--outDir x`) is a
+ * positional, `--output=x` is an inline value, and the value-less writers
+ * (`--write`/`-w`, `--fix`) write their positionals. The one spelling the walk
+ * cannot see is a short flag with its value glued on, `sort -o/path`, which
+ * reads as a single flag token — so that is the only table.
+ */
+const GLUED_OUTPUT_FLAGS: Readonly<Record<string, string>> = { sort: "-o" };
+
+/** Pattern-taking heads whose first positional is data, not a path. */
+const PATTERN_HEADS: ReadonlySet<string> = new Set(["grep", "rg"]);
+const PATTERN_VALUE_FLAGS: ReadonlySet<string> = new Set(["-e", "--regexp"]);
+const PATTERN_FILE_FLAGS: ReadonlySet<string> = new Set(["-f", "--file"]);
+
+/** Shell quote removal; every other expansion is refused by the metacharacter rule. */
+function _unquote(token: string): string {
+    return token.replace(/["']/g, "");
+}
+
+/**
+ * Could this value name a place outside the tree? A relative value with no `..`
+ * segment cannot, so only these shapes are worth resolving in a flag value.
+ */
+function _pathShaped(value: string): boolean {
+    return value.startsWith("/") || value.startsWith("~") || value.split("/").includes("..");
+}
+
+/**
+ * Every argument of a Bash command that names a filesystem location.
+ *
+ * Positionals are all candidates — a relative positional that stays inside is
+ * harmless to check, and missing one is not. A flag's inline value is a
+ * candidate when it is path-shaped, and a glued output value always is.
+ */
+function _pathArguments(argv: readonly string[], head: string): string[] {
+    const out: string[] = [];
+    const glued = GLUED_OUTPUT_FLAGS[head];
+    const isPatternHead = PATTERN_HEADS.has(head);
+    let patternPending = isPatternHead && !argv.some((t) => {
+        const flag = t.split("=")[0] as string;
+        return PATTERN_VALUE_FLAGS.has(flag) || PATTERN_FILE_FLAGS.has(flag);
+    });
+    for (let i = 1; i < argv.length; i++) {
+        const token = _unquote(argv[i] as string);
+        if (!_isFlag(token)) {
+            if (patternPending) {
+                patternPending = false;
+                continue;
+            }
+            out.push(token);
+            continue;
+        }
+        const eq = token.indexOf("=");
+        const flag = eq >= 0 ? token.slice(0, eq) : token;
+        const inline = eq >= 0 ? token.slice(eq + 1) : null;
+        if (isPatternHead && PATTERN_VALUE_FLAGS.has(flag)) {
+            if (inline === null) i++;
+            continue;
+        }
+        if (isPatternHead && PATTERN_FILE_FLAGS.has(flag)) {
+            const value = inline ?? argv[++i];
+            if (value !== undefined) out.push(_unquote(value));
+            continue;
+        }
+        if (glued && token.startsWith(glued) && token.length > glued.length && !token.startsWith("--")) {
+            out.push(token.slice(glued.length));
+            continue;
+        }
+        if (inline !== null && _pathShaped(inline)) out.push(inline);
+    }
+    return out;
+}
+
+/** Stands in for the tree when the caller has none: absolute and `..` still escape it. */
+const UNROOTED = path.resolve("/", "agent-config-unrooted-working-tree");
+
+function _confined(candidate: string, workingTree: string): boolean {
+    if (candidate.startsWith("~")) return false;
+    return isInsideWorkingTree(candidate, workingTree.trim() ? workingTree : UNROOTED);
+}
+
+/** What the classifier decided, and whether a path confinement actually ran. */
+export interface CategoryAVerdict {
+    categoryA: boolean;
+    confinementChecked: boolean;
+}
+
+const NOT_A: CategoryAVerdict = { categoryA: false, confinementChecked: false };
 
 /** Non-flag token after the subcommand, or `""`. */
 function _secondSubcommand(argv: readonly string[]): string {
@@ -231,20 +355,14 @@ export function namesConsequenceOperation(command: string): boolean {
     return false;
 }
 
-/** Is this Bash command string category A? */
-export function isCategoryABashCommand(command: string): boolean {
-    if (typeof command !== "string" || !command.trim()) return false;
-    if (SHELL_METACHARACTERS.test(command)) return false;
-    if (namesConsequenceOperation(command)) return false;
-
-    const argv = _argv(command);
-    const head = (argv[0] ?? "").toLowerCase();
-    if (!head) return false;
-
+/** Does the head and its subcommand name a read, build, test or lint? */
+function _namesASafeOperation(argv: readonly string[], head: string): boolean {
     if (SAFE_HEADS.has(head)) return true;
 
     if (head === "git") {
-        return GIT_READ_SUBCOMMANDS.has(_gitSubcommand(argv));
+        const { sub, index } = _gitSubcommandAt(argv);
+        if (!GIT_READ_SUBCOMMANDS.has(sub)) return false;
+        return !(sub === "branch" && _gitBranchLosesARef(argv, index));
     }
 
     const allowed = RUNNER_SUBCOMMANDS[head];
@@ -259,33 +377,70 @@ export function isCategoryABashCommand(command: string): boolean {
 }
 
 /**
+ * Classify a Bash command string.
+ *
+ * `workingTree` is the root every path argument must resolve inside. Without
+ * one, the command is judged against a stand-in root, so an absolute, `~` or
+ * `..`-escaping argument still disqualifies it.
+ */
+export function bashCategoryAVerdict(command: string, workingTree = ""): CategoryAVerdict {
+    if (typeof command !== "string" || !command.trim()) return NOT_A;
+    if (SHELL_METACHARACTERS.test(command)) return NOT_A;
+    if (namesConsequenceOperation(command)) return NOT_A;
+
+    const argv = _argv(command);
+    const head = (argv[0] ?? "").toLowerCase();
+    if (!head) return NOT_A;
+    if (!_namesASafeOperation(argv, head)) return NOT_A;
+
+    if (NON_OPENING_HEADS.has(head)) return { categoryA: true, confinementChecked: false };
+    const candidates = _pathArguments(argv, head);
+    for (const candidate of candidates) {
+        if (!_confined(candidate, workingTree)) return NOT_A;
+    }
+    return { categoryA: true, confinementChecked: candidates.length > 0 };
+}
+
+/** Is this Bash command string category A? */
+export function isCategoryABashCommand(command: string, workingTree = ""): boolean {
+    return bashCategoryAVerdict(command, workingTree).categoryA;
+}
+
+/**
  * Is this tool call category A?
  *
  * `workingTree` is the root every path argument must resolve inside. An empty
  * root means the dispatcher could not establish one, and an unestablished
  * boundary is not a boundary — the call is not category A.
  */
-export function isCategoryA(
+export function categoryAVerdict(
     toolName: string,
     toolInput: ToolInput,
     workingTree: string,
-): boolean {
-    if (!workingTree.trim()) return false;
-    if (typeof toolName !== "string" || !toolName) return false;
+): CategoryAVerdict {
+    if (!workingTree.trim()) return NOT_A;
+    if (typeof toolName !== "string" || !toolName) return NOT_A;
 
     if (READ_ONLY_TOOLS.has(toolName)) {
+        let checked = false;
         for (const key of PATH_KEYS) {
             const value = toolInput?.[key];
             if (typeof value !== "string") continue;
-            if (!isInsideWorkingTree(value, workingTree)) return false;
+            if (!isInsideWorkingTree(value, workingTree)) return NOT_A;
+            checked = true;
         }
-        return true;
+        return { categoryA: true, confinementChecked: checked };
     }
 
     if (toolName === "Bash") {
         const command = toolInput?.["command"];
-        return typeof command === "string" && isCategoryABashCommand(command);
+        return typeof command === "string" ? bashCategoryAVerdict(command, workingTree) : NOT_A;
     }
 
-    return false;
+    return NOT_A;
+}
+
+/** Is this tool call category A? */
+export function isCategoryA(toolName: string, toolInput: ToolInput, workingTree: string): boolean {
+    return categoryAVerdict(toolName, toolInput, workingTree).categoryA;
 }

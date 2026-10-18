@@ -775,6 +775,15 @@ for a **category-A** call: a read, a navigation, a build, a test or a lint insid
 the working tree with no consequence operation attached
 (`src/scripts/hooks/category_a.ts`).
 
+**Corrected 2026-10-18** (`road-to-a-hard-floor-the-shell-cannot-talk-past` Phase 0):
+"inside the working tree" was enforced on the read tools only. The Bash branch now
+confines every path argument — positionals, path-shaped `--flag=value` values and a
+glued `sort -o/path` — to the working tree, withholds the allow from `git branch`
+forms that can lose a ref (`-d`, `-D`, `--delete`, `-f`, `--force`, `-m`, `--move`,
+`-M`, `-C`), and the allow's reason names the working tree only when a path was
+actually confined for that call. Withholding an allow returns the host's own
+confirmation; it never adds a question from this package.
+
 The composition policy is **one `ask` or `deny` beats every `allow`**
 (`composePermissionDecision`), and the emission additionally requires the reduced
 severity to already be `allow`, so an allow can never travel with a finding. This

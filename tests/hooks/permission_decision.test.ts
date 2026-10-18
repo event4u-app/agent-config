@@ -309,6 +309,14 @@ describe('working-tree confinement', () => {
         expect(isInsideWorkingTree('../outside', ROOT)).toBe(false);
         expect(isInsideWorkingTree('/etc/passwd', ROOT)).toBe(false);
         expect(isInsideWorkingTree('src/../../outside', ROOT)).toBe(false);
+        expect(isInsideWorkingTree('..', ROOT)).toBe(false);
+    });
+
+    it('a name that merely starts with two dots is inside', () => {
+        // `go test ./...` resolves to `<root>/...`; a prefix test on `..`
+        // read that as an escape.
+        expect(isInsideWorkingTree('./...', ROOT)).toBe(true);
+        expect(isInsideWorkingTree('..cache/x', ROOT)).toBe(true);
     });
 
     it('an empty root confines nothing and therefore admits nothing', () => {
@@ -326,5 +334,126 @@ describe('the confinement root is the host cwd, not the dispatcher process cwd',
 
     it('falls back to the workspace root when the host sends no cwd', () => {
         expect(_working_tree_root({ payload: {}, workspace_root: '/repo' })).toBe('/repo');
+    });
+});
+
+/*
+ * Phase 0 of road-to-a-hard-floor-the-shell-cannot-talk-past: category A stops
+ * granting what it cannot prove. Every D2 row below was executed through
+ * `_permission_for` on main@17f028941 and came back `allow`.
+ */
+describe('category A withdraws only what it cannot prove (Phase 0)', () => {
+    const bash = (command: string) => envelope('Bash', { command });
+    const allowOf = (command: string) => _permission_for('pre_tool_use', bash(command), 0, ['allow']);
+    const a = (command: string) => isCategoryA('Bash', { command }, ROOT);
+
+    it('branch-loses-a-ref: a branch form that can lose a ref is not category A', () => {
+        for (const cmd of [
+            'git branch -d topic',
+            'git branch -D main',
+            'git branch --delete topic',
+            'git branch -f main HEAD~20',
+            'git branch --force main HEAD~20',
+            'git branch -M main old',
+            'git branch -C main old',
+            'git branch -m main old',
+            'git branch --move main old',
+            'git branch -Dr origin/x',
+            'git -C sub branch -D main',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of ['git branch', 'git branch -a', 'git branch --list', 'git branch new', 'git branch -v']) {
+            expect(a(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('bash-path-confinement: a path argument outside the working tree is not category A', () => {
+        for (const cmd of [
+            'cat ~/.ssh/id_rsa',
+            "cat '~/.ssh/id_rsa'",
+            'cat "/etc/passwd"',
+            'cat /etc/passwd',
+            'find / -name x',
+            'ls ../../other',
+            'head --file=/etc/shadow',
+            'grep -rn foo /etc',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of ['cat src/x.ts', 'cat /repo/src/x.ts', 'ls', 'grep -rn foo src', 'go test ./...', 'git log main..topic']) {
+            expect(a(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('bash-path-confinement: a grep pattern is data, not a path', () => {
+        expect(a('grep -rn /api src')).toBe(true);
+        expect(a('rg -e /api src')).toBe(true);
+        expect(a('grep -rn /api /etc')).toBe(false);
+        expect(a('grep -f /etc/patterns src')).toBe(false);
+    });
+
+    it('output-flags-are-paths: an output-writing flag sends its target through confinement', () => {
+        for (const cmd of [
+            'sort -o /home/u/.bashrc /dev/null',
+            'sort -o/home/u/.bashrc src/a',
+            'sort -o../../x src/a',
+            'sort --output=/home/u/.bashrc src/a',
+            'git diff --output=/home/u/.bashrc',
+            'git diff --output /home/u/.bashrc',
+            'find . -fprint /tmp/x',
+            'tsc --outDir /tmp/out',
+            'tsc --outFile=/tmp/out.js',
+            'prettier --write /etc/hosts',
+            'eslint --fix /etc',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of [
+            'sort -o out.txt src/a',
+            'git diff --output=diff.patch',
+            'tsc --outDir dist',
+            'prettier --write src',
+            'eslint --fix .',
+            'find . -fprint list.txt',
+        ]) {
+            expect(a(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('output-flags-are-paths: without a root, an outside target is still refused', () => {
+        expect(isCategoryABashCommand('sort -o /home/u/.bashrc src/a')).toBe(false);
+        expect(isCategoryABashCommand('sort -o ../../x src/a')).toBe(false);
+        expect(isCategoryABashCommand('sort -o out.txt src/a')).toBe(true);
+    });
+
+    it('reason-names-what-was-checked: the working tree is named only when confinement ran', () => {
+        expect(allowOf('cat src/x.ts')?.reason).toContain('inside the working tree');
+        const bare = allowOf('pwd');
+        expect(bare?.decision).toBe('allow');
+        expect(bare?.reason).not.toContain('inside the working tree');
+        const todo = _permission_for('pre_tool_use', envelope('TodoRead', {}), 0, ['allow']);
+        expect(todo?.decision).toBe('allow');
+        expect(todo?.reason).not.toContain('inside the working tree');
+        const read = _permission_for('pre_tool_use', envelope('Read', { file_path: '/repo/a' }), 0, ['allow']);
+        expect(read?.reason).toContain('inside the working tree');
+    });
+
+    it('every D2 row is withheld through _permission_for, every true row still allowed', () => {
+        for (const cmd of [
+            'git branch -D main',
+            'git branch -f main HEAD~20',
+            'git branch -M main old',
+            'cat ~/.ssh/id_rsa',
+            'find / -name x',
+            'sort -o /home/u/.bashrc /dev/null',
+            'git diff --output=/home/u/.bashrc',
+            'prettier --write /etc/hosts',
+        ]) {
+            expect(allowOf(cmd), cmd).toBeNull();
+        }
+        for (const cmd of ['git branch', 'git branch -a', 'git branch new', 'cat src/x.ts', 'prettier --write src', 'eslint --fix .']) {
+            expect(allowOf(cmd)?.decision, cmd).toBe('allow');
+        }
     });
 });
