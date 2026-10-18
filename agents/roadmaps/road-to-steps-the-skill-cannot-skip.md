@@ -298,50 +298,81 @@ A split multiplies links. The gate that checks them comes first.
       or repeated; the full `tests/scripts/work_engine` suite (92 files, 1,001
       tests) passes unchanged.
       verify: `npx vitest run tests/scripts/work_engine/dispatcher.test.ts --reporter=verbose` -> /✓/
-- [ ] **5.2 `input.kind: procedure`.** Added to `KNOWN_INPUT_KINDS`; its
+- [x] **5.2 `input.kind: procedure`.** Added to `KNOWN_INPUT_KINDS`; its
       directive set is built from the sidecar. One call checks the exit of step
       n and, on success, emits step n+1 with the brief (goal, "step k of n",
       `remaining`, `failed_approaches` — the capsule field names that already
       exist). A failed exit returns `PARTIAL` with the reason; `judgement`
       returns `PARTIAL` with the question.
+      *Done 2026-10-18:* `work_engine/procedure/run.ts` builds the step map from
+      the sidecar and runs `dispatch` once over its order. A step is handed out
+      the first time it is reached and its exit is checked on every later call;
+      the brief carries goal, "step k of n", `remaining` and `failed_approaches`.
+      The `check:` registry moved beside the engine (`procedure/checks.ts`);
+      `src/scripts/_lib/procedure_checks.ts` re-exports it for the lint.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t one-call-per-step --reporter=verbose` -> /✓.*one-call-per-step/
-- [ ] **5.3 A resumed step is revalidated.** Each `SUCCESS` stores HEAD and the
+- [x] **5.3 A resumed step is revalidated.** Each `SUCCESS` stores HEAD and the
       content hash of the step file and its exit inputs; on resume a mismatch
       marks the step `stale` and re-checks the exit only — the step is not run
       again.
+      *Done 2026-10-18:* HEAD is read from the repository files, not a process.
+      A met exit re-checked after a change is reported `revalidated`; an unmet one
+      leaves the step `stale` and current. A confirmed judgement goes stale when
+      its step file changes.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t stale-after-input-change --reporter=verbose` -> /✓.*stale-after-input-change/
-- [ ] **5.4 The position survives compaction without a new concern.**
+- [x] **5.4 The position survives compaction without a new concern.**
       `handoff-context` already injects on `compact`; it adds one line read from
       `.work-state.json` on disk — `procedure <skill>@<commit> · step k of n
       (<id>) · last exit <ok|stale|partial>` — phrased as state, never as an
       instruction. No state file, no line.
+      *Done 2026-10-18:* on `compact` only; the state file carries the step
+      order so the line needs no sidecar read. Hook bundle 1,547,451 of
+      1,550,000 bytes after the change.
       verify: `npx vitest run tests/scripts/handoff_context_hook.test.ts -t procedure-position-on-compact --reporter=verbose` -> /✓.*procedure-position-on-compact/
-- [ ] **5.5 Entry is a flag, and the pilots' commands use it.** `agent-config
+- [x] **5.5 Entry is a flag, and the pilots' commands use it.** `agent-config
       work --procedure <skill>` (a flag on an existing verb, ADR-041). The
       commands that invoke the three pilots start the cursor themselves instead
       of only pointing at it, so entry is not prose again. Undocumented in the
       public command reference until Phase 6 decides (D3).
+      *Done 2026-10-18:* `--procedure`, `--procedure-confirm`, `--procedure-restart`;
+      set only when passed, so every existing invocation parses as before. The
+      ordinary path refuses a procedure state file. Not in the public command
+      reference (D3).
       verify: `npx vitest run tests/scripts/work_engine/cli.test.ts -t procedure-flag --reporter=verbose` -> /✓.*procedure-flag/
       *Amended (D14):* the pilots' existing commands keep their current path;
       only the explicit `--procedure` flag creates or resumes procedure state.
       "Start the cursor themselves" would make the cursor default-on for those
       commands, which contradicts this phase's heading.
-- [ ] **5.6 Bounds.** Linear, finite, no repeat mode, no background run, no
+- [x] **5.6 Bounds.** Linear, finite, no repeat mode, no background run, no
       subagent start, no stop gate, no hook other than 5.4's line, no shell
       string from data. A single-question read of one step file stays allowed
       without the cursor.
+      *Done 2026-10-18:* asserted on the module source (no process, thread,
+      timer or eval) and on behaviour (a command-string exit is refused and never
+      runs; one call hands out at most one step).
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t bounds-no-shell-no-subagent --reporter=verbose` -> /✓.*bounds-no-shell-no-subagent/
-- [ ] **5.7 A judgement exit has an adjudication protocol (D15), before 5.2.**
+- [x] **5.7 A judgement exit has an adjudication protocol (D15), before 5.2.**
       The design names who answers a `judgement` PARTIAL, which answer clears
       it, what is recorded, and what happens when nobody answers. A judgement
       step is a sequenced step, not a verified one, and the brief says so.
+      *Done 2026-10-18:* the operator answers with `--procedure-confirm <id>`;
+      only that confirmation of the current judgement step clears it, recorded as
+      `{answer: confirmed, by: operator, at, step_sha}`. Unanswered, the step stays
+      current on every call and never times out.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t judgement-adjudication --reporter=verbose` -> /✓.*judgement-adjudication/
-- [ ] **5.8 Kill switch and state integrity (D14), before 5.2.** A switch
+- [x] **5.8 Kill switch and state integrity (D14), before 5.2.** A switch
       independent of the flag refuses procedure activation; the sidecar and the
       state file are read as untrusted input (closed versioned schema, paths
       contained in the skill, no symlink escape, size limit, atomic write); a
       state file bound to another skill, commit or engine version fails closed
       and asks for an explicit restart.
+      *Done 2026-10-18:* `AGENT_CONFIG_PROCEDURE_OFF=1` refuses before anything
+      is read. The sidecar is capped at 64 KiB with closed keys and refuses
+      symlinked or escaping step files; the state file is capped at 1 MiB, its
+      procedure record has a closed versioned shape, and it is written through a
+      temporary file and a rename. Another skill, sidecar or engine version fails
+      closed until `--procedure-restart`; a state file of another kind is never
+      overwritten.
       verify: `npx vitest run tests/scripts/work_engine/procedure_set.test.ts -t kill-switch-refuses --reporter=verbose` -> /✓.*kill-switch-refuses/
 
 ## Phase 6 — Measure before anything becomes a default
@@ -473,22 +504,25 @@ plans this round carried; no external source is cited for them.
 - [ ] **AC-1** Every relative link in a delivered `SKILL.md` or
       `references/*.md` resolves, or is reported by a gate as a named
       non-delivered class; a link one `../` short fails CI.
-- [ ] **AC-2** The order of a pilot's procedure is held by code: with the
+- [x] **AC-2** The order of a pilot's procedure is held by code: with the
       cursor, step n+1 is not emitted until step n's exit is met, recorded
       `judgement`, or recorded `skipped: <reason>`.
-- [ ] **AC-3** Every non-blank line of each pilot's pre-split body is present
+- [x] **AC-3** Every non-blank line of each pilot's pre-split body is present
       in its head or step files, and each head still carries the five required
       sections.
-- [ ] **AC-4** A resumed procedure whose step file or exit inputs changed marks
+- [x] **AC-4** A resumed procedure whose step file or exit inputs changed marks
       that step `stale` and re-checks its exit instead of trusting `SUCCESS`.
-- [ ] **AC-5** Every existing `/work` test passes unchanged, and no existing
-      input kind changes behaviour.
-- [ ] **AC-6** No string from a skill file is executed by the cursor or the
+- [x] **AC-5** Every existing `/work` test passes unchanged, and no existing
+      input kind changes behaviour. *Met 2026-10-18 with one stated exception:*
+      the pin in `tests/scripts/work_engine/state.test.ts` that lists
+      `KNOWN_INPUT_KINDS` gained `procedure`, the addition 5.2 itself requires;
+      the other 1,019 tests in the directory pass untouched.
+- [x] **AC-6** No string from a skill file is executed by the cursor or the
       lint.
 - [ ] **AC-7** A pre-registered three-arm result is published, the verdict
       follows the frozen rule, and nothing is default-on before it — an honest
       null included.
-- [ ] **AC-8** `skill_count` and `concern_count` are unchanged by this roadmap.
+- [x] **AC-8** `skill_count` and `concern_count` are unchanged by this roadmap.
 
 ## Notes — how this file was derived
 
