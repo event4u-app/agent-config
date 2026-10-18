@@ -103,6 +103,25 @@ Generate the body as a single fenced markdown block per
 fingerprint constraints: sentence-length ±25 %, opener / closer
 patterns, hashtag / emoji rules, ±15 % length tolerance.
 
+### 5b. Check the finished draft
+
+Step 4 steers drafting; this step checks the result. Pipe the body on
+stdin — this command never writes the draft to disk:
+
+```bash
+npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
+  --ghostwriter agents/reference/ghostwriter/<slug>.md \
+  [--slot agents/context-spine/brand-voice.md]
+```
+
+Pass `--slot` only when `agent-config brand:status --json` reports the
+`brand-voice` slot valid. Exit **1** is a profile taboo in the draft:
+print its located finding and **abort** — no draft, no footer (§ Rules).
+Brand `avoid` hits and `unbacked-claim` findings flag without blocking:
+print each after the fenced block with its line, its note or the missing
+proof. Quoted, cited and code-fenced text is never scanned. No runtime →
+say so in one line and rely on step 4.
+
 ### 6. Append the disclosure footer (literal, deterministic)
 
 After the body, emit a blank line, then the literal string (rendered

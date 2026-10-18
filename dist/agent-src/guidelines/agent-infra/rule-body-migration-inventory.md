@@ -57,7 +57,7 @@ always-loaded rules.
 | ask-when-uncertain.md | stay | 66 | Y | — | kernel Iron Law + ask-policy floor |
 | augment-edit-discipline.md | thin | 29 | | `guideline:augment-portability-patterns` + `skill:agent-docs-writing` (both existing) | two explicit "body migrated to" sentences |
 | autonomous-execution.md | thin | 81 | | `contexts/execution/autonomy-mechanics.md` + siblings (existing) | hybrid: several short Iron-Law-style blocks retained (Hard Floor pointer, N=3 budget headline), full mechanics already migrated |
-| brand-consistency.md | stay | 75 | | — | gate definition is the enforcement surface itself; already routes deeper mechanics to `brand-identity`/`brand-to-tokens`/`design-intelligence` |
+| brand-consistency.md | stay | 75 | | — | checklist definition is the rule itself; already routes deeper mechanics to `brand-identity`/`brand-to-tokens`/`design-intelligence` |
 | brand-source-of-truth.md | stay | 65 | | — | explicitly "light by design"; precedence order is the whole rule |
 | broken-access-control.md | thin | 68 | | `skill:authz-review` (existing) | hybrid: 2 short Iron-Law blocks (3 negative tests) retained, deep controls/matrix/backstop-grep content already migrated |
 | cli-output-handling.md | thin | 40 | | `skill:rtk-output-filtering` (existing) | pure P4 stub |
