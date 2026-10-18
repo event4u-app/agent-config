@@ -5,7 +5,8 @@
  *
  * Every non-test TypeScript file under `src/scripts` and `src/cli` is read, from
  * the filesystem rather than the index so a file not yet added is seen too; a
- * code line outside `src/scripts/_lib/egress_rules.ts` that spells one of the
+ * code line outside `src/scripts/_lib/egress_rules.ts` (and its generated,
+ * equality-checked projection `egress_prefixes.ts`) that spells one of the
  * table's declared prefixes at a token start fails. A second spelling is how the
  * seven private copies of F2 drifted apart — one key shape caught by one
  * consumer and passed unchanged by the next.
@@ -25,7 +26,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { CREDENTIAL_PREFIXES } from './_lib/egress_rules.js';
+import { CREDENTIAL_PREFIXES as PROJECTED } from './_lib/egress_prefixes.js';
+import { CREDENTIAL_PREFIXES, EGRESS_RULES } from './_lib/egress_rules.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -34,6 +36,8 @@ const GATE = 'check_credential_spelling';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 export const SCAN_DIRS: readonly string[] = ['src/scripts', 'src/cli'];
 export const OWNER = 'src/scripts/_lib/egress_rules.ts';
+/** The bundled projection of the table's prefix list, checked equal to it by its own test. */
+export const PROJECTION = 'src/scripts/_lib/egress_prefixes.ts';
 
 function walk(dir: string, out: string[]): void {
     if (!fs.existsSync(dir)) return;
@@ -58,6 +62,13 @@ function prefixSpelling(prefixes: readonly string[]): RegExp {
 
 const NOT_A_PATTERN = /not-a-credential-pattern: \S/;
 
+// A quoted rule id names a row (`'xai-api-key'`); it is not a spelling of the
+// prefix it happens to start with, so it is removed before the line is judged.
+const RULE_ID = new RegExp(
+    `(['"\`])(?:${EGRESS_RULES.map((r) => escapeRe(r.rule)).join('|')})\\1`,
+    'g',
+);
+
 /** 1-based lines that spell a prefix; comment lines and reasoned markers excluded. */
 export function offendingLines(text: string, prefixes: readonly string[] = CREDENTIAL_PREFIXES): number[] {
     const re = prefixSpelling(prefixes);
@@ -66,7 +77,7 @@ export function offendingLines(text: string, prefixes: readonly string[] = CREDE
         const code = line.trim();
         if (code.startsWith('//') || code.startsWith('*') || code.startsWith('/*')) return;
         if (NOT_A_PATTERN.test(code)) return;
-        if (re.test(code.replace(/\\/g, ''))) out.push(i + 1);
+        if (re.test(code.replace(RULE_ID, '').replace(/\\/g, ''))) out.push(i + 1);
     });
     return out;
 }
@@ -79,7 +90,7 @@ export function findSpellings(root: string, ledger?: GateLedger): { hits: string
     for (const f of files) {
         const rel = path.relative(root, f).split(path.sep).join('/');
         ledger?.plan(rel);
-        if (rel === OWNER) {
+        if (rel === OWNER || rel === PROJECTION) {
             ledger?.outOfScope(rel, 'declared_exemption');
             continue;
         }
@@ -96,6 +107,10 @@ export function check(root: string): number {
     const { hits, scanned } = findSpellings(root, ledger);
     ledger.report();
     reportScanned({ gate: GATE, scanned, units: 'TypeScript source file(s)', roots: [...SCAN_DIRS] });
+    if (JSON.stringify(PROJECTED) !== JSON.stringify(CREDENTIAL_PREFIXES)) {
+        process.stderr.write(`❌  ${GATE}: ${PROJECTION} no longer equals the table's prefix list — regenerate it.\n`);
+        return 1;
+    }
     if (hits.length > 0) {
         process.stderr.write(`❌  ${GATE}: a raw-key prefix is spelled outside ${OWNER}:\n`);
         for (const h of hits) process.stderr.write(`  · ${h}\n`);

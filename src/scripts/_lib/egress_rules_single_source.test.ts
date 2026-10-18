@@ -26,6 +26,9 @@ describe('one place spells a raw-key prefix', () => {
         expect(offendingLines('// sk-ant- in a comment\nconst task = "task-runner";')).toEqual([]);
         expect(offendingLines("const k = 'sk-x'; // not-a-credential-pattern:")).toEqual([1]);
         expect(offendingLines("const k = 'sk-x'; // not-a-credential-pattern: fake")).toEqual([]);
+        // A quoted rule id names a row; a bare prefix beside it still counts.
+        expect(offendingLines("prefixesOf('xai-api-key')")).toEqual([]);
+        expect(offendingLines("const k = 'xai-' + v; // 'xai-api-key'")).toEqual([1]);
     });
 
     it('no file outside the table spells one', () => {

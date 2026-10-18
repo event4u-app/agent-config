@@ -17,8 +17,6 @@ export interface EgressRule {
     readonly kind?: string;
     /** MUST carry the global flag. */
     readonly pattern: RegExp;
-    /** Why the pattern runs in linear time on any input; required, reviewed with the pattern. */
-    readonly linearity: string;
     /**
      * Which bytes a replacement must remove. `'detection'`: the detection span is
      * the whole secret. A `through` function returns the end of the secret for a
@@ -123,15 +121,12 @@ export function pemMaskEnd(text: string, span: SpanBounds): number | null {
     return null;
 }
 
-const PREFIX_RUN =
-    'Starts only where the literal prefix occurs; the single class after it either reaches its minimum and consumes the whole run (the global scan resumes past it) or fails within the minimum, so each character is read a bounded number of times.';
-const FIXED_RUN =
-    'Fixed-length class after a literal prefix: every attempt reads at most the prefix plus the fixed count.';
-
 // Quantifiers are unbounded where the pattern is linear without a bound, so a
-// long value is matched whole and no suffix survives a replacement. Each rule
-// states why it is linear; a bound remains only where the unbounded form was
-// quadratic, and what that bound loses is published in DETECTION_CEILINGS.
+// long value is matched whole and no suffix survives a replacement. Each rule's
+// argument for why it is linear lives in `egress_rules_linearity.ts`, kept out
+// of this module because no runtime path reads it; a test refuses a row without
+// one. A bound remains only where the unbounded form was quadratic, and what
+// that bound loses is published in DETECTION_CEILINGS.
 export const EGRESS_RULES: readonly EgressRule[] = [
     {
         rule: 'anthropic-api-key',
@@ -141,7 +136,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         kind: 'anthropic-api-key',
         pattern: /sk-ant-[A-Za-z0-9_-]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'anthropic-project-key',
@@ -151,7 +145,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         kind: 'anthropic-api-key',
         pattern: /sk-proj-[A-Za-z0-9_-]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'aws-access-key',
@@ -160,7 +153,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /AKIA[0-9A-Z]{16}/g,
-        linearity: FIXED_RUN,
     },
     {
         rule: 'google-api-key',
@@ -169,7 +161,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /AIza[0-9A-Za-z_-]{35}/g,
-        linearity: FIXED_RUN,
     },
     {
         rule: 'github-pat',
@@ -178,7 +169,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /ghp_[0-9A-Za-z]{36}/g,
-        linearity: FIXED_RUN,
     },
     {
         rule: 'github-fine-grained-pat',
@@ -188,7 +178,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         kind: 'github-pat',
         pattern: /github_pat_[0-9A-Za-z_]{22,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'openai-api-key',
@@ -198,7 +187,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         tokenStart: true,
         pattern: /(?<![A-Za-z0-9])sk-[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'google-oauth-token',
@@ -208,7 +196,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         tokenStart: true,
         pattern: /(?<![A-Za-z0-9])ya29\.[0-9A-Za-z_-]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'github-app-token',
@@ -217,7 +204,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /gh[ousr]_[A-Za-z0-9]{36,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'xai-api-key',
@@ -227,7 +213,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         tokenStart: true,
         pattern: /(?<![A-Za-z0-9])xai-[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'perplexity-api-key',
@@ -236,7 +221,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /pplx-[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'groq-api-key',
@@ -246,7 +230,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         tokenStart: true,
         pattern: /(?<![A-Za-z0-9])gsk_[A-Za-z0-9]{20,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'jwt',
@@ -256,8 +239,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         pattern:
             /(?<![A-Za-z0-9_-])(?=((?:(?!eyJ)[A-Za-z0-9_-])*))\1(eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})/dg,
         valueGroup: 2,
-        linearity:
-            'One attempt per base64url run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first eyJ atomically, so the engine never retries a later eyJ in the same run. That loses nothing: every eyJ in one run reaches the same run end, so the first one, which has the most characters after it, matches whenever any later one would. An attempt spans at most three dot-separated runs, so each character is read a bounded number of times.',
     },
     {
         rule: 'stripe-secret-key',
@@ -266,7 +247,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /sk_(?:live|test)_[0-9A-Za-z]{16,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'slack-token',
@@ -275,7 +255,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         class: 'credential',
         replacement: 'detection',
         pattern: /xox[baprs]-[0-9A-Za-z-]{10,}/g,
-        linearity: PREFIX_RUN,
     },
     {
         rule: 'pem-private-key',
@@ -284,8 +263,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
 
         pattern: /-----BEGIN [A-Z ]*PRIVATE KEY-----/g,
         replacement: { through: pemBlockEnd },
-        linearity:
-            'Starts only at the literal header; the label class excludes the dash, so label runs of different headers are disjoint, and backtracking over one run tries the fixed 16-character suffix at each position: linear with a constant factor of 16.',
     },
     {
         rule: 'db-connection-uri',
@@ -294,8 +271,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         replacement: 'detection',
         pattern: /(?<![a-z0-9+.-])(?=((?:(?!\b[a-z])[a-z0-9+.-])*))\1(\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:[^\s:/@]+@)/dg,
         valueGroup: 2,
-        linearity:
-            'One attempt per scheme-character run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first word-boundary letter atomically. Every such start in one run reaches the same :// at the same run end, so the first one matches whenever any later one would, and nothing the unbounded scheme matched is lost. The userinfo classes exclude : and /, so each userinfo run is read by one attempt per side.',
     },
     {
         rule: 'generic-assignment',
@@ -306,8 +281,6 @@ export const EGRESS_RULES: readonly EgressRule[] = [
             /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
         valueGroup: 1,
         validator: looksLikeSecretValue,
-        linearity:
-            'Starts only at a keyword; the whitespace runs end at the first non-space and the value run at the first quote or space, and a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops at the first character after the whitespace.',
     },
 ];
 
