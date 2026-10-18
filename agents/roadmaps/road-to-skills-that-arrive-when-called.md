@@ -292,10 +292,12 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 - [ ] **4.5 Only its own entries.** Never touches an entry it did not write,
   never writes into a project tree, never shadows a host built-in.
   verify: a foreign entry survives a full collect.
-- [ ] <!-- blocked-by: which-completeness-skills-owe | asked: yes — 2026-10-12, inbox-2026-10-n reply --> **4.6 The first host waits.** It gets materialisation only if the
+- [ ] **4.6 The first host waits.** It gets materialisation only if the
   completeness answer makes presence optional and Phase 5 reads no harm; until
   then it keeps the full install.
   verify: decision test for each completeness answer.
+  Answered 2026-10-18 (ADR-289, reach): presence on the first host is optional,
+  so this step now waits only on Phase 5 reading no harm.
 - [x] **4.7 Computed visibility on the first host.** The resident set keeps
   descriptions; the rest go `name-only`, still listed and invocable — computed,
   never a key; only for skills the package owns; never over a user value; removed
@@ -368,6 +370,10 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   default projection include the skills that surviving artefacts declare? Yes →
   keep both `skills:` and `requires_skills:` targets and regenerate the claims;
   no → prune the declaring commands; or wait for `which-completeness-skills-owe`.
+  **Answered 2026-10-18: yes, keep-declared** — AI council 2/2 under the owner's
+  delegation of 2026-10-18 (`agents/evidence/council/completeness-skills-owe-20261018.md`,
+  ADR-289 § Decision 2). The step is executable as written; dependency closure is
+  an installer invariant and the declaring commands are not pruned.
 - [x] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
   list. Measured population in the source tree at `5fa963cec`: **2**
   (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small
@@ -389,7 +395,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ### blocker: which-completeness-skills-owe
 
-- **Status:** open — owner-reserved (council 2026-10-16, 2/2 ESCALATE, both recommending (b)); re-checked 2026-10-18, still unmet: no ADR under `docs/decisions/` names this blocker, and `README.md:59` still reads "Pack-scoped install — writes the active pack only". Raised 2026-10-12 by round inbox-2026-10-n; the supplied plans cite an owner directive of 2026-08-30 against a silent subset, which no file in `agents/` or `docs/` records, and the same round asks for a minimal install
+- **Status:** resolved — (b) reach, with declared skills kept (6.3 keep-declared): ADR-289. Decided by: AI council (2/2, 2026-10-18), under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record `agents/evidence/council/completeness-skills-owe-20261018.md`. `README.md:59` cites ADR-289 and ADR-267 § 5 carries an amendment pointing to it. Was: open — owner-reserved (council 2026-10-16, 2/2 ESCALATE before the delegation, both recommending (b)); raised 2026-10-12 by round inbox-2026-10-n
 - **Owner:** owner — what a consumer is promised to receive is a public product statement (`README.md:59`)
 - **Class:** 3
 - **Ownership:** product-owned
@@ -451,6 +457,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 | D6 | reversible-technical | council:skills-arrive-reach-shape-20261018 | The reach report has six buckets: installed as described / name-only / unlisted, not installed as reachable-not-installed / degraded / unreachable by the best available path; it ships as a `doctor` check, not a new command | AI council 2026-10-18, both seats DECIDE; a five-bucket partition assumed every uninstalled skill is reachable | a host gains a read path that carries host-applied keys |
 | D7 | reversible-technical | council:skills-arrive-reach-shape-20261018 | Output shape is a committed data file listing every skill by hand; the class is standing wherever the call was unclear, and standing is also the runtime default for a missing name | AI council 2026-10-18; a frontmatter key would spend 301 skill byte budgets and a heuristic over prose is not deterministic | 3.2 shows a skill classed standing losing nothing when forked |
 | D5 | product-owned | owner | Option (a) on `listing-override-write-is-owner-owned`: write `skillOverrides` for package-owned skills into the user-global host settings, never over a user value, removed on uninstall, no settings key — an owner lowering of the recorded never-write commitment | Owner chat answer "1", 2026-10-14; the advisory option hands the user the configuration the 2026-10-12 directive removes | a host build changes what `name-only` does, or a consumer reports a value of theirs touched |
+| D8 | product-owned | council:agents/evidence/council/completeness-skills-owe-20261018.md | Blocker `which-completeness-skills-owe` → (b) reach, and 6.3 keeps every skill a surviving artefact declares (ADR-289). The contract is published as met only once its operational definition exists and the reach report counts zero `unreachable`; `projection.mode` stays until the reach mechanism and its tests exist | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | a supported host cannot supply a deterministic retrieval path and cannot hold the skill either |
 
 ## Kill register
 
