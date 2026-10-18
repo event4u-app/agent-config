@@ -12,9 +12,15 @@
  * ONE FILE PER SESSION, BECAUSE THE HOST RUNS THIS EVENT ASYNCHRONOUSLY. A
  * session start fires one event per loaded file and the hooks run in parallel,
  * so append order is scheduler order and the reader treats each session as a
- * set. Bounding growth by deleting whole old session files needs no lock: two
- * processes pruning the same file both succeed, where two rotating one shared
- * file could each rename the other's fresh data away.
+ * set. Retention is the newest {@link KEEP_SESSIONS} session files, each capped
+ * at {@link MAX_SESSION_BYTES}; old files are deleted whole, never rotated.
+ *
+ * WHAT A RACE CAN AND CANNOT DO. Two processes pruning at once both succeed. A
+ * prune can delete the file of an idle session that is older than fifty newer
+ * ones; if that session later loads a file, it starts a new file without its
+ * start-up loads, which the record reads as `unknown` — evidence is lost in the
+ * direction that keeps the machine full, never invented. The count can sit one
+ * or two above fifty until the next new session prunes again.
  *
  * KILL SWITCH. `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off` makes it a no-op without
  * a reinstall; removing the one `instructions_loaded` binding in
@@ -27,25 +33,26 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { event4u_root } from '../_lib/user_global_paths.js';
-import { classifyInstructionsLoaded } from '../_lib/instructions_loaded_event.js';
+import { captureInstructionsLoaded } from '../_lib/instructions_loaded_event.js';
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
 export const KILL_SWITCH_ENV = 'AGENT_CONFIG_INSTRUCTIONS_OBSERVER';
 export const KEEP_SESSIONS = 50;
+/** A session file stops growing here, so retention is bounded in bytes as well as in sessions. */
+export const MAX_SESSION_BYTES = 256 * 1024;
 
 export function arrivalsDir(env: NodeJS.ProcessEnv = process.env): string {
     return path.join(event4u_root(env), 'runtime', 'arrivals');
 }
 
-/** Delete all but the newest {@link KEEP_SESSIONS} session files. */
+/** Delete all but the newest {@link KEEP_SESSIONS} session files; ties broken by name. */
 function prune(dir: string): void {
     const files = fs
         .readdirSync(dir)
-        .filter((f) => f.endsWith('.jsonl'))
         .map((f) => ({ f, t: fs.statSync(path.join(dir, f)).mtimeMs }))
-        .sort((a, b) => b.t - a.t);
+        .sort((a, b) => b.t - a.t || (a.f < b.f ? -1 : 1));
     for (const { f } of files.slice(KEEP_SESSIONS)) fs.rmSync(path.join(dir, f), { force: true });
 }
 
@@ -58,20 +65,22 @@ export function processEnvelope(raw: string, env: NodeJS.ProcessEnv = process.en
         } catch {
             parsed = null;
         }
-        // Bound to `instructions_loaded` alone, so the envelope's event is not re-checked here.
         const envelope = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : null;
         const inner = envelope?.['payload'];
-        const line = classifyInstructionsLoaded(typeof inner === 'object' && inner !== null ? inner : envelope, {
-            ts: new Date().toISOString(),
-            home: env['HOME'] ?? os.homedir(),
-            env,
-        });
+        const payload = typeof inner === 'object' && inner !== null ? inner : envelope;
+        const line = captureInstructionsLoaded(payload, new Date().toISOString(), env['HOME'] ?? os.homedir(), env);
         const dir = arrivalsDir(env);
-        const file = path.join(dir, `${line.session ?? '_no-session'}.jsonl`);
-        const fresh = !fs.existsSync(file);
+        const file = path.join(dir, `${line.session ?? '_'}.jsonl`);
+        let size = -1;
+        try {
+            size = fs.statSync(file).size;
+        } catch {
+            // First line of this session.
+        }
+        if (size > MAX_SESSION_BYTES) return EXIT_ALLOW;
         fs.mkdirSync(dir, { recursive: true });
         fs.appendFileSync(file, `${JSON.stringify(line)}\n`);
-        if (fresh) prune(dir);
+        if (size < 0) prune(dir);
     } catch {
         // An unwritable disk, or a file a parallel prune removed, loses one line; it never fails the session.
     }

@@ -26,7 +26,14 @@ import * as path from 'node:path';
 
 import type { ActivationReceipt } from './activation_ladder.js';
 import type { ArrivalEvidence } from './layer_form_decision.js';
-import { LOAD_REASONS, type LoadReason, type LoadedLine, type ObserverLine } from './instructions_loaded_event.js';
+import type { CaptureLine } from './instructions_loaded_event.js';
+import {
+    LOAD_REASONS,
+    classifyCapture,
+    type LoadReason,
+    type LoadedLine,
+    type ObserverLine,
+} from './instructions_loaded_classify.js';
 
 export type ArrivalUnknownReason =
     | 'event-unavailable'
@@ -57,22 +64,29 @@ export interface ArrivalRecord {
 
 /** Parse every session file under the observer directory; lines that are not observer lines are dropped. */
 export function readObserverLines(dir: string): ObserverLine[] {
-    let text = '';
+    let names: string[] = [];
     try {
-        for (const f of fs.readdirSync(dir)) {
-            if (f.endsWith('.jsonl')) text += `${fs.readFileSync(path.join(dir, f), 'utf8')}\n`;
-        }
+        names = fs.readdirSync(dir).filter((f) => f.endsWith('.jsonl'));
     } catch {
         return [];
     }
     const out: ObserverLine[] = [];
-    for (const raw of text.split('\n')) {
-        if (!raw.trim()) continue;
+    for (const f of names) {
+        let text = '';
         try {
-            const o = JSON.parse(raw) as ObserverLine;
-            if (o && o.v === 1 && (o.event === 'loaded' || o.event === 'unknown')) out.push(o);
+            text = fs.readFileSync(path.join(dir, f), 'utf8');
         } catch {
-            // A torn line is skipped; it carries no session to attribute it to.
+            // Pruned between the listing and the read; the other sessions still count.
+            continue;
+        }
+        for (const raw of text.split('\n')) {
+            if (!raw.trim()) continue;
+            try {
+                const o = JSON.parse(raw) as CaptureLine;
+                if (o && o.v === 2) out.push(classifyCapture(o));
+            } catch {
+                // A torn line is skipped; it carries no session to attribute it to.
+            }
         }
     }
     return out;

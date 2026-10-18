@@ -4,7 +4,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { classifyInstructionsLoaded, hostVersionFromEnv, type ObserverLine } from '../../src/scripts/_lib/instructions_loaded_event.js';
+import { classifyInstructionsLoaded, hostVersionFromEnv, type ObserverLine } from '../../src/scripts/_lib/instructions_loaded_classify.js';
+import { captureInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_event.js';
 import {
     arrivalEvidence,
     arrivalReceipts,
@@ -14,7 +15,7 @@ import {
     validateArrivalRecord,
 } from '../../src/scripts/_lib/arrival_record.js';
 import { rungState } from '../../src/scripts/_lib/activation_ladder.js';
-import { processEnvelope, arrivalsDir, KEEP_SESSIONS, KILL_SWITCH_ENV } from '../../src/scripts/hooks/instructions_observer_hook.js';
+import { processEnvelope, arrivalsDir, KEEP_SESSIONS, KILL_SWITCH_ENV, MAX_SESSION_BYTES } from '../../src/scripts/hooks/instructions_observer_hook.js';
 import { recordsIn, renderRecord } from '../../src/scripts/arrival_report.js';
 
 const HOME = '/home/dev';
@@ -154,7 +155,7 @@ describe('the observer concern', () => {
     it('appends one line per event to its session file, and a record can be built from the directory', () => {
         expect(processEnvelope(envelope({ session_id: 's9', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
         expect(processEnvelope('{not json', env)).toBe(0);
-        expect(fs.readdirSync(arrivalsDir(env)).sort()).toEqual(['_no-session.jsonl', 's9.jsonl']);
+        expect(fs.readdirSync(arrivalsDir(env)).sort()).toEqual(['_.jsonl', 's9.jsonl']);
         const lines = readObserverLines(arrivalsDir(env));
         expect(lines).toHaveLength(2);
         expect(latestArrivalRecord(lines)?.status).toBe('visible');
@@ -180,17 +181,51 @@ describe('the observer concern', () => {
         expect(fs.existsSync(arrivalsDir(env))).toBe(false);
     });
 
-    it('an envelope carrying another event is classified, not trusted: no file path means an unknown line', () => {
+    it('an envelope carrying another event is classified, not trusted: an unknown line', () => {
         processEnvelope(JSON.stringify({ event: 'stop', payload: { session_id: 'x', hook_event_name: 'Stop' } }), env);
         expect(readObserverLines(arrivalsDir(env))).toMatchObject([{ event: 'unknown', why: 'event-mismatch' }]);
+    });
+
+    it('a hostile session id never names a file outside the directory', () => {
+        for (const sid of ['../escape', '..', '/abs', 'a/b', '.hidden']) {
+            processEnvelope(envelope({ session_id: sid, file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        }
+        expect(fs.readdirSync(root).sort()).toEqual(['runtime']);
+        expect(fs.readdirSync(arrivalsDir(env))).toEqual(['_.jsonl']);
+    });
+
+    it('a session file stops growing at its cap', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'big.jsonl'), 'x'.repeat(MAX_SESSION_BYTES + 1));
+        processEnvelope(envelope({ session_id: 'big', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.statSync(path.join(dir, 'big.jsonl')).size).toBe(MAX_SESSION_BYTES + 1);
+    });
+
+    it('sixty sessions leave exactly the newest fifty, ties broken by name', () => {
+        for (let i = 0; i < 60; i += 1) {
+            processEnvelope(envelope({ session_id: `s${String(i).padStart(2, '0')}`, file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        }
+        const dir = arrivalsDir(env);
+        for (const f of fs.readdirSync(dir)) fs.utimesSync(path.join(dir, f), 5_000, 5_000);
+        processEnvelope(envelope({ session_id: 'zz', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.readdirSync(dir)).toHaveLength(KEEP_SESSIONS);
+    });
+
+    it('one unreadable session file does not discard the others', () => {
+        processEnvelope(envelope({ session_id: 'ok', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        fs.mkdirSync(path.join(arrivalsDir(env), 'broken.jsonl'));
+        expect(readObserverLines(arrivalsDir(env)).map((l) => l.session)).toEqual(['ok']);
     });
 });
 
 describe('arrival_report', () => {
     it('prints one block per session, newest first, and nothing for an empty directory', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrival-report-'));
-        fs.writeFileSync(path.join(dir, 'old.jsonl'), JSON.stringify(load(USER_RULE('a'), 'session_start', 'old')));
-        fs.writeFileSync(path.join(dir, 'new.jsonl'), JSON.stringify(load(USER_RULE('a'), 'session_start', 'new')));
+        const cap = (sid: string, ts: string) =>
+            JSON.stringify(captureInstructionsLoaded({ session_id: sid, file_path: USER_RULE('a'), load_reason: 'session_start' }, ts, HOME, ENV));
+        fs.writeFileSync(path.join(dir, 'old.jsonl'), cap('old', '2026-10-18T00:00:01Z'));
+        fs.writeFileSync(path.join(dir, 'new.jsonl'), cap('new', '2026-10-18T00:00:02Z'));
         const records = recordsIn(dir, 10);
         expect(records.map((r) => r.session)).toEqual(['new', 'old']);
         expect(renderRecord(records[0]!).join('\n')).toContain('host version 2.1.299');

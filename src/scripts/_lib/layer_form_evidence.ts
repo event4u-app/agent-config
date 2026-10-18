@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { readCarrierState, runtimeRootFor, type CarrierState } from '../../install/stagedRuntime.js';
 import { readUserPin } from '../../install/userPin.js';
 import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLines, type ArrivalRecord } from './arrival_record.js';
-import { hostVersionFromEnv } from './instructions_loaded_event.js';
+import { hostVersionFromEnv } from './instructions_loaded_classify.js';
 import { THINNABLE_HOSTS } from './lean_projection_mode.js';
 import { decideLayerForm, gatherShippedEvidence, type LayerFormDecision, type LayerFormInput } from './layer_form_decision.js';
 import { readConsequenceClass } from './rule_consequence_class.js';

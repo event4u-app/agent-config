@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildArrivalRecord } from '../../src/scripts/_lib/arrival_record.js';
-import { classifyInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_event.js';
+import { classifyInstructionsLoaded } from '../../src/scripts/_lib/instructions_loaded_classify.js';
 import { FORM_REASONS, decideLayerForm, type FormReason, type LayerFormInput } from '../../src/scripts/_lib/layer_form_decision.js';
 import { declareLayerForm, withMachineEvidence, type MachineEvidence } from '../../src/scripts/_lib/layer_form_evidence.js';
 
