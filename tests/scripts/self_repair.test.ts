@@ -412,6 +412,8 @@ function plumbing(cmd: string, args: string[]): Partial<RunResult> | undefined {
     switch (args[0]) {
         case 'rev-parse':
             return { out: `${'b'.repeat(40)}\n` };
+        case 'remote':
+            return args[2] === 'origin' ? { out: 'https://github.com/up/stream.git\n' } : undefined;
         case 'diff':
             return { out: 'diff --git a/src/rules/x.md b/src/rules/x.md\n+a fix\n' };
         case 'write-tree':
@@ -503,7 +505,7 @@ describe('self-repair — egress ladder', () => {
     const deps = (runner: Runner, rec: DefectRecord, plan: ReleasePlan, probe: Probe): ReleaseDeps => ({
         runner,
         now: () => LATER,
-        approvedDigest: outgoingDigest(collectOutgoing(rec, plan, probe, runner).outgoing),
+        approvedDigest: outgoingDigest(collectOutgoing(rec, plan, probe, runner, 'up/stream').outgoing),
     });
 
     it('a failed upstream push degrades to an issue attempt in the same invocation', () => {

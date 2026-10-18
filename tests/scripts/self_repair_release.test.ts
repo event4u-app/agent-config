@@ -71,7 +71,7 @@ interface Repo {
     checkout: string;
     origin: string;
     /** Write a file and commit it on the current branch of the checkout. */
-    commit: (file: string, content: string | null, message?: string) => void;
+    commit: (file: string, content: string | Buffer | null, message?: string) => void;
 }
 
 /**
@@ -90,7 +90,7 @@ function repo(): Repo {
     git(checkout, 'config', 'user.name', 'Jane Example');
     git(checkout, 'config', 'user.email', 'jane@acme-corp.example');
     git(checkout, 'config', 'commit.gpgsign', 'false');
-    const commit = (file: string, content: string | null, message = 'change'): void => {
+    const commit = (file: string, content: string | Buffer | null, message = 'change'): void => {
         const p = path.join(checkout, file);
         if (content === null) {
             fs.rmSync(p);
@@ -113,18 +113,19 @@ function probe(r: Repo, canFork = false): Probe {
 }
 
 /** Real git, scripted `gh`. Records every forge call. */
-function forge(opts: { identity?: string | null } = {}): { runner: Runner; pr: string[][]; issues: string[][]; pushes: string[][] } {
+function forge(opts: { identity?: string | null; login?: string } = {}): { runner: Runner; pr: string[][]; issues: string[][]; pushes: string[][] } {
     const state = { pr: [] as string[][], issues: [] as string[][], pushes: [] as string[][] };
-    const runner: Runner = (cmd, args, cwd, env) => {
+    const login = opts.login ?? LOGIN;
+    const runner: Runner = (cmd, args, cwd, env, runOpts) => {
         if (cmd === 'git') {
             if (args[0] === 'push') state.pushes.push([...args]);
             // A fork remote is not reachable from a test: answer it as pushed.
             if (args[0] === 'push' && args[1] === 'self-repair-fork') return { ok: true, out: '', timedOut: false };
-            return runCommand(cmd, args, cwd, env);
+            return runCommand(cmd, args, cwd, env, runOpts);
         }
-        if (args[0] === 'api' && args.includes('.login')) return { ok: true, out: `${LOGIN}\n`, timedOut: false };
+        if (args[0] === 'api' && args.includes('.login')) return { ok: true, out: `${login}\n`, timedOut: false };
         if (args[0] === 'api') {
-            const id = opts.identity === undefined ? `${ACCOUNT_ID} ${LOGIN}` : opts.identity;
+            const id = opts.identity === undefined ? `${ACCOUNT_ID} ${login}` : opts.identity;
             return id === null ? { ok: false, out: 'HTTP 401', timedOut: false } : { ok: true, out: `${id}\n`, timedOut: false };
         }
         if (args[0] === 'pr' && args[1] === 'create') {
@@ -141,8 +142,15 @@ function forge(opts: { identity?: string | null } = {}): { runner: Runner; pr: s
 }
 
 /** Deps carrying the digest of exactly what the dry run would print now. */
-function approved(r: Repo, f: ReturnType<typeof forge>, p: ReleasePlan, deny: string[] = [], rec = record()): ReleaseDeps {
-    const collected = collectOutgoing(rec, p, probe(r, p.pushVia === 'fork'), f.runner);
+function approved(
+    r: Repo,
+    f: ReturnType<typeof forge>,
+    p: ReleasePlan,
+    deny: string[] = [],
+    rec = record(),
+    repo = 'o/r',
+): ReleaseDeps {
+    const collected = collectOutgoing(rec, p, probe(r, p.pushVia === 'fork'), f.runner, repo);
     return {
         runner: f.runner,
         now: () => '2026-10-17T00:00:00.000Z',
@@ -212,6 +220,33 @@ describe('the release builds one clean commit and scans every object it adds', (
         const detail = out.attempts.find((a) => a.step === 'payload-scan')?.detail ?? '';
         expect(detail).toMatch(/aws-access-key/);
         expect(detail).not.toMatch(/AKIAIOSFODNN7EXAMPLE/);
+    });
+
+    it('binary-blob-fails-closed — a token in a binary blob beside invalid UTF-8 refuses the push', () => {
+        // UTF-16LE spells the token with a NUL after every byte, so no text
+        // view of the blob carries it as one run; 0xFF 0xFE and a lone 0xC3
+        // are not UTF-8 at all. A blob the floor cannot read as text is a
+        // blob it cannot clear, so it refuses rather than guesses.
+        const r = repo();
+        const token = Buffer.from('AKIAIOSFODNN7EXAMPLE', 'utf16le');
+        r.commit('assets/blob.bin', Buffer.concat([Buffer.from([0xff, 0xfe]), token, Buffer.from([0xc3])]));
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
+
+        expect(f.pushes).toHaveLength(0);
+        expect(hasPushedBranch(r)).toBe(false);
+        expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(/unscannable-binary in object/);
+        expect(out.published).toBe('issue');
+    });
+
+    it('binary-blob-fails-closed — an ASCII token beside invalid UTF-8 bytes is read from the original bytes', () => {
+        const r = repo();
+        r.commit('assets/blob.bin', Buffer.concat([Buffer.from([0xc3]), Buffer.from('AKIAIOSFODNN7EXAMPLE'), Buffer.from([0xff])]));
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream')));
+
+        expect(f.pushes).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'payload-scan')?.detail).toMatch(/in object/);
     });
 
     it('a branch with no change against the base sends nothing at all', () => {
@@ -339,14 +374,66 @@ describe('the person approves the exact bytes', () => {
         expect(out.attempts[0]?.detail).toMatch(/--approve/);
     });
 
+    it('changed-destination-voids-approval — the same content sent to another repository is refused', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/other', approved(r, f, plan('upstream'), [], record(), 'o/r'));
+
+        expect(out.published).toBeNull();
+        expect(f.pushes).toHaveLength(0);
+        expect(f.issues).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'approval')).toBeDefined();
+    });
+
+    it('changed-destination-voids-approval — the same content sent from another account is refused', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const deps = approved(r, forge(), plan('upstream'));
+        const other = forge({ login: 'another-login' });
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', { ...deps, runner: other.runner });
+
+        expect(out.published).toBeNull();
+        expect(other.pushes).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'approval')).toBeDefined();
+    });
+
+    it('changed-destination-voids-approval — the same issue sent from another account is refused', () => {
+        const r = repo();
+        const issuePlan = plan('upstream', { route: 'issue', pushVia: null });
+        const deps = approved(r, forge(), issuePlan);
+        const other = forge({ login: 'another-login' });
+        const out = executeRelease(record(), issuePlan, probe(r), 'o/r', { ...deps, runner: other.runner });
+
+        expect(out.published).toBeNull();
+        expect(other.issues).toHaveLength(0);
+    });
+
+    it('changed-destination-voids-approval — a moved base voids it, since the commit would sit on another parent', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const deps = approved(r, f, plan('upstream'));
+        // A second commit on the base, published, then fetched.
+        git(r.checkout, 'switch', '-q', 'main');
+        r.commit('README.md', 'base moved\n', 'moved');
+        git(r.checkout, 'push', '-q', 'origin', 'main');
+        git(r.checkout, 'switch', '-q', 'fix/neutral');
+        git(r.checkout, 'fetch', '-q', 'origin');
+        const out = executeRelease(record(), plan('upstream'), probe(r), 'o/r', deps);
+
+        expect(out.published).toBeNull();
+        expect(f.pushes).toHaveLength(0);
+    });
+
     it('the dry run prints every byte it digests — branch, identity, message, diff, title, body', () => {
         const r = repo();
         r.commit('src/rules/x.md', 'a neutral sentence\n');
         const f = forge();
-        const collected = collectOutgoing(record(), plan('upstream'), probe(r), f.runner);
+        const collected = collectOutgoing(record(), plan('upstream'), probe(r), f.runner, 'o/r');
         const text = renderDryRun(plan('upstream'), LOGIN, collected);
 
-        for (const needle of [BRANCH, NOREPLY, 'Self-repair fingerprint: abc123def4567890', '+a neutral sentence', 'a title', 'a body']) {
+        for (const needle of [BRANCH, NOREPLY, 'Self-repair fingerprint: abc123def4567890', '+a neutral sentence', 'a title', 'a body', 'o/r', LOGIN, r.origin, 'upstream']) {
             expect(text).toContain(needle);
         }
         expect(text).toContain(`DIGEST ${outgoingDigest(collected.outgoing)}`);

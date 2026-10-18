@@ -20,7 +20,7 @@
  * failure or 30 s timeout → issue; issue failure → the record stays open with
  * the errors attached) — degrading never widens what leaves the machine, only
  * the vehicle. `--dry-run` prints the resolved route, the GitHub account the
- * send would carry, every byte that may leave and their digest, and creates
+ * send would carry, its destination and payload and their digest, and creates
  * nothing: it reads the forge (auth status, push rights, the signed-in login)
  * and the local repository, and writes to neither.
  *
@@ -37,10 +37,14 @@
  * object, every tree and blob path, every blob's content, plus title and body.
  * A finding skips every push rung.
  *
- * Nothing is sent without an approval of the exact bytes: the dry run prints
- * them with their digest, and the release refuses unless `--approve <digest>`
- * names the bytes it is about to send (`_lib/self_repair_outgoing.ts`).
+ * Nothing is sent without an approval of the exact bytes and their
+ * destination — repository, account, route, remote, base commit: the dry run
+ * prints them with their digest, and the release refuses unless
+ * `--approve <digest>` names what it is about to send and where. Only the
+ * commit date is outside the digest. A blob that is not UTF-8 text, or carries
+ * a NUL, is refused rather than scanned (`_lib/self_repair_outgoing.ts`).
  */
+import { isUtf8 } from 'node:buffer';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -81,6 +85,7 @@ import {
     commitMessage,
     isNoreplyEmail,
     noreplyIdentity,
+    type Destination,
     type Outgoing,
     type OutgoingPullRequest,
     outgoingDigest,
@@ -115,18 +120,40 @@ export interface RunResult {
     ok: boolean;
     out: string;
     timedOut: boolean;
+    /** stdout exactly as the process wrote it — set only when `binary` was asked for. */
+    bytes?: Buffer;
+}
+
+export interface RunOptions {
+    /**
+     * Keep stdout as bytes. A UTF-8 decode replaces every invalid sequence with
+     * U+FFFD, so text read that way is not the content that leaves.
+     */
+    binary?: boolean;
 }
 
 /**
  * Injectable command runner — tests script it, production shells out. `env` is
  * merged over the process environment, never a replacement for it.
  */
-export type Runner = (cmd: string, args: string[], cwd?: string, env?: NodeJS.ProcessEnv) => RunResult;
+export type Runner = (
+    cmd: string,
+    args: string[],
+    cwd?: string,
+    env?: NodeJS.ProcessEnv,
+    opts?: RunOptions,
+) => RunResult;
 
-export function runCommand(cmd: string, args: string[], cwd?: string, env?: NodeJS.ProcessEnv): RunResult {
+export function runCommand(
+    cmd: string,
+    args: string[],
+    cwd?: string,
+    env?: NodeJS.ProcessEnv,
+    opts?: RunOptions,
+): RunResult {
     const r = spawnSync(cmd, args, {
         cwd,
-        encoding: 'utf-8',
+        encoding: 'buffer',
         timeout: EGRESS_STEP_TIMEOUT_MS,
         // An inherited GIT_DIR or GIT_INDEX_FILE (a release run from a hook)
         // would point every git step at another repository or index.
@@ -136,10 +163,13 @@ export function runCommand(cmd: string, args: string[], cwd?: string, env?: Node
     // SIGTERM is a failure, not a timeout, and recording it as "timed out"
     // points the next debugging session at the wrong cause (R2 finding #3).
     const timedOut = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT';
+    const stdout = r.stdout ?? Buffer.alloc(0);
+    const stderr = r.stderr ?? Buffer.alloc(0);
     return {
         ok: r.status === 0 && !timedOut,
-        out: `${r.stdout ?? ''}${r.stderr ?? ''}`,
+        out: `${stdout.toString('utf-8')}${stderr.toString('utf-8')}`,
         timedOut,
+        ...(opts?.binary === true ? { bytes: Buffer.from(stdout) } : {}),
     };
 }
 
@@ -367,12 +397,18 @@ export interface Collected {
 }
 
 /**
- * Read every byte the plan may send. The dry run renders this; the release
+ * Read what the plan may send and where. The dry run renders this; the release
  * recomputes it and accepts only an approval of the same bytes.
  */
-export function collectOutgoing(record: DefectRecord, plan: ReleasePlan, probe: Probe, runner: Runner): Collected {
+export function collectOutgoing(
+    record: DefectRecord,
+    plan: ReleasePlan,
+    probe: Probe,
+    runner: Runner,
+    repo: string,
+): Collected {
     const none: Collected = {
-        outgoing: { pullRequest: null, issue: null },
+        outgoing: { destination: null, pullRequest: null, issue: null },
         precondition: null,
         prUnavailable: null,
         baseSha: null,
@@ -383,7 +419,18 @@ export function collectOutgoing(record: DefectRecord, plan: ReleasePlan, probe: 
     // Re-rendered for the issue rung: a plan that degrades from pull-request
     // must not file an issue whose body claims `Route: pull-request`.
     const issue = { title: plan.title, body: plan.route === 'issue' ? plan.body : renderReport(record, 'issue') };
-    const out: Collected = { ...none, outgoing: { pullRequest: null, issue } };
+    // Where the bytes go is part of what is approved: the same text sent to
+    // another repository, from another account, is another act.
+    const account = resolveAccount(runner);
+    const issueOnly: Destination = {
+        repo,
+        account,
+        route: plan.route,
+        rungs: ['issue'],
+        remote: null,
+        baseSha: null,
+    };
+    const out: Collected = { ...none, outgoing: { destination: issueOnly, pullRequest: null, issue } };
     if (plan.route !== 'pull-request') {
         return out;
     }
@@ -405,6 +452,7 @@ export function collectOutgoing(record: DefectRecord, plan: ReleasePlan, probe: 
     }
     const unavailable = (step: string, detail: string): Collected => ({
         ...out,
+        outgoing: { ...out.outgoing, destination: { ...issueOnly, route: 'issue' } },
         prUnavailable: { step, ok: false, detail },
     });
     const identity = resolveIdentity(runner);
@@ -425,6 +473,21 @@ export function collectOutgoing(record: DefectRecord, plan: ReleasePlan, probe: 
     if (!diff.ok) {
         return unavailable('patch-build', `patch-build: the change on ${PAYLOAD_BASE_REF}...<branch> could not be read`);
     }
+    const rungs: Destination['rungs'] =
+        plan.pushVia === 'upstream' && probe.canFork ? ['upstream', 'fork', 'issue'] : [plan.pushVia ?? 'upstream', 'issue'];
+    let remote: string | null = null;
+    if (rungs[0] === 'upstream') {
+        const url = runner('git', ['remote', 'get-url', 'origin'], checkout);
+        if (!url.ok || url.out.trim() === '') {
+            return unavailable('destination', 'destination: the origin remote of the checkout could not be read');
+        }
+        remote = url.out.trim();
+    } else if (account !== null) {
+        remote = `https://github.com/${account}/${repo.split('/')[1] ?? repo}.git`;
+    }
+    if (account === null || remote === null) {
+        return unavailable('destination', 'destination: the account the pull request would carry could not be resolved');
+    }
     if (diff.out.trim() === '') {
         return {
             ...out,
@@ -439,6 +502,7 @@ export function collectOutgoing(record: DefectRecord, plan: ReleasePlan, probe: 
         ...out,
         baseSha: base.out.trim(),
         outgoing: {
+            destination: { repo, account, route: 'pull-request', rungs, remote, baseSha: base.out.trim() },
             issue,
             pullRequest: {
                 branch: retroBranch(record.fingerprint),
@@ -452,7 +516,7 @@ export function collectOutgoing(record: DefectRecord, plan: ReleasePlan, probe: 
     };
 }
 
-/** The dry run: the account, then every byte that may leave, then its digest. */
+/** The dry run: the account, the destination and payload, then their digest. */
 export function renderDryRun(plan: ReleasePlan, account: string | null, collected?: Collected): string {
     let out = '';
     if (plan.route === 'pull-request' || plan.route === 'issue') {
@@ -548,13 +612,14 @@ function readPushedObjects(
     checkout: string,
     baseSha: string,
     sha: string,
-): { commits: string; objects: string } | null {
+): { commits: string; objects: string; unscannable: number } | null {
     const list = runner('git', ['rev-list', '--objects', `${baseSha}..${sha}`], checkout);
     if (!list.ok) {
         return null;
     }
     let commits = '';
     let objects = '';
+    let unscannable = 0;
     for (const line of list.out.split('\n')) {
         const [oid, ...rest] = line.trim().split(' ');
         if (!oid) continue;
@@ -569,12 +634,22 @@ function readPushedObjects(
         }
         objects += `${rest.join(' ')}\n`;
         if (kind === 'blob') {
-            const blob = runner('git', ['cat-file', 'blob', oid], checkout);
+            const blob = runner('git', ['cat-file', 'blob', oid], checkout, undefined, { binary: true });
             if (!blob.ok) return null;
-            objects += `${blob.out}\n`;
+            const bytes = blob.bytes ?? Buffer.from(blob.out, 'utf-8');
+            // A blob that is not UTF-8 text, or carries a NUL, is not a text
+            // the detector table can read: a token spelled in UTF-16, or split
+            // by an invalid sequence, survives no text view of it. The floor
+            // cannot clear it, so it refuses rather than guesses.
+            if (bytes.includes(0) || !isUtf8(bytes)) {
+                unscannable += 1;
+            }
+            // Scanned byte for byte as well: latin1 maps each byte to one
+            // character, so nothing is replaced before the rules read it.
+            objects += `${bytes.toString('latin1')}\n`;
         }
     }
-    return { commits, objects };
+    return { commits, objects, unscannable };
 }
 
 const IDENTITY_LINE_RE = /^(?:author|committer) .* <([^>]*)> \d+ [+-]\d{4}$/gm;
@@ -596,6 +671,7 @@ function tryPullRequest(
     repo: string,
     via: PushVia,
     deps: ReleaseDeps,
+    approvedAccount: string | null,
 ): EgressAttempt | null {
     const checkout = probe.agentConfigCheckout!;
     const refspec = `${sha}:refs/heads/${pr.branch}`;
@@ -616,6 +692,9 @@ function tryPullRequest(
             return { step: 'whoami', ok: false, detail: failDetail('whoami', who) };
         }
         const login = who.out.trim();
+        if (login !== approvedAccount) {
+            return { step: 'whoami', ok: false, detail: 'whoami: the signed-in account changed after the approval — nothing was pushed' };
+        }
         const repoName = repo.split('/')[1] ?? repo;
         const hasRemote = deps.runner('git', ['remote', 'get-url', FORK_REMOTE], checkout);
         if (!hasRemote.ok) {
@@ -682,7 +761,7 @@ export function executeRelease(
     if (plan.route === 'local-only') {
         return { published: null, attempts };
     }
-    const collected = collectOutgoing(record, plan, probe, deps.runner);
+    const collected = collectOutgoing(record, plan, probe, deps.runner, repo);
     if (collected.precondition !== null) {
         attempts.push(collected.precondition);
         return { published: null, attempts };
@@ -717,7 +796,7 @@ export function executeRelease(
         const ladder: PushVia[] =
             sha === null ? [] : plan.pushVia === 'upstream' && probe.canFork ? ['upstream', 'fork'] : [plan.pushVia ?? 'upstream'];
         for (const via of ladder) {
-            const failed = tryPullRequest(pr!, sha!, probe, repo, via, deps);
+            const failed = tryPullRequest(pr!, sha!, probe, repo, via, deps, collected.outgoing.destination?.account ?? null);
             if (failed === null) {
                 return { published: 'pull-request', attempts };
             }
@@ -771,7 +850,10 @@ function cleanCommit(
         });
         return null;
     }
-    const findings = scanPayload({ ...pushed, branch: pr.branch, title: '', body: '' }, deny);
+    const findings = scanPayload({ commits: pushed.commits, objects: pushed.objects, branch: pr.branch, title: '', body: '' }, deny);
+    if (pushed.unscannable > 0) {
+        findings.push({ part: 'object', rule: 'unscannable-binary' });
+    }
     if (findings.length > 0) {
         attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(findings) });
         return null;
@@ -861,7 +943,7 @@ function releaseCmd(root: string, argv: string[]): number {
     }
     if (dryRun) {
         const account = plan.route === 'local-only' ? null : resolveAccount(runCommand);
-        process.stdout.write(renderDryRun(plan, account, collectOutgoing(record, plan, probe, runCommand)));
+        process.stdout.write(renderDryRun(plan, account, collectOutgoing(record, plan, probe, runCommand, repo)));
         return EXIT_OK;
     }
     if (plan.route === 'local-only') {
