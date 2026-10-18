@@ -73,7 +73,7 @@
     "description-assist": 7721,
     "design-intelligence": 11085,
     "design-review": 19912,
-    "design-system-capture": 14609,
+    "design-system-capture": 14880,
     "design-tokens": 8816,
     "design-variations": 6907,
     "devcontainer": 4553,
@@ -212,7 +212,7 @@
     "pixar-storyteller": 5247,
     "playbook-authoring": 10751,
     "playwright-architect": 5774,
-    "playwright-testing": 11165,
+    "playwright-testing": 11339,
     "po-discovery": 5282,
     "positioning-strategy": 8376,
     "prediction-pool-optimizer": 16448,
@@ -597,6 +597,18 @@
       "old": 11344,
       "new": 11967,
       "reason": "A Custom source section beside the CSV pairing path: spec path, license and fallback overrides for a family built with type-design, and the T7 stated reason. road-to-type-with-a-witness 4.14."
+    },
+    {
+      "skill": "design-system-capture",
+      "old": 14609,
+      "new": 14880,
+      "reason": "The extraction floor points React stacks at the host's own sync via /design-system:sync plan, and the Lock line names design_lock.ts as its carrier. road-to-a-canvas-the-code-owns 5.3 and 8.2."
+    },
+    {
+      "skill": "playwright-testing",
+      "old": 11165,
+      "new": 11339,
+      "reason": "One taught sentence: a baseline update is shown as a diff and lands in a commit of its own, on the pinned renderer. road-to-a-canvas-the-code-owns 7.3."
     }
   ]
 }
