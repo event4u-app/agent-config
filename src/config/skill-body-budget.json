@@ -125,7 +125,7 @@
     "hiring-loop-design": 12107,
     "history-design": 4758,
     "html-deck": 8141,
-    "humanizer": 15187,
+    "humanizer": 15706,
     "iconography": 8205,
     "image-analyser": 6133,
     "image-creator": 5784,
@@ -458,7 +458,7 @@
       "skill": "svg-authoring",
       "old": 17525,
       "new": 17818,
-      "reason": "The counter rule in \u00a7 Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
+      "reason": "The counter rule in § Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
     },
     {
       "skill": "deep-reading-analyst",
@@ -609,6 +609,12 @@
       "old": 14609,
       "new": 14880,
       "reason": "The extraction floor points React stacks at the host's own sync via /design-system:sync plan, and the Lock line names design_lock.ts as its carrier. road-to-a-canvas-the-code-owns 5.3 and 8.2."
+    },
+    {
+      "skill": "humanizer",
+      "old": 15187,
+      "new": 15706,
+      "reason": "Step 5 runs the lexicon and claim pass on the finished draft over stdin and says what an avoid hit, a taboo hit, an unbacked claim and exit 2 each mean. road-to-a-brand-the-tree-can-check 5.4."
     }
   ]
 }
