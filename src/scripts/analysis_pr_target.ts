@@ -9,6 +9,8 @@
  */
 import { execFileSync } from 'node:child_process';
 
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
+
 export interface PrInfo {
     number: number;
     baseSha: string;
@@ -73,7 +75,7 @@ export function resolvePrTarget(
 
 /** The gh-backed lookup a door uses; read-only. */
 export function ghPrLookup(cwd: string): PrLookup {
-    const gh = (args: string[]): string => execFileSync('gh', args, { cwd, encoding: 'utf8' }).trim();
+    const gh = (args: string[]): string => sanitize_text(execFileSync('gh', args, { cwd, encoding: 'utf8' })).trim();
     return {
         byNumber: (n) => {
             try {
