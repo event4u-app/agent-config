@@ -58,14 +58,13 @@ A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 payload floor over every object it pushes, the may-not-modify deny list, the
 route ladder (pull request, then issue, then a local record) and an approval
 bound to the digest of the exact bytes. The per-turn Hard-Floor word is the
-person's: `--approve <digest>` IS the confirmation, and names what it confirms. A checkbox in a skill
+person's: `--approve <digest>` IS the confirmation. A checkbox in a skill
 carries none of them, which is why this skill asks a *worth it* question and
 nothing else.
 
-The release pushes one commit it builds on `origin/main` from the branch's
-net change, on `retro/<fingerprint>`, as the noreply identity of the signed-in
-account. The floor reads credentials from the detector table and the
-consumer's identifiers from `check_portability`; a finding skips the push.
+It pushes one commit built on `origin/main` from the branch's net change, as
+the account's noreply identity. The floor reads credentials and the consumer's
+identifiers; a finding skips the push.
 
 ## Core principles
 
@@ -218,11 +217,8 @@ record the rationale in the finding.
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run resolves the route and prints the account and every byte that
-may leave — branch name, commit identity and message, diff, title and body,
-and the issue the ladder would fall back to — then their digest. It only reads
-GitHub and the local repository, and creates or modifies nothing. Read it with
-the user; the digest names exactly what they read.
+The dry run prints the route, the account, every byte that may leave and
+their digest. It creates nothing. Read it with the user.
 
 A refusal from the privacy floor is **final**: the finding stays local. There
 is no scrubbing pass, because a rewritten identifier is still a leaked one.
