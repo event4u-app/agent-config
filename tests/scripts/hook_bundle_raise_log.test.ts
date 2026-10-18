@@ -158,10 +158,12 @@ describe('chunk builds — one definition, used by the build and by the gate', (
     });
 
     it('a chunk defined twice, and a chunk with two ceilings, are findings', () => {
-        const dupDefined = chunkCoverageFindings(['a.ts', 'a.ts'], [{ entry: 'a.ts', maxBytes: 1 }]);
-        expect(dupDefined.some((f) => f.includes('defined more than once'))).toBe(true);
-        const dupBudget = chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }, { entry: 'a.ts', maxBytes: 2 }]);
-        expect(dupBudget.some((f) => f.includes('more than one ceiling'))).toBe(true);
+        expect(chunkCoverageFindings(['a.ts', 'a.ts', 'a.ts'], [{ entry: 'a.ts', maxBytes: 1 }])).toEqual([
+            'chunk a.ts is defined more than once in hook_chunks.mjs',
+        ]);
+        expect(chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }, { entry: 'a.ts', maxBytes: 2 }])).toEqual([
+            'chunk a.ts has more than one ceiling in src/config/hook-bundle-budget.json',
+        ]);
         expect(chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }])).toEqual([]);
     });
 
