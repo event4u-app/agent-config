@@ -7,7 +7,7 @@ verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
-subject: fc6c5632f1024f46a88626186f2168833619c86df1cb6e38eaa843d2c62ee935
+subject: b5014dbe36a252b3f241257a18468ab2862929faedce11601a8b0733d2fc445e
 effective_after: merge
 ---
 
@@ -15,8 +15,9 @@ effective_after: merge
 
 # Ratification — every credential consumer reads the one rule table
 
-Covers branch `drain/road-to-one-detector-and-the-senders-we-own-20261018b`, step 2.2 of
-`road-to-one-detector-and-the-senders-we-own`.
+Covers branch `drain/road-to-one-detector-and-the-senders-we-own-20261018b`: steps 2.2
+(the shared rule table), 2.2b (the egress engine as a conditional chunk) and 1.1 (the
+credential-read guard) of `road-to-one-detector-and-the-senders-we-own`.
 
 ## Decision
 
@@ -30,13 +31,17 @@ no consumer catches less than before the move.
 
 ## The gated surface
 
-The ratification gate classifies one file of this diff as gated,
-`src/scripts/_lib/egress_rules.ts` (hook-plumbing source: the dispatcher's egress stage
-bundles it). The subject above is `ratification_subject` over the branch's whole
-changed-file list at `35ee7a32f`, the commit round 2 reviewed. The hook bundle reads
-1,546,845 B against its unchanged 1,550,000 B ceiling.
+The ratification gate classifies eight files of this diff as gated:
+`src/config/hook-bundle-budget.json`, `src/config/hook-latency-budget.json`,
+`src/scripts/_lib/egress_engine.ts`, `src/scripts/_lib/egress_rules.ts`,
+`src/scripts/hook_manifest.json`, `src/scripts/hook_manifest.yaml`,
+`src/scripts/hooks/block_credential_reads.ts` and `src/scripts/hooks/egress_engine_loader.ts`.
+The subject above is `ratification_subject` over the branch's whole changed-file list at
+`f6c887efc` (the merge of origin/main onto `925e2da65`, the commit round 4c's tenth pass
+reviewed; the merge touches no gated file). The hook bundle reads 1,543,028 B against its
+unchanged 1,550,000 B ceiling; the egress chunk is 18,478 B of 28,000 B.
 
-## The review — two rounds, both seats
+## The review — step 2.2, two rounds, both seats
 
 Prompts: `agents/evidence/council/one-detector-shared-detection-review-20261018.question.md`
 (round 1, reviewed `34824a346`) and
@@ -79,3 +84,41 @@ unchanged.
 The seat verdicts are transcribed by the implementing session; the council responses are
 gitignored and not committed. The prompts are committed, so what was asked can be
 checked; what was answered rests on this transcription.
+
+## The review — steps 2.2b and 1.1
+
+Every prompt is committed under `agents/evidence/council/` as
+`one-detector-bundle-budget-20261018.question.md`,
+`one-detector-engine-chunk-review-20261018.question.md` and
+`one-detector-round4{a,b,b2..b5,c,c2..c10}-20261018.question.md`. Quorum 2 of 2 through the
+CLI seats each round, nothing billed.
+
+| Round | Subject | anthropic | openai |
+|---|---|---|---|
+| budget | how the egress engine leaves the bundle | options C+B | options C+B |
+| 3 (attempts a–c) | engine chunk | timed out | timed out |
+| 3 (attempt d) | engine chunk | REQUEST_CHANGES | REQUEST_CHANGES |
+| 4a | engine chunk, round-3 fixes | REQUEST_CHANGES | REQUEST_CHANGES |
+| 4b, 4b2–4b4 | loader failure policy, callers | REQUEST_CHANGES | REQUEST_CHANGES |
+| 4b5 | loader failure policy, callers | APPROVE | APPROVE |
+| 4c, 4c2–4c6 | credential-read guard (1.1) | REQUEST_CHANGES | REQUEST_CHANGES |
+| 4c7 | credential-read guard | APPROVE with a documentation caveat | REQUEST_CHANGES |
+| 4c8, 4c9 | credential-read guard | REQUEST_CHANGES | REQUEST_CHANGES |
+| 4c10 | credential-read guard, reviewed `925e2da65` | APPROVE | APPROVE |
+
+The timed-out attempts carried no verdict and count for nothing. Each REQUEST_CHANGES round's
+findings were fixed test-first before the next round; every fix commit names the round. The
+guard's findings were bypasses (copy and source of a credential file, wrapper commands, option
+values, `env -S`, attached redirections, escapes and quote joins) and then false positives
+(quote-blind escape reading, re-serialised words, and backslashes read as separators where the
+host does not separate on them). The one stated conservative false positive the tenth pass
+accepted: on a Windows host a redirection attached to the command word is judged with its
+backslashes as separators, because `invokedSegments` has already stripped that word's quotes;
+both seats named preserving quote metadata upstream as a later improvement, not a blocker.
+
+Stances in round 4c10, in the seats' words:
+
+- anthropic: "**APPROVE** ... The guard is ready to ratify."
+- openai: "the remaining false positive is narrow and fail-safe ... **Stance:** APPROVE".
+
+As above, the verdicts are transcribed by the implementing session; the prompts are committed.
