@@ -2152,7 +2152,7 @@ index 7dbf5bf08d5fdae1aa3fc58c4eb914a8bb16d9a0..1ac7fda8ad36baf9b5e005ea7c711f32
 +      "trigger": true
 +    },
      {
-       "q": "analyse the competitor repo at github.com/foo/bar and compare it to ours",
+       "q": "analyse the competitor repo at [REDACTED:src-conf] and compare it to ours",
        "trigger": false
 diff --git a/src/domains/analysis-workbench/analyze/pr/command.md b/src/domains/analysis-workbench/analyze/pr/command.md
 new file mode 100644
