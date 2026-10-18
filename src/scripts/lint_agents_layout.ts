@@ -35,6 +35,9 @@ const AGENTS_ROOT = 'agents';
 const ALLOWED_FLAT_FILES: ReadonlySet<string> = new Set([
     'index.md',
     'roadmaps-progress.md',
+    // Generated owned-roadmap digest; beside the dashboard because inside
+    // `roadmaps/` every active-roadmap glob would read it as a roadmap.
+    'roadmaps-owned.md',
     '.gitkeep',
     '.event4u-bridge.yml',
     '.agent-tools.yml',

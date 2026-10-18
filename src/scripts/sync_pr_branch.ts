@@ -133,6 +133,10 @@ const GENERATED = [
     // measured for road-to-merge-hotspot-drawdown. Regenerate; never merge.
     'agents/roadmaps/archive/INDEX.md',
     'agents/roadmaps/archive/index.json',
+    // Written by `generate_owned_digest.ts` from every active, parked and stub
+    // roadmap; two branches that land or park roadmaps both change it.
+    // Regenerate; never merge.
+    'agents/roadmaps-owned.md',
     // ── Added 2026-08-25 (road-to-merge-surface-zero 1.1). Each carries its
     // write site, because this list tells a human to DISCARD one side, and an
     // entry added on a conflict count alone would tell them to discard hand
