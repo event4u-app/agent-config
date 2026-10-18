@@ -64,11 +64,18 @@ export function roundUnion(projectRoot: string, roundId: string): RoundUnion {
     let lineage: Record<string, string[]> = {};
     const manifest = path.join(projectRoot, runtimeRel, ROUND_MANIFEST);
     if (fs.existsSync(manifest)) {
-        const data = JSON.parse(fs.readFileSync(manifest, 'utf8')) as { lineage?: unknown };
-        if (data.lineage !== undefined && (typeof data.lineage !== 'object' || data.lineage === null || Array.isArray(data.lineage))) {
-            throw new InboxFinalError(`${ROUND_MANIFEST} carries a lineage that is not a map`);
+        let data: { lineage?: unknown };
+        try {
+            data = JSON.parse(fs.readFileSync(manifest, 'utf8')) as { lineage?: unknown };
+        } catch (err) {
+            throw new InboxFinalError(`${ROUND_MANIFEST} is not readable JSON (${err instanceof Error ? err.message : String(err)})`);
         }
-        lineage = (data.lineage ?? {}) as Record<string, string[]>;
+        const raw = data.lineage ?? {};
+        const isMap = typeof raw === 'object' && raw !== null && !Array.isArray(raw);
+        if (!isMap || !Object.values(raw).every((v) => Array.isArray(v) && v.every((x) => typeof x === 'string'))) {
+            throw new InboxFinalError(`${ROUND_MANIFEST} carries a lineage that is not a map of file lists`);
+        }
+        lineage = raw as Record<string, string[]>;
     }
     return { files: [...runtime, ...drops], lineage, renameBeforeTriage: !isOpaqueRoundId(roundId) };
 }
@@ -141,9 +148,18 @@ export interface LaneLedger {
 }
 
 export function foldLaneLedgers(lanes: readonly LaneLedger[]): { lanes: number; census: number; points: number } {
+    const laneIds = new Set<string>();
+    const pointLane = new Map<string, string>();
     for (const l of lanes) {
-        if (l.census <= 0 || l.points.length === 0) {
+        if (!(l.census > 0) || !Array.isArray(l.points)) {
             throw new InboxFinalError(`lane ${l.lane} has no census or no point ledger of its own; a fold without one loses that lane`);
+        }
+        if (laneIds.has(l.lane)) throw new InboxFinalError(`lane ${l.lane} appears twice; its census would be counted twice`);
+        laneIds.add(l.lane);
+        for (const p of l.points) {
+            const other = pointLane.get(p.id);
+            if (other !== undefined) throw new InboxFinalError(`point ${p.id} sits in lanes ${other} and ${l.lane}; a topic belongs to one lane`);
+            pointLane.set(p.id, l.lane);
         }
     }
     return {

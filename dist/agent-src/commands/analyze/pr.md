@@ -117,7 +117,10 @@ introduced; any other line was already there). A clean head reports
 - **Every push** is a compare-and-swap on the head this run last saw (D7). A
   moved head stops the run before it pushes.
 - **Re-review after each push.** Stop when nothing new clears the threshold, or
-  after the third round.
+  after the third round. A finding still reported after its fix was pushed
+  ends the run `fix-failed`, never `converged`.
+- Fixes are applied in a private worktree at the pinned head, new files
+  included — never in your checkout.
 
 Never merges, never approves its own changes — the port has neither.
 

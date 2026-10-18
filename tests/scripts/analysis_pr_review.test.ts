@@ -61,6 +61,26 @@ describe('reviewPr (step 5.2)', () => {
         expect(addedLines(DIFF).get('src/pay.ts')).toEqual(new Set([11, 12]));
     });
 
+    it('an added line whose text starts with "++ " stays content, and a quoted path is read', () => {
+        const diff = [
+            'diff --git "a/sp ace.ts" "b/sp ace.ts"',
+            '--- "a/sp ace.ts"',
+            '+++ "b/sp ace.ts"',
+            '@@ -1,1 +1,3 @@',
+            ' keep',
+            '+++ counter;',
+            '+tail',
+            '',
+        ].join('\n');
+        expect(addedLines(diff).get('sp ace.ts')).toEqual(new Set([2, 3]));
+    });
+
+    it('a finding backed by a test counts toward the metric like one with a reproduction', () => {
+        const tested = { ...planted, reproduction: null, test: 'tests/pay.test.ts > refuses a negative total' };
+        const v = reviewPr({ pr: 7, baseSha: BASE, headSha: HEAD, comment: false }, port(), () => [tested], kept);
+        expect(v.metric).toBe(1);
+    });
+
     it('reports a planted defect with file:line, marks it introduced here, and writes nothing to the PR', () => {
         const p = port();
         const v = reviewPr({ pr: 7, baseSha: BASE, headSha: HEAD, comment: false }, p, () => [planted], kept);

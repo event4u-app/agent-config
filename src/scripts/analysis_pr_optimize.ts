@@ -54,15 +54,15 @@ export interface KeyedFinding {
 
 export interface OptimizePort {
     remoteHead(branch: string): string | null;
-    /** Applies and commits the fixes locally; returns the new local head. */
-    applyFixes(fixes: readonly Fix[]): string;
+    /** Applies and commits the fixes on top of `baseSha`, new files included; returns the new head. */
+    applyFixes(fixes: readonly Fix[], baseSha: string): string;
     /** Fails, changing nothing, unless the remote head is exactly `expected`. */
     push(branch: string, expected: string): void;
-    /** Writes the fixes as a patch file; returns its path. */
-    writePatch(pr: number, fixes: readonly Fix[]): string;
+    /** Writes the fixes, applied to `headSha`, as a patch file (new files included); returns its path. */
+    writePatch(pr: number, headSha: string, fixes: readonly Fix[]): string;
 }
 
-export type OptimizeEnd = 'converged' | 'round-cap' | 'moved-head' | 'patch';
+export type OptimizeEnd = 'converged' | 'round-cap' | 'moved-head' | 'patch' | 'fix-failed';
 
 export interface OptimizeResult {
     end: OptimizeEnd;
@@ -70,6 +70,8 @@ export interface OptimizeResult {
     fixes: Fix[];
     patch?: string;
     reason?: string;
+    /** Findings a pushed fix was meant to remove that the re-review still reports. */
+    persisting?: string[];
 }
 
 export function eligibility(pr: PrBranch): Eligibility {
@@ -118,55 +120,100 @@ export function optimizePr(
     const known = new Set<string>();
     let expected = pr.headSha;
     for (let rounds = 0; ; rounds += 1) {
-        const fresh = review(expected).filter((f) => !known.has(f.key));
+        const found = review(expected);
+        const persisting = found.filter((f) => known.has(f.key)).map((f) => f.key);
+        if (persisting.length > 0) {
+            return { end: 'fix-failed', rounds, fixes: done, persisting, reason: `still reported after their fix: ${persisting.join(', ')}` };
+        }
+        const fresh = found;
         if (fresh.length === 0) return { end: 'converged', rounds, fixes: done };
         if (rounds >= MAX_OPTIMIZE_ROUNDS) return { end: 'round-cap', rounds, fixes: done };
         const fixes = planFixes(fresh);
         checkDispositions(fresh, fixes);
         if (target.kind === 'patch') {
             done.push(...fixes);
-            return { end: 'patch', rounds: rounds + 1, fixes: done, patch: port.writePatch(pr.pr, fixes), reason: target.reason };
+            return { end: 'patch', rounds: rounds + 1, fixes: done, patch: port.writePatch(pr.pr, expected, fixes), reason: target.reason };
         }
         const remote = port.remoteHead(target.branch);
         if (remote !== expected) {
             return { end: 'moved-head', rounds, fixes: done, reason: `${target.branch} is at ${String(remote)}, expected ${expected}` };
         }
-        const next = port.applyFixes(fixes);
-        port.push(target.branch, expected);
+        const next = port.applyFixes(fixes, expected);
+        try {
+            port.push(target.branch, expected);
+        } catch (err) {
+            const why = err instanceof Error ? err.message : String(err);
+            return { end: 'moved-head', rounds, fixes: done, reason: `lease on ${target.branch} at ${expected} refused at push (${why}); local commit ${next} not pushed` };
+        }
         for (const f of fresh) known.add(f.key);
         done.push(...fixes);
         expected = next;
     }
 }
 
-/** The git + gh port a door uses: a leased fast-forward push, a patch file, nothing else. */
-export function gitOptimizePort(cwd: string, apply: (fixes: readonly Fix[]) => void): OptimizePort {
-    const run = (bin: string, args: string[]): string => execFileSync(bin, args, { cwd, encoding: 'utf8', stdio: 'pipe' }).trim();
+/**
+ * The git port a door uses. Fixes are applied in a private detached worktree at
+ * the head the run pinned, never in the caller's checkout; every file the fix
+ * touches is staged, new files included. A push leases the expected head and
+ * fast-forwards only. `dispose` removes the worktree.
+ */
+export function gitOptimizePort(
+    repoCwd: string,
+    apply: (fixes: readonly Fix[], dir: string) => void,
+): OptimizePort & { dispose(): void } {
+    const run = (cwd: string, args: string[]): string => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' }).trim();
+    const sha = (s: string, what: string): string => {
+        if (!OBJECT_ID.test(s)) throw new OptimizeError(`${what} ${JSON.stringify(s)} is not a full object id`);
+        return s;
+    };
+    let dir: string | null = null;
+    const worktreeAt = (base: string): string => {
+        if (dir === null) {
+            dir = fs.mkdtempSync(path.join(os.tmpdir(), 'analyze-pr-fix-'));
+            run(repoCwd, ['worktree', 'add', '--detach', dir, sha(base, 'base SHA')]);
+        } else if (run(dir, ['rev-parse', 'HEAD']) !== base) {
+            throw new OptimizeError(`fix worktree is not at ${base}`);
+        }
+        return dir;
+    };
     return {
         remoteHead: (branch) => {
             const ref = `refs/heads/${assertRefName(branch, 'branch')}`;
-            const row = run('git', ['ls-remote', 'origin', ref])
+            const row = run(repoCwd, ['ls-remote', 'origin', ref])
                 .split('\n')
                 .map((l) => l.split(/\s+/))
                 .find((cols) => cols[1] === ref);
             return row?.[0] ?? null;
         },
-        applyFixes: (fixes) => {
-            apply(fixes);
-            run('git', ['commit', '-m', `fix: analyze:pr --optimize (${fixes.length} finding(s))`]);
-            return run('git', ['rev-parse', 'HEAD']);
+        applyFixes: (fixes, baseSha) => {
+            const wt = worktreeAt(baseSha);
+            apply(fixes, wt);
+            run(wt, ['add', '--all']);
+            run(wt, ['commit', '-m', `fix: analyze:pr --optimize (${fixes.length} finding(s))`]);
+            return run(wt, ['rev-parse', 'HEAD']);
         },
         push: (branch, expected) => {
+            if (dir === null) throw new OptimizeError('nothing applied to push');
             const ref = `refs/heads/${assertRefName(branch, 'branch')}`;
-            if (!OBJECT_ID.test(expected)) throw new OptimizeError(`expected head ${JSON.stringify(expected)} is not a full object id`);
-            run('git', ['merge-base', '--is-ancestor', expected, 'HEAD']);
-            run('git', ['push', '--porcelain', `--force-with-lease=${ref}:${expected}`, 'origin', `HEAD:${ref}`]);
+            run(dir, ['merge-base', '--is-ancestor', sha(expected, 'expected head'), 'HEAD']);
+            run(dir, ['push', '--porcelain', `--force-with-lease=${ref}:${expected}`, 'origin', `HEAD:${ref}`]);
         },
-        writePatch: (pr, fixes) => {
-            apply(fixes);
-            const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'analyze-pr-')), `pr-${pr}.patch`);
-            fs.writeFileSync(file, run('git', ['diff', '--no-color', '--no-ext-diff', 'HEAD']));
-            return file;
+        writePatch: (pr, headSha, fixes) => {
+            const wt = fs.mkdtempSync(path.join(os.tmpdir(), 'analyze-pr-patch-'));
+            run(repoCwd, ['worktree', 'add', '--detach', wt, sha(headSha, 'head SHA')]);
+            try {
+                apply(fixes, wt);
+                run(wt, ['add', '--all']);
+                const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'analyze-pr-')), `pr-${pr}.patch`);
+                fs.writeFileSync(file, `${run(wt, ['diff', '--cached', '--binary', '--no-color', '--no-ext-diff', 'HEAD'])}\n`);
+                return file;
+            } finally {
+                run(repoCwd, ['worktree', 'remove', '--force', wt]);
+            }
+        },
+        dispose: () => {
+            if (dir !== null) run(repoCwd, ['worktree', 'remove', '--force', dir]);
+            dir = null;
         },
     };
 }

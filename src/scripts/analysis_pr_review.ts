@@ -34,8 +34,10 @@ export interface CandidateFinding {
     fix: string;
     /** The proposer's own confidence, 0..1. */
     confidence: number;
-    /** A command, input or test that shows the defect; null when there is none. */
+    /** A command or input that shows the defect; null when there is none. */
     reproduction: string | null;
+    /** A test that fails on the defect; null or absent when there is none. */
+    test?: string | null;
     /** Model family of the analyst or seat that proposed it. */
     family: string;
 }
@@ -85,34 +87,55 @@ function assertObjectId(sha: string, what: string): string {
     return sha;
 }
 
-/** Head-side line numbers added per file, read from a unified diff. */
+function diffPath(raw: string): string | null {
+    let p = raw.trim();
+    if (p === '/dev/null') return null;
+    if (p.startsWith('"') && p.endsWith('"')) p = JSON.parse(p) as string;
+    return p.replace(/^b\//u, '');
+}
+
+/**
+ * Head-side line numbers added per file, read from a unified diff. Inside a
+ * hunk the header's line counts decide what is content, so an added line whose
+ * own text begins with `++ ` is never mistaken for a file header.
+ */
 export function addedLines(diff: string): Map<string, Set<number>> {
     const out = new Map<string, Set<number>>();
     let file: string | null = null;
     let line = 0;
+    let oldLeft = 0;
+    let newLeft = 0;
     for (const raw of diff.split('\n')) {
-        if (raw.startsWith('+++ ')) {
-            const target = raw.slice(4).trim();
-            file = target === '/dev/null' ? null : target.replace(/^b\//u, '');
-            continue;
-        }
-        if (raw.startsWith('--- ')) continue;
-        const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/u.exec(raw);
-        if (hunk !== null) {
-            line = Number(hunk[1]);
-            continue;
-        }
-        if (file === null || line === 0) continue;
-        if (raw.startsWith('+')) {
-            let set = out.get(file);
-            if (set === undefined) {
-                set = new Set();
-                out.set(file, set);
+        if (oldLeft > 0 || newLeft > 0) {
+            if (raw.startsWith('+')) {
+                if (file !== null) {
+                    let set = out.get(file);
+                    if (set === undefined) {
+                        set = new Set();
+                        out.set(file, set);
+                    }
+                    set.add(line);
+                }
+                line += 1;
+                newLeft -= 1;
+            } else if (raw.startsWith('-')) {
+                oldLeft -= 1;
+            } else if (raw.startsWith(' ') || raw === '') {
+                line += 1;
+                oldLeft -= 1;
+                newLeft -= 1;
             }
-            set.add(line);
-            line += 1;
-        } else if (raw.startsWith(' ')) {
-            line += 1;
+            continue;
+        }
+        if (raw.startsWith('+++ ')) {
+            file = diffPath(raw.slice(4));
+            continue;
+        }
+        const hunk = /^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/u.exec(raw);
+        if (hunk !== null) {
+            oldLeft = hunk[1] === undefined ? 1 : Number(hunk[1]);
+            line = Number(hunk[2]);
+            newLeft = hunk[3] === undefined ? 1 : Number(hunk[3]);
         }
     }
     return out;
@@ -132,7 +155,8 @@ export function renderVerdict(v: Omit<PrVerdict, 'text'>, threshold: number): st
             `  - evidence: ${f.evidence}\n` +
             `  - fix: ${f.fix}\n` +
             `  - confidence: ${f.confidence} · ${f.origin === 'introduced' ? 'introduced here' : 'pre-existing'}` +
-            (f.reproduction === null ? '' : `\n  - reproduction: ${f.reproduction}`),
+            (f.reproduction === null ? '' : `\n  - reproduction: ${f.reproduction}`) +
+            (f.test === null || f.test === undefined ? '' : `\n  - test: ${f.test}`),
     );
     return `${head}\n\n${rows.join('\n')}\n\n${tally}\n`;
 }
@@ -184,7 +208,8 @@ export function reviewPr(
         kept.set(key, { ...f, origin, disprove_note: d.note });
     }
     const findings = [...kept.values()];
-    const metric = findings.filter((f) => f.origin === 'introduced' && f.reproduction !== null && f.reproduction.trim() !== '').length;
+    const shown = (v: string | null | undefined): boolean => typeof v === 'string' && v.trim() !== '';
+    const metric = findings.filter((f) => f.origin === 'introduced' && (shown(f.reproduction) || shown(f.test))).length;
     const base = { pr: input.pr, baseSha, headSha, findings, belowThreshold, refuted, duplicates, metric };
     const text = renderVerdict(base, threshold);
     if (input.comment) port.comment(input.pr, text);
@@ -204,7 +229,8 @@ export function gitGhReviewPort(cwd: string): PrReviewPort {
             run('git', ['worktree', 'remove', '--force', worktree]);
         },
         diff: (baseSha, headSha) =>
-            run('git', ['diff', '--no-color', '--no-ext-diff', `${assertObjectId(baseSha, 'base SHA')}..${assertObjectId(headSha, 'head SHA')}`]),
+            // Three dots: from the merge base, so commits the base gained later are never the PR's.
+            run('git', ['diff', '--no-color', '--no-ext-diff', `${assertObjectId(baseSha, 'base SHA')}...${assertObjectId(headSha, 'head SHA')}`]),
         comment: (pr, body) => {
             const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'analyze-pr-body-')), 'body.md');
             fs.writeFileSync(file, body);

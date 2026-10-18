@@ -27,7 +27,7 @@ function port(over: Partial<OptimizePort> = {}): Probe {
         patches: 0,
         remote: sha('1'),
         remoteHead: () => p.remote,
-        applyFixes: () => {
+        applyFixes: (_fixes, _base) => {
             n += 1;
             return sha(String(n));
         },
@@ -108,10 +108,33 @@ describe('optimizePr (step 5.3)', () => {
         expect(out.end).toBe('converged');
     });
 
-    it('a finding already fixed in an earlier round is not new and does not keep the loop alive', () => {
+    it('a finding still present after its fix was pushed ends the run as fix-failed, never converged', () => {
         const p = port();
         const out = optimizePr(OPEN, p, () => [finding('f1')], (fs) => fs.map((f) => testFix(f.key)));
-        expect(out).toMatchObject({ end: 'converged', rounds: 1 });
+        expect(out).toMatchObject({ end: 'fix-failed', rounds: 1, persisting: ['f1'] });
         expect(p.pushes).toHaveLength(1);
+    });
+
+    it('a lease refused at push time ends as moved-head instead of throwing', () => {
+        const p = port({
+            push: () => {
+                throw new Error('stale info');
+            },
+        });
+        const out = optimizePr(OPEN, p, () => [finding('f1')], (fs) => fs.map((f) => testFix(f.key)));
+        expect(out.end).toBe('moved-head');
+        expect(out.reason).toMatch(/lease/u);
+    });
+
+    it('the patch path writes the patch against the pinned PR head', () => {
+        let base = '';
+        const p = port({
+            writePatch: (_pr, headSha) => {
+                base = headSha;
+                return '/tmp/x.patch';
+            },
+        });
+        optimizePr({ ...OPEN, isCrossRepository: true }, p, () => [finding('f1')], (fs) => fs.map((f) => testFix(f.key)));
+        expect(base).toBe(sha('1'));
     });
 });

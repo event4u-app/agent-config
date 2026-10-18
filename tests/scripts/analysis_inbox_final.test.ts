@@ -50,6 +50,13 @@ describe('roundUnion (step 3.4)', () => {
         expect(roundUnion(root, 'better-frontend').renameBeforeTriage).toBe(true);
     });
 
+    it('a malformed manifest or lineage is refused with a named error', () => {
+        write('agents/runtime/analysis/inbox-2026-10-x/manifest.json', '{ not json');
+        expect(() => roundUnion(root, 'inbox-2026-10-x')).toThrow(InboxFinalError);
+        write('agents/runtime/analysis/inbox-2026-10-x/manifest.json', JSON.stringify({ lineage: { 'a.md': 'seed.md' } }));
+        expect(() => roundUnion(root, 'inbox-2026-10-x')).toThrow(InboxFinalError);
+    });
+
     it('refuses a round id that walks out of the round folders', () => {
         expect(() => roundUnion(root, '../secrets')).toThrow(InboxFinalError);
     });
@@ -119,5 +126,12 @@ describe('planLanes and foldLaneLedgers (step 3.4)', () => {
         ]);
         expect(folded).toEqual({ lanes: 2, census: 21, points: 2 });
         expect(() => foldLaneLedgers([{ lane: 'L1', census: 0, points: [] }])).toThrow(InboxFinalError);
+    });
+
+    it('a lane with a census and no adopted point folds; a duplicate lane or point id is refused', () => {
+        expect(foldLaneLedgers([{ lane: 'L1', census: 3, points: [] }])).toEqual({ lanes: 1, census: 3, points: 0 });
+        const p = { id: 'p1', disposition: 'adopted' };
+        expect(() => foldLaneLedgers([{ lane: 'L1', census: 1, points: [p] }, { lane: 'L1', census: 1, points: [] }])).toThrow(/lane/u);
+        expect(() => foldLaneLedgers([{ lane: 'L1', census: 1, points: [p] }, { lane: 'L2', census: 1, points: [p] }])).toThrow(/p1/u);
     });
 });
