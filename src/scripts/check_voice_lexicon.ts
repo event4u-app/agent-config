@@ -84,6 +84,8 @@ export function blankExempt(text: string): string {
     t = t.replace(/https?:\/\/\S+/g, blank);
     t = t
         .replace(/"[^"\n]{1,300}"/g, blank)
+        // German low-high quotes close on “, the English opener, so they run first.
+        .replace(/„[^“\n]{1,300}“/g, blank)
         .replace(/“[^”\n]{1,300}”/g, blank)
         .replace(/(^|[\s([{"“])'([^'\n]{1,120})'(?=[\s)\]},.!?;:"”]|$)/g, (m, lead: string, inner: string) =>
             inner.includes(' ') ? lead + blank(m.slice(lead.length)) : m,
