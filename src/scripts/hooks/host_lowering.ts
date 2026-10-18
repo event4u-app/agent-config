@@ -238,8 +238,15 @@ function _structure(raw: Record<string, unknown> | null): HostLowering {
                 slots.set(slot, row);
             }
             const rewrite = new Map<string, RewriteAnswer>();
-            for (const [ch, av] of Object.entries((s['rewrite'] ?? {}) as Record<string, unknown>)) {
-                const a = (av ?? {}) as Record<string, unknown>;
+            const rw = s['rewrite'];
+            if (rw !== undefined && (typeof rw !== 'object' || rw === null || Array.isArray(rw))) {
+                throw new Error(`host_lowering.yaml: ${host}/${surface} \`rewrite:\` is not a mapping`);
+            }
+            for (const [ch, av] of Object.entries((rw ?? {}) as Record<string, unknown>)) {
+                if (typeof av !== 'object' || av === null || Array.isArray(av)) {
+                    throw new Error(`host_lowering.yaml: ${host}/${surface}/${ch} rewrite answer is not a mapping`);
+                }
+                const a = av as Record<string, unknown>;
                 rewrite.set(ch, {
                     mode: String(a['mode'] ?? ''),
                     answered_at: _asString(a['answered_at']),

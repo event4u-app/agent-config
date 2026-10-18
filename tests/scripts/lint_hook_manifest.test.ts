@@ -583,6 +583,41 @@ describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
       expect(e.join("\n")).toMatch(/claude\/any\/prompt: rewrite-gate-without-refusal — the trampoline does not propagate[^;]*\.$/m);
     });
 
+    it("rewrite-gate-without-refusal: a gate on a slot with no block_exit alone", () => {
+      const e = check((y) =>
+        claudeOnly(
+          y,
+          "user_prompt_submit: { native: UserPromptSubmit,  block_exit: 2,",
+          "user_prompt_submit: { native: UserPromptSubmit,  block_exit: null,",
+        ),
+      );
+      expect(e.join("\n")).toMatch(/claude\/any\/prompt: rewrite-gate-without-refusal — `user_prompt_submit` carries no `block_exit`\.$/m);
+    });
+
+    it("rewrite-gate-without-refusal: a gate on an expired row alone", () => {
+      const e = check((y) => claudeOnly(y.replace(`input:  { mode: replace, host_version: 2.1.301, probe: ${PROBE},`, "input:  { mode: offered,"), "expires: 2027-09-06", "expires: 2026-01-01"));
+      expect(e.join("\n")).toMatch(/claude\/any\/prompt: rewrite-gate-without-refusal — the row expired 2026-01-01\.$/m);
+    });
+
+    it("rewrite-gate-without-refusal: a gate on an unbound slot alone", () => {
+      const e = check((y) => claudeOnly(y, "          user_prompt_submit: { native: UserPromptSubmit,  block_exit: 2,    answered_at: 2026-09-29 }\n", ""));
+      expect(e.join("\n")).toMatch(/claude\/any\/prompt: rewrite-gate-without-refusal — this package binds no native `user_prompt_submit` event here\.$/m);
+    });
+
+    for (const bad of ["7", "false", "null", "[input]"]) {
+      it(`a rewrite value that is not a mapping (${bad}) fails the parse rather than reading as unstated`, () => {
+        const r = run(lowering("augment", `        rewrite: ${bad}\n`));
+        expect(r.code).toBe(1);
+        expect(r.text).toMatch(/augment\/any `rewrite:` is not a mapping/);
+      });
+    }
+
+    it("a rewrite answer that is not a mapping fails the parse", () => {
+      const r = run(lowering("augment", "        rewrite:\n          input: replace\n"));
+      expect(r.code).toBe(1);
+      expect(r.text).toMatch(/augment\/any\/input rewrite answer is not a mapping/);
+    });
+
     it("rewrite-axis-malformed: a date on no calendar day", () => {
       const e = check((y) => y.replace("output: { mode: none,    answered_at: 2026-10-18 }", "output: { mode: none,    answered_at: 2026-02-31 }"));
       expect(e.join("\n")).toMatch(/claude\/any\/output: rewrite-axis-malformed — no `answered_at` calendar date/);
