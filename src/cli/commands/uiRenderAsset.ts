@@ -45,6 +45,7 @@ import type { Browser, Page } from '@playwright/test';
 import { elementExtent, parseElements, readViewBox, vectorVerdict } from '../../scripts/lint_svg_asset.js';
 import type { DeliveryMode, SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
 import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js';
+import { tokenDocumentError } from '../../shared/brandTokenDocument.js';
 import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
 import { applyFaceStates, faceFindings } from './uiRenderAssetFonts.js';
 import { readGrounds, type OpenPage } from './uiRenderAssetGrounds.js';
@@ -282,7 +283,11 @@ export function readBackgroundTokens(projectRoot: string): AssetReading['backgro
         if (!fs.existsSync(abs)) continue;
         let doc: unknown;
         try {
-            doc = JSON.parse(fs.readFileSync(abs, 'utf8'));
+            const text = fs.readFileSync(abs, 'utf8');
+            // The validity `brand:status` reports, not merely parseable JSON:
+            // `findToken` takes a bare `value`, so a non-DTCG file would win.
+            if (tokenDocumentError(text) !== null) continue;
+            doc = JSON.parse(text);
         } catch {
             continue;
         }

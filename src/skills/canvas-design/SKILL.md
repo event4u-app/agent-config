@@ -46,6 +46,16 @@ The work emphasizes: visual expression over text · original direction (no artis
 
 ## Procedure
 
+### 0. Read the brand before choosing anything
+
+Before the first colour, typeface or voice decision run `./agent-config
+brand:status --json` — never a file test of your own, never a remembered
+value. Take values only from the `sources[]` it reports valid: `tokens.json`
+for colour, type and spacing, the `brand-voice` slot for any text the asset
+carries. A source it marks `invalid` or `shadowed` is not the brand. On a
+`bare` reading, or none valid for the axis in hand, derive from the brief and
+**label those values `corpus-sourced`** — a gap-fill is never the brand.
+
 ### 1. Brief intake
 
 One numbered-options block surfaces: theme / occasion · target medium + dimensions (web 1200×630? print A3? square 1080×1080?) · color & mood direction · hard constraints (logo required? color to avoid?) · single page or series.

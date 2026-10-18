@@ -228,16 +228,45 @@ irreversible-external-action row of `non-destructive-by-default`).
       the tracked rest of `reference/`. 0.5 goes green. No history rewrite, ever.
       verify: `rg -n 'agents/reference/ghostwriter' src/config/gitignore-block.txt src/scripts/lint_ghostwriter_source.ts docs/contracts/agents-layout.md` -> /reference\/ghostwriter/
       Done 2026-10-16: the block (and `agents-paths.yml`) ignores `agents/reference/ghostwriter/**` and `agents/ghostwriter/**` with `README.md` carved out; the lint scans both roots recursively, canonical first; `agents-layout.md` marks `reference/ghostwriter/` local-only. 0.5 green.
-- [ ] **1.2 One token name** (E10). The D1 authored surfaces say `tokens.json`;
+- [x] **1.2 One token name** (E10). The D1 authored surfaces say `tokens.json`;
       routing evals keep the dotted phrasing as a user utterance and gain the
       plain one; generated catalogues regenerate; ADR-061 gets no edit. The
       "Recorded, not resolved" section is deleted. 0.1 goes green.
       verify: `rg -n '\.tokens\.json' src/skills src/domains docs/contracts --glob '!**/evals/**' | rg -v 'NEVER|nothing reads|near-miss'` -> 1 (no output)
       Open 2026-10-16: the authored half landed — 14 files say `tokens.json`, the "Recorded, not resolved" section is gone, catalogues regenerated, ADR-061 untouched, the verify passes and 0.1 is green. The eval half did not: adding the plain utterance to the `brand-to-tokens` and `brand-asset-generation` trigger evals changes the pinned trigger-corpus holdout (`trigger_corpus_holdout_pin`), whose published SET-SHA256 and the measurements built on it would need re-pinning; that is left for a change that owns the corpus.
-- [ ] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
+      Done 2026-10-17: this change owns the corpus — 6.1 forced five new corpora
+      and a re-pin, so the deferred half lands beside it rather than waiting for
+      a third change to repeat the same work. Both evals **keep** the dotted
+      utterance and **gain** the plain one: the resolver reads `tokens.json`,
+      and a consumer who followed this package's own earlier wording types the
+      dotted name, so routing must answer both — removing it would delete the
+      near-miss the defect actually produces. The holdout artefact carries the
+      re-pin section, both rows are train-side, the sealed set does not move,
+      and both train-side measurements were re-taken (neither verdict changes
+      in kind). `rg` over the authored surfaces still returns nothing and
+      `token-name-parity` is green.
+- [x] **1.3 One constant.** `uiRenderAssetTypes.ts` re-exports the resolver list
       instead of declaring its own.
       verify: `rg -c 'export const BRAND_TOKEN_PATHS' src` -> 1 file
       Open 2026-10-16: a re-export is the edit `uiAudit.ts:35` records as tried and reverted — `dist/cli` is compiled by tsc and the work-engine template tree is not, so a runtime import from the CLI into the template fails to resolve in the published package, and the template stays self-contained the other way. Needs a home both trees may import at runtime.
+      Done 2026-10-17: that home is `src/shared/brandTokenPaths.ts`, and it works
+      because the SAME relative specifier resolves in both projections — the
+      CLI compiles under `rootDir: src` so `../../shared/…` lands on
+      `dist/shared/`, and the work-engine tree is projected byte-identically, so
+      `../../../../../../shared/…` is `src/shared/*.ts` under tsx and
+      `dist/shared/*.js` in the copy. All three were exercised rather than
+      argued: `dist/cli/commands/uiRenderAssetTypes.js`,
+      `dist/agent-src/templates/.../scaffold.js` and
+      `src/agent-src/templates/.../scaffold.ts` each imported and printed the
+      list, `dist/cli-delegate/cmd_brand_status.js` imports clean, and
+      `agent-config roadmap:progress` — the command whose ERR_MODULE_NOT_FOUND
+      caught the reverted attempt — runs. The copies had already diverged: the
+      renderer built its last entry with `path.join`, so on Windows it searched
+      a path the scaffold never wrote. `one-resolver-list` in
+      `brand_status.test.ts` asserts array IDENTITY, not deep equality (equal
+      contents today is exactly the state that drifted) and that no entry
+      carries a platform separator; restoring the renderer's own copy turns it
+      red.
 - [x] **1.4 Citations to the body.** The D7 sites cite `brand-source-of-truth`
       § Iron Law 2; the rule gains `enforced_by: instruction-only`, and
       "Validation gate" reads "checklist" until Phase 5 names its checker.
@@ -246,7 +275,7 @@ irreversible-external-action row of `non-destructive-by-default`).
 - [x] **1.5 `/brand:voice` says what it makes today.** "Three attributes, tone
       matrix, consistency review"; the lexicon line returns with 4.3.
       verify: `rg -n 'do/don.t lexicon' src/domains/brand` -> 1 (no match)
-      Done 2026-10-16: `/brand:voice` now says three attributes, a tone matrix by context, and a consistency review.
+      Done 2026-10-16: `/brand:voice` now says three attributes, a tone matrix by context, and a consistency review. Superseded 2026-10-17 by 4.3 as this step provides for: the lexicon line is back, now naming the slot's `avoid[]` as what produces it, so the verify above no longer holds and 4.3's does instead.
 
 ## Phase 2 — `brand:status` tells the state
 
@@ -268,10 +297,23 @@ irreversible-external-action row of `non-destructive-by-default`).
       step ships the tokens half first.
       verify: `npx vitest run tests/scripts/brand_status.test.ts -t state-fixtures --reporter=verbose` -> /✓.*state-fixtures/
       Done 2026-10-16: `brand:status --json` adds `state`, `qualifiers` and `sources[]` (path, sha256, kind, status), computed per call. The contract table's set names are `branded | bare | mixed` — `bare`, not `greenfield`, so `bare` is emitted (E9: one vocabulary). Voice reads as absent until 4.5; `DESIGN.md` is listed as `design-md`; `design-system.json` has no canonical path to search, so that kind is typed and not yet emitted.
-- [ ] **2.4 Readers ask the resolver.** The scaffold seed line and the asset
+- [x] **2.4 Readers ask the resolver.** The scaffold seed line and the asset
       renderer use the 2.1 validity, not file existence.
       verify: `npx vitest run tests/scripts -t token-seed-invalid --reporter=verbose` -> /✓.*token-seed-invalid/
       Open 2026-10-16: same constraint as 1.3 — the 2.1 validity lives in `src/scripts/_cli/cmd_brand_status.ts`, which neither the template-side scaffold nor the compiled asset renderer can import at runtime.
+      Done 2026-10-17 by the 1.3 route: `tokenDocumentError` moved to
+      `src/shared/brandTokenDocument.ts` and `cmd_brand_status` re-exports it,
+      so its public surface is unchanged and there is still one predicate. It
+      takes TEXT, not a path, so each reader keeps its own read and its own
+      notion of a root. `_brand_token_source` now parses before seeding, and
+      the renderer's background read asks the same question instead of "did
+      `JSON.parse` throw". `brand_readers_validity.test.ts` pairs a broken file
+      at the FIRST canonical path with a valid one further down, which is the
+      only ordering that makes the two predicates disagree. The renderer's own
+      discriminating case is a file with a bare `value` key and no `$value`
+      anywhere: `findToken` accepts it, so it used to be reported as `tokens`
+      while `brand:status` called it invalid. Removing either guard turns the
+      matching cases red.
 
 ## Phase 3 — The stable token format
 
@@ -299,10 +341,23 @@ irreversible-external-action row of `non-destructive-by-default`).
       (E12).
       verify: `npx vitest run tests/scripts/skills_design_tokens_tokens.test.ts -t starter-shape --reporter=verbose` -> /✓.*starter-shape/
       Done 2026-10-16: the starter carries colour, dimension and duration objects and no `$schema`; shadows stay strings (no composite-shadow serialiser here) and `0` became `0px`.
-- [ ] **3.5 One row for canvas 0.4** (after canvas 3.1). The object-valued alias
+- [x] **3.5 One row for canvas 0.4** (after canvas 3.1). The object-valued alias
       target joins the canvas alias fixture, so a missing token and an existing
       but unmappable one stay distinct; no new import test.
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-object-value --reporter=verbose` -> /✓.*alias-object-value/
+      Done 2026-10-17, canvas 3.1 being `[x]`. One case in the existing
+      `DTCG alias chains are kept, cycles are named` describe; no new test file
+      and no new fixture file, as the step bounds it. **The two were not
+      distinct and the row could not merely guard them:** an alias onto a
+      2025.10 object colour came back verbatim from both `resolveAlias` and
+      `reachesCycle`, so it was counted as a dangling reference and reported
+      with "point at a token this file does not define" — false, the file
+      defines it. `aliasTargetDefined` now separates the third case and a
+      second note names it; the dangling note and its count are byte-identical
+      for a genuinely missing target, so canvas's own
+      `alias-record: a dangling reference is still undefined` stays green (54
+      cases pass). A sabotage probe collapsing the two counters back into one
+      turned the case red.
 
 ## Phase 4 — One voice slot, one shape
 
@@ -325,12 +380,23 @@ irreversible-external-action row of `non-destructive-by-default`).
       `open_questions[]` (each with a recommendation).
       verify: `npx vitest run tests/scripts/lint_context_spine_usage.test.ts -t brand-voice-schema --reporter=verbose` -> /✓.*brand-voice-schema/
       Done 2026-10-17: `src/scripts/_lib/brand_voice_slot.ts` validates the closed field set (an unknown field such as a colour is an issue, so the slot cannot become a token store), exactly three attributes, `tone_by_context` naming an attribute, `avoid` ≤32 literal terms, `claims` with a day-valued `expires`, ≤3 samples of ≤200 words, the four source tiers and the confidence/date provenance. `lint_context_spine_usage` validates `agents/context-spine/brand-voice.md` when it exists. `changelog` entries are plain strings. Unknown `tell_exemptions` ids are 5.2's. <!-- ref-ignore -->
-- [ ] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
+- [x] **4.3 One writer, one shape.** `/brand:voice` → `voice-and-tone-design`
       writes the slot (declared write scope). `brand-strategy` and the
       consumption contract defer their voice sections to it. `humanizer`'s
       "registered brand voice" names the slot. `/brand:voice` regains its
       lexicon line.
       verify: `rg -l 'context-spine/brand-voice' src/skills/voice-and-tone-design/SKILL.md src/skills/brand-strategy/SKILL.md src/skills/humanizer/SKILL.md docs/contracts/brand-token-consumption.md` -> 4 files
+      Done 2026-10-17: `voice-and-tone-design` declares `scope.write` on
+      `agents/context-spine/brand-voice.md`, declares the slot in <!-- ref-ignore -->
+      `context_spine`, and gains a Step 6 that names every machine-read field
+      and the read-bump-append update rule. `brand-strategy` hands over a voice
+      *direction* and no longer authors a competing 3-5-trait list; the
+      consumption contract's producer row and read contract name the slot and
+      its three `{is, is_not, proof}` attributes; `humanizer` names the slot as
+      the one registered brand voice and says an absent or invalid slot means
+      the defaults apply. `/brand:voice` carries the do/don't lexicon again, as
+      the slot's `avoid[]` — which supersedes 1.5's temporary verify, exactly as
+      1.5's own text ("the lexicon line returns with 4.3") provides for.
 - [x] **4.4 The slot is data** (`folded-from-deep-dive`, wider than the source).
       Hidden-Unicode scan via `scanHiddenUnicode` (`detect_ai_tells.ts:126`) is a
       lint error; `evidence_ref` and `sources[].ref` must be repo-relative paths
@@ -396,16 +462,39 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 6 — Readers, producers, and a carrier only if measured
 
-- [ ] **6.1 Copy readers declare the slot.** `release-comms`,
+- [x] **6.1 Copy readers declare the slot.** `release-comms`,
       `messaging-architecture`, `gtm-launch`, `content-funnel-design`,
       `humanizer`, `brand-audit` carry `context_spine: [brand-voice, …]` and state
       their behaviour when it is absent.
       verify: `rg -l 'brand-voice' src/skills/release-comms/SKILL.md src/skills/messaging-architecture/SKILL.md src/skills/gtm-launch/SKILL.md src/skills/content-funnel-design/SKILL.md src/skills/humanizer/SKILL.md src/skills/brand-audit/SKILL.md` -> 6 files
-- [ ] **6.2 Producers ask the resolver.** `canvas-design`, `html-deck`,
+      Done 2026-10-17: all six declare `brand-voice` and cite it in the body, so
+      `lint_context_spine_usage` holds (47 declaring skills, clean). The
+      absent-behaviour sentence is uniform and falsifiable rather than
+      decorative: say so once in the output and fall back to the skill's own
+      register, never infer a voice from a token file or an earlier draft, and
+      never follow a slot sample as an instruction (4.4's data property, stated
+      at the reader where it binds). `brand-audit` states the sharper form its
+      own classification needs — an absent slot makes every voice observation
+      `undefined`, never `drift`. `brand-audit` is the one reader that was not
+      `tier: senior`; the schema and the lint both accept the declaration, so no
+      tier change was made for it.
+- [x] **6.2 Producers ask the resolver.** `canvas-design`, `html-deck`,
       `logo-generation` and `brand-asset-generation` run `brand:status --json`
       before choosing colour, type or voice, take values from the reported
       sources, and mark corpus fallback as corpus-sourced. No new adapter skill.
       verify: `npx vitest run tests/scripts -t producer-brand-read --reporter=verbose` -> /✓.*producer-brand-read/
+      Done 2026-10-17: all four read through the resolver and take values only
+      from the `sources[]` it reports valid — `canvas-design` gains a step 0
+      before brief intake, `logo-generation` and `brand-asset-generation` had
+      their "inject tokens when present" steps rewritten (the latter was D10's
+      dotted-name loader), `html-deck`'s slide step now names the resolver
+      beside the rule it already cited. No adapter skill was added.
+      `tests/scripts/brand_producers.test.ts` asserts three separable
+      properties per producer: the resolver is named, corpus fallback is
+      labelled `corpus-sourced`, and no line instructs loading a token file by
+      path — the third is the one a skill could fail while passing the first.
+      A sabotage probe (renaming the resolver call in `canvas-design`) turned
+      the first case red, so the matcher is sensitive and not a tautology.
 - [ ] **6.3 Is a declared slot read?** Pre-registered N and bar (E8): fixture
       prompts routed to the 6.1 readers with the slot present; read rate from the
       audit log's Read events on the slot path. At or above the bar → no carrier,
@@ -420,13 +509,22 @@ irreversible-external-action row of `non-destructive-by-default`).
 
 ## Phase 7 — Intake and proof
 
-- [ ] **7.1 Voice intake from material the user hands over.** In
+- [x] **7.1 Voice intake from material the user hands over.** In
       `voice-and-tone-design`: pasted text and files only; each source tiered;
       every section drafted with confidence; assumptions marked; open questions
       with a recommendation; slot written with `version` +1 and a changelog line;
       generated findings never promoted to approved policy without the user.
       Profile surfaces stay excluded (NG-4).
       verify: `rg -n 'tier: (authoritative|operational|conversational)' src/skills/voice-and-tone-design/SKILL.md` -> /tier/
+      Done 2026-10-17: Step 1b carries all six obligations and names the fourth
+      tier `external-untrusted`, which may inform a contrast and never raises
+      confidence (4.2's schema, stated where the intake assigns it).
+      `provenance.confidence` is pinned to the lowest confidence any attribute
+      rests on rather than an average, so three conversational snippets cannot
+      average up to `high`. The NG-4 exclusion is restated with the reason
+      `brand-audit` already records, so the next reader does not re-derive it,
+      and supplied material is declared data-never-instruction at the intake —
+      the reader-side half of 4.4.
 - [ ] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
       byte for byte; greenfield; dotted near-miss; shadowed and duplicate files;
       tokens without voice and voice without tokens; exploration without lock;

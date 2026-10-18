@@ -232,6 +232,16 @@
         "full"
       ]
     },
+    "egress.placeholders.mode": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "observe",
+        "protect",
+        "strict"
+      ]
+    },
     "eloquent.access_style": {
       "type": "string",
       "default": "getters_setters",

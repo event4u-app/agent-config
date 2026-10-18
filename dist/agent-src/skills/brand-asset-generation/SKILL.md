@@ -51,10 +51,17 @@ adapters — not a second image-gen stack.
    written here, because these change without notice. If the spec cannot be
    established, say so and ask rather than emitting an asset that will be
    cropped.
-2. **Inject brand tokens when present** — if `pack-brand` is installed, load `tokens.json`
-   (colors, typography, voice). Feed hex values, font names, and tone keywords directly
-   into the prompt. Without tokens, derive palette and type from the brief itself;
-   raw generation works — output is brief-driven, not token-driven.
+2. **Ask the resolver, then inject what it reports** — run
+   `./agent-config brand:status --json` before any colour, type or voice
+   decision. Take hex values and font names from the `tokens.json` entry it
+   reports as valid, and tone keywords from the `brand-voice` slot
+   (`agents/context-spine/brand-voice.md`) when that is valid too; feed those <!-- ref-ignore -->
+   into the prompt. Never load a token file by path on your own — a file the
+   resolver marks `invalid` or `shadowed` is not the brand, and a dotted
+   near-miss is not the brand either. When the resolver reports `bare`, or
+   nothing valid for the axis in hand, derive palette and type from the brief;
+   raw generation works, and every such value is **labelled `corpus-sourced`
+   in the output** so brief-driven is never reported as token-driven.
 3. **Route and prompt** — delegate provider selection to
    [`image-provider-routing`](../image-provider-routing/SKILL.md) (text-in-image →
    Ideogram, photoreal product shot → Flux, etc.). Author the provider-specific prompt

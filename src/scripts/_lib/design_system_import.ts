@@ -528,9 +528,28 @@ function reachesCycle(ref: string, root: Record<string, unknown>): boolean {
     return false;
 }
 
+/**
+ * True when `ref` names a token leaf this file actually defines, whatever its
+ * `$value` turns out to be. `resolveAlias` cannot answer this and `reachesCycle`
+ * only answers the loop case: an alias onto a stable-DTCG object colour comes
+ * back verbatim from both, exactly like a pointer at nothing. The two need
+ * opposite actions — a missing token is an authoring error in the source file, an
+ * unmappable one is a value this adapter does not carry yet — so they are
+ * counted and reported apart.
+ */
+function aliasTargetDefined(ref: string, root: Record<string, unknown>): boolean {
+    let node: unknown = root;
+    for (const segment of ref.split('.')) {
+        if (!isPlainObject(node)) return false;
+        node = node[segment];
+    }
+    return isTokenLeaf(node);
+}
+
 function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOutcome {
     const notes: string[] = [];
     let unresolvedAliases = 0;
+    let unmappableAliases = 0;
     // Token path → the path its alias names (one hop; a chain is the hops).
     const aliasOf: Record<string, string> = {};
     const aliasCycles: string[] = [];
@@ -565,7 +584,10 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
                 if (ref !== null) {
                     aliasOf[next.join('.')] = ref;
                     if (cyclic) aliasCycles.push(next.join('.'));
-                    else if (raw === literal) unresolvedAliases += 1;
+                    else if (raw === literal) {
+                        if (aliasTargetDefined(ref, input)) unmappableAliases += 1;
+                        else unresolvedAliases += 1;
+                    }
                 }
                 const bucket = dtcgBucket(leafType(value), next);
                 const role = roleName(next);
@@ -656,6 +678,11 @@ function mapDtcg(input: Record<string, unknown>, source: SourceBlock): ImportOut
     if (unresolvedAliases > 0) {
         notes.push(
             `${unresolvedAliases} DTCG alias reference(s) point at a token this file does not define — the reference is kept verbatim so the broken pointer is visible, not blanked`,
+        );
+    }
+    if (unmappableAliases > 0) {
+        notes.push(
+            `${unmappableAliases} DTCG alias reference(s) point at a token this file DOES define whose $value this adapter cannot map — the target is listed under _meta.unmapped and the reference is kept verbatim`,
         );
     }
     // `bundled_local: false` is a reading, not a claim about the source site:
