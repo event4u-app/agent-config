@@ -335,6 +335,12 @@ Under the hood:
     Also honored via `AGENT_CONFIG_NO_UI=1`. CI runners (`CI=1`) and
     non-TTY stdouts auto-suppress regardless. See
     [`docs/wizard.md § Auto-launch`](wizard.md#auto-launch-from-npx--init).
+  - `--full` keeps this machine's installed rule layer full-bodied: it writes
+    one `user_pin` field into the install receipt
+    (`~/.event4u/agent-config/runtime/carrier.json`), and the package never
+    thins the layer while it is there. It is sticky — a later `install` or
+    upgrade keeps it — and `agent-config uninstall` removes it. It is not a
+    setting and has no settings key.
 
 A full run creates:
 
