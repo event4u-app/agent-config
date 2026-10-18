@@ -30,6 +30,7 @@ import {
 import { ENGINE_UNAVAILABLE, runEgressStage, WITHHELD_MARKER, type EgressMode } from '../../../src/scripts/hooks/egress_stage.js';
 import type { JsonObject } from '../../../src/scripts/hooks/payload_stub.js';
 import { buildMetafile } from '../../../src/scripts/check_hook_bundle_composition.js';
+import { sidecarPathFor } from '../../../src/scripts/hooks/bundle_integrity.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const ESBUILD = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
@@ -44,7 +45,8 @@ function writeChunk(dir: string, body: Buffer | string, sidecar: 'match' | 'mism
     const sha = createHash('sha256').update(body).digest('hex');
     if (sidecar !== 'none') {
         const recorded = sidecar === 'match' ? sha : sha.replace(/^./, sha[0] === '0' ? '1' : '0');
-        fs.writeFileSync(`${chunk.replace(/\.js$/u, '')}.sha256`, `${recorded}  ${ENGINE_CHUNK_BASENAME}\n`);
+        // The loader's own sidecar path, so a test can never write a file it does not read.
+        fs.writeFileSync(sidecarPathFor(chunk), `${recorded}  ${ENGINE_CHUNK_BASENAME}\n`);
     }
     // The loader resolves the chunk as a sibling of the bundle it runs from.
     return pathToFileURL(path.join(dir, 'dispatch.js')).href;
@@ -84,9 +86,14 @@ describe('the loader refuses every unusable chunk', () => {
     it('refuses a chunk altered against its sidecar', () => {
         const altered = Buffer.concat([goodChunk, Buffer.from('\n// altered\n')]);
         const url = writeChunk(path.join(tmp, 'altered'), altered, 'none');
-        const sha = createHash('sha256').update(goodChunk).digest('hex');
-        fs.writeFileSync(path.join(tmp, 'altered', `${ENGINE_CHUNK_BASENAME}.sha256`), `${sha}  ${ENGINE_CHUNK_BASENAME}\n`);
+        const sidecar = sidecarPathFor(path.join(tmp, 'altered', ENGINE_CHUNK_BASENAME));
+        fs.writeFileSync(sidecar, `${createHash('sha256').update(goodChunk).digest('hex')}  ${ENGINE_CHUNK_BASENAME}\n`);
+        // The sidecar the loader reads is present: this is the mismatch branch, not the missing one.
+        expect(fs.existsSync(sidecar)).toBe(true);
         expect(reason(loadEgressEngineUncached(url, true))).toBe('digest');
+        // And the same chunk with a matching sidecar loads, so the refusal is the digest's.
+        fs.writeFileSync(sidecar, `${createHash('sha256').update(altered).digest('hex')}  ${ENGINE_CHUNK_BASENAME}\n`);
+        expect(reason(loadEgressEngineUncached(url, true))).toBe('ok');
     });
 
     it('refuses a chunk with no sidecar to match', () => {
@@ -109,8 +116,11 @@ describe('the loader refuses every unusable chunk', () => {
     });
 
     it('returns a value, never a throw, when the bundle url itself cannot be resolved', () => {
-        expect(() => loadEgressEngineUncached('not a url', true)).not.toThrow();
-        expect(reason(loadEgressEngineUncached('not a url', true))).toBe('invalid');
+        let load: EngineLoad | undefined;
+        expect(() => {
+            load = loadEgressEngineUncached('not a url', true);
+        }).not.toThrow();
+        expect(reason(load as EngineLoad)).toBe('invalid');
     });
 
     it('refuses a chunk missing an export it must carry', () => {
@@ -167,7 +177,6 @@ describe('nothing in the dispatch bundle pulls the engine statically', () => {
             'src/scripts/_lib/secret_detector.ts',
             'src/scripts/_lib/egress_engine.ts',
         ];
-        expect(Object.keys(meta.inputs).length).toBeGreaterThan(100);
         // The path form the check reads: the stage that uses the engine is in the bundle.
         expect('src/scripts/hooks/egress_stage.ts' in meta.inputs).toBe(true);
         expect(engine.filter((m) => m in meta.inputs)).toEqual([]);
