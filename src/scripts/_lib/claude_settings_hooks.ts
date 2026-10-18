@@ -140,6 +140,8 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
             `--platform claude --event ${ac_event} --native-event ${native} ` +
             `--project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
         matrix[native] =
+            'R="${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; ' +
+            '[ -f "$S/node" ] && read -r N < "$S/node"; ' +
             'B=""; ' +
             '[ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && ' +
             'B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; ' +
@@ -148,8 +150,10 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
             'B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; ' +
             'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
             `exec node "$B" ${dispatchArgs}; fi; ` +
+            'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
+            `exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; ` +
             'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
-            `command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}exit 0; }; ` +
+            `command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}exit 0; }; ` +
             `"$BIN" dispatch:hook ${dispatchArgs}`;
     }
     return matrix;
@@ -178,6 +182,36 @@ export const NO_DISPATCHER_CONTEXT =
 function _no_dispatcher_notice(native: string): string {
     const context = native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : '';
     return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
+}
+
+export const THINNED_DEAD_CARRIER_LINE =
+    'agent-config: no hook dispatcher was reached and the rule layer on disk is thinned, so routed rule ' +
+    'bodies will not arrive in this session. Open a rule body from the absolute Body path in its stub. ' +
+    'The full rule layer is restored for the next session.';
+
+/**
+ * The dead-carrier branch on a THINNED layer (road-to-a-hook-carrier-that-is-never-silent
+ * 3.1, 3.2), SessionStart only and without node. `$R/thinned` exists only while
+ * the install left the claude layer thinned and holds that layer's directory; on
+ * a full layer the branch is silent, which is what keeps an uninstalled
+ * repository quiet. It prints one context line, then restores the staged full
+ * layer — overwriting only files that carry the package stamp, adding missing
+ * ones, removing none, each by an atomic rename — and demotes the machine. A
+ * failed copy leaves the marker, so the line keeps printing rather than the
+ * session going quiet on a layer that is still thin. `AC_HOOK_PROBE` is the
+ * stripped-environment probe, which must observe and never restore.
+ */
+function _thinned_dead_carrier(native: string): string {
+    if (native !== 'SessionStart') return '';
+    return (
+        `[ -z "$AC_HOOK_PROBE" ] && [ -f "$R/thinned" ] && { echo '${THINNED_DEAD_CARRIER_LINE}'; ` +
+        'L=""; read -r L < "$R/thinned"; F=1; ' +
+        'if [ -d "$L" ] && [ -d "$S/claude-rules" ]; then F=0; for f in "$S/claude-rules"/*.md; do ' +
+        '[ -f "$f" ] || continue; t="$L/${f##*/}"; ' +
+        'if [ ! -e "$t" ] || grep -qx "package: event4u/agent-config" "$t"; then ' +
+        'cp "$f" "$t.ac-restore" && mv -f "$t.ac-restore" "$t" || F=1; fi; done; fi; ' +
+        '[ "$F" = 0 ] && mv -f "$R/thinned" "$R/demoted"; }; '
+    );
 }
 
 function _is_managed_group(group: unknown): boolean {

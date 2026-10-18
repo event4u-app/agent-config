@@ -629,9 +629,19 @@ function legUninstall(ctx: Ctx): string {
         env: binEnv(ctx),
     });
     if (r.status !== 0) throw new Error(`uninstall exit ${r.status}: ${(r.stdout + r.stderr).slice(-600)}`);
+    // A plain uninstall preserves ~/.claude, so the lockfile it records is kept
+    // for the purge that can still remove it; only the purge may delete it.
     const lock = path.join(ctx.tmpRoot, 'home', '.event4u', 'agent-config', 'installed.lock');
-    if (fs.existsSync(lock)) throw new Error(`global lockfile still present after uninstall: ${lock}`);
-    return 'uninstall --global green, lockfile removed';
+    if (!fs.existsSync(lock)) throw new Error(`plain uninstall deleted the lockfile the purge needs: ${lock}`);
+    const p = run(ctx.bin, ['uninstall', '--global', '--tools=claude-code,cursor,windsurf', '--purge', '--force'], {
+        cwd: ctx.projectDir,
+        env: binEnv(ctx),
+    });
+    if (p.status !== 0) throw new Error(`uninstall --purge exit ${p.status}: ${(p.stdout + p.stderr).slice(-600)}`);
+    if (fs.existsSync(lock)) throw new Error(`global lockfile still present after uninstall --purge: ${lock}`);
+    const runtime = path.join(ctx.tmpRoot, 'home', '.event4u', 'agent-config', 'runtime');
+    if (fs.existsSync(runtime)) throw new Error(`staged hook runtime still present after uninstall --purge: ${runtime}`);
+    return 'uninstall --global keeps the lockfile; --purge removes it and the staged runtime';
 }
 
 function legUpgrade(ctx: Ctx): string {

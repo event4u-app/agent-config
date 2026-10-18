@@ -443,6 +443,22 @@ Hooks keep firing after removal (they live in `settings.json`, not the
 plugin); `agent-config doctor` verifies via the `hook-wiring` check and
 flags a leftover plugin as `claude-plugin: duplicate surface`.
 
+The hook commands do not depend on `PATH`. The global install stages what they
+need — the dispatcher bundle, the node it ran under, and the rule bodies the
+stubs of a thinned layer point at — under `~/.event4u/agent-config/runtime/`,
+so an `npx` install keeps working after npm clears its cache. Each command
+tries a project-local install first, then that staged dispatcher, then an
+`agent-config` binary on `PATH`. The install probes the `SessionStart` command
+from `PATH=/usr/bin:/bin` and records the outcome in
+`~/.event4u/agent-config/runtime/carrier.json`; the `hook-carrier` check in
+`agent-config doctor` re-runs the probe and prints the layer state and since
+when the outcome holds. A thinned rule layer is only written on a carrier that
+probe reached. If a session still starts with no dispatcher on a thinned layer,
+it prints one line saying so, restores the full layer for the next session, and
+the machine stays full until an install, upgrade or doctor run passes the probe.
+`agent-config uninstall --global --purge` removes the staged runtime; a plain
+uninstall keeps it, because the preserved stubs under `~/.claude` point into it.
+
 The same global install also writes Claude Code's `skillOverrides` for the
 skills it deployed: the set that fits the host's description budget keeps its
 description, every other package skill is set `name-only` — still listed, still

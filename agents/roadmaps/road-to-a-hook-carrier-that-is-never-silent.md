@@ -70,14 +70,21 @@ routed rule body with nothing in the session saying so.
 
 ## Phase 0 — Measure the carrier where it actually runs
 
-- [ ] **0.1 One carrier census.** Scratch-`HOME` install per install path
+- [x] **0.1 One carrier census.** Scratch-`HOME` install per install path
   (checkout, `npm i -g`, `npx`): hook command tails, whether each reaches the
   dispatcher under the launcher's `PATH` and under `PATH=/usr/bin:/bin`, the
   package root the stubs point at, and whether that root sits under a
   package-manager cache. One deterministic report under `agents/evidence/analysis/`.
   verify: two runs at one commit are byte-equal; the `npx` row records the real
   cache path, or records that `npx` did not place the root in a cache.
-- [ ] **0.2 First-host probes**, rows in the shape of
+  Done as `src/scripts/hook_carrier_census.ts` →
+  `agents/evidence/analysis/hook-carrier-census-2026-10.md`, pinned byte-equal by
+  `tests/scripts/hook_carrier_census.test.ts`. The `npx` root was observed live on
+  2026-10-18 (npm 11.19.0) at `<cache>/_npx/4297e1a784ff86d4/node_modules/@event4u/agent-config`;
+  with a global install on `PATH` the same command ran the global binary and
+  placed nothing in the cache. The cells use a stand-in dispatcher, so they
+  measure resolution only; the real bundle was reached separately (see 2.1).
+- [x] **0.2 First-host probes**, rows in the shape of
   `src/config/host-injection-effect.json` with host version, transcript pointer
   and expiry, `unobserved` until observed: (a) plain stdout from a shell branch of
   a `SessionStart` command reaches the model, and the documented 10,000-character
@@ -85,52 +92,85 @@ routed rule body with nothing in the session saying so.
   one machine; (c) a rule file replaced on disk mid-session — what other live
   sessions see on their next load.
   verify: one row per item.
+  Done as `src/config/hook-carrier-probes.json`, three rows, all `unobserved`:
+  no live-host observation was made in this change. Each row carries its own
+  expiry (2027-01-18) and is validated by `recordProblems`.
 
 ## Phase 1 — A root the package owns
 
-- [ ] **1.1 Stage the runtime under the machine root.** Install stages what the
+- [x] **1.1 Stage the runtime under the machine root.** Install stages what the
   carrier and the stubs need — the dispatcher bundle and the rule bodies of the
   running version — under `~/.event4u/agent-config/`, which already holds the
   install state, and every absolute pointer and carrier path resolves there.
   verify: an npx-shaped install fixture, then the cache directory deleted —
   pointers and dispatcher still resolve.
-- [ ] **1.2 One version on disk.** Upgrade replaces the staged runtime
+  Done in `src/install/stagedRuntime.ts`, called from the claude-code deploy in
+  `install.ts` before the thin pass; stub `Body:` pointers are now rooted at
+  `runtime/current/` (`bodyLinkRoot`). Staged: `dist/hooks`, `dist/agent-src`,
+  `dist/router.json`, the data files of `src/scripts` (not its TypeScript),
+  `src/config`, `package.json`, the node path, and `node_modules/yaml` — the
+  one package the bundle still resolves at run time (D7). Tests:
+  `tests/install/staged_runtime.test.ts`.
+- [x] **1.2 One version on disk.** Upgrade replaces the staged runtime
   atomically (stage, then move); a half-written stage is never the one pointers
   resolve to.
   verify: fault-injection fixture interrupting the stage leaves the previous
   version resolvable.
+  `current` is a relative symlink swapped by one rename; a later stage sweeps
+  stale `.stage-*`, `.current-*` and `v-*` entries, leaving one version.
 
 ## Phase 2 — Absolute paths ahead of `PATH`
 
-- [ ] **2.1 The staged dispatcher first.** The hook command tries the staged
+- [x] **2.1 The staged dispatcher first.** The hook command tries the staged
   dispatcher with the `node` resolved at install, then today's project-local and
   `PATH` fallbacks, in that order.
   verify: the command run from an empty directory with `PATH=/usr/bin:/bin`
   reaches the dispatcher; a project-local install still wins where present.
-- [ ] **2.2 A probe the other files can read.** `doctor` and the install receipt
+  *Correction:* the step's order (staged first) and its verify (project-local
+  wins) disagree; the verify is what the code follows — project-local, then the
+  staged dispatcher, then `PATH` — which still puts every absolute path ahead of
+  `PATH`, as the phase title says (D6). The real bundle, staged from this tree,
+  was run under `PATH=/usr/bin:/bin` from an empty directory: `--read-exit`
+  reached it, a real `SessionStart` emitted its context, and a `PreToolUse` for
+  a commit with `--no-verify` was refused by `block-no-verify` with exit 2.
+- [x] **2.2 A probe the other files can read.** `doctor` and the install receipt
   record, per host, whether 2.1's command reached the dispatcher from a stripped
   environment, with the date and package version.
   verify: snapshot per outcome (reached, not reached, not probed).
+  The install probes the `SessionStart` command it is about to write (with
+  `--read-exit`, so no concern runs) and records `runtime/carrier.json`; doctor
+  has a `hook-carrier` check that re-probes. Windows has no `/bin/sh` to probe
+  with and records nothing ("not probed") (D9).
 
 ## Phase 3 — Silence only where it is free
 
-- [ ] **3.1 A visible line on a thinned layer.** When the layer on disk is thinned
+- [x] **3.1 A visible line on a thinned layer.** When the layer on disk is thinned
   and no dispatcher resolves, the shell branch prints one line — within the cap,
   without `node` — saying routed rule bodies will not arrive and to open them from
   the absolute paths in the stubs. It exits 0; a session is never blocked by it.
   On a full layer the branch stays silent.
   verify: dispatcher removed — thinned layer prints the line, full layer prints
   nothing.
-- [ ] **3.2 Fail full, in shell.** In the same branch the command restores the
+  The branch is in the `SessionStart` command only, so a tool call never prints
+  it, and the `runtime/thinned` marker the install writes is what says the layer
+  is thinned.
+- [x] **3.2 Fail full, in shell.** In the same branch the command restores the
   full layer from the staged copy of 1.1 — only files carrying the package's
   ownership stamp, never removing a file — and marks the machine `demoted`. The
   running session keeps 3.1's line; the next starts full.
   verify: after a dead-carrier session the layer is byte-equal to the full
   fixture of 0.1; a foreign rule file is untouched.
-- [ ] **3.3 Demotion is sticky.** A demoted machine is promoted again only after
+  The staged copy is the installed layer snapshotted after the rewrite and
+  before the thin pass, so it is the full layer byte for byte. Each file is
+  replaced by an atomic rename; a failed copy keeps the marker, so the line keeps
+  printing rather than going quiet on a layer that is still thin.
+- [x] **3.3 Demotion is sticky.** A demoted machine is promoted again only after
   an install, upgrade or `doctor` run passes 2.2's probe. No flapping between a
   terminal launch and an app launch.
   verify: state-machine test over alternating alive and dead sessions.
+  The install also thins only on a carrier the probe reached (D8), so a machine
+  is never thinned onto a dead carrier in the first place; doctor clears a
+  demotion on a passing probe and the next install re-thins.
 
 ## Phase 4 — Say what changes for machines that were silent
 
@@ -141,6 +181,12 @@ routed rule body with nothing in the session saying so.
   state and when it last changed.
   verify: the changelog entry names the three `fail_closed` concerns; doctor
   snapshot shows the carrier state.
+  *Partial (2026-10-18):* the doctor half is done (`hook-carrier` check,
+  `describeCarrierState`, tested). The changelog half is open: release notes are
+  generated by `task release` from the commits of the span, and `## [Unreleased]`
+  takes no hand entries, so it is verifiable only at the release that ships 2.1.
+  The PR that ships 2.1 carries `Consumer-Impact: notice` and names the three
+  concerns for that release head.
 
 ## Phase 5 — The plugin channel says what it carries
 
@@ -200,6 +246,10 @@ plugin ships no dispatcher of its own (D4).
 | D3 | reversible-technical | agent | Restore adds files and never removes one | Removal under a live session is the one write that can hurt another session on the machine | probe 0.2 (c) shows replaced files are not picked up at all, making restore moot |
 | D4 | product-owned | owner | The plugin channel ships no dispatcher of its own: its no-dispatcher branch becomes visible and the marketplace text stops claiming working hooks (Phase 5); no release-asset archive, no resolution from the npm package at hook time | Owner answer 2026-10-14, option (c), after the AI council (anthropic + openai, 2/2, both (c), both owner-reserved because it withdraws a public statement); the channel is DEPRECATED as a content channel, and a dispatcher fetched at hook time would put network and latency where enforcement must be deterministic | material plugin-only usage is measured, or a self-contained integrity-verified carrier needs no network at hook time |
 | D5 | reversible-technical | agent | The plugin's no-dispatcher notice lives in the command shared with the settings carrier and is keyed on `CLAUDE_PLUGIN_ROOT` | The host dedupes plugin and settings hooks only on byte-identical command strings (`claude_hook_matrix_parity.test.ts`); a plugin-only string would run every concern twice where both are installed, and the env key keeps the settings carrier silent as Phase 3 requires | probe 0.2 shows the host does not export `CLAUDE_PLUGIN_ROOT` to plugin hook processes, or dedupe stops being string-based |
+| D6 | reversible-technical | agent | The hook command tries project-local, then the staged dispatcher, then `PATH` | Step 2.1's own verify requires a project-local install to win; the phase's point — absolute paths ahead of `PATH` — holds either way, and a project pinning a version must keep it | a project-local install is found to shadow a newer staged guard in a way that matters |
+| D7 | reversible-technical | agent | The staged runtime carries the bundle, `dist/agent-src`, the data files of `src/scripts`, `src/config`, `package.json`, and `node_modules/yaml` | Measured by running the real bundle from a stage: it reads `src/scripts/hooks/host_lowering.yaml` and resolves `yaml` through a `createRequire` the bundler did not inline; the rest of `src/scripts` is 27 MB of TypeScript the bundle already contains | a concern reads a package file outside the staged set, or the bundle stops resolving `yaml` at run time |
+| D8 | reversible-technical | agent | The install thins only on a carrier the stripped-environment probe reached | A layer thinned onto a dead carrier would print 3.1's line and restore at the next session — a thin that is undone before it is used; refusing it up front is the same outcome without the round trip | the probe reports not-reached on a machine whose real launcher does reach the dispatcher |
+| D9 | reversible-technical | agent | On Windows the install and doctor do not probe, and thinning keeps its earlier behaviour | There is no `/bin/sh` to run the probe with; recording "not reached" would be a measurement that was never taken | a Windows host is found to run the hook commands through a shell the probe can use |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
@@ -213,11 +263,11 @@ plugin ships no dispatcher of its own (D4).
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — With `PATH=/usr/bin:/bin` and no project-local install, every
+- [x] AC-1 — With `PATH=/usr/bin:/bin` and no project-local install, every
   installed hook command reaches the dispatcher.
-- [ ] AC-2 — With the package-manager cache of an `npx` install deleted, every
+- [x] AC-2 — With the package-manager cache of an `npx` install deleted, every
   stub pointer and carrier path still resolves.
-- [ ] AC-3 — On a thinned layer a dead carrier prints 3.1's line; on a full layer
+- [x] AC-3 — On a thinned layer a dead carrier prints 3.1's line; on a full layer
   nothing prints.
-- [ ] AC-4 — A dead-carrier session is followed by a full layer that stays until
+- [x] AC-4 — A dead-carrier session is followed by a full layer that stays until
   2.2's probe passes again.

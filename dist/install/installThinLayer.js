@@ -64,7 +64,7 @@ import { absoluteBodyLinkPrefix, build_thin, split_frontmatter, } from '../scrip
 export function thinInstalledRuleLayer(opts) {
     const packageRoot = path.resolve(opts.packageRoot);
     const bodySourceDir = path.join(packageRoot, 'dist', 'agent-src', 'rules');
-    const bodyLinkPrefix = absoluteBodyLinkPrefix(packageRoot);
+    const bodyLinkPrefix = absoluteBodyLinkPrefix(opts.bodyLinkRoot ?? packageRoot);
     const preserved = opts.preserved ?? new Set();
     // Scope is `null` on purpose. The copy already applied the install's rule
     // scope, so the files that EXIST in `rulesDir` are the scoped set; asking
