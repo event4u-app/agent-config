@@ -69,7 +69,7 @@ THE FILE IS `tokens.json`, NEVER `.tokens.json` — A DOT-PREFIXED FILE IS READ 
 ```
 
 The resolver searches exactly four paths under the project root, in this order,
-first hit wins (`BRAND_TOKEN_PATHS`, the UI scaffold directive):
+first hit wins (`BRAND_TOKEN_PATHS` in `brandTokenPaths.ts`):
 
 1. `tokens.json`
 2. `assets/tokens.json`

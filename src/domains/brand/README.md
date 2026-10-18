@@ -16,7 +16,7 @@ Brand as a first-class UX layer — archetype/voice/identity grounding corpus, b
 - **`brand-review`** — Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule.
 - **`brand-strategy`** — Define brand positioning, archetype, voice, tone, and messaging over the brand-grounding corpus — the strategy that bounds identity and UI.
 - **`brand-tokens`** — Derive a DTCG tokens.json source of truth from brand decisions, then emit CSS vars + Tailwind via the no-Node token generator.
-- **`brand-voice`** — Define the brand voice-and-tone profile — three attributes, a tone matrix by context, and a consistency review — the profile `/brand:review` reads copy against.
+- **`brand-voice`** — Define the brand voice-and-tone profile — three attributes, a tone matrix by context, a do/don't lexicon, and a consistency review — the profile `/brand:review` reads copy against.
 
 ## Rules (2)
 

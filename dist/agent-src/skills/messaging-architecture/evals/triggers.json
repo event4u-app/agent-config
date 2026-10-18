@@ -1,0 +1,15 @@
+{
+  "skill": "messaging-architecture",
+  "last_eval": "2026-10-17",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers building the message stack on locked positioning, lines diverging across surfaces, a missing audience-by-message matrix, and a German phrasing. Should-not covers the three neighbours the skill routes to (writing the copy, peer comparison, launch sequencing) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "positioning is locked — build the message stack the launch deck and the homepage both hang on", "trigger": true, "class": "exemplar"},
+    {"q": "every surface says something slightly different and the segment cannot recognise us", "trigger": true, "class": "exemplar"},
+    {"q": "we shout one message at three audiences who hear three different things — build the matrix", "trigger": true, "class": "exemplar"},
+    {"q": "wir brauchen eine Botschaftsarchitektur, keine weiteren Einzeltexte", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "write the homepage hero section now that the messages are agreed", "trigger": false, "class": "near-miss", "note": "writing the copy is downstream of this skill"},
+    {"q": "how do we position against the two incumbents feature by feature", "trigger": false, "class": "near-miss", "note": "peer-vs-peer comparison is competitive-positioning"},
+    {"q": "which audience gets the beta and which waits for GA", "trigger": false, "class": "near-miss", "note": "launch sequencing is gtm-launch"},
+    {"q": "the CI runner is out of disk space again", "trigger": false, "class": "counterexample"}
+  ]
+}
