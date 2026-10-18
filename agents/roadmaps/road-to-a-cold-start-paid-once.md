@@ -177,6 +177,13 @@ starts. 1.4's by-name half stays unobserved for the same reason as on
 2026-10-17. 1.10 stays open until those rows exist. No row was written from
 documentation.
 
+The same screen, for the later phases. 3.3 needs per-worker state at
+`PreToolUse` time (transcript tokens, last request, workspace facts) that the
+ledger does not carry, plus the resume addressing 1.4 left unobserved; 3.5, 3.6
+and 6.2 wait on its window. 4.3 and 4.5 bind hook surfaces and 4.6 waits on 1.9.
+Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
+6.5 wait on 1.7; 2.6 on its own holdout re-pin change.
+
 ## Phase 2 — Workers that load what their role needs
 
 - [x] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
