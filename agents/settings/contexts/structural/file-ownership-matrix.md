@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **592**
-- Edges (incl. self-WRITE): **2297**
+- Files indexed: **593**
+- Edges (incl. self-WRITE): **2298**
 
 ## READ_ONLY edges
 
@@ -1722,7 +1722,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 65 |
+| `context` | 66 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 369 |
