@@ -367,7 +367,7 @@ export const settingsSchema = z.object({
         model_ceiling: z.string().default('').describe(
             'Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one.',
         ),
-        max_parallel: z.number().int().min(1).default(3).describe(
+        max_parallel: z.number().int().min(1).max(64).default(3).describe(
             'Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns; whether that cap also bounds a resumed worker is unobserved. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
         ),
         adversarial_council: z.enum(['off', 'ask', 'on']).default('off').describe(

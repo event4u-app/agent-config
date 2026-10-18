@@ -30,14 +30,26 @@ import * as path from 'node:path';
 import * as YAML from 'yaml';
 
 /**
+ * The concurrency row's ceiling. The row exists to bound fan-out, so a value
+ * past this is refused rather than written: an unbounded cap would turn the
+ * one row that limits spend into a way to raise it.
+ */
+export const MAX_CONCURRENT_SUBAGENTS = 64;
+
+/**
  * The allow table. Three rows, and adding a fourth is a governance change.
  * `settingsKey` is the dotted path into the settings document.
  */
-export const WRITABLE_HOST_ENV: readonly { readonly variable: string; readonly settingsKey: string }[] = [
+export const WRITABLE_HOST_ENV: readonly {
+    readonly variable: string;
+    readonly settingsKey: string;
+    readonly max?: number;
+}[] = [
     { variable: 'BASH_MAX_OUTPUT_LENGTH', settingsKey: 'host_environment.request_size_caps.bash_max_output_length' },
     { variable: 'MAX_MCP_OUTPUT_TOKENS', settingsKey: 'host_environment.request_size_caps.max_mcp_output_tokens' },
-    { variable: 'CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS', settingsKey: 'subagents.max_parallel' },
+    { variable: 'CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS', settingsKey: 'subagents.max_parallel', max: MAX_CONCURRENT_SUBAGENTS },
 ];
+
 
 /** Where a project's settings document lives, canonical first. */
 const SETTINGS_CANDIDATES: readonly string[][] = [
@@ -86,12 +98,15 @@ export function readSettingsDoc(projectRoot: string): unknown | null {
  */
 export function hostEnvBlock(settings: unknown): Record<string, string> | null {
     const out: Record<string, string> = {};
-    for (const { variable, settingsKey } of WRITABLE_HOST_ENV) {
+    for (const { variable, settingsKey, max } of WRITABLE_HOST_ENV) {
         let v: unknown = settings;
         for (const part of settingsKey.split('.')) {
             v = v !== null && typeof v === 'object' ? (v as Record<string, unknown>)[part] : undefined;
         }
-        if (typeof v === 'number' && Number.isInteger(v) && v > 0) out[variable] = String(v);
+        // A safe integer, so `String(v)` is the digits the host parses back.
+        if (typeof v !== 'number' || !Number.isSafeInteger(v) || v <= 0) continue;
+        if (max !== undefined && v > max) continue;
+        out[variable] = String(v);
     }
     return Object.keys(out).length === 0 ? null : out;
 }
