@@ -10383,13 +10383,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/brand-identity/SKILL.md",
-      "target": ".agent-src.uncondensed/skills/type-design/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/brand-identity/SKILL.md",
       "target": ".agent-src.uncondensed/skills/typography-system/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",

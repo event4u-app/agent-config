@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **596**
-- Edges (incl. self-WRITE): **2305**
+- Edges (incl. self-WRITE): **2304**
 
 ## READ_ONLY edges
 
@@ -723,7 +723,6 @@
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/brand/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/logo-generation/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/type-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
