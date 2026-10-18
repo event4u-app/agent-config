@@ -20,6 +20,7 @@ suggestion:
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---
@@ -133,6 +134,17 @@ ambiguity the invocation did not settle, and it halts before any fetch.
 Everything the menu's "Cancel" option protected is protected elsewhere: the
 write-acts of §§ 7-8 keep their own confirmations, and plan mode (§ Enforced
 limits) is the default, so a run that is never confirmed writes nothing tracked.
+
+### 1a. Anchor profile — what this scope has
+
+Outside this package the anchors are what the scope itself already says is
+wrong or wanted, read in order: skipped tests, open issues (`gh` when present),
+the FIXME/TODO census, open roadmap steps, ADRs, then `docs/CLAIMS.md`.
+`buildAnchorTable` (`src/scripts/analysis_anchors.ts`) types every row
+`defect | capability_gap | product_opportunity | maintainability | security |
+performance` — an opportunity is never a defect. A scope with `docs/CLAIMS.md`
+keeps the profile of § 1b below. No row at all → **feature mode**, anchored on
+`--goal "…"`; without a goal, ask for it once.
 
 ### 1b. Anchor table first
 

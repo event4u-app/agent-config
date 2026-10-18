@@ -14,6 +14,7 @@ suggestion:
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:inbox name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---

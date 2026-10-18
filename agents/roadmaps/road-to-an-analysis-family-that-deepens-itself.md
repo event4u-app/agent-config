@@ -368,7 +368,7 @@ today's analysis-only behaviour.
       verify: a connected fixture run's ledger carries one coded web row and no
       source name in any tracked output; a `--no-network` run completes labelled
       degraded.
-- [ ] **4.3 Anchor profiles — defects and opportunities (directive g).** The
+- [x] **4.3 Anchor profiles — defects and opportunities (directive g).** The
       anchor table reads what the scope has, in order: failing or skipped tests,
       open issues (`gh` when present), TODO/FIXME census, roadmaps, ADRs,
       `docs/CLAIMS.md` — this package's profile stays today's. None → feature
@@ -379,7 +379,12 @@ today's analysis-only behaviour.
       `visibility: internal` (F17).
       verify: a run against a consumer fixture without `docs/CLAIMS.md` produces
       a non-empty typed anchor table or states feature mode, and
-      `./scripts-run src/scripts/lint_framework_leakage` passes on the door files.
+      `./scripts-run src/scripts/lint_framework_leakage` passes on the door files. Done
+      2026-10-18 in `src/scripts/analysis_anchors.ts` (issue default type seen red
+      as `defect`); `analyze:repo` § 1a documents it, both doors carry the
+      `engineering` workspace and stay `internal`. Failing tests need a run and
+      come from the door, not the census; stack axes from `project-analysis-core`
+      are not wired here.
 - [x] **4.4 Several sources, one gap one roadmap; prompts for external
       analysts (directive i).** `<door> <a> <b> …` runs one lane per source and
       folds so one gap is one roadmap; `analyze:roadmap-repos` keeps dispatching
