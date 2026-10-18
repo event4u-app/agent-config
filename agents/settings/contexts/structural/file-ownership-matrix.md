@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **592**
-- Edges (incl. self-WRITE): **2297**
+- Files indexed: **596**
+- Edges (incl. self-WRITE): **2305**
 
 ## READ_ONLY edges
 
@@ -723,6 +723,7 @@
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/brand/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/logo-generation/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/type-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
@@ -1657,6 +1658,9 @@
 | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `.agent-src.uncondensed/rules/token-optimizer-maintenance.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `.agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/type-design/SKILL.md` | `.agent-src.uncondensed/skills/type-design/references/font-spec.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/type-design/SKILL.md` | `.agent-src.uncondensed/skills/type-design/references/gates.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/type-design/SKILL.md` | `.agent-src.uncondensed/skills/type-design/references/toolchain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/rules/brand-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/brand/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
@@ -1725,5 +1729,5 @@
 | `context` | 65 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 369 |
+| `skill` | 373 |
 

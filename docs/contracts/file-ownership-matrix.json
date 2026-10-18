@@ -3492,6 +3492,30 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/type-design/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/type-design/references/font-spec.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/type-design/references/gates.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncondensed/skills/type-design/references/toolchain.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/typography-system/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -10353,6 +10377,13 @@
     {
       "source": ".agent-src.uncondensed/skills/brand-identity/SKILL.md",
       "target": ".agent-src.uncondensed/skills/logo-generation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/brand-identity/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/type-design/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -19131,6 +19162,55 @@
     {
       "source": ".agent-src.uncondensed/skills/traefik/SKILL.md",
       "target": ".agent-src.uncondensed/skills/traefik/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/type-design/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/type-design/references/font-spec.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/type-design/references/gates.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/type-design/references/toolchain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/references/font-spec.md",
+      "target": ".agent-src.uncondensed/skills/type-design/references/font-spec.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/references/gates.md",
+      "target": ".agent-src.uncondensed/skills/type-design/references/gates.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/type-design/references/toolchain.md",
+      "target": ".agent-src.uncondensed/skills/type-design/references/toolchain.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
