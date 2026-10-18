@@ -35,7 +35,11 @@ council-refined roadmap set.
 This is a **coordinator** over existing primitives — it composes, never
 reimplements: subagent fan-out analysis, `/analyze:decision`-style decision
 challenge, `ai-council` resolution, `/roadmap:create` output shape,
-`/create-pr` mechanics.
+`/create-pr` mechanics. One of the four analysis doors, to become
+`analyze:and-optimize`
+(ADR-288);
+shared vocabulary, lenses and tiers:
+[`analysis-loop`](../../contexts/execution/analysis-loop.md).
 
 ## When to invoke
 

@@ -31,6 +31,11 @@ tree that has since moved**. Most of the work is finding out which parts are
 still true — and, for the parts that tell an agent to *do* something, which of
 its steps still run when you actually run them.
 
+The final stage of the four analysis doors
+(ADR-288);
+shared vocabulary, lenses and tiers:
+[`analysis-loop`](../../contexts/execution/analysis-loop.md).
+
 ## Argument
 
 | Given | Scope |

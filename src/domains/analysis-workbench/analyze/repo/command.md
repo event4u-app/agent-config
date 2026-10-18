@@ -32,7 +32,10 @@ this repo's own verified defects, maps what the reference does well, classifies
 each finding (adopt / adapt / reject / already-have), converges its verdicts,
 and proposes concrete adoption items — optionally with a roadmap draft.
 
-Scope boundaries: § When **not** to use.
+Scope boundaries: § When **not** to use. One of the four analysis doors
+(ADR-288);
+shared vocabulary, lenses and tiers:
+[`analysis-loop`](../../contexts/execution/analysis-loop.md).
 
 ## Inputs
 
