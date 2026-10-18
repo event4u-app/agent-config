@@ -777,12 +777,16 @@ the working tree with no consequence operation attached
 
 **Corrected 2026-10-18** (`road-to-a-hard-floor-the-shell-cannot-talk-past` Phase 0):
 "inside the working tree" was enforced on the read tools only. The Bash branch now
-confines every path argument — positionals, path-shaped `--flag=value` values and a
-glued `sort -o/path` — to the working tree, withholds the allow from `git branch`
-forms that can lose a ref (`-d`, `-D`, `--delete`, `-f`, `--force`, `-m`, `--move`,
-`-M`, `-C`), and the allow's reason names the working tree only when a path was
-actually confined for that call. Withholding an allow returns the host's own
-confirmation; it never adds a question from this package.
+confines every path argument — positionals, `--flag=value` values, the tail of a
+single-dash token (`sort -o/path`) and everything after `--` — to the working tree,
+refuses a path segment the shell could glob to `..` (`.*`, `.?`, a bracket
+expression), admits `git branch` only in its observational forms (listing, `-a`,
+`-r`, `-v`, `--show-current`, `--merged`/`--contains` filters), and the allow's
+reason names the working tree only when a path was actually confined for that
+call. Withholding an allow returns the host's own confirmation; it never adds a
+question from this package. The classifier splits on whitespace after refusing
+every shell metacharacter, including `\`; it is a guardrail against the shapes it
+names, not a shell-equivalent parser.
 
 The composition policy is **one `ask` or `deny` beats every `allow`**
 (`composePermissionDecision`), and the emission additionally requires the reduced

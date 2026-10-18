@@ -363,9 +363,58 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
         ]) {
             expect(a(cmd), cmd).toBe(false);
         }
-        for (const cmd of ['git branch', 'git branch -a', 'git branch --list', 'git branch new', 'git branch -v']) {
+    });
+
+    it('branch-loses-a-ref: only observational branch forms stay category A', () => {
+        // Council review 2026-10-18: a form that writes a ref without losing
+        // one is still not a read, so the allowlist admits observation only.
+        for (const cmd of [
+            'git branch new',
+            'git branch new HEAD~3',
+            'git branch -c main copy',
+            'git branch --copy main copy',
+            'git branch -u origin/main',
+            'git branch --set-upstream-to=origin/main',
+            'git branch --unset-upstream',
+            'git branch --edit-description',
+            'git branch -t topic origin/x',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of [
+            'git branch',
+            'git branch -a',
+            'git branch -av',
+            'git branch -vv',
+            'git branch --list',
+            "git branch --list 'feat*'",
+            'git branch -l feat',
+            'git branch --show-current',
+            'git branch --merged main',
+            'git branch --contains HEAD~3',
+            'git branch --sort=-committerdate',
+        ]) {
             expect(a(cmd), cmd).toBe(true);
         }
+    });
+
+    it('bash-path-confinement: shell spellings that reach outside are refused', () => {
+        for (const cmd of [
+            'cat .*/etc/passwd',
+            'cat src/.?/x',
+            'ls [.][.]/other',
+            'cat -- -/../../etc/passwd',
+            'cat -- --/../../etc/passwd',
+            'cat ""/etc/passwd',
+            'cat "."/../x',
+            'grep -f/etc/patterns src',
+            'cat ..\\/outside',
+            'cat ~root/.profile',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        expect(a('cat -- src/a.ts')).toBe(true);
+        expect(a('ls .github')).toBe(true);
     });
 
     it('bash-path-confinement: a path argument outside the working tree is not category A', () => {
@@ -452,7 +501,7 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
         ]) {
             expect(allowOf(cmd), cmd).toBeNull();
         }
-        for (const cmd of ['git branch', 'git branch -a', 'git branch new', 'cat src/x.ts', 'prettier --write src', 'eslint --fix .']) {
+        for (const cmd of ['git branch', 'git branch -a', 'cat src/x.ts', 'prettier --write src', 'eslint --fix .']) {
             expect(allowOf(cmd)?.decision, cmd).toBe('allow');
         }
     });
