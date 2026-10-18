@@ -29,6 +29,7 @@ import {
 } from '../../../src/scripts/hooks/egress_engine_loader.js';
 import { ENGINE_UNAVAILABLE, runEgressStage, WITHHELD_MARKER, type EgressMode } from '../../../src/scripts/hooks/egress_stage.js';
 import type { JsonObject } from '../../../src/scripts/hooks/payload_stub.js';
+import { buildMetafile } from '../../../src/scripts/check_hook_bundle_composition.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const ESBUILD = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
@@ -102,6 +103,16 @@ describe('the loader refuses every unusable chunk', () => {
         expect(reason(loadEgressEngineUncached(writeChunk(path.join(tmp, 'invalid'), 'module.exports = {', 'match'), true))).toBe('invalid');
     });
 
+    it('refuses a present chunk whose own dependency cannot be resolved as invalid, not missing', () => {
+        const body = "require('./no-such-dependency.cjs'); module.exports = {};";
+        expect(reason(loadEgressEngineUncached(writeChunk(path.join(tmp, 'transitive'), body, 'match'), true))).toBe('invalid');
+    });
+
+    it('returns a value, never a throw, when the bundle url itself cannot be resolved', () => {
+        expect(() => loadEgressEngineUncached('not a url', true)).not.toThrow();
+        expect(reason(loadEgressEngineUncached('not a url', true))).toBe('invalid');
+    });
+
     it('refuses a chunk missing an export it must carry', () => {
         const body = 'module.exports = { ENGINE_SCHEMA: 1, EGRESS_RULES: [] };';
         expect(reason(loadEgressEngineUncached(writeChunk(path.join(tmp, 'partial'), body, 'match'), true))).toBe('invalid');
@@ -145,4 +156,20 @@ describe('an unavailable engine never lets a protective mode pass content unscan
             expect(r.refused).toEqual([{ field: 'input', rule: ENGINE_UNAVAILABLE }]);
         });
     }
+});
+
+describe('nothing in the dispatch bundle pulls the engine statically', () => {
+    it('the built bundle carries none of the engine modules', () => {
+        const meta = JSON.parse(buildMetafile(REPO_ROOT)) as { inputs: Record<string, unknown> };
+        const engine = [
+            'src/scripts/_lib/egress_rules.ts',
+            'src/scripts/_lib/egress_token.ts',
+            'src/scripts/_lib/secret_detector.ts',
+            'src/scripts/_lib/egress_engine.ts',
+        ];
+        expect(Object.keys(meta.inputs).length).toBeGreaterThan(100);
+        // The path form the check reads: the stage that uses the engine is in the bundle.
+        expect('src/scripts/hooks/egress_stage.ts' in meta.inputs).toBe(true);
+        expect(engine.filter((m) => m in meta.inputs)).toEqual([]);
+    }, 120_000);
 });

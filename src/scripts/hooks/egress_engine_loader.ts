@@ -61,7 +61,9 @@ export function engineSpecifier(selfUrl: string, bundled: boolean): string {
  * From source the engine is TypeScript whose imports name `.js` siblings, which
  * a plain `require` cannot resolve outside a `tsx` process (a test runner, for
  * one). `tsx`'s own require resolves them; the specifier is computed so esbuild
- * never pulls `tsx` into the bundle, where this branch is not taken.
+ * never pulls `tsx` into the bundle, where this branch is not taken. Without
+ * `tsx` the plain require fails on such a module, which is `invalid`: the
+ * source path is a development path, and it fails closed like every other.
  */
 function sourceRequire(req: NodeJS.Require): (id: string, from: string) => unknown {
     try {
@@ -73,28 +75,37 @@ function sourceRequire(req: NodeJS.Require): (id: string, from: string) => unkno
     return (id: string) => req(id);
 }
 
-/** The uncached load; `bundled` is a test seam, the hook path never passes it. */
+/**
+ * The uncached load; `bundled` is a test seam, the hook path never passes it.
+ *
+ * Every step — resolving the specifier, the existence check, the digest, the
+ * load, the export check — runs inside one conversion boundary, so the function
+ * returns a value on every path. `missing` means the chunk file itself is
+ * absent; once it exists, anything its load throws (a dependency it cannot
+ * resolve included) is `invalid`.
+ */
 export function loadEgressEngineUncached(selfUrl: string = import.meta.url, bundled: boolean = isBundled()): EngineLoad {
-    const specifier = engineSpecifier(selfUrl, bundled);
-    if (bundled) {
+    try {
+        const specifier = engineSpecifier(selfUrl, bundled);
         if (!fs.existsSync(specifier)) return { ok: false, reason: 'missing' };
         // No sidecar, a malformed one or a mismatch: the chunk is not the one built.
-        if (verifyBundle(specifier).state !== 'ok') return { ok: false, reason: 'digest' };
+        if (bundled && verifyBundle(specifier).state !== 'ok') return { ok: false, reason: 'digest' };
+        let mod: Record<string, unknown>;
+        try {
+            const req = createRequire(selfUrl);
+            mod = (bundled ? req(specifier) : sourceRequire(req)(specifier, fileURLToPath(selfUrl))) as Record<string, unknown>;
+        } catch {
+            return { ok: false, reason: 'invalid' };
+        }
+        if (mod['ENGINE_SCHEMA'] !== EXPECTED_ENGINE_SCHEMA) return { ok: false, reason: 'schema' };
+        for (const name of ['detect', 'replaceValues', 'scanText', 'TokenScope', 'EgressRefusedError']) {
+            if (typeof mod[name] !== 'function') return { ok: false, reason: 'invalid' };
+        }
+        if (!Array.isArray(mod['EGRESS_RULES'])) return { ok: false, reason: 'invalid' };
+        return { ok: true, engine: mod as unknown as EgressEngine };
+    } catch {
+        return { ok: false, reason: 'invalid' };
     }
-    let mod: Record<string, unknown>;
-    try {
-        const req = createRequire(selfUrl);
-        mod = (bundled ? req(specifier) : sourceRequire(req)(specifier, fileURLToPath(selfUrl))) as Record<string, unknown>;
-    } catch (exc) {
-        const code = (exc as NodeJS.ErrnoException).code;
-        return { ok: false, reason: code === 'MODULE_NOT_FOUND' ? 'missing' : 'invalid' };
-    }
-    if (mod['ENGINE_SCHEMA'] !== EXPECTED_ENGINE_SCHEMA) return { ok: false, reason: 'schema' };
-    for (const name of ['detect', 'replaceValues', 'scanText', 'TokenScope', 'EgressRefusedError']) {
-        if (typeof mod[name] !== 'function') return { ok: false, reason: 'invalid' };
-    }
-    if (!Array.isArray(mod['EGRESS_RULES'])) return { ok: false, reason: 'invalid' };
-    return { ok: true, engine: mod as unknown as EgressEngine };
 }
 
 const cache = new Map<string, EngineLoad>();

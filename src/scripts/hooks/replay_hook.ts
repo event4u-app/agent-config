@@ -293,7 +293,7 @@ export function main(argv?: string[]): number {
  * What the egress stage would do with this payload under the workspace's
  * mode: counts and refusals by type, never a value. Pure — no state written.
  */
-function _egressPreview(decoded: unknown): {
+export function _egressPreview(decoded: unknown): {
   mode: EgressMode;
   action: "none" | "count" | "replace";
   counts: readonly EgressCount[];

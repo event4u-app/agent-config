@@ -190,18 +190,33 @@ function collectStrings(v: JsonValue, out: string[]): void {
 /** The rule id a refusal records when the engine cannot load. */
 export const ENGINE_UNAVAILABLE = "engine-unavailable";
 
+/** Raised when the engine cannot load; the stage turns it into an `engine-unavailable` refusal. */
+export class EngineUnavailableError extends Error {
+  readonly reason: string;
+
+  constructor(reason: string) {
+    super(`${ENGINE_UNAVAILABLE}: ${reason}`);
+    this.reason = reason;
+    this.name = "EngineUnavailableError";
+  }
+}
+
 /**
- * The engine, or a throw the stage's own failure path turns into a withheld
- * view (`protect`, `strict`) or a recorded miss (`observe`). Never reached when
- * the mode is `off`, so the shipped default loads nothing.
+ * The engine, or an `EngineUnavailableError` the stage's own failure path turns
+ * into a withheld view (`protect`, `strict`) or a recorded miss (`observe`).
+ * Never reached when the mode is `off`, so the shipped default loads nothing.
  */
 export function requireEngine(load: () => ReturnType<typeof loadEgressEngine> = loadEgressEngine): EgressEngine {
   const r = load();
-  if (!r.ok) throw new Error(`${ENGINE_UNAVAILABLE}: ${r.reason}`);
+  if (!r.ok) throw new EngineUnavailableError(r.reason);
   return r.engine;
 }
 
-/** Detection and the extent proof only — nothing is replaced and nothing is kept. */
+/**
+ * Detection and the extent proof only — nothing is replaced and nothing is kept.
+ * Throws `EngineUnavailableError` when no engine is passed and none loads; a
+ * caller outside the stage handles it (the replay preview reports it).
+ */
 export function countEnvelope(
   envelope: JsonObject,
   engine: EgressEngine = requireEngine(),
@@ -252,7 +267,8 @@ function replaceDeep(v: JsonValue, scope: TokenScope, engine: EgressEngine): Jso
  * The placeholder view: every listed value in the prompt, the tool input and
  * the tool result replaced by its token, under one scope that lives as long as
  * this dispatch. A key whose value cannot be replaced safely is withheld whole,
- * never partly replaced. The received envelope is not modified.
+ * never partly replaced. The received envelope is not modified. Throws
+ * `EngineUnavailableError` when no engine is passed and none loads.
  */
 export function buildPlaceholderEnvelope(
   envelope: JsonObject,
@@ -357,7 +373,7 @@ export function runEgressStage(
     const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope, engine);
     result = { mode, placeholder, ...counted };
   } catch (exc) {
-    const rule = exc instanceof Error && exc.message.startsWith(ENGINE_UNAVAILABLE) ? ENGINE_UNAVAILABLE : "stage-error";
+    const rule = exc instanceof EngineUnavailableError ? ENGINE_UNAVAILABLE : "stage-error";
     const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);
     const refused = scanned.map((field) => ({ field, rule }));
     if (mode === "observe") {
