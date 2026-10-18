@@ -242,7 +242,9 @@ of one envelope through the payload-shape planner:
 
 **The engine is a conditional chunk.** The rule table, the token grammar and the
 commit scanner are not part of `dist/hooks/dispatch.js`: `build:hook-chunks`
-emits them as `dist/hooks/egress_engine.chunk.cjs` with a digest sidecar, and
+runs `src/scripts/hook_chunks.mjs`, the one definition of every chunk's entry,
+output and build options, which emits them as `dist/hooks/egress_engine.chunk.cjs`
+with a digest sidecar, and
 `hooks/egress_engine_loader.ts` loads the chunk only when a caller needs
 detection — the stage when its mode is not `off`, the subagent capsule when it
 validates an envelope. The loader refuses a chunk that is missing, that does not
@@ -256,9 +258,11 @@ unavailable engine means is fixed per mode:
 | `observe` | no view changes; the record carries an `engine-unavailable` refusal per scanned field |
 | `protect`, `strict` | every body is withheld from the placeholder view, recorded as `engine-unavailable` |
 
-The subagent capsule rejects an envelope it cannot scan. The chunk carries its
+The subagent capsule rejects an envelope it cannot scan. Every chunk carries its
 own byte ceiling in `src/config/hook-bundle-budget.json` (`chunks`), raised only
-with a `raise_log` entry that names it. The one bundled module that needs the
+with a `raise_log` entry that names it; the composition gate builds each with the
+same `buildChunk` the shipped build uses and refuses a defined chunk without a
+ceiling, a ceiling without a chunk, and a doubled entry on either side. The one bundled module that needs the
 raw-key prefix list (`ai_council/config.ts`) reads `_lib/egress_prefixes.ts`, a
 generated projection of the table that a test and `check_credential_spelling`
 both hold equal to it.
