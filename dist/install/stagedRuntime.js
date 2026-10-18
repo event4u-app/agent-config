@@ -368,6 +368,14 @@ export function probeAndPromote(sessionStartCommand, env = process.env) {
     }
     return readCarrierState(runtimeRoot);
 }
+/** Remove the staged runtime and its state files; returns the path removed, or null when absent. */
+export function removeStagedRuntime(env = process.env) {
+    const runtimeRoot = runtimeRootFor(env);
+    if (!fs.existsSync(runtimeRoot))
+        return null;
+    fs.rmSync(runtimeRoot, { recursive: true, force: true });
+    return runtimeRoot;
+}
 /** The `SessionStart` command the installer writes for this package, or null. */
 export function sessionStartCommandFor(packageRoot) {
     try {

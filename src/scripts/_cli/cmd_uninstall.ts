@@ -72,6 +72,7 @@ import {
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { subtract_pointers } from '../_lib/json_pointers.js';
 import { PROJECT_BRIDGE_MARKERS, USER_SCOPE_PATHS } from '../install.js';
+import { removeStagedRuntime } from '../../install/stagedRuntime.js';
 
 type AnyDict = Record<string, unknown>;
 
@@ -914,6 +915,12 @@ function _uninstall_global(opts: Options): number {
         if (removed && !opts.dry_run) {
             removed_names.push(tool);
         }
+    }
+    // The staged hook runtime is the package's own; a plain uninstall keeps it
+    // because the preserved stubs under ~/.claude point into it.
+    if (tools.includes('claude-code') && opts.purge && !refused && !opts.dry_run) {
+        const staged = removeStagedRuntime();
+        if (staged !== null) _print(_stdout, `  · claude-code: removed the staged hook runtime (${staged})`);
     }
     // Managed Claude hooks and the listing override live in ~/.claude/settings.json
     // (single-surface model) — remove exactly our entries, never user-owned ones.

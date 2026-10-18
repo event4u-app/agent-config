@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     CLAUDE_LAYER_DIRNAME,
     currentRuntimeDir,
+    removeStagedRuntime,
     stageRuntime,
 } from '../../src/install/stagedRuntime.js';
 
@@ -85,6 +86,16 @@ describe('stageRuntime — what the real bundle reads', () => {
         expect(existsSync(path.join(current, 'node_modules', 'yaml', 'package.json'))).toBe(true);
         expect(existsSync(path.join(current, 'src', 'scripts', 'install.ts'))).toBe(false);
     }, 60_000);
+});
+
+describe('removeStagedRuntime — what uninstall --purge removes', () => {
+    it('removes the runtime root and reports it, and is a no-op when absent', () => {
+        const env = { EVENT4U_CONFIG_HOME: path.join(tmp, 'machine') };
+        stageRuntime({ packageRoot: npxPackage('1.0.0'), runtimeRoot: path.join(tmp, 'machine', 'runtime'), nodePath: process.execPath });
+        expect(removeStagedRuntime(env)).toBe(path.join(tmp, 'machine', 'runtime'));
+        expect(existsSync(path.join(tmp, 'machine', 'runtime'))).toBe(false);
+        expect(removeStagedRuntime(env)).toBeNull();
+    });
 });
 
 describe('stageRuntime — one version on disk (1.2)', () => {

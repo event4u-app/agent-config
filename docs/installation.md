@@ -456,6 +456,8 @@ when the outcome holds. A thinned rule layer is only written on a carrier that
 probe reached. If a session still starts with no dispatcher on a thinned layer,
 it prints one line saying so, restores the full layer for the next session, and
 the machine stays full until an install, upgrade or doctor run passes the probe.
+`agent-config uninstall --global --purge` removes the staged runtime; a plain
+uninstall keeps it, because the preserved stubs under `~/.claude` point into it.
 
 The same global install also writes Claude Code's `skillOverrides` for the
 skills it deployed: the set that fits the host's description budget keeps its
