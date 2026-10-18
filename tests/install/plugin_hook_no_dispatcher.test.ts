@@ -11,7 +11,7 @@
 // behaviour.
 
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { closeSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,15 +49,24 @@ describe('plugin hook command — no dispatcher reachable', () => {
             CLAUDE_PROJECT_DIR: ws,
         };
         if (pluginRoot !== undefined) env['CLAUDE_PLUGIN_ROOT'] = pluginRoot;
-        const res = spawnSync('/bin/sh', ['-c', pluginCommand(native)], {
-            cwd: ws,
-            input: '{}',
-            encoding: 'utf-8',
-            env,
-            timeout: 30000,
-        });
-        expect(res.error).toBeUndefined();
-        return res;
+        // stdin from a file, not `input`: a branch that exits without reading stdin
+        // races a piped write into EPIPE, which is the harness failing, not the hook.
+        const stdinPath = path.join(ws, 'stdin.json');
+        writeFileSync(stdinPath, '{}');
+        const stdinFd = openSync(stdinPath, 'r');
+        try {
+            const res = spawnSync('/bin/sh', ['-c', pluginCommand(native)], {
+                cwd: ws,
+                stdio: [stdinFd, 'pipe', 'pipe'],
+                encoding: 'utf-8',
+                env,
+                timeout: 30000,
+            });
+            expect(res.error).toBeUndefined();
+            return res;
+        } finally {
+            closeSync(stdinFd);
+        }
     }
 
     it('SessionStart prints one stderr line, one context line, and exits 0', () => {
