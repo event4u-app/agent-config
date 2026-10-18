@@ -404,7 +404,7 @@ today's analysis-only behaviour.
       (`foldLanes` keyed by tree anchor, seen red keyed by finding id;
       `emitPrompts` and its CLI), wired into the `analyze:repo` door text and
       argument hint; the emitted frontmatter parses through `parseHandoff`.
-- [ ] **4.5 `analyze:and-optimize` (directive a).** `optimize:deep` moves to
+- [x] **4.5 `analyze:and-optimize` (directive a).** `optimize:deep` moves to
       `analyze/and-optimize/` with `replaces: [optimize-deep, optimize:deep]`;
       its `limits:` block and `tests/scripts/optimize_deep_limits.test.ts` carry
       over unchanged. Its steps are then re-expressed over 2.1–3.3, with the
@@ -413,7 +413,14 @@ today's analysis-only behaviour.
       stay as they are (D11).
       verify: the carried limits test passes at the new path, `optimize:deep`
       still resolves in the projected tree after `task generate-tools`, and in a
-      module fixture every reader's path lies under the module root.
+      module fixture every reader's path lies under the module root. Done
+      2026-10-19: moved to `src/domains/analysis-workbench/analyze/and-optimize/`
+      with `replaces: [optimize-deep, optimize:deep]`, `/optimize deep` routes
+      there, the limits test passes at the new path unchanged otherwise; the
+      projected door carries both aliases (`tests/scripts/analysis_and_optimize.test.ts`);
+      `readSet` in `src/scripts/analysis_and_optimize.ts` reads anchors and code
+      under the scope root (module case seen red with `project_root`); Steps
+      0–5 re-expressed over 2.1–3.3.
 
 **Exit:** the source door and and-optimize complete a fixture run each from a
 subfolder and from a module. **Rollback:** the `replaces:` aliases keep the old

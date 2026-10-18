@@ -1,13 +1,14 @@
 ---
 model_tier: high
-name: optimize-deep
-pack: meta
+name: analyze-and-optimize
+pack: analysis-workbench
 visibility: internal
-sub: deep
-cluster: optimize
+sub: and-optimize
+cluster: analyze
+replaces: [optimize-deep, optimize:deep]
 skills: [ai-council, roadmap-writing, subagent-orchestration, decision-review]
-description: "Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'."
-argument-hint: "[--mode=plan|execute] [--loops=N] [--scope=<path>] [--no-external]"
+description: "Analyse this project, repository or module and improve it — independent analysts reading code, an exchange, the council, validated ready roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'."
+argument-hint: "[--mode=plan|execute] [--loops=N] [--scope=<path>|repo] [--project=<path>] [--quick] [--no-external]"
 limits:
   mode_default: plan
   max_iterations: 3
@@ -24,10 +25,10 @@ packs:
   - meta
 ---
 
-# /optimize-deep
+# /analyze:and-optimize
 
 Autonomous deep-improvement loop: **analyze → verify → council → roadmaps →
-PR → refine ×N**. The autonomous sibling of [`/optimize project`](project.md)
+PR → refine ×N**. The autonomous sibling of [`/optimize project`](../optimize/project.md)
 (which is interview-driven and asks the user); this command answers its own
 questions in the AI council and ends with a pull request plus a
 council-refined roadmap set.
@@ -35,9 +36,8 @@ council-refined roadmap set.
 This is a **coordinator** over existing primitives — it composes, never
 reimplements: subagent fan-out analysis, `/analyze:decision`-style decision
 challenge, `ai-council` resolution, `/roadmap:create` output shape,
-`/create-pr` mechanics. One of the four analysis doors, to become
-`analyze:and-optimize`
-(ADR-288);
+`/create-pr` mechanics. One of the four analysis doors (ADR-288), formerly
+`optimize:deep` — `optimize:deep` and `optimize-deep` stay aliases;
 shared vocabulary, lenses and tiers:
 [`analysis-loop`](../../contexts/execution/analysis-loop.md).
 
@@ -122,58 +122,85 @@ above that, re-invoke deliberately with fresh context.
 
 ## Steps
 
-### Step 0 — Preflight (read-only)
+### Step 0 — Preflight and scope (read-only)
 
-1. Live remote state first (`direct-answers` live-state law): fetch,
+1. **Resolve the scope** with `src/scripts/analysis_target.ts` and print its
+   line before any read: `Scope: <repo|module|subdir> <name> at <path>
+   (anchor: <…>)`. `--scope=<path>` fixes the scope root and must lie inside
+   the project, `--scope=repo` widens to the whole repository, `--project`
+   fixes the project root. Inside a module the scope is the module, with or
+   without a marker in its own `agents/`, and the outer project stays
+   `project_root`. Nothing below reads outside the scope root.
+2. Live remote state first (`direct-answers` live-state law): fetch,
    open PRs, recently merged work overlapping the scope — never from memory.
-2. Create or enter an isolated worktree on a fresh branch off the trunk
+3. Create or enter an isolated worktree on a fresh branch off the trunk
    (branch/worktree creation is authorized by invoking this command; every
    Hard-Floor action below stays gated).
-3. Seed it per the
+4. Seed it per the
    [`using-git-worktrees` § 4b allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list)
    — symlink or fully install dependencies, copy or regenerate the generated
    projections, regenerate build output, and never copy `.agent-settings.yml`
    into a worktree.
-4. Read the lock inventory: honest nulls, DR memories, `later/` resume
+5. Read the lock inventory: honest nulls, DR memories, `later/` resume
    conditions, standing ADRs. These are constraints for Step 4, surfaced —
    never silently relitigated (`decision-revisit-gate`).
+6. Open the run (`src/scripts/analysis_run.ts`): run id, pinned head, token
+   budget; a budget cap ends the run `handed-back`, never raises the budget.
 
-### Step 1 — Deep analysis (parallel subagents)
+### Step 1 — Deep analysis: analysts, lenses, exchange
 
-Fan out read-only analysis subagents over the repo's load-bearing surfaces
-(token/context cost, execution flows, CI/PR pipeline, routing/activation,
-decision debt, archived intelligence) plus — unless `--no-external` —
-tree-level deep-dives of named external references (`external-reference-deep-dive`:
-file trees + raw files, never README summaries). Each agent returns
-structured findings with file:line evidence and an effort estimate.
+The read set is `readSet` (`src/scripts/analysis_and_optimize.ts`): the anchor
+table of the scope (`analysis_anchors.ts` — skipped tests, issues, FIXME/TODO,
+open roadmap steps, ADRs) **and the scope's code**, not only its roadmaps and
+ADRs. Every path lies under the scope root.
+
+1. **Analysts** (`analysis_analysts.ts`): three by default, one under
+   `--quick` or a scope below the pre-registered size, all on the same brief,
+   each stamped with its family and context relation. Unless
+   `--no-external`, tree-level deep-dives of named external references
+   (`external-reference-deep-dive`: file trees + raw files, never README
+   summaries) join the brief.
+2. **Seed + three lenses each** — coverage, adversary, overbuild-sequencing
+   (`analysis-loop` § The loop shape); every loop appends a ledger row with
+   tiered evidence (`analysis_ledger.ts`). Each analyst returns structured
+   findings with `file:line` evidence and an effort estimate.
+3. **One exchange** (`analysis_exchange.ts`): inventory, cross-exam, converge,
+   with a disagreement ledger and a minority audit.
 
 ### Step 2 — Verification gate (non-negotiable)
 
 Hand-verify every damning finding before it may steer the roadmap
 (`plausible-mechanism-is-not-evidence`): re-run the grep/measurement the
 finding rests on, in this checkout, at this SHA. A finding that fails
-verification is dropped with a note. Findings colliding with a recorded
-lock are marked and routed to Step 3 only if the mechanism differs
-(mechanism-match test) — otherwise honored as locked.
+verification is dropped with a note. Only `executed` and `read` tiers count as
+verified. Findings colliding with a recorded lock are marked and routed to
+Step 3 only if the mechanism differs (mechanism-match test) — otherwise
+honored as locked.
 
-### Step 3 — Council pass
+### Step 3 — Council pass and the gain gate
 
 Run the AI council (`council:estimate` → `council:run --confirm`) on the
 contested decisions only: priority order, roadmap topology, lock collisions
 that pass the mechanism-match test, and the loop count when the user gave
 none. Surface the fast-path marker verbatim where the low-impact path
 resolves something. High-impact and user-required classes still reach the
-user per `ai-council-config` — autonomy never rewires that floor.
+user per `ai-council-config` — autonomy never rewires that floor. Then the
+gain gate (`analysis_gate.ts`) decides whether one more exchange round is
+offered; questions route by `analysis_questions.ts` — council first, the owner
+once.
 
-### Step 4 — Roadmap set
+### Step 4 — Roadmap set: emit and validate
 
 Author ONE central roadmap (goal, verified findings, locks honored,
 sub-roadmap management table, pre-registered success criteria, provenance —
 external sources anonymized + `ENC1:`-encrypted per `source-confidentiality`)
-plus sub-roadmaps cut along the council's topology. Foundation-class
+plus sub-roadmaps cut along the council's topology, through the emit stage
+(`analysis_emit.ts`: `status: ready`, owner-first landing). Foundation-class
 work (whatever must be true for the rest to be verifiable — typically the
-CI oracle) gates the leverage-class work explicitly. Regenerate the
-dashboard (`roadmap:progress`) in the same response as any roadmap write.
+CI oracle) gates the leverage-class work explicitly. The validate stage
+(`analysis_validate.ts`) runs before anything leaves the machine; a failure
+stops the run in `emitted`. Regenerate the dashboard (`roadmap:progress`) in
+the same response as any roadmap write.
 
 ### Step 5 — Pull request (execute mode only)
 
@@ -182,7 +209,8 @@ dashboard (`roadmap:progress`) in the same response as any roadmap write.
 and present the plan (plan mode's defined end state). Then push the branch
 and open the PR per [`/create-pr`](../pr/create.md) — its mechanics and the
 always-active PR-surface rules govern the body and reply shape; do not
-restate them here.
+restate them here. The publish stage (`analysis_publish.ts`) does it: own
+branch only, the allowed path set, a leased push, a non-draft PR exactly once.
 
 ### Step 6 — Refinement loops (×N, execute mode only)
 
