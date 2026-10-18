@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **747 public artefacts** shipped by
+Consumer-facing catalog of all **748 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -454,10 +454,11 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (205)
+## Commands (206)
 
 | kind | name | cluster | description |
 |---|---|---|---|
+| command | [`agent-design`](../dist/agent-src/commands/agent-design.md) | cluster: agent-design | Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation |
 | command | [`agent-handoff`](../dist/agent-src/commands/agent-handoff.md) |  | Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste. |
 | command | [`agent-status`](../dist/agent-src/commands/agent-status.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
 | command | [`agents`](../dist/agent-src/commands/agents.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
@@ -519,7 +520,7 @@ are excluded.
 | command | [`design-system-capture`](../dist/agent-src/commands/design-system/capture.md) | cluster: design-system | Inventory this repo's own components and tokens and emit them in the design-system.json shape, so the import path is identical to an external extraction. |
 | command | [`design-system-generate`](../dist/agent-src/commands/design-system/generate.md) | cluster: design-system | Ground a design system in the curated design corpus from a product or industry brief, then optionally persist it as MASTER.md or seed DESIGN.md. |
 | command | [`design-system-import`](../dist/agent-src/commands/design-system/import.md) | cluster: design-system | Run an extraction tool's output through the three-lane adapter into the design-system.json contract, then hand it to the per-field confirmation import. |
-| command | [`design`](../dist/agent-src/commands/design.md) | cluster: design | Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation |
+| command | [`design-system-sync`](../dist/agent-src/commands/design-system/sync.md) | cluster: design-system | Reconcile a design system that already exists on the host's canvas into the code through one ledger the user sees, before the user runs the host's own sync. |
 | command | [`estimate-ticket`](../dist/agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
 | command | [`explain-run`](../dist/agent-src/commands/explain-run.md) |  | Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'. |
 | command | [`feature`](../dist/agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
