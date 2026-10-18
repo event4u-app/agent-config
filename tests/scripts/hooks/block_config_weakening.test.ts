@@ -23,6 +23,7 @@ import {
     count_entries,
     decide,
     parseSettingsDoc,
+    snapshotUpdateWarning,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
 import {
     buildSettingsClassIndex,
@@ -590,5 +591,28 @@ describe('block_config_weakening — differential: the two readers refuse the sa
         const refused = CORPUS.filter((t) => parseSettingsDoc(t, '.agent-settings.yml') === null);
         expect(refused.length).toBeGreaterThan(8);
         expect(CORPUS.length - refused.length).toBeGreaterThan(20);
+    });
+});
+
+// road-to-a-canvas-the-code-owns 7.1 — visual baselines are a review surface.
+describe('block_config_weakening — snapshot surfaces', () => {
+    it('snapshot: classifies baseline image directories as advisory', () => {
+        expect(classify_target('tests/e2e/home.spec.ts-snapshots/home-chromium.png')).toBe('advisory');
+        expect(classify_target('src/components/__screenshots__/button.png')).toBe('advisory');
+        // the near-miss: a folder merely named "snapshots" is not a baseline dir
+        expect(classify_target('docs/snapshots/readme.md')).toBeNull();
+    });
+
+    it('snapshot: warns on a visual-runner baseline update with the acceptance step', () => {
+        const w = snapshotUpdateWarning('npx playwright test --update-snapshots');
+        expect(w).toMatch(/diff/);
+        expect(w).toMatch(/commit of its own/);
+        expect(snapshotUpdateWarning('npx vitest run --update-snapshots tests/unit')).toBeNull();
+        expect(snapshotUpdateWarning('npx playwright test')).toBeNull();
+    });
+
+    it('snapshot: an advisory snapshot write warns, never blocks', () => {
+        const d = decide('advisory', 'tests/e2e/a.spec.ts-snapshots/a.png', 1, 1);
+        expect(d.action).toBe('warn');
     });
 });
