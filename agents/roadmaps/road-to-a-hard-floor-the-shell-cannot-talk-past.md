@@ -109,30 +109,50 @@ Lands alone, first, as its own PR. It withdraws the allow **only** from irrevers
 from targets outside the working tree. Reversible in-tree forms keep their allow, so this phase
 adds no prompt — neither an agent question nor a host prompt — on reversible work.
 
-- [ ] **0.1 `git branch` keeps its allow except where it loses a ref.** Not category A: `-d`,
+- [x] **0.1 `git branch` keeps its allow except where it loses a ref.** Not category A: `-d`,
       `-D`, `--delete`, `-f`/`--force`, `-M`, `-C`, and `-m`/`--move` onto an existing name.
       Still category A: list forms and creating a new branch.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*branch-loses-a-ref/
-- [ ] **0.2 Bash path arguments get the read tools' confinement.** Every path-shaped argument
+- [x] **0.2 Bash path arguments get the read tools' confinement.** Every path-shaped argument
       (absolute, `~`, `..`-escaping, or `--flag=<path>`) must resolve inside the working tree
       through the same `isInsideWorkingTree` the read branch uses (`category_a.ts:143`, `:276-282`).
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*bash-path-confinement/
-- [ ] **0.3 Output-writing flags count as paths.** A closed list per safe head: `--output`,
+- [x] **0.3 Output-writing flags count as paths.** A closed list per safe head: `--output`,
       `--output-directory` (git), `-o` (sort), `-fprint`/`-fprintf`/`-fls` (find), `--write`/`-w`
       (prettier, biome), `--fix` (eslint, stylelint, ruff, rubocop), `--outDir`/`--outFile` (tsc),
       as tokens and as `--flag=value`. Their target goes through 0.2; inside the tree the command
       stays category A.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*output-flags-are-paths/
-- [ ] **0.4 The allow says what it checked.** The reason string at `permission_gate.ts:112-114`
+- [x] **0.4 The allow says what it checked.** The reason string at `permission_gate.ts:112-114`
       names the confinement only when 0.2 actually ran for that call.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*reason-names-what-was-checked/
-- [ ] **0.5 Rows, both polarities, and sensitivity.** Every D2 row lands as a `false` case and
+- [x] **0.5 Rows, both polarities, and sensitivity.** Every D2 row lands as a `false` case and
       `git branch`, `git branch -a`, `git branch new`, `cat src/x.ts`, `prettier --write src`,
       `eslint --fix .` as `true` cases; reverting each of 0.1–0.3 reds its own rows.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts` -> 0
 
 D3 (names standing in for bodies) closes in 2.4, behind the segmenter: withdrawing the allow
 before then would put a host prompt on every `npm run build`.
+
+**Delivered 2026-10-18, stricter than written in two places.** (1) 0.1: after the
+modification review (`agents/evidence/council/hard-floor-phase0-review-20261018.question.md`
+and its round-2 sibling), `git branch` is an allowlist of **observational** forms only —
+listing, `-a`/`-r`/`-v`, `--show-current`, `--merged`/`--contains` filters. Creating a branch
+(`git branch new`, `-c`, `-u`, `--edit-description`) writes a ref and is no longer category
+A, so the step text's "still category A: … creating a new branch" no longer holds; `-m` is
+withdrawn on every target because target existence is a repository fact. The cost is the
+host's own confirmation on those forms, never a question from this package. (2) 0.3: no
+per-head table. The walk confines every spelling — a separate value token is a positional,
+`--flag=value` an inline value, `-o/path` the tail of a single-dash token, `--write`/`--fix`
+write their positionals — and a table of them was measured inert (removing it redded
+nothing). Added from the review: everything after `--` is a positional, a dash-led token
+containing `/` is a path (it may be the previous option's value, `sort -o --/../x`), an unquoted
+glob (`*`, `?`, `[`) is refused because its expansion is never seen (`ls src/*.ts` pays a host prompt), and confinement follows symlinks in
+both branches (an in-tree link to `~/.ssh` is outside) — the classifier's one filesystem read,
+which can only withhold. Fixed in passing: `isInsideWorkingTree` read `./...` (and any name
+starting `..`) as an escape. Every mechanism has a sensitivity probe that reds its own rows.
+**Bundle cost: +3,581 B, leaving 106 B under the ceiling** — the next bundled addition needs
+1.8's parser deletion first, or an owner-logged raise.
 
 ## Phase 1 — One segmenter
 
