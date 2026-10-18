@@ -295,11 +295,47 @@ the Acceptance Criteria held.
       `--no-verify` form stay blocked; `git grep -n`, `git grep -nE`,
       `git log -n 5`, `git branch -n`, `git push -n` pass; neutralising the fix
       turns the blocked set green in `tests/scripts/hooks/block_no_verify.test.ts`.
+      <br>**2026-10-17: written, verified, and NOT landed — it needs a
+      ratification this run cannot produce.** The change is small and the
+      design held: extract the subcommand resolver `git config` detection
+      already carried as `_git_subcommand` and reuse it (so `git -C /repo
+      grep -n` resolves to `grep`, not `/repo`); gate the short branch and
+      the bundle branch (`-nm`, `-mn`) on a `_SHORT_N_IS_NO_VERIFY` set of
+      `commit` and `am`; leave the long `--no-verify` unscoped and assert it
+      on `push`, `merge` and `am` so the narrowing cannot leak into it; keep
+      `git -n` with no subcommand blocked, because unresolved is not safe.
+      `am` keeps its refusal although this git's own `git am -h` lists no
+      `-n` at all — conservatism, and the code should say so rather than
+      claim an alias. 26 cases, the 10 allow-cases seen **red** first;
+      forcing the predicate false reds 14, so both arms have sensitivity.
+      `tests/scripts/hooks/block_no_verify.test.ts` was green at 72/72 and
+      `npm run typecheck` clean.
+      <br>**Why it is not on the branch.** `block_no_verify.ts` is a
+      governance hook and `hook_manifest.{yaml,json}` is hook plumbing, so
+      the diff is gated by ADR-268 § 4: it needs an artefact under
+      `agents/evidence/ratifications/` whose `reviewed_by` differs from both
+      `proposed_by` and `implemented_by`, with provider diversity across the
+      configured seats. A drain lane is proposer and implementer, and both
+      council seats returned `0/2 present — INCONCLUSIVE` on 2026-10-17, so
+      no independent reviewer exists today. `confirmed-non-expanding` is not
+      the way around it — the contract states as an Iron Law that it carries
+      the same independence bar and that a misclassified expansion is review
+      error, and relaxing a guard's reach is the expansion direction however
+      small. The pre-push preflight refused the push, correctly, and the
+      commits were reset off the branch rather than forced past it.
+      Reopening costs minutes once a seat answers; the design above is the
+      whole of it.
 - [ ] **4.4 Run B and C through the existing demotion contract.** The shadow
       record and the demotion contract exist (`turn_end_refusals.ts:18-28`); the
       "always armed" decision (`settings_removed_keys.ts:84-87`) is not
       reopened. Feed them the 4.1/4.2 counts.
       verify: the contract's verdict for each detector is recorded.
+      <br>2026-10-17, screened and not run: C's input is ready (4.2), B's is
+      not. 4.1 cannot supply it without the digest-to-transcript join it
+      names, because the pin store keeps 7 days and 3 of 31 sessions survive
+      in it. Running the contract for C alone would record one of the two
+      verdicts this step's verify asks for and read as the step being done,
+      so it waits for 4.1.
 
 ## Phase 5 — Make the existing no-cheap-question law visible
 
@@ -356,7 +392,7 @@ the Acceptance Criteria held.
 | K9 | a new `throughput:queue` CLI and job state machine | `ci_settle` already settles by head SHA and names the background form; 3.2 adds an obligation, not a scheduler | 3.2's fixture cannot be met without persisted state |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
