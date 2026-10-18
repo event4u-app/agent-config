@@ -53,11 +53,11 @@ The subset, by claim id, read against the ledger on 2026-10-16:
 
 | Claim id | Status | Evidence class today |
 |---|---|---|
-| `surgical-uninstall` | backed | `exec:` — unit tests under `tests/lib/`, not this harness |
+| `surgical-uninstall` | backed | `exec:` — `tests/install/uninstall_shared_host_config_real_install.test.ts`, this harness, plus the `tests/lib/` unit suites |
 | `host-agent-count` | backed | `exec:` — `tests/install/toolDetection.test.ts`, this harness |
 | `install-audit-clean` | backed | pointer — a workflow step |
 | `hook-dispatch-latency` | backed | pointer — `docs/hook-latency.json` |
-| `default-install-context-cost` | backed | `exec:` — `update_counts --check`, a count of this repository |
+| `default-install-context-cost` | backed | `exec:` — `tests/install/default_install_skill_count_real_install.test.ts`, this harness |
 | `thin-inject-delivery-equivalence` | backed | pointer — a bench report |
 | `mcp-registered-server-standing-cost` | backed | pointer — a metrics file |
 | `skill-tiering-h2-costs-more-by-default` | backed | pointer — an analysis file |
