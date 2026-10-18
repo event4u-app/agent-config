@@ -52,23 +52,29 @@ output. It is the classifier and the data behind it.
 
 ## Phase 1 — Name the impact where it is known: at commit time
 
-- [ ] **1.1 Define the trailer.** `Consumer-Impact: none | automatic | notice |
+- [x] **1.1 Define the trailer.** `Consumer-Impact: none | automatic | notice |
       action`, plus an optional `Security: yes`, documented in
       `CONTRIBUTING.md` beside the bump table at `:329-333`. `none` = nothing a
       consumer can observe; `automatic` = the update handles it; `notice` =
       read this; `action` = do something or it breaks.
       The four values are enumerated on one line.
       verify: `grep -c 'Consumer-Impact' CONTRIBUTING.md` -> /^[1-9][0-9]*$/
-- [ ] **1.2 Parse it where commits are already parsed.** `src/scripts/release.ts`
+- [x] **1.2 Parse it where commits are already parsed.** `src/scripts/release.ts`
       builds its `Commit` records at `:455-470`; read the trailer in that same
       pass, defaulting to `none` with the absence recorded.
       verify: a unit test over a synthetic commit list returns the four values
       and `none` for an untrailered subject.
-- [ ] **1.3 Refuse a breaking subject with no trailer.** A commit carrying `!`
+- [x] **1.3 Refuse a breaking subject with no trailer.** A commit carrying `!`
       or `BREAKING CHANGE` inside the release span and no `Consumer-Impact:`
       fails the release check — the one place the author is still present.
       verify: a fixture span with such a commit exits non-zero; the same span
       with the trailer exits 0. Both directions.
+      Landed: `src/scripts/_lib/consumer_impact.ts` (`impact_span_verdict`),
+      called from `release.ts` `main()` right after the span is read;
+      `tests/lib/consumer_impact.test.ts` builds a real span in a temp
+      repository and asserts both directions plus an out-of-enum value. Seen
+      red by neutralising the predicate. The span since 16.5.0 carries no `!`
+      subject, so the next release is not affected.
 
 ## Phase 2 — The bump follows the impact, not the punctuation
 
@@ -76,23 +82,48 @@ output. It is the classifier and the data behind it.
       the span carries `action`, or touches a surface `CONTRIBUTING.md:331`
       already lists as major. An internal `!` becomes a minor.
       verify: unit tests over the two branches.
-- [ ] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
+      Open (2026-10-17): still held by blocker `impact-numbering-model`
+      option (a). The rule exists as the pure, uncalled `impact_bump` in
+      `src/scripts/_lib/impact_bump.ts` so 2.2 could score it; wiring it into
+      `infer_bump` is the owner-reserved part.
+- [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
       rule against the recorded rows.
       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
       come out **major**. A replay that reproduces the old classification has
       changed nothing and is the failure, not the pass.
-- [ ] **2.3 Backfill the record.** Add a `Consumer impact` column to
+      Landed (2026-10-17): `replay_majors` reads the 2.3 column from the live
+      `BREAKING_CHANGES.md`. Result over 10.0.0 → 16.0.0: 12.0.0 and 15.0.0
+      major; 10.0.0, 11.0.0, 13.0.0, 14.0.0 and 16.0.0 minor — five of seven
+      majors would have been minors. The surface half of the rule is not
+      scored: the record has no surface column, and inferring one would
+      re-judge history. Accuracy on this window is 7/7 with zero false
+      negatives on `action`, but the window is the same seven rows that
+      supplied the expected values, so it is a consistency check, not an
+      independent measurement. Test: `tests/lib/impact_bump.test.ts`, seen
+      red before the column existed.
+- [x] **2.3 Backfill the record.** Add a `Consumer impact` column to
       `BREAKING_CHANGES.md` for 2.0.0 → 16.5.0, taken from each row's existing
       Migration prose rather than re-judged.
       verify: every row in that table carries a value from the enum.
+      Landed (2026-10-17): all 17 rows (1.0.0 → 16.0.0, two for 6.0.0)
+      carry a value; the table has no row for a non-major, so 16.5.0 adds
+      none. Prose that says "no consumer action" → `none`; "Automatic" →
+      `automatic`; an instruction to change something → `action`; 9.0.0
+      (an opt-out rollback, nothing breaks) → `notice`. No row needed the
+      undecided-prose fallback. The column carries the blocker's
+      experimental, non-normative disclaimer.
 
 ## Phase 3 — Publish the map, and read versions correctly
 
-- [ ] **3.1 Write the map into the published package.** The release script
+- [x] **3.1 Write the map into the published package.** The release script
       emits `agentConfig.impact` into `package.json`, non-`none` entries only,
       so the document stays small.
       verify: a dry-run release writes the key and omits `none` rows.
-- [ ] **3.2 Spike — is the map reachable in one request?** `update_check.ts:36`
+      Landed: `set_package_version` (release step 2) writes the map through
+      `write_impact_map`. `--dry-run` returns before step 2 and writes no
+      file, so the writer is exercised on a temp `package.json` instead: an
+      `action` release writes the key, a `none` release adds no row.
+- [x] **3.2 Spike — is the map reachable in one request?** `update_check.ts:36`
       already fetches `https://registry.npmjs.org/@event4u/agent-config/latest`
       once per 24 h. Establish whether that document carries custom
       `package.json` fields. If it does not, cost the packument fallback
@@ -100,28 +131,35 @@ output. It is the classifier and the data behind it.
       it. This is a spike with a written outcome, not a build step.
       verify: the finding is recorded in this file's `## Decisions` as D4 with
       the observed response shape.
-- [ ] **3.3 A real comparator for policy decisions.** Add one beside
+- [x] **3.3 A real comparator for policy decisions.** Add one beside
       `_is_newer`: prerelease ordering, `v` prefix, invalid input → no action.
       **Keep `_is_newer` and its behaviour** as a pinned regression fixture —
       `_is_newer('16.6.0','16.6.0-next.3') === false` is the witness that the
       new path and the old one are different code.
       verify: the new comparator returns `true` for that pair; the pinned
       fixture still returns `false`.
-- [ ] **3.4 The local machine overrides the map.** If the candidate's
+- [x] **3.4 The local machine overrides the map.** If the candidate's
       `engines.node` is unsatisfied by `process.version`, the impact for this
       machine is `action`, whatever the map says.
       verify: a fixture with `engines.node: ">=22"` under a Node 20
       `process.version` yields `action`.
+      Landed (3.3 + 3.4): `is_newer_version` sits beside `_is_newer` in
+      `src/scripts/_lib/update_check.ts`, backed by the pure
+      `src/scripts/_lib/version_order.ts` (SemVer precedence and the
+      `engines.node` range subset); `_is_newer` and the banner are untouched.
+      `machine_override` in `classify_update.ts` returns `action` for that
+      fixture and for a range it cannot check. Tests:
+      `tests/lib/version_order.test.ts`, `tests/lib/classify_update.test.ts`.
 
 ## Phase 4 — One pure classifier, no behaviour change
 
-- [ ] **4.1 Write `classifyUpdate`.** Signature:
+- [x] **4.1 Write `classifyUpdate`.** Signature:
       `{installed, candidate, origin, env, impactMap, engines, publishedAt, deprecated, provenance, settings} → {action: auto|ask|notify|none, reasons[]}`.
       Origins come from `src/scripts/_cli/doctor_install_mode.ts`; no new
       detector, no new CLI verb (ADR-041).
       verify: the function is pure — no filesystem, no network, no process
       exit — asserted by a test that calls it with a frozen input object.
-- [ ] **4.2 Encode the rules.** Any `action` in range, or engines unmet →
+- [x] **4.2 Encode the rules.** Any `action` in range, or engines unmet →
       `ask`. `Security: yes` in range → `notify` in every mode but `off`. A
       project pin present → never `auto`. CI, non-interactive, a source
       checkout, or `AGENT_CONFIG_NO_UPDATE_CHECK=1` → `none`, mirroring the
@@ -131,10 +169,41 @@ output. It is the classifier and the data behind it.
       verify: a ≥ 40-case matrix including the five no-action majors, a forged
       manifest, a prerelease, a dist-tag drift and a disk-full read. **Zero
       `auto` verdicts under uncertainty** is the assertion that matters.
+      Landed (4.1 + 4.2): `src/scripts/_lib/classify_update.ts`, 57-case
+      matrix in `tests/lib/classify_update.test.ts`. Interpretations taken
+      where the step was silent: "wait" is `none` with a `wait:` reason; a
+      security fix lifts a wait to `notify`; an absent mode, an unknown
+      origin, a `project-pin` origin or a prerelease candidate is an
+      uncertainty; an `ephemeral` npx run is `none`; a malformed map entry
+      is treated as `action`. The origin type reuses `InstallOrigin` from
+      `classify_install_origin` in `update_check.ts` (landed on main in
+      #2416, which `doctor_install_mode.ts` feeds) plus `source-checkout`;
+      no new detector.
+      The no-`auto` assertion was seen red by disabling the provenance rule.
+      AC-4 stays open: its second half holds; its first holds for every
+      input that is not suppressed and has a newer candidate. This step
+      makes CI, non-interactive, source checkout, the opt-out and mode `off`
+      resolve to `none`, so a literal "every input" contradicts it. Which
+      wins is for the reviewer to settle; the test asserts the scoped form.
+      Amended after the merge-danger council on this PR: engines unmet now
+      yields a fifth verdict, `action`, not `ask` — `ask` means "install on
+      approval", and a candidate this machine cannot run must not be
+      installable that way (3.4 already names the impact `action`). A
+      prerelease Node runtime is an uncertainty (`notify`), the same policy
+      as a prerelease candidate, because the `engines.node` subset does not
+      reproduce npm's prerelease range bounds.
 - [ ] **4.3 Expose it read-only.** `doctor --json` reports the verdict and its
       reasons. Nothing acts on it in this roadmap.
       verify: the banner, `upgrade` and `update` emit byte-identical output on
       the existing fixtures — a diff of recorded stdout before and after.
+      Open (2026-10-16): the verdict has nothing true to report from yet.
+      The cached `update-check.json` keeps only `last_seen_version`, so
+      `engines`, `agentConfig.impact`, `dist.attestations` and
+      `deprecated` — all present in the `/latest` document per D4 — would
+      need to be persisted by the probe first, which changes a state file
+      the banner reads. And `cmd_doctor.ts` sits above the 1,500-line
+      ceiling, so the reporting line needs a neighbouring extraction to pay
+      for it. Both belong in one reviewed change, not appended to this one.
 
 ## Blockers
 
@@ -149,6 +218,10 @@ output. It is the classifier and the data behind it.
   compatibility commitment, because version numbers govern consumer dependency
   resolution. Record:
   `agents/evidence/council/owner-blocker-routing-20261016.md`.
+  **2026-10-17:** the evidence (a) waits on now exists. Step 2.2 replayed
+  10.0.0 → 16.0.0 and scored 12.0.0 and 15.0.0 major and the other five
+  minor, with no `action` row scored as a minor. The decision itself is
+  still open.
 - **Owner:** repository owner, **for (a) alone.**
 - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
@@ -208,14 +281,14 @@ output. It is the classifier and the data behind it.
 | D1 | deterministic | evidence | SemVer-major is never the ask trigger | 5 of the last 7 majors needed no consumer action (`BREAKING_CHANGES.md:50-56`, executed) | a major is cut only for consumer-visible change for four consecutive releases |
 | D2 | reversible-technical | evidence | Keep `_is_newer` beside the new comparator rather than replacing it | its truncation behaviour is asserted by an existing fixture; replacing it in place would delete the regression witness for the defect | the pinned fixture is retired with a recorded reason |
 | D3 | deterministic | agent | No new CLI verb; the classifier is a function `doctor --json` reports | ADR-041 | ADR-041 is superseded |
-| D4 | contested-technical | agent | Defer the read-path choice (`/latest` vs the packument) to step 3.2's spike, and let nothing before it depend on the answer | the question is about a third party's response document and cannot be settled offline; step 3.2 settles it and records the observed shape | the registry changes what `/latest` carries, or a step before 3.2 acquires a dependency on the answer |
+| D4 | contested-technical | evidence | Read the impact map from the `/latest` document the 24 h probe already fetches; no packument fallback is needed | step 3.2, observed 2026-10-16: `GET https://registry.npmjs.org/@event4u/agent-config/latest` returned 7,948 bytes for 16.5.0 carrying every top-level `package.json` key of the 16.5.0 tag except `files`, **including the non-standard `mcpName`** — so a custom top-level key reaches the reader. The same document carries `engines` (`{"node": ">=20.11.0"}`) and `dist.attestations` (provenance); `deprecated` is absent when unset. The fallbacks cost far more: the full packument was 842,897 bytes and the abbreviated `application/vnd.npm.install-v1+json` form 260,604 bytes, against one request per 24 h | the registry stops carrying a non-standard top-level key in `/latest`, or the first release that writes `agentConfig` shows it absent from that document |
 | D5 | critical-technical | evidence | Uncertainty never resolves to `auto` | an updater that guesses on a release it cannot classify is the failure mode the whole file exists to prevent | never |
 
-D4 closes a deferral, not a read path: what was decided is that the read path
-is settled by a measurement rather than by argument, because the question is
-about a third party's response document and cannot be answered offline. Step
-3.2 takes the measurement and records the shape it found. Nothing before 3.2
-depends on which way it comes out.
+D4 was first recorded as a deferral to a measurement; step 3.2 took it. The
+witness is indirect on purpose: no published version carries `agentConfig`
+yet, so the evidence that it will survive is that `mcpName`, another key npm
+does not define, already does. The first release that writes the key is the
+direct check named in the revisit column.
 
 ## What this roadmap deliberately does not do
 
@@ -239,21 +312,21 @@ depends on which way it comes out.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** Replaying 10.0.0 → 16.0.0 through the new bump rule yields minor
+- [x] **AC-1** Replaying 10.0.0 → 16.0.0 through the new bump rule yields minor
       for 13.0.0, 14.0.0 and 16.0.0 and major for 12.0.0 and 15.0.0.
-- [ ] **AC-2** A release-span commit carrying `!` with no `Consumer-Impact:`
+- [x] **AC-2** A release-span commit carrying `!` with no `Consumer-Impact:`
       trailer fails the release check; the same commit with a trailer passes.
-- [ ] **AC-3** The new comparator returns `true` for
+- [x] **AC-3** The new comparator returns `true` for
       `('16.6.0','16.6.0-next.3')` while the pinned `_is_newer` fixture still
       returns `false`.
 - [ ] **AC-4** Over a ≥ 40-case matrix, `classifyUpdate` returns `ask` for
       every input whose `engines.node` is unsatisfied, and `auto` for **no**
       input carrying an unknown, a missing provenance or a project pin.
-- [ ] **AC-5** `classifyUpdate` performs no filesystem or network access,
+- [x] **AC-5** `classifyUpdate` performs no filesystem or network access,
       asserted by a test that calls it with a frozen input.
 - [ ] **AC-6** The banner, `upgrade` and `update` produce byte-identical
       recorded stdout before and after the whole change.
-- [ ] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
+- [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
 - [ ] **AC-8** `task ci` green.
 
