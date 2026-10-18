@@ -821,6 +821,11 @@ tasks:
     desc: "Fail on a high-confidence secret in the changed set (diff vs origin/main + untracked) — the non-bypassable CI net behind the secret-vcs-guard rule (secret_detector)"
     cmd: ./scripts-run src/scripts/check_secret_leak
 
+  check-credential-spelling:
+    silent: true
+    desc: "Fail when a raw-key prefix is spelled outside the one rule table (src/scripts/_lib/egress_rules.ts) under src/scripts or src/cli — a second spelling is how the private copies drifted apart (road-to-one-detector-and-the-senders-we-own 2.2)"
+    cmd: ./scripts-run src/scripts/check_credential_spelling
+
   check-secret-leak-pack:
     silent: true
     desc: "Fail on a high-confidence secret in what actually SHIPS — the npm pack payload, including shipped-but-gitignored paths (dist/cli/**) that every git-backed mode of the sibling gate cannot reach by construction. An additive mode nothing calls is indistinguishable from no mode at all, which is why this task exists rather than only the flag (road-to-publish-boundary-evidence Phase 2)"

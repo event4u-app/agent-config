@@ -16,7 +16,7 @@
  *
  * Masks applied (resolution order):
  *
- * 1. Raw-key secret prefixes (`sk_live_…`, `ghp_…` etc.) and inline
+ * 1. Raw-key secret prefixes (the rule table's, at a token start) and inline
  *    `api_key=…` shapes → `<secret>`.
  * 2. Emails → `<email>`.
  * 3. Absolute file paths (`/Users/…`, `/home/…`, `C:\…`) → `<path>`.
@@ -39,29 +39,17 @@
  *    matching the original's `f"<{len(out)} chars>"`.
  */
 
+import { rawKeyPrefixPattern } from '../../_lib/egress_rules.js';
+
 export const LONG_STRING_THRESHOLD = 200;
-
-const _RAW_KEY_PREFIXES: readonly string[] = [
-    'sk_live_', 'sk_test_', 'ghp_', 'github_pat_', 'gho_', 'ghs_',
-    'ghu_', 'xoxb-', 'xoxp-', 'AIza', 'AKIA',
-];
-
-/** Escape a literal for a RegExp, mirroring Python's `re.escape`. */
-function _reEscape(literal: string): string {
-    // Python `re.escape` escapes non-alphanumerics; under the `u` flag a
-    // `\-` is an illegal escape, so `-` is escaped via its unicode form.
-    // The fixed prefixes only contain `-` (e.g. `xoxb-`), so this is the
-    // sole case that matters; the broad class covers the rest faithfully.
-    return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/-/g, '\\u002d');
-}
 
 // Unicode word-char class standing in for Python's default-mode `\w`.
 const _W = '\\p{L}\\p{N}_';
 
-const _RAW_KEY_RE = new RegExp(
-    '(?:' + _RAW_KEY_PREFIXES.map(_reEscape).join('|') + ')[A-Za-z0-9_-]{6,}',
-    'gu',
-);
+// The raw-key prefixes are the rule table's (road-to-one-detector-and-the-
+// senders-we-own 2.2); this surface keeps its own policy: prefix plus six key
+// characters is enough to mask, because it cannot refuse.
+const _RAW_KEY_RE = rawKeyPrefixPattern(6);
 const _API_KEY_RE = new RegExp(
     '\\bapi[_-]?key\\b\\s*[:=]\\s*[A-Za-z0-9+/=_-]{12,}',
     'giu',

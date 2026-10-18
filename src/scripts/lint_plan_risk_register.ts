@@ -609,6 +609,12 @@ function _reviewedIn(text: string): string | null {
  * reviewed exactly as the contract asks — every author-today/merge-tomorrow PR
  * reproduces it.
  *
+ * Within the run, a commit dated on or before the stamp is preferred, newest
+ * first: the marker takes a bare date, so a plan changed again the same day it
+ * was reviewed has no later value to write, and the contract (§ 1, "Residual
+ * (accepted)") resolves that same-day pair in favour of passing. A run with no
+ * such commit falls back to the commit that introduced the stamp.
+ *
  * The oldest commit of the run is the honest baseline, and the age matters:
  * comparing against the NEWEST commit carrying the stamp would compare the
  * current content with itself, making every committed file trivially fresh and
@@ -620,12 +626,17 @@ function _stampIntroducedAt(
     reviewed: string,
 ): HistoryEntry | undefined {
     let introduced: HistoryEntry | undefined;
+    let sameDay: HistoryEntry | undefined;
     for (const entry of history) {
         const blob = _blobAt(absPath, entry.sha);
         if (blob === null || _reviewedIn(blob) !== reviewed) break;
         introduced = entry;
+        // History is newest-first, so the first run member dated on or before
+        // the stamp is the newest such commit: a change committed the day the
+        // stamp names is covered by it (contract § 1, accepted residual).
+        if (sameDay === undefined && entry.date <= reviewed) sameDay = entry;
     }
-    return introduced;
+    return sameDay ?? introduced;
 }
 
 export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';

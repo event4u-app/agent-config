@@ -32,6 +32,7 @@ somewhere in `tests/`" because the looser form hides exactly the gap below.
 | guard | concern script | verdict | driving tests |
 |---|---|---|---|
 | `block-config-weakening` | `src/scripts/hooks/block_config_weakening.ts` | covered | 1 |
+| `block-credential-reads` | `src/scripts/hooks/block_credential_reads.ts` | covered | 1 |
 | `block-kernel-rule-writes` | `src/scripts/hooks/block_kernel_rule_writes.ts` | covered | 4 |
 | `block-no-verify` | `src/scripts/hooks/block_no_verify.ts` | covered | 4 |
 | `block-plumbing-writes` | `src/scripts/hooks/block_plumbing_writes.ts` | covered | 1 |

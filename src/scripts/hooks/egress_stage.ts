@@ -17,9 +17,10 @@ import * as path from "node:path";
 import { parse as parseYaml } from "yaml";
 
 import { _resolve_cascade_paths, load_agent_settings } from "../_lib/agent_settings.js";
-import { detect, EGRESS_RULES, type EgressClass } from "../_lib/egress_rules.js";
-import { EgressRefusedError, replaceValues, TokenScope } from "../_lib/egress_token.js";
+import type { EgressClass, EgressRule } from "../_lib/egress_rules.js";
+import type { TokenScope } from "../_lib/egress_token.js";
 import { isEnvKillSwitchActive } from "../_lib/env_kill_switch.js";
+import { type EgressEngine, loadEgressEngine } from "./egress_engine_loader.js";
 import { BODY_KEYS, type JsonObject, type JsonValue } from "./payload_stub.js";
 import { is_replay_mode } from "./state_io.js";
 
@@ -40,6 +41,7 @@ export const EGRESS_STAGE_KILL_SWITCH = "AGENT_CONFIG_NO_EGRESS_STAGE";
  */
 export const EXECUTION_VIEW_GRANTS: ReadonlyMap<string, string> = new Map([
   ["block-config-weakening", "src/scripts/hooks/block_config_weakening.ts"],
+  ["block-credential-reads", "src/scripts/hooks/block_credential_reads.ts"],
   ["block-kernel-rule-writes", "src/scripts/hooks/block_kernel_rule_writes.ts"],
   ["block-no-verify", "src/scripts/hooks/block_no_verify.ts"],
   ["block-plumbing-writes", "src/scripts/hooks/block_plumbing_writes.ts"],
@@ -186,10 +188,41 @@ function collectStrings(v: JsonValue, out: string[]): void {
   else if (isObject(v)) for (const x of Object.values(v)) collectStrings(x, out);
 }
 
-const RULE_BY_ID = new Map(EGRESS_RULES.map((r) => [r.rule, r]));
+/** The rule id a refusal records when the engine cannot load. */
+export const ENGINE_UNAVAILABLE = "engine-unavailable";
 
-/** Detection and the extent proof only — nothing is replaced and nothing is kept. */
-export function countEnvelope(envelope: JsonObject): Pick<EgressStageResult, "scanned" | "counts" | "refused"> {
+/** Raised when the engine cannot load; the stage turns it into an `engine-unavailable` refusal. */
+export class EngineUnavailableError extends Error {
+  readonly reason: string;
+
+  constructor(reason: string) {
+    super(`${ENGINE_UNAVAILABLE}: ${reason}`);
+    this.reason = reason;
+    this.name = "EngineUnavailableError";
+  }
+}
+
+/**
+ * The engine, or an `EngineUnavailableError` the stage's own failure path turns
+ * into a withheld view (`protect`, `strict`) or a recorded miss (`observe`).
+ * Never reached when the mode is `off`, so the shipped default loads nothing.
+ */
+export function requireEngine(load: () => ReturnType<typeof loadEgressEngine> = loadEgressEngine): EgressEngine {
+  const r = load();
+  if (!r.ok) throw new EngineUnavailableError(r.reason);
+  return r.engine;
+}
+
+/**
+ * Detection and the extent proof only — nothing is replaced and nothing is kept.
+ * Throws `EngineUnavailableError` when no engine is passed and none loads; a
+ * caller outside the stage handles it (the replay preview reports it).
+ */
+export function countEnvelope(
+  envelope: JsonObject,
+  engine: EgressEngine = requireEngine(),
+): Pick<EgressStageResult, "scanned" | "counts" | "refused"> {
+  const ruleById = new Map<string, EgressRule>(engine.EGRESS_RULES.map((r) => [r.rule, r]));
   const payload = payloadOf(envelope);
   const scanned: EgressField[] = [];
   const counts = new Map<string, EgressCount>();
@@ -202,8 +235,8 @@ export function countEnvelope(envelope: JsonObject): Pick<EgressStageResult, "sc
     const texts: string[] = [];
     for (const k of keys) collectStrings(payload[k] as JsonValue, texts);
     for (const text of texts) {
-      for (const span of detect(text)) {
-        const policy = RULE_BY_ID.get(span.rule)?.replacement;
+      for (const span of engine.detect(text)) {
+        const policy = ruleById.get(span.rule)?.replacement;
         if (policy !== undefined && policy !== "detection") {
           const end = policy.through(text, span);
           if (end === null || end < span.end) {
@@ -220,12 +253,12 @@ export function countEnvelope(envelope: JsonObject): Pick<EgressStageResult, "sc
   return { scanned, counts: [...counts.values()], refused };
 }
 
-function replaceDeep(v: JsonValue, scope: TokenScope): JsonValue {
-  if (typeof v === "string") return replaceValues(v, scope);
-  if (Array.isArray(v)) return v.map((x) => replaceDeep(x, scope));
+function replaceDeep(v: JsonValue, scope: TokenScope, engine: EgressEngine): JsonValue {
+  if (typeof v === "string") return engine.replaceValues(v, scope);
+  if (Array.isArray(v)) return v.map((x) => replaceDeep(x, scope, engine));
   if (isObject(v)) {
     const out: JsonObject = {};
-    for (const [k, x] of Object.entries(v)) out[k] = replaceDeep(x, scope);
+    for (const [k, x] of Object.entries(v)) out[k] = replaceDeep(x, scope, engine);
     return out;
   }
   return v;
@@ -235,19 +268,24 @@ function replaceDeep(v: JsonValue, scope: TokenScope): JsonValue {
  * The placeholder view: every listed value in the prompt, the tool input and
  * the tool result replaced by its token, under one scope that lives as long as
  * this dispatch. A key whose value cannot be replaced safely is withheld whole,
- * never partly replaced. The received envelope is not modified.
+ * never partly replaced. The received envelope is not modified. Throws
+ * `EngineUnavailableError` when no engine is passed and none loads.
  */
-export function buildPlaceholderEnvelope(envelope: JsonObject, scope: TokenScope = new TokenScope()): JsonObject {
+export function buildPlaceholderEnvelope(
+  envelope: JsonObject,
+  engine: EgressEngine = requireEngine(),
+  scope: TokenScope = new engine.TokenScope(),
+): JsonObject {
   const payload = payloadOf(envelope);
   if (payload === null) return envelope;
   const next: JsonObject = { ...payload };
   for (const field of FIELDS) {
     for (const k of presentKeys(payload, field)) {
       try {
-        next[k] = replaceDeep(payload[k] as JsonValue, scope);
+        next[k] = replaceDeep(payload[k] as JsonValue, scope, engine);
       } catch (exc) {
         // Anything but a refusal is a defect, and withholds every body upstream.
-        if (!(exc instanceof EgressRefusedError)) throw exc;
+        if (!(exc instanceof engine.EgressRefusedError)) throw exc;
         next[k] = { [WITHHELD_MARKER]: true, rule: exc.rule };
       }
     }
@@ -316,6 +354,7 @@ export function recordObservation(workspaceRoot: string, line: EgressObservation
 export function runEgressStage(
   envelope: JsonObject,
   readMode: (workspaceRoot: string) => EgressMode = readEgressMode,
+  loadEngine: () => ReturnType<typeof loadEgressEngine> = loadEgressEngine,
 ): EgressStageResult {
   const none: EgressStageResult = { mode: "off", placeholder: undefined, scanned: [], counts: [], refused: [] };
   const payload = payloadOf(envelope);
@@ -330,18 +369,20 @@ export function runEgressStage(
   if (mode === "off") return none;
   let result: EgressStageResult;
   try {
-    const counted = countEnvelope(envelope);
-    const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope);
+    const engine = requireEngine(loadEngine);
+    const counted = countEnvelope(envelope, engine);
+    const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope, engine);
     result = { mode, placeholder, ...counted };
-  } catch {
+  } catch (exc) {
+    const rule = exc instanceof EngineUnavailableError ? ENGINE_UNAVAILABLE : "stage-error";
     const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);
-    const refused = scanned.map((field) => ({ field, rule: "stage-error" }));
+    const refused = scanned.map((field) => ({ field, rule }));
     if (mode === "observe") {
       result = { ...none, mode, scanned, refused };
     } else {
       const withheld: JsonObject = { ...payload };
       for (const f of scanned) {
-        for (const k of presentKeys(payload, f)) withheld[k] = { [WITHHELD_MARKER]: true, rule: "stage-error" };
+        for (const k of presentKeys(payload, f)) withheld[k] = { [WITHHELD_MARKER]: true, rule };
       }
       result = { ...none, mode, scanned, refused, placeholder: { ...envelope, payload: withheld } };
     }

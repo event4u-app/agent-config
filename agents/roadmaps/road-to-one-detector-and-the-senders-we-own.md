@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "No active, parked or stub roadmap owns what session content carries toward a model provider: the seven active roadmaps cover authority, routing, install thinning, blocking time, corpus cadence, decision closure and self-modification, and the two nearest archived owners (road-to-a-sanitize-list-that-is-generated, inbound codepoints; road-to-hooks-on-every-host, slot bindings) are closed. Archiving an unrelated roadmap to make room would retire live work and leave the outbound path as open as it is."
-estate_growth_exempt: "Grows active_roadmaps by one, as the first of a two-roadmap set landed from one inbox round: this file holds everything this package can prove on bytes it writes itself, and road-to-placeholders-on-the-wire holds the host-carrier half that depends on it. Adds no blocker."
+estate_growth_exempt: "Grows open_blockers by one and concern_count by one, both owned by this roadmap's Phase 1. The concern is block-credential-reads (step 1.1), the only fail-closed layer of the egress work, admitted in agents/decisions/concern-admissions.jsonl. The blocker is native-deny-is-a-host-setting-write: step 1.2 would add a second exception to the published promise that this package writes no host setting, which only the owner may decide, so it is recorded rather than built or dropped. The roadmap itself was added as the first of a two-roadmap set, its host-carrier half being road-to-placeholders-on-the-wire."
 relates:
   - slug: road-to-a-sanitize-list-that-is-generated
     relation: disjoint
@@ -80,8 +80,11 @@ is open.
   drain lane did not edit. 2.3 to 2.6 and 3.2 edit the rule table or the token
   module, both bundled into the dispatcher, so each needs a ratification record
   before it can land.
-- **Next in order:** 2.2 (which now carries the
-  single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
+- **2026-10-18:** 2.2 landed with its ratification record; its two
+  remainders without a vendor literal became 2.7.
+- **2026-10-18:** the engine became a conditional chunk (2.2b, D9), which is what
+  2.3 to 2.5 and 3.2 needed: their bytes now land in the chunk, under its own ceiling.
+- **Next in order:** 1.1, 2.3, 3.2, 3.3.
 
 ## What this roadmap deliberately does not do
 
@@ -108,6 +111,7 @@ is open.
 | D6 | reversible-technical | agent | Settings block `egress.placeholders`, not `privacy.egress` | A key named "privacy" reads as the guarantee N1 exists to avoid | — |
 | D7 | reversible-technical | agent | Reading local `.env*` values into memory to build an exact-match set is in scope; nothing derived from them is written | The only detector for a password with no recognisable shape | — |
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | Consumer-facing default; this roadmap ships every replacement path behind `egress.placeholders.mode: off` and decides nothing for consumers | asked at `road-to-placeholders-on-the-wire` blocker `default-mode-for-consumers` |
+| D9 | reversible-technical | council:one-detector-bundle-budget-20261018 | The engine leaves the dispatch bundle as a conditional chunk with its own ceiling, and the linearity prose leaves the engine; an unavailable engine withholds every body in `protect` and `strict`, records the miss in `observe`, is never loaded in `off` | Measured 2026-10-18: 3,155 B of bundle headroom against 12–15 KB of queued engine work; the SVG rule set set the chunk precedent. Two-provider council (anthropic, openai), 2/2, options C and B, with the per-mode failure table, a schema handshake and a chunk budget as conditions; the prompt is `agents/evidence/council/one-detector-bundle-budget-20261018.question.md` | the chunk load costs a measurable latency in a non-`off` mode, or a host installs `dispatch.js` without its siblings |
 
 ## Phase 0 — Contract, census, pre-registration (no product code)
 
@@ -161,13 +165,27 @@ is open.
 Prevention goes first because it is the only fail-closed layer: a value never
 read cannot leak through any later bug.
 
-- [ ] **1.1 Refuse reads of credential-class files at `pre_tool_use`** — `.env*`
+- [x] **1.1 Refuse reads of credential-class files at `pre_tool_use`** — `.env*`
       except `.env.example`, private keys, cloud and package-registry credential
       files — and refuse commands that dump the environment. One blocking concern
       in the shape of the `block_*` guards, reusing their command parser, with
       an admission row and a kill-switch row. The reason names the file class and
       the alternative (reference the variable by name).
       verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 0 — the file holds a red and a green case per file class on a deny-capable slot (`isBlockCapable`, `src/scripts/hooks/host_semantics.ts:113`) and a warn assertion on a slot that is not.
+      **Done 2026-10-18:** `src/scripts/hooks/block_credential_reads.ts`, bound on the
+      three `pre_tool_use` rows the other `block-*` guards bind, with the class list
+      in `src/scripts/_lib/credential_files.ts` for 1.2 to read. It refuses a file tool
+      on an env file (the template names pass), a private key, a cloud/CLI or a
+      package-registry credential file; a shell command handing such a path to
+      anything but a short list that does not print it; and `env`, `printenv`, a
+      bare `export`/`set`, `declare -x`. `npx vitest run
+      tests/scripts/hooks/block_credential_reads.test.ts` -> 0, 16 cases including
+      every allow branch. Admission row in `agents/decisions/concern-admissions.jsonl`,
+      kill switch `AGENT_CONFIG_ALLOW_CREDENTIAL_READS` in the contract's table,
+      execution-view grant in the egress stage. Bundle +11,970 B (1,542,666 of
+      1,550,000), stated beside a `null` SLA row in `src/config/hook-latency-budget.json`
+      until both machine classes are measured. A program that opens the file
+      itself is not caught; that residue is the fixture set of 1.3.
 - [ ] **1.2 Lower the same list to the host's own primitives at install.** On
       Claude Code, `permissions.deny Read(…)` entries recorded in the install
       manifest so uninstall removes exactly those. The stronger sandbox and
@@ -217,7 +235,7 @@ read cannot leak through any later bug.
       `pem-private-key` replaces through its END marker and refuses the text when
       that cannot be proven, so 3.3 inherits replacement-grade spans rather than
       having to widen them.
-- [ ] **2.2 Move every site of F2 onto it** without changing what each site does
+- [x] **2.2 Move every site of F2 onto it** without changing what each site does
       with a hit — the council low-impact redactor still refuses, the explain
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
       detection is shared.
@@ -241,6 +259,38 @@ read cannot leak through any later bug.
       and the keyword-assignment variants (`password =`, `api_key:`) four
       consumers read at their own threshold plus the class-spelled prefix list in
       `check_reach_channels.ts`, which carry no vendor literal.
+      **Done 2026-10-18:** the four reverted commits re-applied, and a review of
+      them found the move narrowed five consumers (a prefix held to a token start
+      where the consumer's own reading was not, a GitHub token masked only to 36
+      characters, an OpenAI key glued to a word missed, a key block with a
+      mismatched END label losing only its header). Fixed:
+      `rawKeyPrefixPattern` anchors a prefix only where its row is anchored,
+      `workspace_secrets` keeps its two looser shapes over the table's prefixes,
+      the bundler keeps its unanchored OpenAI shape, an unproven key block is
+      masked through the nearest END marker. `npx vitest run
+      src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 freezes every
+      pre-move pattern against an adversarial corpus, each fix seen red with it
+      removed; the drift matrix (`egress_drift_matrix.test.ts`, `sk-ant-api03` a
+      named row) is green. The single-spelling check is the gate
+      `check_credential_spelling` (self-test, ledger, `rule-backstops` and
+      `task ci`), registered in `src/config/gate-coverage.yml` with a
+      create-only canary seen red. `check_secret_leak --all` stays green with the
+      six added rows. The two remainders above move to 2.7.
+- [x] **2.2b The engine is a conditional chunk (D9).** The rule table, the token
+      grammar and the commit scanner leave `dist/hooks/dispatch.js` for
+      `egress_engine.chunk.cjs`, loaded only when a caller needs detection,
+      refused when missing, altered, without a sidecar, of another schema or
+      unloadable; the per-rule linearity prose moves to a test-only module; the
+      chunk carries its own ceiling.
+      verify: `npx vitest run tests/scripts/hooks/egress_engine_chunk.test.ts` -> 0 (every refusal reason, and each mode with the engine unavailable); `./scripts-run src/scripts/check_hook_bundle_composition` reports the dispatch bundle and the chunk under their ceilings.
+      **Done 2026-10-18:** the dispatch bundle reads 1,530,696 B (from 1,546,845)
+      and the chunk 18,478 B against its 28,000 B ceiling. The two other bundled
+      importers stopped being static edges: the subagent capsule loads the chunk
+      and rejects an envelope it cannot scan, and `ai_council/config.ts` reads
+      `_lib/egress_prefixes.ts`, a generated projection of the prefix list that a
+      test and `check_credential_spelling` hold equal to the table. Probed end to
+      end on the built bundle: in `observe` it counted a planted token, and with
+      the chunk moved away it recorded `engine-unavailable`.
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own
@@ -285,6 +335,14 @@ read cannot leak through any later bug.
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
+- [ ] **2.7 The shapes with no vendor literal read the table too** — the
+      keyword-assignment variants (`password =`, `api_key:`) the council bundler,
+      `workspace_secrets` and the low-impact redactor read at their own
+      threshold, and the class-spelled prefixes in `check_reach_channels.ts`.
+      Split out of 2.2, whose gate cannot see them. Each consumer keeps its own
+      threshold and placeholder; the legacy-superset suite gains their frozen
+      patterns before the move.
+      verify: `npx vitest run src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 with those patterns frozen, and `check_credential_spelling` fails a keyword-assignment or class-spelled shape outside the table (self-test case).
 
 ## Phase 3 — The grammar, and the requests this package writes (F1, F8)
 
@@ -329,16 +387,46 @@ response, with no host contract in between and no hook budget to spend — so
       too** — hot context, handoff and memory recall re-inject stored text.
       verify: a stored entry containing a listed value is injected as its token.
 
+## Blockers
+
+### blocker: native-deny-is-a-host-setting-write
+- **Status:** open
+- **Owner:** maintainer
+- **Blocks:** step 1.2 and the installer half of AC-4.
+- **What to do:** pick exactly one —
+  1. **write the deny tier** — a global Claude Code install appends `Read(…)` rows
+     for the classes of `src/scripts/_lib/credential_files.ts` to
+     `permissions.deny` in `~/.claude/settings.json` (via the splice in
+     `src/install/noGoDenyRows.ts`), records exactly what it wrote in a sidecar
+     the way `src/scripts/_lib/skill_listing_overrides.ts` does, and
+     `agent-config uninstall` removes exactly those rows; `docs/mcp-server.md`
+     § "One exception" gains a second exception;
+  2. **offer, never write** — `hooks:doctor` reports the tier in force and prints
+     the rows for the user to paste, and nothing is written; or
+  3. **neither** — prevention stays the `pre_tool_use` guard of 1.1 alone.
+- **Resolved when:** this section records the choice and the date, and 1.2's
+  wording names it.
+- **Recommendation:** 2 — it reaches the same rows on the same host without a
+  second exception to a public commitment, and the guard of 1.1 already refuses
+  on the one host that honours a deny. Its cost is that a user who never runs
+  `hooks:doctor` never sees the rows.
+- **If you do nothing:** 1.2 stays open; the guard of 1.1 is the only prevention.
+- **Why this is the owner's:** `docs/mcp-server.md` publishes that this package
+  writes no host setting, with one owner-decided exception (`skillOverrides`,
+  2026-10-14). Option 1 adds a second exception to that public commitment, which
+  the decision-revisit gate's reserved set gives to the owner, not to a council.
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Over-replacement breaks ordinary code and reviews | implementation | A fixture address, a commit identity or a card-shaped number becomes a token and the council reviews a damaged diff | Validators plus context plus allowlist in 2.3; the census as a pinned test; replacement is span-level, never line-level (3.3) | Phase 2 — One detector table (F2, F3) |
-| 2 | Moving seven consumers changes a verdict silently | implementation | A consumer that refused now masks, or the secret-leak gate's verdict drifts | 2.2 shares detection only; the drift matrix is green before and after | Phase 2 — One detector table (F2, F3) |
+| 2 | Moving seven consumers changes a verdict silently | implementation | A consumer that refused now masks, or the secret-leak gate's verdict drifts | 2.2 shares detection only; the drift matrix is green before and after, and the legacy-superset suite freezes every pre-move pattern against an adversarial corpus (re-reviewed 2026-10-18: the first move narrowed five consumers and the suite caught it) | Phase 2 — One detector table (F2, F3) |
 | 3 | The constraint is read as covering every channel | product | The owner's constraint is absolute; this roadmap proves it only where this package writes the bytes | The four states and `uncovered` are in the contract (0.1); N8 states the boundary; the claim is per channel | Phase 0 — Contract, census, pre-registration (no product code) |
 | 4 | Placeholders degrade review or coding quality | product | A model reasons worse over a value it cannot see | Paired comparison pre-registered in 0.3; a null or a loss is published and D8 keeps consumer defaults off | Phase 0 — Contract, census, pre-registration (no product code) |
 | 5 | The prevention guard costs every tool call | implementation | One more concern on a `pre_tool_use` slot whose latency trigger already fired | Pure path classifier, no dependency; byte delta stated in the PR and in `src/config/hook-latency-budget.json` | Phase 1 — Prevention that needs no rewrite (F4) |
+| 6 | The engine chunk is absent or wrong at run time | implementation | Moving the egress engine out of the dispatch bundle (2.2b) adds a load that can fail: a missing file, a stale digest, a schema drift | The loader verifies a digest sidecar and a schema number and reports why it refused; `off` never loads, `observe` records the refusal, `protect` and `strict` withhold the body; the composition gate pins every chunk's budget and coverage | Phase 2 — One detector table (F2, F3) |
 
 ## Acceptance Criteria
 

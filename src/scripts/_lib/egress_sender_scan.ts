@@ -91,7 +91,10 @@ const SEND_SHAPES: readonly RegExp[] = [
 
 const URL_HOST = /https?:\/\/([a-z0-9-]+(?:\.[a-z0-9-]+)+|localhost)(?=[:/'"`\s)]|$)/gi;
 const CONTENT_MARKER = /(?:\/\/|#)\s*egress-content:\s*(session-content|fixed-corpus)\b/;
-const ENGINE_IMPORT = /from\s+['"][^'"]*egress_(?:token|rules)(?:\.js)?['"]/;
+// Passing the engine means importing a function that detects or replaces; a
+// module that reads only a table constant (a vendor key prefix) does not.
+const ENGINE_IMPORT =
+    /import\s*\{[^}]*\b(?:detect|findSpans|replaceSpans|replaceValues)\b[^}]*\}\s*from\s+['"][^'"]*egress_(?:token|rules)(?:\.js)?['"]/;
 const ADAPTER_DIR = /^src\/scripts\/ai-(?:image|video)\/adapters\/[^/]+\.sh$/;
 
 /** The scanner and its CLI quote every host above; a row for them would be the scanner reading itself. */

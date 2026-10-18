@@ -25,6 +25,7 @@ on:
     paths:
       - "src/rules/**"
       - "src/scripts/**"
+      - "src/cli/**"
       - "src/skills/**"
       - "src/agent-src/**"
       # check_command_examples reads the command corpus and its pattern
@@ -61,6 +62,7 @@ on:
     paths:
       - "src/rules/**"
       - "src/scripts/**"
+      - "src/cli/**"
       - "src/skills/**"
       - "src/agent-src/**"
       # check_command_examples reads the command corpus and its pattern
@@ -275,6 +277,12 @@ jobs:
 
       - name: secret-vcs-guard
         run: ./scripts-run src/scripts/check_secret_leak
+
+      # One rule table defines every credential shape; a second spelling of a
+      # vendor prefix is how seven private copies drifted until one key shape was
+      # caught by one consumer and passed unchanged by the next.
+      - name: credential prefixes are spelled once (rule table)
+        run: ./scripts-run src/scripts/check_credential_spelling
 
       # The target-readiness grader has no repo corpus to scan — it grades a
       # TARGET repository, so on this tree there is nothing to grade. What CI can
