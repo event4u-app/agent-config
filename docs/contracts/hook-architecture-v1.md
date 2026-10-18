@@ -741,6 +741,17 @@ such field. Re-probed 2026-08-23 against **Claude Code 2.1.241**, that assertion
 | `claude` | **offered** (2.1.241) | binary strings document `` `updatedInput` - Modified tool input (PreToolUse only) ``, the shape `{behavior: 'allow', updatedInput?: object}`, **schema validation** on the value, and a fallback when it is absent or empty |
 | every other host | **unprobed** | no observation exists; absence of a claim, not a claim of absence |
 
+**The table carries this as a dated column.** `host_lowering.yaml` rows may hold
+a `rewrite:` map — `output` (post-tool), `input` (pre-tool), `prompt` — each
+`replace`, `gate` or `none` with an `answered_at` date; a row without one is
+`none` on every channel. Today only `claude` states it: `input: replace` (the
+2026-08-23 read above), `prompt: gate`, `output: none`. `lint_hook_manifest`
+refuses a `replace` on a row that cannot carry one — no native envelope, a
+discarding trampoline, an unverified or expired row, an unbound slot
+(`rewrite-toward-non-replace-host-refused`) — and a `gate` on a slot with no
+`block_exit` (`rewrite-gate-without-refusal`). The column states what this
+package may do, not what it emits.
+
 **This dispatcher does not emit `updatedInput`, and that is the load-bearing
 distinction.** `src/scripts/hooks/host_semantics.ts` builds the
 `hookSpecificOutput: { hookEventName, additionalContext }` envelope and no
