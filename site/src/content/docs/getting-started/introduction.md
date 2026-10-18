@@ -18,7 +18,7 @@ depth and the discipline.
 
 | Artifact | Count | What it is |
 |---|---|---|
-| **Skills** | 300 | On-demand expertise and executable procedures, matched to a task by intent |
+| **Skills** | 301 | On-demand expertise and executable procedures, matched to a task by intent |
 | **Rules** | 122 | Always-active behaviour constraints auto-loaded every conversation |
 | **Commands** | 205 | Slash-command workflow orchestrators (`/commit`, `/create-pr`, `/work`, …) |
 | **Guidelines** | 121 | Reference conventions read on demand |
