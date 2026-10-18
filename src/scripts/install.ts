@@ -2848,21 +2848,9 @@ function _deploy_claude_desktop(
     claude_desktop_bundler.build_skill_bundles(package_root, bundles_dir, force);
     claude_desktop_bundler.build_command_bundles(package_root, bundles_dir, force);
     const bundle_count = countZips(bundles_dir);
-    const [, , marker_paths] = _write_claude_desktop_marker(
-        force,
-        lockfile_path,
-        bundles_dir,
-        bundle_count,
-    );
-    // The marker's digest lived only in a project lock's files[], which a
-    // global entry no longer records; the user-scoped ledger holds it instead.
-    const anchor_raw = USER_SCOPE_PATHS['claude-desktop'] as string;
-    recordGlobalDeploy({
-        toolId: 'claude-desktop', anchorRaw: anchor_raw, anchor: expanduser(anchor_raw),
-        currentFiles: new Set(['agent-config.md']), destSubs: [], packageTag: PACKAGE_TAG_ID,
-        preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged,
-        recordedFor: tracker.recordedDigest,
-    });
+    const [, , marker_paths] = _write_claude_desktop_marker(force, lockfile_path, bundles_dir, bundle_count);
+    // The marker's digest is the ledger's to hold: a global lock entry records no files[].
+    recordGlobalDeploy({ toolId: 'claude-desktop', anchorRaw: USER_SCOPE_PATHS['claude-desktop'] as string, anchor: expanduser(USER_SCOPE_PATHS['claude-desktop'] as string), currentFiles: new Set(['agent-config.md']), destSubs: [], packageTag: PACKAGE_TAG_ID, preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged, recordedFor: tracker.recordedDigest });
     return [bundle_count, 0, 'deployed', [bundles_dir, ...marker_paths]];
 }
 
