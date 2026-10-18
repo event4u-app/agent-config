@@ -31,6 +31,7 @@ import * as path from 'node:path';
 
 import type { EnvMap } from './user_global_paths';
 import * as user_global_paths from './user_global_paths';
+import { compare_versions } from './version_order';
 
 export const PACKAGE_NAME = '@event4u/agent-config';
 export const NPM_REGISTRY_URL = `https://registry.npmjs.org/${PACKAGE_NAME}/latest`;
@@ -257,6 +258,16 @@ export function _is_newer(latest: string, installed: string): boolean {
         }
     }
     return false;
+}
+
+/**
+ * The comparator for policy decisions: full SemVer precedence, so a final
+ * release is newer than its own prerelease, and unparseable input on either
+ * side is never newer. `_is_newer` above keeps its truncating behaviour and
+ * still feeds the banner; it is the regression witness that the two differ.
+ */
+export function is_newer_version(latest: string, installed: string): boolean {
+    return compare_versions(latest, installed) === 1;
 }
 
 function _resolve_origin(
