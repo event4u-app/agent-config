@@ -392,11 +392,13 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 - [x] **6.1 A rewrite axis in `host_lowering.yaml`** per slot — `output`, `input`,
       `prompt`, each `replace`, `gate` or `none` — dated like every other column.
       verify: `npx vitest run tests/scripts/lint_hook_manifest.test.ts -t rewrite-toward-non-replace-host-refused --reporter=verbose` -> /✓.*rewrite-toward-non-replace-host-refused/
-      — 2026-10-18: `rewrite:` per row (`output`/`input`/`prompt`, dated); only
-      `claude` states it (`input: replace` from the 2026-08-23 read, `prompt:
-      gate`, `output: none` until 0.1). Absent reads as `none`. Lint ids
-      `rewrite-toward-non-replace-host-refused`, `rewrite-gate-without-refusal`,
-      `rewrite-axis-malformed`. Shipped in its own PR with a ratification record.
+      — 2026-10-18: `rewrite:` per row (`output`/`input`/`prompt`, dated);
+      only `claude` states it — `input: offered` (documented, no live
+      substitution probe), `prompt: gate`, `output: none`. An absent channel is
+      `unstated`. `replace` needs a probe record and host version (0.1/0.2).
+      Lint ids `rewrite-toward-non-replace-host-refused`,
+      `rewrite-gate-without-refusal`, `rewrite-axis-malformed`. Narrowed from
+      `input: replace` after ratification round 1 refused it 2/2.
 - [ ] **6.2 Bind the next host by evidence, one at a time.** Copilot CLI's
       transformed-prompt field is bound only after a command-hook probe; Gemini
       CLI only after its envelope exists. A host that can gate and not replace

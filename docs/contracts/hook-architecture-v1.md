@@ -743,14 +743,17 @@ such field. Re-probed 2026-08-23 against **Claude Code 2.1.241**, that assertion
 
 **The table carries this as a dated column.** `host_lowering.yaml` rows may hold
 a `rewrite:` map — `output` (post-tool), `input` (pre-tool), `prompt` — each
-`replace`, `gate` or `none` with an `answered_at` date; a row without one is
-`none` on every channel. Today only `claude` states it: `input: replace` (the
-2026-08-23 read above), `prompt: gate`, `output: none`. `lint_hook_manifest`
-refuses a `replace` on a row that cannot carry one — no native envelope, a
-discarding trampoline, an unverified or expired row, an unbound slot
-(`rewrite-toward-non-replace-host-refused`) — and a `gate` on a slot with no
-`block_exit` (`rewrite-gate-without-refusal`). The column states what this
-package may do, not what it emits.
+`replace`, `offered`, `gate` or `none` with an `answered_at` date; a channel with
+no answer is `unstated`, an absence of a claim rather than a dated `none`. Only
+`replace` authorizes a substitution and only `gate` a refusal; `offered` records
+a documented field no live probe has shown delivered, and authorizes nothing.
+Today only `claude` states it: `input: offered` (the 2026-08-23 read above),
+`prompt: gate`, `output: none`. `lint_hook_manifest` refuses a `replace` unless
+the row has a native envelope, a propagating trampoline, a current `verified`
+block and a bound native slot **and** the answer names a probed host version and
+a probe record that exists in the tree (`rewrite-toward-non-replace-host-refused`);
+a `gate` on a slot with no `block_exit` (`rewrite-gate-without-refusal`); and an
+undated, future-dated or unknown answer (`rewrite-axis-malformed`).
 
 **This dispatcher does not emit `updatedInput`, and that is the load-bearing
 distinction.** `src/scripts/hooks/host_semantics.ts` builds the

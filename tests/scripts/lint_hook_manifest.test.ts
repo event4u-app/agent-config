@@ -8,7 +8,7 @@ import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
-import { parseHostLowering, REWRITE_CHANNELS, rewriteModeFor } from "../../src/scripts/hooks/host_lowering.js";
+import { parseHostLowering, REWRITE_CHANNELS, rewriteAuthorizes, rewriteModeFor } from "../../src/scripts/hooks/host_lowering.js";
 import { CONCERN_REGISTRY } from "../../src/scripts/hooks/concern_registry.js";
 import { _load_yaml } from "../../src/scripts/hooks/dispatch_hook.js";
 
@@ -453,20 +453,66 @@ describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
     expect(r.code).toBe(0);
     const row = parseHostLowering(fs.readFileSync(COMMITTED_LOWERING, "utf-8")).get("claude")?.get("any");
     expect(row).toBeDefined();
-    expect(rewriteModeFor(row!, "input")).toBe("replace");
+    expect(rewriteModeFor(row!, "input")).toBe("offered");
     expect(rewriteModeFor(row!, "prompt")).toBe("gate");
     expect(rewriteModeFor(row!, "output")).toBe("none");
+    expect(rewriteAuthorizes(row!, "input")).toBeNull();
+    expect(rewriteAuthorizes(row!, "output")).toBeNull();
+    expect(rewriteAuthorizes(row!, "prompt")).toBe("gate");
   });
 
-  it("an absent axis reads as none on every channel", () => {
+  it("an absent axis is unstated on every channel and authorizes nothing", () => {
     const row = parseHostLowering(fs.readFileSync(COMMITTED_LOWERING, "utf-8")).get("augment")?.get("any");
-    for (const ch of REWRITE_CHANNELS) expect(rewriteModeFor(row!, ch)).toBe("none");
+    for (const ch of REWRITE_CHANNELS) {
+      expect(rewriteModeFor(row!, ch)).toBe("unstated");
+      expect(rewriteAuthorizes(row!, ch)).toBeNull();
+    }
+  });
+
+  it("an offered field on a row with no envelope is accepted: it authorizes nothing", () => {
+    const r = run(lowering("augment", "        rewrite:\n          input: { mode: offered, answered_at: 2026-10-01 }\n"));
+    expect(r.text).not.toMatch(/rewrite-/);
   });
 
   it("rewrite-toward-non-replace-host-refused: replace on a row with no native envelope is refused", () => {
     const r = run(lowering("augment", "        rewrite:\n          input: { mode: replace, answered_at: 2026-10-18 }\n"));
     expect(r.code).toBe(1);
     expect(r.text).toMatch(/host_lowering augment\/any\/input: rewrite-toward-non-replace-host-refused/);
+  });
+
+  it("rewrite-toward-non-replace-host-refused: replace on the claude row without a live probe is refused", () => {
+    const yaml = fs.readFileSync(COMMITTED_LOWERING, "utf-8").replace("input:  { mode: offered,", "input:  { mode: replace,");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-lowering-rewrite-"));
+    tmpDirs.push(dir);
+    const p = path.join(dir, "host_lowering.yaml");
+    fs.writeFileSync(p, yaml, "utf-8");
+    const r = run(p);
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — .*names no probed host version.*cites no live substitution probe/);
+  });
+
+  it("rewrite-toward-non-replace-host-refused: a replace citing a probe file that does not exist is refused", () => {
+    const yaml = fs
+      .readFileSync(COMMITTED_LOWERING, "utf-8")
+      .replace("input:  { mode: offered,", "input:  { mode: replace, host_version: 2.1.301, probe: agents/evidence/analysis/no-such-probe.md,");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-lowering-rewrite-"));
+    tmpDirs.push(dir);
+    const p = path.join(dir, "host_lowering.yaml");
+    fs.writeFileSync(p, yaml, "utf-8");
+    const r = run(p);
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the cited probe agents\/evidence\/analysis\/no-such-probe\.md does not exist/);
+  });
+
+  it("a replace with a probe record in the tree, a version and a capable row is accepted", () => {
+    const yaml = fs
+      .readFileSync(COMMITTED_LOWERING, "utf-8")
+      .replace("input:  { mode: offered,", "input:  { mode: replace, host_version: 2.1.301, probe: docs/contracts/hook-architecture-v1.md,");
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-lowering-rewrite-"));
+    tmpDirs.push(dir);
+    const p = path.join(dir, "host_lowering.yaml");
+    fs.writeFileSync(p, yaml, "utf-8");
+    expect(run(p).text).not.toMatch(/rewrite-/);
   });
 
   it("rewrite-toward-non-replace-host-refused: replace on a channel whose slot this package does not bind is refused", () => {
@@ -492,5 +538,11 @@ describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
     expect(r.text).toMatch(/augment\/any\/input: rewrite-axis-malformed — no `answered_at`/);
     expect(r.text).toMatch(/augment\/any\/request: rewrite-axis-malformed — unknown channel/);
     expect(r.text).toMatch(/augment\/any\/output: rewrite-axis-malformed — unknown mode/);
+  });
+
+  it("rewrite-axis-malformed: an answer dated after today is refused", () => {
+    const r = run(lowering("augment", "        rewrite:\n          input: { mode: none, answered_at: 2099-01-01 }\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/augment\/any\/input: rewrite-axis-malformed — `answered_at: 2099-01-01` is after/);
   });
 });
