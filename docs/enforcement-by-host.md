@@ -413,7 +413,7 @@ the runtime resolver reads — on 2026-09-13:
 
 | Host | `destructive:` | Measured from |
 |---|---|---|
-| `claude` | `hook` | `pre_tool_use` bound with `block_exit: 2` — a configured refusal |
+| `claude` | `hook` | `pre_tool_use` bound with `block_exit: 2` — the slot can refuse, and no bound concern recognises a typed op yet (corrected 2026-10-18, see below) |
 | `augment` | `manual-only` | `pre_tool_use` bound, `block_exit: null` — it runs and is ignored |
 | `cursor` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
 | `cline` | `manual-only` | no `pre_tool_use` slot (5 other slots bound) |
@@ -428,6 +428,13 @@ keeping.** `augment` binds the slot and discards the result; `cursor`, `cline` a
 pre-tool events onto it — **unbound, not unbindable**; `windsurf` and `copilot`
 have no alias row at all. Four states, one value, because what the column answers
 is *can a typed op be refused here*, and for all four the answer is no.
+
+**`hook` on `claude` measures the binding, not a guard.** Corrected 2026-10-18
+(`road-to-a-hard-floor-the-shell-cannot-talk-past` 7.2): the slot is bound and
+can refuse, and no bound concern recognises a typed op yet — none of the
+`pre_tool_use` concerns on `claude` classifies a destructive command, so the cell
+says what the slot could carry, not what it carries. When that roadmap's
+`destructive-consequence` concern enforces, this cell names it.
 
 **What this column is NOT.** It is not a measurement of whether a host's pre-tool
 event can deny — nothing in this tree records that for an unbound host. It reads

@@ -279,7 +279,7 @@ UI-shaped work routes to one of three directive sets — `ui` (full audit→desi
 
 ### Profiles — how much governance gets loaded
 
-Safety floor (non-destructive defaults · ask-before-guessing · mirror-the-user's-language) ships in **every** profile. What changes is how much extra coaching gets pulled in.
+Safety floor (non-destructive defaults · ask-before-guessing · mirror-the-user's-language) ships in **every** profile, as [a guardrail, not a security boundary](docs/enforcement-by-host.md). Profiles add coaching.
 
 | Profile | What you get | When to pick it |
 |---|---|---|
