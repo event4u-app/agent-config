@@ -189,7 +189,7 @@ describe('the observer concern', () => {
 
     it('keeps only the newest sessions when a new one starts', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         for (let i = 0; i < KEEP_SESSIONS + 5; i += 1) {
             const f = path.join(dir, `old-${String(i)}.jsonl`);
             fs.writeFileSync(f, '', { mode: 0o600 });
@@ -221,7 +221,7 @@ describe('the observer concern', () => {
 
     it('a session file stops growing at its cap', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         fs.writeFileSync(path.join(dir, 'big.jsonl'), 'x'.repeat(MAX_SESSION_BYTES + 1), { mode: 0o600 });
         processEnvelope(envelope({ session_id: 'big', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         expect(fs.statSync(path.join(dir, 'big.jsonl')).size).toBe(MAX_SESSION_BYTES + 1);
@@ -239,7 +239,7 @@ describe('the observer concern', () => {
 
     it('a write to an existing session prunes too, so a count above fifty does not survive', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         for (let i = 0; i < KEEP_SESSIONS + 1; i += 1) {
             const f = path.join(dir, `n${String(i).padStart(2, '0')}.jsonl`);
             fs.writeFileSync(f, '{}\n', { mode: 0o600 });
@@ -251,7 +251,7 @@ describe('the observer concern', () => {
 
     it('a file exactly at the cap takes no further line', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         fs.writeFileSync(path.join(dir, 'cap.jsonl'), 'x'.repeat(MAX_SESSION_BYTES), { mode: 0o600 });
         processEnvelope(envelope({ session_id: 'cap', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         expect(fs.statSync(path.join(dir, 'cap.jsonl')).size).toBe(MAX_SESSION_BYTES);
@@ -259,7 +259,7 @@ describe('the observer concern', () => {
 
     it('a non-session entry in the directory is neither read nor pruned', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         fs.writeFileSync(path.join(dir, 'README'), 'x');
         processEnvelope(envelope({ session_id: 'ok', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         expect(fs.readdirSync(dir).sort()).toEqual(['README', 'ok.jsonl']);
@@ -267,7 +267,7 @@ describe('the observer concern', () => {
 
     it('a symlinked session file is never appended to', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         const target = path.join(root, 'elsewhere.txt');
         fs.writeFileSync(target, '');
         fs.symlinkSync(target, path.join(dir, 'link.jsonl'));
@@ -278,7 +278,7 @@ describe('the observer concern', () => {
 
     it('a non-regular entry is never pruned, and only regular session files count toward the fifty', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(path.join(dir, 'adir.jsonl'), { recursive: true });
+        fs.mkdirSync(path.join(dir, 'adir.jsonl'), { recursive: true, mode: 0o700 });
         fs.utimesSync(path.join(dir, 'adir.jsonl'), 1, 1);
         for (let i = 0; i < KEEP_SESSIONS + 3; i += 1) {
             processEnvelope(envelope({ session_id: `s${String(i).padStart(2, '0')}`, file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
@@ -295,7 +295,7 @@ describe('the observer concern', () => {
 
     it('a session file someone else can read is refused, and the refusal leaves a mark', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         fs.writeFileSync(path.join(dir, 'open.jsonl'), '', { mode: 0o644 });
         fs.chmodSync(path.join(dir, 'open.jsonl'), 0o644);
         processEnvelope(envelope({ session_id: 'open', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
@@ -305,12 +305,46 @@ describe('the observer concern', () => {
 
     it('a FIFO planted at the session path neither stalls nor receives the line', () => {
         const dir = arrivalsDir(env);
-        fs.mkdirSync(dir, { recursive: true });
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
         expect(spawnSync('mkfifo', [path.join(dir, 'fifo.jsonl')]).status).toBe(0);
         const started = Date.now();
         expect(processEnvelope(envelope({ session_id: 'fifo', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
         expect(Date.now() - started).toBeLessThan(2_000);
         expect(lastObserverError(dir)).toMatch(/ (ENXIO|EREFUSED)$/);
+    });
+
+    it('a symlinked or shared arrivals directory is refused before any file in it is opened', () => {
+        const elsewhere = path.join(root, 'elsewhere');
+        fs.mkdirSync(elsewhere, { mode: 0o700 });
+        fs.mkdirSync(path.join(root, 'runtime'), { mode: 0o700 });
+        fs.symlinkSync(elsewhere, arrivalsDir(env));
+        processEnvelope(envelope({ session_id: 'x', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.readdirSync(elsewhere)).toEqual([]);
+        expect(lastObserverError(arrivalsDir(env))).toMatch(/ EREFUSED_DIR$/);
+        fs.rmSync(arrivalsDir(env));
+        fs.mkdirSync(arrivalsDir(env), { mode: 0o700 });
+        fs.chmodSync(arrivalsDir(env), 0o755);
+        processEnvelope(envelope({ session_id: 'y', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.readdirSync(arrivalsDir(env))).toEqual([]);
+    });
+
+    it('a FIFO planted at the failure marker neither stalls nor receives the mark', () => {
+        fs.mkdirSync(path.join(root, 'runtime'), { mode: 0o700 });
+        expect(spawnSync('mkfifo', [`${arrivalsDir(env)}.last-error`]).status).toBe(0);
+        fs.mkdirSync(arrivalsDir(env), { mode: 0o700 });
+        fs.chmodSync(arrivalsDir(env), 0o755);
+        const started = Date.now();
+        expect(processEnvelope(envelope({ session_id: 'z', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
+        expect(Date.now() - started).toBeLessThan(2_000);
+    });
+
+    it('a torn trailing line is skipped and the lines around it still read', () => {
+        processEnvelope(envelope({ session_id: 't', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        fs.appendFileSync(path.join(arrivalsDir(env), 't.jsonl'), '{"v":2,"ts":"2026');
+        expect(readObserverLines(arrivalsDir(env))).toHaveLength(1);
+        fs.appendFileSync(path.join(arrivalsDir(env), 't.jsonl'), '\n');
+        processEnvelope(envelope({ session_id: 't', file_path: USER_RULE('b'), load_reason: 'session_start' }), env);
+        expect(readObserverLines(arrivalsDir(env)).map((l) => l.event === 'loaded' && l.file)).toEqual(['a.md', 'b.md']);
     });
 
     it('never throws, whatever it is handed', () => {

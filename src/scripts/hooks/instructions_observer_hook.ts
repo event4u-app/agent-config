@@ -75,7 +75,39 @@ const C = fs.constants;
 const NOFOLLOW = C.O_NOFOLLOW ?? 0;
 /** `O_NONBLOCK` so a FIFO planted at the path cannot stall the open waiting for a reader. */
 const APPEND_NOFOLLOW = C.O_WRONLY | C.O_APPEND | C.O_CREAT | C.O_NONBLOCK | NOFOLLOW;
-const TRUNC_NOFOLLOW = C.O_WRONLY | C.O_TRUNC | C.O_CREAT | NOFOLLOW;
+const TRUNC_NOFOLLOW = C.O_WRONLY | C.O_TRUNC | C.O_CREAT | C.O_NONBLOCK | NOFOLLOW;
+
+/**
+ * Write `text` through one descriptor opened with `flags`: the descriptor must
+ * be a regular file nobody but its owner can read, under `cap` bytes, and the
+ * write must be whole. Each refusal throws its own code. The size and mode are
+ * checked on the descriptor, never on the path, so nothing swapped in between
+ * a check and the write can redirect it.
+ */
+function writePrivate(file: string, text: string, flags: number, cap = Infinity): void {
+    const fd = fs.openSync(file, flags, 0o600);
+    try {
+        const st = fs.fstatSync(fd);
+        if (!st.isFile() || (st.mode & 0o077) !== 0) throw new Error('EREFUSED');
+        // Every captured field is an ASCII id or boolean, so a line's length is its byte count.
+        if (st.size < cap && fs.writeSync(fd, text) !== text.length) throw new Error('ESHORT');
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
+/**
+ * The arrivals directory, created `0700` and then verified: a real directory,
+ * not a symlink, with no group or other bits, owned by this user where the
+ * platform reports owners. Anything else throws `EREFUSED_DIR` before a file in
+ * it is opened.
+ */
+function privateDir(dir: string): void {
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const st = fs.lstatSync(dir);
+    const uid = process.getuid?.();
+    if (!st.isDirectory() || (st.mode & 0o077) !== 0 || (uid !== undefined && st.uid !== uid)) throw new Error('EREFUSED_DIR');
+}
 
 export function arrivalsDir(env: NodeJS.ProcessEnv = process.env): string {
     return path.join(event4u_root(env), 'runtime', 'arrivals');
@@ -114,23 +146,13 @@ export function processEnvelope(raw: string, env: NodeJS.ProcessEnv = process.en
         const cap = captureInstructionsLoaded(typeof inner === 'object' && inner !== null ? inner : envelope, new Date().toISOString(), env['HOME'] ?? '', env);
         // A line with no session id can never form a record, so it is not written.
         if (cap.session === null) return EXIT_ALLOW;
-        // Every captured field is an ASCII id or boolean, so the line's length is its byte count.
-        const text = `${JSON.stringify(cap)}\n`;
-        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
-        const fd = fs.openSync(path.join(dir, `${cap.session}.jsonl`), APPEND_NOFOLLOW, 0o600);
-        try {
-            const st = fs.fstatSync(fd);
-            // Only a regular file nobody else can read is written to.
-            if (!st.isFile() || (st.mode & 0o077) !== 0) throw new Error('EREFUSED');
-            if (st.size < MAX_SESSION_BYTES && fs.writeSync(fd, text) !== text.length) throw new Error('ESHORT');
-        } finally {
-            fs.closeSync(fd);
-        }
+        privateDir(dir);
+        writePrivate(path.join(dir, `${cap.session}.jsonl`), `${JSON.stringify(cap)}\n`, APPEND_NOFOLLOW, MAX_SESSION_BYTES);
         prune(dir);
     } catch (e) {
         try {
             const code = String((e as NodeJS.ErrnoException).code ?? (e as Error).message);
-            if (dir) fs.writeFileSync(`${dir}.last-error`, `${new Date().toISOString()} ${code}\n`, { flag: TRUNC_NOFOLLOW });
+            if (dir) writePrivate(`${dir}.last-error`, `${new Date().toISOString()} ${code}\n`, TRUNC_NOFOLLOW);
         } catch {
             // Nowhere to record it either; the session is still never failed.
         }
