@@ -123,6 +123,13 @@ None of this is rebuilt here.
       signature or tie it to `publish-npm.yml`. That verification is what
       keeps this step open. Harmless today: the production wiring swaps
       nothing until 1.4.
+      *Found 2026-10-18, also open here:* `running_origin()` in
+      `upgrade_unattended.ts` takes `_is_source_repo(packageRoot)` for a source
+      checkout, and that probe answers true on `dist/agent-src/` — which every
+      published tarball ships — so an installed package reads as a source
+      checkout and the unattended run would always be suppressed. Same
+      harmlessness as above until 1.4; the fix is the `.git`-at-package-root
+      test `doctor_update_verdict.ts` uses, with a fixture for each shape.
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.
