@@ -284,8 +284,23 @@ describe('check_voice_lexicon — draft-surfaces', () => {
         const r = run(['--draft', '-', '--ghostwriter', gw], '```markdown\nIntro.\nA real game-changer.\n```\n');
         expect(r.status).toBe(1);
         expect(r.stdout).toMatch(/^-:3:\d+ error avoid "game-changer"/mu);
-        const twoFences = '```\na\n```\ntext\n```\nb\n```\n';
-        expect(unwrapSingleFence(twoFences)).toBe(twoFences);
+        for (const fenced of [
+            '````markdown\nA real game-changer.\n````\n',
+            '```\nA real game-changer.\n   ```\n',
+            '~~~\nA real game-changer.\n~~~~\n',
+            '```\nIntro.\n```js\nx\n```\nA real game-changer.\n```\n',
+        ]) {
+            const unwrapped = unwrapSingleFence(fenced);
+            expect(unwrapped.split('\n').length).toBe(fenced.split('\n').length);
+            expect(blankExempt(unwrapped)).toContain('game-changer');
+        }
+        expect(unwrapSingleFence('Plain.\n```\ncode\n```\n')).toBe('Plain.\n```\ncode\n```\n');
+    });
+
+    it('draft-surfaces: an empty or unpiped draft is exit 2, never a clean pass', () => {
+        const r = run(['--draft', '-'], '');
+        expect(r.status).toBe(2);
+        expect(r.stderr).toMatch(/draft is empty/);
     });
 
     it('draft-surfaces: every surface says what exit 2 means', () => {

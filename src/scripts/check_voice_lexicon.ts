@@ -362,12 +362,19 @@ function readStdin(): string | null {
  * is a single fence, blank the two fence lines and scan the body; offsets hold.
  */
 export function unwrapSingleFence(text: string): string {
-    const m = /^(\s*)(```|~~~)[^\n]*\n([\s\S]*?)\n\2[ \t]*(\n\s*)?$/.exec(text);
-    if (m === null || (m[3] ?? '').includes(m[2] as string)) return text;
-    const open = text.indexOf('\n', (m[1] ?? '').length);
-    const close = text.lastIndexOf(m[2] as string);
-    const blank = (s: string): string => s.replace(/[^\n]/g, ' ');
-    return blank(text.slice(0, open)) + text.slice(open, close) + blank(text.slice(close));
+    const lines = text.split('\n');
+    const first = lines.findIndex((l) => l.trim() !== '');
+    let last = lines.length - 1;
+    while (last > first && (lines[last] ?? '').trim() === '') last -= 1;
+    const open = /^\s*(`{3,}|~{3,})/.exec(lines[first] ?? '');
+    if (first < 0 || last <= first || open === null) return text;
+    const fence = open[1] as string;
+    const closeRe = new RegExp(`^\\s*${fence[0] === '`' ? '`' : '~'}{${fence.length},}\\s*$`);
+    if (!closeRe.test(lines[last] ?? '')) return text;
+    const blank = (l: string): string => l.replace(/[^\n]/g, ' ');
+    lines[first] = blank(lines[first] as string);
+    lines[last] = blank(lines[last] as string);
+    return lines.join('\n');
 }
 
 function readOrNull(p: string): string | null {
@@ -388,6 +395,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const raw = args.draft === '-' ? readStdin() : readOrNull(args.draft);
     if (raw === null) {
         process.stderr.write(`draft not readable: ${args.draft === '-' ? 'stdin (pipe the draft)' : args.draft}\n`);
+        return 2;
+    }
+    if (raw.trim() === '') {
+        process.stderr.write(`draft is empty: ${args.draft === '-' ? 'stdin (pipe the draft)' : args.draft}\n`);
         return 2;
     }
     const draft = unwrapSingleFence(raw);
