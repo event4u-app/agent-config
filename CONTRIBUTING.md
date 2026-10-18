@@ -334,21 +334,25 @@ the policy is interpreted as follows:
 
 Consumer impact: a commit states what it costs a consumer in a
 `Consumer-Impact:` Git trailer (for a squash merge, in the squash commit's
-body). A trailer counts only in the body's final paragraph, and only when every
-line of that paragraph is a `Key: value` trailer (an indented line continues the
-one above); the same line anywhere else — quoted in prose, or in an earlier
-paragraph — is ignored. The key is spelled exactly `Consumer-Impact` and the
-value is exactly one of the lowercase words `none` | `automatic` | `notice` |
-`action`. A misspelt key (`consumer-impact`), an unknown value, or two
-`Consumer-Impact` trailers with different values make the trailer invalid; a
-repeated identical trailer is accepted.
+body). A trailer counts only in a trailer block: a paragraph in which every
+line is a `Key: value` trailer (an indented line continues the one above). That
+block need not be the final paragraph — a GitHub squash merge keeps each
+squashed commit's trailers in an earlier paragraph and ends the body with its
+own `Co-authored-by:` paragraph. The same line anywhere else — quoted in prose,
+or inside a code fence — is ignored. The key is spelled exactly
+`Consumer-Impact` and the value is exactly one of the lowercase words `none` |
+`automatic` | `notice` | `action`. A misspelt key (`consumer-impact`), an
+unknown value, or two `Consumer-Impact` trailers with different values in one
+block make the trailer invalid; a repeated identical trailer is accepted. When
+several blocks carry a valid value (a squash of several commits), the most
+severe one counts, as it does across a release span.
 
 - `none` — nothing a consumer can observe.
 - `automatic` — the update handles it; the consumer does nothing.
 - `notice` — the consumer should read the release notes.
 - `action` — the consumer must do something or the install breaks.
 
-An optional `Security: yes` trailer, in the same final block, marks a security
+An optional `Security: yes` trailer, in any trailer block, marks a security
 fix. A commit with no valid `Consumer-Impact:` trailer is recorded as `none`,
 with the absence kept. A breaking commit must carry a valid trailer, and
 `task release` refuses a span that contains one without it. A commit is
