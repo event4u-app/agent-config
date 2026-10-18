@@ -182,7 +182,7 @@ read cannot leak through any later bug.
       tests/scripts/hooks/block_credential_reads.test.ts` -> 0, 16 cases including
       every allow branch. Admission row in `agents/decisions/concern-admissions.jsonl`,
       kill switch `AGENT_CONFIG_ALLOW_CREDENTIAL_READS` in the contract's table,
-      execution-view grant in the egress stage. Bundle +8,704 B (1,539,400 of
+      execution-view grant in the egress stage. Bundle +11,171 B (1,541,867 of
       1,550,000), stated beside a `null` SLA row in `src/config/hook-latency-budget.json`
       until both machine classes are measured. A program that opens the file
       itself is not caught; that residue is the fixture set of 1.3.

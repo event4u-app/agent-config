@@ -46,7 +46,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { CREDENTIAL_CLASS_LABEL, credentialFileClass, segmentVerdict, type CredentialFileClass } from '../_lib/credential_files.js';
+import {
+    CREDENTIAL_CLASS_LABEL,
+    credentialBasename,
+    credentialFileClass,
+    segmentVerdict,
+    type CredentialFileClass,
+} from '../_lib/credential_files.js';
 import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
 import { invokedSegments } from './git_command_classifier.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -90,7 +96,7 @@ export function verdictFor(toolName: string, input: JsonObject): Refusal | null 
     if (!NON_READING_TOOLS.has(tool)) {
         for (const v of pathValues(input, false, [])) {
             const cls = credentialFileClass(v);
-            if (cls !== null) return { class: cls, what: `\`${path.basename(v)}\`` };
+            if (cls !== null) return { class: cls, what: `\`${credentialBasename(v)}\`` };
         }
     }
     const cmd = input['command'];

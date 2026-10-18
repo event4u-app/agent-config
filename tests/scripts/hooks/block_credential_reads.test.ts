@@ -103,6 +103,43 @@ describe('the tool and command surface', () => {
         }
     });
 
+    it('reads command grammar the way the command does (council round 4c, second pass)', () => {
+        for (const cmd of [
+            'sudo -u root env',
+            'sudo --user root env',
+            'sudo --user=root printenv',
+            'env -u PATH',
+            'env FOO=1',
+            "env -S 'cat .env'",
+            'env -C /tmp cat .env',
+            'cp -t backup .env',
+            'cp --target-directory=backup .env',
+            'mv --target-directory backup .env',
+            'timeout --signal TERM 5 env',
+            'timeout -k 2 10s cat .env',
+            'exec -a name env',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
+        }
+        for (const cmd of ['sudo -u root ls /root', 'timeout 5 npm test', 'env FOO=1 node app.js', 'cp -t backup .env.example']) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(0);
+        }
+    });
+
+    it('a .pem counts only when a name token says key, and only an absolute /proc path is the environment', () => {
+        expect(credentialFileClass('certs/monkey.pem')).toBeNull();
+        expect(credentialFileClass('certs/secretary-ca.pem')).toBeNull();
+        expect(credentialFileClass('certs/tls.key.pem')).toBe('private-key');
+        expect(credentialFileClass('certs/private.pem')).toBe('private-key');
+        expect(credentialFileClass('docs/proc/self/environ')).toBeNull();
+        expect(credentialFileClass('proc/self/environ')).toBeNull();
+    });
+
+    it('names a Windows path by its basename only', () => {
+        const r = verdictFor('Read', { file_path: 'C:\\Users\\someone\\project\\.env' });
+        expect(r?.what).toBe('`.env`');
+    });
+
     it('passes the legitimate neighbours of those bypasses', () => {
         for (const cmd of [
             'cp .env.example .env',
