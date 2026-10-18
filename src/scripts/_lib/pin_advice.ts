@@ -9,10 +9,14 @@
 import { CONSUMER_IMPACT_VALUES } from './consumer_impact';
 import { compare_versions, parse_version } from './version_order';
 
-export function pin_advice_lines(pin: string, latest: string, impactMap: unknown): string[] {
+/** `impactMap` is `undefined` when it could not be fetched and `null` when the release carries none. */
+export function pin_advice_lines(pin: string, latest: string, impactMap: unknown, label: 'latest' | 'target' = 'latest'): string[] {
     if (compare_versions(latest, pin) !== 1) return [];
-    const head = `Pinned at ${pin}; latest is ${latest}.`;
+    const head = `Pinned at ${pin}; ${label} is ${latest}.`;
     const tail = 'Moving the pin is a team decision: `agent-config update` rewrites it, this check never does.';
+    if (impactMap === undefined) {
+        return [head, `  The releases in between cannot be read: the impact map of ${latest} could not be fetched.`, tail];
+    }
     if (impactMap === null || typeof impactMap !== 'object' || Array.isArray(impactMap)) {
         return [head, `  The releases in between cannot be read: ${latest} carries no impact map.`, tail];
     }

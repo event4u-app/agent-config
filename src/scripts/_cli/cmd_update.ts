@@ -303,18 +303,18 @@ function _read_pin_value(p: string): string | null {
     return raw === '' ? null : _normalize(raw);
 }
 
-/** The latest release's `agentConfig.impact`; `null` when it cannot be read. */
+/** The release's `agentConfig.impact`: `null` when the document carries none, `undefined` when it could not be fetched. */
 async function _fetch_impact_map(version: string, timeout = 1.0): Promise<unknown> {
     try {
         const resp = await fetch(REGISTRY_VERSION_URL.replace('{version}', _normalize(version)), {
             headers: { Accept: 'application/json' },
             signal: AbortSignal.timeout(timeout * 1000),
         });
-        if (resp.status !== 200) return null;
+        if (resp.status !== 200) return undefined;
         const doc = (await resp.json()) as { agentConfig?: { impact?: unknown } } | null;
         return doc?.agentConfig?.impact ?? null;
     } catch {
-        return null;
+        return undefined;
     }
 }
 
@@ -521,7 +521,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         const pin = _read_pin_value(_find_pin_file(cwd));
         if (pin !== null && !offline) {
             const fetch_impact = options.impact_fetcher ?? _fetch_impact_map;
-            for (const line of pin_advice_lines(pin, latest, await fetch_impact(latest))) _print(out, line);
+            for (const line of pin_advice_lines(pin, latest, await fetch_impact(latest), args.to ? 'target' : 'latest')) _print(out, line);
         }
         return 0;
     }

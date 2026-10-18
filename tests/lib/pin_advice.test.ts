@@ -28,6 +28,8 @@ describe('pin_advice_lines', () => {
 
     it('names an absent or forged map instead of trusting it', () => {
         expect(pin_advice_lines('16.0.0', '17.0.0', null).join('\n')).toMatch(/carries no impact map/);
+        expect(pin_advice_lines('16.0.0', '17.0.0', undefined).join('\n')).toMatch(/could not be fetched/);
+        expect(pin_advice_lines('16.0.0', '17.0.0', MAP, 'target')[0]).toBe('Pinned at 16.0.0; target is 17.0.0.');
         expect(pin_advice_lines('16.0.0', '17.0.0', { 'not-a-version': {} }).join('\n')).toMatch(/not trustworthy/);
         expect(pin_advice_lines('16.0.0', '17.0.0', { '16.9.0': { impact: 'urgent' } }).join('\n')).toMatch(/not trustworthy/);
     });

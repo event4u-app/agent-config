@@ -110,12 +110,19 @@ None of this is rebuilt here.
 
 ## Phase 2 — A safety envelope on the verb that already exists
 
-- [x] **2.1 `upgrade --unattended`, no new verb.** ADR-041 is accepted; this
+- [ ] **2.1 `upgrade --unattended`, no new verb.** ADR-041 is accepted; this
       is a flag on `cmd_upgrade.ts`. It refuses unless every gate passes: a
       72 h release age, a provenance check against the OIDC publish
       (`publish-npm.yml:62`), a `deprecated` check in the same fetch, and the
       `engines` comparison from the sibling roadmap.
       verify: a fixture per gate shows the refusal and its reason.
+      *Open on one gate (2026-10-18).* The flag, the age, `deprecated`,
+      `engines` and impact-map gates landed with a refusal fixture each. The
+      provenance gate checks that an attestation is present and carries an
+      SLSA provenance predicate; it does **not** verify the attestation's
+      signature or tie it to `publish-npm.yml`. That verification is what
+      keeps this step open. Harmless today: the production wiring swaps
+      nothing until 1.4.
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.
