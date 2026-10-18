@@ -472,7 +472,7 @@ deleted or left as a silent twin without a row the user has seen.
 - **If you do nothing:** 1.2 still lands and the host's `design` stops being shadowed; the maintainer router is unreachable on Claude Code.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude-opus -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -483,6 +483,7 @@ deleted or left as a silent twin without a row the user has seen.
 | 5 | Agent accepts its own baselines | implementation | Visual gates become self-graded | 7.1 warning, 7.3 taught step, D8 | Phase 7 — Baselines the user accepts |
 | 6 | Posture cannot express a design-system-wide choice | implementation | 5.1 needs a field `Signals` lacks | D4: grow the schema only on a failing fixture | Phase 5 — One authority, one store |
 | 7 | Two writers for usage rules | implementation | `DESIGN.md` and the host's conventions file diverge | 5.2 marker block and drift check | Phase 5 — One authority, one store |
+| 8 | The bundle half of the lane is stranded | implementation | D12 lets 3.2 land on the snapshot input alone; 3.2b could stay open for good if nobody runs the fixture, and the lane would read as complete | 3.2b is its own open box with a `blocked-by` marker, and the blocker's Status names the one maintainer act that unblocks it | Phase 3 — A lane that keeps meaning |
 
 ## Provenance
 
