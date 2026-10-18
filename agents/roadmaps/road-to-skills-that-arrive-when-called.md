@@ -482,11 +482,11 @@ pooling skill payloads across subagent spawns — neither was argued by any plan
 beyond its name.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A materialised skill arrives one turn late | product | The host may not pick up a written skill in the same turn. | 0.2 (a) decides same-turn pickup; 4.2 materialises at the earliest deterministic point; 5.1 counts misses. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
+| 1 | A materialised skill arrives one call late | product | 0.2 (a) observed same-turn pickup for a symlink, but one of two sessions missed the first call and launched on a retry: the directory watcher races the write. | 4.2 materialises at the earliest deterministic point and retries once on `Unknown skill`; 5.1 counts misses. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
 | 2 | Two sessions, one directory | implementation | A removal in one session pulls a skill from another. | 4.4 leases; never remove under a live lease; 0.2 (b) measures first. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
 | 3 | A fork hides context a skill needed | product | A forked run sees no conversation. | Only report skills (3.1); harm guard in 3.2. | Phase 3 — Fork what ends in a report |
 | 4 | Host contracts move | implementation | A host version changes pickup, budget or key semantics. | Expiring rows (Phase 0); digest watch (6.2); 1.2's key list expires. | Phase 0 — Probe the host contracts before building on them |
