@@ -83,6 +83,19 @@ test-only IBAN rule, because the shipped rule table is credential-only until the
 sibling's 2.3. Phase 0 stays human-run, 1.3 waits for its release of readings,
 Phases 3–4 wait on 0.1/0.2 and 1.3, Phase 7 past 7.2 on `request-gateway-build`.
 
+**6.1 built, ratification refused three times, held as residue.** Branch
+`drain/road-to-placeholders-on-the-wire-rewrite-axis-20261018` carries the
+rewrite axis and its lint (`host_lowering.ts`, `.yaml`, `.json`,
+`lint_hook_manifest.ts`, the bundle note, +841 B). AI council, `anthropic` +
+`openai`, $0.00: round 1 refused `input: replace` on a binary-strings read (now
+`offered`, which authorizes nothing; absent is `unstated`); round 2 refused a
+probe that was any existing file and a gate that skipped propagation (now one
+fail-closed validator and a structured probe record); round 3 refused a
+non-mapping `rewrite:` reading as unstated and untested gate prerequisites —
+both fixed on the branch after the round. All three rounds agreed no authority
+is expanded. The three-round cap is reached, so the branch is not pushed: the
+next step is one more ratification round over its head, then the record.
+
 ## Execution status — 2026-10-16, branch `drain/placeholders-on-the-wire-20261016`
 
 One drain lane, scoped to steps no other lane holds. 7.1 closed.
