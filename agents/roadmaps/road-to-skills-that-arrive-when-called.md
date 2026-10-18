@@ -346,7 +346,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ### blocker: which-completeness-skills-owe
 
-- **Status:** open — raised 2026-10-12 by round inbox-2026-10-n; the supplied plans cite an owner directive of 2026-08-30 against a silent subset, which no file in `agents/` or `docs/` records, and the same round asks for a minimal install
+- **Status:** open — owner-reserved (council 2026-10-16, 2/2 ESCALATE, both recommending (b)); re-checked 2026-10-18, still unmet: no ADR under `docs/decisions/` names this blocker, and `README.md:59` still reads "Pack-scoped install — writes the active pack only". Raised 2026-10-12 by round inbox-2026-10-n; the supplied plans cite an owner directive of 2026-08-30 against a silent subset, which no file in `agents/` or `docs/` records, and the same round asks for a minimal install
 - **Owner:** owner — what a consumer is promised to receive is a public product statement (`README.md:59`)
 - **Class:** 3
 - **Ownership:** product-owned

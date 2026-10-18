@@ -194,13 +194,19 @@ deleted or left as a silent twin without a row the user has seen.
       under `_meta.alias_cycles`, not counted as undefined. 0.4 goes green.
       (2026-10-16: `dtcg` lane only; the `claude-design` lane is 3.2.)
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-record --reporter=verbose` -> /✓.*alias-record/
-- [ ] <!-- blocked-by: host-sync-layout-at-current-host | asked: no — authored from inbox round inbox-2026-10-m, which carried no owner turn on this question --> **3.2 `claude-design` lane.** Reads a user-exported snapshot directory
-      or the local bundle whose layout the blocker pins: tokens and the
+- [ ] **3.2 `claude-design` lane, snapshot input.** Reads a user-exported snapshot directory
+      (the local-bundle input is 3.2b, split out by D12): tokens and the
       custom-property closure of the stylesheet, component contracts from the
       `.d.ts` files, guidelines into `_meta`. Every `var(--x)` with no definition in
       the closure is listed in `_meta.unresolved_custom_properties`. Offline,
       provenance mandatory, unknown files in `_meta.unmapped`, never dropped.
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design --reporter=verbose` -> /✓.*claude-design/
+- [ ] <!-- blocked-by: host-sync-layout-at-current-host | asked: yes — the routing went to the council on 2026-10-16 and 2026-10-18 (D12); what remains is the maintainer-run fixture of option (a) --> **3.2b `claude-design` lane, local-bundle input.** The same lane reads the
+      local bundle whose layout the blocker pins, with the same outputs and
+      the same `_meta` rules as 3.2. Split from 3.2 by D12 so the snapshot
+      input can land without the observed layout; this half keeps the
+      criterion open rather than narrowing it.
+      verify: `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design-bundle --reporter=verbose` -> /✓.*claude-design-bundle/
 - [ ] **3.3 The base is a commit, not the anchor.** With a projection commit in the
       ledger, each row is classified three ways (base, code, remote) and the base
       is read with `git show <commit>:<path>`. Without one it is two-way and the
@@ -373,13 +379,14 @@ deleted or left as a silent twin without a row the user has seen.
 | D9 | reversible-technical | agent | The remote snapshot is written under `.claude/design-system/remote-snapshot/<date>/` and never committed by the command | the command never commits (4.2 body); snapshot content may be proprietary | a consumer asks for committed snapshots |
 | D10 | reversible-technical | evidence | Remote reachability: user export, then local files; no canvas MCP rung | no read-tool names for a canvas MCP exist in the tree or the source set | a read-only canvas MCP is documented |
 | D11 | deterministic | agent | Closure pass 2026-10-12: seven `unfalsifiable-verify` listings (0.4, 3.1, 3.2, 5.3, 7.1, 7.3, 8.4) name a `-t` title absent from an existing test file or an `rg` pattern absent from its target today, so each verify fails until its step lands; zero owner questions — the two owner-owned items are the blockers below | `closure_scan` on this file: 7 listings, 0 owner questions | a step lands without its title or sentence |
+| D12 | reversible-technical | council:canvas-host-sync-layout-r2-20261018 | Split 3.2: the snapshot-directory input lands now as 3.2; the local-bundle input becomes 3.2b, and 3.2b and 5.2 stay open, blocked on the observed fixture of option (a). Option (b) is not taken: dropping 5.2 converts a step to cancelled, which both seats classed owner-reserved | Round 2 of 2026-10-18, `anthropic` + `openai`, 2/2 present, $0.00 (subscription). Input changed since the 2026-10-16 split: the roadmap now states what 5.2 delivers and that 8.5 is unaffected. `anthropic`: DECIDE (c) — (a) no, (b) yes (dropped step), (c) no (kept open). `openai`: DECIDE (a) — (b) yes, and (c) yes *as worded* because snapshot-only rewrote 3.2's local-bundle criterion; it named a rewrite keeping that input open and blocked as council-decidable and its preferred choice. This row is that rewrite. Prompt and verdicts: `agents/evidence/council/canvas-host-sync-layout-r2-20261018.md` | a maintainer runs option (a) — 3.2b and 5.2 then unblock; or the owner prefers (b) and cancels 5.2 |
 
 ## Blockers
 
 ### blocker: host-sync-layout-at-current-host
-- **Status:** open — raised 2026-10-12 from inbox round `inbox-2026-10-m`; the bundle layout came from an extract of an older host version, and an offline read of host 2.1.296 finds only part of it.
+- **Status:** open — waits only on the maintainer-run fixture of option (a); no decision is pending. Re-checked 2026-10-18: `tests/fixtures/design-sync/` does not exist (`ls` → No such file or directory). The council's second round (D12, 2/2) declined (b), because dropping 5.2 cancels a step, and split 3.2 so its snapshot input is no longer held here. Raised 2026-10-12 from inbox round `inbox-2026-10-m`; the bundle layout came from an extract of an older host version, and an offline read of host 2.1.296 finds only part of it.
 - **Owner:** maintainer — answering it needs a canvas account and network, which no agent run may use.
-- **Blocks:** steps 3.2, 5.2 and 8.5.
+- **Blocks:** steps 3.2b, 5.2 and 8.5 (3.2 was split by D12 and no longer waits here).
 - **What to do:** pick exactly one — (a) run `/design-sync` once on `tests/fixtures/design-sync/react-package/` with a canvas account and commit the resulting listing of `.design-sync/` and of the local build output into `tests/fixtures/design-sync/host-observed/`; or (b) narrow 3.2 to a user-exported snapshot directory only and drop 5.2, keeping to the names the 2.1.296 binary carries (`.design-sync/config.json`, `previews/`, `.render-check.json`).
 - **Resolved when:** `tests/fixtures/design-sync/host-observed/` exists, or 3.2 and 5.2 are rewritten per (b) and `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design` exits 0.
 - **Recommendation:** (a). The lane exists to read what the host writes; a fixture invented from an old extract would test the extract, not the host.

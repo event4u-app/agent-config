@@ -412,7 +412,7 @@ rather than as a ninth roadmap.
 - **If you do nothing:** 2.1, 2.3 and 2.4 stay open and now read as blocked rather than as runnable, so an autonomous run stops re-entering them. The default flip stays opt-in indefinitely, every non-opted-in install keeps loading 338,225 characters, and the owner's (a) answer of 2026-10-06 keeps looking like a pending decision when it is in fact a decision waiting on an instrument.
 
 ### blocker: default-flip-of-the-installed-layer
-- **Status:** open — **not a question, and no longer unobtainable.** The owner
+- **Status:** open — **not a question, and no longer unobtainable.** **Re-checked 2026-10-18, still unmet:** `ls agents/evidence/analysis/ | grep installed-arrival` returns nothing. The producer moved: steps 2.1 and 2.2 of `road-to-a-setup-that-decides-itself` landed on 2026-10-18 (`src/scripts/_lib/arrival_record.ts`, `./scripts-run src/scripts/arrival_report`), but its step 1.1 — the `InstructionsLoaded` binding that feeds them — is still open, so the report has no sessions to print. The wait is now on that one binding and then on real sessions. The owner
   answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5). It closes when
   an ADR records (a) together with the arrival record it relied on.
   **Corrected 2026-10-16, and the correction reverses the previous reading.**

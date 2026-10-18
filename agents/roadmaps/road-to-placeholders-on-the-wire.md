@@ -476,7 +476,7 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
   channels keep working.
 
 ### blocker: request-gateway-build
-- **Status:** open
+- **Status:** open — owner-reserved on the escalation condition (council 2026-10-16 split: `openai` DECIDE (a) conditional on 7.2, `anthropic` ESCALATE (b) with a staged opt-in); no round 2 was run because no input has changed since. Re-checked 2026-10-18, still unmet: step 7.2 is open and no 7.2 probe file exists, and that probe needs a real subscription login through a loopback base URL, so it is human-run whichever way the owner answers.
 - **Owner:** maintainer
 - **Blocks:** steps 7.3–7.7.
 - **What to do:** pick exactly one — (a) build the gateway, decided with the 7.2
