@@ -129,7 +129,7 @@ infers from the brief via its Dial Inference Table). One-line rationale each.
 
 ## Consistency Locks
 Within-project invariants (derived from the confirmed system). A value outside
-a declared Lock is off-system; the anti-slop detector flags it (rebuttable).
+a declared Lock is off-system; `design_lock.ts` flags it (rebuttable).
 - Theme Lock: [single | light+dark via prefers-color-scheme] — no mid-surface inversion
 - Colour Lock: [one accent family] — [the accent hue]
 - Shape Lock: [one corner-radius scale] — [the radius set, e.g. 6/12/16px]
@@ -297,6 +297,11 @@ handoff shape emitted alongside `design-system.json`
   mapping (design name → code component), responsive states, known caveats, and
   — when the artifact is a mock — an explicit "prototype, not production code"
   warning so a consumer never ships the reference verbatim.
+
+**React stacks with the host's canvas:** the host's own `/design-sync` projects
+the components; run `/design-system:sync plan` first and do not hand-build the
+bundle. This floor stays the artefact for a manual projection — every non-React
+stack, or a host without the sync.
 
 **What to capture FROM** a running project: sources first, SSR fetch second,
 rendered snapshot only with consumer tooling; record the git SHA. Rationale:
