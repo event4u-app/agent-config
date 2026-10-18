@@ -106,7 +106,7 @@ Findings F1–F18, each with its anchor, moved verbatim to `agents/evidence/anal
       four doors. Done 2026-10-18:
       `docs/decisions/ADR-288-analysis-family-one-engine-four-doors.md`, both
       owner answers recorded as D7 and D8.
-- [ ] **1.3 The context file.** `src/agent-src/contexts/execution/analysis-loop.md`,
+- [x] **1.3 The context file.** `src/agent-src/contexts/execution/analysis-loop.md`,
       loaded on demand (0 standing tokens): vocabulary (*pass* is an inbox
       extraction read, *loop* a deepening iteration, *round* one exchange); the
       brief lifecycle (frozen after scope resolution and at most one blocking
@@ -121,10 +121,9 @@ Findings F1–F18, each with its anchor, moved verbatim to `agents/evidence/anal
       sections Findings vs tree · Kills · Decisions · Steps with `verify:` · Loop
       log; source names only in an `*.annex.md`).
       verify: `./scripts-run src/scripts/check_references` -> 0 — and each of the
-      four door files links the context file. *Open 2026-10-18: the context
-      file exists and `analyze:repo`, `analyze:inbox` and `optimize:deep` link
-      it; the fourth door, `analyze:pr`, does not exist until Phase 5, so the
-      step stays open on its own verify.*
+      four door files links the context file. Done 2026-10-19: `analyze:pr`
+      (5.2) links it as the fourth door, beside `analyze:repo`, `analyze:inbox`
+      and `analyze:and-optimize`; `check_references` -> 0.
 - [x] **1.4 Pre-register before any code.** In the ADR of 1.2: the metric per
       door, always a count of decidable items — source door: rows anchored on
       both sides (today's `analyze/repo` metric); and-optimize: steps with a
@@ -430,7 +429,7 @@ names; revert the move and the aliases.
       question; an ambiguous fixture asks once. Done 2026-10-18 in
       `src/scripts/analysis_pr_target.ts` (several-candidates case seen red); a
       named PR that is not open asks instead of falling through to the branch.
-- [ ] **5.2 Feedback by default, read-only.** PR head in a throwaway worktree;
+- [x] **5.2 Feedback by default, read-only.** PR head in a throwaway worktree;
       the PR body is a claim set (inbox Phase 4); `review:changes` judges on
       `base..head`, then 2.3–2.6, `council:pr` as seat runner, a disprove pass
       by a different model per finding, a confidence threshold, dedupe. Verdict
@@ -438,8 +437,13 @@ names; revert the move and the aliases.
       introduced here or pre-existing. `--comment` posts; default posts nothing.
       verify: a fixture PR with a planted defect reports it with `file:line`; a
       clean fixture reports "no finding above threshold" and makes no `gh`
-      write call.
-- [ ] **5.3 `--optimize` (directive a).** Eligibility first: PR open, head branch
+      write call. Done 2026-10-19: `src/domains/analysis-workbench/analyze/pr/command.md`
+      over `reviewPr` in `src/scripts/analysis_pr_review.ts` (throwaway
+      worktree, same-family disprover refused, threshold 0.7, dedupe,
+      introduced-vs-pre-existing from the diff); the unconditional-comment and
+      same-family cases were seen red. Finding the defect stays model work in
+      the door; the module decides what of it is reported.
+- [x] **5.3 `--optimize` (directive a).** Eligibility first: PR open, head branch
       writable, not a fork — otherwise a patch file plus the verdict. Each fix
       records one test disposition (regression test seen red, existing test seen
       red, deterministic static check, or `infeasible` with a reason code the
@@ -448,7 +452,9 @@ names; revert the move and the aliases.
       three rounds. Never merges, never approves its own changes.
       verify: a fixture PR converges in at most three rounds with one
       disposition per fix, a moved-head fixture stops before pushing, and a fork
-      fixture yields a patch file.
+      fixture yields a patch file. Done 2026-10-19 in `src/scripts/analysis_pr_optimize.ts`
+      (moved-head and round-cap cases seen red); the port has no merge and no
+      approve, and the push leases the expected head.
 
 **Exit:** the three fixtures above green. **Rollback:** delete the new command
 file; `council:pr` is unchanged.
