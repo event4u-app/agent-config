@@ -29,7 +29,7 @@
     "brand": 5866,
     "brand-asset-generation": 6307,
     "brand-audit": 7123,
-    "brand-identity": 5849,
+    "brand-identity": 5997,
     "brand-strategy": 5072,
     "brand-to-tokens": 5678,
     "bug-analyzer": 13634,
@@ -159,7 +159,7 @@
     "livewire-architect": 6631,
     "llm-provider-knowledge": 7434,
     "logging-monitoring": 12016,
-    "logo-generation": 5650,
+    "logo-generation": 5790,
     "market-entry-analysis": 10016,
     "markitdown": 14433,
     "mcp": 9204,
@@ -270,7 +270,7 @@
     "storybook-workshop": 13536,
     "subagent-orchestration": 19742,
     "supply-chain-intake": 10137,
-    "svg-authoring": 17818,
+    "svg-authoring": 17970,
     "symfony-workflow": 10329,
     "systematic-debugging": 17024,
     "tailwind-engineer": 13083,
@@ -286,7 +286,8 @@
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
-    "typography-system": 11344,
+    "type-design": 9886,
+    "typography-system": 11967,
     "ui-apply-generic": 8283,
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
@@ -550,6 +551,30 @@
       "old": 8182,
       "new": 12228,
       "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise. The scope declaration's verification_reason is part of this figure: three gates refuse every invocation form a verification_command could take here, so the obligation is stated instead of pinned."
+    },
+    {
+      "skill": "brand-identity",
+      "old": 5849,
+      "new": 5997,
+      "reason": "One See-also line handing a custom type story to the new type-design skill. road-to-type-with-a-witness 4.14."
+    },
+    {
+      "skill": "logo-generation",
+      "old": 5650,
+      "new": 5790,
+      "reason": "One See-also line routing 'make this a font' to type-design, named rather than linked because it ships in another pack. road-to-type-with-a-witness 4.14."
+    },
+    {
+      "skill": "svg-authoring",
+      "old": 17818,
+      "new": 17970,
+      "reason": "One See-also line routing 'the rest of the alphabet' to type-design, which reuses this skill's trace and counter rule. road-to-type-with-a-witness 4.14."
+    },
+    {
+      "skill": "typography-system",
+      "old": 11344,
+      "new": 11967,
+      "reason": "A Custom source section beside the CSV pairing path: spec path, license and fallback overrides for a family built with type-design, and the T7 stated reason. road-to-type-with-a-witness 4.14."
     }
   ]
 }

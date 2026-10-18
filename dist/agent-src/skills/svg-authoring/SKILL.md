@@ -296,6 +296,8 @@ report a non-zero natural width.
   for the glyph it lacks.
 - `logo-generation` — the brand pipeline that
   routes a geometric mark here.
+- `type-design` — "the rest of the alphabet" / "make this a font": a
+  wordmark extended into a constructed font, reusing the trace and counter rule.
 - `image-provider-routing` — illustrative
   vector art goes to a provider, not here.
 - `fe-design` § Motion — the motion authority, in

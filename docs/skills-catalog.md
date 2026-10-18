@@ -1,6 +1,6 @@
 # Skills Catalog
 
-All **300 skills** available in this package, in alphabetical order.
+All **301 skills** available in this package, in alphabetical order.
 Click a skill name to open its SKILL.md and read the full guidance.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_catalog`
@@ -291,6 +291,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
 | [`throughput-vs-morale-tradeoff`](../dist/agent-src/skills/throughput-vs-morale-tradeoff/SKILL.md) | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | [`token-optimizer`](../dist/agent-src/skills/token-optimizer/SKILL.md) | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
 | [`traefik`](../dist/agent-src/skills/traefik/SKILL.md) | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
+| [`type-design`](../dist/agent-src/skills/type-design/SKILL.md) | Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font. |
 | [`typography-system`](../dist/agent-src/skills/typography-system/SKILL.md) | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
 | [`ui-apply-generic`](../dist/agent-src/skills/ui-apply-generic/SKILL.md) | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus. |
 | [`ui-component-architect`](../dist/agent-src/skills/ui-component-architect/SKILL.md) | Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui. |

@@ -400,7 +400,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-23
 
 ### claim: skill-count
-- claim: 300 skills.
+- claim: 301 skills.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -567,7 +567,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-19
 
 ### claim: default-install-context-cost
-- claim: The scoped-projection default for new installs ships 229 of 300 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
+- claim: The scoped-projection default for new installs ships 230 of 301 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
 - kind: quant
 - evidence: exec:vitest run tests/install/default_install_skill_count_real_install.test.ts -> 0
 - note: Re-pointed 2026-10-18. The previous evidence, `update_counts --check`, proved that the published figure equals the installer's predicate applied to this repository's catalog — a statement about the predicate, which an installer that stopped applying it would leave green. The harness case runs a real global `claude-code` install into a throwaway HOME and holds three numbers equal: the catalog skills that arrived in `~/.claude/skills/`, the predicate's `projected`, and the `N of M` this row publishes. It was observed red with this row's figure changed to 228.

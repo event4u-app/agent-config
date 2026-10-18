@@ -1,0 +1,2327 @@
+diff --git a/CAPABILITIES.yaml b/CAPABILITIES.yaml
+index c965832e06e5be85b5176a5ffc9d23e805e4f16e..90d66d328c0cfe48d1550fed5b716265a426ce64 100644
+--- a/CAPABILITIES.yaml
++++ b/CAPABILITIES.yaml
+@@ -11,7 +11,7 @@
+ meta:
+   generated_by: generate_capabilities_index
+   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
+-  skills_total: 300
++  skills_total: 301
+   commands_total: 205
+   capability_areas: 31
+   gaps: 0
+@@ -60,9 +60,9 @@ capability_areas:
+       description: "Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge."
+       size_class: "medium"
+       coverage: strong
+-      skill_count: 9
++      skill_count: 10
+       command_count: 4
+-      skills: ["design-intelligence", "design-system-capture", "design-tokens", "design-variations", "html-deck", "iconography", "svg-authoring", "typography-system", "wireframe"]
++      skills: ["design-intelligence", "design-system-capture", "design-tokens", "design-variations", "html-deck", "iconography", "svg-authoring", "type-design", "typography-system", "wireframe"]
+       commands: ["design-system", "design-system-capture", "design-system-generate", "design-system-import"]
+     - id: git
+       label: "Git"
+diff --git a/README.md b/README.md
+index 65e3780b020697928f9395a47b4fc6df87e9a97b..768d639ec13198ee8373312516a74de88277da5e 100644
+--- a/README.md
++++ b/README.md
+@@ -4,7 +4,7 @@
+ 
+ [![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![Public install smoke (3 OS × 2 Node)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke-public-install.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm&color=orange)](https://www.npmjs.com/package/@event4u/agent-config) [![agent-config MCP server](https://glama.ai/mcp/servers/event4u-app/agent-config/badges/score.svg)](https://glama.ai/mcp/servers/event4u-app/agent-config) [![MCP Toplist](https://mcptoplist.com/badge/glama%2Fevent4u-app%2Fagent-config.svg)](https://mcptoplist.com/server/glama%2Fevent4u-app%2Fagent-config) [![downloads](https://img.shields.io/npm/dm/@event4u/agent-config?style=flat-square&label=downloads%2Fmonth&color=orange)](https://www.npmjs.com/package/@event4u/agent-config)
+ 
+-[![Skills](https://img.shields.io/badge/Skills-300-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-122-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-205-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-121-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/) <!-- claim:published-artifact-counts -->
++[![Skills](https://img.shields.io/badge/Skills-301-orange?style=flat-square)](dist/agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-122-orange?style=flat-square)](dist/agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-205-orange?style=flat-square)](dist/agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-121-orange?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-29-orange?style=flat-square)](dist/agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-orange?style=flat-square)](dist/agent-src/personas/advisors/) <!-- claim:published-artifact-counts -->
+ 
+ <sub>**How these are counted** — one canonical counter, `agent-config` → `update_counts --check`, re-derives all six from the tree and fails CI when one is off by one. Two bases are not what the linked directory shows, so they are stated here rather than left to be inferred: **Commands 205** counts every command file **recursively** (the linked directory holds 60 at its top level) and **Rules 122** counts the **source** rules while the linked projection holds 121 — one rule is dormant and is not projected. **Personas 29** excludes the directory README. Counts are of files and directories: none of them measures quality, activation or adoption. <!-- claim:published-artifact-counts --></sub>
+ 
+diff --git a/agents/decisions/skill-admissions.jsonl b/agents/decisions/skill-admissions.jsonl
+index 9b291b657966f54799590439e6f163b713f36306..6d09081baee90df08d72c7ba0359d43b57d5614b 100644
+--- a/agents/decisions/skill-admissions.jsonl
++++ b/agents/decisions/skill-admissions.jsonl
+@@ -2,3 +2,4 @@
+ {"_absence_of_refusals":"AC-5 asks for one historical refusal backfilled OR the absence of any recorded. The absence is recorded, because it is the finding: a grep for a refused skill proposal over archive/, later/ and stubs/ returns the recurring OBSERVATION that the count keeps climbing (road-to-capability-governance.md:46) and one 2026-05-01 audit that captured the count as data (road-to-governance-cleanup.md:64). No skill proposal was ever refused in a form the tree records -- which is exactly what a ledger kept in PR bodies would produce, and is the defect rather than a gap in this backfill. The first genuine `rejected` row will be the first visible no."}
+ {"skill": "web-launch-readiness", "decision": "rejected", "date": "2026-08-25", "instead": "Ships as a command routed through production-validator, which carries unscoped Bash and can invoke it deterministically. AI council 2/2: the evidence establishes a COVERAGE gap, not a SKILL-SHAPED gap -- a site-type-conditional config, 7 deterministic checks, 4 tiers, 18 schema tests and a hard pass/fail benchmark gate are the signature of a linter. `later/` was refused explicitly: parking implies the problem is timing or evidence, and it is neither. Reopen only on demonstrated failures in discovery, orchestration or interpretation that cannot be fixed in the validator or the command contract -- and cite THAT evidence, not the original 0-of-8 coverage gap. Recorded at road-to-web-launch-readiness b-estate-decision-web-launch."}
+ {"skill": "svg-authoring", "decision": "admitted", "date": "2026-10-11", "family": "design / asset authoring. It sits between `iconography` (the incumbent set answers first) and `image-generation` (a raster), and beside `logo-generation`, `canvas-design` and `wireframe`, which all produce hand-authored SVG and route into it rather than restating it.", "capability": "The procedure for writing or editing an SVG by hand, and the status vocabulary that binds a claim to evidence: read the delivery mode, classify the asset, write with the invariants, run the static witness, run the engine witness, look, and report `verified` only against a render manifest whose digest equals the delivered file's. Raster-to-vector is a named branch with a measured procedure rather than a look. Six lanes produced hand-authored SVG and none of them had any of this.", "why_not_extend": "Measured against the overlap scan, not asserted: no existing skill holds a hand-authored-SVG procedure, and the six producing lanes sit in three packs — `iconography`, `wireframe` and `design-intelligence` in frontend-design, `logo-generation` in ai-image, `canvas-design` in ai-video — plus one guideline. A reference file under any one of them is unreachable from the other two packs, while `packs:` takes a list, so the owner reaches all of them and a reference cannot. Recorded as decision E2 of road-to-svg-with-a-witness.", "why_not_a_guideline": "A guideline is read; this is executed. Its steps invoke two checkers and bind a status word to one of their outputs — `verified` requires a render manifest whose recorded digest equals the delivered file's digest on disk, which is a procedure with a falsifiable outcome rather than advice. The prose half of the same roadmap DID go to guidelines and authorities: the motion mechanisms to fe-design's § Motion, the ARIA rows to the accessibility corpus, the render-security sinks to that skill. Only the procedure is here.", "visibility": "Routed, not browsed. It ships `evals/triggers.json` with six should-trigger and six should-not-trigger queries whose near-misses are exactly the neighbours above, and the six lanes each carry a one-line pointer into it. The description is 130 characters and names the six jobs plus the two checks, so a host that shows only descriptions still routes it. Its catalogue line costs 32 tokens, paid back in the same change by trimming four lane descriptions: the per-spawn preamble payload measures 135,975 against a measured ceiling of 135,980.", "roadmap": "road-to-svg-with-a-witness", "estate_cost": "skill_count 299 -> 300, claimed with estate_growth_exempt in the roadmap's own frontmatter; skill_description_tokens 11,460 -> 11,456, a net REDUCTION because the four lane descriptions were compressed by more than the new one costs."}
++{"skill": "type-design", "decision": "admitted", "date": "2026-10-18", "family": "design / asset authoring. It sits beside `typography-system` (choosing and pairing existing fonts), `svg-authoring` (one vector asset, whose trace-to-measure and counter rule it reuses), `logo-generation` and `brand-identity` (where a wordmark is born), and `iconography` (an icon font from an existing set). Each of those routes \"make this a font\" into it rather than restating it.", "capability": "Building an original font as a constructed system: a rights gate before any trace, a license that is asked and never stamped, no freehand outlines, a font-spec.yaml that code builds every outline from, a construction order through derivation chains, spacing before kerning, peer-side gates with thresholds (outline hygiene, vertical metrics, stem consistency by ray-cast, fidelity IoU), and a rendered proof read through the asset witness. No skill under src/ named or carried any of it (0 hits for a font compiler, a UFO library or a tracer at main@17f028941).", "why_not_extend": "Decision A1 of road-to-type-with-a-witness: a reference under svg-authoring would put a twelve-step pipeline behind a one-asset trigger, and the neighbours sit in different packs (typography-system and svg-authoring in frontend-design, logo-generation in ai-image, brand-identity in brand), so a reference inside one of them is unreachable from the others. A1's recorded fallback was a reference file if no same-change payload reduction could be found; one was found, so it did not fire.", "why_not_a_guideline": "A guideline is read; this is executed. Its steps run a pinned toolchain, gate on measured thresholds and bind the maturity label `validated-static` to every gate being green and the witness reading `loaded` - a procedure with a falsifiable outcome, not advice. The delivery prose half went to the delivery owner instead: the metric-matched fallback derivation lives in docs/guidelines/design-asset-discipline.md and gates.md points at it.", "visibility": "Routed, not browsed. It ships evals/triggers.json with six should-trigger and five should-not-trigger queries whose near-misses are the four neighbours, and four neighbours carry a one-line pointer into it. The description is 149 characters. Its catalogue line is paid back in the same change by removing two See-also bullets that duplicated a link already in the same rule body: the per-spawn preamble payload measures 135,880 against a ceiling of 135,907.", "roadmap": "road-to-type-with-a-witness", "estate_cost": "skill_count 300 -> 301 and skill_description_tokens 11,455 -> 11,489, both claimed with estate_growth_exempt in the roadmap's own frontmatter; the per-spawn preamble payload falls by 27 tokens."}
+diff --git a/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json b/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
+index 30682cc0b46928240b81185e6653725ff0c320ed..419e0d6c8d3fb5540bf0e0fde3bf956eb36172a2 100644
+--- a/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
++++ b/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
+@@ -18,32 +18,40 @@
+     "token_target": 500
+   },
+   "metrics": {
+-    "precision_at_k": 81.264,
+-    "recall_at_k": 60.708,
+-    "recall_loss_pp": 39.292,
++    "precision_at_k": 80.995,
++    "recall_at_k": 59.766,
++    "recall_loss_pp": 40.234,
+     "ceiling_met": false,
+     "recall_curve_pp": {
+-      "1": 41.147,
+-      "3": 54.3,
+-      "5": 60.708,
+-      "10": 68.971,
+-      "20": 75.885
++      "1": 41.068,
++      "3": 54.09,
++      "5": 59.766,
++      "10": 68.781,
++      "20": 75.793
+     },
+-    "false_activation_at_k": 14.561,
+-    "context_cost_tokens": 229.9,
++    "false_activation_at_k": 14.609,
++    "context_cost_tokens": 229.7,
+     "token_target_met": true,
+-    "benefit_unconditional": 60.708,
+-    "benefit_conditional_on_activation": 81.264,
+-    "adjudicated_deliveries": 443,
+-    "unadjudicated_deliveries": 4926,
+-    "tie_decided_cut_pp": 80.244
++    "benefit_unconditional": 59.766,
++    "benefit_conditional_on_activation": 80.995,
++    "adjudicated_deliveries": 442,
++    "unadjudicated_deliveries": 4971,
++    "tie_decided_cut_pp": 80.328
+   },
+   "set_compatibility": {
+-    "shared_prompts": 13,
++    "shared_prompts": 14,
+     "jointly_wrong_pairs_delivered_at_k": 0,
+     "pairs_delivered_at_k": [],
+-    "jointly_wrong_pairs_in_corpus": 10,
++    "jointly_wrong_pairs_in_corpus": 11,
+     "candidates": [
++      {
++        "prompt": "generate a logo for my bakery called Golden Crust",
++        "pair": [
++          "svg-authoring",
++          "type-design"
++        ],
++        "jointlyDeliveredAtK": null
++      },
+       {
+         "prompt": "is this diff clean — naming, structure, conventions?",
+         "pair": [
+@@ -129,7 +137,7 @@
+   "corpus": {
+     "partition": "train",
+     "holdout_sealed": true,
+-    "cases": 1163,
+-    "prompts": 1149
++    "cases": 1174,
++    "prompts": 1159
+   }
+ }
+diff --git a/agents/evidence/analysis/routing-body-signal-verdict.json b/agents/evidence/analysis/routing-body-signal-verdict.json
+index 9d2f76c348f15fea025ccd32f408cbf5e43b9e4d..f04c66c624cba317f18c1a6e54fe173fb32eb4ff 100644
+--- a/agents/evidence/analysis/routing-body-signal-verdict.json
++++ b/agents/evidence/analysis/routing-body-signal-verdict.json
+@@ -3,7 +3,7 @@
+   "step": "5.1",
+   "roadmap": "road-to-governed-harness-evolution",
+   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
+-  "measured_at": "2026-10-17",
++  "measured_at": "2026-10-18",
+   "proxy_to_real_fidelity": {
+     "value": null,
+     "status": "unmeasured-by-construction",
+@@ -11,13 +11,13 @@
+   },
+   "body_signal": {
+     "verdict": "harmful",
+-    "reason": "false activation +6.14 pp breaches the +2.0 pp guard",
++    "reason": "false activation +5.91 pp breaches the +2.0 pp guard",
+     "k": 5,
+-    "delta_recall_pp": 3.204,
+-    "delta_false_activation_pp": 6.14,
+-    "p_value": 0.1808,
++    "delta_recall_pp": 3.673,
++    "delta_false_activation_pp": 5.913,
++    "p_value": 0.1214,
+     "discordant_positive_pairs": {
+-      "gained": 100,
++      "gained": 103,
+       "lost": 81
+     },
+     "bars": {
+@@ -28,36 +28,36 @@
+     },
+     "arms": {
+       "description": {
+-        "positives": 593,
+-        "positiveHits": 360,
+-        "negatives": 570,
+-        "negativeHits": 83
++        "positives": 599,
++        "positiveHits": 358,
++        "negatives": 575,
++        "negativeHits": 84
+       },
+       "description+body": {
+-        "positives": 593,
+-        "positiveHits": 379,
+-        "negatives": 570,
++        "positives": 599,
++        "positiveHits": 380,
++        "negatives": 575,
+         "negativeHits": 118
+       }
+     },
+     "recall_pp": {
+-      "description": 60.708,
+-      "description+body": 63.912
++      "description": 59.766,
++      "description+body": 63.439
+     },
+     "false_activation_pp": {
+-      "description": 14.561,
+-      "description+body": 20.702
++      "description": 14.609,
++      "description+body": 20.522
+     }
+   },
+   "corpus": {
+     "partition": "train",
+     "holdout_sealed": true,
+-    "train_corpora": 121,
++    "train_corpora": 122,
+     "legacy_shaped_corpora": [
+       "brand-asset-generation",
+       "estimate-ticket"
+     ],
+-    "cases": 1163,
+-    "catalogue_size": 300
++    "cases": 1174,
++    "catalogue_size": 301
+   }
+ }
+diff --git a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+index bf8eb7661158880d567113d887623106eeb35254..03435508a42bf1793a5cfc6bf87f0c8f96e11a2c 100644
+--- a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
++++ b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+@@ -23,7 +23,7 @@ beside it.
+ 
+ - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
+   and § Correction 2026-08-31 are about.
+-- **Now: 156 files, 35 holdout and 121 train.** That bullet read
++- **Now: 157 files, 35 holdout and 122 train.** That bullet read
+   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
+   when there had since been nine — it drifted 31 files behind the tree because
+   each growth after 2026-10-01 wrote its own section and left this line alone.
+@@ -33,8 +33,8 @@ beside it.
+   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
+   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
+   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
+-  § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b and
+-  § Growth — 2026-10-17; the
++  § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b,
++  § Growth — 2026-10-17 and § Growth — 2026-10-18; the
+   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
+   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
+   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
+@@ -647,10 +647,44 @@ delta-recall 3.22 -> **3.204 pp** (still below the 5.0 pp bar), McNemar p
+ **Both gates were run after the final edit**, for the reason the 2026-10-16
+ section records: the pin test alone cannot see which table a row sits in.
+ 
++## Growth — 2026-10-18, one train corpus; the seal does not move
++
++```
++ONE ROW ADDED, TRAIN-SIDE. THE SEALED SET STAYS AT 35.
++NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
++RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
++```
++
++**What changed.** `road-to-type-with-a-witness` Phase 4 added the `type-design`
++skill with its own corpus: **11** labelled queries — 6 exemplars of which one is
++German, 5 near-misses naming `typography-system` (twice), `logo-generation`,
++`svg-authoring` and `iconography`. The four neighbours whose bodies gained a
++pointer to it already carried a corpus, and none of those files was edited.
++
++| Row | Partition | `sha256(name)[0:2]` | Bucket |
++|---|---|---|---|
++| `type-design` | train | `0x43` | 67 ≥ 51 |
++
++**Both train-side measurements were re-taken, after the skill edits.**
++`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
++on the false-activation guard — false activation 6.14 -> **5.91 pp** against the
+++2.0 pp guard, delta-recall 3.204 -> **3.67 pp** (still below the 5.0 pp bar),
++McNemar p 0.1808 -> **0.1214**, train corpora 121 -> **122**, cases 1163 ->
++**1174**, catalogue 300 -> **301**. `delivery-set-measurement-2026-08-31.json`:
++precision@5 81.264 -> **81.00 %**, recall@5 60.708 -> **59.77 %**, recall loss
++39.292 -> **40.23 pp** — the ceiling stays **BREACHED** — false activation@5
++14.561 -> **14.61 %**, context cost 229.9 -> **229.7** tokens against the 500
++target, still **MET**. One new jointly-wrong pair appears in the set-compatibility
++list, `{svg-authoring, type-design}` on the logo near-miss both corpora share,
++and it is never delivered together at k ≤ 20. Neither verdict changes in kind.
++
++**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
++and `routing_signal_measurement.test.ts` § 5.1.
++
+ ## The set hash
+ 
+ ```
+-SET-SHA256  e40c3f3b73dc4e2d82fc46eb2061848fe0731a34937bce6b0f29eaeccb50e4c8
++SET-SHA256  99ede20a933f8aa72cda7e962d5eaff6a70698a82109d52023d3044ca78f2593
+ ```
+ 
+ Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
+@@ -1130,6 +1164,7 @@ open and which this file does not settle.
+ | `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
+ | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
+ | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
++| `type-design` | `9c974247ed5c815ebc17c1af49c7b4716dfeb0d201921122797ada6fe7ca8948` |
+ | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
+ | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
+ | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
+diff --git a/agents/index.md b/agents/index.md
+index e8dfe7f5bba4379c315b139f0891a0ff621830a0..5381f64068c47f06956e552f9f4a7f2e6974fdbc 100644
+--- a/agents/index.md
++++ b/agents/index.md
+@@ -1,13 +1,13 @@
+ # Agent-Config Internal Index
+ 
+-Maintainer-facing index of all **747 artefacts** in this package.
++Maintainer-facing index of all **748 artefacts** in this package.
+ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ 
+ > **Regenerate:** `./scripts-run src/scripts/generate_index`
+ > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
+ > Do not edit manually.
+ 
+-## Skills (300)
++## Skills (301)
+ 
+ | kind | name | source | description |
+ |---|---|---|---|
+@@ -294,6 +294,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
+ | skill | [`throughput-vs-morale-tradeoff`](../src/skills/throughput-vs-morale-tradeoff/SKILL.md) | official | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
+ | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
+ | skill | [`traefik`](../src/skills/traefik/SKILL.md) | official | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
++| skill | [`type-design`](../src/skills/type-design/SKILL.md) | official | Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font. |
+ | skill | [`typography-system`](../src/skills/typography-system/SKILL.md) | official | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
+ | skill | [`ui-apply-generic`](../src/skills/ui-apply-generic/SKILL.md) | official | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus. |
+ | skill | [`ui-component-architect`](../src/skills/ui-component-architect/SKILL.md) | official | Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui. |
+diff --git a/agents/roadmaps/road-to-type-with-a-witness.md b/agents/roadmaps/road-to-type-with-a-witness.md
+index 8f2b4c7bddac0360f1f5d40d3ce1754f5b07c676..515001678373b04da7225fc2957d47c0bcabe90a 100644
+--- a/agents/roadmaps/road-to-type-with-a-witness.md
++++ b/agents/roadmaps/road-to-type-with-a-witness.md
+@@ -20,7 +20,7 @@ relates:
+     relation: disjoint
+     note: "Active. Owns the bundled-script contract; the new skill bundles no script and runs a pinned peer-side toolchain, so that contract is not touched."
+ estate_offset_exempt: "Adds one active roadmap with nothing to offset: no active, later or stub roadmap owns font construction, the font states of the asset witness, or the typography carriers (swept agents/roadmaps/ for font, glyph, typography, line-height and document.fonts on 2026-10-12). Merging into road-to-svg-witness-provenance would bind a typography programme to a three-finding security follow-up."
+-estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with this file: the reconstruction benchmark needs real font families as held-out truth, and whether the 2026-06-28 no-font-bundler council lock covers a maintainer-run benchmark is a lock interpretation the council owns, not a step an agent can take."
++estate_growth_exempt: "2026-10-18 change: one skill (`type-design`) and its description tokens — no existing skill can carry a twelve-step font-construction pipeline behind its own trigger (decision A1), and the description cost is paid by a same-change rules reduction, so the per-spawn payload falls. Earlier change: one open blocker (benchmark-fixture-fonts) is added with this file: the reconstruction benchmark needs real font families as held-out truth, and whether the 2026-06-28 no-font-bundler council lock covers a maintainer-run benchmark is a lock interpretation the council owns, not a step an agent can take."
+ ---
+ # Road to type with a witness
+ 
+@@ -206,7 +206,7 @@ estate_growth_exempt: "One open blocker (benchmark-fixture-fonts) is added with
+       existing `svg-witness-tests` job (`.github/workflows/tests.yml:543`) on
+       ubuntu and macOS.
+       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*load-waited-for-delayed-face/
+-      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
++      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed. Checked 2026-10-18 for AC-1: `SVG Witness Tests` on ubuntu-latest and macos-latest passed on PR #2430 (run 38987233705), and both job logs carry the font-state cases.
+ 
+ ## Phase 2 — Two delivery tells under the delivery owner
+ 
+@@ -263,34 +263,39 @@ One skill, `execution: manual`, pack `frontend-design`. The model perceives,
+ decides and judges; code does every coordinate. The skill bundles no script and
+ no font; it runs a pinned toolchain in the consumer's environment.
+ 
+-- [ ] **4.1 Scope and honest limit.** Two entry paths, one core. Path A starts
++- [x] **4.1 Scope and honest limit.** Two entry paths, one core. Path A starts
+       from lettering (raster or SVG, including a wordmark the agent just made
+       with `logo-generation` or `image-generation`). Path B starts from a brief.
+       The body states that a coherent display or brand family is in reach and
+       text-grade optical refinement is a type designer's work.
+       verify: `grep -c "type designer" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.2 Rights gate before any trace.** Own or commissioned lettering
++      Done 2026-10-18: § The honest limit.
++- [x] **4.2 Rights gate before any trace.** Own or commissioned lettering
+       proceeds. Lettering set in an existing typeface is named, and licensing
+       that typeface is recommended instead of reconstructing it. A third party's
+       mark stops until its owner's rights are stated. An origin the agent cannot
+       establish is treated as not owned and asked about.
+       verify: `grep -ci "rights gate" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.3 No default output licence (decision A3).** The skill asks which
++      Done 2026-10-18: § Rights gate, five rights classes recorded in the spec's source block.
++- [x] **4.3 No default output licence (decision A3).** The skill asks which
+       licence the new font carries, records it in the spec and the name table,
+       and writes `unknown` when none is given; it never stamps one on its own.
+-      verify: `grep -ci "licence" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.4 Freehand outlines are not a deliverable.** The model never writes
++      verify: `grep -ci "license" src/skills/type-design/SKILL.md` -> /^[1-9]/
++      Done 2026-10-18: § License — asked, never stamped. The verify spells `license`: lint_canonical_terms gates the tree on that spelling, so the step's original `licence` would have required a new canonical-term violation.
++- [x] **4.4 Freehand outlines are not a deliverable.** The model never writes
+       path data for a glyph by hand and never ships a freehand SVG glyph; it
+       changes spec parameters and lets code rebuild.
+       verify: `grep -ci "freehand" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.5 `font-spec.yaml`, documented in `references/font-spec.md`.** Units
++      Done 2026-10-18: § No freehand outlines.
++- [x] **4.5 `font-spec.yaml`, documented in `references/font-spec.md`.** Units
+       per em; baseline, x-height, cap height, ascender, descender; stems
+       (lowercase and capitals, vertical and horizontal), contrast, stress angle,
+       overshoot, aperture, terminal and serif style; spacing values; coverage
+       tier; licence block; source block (path, rights class from 4.2, digest
+       of the source image, locked glyphs).
+       verify: `grep -c "stress angle" src/skills/type-design/references/font-spec.md` -> /^[1-9]/
+-- [ ] **4.6 Path A.** Ingest (SVG parse, or threshold and deskew a raster) →
++      Done 2026-10-18: `references/font-spec.md`.
++- [x] **4.6 Path A.** Ingest (SVG parse, or threshold and deskew a raster) →
+       code segments and the model labels a numbered contact sheet → trace with
+       the fill rule declared (Phase 3) → measure the spec from the traced
+       letters → normalise the present letters to it → extend per 4.8. A
+@@ -299,48 +304,54 @@ no font; it runs a pinned toolchain in the consumer's environment.
+       whose drift fails 5.6. A source below a stated resolution is reported
+       as low confidence and cannot reach `validated-static` on fidelity.
+       verify: `grep -ci "contact sheet" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.7 Path B.** Brief → spec with numbers → `n o H O` built → proof
++      Done 2026-10-18: procedure step 2; the low-resolution floor is a stated default (600 px cap height / 1,000 units), labelled as such.
++- [x] **4.7 Path B.** Brief → spec with numbers → `n o H O` built → proof
+       sheet rendered → the four control glyphs approved by the person asking
+       before anything else is built.
+       verify: `grep -c "n o H O" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.8 Construction order.** `n o H O` → derivation chains (n to h m u r;
++      Done 2026-10-18: procedure step 3.
++- [x] **4.8 Construction order.** `n o H O` → derivation chains (n to h m u r;
+       o to c e b d p q; H to E F I L T; O to C D G Q) → diagonals → free shapes
+       (a g s S f t z and the figures) → composites for diacritics through
+       anchors, the German set included.
+       verify: `grep -ci "derivation chain" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.9 Coverage tiers, defined here (decision A9).** `wordmark` (the
++      Done 2026-10-18: procedure step 4.
++- [x] **4.9 Coverage tiers, defined here (decision A9).** `wordmark` (the
+       letters present plus alternates), `latin-basic` (A-Z, a-z, 0-9, basic
+       punctuation, space, `.notdef`), `latin-de` (adds the umlauts, both forms
+       of sharp s and the German quotation marks). The tier is written into the
+       spec and the QA report, and nothing claims a tier it does not cover.
+       verify: `grep -c "latin-de" src/skills/type-design/references/font-spec.md` -> /^[1-9]/
+-- [ ] **4.10 Toolchain manifest.** A pip-installable outline library, a path
++      Done 2026-10-18: § Coverage tiers in `references/font-spec.md`.
++- [x] **4.10 Toolchain manifest.** A pip-installable outline library, a path
+       boolean library, a UFO library, a font compiler, a shaping binding and a
+       raster tracer, each pinned to an exact version in
+       `references/toolchain.md` and taken through `supply-chain-intake` before
+       the skill names it. Bumped by pull request, never floating.
+       verify: `grep -cE "==[0-9]" src/skills/type-design/references/toolchain.md` -> /^[1-9]/
+-      Open 2026-10-17: an exact pin is a registry fact, and the drain lane that took Phases 1-3 had no live registry read to confirm each version through `supply-chain-intake`; naming a version from memory would be the invented-package failure the intake exists to stop.
+-- [ ] **4.11 Outputs land in the consumer tree.** UFO source, `font-spec.yaml`,
++      Done 2026-10-18: six exact pins, each the newest release at least two weeks old, with an intake record (registry JSON, publish date, downloads, OSV: no advisory). The raster tracer is MIT (`vtracer`); the GPL candidates were rejected per the non-goal.
++- [x] **4.11 Outputs land in the consumer tree.** UFO source, `font-spec.yaml`,
+       built `woff2` and `ttf`, the proof page and the QA report, at the location
+       `design-system-capture` conventions give; never inside the package. The
+       QA report carries one maturity label — `concept`, `prototype` or
+       `validated-static` (every Phase 5 gate green) — and never a claim the run
+       cannot show.
+       verify: `grep -c "design-system-capture" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **4.12 The skill lands within the payload ceiling (decision A1).** The
++      Done 2026-10-18: § Outputs and § Maturity; `design-system-capture` is where the family is recorded.
++- [x] **4.12 The skill lands within the payload ceiling (decision A1).** The
+       change that adds `src/skills/type-design/SKILL.md` carries a reduction of
+       at least the new catalogue entry's tokens elsewhere in the preamble
+       payload, and an `estate_growth_exempt` claim naming why no existing skill
+       can carry the capability.
+       verify: `./scripts-run src/scripts/check_preamble_payload_budget` -> 0
+-      Open 2026-10-17: measured 135,908 tok against a 135,908 ceiling — zero headroom — so the skill needs a same-change reduction of its catalogue entry (~53 tok, the 2026-08-27 measurement) from the rules bucket; choosing which rule prose to cut is the A1 decision, not a drive-by.
+-- [ ] **4.13 Trigger evals.** At least 5 should-trigger and 5 should-not
++      Done 2026-10-18: 135,880 tok against the 135,907 ceiling (net -27). The reduction is two See-also bullets that repeated a link the same rule's "Body migrated to" line already carries (`context-hygiene`, `roadmap-ci-steps-policy`) — duplicates, so no load-bearing line was cut and A1's fallback did not fire. The estate claim is the amended `estate_growth_exempt` above.
++- [x] **4.13 Trigger evals.** At least 5 should-trigger and 5 should-not
+       queries, the latter naming the neighbours: choosing a font
+       (`typography-system`), making a logo (`logo-generation`), tracing an icon
+       (`svg-authoring`), an icon font (`iconography`).
+       verify: `./scripts-run src/scripts/lint_new_skill_gate` -> 0
+-- [ ] **4.14 Route it in.** `logo-generation`, `brand-identity` and
++      Done 2026-10-18: `evals/triggers.json`, 6 exemplars and 5 near-misses naming the four neighbours; the gate cleared it against origin/main.
++- [x] **4.14 Route it in.** `logo-generation`, `brand-identity` and
+       `svg-authoring` hand "the rest of the alphabet / make this a font" to
+       `type-design`. `typography-system` gains a `custom` source beside its CSV
+       pairing path (spec path, licence, fallback overrides),
+@@ -348,30 +359,35 @@ no font; it runs a pinned toolchain in the consumer's environment.
+       records a custom family with its source and licence; `bundled_local`
+       stays a flag. The neighbours' trigger evals stay green.
+       verify: `grep -c "type-design" src/skills/logo-generation/SKILL.md` -> /^[1-9]/
++      Done 2026-10-18: logo-generation, svg-authoring (named, other pack) and brand-identity hand off; typography-system § Custom source; `design-system-json.md` records a `custom` block beside `bundled_local`.
+ 
+ ## Phase 5 — Gates, proof and the benchmark
+ 
+ Each gate is a peer-side command in the skill's procedure with a threshold and a
+ failure message the agent can act on.
+ 
+-- [ ] **5.1 Outline hygiene, in `references/gates.md`.** Every contour closed; counters per glyph equal an
++- [x] **5.1 Outline hygiene, in `references/gates.md`.** Every contour closed; counters per glyph equal an
+       expected table (o 1, e 1, a 1, B 2, 8 2, g 1 or 2); points at extrema; no
+       contour under the size threshold; direction correct for the outline
+       format; fill rule declared before overlap removal.
+       verify: `grep -ci "counters per glyph" src/skills/type-design/references/gates.md` -> /^[1-9]/
+-- [ ] **5.2 Vertical metrics.** Typo and hhea agree, both line gaps 0,
++      Done 2026-10-18: `references/gates.md` § 1, coverage included.
++- [x] **5.2 Vertical metrics.** Typo and hhea agree, both line gaps 0,
+       `USE_TYPO_METRICS` set, win values cover the family's extremes.
+       verify: `grep -c "USE_TYPO_METRICS" src/skills/type-design/references/gates.md` -> /^[1-9]/
+-- [ ] **5.3 System consistency.** Stems by ray-cast at half x-height across
++      Done 2026-10-18: gates § 2.
++- [x] **5.3 System consistency.** Stems by ray-cast at half x-height across
+       n h m u l i within 3 %; overshoot 1 to 3 % on o O e c s; ink area per
+       glyph group within a stated band.
+       verify: `grep -ci "ray-cast" src/skills/type-design/references/gates.md` -> /^[1-9]/
+-- [ ] **5.4 Spacing before kerning.** Sidebearings from edge classes (straight,
++      Done 2026-10-18: gates § 3; thresholds labelled stated defaults the benchmark may move.
++- [x] **5.4 Spacing before kerning.** Sidebearings from edge classes (straight,
+       round, diagonal) set on H, n, O, o first; kerning classes from edge groups
+       only afterwards; a collision check on the kerning strings; `kern`,
+       `mark`, `liga` and, where figures exist, `tnum` built; shaping confirms the features apply.
+       verify: `grep -ci "sidebearing" src/skills/type-design/references/gates.md` -> /^[1-9]/
+-- [ ] **5.5 Rendered proof through the existing witness (decision A7).** A
++      Done 2026-10-18: gates § 4.
++- [x] **5.5 Rendered proof through the existing witness (decision A7).** A
+       generated host page whose specimens are SVG text elements: waterfall 12 to
+       72 px, `HHOHH nnonn`, every letter between n and n and between o and o,
+       the kerning strings, the wordmark text. `ui:render --profile asset` must
+@@ -380,15 +396,18 @@ failure message the agent can act on.
+       three repair rounds; after that the QA report names the gate and the
+       label stays below `validated-static`.
+       verify: `grep -c "profile asset" src/skills/type-design/SKILL.md` -> /^[1-9]/
+-- [ ] **5.6 Source fidelity, path A.** The wordmark text set in the new font,
++      Done 2026-10-18: procedure steps 7 and 10, gates § 5.
++- [x] **5.6 Source fidelity, path A.** The wordmark text set in the new font,
+       aligned by baseline and cap height, compared with the source by
+       silhouette IoU with the method `svg-authoring` already uses: 0.90 per
+       glyph, 0.85 per word, and a locked signature glyph at 0.95. The diff
+       overlay is produced and looked at.
+       verify: `grep -c "0.95" src/skills/type-design/references/gates.md` -> /^[1-9]/
+-- [ ] **5.7 Metric-matched fallback.** The skill emits the fallback
++      Done 2026-10-18: gates § 6.
++- [x] **5.7 Metric-matched fallback.** The skill emits the fallback
+       `@font-face` overrides for the new family, which is what T12 asks for.
+       verify: `grep -c "size-adjust" src/skills/type-design/references/gates.md` -> /^[1-9]/
++      Done 2026-10-18: gates § 7, deriving from the `design-asset-discipline` bullet rather than restating it.
+ - [ ] **5.8 Pre-registered reconstruction benchmark — committed fixtures, per
+       the council's (a) of 2026-10-16.** Held-out real families live under
+       `tests/fixtures/fonts/` <!-- ref-ignore -->, each with its licence text
+@@ -404,12 +423,14 @@ failure message the agent can act on.
+       the fixture identities are retained beside the verdict. A claim enters
+       `docs/CLAIMS.md` only from this run.
+       verify: the rendered proof exists for each family; a fixture's name does not appear in the input handed to the skill; the measurements and thresholds are committed with the verdict.
++      Open 2026-10-18 (screen): not executable in a drain lane. The run is a full path-A execution of `type-design` per family — the pinned peer-side toolchain installed, the construction and every gate run — by a generating session that is not the grader, after thresholds are frozen in a commit of their own. No fixture family is committed yet, so nothing here is half-done.
+ - [ ] **5.9 The published archive carries no typeface binary.** The lock's one
+       bright line, verified against the produced archive rather than against the
+       configuration that is supposed to produce it. The check also covers
+       release archives, container build contexts and provenance bundles, because
+       an exclusion from `package.json#files` is necessary and not sufficient.
+       verify: the produced tarball carries no typeface binary and no fixture path — `npm pack --dry-run | grep -cE '[.](ttf|otf|woff2?|ttc)$'` -> /^0$/
++      Open 2026-10-18 (screen): gated on 5.8. The check binds the fixtures 5.8 commits; run today it reads 0 over a tree with no typeface binary at all, which is the vacuous zero this step exists to avoid claiming. It lands in the change that adds the first fixture.
+ - [ ] **5.10 The fixture carve-out states its own bound.** The amendment covers
+       typeface families for this benchmark and nothing else: a later family
+       joins by an explicit decision, never drive-by, and "openly licensed" means
+@@ -417,6 +438,7 @@ failure message the agent can act on.
+       fixtures" becomes a category that drifts into audio samples and image
+       sets.
+       verify: the bound and the SPDX restriction are written where the fixtures live, and a family carrying a non-OSI identifier is refused by the same check as 5.9
++      Open 2026-10-18 (screen): gated on 5.8 and 5.9 — "where the fixtures live" does not exist until 5.8 creates it, and the refusal is part of 5.9's check.
+ 
+ ## Phase 6 — Third-party registry items are audited before `add`
+ 
+@@ -499,18 +521,18 @@ skill.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-0 — Body line-height and the control font-size floor have one value
++- [x] AC-0 — Body line-height and the control font-size floor have one value
+       each across the carriers, the drift test was seen red first, and
+       `typography-system` claims only content it carries.
+-- [ ] AC-1 — The asset witness reports `loaded`, `error` and `synthesised` for
++- [x] AC-1 — The asset witness reports `loaded`, `error` and `synthesised` for
+       the three in-memory fixtures on ubuntu and macOS, and the page profile
+       reports a painted family beside the declared one.
+-- [ ] AC-2 — T11 and T12 sit in the catalogue with fixtures, and the parity
++- [x] AC-2 — T11 and T12 sit in the catalogue with fixtures, and the parity
+       lint is green.
+-- [ ] AC-3 — `svg-structure-filled-counter` flags the two-circle disc and not
++- [x] AC-3 — `svg-structure-filled-counter` flags the two-circle disc and not
+       its even-odd twin, and its false-positive count over the tracked SVGs is
+       recorded.
+-- [ ] AC-4 — `type-design` passes the new-skill gate, the payload ceiling holds
++- [x] AC-4 — `type-design` passes the new-skill gate, the payload ceiling holds
+       in the change that adds it, and the rights gate, the licence question and
+       the no-freehand rule are in its body.
+ - [ ] AC-5 — A path A run on a wordmark produces a font whose proof page reads
+@@ -520,5 +542,5 @@ skill.
+       name the coverage tier and the maturity label.
+ - [ ] AC-6 — The reconstruction benchmark has run once with frozen thresholds,
+       and its verdict is recorded, a null included.
+-- [ ] AC-7 — A third-party registry item is routed through
++- [x] AC-7 — A third-party registry item is routed through
+       `supply-chain-intake` before `add`.
+diff --git a/agents/settings/contexts/structural/file-ownership-matrix.md b/agents/settings/contexts/structural/file-ownership-matrix.md
+index 4ddda335ec571d4304ee81821e05d89a636b59e3..877be2a6cf3124a043ab4d8e4aa8406b153cdf24 100644
+--- a/agents/settings/contexts/structural/file-ownership-matrix.md
++++ b/agents/settings/contexts/structural/file-ownership-matrix.md
+@@ -5,8 +5,8 @@
+ 
+ - Schema version: `1`
+ - Source of truth: `.agent-src.uncondensed/`
+-- Files indexed: **592**
+-- Edges (incl. self-WRITE): **2297**
++- Files indexed: **596**
++- Edges (incl. self-WRITE): **2305**
+ 
+ ## READ_ONLY edges
+ 
+@@ -723,6 +723,7 @@
+ | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/brand/SKILL.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/logo-generation/SKILL.md` | `body_link` | 1 |
++| `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/type-design/SKILL.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-identity/SKILL.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/brand-strategy/SKILL.md` | `.agent-src.uncondensed/skills/brand-to-tokens/SKILL.md` | `body_link` | 1 |
+@@ -1657,6 +1658,9 @@
+ | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `.agent-src.uncondensed/rules/token-optimizer-maintenance.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/token-optimizer/SKILL.md` | `.agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
++| `.agent-src.uncondensed/skills/type-design/SKILL.md` | `.agent-src.uncondensed/skills/type-design/references/font-spec.md` | `body_link` | 1 |
++| `.agent-src.uncondensed/skills/type-design/SKILL.md` | `.agent-src.uncondensed/skills/type-design/references/gates.md` | `body_link` | 1 |
++| `.agent-src.uncondensed/skills/type-design/SKILL.md` | `.agent-src.uncondensed/skills/type-design/references/toolchain.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/rules/brand-source-of-truth.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/brand/SKILL.md` | `body_link` | 1 |
+ | `.agent-src.uncondensed/skills/typography-system/SKILL.md` | `.agent-src.uncondensed/skills/design-intelligence/SKILL.md` | `body_link` | 1 |
+@@ -1725,5 +1729,5 @@
+ | `context` | 65 |
+ | `persona` | 36 |
+ | `rule` | 122 |
+-| `skill` | 369 |
++| `skill` | 373 |
+ 
+diff --git a/dist/agent-src/rules/context-hygiene.md b/dist/agent-src/rules/context-hygiene.md
+index a751b52876fcb0164b9e5d409e856183929f0487..cad1bb82c5fab279673e3283d33b949dcdc6a3a9 100644
+--- a/dist/agent-src/rules/context-hygiene.md
++++ b/dist/agent-src/rules/context-hygiene.md
+@@ -130,5 +130,4 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ 
+ ## See also
+ 
+-- [`guideline:agent-infra/context-hygiene-mechanics`](../guidelines/agent-infra/context-hygiene-mechanics.md) — templates + per-host procedures.
+ - [`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md) — the read-loop debug procedure.
+diff --git a/dist/agent-src/rules/roadmap-ci-steps-policy.md b/dist/agent-src/rules/roadmap-ci-steps-policy.md
+index 450e398f1e9e7c209d54cfcba504536251f039b5..9d5fa5e4febff05e32dc097066ae07b4aa51e96a 100644
+--- a/dist/agent-src/rules/roadmap-ci-steps-policy.md
++++ b/dist/agent-src/rules/roadmap-ci-steps-policy.md
+@@ -66,8 +66,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ 
+ ## See also
+ 
+-- [`contexts/execution/roadmap-ci-steps-mechanics`](../contexts/execution/roadmap-ci-steps-mechanics.md)
+-  — the migrated body.
+ - [`verify-before-complete`](verify-before-complete.md) — the
+   Iron Law this rule narrows; carve-out cites it.
+ - [`roadmap-progress-sync`](roadmap-progress-sync.md) — inline flip
+diff --git a/dist/agent-src/rules/token-budget-discipline.md b/dist/agent-src/rules/token-budget-discipline.md
+index a2896e8ebd28b784470340fa6342526835cfbeb0..17470b1319650df272339dfc826a79ca03a87c42 100644
+--- a/dist/agent-src/rules/token-budget-discipline.md
++++ b/dist/agent-src/rules/token-budget-discipline.md
+@@ -51,7 +51,7 @@ A skill claiming `rich` MUST satisfy ALL three:
+    carry a `load_context` pointer instead.
+ 
+ 3. **≤ 15 % of the suite's skills may claim `rich`** — the CI linter counts
+-   rich-tagged skills and hard-fails if the ratio is exceeded. With 300 skills
++   rich-tagged skills and hard-fails if the ratio is exceeded. With 301 skills
+    the cap is ~45. Do not claim `rich` for convenience; claim it only for
+    irreducible-complexity skills.
+ 
+diff --git a/dist/agent-src/skills/brand-identity/SKILL.md b/dist/agent-src/skills/brand-identity/SKILL.md
+index 236b0aa45deebbe0f483188f37d876e0640bbc58..82bb6a7566d4acc08004592cfe6060ac1267d4ef 100644
+--- a/dist/agent-src/skills/brand-identity/SKILL.md
++++ b/dist/agent-src/skills/brand-identity/SKILL.md
+@@ -101,4 +101,5 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
+ - [`brand-to-tokens`](../brand-to-tokens/SKILL.md) — emits the DTCG token source of truth.
+ - [`typography-system`](../typography-system/SKILL.md) — turns the type story into type tokens.
+ - [`logo-generation`](../logo-generation/SKILL.md) — generates marks from this identity (pack-ai-image).
++- [`type-design`](../type-design/SKILL.md) — when the type story is a custom family: the wordmark's lettering or a brief built into an original font (pack-frontend-design).
+ - [`brand`](../brand/SKILL.md) — the corpus grounded against.
+diff --git a/dist/agent-src/skills/design-system-capture/references/design-system-json.md b/dist/agent-src/skills/design-system-capture/references/design-system-json.md
+index 0d8c93139073e17255e83efed9786f997d94b7cd..6306db1b9a4efc64a8ec937aacb67754bfdb8452 100644
+--- a/dist/agent-src/skills/design-system-capture/references/design-system-json.md
++++ b/dist/agent-src/skills/design-system-capture/references/design-system-json.md
+@@ -71,6 +71,10 @@
+ - **`bundled_local`** on a font family is a flag, not an instruction: the
+   package never downloads or bundles fonts (out of scope) — it records that the
+   source did.
++- **A custom family** (built with `type-design`, or commissioned) adds
++  `"custom": { "spec": "<path to font-spec.yaml>", "license": "<as stated, or unknown>" }`
++  to its `families[]` entry. The license is recorded as given, never inferred;
++  `bundled_local` stays the separate flag it is.
+ - **`motion` has a consumer.** It sits outside the DTCG mapping above, and for
+   a long time that meant nothing read it at all: the block was written by
+   capture and consumed by nobody, so easing and duration were re-derived from
+diff --git a/dist/agent-src/skills/logo-generation/SKILL.md b/dist/agent-src/skills/logo-generation/SKILL.md
+index be30114bd7c60158503fd5e93167377b6a9f94e5..988ffe421370dd7f6590d44f539dbf0cb1f875bd 100644
+--- a/dist/agent-src/skills/logo-generation/SKILL.md
++++ b/dist/agent-src/skills/logo-generation/SKILL.md
+@@ -108,3 +108,4 @@ PNG as the final logo file.
+ - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
+ - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the brief into provider-specific prompt grammar.
+ - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before generating brand marks or likenesses.
++- `type-design` — "make this a font": the rest of the alphabet in a wordmark's lettering. Named, not linked — it ships in another pack.
+diff --git a/dist/agent-src/skills/svg-authoring/SKILL.md b/dist/agent-src/skills/svg-authoring/SKILL.md
+index 5d4bee441db78dd50159005f428eaa1e3aa5af04..202c4956dabb397596931e381b44f3d518f97034 100644
+--- a/dist/agent-src/skills/svg-authoring/SKILL.md
++++ b/dist/agent-src/skills/svg-authoring/SKILL.md
+@@ -296,6 +296,8 @@ report a non-zero natural width.
+   for the glyph it lacks.
+ - `logo-generation` — the brand pipeline that
+   routes a geometric mark here.
++- `type-design` — "the rest of the alphabet" / "make this a font": a
++  wordmark extended into a constructed font, reusing the trace and counter rule.
+ - `image-provider-routing` — illustrative
+   vector art goes to a provider, not here.
+ - `fe-design` § Motion — the motion authority, in
+diff --git a/dist/agent-src/skills/type-design/SKILL.md b/dist/agent-src/skills/type-design/SKILL.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..23798d46f851ef553a19c13055f85ec247857f49
+--- /dev/null
++++ b/dist/agent-src/skills/type-design/SKILL.md
+@@ -0,0 +1,195 @@
++---
++model_tier: high
++name: type-design
++description: "Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font."
++domain: product
++personas:
++  - design-director
++workspaces:
++  - engineering
++packs:
++  - frontend-design
++trust:
++  level: experimental
++install:
++  removable: true
++scope:
++  write: []
++  verification_reason: "execution declares no handler, so this skill runs nothing of its own — every write is the calling agent's, under the rules that govern it. No command can prove a scope the skill never executes."
++execution:
++  type: manual
++---
++
++# type-design
++
++Design an original font as a **constructed system**: measure parameters, let
++code build every outline from measured parts, set spacing before kerning, and
++build through gates that measure outlines, metrics, coverage and fidelity — with
++a rendered proof the agent looked at. The model perceives, decides and judges;
++code writes every coordinate.
++
++The skill bundles no script and no font. It runs a pinned peer-side toolchain in
++the consumer's environment ([`references/toolchain.md`](references/toolchain.md)).
++
++## When to use
++
++- "Turn this wordmark into a font", "the rest of the alphabet in this lettering".
++- "Design an original display face for our brand" from a written brief.
++- A logo or a lettering image exists and the person wants a typeable family.
++
++## When NOT to use
++
++- Choosing or pairing existing fonts, or building a type scale →
++  `typography-system`.
++- Making a logo or a single mark → `logo-generation`; tracing one icon or mark
++  → `svg-authoring`; an icon font from an existing set → `iconography`.
++- Reproducing a typeface someone else published — license it instead (§ Rights gate).
++
++## The honest limit
++
++A coherent **display or brand family** — one weight, Latin, shared stems,
++overshoot and spacing — is in reach. **Text-grade optical refinement** (hinting,
++optical compensation at small sizes, a multi-weight interpolated family) is a
++type designer's work. Say so before the first build, and never label a result
++beyond what the gates showed (§ Maturity).
++
++## Rights gate — before any trace
++
++1. **Own or commissioned lettering** proceeds.
++2. **Lettering set in an existing typeface** — name the typeface and recommend
++   licensing it instead of reconstructing it. Proceed only on a stated decision
++   that the result is a different design.
++3. **A third party's mark** stops until its owner's rights are stated.
++4. **An origin the agent cannot establish** is treated as not owned, and asked
++   about. Never assume a lettering image is the person's own.
++
++Record the class (`own`, `commissioned`, `typeface-named`, `third-party`,
++`unknown`) in the spec's source block.
++
++## License — asked, never stamped
++
++Ask which license the new font carries. Record the answer in `font-spec.yaml`
++and in the font's name table (license description and URL). With no answer the
++license is `unknown`, written as such in both places. **Never** choose one on
++the person's behalf: a default license is a commitment made for someone else.
++
++## No freehand outlines
++
++The model never writes path data for a glyph by hand and never ships a freehand
++SVG glyph. To change a shape, change a spec parameter or a construction rule and
++let code rebuild. A glyph that cannot be expressed through the spec is a sign the
++spec is missing a parameter — add it.
++
++## Procedure
++
++0. **Toolchain** — install the pinned set from
++   [`references/toolchain.md`](references/toolchain.md) into an isolated
++   environment in the consumer tree. Missing and not installable → stop and say
++   which tool; never substitute a hand-written approximation.
++1. **Spec first** — write `font-spec.yaml` per
++   [`references/font-spec.md`](references/font-spec.md): units per em, vertical
++   metrics, stems, contrast, stress angle, overshoot, aperture, terminals,
++   spacing, the coverage tier, license and source blocks.
++2. **Path A — from lettering** (raster or SVG, including a wordmark just made by
++   `logo-generation` or `image-generation`):
++   1. **Ingest** — parse the SVG, or threshold and deskew the raster.
++   2. **Segment** — code splits the letters; the model labels a numbered
++      **contact sheet** of the segments, never the raw image by eye.
++   3. **Trace** with the fill rule declared and counters wound opposite to their
++      outer contour (`svg-authoring` § Trace to measure, construct to deliver).
++   4. **Measure** the spec from the traced letters, then **normalise** the
++      present letters to it, and extend per step 4.
++   5. A wordmark's one-off tweaks become **alternates or ligatures**, never the
++      default forms. A **signature letter** the brief names is a **locked
++      glyph**; its drift fails the fidelity gate.
++   6. A source below 600 px cap height (or an SVG under 1,000 units) is reported
++      as **low confidence** and cannot reach `validated-static` on fidelity —
++      a stated default, not a measured one; the benchmark is what can move it.
++3. **Path B — from a brief**: brief → spec with numbers → build `n o H O` →
++   render the proof sheet → the person asking **approves the four control
++   glyphs** before anything else is built. A rejection changes the spec, and
++   the four are rebuilt.
++4. **Construction order** — `n o H O` first, then the **derivation chains**:
++   n → h m u r · o → c e b d p q · H → E F I L T · O → C D G Q. Then the
++   diagonals (A K M N V W X Y k v w x y), then the free shapes (a g s S f t z and
++   the figures), then composites for diacritics through anchors — the German set
++   (ä ö ü Ä Ö Ü ß ẞ „ “ ‚ ‘) included when the tier asks for it.
++5. **Spacing before kerning** — sidebearings from edge classes first, kerning
++   classes only afterwards ([`references/gates.md`](references/gates.md) § 4).
++6. **Build and gate** — UFO source → compiled `ttf` and `woff2`. Run every gate
++   in [`references/gates.md`](references/gates.md); each prints a threshold and
++   a failure message to act on.
++7. **Rendered proof** — generate a host page whose specimens are SVG `<text>`
++   elements set in the new family (waterfall 12 to 72 px, `HHOHH nnonn`, every
++   letter between n and n and between o and o, the kerning strings, the wordmark
++   text), with the built `woff2` beside it, and run the witness:
++   ```bash
++   agent-config ui:render proof/index.html --profile asset
++   ```
++   The new family must read `loaded` — never `error` or `synthesised`. Open the
++   PNG and state what you saw.
++8. **Fidelity (path A)** — the wordmark text set in the new font against the
++   source by silhouette IoU (gates § 6); produce the diff overlay and look at it.
++9. **Fallback** — emit the metric-matched fallback `@font-face` (gates § 7).
++10. **Repair budget** — a failing gate gets at most **three** repair rounds.
++    After that the QA report names the gate and the label stays below
++    `validated-static`.
++
++## Outputs — in the consumer tree
++
++UFO source, `font-spec.yaml`, built `woff2` and `ttf`, the proof page with its
++PNG, and the QA report — at the location `design-system-capture` conventions
++give the project's design-system assets, **never inside the package**. Record
++the family there as a custom family with its source and license.
++
++### Maturity — exactly one label
++
++| Label | Means |
++|---|---|
++| `concept` | spec and control glyphs exist; the tier is not covered |
++| `prototype` | the tier is covered and the font builds; at least one gate is open |
++| `validated-static` | every gate in `references/gates.md` is green, the witness read `loaded`, and the proof was looked at |
++
++Never a claim the run cannot show.
++
++## Output format
++
++1. **QA report** — coverage tier, maturity label, the license (or `unknown`),
++   the rights class, and each gate with its measured value, threshold and
++   result.
++2. **Witness reading** — the face state the asset profile reported for the new
++   family, the PNG path, and one sentence on what the agent saw in it.
++3. **Fidelity (path A)** — per-glyph and per-word IoU, the locked glyph's IoU,
++   the registration they were measured against, and the overlay path.
++4. **Files** — every output path, read back from disk, with byte size.
++
++## Gotcha
++
++- **A plausible font is not a system.** Glyphs that each look fine and share no
++  stems, overshoot or spacing pass a glance and fail the consistency gate —
++  run it, do not eyeball it.
++- **Same-direction counters paint solid.** Under `fill-rule: nonzero`, the default, an
++  `o` whose inner contour winds like its outer one fills its counter.
++- **Kerning cannot rescue spacing.** Kerning pairs on unspaced glyphs grow
++  without bound and still look uneven; set sidebearings first.
++- **The witness reads the face, not the look.** A fallback face that resembles
++  the new one reads `error` there — trust the state, not the screenshot.
++
++## Do NOT
++
++- Do NOT trace lettering whose rights class is `third-party` or `unknown`.
++- Do NOT write or ship glyph path data by hand.
++- Do NOT stamp a license the person did not give.
++- Do NOT claim a coverage tier the font does not cover, or `validated-static`
++  with a gate open.
++- Do NOT write outputs into the package, or add a font binary to it.
++
++## See also
++
++Named rather than linked: this skill and its neighbours ship in different packs.
++
++- `typography-system` — choosing and pairing fonts; consumes a custom family.
++- `svg-authoring` — trace-to-measure and the counter rule this skill reuses.
++- `logo-generation`, `brand-identity` — where a wordmark is born and handed here.
++- `design-system-capture` — where the finished family is recorded.
++- `supply-chain-intake` — the gate every toolchain pin passed.
+diff --git a/dist/agent-src/skills/type-design/evals/triggers.json b/dist/agent-src/skills/type-design/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..930be2e40c24de64f96d55229dc600dce655073d
+--- /dev/null
++++ b/dist/agent-src/skills/type-design/evals/triggers.json
+@@ -0,0 +1,18 @@
++{
++  "skill": "type-design",
++  "last_eval": "2026-10-18",
++  "description": "6 exemplars + 5 near-misses. Exemplars cover both entry paths — lettering (a wordmark image, an SVG wordmark, a hand-lettered raster) and a written brief — plus the German phrasing of the wordmark case. Near-misses are the neighbours that share the vocabulary and are somebody else's job: choosing or pairing an existing font (typography-system), building a type scale (typography-system), making a logo (logo-generation), tracing one icon or mark (svg-authoring), and an icon font from an existing set (iconography).",
++  "queries": [
++    {"q": "turn our wordmark PNG into a full font — the rest of the alphabet in the same style", "trigger": true, "class": "exemplar"},
++    {"q": "mach aus unserem Schriftzug eine komplette Schrift, mit Umlauten und ß", "trigger": true, "class": "exemplar", "language": "de"},
++    {"q": "design an original display typeface for our brand from this brief: geometric, high contrast, flat terminals", "trigger": true, "class": "exemplar"},
++    {"q": "I hand-lettered these six letters — can you extend them into a typeable font with woff2 output?", "trigger": true, "class": "exemplar"},
++    {"q": "we have the logo as SVG; build a matching font so the team can set headlines in it", "trigger": true, "class": "exemplar"},
++    {"q": "create a custom font file from scratch for our product, with kerning and a specimen page", "trigger": true, "class": "exemplar"},
++    {"q": "pick a heading and body font pairing for our SaaS site", "trigger": false, "class": "near-miss", "note": "choosing existing fonts → typography-system"},
++    {"q": "build a modular type scale with DTCG tokens", "trigger": false, "class": "near-miss", "note": "type scale → typography-system"},
++    {"q": "generate a logo for my bakery called Golden Crust", "trigger": false, "class": "near-miss", "note": "a logo, not a font → logo-generation"},
++    {"q": "trace this PNG icon into a clean SVG", "trigger": false, "class": "near-miss", "note": "one vector asset → svg-authoring"},
++    {"q": "build an icon font from our Lucide icons", "trigger": false, "class": "near-miss", "note": "icon set delivery → iconography"}
++  ]
++}
+diff --git a/dist/agent-src/skills/type-design/references/font-spec.md b/dist/agent-src/skills/type-design/references/font-spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..010b178e912b11940f506b25871982df2f0cdec2
+--- /dev/null
++++ b/dist/agent-src/skills/type-design/references/font-spec.md
+@@ -0,0 +1,90 @@
++# `font-spec.yaml` — the parameters every outline is built from
++
++The spec is the only place a shape decision lives. Code reads it and builds the
++outlines; the model changes it and lets code rebuild. A value the run measured
++carries `measured: true` and the glyphs it came from; a value the brief set
++carries `measured: false`.
++
++```yaml
++family: "Acme Display"
++style: "Regular"
++units_per_em: 1000
++
++vertical:                    # font units, baseline = 0
++  baseline: 0
++  x_height: 520
++  cap_height: 700
++  ascender: 760
++  descender: -220
++
++stems:                       # font units, measured by ray-cast (gates § 3)
++  lowercase_vertical: 92     # n h m u l i
++  lowercase_horizontal: 80   # e bar, t crossbar
++  capital_vertical: 100      # H I L
++  capital_horizontal: 86     # H bar, E arms
++
++contrast: 0.86               # thinnest / thickest stroke on o and O
++stress_angle: 0              # degrees from vertical; negative leans left
++overshoot:                   # share of x-height / cap height, 0.01–0.03
++  round: 0.015
++  pointed: 0.010
++aperture: 0.42               # opening of c e s a, share of the bowl width
++terminal: "flat"             # flat | angled | round | ball
++serif: "none"                # none | slab | bracketed | hairline
++
++spacing:                     # sidebearings in font units, per edge class
++  straight: 62
++  round: 38
++  diagonal: 8
++
++coverage: "latin-basic"      # wordmark | latin-basic | latin-de
++
++license:
++  id: "unknown"              # the answer the person gave, or unknown
++  url: ""
++  name_table: true           # written into the name table at build
++
++source:
++  path: "brand/wordmark.png" # path A; omitted for path B
++  rights: "own"              # own | commissioned | typeface-named | third-party | unknown
++  digest: "sha256:…"         # of the source file, so a later run knows it is the same image
++  resolution_confidence: "ok"   # ok | low
++  locked_glyphs: ["g"]       # signature letters; drift fails gates § 6
++```
++
++## Fields
++
++- **`units_per_em`** — 1000 unless the build target asks for 2048.
++- **`vertical`** — baseline, x-height, cap height, ascender, descender. The
++  vertical metrics tables are derived from these (gates § 2), never set apart
++  from them.
++- **`stems`** — lowercase and capitals, vertical and horizontal. Every straight
++  stroke a construction rule draws takes its width from here.
++- **`contrast`** and **`stress angle`** — the ratio of thin to thick on the
++  round letters and the axis it rotates around. A monoline face is `1.0` at
++  stress angle `0`.
++- **`overshoot`** — how far round and pointed letters cross the baseline and the
++  x-height or cap height, as a share of that height.
++- **`aperture`**, **`terminal`**, **`serif`** — the open letters' opening, how
++  strokes end, and what sits at their ends.
++- **`spacing`** — sidebearings per edge class, set on H, n, O and o before any
++  other glyph (gates § 4).
++- **`license`** — never filled by default (`SKILL.md` § License).
++- **`source`** — path A only: the file, its rights class from the rights gate,
++  its digest, whether its resolution is enough for fidelity, and the locked
++  glyphs.
++
++## Coverage tiers
++
++Defined by this skill, not copied from an external glyph-set definition. The
++tier is written into the spec and into the QA report, and nothing claims a tier
++it does not cover.
++
++| Tier | Glyphs |
++|---|---|
++| `wordmark` | the letters present in the source, plus their alternates and ligatures, plus `space` and `.notdef` |
++| `latin-basic` | A–Z, a–z, 0–9, `space`, `.notdef`, and `. , : ; ! ? ' " - – — ( ) / & @ # % *` |
++| `latin-de` | `latin-basic` plus ä ö ü Ä Ö Ü, both forms of sharp s (ß and ẞ), and the German quotation marks „ “ ‚ ‘ |
++
++The coverage gate (gates § 1) lists every glyph the tier names and fails on any
++that is absent.
+diff --git a/dist/agent-src/skills/type-design/references/gates.md b/dist/agent-src/skills/type-design/references/gates.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ef8797947a6662df6ed927a54240bf2effb34de1
+--- /dev/null
++++ b/dist/agent-src/skills/type-design/references/gates.md
+@@ -0,0 +1,95 @@
++# Gates — every one a peer-side command with a threshold
++
++Each gate runs in the toolchain environment (`toolchain.md`) against the built
++UFO and the compiled `ttf`, prints its measured value beside its threshold, and
++on failure prints a message naming the glyph and what to change in the spec.
++A gate the run did not execute is reported as `not run`, never as passed.
++
++The thresholds below are stated defaults (own analysis). The reconstruction
++benchmark is what may move them; nothing else does.
++
++## 1. Outline hygiene and coverage
++
++- **Every contour closed.** An open contour fails with the glyph and the point
++  index.
++- **Counters per glyph** equal an expected table: o 1, e 1, a 1, b d p q 1,
++  A 1, D O Q 1, R 1, B 2, 8 2, 0 1, 6 1, 9 1, g 1 or 2 (single- or
++  double-storey, as the spec says). A filled or a doubled counter fails.
++- **Points at extrema** on every curve, within 1 unit.
++- **No contour under the size threshold** — an area below 0.05 % of the em
++  square is a stray fragment and fails.
++- **Direction correct for the outline format** — outer contours clockwise in
++  TrueType (`glyf`) output and counter-clockwise in CFF output, counters wound
++  opposite to their outer contour in both.
++- **Fill rule declared before overlap removal** — overlap removal runs on a
++  glyph only after its fill rule and contour directions are settled; running it
++  first is how a counter disappears.
++- **Coverage** — every glyph the spec's tier names exists and is non-empty
++  (`space` excepted). A missing glyph fails with the tier and the name.
++
++## 2. Vertical metrics
++
++- `OS/2` typo ascender, descender and line gap agree with `hhea` ascender,
++  descender and line gap.
++- Both line gaps are `0`.
++- `USE_TYPO_METRICS` (`OS/2.fsSelection` bit 7) is set.
++- `usWinAscent` and `usWinDescent` cover the family's extremes: the highest and
++  lowest point of any glyph, diacritics included. A clipped extreme fails with
++  the glyph.
++
++## 3. System consistency
++
++- **Stems by ray-cast at half x-height** — a horizontal ray at `x_height / 2`
++  across n h m u l i; every vertical stem it crosses is within **3 %** of the
++  spec's `lowercase_vertical`. Capitals the same at half cap height across
++  H I L E F T against `capital_vertical`.
++- **Overshoot** — o O e c s reach **1 to 3 %** beyond baseline and x-height or
++  cap height, and within 0.5 % of the spec's `overshoot.round`.
++- **Ink area per glyph group** — the filled share of each glyph's advance box,
++  grouped (straight lowercase, round lowercase, capitals, figures), within
++  **±12 %** of its group's median. An outlier fails with the glyph.
++
++## 4. Spacing before kerning
++
++- **Sidebearings from edge classes first** — straight, round and diagonal edges
++  take the spec's `spacing` values. Set them on H, n, O and o, check `HHOHH`
++  and `nnonn` in the proof, and only then propagate to the derived glyphs.
++- **Kerning classes from edge groups only afterwards** — a kerning class is an
++  edge group, never a single glyph, except for a named exception pair.
++- **Collision check** — render the kerning strings (`AVATAR`, `To`, `Ty`, `LT`,
++  `P.`, `r,`, `f)` and their German counterparts for `latin-de`) and fail on any
++  two glyphs whose outlines intersect.
++- **Features built** — `kern`, `mark` (diacritic anchors), `liga` (where the
++  spec defines ligatures) and, where figures exist, `tnum`.
++- **Shaping confirms the features apply** — shape the kerning strings, an
++  accented word and a ligature through the shaping binding and fail when the
++  shaped advances or glyph ids equal the unshaped ones.
++
++## 5. Rendered proof
++
++The witness reading, not a gate script: `ui:render --profile asset` over the
++proof page reads `loaded` for the new family (`SKILL.md` step 7). `error`,
++`unloaded`, `timeout` or `synthesised` fails, and the agent has looked at the PNG.
++
++## 6. Source fidelity — path A
++
++The wordmark text set in the new font, aligned to the source by baseline and
++cap height, compared by **silhouette IoU** with the method `svg-authoring` uses
++for a raster-to-vector conversion (saturated regions, registration recorded as
++`x,y,w,h` in the source's pixel frame, scorer and sample resolution named).
++
++- per glyph **≥ 0.90**
++- per word **≥ 0.85**
++- a **locked signature glyph ≥ 0.95**
++
++Produce the diff overlay (source and render in two colours, overlap neutral) and
++look at it. A source flagged `resolution_confidence: low` reports these numbers
++but cannot pass this gate.
++
++## 7. Metric-matched fallback
++
++Emit the fallback `@font-face` for the new family over a named local system face,
++with `size-adjust`, `ascent-override`, `descent-override` and
++`line-gap-override` derived from the built font's own tables — the derivation is
++the one in `docs/guidelines/design-asset-discipline.md` (the swapped-face
++bullet). That is what catalogue tell T12 asks a swapped webfont to carry.
+diff --git a/dist/agent-src/skills/type-design/references/toolchain.md b/dist/agent-src/skills/type-design/references/toolchain.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3e545f38cca2f3690d99e31f1f3db1fd19b94ec6
+--- /dev/null
++++ b/dist/agent-src/skills/type-design/references/toolchain.md
+@@ -0,0 +1,64 @@
++# Toolchain — pinned, peer-side, never bundled
++
++The package ships no Python and no font tooling. The type-design build runs in
++an isolated environment **in the consumer's tree**, from the exact versions
++below. A version moves only by a pull request that repeats the intake below for
++the new version — never floating, never `latest`.
++
++| Role | Package | Pin | License |
++|---|---|---|---|
++| outline library, compiler back end | `fonttools` | `fonttools==4.66.1` | MIT |
++| path booleans (overlap removal) | `skia-pathops` | `skia-pathops==0.9.2` | BSD-3-Clause |
++| UFO source library | `ufoLib2` | `ufoLib2==0.18.1` | Apache-2.0 |
++| font compiler | `fontmake` | `fontmake==3.12.1` | Apache-2.0 |
++| shaping binding (feature checks) | `uharfbuzz` | `uharfbuzz==0.56.2` | Apache-2.0 |
++| raster tracer | `vtracer` | `vtracer==0.6.15` | MIT |
++
++Write the pins to `.type-design/pins.txt` in the consumer tree:
++
++```text
++fonttools==4.66.1
++skia-pathops==0.9.2
++ufoLib2==0.18.1
++fontmake==3.12.1
++uharfbuzz==0.56.2
++vtracer==0.6.15
++```
++
++Create a virtual environment under `.type-design/`, install that file into it
++with the environment's own package installer, and freeze the resolved set to
++`.type-design/pins.lock`.
++
++Commit the lock file with the font sources: `fontmake` resolves further packages
++(`ufo2ft`, `glyphsLib`, `fontMath`), and the lock records which ones built this
++font. The raster tracer is MIT-licensed on purpose: a copyleft tracer is not the
++default builder.
++
++## Intake record — 2026-10-18
++
++Taken through `supply-chain-intake` against the live registry on 2026-10-18.
++
++| Pin | Exists | Published | Downloads, last month | Known vulnerabilities |
++|---|---|---|---|---|
++| `fonttools==4.66.1` | yes | 2026-09-29 | 189,260,520 | none |
++| `skia-pathops==0.9.2` | yes | 2026-02-16 | 325,892 | none |
++| `ufoLib2==0.18.1` | yes | 2025-07-10 | 79,359 | none |
++| `fontmake==3.12.1` | yes | 2026-06-02 | 23,711 | none |
++| `uharfbuzz==0.56.2` | yes | 2026-09-21 | 1,509,780 | none |
++| `vtracer==0.6.15` | yes | 2026-03-23 | 477,912 | none |
++
++- **Existence and publish date** — the registry's JSON API for each package
++  and version; none is yanked.
++- **Age** — each pin is the newest release at least two weeks old on the intake
++  date. A newer release existed for `fonttools`, `ufoLib2`, `fontmake` and
++  `uharfbuzz` and was passed over for being days old.
++- **Compatibility** — `fontmake==3.12.1` requires `ufoLib2>=0.18.1` and
++  `fonttools>=4.59.2`; `ufoLib2==0.18.1` requires `fonttools>=4.58.0`. All six
++  need Python 3.11 or newer because `fonttools` does.
++- **Vulnerabilities** — the OSV database returned no advisory for any of the six
++  pinned versions. Run `pip-audit` over the frozen lock before the first build;
++  the intake covered the six named packages, not what they resolve.
++- **Typo-adjacency** — each registry entry declares its source repository
++  (`fonttools/fonttools`, `fonttools/skia-pathops`, `fonttools/ufoLib2`,
++  `googlei18n/fontmake`, `trufont/uharfbuzz`, and visioncortex for `vtracer`);
++  `potracer` and `pypotrace` were considered for tracing and rejected as GPL.
+diff --git a/dist/agent-src/skills/typography-system/SKILL.md b/dist/agent-src/skills/typography-system/SKILL.md
+index 4b9cf2bc9b47f4e69b6cd0456e4605ccc2e9f1e9..ddaeca5a8c55424a0b092be08135c076002c8ce0 100644
+--- a/dist/agent-src/skills/typography-system/SKILL.md
++++ b/dist/agent-src/skills/typography-system/SKILL.md
+@@ -100,6 +100,16 @@ Consumer brand tokens outrank the corpus filter
+ ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)) — if the
+ brand already registers fonts, use them and skip the filter.
+ 
++## Custom source — a family built for the project
++
++Beside the CSV pairing path: when the project has its own family (built with
++`type-design`, or commissioned), take it as the heading or body font instead of
++a CSV row, and record three things — the **spec path** (`font-spec.yaml`), the
++**license** as stated (or `unknown`), and the **fallback overrides**
++(`size-adjust`, `ascent-override`, `descent-override`) the build emitted. A
++stated custom family is the stated reason T7 asks for. Steps 3–5 run unchanged;
++step 5's availability check is the built `woff2` existing, not a Google Fonts URL.
++
+ ## Delivery — hosting mode (self-hosted by default)
+ 
+ The delivery policy is **owned** by
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index 5f2620f0884fceddaa7226d0f30ea826930af185..262cfd349dfdceb5911785a3e7d32ef6dc4dfd4f 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -400,7 +400,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - last_verified: 2026-08-23
+ 
+ ### claim: skill-count
+-- claim: 300 skills.
++- claim: 301 skills.
+ - kind: quant
+ - evidence: exec:check_artefact_count_messaging -> 0
+ - status: backed
+@@ -567,7 +567,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - last_verified: 2026-08-19
+ 
+ ### claim: default-install-context-cost
+-- claim: The scoped-projection default for new installs ships 229 of 300 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
++- claim: The scoped-projection default for new installs ships 230 of 301 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree.
+ - kind: quant
+ - evidence: exec:vitest run tests/install/default_install_skill_count_real_install.test.ts -> 0
+ - note: Re-pointed 2026-10-18. The previous evidence, `update_counts --check`, proved that the published figure equals the installer's predicate applied to this repository's catalog — a statement about the predicate, which an installer that stopped applying it would leave green. The harness case runs a real global `claude-code` install into a throwaway HOME and holds three numbers equal: the catalog skills that arrived in `~/.claude/skills/`, the predicate's `projected`, and the `N of M` this row publishes. It was observed red with this row's figure changed to 228.
+diff --git a/docs/architecture.md b/docs/architecture.md
+index 500be97619ebdfd3d156b5487a10a826bce56127..542d7bd70d0ad915feb0f23654ab9a856b04ad0c 100644
+--- a/docs/architecture.md
++++ b/docs/architecture.md
+@@ -153,7 +153,7 @@ note, package-internal path-swap, description budget, and the
+ 
+ | Layer | Count | Purpose |
+ |---|---|---|
+-| **Skills** | 300 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
++| **Skills** | 301 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
+ | **Rules** | 122 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+ | **Commands** | 205 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
+ | **Guidelines** | 121 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
+diff --git a/docs/catalog.md b/docs/catalog.md
+index a873ea107aadf00925d1f3168b91da613b7e73e3..56655d05fc111adbcc314458b32ce58e0d3608a0 100644
+--- a/docs/catalog.md
++++ b/docs/catalog.md
+@@ -1,13 +1,13 @@
+ # agent-config — Public Catalog
+ 
+-Consumer-facing catalog of all **746 public artefacts** shipped by
++Consumer-facing catalog of all **747 public artefacts** shipped by
+ this package. Internal package-maintenance rules and deprecation shims
+ are excluded.
+ 
+ > **Regenerate:** `./scripts-run src/scripts/generate_index`
+ > Auto-generated — do not edit manually.
+ 
+-## Skills (300)
++## Skills (301)
+ 
+ > **Behavioural-eval coverage is measured, not implied.** A skill is
+ > behaviourally evaluated only if it ships `evals/evals.json`; most do
+@@ -310,6 +310,7 @@ are excluded.
+ | skill | [`throughput-vs-morale-tradeoff`](../dist/agent-src/skills/throughput-vs-morale-tradeoff/SKILL.md) | official | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
+ | skill | [`token-optimizer`](../dist/agent-src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
+ | skill | [`traefik`](../dist/agent-src/skills/traefik/SKILL.md) | official | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
++| skill | [`type-design`](../dist/agent-src/skills/type-design/SKILL.md) | official | Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font. |
+ | skill | [`typography-system`](../dist/agent-src/skills/typography-system/SKILL.md) | official | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
+ | skill | [`ui-apply-generic`](../dist/agent-src/skills/ui-apply-generic/SKILL.md) | official | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus. |
+ | skill | [`ui-component-architect`](../dist/agent-src/skills/ui-component-architect/SKILL.md) | official | Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui. |
+diff --git a/docs/contracts/file-ownership-matrix.json b/docs/contracts/file-ownership-matrix.json
+index dd5085e2c963344252bcf6bec2db41748ae97f7f..918e12fb63eeee7821a05dafa4ccb09bd0ef58d3 100644
+--- a/docs/contracts/file-ownership-matrix.json
++++ b/docs/contracts/file-ownership-matrix.json
+@@ -3492,6 +3492,30 @@
+       "load_context": [],
+       "load_context_eager": []
+     },
++    ".agent-src.uncondensed/skills/type-design/SKILL.md": {
++      "kind": "skill",
++      "rule_type": null,
++      "load_context": [],
++      "load_context_eager": []
++    },
++    ".agent-src.uncondensed/skills/type-design/references/font-spec.md": {
++      "kind": "skill",
++      "rule_type": null,
++      "load_context": [],
++      "load_context_eager": []
++    },
++    ".agent-src.uncondensed/skills/type-design/references/gates.md": {
++      "kind": "skill",
++      "rule_type": null,
++      "load_context": [],
++      "load_context_eager": []
++    },
++    ".agent-src.uncondensed/skills/type-design/references/toolchain.md": {
++      "kind": "skill",
++      "rule_type": null,
++      "load_context": [],
++      "load_context_eager": []
++    },
+     ".agent-src.uncondensed/skills/typography-system/SKILL.md": {
+       "kind": "skill",
+       "rule_type": null,
+@@ -10357,6 +10381,13 @@
+       "via": "body_link",
+       "depth": 1
+     },
++    {
++      "source": ".agent-src.uncondensed/skills/brand-identity/SKILL.md",
++      "target": ".agent-src.uncondensed/skills/type-design/SKILL.md",
++      "type": "READ_ONLY",
++      "via": "body_link",
++      "depth": 1
++    },
+     {
+       "source": ".agent-src.uncondensed/skills/brand-identity/SKILL.md",
+       "target": ".agent-src.uncondensed/skills/typography-system/SKILL.md",
+@@ -19135,6 +19166,55 @@
+       "via": "self",
+       "depth": 0
+     },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
++      "target": ".agent-src.uncondensed/skills/type-design/SKILL.md",
++      "type": "WRITE",
++      "via": "self",
++      "depth": 0
++    },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
++      "target": ".agent-src.uncondensed/skills/type-design/references/font-spec.md",
++      "type": "READ_ONLY",
++      "via": "body_link",
++      "depth": 1
++    },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
++      "target": ".agent-src.uncondensed/skills/type-design/references/gates.md",
++      "type": "READ_ONLY",
++      "via": "body_link",
++      "depth": 1
++    },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/SKILL.md",
++      "target": ".agent-src.uncondensed/skills/type-design/references/toolchain.md",
++      "type": "READ_ONLY",
++      "via": "body_link",
++      "depth": 1
++    },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/references/font-spec.md",
++      "target": ".agent-src.uncondensed/skills/type-design/references/font-spec.md",
++      "type": "WRITE",
++      "via": "self",
++      "depth": 0
++    },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/references/gates.md",
++      "target": ".agent-src.uncondensed/skills/type-design/references/gates.md",
++      "type": "WRITE",
++      "via": "self",
++      "depth": 0
++    },
++    {
++      "source": ".agent-src.uncondensed/skills/type-design/references/toolchain.md",
++      "target": ".agent-src.uncondensed/skills/type-design/references/toolchain.md",
++      "type": "WRITE",
++      "via": "self",
++      "depth": 0
++    },
+     {
+       "source": ".agent-src.uncondensed/skills/typography-system/SKILL.md",
+       "target": ".agent-src.uncondensed/rules/brand-source-of-truth.md",
+diff --git a/docs/featured-skills.md b/docs/featured-skills.md
+index 7d0755cceed2fddd4ca9b3c312326f1a83226d02..f5d9e9fbec7236ead250efde2f0b32b2e354d2eb 100644
+--- a/docs/featured-skills.md
++++ b/docs/featured-skills.md
+@@ -1,6 +1,6 @@
+ # Featured Skills
+ 
+-A curated subset of the 300 skills. Three tiers, one per primary audience. Full catalog lives in [`dist/agent-src/skills/`](../dist/agent-src/skills/); see also [`docs/catalog.md`](catalog.md) for the complete index and [`docs/featured-commands.md`](featured-commands.md) for command-level highlights.
++A curated subset of the 301 skills. Three tiers, one per primary audience. Full catalog lives in [`dist/agent-src/skills/`](../dist/agent-src/skills/); see also [`docs/catalog.md`](catalog.md) for the complete index and [`docs/featured-commands.md`](featured-commands.md) for command-level highlights.
+ 
+ > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (see `road-to-product-adoption.md` Phase 1), this page is documentation, not marketing. The entries below are the candidates the corpus tests against; their description quality is what the eval validates.
+ 
+@@ -93,4 +93,4 @@ task lint-featured-skills
+ 
+ CI runs this in `taskfiles/ci-fast.yml`. Stale entries (renamed / removed skill or command) fail the build. See [`scripts/lint_featured_skills.py`](../src/scripts/lint_featured_skills.ts) for the matcher.
+ 
+-→ Browse all 300 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 205 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
++→ Browse all 301 skills: [`dist/agent-src/skills/`](../dist/agent-src/skills/) · all 205 commands: [`dist/agent-src/commands/`](../dist/agent-src/commands/)
+diff --git a/docs/getting-started-by-role.md b/docs/getting-started-by-role.md
+index d06b75c1180d09d1f093012900bfab4336e8248a..8189aa337b02f02f8e08baffcece8a77287fed26 100644
+--- a/docs/getting-started-by-role.md
++++ b/docs/getting-started-by-role.md
+@@ -2,7 +2,7 @@
+ 
+ > Pick the entry that matches what you do day-to-day. Each section names the three skills you will reach for first and shows whether MCP (no terminal) or CLI (terminal) is the simpler install path for that role.
+ 
+-`agent-config` ships 300 skills, 122 governed rules, and 205 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
++`agent-config` ships 301 skills, 122 governed rules, and 205 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
+ 
+ > **Taglines at a glance →** [`docs/role-experiences.md`](role-experiences.md) — the one-line pitch per role experience, in one table.
+ 
+diff --git a/docs/governance-advantage.md b/docs/governance-advantage.md
+index b53a23b938dc45427e5bb73291041be10aa26708..530a782c7be7f18fa46cdb0e8bca1812f0b0346d 100644
+--- a/docs/governance-advantage.md
++++ b/docs/governance-advantage.md
+@@ -33,7 +33,7 @@ the host lacks (a static host gives it no runtime attention guarantee, but a
+ runtime-only system gives it nothing at all here). A runtime-only system contributes *nothing* on these hosts.
+ 
+ ### 2. Intent routing, not a 500-artefact dump
+-A prompt does not load all 300 skills. `dist/router.json` (116 routed rules, intent →
++A prompt does not load all 301 skills. `dist/router.json` (116 routed rules, intent →
+ skill, keyword/phrase/path triggers) carries the right skill on intent. The
+ governance value is *selection discipline* — the host gets the relevant rule
+ set, not the whole catalogue as context ballast.
+diff --git a/docs/proof.md b/docs/proof.md
+index e276bf50aa2de383e233e443eaa62322cc31c32f..2b58028f7c33367a8e7cf5c133d5fe5a1e809b34 100644
+--- a/docs/proof.md
++++ b/docs/proof.md
+@@ -58,7 +58,7 @@ evidence pointer, or `task check-claims` fails the build.
+ | An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so. | qual | `exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0` | ✅ |
+ | A council member's unparseable answer is separable from a member that found nothing — 2/7 `parse_failed`, 1/7 `empty`, 4/7 `parsed` over the seven recorded answers in `tests/fixtures/council-parse-corpus/`, which is a fixture-corpus denominator and NOT live traffic; reproduce with `./scripts-run src/scripts/council_parse_rate`. | quant | `exec:vitest run tests/scripts/ai_council/parse_corpus.test.ts -> 0` | ✅ |
+ | The first cross-vendor parity pass (5 orchestration-corpus tasks × 2 vendors × 3 repeats, identical prompts via the council transport, $0.16) measured real per-host finding-count differences — claude-sonnet-4-5 surfaced ~2× the findings of gpt-4o on the multi-file analysis task (median 11 vs 5) while both vendors were identical on the planted hollow-implementation task (2 vs 2) and perfectly silent on the clean-code negative control (0 vs 0, no spurious findings). The per-task `finding_floor` values are calibrated from the cross-host lower envelope and the gate is armed. | quant | `internal/bench/reports/parity-count.json#min over hosts of median` | ✅ |
+-| The scoped-projection default for new installs ships 229 of 300 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree. | quant | `exec:vitest run tests/install/default_install_skill_count_real_install.test.ts -> 0` | ✅ |
++| The scoped-projection default for new installs ships 230 of 301 skills (untagged core plus engineering/maintainer packs), an approximately 25% reduction of the skill-catalog surface (a reduction of 71 projected entries; the token figures measured 2026-07-27 at the then-283-skill catalog were about 577k to about 428k approximated tokens and are NOT rescaled here). Both figures are generated, not typed: reproduce them with `./scripts-run src/scripts/count_scoped_projection`, which partitions the canonical skill catalog with the same predicate `install.ts` applies when it prunes a real tree. | quant | `exec:vitest run tests/install/default_install_skill_count_real_install.test.ts -> 0` | ✅ |
+ | On a 32-file labelled clean-UI corpus, 18 of the 19 shipped design-slop rules produced zero false positives; the nineteenth (`slop-c6-lock-colour`, catalog C6) fired on 4 of the 32 files and was demoted to judgment-only rather than tuned. | quant | `internal/bench/corpora/design-slop-fp-PREREG.md#The ceiling, declared before the run` | ✅ |
+ | On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence. | quant | `docs/benchmark.md#weak-host-specific` | ✅ |
+ | The non-coding domain skills (finance/founder/ops/content) are forged on TS/PHP and labeled unvalidated until they pass a sourced domain-truth fixture; no public prose implies proven domain correctness, and the validated count is CI-ratcheted. | qual | `exec:domain_soundness_status --check -> 0` | ✅ |
+@@ -96,7 +96,7 @@ evidence pointer, or `task check-claims` fails the build.
+ | `sequential-thinking` applies chain-of-thought decomposition with two constraints the original formulation does not carry — a cap on the number of thoughts and a mandatory validation step — specifically to bound the unbounded-expansion failure mode. | qual | `https://arxiv.org/abs/2201.11903 (2026-08-11)` | ✅ |
+ | Every artifact the package ships — source AND the condensed projection that reaches consumers — is machine-scanned in CI for hidden-Unicode, mixed-script-confusable, and instruction-smuggling payloads (the rules-file-backdoor class); a finding blocks the release before `npm publish`, not just the merge. | qual | `exec:lint_agent_security -> 0` | ✅ |
+ | Skill self-selection is measured, not assumed, and over this package's own transcript store it is ZERO — not near zero. `report_skill_activation` over 30 sessions and 11,338 assistant turns records 0 Skill invocations and 0 of 299 distinct skills (measured 2026-09-06). Every figure in this sentence, and the date, is read out of `agents/evidence/metrics/skill-activation-census.json`, which the census writes and refuses to write from an empty store; `check_skill_activation_claim` fails when the record and this sentence disagree, so the published number cannot outlive its measurement silently. The 299 split three ways and the zero means a different thing in each: 12 declare a machine-matchable trigger key in frontmatter, 100 carry an `evals/triggers.json` corpus, 2 do both, and the remaining 189 are reachable only by a human naming them. For the 12 the zero was published as a defect — a matchable declaration exists and nothing acted on it — and ADR-263 SUPERSEDES that reading in those words: the 12 are unvalidated metadata with no host contract to bind to, so nothing was owed and nothing failed; they are kept, not deleted, as the thing a future host contract would bind to. For the 189 the zero is the design, because no automatic selection is claimed for them and invocation there is a reader opening a file. For the 100 the zero licenses nothing in either direction: `evals/triggers.json` is a TEST fixture read by `check_routing_coverage` / `lint_skill_trigger_corpus` / `check_trigger_evals`, no host reads it at routing time, and the two surfaces share the word "trigger" and are unrelated. A 14-file eval-corpus wave taking coverage 100 → 114 was authored, measured against, and then reverted on the same branch for an unrelated governance reason; the census read 0 in both states. FRAMING, RECORDED 2026-09-07 SO A LATER REVIEW MEETS AN ANSWER RATHER THAN RE-DERIVING THE ARGUMENT: the surface is left exactly as it is and the zero is published with its reason. Two substantive alternatives were on the table and NEITHER was taken — building a host-side selection path for the population that declares a machine-matchable trigger key, or declaring the human-named remainder reference material by design. Each of those changes what the package claims to be for its consumers, which is an owner-reserved commitment under `decision-revisit-gate` — and on 2026-09-08 that commitment was made: ADR-263 LOCKS the second, in the corrected form "by observation" rather than "by design", and REJECTS the first, on the ground that there is no host contract to build against and that shipping a documented routing capability which still yields zero would convert an implementation cost into a credibility cost. So neither alternative is open any longer, and the sentence that said both were is corrected here rather than left standing. What ADR-263 did NOT do is still worth naming, and the boundary is narrower than a first reading suggests: no selection mechanism was built, and the numeric split above — 12 / 100 / 2 / 189 — is untouched. It DID reclassify the 12 semantically, from a population owed a selection path to unvalidated metadata with no host contract, which is the supersession recorded two sentences up; what it did not do is move a skill from one of the four counts into another — "by observation" is deliberately not "by design", because design intent is an ownership claim this repository cannot make about hosts it does not own. Its own falsifier, stated so it can fail: the reason for accepting the zero as-is is that a single-machine transcript store cannot separate an unbuilt selection path from an unused one, so the moment a second store — a consumer install, another host, a CI-visible corpus — becomes readable, the reason stops holding and the choice returns. <!-- count: dated --> | quant | `exec:check_skill_activation_claim -> 0` | ✅ |
+-| 300 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
++| 301 skills. | quant | `exec:check_artefact_count_messaging -> 0` | ✅ |
+ | Skills use `SKILL.md` with package-specific frontmatter keys (top-level keys such as `domain`, `model_tier`, `workspaces` and `packs`, defined and validated by this package's own schema rather than the Agent Skills specification's reference validator). | qual | `src/scripts/schemas/skill.schema.json#model_tier` | ✅ |
+ | `skill-improvement-pipeline` converts post-task outcomes into durable written lessons rather than in-context retries, following the Reflexion formulation. | qual | `https://arxiv.org/abs/2303.11366 (2026-08-11)` | ✅ |
+ | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that statement is derived by the same collector the gate scans with. | quant | `agents/evidence/metrics/skill-link-census.json#"dead_links": []` | ✅ |
+@@ -204,11 +204,11 @@ shipping theater; the full per-cell data is committed at
+ `internal/bench/reports/persona-placebo.json`.
+ 
+ **Behavioural-eval coverage — the honest baseline.** Skill *quality* is only
+-as good as its measurement. Today **42 of 300** skills carry a behavioural
++as good as its measurement. Today **42 of 301** skills carry a behavioural
+ `evals.json`; the highest-traffic / highest-cost tiers (default-surface +
+ `rich` + routers) are **fully covered (35 of 35)**, the long tail
+-(7 of 265) is not. We publish that gap rather than imply
+-"300 evaluated skills": coverage is measured per tier
++(7 of 266) is not. We publish that gap rather than imply
++"301 evaluated skills": coverage is measured per tier
+ (`./scripts-run src/scripts/skill_eval_coverage`), **CI-ratcheted so it can
+ only rise**, and the priority tiers carry a hard **tier floor**: every
+ rich / default-surface / router skill MUST have a behavioural eval or an
+diff --git a/docs/skills-catalog.md b/docs/skills-catalog.md
+index 11a745b254c06af5a80bd9aa1fef85aa1be15668..408ea4b323862c243fc5e5ca1a74904ca9809d7e 100644
+--- a/docs/skills-catalog.md
++++ b/docs/skills-catalog.md
+@@ -1,6 +1,6 @@
+ # Skills Catalog
+ 
+-All **300 skills** available in this package, in alphabetical order.
++All **301 skills** available in this package, in alphabetical order.
+ Click a skill name to open its SKILL.md and read the full guidance.
+ 
+ > **Regenerate:** `./scripts-run src/scripts/generate_catalog`
+@@ -291,6 +291,7 @@ Click a skill name to open its SKILL.md and read the full guidance.
+ | [`throughput-vs-morale-tradeoff`](../dist/agent-src/skills/throughput-vs-morale-tradeoff/SKILL.md) | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
+ | [`token-optimizer`](../dist/agent-src/skills/token-optimizer/SKILL.md) | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
+ | [`traefik`](../dist/agent-src/skills/traefik/SKILL.md) | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
++| [`type-design`](../dist/agent-src/skills/type-design/SKILL.md) | Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font. |
+ | [`typography-system`](../dist/agent-src/skills/typography-system/SKILL.md) | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
+ | [`ui-apply-generic`](../dist/agent-src/skills/ui-apply-generic/SKILL.md) | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus. |
+ | [`ui-component-architect`](../dist/agent-src/skills/ui-component-architect/SKILL.md) | Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui. |
+diff --git a/llms.txt b/llms.txt
+index 39629b309bb71458b0729a80de8619b0cb05823e..7dbb23c0bfab882a3eab936623dac27c8e4231c7 100644
+--- a/llms.txt
++++ b/llms.txt
+@@ -289,6 +289,7 @@ threat-modeling: Use when adding auth, webhooks, uploads, queues, secrets, tenan
+ throughput-vs-morale-tradeoff: Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'.
+ token-optimizer: Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset.
+ traefik: Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
++type-design: Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font.
+ typography-system: Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale.
+ ui-apply-generic: Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus.
+ ui-component-architect: Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui.
+diff --git a/site/src/content/docs/architecture/overview.md b/site/src/content/docs/architecture/overview.md
+index ebaecdfeba5a8c17addbc1a3196d91a259c9e7a3..52c22935054eaf1511671475ecda621b5cccde44 100644
+--- a/site/src/content/docs/architecture/overview.md
++++ b/site/src/content/docs/architecture/overview.md
+@@ -12,7 +12,7 @@ read.
+ 
+ | Artifact | Count | Role |
+ |---|---|---|
+-| **Skills** | 300 | Intent-matched capabilities and executable procedures |
++| **Skills** | 301 | Intent-matched capabilities and executable procedures |
+ | **Rules** | 122 | Always-active behaviour constraints, auto-loaded per conversation |
+ | **Commands** | 205 | Slash-command orchestrators that compose skills + gates |
+ | **Guidelines** | 121 | Reference conventions, read on demand |
+diff --git a/site/src/content/docs/getting-started/introduction.md b/site/src/content/docs/getting-started/introduction.md
+index 2ee5a4415070bf11f638e8c77f1a65c947ea4850..2419bde7f3716637d43e2208d2b2aa1521ff54fe 100644
+--- a/site/src/content/docs/getting-started/introduction.md
++++ b/site/src/content/docs/getting-started/introduction.md
+@@ -18,7 +18,7 @@ depth and the discipline.
+ 
+ | Artifact | Count | What it is |
+ |---|---|---|
+-| **Skills** | 300 | On-demand expertise and executable procedures, matched to a task by intent |
++| **Skills** | 301 | On-demand expertise and executable procedures, matched to a task by intent |
+ | **Rules** | 122 | Always-active behaviour constraints auto-loaded every conversation |
+ | **Commands** | 205 | Slash-command workflow orchestrators (`/commit`, `/create-pr`, `/work`, …) |
+ | **Guidelines** | 121 | Reference conventions read on demand |
+diff --git a/src/config/routing-coverage-seed.json b/src/config/routing-coverage-seed.json
+index 44a95566ed48b6fdd2847549ef432e697546cedc..3f83c610c9a2a9ab5fb7fcb4693c8c3a719a5fd4 100644
+--- a/src/config/routing-coverage-seed.json
++++ b/src/config/routing-coverage-seed.json
+@@ -10,11 +10,11 @@
+     },
+     "seed": {
+         "rules": 0.9626,
+-        "skills": 0.52
++        "skills": 0.5216
+     },
+     "seed_provenance": {
+         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
+-        "skills": "156 of 300 skills carry evals/triggers.json on 2026-10-17; was 151 of 300 on 2026-10-16, 148 of 300 earlier that day, 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
++        "skills": "157 of 301 skills carry evals/triggers.json on 2026-10-18; was 156 of 300 on 2026-10-17, 151 of 300 on 2026-10-16, 148 of 300 earlier that day, 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
+     },
+     "history": [
+@@ -192,6 +192,13 @@
+             "from": 0.4933,
+             "to": 0.5033,
+             "reason": "road-to-steps-the-skill-cannot-skip steps 1.2 and 2.1 repaired reference links in design-review and roadmap-management and aligned skill-reviewer's split rule, so check_routing_coverage required a corpus from each touched skill and none of the three had one (148 -> 151 of 300). TEN cases each, the 2026-10-14b shape: 5 exemplars of which one is German, 3 near-misses, 2 counterexamples. The seed rises to the live value; it may never be LOWERED. TWO ROWS SEAL: design-review is 0x1d = 29 and roadmap-management 0x07 = 7, below the holdout ceiling of 51; skill-reviewer is 0x51 = 81 and trains. The sealed set moves 32 -> 34 and the train set 116 -> 117. BOTH published train-side measurements were re-taken after every skill edit was on disk: routing-body-signal-verdict.json still harmful (false activation +5.776 pp against the +2.0 pp guard, delta-recall +2.269 pp against the 5.0 pp bar, McNemar p 0.3616, train corpora 117, cases 1127, catalogue 300); delivery-set-measurement-2026-08-31.json precision@5 80.645 %, recall@5 61.082 %, false activation@5 15.162 %. Three grandfather entries removed with the corpora: 152 -> 149, the shrink-only direction."
++        },
++        {
++            "date": "2026-10-18",
++            "scope": "skills",
++            "from": 0.52,
++            "to": 0.5216,
++            "reason": "road-to-type-with-a-witness Phase 4 added the `type-design` skill, which moved the DENOMINATOR 300 -> 301 -- the ratio-falls-two-ways case the _comment names. The repair is the corpus, not the seed: the skill shipped its own evals/triggers.json in the same change (156 -> 157 of 301), so the ratio ROSE across the increase. 11 cases: 6 exemplars of which one is German and 5 near-misses naming the neighbours. sha256('type-design')[0:2] is 0x43 = 67, above the holdout ceiling of 51, so it trains (121 -> 122) and the sealed set stays at 35. BOTH published train-side measurements were re-taken after every skill edit was on disk: routing-body-signal-verdict.json still harmful (false activation +5.91 pp against the +2.0 pp guard, delta-recall +3.67 pp against the 5.0 pp bar, McNemar p 0.1214, train corpora 122, cases 1174, catalogue 301); delivery-set-measurement-2026-08-31.json precision@5 81.00 %, recall@5 59.77 %, false activation@5 14.61 %. The seed rises to the live value; it may never be LOWERED."
+         }
+     ]
+ }
+diff --git a/src/config/skill-body-budget.json b/src/config/skill-body-budget.json
+index c4a7aa9e9134f0a53fe899ff72937459685f6fef..b6098d9901f6fad7b09a5de6f4f66d15c2137f83 100644
+--- a/src/config/skill-body-budget.json
++++ b/src/config/skill-body-budget.json
+@@ -1,7 +1,7 @@
+ {
+   "owner": "maintainer",
+   "review_by": "2027-04-12",
+-  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down \u2014 check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
++  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
+   "ceilings": {
+     "accessibility-auditor": 11064,
+     "activation-design": 8513,
+@@ -29,7 +29,7 @@
+     "brand": 5866,
+     "brand-asset-generation": 6307,
+     "brand-audit": 7123,
+-    "brand-identity": 5849,
++    "brand-identity": 6024,
+     "brand-strategy": 5072,
+     "brand-to-tokens": 5678,
+     "bug-analyzer": 13634,
+@@ -159,7 +159,7 @@
+     "livewire-architect": 6631,
+     "llm-provider-knowledge": 7434,
+     "logging-monitoring": 12016,
+-    "logo-generation": 5650,
++    "logo-generation": 5790,
+     "market-entry-analysis": 10016,
+     "markitdown": 14433,
+     "mcp": 9204,
+@@ -270,7 +270,7 @@
+     "storybook-workshop": 13536,
+     "subagent-orchestration": 19742,
+     "supply-chain-intake": 10137,
+-    "svg-authoring": 17818,
++    "svg-authoring": 17970,
+     "symfony-workflow": 10329,
+     "systematic-debugging": 17024,
+     "tailwind-engineer": 13083,
+@@ -286,7 +286,8 @@
+     "throughput-vs-morale-tradeoff": 13242,
+     "token-optimizer": 6275,
+     "traefik": 9138,
+-    "typography-system": 11344,
++    "type-design": 9736,
++    "typography-system": 11946,
+     "ui-apply-generic": 8283,
+     "ui-component-architect": 13328,
+     "unit-economics-modeling": 9297,
+@@ -417,7 +418,7 @@
+       "skill": "test-case-discovery",
+       "old": 12325,
+       "new": 12862,
+-      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies \u2014 not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
++      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
+     },
+     {
+       "skill": "security",
+@@ -429,7 +430,7 @@
+       "skill": "svg-authoring",
+       "old": 17525,
+       "new": 17818,
+-      "reason": "The counter rule in \u00a7 Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
++      "reason": "The counter rule in § Trace to measure step 2: a shape with counters declares its fill-rule, winds outer and inner contours opposite, and removes overlap only after both are settled, because two same-direction contours under nonzero paint the counter solid (measured 196,314 of a 196,350 px disc). road-to-type-with-a-witness 3.1."
+     },
+     {
+       "skill": "deep-reading-analyst",
+@@ -550,6 +551,30 @@
+       "old": 8182,
+       "new": 12228,
+       "reason": "Two new procedure steps the roadmap requires of the slot's only writer: an intake from user-supplied material with source tiers, per-section confidence and recommendations on every open question (7.1), and the write step naming every machine-read field (4.3). Both were compressed before this raise. The scope declaration's verification_reason is part of this figure: three gates refuse every invocation form a verification_command could take here, so the obligation is stated instead of pinned."
++    },
++    {
++      "skill": "brand-identity",
++      "old": 5849,
++      "new": 6024,
++      "reason": "One See-also line handing a custom type story to the new type-design skill. road-to-type-with-a-witness 4.14."
++    },
++    {
++      "skill": "logo-generation",
++      "old": 5650,
++      "new": 5790,
++      "reason": "One See-also line routing 'make this a font' to type-design, named rather than linked because it ships in another pack. road-to-type-with-a-witness 4.14."
++    },
++    {
++      "skill": "svg-authoring",
++      "old": 17818,
++      "new": 17970,
++      "reason": "One See-also line routing 'the rest of the alphabet' to type-design, which reuses this skill's trace and counter rule. road-to-type-with-a-witness 4.14."
++    },
++    {
++      "skill": "typography-system",
++      "old": 11344,
++      "new": 11946,
++      "reason": "A Custom source section beside the CSV pairing path: spec path, license and fallback overrides for a family built with type-design, and the T7 stated reason. road-to-type-with-a-witness 4.14."
+     }
+   ]
+ }
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index b69c6b2f7c33853baea36fb51e31e110dc2d429f..32cae920635f87e3c19d1e37edf74d051657e7bf 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -98,6 +98,6 @@ token_passport:
+   catalog_tokens: 3649
+   commands_tokens: 254764
+   other_tokens: 1304
+-  rules_tokens: 63953
+-  total_tokens: 323670
++  rules_tokens: 63883
++  total_tokens: 323600
+ trust_level_default: core
+diff --git a/src/rules/context-hygiene.md b/src/rules/context-hygiene.md
+index 7412f93b58c504d8a0052117edd1d844f6a21633..94d3f364b3855c20a78e2ffca3430bc548ccc352 100644
+--- a/src/rules/context-hygiene.md
++++ b/src/rules/context-hygiene.md
+@@ -130,5 +130,4 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ 
+ ## See also
+ 
+-- [`guideline:agent-infra/context-hygiene-mechanics`](../docs/guidelines/agent-infra/context-hygiene-mechanics.md) — templates + per-host procedures.
+ - [`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md) — the read-loop debug procedure.
+diff --git a/src/rules/roadmap-ci-steps-policy.md b/src/rules/roadmap-ci-steps-policy.md
+index 450e398f1e9e7c209d54cfcba504536251f039b5..9d5fa5e4febff05e32dc097066ae07b4aa51e96a 100644
+--- a/src/rules/roadmap-ci-steps-policy.md
++++ b/src/rules/roadmap-ci-steps-policy.md
+@@ -66,8 +66,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
+ 
+ ## See also
+ 
+-- [`contexts/execution/roadmap-ci-steps-mechanics`](../contexts/execution/roadmap-ci-steps-mechanics.md)
+-  — the migrated body.
+ - [`verify-before-complete`](verify-before-complete.md) — the
+   Iron Law this rule narrows; carve-out cites it.
+ - [`roadmap-progress-sync`](roadmap-progress-sync.md) — inline flip
+diff --git a/src/rules/token-budget-discipline.md b/src/rules/token-budget-discipline.md
+index a2896e8ebd28b784470340fa6342526835cfbeb0..17470b1319650df272339dfc826a79ca03a87c42 100644
+--- a/src/rules/token-budget-discipline.md
++++ b/src/rules/token-budget-discipline.md
+@@ -51,7 +51,7 @@ A skill claiming `rich` MUST satisfy ALL three:
+    carry a `load_context` pointer instead.
+ 
+ 3. **≤ 15 % of the suite's skills may claim `rich`** — the CI linter counts
+-   rich-tagged skills and hard-fails if the ratio is exceeded. With 300 skills
++   rich-tagged skills and hard-fails if the ratio is exceeded. With 301 skills
+    the cap is ~45. Do not claim `rich` for convenience; claim it only for
+    irreducible-complexity skills.
+ 
+diff --git a/src/skills/brand-identity/SKILL.md b/src/skills/brand-identity/SKILL.md
+index 236b0aa45deebbe0f483188f37d876e0640bbc58..82bb6a7566d4acc08004592cfe6060ac1267d4ef 100644
+--- a/src/skills/brand-identity/SKILL.md
++++ b/src/skills/brand-identity/SKILL.md
+@@ -101,4 +101,5 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
+ - [`brand-to-tokens`](../brand-to-tokens/SKILL.md) — emits the DTCG token source of truth.
+ - [`typography-system`](../typography-system/SKILL.md) — turns the type story into type tokens.
+ - [`logo-generation`](../logo-generation/SKILL.md) — generates marks from this identity (pack-ai-image).
++- [`type-design`](../type-design/SKILL.md) — when the type story is a custom family: the wordmark's lettering or a brief built into an original font (pack-frontend-design).
+ - [`brand`](../brand/SKILL.md) — the corpus grounded against.
+diff --git a/src/skills/design-system-capture/references/design-system-json.md b/src/skills/design-system-capture/references/design-system-json.md
+index c350726041b0705054303b536ffaf7756f9c6e1f..a67e4df99e2c1e93bfb4a27a3ce961148945dceb 100644
+--- a/src/skills/design-system-capture/references/design-system-json.md
++++ b/src/skills/design-system-capture/references/design-system-json.md
+@@ -71,6 +71,10 @@
+ - **`bundled_local`** on a font family is a flag, not an instruction: the
+   package never downloads or bundles fonts (out of scope) — it records that the
+   source did.
++- **A custom family** (built with `type-design`, or commissioned) adds
++  `"custom": { "spec": "<path to font-spec.yaml>", "license": "<as stated, or unknown>" }`
++  to its `families[]` entry. The license is recorded as given, never inferred;
++  `bundled_local` stays the separate flag it is.
+ - **`motion` has a consumer.** It sits outside the DTCG mapping above, and for
+   a long time that meant nothing read it at all: the block was written by
+   capture and consumed by nobody, so easing and duration were re-derived from
+diff --git a/src/skills/logo-generation/SKILL.md b/src/skills/logo-generation/SKILL.md
+index be30114bd7c60158503fd5e93167377b6a9f94e5..988ffe421370dd7f6590d44f539dbf0cb1f875bd 100644
+--- a/src/skills/logo-generation/SKILL.md
++++ b/src/skills/logo-generation/SKILL.md
+@@ -108,3 +108,4 @@ PNG as the final logo file.
+ - [`image-provider-routing`](../image-provider-routing/SKILL.md) — select the right provider before writing the prompt.
+ - [`prompt-engineering-image`](../prompt-engineering-image/SKILL.md) — translate the brief into provider-specific prompt grammar.
+ - [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md) — rights check before generating brand marks or likenesses.
++- `type-design` — "make this a font": the rest of the alphabet in a wordmark's lettering. Named, not linked — it ships in another pack.
+diff --git a/src/skills/svg-authoring/SKILL.md b/src/skills/svg-authoring/SKILL.md
+index 5d4bee441db78dd50159005f428eaa1e3aa5af04..202c4956dabb397596931e381b44f3d518f97034 100644
+--- a/src/skills/svg-authoring/SKILL.md
++++ b/src/skills/svg-authoring/SKILL.md
+@@ -296,6 +296,8 @@ report a non-zero natural width.
+   for the glyph it lacks.
+ - `logo-generation` — the brand pipeline that
+   routes a geometric mark here.
++- `type-design` — "the rest of the alphabet" / "make this a font": a
++  wordmark extended into a constructed font, reusing the trace and counter rule.
+ - `image-provider-routing` — illustrative
+   vector art goes to a provider, not here.
+ - `fe-design` § Motion — the motion authority, in
+diff --git a/src/skills/type-design/SKILL.md b/src/skills/type-design/SKILL.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..23798d46f851ef553a19c13055f85ec247857f49
+--- /dev/null
++++ b/src/skills/type-design/SKILL.md
+@@ -0,0 +1,195 @@
++---
++model_tier: high
++name: type-design
++description: "Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font."
++domain: product
++personas:
++  - design-director
++workspaces:
++  - engineering
++packs:
++  - frontend-design
++trust:
++  level: experimental
++install:
++  removable: true
++scope:
++  write: []
++  verification_reason: "execution declares no handler, so this skill runs nothing of its own — every write is the calling agent's, under the rules that govern it. No command can prove a scope the skill never executes."
++execution:
++  type: manual
++---
++
++# type-design
++
++Design an original font as a **constructed system**: measure parameters, let
++code build every outline from measured parts, set spacing before kerning, and
++build through gates that measure outlines, metrics, coverage and fidelity — with
++a rendered proof the agent looked at. The model perceives, decides and judges;
++code writes every coordinate.
++
++The skill bundles no script and no font. It runs a pinned peer-side toolchain in
++the consumer's environment ([`references/toolchain.md`](references/toolchain.md)).
++
++## When to use
++
++- "Turn this wordmark into a font", "the rest of the alphabet in this lettering".
++- "Design an original display face for our brand" from a written brief.
++- A logo or a lettering image exists and the person wants a typeable family.
++
++## When NOT to use
++
++- Choosing or pairing existing fonts, or building a type scale →
++  `typography-system`.
++- Making a logo or a single mark → `logo-generation`; tracing one icon or mark
++  → `svg-authoring`; an icon font from an existing set → `iconography`.
++- Reproducing a typeface someone else published — license it instead (§ Rights gate).
++
++## The honest limit
++
++A coherent **display or brand family** — one weight, Latin, shared stems,
++overshoot and spacing — is in reach. **Text-grade optical refinement** (hinting,
++optical compensation at small sizes, a multi-weight interpolated family) is a
++type designer's work. Say so before the first build, and never label a result
++beyond what the gates showed (§ Maturity).
++
++## Rights gate — before any trace
++
++1. **Own or commissioned lettering** proceeds.
++2. **Lettering set in an existing typeface** — name the typeface and recommend
++   licensing it instead of reconstructing it. Proceed only on a stated decision
++   that the result is a different design.
++3. **A third party's mark** stops until its owner's rights are stated.
++4. **An origin the agent cannot establish** is treated as not owned, and asked
++   about. Never assume a lettering image is the person's own.
++
++Record the class (`own`, `commissioned`, `typeface-named`, `third-party`,
++`unknown`) in the spec's source block.
++
++## License — asked, never stamped
++
++Ask which license the new font carries. Record the answer in `font-spec.yaml`
++and in the font's name table (license description and URL). With no answer the
++license is `unknown`, written as such in both places. **Never** choose one on
++the person's behalf: a default license is a commitment made for someone else.
++
++## No freehand outlines
++
++The model never writes path data for a glyph by hand and never ships a freehand
++SVG glyph. To change a shape, change a spec parameter or a construction rule and
++let code rebuild. A glyph that cannot be expressed through the spec is a sign the
++spec is missing a parameter — add it.
++
++## Procedure
++
++0. **Toolchain** — install the pinned set from
++   [`references/toolchain.md`](references/toolchain.md) into an isolated
++   environment in the consumer tree. Missing and not installable → stop and say
++   which tool; never substitute a hand-written approximation.
++1. **Spec first** — write `font-spec.yaml` per
++   [`references/font-spec.md`](references/font-spec.md): units per em, vertical
++   metrics, stems, contrast, stress angle, overshoot, aperture, terminals,
++   spacing, the coverage tier, license and source blocks.
++2. **Path A — from lettering** (raster or SVG, including a wordmark just made by
++   `logo-generation` or `image-generation`):
++   1. **Ingest** — parse the SVG, or threshold and deskew the raster.
++   2. **Segment** — code splits the letters; the model labels a numbered
++      **contact sheet** of the segments, never the raw image by eye.
++   3. **Trace** with the fill rule declared and counters wound opposite to their
++      outer contour (`svg-authoring` § Trace to measure, construct to deliver).
++   4. **Measure** the spec from the traced letters, then **normalise** the
++      present letters to it, and extend per step 4.
++   5. A wordmark's one-off tweaks become **alternates or ligatures**, never the
++      default forms. A **signature letter** the brief names is a **locked
++      glyph**; its drift fails the fidelity gate.
++   6. A source below 600 px cap height (or an SVG under 1,000 units) is reported
++      as **low confidence** and cannot reach `validated-static` on fidelity —
++      a stated default, not a measured one; the benchmark is what can move it.
++3. **Path B — from a brief**: brief → spec with numbers → build `n o H O` →
++   render the proof sheet → the person asking **approves the four control
++   glyphs** before anything else is built. A rejection changes the spec, and
++   the four are rebuilt.
++4. **Construction order** — `n o H O` first, then the **derivation chains**:
++   n → h m u r · o → c e b d p q · H → E F I L T · O → C D G Q. Then the
++   diagonals (A K M N V W X Y k v w x y), then the free shapes (a g s S f t z and
++   the figures), then composites for diacritics through anchors — the German set
++   (ä ö ü Ä Ö Ü ß ẞ „ “ ‚ ‘) included when the tier asks for it.
++5. **Spacing before kerning** — sidebearings from edge classes first, kerning
++   classes only afterwards ([`references/gates.md`](references/gates.md) § 4).
++6. **Build and gate** — UFO source → compiled `ttf` and `woff2`. Run every gate
++   in [`references/gates.md`](references/gates.md); each prints a threshold and
++   a failure message to act on.
++7. **Rendered proof** — generate a host page whose specimens are SVG `<text>`
++   elements set in the new family (waterfall 12 to 72 px, `HHOHH nnonn`, every
++   letter between n and n and between o and o, the kerning strings, the wordmark
++   text), with the built `woff2` beside it, and run the witness:
++   ```bash
++   agent-config ui:render proof/index.html --profile asset
++   ```
++   The new family must read `loaded` — never `error` or `synthesised`. Open the
++   PNG and state what you saw.
++8. **Fidelity (path A)** — the wordmark text set in the new font against the
++   source by silhouette IoU (gates § 6); produce the diff overlay and look at it.
++9. **Fallback** — emit the metric-matched fallback `@font-face` (gates § 7).
++10. **Repair budget** — a failing gate gets at most **three** repair rounds.
++    After that the QA report names the gate and the label stays below
++    `validated-static`.
++
++## Outputs — in the consumer tree
++
++UFO source, `font-spec.yaml`, built `woff2` and `ttf`, the proof page with its
++PNG, and the QA report — at the location `design-system-capture` conventions
++give the project's design-system assets, **never inside the package**. Record
++the family there as a custom family with its source and license.
++
++### Maturity — exactly one label
++
++| Label | Means |
++|---|---|
++| `concept` | spec and control glyphs exist; the tier is not covered |
++| `prototype` | the tier is covered and the font builds; at least one gate is open |
++| `validated-static` | every gate in `references/gates.md` is green, the witness read `loaded`, and the proof was looked at |
++
++Never a claim the run cannot show.
++
++## Output format
++
++1. **QA report** — coverage tier, maturity label, the license (or `unknown`),
++   the rights class, and each gate with its measured value, threshold and
++   result.
++2. **Witness reading** — the face state the asset profile reported for the new
++   family, the PNG path, and one sentence on what the agent saw in it.
++3. **Fidelity (path A)** — per-glyph and per-word IoU, the locked glyph's IoU,
++   the registration they were measured against, and the overlay path.
++4. **Files** — every output path, read back from disk, with byte size.
++
++## Gotcha
++
++- **A plausible font is not a system.** Glyphs that each look fine and share no
++  stems, overshoot or spacing pass a glance and fail the consistency gate —
++  run it, do not eyeball it.
++- **Same-direction counters paint solid.** Under `fill-rule: nonzero`, the default, an
++  `o` whose inner contour winds like its outer one fills its counter.
++- **Kerning cannot rescue spacing.** Kerning pairs on unspaced glyphs grow
++  without bound and still look uneven; set sidebearings first.
++- **The witness reads the face, not the look.** A fallback face that resembles
++  the new one reads `error` there — trust the state, not the screenshot.
++
++## Do NOT
++
++- Do NOT trace lettering whose rights class is `third-party` or `unknown`.
++- Do NOT write or ship glyph path data by hand.
++- Do NOT stamp a license the person did not give.
++- Do NOT claim a coverage tier the font does not cover, or `validated-static`
++  with a gate open.
++- Do NOT write outputs into the package, or add a font binary to it.
++
++## See also
++
++Named rather than linked: this skill and its neighbours ship in different packs.
++
++- `typography-system` — choosing and pairing fonts; consumes a custom family.
++- `svg-authoring` — trace-to-measure and the counter rule this skill reuses.
++- `logo-generation`, `brand-identity` — where a wordmark is born and handed here.
++- `design-system-capture` — where the finished family is recorded.
++- `supply-chain-intake` — the gate every toolchain pin passed.
+diff --git a/src/skills/type-design/evals/triggers.json b/src/skills/type-design/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..930be2e40c24de64f96d55229dc600dce655073d
+--- /dev/null
++++ b/src/skills/type-design/evals/triggers.json
+@@ -0,0 +1,18 @@
++{
++  "skill": "type-design",
++  "last_eval": "2026-10-18",
++  "description": "6 exemplars + 5 near-misses. Exemplars cover both entry paths — lettering (a wordmark image, an SVG wordmark, a hand-lettered raster) and a written brief — plus the German phrasing of the wordmark case. Near-misses are the neighbours that share the vocabulary and are somebody else's job: choosing or pairing an existing font (typography-system), building a type scale (typography-system), making a logo (logo-generation), tracing one icon or mark (svg-authoring), and an icon font from an existing set (iconography).",
++  "queries": [
++    {"q": "turn our wordmark PNG into a full font — the rest of the alphabet in the same style", "trigger": true, "class": "exemplar"},
++    {"q": "mach aus unserem Schriftzug eine komplette Schrift, mit Umlauten und ß", "trigger": true, "class": "exemplar", "language": "de"},
++    {"q": "design an original display typeface for our brand from this brief: geometric, high contrast, flat terminals", "trigger": true, "class": "exemplar"},
++    {"q": "I hand-lettered these six letters — can you extend them into a typeable font with woff2 output?", "trigger": true, "class": "exemplar"},
++    {"q": "we have the logo as SVG; build a matching font so the team can set headlines in it", "trigger": true, "class": "exemplar"},
++    {"q": "create a custom font file from scratch for our product, with kerning and a specimen page", "trigger": true, "class": "exemplar"},
++    {"q": "pick a heading and body font pairing for our SaaS site", "trigger": false, "class": "near-miss", "note": "choosing existing fonts → typography-system"},
++    {"q": "build a modular type scale with DTCG tokens", "trigger": false, "class": "near-miss", "note": "type scale → typography-system"},
++    {"q": "generate a logo for my bakery called Golden Crust", "trigger": false, "class": "near-miss", "note": "a logo, not a font → logo-generation"},
++    {"q": "trace this PNG icon into a clean SVG", "trigger": false, "class": "near-miss", "note": "one vector asset → svg-authoring"},
++    {"q": "build an icon font from our Lucide icons", "trigger": false, "class": "near-miss", "note": "icon set delivery → iconography"}
++  ]
++}
+diff --git a/src/skills/type-design/references/font-spec.md b/src/skills/type-design/references/font-spec.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..010b178e912b11940f506b25871982df2f0cdec2
+--- /dev/null
++++ b/src/skills/type-design/references/font-spec.md
+@@ -0,0 +1,90 @@
++# `font-spec.yaml` — the parameters every outline is built from
++
++The spec is the only place a shape decision lives. Code reads it and builds the
++outlines; the model changes it and lets code rebuild. A value the run measured
++carries `measured: true` and the glyphs it came from; a value the brief set
++carries `measured: false`.
++
++```yaml
++family: "Acme Display"
++style: "Regular"
++units_per_em: 1000
++
++vertical:                    # font units, baseline = 0
++  baseline: 0
++  x_height: 520
++  cap_height: 700
++  ascender: 760
++  descender: -220
++
++stems:                       # font units, measured by ray-cast (gates § 3)
++  lowercase_vertical: 92     # n h m u l i
++  lowercase_horizontal: 80   # e bar, t crossbar
++  capital_vertical: 100      # H I L
++  capital_horizontal: 86     # H bar, E arms
++
++contrast: 0.86               # thinnest / thickest stroke on o and O
++stress_angle: 0              # degrees from vertical; negative leans left
++overshoot:                   # share of x-height / cap height, 0.01–0.03
++  round: 0.015
++  pointed: 0.010
++aperture: 0.42               # opening of c e s a, share of the bowl width
++terminal: "flat"             # flat | angled | round | ball
++serif: "none"                # none | slab | bracketed | hairline
++
++spacing:                     # sidebearings in font units, per edge class
++  straight: 62
++  round: 38
++  diagonal: 8
++
++coverage: "latin-basic"      # wordmark | latin-basic | latin-de
++
++license:
++  id: "unknown"              # the answer the person gave, or unknown
++  url: ""
++  name_table: true           # written into the name table at build
++
++source:
++  path: "brand/wordmark.png" # path A; omitted for path B
++  rights: "own"              # own | commissioned | typeface-named | third-party | unknown
++  digest: "sha256:…"         # of the source file, so a later run knows it is the same image
++  resolution_confidence: "ok"   # ok | low
++  locked_glyphs: ["g"]       # signature letters; drift fails gates § 6
++```
++
++## Fields
++
++- **`units_per_em`** — 1000 unless the build target asks for 2048.
++- **`vertical`** — baseline, x-height, cap height, ascender, descender. The
++  vertical metrics tables are derived from these (gates § 2), never set apart
++  from them.
++- **`stems`** — lowercase and capitals, vertical and horizontal. Every straight
++  stroke a construction rule draws takes its width from here.
++- **`contrast`** and **`stress angle`** — the ratio of thin to thick on the
++  round letters and the axis it rotates around. A monoline face is `1.0` at
++  stress angle `0`.
++- **`overshoot`** — how far round and pointed letters cross the baseline and the
++  x-height or cap height, as a share of that height.
++- **`aperture`**, **`terminal`**, **`serif`** — the open letters' opening, how
++  strokes end, and what sits at their ends.
++- **`spacing`** — sidebearings per edge class, set on H, n, O and o before any
++  other glyph (gates § 4).
++- **`license`** — never filled by default (`SKILL.md` § License).
++- **`source`** — path A only: the file, its rights class from the rights gate,
++  its digest, whether its resolution is enough for fidelity, and the locked
++  glyphs.
++
++## Coverage tiers
++
++Defined by this skill, not copied from an external glyph-set definition. The
++tier is written into the spec and into the QA report, and nothing claims a tier
++it does not cover.
++
++| Tier | Glyphs |
++|---|---|
++| `wordmark` | the letters present in the source, plus their alternates and ligatures, plus `space` and `.notdef` |
++| `latin-basic` | A–Z, a–z, 0–9, `space`, `.notdef`, and `. , : ; ! ? ' " - – — ( ) / & @ # % *` |
++| `latin-de` | `latin-basic` plus ä ö ü Ä Ö Ü, both forms of sharp s (ß and ẞ), and the German quotation marks „ “ ‚ ‘ |
++
++The coverage gate (gates § 1) lists every glyph the tier names and fails on any
++that is absent.
+diff --git a/src/skills/type-design/references/gates.md b/src/skills/type-design/references/gates.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ef8797947a6662df6ed927a54240bf2effb34de1
+--- /dev/null
++++ b/src/skills/type-design/references/gates.md
+@@ -0,0 +1,95 @@
++# Gates — every one a peer-side command with a threshold
++
++Each gate runs in the toolchain environment (`toolchain.md`) against the built
++UFO and the compiled `ttf`, prints its measured value beside its threshold, and
++on failure prints a message naming the glyph and what to change in the spec.
++A gate the run did not execute is reported as `not run`, never as passed.
++
++The thresholds below are stated defaults (own analysis). The reconstruction
++benchmark is what may move them; nothing else does.
++
++## 1. Outline hygiene and coverage
++
++- **Every contour closed.** An open contour fails with the glyph and the point
++  index.
++- **Counters per glyph** equal an expected table: o 1, e 1, a 1, b d p q 1,
++  A 1, D O Q 1, R 1, B 2, 8 2, 0 1, 6 1, 9 1, g 1 or 2 (single- or
++  double-storey, as the spec says). A filled or a doubled counter fails.
++- **Points at extrema** on every curve, within 1 unit.
++- **No contour under the size threshold** — an area below 0.05 % of the em
++  square is a stray fragment and fails.
++- **Direction correct for the outline format** — outer contours clockwise in
++  TrueType (`glyf`) output and counter-clockwise in CFF output, counters wound
++  opposite to their outer contour in both.
++- **Fill rule declared before overlap removal** — overlap removal runs on a
++  glyph only after its fill rule and contour directions are settled; running it
++  first is how a counter disappears.
++- **Coverage** — every glyph the spec's tier names exists and is non-empty
++  (`space` excepted). A missing glyph fails with the tier and the name.
++
++## 2. Vertical metrics
++
++- `OS/2` typo ascender, descender and line gap agree with `hhea` ascender,
++  descender and line gap.
++- Both line gaps are `0`.
++- `USE_TYPO_METRICS` (`OS/2.fsSelection` bit 7) is set.
++- `usWinAscent` and `usWinDescent` cover the family's extremes: the highest and
++  lowest point of any glyph, diacritics included. A clipped extreme fails with
++  the glyph.
++
++## 3. System consistency
++
++- **Stems by ray-cast at half x-height** — a horizontal ray at `x_height / 2`
++  across n h m u l i; every vertical stem it crosses is within **3 %** of the
++  spec's `lowercase_vertical`. Capitals the same at half cap height across
++  H I L E F T against `capital_vertical`.
++- **Overshoot** — o O e c s reach **1 to 3 %** beyond baseline and x-height or
++  cap height, and within 0.5 % of the spec's `overshoot.round`.
++- **Ink area per glyph group** — the filled share of each glyph's advance box,
++  grouped (straight lowercase, round lowercase, capitals, figures), within
++  **±12 %** of its group's median. An outlier fails with the glyph.
++
++## 4. Spacing before kerning
++
++- **Sidebearings from edge classes first** — straight, round and diagonal edges
++  take the spec's `spacing` values. Set them on H, n, O and o, check `HHOHH`
++  and `nnonn` in the proof, and only then propagate to the derived glyphs.
++- **Kerning classes from edge groups only afterwards** — a kerning class is an
++  edge group, never a single glyph, except for a named exception pair.
++- **Collision check** — render the kerning strings (`AVATAR`, `To`, `Ty`, `LT`,
++  `P.`, `r,`, `f)` and their German counterparts for `latin-de`) and fail on any
++  two glyphs whose outlines intersect.
++- **Features built** — `kern`, `mark` (diacritic anchors), `liga` (where the
++  spec defines ligatures) and, where figures exist, `tnum`.
++- **Shaping confirms the features apply** — shape the kerning strings, an
++  accented word and a ligature through the shaping binding and fail when the
++  shaped advances or glyph ids equal the unshaped ones.
++
++## 5. Rendered proof
++
++The witness reading, not a gate script: `ui:render --profile asset` over the
++proof page reads `loaded` for the new family (`SKILL.md` step 7). `error`,
++`unloaded`, `timeout` or `synthesised` fails, and the agent has looked at the PNG.
++
++## 6. Source fidelity — path A
++
++The wordmark text set in the new font, aligned to the source by baseline and
++cap height, compared by **silhouette IoU** with the method `svg-authoring` uses
++for a raster-to-vector conversion (saturated regions, registration recorded as
++`x,y,w,h` in the source's pixel frame, scorer and sample resolution named).
++
++- per glyph **≥ 0.90**
++- per word **≥ 0.85**
++- a **locked signature glyph ≥ 0.95**
++
++Produce the diff overlay (source and render in two colours, overlap neutral) and
++look at it. A source flagged `resolution_confidence: low` reports these numbers
++but cannot pass this gate.
++
++## 7. Metric-matched fallback
++
++Emit the fallback `@font-face` for the new family over a named local system face,
++with `size-adjust`, `ascent-override`, `descent-override` and
++`line-gap-override` derived from the built font's own tables — the derivation is
++the one in `docs/guidelines/design-asset-discipline.md` (the swapped-face
++bullet). That is what catalogue tell T12 asks a swapped webfont to carry.
+diff --git a/src/skills/type-design/references/toolchain.md b/src/skills/type-design/references/toolchain.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3e545f38cca2f3690d99e31f1f3db1fd19b94ec6
+--- /dev/null
++++ b/src/skills/type-design/references/toolchain.md
+@@ -0,0 +1,64 @@
++# Toolchain — pinned, peer-side, never bundled
++
++The package ships no Python and no font tooling. The type-design build runs in
++an isolated environment **in the consumer's tree**, from the exact versions
++below. A version moves only by a pull request that repeats the intake below for
++the new version — never floating, never `latest`.
++
++| Role | Package | Pin | License |
++|---|---|---|---|
++| outline library, compiler back end | `fonttools` | `fonttools==4.66.1` | MIT |
++| path booleans (overlap removal) | `skia-pathops` | `skia-pathops==0.9.2` | BSD-3-Clause |
++| UFO source library | `ufoLib2` | `ufoLib2==0.18.1` | Apache-2.0 |
++| font compiler | `fontmake` | `fontmake==3.12.1` | Apache-2.0 |
++| shaping binding (feature checks) | `uharfbuzz` | `uharfbuzz==0.56.2` | Apache-2.0 |
++| raster tracer | `vtracer` | `vtracer==0.6.15` | MIT |
++
++Write the pins to `.type-design/pins.txt` in the consumer tree:
++
++```text
++fonttools==4.66.1
++skia-pathops==0.9.2
++ufoLib2==0.18.1
++fontmake==3.12.1
++uharfbuzz==0.56.2
++vtracer==0.6.15
++```
++
++Create a virtual environment under `.type-design/`, install that file into it
++with the environment's own package installer, and freeze the resolved set to
++`.type-design/pins.lock`.
++
++Commit the lock file with the font sources: `fontmake` resolves further packages
++(`ufo2ft`, `glyphsLib`, `fontMath`), and the lock records which ones built this
++font. The raster tracer is MIT-licensed on purpose: a copyleft tracer is not the
++default builder.
++
++## Intake record — 2026-10-18
++
++Taken through `supply-chain-intake` against the live registry on 2026-10-18.
++
++| Pin | Exists | Published | Downloads, last month | Known vulnerabilities |
++|---|---|---|---|---|
++| `fonttools==4.66.1` | yes | 2026-09-29 | 189,260,520 | none |
++| `skia-pathops==0.9.2` | yes | 2026-02-16 | 325,892 | none |
++| `ufoLib2==0.18.1` | yes | 2025-07-10 | 79,359 | none |
++| `fontmake==3.12.1` | yes | 2026-06-02 | 23,711 | none |
++| `uharfbuzz==0.56.2` | yes | 2026-09-21 | 1,509,780 | none |
++| `vtracer==0.6.15` | yes | 2026-03-23 | 477,912 | none |
++
++- **Existence and publish date** — the registry's JSON API for each package
++  and version; none is yanked.
++- **Age** — each pin is the newest release at least two weeks old on the intake
++  date. A newer release existed for `fonttools`, `ufoLib2`, `fontmake` and
++  `uharfbuzz` and was passed over for being days old.
++- **Compatibility** — `fontmake==3.12.1` requires `ufoLib2>=0.18.1` and
++  `fonttools>=4.59.2`; `ufoLib2==0.18.1` requires `fonttools>=4.58.0`. All six
++  need Python 3.11 or newer because `fonttools` does.
++- **Vulnerabilities** — the OSV database returned no advisory for any of the six
++  pinned versions. Run `pip-audit` over the frozen lock before the first build;
++  the intake covered the six named packages, not what they resolve.
++- **Typo-adjacency** — each registry entry declares its source repository
++  (`fonttools/fonttools`, `fonttools/skia-pathops`, `fonttools/ufoLib2`,
++  `googlei18n/fontmake`, `trufont/uharfbuzz`, and visioncortex for `vtracer`);
++  `potracer` and `pypotrace` were considered for tracing and rejected as GPL.
+diff --git a/src/skills/typography-system/SKILL.md b/src/skills/typography-system/SKILL.md
+index f25edac98a5b46ef9c78ebcd33c96dd229c25596..73e73d3505be036afb74df9cba4955dad99ae11d 100644
+--- a/src/skills/typography-system/SKILL.md
++++ b/src/skills/typography-system/SKILL.md
+@@ -100,6 +100,16 @@ Consumer brand tokens outrank the corpus filter
+ ([`brand-source-of-truth`](../../rules/brand-source-of-truth.md)) — if the
+ brand already registers fonts, use them and skip the filter.
+ 
++## Custom source — a family built for the project
++
++Beside the CSV pairing path: when the project has its own family (built with
++`type-design`, or commissioned), take it as the heading or body font instead of
++a CSV row, and record three things — the **spec path** (`font-spec.yaml`), the
++**license** as stated (or `unknown`), and the **fallback overrides**
++(`size-adjust`, `ascent-override`, `descent-override`) the build emitted. A
++stated custom family is the stated reason T7 asks for. Steps 3–5 run unchanged;
++step 5's availability check is the built `woff2` existing, not a Google Fonts URL.
++
+ ## Delivery — hosting mode (self-hosted by default)
+ 
+ The delivery policy is **owned** by
+diff --git a/tests/scripts/check_routing_coverage.test.ts b/tests/scripts/check_routing_coverage.test.ts
+index b137e8658a10ed201952106afbcf4a2027a22b5f..2731fc0bcc7960d64cb54a4dc27acebb4d7c4784 100644
+--- a/tests/scripts/check_routing_coverage.test.ts
++++ b/tests/scripts/check_routing_coverage.test.ts
+@@ -179,7 +179,9 @@ describe('the live tree', () => {
+         expect(s.rules - s.skills).toBeGreaterThan(0.4);
+     });
+ 
+-    it('measures 107 routed rules and 300 routed skills', () => {
++    it('measures 107 routed rules and 301 routed skills', () => {
++        // 300 -> 301 skills on 2026-10-18: `type-design`, shipped with its own
++        // corpus, so the skills ratio rose across the increase (156/300 -> 157/301).
+         // 299 -> 300 skills on 2026-10-11: `svg-authoring`. The first skill-side
+         // DENOMINATOR move this pin has recorded — the entries below are all
+         // rules-side. It shipped its own corpus in the same change, so the ratio
+@@ -194,7 +196,7 @@ describe('the live tree', () => {
+         // move, while the unit count changing means the estate changed, which is
+         // a thing a reader should be told about rather than have absorbed.
+         expect(measureRules(REPO).units).toBe(107);
+-        expect(measureSkills(REPO).units).toBe(300);
++        expect(measureSkills(REPO).units).toBe(301);
+     });
+ });
+ 
+diff --git a/tests/scripts/install_rule_links.test.ts b/tests/scripts/install_rule_links.test.ts
+index 153aee14f41ac1b0d07b47d0b303723f6a942d57..5ba25a53ed9c5cfa863d07640f4b6b4a7c0dda2b 100644
+--- a/tests/scripts/install_rule_links.test.ts
++++ b/tests/scripts/install_rule_links.test.ts
+@@ -275,7 +275,7 @@ describe("the real install plan", () => {
+   }
+ 
+   it("the deployable share of claude-code's unresolved links is exactly the blocker's subject", () => {
+-    // 112 of the 115 would resolve by adding two directories to the deploy
++    // 110 of the 113 would resolve by adding two directories to the deploy
+     // plan; the other 3 would not, and that split is what the blocker's
+     // recommendation rests on. Pinned so a future reader can tell the two
+     // populations apart without re-deriving them — and so the blocker cannot
+@@ -288,6 +288,11 @@ describe("the real install plan", () => {
+     // the link went with the prose. The pin moves DOWN with the tree — a
+     // smaller deployable share is the blocker's subject shrinking, never the
+     // ratchet loosening, and `UNRESOLVED_BASELINE` is untouched at 160.
++    //
++    // contexts 62 -> 61 on 2026-10-18: `roadmap-ci-steps-policy` dropped a
++    // See-also bullet that repeated the `contexts/execution/` link its
++    // "Body migrated to" line already carries, and guidelines 50 -> 49 for the
++    // same duplicate in `context-hygiene` (road-to-type-with-a-witness 4.12).
+     const pairs = GLOBAL_DEPLOY_SOURCES["claude-code"];
+     expect(pairs).toBeDefined();
+     const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
+@@ -295,8 +300,8 @@ describe("the real install plan", () => {
+       (d) => d.directory === "contexts" || d.directory === "guidelines",
+     );
+     expect(deployable.map((d) => [d.directory, d.count, d.verdict])).toEqual([
+-      ["contexts", 62, "directory-not-deployed"],
+-      ["guidelines", 50, "directory-not-deployed"],
++      ["contexts", 61, "directory-not-deployed"],
++      ["guidelines", 49, "directory-not-deployed"],
+     ]);
+   });
+ 
+diff --git a/tests/scripts/routing_signal_measurement.test.ts b/tests/scripts/routing_signal_measurement.test.ts
+index da156242f81e141e90e58519e4292da44bbc0da2..9978c9782891a27c473a051662b7a8afb7b50606 100644
+--- a/tests/scripts/routing_signal_measurement.test.ts
++++ b/tests/scripts/routing_signal_measurement.test.ts
+@@ -319,8 +319,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
+         //
+         // 151 -> 156 on 2026-10-17: the five brand-roadmap skills gain a corpus;
+         // `gtm-launch` seals (34 -> 35) and four train (117 -> 121).
++        //
++        // 156 -> 157 on 2026-10-18: `type-design` (0x43 = 67) trains (121 -> 122).
+         const all = corpusSkills(REPO);
+-        expect(all.length).toBe(156);
++        expect(all.length).toBe(157);
+         expect(all.filter((r) => r.partition === 'holdout').length).toBe(35);
+     });
+ });
+@@ -381,7 +383,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
+         // 117 -> 121 on 2026-10-17: `content-funnel-design`, `messaging-architecture`,
+         // `release-comms` and `voice-and-tone-design` train; `gtm-launch` seals
+         // and is absent here.
+-        expect(new Set(cases.map((c) => c.skill)).size).toBe(121);
++        // 121 -> 122 on 2026-10-18: `type-design` (0x43 = 67) trains.
++        expect(new Set(cases.map((c) => c.skill)).size).toBe(122);
+     });
+ 
+     it('both legacy-shaped train corpora are read, not silently dropped', () => {
