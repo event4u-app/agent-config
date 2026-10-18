@@ -1,6 +1,5 @@
 
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -17,41 +16,9 @@ import {
     to_dict,
 } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
 
-// tests/scripts/work_engine/state.test.ts → four levels up is the repo root.
-const REPO_ROOT = path.resolve(
-    fileURLToPath(import.meta.url),
-    '..',
-    '..',
-    '..',
-    '..',
-);
 
-const STATE_PY = path.join(
-    REPO_ROOT,
-    'src',
-    'agent-src',
-    'templates',
-    'scripts',
-    'work_engine',
-    'state.py',
-);
 
-/** TS twin: from_dict then JSON.stringify(to_dict, null, 2) — `state.dump`'s body. */
-function tsSerialize(fixtureJson: string): string {
-    const payload = JSON.parse(fixtureJson);
-    return JSON.stringify(to_dict(from_dict(payload)), null, 2);
-}
 
-/** TS twin: from_dict, capture the SchemaError message. */
-function tsErrorMessage(fixtureJson: string): string {
-    const payload = JSON.parse(fixtureJson);
-    try {
-        from_dict(payload);
-        return '__NO_ERROR__';
-    } catch (exc) {
-        return (exc as Error).message;
-    }
-}
 
 // ── Fixtures ────────────────────────────────────────────────────────────
 //
@@ -119,32 +86,8 @@ const FULL_ENVELOPE = JSON.stringify({
     report: 'done',
 });
 
-// Unknown top-level keys are tolerated + dropped; non-ASCII left verbatim.
-const TOLERANT_AND_UNICODE = JSON.stringify({
-    version: 1,
-    input: { kind: 'file', data: { path: 'src/Héllo.tsx' } },
-    future_field: { ignored: true },
-    report: 'café — naïve façade ☕',
-    extension_used: 'leaked-but-not-a-field',
-});
 
-// `rounds` at the extension ceiling (3) only valid when extension_used is true.
-const POLISH_EXTENSION = JSON.stringify({
-    version: 1,
-    input: { kind: 'ticket', data: {} },
-    ui_polish: { rounds: 3, extension_used: true, applied: [] },
-});
 
-const EMPTY_DICT_GATES = JSON.stringify({
-    version: 1,
-    input: { kind: 'ticket', data: {} },
-    ui_audit: {},
-    ui_design: {},
-    ui_review: {},
-    ui_polish: {},
-    contract: {},
-    stitch: {},
-});
 
 describe('work_engine/state — TS-side unit checks (no python3 needed)', () => {
     it('module constants match the schema', () => {
@@ -209,7 +152,4 @@ import * as os from 'node:os';
 
 function fs_mkdtemp(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'we-state-'));
-}
-function fs_readFile(p: string): string {
-    return fs.readFileSync(p, 'utf-8');
 }
