@@ -186,7 +186,8 @@ describe('2.1b restoration fails closed in five named outcomes', () => {
     it('ORIGIN_CHANGED — the path now names another file', () => {
         const value = iban(13);
         const { file, token } = issueIban('s', value, 'a.txt');
-        fs.rmSync(file);
+        // Moved aside, not removed: a removed file's inode may be handed straight back.
+        fs.renameSync(file, `${file}.old`);
         fs.writeFileSync(file, `account: ${value}\n`);
         const r = restoreToken(token, { dir, sessionId: 's', destination: fileDestination(file), rules: RULES });
         expect(!r.ok && r.outcome).toBe('ORIGIN_CHANGED');
