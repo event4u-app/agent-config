@@ -10,6 +10,7 @@ import {
     MANAGED_SIGNATURE,
     NO_DISPATCHER_CONTEXT,
     NO_DISPATCHER_STDERR,
+    THINNED_DEAD_CARRIER_LINE,
     build_claude_hook_matrix,
     ensure_managed_hooks,
     remove_managed_hooks,
@@ -19,7 +20,19 @@ function expectedCommand(acEvent: string, native: string): string {
     const args =
         `--platform claude --event ${acEvent} --native-event ${native} ` +
         '--project-dir "$CLAUDE_PROJECT_DIR" --min-version 1';
+    const thinned =
+        native === 'SessionStart'
+            ? `[ -z "$AC_HOOK_PROBE" ] && [ -f "$R/thinned" ] && { echo '${THINNED_DEAD_CARRIER_LINE}'; ` +
+              'L=""; read -r L < "$R/thinned"; F=1; ' +
+              'if [ -d "$L" ] && [ -d "$S/claude-rules" ]; then F=0; for f in "$S/claude-rules"/*.md; do ' +
+              '[ -f "$f" ] || continue; t="$L/${f##*/}"; ' +
+              'if [ ! -e "$t" ] || grep -qx "package: event4u/agent-config" "$t"; then ' +
+              'cp "$f" "$t.ac-restore" && mv -f "$t.ac-restore" "$t" || F=1; fi; done; fi; ' +
+              '[ "$F" = 0 ] && mv -f "$R/thinned" "$R/demoted"; }; '
+            : '';
     return (
+        'R="${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; ' +
+        '[ -f "$S/node" ] && read -r N < "$S/node"; ' +
         'B=""; ' +
         '[ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && ' +
         'B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; ' +
@@ -28,10 +41,12 @@ function expectedCommand(acEvent: string, native: string): string {
         'B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; ' +
         'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
         `exec node "$B" ${args}; fi; ` +
+        'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
+        `exec "$N" "$S/dist/hooks/dispatch.js" ${args}; fi; ` +
         'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
         `command -v "$BIN" >/dev/null 2>&1 || { [ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${
             native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : ''
-        } }; exit 0; }; ` +
+        } }; ${thinned}exit 0; }; ` +
         `"$BIN" dispatch:hook ${args}`
     );
 }

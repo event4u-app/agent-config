@@ -118,6 +118,7 @@ import {
     thinInstalledRuleLayer,
 } from '../install/installThinLayer.js';
 import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
+import { deployClaudeCarrier } from '../install/stagedRuntime.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
 import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
@@ -3017,18 +3018,11 @@ function _deploy_global_content(
             );
             // Steps 1.1 and 1.4 of road-to-an-installed-layer-that-is-thinned;
             // both modules' headers carry the reasoning.
-            if (installerThinsHost(tool_id, { packageRoot: package_root })) {
-                try {
-                    const thin = thinInstalledRuleLayer({
-                        rulesDir: path.join(anchor, 'rules'),
-                        packageRoot: package_root,
-                        preserved: preserved_now,
-                    });
-                    if (!state.QUIET) for (const l of describeThinInstalledLayer(thin)) info(l);
-                } catch (e) {
-                    warn(`claude-code: thinned rule layer not written — ${String(e)}`);
-                }
-            }
+            deployClaudeCarrier({
+                packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn,
+                wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
+                thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot })),
+            });
             if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, undefined, { thisDeploy: new Map([[anchor, current_files]]) })) info(l);
         }
 

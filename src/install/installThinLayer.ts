@@ -104,6 +104,11 @@ export interface ThinInstalledLayerOptions {
     readonly packageRoot: string;
     /** Absolute paths the conflict tracker preserved; never rewritten here. */
     readonly preserved?: ReadonlySet<string>;
+    /**
+     * The root stub `Body:` pointers are built on, when it is not the package:
+     * the staged runtime, which outlives a cleared package-manager cache.
+     */
+    readonly bodyLinkRoot?: string | null;
 }
 
 /**
@@ -115,7 +120,7 @@ export interface ThinInstalledLayerOptions {
 export function thinInstalledRuleLayer(opts: ThinInstalledLayerOptions): ThinInstalledLayerResult {
     const packageRoot = path.resolve(opts.packageRoot);
     const bodySourceDir = path.join(packageRoot, 'dist', 'agent-src', 'rules');
-    const bodyLinkPrefix = absoluteBodyLinkPrefix(packageRoot);
+    const bodyLinkPrefix = absoluteBodyLinkPrefix(opts.bodyLinkRoot ?? packageRoot);
     const preserved = opts.preserved ?? new Set<string>();
 
     // Scope is `null` on purpose. The copy already applied the install's rule
