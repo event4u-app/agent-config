@@ -308,9 +308,10 @@ deleted or left as a silent twin without a row the user has seen.
       with the projection commit; `verify` reports a baseline older than the current
       projection as `stale`.
       verify: `npx vitest run tests/scripts/design_sync_verify.test.ts -t stale-baseline --reporter=verbose` -> /✓.*stale-baseline/
-- [x] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
+- [ ] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
       baseline updates are shown as a diff and land in a commit of their own, on the
       pinned renderer of `playwright-architect/SKILL.md:130-132`.
+      (2026-10-18 screen: open. Editing `playwright-testing` obliges a trigger corpus for it, and adding one re-seals five published measurements — the trigger-corpus holdout pin, the routing-signal verdict, the delivery-set record and the routing-coverage seed. That is its own change; the hook's warning text of 7.1 already carries the acceptance step.)
       verify: `rg -n 'commit of their own' src/skills/playwright-testing/SKILL.md` -> /commit of their own/
 
 ## Phase 8 — Review gates that read the projection
