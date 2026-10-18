@@ -647,10 +647,9 @@ export function main(): number {
             return EXIT_BLOCK;
         }
 
-        if (kind === 'advisory' && SNAPSHOT_DIR.test(p.split(path.sep).join('/'))) {
-            snapWarn = `${path.relative(root, abs) || p}: ${SNAPSHOT_ACCEPTANCE}`;
-            continue;
-        }
+        // A snapshot path still runs every check below; only its warning text is deferred.
+        const isSnap = kind === 'advisory' && SNAPSHOT_DIR.test(p.split(path.sep).join('/'));
+        if (isSnap) snapWarn = `${path.relative(root, abs) || p}: ${SNAPSHOT_ACCEPTANCE}`;
         const added = added_entries(ti, on_disk);
         if (added <= 0) {
             continue;
@@ -662,7 +661,7 @@ export function main(): number {
             process.stderr.write(`block-config-weakening: BLOCKED — ${d.reason}\n`);
             return EXIT_BLOCK;
         }
-        if (d.action === 'warn') {
+        if (d.action === 'warn' && !isSnap) {
             process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: d.reason })}\n`);
             return EXIT_WARN;
         }
