@@ -52,13 +52,16 @@ import { GRANULARITY_CONVENTION } from '../../state.js';
  * anti-generic moat that makes a generated multi-page app coherent rather than
  * default-shadcn. Absent → sane defaults. The dependency is acyclic and
  * degrades gracefully: scaffold never *requires* `pack-brand`.
+ *
+ * Re-exported, not declared: the list has three readers across two trees and
+ * `shared/brandTokenPaths.ts` is the one home both reach at runtime. The
+ * specifier below resolves to `src/shared/` under tsx and to `dist/shared/` in
+ * the projected copy, which is why it is six hops and not an alias.
  */
-export const BRAND_TOKEN_PATHS: ReadonlyArray<string> = [
-    'tokens.json',
-    'assets/tokens.json',
-    'resources/tokens.json',
-    'agents/settings/brand/tokens.json',
-];
+import { BRAND_TOKEN_PATHS } from '../../../../../../shared/brandTokenPaths.js';
+import { tokenDocumentError } from '../../../../../../shared/brandTokenDocument.js';
+
+export { BRAND_TOKEN_PATHS };
 
 /**
  * Conventional location of the project's `Playbook` contexts (ADR-244).
@@ -404,20 +407,26 @@ function _resolve_build_directive(state: DeliveryState): string {
 }
 
 /**
- * Return the relative path to a present `tokens.json`, or `null`.
+ * Return the relative path to a VALID `tokens.json`, or `null`.
  *
  * Checks {@link BRAND_TOKEN_PATHS} under `root` (default: the current working
  * directory, which is the consumer project root when the engine runs). The
- * first existing file wins. Absent → `null` so the caller degrades to default
- * tokens — the acyclic, graceful-degradation contract.
+ * first file that parses as a DTCG document wins — the same predicate
+ * `brand:status` reports with, so the plan and the resolver cannot name
+ * different files as the brand. A file that merely exists is not a brand: a
+ * malformed `tokens.json` at the first path used to beat a valid
+ * `assets/tokens.json` at the second and seed the plan from a document nothing
+ * can read. Absent or unreadable → `null` so the caller degrades to default
+ * tokens — the acyclic, graceful-degradation contract is unchanged.
  */
-function _brand_token_source(root: string | null = null): string | null {
+export function _brand_token_source(root: string | null = null): string | null {
     const base = root !== null ? root : process.cwd();
     for (const rel of BRAND_TOKEN_PATHS) {
         try {
-            if (fs.statSync(path.join(base, rel)).isFile()) {
-                return rel;
-            }
+            const abs = path.join(base, rel);
+            if (!fs.statSync(abs).isFile()) continue;
+            if (tokenDocumentError(fs.readFileSync(abs, 'utf-8')) !== null) continue;
+            return rel;
         } catch {
             continue;
         }

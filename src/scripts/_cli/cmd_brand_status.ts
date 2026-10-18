@@ -12,7 +12,7 @@
  * ## The filename defect this verb exposes
  *
  * The authored surfaces once named `.tokens.json`, with a leading dot. The only
- * real resolver in the tree — `BRAND_TOKEN_PATHS` in the UI scaffold directive —
+ * real resolver in the tree — `BRAND_TOKEN_PATHS` in `shared/brandTokenPaths.ts` —
  * looks for `tokens.json`, without one, in four conventional locations. A
  * consumer who followed the old wording authored a file the resolver can never
  * find. So this verb searches the canonical list AND separately reports a
@@ -40,6 +40,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { parseBrandVoiceSlot, slotDay, validateBrandVoiceSlotText } from '../_lib/brand_voice_slot.js';
 import { BRAND_TOKEN_PATHS } from '../../agent-src/templates/scripts/work_engine/directives/ui/scaffold.js';
+import { tokenDocumentError } from '../../shared/brandTokenDocument.js';
 
 export interface BrandStatusOptions {
     cwd: string;
@@ -165,31 +166,12 @@ function inspectVoice(root: string, now: Date, sources: BrandSource[]): VoiceRep
 
 const DESIGN_MD = 'DESIGN.md';
 
-function _hasDtcgToken(node: unknown, depth = 0): boolean {
-    if (depth > 64 || typeof node !== 'object' || node === null || Array.isArray(node)) return false;
-    if ('$value' in node) return true;
-    return Object.values(node as Record<string, unknown>).some((v) => _hasDtcgToken(v, depth + 1));
-}
-
 /**
- * Parse before present: `null` when the text is a DTCG token document, else the
- * reason it is not one. A file that merely exists is not a brand.
+ * Re-exported, not declared: the scaffold's `token_seed` line and the asset
+ * renderer answer the same question and must answer it the same way, and
+ * neither can import from here at runtime.
  */
-export function tokenDocumentError(text: string): string | null {
-    let doc: unknown;
-    try {
-        doc = JSON.parse(text);
-    } catch (exc) {
-        return `not JSON: ${exc instanceof Error ? exc.message : String(exc)}`;
-    }
-    if (typeof doc !== 'object' || doc === null || Array.isArray(doc)) {
-        return 'not a DTCG document: the root is not an object';
-    }
-    if (!_hasDtcgToken(doc)) {
-        return 'not a DTCG document: no token carries a `$value`';
-    }
-    return null;
-}
+export { tokenDocumentError } from '../../shared/brandTokenDocument.js';
 
 /**
  * Every canonical path holding a tokens file, classified. Computed on every

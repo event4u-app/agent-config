@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.9626,
-        "skills": 0.5033
+        "skills": 0.52
     },
     "seed_provenance": {
         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "151 of 300 skills carry evals/triggers.json on 2026-10-16; was 148 of 300 earlier that day, 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+        "skills": "156 of 300 skills carry evals/triggers.json on 2026-10-17; was 151 of 300 on 2026-10-16, 148 of 300 earlier that day, 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
     },
     "history": [
