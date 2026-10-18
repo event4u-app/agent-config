@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -46,7 +47,7 @@ describe('classifyInstructionsLoaded', () => {
     });
 
     it('records every payload it cannot read as unknown', () => {
-        expect(line('not an object')).toMatchObject({ event: 'unknown', why: 'malformed' });
+        expect(line('not an object')).toMatchObject({ event: 'unknown', session: null });
         expect(line({ session_id: 's1', hook_event_name: 'Stop' })).toMatchObject({ event: 'unknown', why: 'event-mismatch' });
         expect(line({ hook_event_name: 'InstructionsLoaded', session_id: 's1', load_reason: 'session_start' })).toMatchObject({ event: 'unknown', why: 'no-file-path' });
         expect(line({ hook_event_name: 'InstructionsLoaded', session_id: 's1', file_path: USER_RULE('a'), load_reason: 'telepathy' })).toMatchObject({ event: 'unknown', why: 'unknown-load-reason' });
@@ -179,9 +180,10 @@ describe('the observer concern', () => {
     it('appends one line per event to its session file, and a record can be built from the directory', () => {
         expect(processEnvelope(envelope({ session_id: 's9', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
         expect(processEnvelope('{not json', env)).toBe(0);
-        expect(fs.readdirSync(arrivalsDir(env)).sort()).toEqual(['_.jsonl', 's9.jsonl']);
+        expect(fs.readdirSync(arrivalsDir(env))).toEqual(['s9.jsonl']);
+        expect((fs.statSync(path.join(arrivalsDir(env), 's9.jsonl')).mode & 0o777).toString(8)).toBe('600');
         const lines = readObserverLines(arrivalsDir(env));
-        expect(lines).toHaveLength(2);
+        expect(lines).toHaveLength(1);
         expect(latestArrivalRecord(lines)?.status).toBe('visible');
     });
 
@@ -190,7 +192,7 @@ describe('the observer concern', () => {
         fs.mkdirSync(dir, { recursive: true });
         for (let i = 0; i < KEEP_SESSIONS + 5; i += 1) {
             const f = path.join(dir, `old-${String(i)}.jsonl`);
-            fs.writeFileSync(f, '');
+            fs.writeFileSync(f, '', { mode: 0o600 });
             fs.utimesSync(f, 1_000 + i, 1_000 + i);
         }
         processEnvelope(envelope({ session_id: 'new', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
@@ -214,14 +216,13 @@ describe('the observer concern', () => {
         for (const sid of ['../escape', '..', '/abs', 'a/b', '.hidden']) {
             processEnvelope(envelope({ session_id: sid, file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         }
-        expect(fs.readdirSync(root).sort()).toEqual(['runtime']);
-        expect(fs.readdirSync(arrivalsDir(env))).toEqual(['_.jsonl']);
+        expect(fs.readdirSync(root), 'nothing is written for an id that is not id-shaped').toEqual([]);
     });
 
     it('a session file stops growing at its cap', () => {
         const dir = arrivalsDir(env);
         fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(path.join(dir, 'big.jsonl'), 'x'.repeat(MAX_SESSION_BYTES + 1));
+        fs.writeFileSync(path.join(dir, 'big.jsonl'), 'x'.repeat(MAX_SESSION_BYTES + 1), { mode: 0o600 });
         processEnvelope(envelope({ session_id: 'big', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         expect(fs.statSync(path.join(dir, 'big.jsonl')).size).toBe(MAX_SESSION_BYTES + 1);
     });
@@ -241,7 +242,7 @@ describe('the observer concern', () => {
         fs.mkdirSync(dir, { recursive: true });
         for (let i = 0; i < KEEP_SESSIONS + 1; i += 1) {
             const f = path.join(dir, `n${String(i).padStart(2, '0')}.jsonl`);
-            fs.writeFileSync(f, '{}\n');
+            fs.writeFileSync(f, '{}\n', { mode: 0o600 });
             fs.utimesSync(f, 5_000 + i, 5_000 + i);
         }
         processEnvelope(envelope({ session_id: 'n10', file_path: USER_RULE('a'), load_reason: 'compact' }), env);
@@ -251,7 +252,7 @@ describe('the observer concern', () => {
     it('a file exactly at the cap takes no further line', () => {
         const dir = arrivalsDir(env);
         fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(path.join(dir, 'cap.jsonl'), 'x'.repeat(MAX_SESSION_BYTES));
+        fs.writeFileSync(path.join(dir, 'cap.jsonl'), 'x'.repeat(MAX_SESSION_BYTES), { mode: 0o600 });
         processEnvelope(envelope({ session_id: 'cap', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         expect(fs.statSync(path.join(dir, 'cap.jsonl')).size).toBe(MAX_SESSION_BYTES);
     });
@@ -275,27 +276,46 @@ describe('the observer concern', () => {
         expect(lastObserverError(dir), 'the refusal leaves a mark').toMatch(/ ELOOP$/);
     });
 
-    it('the placeholder file is outside the fifty, and a non-regular entry is never pruned', () => {
+    it('a non-regular entry is never pruned, and only regular session files count toward the fifty', () => {
         const dir = arrivalsDir(env);
-        processEnvelope(envelope({ file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
-        fs.utimesSync(path.join(dir, '_.jsonl'), 1, 1);
-        fs.mkdirSync(path.join(dir, 'adir.jsonl'));
+        fs.mkdirSync(path.join(dir, 'adir.jsonl'), { recursive: true });
         fs.utimesSync(path.join(dir, 'adir.jsonl'), 1, 1);
         for (let i = 0; i < KEEP_SESSIONS + 3; i += 1) {
             processEnvelope(envelope({ session_id: `s${String(i).padStart(2, '0')}`, file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         }
         const left = fs.readdirSync(dir);
-        expect(left).toContain('_.jsonl');
         expect(left).toContain('adir.jsonl');
         expect(left.filter((f) => /^s\d\d\.jsonl$/.test(f))).toHaveLength(KEEP_SESSIONS);
     });
 
-    it('lines without a session id never form a record, however many there are', () => {
+    it('a payload without a session id writes nothing, so it can never form a record', () => {
         for (let i = 0; i < 3; i += 1) processEnvelope(envelope({ file_path: USER_RULE(`r${String(i)}`), load_reason: 'session_start' }), env);
-        const lines = readObserverLines(arrivalsDir(env));
-        expect(lines).toHaveLength(3);
-        expect(latestArrivalRecord(lines)).toBeNull();
-        expect(recordsIn(arrivalsDir(env), 10)).toEqual([]);
+        expect(fs.existsSync(arrivalsDir(env))).toBe(false);
+    });
+
+    it('a session file someone else can read is refused, and the refusal leaves a mark', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'open.jsonl'), '', { mode: 0o644 });
+        fs.chmodSync(path.join(dir, 'open.jsonl'), 0o644);
+        processEnvelope(envelope({ session_id: 'open', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.readFileSync(path.join(dir, 'open.jsonl'), 'utf8')).toBe('');
+        expect(lastObserverError(dir)).toMatch(/ EREFUSED$/);
+    });
+
+    it('a FIFO planted at the session path neither stalls nor receives the line', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        expect(spawnSync('mkfifo', [path.join(dir, 'fifo.jsonl')]).status).toBe(0);
+        const started = Date.now();
+        expect(processEnvelope(envelope({ session_id: 'fifo', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
+        expect(Date.now() - started).toBeLessThan(2_000);
+        expect(lastObserverError(dir)).toMatch(/ (ENXIO|EREFUSED)$/);
+    });
+
+    it('never throws, whatever it is handed', () => {
+        expect(processEnvelope(undefined as unknown as string, env)).toBe(0);
+        expect(processEnvelope('null', { ...env, EVENT4U_CONFIG_HOME: '\0' })).toBe(0);
     });
 
     it('one unreadable session file does not discard the others', () => {

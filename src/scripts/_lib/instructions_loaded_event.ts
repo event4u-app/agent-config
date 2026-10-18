@@ -22,21 +22,18 @@ export interface CaptureLine {
     readonly rules: boolean;
     /** The path sat under the user's own `~/.claude/`. */
     readonly user: boolean;
-    /** The payload was an object at all. */
-    readonly ok: boolean;
 }
 
 /** A token that is safe as a filename and carries no path: starts alphanumeric, no separators. */
 export const ID_SHAPE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 /** The one rule for which directory entries are session files — the reader and the prune share it. */
-export const isSessionFile = (f: string): boolean => f.endsWith('.jsonl') && (f === '_.jsonl' || ID_SHAPE_RE.test(f.slice(0, -6)));
+export const isSessionFile = (f: string): boolean => f.endsWith('.jsonl') && ID_SHAPE_RE.test(f.slice(0, -6));
 
 const idShaped = (v: unknown): string | null => (typeof v === 'string' && ID_SHAPE_RE.test(v) ? v : null);
 
 export function captureInstructionsLoaded(payload: unknown, ts: string, home: string, env: NodeJS.ProcessEnv): CaptureLine {
-    const ok = typeof payload === 'object' && payload !== null && !Array.isArray(payload);
-    const p = (ok ? payload : {}) as Record<string, unknown>;
+    const p = (typeof payload === 'object' && payload !== null && !Array.isArray(payload) ? payload : {}) as Record<string, unknown>;
     const raw = String(p['file_path'] ?? '').replace(/\\/g, '/');
     // Only an absolute path with no `.`/`..` segment and no doubled separator is read at all.
     const norm = /^([A-Za-z]:)?\//.test(raw) && !/\/\.{0,2}\//.test(raw) ? raw : '';
@@ -52,6 +49,5 @@ export function captureInstructionsLoaded(payload: unknown, ts: string, home: st
         file: idShaped(norm.slice(norm.lastIndexOf('/') + 1)),
         rules: norm.includes('/.claude/rules/'),
         user: h !== '' && norm.startsWith(`${h}/.claude/`),
-        ok,
     };
 }

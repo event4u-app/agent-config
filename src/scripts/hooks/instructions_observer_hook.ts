@@ -15,13 +15,14 @@
  * so append order is scheduler order and the reader treats each session as a
  * set. Retention is the newest {@link KEEP_SESSIONS} session files, each capped
  * at {@link MAX_SESSION_BYTES}; old files are deleted whole, never rotated.
- * Lines without a session id go to `_.jsonl`, which is capped the same way, is
- * outside the session count, and never forms a record.
+ * A line without a session id could never form a record, so it is not written.
  *
- * ONE DESCRIPTOR, NO PATH CHECK. The file is opened once with `O_NOFOLLOW`, the
- * opened descriptor is checked to be a regular file under the cap, and the line
- * is written through it — so no symlink swapped in between a check and a write
- * can redirect the line.
+ * ONE DESCRIPTOR, NO PATH CHECK. The file is opened once with `O_NOFOLLOW` and
+ * `O_NONBLOCK`; the descriptor must be a regular file readable by its owner
+ * alone, and the line is written through it whole or the write is a failure —
+ * so no symlink swapped in between a check and a write can redirect the line,
+ * no FIFO planted at the path can stall the open, and no torn line passes
+ * silently.
  *
  * THE BOUNDS, STATED AS WHAT THEY ARE. Every write prunes after it appends, so
  * the file count can exceed fifty by the writers between their append and their
@@ -38,10 +39,12 @@
  * loads, which the record reads as `unknown` — evidence is lost in the
  * direction that keeps the machine full, never invented.
  *
- * A FAILURE LEAVES A MARK. Whatever stops a write — permissions, a full disk,
- * a symlink refused — is recorded as its error code in `arrivals.last-error`
- * beside the directory, so an observer that has gone quiet can be told apart
- * from one that saw nothing.
+ * A FAILURE LEAVES A DATED MARK, WHERE IT CAN. A write stopped by permissions,
+ * a full disk, a refused symlink or file, or a short write records its date and
+ * error code in `arrivals.last-error` beside the directory. It is the LAST
+ * failure, not a current state: a date older than the newest session file means
+ * the observer has written since. A failure that also prevents writing the mark
+ * — the machine root itself unwritable — leaves none.
  *
  * KILL SWITCH. `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off` makes it a no-op without
  * a reinstall; removing the one `instructions_loaded` binding in
@@ -50,7 +53,6 @@
  * unexplained test break.
  */
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { event4u_root } from '../_lib/user_global_paths.js';
@@ -67,7 +69,8 @@ export const MAX_SESSION_BYTES = 256 * 1024;
 const C = fs.constants;
 /** `O_NOFOLLOW` is POSIX; where the platform has none the flag is simply absent. */
 const NOFOLLOW = C.O_NOFOLLOW ?? 0;
-const APPEND_NOFOLLOW = C.O_WRONLY | C.O_APPEND | C.O_CREAT | NOFOLLOW;
+/** `O_NONBLOCK` so a FIFO planted at the path cannot stall the open waiting for a reader. */
+const APPEND_NOFOLLOW = C.O_WRONLY | C.O_APPEND | C.O_CREAT | C.O_NONBLOCK | NOFOLLOW;
 const TRUNC_NOFOLLOW = C.O_WRONLY | C.O_TRUNC | C.O_CREAT | NOFOLLOW;
 
 export function arrivalsDir(env: NodeJS.ProcessEnv = process.env): string {
@@ -78,7 +81,7 @@ export function arrivalsDir(env: NodeJS.ProcessEnv = process.env): string {
 function prune(dir: string): void {
     const files: { f: string; t: number }[] = [];
     for (const f of fs.readdirSync(dir)) {
-        if (f === '_.jsonl' || !isSessionFile(f)) continue;
+        if (!isSessionFile(f)) continue;
         try {
             const st = fs.lstatSync(path.join(dir, f));
             if (st.isFile()) files.push({ f, t: st.mtimeMs });
@@ -91,32 +94,39 @@ function prune(dir: string): void {
 }
 
 export function processEnvelope(raw: string, env: NodeJS.ProcessEnv = process.env): number {
-    if (env[KILL_SWITCH_ENV] === 'off' || is_replay_mode()) return EXIT_ALLOW;
-    const dir = arrivalsDir(env);
+    let dir = '';
     try {
+        if (env[KILL_SWITCH_ENV] === 'off' || is_replay_mode()) return EXIT_ALLOW;
+        dir = arrivalsDir(env);
         let parsed: unknown = null;
         try {
-            parsed = raw.trim() ? JSON.parse(raw) : null;
+            parsed = JSON.parse(raw);
         } catch {
-            parsed = null;
+            // An unreadable envelope carries no session to file a line under.
         }
-        const envelope = typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : null;
-        const inner = envelope?.['payload'];
-        const payload = typeof inner === 'object' && inner !== null ? inner : envelope;
-        const line = captureInstructionsLoaded(payload, new Date().toISOString(), env['HOME'] ?? os.homedir(), env);
-        fs.mkdirSync(dir, { recursive: true });
-        const fd = fs.openSync(path.join(dir, `${line.session ?? '_'}.jsonl`), APPEND_NOFOLLOW, 0o600);
+        const envelope = (parsed ?? {}) as Record<string, unknown>;
+        const inner = envelope['payload'];
+        // Without HOME no load reads as user-layer, which can only keep the machine full.
+        const cap = captureInstructionsLoaded(typeof inner === 'object' && inner !== null ? inner : envelope, new Date().toISOString(), env['HOME'] ?? '', env);
+        // A line with no session id can never form a record, so it is not written.
+        if (cap.session === null) return EXIT_ALLOW;
+        // Every captured field is an ASCII id or boolean, so the line's length is its byte count.
+        const text = `${JSON.stringify(cap)}\n`;
+        fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+        const fd = fs.openSync(path.join(dir, `${cap.session}.jsonl`), APPEND_NOFOLLOW, 0o600);
         try {
             const st = fs.fstatSync(fd);
-            if (st.isFile() && st.size < MAX_SESSION_BYTES) fs.writeSync(fd, `${JSON.stringify(line)}\n`);
+            // Only a regular file nobody else can read is written to.
+            if (!st.isFile() || (st.mode & 0o077) !== 0) throw new Error('EREFUSED');
+            if (st.size < MAX_SESSION_BYTES && fs.writeSync(fd, text) !== text.length) throw new Error('ESHORT');
         } finally {
             fs.closeSync(fd);
         }
         prune(dir);
     } catch (e) {
         try {
-            const code = String((e as NodeJS.ErrnoException).code ?? 'error');
-            fs.writeFileSync(`${dir}.last-error`, `${new Date().toISOString()} ${code}\n`, { flag: TRUNC_NOFOLLOW });
+            const code = String((e as NodeJS.ErrnoException).code ?? (e as Error).message);
+            if (dir) fs.writeFileSync(`${dir}.last-error`, `${new Date().toISOString()} ${code}\n`, { flag: TRUNC_NOFOLLOW });
         } catch {
             // Nowhere to record it either; the session is still never failed.
         }
@@ -125,5 +135,9 @@ export function processEnvelope(raw: string, env: NodeJS.ProcessEnv = process.en
 }
 
 export function main(): number {
-    return processEnvelope(readHookStdin());
+    try {
+        return processEnvelope(readHookStdin());
+    } catch {
+        return EXIT_ALLOW;
+    }
 }

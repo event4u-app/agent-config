@@ -14,7 +14,8 @@ import { captureInstructionsLoaded, type CaptureLine } from './instructions_load
 export const LOAD_REASONS = ['session_start', 'nested_traversal', 'path_glob_match', 'include', 'compact'] as const;
 export type LoadReason = (typeof LOAD_REASONS)[number];
 
-export type UnknownWhy = 'malformed' | 'event-mismatch' | 'no-file-path' | 'unknown-load-reason';
+/** A payload that is not an object at all carries no session and is never written, so it has no reason here. */
+export type UnknownWhy = 'event-mismatch' | 'no-file-path' | 'unknown-load-reason';
 
 interface LineBase {
     readonly v: 1;
@@ -58,7 +59,6 @@ export function classifyCapture(c: CaptureLine): ObserverLine {
         launch: c.launch !== null && /^[a-z][a-z0-9-]{0,31}$/.test(c.launch) ? c.launch : null,
     };
     const unknown = (why: UnknownWhy): UnknownLine => ({ ...base, event: 'unknown', why });
-    if (!c.ok) return unknown('malformed');
     if (c.name !== 'InstructionsLoaded') return unknown('event-mismatch');
     if (c.file === null || !c.file.endsWith('.md')) return unknown('no-file-path');
     if (!(LOAD_REASONS as readonly (string | null)[]).includes(c.reason)) return unknown('unknown-load-reason');
