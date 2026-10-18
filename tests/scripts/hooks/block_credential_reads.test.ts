@@ -9,7 +9,7 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { credentialFileClass, segmentVerdict } from '../../../src/scripts/_lib/credential_files.js';
+import { _setBackslashSeparatesForTest, credentialFileClass, segmentVerdict } from '../../../src/scripts/_lib/credential_files.js';
 import { denyMessage, KILL_SWITCH, main, verdictFor } from '../../../src/scripts/hooks/block_credential_reads.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../../src/scripts/hooks/hook_stdin.js';
 import { emitFor, isBlockCapable } from '../../../src/scripts/hooks/host_semantics.js';
@@ -25,6 +25,7 @@ function run(tool: string, input: Record<string, string>): number {
 
 afterEach(() => {
     delete process.env[KILL_SWITCH];
+    _setBackslashSeparatesForTest(null);
 });
 
 // One red and one green path per class: the green is the nearest legitimate neighbour.
@@ -182,6 +183,26 @@ describe('the tool and command surface', () => {
         for (const cmd of ["cat .e''nv.example", 'cat notes\\.txt', 'cat ".e\\nv"', "cat '.e\\nv'", 'cat ".e\'nv"']) {
             expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(0);
         }
+    });
+
+    it('reads a backslash as a separator only where the host or the path syntax makes it one (council round 4c, seventh pass)', () => {
+        // On a POSIX host a backslash the shell keeps is a filename character:
+        // `dir\.env` is one file, not `.env` in `dir`.
+        _setBackslashSeparatesForTest(false);
+        for (const cmd of ["cat 'dir\\.env'", 'cat "dir\\.env"', "cat '.ssh\\id_rsa'"]) {
+            expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(0);
+        }
+        expect(run('Read', { file_path: 'dir\\.env' })).toBe(0);
+        // A drive-letter or UNC path is a Windows path whatever the host.
+        for (const cmd of ['cat "C:\\Users\\someone\\project\\.env"', "cat '\\\\server\\share\\.env'"]) {
+            expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(1);
+        }
+        // On a Windows host every backslash separates.
+        _setBackslashSeparatesForTest(true);
+        for (const cmd of ["cat 'dir\\.env'", 'cat "dir\\.env"', "cat '.ssh\\id_rsa'"]) {
+            expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(1);
+        }
+        expect(run('Read', { file_path: 'dir\\.env' })).toBe(1);
     });
 
     it('a .pem counts only when a name token says key, and only an absolute /proc path is the environment', () => {

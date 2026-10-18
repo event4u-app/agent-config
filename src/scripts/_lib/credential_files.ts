@@ -68,9 +68,28 @@ const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> = 
 
 const PROC_ENVIRON = /^\/proc\/[^/]+\/environ$/;
 
+/**
+ * Whether a backslash separates path segments. On Windows it does; on a POSIX
+ * host a backslash the shell keeps is a filename character (`'dir\.env'` is one
+ * file), so reading it as a separator there refuses a file that is not a
+ * credential file. A drive-letter or UNC path is read as a Windows path on any
+ * host: its syntax says what it is.
+ */
+let backslashSeparates = process.platform === 'win32';
+const WINDOWS_PATH = /^(?:[A-Za-z]:\\|\\\\)/;
+
+/** Test seam: force the host's backslash reading, or `null` to restore it. */
+export function _setBackslashSeparatesForTest(value: boolean | null): void {
+    backslashSeparates = value ?? process.platform === 'win32';
+}
+
+function separated(p: string): string {
+    return backslashSeparates || WINDOWS_PATH.test(p) ? p.replace(/\\/g, '/') : p;
+}
+
 /** The credential class of a path, or null. Decided from the path alone. */
 export function credentialFileClass(rawPath: string): CredentialFileClass | null {
-    const trimmed = rawPath.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    const trimmed = separated(rawPath.trim()).replace(/\/+$/, '');
     if (trimmed === '') return null;
     // `.` and `..` segments resolved, so `/proc/self/../self/environ` is the file it names.
     const p = path.posix.normalize(trimmed);
@@ -183,16 +202,17 @@ const base = (w: string): string => w.replace(/^.*\//, '');
  * a path cannot hold unquoted — whitespace, quotes, redirections, pipes,
  * separators, parentheses, `=`, `,`, backticks — so `cat<.env`, `--config=.env`
  * and `<(cat .env)` all expose the path, and an attached short option
- * (`xargs -a.env`) is read both whole and without its `-x` prefix. Backslashes
- * read as separators, so a Windows path is a path.
+ * (`xargs -a.env`) is read both whole and without its `-x` prefix. A Windows
+ * path is a path: `credentialFileClass` reads its backslashes as separators.
  */
 export function credentialMention(text: string): Verdict {
     // Two readings of one segment, because neither alone matches the shell: the
-    // raw text with backslashes as path separators (a Windows path, an attached
-    // `cat<.env`), and each word the shell would build — quotes joined, escapes
-    // applied only where the shell applies them (`cat .e''nv`, an unquoted
-    // `cat .e\nv`) — each cut at the same characters.
-    const readings = [text.replace(/\\/g, '/'), ...commandWords(text)];
+    // raw text (a Windows path, an attached `cat<.env`), and each word the shell
+    // would build — quotes joined, escapes applied only where the shell applies
+    // them (`cat .e''nv`, an unquoted `cat .e\nv`) — each cut at the same
+    // characters. Whether a backslash separates is the path's decision, not the
+    // reading's (see `separated`).
+    const readings = [text, ...commandWords(text)];
     for (const reading of readings) {
         const v = mentionIn(reading);
         if (v !== null) return v;
@@ -215,7 +235,7 @@ function mentionIn(text: string): Verdict {
 /** The first credential path among words the shell already built — judged as data, never re-parsed. */
 function credentialAmong(words: readonly string[]): Verdict {
     for (const w of words) {
-        const v = mentionIn(w) ?? mentionIn(w.replace(/\\/g, '/'));
+        const v = mentionIn(w);
         if (v !== null) return v;
     }
     return null;
