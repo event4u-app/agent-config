@@ -38,6 +38,7 @@ import {
     stageRuntime,
     type LayerState,
 } from '../../src/install/stagedRuntime.js';
+import { readUserPin } from '../../src/install/userPin.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MATRIX = build_claude_hook_matrix(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'));
@@ -188,6 +189,18 @@ describe('the install-time decision', () => {
         expect(plan.thin).toBe(false);
         expect(readCarrierState(runtimeRoot()).layer).toBe('full');
         expect(plan.lines[0]).toContain('NOT reached');
+    });
+
+    it('install --full pins the layer full on a reached carrier, and the pin is sticky (setup roadmap 3.5)', () => {
+        const pkg = fixturePackage(path.join(tmp, 'pkg'), true);
+        const opts = { packageRoot: pkg, rulesDir: layer, sessionStartCommand: MATRIX['SessionStart'] as string, wantsThin: true, env: env() };
+        const pinned = prepareClaudeCarrier({ ...opts, userPin: true });
+        expect(pinned.thin).toBe(false);
+        expect(pinned.lines.join('\n')).toContain('pinned full by `install --full`');
+        expect(readUserPin(runtimeRoot())).not.toBeNull();
+        recordCarrierProbe(runtimeRoot(), 'claude', 'reached', '9.9.9');
+        expect(readUserPin(runtimeRoot()), 'a probe rewrite keeps the pin').not.toBeNull();
+        expect(prepareClaudeCarrier(opts).thin, 'a later plain install keeps the pin').toBe(false);
     });
 });
 

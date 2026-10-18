@@ -28,7 +28,7 @@ import process from 'node:process';
 import { parse as parseYaml } from 'yaml';
 
 import { inheritedGitOverrides } from './repo_root.js';
-import { layerFormDoctorCheck } from './layer_form_decision.js';
+import { layerFormDoctorCheck } from './layer_form_evidence.js';
 import {
     checkHostPermissionSettings,
     defaultHostPermissionDeps,
