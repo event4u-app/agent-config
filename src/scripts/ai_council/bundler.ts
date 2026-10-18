@@ -90,7 +90,9 @@ const _REDACTION_LINE_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
     [/(api[_-]?key|secret|token|password)\s*[:=]/iu, '[redacted: secret-like assignment]'],
     [rawKeyPrefixPattern(8, prefixesOf('anthropic-api-key')), '[redacted: anthropic-key-like token]'],
     [
-        rawKeyPrefixPattern(20, [...prefixesOf('openai-api-key'), ...prefixesOf('anthropic-project-key')]),
+        rawKeyPrefixPattern(20, [...prefixesOf('openai-api-key'), ...prefixesOf('anthropic-project-key')], {
+            boundary: 'never',
+        }),
         '[redacted: openai-key-like token]',
     ],
 ];

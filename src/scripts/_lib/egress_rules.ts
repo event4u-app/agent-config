@@ -103,6 +103,19 @@ export function pemBlockEnd(text: string, span: SpanBounds): number | null {
     return m.index + m[0].length;
 }
 
+/**
+ * End of the first key-end marker of any label after the header, or null. For a
+ * masking surface that cannot refuse: when the block's extent is unproven it
+ * masks too much rather than leaving the key body behind.
+ */
+export function pemMaskEnd(text: string, span: SpanBounds): number | null {
+    KEY_MARKER.lastIndex = span.end;
+    for (let m = KEY_MARKER.exec(text); m !== null; m = KEY_MARKER.exec(text)) {
+        if (m[1] === 'END') return m.index + m[0].length;
+    }
+    return null;
+}
+
 const PREFIX_RUN =
     'Starts only where the literal prefix occurs; the single class after it either reaches its minimum and consumes the whole run (the global scan resumes past it) or fails within the minimum, so each character is read a bounded number of times.';
 const FIXED_RUN =
@@ -306,17 +319,32 @@ export function vendorPrefix(rule: string): string {
     return first;
 }
 
+// A prefix is held to a token start only where its own row is; a prefix whose
+// row matches mid-word stays unanchored, so a shape-only surface never misses
+// what the row would catch.
+const ANCHORED_PREFIXES: ReadonlySet<string> = new Set(
+    EGRESS_RULES.filter((r) => r.pattern.source.startsWith('(?<!')).flatMap((r) => r.prefixes ?? []),
+);
+
 /**
- * A raw-key prefix at a token start followed by at least `minTail` key
- * characters. Coarser than the rows on purpose: it is for surfaces that refuse or
- * mask on shape alone, where a short or truncated key must still be caught.
+ * A raw-key prefix followed by at least `minTail` key characters. Coarser than
+ * the rows on purpose: it is for surfaces that refuse or mask on shape alone,
+ * where a short or truncated key must still be caught. `boundary: 'never'` drops
+ * the token-start requirement for every prefix; `tail` narrows the key class.
  */
-export function rawKeyPrefixPattern(minTail: number, prefixes: readonly string[] = CREDENTIAL_PREFIXES): RegExp {
+export function rawKeyPrefixPattern(
+    minTail: number,
+    prefixes: readonly string[] = CREDENTIAL_PREFIXES,
+    opts: { readonly boundary?: 'row' | 'never'; readonly tail?: string } = {},
+): RegExp {
     const alt = [...prefixes]
         .sort((a, b) => b.length - a.length)
-        .map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+        .map((p) => {
+            const lit = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return opts.boundary !== 'never' && ANCHORED_PREFIXES.has(p) ? `(?<![A-Za-z0-9])${lit}` : lit;
+        })
         .join('|');
-    return new RegExp(`(?<![A-Za-z0-9])(?:${alt})[A-Za-z0-9_-]{${minTail},}`, 'g');
+    return new RegExp(`(?:${alt})[${opts.tail ?? 'A-Za-z0-9_-'}]{${minTail},}`, 'g');
 }
 
 /**

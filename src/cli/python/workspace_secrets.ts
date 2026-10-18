@@ -29,7 +29,15 @@
  * two surfaces stay byte-consistent.
  */
 
-import { detect, EGRESS_RULES, type EgressRule, replacementEnd } from '../../scripts/_lib/egress_rules.js';
+import {
+    detect,
+    EGRESS_RULES,
+    type EgressRule,
+    pemMaskEnd,
+    prefixesOf,
+    rawKeyPrefixPattern,
+    replacementEnd,
+} from '../../scripts/_lib/egress_rules.js';
 
 export const PLACEHOLDER = '[SECRET]';
 
@@ -60,16 +68,47 @@ const rank = (name: string): number => {
     return i < 0 ? LEGACY_ORDER.length : i;
 };
 
+// This module's own, looser readings of two shapes, kept so the move to the
+// table narrows nothing: the GitHub token family at any length and an OpenAI key
+// glued to a preceding word. The prefixes are the table's.
+const OWN_SHAPES: ReadonlyArray<readonly [string, RegExp]> = [
+    [
+        'github_pat',
+        rawKeyPrefixPattern(36, [...prefixesOf('github-pat'), ...prefixesOf('github-app-token')], {
+            boundary: 'never',
+            tail: 'A-Za-z0-9',
+        }),
+    ],
+    ['openai_key', rawKeyPrefixPattern(20, prefixesOf('openai-api-key'), { boundary: 'never', tail: 'A-Za-z0-9' })],
+];
+
+type Span = { name: string; start: number; end: number };
+
 /** HIGH spans in report order, each widened to the bytes a scrub must remove. */
-function highSpans(text: string): Array<{ name: string; start: number; end: number }> {
-    return detect(text, HIGH_RULES)
-        .map((s) => ({
-            name: LEGACY_NAME[s.rule] ?? s.rule,
-            start: s.start,
-            // A masking surface cannot refuse; an unproven extent masks the detection span.
-            end: replacementEnd(text, s) ?? s.end,
-        }))
-        .sort((x, y) => rank(x.name) - rank(y.name) || x.start - y.start);
+function highSpans(text: string): Span[] {
+    const spans: Span[] = detect(text, HIGH_RULES).map((s) => ({
+        name: LEGACY_NAME[s.rule] ?? s.rule,
+        start: s.start,
+        // A masking surface cannot refuse; an unproven extent masks through the
+        // nearest key-end marker, else the detection span.
+        end: replacementEnd(text, s) ?? (s.rule === 'pem-private-key' ? pemMaskEnd(text, s) : null) ?? s.end,
+    }));
+    for (const [name, re] of OWN_SHAPES) {
+        for (const m of text.matchAll(re)) spans.push({ name, start: m.index, end: m.index + m[0].length });
+    }
+    // One finding per value: a span inside another span of the same name is that span.
+    const kept = spans.filter(
+        (a, i) =>
+            !spans.some(
+                (b, j) =>
+                    j !== i &&
+                    b.name === a.name &&
+                    b.start <= a.start &&
+                    b.end >= a.end &&
+                    (b.end - b.start > a.end - a.start || j < i),
+            ),
+    );
+    return kept.sort((x, y) => rank(x.name) - rank(y.name) || x.start - y.start);
 }
 
 // --- FUZZY pattern (heuristic key/value assignment) -------------------------
