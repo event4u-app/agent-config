@@ -350,7 +350,7 @@ no font; it runs a pinned toolchain in the consumer's environment.
       (`typography-system`), making a logo (`logo-generation`), tracing an icon
       (`svg-authoring`), an icon font (`iconography`).
       verify: `./scripts-run src/scripts/lint_new_skill_gate` -> 0
-      Done 2026-10-18: `evals/triggers.json`, 6 exemplars and 5 near-misses naming the four neighbours; the gate cleared it against origin/main.
+      Done 2026-10-18: `evals/triggers.json`, 6 exemplars, 5 near-misses naming the four neighbours and 1 counterexample; the gate cleared it against origin/main.
 - [x] **4.14 Route it in.** `logo-generation`, `brand-identity` and
       `svg-authoring` hand "the rest of the alphabet / make this a font" to
       `type-design`. `typography-system` gains a `custom` source beside its CSV

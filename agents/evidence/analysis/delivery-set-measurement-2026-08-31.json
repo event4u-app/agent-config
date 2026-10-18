@@ -18,7 +18,7 @@
     "token_target": 500
   },
   "metrics": {
-    "precision_at_k": 80.995,
+    "precision_at_k": 80.813,
     "recall_at_k": 59.766,
     "recall_loss_pp": 40.234,
     "ceiling_met": false,
@@ -29,14 +29,14 @@
       "10": 68.781,
       "20": 75.793
     },
-    "false_activation_at_k": 14.609,
+    "false_activation_at_k": 14.757,
     "context_cost_tokens": 229.7,
     "token_target_met": true,
     "benefit_unconditional": 59.766,
-    "benefit_conditional_on_activation": 80.995,
-    "adjudicated_deliveries": 442,
-    "unadjudicated_deliveries": 4971,
-    "tie_decided_cut_pp": 80.328
+    "benefit_conditional_on_activation": 80.813,
+    "adjudicated_deliveries": 443,
+    "unadjudicated_deliveries": 4975,
+    "tie_decided_cut_pp": 80.345
   },
   "set_compatibility": {
     "shared_prompts": 14,
@@ -137,7 +137,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 1174,
-    "prompts": 1159
+    "cases": 1175,
+    "prompts": 1160
   }
 }

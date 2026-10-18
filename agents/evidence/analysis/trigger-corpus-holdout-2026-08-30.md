@@ -656,9 +656,10 @@ RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
 ```
 
 **What changed.** `road-to-type-with-a-witness` Phase 4 added the `type-design`
-skill with its own corpus: **11** labelled queries — 6 exemplars of which one is
+skill with its own corpus: **12** labelled queries — 6 exemplars of which one is
 German, 5 near-misses naming `typography-system` (twice), `logo-generation`,
-`svg-authoring` and `iconography`. The four neighbours whose bodies gained a
+`svg-authoring` and `iconography`, and 1 counterexample (a build failure that
+names a font file). The four neighbours whose bodies gained a
 pointer to it already carried a corpus, and none of those files was edited.
 
 | Row | Partition | `sha256(name)[0:2]` | Bucket |
@@ -667,13 +668,13 @@ pointer to it already carried a corpus, and none of those files was edited.
 
 **Both train-side measurements were re-taken, after the skill edits.**
 `routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
-on the false-activation guard — false activation 6.14 -> **5.91 pp** against the
+on the false-activation guard — false activation 6.14 -> **5.73 pp** against the
 +2.0 pp guard, delta-recall 3.204 -> **3.67 pp** (still below the 5.0 pp bar),
 McNemar p 0.1808 -> **0.1214**, train corpora 121 -> **122**, cases 1163 ->
-**1174**, catalogue 300 -> **301**. `delivery-set-measurement-2026-08-31.json`:
-precision@5 81.264 -> **81.00 %**, recall@5 60.708 -> **59.77 %**, recall loss
+**1175**, catalogue 300 -> **301**. `delivery-set-measurement-2026-08-31.json`:
+precision@5 81.264 -> **80.81 %**, recall@5 60.708 -> **59.77 %**, recall loss
 39.292 -> **40.23 pp** — the ceiling stays **BREACHED** — false activation@5
-14.561 -> **14.61 %**, context cost 229.9 -> **229.7** tokens against the 500
+14.561 -> **14.76 %**, context cost 229.9 -> **229.7** tokens against the 500
 target, still **MET**. One new jointly-wrong pair appears in the set-compatibility
 list, `{svg-authoring, type-design}` on the logo near-miss both corpora share,
 and it is never delivered together at k ≤ 20. Neither verdict changes in kind.
@@ -684,7 +685,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  99ede20a933f8aa72cda7e962d5eaff6a70698a82109d52023d3044ca78f2593
+SET-SHA256  b46f135552f477c6075a96c149733457c12dc91e70a571518ed8f268cbeded67
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1164,7 +1165,7 @@ open and which this file does not settle.
 | `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
-| `type-design` | `9c974247ed5c815ebc17c1af49c7b4716dfeb0d201921122797ada6fe7ca8948` |
+| `type-design` | `2e30ad32983f9d007c4f2fc0502d68b518a58ae9ac3a54a898fa09bfda2299a9` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
