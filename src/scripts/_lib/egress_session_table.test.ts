@@ -37,7 +37,6 @@ const IBAN_RULE: EgressRule = {
     type: 'IBAN',
     class: 'identifier',
     pattern: /\bDE\d{20}\b/g,
-    linearity: 'fixed-width digit run',
     replacement: 'detection',
 };
 const RULES = [IBAN_RULE];
