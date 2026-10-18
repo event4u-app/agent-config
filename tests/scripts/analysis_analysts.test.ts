@@ -12,9 +12,11 @@ import {
     planAnalysts,
     readExternalDrops,
     roundViolations,
+    cliAnalystCommand,
     stampOutput,
     type AnalystOutput,
 } from '../../src/scripts/analysis_analysts.js';
+import { AGENCY_BYPASS_FLAGS, ANALYST_BOUNDS, analystBoundFor, boundFor } from '../../src/scripts/ai_council/cli_agency_bounds.js';
 
 let root: string;
 
@@ -169,5 +171,64 @@ describe('handoff-v1 drops', () => {
     it('requires phase, loop and pin', () => {
         expect(() => parseHandoff(handoff({ handoff: 'v1', phase: 'seed', pin: 'p' }), 'x.md')).toThrow(/loop/);
         expect(() => parseHandoff(handoff({ handoff: 'v1', phase: 'later', loop: '1', pin: 'p' }), 'x.md')).toThrow(/phase/);
+    });
+});
+
+describe('cli analysts (step 2.4b)', () => {
+    const cli = (family: string | undefined) =>
+        stampOutput({
+            analyst_id: `cli:${family ?? 'x'}`,
+            mode: 'cli',
+            hostFamily: 'anthropic',
+            family,
+            phase: 'seed',
+            brief: BRIEF,
+            body: 'x',
+            consulted: [],
+        });
+
+    it('stamps a cli analyst of another provider cross-family', () => {
+        const out = cli('openai');
+        expect(out.family).toBe('openai');
+        expect(out.review_independence).toBe('cross-family');
+        expect(out.context_relation).toBe('fresh');
+    });
+
+    it('stamps a cli analyst of the host provider same-family, never cross-family', () => {
+        expect(cli('anthropic').review_independence).toBe('same-family');
+    });
+
+    it('refuses a cli analyst without a known provider family', () => {
+        expect(() => cli(undefined)).toThrow(AnalystError);
+        expect(() => cli('someone')).toThrow(AnalystError);
+    });
+
+    it('builds the analyst argv from the read-only analyst profile, not the seat bound', () => {
+        const cmd = cliAnalystCommand('anthropic');
+        expect(cmd.binary).toBe('claude');
+        expect(cmd.argv).toEqual(analystBoundFor('anthropic'));
+        expect(cmd.argv).not.toEqual(boundFor('anthropic'));
+        expect(cmd.promptVia).toBe('stdin');
+    });
+
+    it('refuses a member whose analyst profile was never probed or failed its probe', () => {
+        expect(() => cliAnalystCommand('gemini')).toThrow(/no probed read-only analyst profile/);
+        expect(() => cliAnalystCommand('xai')).toThrow(/no probed read-only analyst profile/);
+        expect(() => cliAnalystCommand('nobody')).toThrow(/no probed read-only analyst profile/);
+    });
+
+    it('never puts a bypass flag in an analyst profile and records the probe behind every bound', () => {
+        for (const b of ANALYST_BOUNDS) {
+            for (const flag of b.bound) expect(AGENCY_BYPASS_FLAGS).not.toContain(flag);
+            if (b.bound.length > 0) {
+                expect(b.probed_version).not.toBeNull();
+                expect(b.probed_on).not.toBeNull();
+            }
+        }
+    });
+
+    it('leaves the seat bound untouched (seat doctrine unchanged)', () => {
+        expect(boundFor('anthropic')).toEqual(['--tools', '']);
+        expect(boundFor('openai')).toEqual(['--sandbox', 'read-only']);
     });
 });
