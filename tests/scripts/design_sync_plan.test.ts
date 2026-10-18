@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { importClaudeDesignSnapshot } from '../../src/scripts/_lib/design_system_claude_design.js';
-import type { DesignSystem } from '../../src/scripts/_lib/design_system_import.js';
+import type { ComponentObservation, DesignSystem } from '../../src/scripts/_lib/design_system_import.js';
 import { planCounts, planLedger, readBaseAtCommit } from '../../src/scripts/_lib/design_sync_plan.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -102,7 +102,7 @@ describe('snapshot is data', () => {
 });
 
 describe('counts', () => {
-    const comp = (name: string) => ({ name, observed: { props: ['a'] } }) as const;
+    const comp = (name: string): ComponentObservation => ({ name, observed: { props: ['a'] } });
     it('counts: two remote-only components (one colliding) and one conflicting token → overwrite 2, twin 1', () => {
         const base = ds({ primary: '#111' });
         const code: DesignSystem = { ...ds({ primary: '#222' }), components: [comp('Button')], _meta: { component_paths: { Button: 'components/Button.tsx' } } };
