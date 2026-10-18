@@ -4,6 +4,8 @@
      verdict beside it can be checked against what was actually asked
      (evaluator-independence: a recorded verdict whose prompt is not
      recoverable is not evidence). Not edited after the run. -->
+<!-- check-refs: skip -->
+<!-- The prompt names agents/roadmaps/OWNED.md, the location the council moved; the skip keeps the prompt verbatim. -->
 
 # A digest of what each roadmap owns: budget, row set, and where it lives
 
