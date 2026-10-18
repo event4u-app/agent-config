@@ -41,6 +41,7 @@ export const EGRESS_STAGE_KILL_SWITCH = "AGENT_CONFIG_NO_EGRESS_STAGE";
  */
 export const EXECUTION_VIEW_GRANTS: ReadonlyMap<string, string> = new Map([
   ["block-config-weakening", "src/scripts/hooks/block_config_weakening.ts"],
+  ["block-credential-reads", "src/scripts/hooks/block_credential_reads.ts"],
   ["block-kernel-rule-writes", "src/scripts/hooks/block_kernel_rule_writes.ts"],
   ["block-no-verify", "src/scripts/hooks/block_no_verify.ts"],
   ["block-plumbing-writes", "src/scripts/hooks/block_plumbing_writes.ts"],

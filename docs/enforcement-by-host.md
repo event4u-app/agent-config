@@ -302,17 +302,19 @@ Projected from `src/scripts/hook_manifest.yaml` (declared severity) and `src/scr
 
 The manifest declares what a concern is *meant* to do; the lowering table records what the host slot it is bound on *can* do. A `blocking` concern on a slot that cannot refuse still runs and still warns — it is not silent, and it is not a refusal either. These columns say which.
 
-**20 binding(s) declare `blocking`: 8 refuse, 6 run and warn on a slot verified unable to refuse, 6 sit on a slot with no lowering row, 0 sit on a slot whose proof has lapsed.**
+**23 binding(s) declare `blocking`: 9 refuse, 7 run and warn on a slot verified unable to refuse, 7 sit on a slot with no lowering row, 0 sit on a slot whose proof has lapsed.**
 
 | Host | Slot | Concern | Declared severity | Verified enforcement | What that means |
 |---|---|---|---|---|---|
 | `augment` | `pre_tool_use` | `block-config-weakening` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
+| `augment` | `pre_tool_use` | `block-credential-reads` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
 | `augment` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
 | `augment` | `pre_tool_use` | `block-no-verify` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
 | `augment` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
 | `augment` | `pre_tool_use` | `block-speaking-inbox-dir` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
 | `augment` | `pre_tool_use` | `evidence-independence` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
 | `claude` | `pre_tool_use` | `block-config-weakening` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
+| `claude` | `pre_tool_use` | `block-credential-reads` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
 | `claude` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
 | `claude` | `pre_tool_use` | `block-no-verify` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
 | `claude` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
@@ -321,6 +323,7 @@ The manifest declares what a concern is *meant* to do; the lowering table record
 | `claude` | `pre_tool_use` | `one-question-per-ask` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
 | `claude` | `stop` | `turn-end-gate` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
 | `cowork` | `pre_tool_use` | `block-config-weakening` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
+| `cowork` | `pre_tool_use` | `block-credential-reads` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
 | `cowork` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
 | `cowork` | `pre_tool_use` | `block-no-verify` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
 | `cowork` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `unverified` | no lowering row for this slot — nothing is bound natively, and nothing is established |
