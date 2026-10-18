@@ -31,7 +31,7 @@ below; then the test case names):
    a hook that waits on another hook can stall a session.
 3. (c) Shown in full below. Test names listed below (28 cases, all green;
    two new ones seen red before the fix).
-4. (d) One exported `isSessionFile` rule used by both.
+4. (d) One exported `isSessionFile` rule used by both. <!-- ref-ignore -->
 5. (e) Not changed. The `rules`/`user` booleans only label a load as a
    user-layer rule; the host documents `file_path` as the absolute path of
    the loaded file, and a host that lied about it could equally lie about
