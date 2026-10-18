@@ -536,8 +536,30 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
                 expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(true);
             }
             expect(isCategoryA('Read', { file_path: path.join(tree, 'inner', 'a.ts') }, tree)).toBe(true);
+            expect(isCategoryA('Bash', { command: 'cat src/missing/new.txt' }, tree)).toBe(true);
         } finally {
             fs.rmSync(base, { recursive: true, force: true });
+        }
+    });
+
+    it('bash-path-confinement: a symlink that cannot be resolved is not inside', () => {
+        // Council review 2026-10-18, round 3: a resolution failure other than
+        // a missing suffix must withhold, never fall back to the lexical answer.
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'cat-a-'));
+        const locked = path.join(tree, 'locked');
+        try {
+            fs.symlinkSync('loop', path.join(tree, 'loop'));
+            fs.mkdirSync(path.join(locked, 'sub'), { recursive: true });
+            fs.chmodSync(locked, 0o000);
+            // root reads through mode 000, so the EACCES row needs a non-root user.
+            const rows = ['cat loop', 'cat loop/x', ...(process.getuid?.() === 0 ? [] : ['cat locked/sub/x'])];
+            for (const cmd of rows) {
+                expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(false);
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'loop') }, tree)).toBe(false);
+        } finally {
+            fs.chmodSync(locked, 0o755);
+            fs.rmSync(tree, { recursive: true, force: true });
         }
     });
 });

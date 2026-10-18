@@ -155,9 +155,13 @@ export function isInsideWorkingTree(candidate: string, root: string): boolean {
 function _real(p: string): string {
     try {
         return fs.realpathSync(p);
-    } catch {
+    } catch (e) {
+        const code = (e as NodeJS.ErrnoException).code;
+        if (code !== "ENOENT" && code !== "ENOTDIR") return "";
         const parent = path.dirname(p);
-        return parent === p ? p : path.join(_real(parent), path.basename(p));
+        if (parent === p) return p;
+        const up = _real(parent);
+        return up && path.join(up, path.basename(p));
     }
 }
 
@@ -166,7 +170,10 @@ function _real(p: string): string {
  *
  * The one place the classifier reads the filesystem, and it can only withhold:
  * an in-tree symlink to `~/.ssh` is lexically inside and really outside. A
- * path that does not exist keeps its lexical answer.
+ * missing suffix keeps its lexical answer; any other resolution failure
+ * (`EACCES`, `ELOOP`) resolves to `""`, which is never inside. The check runs
+ * before the command does, so a link swapped in between is not seen — the
+ * OS sandbox is the boundary, this is a guardrail.
  */
 function _reallyInside(candidate: string, root: string): boolean {
     if (!isInsideWorkingTree(candidate, root)) return false;
@@ -239,7 +246,7 @@ function _gitSubcommandAt(argv: readonly string[]): { sub: string; index: number
  * a filter flag.
  */
 const GIT_BRANCH_OBSERVES =
-    /^(-[arlvi]+|--(all|remotes|list|verbose|show-current|ignore-case|(no-)?colou?r|(no-)?column|omit-empty)(=.*)?)$/;
+    /^(-[arlvi]+|--(all|remotes|list|verbose|show-current|(no-)?color)(=.*)?)$/;
 const GIT_BRANCH_FILTER = /^--((no-)?(contains|merged)|points-at|sort|format|abbrev)(=|$)/;
 
 function _gitBranchOnlyObserves(argv: readonly string[], index: number): boolean {
