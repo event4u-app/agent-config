@@ -102,7 +102,7 @@
         "prepublishOnly": "./scripts-run src/scripts/check_release_includes_discovery",
         "prepare": "[ -d .git ] && bash src/scripts/install-hooks.sh || true",
         "build:skill-scripts": "esbuild src/skills/corpus-grounding/scripts/ground.ts src/skills/design-tokens/scripts/tokens.ts src/skills/js-library-packaging/scripts/check_package_surface.ts src/skills/react-shadcn-ui/scripts/shadcn_add.ts src/skills/storybook-workshop/scripts/story_contrast_floor.ts src/skills/tailwind-engineer/scripts/tailwind_config_gen.ts --bundle --platform=node --format=esm --target=node20 --outbase=src/skills --outdir=src/skills --out-extension:.js=.mjs",
-        "build:hook-chunks": "esbuild src/scripts/_lib/svg_rules.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/svg_rules.chunk.cjs && node src/scripts/write_bundle_digest.mjs dist/hooks/svg_rules.chunk.cjs"
+        "build:hook-chunks": "esbuild src/scripts/_lib/svg_rules.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/svg_rules.chunk.cjs && node src/scripts/write_bundle_digest.mjs dist/hooks/svg_rules.chunk.cjs && esbuild src/scripts/_lib/egress_engine.ts --bundle --platform=node --format=cjs --target=node20 --outfile=dist/hooks/egress_engine.chunk.cjs && node src/scripts/write_bundle_digest.mjs dist/hooks/egress_engine.chunk.cjs"
     },
     "publishConfig": {
         "access": "public",

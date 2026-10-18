@@ -151,6 +151,116 @@ export function analyzeMetafile(json: string): Analysis {
     };
 }
 
+/** A conditional chunk's own ceiling: the bytes `build:hook-chunks` emits for `entry`. */
+export interface ChunkBudget {
+    readonly entry: string;
+    readonly maxBytes: number;
+}
+
+/**
+ * The chunk ceilings, from the budget's optional `chunks` list. A chunk moves
+ * bytes out of the dispatch bundle; without a ceiling of its own it would only
+ * move uncontrolled growth somewhere nobody measures (council 2026-10-18).
+ */
+export function readChunkBudgets(root: string): ChunkBudget[] {
+    const raw = JSON.parse(fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')) as Record<string, unknown>;
+    const list = raw['chunks'];
+    if (list === undefined) return [];
+    if (!Array.isArray(list)) throw new Error(`${BUDGET_REL}: chunks must be a list`);
+    return list.map((c, i) => {
+        const entry = isRecord(c) ? c['entry'] : undefined;
+        const max = isRecord(c) ? c['max_bytes'] : undefined;
+        if (typeof entry !== 'string' || typeof max !== 'number' || !Number.isInteger(max) || max <= 0) {
+            throw new Error(`${BUDGET_REL}: chunks[${String(i)}] needs a string entry and a positive integer max_bytes`);
+        }
+        return { entry, maxBytes: max };
+    });
+}
+
+/**
+ * Build the chunk for `entry` with the exact esbuild segment `build:hook-chunks`
+ * uses for it, to a throwaway path, and return its size. Throws when the script
+ * carries no segment for the entry — a ceiling on a chunk nothing builds bounds
+ * nothing.
+ */
+export function buildChunkBytes(root: string, entry: string): number {
+    const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')) as { scripts?: Record<string, string> };
+    const script = pkg.scripts?.['build:hook-chunks'] ?? '';
+    const segment = script
+        .split('&&')
+        .map((x) => x.trim())
+        .find((x) => x.startsWith('esbuild ') && x.split(/\s+/).includes(entry));
+    if (segment === undefined) throw new Error(`\`build:hook-chunks\` builds no chunk from ${entry}`);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-chunk-composition-'));
+    const out = path.join(dir, 'chunk.cjs');
+    try {
+        const cmd = segment.replace(/--outfile=\S+/, `--outfile=${out}`);
+        const built = spawnSync('sh', ['-c', cmd], {
+            cwd: root,
+            encoding: 'utf-8',
+            env: { ...process.env, PATH: `${path.join(root, 'node_modules', '.bin')}:${process.env['PATH'] ?? ''}` },
+        });
+        if (built.status !== 0 || !fs.existsSync(out)) {
+            throw new Error(`esbuild failed for chunk ${entry} (exit ${String(built.status)})\n${built.stderr ?? ''}`);
+        }
+        return fs.statSync(out).size;
+    } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+    }
+}
+
+/** Over-ceiling findings for measured chunks. */
+export function chunkFindings(measured: ReadonlyMap<string, number>, budgets: readonly ChunkBudget[]): string[] {
+    const out: string[] = [];
+    for (const b of budgets) {
+        const bytes = measured.get(b.entry);
+        if (bytes === undefined) out.push(`chunk ${b.entry} was not measured`);
+        else if (bytes > b.maxBytes) {
+            out.push(
+                `chunk ${b.entry} is ${String(bytes)} bytes, ceiling is ${String(b.maxBytes)} ` +
+                    `(over by ${String(bytes - b.maxBytes)}). Shrink it, or raise its max_bytes in ${BUDGET_REL} ` +
+                    'WITH a raise_log entry naming the chunk and what was added.',
+            );
+        }
+    }
+    return out;
+}
+
+/**
+ * A chunk ceiling raised against the base revision needs a new raise_log entry
+ * whose `chunk` is the entry and whose `to` is the new ceiling — the main
+ * ceiling's rule, applied per chunk.
+ */
+export function chunkRaiseFindings(baseRaw: string | null, workingRaw: string): string[] {
+    if (baseRaw === null) return [];
+    const base = JSON.parse(baseRaw) as Record<string, unknown>;
+    const working = JSON.parse(workingRaw) as Record<string, unknown>;
+    const ceilings = (raw: Record<string, unknown>): Map<string, number> =>
+        new Map(
+            (Array.isArray(raw['chunks']) ? (raw['chunks'] as unknown[]) : [])
+                .filter(isRecord)
+                .map((c) => [String(c['entry']), Number(c['max_bytes'])]),
+        );
+    const before = ceilings(base);
+    const seen = new Set((Array.isArray(base['raise_log']) ? (base['raise_log'] as unknown[]) : []).map((e) => JSON.stringify(e)));
+    const gained = (Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : []).filter(
+        (e) => !seen.has(JSON.stringify(e)),
+    );
+    const out: string[] = [];
+    for (const [entry, to] of ceilings(working)) {
+        const from = before.get(entry);
+        if (from === undefined || to <= from) continue;
+        const logged = gained.find((e) => isRecord(e) && e['chunk'] === entry && e['to'] === to);
+        if (logged === undefined) {
+            out.push(`chunk ${entry} ceiling raised from ${String(from)} to ${String(to)} with no new raise_log entry for it`);
+        } else {
+            const problems = raiseEntryProblems(logged as Record<string, unknown>, from);
+            if (problems.length > 0) out.push(`the raise_log entry for chunk ${entry} is incomplete: ${problems.join('; ')}.`);
+        }
+    }
+    return out;
+}
+
 /** Read the committed budget. Throws rather than defaulting — a guessed ceiling bounds nothing. */
 export function readBudget(root: string): Budget {
     const abs = path.join(root, BUDGET_REL);
@@ -420,6 +530,17 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     }
 
     const findings = verdict(analysis, budget);
+    const chunkSizes = new Map<string, number>();
+    if (fixture === undefined) {
+        try {
+            const budgets = readChunkBudgets(root);
+            for (const b of budgets) chunkSizes.set(b.entry, buildChunkBytes(root, b.entry));
+            findings.push(...chunkFindings(chunkSizes, budgets));
+        } catch (e) {
+            process.stderr.write(`check_hook_bundle_composition: ${String(e instanceof Error ? e.message : e)}\n`);
+            return 2;
+        }
+    }
     const baseAt = argv.indexOf('--base-ref');
     const baseBudget = readBaseBudget(root, baseAt >= 0 ? argv[baseAt + 1] : undefined);
     if (baseBudget === undefined) {
@@ -436,7 +557,8 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
         }
         process.stdout.write('raise rule: no base revision resolved — the max_bytes raise check was not evaluated\n');
     } else {
-        findings.push(...raiseFindings(baseBudget, fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')));
+        const workingBudget = fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8');
+        findings.push(...raiseFindings(baseBudget, workingBudget), ...chunkRaiseFindings(baseBudget, workingBudget));
     }
     // Reported on BOTH paths, red included: a census that goes quiet exactly
     // when the gate fires is the shape `reportScanned` exists to prevent.
@@ -453,6 +575,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
                 `${String(analysis.yamlPackages.length)} YAML reader(s) ` +
                 `[${analysis.yamlPackages.join(', ')}], ${String(analysis.modules)} modules\n`,
         );
+        for (const [entry, bytes] of chunkSizes) process.stdout.write(`✅  chunk ${entry}: ${String(bytes)} B\n`);
         return 0;
     }
     process.stderr.write('❌  hook bundle composition is out of budget\n');

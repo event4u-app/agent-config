@@ -39,6 +39,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { EXIT_USAGE } from './exit_codes.js';
 import {
   countEnvelope,
+  ENGINE_UNAVAILABLE,
   readEgressMode,
   type EgressCount,
   type EgressMode,
@@ -300,7 +301,15 @@ function _egressPreview(decoded: unknown): {
 } {
   const mode = readEgressMode(process.cwd());
   const isObj = decoded !== null && typeof decoded === "object" && !Array.isArray(decoded);
-  const counted = isObj ? countEnvelope({ payload: decoded as JsonObject }) : { counts: [], refused: [] };
+  let counted: Pick<ReturnType<typeof countEnvelope>, "counts" | "refused"> = { counts: [], refused: [] };
+  if (isObj) {
+    try {
+      counted = countEnvelope({ payload: decoded as JsonObject });
+    } catch {
+      // The engine did not load: say so rather than reporting zero findings.
+      counted = { counts: [], refused: [{ field: "prompt", rule: ENGINE_UNAVAILABLE }] };
+    }
+  }
   const action = mode === "off" ? "none" : mode === "observe" ? "count" : "replace";
   return { mode, action, counts: counted.counts, refused: counted.refused };
 }

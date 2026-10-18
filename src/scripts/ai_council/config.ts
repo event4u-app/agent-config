@@ -75,7 +75,7 @@ import * as path from 'node:path';
 
 import { parse as parseYaml } from 'yaml';
 
-import { CREDENTIAL_PREFIXES } from '../_lib/egress_rules.js';
+import { CREDENTIAL_PREFIXES } from '../_lib/egress_prefixes.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import * as budget from './cli_call_budget.js';
 // LAYERING CONSTRAINT, load-bearing: this is a VALUE import from quorum, while

@@ -9,7 +9,12 @@
 // first version on — does not count as a recorded reason.
 import { describe, expect, it } from 'vitest';
 
-import { raiseEntryProblems, raiseFindings } from '../../src/scripts/check_hook_bundle_composition.js';
+import {
+    chunkFindings,
+    chunkRaiseFindings,
+    raiseEntryProblems,
+    raiseFindings,
+} from '../../src/scripts/check_hook_bundle_composition.js';
 
 const OLD_ENTRY = { date: '2026-10-01', from: 1500000, to: 1550000 };
 
@@ -82,5 +87,33 @@ describe('raiseEntryProblems', () => {
             why_it_could_not_be_avoided: 'The bytes are deliberately merged capability, not an accident.',
         };
         expect(raiseEntryProblems(shipped, 1500000)).toEqual([]);
+    });
+});
+
+describe('chunk ceilings', () => {
+    const ENTRY = 'src/scripts/_lib/egress_engine.ts';
+    const chunked = (max: number, log: object[]): string =>
+        JSON.stringify({ max_bytes: 1550000, max_yaml_packages: 1, chunks: [{ entry: ENTRY, max_bytes: max }], raise_log: log });
+    const chunkEntry = (from: number, to: number): object => ({ ...entry(from, to), chunk: ENTRY });
+
+    it('a chunk over its ceiling is a finding, at or under it is not', () => {
+        const budgets = [{ entry: ENTRY, maxBytes: 100 }];
+        expect(chunkFindings(new Map([[ENTRY, 100]]), budgets)).toEqual([]);
+        expect(chunkFindings(new Map([[ENTRY, 101]]), budgets)).toHaveLength(1);
+    });
+
+    it('a ceiling nothing measured is a finding, never a pass', () => {
+        expect(chunkFindings(new Map(), [{ entry: ENTRY, maxBytes: 100 }])).toHaveLength(1);
+    });
+
+    it('a chunk raise needs a new entry naming the chunk and the new ceiling', () => {
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(30000, []))).toHaveLength(1);
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(30000, [entry(28000, 30000)]))).toHaveLength(1);
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(30000, [chunkEntry(28000, 30000)]))).toEqual([]);
+    });
+
+    it('a chunk lowering or a newly registered chunk needs no entry', () => {
+        expect(chunkRaiseFindings(chunked(28000, []), chunked(20000, []))).toEqual([]);
+        expect(chunkRaiseFindings(budget(1550000, []), chunked(28000, []))).toEqual([]);
     });
 });
