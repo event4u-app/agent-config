@@ -280,8 +280,8 @@ no font; it runs a pinned toolchain in the consumer's environment.
 - [x] **4.3 No default output licence (decision A3).** The skill asks which
       licence the new font carries, records it in the spec and the name table,
       and writes `unknown` when none is given; it never stamps one on its own.
-      verify: `grep -ci "licence" src/skills/type-design/SKILL.md` -> /^[1-9]/
-      Done 2026-10-18: § Licence — asked, never stamped.
+      verify: `grep -ci "license" src/skills/type-design/SKILL.md` -> /^[1-9]/
+      Done 2026-10-18: § License — asked, never stamped. The verify spells `license`: lint_canonical_terms gates the tree on that spelling, so the step's original `licence` would have required a new canonical-term violation.
 - [x] **4.4 Freehand outlines are not a deliverable.** The model never writes
       path data for a glyph by hand and never ships a freehand SVG glyph; it
       changes spec parameters and lets code rebuild.
