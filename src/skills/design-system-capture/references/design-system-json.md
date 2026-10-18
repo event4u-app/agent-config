@@ -71,6 +71,10 @@
 - **`bundled_local`** on a font family is a flag, not an instruction: the
   package never downloads or bundles fonts (out of scope) — it records that the
   source did.
+- **A custom family** (built with `type-design`, or commissioned) adds
+  `"custom": { "spec": "<path to font-spec.yaml>", "licence": "<as stated, or unknown>" }`
+  to its `families[]` entry. The licence is recorded as given, never inferred;
+  `bundled_local` stays the separate flag it is.
 - **`motion` has a consumer.** It sits outside the DTCG mapping above, and for
   a long time that meant nothing read it at all: the block was written by
   capture and consumed by nobody, so easing and duration were re-derived from
