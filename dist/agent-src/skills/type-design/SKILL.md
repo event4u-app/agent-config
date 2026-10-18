@@ -168,7 +168,7 @@ Never a claim the run cannot show.
 - **A plausible font is not a system.** Glyphs that each look fine and share no
   stems, overshoot or spacing pass a glance and fail the consistency gate —
   run it, do not eyeball it.
-- **Same-direction counters paint solid.** Under the default `nonzero` rule an
+- **Same-direction counters paint solid.** Under `fill-rule: nonzero`, the default, an
   `o` whose inner contour winds like its outer one fills its counter.
 - **Kerning cannot rescue spacing.** Kerning pairs on unspaced glyphs grow
   without bound and still look uneven; set sidebearings first.
