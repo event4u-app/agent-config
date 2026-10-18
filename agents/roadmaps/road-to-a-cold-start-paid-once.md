@@ -168,6 +168,15 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
 **Exit:** one baseline file and one observation file, every row in the
 protocol's four-part citation. **Rollback:** both are evidence files only.
 
+**Screen 2026-10-18 (drain lane, Claude Code 2.1.302).** 1.5, 1.7, 1.8 and 1.9
+were not reachable from a dispatched leg: the project `PreToolUse` binding
+records nothing per tool, so a `SendMessage` admission leaves no trace without a
+temporary hook binding, which is a settings change a lane may not make; 1.7
+needs an observed skip flag and 1.8 an environment flag set before the session
+starts. 1.4's by-name half stays unobserved for the same reason as on
+2026-10-17. 1.10 stays open until those rows exist. No row was written from
+documentation.
+
 ## Phase 2 — Workers that load what their role needs
 
 - [x] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
@@ -176,13 +185,14 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       untouched: no derivation, no deprecation.
       verify: `npx vitest run tests/scripts/_lib_host_capability.test.ts -t worker-resume-defaults-false --reporter=verbose` -> /✓.*worker-resume-defaults-false/
       Done 2026-10-16: both atoms in `host_capability.ts`, the contract table and the observation criteria; no registry row sets either.
-- [ ] **2.2 Open the subagent schema** with vendor-neutral fields —
+- [x] **2.2 Open the subagent schema** with vendor-neutral fields —
       `omit_project_instructions`, `preload_skills`, `max_turns`, `background`,
       `cache_ttl`, `reuse` (`continuity` or `never`) — and `SendMessage` in the
       tool pattern. Host spelling lives only in the projector, as `model_tier`
       already does.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t reuse-field-projects-to-host-spelling --reporter=verbose` -> /✓.*reuse-field-projects-to-host-spelling/
-- [ ] **2.3 Two package workers, fixed at install.** `ac-worker`
+      Done 2026-10-18: six fields in `subagent.schema.json`, `reuse` required; host spelling in `_lib/subagent_native_fields.ts`. `reuse` and `cache_ttl` are not projected — the host has no per-definition key for either. `omit_project_instructions` maps to the binary string `omitClaudeMd`, unobserved until 1.7, and no definition sets it.
+- [x] **2.3 Two package workers, fixed at install.** `ac-worker`
       (`reuse: continuity`) and `ac-researcher` (`reuse: continuity`, read-only),
       each with the kernel floor in its body and a durable domain name. No
       per-task definition is ever generated. `preload_skills` ships empty: the
@@ -190,10 +200,12 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
       preload is added only for a skill a paired measurement shows the worker
       needs on almost every run. `cache_ttl` ships unset (decision D7).
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t package-workers-preload-nothing --reporter=verbose` -> /✓.*package-workers-preload-nothing/
-- [ ] **2.4 Freshness classes are declared, not inferred.** Every judge,
+      Done 2026-10-18: `src/subagents/ac-worker.md` and `ac-researcher.md`, each carrying the generated safety floor (now kept current by `generate_subagent_floor`), shipped through `docs/wedge/` like `production-validator`. `ac-worker` holds no shell: an unscoped `Bash` grant is the over-broad grant the frontmatter-safety lint refuses, and a portable suite cannot scope it, so the dispatcher runs the check the worker names.
+- [x] **2.4 Freshness classes are declared, not inferred.** Every judge,
       reviewer and `production-validator` definition carries `reuse: never`, so
       the Iron Law becomes a field a function reads.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t judges-are-never-reusable --reporter=verbose` -> /✓.*judges-are-never-reusable/
+      Done 2026-10-18: `production-validator` is the only judging definition in `src/subagents/` (judges and reviewers are skills, not definitions) and declares `reuse: never`; the test fails any judging definition that does not.
 - [ ] **2.5 Skipping project instructions ships on only when both hold:** the
       1.7 net delta is at least 10 % of the median cold start, and a fixture
       shows the dispatch for a skipping worker carries the kernel floor and the
