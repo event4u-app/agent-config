@@ -72,6 +72,17 @@ describe('golden smoke — fresh global install is single-surface complete', () 
             expect(JSON.stringify(hooks[ev])).toContain(MANAGED_SIGNATURE);
         }
 
+        // road-to-a-hook-carrier-that-is-never-silent 1.1 / 2.2: the runtime is
+        // staged under the machine root and the stripped-environment probe is
+        // recorded; with a built bundle, the installed command reaches it.
+        const runtime = path.join(home, '.event4u', 'agent-config', 'runtime');
+        expect(fs.existsSync(path.join(runtime, 'current', 'dist', 'agent-src', 'rules'))).toBe(true);
+        const carrier = JSON.parse(fs.readFileSync(path.join(runtime, 'carrier.json'), 'utf8')) as {
+            hosts: Record<string, { outcome: string }>;
+        };
+        const bundleBuilt = fs.existsSync(path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js'));
+        expect(carrier.hosts['claude']?.outcome).toBe(bundleBuilt ? 'reached' : 'not-reached');
+
         // Listing override: only projected skills, only `name-only`, and recorded for uninstall.
         const overrides = (settings as Record<string, unknown>)['skillOverrides'] as Record<string, string>;
         const deployed = new Set(fs.readdirSync(path.join(home, '.claude', 'skills')));

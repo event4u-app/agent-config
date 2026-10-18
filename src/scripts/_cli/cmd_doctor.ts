@@ -26,7 +26,7 @@
  *   here; files without frontmatter are skipped (P5.1 contract).
  *
  * Health checks (see `CHECK_IDS`):
- * scope · global-binary · claude-plugin · stale-orphans · manifest-integrity ·
+ * scope · global-binary · claude-plugin · hook-carrier · stale-orphans · manifest-integrity ·
  * lockfile-freshness · bridge-drift · mcp-mode · mcp-beta-readiness ·
  * offline-readiness · python-runtime · humanizer-runtime · tier-usage-readiness ·
  * council-cli · team ·
@@ -92,6 +92,7 @@ import { classifyOwnership, ledgerModifiedRecords } from './doctor_ownership_led
 export { INSTALL_MODE_MARKER_RELATIVE, _is_global_only_consumer } from './doctor_install_mode.js';
 import * as claude_plugin from '../_lib/claude_plugin.js';
 import * as claude_settings_hooks from '../_lib/claude_settings_hooks.js';
+import * as staged_runtime from '../../install/stagedRuntime.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as installed_tools from '../_lib/installed_tools.js';
@@ -716,6 +717,7 @@ const CHECK_IDS = [
     'claude-command-wrappers',
     'surface-state',
     'hook-wiring',
+    'hook-carrier',
     ...runtime_wiring.WIRING_CHECK_IDS,
     ...install_reach.REACH_CHECK_IDS,
     'stale-orphans',
@@ -1320,6 +1322,37 @@ function _check_hook_wiring(): Dict {
         managedSignature: claude_settings_hooks.MANAGED_SIGNATURE,
         pluginInstalled: () => claude_plugin.claude_plugin_installed(),
     }) as unknown as Dict;
+}
+
+/**
+ * The staged hook carrier (road-to-a-hook-carrier-that-is-never-silent 2.2,
+ * 3.3, 4.1): probe the SessionStart command from a stripped environment, record
+ * it, promote a demoted machine whose probe now passes, and print the layer and
+ * since when the carrier outcome holds. Skipped until an install staged a runtime.
+ */
+function _check_hook_carrier(): Dict {
+    const runtimeRoot = staged_runtime.runtimeRootFor(process.env);
+    if (!fs.existsSync(staged_runtime.currentRuntimeDir(runtimeRoot))) {
+        return {
+            id: 'hook-carrier',
+            status: 'skipped',
+            message: `no staged runtime under ${runtimeRoot}`,
+            remedy: 'run `agent-config upgrade` (or `npx -y @event4u/agent-config init`) to stage it',
+        };
+    }
+    const manifest = path.join(_package_root(), 'src', 'scripts', 'hook_manifest.yaml');
+    const command = claude_settings_hooks.build_claude_hook_matrix(manifest)['SessionStart'];
+    if (command === undefined) {
+        return { id: 'hook-carrier', status: 'skipped', message: 'no SessionStart hook in the matrix', remedy: '' };
+    }
+    const state = staged_runtime.probeAndPromote(command);
+    const reached = state.probe?.outcome === 'reached';
+    return {
+        id: 'hook-carrier',
+        status: reached ? 'ok' : 'warn',
+        message: [...staged_runtime.describeCarrierProbe(state.probe), staged_runtime.describeCarrierState(state)].join(' · '),
+        remedy: reached ? '' : 'install node where the hook launcher can run it, then run `agent-config upgrade`',
+    };
 }
 
 function _check_bridge_drift(
@@ -2806,6 +2839,7 @@ function _run_checks(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
+        'hook-carrier': _check_hook_carrier,
         ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
@@ -2892,6 +2926,7 @@ function _run_checks_no_manifest(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
+        'hook-carrier': _check_hook_carrier,
         ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
