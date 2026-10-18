@@ -21,7 +21,7 @@ self_contained: true
 workspaces: [engineering]
 packs: [brand]
 enforced_by:
-  - "instruction-only: check_voice_lexicon runs only when a command calls it"
+  - "instruction-only: check_voice_lexicon runs if invoked"
 obligation_frequency: "per-edit"
 ---
 
