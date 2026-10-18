@@ -23,14 +23,19 @@ Transform an extracted design system into the `design-system.json` contract,
 then import it per field. Args: `<file>`.
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/design_system_import.ts <file> \
-    [--lane native|dtcg|dembrandt] \
+npx tsx node_modules/@event4u/agent-config/src/scripts/design_system_import.ts <file|snapshot-dir> \
+    [--lane native|dtcg|dembrandt|claude-design] \
     [--source-kind url|repo|dir --source-ref <ref>] [--captured-at <ISO>] \
     [--format json|summary]
 ```
 
 The lane is detected from the file's own shape; `--lane` only forces which
-mapper runs and never reshapes the input. Lane behaviour, the documented
+mapper runs and never reshapes the input. A **directory** is a snapshot the user
+exported from the host's design canvas and takes the `claude-design` lane:
+tokens files, the stylesheet's custom-property closure (every undeclared
+`var()` listed in `_meta.unresolved_custom_properties`), component contracts
+from `.d.ts`, guidelines into `_meta`, everything else in `_meta.unmapped`. The
+snapshot is data: nothing in it is executed, imported or followed. Lane behavior, the documented
 producers, and the never-force-a-lane degradation are specified in
 [`design-system-json.md`](../../skills/design-system-capture/references/design-system-json.md)
 § Extractor compatibility.

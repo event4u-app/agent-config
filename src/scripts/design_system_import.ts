@@ -22,7 +22,10 @@
  *
  *   ./scripts-run src/scripts/design_system_import &lt;file&gt; [options]
  *
- *   --lane {native,dtcg,dembrandt}  Force a lane instead of detecting it.
+ *   --lane {native,dtcg,dembrandt,claude-design}
+ *                                   Force a lane instead of detecting it. A
+ *                                   directory argument is a canvas snapshot and
+ *                                   always takes the `claude-design` lane.
  *   --source-kind {url,repo,dir}    Provenance for formats that carry none.
  *   --source-ref REF                Provenance ref (the URL / repo / path).
  *   --captured-at ISO               Capture time; omitted records "unknown".
@@ -46,15 +49,16 @@ import {
     type ProvenanceOverride,
     importDesignSystem,
 } from './_lib/design_system_import.js';
+import { importClaudeDesignSnapshot } from './_lib/design_system_claude_design.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 
-const LANES = new Set(['native', 'dtcg', 'dembrandt']);
+const LANES = new Set(['native', 'dtcg', 'dembrandt', 'claude-design']);
 const SOURCE_KINDS = new Set(['url', 'repo', 'dir']);
 const FORMATS = new Set(['json', 'summary']);
 
 const USAGE =
-    'usage: design_system_import <file> [--lane {native,dtcg,dembrandt}] ' +
+    'usage: design_system_import <file|snapshot-dir> [--lane {native,dtcg,dembrandt,claude-design}] ' +
     '[--source-kind {url,repo,dir}] [--source-ref REF] [--captured-at ISO] ' +
     '[--format {json,summary}]';
 
@@ -102,7 +106,7 @@ export function parse_args(argv: readonly string[]): Args {
             case '--lane': {
                 const v = take();
                 if (!LANES.has(v)) {
-                    argError(`argument --lane: invalid choice: '${v}' (choose from 'native', 'dtcg', 'dembrandt')`);
+                    argError(`argument --lane: invalid choice: '${v}' (choose from 'native', 'dtcg', 'dembrandt', 'claude-design')`);
                 }
                 args.lane = v as Lane;
                 break;
@@ -185,6 +189,25 @@ export function render_summary(outcome: ImportOutcome): string {
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const args = parse_args(argv);
 
+    const provenance: ProvenanceOverride | undefined =
+        args.sourceKind !== null && args.sourceRef !== null
+            ? {
+                  kind: args.sourceKind,
+                  ref: args.sourceRef,
+                  ...(args.capturedAt !== null ? { captured_at: args.capturedAt } : {}),
+              }
+            : undefined;
+
+    let isDir = false;
+    try {
+        isDir = fs.statSync(args.file).isDirectory();
+    } catch {
+        isDir = false;
+    }
+    if (isDir || args.lane === 'claude-design') {
+        return emit(args, importClaudeDesignSnapshot(args.file, provenance), provenance);
+    }
+
     let raw: string;
     try {
         raw = fs.readFileSync(args.file, 'utf-8');
@@ -203,16 +226,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 1;
     }
 
-    const provenance: ProvenanceOverride | undefined =
-        args.sourceKind !== null && args.sourceRef !== null
-            ? {
-                  kind: args.sourceKind,
-                  ref: args.sourceRef,
-                  ...(args.capturedAt !== null ? { captured_at: args.capturedAt } : {}),
-              }
-            : undefined;
+    return emit(args, importDesignSystem(parsed, provenance, args.lane ?? undefined), provenance);
+}
 
-    const outcome = importDesignSystem(parsed, provenance, args.lane ?? undefined);
+function emit(args: Args, outcome: ImportOutcome, provenance: ProvenanceOverride | undefined): number {
 
     // The input's own provenance wins over a caller override — defensible, and
     // previously invisible: a user who typed --source-ref was never told the

@@ -6,7 +6,7 @@ visibility: internal
 cluster: design-system
 type: orchestrator
 description: Design-system onramp — generate one from the corpus, import an extractor's output, or capture the current repo's. Three doors onto machinery that already ships.
-argument-hint: "[generate|import|capture] [args]"
+argument-hint: "[generate|import|capture|sync] [args]"
 suggestion:
   eligible: true
   trigger_description: "generate a design system, import extracted design tokens, capture this repo's design system, seed DESIGN.md from a site"
@@ -25,6 +25,10 @@ import contract, and the current-repo inventory all existed before this cluster;
 what was missing was a way in. So every sub-command below is an entry point, not
 a new subsystem.
 
+**`.design-sync/` present?** Offer `/design-system:sync plan` before anything
+else: the host's own sync overwrites colliding canvas work, and `plan` prints
+that count first.
+
 **Optional means invoked or not invoked.** This cluster adds no settings key, no
 always-on rule, and no auto-trigger. It is suggestion-eligible only when a
 design-system question is explicit, and otherwise silent.
@@ -36,6 +40,7 @@ design-system question is explicit, and otherwise silent.
 | `/design-system:generate "<product / industry / keywords>"` | `commands/design-system/generate.md` | Ground a design system in the curated corpus; optionally persist `MASTER.md` + page overrides, or seed `DESIGN.md` |
 | `/design-system:import <file>` | `commands/design-system/import.md` | Run an extractor's output through the three-lane adapter, then the per-field confirmation import |
 | `/design-system:capture` | `commands/design-system/capture.md` | Inventory *this* repo's components and tokens and emit the same `design-system.json` shape |
+| `/design-system:sync plan\|reconcile\|verify` | `commands/design-system/sync.md` | Reconcile a design system already on the host's canvas into the code through one ledger, before the user runs the host's own sync; user-invoked only |
 
 ## Dispatch
 

@@ -131,8 +131,9 @@ deleted or left as a silent twin without a row the user has seen.
 
 ## Phase 0 — The control readings
 
-- [ ] **0.1 Blind spot.** A test greps `src/`, `docs/`, `tests/` for the host sync
+- [x] **0.1 Blind spot.** A test greps `src/`, `docs/`, `tests/` for the host sync
       artefact names and asserts today's count (one file, unrelated).
+      (2026-10-18: control recorded at `17f028941` — one unrelated file; the live census asserts declared carriers.)
       verify: `npx vitest run tests/scripts/design_sync_surface.test.ts -t control --reporter=verbose` -> /✓.*control/
 - [x] **0.2 Predicate drift, red.** A parity test asserts that `isHandoverPath`,
       `isArtifactRead` and `HANDOVER_TRIGGERS` accept one path set; it fails on
@@ -151,8 +152,9 @@ deleted or left as a silent twin without a row the user has seen.
       a cycle; both fail today.
       (2026-10-16: alias record and cycle both red before 3.1.)
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-control --reporter=verbose` -> /✓.*alias-control/
-- [ ] **0.5 Lock without carrier, red.** The D6 fixture asserts a rebuttable finding
+- [x] **0.5 Lock without carrier, red.** The D6 fixture asserts a rebuttable finding
       for `#e11d48`; no tool produces one today.
+      (2026-10-18: `lint_design_slop` clean on the fixture; the control asserts the carrier's finding, green after 8.2.)
       verify: `npx vitest run tests/scripts/design_lock_carrier.test.ts -t control --reporter=verbose` -> /✓.*control/
 
 ## Phase 1 — The small fixes (immediate PR)
@@ -168,10 +170,11 @@ deleted or left as a silent twin without a row the user has seen.
       withheld on Claude Code by the existing guard; 0.3 goes green.
       (2026-10-16: done.)
       verify: `npx vitest run tests/scripts/claude_builtin_names.test.ts --reporter=verbose` -> /✓.*pinned-host-control/
-- [ ] **1.3 The router keeps a reachable name.** Apply the council's (a) of
+- [x] **1.3 The router keeps a reachable name.** Apply the council's (a) of
       2026-10-16: the maintainer router becomes `/agent-design` and carries
       `replaces: [design]`. Sequences strictly after 1.2, which is what puts
       `design` into the built-in set in the first place.
+      (2026-10-18: moved to `src/domains/engineering-base/agent-design/command.md`.)
       verify: `npx tsx src/scripts/lint_no_new_atomic_commands.ts` -> 0
 
 ## Phase 2 — The tree sees the sync surface
@@ -194,12 +197,13 @@ deleted or left as a silent twin without a row the user has seen.
       under `_meta.alias_cycles`, not counted as undefined. 0.4 goes green.
       (2026-10-16: `dtcg` lane only; the `claude-design` lane is 3.2.)
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t alias-record --reporter=verbose` -> /✓.*alias-record/
-- [ ] **3.2 `claude-design` lane, snapshot input.** Reads a user-exported snapshot directory
+- [x] **3.2 `claude-design` lane, snapshot input.** Reads a user-exported snapshot directory
       (the local-bundle input is 3.2b, split out by D12): tokens and the
       custom-property closure of the stylesheet, component contracts from the
       `.d.ts` files, guidelines into `_meta`. Every `var(--x)` with no definition in
       the closure is listed in `_meta.unresolved_custom_properties`. Offline,
       provenance mandatory, unknown files in `_meta.unmapped`, never dropped.
+      (2026-10-18: `_lib/design_system_claude_design.ts`; a directory argument takes the lane.)
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design --reporter=verbose` -> /✓.*claude-design/
 - [ ] <!-- blocked-by: host-sync-layout-at-current-host | asked: yes — the routing went to the council on 2026-10-16 and 2026-10-18 (D12); what remains is the maintainer-run fixture of option (a) --> **3.2b `claude-design` lane, local-bundle input.** The same lane reads the
       local bundle whose layout the blocker pins, with the same outputs and
@@ -207,19 +211,20 @@ deleted or left as a silent twin without a row the user has seen.
       input can land without the observed layout; this half keeps the
       criterion open rather than narrowing it.
       verify: `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design-bundle --reporter=verbose` -> /✓.*claude-design-bundle/
-- [ ] **3.3 The base is a commit, not the anchor.** With a projection commit in the
+- [x] **3.3 The base is a commit, not the anchor.** With a projection commit in the
       ledger, each row is classified three ways (base, code, remote) and the base
       is read with `git show <commit>:<path>`. Without one it is two-way and the
       class is `unknown`, never a guessed three-way. Rows are keyed by token path or
       component export name; equal values alone never make two rows equal.
+      (2026-10-18: `_lib/design_sync_plan.ts`, `readBaseAtCommit`.)
       verify: `npx vitest run tests/scripts/design_sync_plan.test.ts -t three-way --reporter=verbose` -> /✓.*three-way/
-- [ ] **3.4 A snapshot is data.** Nothing in the lane or the ledger executes
+- [x] **3.4 A snapshot is data.** Nothing in the lane or the ledger executes
       snapshot content; a visual look goes through the isolated asset renderer only.
       verify: `npx vitest run tests/scripts/design_sync_plan.test.ts -t snapshot-inert --reporter=verbose` -> /✓.*snapshot-inert/
 
 ## Phase 4 — The ledger and the command
 
-- [ ] **4.1 Ledger schema** (`corrected-from-reproduction`: the anchor hash is
+- [x] **4.1 Ledger schema** (`corrected-from-reproduction`: the anchor hash is
       optional). One `.claude/design-system/sync-ledger.json` per
       `.design-sync/config.json`, with `scope_root`. Row classes: `in-sync`,
       `code-only`, `remote-generated`, `remote-only:collides`, `remote-only:twin`,
@@ -227,8 +232,9 @@ deleted or left as a silent twin without a row the user has seen.
       anchor_hash?, state }` with `state` one of `prepared`, `user-reported-ran`,
       `host-artifacts-observed`, `picker-confirmed`. A row without a disposition
       fails validation.
+      (2026-10-18: `_lib/design_sync_ledger.ts`; `pending` is accepted after plan and refused once reconciled.)
       verify: `npx vitest run tests/scripts/sync_ledger_schema.test.ts --reporter=verbose` -> /✓/
-- [ ] **4.2 `/design-system:sync plan|reconcile|verify`.** Lands as
+- [x] **4.2 `/design-system:sync plan|reconcile|verify`.** Lands as
       `src/domains/engineering-base/design-system/sync/command.md` with
       `disable-model-invocation: true`, the cluster row in
       `docs/contracts/command-clusters.md:70`, the head's sub-command table, a
@@ -237,24 +243,25 @@ deleted or left as a silent twin without a row the user has seen.
       `update_counts`. The body follows the source's command draft minus four
       parts this roadmap does not carry: a workshop-axis read, a canvas MCP rung, a
       default tier vocabulary and a story-first order.
+      (2026-10-18: CLI `src/scripts/design_sync.ts`; commands 205 to 206.)
       verify: `npx tsx src/scripts/lint_no_new_atomic_commands.ts && npx tsx src/scripts/lint_command_flow_coverage.ts && npx tsx src/scripts/check_command_count_messaging.ts` -> 0
-- [ ] **4.3 Two counts, and unknown is not empty.** `plan` prints **overwrite**
+- [x] **4.3 Two counts, and unknown is not empty.** `plan` prints **overwrite**
       (`remote-only:collides` + `conflict`) and **twin** (`remote-only:twin`).
       Fixture: two remote-only components, one at a colliding path, plus one
       conflicting token gives overwrite 2 and twin 1. An unreachable remote yields
       `unknown` rows and no handover recommendation; a missing `projectId` pin
       blocks the handover.
       verify: `npx vitest run tests/scripts/design_sync_plan.test.ts -t counts --reporter=verbose` -> /✓.*counts/
-- [ ] **4.4 No upload route.** The command and its scripts name no `DesignSync`
+- [x] **4.4 No upload route.** The command and its scripts name no `DesignSync`
       method and no canvas write endpoint, and never invoke `/design-sync`.
       verify: `npx vitest run tests/scripts/design_sync_plan.test.ts -t no-upload-route --reporter=verbose` -> /✓.*no-upload-route/
-- [ ] **4.5 Idempotent.** A second `plan` over unchanged inputs writes a
+- [x] **4.5 Idempotent.** A second `plan` over unchanged inputs writes a
       byte-identical ledger and no other file.
       verify: `npx vitest run tests/scripts/design_sync_plan.test.ts -t idempotent --reporter=verbose` -> /✓.*idempotent/
 
 ## Phase 5 — One authority, one store
 
-- [ ] **5.1 The resolver sets the posture; the user disposes each row**
+- [x] **5.1 The resolver sets the posture; the user disposes each row**
       (`corrected-from-reproduction`). `reconcile` calls `resolveUiAuthority` once
       per scope — the canvas snapshot as `reference` with its maturity, the code
       scan as `incumbent`, a registered palette or type lock as
@@ -264,25 +271,26 @@ deleted or left as a silent twin without a row the user has seen.
       resolver's own `conflicts[]` are copied verbatim. No value ranking exists
       beside the resolver. The command is added to `ui-authority.md`
       § Declared consumers.
+      (2026-10-18: `_lib/design_sync_reconcile.ts`; the resolver's own `conflicts[]` are empty for every signal set it accepts today, copied verbatim all the same.)
       verify: `npx vitest run tests/scripts/design_sync_reconcile.test.ts -t authority-posture --reporter=verbose` -> /✓.*authority-posture/
 - [ ] <!-- blocked-by: host-sync-layout-at-current-host | asked: no — authored from inbox round inbox-2026-10-m, which carried no owner turn on this question --> **5.2 Conventions block.** `DESIGN.md` usage rules render into the host's
       human-editable conventions file between markers; text outside the markers
       stays byte-identical, and a drift check fails on a divergent block.
       verify: `npx tsx src/scripts/check_conventions_block.ts --root tests/fixtures/design-sync/drifted` -> 1
-- [ ] **5.3 The extraction floor names its place.**
+- [x] **5.3 The extraction floor names its place.**
       `design-system-capture` § Design-system extraction floor points React stacks
       at the host's own sync and stays the artefact for a manual projection.
       verify: `rg -n 'manual projection' src/skills/design-system-capture/SKILL.md` -> /manual projection/
 
 ## Phase 6 — Components through the existing owner
 
-- [ ] **6.1 A brief, not a write.** For each `remote-only` row the user imports,
+- [x] **6.1 A brief, not a write.** For each `remote-only` row the user imports,
       `reconcile` emits a brief — the remote markup as the spec, its `.d.ts`
       contract — and hands it to the run's UI owner (`fe-design` ad hoc,
       `directives/ui/*` in the engine), whose existing coverage records each
       mechanic as honoured, translated or flagged. The command writes no component.
       verify: `npx vitest run tests/scripts/design_sync_reconcile.test.ts -t brief-handoff --reporter=verbose` -> /✓.*brief-handoff/
-- [ ] **6.2 Tiers only as the detector records them.** The brief carries the tier
+- [x] **6.2 Tiers only as the detector records them.** The brief carries the tier
       names `detect_component_taxonomy` recorded for the project. When it records
       none, the brief carries no tier and proposes no vocabulary.
       verify: `npx vitest run tests/scripts/design_sync_reconcile.test.ts -t taxonomy-recorded --reporter=verbose` -> /✓.*taxonomy-recorded/
@@ -294,34 +302,38 @@ deleted or left as a silent twin without a row the user has seen.
       `--update-snapshots` on a visual runner warns with the acceptance step. Warn,
       never block (`block_config_weakening.ts:28-33`). Measure the hook bundle
       before and after.
+      (2026-10-18: ships as its own PR — the hook is a governance surface and carries its own ratification; measured +669 B, 1,548,120 of 1,550,000 B.)
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts -t snapshot --reporter=verbose` -> /✓.*snapshot/
-- [ ] **7.2 Baseline stamp.** Baselines touched in a run are listed in the ledger
+- [x] **7.2 Baseline stamp.** Baselines touched in a run are listed in the ledger
       with the projection commit; `verify` reports a baseline older than the current
       projection as `stale`.
       verify: `npx vitest run tests/scripts/design_sync_verify.test.ts -t stale-baseline --reporter=verbose` -> /✓.*stale-baseline/
 - [ ] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
       baseline updates are shown as a diff and land in a commit of their own, on the
       pinned renderer of `playwright-architect/SKILL.md:130-132`.
+      (2026-10-18 screen: open. Editing `playwright-testing` obliges a trigger corpus for it, and adding one re-seals five published measurements — the trigger-corpus holdout pin, the routing-signal verdict, the delivery-set record and the routing-coverage seed. That is its own change; the hook's warning text of 7.1 already carries the acceptance step.)
       verify: `rg -n 'commit of their own' src/skills/playwright-testing/SKILL.md` -> /commit of their own/
 
 ## Phase 8 — Review gates that read the projection
 
-- [ ] **8.1 Render check consumed.** `verify` reads `.render-check.json`; any
+- [x] **8.1 Render check consumed.** `verify` reads `.render-check.json`; any
       non-zero failure count, `variantsIdentical` included, without a disposition
       fails the run. The fixture uses the field names the 2.1.296 binary carries.
       verify: `npx vitest run tests/scripts/design_sync_verify.test.ts -t render-check --reporter=verbose` -> /✓.*render-check/
-- [ ] **8.2 The Lock gets its carrier.** A changed UI file whose colour, radius or
+- [x] **8.2 The Lock gets its carrier.** A changed UI file whose colour, radius or
       spacing value lies outside a declared Consistency Lock is a rebuttable
       finding, flags-not-blocks; a brownfield baseline counts only new drift. 0.5
       goes green and `design-system-capture/SKILL.md:131-132` becomes true.
+      (2026-10-18: `src/scripts/design_lock.ts`; the capture skill now names it as the carrier.)
       verify: `npx vitest run tests/scripts/design_lock_carrier.test.ts --reporter=verbose` -> /✓/
-- [ ] **8.3 Matrix rows from the ledger.** `design-review`'s fidelity matrix gets one
+- [x] **8.3 Matrix rows from the ledger.** `design-review`'s fidelity matrix gets one
       row per reconciled component, with the evidence kind named.
       verify: `npx vitest run tests/scripts/design_sync_reconcile.test.ts -t matrix-rows --reporter=verbose` -> /✓.*matrix-rows/
-- [ ] **8.4 One verdict vocabulary.** A gate that could not run reports
+- [x] **8.4 One verdict vocabulary.** A gate that could not run reports
       `unverified` or `degraded` with a reason, from `ui_authority`'s `verification`
       field; `design-fidelity.md:43` names the ledger and the render-check reader as
       its mechanical leg for synced systems.
+      (2026-10-18: the rule sentence was rewritten in place, net -8 tok on the standing payload.)
       verify: `rg -n 'sync-ledger' src/rules/design-fidelity.md` -> /sync-ledger/
 - [~] <!-- blocked-by: host-sync-layout-at-current-host | asked: no — authored from inbox round inbox-2026-10-m, which carried no owner turn on this question --> **8.5 One live round trip, human-run.** On the fixture React package, the
       maintainer runs `plan`, then `/design-sync`, then `verify`, and records the
@@ -345,23 +357,23 @@ deleted or left as a silent twin without a row the user has seen.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — After `reconcile`, the repository holds every design value the user
+- [x] AC-1 — After `reconcile`, the repository holds every design value the user
       imported, and no ledger row is left without a disposition; the canvas is
       never written by this package.
-- [ ] AC-2 — All handover carriers accept one path set, including `*.dc.html` and
+- [x] AC-2 — All handover carriers accept one path set, including `*.dc.html` and
       `.design-sync/`.
-- [ ] AC-3 — `design`, `design-consent` and `design-revoke` are reserved, and no
+- [x] AC-3 — `design`, `design-consent` and `design-revoke` are reserved, and no
       package entry shadows a host name in the pinned fixture.
-- [ ] AC-4 — Imports keep alias chains and report cycles as cycles.
-- [ ] AC-5 — `plan` on the fixture reports overwrite 2 and twin 1, an unreachable
+- [x] AC-4 — Imports keep alias chains and report cycles as cycles.
+- [x] AC-5 — `plan` on the fixture reports overwrite 2 and twin 1, an unreachable
       remote reports `unknown`, and a second run changes nothing.
-- [ ] AC-6 — Conflict rows are pre-filled from `resolveUiAuthority`'s posture; no
+- [x] AC-6 — Conflict rows are pre-filled from `resolveUiAuthority`'s posture; no
       other ranking of values exists in the change.
-- [ ] AC-7 — The command writes no component; it hands a brief to the UI owner and
+- [x] AC-7 — The command writes no component; it hands a brief to the UI owner and
       proposes no tier vocabulary.
 - [ ] AC-8 — A baseline older than the projection commit is `stale`, and a
       snapshot update warns.
-- [ ] AC-9 — A value outside a declared Consistency Lock is flagged, which makes the
+- [x] AC-9 — A value outside a declared Consistency Lock is flagged, which makes the
       capture skill's claim true.
 
 ## Decisions
@@ -386,7 +398,7 @@ deleted or left as a silent twin without a row the user has seen.
 ### blocker: host-sync-layout-at-current-host
 - **Status:** open — waits only on the maintainer-run fixture of option (a); no decision is pending. Re-checked 2026-10-18: `tests/fixtures/design-sync/` does not exist (`ls` → No such file or directory). The council's second round (D12, 2/2) declined (b), because dropping 5.2 cancels a step, and split 3.2 so its snapshot input is no longer held here. Raised 2026-10-12 from inbox round `inbox-2026-10-m`; the bundle layout came from an extract of an older host version, and an offline read of host 2.1.296 finds only part of it.
 - **Owner:** maintainer — answering it needs a canvas account and network, which no agent run may use.
-- **Blocks:** steps 3.2b, 5.2 and 8.5 (3.2 was split by D12 and no longer waits here).
+- **Blocks:** steps 3.2b, 5.2 and 8.5 (3.2 was split by D12 and no longer waits here). Drain of 2026-10-18: every other step landed, so these three are the roadmap's whole open remainder; `tests/fixtures/design-sync/host-observed/` still does not exist.
 - **What to do:** pick exactly one — (a) run `/design-sync` once on `tests/fixtures/design-sync/react-package/` with a canvas account and commit the resulting listing of `.design-sync/` and of the local build output into `tests/fixtures/design-sync/host-observed/`; or (b) narrow 3.2 to a user-exported snapshot directory only and drop 5.2, keeping to the names the 2.1.296 binary carries (`.design-sync/config.json`, `previews/`, `.render-check.json`).
 - **Resolved when:** `tests/fixtures/design-sync/host-observed/` exists, or 3.2 and 5.2 are rewritten per (b) and `npx vitest run tests/scripts/design_system_import.test.ts -t claude-design` exits 0.
 - **Recommendation:** (a). The lane exists to read what the host writes; a fixture invented from an old extract would test the extract, not the host.
@@ -435,7 +447,7 @@ deleted or left as a silent twin without a row the user has seen.
 - **Owner:** owner — a shipped command taking a different name is a public-surface change. **The council read the transition instead and found it maintainer-facing: the label records who raised it, not who must answer.**
 - **Blocks:** step 1.3.
 - **What to do:** **(a), with the name settled: `/agent-design`.** Give
-  `src/domains/engineering-base/design/command.md` that name and
+  the router (now `src/domains/engineering-base/agent-design/command.md`) that name and
   `replaces: [design]`. Superseded alternative, kept so the choice is legible:
   (b) keep `/design` and record in its body that it is withheld on Claude Code
   after 1.2 and reachable on the other hosts only — refused because the router
