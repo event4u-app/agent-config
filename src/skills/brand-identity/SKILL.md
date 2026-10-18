@@ -101,5 +101,5 @@ node <skills-root>/corpus-grounding/scripts/ground.mjs search \
 - [`brand-to-tokens`](../brand-to-tokens/SKILL.md) — emits the DTCG token source of truth.
 - [`typography-system`](../typography-system/SKILL.md) — turns the type story into type tokens.
 - [`logo-generation`](../logo-generation/SKILL.md) — generates marks from this identity (pack-ai-image).
-- [`type-design`](../type-design/SKILL.md) — when the type story is a custom family: the wordmark's lettering or a brief built into an original font (pack-frontend-design).
+- `type-design` — when the type story is a custom family: the wordmark's lettering or a brief built into an original font (pack-frontend-design).
 - [`brand`](../brand/SKILL.md) — the corpus grounded against.

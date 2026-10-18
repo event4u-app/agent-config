@@ -83,7 +83,7 @@ it does not cover.
 | Tier | Glyphs |
 |---|---|
 | `wordmark` | the letters present in the source, plus their alternates and ligatures, plus `space` and `.notdef` |
-| `latin-basic` | A–Z, a–z, 0–9, `space`, `.notdef`, and `. , : ; ! ? ' " - – — ( ) / & @ # % *` |
+| `latin-basic` | A–Z, a–z, 0–9, `space`, `.notdef`, and `. , : ; ! ? ' " ‘ ’ “ ” - – — ( ) / & @ # % *` |
 | `latin-de` | `latin-basic` plus ä ö ü Ä Ö Ü, both forms of sharp s (ß and ẞ), and the German quotation marks „ “ ‚ ‘ |
 
 The coverage gate (gates § 1) lists every glyph the tier names and fails on any

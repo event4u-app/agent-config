@@ -359,7 +359,7 @@ no font; it runs a pinned toolchain in the consumer's environment.
       records a custom family with its source and licence; `bundled_local`
       stays a flag. The neighbours' trigger evals stay green.
       verify: `grep -c "type-design" src/skills/logo-generation/SKILL.md` -> /^[1-9]/
-      Done 2026-10-18: logo-generation, svg-authoring (named, other pack) and brand-identity hand off; typography-system § Custom source; `design-system-json.md` records a `custom` block beside `bundled_local`.
+      Done 2026-10-18: logo-generation, svg-authoring and brand-identity hand off by name; typography-system § Custom source; `design-system-json.md` records a `custom` block beside `bundled_local`.
 
 ## Phase 5 — Gates, proof and the benchmark
 

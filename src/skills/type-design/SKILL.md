@@ -126,7 +126,8 @@ spec is missing a parameter — add it.
    ```bash
    agent-config ui:render proof/index.html --profile asset
    ```
-   The new family must read `loaded` — never `error` or `synthesised`. Open the
+   The new family must read `loaded` — never `error`, `unloaded`, `timeout` or
+   `synthesised`. Open the
    PNG and state what you saw.
 8. **Fidelity (path A)** — the wordmark text set in the new font against the
    source by silhouette IoU (gates § 6); produce the diff overlay and look at it.
@@ -148,7 +149,7 @@ the family there as a custom family with its source and license.
 |---|---|
 | `concept` | spec and control glyphs exist; the tier is not covered |
 | `prototype` | the tier is covered and the font builds; at least one gate is open |
-| `validated-static` | every gate in `references/gates.md` is green, the witness read `loaded`, and the proof was looked at |
+| `validated-static` | every gate in `references/gates.md` that applies to the path is green (gate 6 applies to path A only), the witness read `loaded`, and the proof was looked at |
 
 Never a claim the run cannot show.
 
@@ -177,7 +178,8 @@ Never a claim the run cannot show.
 
 ## Do NOT
 
-- Do NOT trace lettering whose rights class is `third-party` or `unknown`.
+- Do NOT trace lettering whose rights class is `unknown`, or `third-party` until
+  the owner's rights are stated and it is recorded as `commissioned`.
 - Do NOT write or ship glyph path data by hand.
 - Do NOT stamp a license the person did not give.
 - Do NOT claim a coverage tier the font does not cover, or `validated-static`
@@ -186,7 +188,7 @@ Never a claim the run cannot show.
 
 ## See also
 
-Named rather than linked: this skill and its neighbours ship in different packs.
+Named rather than linked: some of these neighbours ship in other packs.
 
 - `typography-system` — choosing and pairing fonts; consumes a custom family.
 - `svg-authoring` — trace-to-measure and the counter rule this skill reuses.
