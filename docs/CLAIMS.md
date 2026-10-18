@@ -311,7 +311,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - claim: The brand-voice lexicon check finds every planted `avoid` term in running text of a finished draft and none of the same terms inside quoted, cited, fenced or linked text.
 - kind: quant
 - evidence: exec:vitest run tests/scripts/brand_scenarios.test.ts tests/scripts/check_voice_lexicon.test.ts -> 0
-- note: Registered `unbacked` by road-to-a-brand-the-tree-can-check 7.3 and backed by its 7.2 scenario fixtures. Recall is 5 of 5 planted terms over word and substring modes, English and German; false positives are 0 of 6 exempt twins (straight, curly and German low-high quotes, a blockquote, inline code, a URL, a fenced block). Writing the leg found the German low-high quote case unexempted, and it was fixed in the same change.
+- note: Registered `unbacked` by road-to-a-brand-the-tree-can-check 7.3 and backed by its 7.2 scenario fixtures. Recall is 5 of 5 planted terms over word and substring modes, English and German; false positives are 0 of 7 exempt twins (straight, curly and German low-high quotes, a blockquote, inline code, a URL, a fenced block). Writing the leg found the German low-high quote case unexempted, and it was fixed in the same change.
 - non_inference: Literal matching only — an inflected German form is a documented miss (E5), so 100 % recall holds for the planted spellings and says nothing about morphology, paraphrase, or any term not in the lexicon.
 - status: backed
 - last_verified: 2026-10-19

@@ -109,8 +109,11 @@ describe('brand scenarios — the resolver', () => {
         const root = project('branded', { 'tokens.json': TOKENS, [SLOT]: slot(), 'DESIGN.md': '# DESIGN.md\n', 'src/a.css': '.a { color: #ff0000; }\n' });
         const before = snapshot(root);
         expect(status(root).json.state).toBe('branded');
-        run(TSX, TOKENS_TS, ['validate', '--dir', path.join(root, 'src'), '--json', '--tokens', path.join(root, 'tokens.json')]);
-        run(TSX, LEXICON_TS, ['--draft', '-', '--slot', path.join(root, SLOT)], 'Plain text.\n');
+        const palette = run(TSX, TOKENS_TS, ['validate', '--dir', path.join(root, 'src'), '--json', '--tokens', path.join(root, 'tokens.json')]);
+        expect(JSON.parse(palette.stdout)).toEqual([expect.objectContaining({ palette: 'on-palette (color.brand)' })]);
+        const lexicon = run(TSX, LEXICON_TS, ['--draft', '-', '--slot', path.join(root, SLOT)], `Plain ${AVOID_TERM} text.\n`);
+        expect(lexicon.status).toBe(0);
+        expect(lexicon.stdout).toContain(`warning avoid "${AVOID_TERM}"`);
         expect(snapshot(root)).toEqual(before);
     });
 
@@ -202,7 +205,7 @@ describe('brand scenarios — the draft', () => {
         ];
         const lexicon = planted.map((p) => ({ ...p, source: 'brand' as const }));
         const running = ['Our synergy works.', 'We are leveraging it.', 'A real Game-Changer.', 'It is world class.', 'Wirklich einzigartig.'];
-        const twins = ['They said "synergy".', '> We are leveraging it.', '`game-changer`', 'See https://x.test/world-class', '„Einzigartig“'];
+        const twins = ['They said "synergy".', 'They said “leveraging”.', '> We are leveraging it.', '`game-changer`', 'See https://x.test/synergy/now', '„Einzigartig“'];
         const draft = [...running, ...twins, '```', 'synergy inside a fence', '```', ''].join('\n');
         const found = scanLexicon(draft, lexicon);
         expect(found.map((f) => f.line)).toEqual([1, 2, 3, 4, 5]);
