@@ -300,7 +300,7 @@ handoff shape emitted alongside `design-system.json`
 
 **React stacks with the host's canvas:** the host's own `/design-sync` projects
 the components; run `/design-system:sync plan` first and do not hand-build the
-bundle. This floor stays the artefact for a manual projection — every non-React
+bundle. This floor stays the artifact for a manual projection — every non-React
 stack, or a host without the sync.
 
 **What to capture FROM** a running project: sources first, SSR fetch second,

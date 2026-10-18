@@ -35,7 +35,7 @@ exported from the host's design canvas and takes the `claude-design` lane:
 tokens files, the stylesheet's custom-property closure (every undeclared
 `var()` listed in `_meta.unresolved_custom_properties`), component contracts
 from `.d.ts`, guidelines into `_meta`, everything else in `_meta.unmapped`. The
-snapshot is data: nothing in it is executed, imported or followed. Lane behaviour, the documented
+snapshot is data: nothing in it is executed, imported or followed. Lane behavior, the documented
 producers, and the never-force-a-lane degradation are specified in
 [`design-system-json.md`](../../skills/design-system-capture/references/design-system-json.md)
 § Extractor compatibility.
