@@ -8,6 +8,7 @@ import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import {
     ESCALATION_HEADING,
     escalationMessage,
+    printable,
     SELF_PATH,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
@@ -120,6 +121,28 @@ describe('escalationMessage — the shape of the one question', () => {
         expect(msg).not.toContain('anthropic: ratified');
     });
 
+    it('says it is advisory and where the decision is actually held', () => {
+        expect(msg).toContain('advisory');
+        expect(msg).toContain('needs-owner');
+    });
+
+    it('never emits a control or bidi character from a record field', () => {
+        const forged = escalationMessage({
+            triggers: ['refused'],
+            records: [
+                {
+                    path: 'r.md\n✅  forged pass',
+                    verdict: 'refused\u001b[32m',
+                    seats: { 'openai\u202e': 'refused' },
+                },
+            ],
+            gatedPaths: ['a\rb'],
+        }).join('\n');
+        expect(forged).not.toMatch(/[\u0000-\u0009\u000b-\u001f\u202e]/u);
+        expect(forged).not.toContain('\n✅  forged pass');
+        expect(printable('a\nb')).toBe('a\\u{a}b');
+    });
+
     it('is empty when nothing triggers it', () => {
         expect(escalationMessage({ triggers: [], records: [], gatedPaths: [KERNEL] })).toEqual([]);
     });
@@ -164,6 +187,44 @@ describe('evaluate — when the user decides, the gate says so', () => {
         expect(r.exitCode).toBe(0);
         expect(text(r)).toContain(ESCALATION_HEADING);
         expect(text(r)).toContain('the reviewer itself');
+    });
+
+    it('polarity: on the reviewer too, a missing record is an authoring defect', () => {
+        const r = evaluate([SELF_PATH]);
+        expect(r.exitCode).toBe(1);
+        expect(text(r)).not.toContain(ESCALATION_HEADING);
+    });
+
+    it('polarity: on the reviewer too, a stale subject is an authoring defect', () => {
+        const rel = writeRecord('ss.md', GOOD, BOTH_RATIFIED, [SELF_PATH], '0'.repeat(64));
+        const r = evaluate([SELF_PATH, rel]);
+        expect(r.exitCode).toBe(1);
+        expect(text(r)).not.toContain(ESCALATION_HEADING);
+    });
+
+    it('polarity: on the reviewer too, a self-ratified record is an authoring defect', () => {
+        const rel = writeRecord(
+            'sx.md',
+            { ...GOOD, proposed_by: 'x', implemented_by: 'x', reviewed_by: 'x' },
+            BOTH_RATIFIED,
+            [SELF_PATH],
+        );
+        const r = evaluate([SELF_PATH, rel]);
+        expect(r.exitCode).toBe(1);
+        expect(text(r)).not.toContain(ESCALATION_HEADING);
+    });
+
+    it('a refused record on the reviewer names both triggers', () => {
+        const rel = writeRecord(
+            'sr.md',
+            { ...GOOD, verdict: 'refused' },
+            { anthropic: 'refused', openai: 'refused' },
+            [SELF_PATH],
+        );
+        const r = evaluate([SELF_PATH, rel]);
+        expect(r.exitCode).toBe(1);
+        expect(text(r)).toContain('the reviewer itself');
+        expect(text(r)).toContain('a seat refused the change');
     });
 
     it('polarity: a passing record over an ordinary gated surface does not escalate', () => {

@@ -521,11 +521,36 @@ export const ESCALATION_HEADING =
     '(docs/contracts/ratification-artifact.md § When the user decides):';
 
 /**
+ * ADVISORY, and the block says so: this gate's exit code does not carry the
+ * user's decision. A failing record already fails; a passing record over the
+ * mechanism passes here and is held at merge, where `classify_merge_risk`
+ * classes the same paths `needs-owner` and the owner's forge act is the only
+ * approval (ADR-281 § 5). A blocking status here would need an owner
+ * acknowledgment the gate could authenticate, and none exists.
+ */
+const ESCALATION_ADVISORY =
+    '  advisory: this exit code does not carry the decision — the merge gate holds ' +
+    'these paths as needs-owner, and the owner approves on the forge (ADR-281 § 5).';
+
+/**
  * Why a run stops for the user. An authoring defect — no record, a malformed or
- * self-ratified one, a stale `subject` — is deliberately not a trigger: routing
- * it to the owner would spend the escalation on "write a record".
+ * self-ratified one, a stale `subject` — is deliberately not a trigger, for the
+ * mechanism's own files too: routing it to the owner would spend the escalation
+ * on "write a record". `reviewer` therefore needs a council answer to fire.
  */
 export type EscalationTrigger = 'refused' | 'non-convergent' | 'diversity-short' | 'reviewer';
+
+/**
+ * Record text and paths are candidate-controlled, and this block lands in a CI
+ * log a person reads: C0/C1 controls and the bidirectional overrides are shown
+ * as `\u{…}` escapes, never emitted, so a field cannot forge a line or recolour one.
+ */
+export function printable(s: string): string {
+    return s.replace(
+        /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/gu,
+        (c) => `\\u{${(c.codePointAt(0) ?? 0).toString(16)}}`,
+    );
+}
 
 export interface EscalationRecord {
     path: string;
@@ -556,27 +581,30 @@ export function escalationMessage(input: {
     if (input.triggers.length === 0) {
         return [];
     }
-    const out = ['', ESCALATION_HEADING];
+    const out = ['', ESCALATION_HEADING, ESCALATION_ADVISORY];
     for (const t of input.triggers) {
         out.push(`  · ${TRIGGER_TEXT[t]}`);
     }
     for (const r of input.records) {
-        out.push(`  record ${r.path} — verdict: ${r.verdict ?? 'unreadable'}`);
+        const verdict = printable(r.verdict ?? 'unreadable');
+        out.push(`  record ${printable(r.path)} — verdict: ${verdict}`);
         const dissent = Object.entries(r.seats).filter(
             ([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding',
         );
         out.push(
             dissent.length === 0
                 ? '    dissent: none recorded'
-                : `    dissent: ${dissent.map(([p, v]) => `${p}: ${v}`).join(', ')}`,
+                : `    dissent: ${dissent.map(([p, v]) => printable(`${p}: ${v}`)).join(', ')}`,
         );
     }
     out.push('  the exact change (gated paths):');
     for (const p of input.gatedPaths) {
-        out.push(`    · ${p}`);
+        out.push(`    · ${printable(p)}`);
     }
     const where =
-        input.records.length > 0 ? input.records.map((r) => r.path).join(', ') : 'the record';
+        input.records.length > 0
+            ? input.records.map((r) => printable(r.path)).join(', ')
+            : 'the record';
     out.push(
         `  this gate does not know the expected gain, the risk, or the rollback — ` +
             `state each in ${where} and the pull request, then ask the user once.`,
@@ -744,7 +772,7 @@ export function evaluate(
 
     let anyRatified = false;
     const failures: string[] = [];
-    const triggers = new Set<EscalationTrigger>(gated.self ? ['reviewer'] : []);
+    const triggers = new Set<EscalationTrigger>();
     const escalated: EscalationRecord[] = [];
     const seatsOf = (text: string): Record<string, string> => {
         const fm = readAdrFrontmatter(text);
@@ -813,6 +841,9 @@ export function evaluate(
         }
     }
 
+    if (gated.self && (anyRatified || escalated.length > 0)) {
+        triggers.add('reviewer');
+    }
     const escalation = escalationMessage({
         triggers: [...triggers],
         records: escalated,

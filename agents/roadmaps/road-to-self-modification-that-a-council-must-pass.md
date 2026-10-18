@@ -1282,12 +1282,17 @@ gaps again; the binding closes replay, and nothing else.
       `smaller-change` refusal: this step alone, nothing else of the staged set.
       `escalationMessage` and `ESCALATION_HEADING` in the gate; the trigger set
       is `refused`, `non-convergent`, a record short only of provider diversity,
-      and any change to the mechanism itself (`gated.self`), ratified or not —
-      exit code unchanged, the block is information. Authoring defects stay
-      silent. The contract's § When the user decides now says what the gate
-      prints and which two conditions it cannot see from a diff. 12 tests;
+      and a change to the mechanism itself (`gated.self`) that carries a council
+      answer, passing or not — exit code unchanged, and the block says it is
+      advisory and names the merge gate's `needs-owner` as where the decision is
+      held. Authoring defects stay silent, on the mechanism's files too; record
+      fields print with control and bidi characters escaped. Round 1 of the
+      review refused 2/2 on exactly those three points (an unqualified "the user
+      decides" on an exit 0, `gated.self` escalating authoring defects, raw
+      record text in a CI log); round 2 reviewed the fix. The contract's § When the user decides now says what the gate
+      prints and which two conditions it cannot see from a diff. 18 tests;
       sensitivity seen by removing the two `lines.push(...escalation)` calls
-      (4 cases red), then restored. Content decided by the council under the
+      (4 cases red), and by reverting each round-1 fix (3 red), then restored. Content decided by the council under the
       owner's standing delegation of 2026-10-16; the merge is the owner's
       (`needs-owner`, ADR-281 amendment).
 

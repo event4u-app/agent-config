@@ -727,12 +727,20 @@ and a subagent fan-out is never a substitute for the council here.
 
 `check_kernel_edit_ratified` prints that question when it can see the case: on
 a `refused` or `non-convergent` record, on a record short only of provider
-diversity, and on any change to the ratification mechanism itself, ratified or
-not (the exit code is unchanged — the escalation is information, the verdict
-is still the record's). It fills in the verdict, the dissenting seats and the
-gated paths, and asks for the expected gain, the risk and the rollback, which
-it does not know. It stays silent on an authoring defect — no record, a
-self-ratified one, a stale `subject` — because that is not the user's question.
+diversity, and on a change to the ratification mechanism itself that carries a
+council answer, passing or not. It fills in the verdict, the dissenting seats
+and the gated paths, and asks for the expected gain, the risk and the rollback,
+which it does not know. It stays silent on an authoring defect — no record, a
+self-ratified one, a stale `subject` — on the mechanism's own files too,
+because that is not the user's question. Record fields are printed with
+control and bidirectional characters escaped.
+
+**The printed question is advisory, and says so.** The gate's exit code does
+not carry the user's decision: a failing record fails already, and a passing
+record over the mechanism passes here and is held at merge, where
+`classify_merge_risk` classes the same paths `needs-owner` and the owner's
+forge act is the approval (ADR-281 § 5). A blocking status in this gate would
+need an owner acknowledgment it could authenticate, and none exists.
 Whether a different provider was tried (condition 1) and whether a row of
 the owner-reserved table is touched (condition 3) are judgements the gate
 cannot make from a diff; a run states them itself.
