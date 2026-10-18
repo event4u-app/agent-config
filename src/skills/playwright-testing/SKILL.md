@@ -140,7 +140,9 @@ test('homepage visual regression', async ({ page }) => {
 - Screenshots are stored in `tests/*.png` (or configured path).
 - First run creates baseline screenshots.
 - Subsequent runs compare against baselines.
-- Update baselines: `npx playwright test --update-snapshots`.
+- Update baselines: `npx playwright test --update-snapshots`. The update is
+  shown to the user as a diff and lands in a commit of their own, on the pinned
+  renderer `playwright-architect` requires — never folded into a code change.
 
 ## Viewport testing
 
