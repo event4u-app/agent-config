@@ -206,6 +206,24 @@ describe('the tool and command surface', () => {
             expect(read(p, 'posix'), `posix ${p}`).toBeNull();
         }
         expect(bash('cat "C:\\Users\\someone\\project\\.env.example"', 'windows')).toBeNull();
+        // An unquoted backslash is the shell's before it is the filesystem's: it
+        // escapes the next character, so `cat dir\.env` opens `dir.env` on both hosts
+        // (council round 4c, ninth pass).
+        for (const host of ['posix', 'windows'] as const) {
+            for (const cmd of ['cat dir\\.env', 'cat C:\\x\\.env', 'cat < dir\\.env']) {
+                expect(bash(cmd, host), `${host} ${JSON.stringify(cmd)}`).toBeNull();
+            }
+        }
+        // A redirection attached to the command word arrives with its quotes already
+        // stripped, so on a Windows host it is judged uncooked: the unquoted form is a
+        // false positive the guard accepts so the quoted one is never missed.
+        expect(bash('cat<dir\\.env', 'windows')).not.toBeNull();
+        expect(bash('cat<dir\\.env', 'posix')).toBeNull();
+        // Quoted, the backslash survives and the Windows host separates on it, attached or not.
+        for (const cmd of ['cat<"C:\\x\\.env"', 'cat --config="dir\\.env"']) {
+            expect(bash(cmd, 'windows'), `windows ${JSON.stringify(cmd)}`).not.toBeNull();
+            expect(bash(cmd, 'posix'), `posix ${JSON.stringify(cmd)}`).toBeNull();
+        }
         // A backslash the shell consumes as an escape names the same file on both hosts.
         for (const host of ['posix', 'windows'] as const) {
             for (const cmd of ['cat .e\\nv', 'cat dir\\/.env', "cat 'certs\\tls.key'"]) {

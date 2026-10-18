@@ -200,14 +200,27 @@ const base = (w: string): string => w.replace(/^.*\//, '');
  */
 export function credentialMention(text: string, host: PathHost = HOST): Verdict {
     // Two readings of one segment, because neither alone matches the shell: the
-    // raw text (a Windows path, an attached `cat<.env`), and each word the shell
+    // raw text (an attached `cat<.env`, `--config=.env`), and each word the shell
     // would build — quotes joined, escapes applied only where the shell applies
     // them (`cat .e''nv`, an unquoted `cat .e\nv`) — each cut at the same
-    // characters. Whether a backslash separates is the host's decision, not the
-    // reading's (see `PathHost`).
-    const readings = [text, ...commandWords(text)];
-    for (const reading of readings) {
-        const v = mentionIn(reading, host);
+    // characters. In the raw text a backslash is still the shell's to consume,
+    // so it never separates there; the host decides only for a built word, where
+    // a surviving backslash is a filename character the filesystem reads.
+    //
+    // One exception, conservative on purpose: the segment arrives with the quotes
+    // of its command word already removed (`invokedSegments` strips them so
+    // `np''m` is npm), so `cat<"C:\x\.env"` and `cat<C:\x\.env` reach here as the
+    // same text. A redirection attached to the command word is therefore judged
+    // as the filesystem would read it, uncooked: on a Windows host it refuses
+    // both, the second a false positive this guard accepts rather than miss the first.
+    const head = /^\S*[<>]\S*/.exec(text.trimStart())?.[0];
+    const readings: ReadonlyArray<readonly [string, PathHost]> = [
+        [text, 'posix'],
+        ...(head === undefined ? [] : [[head, host] as const]),
+        ...commandWords(text).map((w) => [w, host] as const),
+    ];
+    for (const [reading, readingHost] of readings) {
+        const v = mentionIn(reading, readingHost);
         if (v !== null) return v;
     }
     return null;
