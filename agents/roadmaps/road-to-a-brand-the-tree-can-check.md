@@ -527,7 +527,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       `brand-audit` already records, so the next reader does not re-derive it,
       and supplied material is declared data-never-instruction at the intake —
       the reader-side half of 4.4.
-- [ ] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
+- [x] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
       byte for byte; greenfield; dotted near-miss; shadowed and duplicate files;
       tokens without voice and voice without tokens; exploration without lock;
       similar screenshot colours never merged; unbacked superlative; expired
@@ -538,11 +538,13 @@ irreversible-external-action row of `non-destructive-by-default`).
       brand bytes. The "sounds like us" leg stays a labelled rubric. (new test
       file)
       verify: `npx vitest run tests/scripts/brand_scenarios.test.ts --reporter=verbose` -> /✓/
-- [ ] **7.3 Claims the tree can back.** `brand-voice-lexicon-recall` (planted
+      Done 2026-10-19: `tests/scripts/brand_scenarios.test.ts`, 16 legs over the real readers in scratch projects. Two legs are read narrowly and say so: "exploration without lock" is asserted as the resolver persisting nothing (no registry, cache or lock file), and "non-brand task at zero brand bytes" pins the static half — no hook concern binds `brand:status`, the checker or the slot — while 0.6's `no_brand_bytes.test.ts` keeps the dynamic half. A recall leg plants five terms and six exempt twins; writing it found German „…“ quotes unexempted, fixed in `blankExempt` (only lowers hits, so 5.3's zero reading stands). A palette probe moving the sampled token by one step turned that leg red. The "sounds like us" leg stays a labelled rubric, not a test.
+- [x] **7.3 Claims the tree can back.** `brand-voice-lexicon-recall` (planted
       terms 100 %, quoted false positives 0) and `brand-status-state-truth`
       (every 0.2 fixture classified correctly), registered `unbacked`, then backed
       by 7.2.
       verify: `rg -n 'brand-voice-lexicon-recall|brand-status-state-truth' docs/CLAIMS.md` -> 2 matches
+      Done 2026-10-19: both entries are `backed` on `exec:vitest run …` pointers over the 7.2, 0.2 and lexicon suites, each with a `non_inference` line (literal matching misses inflection; fixture classification says nothing about a consumer's intent). `docs/proof.md` rebuilt; the exec-feasibility denominator re-derived to 65.
 
 ## Non-goals
 
@@ -585,17 +587,17 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The tree holds exactly three brand sources — tokens,
+- [x] AC-1 — The tree holds exactly three brand sources — tokens,
       `design-system.json`/`DESIGN.md`, the `brand-voice` slot — and no persisted
       index or registry file beside them.
-- [ ] AC-2 — No authored surface names `.tokens.json` as the file to write, and
+- [x] AC-2 — No authored surface names `.tokens.json` as the file to write, and
       `BRAND_TOKEN_PATHS` is declared once.
-- [ ] AC-3 — A ghostwriter profile at either documented path is ignored by git
+- [x] AC-3 — A ghostwriter profile at either documented path is ignored by git
       and scanned by the source lint, and no tracked file under either path is
       a real-person profile.
-- [ ] AC-4 — `brand:status` never reports a malformed or shadowed file as the
+- [x] AC-4 — `brand:status` never reports a malformed or shadowed file as the
       brand, and names every source with its hash.
-- [ ] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
+- [x] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
       unrepresentable value fails with its token path and a non-zero exit.
 - [x] AC-6 — A planted banned term or unbacked claim in a finished draft from
       ghostwriter, post-as, humanizer or brand review produces a located finding;
@@ -624,6 +626,7 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 | E11 | deterministic | agent | Closure pass 2026-10-15: the `-t` titles and `rg` targets in 0.1-0.6, 2.x, 3.x, 4.x, 5.x, 6.x and 7.x name tests or text that do not exist yet, so each verify fails until its step lands; 0.7 is green today and stays the floor. The contradiction listed in D9 is the finding itself, settled by E2. Zero owner questions. | `closure_scan` on this file | a step lands without its title or sentence |
 | E12 | reversible-technical | evidence | The starter drops `$schema` rather than guessing a replacement URL: no offline check can confirm a published schema location, and no reader consumes the key. | `design-tokens-starter.json:2`; no `$schema` read in `tokens.ts` | the specification publishes a schema URL a validator here would read |
 | E13 | reversible-technical | evidence | AC-6 and AC-8 closed 2026-10-19 with 5.4. AC-6: the four surfaces run `check_voice_lexicon` on the finished draft; the checker's located findings and quoted-text exemption are tested. AC-8: `enforced_by` names the checker under `instruction-only`; the one remaining "validation gate" wording is ADR-210's decision table, a historical record left verbatim by the same convention 1.2 applies to ADR-061. | `draft-surfaces`, `lexicon`, `control` cases in `check_voice_lexicon.test.ts`; `rg -n 'brand-consistency' src docs` | the checker becomes a CI sweep (then `validator:`), or ADR-210 is amended |
+| E14 | reversible-technical | evidence | AC-1..AC-5 closed 2026-10-19 on fresh runs: AC-1 — `brand:status` computes per call and the 7.2 "exploration without lock" leg shows no file is added; AC-2 — `token-name-parity` green and `BRAND_TOKEN_PATHS` exported once (`src/shared/brandTokenPaths.ts`); AC-3 — the managed block covers both paths, `lint_ghostwriter_source` scans both, 0 tracked profiles, and this repository's own `.gitignore` now carries the same four lines, which it lacked (its managed block predates 1.1); AC-4 — `state-fixtures`, `shadowed`, `invalid`; AC-5 — `dtcg-2025`. AC-7 and AC-9 stay open on 6.3: neither can be judged before the read-rate reading decides whether a carrier exists. | `vitest run` over `brand_status`, `brand_scenarios`, `lint_ghostwriter_source`, `skills_design_tokens_tokens` (80 + 16 pass); `git check-ignore --no-index` | a carrier lands (re-check AC-7) |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude-opus -->
