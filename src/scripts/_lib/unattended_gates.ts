@@ -38,12 +38,14 @@ export function read_candidate(packument: unknown): RegistryCandidate | null {
     if (manifest === null) return null;
     const published = asRecord(doc?.['time'])?.[version];
     const attestations = asRecord(asRecord(manifest['dist'])?.['attestations']);
+    // Presence and predicate type only: the attestation's signature is not verified here.
+    const predicate = asRecord(attestations?.['provenance'])?.['predicateType'];
     return {
         version,
         publishedAt: typeof published === 'string' ? published : null,
         deprecated: manifest['deprecated'],
         engines: manifest['engines'],
-        provenance: attestations === null ? false : asRecord(attestations['provenance']) !== null,
+        provenance: typeof predicate === 'string' && predicate.startsWith('https://slsa.dev/provenance/'),
         impactMap: asRecord(manifest['agentConfig'])?.['impact'] ?? null,
     };
 }

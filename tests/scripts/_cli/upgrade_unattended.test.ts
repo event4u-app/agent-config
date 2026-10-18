@@ -39,6 +39,7 @@ function packument(over: { version?: string; ageHours?: number; deprecated?: str
 class World {
     binary = '16.5.0';
     lock = '16.5.0';
+    term = false;
     readonly cmds: string[][] = [];
     fault: ((cmd: string[], w: World) => StepResult | null) | null = null;
 
@@ -69,6 +70,8 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
         fetchPackument: async () => fetched,
         run: world.run,
         readInstalled: () => world.lock,
+        readBinary: () => world.binary,
+        interrupted: () => world.term,
         origin: 'global',
         agentConfigBin: '/global/bin/agent-config',
         globalSettings: [path.join(tmp, 'global', '.agent-settings.yml')],
@@ -117,6 +120,17 @@ describe('upgrade --unattended — one refusal per gate (2.1)', () => {
         ['a deprecated release', { doc: packument({ deprecated: 'broken, use 16.6.1' }) }, /deprecated/],
         ['an unmet engines.node', { doc: packument({ node: '>=99.0.0' }) }, /engines\.node '>=99\.0\.0' is not satisfied/],
         ['a missing provenance attestation', { doc: packument({ provenance: false }) }, /provenance attestation missing/],
+        [
+            'an attestation that is not SLSA provenance',
+            {
+                doc: (() => {
+                    const d = packument() as { versions: Record<string, { dist: unknown }> };
+                    d.versions['16.6.0']!.dist = { attestations: { provenance: { predicateType: 'https://example.com/other' } } };
+                    return d;
+                })(),
+            },
+            /provenance attestation missing/,
+        ],
         ['a release in range that needs action', { doc: packument({ impact: { '16.6.0': { impact: 'action' } } }) }, /needs consumer action/],
         ['an unavailable impact map', { doc: packument({ impact: null }) }, /impact map unavailable/],
         ['a CI run', { env: { ci: true, noUpdateCheck: false, nodeVersion: 'v22.11.0' } }, /suppressed: CI/],
@@ -177,14 +191,16 @@ describe('upgrade --unattended — single flight (2.2)', () => {
         expect(err).toMatch(/another unattended upgrade holds the lock \(pid 1\)/);
     });
 
-    it('a lock left by a dead owner, or past its TTL, is taken over', () => {
+    it('a lock left by a dead owner is taken over; a live owner keeps it past its TTL', () => {
         const lockPath = path.join(tmp, 'state', 'l.lock');
         const base = { lockPath, now: () => NOW, isAlive: () => false };
         expect(acquire_lock({ ...base, pid: 1 })).toBeNull();
         expect(acquire_lock({ ...base, pid: 2 })).toBeNull();
-        const stale = { lockPath, pid: 3, isAlive: () => true, now: () => new Date(NOW.getTime() + 31 * 60_000) };
-        expect(acquire_lock(stale)).toBeNull();
-        expect(acquire_lock({ lockPath, pid: 4, isAlive: () => true, now: () => new Date(NOW.getTime() + 31 * 60_000) })).toMatch(/pid 3/);
+        expect(JSON.parse(fs.readFileSync(lockPath, 'utf-8')).pid).toBe(2);
+        const late = { lockPath, pid: 3, isAlive: () => true, now: () => new Date(NOW.getTime() + 31 * 60_000) };
+        expect(acquire_lock(late)).toMatch(/pid 2\) for longer than its 30 min TTL/);
+        expect(JSON.parse(fs.readFileSync(lockPath, 'utf-8')).pid).toBe(2);
+        expect(fs.readdirSync(path.dirname(lockPath))).toEqual(['l.lock']);
     });
 });
 
@@ -206,9 +222,22 @@ describe('upgrade --unattended — every failure restores the previous version (
             },
         ],
         [
-            'SIGTERM during the global step',
+            'a child killed by SIGTERM during the global step',
             {},
             (cmd, w) => (cmd[1] === 'global' && w.binary === '16.6.0' ? { rc: 143, stderr: '' } : null),
+        ],
+        [
+            'SIGTERM delivered to this process after npm finished',
+            {},
+            (cmd, w) => {
+                if (cmd[0] === 'npm' && cmd[3]!.endsWith('16.6.0')) w.term = true;
+                return null;
+            },
+        ],
+        [
+            'EACCES on the global step after npm replaced the binary',
+            {},
+            (cmd, w) => (cmd[1] === 'global' && w.binary === '16.6.0' ? { rc: 243, stderr: 'Error: EACCES: permission denied' } : null),
         ],
         [
             'a partial settings sync',
@@ -253,6 +282,21 @@ describe('upgrade --unattended — every failure restores the previous version (
         expect(await run_unattended(deps(w))).toBe(4);
         expect(err).toMatch(/the restore did not reach 16\.5\.0/);
     });
+
+    it('a restore that leaves the lock right but the binary half-written is not called a restore', async () => {
+        const w = new World();
+        w.fault = (cmd, world) => {
+            if (cmd[1] === 'global' && world.binary === '16.6.0') return { rc: 1, stderr: 'boom' };
+            if (cmd[0] === 'npm' && cmd[3]!.endsWith('16.5.0')) {
+                world.binary = 'half-written';
+                return { rc: 1, stderr: 'npm error code ENOSPC' };
+            }
+            return null;
+        };
+        expect(await run_unattended(deps(w))).toBe(4);
+        expect(w.lock).toBe('16.5.0');
+        expect(err).toMatch(/binary: half-written/);
+    });
 });
 
 describe('upgrade --unattended — global surfaces only (2.4)', () => {
@@ -283,6 +327,17 @@ describe('upgrade — the flags (2.1, 2.5)', () => {
         expect(_parse(['--unattended', '--dry-run']).dry_run).toBe(true);
         expect(_parse(['--skip', 'v16.6.0']).skip).toBe('16.6.0');
         expect(_parse(['--skip=16.6.0']).skip).toBe('16.6.0');
+        let stderr = '';
+        const write = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((t: string) => ((stderr += t), true)) as typeof process.stderr.write;
+        try {
+            expect(() => _parse(['--skip', 'foo'])).toThrow();
+            expect(() => _parse(['--skip', '16.6.0', '--dry-run'])).toThrow();
+        } finally {
+            process.stderr.write = write;
+        }
+        expect(stderr).toMatch(/'foo' is not a version/);
+        expect(stderr).toMatch(/--skip: not allowed with --check, --dry-run/);
         const src = fs.readFileSync(path.join(__dirname, '../../../src/scripts/_cli/cmd_upgrade.ts'), 'utf-8');
         expect(src.split("'--to'").length - 1).toBe(0);
     });

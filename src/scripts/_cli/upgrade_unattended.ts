@@ -67,6 +67,10 @@ export interface UnattendedDeps {
     readonly run: (cmd: string[]) => StepResult;
     /** The version recorded in `installed.lock`; `''` when unknown. */
     readonly readInstalled: () => string;
+    /** The version of the global package on disk; `''` when unreadable or half-written. */
+    readonly readBinary: () => string;
+    /** True once this process received SIGTERM; checked after every step. */
+    readonly interrupted: () => boolean;
     readonly origin: InstallOrigin;
     readonly agentConfigBin: string;
     /** Existing GLOBAL settings files only — never a project file. */
@@ -121,33 +125,74 @@ interface LockRecord {
     readonly ttl_ms: number;
 }
 
-/** `null` when the lock is ours now; otherwise the reason it is not. */
+function read_text(p: string): string | null {
+    try {
+        return fs.readFileSync(p, 'utf-8');
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * `null` when the lock is ours now; otherwise the reason it is not.
+ *
+ * The lock is created by hard-linking a private file into place, which fails
+ * when any lock exists. A live owner holds it whatever its age — the TTL only
+ * names how long a run is expected to take, it never hands a running swap's
+ * lock to a second caller. A dead owner's lock is moved aside by rename, and
+ * the moved file is compared with the one judged stale: if it is not the same
+ * record, another caller took over in between, and its lock is put back.
+ */
 export function acquire_lock(deps: Pick<UnattendedDeps, 'lockPath' | 'pid' | 'now' | 'isAlive'>): string | null {
     const record: LockRecord = { pid: deps.pid, started_at: deps.now().toISOString(), ttl_ms: LOCK_TTL_MS };
-    for (let attempt = 0; attempt < 2; attempt += 1) {
-        try {
-            fs.mkdirSync(path.dirname(deps.lockPath), { recursive: true });
-            fs.writeFileSync(deps.lockPath, JSON.stringify(record) + '\n', { flag: 'wx' });
-            return null;
-        } catch (exc) {
-            if ((exc as NodeJS.ErrnoException).code !== 'EEXIST') return `cannot write the lock: ${String(exc)}`;
-        }
-        let held: Partial<LockRecord> = {};
-        try {
-            held = JSON.parse(fs.readFileSync(deps.lockPath, 'utf-8')) as Partial<LockRecord>;
-        } catch {
-            // An unreadable lock is treated as stale, never as ours.
-        }
-        const age = deps.now().getTime() - Date.parse(String(held.started_at));
-        const live = typeof held.pid === 'number' && deps.isAlive(held.pid) && age >= 0 && age < (held.ttl_ms ?? LOCK_TTL_MS);
-        if (live) return `another unattended upgrade holds the lock (pid ${held.pid})`;
-        try {
-            fs.unlinkSync(deps.lockPath);
-        } catch {
-            // Raced with another caller clearing it; the retry decides.
-        }
+    const mine = `${deps.lockPath}.${deps.pid}.${process.hrtime.bigint()}`;
+    try {
+        fs.mkdirSync(path.dirname(deps.lockPath), { recursive: true });
+        fs.writeFileSync(mine, JSON.stringify(record) + '\n', { flag: 'wx' });
+    } catch (exc) {
+        return `cannot write the lock: ${String(exc)}`;
     }
-    return 'the lock could not be taken';
+    try {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+            try {
+                fs.linkSync(mine, deps.lockPath);
+                return null;
+            } catch (exc) {
+                if ((exc as NodeJS.ErrnoException).code !== 'EEXIST') return `cannot write the lock: ${String(exc)}`;
+            }
+            const judged = read_text(deps.lockPath);
+            let held: Partial<LockRecord> = {};
+            try {
+                held = JSON.parse(judged ?? '') as Partial<LockRecord>;
+            } catch {
+                // An unreadable lock is treated as stale, never as ours.
+            }
+            if (typeof held.pid === 'number' && deps.isAlive(held.pid)) {
+                const age = deps.now().getTime() - Date.parse(String(held.started_at));
+                const overdue = age >= (held.ttl_ms ?? LOCK_TTL_MS) ? ` for longer than its ${LOCK_TTL_MS / 60_000} min TTL` : '';
+                return `another unattended upgrade holds the lock (pid ${held.pid})${overdue}`;
+            }
+            const tomb = `${mine}.stale`;
+            try {
+                fs.renameSync(deps.lockPath, tomb);
+            } catch {
+                continue;
+            }
+            if (read_text(tomb) !== judged) {
+                try {
+                    fs.linkSync(tomb, deps.lockPath);
+                } catch {
+                    // A third caller holds it now; either way it is not ours.
+                }
+                fs.rmSync(tomb, { force: true });
+                return 'another unattended upgrade took the lock over first';
+            }
+            fs.rmSync(tomb, { force: true });
+        }
+        return 'the lock could not be taken';
+    } finally {
+        fs.rmSync(mine, { force: true });
+    }
 }
 
 function release_lock(deps: Pick<UnattendedDeps, 'lockPath' | 'pid'>): void {
@@ -169,33 +214,29 @@ function install_steps(version: string, deps: UnattendedDeps): string[][] {
     ];
 }
 
-function run_steps(steps: string[][], deps: UnattendedDeps): { ok: true } | { ok: false; cmd: string[]; result: StepResult } {
+function run_steps(steps: string[][], deps: UnattendedDeps, honourSignal = true): { ok: true } | { ok: false; cmd: string[]; result: StepResult } {
     for (const cmd of steps) {
         say(deps.out, '→ ' + cmd.join(' '));
         const result = deps.run(cmd);
         if (result.rc !== 0) return { ok: false, cmd, result };
+        if (honourSignal && deps.interrupted()) return { ok: false, cmd, result: { rc: 143, stderr: 'SIGTERM received' } };
     }
     return { ok: true };
 }
 
+/** Restored means both the binary and `installed.lock` read the previous version again. */
 function restore(previous: string, deps: UnattendedDeps): number {
-    const back = run_steps(install_steps(previous, deps).slice(0, 2), deps);
-    const now = deps.readInstalled();
-    if (back.ok && now === previous) {
+    const back = run_steps(install_steps(previous, deps).slice(0, 2), deps, false);
+    const lock = deps.readInstalled();
+    const binary = deps.readBinary();
+    if (back.ok && lock === previous && binary === previous) {
         say(deps.err, `${PREFIX}: restored ${previous}. Run \`agent-config upgrade\` to retry by hand.`);
-        return 1;
-    }
-    if (now === previous) {
-        say(
-            deps.err,
-            `⚠️  ${PREFIX}: installed.lock still records ${previous}, but a restore step failed — ` +
-                'run `agent-config doctor` before trusting this install.',
-        );
         return 1;
     }
     say(
         deps.err,
-        `❌  ${PREFIX}: the restore did not reach ${previous} (installed: ${now || 'unknown'}). ` +
+        `❌  ${PREFIX}: the restore did not reach ${previous} (installed.lock: ${lock || 'unknown'}, ` +
+            `binary: ${binary || 'unreadable'}). ` +
             `Run \`npm install -g ${PACKAGE_NAME}@${previous}\` then \`agent-config global --no-ui\`.`,
     );
     return EXIT_RESTORE_FAILED;
@@ -248,14 +289,15 @@ export async function run_unattended(deps: UnattendedDeps): Promise<number> {
         }
         const target = verdict.candidate.version;
         const steps = install_steps(target, deps);
+        if (deps.activationBlocked !== null) {
+            const how = deps.dryRun ? 'dry run: a real run would not install' : 'not installing';
+            say(deps.out, `ℹ️  ${PREFIX}: every gate passed for ${target}, but ${how} — ${deps.activationBlocked}.`);
+            return EXIT_REFUSED;
+        }
         if (deps.dryRun) {
             say(deps.out, `${PREFIX} — dry run, every gate passed for ${target}; would execute:`);
             for (const cmd of steps) say(deps.out, '  ' + cmd.join(' '));
             return 0;
-        }
-        if (deps.activationBlocked !== null) {
-            say(deps.out, `ℹ️  ${PREFIX}: every gate passed for ${target}, but not installing — ${deps.activationBlocked}.`);
-            return EXIT_REFUSED;
         }
         const ran = run_steps(steps, deps);
         if (ran.ok) {
@@ -267,9 +309,11 @@ export async function run_unattended(deps: UnattendedDeps): Promise<number> {
             say(
                 deps.err,
                 `❌  ${PREFIX}: permission denied on ${what}. agent-config never runs sudo; ` +
-                    `run this yourself with the right permissions: npm install -g ${PACKAGE_NAME}@${target}`,
+                    `run this yourself with the right permissions: ${ran.cmd.join(' ')}`,
             );
-            if (deps.readInstalled() === previous) return 1;
+            // Denied on the very first write, npm changed nothing; any later step leaves a mixed install.
+            const untouched = ran.cmd === steps[0] && deps.readInstalled() === previous && deps.readBinary() === previous;
+            if (untouched) return 1;
             return restore(previous, deps);
         }
         say(deps.err, `❌  ${PREFIX}: step failed: ${what} — restoring ${previous}.`);
@@ -331,7 +375,35 @@ export async function run_unattended_default(options: {
     agentConfigBin: string;
 }): Promise<number> {
     const globalSettings = path.join(event4u_root(), 'settings', '.agent-settings.yml');
+    const packageJson = path.join(resolvePackageRoot(import.meta.url), 'package.json');
+    let terminated = false;
+    const onTerm = (): void => {
+        terminated = true;
+    };
+    process.on('SIGTERM', onTerm);
+    try {
+        return await run_unattended_wired(options, globalSettings, packageJson, () => terminated);
+    } finally {
+        process.off('SIGTERM', onTerm);
+    }
+}
+
+function run_unattended_wired(
+    options: { dryRun: boolean; out: OutSink; err: OutSink; agentConfigBin: string },
+    globalSettings: string,
+    packageJson: string,
+    interrupted: () => boolean,
+): Promise<number> {
     return run_unattended({
+        readBinary: () => {
+            try {
+                const v = (JSON.parse(fs.readFileSync(packageJson, 'utf-8')) as { version?: unknown }).version;
+                return typeof v === 'string' ? v : '';
+            } catch {
+                return '';
+            }
+        },
+        interrupted,
         fetchPackument: () => fetch_packument(),
         run: (cmd) => default_run(cmd, options.err),
         readInstalled: () => {
@@ -344,7 +416,7 @@ export async function run_unattended_default(options: {
         lockPath: write_target(LOCK_FILE),
         skipPath: write_target(SKIP_FILE),
         env: {
-            ci: Boolean(process.env['CI']),
+            ci: !['', '0', 'false'].includes((process.env['CI'] ?? '').trim().toLowerCase()),
             noUpdateCheck: process.env['AGENT_CONFIG_NO_UPDATE_CHECK'] === '1',
             nodeVersion: process.version,
         },

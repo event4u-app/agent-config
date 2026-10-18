@@ -94,6 +94,7 @@ import { event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { parse_version } from '../_lib/version_order.js';
 
 const PACKAGE_NAME = '@event4u/agent-config';
 const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
@@ -487,6 +488,12 @@ function _parse(argv: string[]): Args {
     }
     if (args.unattended && (args.check || args.converge || args.skip !== null)) {
         _argError('argument --unattended: not allowed with --check, --converge or --skip');
+    }
+    if (args.skip !== null && (args.check || args.dry_run || args.converge)) {
+        _argError('argument --skip: not allowed with --check, --dry-run or --converge');
+    }
+    if (args.skip !== null && parse_version(args.skip) === null) {
+        _argError(`argument --skip: '${args.skip}' is not a version`);
     }
     return args;
 }
