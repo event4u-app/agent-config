@@ -46,6 +46,10 @@
  * the observer has written since. A failure that also prevents writing the mark
  * — the machine root itself unwritable — leaves none.
  *
+ * NOT YET BOUND. No manifest row runs this concern, and it is not in the
+ * dispatcher's concern registry, so it adds nothing to the hook bundle until
+ * its binding lands; the binding needs bundle headroom it does not have today.
+ *
  * KILL SWITCH. `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off` makes it a no-op without
  * a reinstall; removing the one `instructions_loaded` binding in
  * `hook_manifest.yaml` and reinstalling removes it entirely. Either is the
