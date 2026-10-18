@@ -79,6 +79,7 @@ import { main as rereadGuardMain } from './reread_guard_hook.js';
 import { main as memoryRecallMain } from './memory_recall_hook.js';
 import { main as sessionEolMain } from './session_eol_hook.js';
 import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
+import { main as instructionsObserverMain } from './instructions_observer_hook.js';
 import { main as toolResultBytesMain } from './tool_result_bytes_hook.js';
 import { main as spawnGuardShadowMain } from './spawn_guard_shadow_hook.js';
 import { main as sourceFirstGateMain } from './source_first_gate_hook.js';
@@ -147,6 +148,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/memory_recall_hook.ts': memoryRecallMain as ConcernMain,
     'src/scripts/hooks/session_eol_hook.ts': sessionEolMain as ConcernMain,
     'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
+    'src/scripts/hooks/instructions_observer_hook.ts': instructionsObserverMain as ConcernMain,
     'src/scripts/hooks/tool_result_bytes_hook.ts': toolResultBytesMain as ConcernMain,
     'src/scripts/hooks/spawn_guard_shadow_hook.ts': spawnGuardShadowMain as ConcernMain,
     'src/scripts/hooks/source_first_gate_hook.ts': sourceFirstGateMain as ConcernMain,

@@ -327,7 +327,7 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // rather than read from the manifest on purpose: a census that counts
     // whatever it finds cannot notice a concern that silently stopped being
     // declared, which is the failure this case exists for.
-    expect(names.length).toBe(62);
+    expect(names.length).toBe(63);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(

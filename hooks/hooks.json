@@ -99,6 +99,16 @@
           }
         ]
       }
+    ],
+    "InstructionsLoaded": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "R=\"${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime\"; S=\"$R/current\"; N=\"\"; [ -f \"$S/node\" ] && read -r N < \"$S/node\"; B=\"\"; [ -f \"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\" ] && B=\"$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js\"; [ -z \"$B\" ] && [ -f \"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\" ] && [ -f \"$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml\" ] && B=\"$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js\"; if [ -n \"$B\" ] && command -v node >/dev/null 2>&1; then exec node \"$B\" --platform claude --event instructions_loaded --native-event InstructionsLoaded --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1; fi; if [ -n \"$N\" ] && [ -x \"$N\" ] && [ -f \"$S/dist/hooks/dispatch.js\" ]; then exec \"$N\" \"$S/dist/hooks/dispatch.js\" --platform claude --event instructions_loaded --native-event InstructionsLoaded --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1; fi; BIN=\"$CLAUDE_PROJECT_DIR/agent-config\"; [ -x \"$BIN\" ] || BIN=agent-config; command -v \"$BIN\" >/dev/null 2>&1 || { [ -n \"$CLAUDE_PLUGIN_ROOT\" ] && { echo 'agent-config: no hook dispatcher reachable, so no agent-config hook runs in this session. Hooks need the npm package where they can reach it: npm i -g @event4u/agent-config (then npx -y @event4u/agent-config init)' >&2; }; exit 0; }; \"$BIN\" dispatch:hook --platform claude --event instructions_loaded --native-event InstructionsLoaded --project-dir \"$CLAUDE_PROJECT_DIR\" --min-version 1"
+          }
+        ]
+      }
     ]
   }
 }

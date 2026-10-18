@@ -88,10 +88,11 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('event vocabulary coverage (AC-1)', () => {
-    it('the vocabulary still has exactly ten members', () => {
+    it('the vocabulary still has exactly eleven members', () => {
         // Pinned because the roadmap corrects a source claim of nine. A journal
-        // sized to the wrong number drops an event on day one.
-        expect(EVENT_VOCABULARY.size).toBe(10);
+        // sized to the wrong number drops an event on day one. The eleventh,
+        // `instructions_loaded`, arrived with road-to-a-setup-that-decides-itself 1.1.
+        expect(EVENT_VOCABULARY.size).toBe(11);
     });
 
     it('every member is either recorded or explicitly not-recorded with a reason', () => {
@@ -101,7 +102,7 @@ describe('event vocabulary coverage (AC-1)', () => {
         expect(gaps.unreasoned).toEqual([]);
     });
 
-    it('an eleventh vocabulary member fails the partition rather than being missed', () => {
+    it('a further vocabulary member fails the partition rather than being missed', () => {
         // This is the sensitivity of the test above, exercised directly: adding
         // a member without placing it in one set or the other must be a gap.
         const gaps = partitionGaps([...EVENT_VOCABULARY, 'tool_denied']);

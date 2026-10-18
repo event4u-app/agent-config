@@ -49,6 +49,7 @@ export const COLLECTOR_EVENTS = [
     'agent_error',
     'subagent_start',
     'subagent_stop',
+    'instructions_loaded',
 ] as const;
 export type CollectorEvent = (typeof COLLECTOR_EVENTS)[number];
 

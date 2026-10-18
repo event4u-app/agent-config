@@ -111,6 +111,7 @@ hosts:
           pre_compact:        { native: PreCompact,        block_exit: null, answered_at: 2026-09-29 }
           subagent_start:     { native: SubagentStart,     block_exit: null, answered_at: 2026-09-29 }
           subagent_stop:      { native: SubagentStop,      block_exit: null, answered_at: 2026-09-29 }
+          instructions_loaded: { native: InstructionsLoaded, block_exit: null, answered_at: 2026-10-18 }
 
   augment:
     surfaces:

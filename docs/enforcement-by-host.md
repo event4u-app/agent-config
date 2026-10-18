@@ -219,7 +219,7 @@ there, which is what a `0` in this table has always meant.
 Projected from `src/scripts/hooks/host_lowering.yaml` — **configured behavior, not observed behavior.**
 A cell says what this package has written down about a host, never what the host does.
 
-**Configured: 3 of 32 host-slot pairs configure a refusal — `claude` on 3 of its 9 (`stop`, `user_prompt_submit`, `pre_tool_use`). 19 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 9 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
+**Configured: 3 of 33 host-slot pairs configure a refusal — `claude` on 3 of its 10 (`stop`, `user_prompt_submit`, `pre_tool_use`). 20 are `warning`, 10 are `unenforced`, 0 are `halt-by-state`. 1 of 9 modelled hosts configures a refusal on any slot; 0 configure one on every slot it binds.**
 
 | Host | Slot | Configured outcome | Backing | Answered |
 |---|---|---|---|---|
@@ -232,6 +232,7 @@ A cell says what this package has written down about a host, never what the host
 | `claude` | `pre_compact` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
 | `claude` | `subagent_start` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
 | `claude` | `subagent_stop` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-09-29 |
+| `claude` | `instructions_loaded` | `warning` | `block_exit: null` · `fail_policy: propagate` | 2026-10-18 |
 | `augment` | `session_start` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
 | `augment` | `session_end` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
 | `augment` | `stop` | `unenforced` | `block_exit: null` · `fail_policy: discard` | 2026-09-29 |
