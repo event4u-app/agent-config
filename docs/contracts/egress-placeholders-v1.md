@@ -223,8 +223,24 @@ one through the dispatcher and asserts the emission carries none. The lint rule
 `rewrite-concern-refused` is the authoring-time half and reads source text only.
 
 The token scope is one dispatch: a token in a local store cannot be resolved
-later, which is the intended state until the `identifier-table-at-rest` decision
-says how a scope may outlive a process. Byte lengths in a payload stub are
+later. The `identifier-table-at-rest` decision (option (b), council 2026-10-16)
+says how a scope may outlive a process, and its table exists as a module the
+stage does not call yet (`src/scripts/_lib/egress_session_table.ts`): one table
+per session under the user-global root (`runtime/egress-sessions/`, outside the
+workspace, `0600`, named by a digest of the session id), removed after seven
+idle days. It holds a per-session key and, per token, a keyed digest of the
+value, the type, the number and MAC-authenticated origin descriptors — **no
+value of any class**. A restoration names a destination, re-derives the value
+from the origin bound to that destination, matches the digest first even for
+the same destination, and otherwise fails closed as `ORIGIN_CHANGED`,
+`ORIGIN_UNAVAILABLE`, `ORIGIN_AMBIGUOUS`, `DESTINATION_MISMATCH` or
+`SESSION_EXPIRED`, each with a message that names no value and one recovery:
+explicit confirmation with the value shown. A token the session never issued is
+`UNRESOLVED` and has no recovery. Text carried into another session is
+re-issued under that session's key, or becomes the dead form
+`[expired TYPE placeholder]`, which the recogniser never parses. The key rests
+beside the digests, so the table is data minimisation, not a defence against a
+reader running as the same user. Byte lengths in a payload stub are
 measured on the received envelope whichever view the stub is cut from.
 
 **What the placeholder view does not reach.** A concern that opens the host's
