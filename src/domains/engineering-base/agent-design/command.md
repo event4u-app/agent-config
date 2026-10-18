@@ -1,15 +1,15 @@
 ---
 model_tier: medium
-name: design
+name: agent-design
 disable-model-invocation: true
 argument-hint: "[audit|render|review|polish|quieter|bolder|distill|harden|clarify] [path]"
 pack: engineering-base
 intent: "Design dispatcher — inventory, capture, review, or run one bounded intervention verb"
 routes_to: [existing-ui-audit, design-review, fe-design]
-replaces: []
+replaces: [design]
 visibility: internal
 description: Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
-cluster: design
+cluster: agent-design
 type: orchestrator
 suggestion:
   eligible: true
@@ -21,11 +21,15 @@ packs:
   - meta
 ---
 
-# /design
+# /agent-design
 
 One entry point for work on an existing UI surface. A **command**, not a skill —
 the skill catalogue is already the largest standing cost in this suite, and this
 adds a router rather than a 295th entry to it.
+
+Formerly `/design`. The host registers its own `/design` built-in, which this
+package must never shadow, so the router takes the name `/agent-design`
+(`replaces: [design]`).
 
 ## Sub-commands
 
