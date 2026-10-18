@@ -27,12 +27,10 @@ never touches the network: it reads files and writes one ledger,
 `.claude/design-system/sync-ledger.json`, next to `.design-sync/config.json`.
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/design_sync.ts plan \
-    --code design-system.json [--remote <snapshot-dir>] [--base-commit <sha>]
-npx tsx node_modules/@event4u/agent-config/src/scripts/design_sync.ts reconcile \
-    [--set <key>=<disposition>]... [--maturity <m>] [--intent preserve|extend|redesign]
-npx tsx node_modules/@event4u/agent-config/src/scripts/design_sync.ts verify \
-    [--render-check <file>] [--baseline <path>]... [--accept-render <field>=<reason>]...
+npx tsx node_modules/@event4u/agent-config/src/scripts/design_sync.ts <verb> [options]
+#   plan      --code design-system.json [--remote <snapshot-dir>] [--base-commit <sha>]
+#   reconcile [--set <key>=<disposition>]... [--maturity <m>] [--intent preserve|extend|redesign]
+#   verify    [--render-check <file>] [--baseline <path>]... [--accept-render <field>=<reason>]...
 ```
 
 `--code` is this repo's inventory from [`/design-system:capture`](../capture/command.md);
