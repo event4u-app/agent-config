@@ -304,7 +304,7 @@ two new scripts and the context file are additive; deleting them restores today.
       publication after 3.5, which itself runs `--no-pr`.
       2026-10-18: council review of #2461 (2/2) found the stage trusted its caller (branch, lease, base SHA, allowed set, body,
       clone redirects); fixed before any caller exists via `PublicationTarget`, a leased push and run-directory inputs.
-- [ ] **3.4 `analyze:inbox` becomes the final stage.** Replace the
+- [x] **3.4 `analyze:inbox` becomes the final stage.** Replace the
       branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
       engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
       command reads a runtime round (`agents/runtime/analysis/<round-id>/`) plus
@@ -323,7 +323,13 @@ two new scripts and the context file are additive; deleting them restores today.
       verify: `grep -c 'NEVER CREATE A BRANCH'
       src/domains/analysis-workbench/analyze/inbox/command.md` is 0 (1 today);
       `analyze/inbox/evals/triggers.json` holds a `--no-pr` case; the final
-      loop's ledger row names every directive it checked.
+      loop's ledger row names every directive it checked. Done 2026-10-19: the
+      ban is replaced by § Where the work happens (publish via
+      `analysis_publish.ts`, `--no-pr`, `vcs: none`); `roundUnion`,
+      `directiveBinding`, `convergenceRow`, `planLanes` and `foldLaneLedgers`
+      in `src/scripts/analysis_inbox_final.ts` (unchecked-directive, contradicted
+      transcript turn and ledger-less lane cases seen red); Phase 1 reads the
+      round union, Phase 2b runs lanes, Phase 6c is the final loop.
 - [ ] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
       `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of them seven
       files) with `--no-pr`, no network and `subagent` analysts — the first slice
@@ -331,7 +337,11 @@ two new scripts and the context file are additive; deleting them restores today.
       named a replay target by a speaking folder absent from `agents/tmp.old/`.
       verify: the replay ends in `validated` with zero remote calls in the run
       log, a lineage table naming every input file, and at most three roadmaps
-      per topic.
+      per topic. *Open 2026-10-19: every stage it exercises now exists and the
+      inbox reads a round union (3.4), but the replay is a model-driven run —
+      three `subagent` analysts with seed, three lenses and an exchange over a
+      452 KB round that lives only in the maintainer's local `agents/tmp.old/`
+      — and needs its own session, not a drain lane.*
 
 **Exit:** a replayed round lands validated `ready` roadmaps locally; 3.3 green on
 a fixture remote. **Rollback:** revert 3.4's command edit; the inbox returns to
