@@ -103,7 +103,7 @@ const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml
 const BUDGET_PATH = path.join(REPO_ROOT, 'src', 'config', 'hook-latency-budget.json');
 const RESULTS_PATH = path.join(REPO_ROOT, 'docs', 'hook-latency.json');
 
-const EVENTS: readonly string[] = [
+export const EVENTS: readonly string[] = [
     'pre_tool_use',
     'post_tool_use',
     'user_prompt_submit',
@@ -113,7 +113,7 @@ const EVENTS: readonly string[] = [
 ];
 
 /** snake_case hook event → the platform-native name hooks.json passes. */
-const NATIVE_EVENT: Readonly<Record<string, string>> = {
+export const NATIVE_EVENT: Readonly<Record<string, string>> = {
     pre_tool_use: 'PreToolUse',
     post_tool_use: 'PostToolUse',
     user_prompt_submit: 'UserPromptSubmit',
@@ -199,7 +199,7 @@ function syntheticPayload(event: string, workspace: string, tool?: ToolShape): s
  * pays and concern state stays out of the repo.
  */
 let _matrixCache: Record<string, string> | null = null;
-function hooksJsonCommand(event: string): string {
+export function hooksJsonCommand(event: string): string {
     _matrixCache ??= build_claude_hook_matrix(MANIFEST_PATH);
     const native = NATIVE_EVENT[event] ?? event;
     const cmd = _matrixCache[native];
