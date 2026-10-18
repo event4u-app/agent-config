@@ -380,6 +380,20 @@ A split multiplies links. The gate that checks them comes first.
 The three-arm design and its decision rules are own analysis of the parallel
 plans this round carried; no external source is cited for them.
 
+*Status 2026-10-18 — not runnable in this pass; nothing below is started.*
+The instrument exists: `claude plugin eval` (Claude Code 2.1.302) takes
+`--runs`, `--model`, `--ablation`, `--max-cost-usd` and `--json`, and offers
+deterministic graders (`tool_order`, `tool_used`, `regex`, `file_exists`)
+beside the `llm` judge, so grading can stay off the implementer. Three things
+are missing, in order: (1) the corpus — 6.2 admits only tasks on which arm A
+demonstrably fails, which takes a calibration run of arm A that nobody has
+authorised; (2) the arm packaging — the tool's own baseline arm is *no plugin*,
+not the monolith, so arms A, B and C are three plugin directories run with
+`--ablation none`, and none is built; (3) the spend authorisation D17 requires,
+which waits for the computed maximum 6.4 produces. It has no grader that runs a
+script or reads an exit code, so a `check:<id>` exit is graded from the trace
+(`tool_order`, `regex`) or not at all — 6.3 has to say which.
+
 - [ ] **6.1 Pre-register** under `agents/evidence/preregistration/`: arm A the
       monolith (pilot before Phase 4), arm B the split without the cursor (the
       agent follows the head's step table itself), arm C the split with the
@@ -504,9 +518,15 @@ plans this round carried; no external source is cited for them.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** Every relative link in a delivered `SKILL.md` or
+- [x] **AC-1** Every relative link in a delivered `SKILL.md` or
       `references/*.md` resolves, or is reported by a gate as a named
-      non-delivered class; a link one `../` short fails CI.
+      non-delivered class; a link one `../` short fails CI. *Met 2026-10-18:*
+      the last ungated class — `SKILL.md` links leaving the skill directory,
+      84 unresolved — is closed. 30 were `../../agent-src/…` links the
+      projection did not map, now rewritten onto `dist/agent-src/`; 25 were
+      broken in both trees and are repaired; a target that exists only in the
+      source repository is the named repo-only class (36), reported and never
+      failing; anything else fails `lint_skill_link_reach`.
 - [x] **AC-2** The order of a pilot's procedure is held by code: with the
       cursor, step n+1 is not emitted until step n's exit is met, recorded
       `judgement`, or recorded `skipped: <reason>`.
