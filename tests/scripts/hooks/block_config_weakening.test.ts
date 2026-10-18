@@ -10,6 +10,8 @@ import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { EDIT_TOOLS } from '../../../src/scripts/minimal_safe_diff_hook.js';
+
 import { load as jsYamlLoad } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
@@ -635,6 +637,15 @@ describe('block_config_weakening — snapshot surfaces', () => {
         expect(snapshotUpdateWarning('Bash', 'npx vitest run --update-snapshots tests/unit')).toBeNull();
         expect(snapshotUpdateWarning('Bash', 'npx playwright test')).toBeNull();
         expect(snapshotUpdateWarning('Bash', undefined)).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=false')).toBeNull();
+    });
+
+    it('snapshot: no shell-tool name is an edit tool, so the shell warning never meets a path decision', () => {
+        for (const t of ['Bash', 'bash', 'BashTool', 'shell', 'launch-process', 'launch_process']) {
+            expect(EDIT_TOOLS.has(t), t).toBe(false);
+            expect(snapshotUpdateWarning(t, 'npx playwright test --update-snapshots')).not.toBeNull();
+        }
+        for (const t of EDIT_TOOLS) expect(snapshotUpdateWarning(t, 'npx playwright test --update-snapshots'), t).toBeNull();
     });
 
     it('snapshot: a snapshot write warns with the acceptance step, a shell update warns, neither blocks', () => {

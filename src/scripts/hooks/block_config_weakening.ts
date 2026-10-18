@@ -148,7 +148,7 @@ const SHELL_TOOL = /^(bash|bashtool|shell|launch[-_]process)$/i;
 /** A visual-runner baseline update, answered with the acceptance step. Warn only. */
 export function snapshotUpdateWarning(tool: string, command: unknown): string | null {
     if (!SHELL_TOOL.test(tool) || typeof command !== 'string') return null;
-    if (!/--update-snapshots\b/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
+    if (!/--update-snapshots(?=\s|$)/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
     return SNAPSHOT_ACCEPTANCE;
 }
 
@@ -610,13 +610,13 @@ export function main(): number {
     }
 
     const { tool, paths, ti } = _extract(envelope);
-    const snap = snapshotUpdateWarning(tool, ti?.['command']);
-    if (snap !== null) {
+    if (!tool || !EDIT_TOOLS.has(tool) || ti === null) {
+        // Reached only by a call that was ALLOW before this branch existed, so the
+        // shell warning can never stand in for a path decision.
+        const snap = EDIT_TOOLS.has(tool) ? null : snapshotUpdateWarning(tool, ti?.['command']);
+        if (snap === null) return EXIT_ALLOW;
         process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: snap })}\n`);
         return EXIT_WARN;
-    }
-    if (!tool || !EDIT_TOOLS.has(tool) || ti === null) {
-        return EXIT_ALLOW;
     }
 
     const cwd = envelope['cwd'];
