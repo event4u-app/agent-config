@@ -1051,6 +1051,15 @@ gaps again; the binding closes replay, and nothing else.
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
 
+      **Screened 2026-10-18 and left open, for two reasons the tree states.**
+      The artifact contract this step lists is kept OUTSIDE the mechanism set by
+      an owner decision of 2026-10-15 (`agents/evidence/ratifications/gate-the-subject-calculator.md`
+      § Owner decision), and the gate's header repeats it; the writer does not
+      exist until 3.4 lands. What remains — the questions and verdict-rule
+      modules — is imported by nothing (`grep -rl modification_review src`
+      returns only the two modules), so gating them now would charge a record for
+      code no review runs. Revisit when 3.4 wires them into a run.
+
 - [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
@@ -1129,6 +1138,13 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Screened 2026-10-18 and left open: an owner ruling, not a council one.**
+      ADR-281's `review_trigger` reads "Owner ruling only. The review load on
+      the gated surface … changes materially". Putting 28 rules and the shared
+      `rule.schema.json` behind a record is that change, so the delegation of
+      2026-10-16 (technical decisions on the gate's modules go to the council)
+      does not reach it.
 
 - [x] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
@@ -1235,7 +1251,7 @@ gaps again; the binding closes replay, and nothing else.
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [ ] **5.2 The stop has a shape.** In those cases the run ends with the
+- [x] **5.2 The stop has a shape.** In those cases the run ends with the
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
@@ -1261,6 +1277,19 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Landed on its own 2026-10-18**, as the council asked in 2026-10-12's
+      `smaller-change` refusal: this step alone, nothing else of the staged set.
+      `escalationMessage` and `ESCALATION_HEADING` in the gate; the trigger set
+      is `refused`, `non-convergent`, a record short only of provider diversity,
+      and any change to the mechanism itself (`gated.self`), ratified or not —
+      exit code unchanged, the block is information. Authoring defects stay
+      silent. The contract's § When the user decides now says what the gate
+      prints and which two conditions it cannot see from a diff. 12 tests;
+      sensitivity seen by removing the two `lines.push(...escalation)` calls
+      (4 cases red), then restored. Content decided by the council under the
+      owner's standing delegation of 2026-10-16; the merge is the owner's
+      (`needs-owner`, ADR-281 amendment).
 
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the

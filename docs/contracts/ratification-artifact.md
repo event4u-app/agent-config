@@ -725,6 +725,18 @@ recommendation, the dissent, the exact change, what it is expected to gain,
 what it risks, and how it is undone. A run never decides such a case alone,
 and a subagent fan-out is never a substitute for the council here.
 
+`check_kernel_edit_ratified` prints that question when it can see the case: on
+a `refused` or `non-convergent` record, on a record short only of provider
+diversity, and on any change to the ratification mechanism itself, ratified or
+not (the exit code is unchanged — the escalation is information, the verdict
+is still the record's). It fills in the verdict, the dissenting seats and the
+gated paths, and asks for the expected gain, the risk and the rollback, which
+it does not know. It stays silent on an authoring defect — no record, a
+self-ratified one, a stale `subject` — because that is not the user's question.
+Whether a different provider was tried (condition 1) and whether a row of
+the owner-reserved table is touched (condition 3) are judgements the gate
+cannot make from a diff; a run states them itself.
+
 ### The owner-permission-route
 
 Where the council cannot conclude, the owner's permission is **his own
