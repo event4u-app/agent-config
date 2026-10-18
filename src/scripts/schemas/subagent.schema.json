@@ -14,7 +14,8 @@
     "trust",
     "lifecycle",
     "discovery",
-    "source"
+    "source",
+    "reuse"
   ],
   "properties": {
     "schema_version": {
@@ -49,7 +50,7 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^(Read|Write|Edit|Grep|Glob|Bash|WebFetch|WebSearch|NotebookEdit)(\\([^()]+\\))?$"
+        "pattern": "^(Read|Write|Edit|Grep|Glob|Bash|WebFetch|WebSearch|NotebookEdit|SendMessage)(\\([^()]+\\))?$"
       },
       "description": "A tool grant: one of the Claude Code tool names, optionally scoped — `Bash(npm test:*)` grants one command family where a bare `Bash` grants a shell. The base name stays closed, so a typo still fails CI rather than producing broken `.claude/agents/` YAML in the user's IDE; only the optional `(...)` suffix is new. Prefer the narrowest grant the task actually needs, per tool-safety Least Agency.",
       "$comment": "Was a bare enum, which made the scoped-grant syntax `tool-safety` prescribes literally inexpressible here — a schema forbidding what the rule asks for. skill.schema.json's allowed_tools permits that syntax by validating nothing at all; this pattern permits it while keeping the base-name guarantee that made the enum worth having."
@@ -108,6 +109,36 @@
       "type": "string",
       "enum": ["package", "project"],
       "default": "package"
+    },
+    "reuse": {
+      "type": "string",
+      "enum": ["continuity", "never"],
+      "description": "Freshness class, declared rather than inferred. `continuity` lets a finished worker be re-tasked when every condition in `_lib/worker_reuse.ts` holds; `never` means every dispatch is fresh — required of every judge, reviewer and validator (judge Iron Law). Read off the source definition; never projected, because the host has no per-definition reuse key.",
+      "$comment": "road-to-a-cold-start-paid-once Phase 2 (steps 2.2, 2.4)."
+    },
+    "omit_project_instructions": {
+      "type": "boolean",
+      "description": "Skip the project instruction hierarchy for this worker. Projects to the host's skip flag; ships unset on every definition until step 2.5's net-delta reading and its kernel-and-constraints fixture both hold."
+    },
+    "preload_skills": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+      "description": "Skills whose full body the host injects at every cold start. Each one is paid per spawn, so add one only on a paired measurement showing the worker needs it on almost every run."
+    },
+    "max_turns": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Upper bound on agentic turns per run. Projects to the host's turn cap."
+    },
+    "background": {
+      "type": "boolean",
+      "description": "Run the worker in the background by default. Projects to the host's background flag."
+    },
+    "cache_ttl": {
+      "type": "string",
+      "enum": ["5m", "1h"],
+      "description": "Prompt-cache TTL the worker's reuse decision reads as condition (b). Ships unset (host default) on every definition — decision D7: a one-hour write is spend, taken only on a measured re-task gap distribution. Not projected: the host's TTL knob is a settings value, not a per-definition key."
     }
   }
 }

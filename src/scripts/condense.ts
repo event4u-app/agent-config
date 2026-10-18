@@ -53,6 +53,7 @@ import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
 import { describeDroppedHosts, resolveLeanProjection, thinsHost,
     writesThinFiles, type LeanProjectionHosts, type LeanProjectionMode } from './_lib/lean_projection_mode.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
+import { nativeFieldLines } from './_lib/subagent_native_fields.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
 import { resolve_rule_pack_scope } from './_lib/scoped_projection.js';
@@ -1975,11 +1976,6 @@ export function generate_claude_subagents(): number {
         const tools = Array.isArray(toolsRaw) ? toolsRaw.map((t) => String(t)).join(', ') : String(toolsRaw ?? '');
         const tier = typeof fm['model_tier'] === 'string' ? (fm['model_tier'] as string) : 'inherit';
         const model = tier === 'inherit' ? 'inherit' : (_TIER_TO_CLAUDE_MODEL[tier] ?? 'inherit');
-        // Optional pinned reasoning effort (skill-quality-gates Phase 4, Source S):
-        // pass through to the native frontmatter only when the source declares it —
-        // hosts without an effort knob never see the key.
-        const effort = typeof fm['effort'] === 'string' ? (fm['effort'] as string) : null;
-
         const guardedBody =
             defense !== '' && !body.includes('prompt-defense-preamble')
                 ? `\n${defense}\n${body}`
@@ -1990,7 +1986,7 @@ export function generate_claude_subagents(): number {
             `description: ${description}\n` +
             `tools: ${tools}\n` +
             `model: ${model}\n` +
-            (effort !== null ? `effort: ${effort}\n` : '') +
+            nativeFieldLines(fm) + // effort, maxTurns, background, skills, omitClaudeMd — only when declared
             '---\n' +
             guardedBody;
 
