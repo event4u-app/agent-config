@@ -1324,37 +1324,6 @@ function _check_hook_wiring(): Dict {
     }) as unknown as Dict;
 }
 
-/**
- * The staged hook carrier (road-to-a-hook-carrier-that-is-never-silent 2.2,
- * 3.3, 4.1): probe the SessionStart command from a stripped environment, record
- * it, promote a demoted machine whose probe now passes, and print the layer and
- * since when the carrier outcome holds. Skipped until an install staged a runtime.
- */
-function _check_hook_carrier(): Dict {
-    const runtimeRoot = staged_runtime.runtimeRootFor(process.env);
-    if (!fs.existsSync(staged_runtime.currentRuntimeDir(runtimeRoot))) {
-        return {
-            id: 'hook-carrier',
-            status: 'skipped',
-            message: `no staged runtime under ${runtimeRoot}`,
-            remedy: 'run `agent-config upgrade` (or `npx -y @event4u/agent-config init`) to stage it',
-        };
-    }
-    const manifest = path.join(_package_root(), 'src', 'scripts', 'hook_manifest.yaml');
-    const command = claude_settings_hooks.build_claude_hook_matrix(manifest)['SessionStart'];
-    if (command === undefined) {
-        return { id: 'hook-carrier', status: 'skipped', message: 'no SessionStart hook in the matrix', remedy: '' };
-    }
-    const state = staged_runtime.probeAndPromote(command);
-    const reached = state.probe?.outcome === 'reached';
-    return {
-        id: 'hook-carrier',
-        status: reached ? 'ok' : 'warn',
-        message: [...staged_runtime.describeCarrierProbe(state.probe), staged_runtime.describeCarrierState(state)].join(' · '),
-        remedy: reached ? '' : 'install node where the hook launcher can run it, then run `agent-config upgrade`',
-    };
-}
-
 function _check_bridge_drift(
     missing: Dict[],
     modified: Dict[],
@@ -2839,7 +2808,7 @@ function _run_checks(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
-        'hook-carrier': _check_hook_carrier,
+        'hook-carrier': () => staged_runtime.checkHookCarrier(_package_root()) as unknown as Dict,
         ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,
@@ -2926,7 +2895,7 @@ function _run_checks_no_manifest(
         'claude-command-wrappers': _check_claude_command_wrappers,
         'surface-state': _check_surface_state,
         'hook-wiring': _check_hook_wiring,
-        'hook-carrier': _check_hook_carrier,
+        'hook-carrier': () => staged_runtime.checkHookCarrier(_package_root()) as unknown as Dict,
         ...(runtime_wiring.wiringRunners({ packageRoot: _package_root(), projectRoot: project_root, iterOverrides: () => iter_setting_overrides({ cwd: project_root }) }) as unknown as Record<string, CheckRunner>),
         ...(install_reach.reachRunners({ projectRoot: project_root, resolvableVersion: _current_package_version() }) as unknown as Record<string, CheckRunner>),
         'stale-orphans': _check_stale_orphans,

@@ -13967,6 +13967,32 @@ function prepareClaudeCarrier(opts) {
   }
   return { thin: next === "thinned", bodyLinkRoot: staged?.currentDir ?? null, runtimeRoot, lines, warnings };
 }
+function sessionStartCommandFor(packageRoot) {
+  try {
+    return build_claude_hook_matrix(path31.join(packageRoot, "src", "scripts", "hook_manifest.yaml"))["SessionStart"] ?? null;
+  } catch {
+    return null;
+  }
+}
+function deployClaudeCarrier(opts) {
+  const carrier = prepareClaudeCarrier({
+    packageRoot: opts.packageRoot,
+    rulesDir: opts.rulesDir,
+    sessionStartCommand: sessionStartCommandFor(opts.packageRoot),
+    wantsThin: opts.wantsThin
+  });
+  for (const w of carrier.warnings) opts.warn(w);
+  if (!opts.quiet) for (const l of carrier.lines) opts.info(l);
+  if (!carrier.thin) return;
+  try {
+    const lines = opts.thin(carrier.bodyLinkRoot);
+    markClaudeLayer(carrier.runtimeRoot, { thinned: true, rulesDir: opts.rulesDir });
+    if (!opts.quiet) for (const l of lines) opts.info(l);
+  } catch (e) {
+    markClaudeLayer(carrier.runtimeRoot, { thinned: false, rulesDir: opts.rulesDir });
+    opts.warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
+  }
+}
 
 // src/scripts/_lib/lean_projection_mode.ts
 import * as path32 from "node:path";
@@ -23090,30 +23116,15 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         res,
         preserved_now
       );
-      const rules_dir = path35.join(anchor, "rules");
-      const carrier = prepareClaudeCarrier({
+      deployClaudeCarrier({
         packageRoot: package_root,
-        rulesDir: rules_dir,
-        sessionStartCommand: _claude_session_start_command(package_root),
-        wantsThin: installerThinsHost(tool_id, { packageRoot: package_root })
+        rulesDir: path35.join(anchor, "rules"),
+        quiet: state.QUIET,
+        info,
+        warn,
+        wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
+        thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path35.join(anchor, "rules"), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot }))
       });
-      for (const w of carrier.warnings) warn(w);
-      if (!state.QUIET) for (const l of carrier.lines) info(l);
-      if (carrier.thin) {
-        try {
-          const thin = thinInstalledRuleLayer({
-            rulesDir: rules_dir,
-            packageRoot: package_root,
-            preserved: preserved_now,
-            bodyLinkRoot: carrier.bodyLinkRoot
-          });
-          markClaudeLayer(carrier.runtimeRoot, { thinned: true, rulesDir: rules_dir });
-          if (!state.QUIET) for (const l of describeThinInstalledLayer(thin)) info(l);
-        } catch (e) {
-          markClaudeLayer(carrier.runtimeRoot, { thinned: false, rulesDir: rules_dir });
-          warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
-        }
-      }
       if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, void 0, { thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]]) })) info(l);
     }
     const missing_targets = _verify_deploy_targets(anchor, plan);
@@ -23171,14 +23182,6 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     }
   }
   return results;
-}
-function _claude_session_start_command(package_root) {
-  try {
-    const manifest = path35.join(package_root, "src", "scripts", "hook_manifest.yaml");
-    return build_claude_hook_matrix(manifest)["SessionStart"] ?? null;
-  } catch {
-    return null;
-  }
 }
 function setUnion(a, b) {
   const out = new Set(a);

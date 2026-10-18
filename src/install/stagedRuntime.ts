@@ -37,6 +37,7 @@ import { createRequire } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { build_claude_hook_matrix } from '../scripts/_lib/claude_settings_hooks.js';
 import { event4u_root } from '../scripts/_lib/user_global_paths.js';
 
 export const RUNTIME_DIRNAME = 'runtime';
@@ -433,4 +434,76 @@ export function probeAndPromote(sessionStartCommand: string, env: NodeJS.Process
         fs.rmSync(path.join(runtimeRoot, DEMOTED_MARKER), { force: true });
     }
     return readCarrierState(runtimeRoot);
+}
+
+/** The `SessionStart` command the installer writes for this package, or null. */
+export function sessionStartCommandFor(packageRoot: string): string | null {
+    try {
+        return build_claude_hook_matrix(path.join(packageRoot, 'src', 'scripts', 'hook_manifest.yaml'))['SessionStart'] ?? null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * The claude-code deploy step, after the copy and the rewrite: prepare the
+ * carrier, thin through `thin` only when the plan says so, and mark the layer
+ * by what actually happened — a thin pass that throws leaves it marked full.
+ */
+export function deployClaudeCarrier(opts: {
+    readonly packageRoot: string;
+    readonly rulesDir: string;
+    readonly wantsThin: boolean;
+    readonly quiet: boolean;
+    readonly thin: (bodyLinkRoot: string | null) => readonly string[];
+    readonly info: (line: string) => void;
+    readonly warn: (line: string) => void;
+}): void {
+    const carrier = prepareClaudeCarrier({
+        packageRoot: opts.packageRoot,
+        rulesDir: opts.rulesDir,
+        sessionStartCommand: sessionStartCommandFor(opts.packageRoot),
+        wantsThin: opts.wantsThin,
+    });
+    for (const w of carrier.warnings) opts.warn(w);
+    if (!opts.quiet) for (const l of carrier.lines) opts.info(l);
+    if (!carrier.thin) return;
+    try {
+        const lines = opts.thin(carrier.bodyLinkRoot);
+        markClaudeLayer(carrier.runtimeRoot, { thinned: true, rulesDir: opts.rulesDir });
+        if (!opts.quiet) for (const l of lines) opts.info(l);
+    } catch (e) {
+        markClaudeLayer(carrier.runtimeRoot, { thinned: false, rulesDir: opts.rulesDir });
+        opts.warn(`claude-code: thinned rule layer not written — ${String(e)}`);
+    }
+}
+
+/**
+ * The doctor `hook-carrier` check (2.2, 3.3, 4.1): probe the SessionStart
+ * command from a stripped environment, record it, promote a demoted machine
+ * whose probe now passes, and print the layer and since when the carrier
+ * outcome holds. Skipped until an install staged a runtime.
+ */
+export function checkHookCarrier(
+    packageRoot: string,
+    env: NodeJS.ProcessEnv = process.env,
+): { id: string; status: string; message: string; remedy: string } {
+    const runtimeRoot = runtimeRootFor(env);
+    const command = sessionStartCommandFor(packageRoot);
+    if (!fs.existsSync(currentRuntimeDir(runtimeRoot)) || command === null) {
+        return {
+            id: 'hook-carrier',
+            status: 'skipped',
+            message: `no staged runtime under ${runtimeRoot}`,
+            remedy: 'run `agent-config upgrade` (or `npx -y @event4u/agent-config init`) to stage it',
+        };
+    }
+    const state = probeAndPromote(command, env);
+    const reached = state.probe?.outcome === 'reached';
+    return {
+        id: 'hook-carrier',
+        status: reached ? 'ok' : 'warn',
+        message: [...describeCarrierProbe(state.probe), describeCarrierState(state)].join(' · '),
+        remedy: reached ? '' : 'install node where the hook launcher can run it, then run `agent-config upgrade`',
+    };
 }
