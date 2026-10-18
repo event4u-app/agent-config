@@ -156,4 +156,9 @@ describe('legacy superset: no consumer misses what it caught before the move', (
     it('the council api_key_ref check still refuses every old prefix', () => {
         for (const p of OLD.councilRef) expect(councilRefPrefixes).toContain(p);
     });
+
+    it('the MCP config lint keeps a keyword assignment out of its HIGH tier', () => {
+        expect(hasInlineSecret(`"api_key": "${run(24, 3)}"`)).toBe(false);
+        expect(hasInlineSecret(`"token": "${SK}ant-api03-${run(40, 1)}"`)).toBe(true);
+    });
 });

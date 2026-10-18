@@ -38,6 +38,13 @@ export interface EgressRule {
      * spelling their own list.
      */
     readonly prefixes?: readonly string[];
+    /**
+     * The row matches only at a token start (its pattern opens with a lookbehind
+     * for a key character). A shape-only surface reading the prefixes holds them
+     * to a token start exactly when this is set; a test checks it against what the
+     * row actually matches.
+     */
+    readonly tokenStart?: true;
 }
 
 export interface SpanBounds {
@@ -189,6 +196,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         prefixes: ['sk-'],
         class: 'credential',
         replacement: 'detection',
+        tokenStart: true,
         pattern: /(?<![A-Za-z0-9])sk-[A-Za-z0-9]{20,}/g,
         linearity: PREFIX_RUN,
     },
@@ -198,6 +206,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         prefixes: ['ya29.'],
         class: 'credential',
         replacement: 'detection',
+        tokenStart: true,
         pattern: /(?<![A-Za-z0-9])ya29\.[0-9A-Za-z_-]{20,}/g,
         linearity: PREFIX_RUN,
     },
@@ -216,6 +225,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         prefixes: ['xai-'],
         class: 'credential',
         replacement: 'detection',
+        tokenStart: true,
         pattern: /(?<![A-Za-z0-9])xai-[A-Za-z0-9]{20,}/g,
         linearity: PREFIX_RUN,
     },
@@ -234,6 +244,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         prefixes: ['gsk_'],
         class: 'credential',
         replacement: 'detection',
+        tokenStart: true,
         pattern: /(?<![A-Za-z0-9])gsk_[A-Za-z0-9]{20,}/g,
         linearity: PREFIX_RUN,
     },
@@ -319,18 +330,21 @@ export function vendorPrefix(rule: string): string {
     return first;
 }
 
-// A prefix is held to a token start only where its own row is; a prefix whose
-// row matches mid-word stays unanchored, so a shape-only surface never misses
-// what the row would catch.
-const ANCHORED_PREFIXES: ReadonlySet<string> = new Set(
-    EGRESS_RULES.filter((r) => r.pattern.source.startsWith('(?<!')).flatMap((r) => r.prefixes ?? []),
+const TOKEN_START_PREFIXES: ReadonlySet<string> = new Set(
+    EGRESS_RULES.filter((r) => r.tokenStart === true).flatMap((r) => r.prefixes ?? []),
 );
 
 /**
  * A raw-key prefix followed by at least `minTail` key characters. Coarser than
  * the rows on purpose: it is for surfaces that refuse or mask on shape alone,
- * where a short or truncated key must still be caught. `boundary: 'never'` drops
- * the token-start requirement for every prefix; `tail` narrows the key class.
+ * where a short or truncated key must still be caught.
+ *
+ * `boundary: 'row'` (the default) holds a prefix to a token start exactly where
+ * its own row declares `tokenStart`, so the pattern never misses what the row
+ * would catch and a short prefix (`sk-`) does not fire inside a word.
+ * `boundary: 'never'` drops the token start for every prefix: it is for a
+ * consumer whose own pre-table reading matched mid-word, and dropping it there
+ * is what keeps that consumer from narrowing. `tail` narrows the key class.
  */
 export function rawKeyPrefixPattern(
     minTail: number,
@@ -341,7 +355,7 @@ export function rawKeyPrefixPattern(
         .sort((a, b) => b.length - a.length)
         .map((p) => {
             const lit = p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            return opts.boundary !== 'never' && ANCHORED_PREFIXES.has(p) ? `(?<![A-Za-z0-9])${lit}` : lit;
+            return opts.boundary !== 'never' && TOKEN_START_PREFIXES.has(p) ? `(?<![A-Za-z0-9])${lit}` : lit;
         })
         .join('|');
     return new RegExp(`(?:${alt})[${opts.tail ?? 'A-Za-z0-9_-'}]{${minTail},}`, 'g');
@@ -358,6 +372,17 @@ export function replacementEnd(text: string, span: EgressSpan): number | null {
     if (row.replacement === 'detection') return span.end;
     const end = row.replacement.through(text, span);
     return end === null || end < span.end ? null : end;
+}
+
+/**
+ * End of the bytes a MASKING surface removes for `span`. A surface that cannot
+ * refuse must not leave key material behind when the row cannot prove the extent:
+ * an unproven key block is masked through the nearest END marker of any label,
+ * and only a span with nothing better falls back to its detection span. Every
+ * masking consumer reads this, so the fallback is decided once.
+ */
+export function maskingEnd(text: string, span: EgressSpan): number {
+    return replacementEnd(text, span) ?? (span.rule === 'pem-private-key' ? pemMaskEnd(text, span) : null) ?? span.end;
 }
 
 /**

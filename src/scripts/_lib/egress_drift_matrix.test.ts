@@ -24,7 +24,7 @@ import { load_council_config } from '../ai_council/config.js';
 import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
 import { redact as crossRepoRedact } from '../cross_repo_retrieve.js';
 import { hasInlineSecret } from '../lint_mcp_config_security.js';
-import { EGRESS_RULES } from './egress_rules.js';
+import { detect, EGRESS_RULES } from './egress_rules.js';
 import { scanText } from './secret_detector.js';
 
 const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
@@ -76,6 +76,13 @@ const PATTERN_GRADE: Readonly<Record<string, Consumer>> = {
     council_bundler: (f, s) => !bundlerRedact(inSentence(f)).includes(s),
 };
 
+// A row a consumer's policy deliberately leaves out, with the reason. The MCP
+// lint's HIGH tier is structural credentials; a keyword assignment was never in
+// it, and promoting one would change that consumer's policy, not its detection.
+const POLICY_EXCLUDED: Readonly<Record<string, readonly string[]>> = {
+    lint_mcp_config_security: ['generic-assignment'],
+};
+
 function councilRefRefused(ref: string): boolean {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'egress-drift-'));
     const file = path.join(dir, 'council.yml');
@@ -109,8 +116,9 @@ describe('drift matrix: one table, every consumer', () => {
         const fixture = FIXTURES[row.rule] ?? '';
         const secret = secretOf(row.rule, fixture);
         for (const [name, consumer] of Object.entries(PATTERN_GRADE)) {
-            it(`${name} acts on ${row.rule}`, () => {
-                expect(consumer(fixture, secret)).toBe(true);
+            const excluded = POLICY_EXCLUDED[name]?.includes(row.rule) === true;
+            it(`${name} ${excluded ? 'leaves to its own policy' : 'acts on'} ${row.rule}`, () => {
+                expect(consumer(fixture, secret)).toBe(!excluded);
             });
         }
         if ((row.prefixes ?? []).length === 0) continue;
@@ -120,4 +128,20 @@ describe('drift matrix: one table, every consumer', () => {
             });
         }
     }
+
+    it('a row declares tokenStart exactly when it does not match glued to a word', () => {
+        for (const row of credentialRows) {
+            if ((row.prefixes ?? []).length === 0) continue;
+            const glued = detect(`x${FIXTURES[row.rule] ?? ''}`, [row]).length > 0;
+            expect({ rule: row.rule, glued }).toEqual({ rule: row.rule, glued: row.tokenStart !== true });
+        }
+    });
+
+    it('a masking consumer leaves no body of an unproven key block', () => {
+        const body = 'MIIq7w3e5r7t9y';
+        const block = '-----BEGIN RSA ' + 'PRIVATE KEY-----\n' + body + '\n-----END EC ' + 'PRIVATE KEY-----';
+        expect(workspaceScrub(inSentence(block))[0]).not.toContain(body);
+        expect(crossRepoRedact(inSentence(block), {})[0]).not.toContain(body);
+        expect(bundlerRedact(`a\n${block}\nb`)).not.toContain(body);
+    });
 });

@@ -33,9 +33,11 @@ export const CHECK = 'mcp-config-security';
 const _NAME_HINTS = /(^|\/)(\.mcp\.json|mcp\.json|claude_desktop_config\.json)/;
 
 // Real secret VALUES — detected by the one rule table, which owns every
-// credential pattern (road-to-one-detector-and-the-senders-we-own 2.2).
+// credential pattern (road-to-one-detector-and-the-senders-we-own 2.2). The
+// heuristic keyword assignment is not a structural credential and never was HIGH
+// here; this lint's HIGH tier stays the structural rows.
 export function hasInlineSecret(text: string): boolean {
-    return detect(text).some((span) => span.class === 'credential');
+    return detect(text).some((span) => span.class === 'credential' && span.rule !== 'generic-assignment');
 }
 
 // Line-level smells (match on a single line).

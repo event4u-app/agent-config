@@ -20,7 +20,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { detect, prefixesOf, rawKeyPrefixPattern, replacementEnd } from '../_lib/egress_rules.js';
+import { detect, maskingEnd, prefixesOf, rawKeyPrefixPattern } from '../_lib/egress_rules.js';
 
 export const MAX_BUNDLE_BYTES = 50 * 1024; // 50 KB hard ceiling; user must narrow scope on hit.
 
@@ -126,7 +126,7 @@ function _credentialLines(lines: readonly string[]): Map<number, string> {
     const out = new Map<number, string>();
     for (const span of detect(joined)) {
         if (span.class !== 'credential') continue;
-        const end = replacementEnd(joined, span) ?? span.end;
+        const end = maskingEnd(joined, span);
         const label = _RULE_LABEL[span.rule] ?? _CREDENTIAL_LABEL;
         for (let i = lineOf(span.start); i <= lineOf(Math.max(span.start, end - 1)); i += 1) {
             if (!out.has(i)) out.set(i, label);

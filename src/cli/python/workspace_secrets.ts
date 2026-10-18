@@ -33,10 +33,9 @@ import {
     detect,
     EGRESS_RULES,
     type EgressRule,
-    pemMaskEnd,
+    maskingEnd,
     prefixesOf,
     rawKeyPrefixPattern,
-    replacementEnd,
 } from '../../scripts/_lib/egress_rules.js';
 
 export const PLACEHOLDER = '[SECRET]';
@@ -89,9 +88,7 @@ function highSpans(text: string): Span[] {
     const spans: Span[] = detect(text, HIGH_RULES).map((s) => ({
         name: LEGACY_NAME[s.rule] ?? s.rule,
         start: s.start,
-        // A masking surface cannot refuse; an unproven extent masks through the
-        // nearest key-end marker, else the detection span.
-        end: replacementEnd(text, s) ?? (s.rule === 'pem-private-key' ? pemMaskEnd(text, s) : null) ?? s.end,
+        end: maskingEnd(text, s),
     }));
     for (const [name, re] of OWN_SHAPES) {
         for (const m of text.matchAll(re)) spans.push({ name, start: m.index, end: m.index + m[0].length });
