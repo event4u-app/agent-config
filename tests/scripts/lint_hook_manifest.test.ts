@@ -7,7 +7,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
+import { _check_rewrite_axis, CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
 import { parseHostLowering, REWRITE_CHANNELS, rewriteAuthorizes, rewriteModeFor } from "../../src/scripts/hooks/host_lowering.js";
 import { CONCERN_REGISTRY } from "../../src/scripts/hooks/concern_registry.js";
 import { _load_yaml } from "../../src/scripts/hooks/dispatch_hook.js";
@@ -494,25 +494,99 @@ describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
   it("rewrite-toward-non-replace-host-refused: a replace citing a probe file that does not exist is refused", () => {
     const yaml = fs
       .readFileSync(COMMITTED_LOWERING, "utf-8")
-      .replace("input:  { mode: offered,", "input:  { mode: replace, host_version: 2.1.301, probe: agents/evidence/analysis/no-such-probe.md,");
+      .replace("input:  { mode: offered,", "input:  { mode: replace, host_version: 2.1.301, probe: agents/evidence/analysis/host-input-rewrite-probe-2026-10-18.md,");
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-lowering-rewrite-"));
     tmpDirs.push(dir);
     const p = path.join(dir, "host_lowering.yaml");
     fs.writeFileSync(p, yaml, "utf-8");
     const r = run(p);
     expect(r.code).toBe(1);
-    expect(r.text).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the cited probe agents\/evidence\/analysis\/no-such-probe\.md does not exist/);
+    expect(r.text).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the cited probe agents\/evidence\/analysis\/host-input-rewrite-probe-2026-10-18\.md does not exist/);
   });
 
-  it("a replace with a probe record in the tree, a version and a capable row is accepted", () => {
-    const yaml = fs
-      .readFileSync(COMMITTED_LOWERING, "utf-8")
-      .replace("input:  { mode: offered,", "input:  { mode: replace, host_version: 2.1.301, probe: docs/contracts/hook-architecture-v1.md,");
-    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-lowering-rewrite-"));
-    tmpDirs.push(dir);
-    const p = path.join(dir, "host_lowering.yaml");
-    fs.writeFileSync(p, yaml, "utf-8");
-    expect(run(p).text).not.toMatch(/rewrite-/);
+  describe("each prerequisite of an authorizing answer refuses on its own", () => {
+    const PROBE = "agents/evidence/analysis/host-input-rewrite-probe-2026-10-18.md";
+    const GOOD_PROBE = "host: claude\nhost_version: 2.1.301\nchannel: input\nresult: delivered\n";
+
+    function root(probeBody: string | null): string {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), "rewrite-probe-root-"));
+      tmpDirs.push(dir);
+      if (probeBody !== null) {
+        fs.mkdirSync(path.join(dir, "agents", "evidence", "analysis"), { recursive: true });
+        fs.writeFileSync(path.join(dir, PROBE), probeBody, "utf-8");
+      }
+      return dir;
+    }
+
+    /** The committed table, claude input set to `replace` with a probe, then one change applied. */
+    function check(mutate: (yaml: string) => string, probeBody: string | null = GOOD_PROBE): string[] {
+      const yaml = mutate(
+        fs
+          .readFileSync(COMMITTED_LOWERING, "utf-8")
+          .replace("input:  { mode: offered,", `input:  { mode: replace, host_version: 2.1.301, probe: ${PROBE},`),
+      );
+      const errors: string[] = [];
+      _check_rewrite_axis(parseHostLowering(yaml), errors, TODAY, root(probeBody));
+      return errors;
+    }
+    const claudeOnly = (yaml: string, from: string, to: string): string => {
+      const i = yaml.indexOf("\n  augment:");
+      return yaml.slice(0, i).replace(from, to) + yaml.slice(i);
+    };
+
+    it("a replace with a structured probe for this host, version and channel on a capable row is accepted", () => {
+      expect(check((y) => y)).toEqual([]);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: a non-propagating trampoline alone", () => {
+      const e = check((y) => claudeOnly(y, "fail_policy: propagate", "fail_policy: discard"));
+      expect(e.join("\n")).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the trampoline does not propagate[^;]*\.$/m);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: an expired row alone", () => {
+      const e = check((y) => claudeOnly(y, "expires: 2027-09-06", "expires: 2026-01-01"));
+      expect(e.join("\n")).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the row expired 2026-01-01\.$/m);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: no native envelope alone", () => {
+      const e = check((y) => claudeOnly(y, "json_shape: hook-specific-output", "json_shape: none"));
+      expect(e.join("\n")).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the row has no native envelope[^;]*\.$/m);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: an unbound slot alone", () => {
+      const e = check((y) => claudeOnly(y, "          pre_tool_use:       { native: PreToolUse,        block_exit: 2,    answered_at: 2026-09-29 }\n", ""));
+      expect(e.join("\n")).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — this package binds no native `pre_tool_use` event here\.$/m);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: no probed host version alone", () => {
+      const e = check((y) => y.replace("mode: replace, host_version: 2.1.301,", "mode: replace,"));
+      expect(e.join("\n")).toMatch(/claude\/any\/input: rewrite-toward-non-replace-host-refused — the answer names no probed host version\.$/m);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: a probe outside the probe record location", () => {
+      const e = check((y) => y.replace(`probe: ${PROBE}`, "probe: docs/contracts/hook-architecture-v1.md"));
+      expect(e.join("\n")).toMatch(/rewrite-toward-non-replace-host-refused — the probe docs\/contracts\/hook-architecture-v1\.md is not a record/);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: a path that climbs out of the tree", () => {
+      const e = check((y) => y.replace(`probe: ${PROBE}`, "probe: agents/evidence/analysis/../../../host-x-probe-2026-10-18.md"));
+      expect(e.join("\n")).toMatch(/rewrite-toward-non-replace-host-refused — the probe .* is not a record/);
+    });
+
+    it("rewrite-toward-non-replace-host-refused: a probe that does not record delivery for this version and channel", () => {
+      const e = check((y) => y, "host: claude\nhost_version: 2.1.241\nchannel: input\nresult: not-observable\n");
+      expect(e.join("\n")).toMatch(/does not record `host_version: 2\.1\.301`, `result: delivered`/);
+    });
+
+    it("rewrite-gate-without-refusal: a gate on a non-propagating row alone", () => {
+      const e = check((y) => claudeOnly(y.replace(`input:  { mode: replace, host_version: 2.1.301, probe: ${PROBE},`, "input:  { mode: offered,"), "fail_policy: propagate", "fail_policy: discard"));
+      expect(e.join("\n")).toMatch(/claude\/any\/prompt: rewrite-gate-without-refusal — the trampoline does not propagate[^;]*\.$/m);
+    });
+
+    it("rewrite-axis-malformed: a date on no calendar day", () => {
+      const e = check((y) => y.replace("output: { mode: none,    answered_at: 2026-10-18 }", "output: { mode: none,    answered_at: 2026-02-31 }"));
+      expect(e.join("\n")).toMatch(/claude\/any\/output: rewrite-axis-malformed — no `answered_at` calendar date/);
+    });
   });
 
   it("rewrite-toward-non-replace-host-refused: replace on a channel whose slot this package does not bind is refused", () => {
@@ -535,7 +609,7 @@ describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
       ),
     );
     expect(r.code).toBe(1);
-    expect(r.text).toMatch(/augment\/any\/input: rewrite-axis-malformed — no `answered_at`/);
+    expect(r.text).toMatch(/augment\/any\/input: rewrite-axis-malformed — no `answered_at` calendar date/);
     expect(r.text).toMatch(/augment\/any\/request: rewrite-axis-malformed — unknown channel/);
     expect(r.text).toMatch(/augment\/any\/output: rewrite-axis-malformed — unknown mode/);
   });

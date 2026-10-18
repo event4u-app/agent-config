@@ -748,12 +748,16 @@ no answer is `unstated`, an absence of a claim rather than a dated `none`. Only
 `replace` authorizes a substitution and only `gate` a refusal; `offered` records
 a documented field no live probe has shown delivered, and authorizes nothing.
 Today only `claude` states it: `input: offered` (the 2026-08-23 read above),
-`prompt: gate`, `output: none`. `lint_hook_manifest` refuses a `replace` unless
-the row has a native envelope, a propagating trampoline, a current `verified`
-block and a bound native slot **and** the answer names a probed host version and
-a probe record that exists in the tree (`rewrite-toward-non-replace-host-refused`);
-a `gate` on a slot with no `block_exit` (`rewrite-gate-without-refusal`); and an
-undated, future-dated or unknown answer (`rewrite-axis-malformed`).
+`prompt: gate`, `output: none`. `lint_hook_manifest` runs one validator for
+both authorizing modes: the row must have a propagating trampoline, a current
+`verified` block and a bound native slot for the channel. A `gate` also needs a
+`block_exit` on that slot (`rewrite-gate-without-refusal`). A `replace` also
+needs a native envelope, a probed `host_version` and a probe record at
+`agents/evidence/analysis/host-<what>-probe-<date>.md` whose lines state
+`host: <host>`, `host_version: <the same version>`, `channel: <channel>` and
+`result: delivered` (`rewrite-toward-non-replace-host-refused`); a file that
+merely exists is not evidence. An undated, non-calendar, future-dated or unknown
+answer is `rewrite-axis-malformed`.
 
 **This dispatcher does not emit `updatedInput`, and that is the load-bearing
 distinction.** `src/scripts/hooks/host_semantics.ts` builds the

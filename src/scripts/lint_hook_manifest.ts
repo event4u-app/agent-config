@@ -41,6 +41,7 @@ import {
   REWRITE_MODES,
   type HostLowering,
   type RewriteChannel,
+  type SurfaceRow,
 } from "./hooks/host_lowering.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
@@ -781,16 +782,79 @@ export function _check_host_lowering(
   _check_rewrite_axis(table, errors, today);
 }
 
+/** Where a live rewrite probe record lives, and the one name shape it may have. */
+export const REWRITE_PROBE_PATH = /^agents\/evidence\/analysis\/host-[a-z0-9-]+-probe-\d{4}-\d{2}-\d{2}\.md$/;
+
+function _isCalendarDate(d: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const t = new Date(`${d}T00:00:00Z`);
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
+}
+
 /**
- * The rewrite axis says what this package may do to a channel on a host. A
- * `replace` authorizes a substitution, so it needs a row that can carry one —
- * a native envelope, a propagating trampoline, a current `verified` block, a
- * bound slot with a native event — and a live probe of its own: a probe record
- * in this tree and the host version it ran against. A documented field with no
- * such probe is `offered`, which authorizes nothing. A `gate` needs a bound
- * slot that honours a refusal. An answer dated after today is not an answer.
+ * Whether a probe record states a delivered substitution for this host,
+ * version and channel: one line each of `host: `, `host_version: `,
+ * `channel: ` and `result: delivered`. Existence alone is not evidence.
  */
-export function _check_rewrite_axis(table: HostLowering, errors: string[], today: string): void {
+function _probeGaps(root: string, probe: string, host: string, version: string, channel: string): string[] {
+  if (!REWRITE_PROBE_PATH.test(probe)) {
+    return [`the probe ${probe} is not a record under agents/evidence/analysis/ named host-<what>-probe-<date>.md`];
+  }
+  let text: string;
+  try {
+    text = fs.readFileSync(path.join(root, probe), "utf-8");
+  } catch {
+    return [`the cited probe ${probe} does not exist`];
+  }
+  const want = [`host: ${host}`, `host_version: ${version}`, `channel: ${channel}`, "result: delivered"];
+  const lines = new Set(text.split(/\r?\n/).map((l) => l.trim()));
+  const missing = want.filter((w) => !lines.has(w));
+  return missing.length === 0 ? [] : [`the probe ${probe} does not record ${missing.map((m) => `\`${m}\``).join(", ")}`];
+}
+
+/**
+ * Everything a row must have before a stage may act on a channel: a
+ * propagating trampoline, a current `verified` block and a bound native slot
+ * for both modes; a native envelope and a structured live probe for `replace`;
+ * a `block_exit` for `gate`. One validator for both, failing closed.
+ */
+export function _rewriteCapabilityGaps(
+  host: string,
+  row: SurfaceRow,
+  channel: RewriteChannel,
+  mode: "replace" | "gate",
+  answer: { host_version: string | null; probe: string | null },
+  today: string,
+  root: string,
+): string[] {
+  const why: string[] = [];
+  const slotName = REWRITE_CHANNEL_SLOT[channel];
+  const slot = row.slots.get(slotName);
+  if (row.fail_policy !== "propagate") why.push(`the trampoline does not propagate (\`fail_policy: ${row.fail_policy}\`)`);
+  if (row.verified === null) why.push("the row is unverified");
+  else if (row.verified.expires < today) why.push(`the row expired ${row.verified.expires}`);
+  if (slot === undefined || !slot.native.some((n) => n !== "" && n !== "null")) {
+    why.push(`this package binds no native \`${slotName}\` event here`);
+  }
+  if (mode === "gate") {
+    if (slot !== undefined && slot.block_exit === null) why.push(`\`${slotName}\` carries no \`block_exit\``);
+    return why;
+  }
+  if (row.json_shape === "none") why.push("the row has no native envelope (`json_shape: none`)");
+  if (answer.host_version === null) why.push("the answer names no probed host version");
+  if (answer.probe === null) why.push("the answer cites no live substitution probe (use `offered` for a documented field)");
+  else if (answer.host_version !== null) why.push(..._probeGaps(root, answer.probe, host, answer.host_version, channel));
+  return why;
+}
+
+/**
+ * The rewrite axis says what this package may do to a channel on a host. Only
+ * `replace` and `gate` authorize anything, and each must pass
+ * `_rewriteCapabilityGaps`. `offered` — a documented field no probe has shown
+ * delivered — authorizes nothing and needs only a date and a citation. An
+ * answer dated after today, or on no calendar day, is not an answer.
+ */
+export function _check_rewrite_axis(table: HostLowering, errors: string[], today: string, root: string = REPO_ROOT): void {
   for (const [host, surfaces] of table) {
     for (const [surface, row] of surfaces) {
       for (const [channel, answer] of row.rewrite) {
@@ -803,8 +867,8 @@ export function _check_rewrite_axis(table: HostLowering, errors: string[], today
           errors.push(`${where}: rewrite-axis-malformed — unknown mode '${answer.mode}'; one of ${REWRITE_MODES.join(", ")}.`);
           continue;
         }
-        if (answer.answered_at === null || !/^\d{4}-\d{2}-\d{2}$/.test(answer.answered_at)) {
-          errors.push(`${where}: rewrite-axis-malformed — no \`answered_at\` ISO date; the axis is dated like every column.`);
+        if (answer.answered_at === null || !_isCalendarDate(answer.answered_at)) {
+          errors.push(`${where}: rewrite-axis-malformed — no \`answered_at\` calendar date; the axis is dated like every column.`);
           continue;
         }
         if (answer.answered_at > today) {
@@ -816,27 +880,11 @@ export function _check_rewrite_axis(table: HostLowering, errors: string[], today
           errors.push(`${where}: rewrite-axis-malformed — '${answer.mode}' with no citation on the answer or the row.`);
         }
         if (answer.mode === "offered") continue;
-        const slotName = REWRITE_CHANNEL_SLOT[channel as RewriteChannel];
-        const slot = row.slots.get(slotName);
-        const bound = slot !== undefined && slot.native.some((n) => n !== "" && n !== "null");
-        if (answer.mode === "replace") {
-          const why: string[] = [];
-          if (row.json_shape === "none") why.push("the row has no native envelope (`json_shape: none`)");
-          if (row.fail_policy !== "propagate") why.push(`the trampoline does not propagate (\`fail_policy: ${row.fail_policy}\`)`);
-          if (row.verified === null) why.push("the row is unverified");
-          else if (row.verified.expires < today) why.push(`the row expired ${row.verified.expires}`);
-          if (!bound) why.push(`this package binds no native \`${slotName}\` event here`);
-          if (answer.host_version === null) why.push("the answer names no probed host version");
-          if (answer.probe === null) why.push("the answer cites no live substitution probe (use `offered` for a documented field)");
-          else if (!_isFile(path.join(REPO_ROOT, answer.probe))) why.push(`the cited probe ${answer.probe} does not exist`);
-          if (why.length > 0) {
-            errors.push(`${where}: rewrite-toward-non-replace-host-refused — ${why.join("; ")}.`);
-          }
-        } else if (slot === undefined || !bound || slot.block_exit === null) {
-          errors.push(
-            `${where}: rewrite-gate-without-refusal — \`gate\` needs a bound slot that honours a refusal, ` +
-              `and \`${slotName}\` carries no native event with a \`block_exit\` here.`,
-          );
+        const mode = answer.mode as "replace" | "gate";
+        const why = _rewriteCapabilityGaps(host, row, channel as RewriteChannel, mode, answer, today, root);
+        if (why.length > 0) {
+          const id = mode === "replace" ? "rewrite-toward-non-replace-host-refused" : "rewrite-gate-without-refusal";
+          errors.push(`${where}: ${id} — ${why.join("; ")}.`);
         }
       }
     }

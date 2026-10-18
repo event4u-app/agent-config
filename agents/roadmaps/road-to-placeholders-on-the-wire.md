@@ -395,10 +395,12 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       — 2026-10-18: `rewrite:` per row (`output`/`input`/`prompt`, dated);
       only `claude` states it — `input: offered` (documented, no live
       substitution probe), `prompt: gate`, `output: none`. An absent channel is
-      `unstated`. `replace` needs a probe record and host version (0.1/0.2).
+      `unstated`. `replace` needs a probe record of 0.1/0.2's shape stating
+      `host:`, `host_version:`, `channel:` and `result: delivered`; `gate`
+      needs a propagating, current row with a `block_exit`.
       Lint ids `rewrite-toward-non-replace-host-refused`,
       `rewrite-gate-without-refusal`, `rewrite-axis-malformed`. Narrowed from
-      `input: replace` after ratification round 1 refused it 2/2.
+      `input: replace` after ratification rounds 1 and 2 refused 2/2.
 - [ ] **6.2 Bind the next host by evidence, one at a time.** Copilot CLI's
       transformed-prompt field is bound only after a command-hook probe; Gemini
       CLI only after its envelope exists. A host that can gate and not replace
