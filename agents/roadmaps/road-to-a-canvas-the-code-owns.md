@@ -297,12 +297,12 @@ deleted or left as a silent twin without a row the user has seen.
 
 ## Phase 7 — Baselines the user accepts
 
-- [ ] **7.1 Snapshot surfaces classified.** `classify_target` returns `advisory` for
+- [x] **7.1 Snapshot surfaces classified.** `classify_target` returns `advisory` for
       `*-snapshots/**` and `__screenshots__/**`; a Bash call carrying
       `--update-snapshots` on a visual runner warns with the acceptance step. Warn,
       never block (`block_config_weakening.ts:28-33`). Measure the hook bundle
       before and after.
-      (2026-10-18: ships as its own PR — the hook is a governance surface and carries its own ratification; measured +669 B, 1,548,120 of 1,550,000 B.)
+      (2026-10-18: own PR, the hook is a governance surface with its own ratification; bundle 1,547,451 to 1,548,120 B of 1,550,000 B.)
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts -t snapshot --reporter=verbose` -> /✓.*snapshot/
 - [x] **7.2 Baseline stamp.** Baselines touched in a run are listed in the ledger
       with the projection commit; `verify` reports a baseline older than the current
@@ -370,7 +370,7 @@ deleted or left as a silent twin without a row the user has seen.
       other ranking of values exists in the change.
 - [x] AC-7 — The command writes no component; it hands a brief to the UI owner and
       proposes no tier vocabulary.
-- [ ] AC-8 — A baseline older than the projection commit is `stale`, and a
+- [x] AC-8 — A baseline older than the projection commit is `stale`, and a
       snapshot update warns.
 - [x] AC-9 — A value outside a declared Consistency Lock is flagged, which makes the
       capture skill's claim true.
