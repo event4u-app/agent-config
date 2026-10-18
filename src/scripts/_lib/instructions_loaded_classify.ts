@@ -59,7 +59,7 @@ export function classifyCapture(c: CaptureLine): ObserverLine {
     };
     const unknown = (why: UnknownWhy): UnknownLine => ({ ...base, event: 'unknown', why });
     if (!c.ok) return unknown('malformed');
-    if (c.name !== null && c.name !== 'InstructionsLoaded') return unknown('event-mismatch');
+    if (c.name !== 'InstructionsLoaded') return unknown('event-mismatch');
     if (c.file === null || !c.file.endsWith('.md')) return unknown('no-file-path');
     if (!(LOAD_REASONS as readonly (string | null)[]).includes(c.reason)) return unknown('unknown-load-reason');
     const kind = c.rules ? 'rule' : c.file === 'CLAUDE.md' ? 'memory' : 'other';

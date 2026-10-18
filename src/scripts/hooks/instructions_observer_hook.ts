@@ -16,10 +16,11 @@
  * at {@link MAX_SESSION_BYTES}; old files are deleted whole, never rotated.
  *
  * THE BOUNDS, STATED AS WHAT THEY ARE. Every write prunes after it appends, so
- * the file count can exceed fifty only by the number of writers between their
- * append and their own prune — never cumulatively, because each of them prunes.
- * The byte cap is checked before the append, so a file can exceed it by one
- * line (under 1 KiB) per writer racing past the check at once. Neither bound is
+ * the file count can exceed fifty by the writers between their append and their
+ * own prune, and by any writer killed in that gap — until the next write, which
+ * prunes again. The byte cap is checked before the append, so a file can exceed
+ * it by one line (under 2 KiB, every field being a token of at most 128
+ * characters) per writer racing past the check at once. Neither bound is
  * a lock, and no lock is taken: a hook that can wait on another hook is a hook
  * that can stall a session.
  *
@@ -59,7 +60,7 @@ function prune(dir: string): void {
     const files = fs
         .readdirSync(dir)
         .filter(isSessionFile)
-        .map((f) => ({ f, t: fs.statSync(path.join(dir, f)).mtimeMs }))
+        .map((f) => ({ f, t: fs.lstatSync(path.join(dir, f)).mtimeMs }))
         .sort((a, b) => b.t - a.t || (a.f < b.f ? -1 : 1));
     for (const { f } of files.slice(KEEP_SESSIONS)) fs.rmSync(path.join(dir, f), { force: true });
 }
@@ -79,13 +80,14 @@ export function processEnvelope(raw: string, env: NodeJS.ProcessEnv = process.en
         const line = captureInstructionsLoaded(payload, new Date().toISOString(), env['HOME'] ?? os.homedir(), env);
         const dir = arrivalsDir(env);
         const file = path.join(dir, `${line.session ?? '_'}.jsonl`);
-        let size = -1;
+        let st: fs.Stats | null = null;
         try {
-            size = fs.statSync(file).size;
+            st = fs.lstatSync(file);
         } catch {
             // First line of this session.
         }
-        if (size >= MAX_SESSION_BYTES) return EXIT_ALLOW;
+        // A symlink or anything but a regular file is never appended to.
+        if (st !== null && (!st.isFile() || st.size >= MAX_SESSION_BYTES)) return EXIT_ALLOW;
         fs.mkdirSync(dir, { recursive: true });
         fs.appendFileSync(file, `${JSON.stringify(line)}\n`);
         prune(dir);

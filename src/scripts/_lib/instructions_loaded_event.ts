@@ -27,27 +27,29 @@ export interface CaptureLine {
 }
 
 /** A token that is safe as a filename and carries no path: starts alphanumeric, no separators. */
-export const TOKEN_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
+export const ID_SHAPE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
 /** The one rule for which directory entries are session files — the reader and the prune share it. */
-export const isSessionFile = (f: string): boolean => f.endsWith('.jsonl');
+export const isSessionFile = (f: string): boolean => f.endsWith('.jsonl') && (f === '_.jsonl' || ID_SHAPE_RE.test(f.slice(0, -6)));
 
-const token = (v: unknown): string | null => (typeof v === 'string' && TOKEN_RE.test(v) ? v : null);
+const idShaped = (v: unknown): string | null => (typeof v === 'string' && ID_SHAPE_RE.test(v) ? v : null);
 
 export function captureInstructionsLoaded(payload: unknown, ts: string, home: string, env: NodeJS.ProcessEnv): CaptureLine {
     const ok = typeof payload === 'object' && payload !== null && !Array.isArray(payload);
     const p = (ok ? payload : {}) as Record<string, unknown>;
-    const norm = String(p['file_path'] ?? '').replace(/\\/g, '/');
+    const raw = String(p['file_path'] ?? '').replace(/\\/g, '/');
+    // Only an absolute path with no `.`/`..` segment and no doubled separator is read at all.
+    const norm = /^([A-Za-z]:)?\//.test(raw) && !/\/\.{0,2}\//.test(raw) ? raw : '';
     const h = home.replace(/\\/g, '/').replace(/\/+$/, '');
     return {
         v: 2,
         ts,
-        agent: token(env['AI_AGENT']),
-        launch: token(env['CLAUDE_CODE_ENTRYPOINT']),
-        session: token(p['session_id']),
-        name: token(p['hook_event_name']),
-        reason: token(p['load_reason']),
-        file: token(norm.slice(norm.lastIndexOf('/') + 1)),
+        agent: idShaped(env['AI_AGENT']),
+        launch: idShaped(env['CLAUDE_CODE_ENTRYPOINT']),
+        session: idShaped(p['session_id']),
+        name: idShaped(p['hook_event_name']),
+        reason: idShaped(p['load_reason']),
+        file: idShaped(norm.slice(norm.lastIndexOf('/') + 1)),
         rules: norm.includes('/.claude/rules/'),
         user: h !== '' && norm.startsWith(`${h}/.claude/`),
         ok,

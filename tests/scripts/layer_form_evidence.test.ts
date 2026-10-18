@@ -9,7 +9,7 @@ const HOME = '/home/dev';
 const ENV = { AI_AGENT: 'claude-code_2-1-299_agent' } as NodeJS.ProcessEnv;
 const load = (id: string, ts: string) =>
     classifyInstructionsLoaded(
-        { session_id: 's1', file_path: `${HOME}/.claude/rules/${id}.md`, load_reason: 'session_start' },
+        { hook_event_name: 'InstructionsLoaded', session_id: 's1', file_path: `${HOME}/.claude/rules/${id}.md`, load_reason: 'session_start' },
         { ts, home: HOME, env: ENV },
     );
 const RECORD = buildArrivalRecord([load('law-a', '2026-10-18T00:00:01Z'), load('other', '2026-10-18T00:00:02Z')], 's1');

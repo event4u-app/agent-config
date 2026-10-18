@@ -48,8 +48,27 @@ describe('classifyInstructionsLoaded', () => {
     it('records every payload it cannot read as unknown', () => {
         expect(line('not an object')).toMatchObject({ event: 'unknown', why: 'malformed' });
         expect(line({ session_id: 's1', hook_event_name: 'Stop' })).toMatchObject({ event: 'unknown', why: 'event-mismatch' });
-        expect(line({ session_id: 's1', load_reason: 'session_start' })).toMatchObject({ event: 'unknown', why: 'no-file-path' });
-        expect(line({ session_id: 's1', file_path: USER_RULE('a'), load_reason: 'telepathy' })).toMatchObject({ event: 'unknown', why: 'unknown-load-reason' });
+        expect(line({ hook_event_name: 'InstructionsLoaded', session_id: 's1', load_reason: 'session_start' })).toMatchObject({ event: 'unknown', why: 'no-file-path' });
+        expect(line({ hook_event_name: 'InstructionsLoaded', session_id: 's1', file_path: USER_RULE('a'), load_reason: 'telepathy' })).toMatchObject({ event: 'unknown', why: 'unknown-load-reason' });
+    });
+
+    it('fails closed on a missing event name and on a path that is not absolute and canonical', () => {
+        expect(line({ session_id: 's1', file_path: USER_RULE('a'), load_reason: 'session_start' })).toMatchObject({ why: 'event-mismatch' });
+        const ok = { hook_event_name: 'InstructionsLoaded', session_id: 's1', load_reason: 'session_start' };
+        for (const file_path of ['.claude/rules/a.md', `${HOME}/x/../.claude/rules/a.md`, `${HOME}/./.claude/rules/a.md`, `${HOME}//.claude/rules/a.md`]) {
+            expect(line({ ...ok, file_path }), file_path).toMatchObject({ event: 'unknown', why: 'no-file-path' });
+        }
+    });
+
+    it('a line with every field at its maximum length stays under 2 KiB', () => {
+        const t = 'a'.repeat(128);
+        const capture = captureInstructionsLoaded(
+            { hook_event_name: t, session_id: t, load_reason: t, file_path: `/${t}/${t}` },
+            new Date().toISOString(),
+            HOME,
+            { AI_AGENT: t, CLAUDE_CODE_ENTRYPOINT: t },
+        );
+        expect(Buffer.byteLength(JSON.stringify(capture))).toBeLessThan(2048);
     });
 
     it('parses the host version only from the documented agent string', () => {
@@ -93,7 +112,7 @@ describe('the arrival record and its negative controls (step 1.2)', () => {
 
     it('a session mixing host versions is unknown', () => {
         const other = classifyInstructionsLoaded(
-            { session_id: 's1', file_path: USER_RULE('b'), load_reason: 'session_start' },
+            { hook_event_name: 'InstructionsLoaded', session_id: 's1', file_path: USER_RULE('b'), load_reason: 'session_start' },
             { ts: '2026-10-18T00:01:00Z', home: HOME, env: { AI_AGENT: 'claude-code_2-1-300_agent' } },
         );
         expect(buildArrivalRecord([load(USER_RULE('a')), other], 's1').unknown_reason).toBe('host-version-mixed');
@@ -149,8 +168,13 @@ describe('the observer concern', () => {
     });
     afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
-    const envelope = (payload: unknown) =>
-        JSON.stringify({ schema_version: 1, platform: 'claude', event: 'instructions_loaded', payload });
+    const envelope = (payload: Record<string, unknown>) =>
+        JSON.stringify({
+            schema_version: 1,
+            platform: 'claude',
+            event: 'instructions_loaded',
+            payload: { hook_event_name: 'InstructionsLoaded', ...payload },
+        });
 
     it('appends one line per event to its session file, and a record can be built from the directory', () => {
         expect(processEnvelope(envelope({ session_id: 's9', file_path: USER_RULE('a'), load_reason: 'session_start' }), env)).toBe(0);
@@ -240,6 +264,24 @@ describe('the observer concern', () => {
         expect(fs.readdirSync(dir).sort()).toEqual(['README', 'ok.jsonl']);
     });
 
+    it('a symlinked session file is never appended to', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        const target = path.join(root, 'elsewhere.txt');
+        fs.writeFileSync(target, '');
+        fs.symlinkSync(target, path.join(dir, 'link.jsonl'));
+        processEnvelope(envelope({ session_id: 'link', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.readFileSync(target, 'utf8')).toBe('');
+    });
+
+    it('lines without a session id never form a record, however many there are', () => {
+        for (let i = 0; i < 3; i += 1) processEnvelope(envelope({ file_path: USER_RULE(`r${String(i)}`), load_reason: 'session_start' }), env);
+        const lines = readObserverLines(arrivalsDir(env));
+        expect(lines).toHaveLength(3);
+        expect(latestArrivalRecord(lines)).toBeNull();
+        expect(recordsIn(arrivalsDir(env), 10)).toEqual([]);
+    });
+
     it('one unreadable session file does not discard the others', () => {
         processEnvelope(envelope({ session_id: 'ok', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         fs.mkdirSync(path.join(arrivalsDir(env), 'broken.jsonl'));
@@ -251,7 +293,7 @@ describe('arrival_report', () => {
     it('prints one block per session, newest first, and nothing for an empty directory', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arrival-report-'));
         const cap = (sid: string, ts: string) =>
-            JSON.stringify(captureInstructionsLoaded({ session_id: sid, file_path: USER_RULE('a'), load_reason: 'session_start' }, ts, HOME, ENV));
+            JSON.stringify(captureInstructionsLoaded({ hook_event_name: 'InstructionsLoaded', session_id: sid, file_path: USER_RULE('a'), load_reason: 'session_start' }, ts, HOME, ENV));
         fs.writeFileSync(path.join(dir, 'old.jsonl'), cap('old', '2026-10-18T00:00:01Z'));
         fs.writeFileSync(path.join(dir, 'new.jsonl'), cap('new', '2026-10-18T00:00:02Z'));
         const records = recordsIn(dir, 10);
