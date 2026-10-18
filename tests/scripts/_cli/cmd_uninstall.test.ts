@@ -27,22 +27,13 @@
 // two-phase-commit / files[]-deletion arms were hand-verified against the
 // Python during porting; their golden parity unlocks once `installed_tools.ts`
 // stops using `require()`.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { main } from '../../../src/scripts/_cli/cmd_uninstall.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_uninstall.ts');
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
 
 const itPy = it;
 
@@ -65,20 +56,6 @@ function runTs(args: string[], root: string, lock: string): RunResult {
     return runInProc(main, args, { cwd: root, env: { ...baseEnv(root, lock) } });
 }
 
-function norm(text: string, roots: string[]): string {
-    let out = text;
-    for (const root of roots) {
-        out = out.split(root).join('<TMP>');
-        let real = root;
-        try {
-            real = fs.realpathSync(root);
-        } catch {
-            /* removed */
-        }
-        out = out.split(real).join('<TMP>');
-    }
-    return out;
-}
 
 const tmps: string[] = [];
 function freshRoot(): string {
@@ -161,7 +138,7 @@ describe('cmd_uninstall — project scope', () => {
             fs.mkdirSync(path.join(r, '.claude'), { recursive: true });
             fs.writeFileSync(path.join(r, '.claude', 'settings.json'), '{}\n');
         }
-        const t = runTs(['--force', '--tools=claude-code'], ts, path.join(ts, 'lock'));
+        runTs(['--force', '--tools=claude-code'], ts, path.join(ts, 'lock'));
         expect(fs.existsSync(path.join(ts, '.claude', 'settings.json'))).toBe(false);
     });
 });
