@@ -259,17 +259,19 @@ protocol's four-part citation. **Rollback:** both are evidence files only.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
-- [ ] **4.1 Lower
+- [x] **4.1 Lower
       `subagents.max_parallel` into `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`** as a
       third `WRITABLE_HOST_ENV` row. It bounds how many run at once, never
       whether a call happens, so the table's invariant (`host_env_write.ts:20-21`)
       holds. Default stays `3`; no key is added.
       verify: `npx vitest run tests/scripts/_lib_host_env_write.test.ts -t max-parallel-lowers-into-host-cap --reporter=verbose` -> /✓.*max-parallel-lowers-into-host-cap/
+      Done 2026-10-18: third row in `host_env_write.ts`, `settingsKey` now a dotted path; the ADR addendum is `docs/setup/host-traffic-environment.md` § Addendum 2026-10-14, next to the 2026-09-30 decision. Written only when the key is set; the settings template sets it to `3`.
 - [ ] **4.2 Say what the cap covers.** The `max_parallel` description
       (`settings.ts:371`) and `subagent-configuration.md:13` drop "no code counts
       spawns" once 4.1 lands, and state whether the host cap bounds resumes, from
       the 1.5 row — never "the host enforces concurrency" without it.
       verify: `grep -c 'resume' src/agent-src/contexts/subagent-configuration.md` -> /^[1-9][0-9]*$/
+      Partial 2026-10-18, left open: both texts (and the settings template) dropped "no code counts spawns" with 4.1 and now say the resume half is unobserved. The step closes when the 1.5 row states whether the cap bounds a resume.
 - [ ] **4.3 Bind `StopFailure`** in the Claude event map to the `quota_parked`
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.
