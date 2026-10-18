@@ -310,9 +310,9 @@ concerns:
     severity: blocking
     effect: permission
     needs_payload_bodies: [input]
-  # road-to-one-detector-and-the-senders-we-own 1.1 — prevention, the one
-  # fail-closed layer of the egress work: what a session reads is sent to the
-  # model provider, so a credential never read is a credential never sent.
+  # road-to-one-detector-and-the-senders-we-own 1.1 — best-effort prevention
+  # ahead of the egress stage: what a session reads is sent to the model
+  # provider, so a credential never read is a credential never sent.
   # Refuses a file tool on a credential-class path (env files except the
   # template names, private keys, cloud/CLI and package-registry credential
   # files), a shell command handing such a path to anything but a short list of

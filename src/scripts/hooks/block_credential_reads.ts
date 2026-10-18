@@ -4,9 +4,11 @@
  * command that prints the process environment — road-to-one-detector-and-the-
  * senders-we-own 1.1.
  *
- * Prevention is the only fail-closed layer of the egress work: a value that is
- * never read cannot reach a model provider through any later bug. Everything the
- * session reads goes into the conversation, so a `.env` read is a `.env` sent.
+ * Prevention ahead of the egress stage: a value that is never read cannot reach
+ * a model provider through any later bug, and everything the session reads goes
+ * into the conversation, so a `.env` read is a `.env` sent. It is a best-effort
+ * guard over the shapes it recognises, not a boundary: it allows what it cannot
+ * decide (`fail_closed: false`), and the residue below is not caught.
  *
  * What it refuses, with the class list in `_lib/credential_files.ts` (shared
  * with the installer's native deny tier):
@@ -15,8 +17,11 @@
  *     file (`.env`, `.env.*`, `.envrc` — `.env.example` and the other template
  *     names pass), a private key, a cloud or CLI credential file, or a
  *     package-registry credential file;
- *   - a shell command that hands such a path to anything but a short list of
- *     commands that do not print what the file holds (`ls`, `cp`, `rm`, …);
+ *   - a shell command that hands such a path — as an argument, a redirect or an
+ *     option value (`--config=.env`) — to anything but a short list of commands
+ *     that neither print nor run it (`ls`, `rm`, `chmod`, …), looking through
+ *     `sudo`/`command`/`nice`-style wrappers, `sh -c`, `eval` and command
+ *     substitutions;
  *   - a shell command that prints the environment (`env`, `printenv`, a bare
  *     `export`, a bare `set`, `declare -x`).
  *
@@ -51,7 +56,21 @@ type JsonObject = { [k: string]: JsonValue };
 
 export const KILL_SWITCH = 'AGENT_CONFIG_ALLOW_CREDENTIAL_READS';
 
-const PATH_KEYS: readonly string[] = ['file_path', 'path', 'target_file', 'filename', 'filePath', 'notebook_path'];
+const PATH_KEYS: ReadonlySet<string> = new Set([
+    'file_path', 'path', 'target_file', 'filename', 'filePath', 'notebook_path', 'paths', 'files', 'file_paths',
+]);
+
+/** Every string held under a path key, at any depth and inside arrays. */
+function pathValues(v: JsonValue | undefined, underPathKey: boolean, out: string[]): string[] {
+    if (typeof v === 'string') {
+        if (underPathKey && v !== '') out.push(v);
+    } else if (Array.isArray(v)) {
+        for (const x of v) pathValues(x, underPathKey, out);
+    } else if (isObject(v)) {
+        for (const [k, x] of Object.entries(v)) pathValues(x, underPathKey || PATH_KEYS.has(k), out);
+    }
+    return out;
+}
 
 /** Tools that write a value the model already has, or list names without content. */
 const NON_READING_TOOLS: ReadonlySet<string> = new Set(['write', 'create_file', 'glob', 'ls', 'list_dir', 'file_search']);
@@ -69,9 +88,7 @@ export interface Refusal {
 export function verdictFor(toolName: string, input: JsonObject): Refusal | null {
     const tool = toolName.trim().toLowerCase();
     if (!NON_READING_TOOLS.has(tool)) {
-        for (const key of PATH_KEYS) {
-            const v = input[key];
-            if (typeof v !== 'string' || v === '') continue;
+        for (const v of pathValues(input, false, [])) {
             const cls = credentialFileClass(v);
             if (cls !== null) return { class: cls, what: `\`${path.basename(v)}\`` };
         }

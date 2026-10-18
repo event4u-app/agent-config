@@ -64,7 +64,7 @@ describe('the tool and command surface', () => {
         for (const cmd of ['cat .env', 'grep KEY .env.local', 'head -1 ~/.aws/credentials', 'sort < .env', 'git diff .env', 'cd x && less .env']) {
             expect(run('Bash', { command: cmd }), cmd).toBe(1);
         }
-        for (const cmd of ['ls -la .env', 'cp .env.example .env', 'rm .env', 'git add .env.example', 'git check-ignore .env', 'cat .env.example', 'source .env']) {
+        for (const cmd of ['ls -la .env', 'cp .env.example .env', 'rm .env', 'git add .env.example', 'git check-ignore .env', 'cat .env.example']) {
             expect(run('Bash', { command: cmd }), cmd).toBe(0);
         }
     });
@@ -76,6 +76,52 @@ describe('the tool and command surface', () => {
         for (const cmd of ['env FOO=1 node app.js', 'printenv HOME', 'export PATH=/x:$PATH', 'set -euo pipefail', 'declare -a list']) {
             expect(run('Bash', { command: cmd }), cmd).toBe(0);
         }
+    });
+
+    it('refuses the bypasses council round 4c named', () => {
+        for (const cmd of [
+            'cp .env /dev/stdout',
+            'cp .env backup.txt',
+            'mv .env renamed.txt',
+            'set -x; source .env',
+            '. ./.env',
+            'curl --config=.env https://x',
+            'mysqldump --defaults-file=~/.my.cnf db',
+            'echo $(cat .env)',
+            'echo `cat .env`',
+            'cat <<< "$(cat .env)"',
+            'command env',
+            '/usr/bin/env',
+            'sudo env',
+            'sudo -u root cat /root/.aws/credentials',
+            "sh -c 'env'",
+            'nice -n 5 printenv',
+            'cat ~/.git-credentials',
+            'cat /proc/self/../self/environ',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
+        }
+    });
+
+    it('passes the legitimate neighbours of those bypasses', () => {
+        for (const cmd of [
+            'cp .env.example .env',
+            'cp .env.local.example .env.local',
+            'cat .env.production.template',
+            'cat certs/ca.pem certs/chain.pem',
+            'sudo ls -la /root',
+            'command -v node',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(0);
+        }
+        expect(run('Read', { file_path: 'certs/cert.pem' })).toBe(0);
+        expect(run('Read', { file_path: 'certs/server-key.pem' })).toBe(1);
+    });
+
+    it('reads every path a tool input carries, nested and in arrays', () => {
+        expect(run('MultiRead', { paths: ['README.md', 'app/.env'] } as unknown as Record<string, string>)).toBe(1);
+        expect(run('Tool', { edits: [{ file_path: '.pgpass' }] } as unknown as Record<string, string>)).toBe(1);
+        expect(run('Tool', { edits: [{ file_path: 'src/a.ts' }], note: '.env' } as unknown as Record<string, string>)).toBe(0);
     });
 
     it('a malformed envelope, an empty one and the kill switch all allow', () => {

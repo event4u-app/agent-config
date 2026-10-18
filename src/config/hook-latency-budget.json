@@ -31,7 +31,7 @@
         "evidence-independence": 0.956,
         "turn-end-gate": 1.587,
         "block-credential-reads": null,
-        "_block_credential_reads_2026_10_18": "Registered unmeasured (null) when road-to-one-detector-and-the-senders-we-own 1.1 added the concern: the derivation above admits only maxima read on both machine classes, and none exists yet, so the window reports it as unmeasured rather than a guessed number. Its cost is a few string tests per path key and one tokenisation per shell segment, with no file read; it grows the shared hook bundle by 6,999 B (1,530,696 to 1,537,695 of 1,550,000)."
+        "_block_credential_reads_2026_10_18": "Registered unmeasured (null) when road-to-one-detector-and-the-senders-we-own 1.1 added the concern: the derivation above admits only maxima read on both machine classes, and none exists yet, so the window reports it as unmeasured rather than a guessed number. Its cost is a few string tests per path key and one tokenisation per shell segment, with no file read; it grows the shared hook bundle by 8,704 B (1,530,696 to 1,539,400 of 1,550,000)."
     },
     "gate_remeasure": {
         "attempts": 1,

@@ -95,8 +95,8 @@ const BLOCKING_ALLOWLIST = new Set([
     //     crash allows, so the guard is never why an unrelated call fails.
     //   · WHY REFUSAL RATHER THAN A NUDGE. What a session reads is sent to the
     //     model provider; a warning arrives after the value already left. A
-    //     value never read cannot leak through any later bug, which makes this
-    //     the only fail-closed layer of the egress work.
+    //     value never read cannot leak through any later bug. It is best-effort
+    //     over the shapes it recognises, not a boundary.
     //
     // Kill switch: AGENT_CONFIG_ALLOW_CREDENTIAL_READS=1.
     'block-credential-reads',

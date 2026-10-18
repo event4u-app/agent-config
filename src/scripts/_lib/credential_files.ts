@@ -9,8 +9,9 @@
  * decided from the path alone, never from content — the guard runs before the
  * file is opened.
  *
- * Pure: no I/O, no dependency.
+ * Pure: no I/O. The one import is `node:path`'s POSIX normaliser.
  */
+import * as path from 'node:path';
 
 export type CredentialFileClass =
     | 'env-file'
@@ -31,7 +32,14 @@ export const CREDENTIAL_CLASS_LABEL: Readonly<Record<CredentialFileClass, string
 /** `.env.<suffix>` names that document keys rather than hold values. */
 const ENV_TEMPLATE_SUFFIXES: ReadonlySet<string> = new Set(['example', 'sample', 'template', 'dist', 'defaults', 'schema']);
 
-const KEY_EXTENSIONS: readonly string[] = ['.pem', '.key', '.p12', '.pfx', '.ppk', '.jks', '.keystore'];
+const KEY_EXTENSIONS: readonly string[] = ['.key', '.p12', '.pfx', '.ppk', '.jks', '.keystore'];
+/**
+ * `.pem` holds public certificates as often as private keys, so it counts only
+ * when the name says key: `server-key.pem`, `private.pem`, `id_rsa.pem` refuse;
+ * `ca.pem`, `cert.pem`, `chain.pem` pass. The cost, accepted: a private key named
+ * like a certificate is not caught by name.
+ */
+const KEY_PEM_NAME = /(?:key|private|secret|id_)/i;
 const SSH_KEY = /^id_(?:rsa|dsa|ecdsa|ed25519)(?:_sk)?$/;
 
 /** Path tails (after a `/` or at the start) of cloud, CLI and registry credential files. */
@@ -44,6 +52,9 @@ const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> = 
     ['.kube/config', 'cloud-credentials'],
     ['.docker/config.json', 'cloud-credentials'],
     ['.config/gh/hosts.yml', 'cloud-credentials'],
+    ['.git-credentials', 'cloud-credentials'],
+    ['.my.cnf', 'registry-credentials'],
+    ['.pgpass', 'registry-credentials'],
     ['.npmrc', 'registry-credentials'],
     ['.pypirc', 'registry-credentials'],
     ['.netrc', 'registry-credentials'],
@@ -59,18 +70,22 @@ const PROC_ENVIRON = /^\/proc\/[^/]+\/environ$/;
 
 /** The credential class of a path, or null. Decided from the path alone. */
 export function credentialFileClass(rawPath: string): CredentialFileClass | null {
-    const p = rawPath.trim().replace(/\\/g, '/').replace(/\/+$/, '');
-    if (p === '') return null;
-    if (PROC_ENVIRON.test(p)) return 'process-environment';
+    const trimmed = rawPath.trim().replace(/\\/g, '/').replace(/\/+$/, '');
+    if (trimmed === '') return null;
+    // `.` and `..` segments resolved, so `/proc/self/../self/environ` is the file it names.
+    const p = path.posix.normalize(trimmed);
+    if (PROC_ENVIRON.test(p) || PROC_ENVIRON.test(`/${p}`)) return 'process-environment';
     const base = p.slice(p.lastIndexOf('/') + 1);
     if (base === '.env' || base === '.envrc') return 'env-file';
     if (base.startsWith('.env.')) {
-        const suffix = base.slice('.env.'.length).toLowerCase();
-        return ENV_TEMPLATE_SUFFIXES.has(suffix) ? null : 'env-file';
+        // The LAST suffix decides: `.env.local.example` documents keys, `.env.local` holds values.
+        const last = base.slice(base.lastIndexOf('.') + 1).toLowerCase();
+        return ENV_TEMPLATE_SUFFIXES.has(last) ? null : 'env-file';
     }
     if (SSH_KEY.test(base)) return 'private-key';
     const lower = base.toLowerCase();
     if (KEY_EXTENSIONS.some((ext) => lower.endsWith(ext) && lower.length > ext.length)) return 'private-key';
+    if (lower.endsWith('.pem') && KEY_PEM_NAME.test(lower.slice(0, -4))) return 'private-key';
     for (const [tail, cls] of CREDENTIAL_TAILS) {
         if (p === tail || p.endsWith(`/${tail}`)) return cls;
     }
@@ -78,13 +93,19 @@ export function credentialFileClass(rawPath: string): CredentialFileClass | null
 }
 
 /**
- * Command words that act on a path without printing what it holds. A credential
- * path given to any other command is treated as a read, because the set of
- * commands that print a file is open and the set that do not is small.
+ * Command words that act on a path without printing or executing what it holds.
+ * A credential path given to any other command is treated as a read, because
+ * the set of commands that print a file is open and the set that do not is
+ * small. `cp`, `mv`, `source` and `.` are NOT here: `cp .env /dev/stdout` prints
+ * it, `source .env` runs it, and a copy or a rename launders the path for the
+ * next command.
  */
 const NON_READING_COMMANDS: ReadonlySet<string> = new Set([
-    'ls', 'stat', 'test', '[', 'touch', 'rm', 'mv', 'cp', 'chmod', 'chown', 'mkdir', 'wc', 'source', '.',
+    'ls', 'stat', 'test', '[', 'touch', 'rm', 'chmod', 'chown', 'mkdir', 'wc',
 ]);
+
+/** Words that run the command after them: `command env`, `sudo cat .env`, `nice -n 5 env`. */
+const WRAPPERS: ReadonlySet<string> = new Set(['command', 'builtin', 'exec', 'sudo', 'doas', 'nice', 'nohup', 'time', 'stdbuf', 'timeout']);
 
 /** `git` subcommands that name a path without printing its content. */
 const NON_READING_GIT: ReadonlySet<string> = new Set(['add', 'rm', 'mv', 'check-ignore', 'ls-files', 'status']);
@@ -104,8 +125,15 @@ const REDIRECT_PREFIX = /^(?:\d*[<>]{1,2}&?|&>{1,2})/;
 export function segmentVerdict(segment: string): { class: CredentialFileClass; what: string } | null {
     const words = commandWords(segment);
     let i = 0;
-    while (i < words.length && ASSIGNMENT.test(words[i] as string)) i += 1;
-    const cmd = words[i] ?? '';
+    for (;;) {
+        while (i < words.length && ASSIGNMENT.test(words[i] as string)) i += 1;
+        const head = (words[i] ?? '').replace(/^.*\//, '');
+        if (!WRAPPERS.has(head)) break;
+        i += 1;
+        // A wrapper's own flags and a `timeout`/`nice` amount are not the command.
+        while (i < words.length && (/^-/.test(words[i] as string) || /^\d+[smhd]?$/.test(words[i] as string))) i += 1;
+    }
+    const cmd = (words[i] ?? '').replace(/^.*\//, '');
     const args = words.slice(i + 1);
     const operands = args.filter((a) => !a.startsWith('-'));
 
@@ -119,12 +147,26 @@ export function segmentVerdict(segment: string): { class: CredentialFileClass; w
         ((cmd === 'declare' || cmd === 'typeset') && operands.length === 0 && args.some((a) => /^-[a-zA-Z]*[xp]/.test(a)));
     if (dumpsEnv) return { class: 'process-environment', what: `\`${cmd}\`` };
 
+    // A copy or a rename reads its sources and only writes its destination:
+    // `cp .env.example .env` creates the file, while `cp .env /dev/stdout` prints
+    // it and `cp .env x` or `mv .env x` launders it for the next command.
+    if (cmd === 'cp' || cmd === 'mv') {
+        for (const src of operands.slice(0, -1)) {
+            const cls = credentialFileClass(src);
+            if (cls !== null) return { class: cls, what: `\`${path.posix.basename(src)}\`` };
+        }
+        return null;
+    }
     const reads = !(NON_READING_COMMANDS.has(cmd) || (cmd === 'git' && NON_READING_GIT.has(operands[0] ?? '')));
     if (!reads) return null;
     for (const w of words.slice(i + 1)) {
         const target = w.replace(REDIRECT_PREFIX, '');
-        const cls = credentialFileClass(target);
-        if (cls !== null) return { class: cls, what: `\`${target}\`` };
+        // `--config=.env`, `--defaults-file=~/.my.cnf`: the value of an option is a path too.
+        const candidates = target.includes('=') ? [target, target.slice(target.indexOf('=') + 1)] : [target];
+        for (const c of candidates) {
+            const cls = credentialFileClass(c);
+            if (cls !== null) return { class: cls, what: `\`${path.posix.basename(c)}\`` };
+        }
     }
     return null;
 }
