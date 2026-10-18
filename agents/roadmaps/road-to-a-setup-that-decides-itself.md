@@ -139,13 +139,15 @@ with that file.
 
 ## Phase 1 — The instrument
 
-- [x] **1.1 Bind `InstructionsLoaded`.** Absorbs step 3.0 of
+- [ ] **1.1 Bind `InstructionsLoaded`.** Absorbs step 3.0 of
   `stubs/road-to-instructions-loaded-observer.md` (D6). Vocabulary, alias and platform
   row, in the stub's order; observe-only; the stub's kill switch kept —
   removable on hook failure, duplicate events, session-start regression or
   unexplained test breaks.
   verify: the stub's re-entry probe returns `1` and `1`.
-  Landed 2026-10-18: `instructions_loaded` in both vocabularies, the `claude` alias and platform row, and concern `instructions-observer` (`src/scripts/hooks/instructions_observer_hook.ts`), which appends one classified line per event to `<machine root>/runtime/arrivals/<session>.jsonl`, keeps the newest 50 session files with each capped at 256 KiB, and emits nothing. One file per session because the host runs this event asynchronously and in parallel (its hook documentation: "It runs asynchronously for observability purposes"): a shared rotated file let two processes rename each other's data away (council round 1). The bundled half only captures id-shaped tokens and a basename; classification runs at read time (`_lib/instructions_loaded_classify.ts`), which also kept the bundle at 1,549,432 B of 1,550,000. Through the built bundle: 40 parallel loads of one session wrote 40 of 40 lines, and 60 parallel new sessions left exactly 50 files. Measured 89 ms per dispatch, off the session's critical path. Kill switch: `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off`, or delete the one binding line; listed in the contract's kill-switch table. The probe reads `1` and `1`. The 2026-10-16 note called the binding hook plumbing a drain lane does not edit; the plumbing sources carry a ratification record, not a deny, and the owner's (a) of 2026-10-15 is the scheduling decision, so the edit ships with its ratification artefact. Not yet observed: a live fire, which by the stub's own reasoning can only be a later session's record.
+  Open 2026-10-18 — the observer is built, its binding is not shipped. The concern `instructions-observer` (`src/scripts/hooks/instructions_observer_hook.ts`, kill switch `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off`) writes one capture line per event to `<machine root>/runtime/arrivals/<session>.jsonl` through one `O_NOFOLLOW|O_NONBLOCK` descriptor, owner-only, 50 sessions × 256 KiB retained; classification runs at read time (`_lib/instructions_loaded_classify.ts`). It is in no manifest row and not in the concern registry, so the probe still reads `0` and `0`. The binding (vocabulary, alias, platform row, registry entry) was written and then taken out of this change, for two reasons that are both recorded here rather than worked around:
+  (1) **Council modification review, 2026-10-18, anthropic + openai, seven rounds (the first two attempts timed out on both seats), all subscription-authed, nothing billed — no round reached a pass.** Each round closed real defects and raised new ones: a racy shared rotation file (→ one file per session), an order-sensitive record under asynchronous delivery (→ a set, D7), an unsanitised session id, an all-or-nothing reader, a recreated file skipping its prune, a check-then-append symlink race (→ one no-follow descriptor), a fail-open boundary that had slipped, a FIFO that could stall the open. Round 7's open items: verify the `arrivals` directory itself (not a symlink, owned, `0700`) before opening anything in it; give the `arrivals.last-error` marker the same no-follow, non-blocking, regular-file treatment as the session files (as written it can still block on a planted FIFO); a test that a torn trailing line is skipped and the next line still reads.
+  (2) **The dispatcher bundle has no room for those fixes.** With the binding in, it measured 1,549,991 B against its 1,550,000 B ceiling (`src/config/hook-bundle-budget.json`); the round-7 items cost more than the 9 B left. Raising `max_bytes` is a ratchet move recorded in that file's `raise_log` and is the owner's, and a sibling change moving the egress engine into a conditional chunk would free room without one. Either unblocks this step; the review then resumes at round 8 from the items above.
 - [x] **1.2 Negative controls for the observer.** Event unavailable on
   the host version, events reordered, malformed payload, duplicate call: each is
   recorded as `unknown`, never as arrival.
@@ -165,7 +167,7 @@ with that file.
 - [x] **2.2 Hand it to its waiting consumer.** The installed-layer
   roadmap's step 2.1 reads this record.
   verify: that step's verify line has an input.
-  Landed 2026-10-18: `./scripts-run src/scripts/arrival_report` prints one block per session with a `host version` line, which is the token the installed-layer step 2.1 verify greps; that step now names it as its input.
+  Landed 2026-10-18: `./scripts-run src/scripts/arrival_report` prints one block per session with a `host version` line, which is the token the installed-layer step 2.1 verify greps; that step now names it as its input. The tool exists; data begins to arrive only once 1.1's binding ships, so the consumer's verify has an input and, until then, an empty one.
 
 ## Phase 3 — The package decides; no key does
 
@@ -197,7 +199,7 @@ with that file.
   carrier does.
   verify: fresh-`HOME` fixture — session 1 full, session 2 thinned, only with
   the record present; a record missing a standing law yields `demoted`.
-  Open 2026-10-18, screened: two independent stops. (1) Its latency budget is "fixed from 0.1's measurement", and 0.1 is open. (2) The promotion runs in the `session_start` concern, inside the dispatcher bundle, which measured 1,549,865 B against its 1,550,000 B ceiling after 1.1 landed — 135 B, less than one import line. A thin pass in that concern needs either a raised `max_bytes` (a ratchet move recorded in `hook-bundle-budget.json`'s `raise_log`, an owner decision) or bytes removed elsewhere first. Nothing promotes before 5.3 in any case, so leaving it open costs no behaviour.
+  Open 2026-10-18, screened: two independent stops. (1) Its latency budget is "fixed from 0.1's measurement", and 0.1 is open. (2) The promotion runs in the `session_start` concern, inside the dispatcher bundle, whose ceiling 1.1's binding alone already exhausts (1,549,991 B of 1,550,000 with it in, see 1.1). A thin pass in that concern needs either a raised `max_bytes` (a ratchet move recorded in `hook-bundle-budget.json`'s `raise_log`, an owner decision) or bytes removed elsewhere first. Nothing promotes before 5.3 in any case, so leaving it open costs no behaviour.
 - [x] **3.4 A release brake the maintainer owns.** A shipped table row forces
   `full` for a host version or a package version. It is the operator rollback,
   not a consumer surface.
