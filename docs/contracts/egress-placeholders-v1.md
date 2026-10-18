@@ -49,7 +49,14 @@ value, the low-impact corpus redactor — read those prefixes
 their own; every other consumer runs the rows. Each consumer keeps its own
 policy for a hit (refuse, mask, report, redact a line); only detection is
 shared, and `egress_drift_matrix.test.ts` runs a positive fixture for every
-credential row against every consumer. Not yet moved: the keyword-assignment
+credential row against every consumer. Moving a consumer must not narrow it:
+`egress_legacy_superset.test.ts` freezes every pre-move pattern and runs an
+adversarial corpus through old and new, and a consumer whose own reading was
+looser than the row (an OpenAI key glued to a word, a GitHub token past 36
+characters, a key block whose END label differs) keeps that reading over the
+table's prefixes. `rawKeyPrefixPattern` holds a prefix to a token start only
+where its own row is anchored. `check_credential_spelling` fails a second
+spelling of a declared prefix under `src/scripts` and `src/cli`. Not yet moved: the keyword-assignment
 variants (`password =`, `api_key:`) that several consumers read at their own,
 looser threshold, and one prefix spelled through a character class in
 `check_reach_channels.ts`; neither carries a vendor literal, so the

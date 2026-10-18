@@ -80,8 +80,9 @@ is open.
   drain lane did not edit. 2.3 to 2.6 and 3.2 edit the rule table or the token
   module, both bundled into the dispatcher, so each needs a ratification record
   before it can land.
-- **Next in order:** 2.2 (which now carries the
-  single-literal lint moved from 2.1), 2.3, 3.2, 3.3.
+- **2026-10-18:** 2.2 landed with its ratification record; its two
+  remainders without a vendor literal became 2.7.
+- **Next in order:** 2.3, 3.2, 3.3.
 
 ## What this roadmap deliberately does not do
 
@@ -217,7 +218,7 @@ read cannot leak through any later bug.
       `pem-private-key` replaces through its END marker and refuses the text when
       that cannot be proven, so 3.3 inherits replacement-grade spans rather than
       having to widen them.
-- [ ] **2.2 Move every site of F2 onto it** without changing what each site does
+- [x] **2.2 Move every site of F2 onto it** without changing what each site does
       with a hit — the council low-impact redactor still refuses, the explain
       scrubber still masks, `check_secret_leak` keeps its verdicts. Only the
       detection is shared.
@@ -241,6 +242,23 @@ read cannot leak through any later bug.
       and the keyword-assignment variants (`password =`, `api_key:`) four
       consumers read at their own threshold plus the class-spelled prefix list in
       `check_reach_channels.ts`, which carry no vendor literal.
+      **Done 2026-10-18:** the four reverted commits re-applied, and a review of
+      them found the move narrowed five consumers (a prefix held to a token start
+      where the consumer's own reading was not, a GitHub token masked only to 36
+      characters, an OpenAI key glued to a word missed, a key block with a
+      mismatched END label losing only its header). Fixed:
+      `rawKeyPrefixPattern` anchors a prefix only where its row is anchored,
+      `workspace_secrets` keeps its two looser shapes over the table's prefixes,
+      the bundler keeps its unanchored OpenAI shape, an unproven key block is
+      masked through the nearest END marker. `npx vitest run
+      src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 freezes every
+      pre-move pattern against an adversarial corpus, each fix seen red with it
+      removed; the drift matrix (`egress_drift_matrix.test.ts`, `sk-ant-api03` a
+      named row) is green. The single-spelling check is the gate
+      `check_credential_spelling` (self-test, ledger, `rule-backstops` and
+      `task ci`), registered in `src/config/gate-coverage.yml` with a
+      create-only canary seen red. `check_secret_leak --all` stays green with the
+      six added rows. The two remainders above move to 2.7.
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own
@@ -285,6 +303,14 @@ read cannot leak through any later bug.
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
+- [ ] **2.7 The shapes with no vendor literal read the table too** — the
+      keyword-assignment variants (`password =`, `api_key:`) the council bundler,
+      `workspace_secrets` and the low-impact redactor read at their own
+      threshold, and the class-spelled prefixes in `check_reach_channels.ts`.
+      Split out of 2.2, whose gate cannot see them. Each consumer keeps its own
+      threshold and placeholder; the legacy-superset suite gains their frozen
+      patterns before the move.
+      verify: `npx vitest run src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 with those patterns frozen, and `check_credential_spelling` fails a keyword-assignment or class-spelled shape outside the table (self-test case).
 
 ## Phase 3 — The grammar, and the requests this package writes (F1, F8)
 
