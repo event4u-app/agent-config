@@ -230,6 +230,45 @@ consumer behaviour points at something that executes.
       needs the third evidence class D5's `revisit if` already names. The honest
       next move is one of those two, taken where it belongs — not a ledger edit
       here.
+      **Re-read 2026-10-18 under `/roadmap:process-full`, narrowed, still open.**
+      Three rows moved, each with a run behind it:
+      `surgical-uninstall` now carries `exec:` into
+      `tests/install/uninstall_shared_host_config_real_install.test.ts`, which
+      drives a real global `claude-code` install and uninstall over a settings
+      file holding a neighbour's group in the shared `PreToolUse` array and
+      compares bytes — and that path was not covered by the old evidence at
+      all, because the default host removes its hooks through
+      `remove_managed_hooks`, not the pointer subtraction the unit suites pin.
+      This is the key-level half the 2026-10-17 note found missing.
+      `default-install-context-cost` now carries `exec:` into
+      `tests/install/default_install_skill_count_real_install.test.ts`, which
+      holds installed catalog skills = predicate = published `N of M`, and was
+      seen red with the published figure changed to 228.
+      `scope-dedup-cold-start-reduction` left the subset under the contract's
+      own fixture exclusion (its claim text says the saving is unreachable for
+      production installs); the reason is recorded in the contract.
+      **What remains, and who owns it.** An AI-council round on the residue ran
+      DEGRADED — one of two seats answered (`openai`), the other timed out
+      twice — so it is a reading, not convergence. That seat called marking
+      `install-audit-clean` and `hook-dispatch-latency` `unbacked`
+      **owner-reserved** (a downgrade of a published claim), which is the
+      preservation test's drop/weaken row, so this run did not take it. Found
+      while reading B: `install-audit-clean` says "a fresh registry install",
+      but its workflow step audits this repository's lockfile and no
+      shrinkwrap ships, so a consumer's tree is resolved by semver range — the
+      evidence does not measure the claimed subject. The preserving fix is a
+      pack-install-audit case (network); the weakening fix is narrowing the
+      sentence or `unbacked`. The same seat asked for a harness wrapper around
+      `council-fallback-loses-zero-seats`; not taken, because the only way to
+      fake provider transports in an installed copy is a test seam in shipped
+      code, and the installed copy runs the same `src/scripts/` the existing
+      `exec:` drives. The four remaining bench/fixture rows
+      (`thin-inject-delivery-equivalence`, `mcp-registered-server-standing-cost`,
+      `skill-tiering-h2-costs-more-by-default`, `gated-platform-reads`) each
+      assert something about a shipped install, so the exclusion does not
+      reach them; the seat's answer for them was `unbacked`, the same owner-
+      reserved downgrade. `./scripts-run src/scripts/build_proof` exits 0 and
+      `docs/proof.md` now reads **19 of 63** exec-backed, written from that run.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.

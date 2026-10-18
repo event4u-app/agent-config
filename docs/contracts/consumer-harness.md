@@ -61,13 +61,21 @@ The subset, by claim id, read against the ledger on 2026-10-16:
 | `thin-inject-delivery-equivalence` | backed | pointer — a bench report |
 | `mcp-registered-server-standing-cost` | backed | pointer — a metrics file |
 | `skill-tiering-h2-costs-more-by-default` | backed | pointer — an analysis file |
-| `scope-dedup-cold-start-reduction` | backed | pointer — a context file |
 | `council-fallback-loses-zero-seats` | backed | `exec:` — unit tests under `tests/scripts/` |
 | `gated-platform-reads` | backed | pointer — `docs/benchmark.md` |
 | `no-runtime-daemon` | withdrawn | — |
 
 `tests/scripts/consumer_harness_contract.test.ts` fails when an id in this table
 leaves the ledger or changes status, so the subset cannot drift silently.
+
+**Removed from the subset on 2026-10-18:** `scope-dedup-cold-start-reduction`.
+Its own claim text states the figure is fixture-measured on byte-identical
+projections and "currently unreachable for production installs", so the reading
+is about the fixture, which is the exclusion in the definition above. It stays
+`backed` on its pointer; a production install that realises the saving would be
+a new claim and would belong in this table. The other fixture- and bench-backed
+rows stay: each of their claim sentences asserts something about what a shipped
+install does, so the exclusion does not reach them.
 
 ## What this file does not do
 
