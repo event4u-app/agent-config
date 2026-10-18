@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { scan as workspaceScan, scrub as workspaceScrub } from '../../cli/python/workspace_secrets.js';
+import { scan as workspaceScan, scrub as workspaceScrub } from './workspace_secrets.js';
 import { scrub_string as explainScrub } from '../_cli/explain_last/scrubber.js';
 import { redact as bundlerRedact } from '../ai_council/bundler.js';
 import { _RAW_KEY_PREFIXES as councilRefPrefixes } from '../ai_council/config.js';

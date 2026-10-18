@@ -40,7 +40,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { scrub } from '../cli/python/workspace_secrets.js';
+import { scrub } from './_lib/workspace_secrets.js';
 import { collect } from './linked_projects_list.js';
 
 const _HERE = fileURLToPath(import.meta.url);
