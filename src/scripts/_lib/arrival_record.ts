@@ -26,7 +26,7 @@ import * as path from 'node:path';
 
 import type { ActivationReceipt } from './activation_ladder.js';
 import type { ArrivalEvidence } from './layer_form_decision.js';
-import type { CaptureLine } from './instructions_loaded_event.js';
+import { isSessionFile, type CaptureLine } from './instructions_loaded_event.js';
 import {
     LOAD_REASONS,
     classifyCapture,
@@ -66,7 +66,7 @@ export interface ArrivalRecord {
 export function readObserverLines(dir: string): ObserverLine[] {
     let names: string[] = [];
     try {
-        names = fs.readdirSync(dir).filter((f) => f.endsWith('.jsonl'));
+        names = fs.readdirSync(dir).filter(isSessionFile);
     } catch {
         return [];
     }

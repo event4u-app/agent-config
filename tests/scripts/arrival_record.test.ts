@@ -212,6 +212,34 @@ describe('the observer concern', () => {
         expect(fs.readdirSync(dir)).toHaveLength(KEEP_SESSIONS);
     });
 
+    it('a write to an existing session prunes too, so a count above fifty does not survive', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        for (let i = 0; i < KEEP_SESSIONS + 1; i += 1) {
+            const f = path.join(dir, `n${String(i).padStart(2, '0')}.jsonl`);
+            fs.writeFileSync(f, '{}\n');
+            fs.utimesSync(f, 5_000 + i, 5_000 + i);
+        }
+        processEnvelope(envelope({ session_id: 'n10', file_path: USER_RULE('a'), load_reason: 'compact' }), env);
+        expect(fs.readdirSync(dir)).toHaveLength(KEEP_SESSIONS);
+    });
+
+    it('a file exactly at the cap takes no further line', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'cap.jsonl'), 'x'.repeat(MAX_SESSION_BYTES));
+        processEnvelope(envelope({ session_id: 'cap', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.statSync(path.join(dir, 'cap.jsonl')).size).toBe(MAX_SESSION_BYTES);
+    });
+
+    it('a non-session entry in the directory is neither read nor pruned', () => {
+        const dir = arrivalsDir(env);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'README'), 'x');
+        processEnvelope(envelope({ session_id: 'ok', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
+        expect(fs.readdirSync(dir).sort()).toEqual(['README', 'ok.jsonl']);
+    });
+
     it('one unreadable session file does not discard the others', () => {
         processEnvelope(envelope({ session_id: 'ok', file_path: USER_RULE('a'), load_reason: 'session_start' }), env);
         fs.mkdirSync(path.join(arrivalsDir(env), 'broken.jsonl'));

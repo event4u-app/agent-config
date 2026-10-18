@@ -29,6 +29,9 @@ export interface CaptureLine {
 /** A token that is safe as a filename and carries no path: starts alphanumeric, no separators. */
 export const TOKEN_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 
+/** The one rule for which directory entries are session files — the reader and the prune share it. */
+export const isSessionFile = (f: string): boolean => f.endsWith('.jsonl');
+
 const token = (v: unknown): string | null => (typeof v === 'string' && TOKEN_RE.test(v) ? v : null);
 
 export function captureInstructionsLoaded(payload: unknown, ts: string, home: string, env: NodeJS.ProcessEnv): CaptureLine {
