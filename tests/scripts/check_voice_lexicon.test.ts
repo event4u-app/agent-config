@@ -25,6 +25,7 @@ import {
     type LexiconTerm,
 } from '../../src/scripts/check_voice_lexicon.js';
 import { validateBrandVoiceSlotText } from '../../src/scripts/_lib/brand_voice_slot.js';
+import { CLAIM_PHRASES } from '../../src/scripts/_lib/claim_phrases.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_voice_lexicon.ts');
@@ -235,5 +236,10 @@ describe('check_voice_lexicon — claim-shapes', () => {
     it('claim-shapes: German phrases are hints, bare words never fire, quoted claims are exempt', () => {
         const found = scanClaims('Wir sind Marktführer.\nThe only way, the best tool.\nThey said "number one".\n', [], NOW);
         expect(found.map((f) => [f.line, f.severity])).toEqual([[1, 'hint']]);
+    });
+
+    it('claim-shapes: no English registry entry is a single bare word (NG-10)', () => {
+        const bare = CLAIM_PHRASES.filter((p) => p.language === 'en' && !/[\s\-.]/u.test(p.phrase)).map((p) => p.phrase);
+        expect(bare).toEqual([]);
     });
 });
