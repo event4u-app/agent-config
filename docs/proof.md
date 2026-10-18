@@ -316,7 +316,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 | Rule | Effective level | Declared backstop(s) |
 |---|---|---|
 | `active-remediation` | none | `instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one` |
-| `brand-source-of-truth` | none | `instruction-only: check_voice_lexicon runs only when a command calls it` |
+| `brand-source-of-truth` | none | `instruction-only: check_voice_lexicon runs if invoked` |
 | `code-comment-discipline` | validator | `validator:src/scripts/lint_code_comments.ts`<br>`hook:comment-discipline` |
 | `code-provenance` | none | `instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation` |
 | `context-hygiene` | observer | `hook:context-hygiene` |
