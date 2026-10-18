@@ -154,6 +154,7 @@ describe('work_engine/state — TS-side unit checks (no python3 needed)', () => 
         expect([...KNOWN_INPUT_KINDS].sort()).toEqual([
             'diff',
             'file',
+            'procedure',
             'prompt',
             'ticket',
         ]);
