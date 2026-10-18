@@ -14,6 +14,10 @@
  * is the test that goes red the moment an `allow` is allowed to outrank a
  * `deny`.
  */
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -405,9 +409,13 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
             'ls [.][.]/other',
             'cat -- -/../../etc/passwd',
             'cat -- --/../../etc/passwd',
+            'sort -o --/../../outside src/a',
+            'git diff --output --/../../outside',
+            'sort -o -x/../../../outside src/a',
             'cat ""/etc/passwd',
             'cat "."/../x',
             'grep -f/etc/patterns src',
+            'grep -- -x /etc/passwd',
             'cat ..\\/outside',
             'cat ~root/.profile',
         ]) {
@@ -503,6 +511,33 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
         }
         for (const cmd of ['git branch', 'git branch -a', 'cat src/x.ts', 'prettier --write src', 'eslint --fix .']) {
             expect(allowOf(cmd)?.decision, cmd).toBe('allow');
+        }
+    });
+
+    it('bash-path-confinement: an in-tree symlink that points outside is outside', () => {
+        // Council review 2026-10-18, round 2: lexical confinement admitted
+        // `cat link` where `link` resolves to a file outside the tree.
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'cat-a-'));
+        try {
+            const tree = path.join(base, 'tree');
+            const outside = path.join(base, 'outside');
+            fs.mkdirSync(path.join(tree, 'src'), { recursive: true });
+            fs.mkdirSync(outside);
+            fs.writeFileSync(path.join(outside, 'secret'), 'x');
+            fs.writeFileSync(path.join(tree, 'src', 'a.ts'), 'x');
+            fs.symlinkSync(path.join(outside, 'secret'), path.join(tree, 'link'));
+            fs.symlinkSync(outside, path.join(tree, 'linkdir'));
+            fs.symlinkSync(path.join(tree, 'src'), path.join(tree, 'inner'));
+            for (const cmd of ['cat link', 'cat linkdir/secret', 'sort -o linkdir/new src/a.ts']) {
+                expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(false);
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'link') }, tree)).toBe(false);
+            for (const cmd of ['cat src/a.ts', 'cat inner/a.ts', 'sort -o src/new.txt src/a.ts']) {
+                expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(true);
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'inner', 'a.ts') }, tree)).toBe(true);
+        } finally {
+            fs.rmSync(base, { recursive: true, force: true });
         }
     });
 });

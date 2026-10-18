@@ -108,7 +108,7 @@ export function _permission_for(
   if (!verdict.categoryA) return null;
   // The reason may only name a check that ran for this call: a bare `pwd`
   // had no path argument to confine, so it must not claim it was confined.
-  const where = verdict.confinementChecked ? " inside the working tree" : ", no path argument to confine";
+  const where = verdict.confined ? " inside the working tree" : ", no path argument to confine";
   return {
     decision: "allow",
     reason: `agent-config: category-A ${tool_name}${where} — no concern gates it and none asked to.`,

@@ -23,6 +23,7 @@
  * grant — the host's own strings record `permissionDecision=allow ignored: a
  * confined session takes grants only from its command line`.
  */
+import * as fs from "node:fs";
 import * as path from "node:path";
 
 /** A JSON-ish tool input as it arrives in the dispatcher envelope. */
@@ -148,6 +149,28 @@ export function isInsideWorkingTree(candidate: string, root: string): boolean {
     // `..` as a whole first segment escapes; `...` or `..cache` is a name.
     const escapes = rel === ".." || rel.startsWith(`..${path.sep}`);
     return !escapes && !path.isAbsolute(rel);
+}
+
+/** `p` with every symlink in its longest existing prefix resolved. */
+function _real(p: string): string {
+    try {
+        return fs.realpathSync(p);
+    } catch {
+        const parent = path.dirname(p);
+        return parent === p ? p : path.join(_real(parent), path.basename(p));
+    }
+}
+
+/**
+ * {@link isInsideWorkingTree}, and still inside once symlinks are followed.
+ *
+ * The one place the classifier reads the filesystem, and it can only withhold:
+ * an in-tree symlink to `~/.ssh` is lexically inside and really outside. A
+ * path that does not exist keeps its lexical answer.
+ */
+function _reallyInside(candidate: string, root: string): boolean {
+    if (!isInsideWorkingTree(candidate, root)) return false;
+    return isInsideWorkingTree(_real(path.resolve(root, candidate)), _real(path.resolve(root)));
 }
 
 /** Split a command on whitespace; the caller has already refused metacharacters. */
@@ -286,29 +309,32 @@ function _pathArguments(argv: readonly string[], head: string): string[] {
         } else if (grep && /^(-f|--file)$/.test(token)) {
             out.push((argv[++i] ?? "").replace(/["']/g, ""));
         } else {
+            // A dash-led token may itself be the value of the option before it
+            // (`sort -o --/../x`), so one that contains `/` is a path too.
+            if (token.includes("/")) out.push(token);
             const eq = token.indexOf("=");
             if (eq >= 0) out.push(token.slice(eq + 1));
-            else if (!token.startsWith("--")) out.push(token.slice(2));
+            else if (!token.startsWith("--") && token.length > 2) out.push(token.slice(2));
         }
     }
-    return out.filter((c) => c !== "");
+    return out;
 }
 
 /** Stands in for the tree when the caller has none: absolute and `..` still escape it. */
-const UNROOTED = path.resolve("/", "agent-config-unrooted-working-tree");
+const UNROOTED = path.resolve("/agent-config-unrooted");
 
 function _confined(candidate: string, workingTree: string): boolean {
     if (candidate.startsWith("~") || candidate.split("/").some((seg) => DOT_GLOB_SEGMENT.test(seg))) return false;
-    return isInsideWorkingTree(candidate, workingTree.trim() ? workingTree : UNROOTED);
+    return _reallyInside(candidate, workingTree.trim() ? workingTree : UNROOTED);
 }
 
 /** What the classifier decided, and whether a path confinement actually ran. */
 export interface CategoryAVerdict {
     categoryA: boolean;
-    confinementChecked: boolean;
+    confined: boolean;
 }
 
-const NOT_A: CategoryAVerdict = { categoryA: false, confinementChecked: false };
+const NOT_A: CategoryAVerdict = { categoryA: false, confined: false };
 
 /** Non-flag token after the subcommand, or `""`. */
 function _secondSubcommand(argv: readonly string[]): string {
@@ -374,12 +400,12 @@ export function bashCategoryAVerdict(command: string, workingTree = ""): Categor
     if (!head) return NOT_A;
     if (!_namesASafeOperation(argv, head)) return NOT_A;
 
-    if (NON_OPENING_HEADS.test(head)) return { categoryA: true, confinementChecked: false };
+    if (NON_OPENING_HEADS.test(head)) return { categoryA: true, confined: false };
     const candidates = _pathArguments(argv, head);
     for (const candidate of candidates) {
         if (!_confined(candidate, workingTree)) return NOT_A;
     }
-    return { categoryA: true, confinementChecked: candidates.length > 0 };
+    return { categoryA: true, confined: candidates.length > 0 };
 }
 
 /** Is this Bash command string category A? */
@@ -407,10 +433,10 @@ export function categoryAVerdict(
         for (const key of PATH_KEYS) {
             const value = toolInput?.[key];
             if (typeof value !== "string") continue;
-            if (!isInsideWorkingTree(value, workingTree)) return NOT_A;
+            if (!_reallyInside(value, workingTree)) return NOT_A;
             checked = true;
         }
-        return { categoryA: true, confinementChecked: checked };
+        return { categoryA: true, confined: checked };
     }
 
     if (toolName === "Bash") {
