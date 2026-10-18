@@ -1,0 +1,63 @@
+{
+    "skill": "rtk-output-filtering",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three uses the SKILL.md lists: wrapping a verbose command, installing rtk on a machine, and writing project-local filters, with a German variant. Near-misses are the token-saving neighbours: the general token decision tree (token-optimizer), packing a codebase for an LLM (repomix-packer), and the case this skill itself forbids — a git diff where completeness matters, which belongs to code-review. Counterexamples guard short commands and the 'filter' homonym in data code.",
+    "queries": [
+        {
+            "q": "run the full phpunit suite but don't flood the context with the output",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "set up rtk on this new laptop, including the tee and audit logging",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add a project-local rtk filter for our custom deploy script, it prints 400 lines of progress bars",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "phpstan spits out thousands of lines — wrap it so we only see what matters",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "installier rtk hier im Projekt und richte die Filter für docker compose logs ein",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "we're close to the context limit — what's the cheapest way to keep going?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a general token-saving decision across reads, handoffs and runs → token-optimizer, which routes to rtk only as one branch"
+        },
+        {
+            "q": "pack the whole repo into one file so I can paste it into another model",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "token-conscious, but a codebase packer rather than an output filter → repomix-packer"
+        },
+        {
+            "q": "show me the complete git diff of this branch so we can review every change",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "this skill's SKILL.md forbids rtk where completeness matters, git diff by name — the raw diff serves a review → code-review"
+        },
+        {
+            "q": "what's the current branch?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "short command with a one-line answer; SKILL.md says no overhead benefit"
+        },
+        {
+            "q": "add a filter to the orders list so admins can search by customer",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'filter' as a UI/query feature, unrelated to CLI output"
+        }
+    ]
+}

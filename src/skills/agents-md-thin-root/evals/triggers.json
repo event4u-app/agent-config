@@ -1,0 +1,63 @@
+{
+    "skill": "agents-md-thin-root",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover editing and reviewing the package-root AGENTS.md and the consumer template, including the budget-meter signal and the pointer-ratio contract the skill enforces. Near-misses use the skill's own named exclusion (copilot-instructions belongs to copilot-agents-optimization) plus two neighbours that touch AGENTS.md-adjacent text without the Thin-Root contract: generic telegraph condensation of a memory file (condense-memory) and editing agent docs outside AGENTS.md (agent-docs-writing). Counterexamples guard the bare word 'agents' and an unrelated README edit.",
+    "queries": [
+        {
+            "q": "add a section to AGENTS.md about the new release flow",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the budget meter says the root AGENTS.md is eating most of the workspace-guidelines budget — slim it down",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "review this PR, it changes templates/AGENTS.md for consumers",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "does our AGENTS.md still hit the 40% pointer ratio and keep the emergency-triage block?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "bau einen Verweis auf den neuen Contract in die AGENTS.md ein, ohne die Zeichengrenze zu reißen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "tighten .github/copilot-instructions.md, Copilot keeps ignoring it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "named in this skill's own Do-NOT list → copilot-agents-optimization"
+        },
+        {
+            "q": "run the telegraph condenser over CLAUDE.md and keep the .original.md backup",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "shrinking an always-loaded memory file by telegraph grammar rather than by the pointer contract → condense-memory"
+        },
+        {
+            "q": "update the module doc under agents/ for the billing module",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "agent documentation outside AGENTS.md, which this skill's Do-NOT list excludes → agent-docs-writing"
+        },
+        {
+            "q": "which agents are running right now and what are they working on?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'agents' homonym — runtime subagents, not the AGENTS.md file"
+        },
+        {
+            "q": "fix the install instructions in README.md",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a top-level doc edit with no AGENTS.md and no budget contract involved"
+        }
+    ]
+}
