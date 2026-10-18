@@ -440,7 +440,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t "claim-shapes|negative-corpus" --reporter=verbose` -> /✓.*claim-shapes[\s\S]*✓.*negative-corpus/
       Open 2026-10-17: the registry (`src/scripts/_lib/claim_phrases.ts`) and the corpus list (`tests/fixtures/voice-lexicon/negative-corpus.txt`, 183 contract docs) were committed before the first run; the `claim-shapes` cases pass and the scan is live at `warning`/`hint`. The first measurement missed the bar — 8 hits over 283,204 words, 0.28 per 10k against 0.1, all false positives from three phrases (`unmatched`, `beats every`, `never fails`) — recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md`. E8 forbids tuning after the first run, so no registry edit and no bar test landed; closing needs a fresh pre-registration against a corpus the revision was not chosen on.
       Done 2026-10-19: the fresh pre-registration landed in its own commit before any scan — registry v2 drops the four English single-word entries NG-10 already excludes (`unmatched`, `unrivaled`, `unrivalled`, `unhackable`; a `claim-shapes` case pins it, seen red), keeps `beats every` and `never fails`, and corpus v2 is 111 `docs/guidelines` files never scanned before. Reading: 0 hits in 97,835 words, bar met; `negative-corpus` asserts it and turned red under a planted noisy phrase. Recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md`, including the v1-corpus figure under v2 (0.105) labelled as not evidence.
-- [ ] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
+- [x] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
       `humanizer` and `/brand:review` run 5.1-5.3 on the finished draft. A
       ghostwriter taboo hit aborts as documented; brand findings are located,
       carry the replacement note or the missing proof, and flag without
@@ -448,6 +448,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       judgement. The rule names the checker; `enforced_by` changes accordingly.
       verify: `rg -l 'check_voice_lexicon' src/domains/gtm-marketing/ghostwriter/write/command.md src/skills/humanizer/SKILL.md src/domains/brand/brand/review/command.md` -> 3 files
       Open 2026-10-17: the checker exists (5.1); wiring it into `/ghostwriter:write`, `/post-as:*`, `humanizer` and `/brand:review` changes what those consumer-facing commands do on every draft, which this drain lane treats as owner-reserved. The `enforced_by` change waits with it.
+      Done 2026-10-19: the step is this roadmap's own, and what it changes is the step's stated design — flags, never blocks, except the taboo abort `/ghostwriter:write` already documented — so it lands under the run's authority. The checker gained `--draft -` (stdin), because both drafting commands print only and may not write the draft to disk. `/ghostwriter:write` step 5b runs it with `--ghostwriter` (exit 1 aborts with no draft and no footer) and `--slot` when `brand:status` reports the slot valid; `/post-as:ghostwriter` is its alias; `/post-as:me` step 5b runs it with the slot only, since `.agent-user.md` v1 has no `style.avoid` (5.5); `humanizer` step 5 runs it after the tell detector and reports `unbacked-claim` instead of rewording it away; `/brand:review` runs it and the 3.3 palette reading before any model judgement. `brand-source-of-truth` now reads `instruction-only: check_voice_lexicon runs only when a command calls it` — a model still invokes it, so no `validator:` claim; the preamble budget reads zero net growth. `draft-surfaces` in `check_voice_lexicon.test.ts` (seen red) pins stdin and all four surfaces; `command-clusters.md` no longer calls `brand-consistency` a gate.
 - [ ] **5.5 User schema v2** — only if 5.0 says build.
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
       Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
@@ -596,12 +597,12 @@ Carried from the supplied plans' kill register; each was judged and not taken.
       brand, and names every source with its hash.
 - [ ] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
       unrepresentable value fails with its token path and a non-zero exit.
-- [ ] AC-6 — A planted banned term or unbacked claim in a finished draft from
+- [x] AC-6 — A planted banned term or unbacked claim in a finished draft from
       ghostwriter, post-as, humanizer or brand review produces a located finding;
       a quoted one does not.
 - [ ] AC-7 — A non-brand task in a fully branded project carries zero brand
       bytes, before and after any carrier.
-- [ ] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
+- [x] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
       `instruction-only`, and no file calls `brand-consistency` a gate.
 - [ ] AC-9 — A runtime carrier exists only if the recorded read-rate
       measurement missed its pre-registered bar.
@@ -622,6 +623,7 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 | E10 | reversible-technical | evidence | Docs align to the resolver (`tokens.json`); the resolver keeps flagging dotted near-misses. Reopens the 2026-09-09 deferral: it named no owner, no blocker and no revisit condition, while `brand-asset-generation` itself loads the dotted name. No runtime behaviour changes. | `brand-to-tokens/SKILL.md:32-51`; `cmd_brand_status.ts:62-80` | a consumer reports a tool that writes the dotted name |
 | E11 | deterministic | agent | Closure pass 2026-10-15: the `-t` titles and `rg` targets in 0.1-0.6, 2.x, 3.x, 4.x, 5.x, 6.x and 7.x name tests or text that do not exist yet, so each verify fails until its step lands; 0.7 is green today and stays the floor. The contradiction listed in D9 is the finding itself, settled by E2. Zero owner questions. | `closure_scan` on this file | a step lands without its title or sentence |
 | E12 | reversible-technical | evidence | The starter drops `$schema` rather than guessing a replacement URL: no offline check can confirm a published schema location, and no reader consumes the key. | `design-tokens-starter.json:2`; no `$schema` read in `tokens.ts` | the specification publishes a schema URL a validator here would read |
+| E13 | reversible-technical | evidence | AC-6 and AC-8 closed 2026-10-19 with 5.4. AC-6: the four surfaces run `check_voice_lexicon` on the finished draft; the checker's located findings and quoted-text exemption are tested. AC-8: `enforced_by` names the checker under `instruction-only`; the one remaining "validation gate" wording is ADR-210's decision table, a historical record left verbatim by the same convention 1.2 applies to ADR-061. | `draft-surfaces`, `lexicon`, `control` cases in `check_voice_lexicon.test.ts`; `rg -n 'brand-consistency' src docs` | the checker becomes a CI sweep (then `validator:`), or ADR-210 is amended |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude-opus -->
