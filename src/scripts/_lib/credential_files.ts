@@ -187,12 +187,12 @@ const base = (w: string): string => w.replace(/^.*\//, '');
  * read as separators, so a Windows path is a path.
  */
 export function credentialMention(text: string): Verdict {
-    // Three readings of one segment, because neither alone matches the shell:
-    // the raw text with backslashes as path separators (a Windows path), the raw
-    // text with backslashes as shell escapes (`cat .e\nv`), and each word the
-    // shell would build (`cat .e''nv`, `cat<.e\nv`), every one cut at the same
-    // characters.
-    const readings = [text.replace(/\\/g, '/'), text.replace(/\\\n/g, '').replace(/\\(.)/g, '$1'), ...commandWords(text)];
+    // Two readings of one segment, because neither alone matches the shell: the
+    // raw text with backslashes as path separators (a Windows path, an attached
+    // `cat<.env`), and each word the shell would build — quotes joined, escapes
+    // applied only where the shell applies them (`cat .e''nv`, an unquoted
+    // `cat .e\nv`) — each cut at the same characters.
+    const readings = [text.replace(/\\/g, '/'), ...commandWords(text)];
     for (const reading of readings) {
         const v = mentionIn(reading);
         if (v !== null) return v;
@@ -212,9 +212,13 @@ function mentionIn(text: string): Verdict {
     return null;
 }
 
-/** The first credential path among parsed words (each judged as raw text). */
+/** The first credential path among words the shell already built — judged as data, never re-parsed. */
 function credentialAmong(words: readonly string[]): Verdict {
-    return credentialMention(words.map((w) => (/[\s'"\\]/.test(w) ? `'${w.replace(/'/g, '')}'` : w)).join(' '));
+    for (const w of words) {
+        const v = mentionIn(w) ?? mentionIn(w.replace(/\\/g, '/'));
+        if (v !== null) return v;
+    }
+    return null;
 }
 
 /**

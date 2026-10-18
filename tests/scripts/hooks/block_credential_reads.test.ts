@@ -177,7 +177,9 @@ describe('the tool and command surface', () => {
         ]) {
             expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(1);
         }
-        for (const cmd of ["cat .e''nv.example", 'cat notes\\.txt']) {
+        // A backslash the shell keeps (inside single quotes, or before an ordinary
+        // character inside double quotes) and a literal apostrophe name another file.
+        for (const cmd of ["cat .e''nv.example", 'cat notes\\.txt', 'cat ".e\\nv"', "cat '.e\\nv'", 'cat ".e\'nv"']) {
             expect(run('Bash', { command: cmd }), JSON.stringify(cmd)).toBe(0);
         }
     });
