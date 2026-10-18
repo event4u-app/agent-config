@@ -178,3 +178,19 @@ describe('check_skill_body_budget — the file on disk', () => {
         expect(() => JSON.parse(fs.readFileSync(abs, 'utf8'))).not.toThrow();
     });
 });
+
+describe('check_skill_body_budget — procedure step files carry their own ceilings (4.3)', () => {
+    it('measures every references/steps/*.md under its own key', () => {
+        const bodies = measureBodies(REPO);
+        const stepKeys = Object.keys(bodies).filter((k) => k.includes('/references/steps/'));
+        expect(stepKeys.length).toBeGreaterThan(0);
+        for (const k of stepKeys) expect(k).toMatch(/^[a-z0-9-]+\/references\/steps\/[^/]+\.md$/);
+    });
+
+    it('a step file that grows past its ceiling is a finding, like a head', () => {
+        const key = 'alpha/references/steps/01-a.md';
+        const budget: Budget = { ceilings: { alpha: 1000, [key]: 300 }, raised: [] };
+        const findings = compare({ alpha: 1000, [key]: 301 }, budget);
+        expect(findings.map((f) => f.skill)).toEqual([key]);
+    });
+});

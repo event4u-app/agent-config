@@ -427,6 +427,31 @@ export function recycleEnvelopeGate(source: string): SourceGate {
     return _gate(source, RECYCLE_INJECTING_SOURCES);
 }
 
+/**
+ * The procedure cursor's position after a compaction, read from the state file
+ * on disk and phrased as a record, never as an instruction: a resumed step that
+ * was already done must not be read as one to do again. No procedure state file,
+ * no line.
+ */
+export function procedurePositionLine(root: string): string | null {
+    try {
+        const file = path.join(root, '.work-state.json');
+        if (fs.statSync(file).size > 1024 * 1024) return null;
+        const input = (JSON.parse(fs.readFileSync(file, 'utf-8')) as { input?: { kind?: unknown; data?: unknown } }).input;
+        if (input?.kind !== 'procedure' || typeof input.data !== 'object' || input.data === null) return null;
+        const d = input.data as { skill?: unknown; started_head?: unknown; current?: unknown; order?: unknown; steps?: unknown };
+        if (typeof d.skill !== 'string' || !Array.isArray(d.order) || typeof d.current !== 'string') return null;
+        const k = d.order.indexOf(d.current) + 1;
+        if (k === 0) return null;
+        const rec = (d.steps as Record<string, { status?: unknown }> | undefined)?.[d.current];
+        const exit = rec?.status === 'ok' || rec?.status === 'stale' ? rec.status : 'partial';
+        const head = typeof d.started_head === 'string' ? d.started_head.slice(0, 12) : 'none';
+        return `procedure ${d.skill}@${head} · step ${String(k)} of ${String(d.order.length)} (${d.current}) · last exit ${exit}`;
+    } catch {
+        return null;
+    }
+}
+
 // ---------------------------------------------------------------------
 // CLI — dispatcher concern entry point
 // ---------------------------------------------------------------------
@@ -491,6 +516,11 @@ export function main(): number {
             if (handoff.action === 'inject' && handoff.context) {
                 blocks.push(handoff.context);
                 reasons.push(handoff.reason);
+            }
+            const position = source === 'compact' ? procedurePositionLine(root) : null;
+            if (position !== null) {
+                blocks.push(position);
+                reasons.push('procedure position');
             }
             if (blocks.length > 0) {
                 process.stdout.write(

@@ -91,6 +91,17 @@ describe('lint_skill_link_reach', () => {
         expect(main(['--root', tmp, '--quiet', '--sibling-ceiling', '0'])).toBe(1);
     });
 
+    it('sibling-ratchet: a procedure step file is part of the body, so its reference links are not sibling links', () => {
+        skill('a', 'SKILL.md', 'steps: [s](references/steps/01-s.md)\n');
+        skill('a', 'references/steps/01-s.md', 'rules: [r](../one.md) and next [n](02-n.md)\n');
+        skill('a', 'references/steps/02-n.md', 'body\n');
+        skill('a', 'references/one.md', 'body\n');
+
+        const report = run(tmp);
+        expect(report.unresolvedFiles).toEqual([]);
+        expect(report.siblingLinks).toEqual([]);
+    });
+
     it('sibling-ratchet: the real tree sits exactly at the recorded ceiling', () => {
         const report = run(path.resolve(import.meta.dirname, '..', '..'));
         expect(report.siblingLinks.length).toBe(SIBLING_LINK_CEILING);

@@ -154,6 +154,8 @@ export const DEFAULT_DIRECTIVE_SET = 'backend';
  * route it. R2 widens the envelope; R2 Phase 3 widens backend's capability
  * tuple in lockstep with the `refine-prompt` skill landing. R3 Phase 1 widens
  * the envelope further; `ui` capability is wired in Phase 3 of the UI track.
+ * `procedure` is run only by the procedure cursor (`work --procedure`); no
+ * directive set lists it, so the ordinary dispatch path refuses it.
  *
  * Other kinds are rejected so unknown values surface as errors instead of
  * silently falling through to a default branch.
@@ -163,6 +165,7 @@ export const KNOWN_INPUT_KINDS: ReadonlySet<string> = new Set([
     'prompt',
     'diff',
     'file',
+    'procedure',
 ]);
 
 /**
