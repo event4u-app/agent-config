@@ -360,14 +360,20 @@ today's analysis-only behaviour.
       verify: `npx vitest run tests/scripts/source_adapters.test.ts` -> 0 — pins each
       local kind, refuses an archive with a `../` entry, and fails a URL argument
       with the blocker's name. Done 2026-10-17 in `src/scripts/source_adapters.ts` (`../` and symlink refusals seen red).
-- [ ] **4.2b Network sources and the research step.** Repositories at depth 1 to
+- [x] **4.2b Network sources and the research step.** Repositories at depth 1 to
       a pinned SHA, URLs and articles (redirect and size caps, digest plus quoted
       anchor), and the research brief (code not README, other repositories,
       links, posts, the web); sources coded S1, S2, …, identity only as `ENC1:`
       in `intake.md`.
       verify: a connected fixture run's ledger carries one coded web row and no
       source name in any tracked output; a `--no-network` run completes labelled
-      degraded.
+      degraded. Done 2026-10-18 in `src/scripts/network_sources.ts`: URL reads with
+      credential, scheme and private-address refusal at every redirect hop,
+      redirect and size caps (private-host refusal seen red); depth-1 clones
+      with hooks off and the pin checked; the S1, S2 codebook with `ENC1:`
+      identities in `intake.md`; the research brief in the analyst prompt. DNS
+      is checked before the request, not pinned for it — the rebinding residual
+      is named in the module.
 - [x] **4.3 Anchor profiles — defects and opportunities (directive g).** The
       anchor table reads what the scope has, in order: failing or skipped tests,
       open issues (`gh` when present), TODO/FIXME census, roadmaps, ADRs,

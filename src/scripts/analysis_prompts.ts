@@ -13,6 +13,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import type { Finding } from './analysis_emit.js';
+import { RESEARCH_BRIEF } from './network_sources.js';
 import { resolveAnalysisTarget, scopeLine } from './analysis_target.js';
 
 export const LENS_QUESTIONS = {
@@ -66,6 +67,8 @@ export function emitPrompts(input: { scope: string; pin: string; roundId: string
     ];
     const analyst = [
         ...shared,
+        '',
+        `Research: ${RESEARCH_BRIEF}`,
         '',
         'Write an analysis and a roadmap, then deepen both three times, one lens per loop:',
         '',
