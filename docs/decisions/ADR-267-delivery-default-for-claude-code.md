@@ -86,6 +86,8 @@ applies and every PR inherits a red gate.
 5. The completeness invariant holds and is not weakened by this record: **every
    rule file is written for every host, and every body is delivered on match.**
    A stub is a form, not a subset.
+   _(Amended 2026-10-18: this invariant covers rules. What skills owe — reach,
+   not presence — is [ADR-289](ADR-289-skills-owe-reach-not-presence.md).)_
 
 ## Why Claude Code, and only Claude Code
 
