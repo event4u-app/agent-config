@@ -1,0 +1,63 @@
+{
+    "skill": "motion-choreographer",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the step the skill owns in the AI-video pipeline: a locked still plus blueprint turned into a provider-tuned motion prompt, including a provider switch and the native-audio sync it names. Near-misses use the skill's own named exclusions: a prose-only scene that must first go through scene-expander, and a still graphic (canvas-design), plus the end-to-end pipeline orchestration that sits above this step (video-director). Counterexamples guard 'motion' as UI animation and 'choreography' in its literal sense.",
+    "queries": [
+        {
+            "q": "the still for scene 4 is locked — write the Veo motion prompt from the blueprint",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "retune scene 2's motion prompt for Kling, we're switching off Sora",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "give me camera move, primary and secondary motion and physics for the locked hero shot",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "sync the native audio cue to the door slam in the motion prompt for scene 7",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Bild ist ausgewählt, jetzt bitte den Motion-Prompt für Veo mit Kamerafahrt und Ton",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "turn this scene description into a structured blueprint",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the blueprint is still prose, which this skill's Do-NOT list sends first → scene-expander"
+        },
+        {
+            "q": "design a poster still for the film's title card",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a still graphic, named in this skill's Do-NOT list → canvas-design"
+        },
+        {
+            "q": "plan the whole video from script to final stitch",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "end-to-end pipeline direction above the single motion-prompt step → video-director"
+        },
+        {
+            "q": "add a fade-in animation to the modal on open",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'motion' homonym — UI animation, not video-model prompting"
+        },
+        {
+            "q": "choreograph a dance routine for our team offsite",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the literal 'choreography' homonym with no video pipeline"
+        }
+    ]
+}

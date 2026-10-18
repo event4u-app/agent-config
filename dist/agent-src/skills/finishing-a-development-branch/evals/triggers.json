@@ -1,0 +1,63 @@
+{
+    "skill": "finishing-a-development-branch",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the ship-gate moment the skill claims: implementation complete, deciding merge / PR / park / discard, an idle branch whose fate is open, including a German 'fertig, was jetzt' phrasing. Near-misses use the skill's own named exclusion (a PR mid-review → receiving-code-review) plus two neighbours on the same branch lifecycle: resolving merge conflicts (merge-conflicts) and worktree cleanup after the fact (worktree-lifecycle). Counterexamples guard 'finish' on unrelated work and a git question with no branch-ending decision.",
+    "queries": [
+        {
+            "q": "the feature is done, all commits are in — what's next, merge or PR?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "I think this bug fix branch is complete, let's ship it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this branch has been sitting for two weeks, help me decide whether to park or discard it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "verify everything and wrap up the branch so I can hand it off",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Implementierung ist fertig — prüf alles und sag mir, ob wir mergen, einen PR aufmachen oder den Branch verwerfen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "the reviewer left twelve comments on my open PR, work through them",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "named in this skill's own Do-NOT list — a PR already mid-review → receiving-code-review"
+        },
+        {
+            "q": "rebasing onto main gave me conflicts in three files, resolve them",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "same branch lifecycle, but conflict resolution rather than the ship decision → merge-conflicts"
+        },
+        {
+            "q": "clean up the worktrees from last week's spikes",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "removing worktrees, not routing a finished branch → worktree-lifecycle"
+        },
+        {
+            "q": "finish writing the migration for the orders table",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'finish' homonym while still implementing, which this skill's Do-NOT list excludes"
+        },
+        {
+            "q": "how do I rename a local branch?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a git mechanics question with no completed work to route"
+        }
+    ]
+}

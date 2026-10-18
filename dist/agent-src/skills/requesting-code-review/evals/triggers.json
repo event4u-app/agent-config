@@ -1,0 +1,63 @@
+{
+    "skill": "requesting-code-review",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the PR-opening moment in its explicit and implicit forms ('open a PR', 'ready to merge'), a stacked-PR handover, a targeted sanity-check ask and a German variant. Near-misses use the exclusions this skill's SKILL.md names: processing feedback (receiving-code-review, the sharpest edge) and work that is not yet code-complete, plus doing the review itself (code-review). Counterexamples guard documentation-only changes, which the skill excludes, and a non-code 'request'.",
+    "queries": [
+        {
+            "q": "the feature is done and tests are green — open a PR for it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "ready to merge, get this in front of a reviewer",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the second PR in the stack is ready; make it easy for whoever reviewed the parent to pick it up",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "can you ask Lena to sanity-check just commit a3f9e1, the migration one?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Branch ist fertig, mach bitte einen PR mit sauberer Beschreibung und Testplan",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "the bot left review comments on my PR — work through them",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the sharpest edge: same loop, opposite direction — processing feedback → receiving-code-review, which this skill's SKILL.md names"
+        },
+        {
+            "q": "review this diff for security problems",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the user wants the review itself performed, not a review requested → code-review"
+        },
+        {
+            "q": "half the tests still fail but let's wrap up the branch — merge it or keep it?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "not code-complete, which this skill excludes; deciding the branch's fate is finishing-a-development-branch"
+        },
+        {
+            "q": "fix the typo in the README",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "documentation-only with no behaviour impact — excluded in this skill's SKILL.md, and nothing asks for review"
+        },
+        {
+            "q": "request a quote from the hosting provider for the bigger plan",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'request' in a procurement sense, unrelated to code review"
+        }
+    ]
+}
