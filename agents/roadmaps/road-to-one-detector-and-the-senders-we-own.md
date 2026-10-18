@@ -426,6 +426,7 @@ response, with no host contract in between and no hook budget to spend — so
 | 3 | The constraint is read as covering every channel | product | The owner's constraint is absolute; this roadmap proves it only where this package writes the bytes | The four states and `uncovered` are in the contract (0.1); N8 states the boundary; the claim is per channel | Phase 0 — Contract, census, pre-registration (no product code) |
 | 4 | Placeholders degrade review or coding quality | product | A model reasons worse over a value it cannot see | Paired comparison pre-registered in 0.3; a null or a loss is published and D8 keeps consumer defaults off | Phase 0 — Contract, census, pre-registration (no product code) |
 | 5 | The prevention guard costs every tool call | implementation | One more concern on a `pre_tool_use` slot whose latency trigger already fired | Pure path classifier, no dependency; byte delta stated in the PR and in `src/config/hook-latency-budget.json` | Phase 1 — Prevention that needs no rewrite (F4) |
+| 6 | The engine chunk is absent or wrong at run time | implementation | Moving the egress engine out of the dispatch bundle (2.2b) adds a load that can fail: a missing file, a stale digest, a schema drift | The loader verifies a digest sidecar and a schema number and reports why it refused; `off` never loads, `observe` records the refusal, `protect` and `strict` withhold the body; the composition gate pins every chunk's budget and coverage | Phase 2 — One detector table (F2, F3) |
 
 ## Acceptance Criteria
 
