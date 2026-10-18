@@ -14,7 +14,9 @@
  *
  * Flags:
  *
- * - `--check` — print the available latest version + return; no write.
+ * - `--check` — print the available latest version + return; no write. In a
+ *   project that pins a version, also list what the latest release's impact
+ *   map records between the pin and latest (skipped with `--offline`).
  * - `--to <version>` — pin to an exact version (registry-existence checked).
  *   Downgrades are allowed; the pin is a project decision.
  * - (no flag) — pin to the registry's `latest` tag.
@@ -68,6 +70,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as installed_lock from '../_lib/installed_lock.js';
 import * as update_check from '../_lib/update_check.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { pin_advice_lines } from '../_lib/pin_advice.js';
 import {
     DEFAULT_PROJECT_FILE,
     LOCAL_PROJECT_FILE,
@@ -291,6 +294,30 @@ function _read_pin_line(p: string): number | null {
     return null;
 }
 
+/** The pinned version in `p`, unquoted; `null` when the file carries no pin. */
+function _read_pin_value(p: string): string | null {
+    const idx = _read_pin_line(p);
+    if (idx === null) return null;
+    const line = _splitlinesKeepends(fs.readFileSync(p, { encoding: 'utf-8' }))[idx] as string;
+    const raw = (PIN_LINE_RE.exec(line)?.[2] ?? '').replace(/\s+#.*$/, '').trim().replace(/^["']|["']$/g, '');
+    return raw === '' ? null : _normalize(raw);
+}
+
+/** The latest release's `agentConfig.impact`; `null` when it cannot be read. */
+async function _fetch_impact_map(version: string, timeout = 1.0): Promise<unknown> {
+    try {
+        const resp = await fetch(REGISTRY_VERSION_URL.replace('{version}', _normalize(version)), {
+            headers: { Accept: 'application/json' },
+            signal: AbortSignal.timeout(timeout * 1000),
+        });
+        if (resp.status !== 200) return null;
+        const doc = (await resp.json()) as { agentConfig?: { impact?: unknown } } | null;
+        return doc?.agentConfig?.impact ?? null;
+    } catch {
+        return null;
+    }
+}
+
 /** Rewrite the pin in `path`; return `true` if the file changed. */
 function _write_pin(p: string, new_version: string): boolean {
     const target = `agent_config_version: "${_normalize(new_version)}"\n`;
@@ -374,6 +401,7 @@ interface MainOptions {
     fetcher?: () => string | null | Promise<string | null>;
     version_checker?: (version: string) => boolean | Promise<boolean>;
     cache_warmer?: (version: string) => void;
+    impact_fetcher?: (version: string) => unknown;
     state_path?: string | null;
     out?: OutSink;
     err?: OutSink;
@@ -489,6 +517,11 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
             _print(out, `Update: npx ${PACKAGE_NAME} update`);
         } else {
             _print(out, `agent-config is up to date (${installed_version}).`);
+        }
+        const pin = _read_pin_value(_find_pin_file(cwd));
+        if (pin !== null && !offline) {
+            const fetch_impact = options.impact_fetcher ?? _fetch_impact_map;
+            for (const line of pin_advice_lines(pin, latest, await fetch_impact(latest))) _print(out, line);
         }
         return 0;
     }
