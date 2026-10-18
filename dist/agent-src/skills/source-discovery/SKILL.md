@@ -16,7 +16,7 @@ rule. Hand-off target from [`think-before-action`](../../rules/think-before-acti
 when a task touches **external or expensive** structure. Definitions
 (Evidence Report buckets, provenance, trust tiers, the DB-not-in-codebase
 boundary, the card-worthiness threshold) live in
-[`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md) —
+[`evidence-discipline`](../../contexts/execution/evidence-discipline.md) —
 read it once; this file is the executable procedure.
 
 ## When to use
@@ -165,7 +165,7 @@ bypasses a fresh structural read. A field/endpoint/column/value is still confirm
 against a live source this session. v2 capture is **write-only into gitignored
 intake** (the agent may *suggest* a signal, never silently commit); trust and
 commit are always human-gated. Full model + the three classes + memory tiers:
-[`project-intelligence`](../../agent-src/contexts/execution/project-intelligence.md).
+[`project-intelligence`](../../contexts/execution/project-intelligence.md).
 
 ## Knowledge capture (`api_shape_learned` / `convention_detected` events)
 
@@ -184,7 +184,7 @@ npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts -
 
 `/team-knowledge consolidate` turns accumulated events into
 `agents/knowledge/concepts/` pages as a reviewed batch — see
-[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md).
+[`knowledge-pages`](../../templates/contexts/knowledge-pages.md).
 
 ## Gotchas
 

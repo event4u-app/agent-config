@@ -1,0 +1,63 @@
+{
+    "skill": "subagent-orchestration",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the four triggers the SKILL.md lists — a second agent reviewing before apply, independent parallel slices, competing candidate implementations, the explicit 'try it two ways' ask — plus a German variant. Near-misses share the 'second opinion' and 'parallel' vocabulary but belong elsewhere: external models outside the session (ai-council), a single isolated worktree (using-git-worktrees), and a devil's-advocate critique (adversarial-review). Counterexamples guard the one-liner fix the skill explicitly excludes and the 'agent' homonym in a sales context.",
+    "queries": [
+        {
+            "q": "have a second agent review this migration before we apply it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "these six bug fixes are unrelated — split them across subagents and run them in parallel",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "try this caching layer two different ways and let a judge pick the better one",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this touches the API, the queue and the frontend — implement it and have an independent judge check it before merging",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Lass zwei Agents das unabhängig umsetzen und einen dritten die Ergebnisse vergleichen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "ask GPT and another Claude outside this session whether the roadmap holds up",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a second opinion from external models, not implementer/judge subagents → ai-council"
+        },
+        {
+            "q": "try this refactor on the side without touching my current branch",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "isolation for one line of work, no orchestration of agents → using-git-worktrees"
+        },
+        {
+            "q": "play devil's advocate on this architecture and be brutal",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a critique requested directly, no implementer to judge → adversarial-review"
+        },
+        {
+            "q": "fix the off-by-one in the pagination helper",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a one-liner fix — this skill's SKILL.md says a second agent's overhead exceeds the value"
+        },
+        {
+            "q": "assign the new leads to the sales agents by region",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'agents' as people in a CRM, unrelated to subagents"
+        }
+    ]
+}

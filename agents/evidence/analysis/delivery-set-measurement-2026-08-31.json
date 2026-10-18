@@ -18,32 +18,40 @@
     "token_target": 500
   },
   "metrics": {
-    "precision_at_k": 80.813,
-    "recall_at_k": 59.766,
-    "recall_loss_pp": 40.234,
+    "precision_at_k": 80.793,
+    "recall_at_k": 60.093,
+    "recall_loss_pp": 39.907,
     "ceiling_met": false,
     "recall_curve_pp": {
-      "1": 41.068,
-      "3": 54.09,
-      "5": 59.766,
-      "10": 68.781,
-      "20": 75.793
+      "1": 40.839,
+      "3": 53.727,
+      "5": 60.093,
+      "10": 68.789,
+      "20": 75.621
     },
-    "false_activation_at_k": 14.757,
-    "context_cost_tokens": 229.7,
+    "false_activation_at_k": 14.815,
+    "context_cost_tokens": 230.5,
     "token_target_met": true,
-    "benefit_unconditional": 59.766,
-    "benefit_conditional_on_activation": 80.813,
-    "adjudicated_deliveries": 443,
-    "unadjudicated_deliveries": 4975,
-    "tie_decided_cut_pp": 80.345
+    "benefit_unconditional": 60.093,
+    "benefit_conditional_on_activation": 80.793,
+    "adjudicated_deliveries": 479,
+    "unadjudicated_deliveries": 5373,
+    "tie_decided_cut_pp": 80.705
   },
   "set_compatibility": {
-    "shared_prompts": 14,
+    "shared_prompts": 15,
     "jointly_wrong_pairs_delivered_at_k": 0,
     "pairs_delivered_at_k": [],
-    "jointly_wrong_pairs_in_corpus": 11,
+    "jointly_wrong_pairs_in_corpus": 12,
     "candidates": [
+      {
+        "prompt": "fix the typo in the README",
+        "pair": [
+          "complexity-first-planning",
+          "requesting-code-review"
+        ],
+        "jointlyDeliveredAtK": null
+      },
       {
         "prompt": "generate a logo for my bakery called Golden Crust",
         "pair": [
@@ -137,7 +145,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 1175,
-    "prompts": 1160
+    "cases": 1265,
+    "prompts": 1249
   }
 }

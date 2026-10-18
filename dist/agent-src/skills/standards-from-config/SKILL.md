@@ -20,7 +20,7 @@ the config file, and the card only points at it plus distils the 3–5 points an
 agent needs most while writing.
 
 Definitions (Class A/B/C, trust tiers, the v1↔v2 isolation contract) live in
-[`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md);
+[`evidence-discipline`](../../contexts/execution/evidence-discipline.md);
 the parent context mechanism is [`context-document`](../context-document/SKILL.md).
 
 ## When to use
@@ -129,6 +129,6 @@ A Class-A standards card MUST contain, in order:
 
 ## See also
 
-- [`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md) — Class A/B/C, trust tiers, the isolation contract.
+- [`evidence-discipline`](../../contexts/execution/evidence-discipline.md) — Class A/B/C, trust tiers, the isolation contract.
 - [`context-document`](../context-document/SKILL.md) — the parent context mechanism + storage locations.
 - [`source-discovery`](../source-discovery/SKILL.md) — v1 structural discovery (read fresh; Class A never bypasses it).

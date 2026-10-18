@@ -150,8 +150,7 @@ invoke [`rule-refactor`](../rule-refactor/SKILL.md). Do NOT:
   do its job, the rule is right and the rule set around it is wrong.
 * Raise `FAIL_THRESHOLD` in `scripts/measure_augment_budget.ts` —
   threshold-lift is explicitly forbidden (see the
-  [`validation-budget`](../../rules/validation-budget.md) rule and
-  the `rule-refactor` Iron Law).
+  [`rule-refactor`](../rule-refactor/SKILL.md) Iron Law).
 * Promote an always-rule to auto to dodge the cap if the rule's
   semantics require always-on visibility — that breaks the rule, not
   the budget.

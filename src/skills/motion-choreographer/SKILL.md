@@ -25,7 +25,7 @@ install:
 > environment motion, physics constraints, and — when the adapter
 > declares `audio: native` — a synchronized audio direction block.
 > Reads adapter capabilities from
-> [`adapter-contract.md`](../../../scripts/media/lib/adapter-contract.md);
+> [`adapter-contract.md`](../../scripts/media/lib/adapter-contract.md);
 > never speaks to a network API.
 
 ## When to use
@@ -64,7 +64,7 @@ Do NOT use when:
    `scripts/ai-video/adapters/<id>.sh capability --model <m>`. `null` is
    unknown, never `true`. A model that cannot frame-lock is **declined
    with a one-line why**, never substituted in
-   ([`adapter-contract.md#end_image`](../../../scripts/media/lib/adapter-contract.md#end_image)).
+   ([`adapter-contract.md#end_image`](../../scripts/media/lib/adapter-contract.md#end_image)).
 
 ### Step 1: Camera choreography
 

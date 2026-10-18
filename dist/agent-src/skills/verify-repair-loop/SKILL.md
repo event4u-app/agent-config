@@ -219,7 +219,7 @@ Required fields (ordered):
    `clean-no-op`, `blocked`, `approval-required`, `exhausted`, `stagnated` and
    `premise-invalidated`. It is declared once, at
    `src/scripts/_lib/outcome_vocabularies.ts` (`RUN_TERMINAL_STATES`), and
-   described in [`terminal-states`](../../agent-src/contexts/execution/terminal-states.md).
+   described in [`terminal-states`](../../contexts/execution/terminal-states.md).
    Never emit a value outside that set: a sixth stop reason maps onto an
    existing member or it is not a terminal state.
 

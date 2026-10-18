@@ -14553,6 +14553,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/adr-create/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md",
       "target": ".agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md",
       "type": "WRITE",
       "via": "self",

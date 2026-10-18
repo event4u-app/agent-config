@@ -32,10 +32,10 @@ Use this skill when:
 * Mining the audit log (`agents/runtime/state/audit/<YYYY-MM>.jsonl`,
   [`audit-log-v1`](../../docs/contracts/audit-log-v1.md)) surfaced
   a repeated phase pattern via
-  [`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
+  [`extract_audit_patterns.ts`](../../scripts/extract_audit_patterns.ts)
   — the pattern's `count` ≥ 2 already satisfies the repetition gate
 * A comparative analysis handed over a **`### SEED —` block** from its
-  `## Seeds` section ([`/analyze:repo`](../../agent-src/commands/analyze/repo.md)
+  `## Seeds` section ([`/analyze:repo`](../../commands/analyze/repo.md)
   § 6). This is an accepted intake shape: the block already carries the
   proposed name, kind, target template, one-line description, and the
   `Extends instead?` answer, so step 4's overlap search starts from a stated
@@ -348,7 +348,7 @@ the gap is documented in its skill body.
 ## Audit-derived learnings (optional source)
 
 When the input is a pattern surfaced by
-[`extract_audit_patterns.ts`](../../../scripts/extract_audit_patterns.ts)
+[`extract_audit_patterns.ts`](../../scripts/extract_audit_patterns.ts)
 mining `agents/runtime/state/audit/<YYYY-MM>.jsonl`
 ([`audit-log-v1`](../../docs/contracts/audit-log-v1.md)):
 

@@ -1,0 +1,63 @@
+{
+    "skill": "description-assist",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the description-only polishing asks the skill names verbatim ('make this pushier', 'will this ever fire') plus the audit flags it consumes (too-short, no-trigger-prefix). Near-misses use the skill's own one-field-per-turn exclusion: rewriting the body of a skill (skill-writing), reviewing a whole skill for quality (skill-reviewer), and running the lint gates themselves (lint-skills). Counterexamples guard the 'description' homonym in non-artifact contexts, which the skill's Do-NOT list names (READMEs, product copy).",
+    "queries": [
+        {
+            "q": "make this skill description pushier, it never triggers",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "will this rule's description ever fire on 'set up a worktree'?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "audit_skill_descriptions flagged code-review as too-short — rewrite the description",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "give me three variants of the frontmatter description for the new command",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "die Beschreibung im Frontmatter von diesem Skill ist zu schwach, mach sie triggerfreudiger",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "rewrite the procedure section of this skill, steps 3 and 4 are wrong",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "changes the body, which this skill's Do-NOT list excludes (one field per turn) → skill-writing"
+        },
+        {
+            "q": "review the whole skill for quality before I merge it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a full-artifact review, not a single-field polish → skill-reviewer"
+        },
+        {
+            "q": "run the skill linter and fix what it reports",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "running the lint gate itself rather than rewording one field → lint-skills"
+        },
+        {
+            "q": "write a product description for our new pricing page",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'description' homonym on content that is not an agent artifact, which this skill's Do-NOT list names"
+        },
+        {
+            "q": "improve the description on PR #2471",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a PR body, not frontmatter — the skill's Do-NOT list excludes non-artifact text"
+        }
+    ]
+}

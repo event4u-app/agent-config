@@ -21,7 +21,7 @@ packs:
 
 <!-- cloud_safe: noop -->
 
-> **Experimental.** Output-side telegraph dialect did not meet the kill-criterion in [`internal/bench/reports/telegraph-v1.md`](../../../bench/reports/telegraph-v1.md) (`vs_terse` median −9.27 %). Input-side memory condensation is an orthogonal use case: the savings target the always-loaded memory budget, not the reply stream. Treat ship-criterion as **per-target measurement**, not the v1 verdict.
+> **Experimental.** Output-side telegraph dialect did not meet the kill-criterion in [`telegraph-v1`](../../../internal/bench/reports/telegraph-v1.md) (`vs_terse` median −9.27 %). Input-side memory condensation is an orthogonal use case: the savings target the always-loaded memory budget, not the reply stream. Treat ship-criterion as **per-target measurement**, not the v1 verdict.
 
 ## When to use
 

@@ -363,7 +363,7 @@ DoR check — not automatically on every refinement.
 - [`jira-ticket`](../../commands/jira-ticket.md) — ticket loader
 - [`validate-feature-fit`](../validate-feature-fit/SKILL.md) — orchestrated sub-skill
 - [`threat-modeling`](../threat-modeling/SKILL.md) — orchestrated sub-skill
-- [`feature-explore`](../../commands/feature-explore.md) — upstream idea capture; hints at `/refine-ticket` when input looks like a ticket
-- [`feature-plan`](../../commands/feature-plan.md) — downstream planning
+- [`feature-explore`](../../commands/feature/explore.md) — upstream idea capture; hints at `/refine-ticket` when input looks like a ticket
+- [`feature-plan`](../../commands/feature/plan.md) — downstream planning
 - [`adversarial-review`](../adversarial-review/SKILL.md) — same `critical-challenger` persona, different stage (post-plan)
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — this skill was drafted under it

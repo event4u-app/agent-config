@@ -75,16 +75,24 @@ Every substantive pointer specifies, on the same line or the immediately followi
 ### Wrong vs. right
 
 ❌ **Wrong** — bare link, no *why*, no anchor:
-> See [`commit-policy`](dist/agent-src/rules/commit-policy.md).
+```markdown
+See [`commit-policy`](dist/agent-src/rules/commit-policy.md).
+```
 
 ❌ **Wrong** — *why* present but < 60 chars:
-> Commit rules: [`commit-policy`](dist/agent-src/rules/commit-policy.md).
+```markdown
+Commit rules: [`commit-policy`](dist/agent-src/rules/commit-policy.md).
+```
 
 ✅ **Right** — full anatomy, anchor, *why* ≥ 60 chars:
-> Commit policy — never auto-commit, four named exceptions, Hard Floor list of bulk-deletion / infra triggers: [`commit-policy § Iron Law`](dist/agent-src/rules/commit-policy.md#the-iron-law).
+```markdown
+Commit policy — never auto-commit, four named exceptions, Hard Floor list of bulk-deletion / infra triggers: [`commit-policy § Iron Law`](dist/agent-src/rules/commit-policy.md#the-iron-law).
+```
 
 ✅ **Right** — anchor optional when target is short:
-> Mirror the user's language every reply, single Iron Law that overrides any momentum: [`language-and-tone`](dist/agent-src/rules/language-and-tone.md).
+```markdown
+Mirror the user's language every reply, single Iron Law that overrides any momentum: [`language-and-tone`](dist/agent-src/rules/language-and-tone.md).
+```
 
 ## Workspace files — `packages/<n>/AGENTS.md`
 

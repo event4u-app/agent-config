@@ -379,7 +379,7 @@ Skip emit when `emergency.orchestration_halt` is set or `spawn_count == 0`
 
 | Task                                 | Skill / command                      |
 |--------------------------------------|--------------------------------------|
-| Configuration reference              | [`subagent-configuration`](../../agent-src/contexts/execution/subagent-configuration.md) |
+| Configuration reference              | [`subagent-configuration`](../../agent-src/contexts/subagent-configuration.md) |
 | Do-and-judge loop                    | Inline — see [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
 | Stepwise plan with judge gates       | Inline — see [`prompts/do-in-steps.md`](prompts/do-in-steps.md) |
 | Standalone judge on an existing diff | Inline — see judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |

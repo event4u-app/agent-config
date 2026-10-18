@@ -1,0 +1,63 @@
+{
+    "skill": "receiving-code-review",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover review feedback arriving from a bot, a human reviewer and a pasted block, including the bare 'fix the comments' phrasing the description names and a German variant. Near-misses are the three neighbours this skill's SKILL.md separates itself from: writing a review yourself (code-review), asking for one (requesting-code-review, the sharpest edge), and a linter-decidable style nit (quality-tools). Counterexamples guard the word 'comments' in the code-comment sense and an unrelated review of a contract.",
+    "queries": [
+        {
+            "q": "Copilot left eleven comments on PR #812 — go through them and fix what's actually right",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the reviewer says this query should use a join instead of two lookups; is she right before I change it?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "here's the feedback from Jonas on my branch, pasted below — handle it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "fix the comments on the PR",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Greptile meckert, dass der Cache nie invalidiert wird — prüf das erst, bevor du was änderst",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "review my diff before I push it — anything wrong with the error handling?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the user wants a review written, not feedback processed → code-review; this skill's SKILL.md excludes writing a review yourself"
+        },
+        {
+            "q": "this is code-complete, open the PR and write a description with a test plan",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the sharpest edge: same review loop, opposite direction — asking for review rather than processing it → requesting-code-review"
+        },
+        {
+            "q": "the reviewer flagged trailing whitespace and import order — just make the linter happy",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "pure style feedback a linter decides; SKILL.md says to run the linter instead → quality-tools"
+        },
+        {
+            "q": "clean up the code comments in this file, half of them restate the function name",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'comments' in the code-comment sense, not review comments — guards triggering on the word"
+        },
+        {
+            "q": "review the indemnity clause in this vendor contract",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'review' of a legal document, nothing to do with code review feedback"
+        }
+    ]
+}

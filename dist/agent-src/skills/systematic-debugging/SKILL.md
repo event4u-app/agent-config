@@ -278,7 +278,7 @@ If the root cause traces to a `agents/knowledge/` page that was
 followed while implementing (a documented convention was wrong, an
 API shape page was stale, a procedure was incomplete), append a
 `mistake_made` event to the knowledge intake — never rewrite the page
-mid-task (see [`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)):
+mid-task (see [`knowledge-pages`](../../templates/contexts/knowledge-pages.md)):
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/emit_knowledge_event.ts \
@@ -297,7 +297,7 @@ finds the new line.
 wrong right now (observed reality ≠ documented claim, not a one-off),
 this is the hybrid immediate-fix case instead — surface the proposed
 correction and ask before continuing (see
-[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
+[`knowledge-pages`](../../templates/contexts/knowledge-pages.md)
 § Contested entries). Approved → isolated fix commit. Declined →
 `npx tsx node_modules/@event4u/agent-config/src/scripts/append_contested.ts` on that page, then still
 emit the `context_stale` event above it for the consolidation pass.

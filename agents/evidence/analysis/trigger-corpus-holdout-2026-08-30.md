@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 157 files, 35 holdout and 122 train.** That bullet read
+- **Now: 167 files, 36 holdout and 131 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -34,7 +34,7 @@ beside it.
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
   § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b,
-  § Growth — 2026-10-17 and § Growth — 2026-10-18; the
+  § Growth — 2026-10-17, § Growth — 2026-10-18 and § Growth — 2026-10-18b; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -682,10 +682,63 @@ and it is never delivered together at k ≤ 20. Neither verdict changes in kind.
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
 
+## Growth — 2026-10-18b, ten corpora; one seals
+
+```
+TEN ROWS ADDED: NINE TRAIN, ONE HOLDOUT. THE SEALED SET MOVES 35 -> 36.
+NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
+RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
+```
+
+**What changed.** `road-to-steps-the-skill-cannot-skip` AC-1 repaired dead
+relative links in the `SKILL.md` of ten skills that carried no corpus, and
+`check_routing_coverage` requires one from every touched skill. Each gained
+**10** labelled queries — 5 exemplars of which one is German, 3 near-misses
+naming the neighbouring skill that owns them, and 2 counterexamples. 100 cases
+in all. The link edits change no routing surface: no description and no
+trigger line moved.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `agents-md-thin-root` | train | `0x38` | 56 ≥ 51 |
+| `condense-memory` | holdout | `0x01` | 1 < 51 |
+| `description-assist` | train | `0x52` | 82 ≥ 51 |
+| `finishing-a-development-branch` | train | `0xcb` | 203 ≥ 51 |
+| `motion-choreographer` | train | `0x85` | 133 ≥ 51 |
+| `receiving-code-review` | train | `0x62` | 98 ≥ 51 |
+| `requesting-code-review` | train | `0xc2` | 194 ≥ 51 |
+| `rtk-output-filtering` | train | `0xdc` | 220 ≥ 51 |
+| `rule-writing` | train | `0xe1` | 225 ≥ 51 |
+| `subagent-orchestration` | train | `0x7f` | 127 ≥ 51 |
+
+**One row seals, and nobody chose it.** The sealed set moves **35 -> 36**, the
+train set **122 -> 131**, and the realised split is **36/167 = 21.56 %** against
+the rule's 19.9 % target. AC-6 still rests on the same 18 rows, so it is now 18
+of 36; a proposer evaluated against this holdout must exclude `condense-memory`
+or say it is using a row whose seal is younger than the evaluation.
+
+**Both train-side measurements were re-taken, after the skill edits.** The
+"before" figures are the committed files at the merge base, which had moved
+since the 2026-10-18 section above. `routing-body-signal-verdict.json`: verdict
+unchanged in kind, still `harmful` on the false-activation guard — false
+activation 6.076 -> **5.636 pp** against the +2.0 pp guard, delta-recall 3.339
+-> **3.106 pp** (still below the 5.0 pp bar), McNemar p 0.1611 -> **0.1768**,
+train corpora 122 -> **131**, cases 1175 -> **1265**, catalogue **301**.
+`delivery-set-measurement-2026-08-31.json`: precision@5 80.813 -> **80.793 %**,
+recall@5 59.766 -> **60.093 %**, recall loss 40.234 -> **39.907 pp** — the
+ceiling stays **BREACHED** — false activation@5 14.757 -> **14.815 %**, context
+cost 229.7 -> **230.5** tokens against the 500 target, still **MET**. One new
+jointly-wrong pair appears, `{complexity-first-planning, requesting-code-review}`
+on a README-typo counterexample, and it is never delivered together at k ≤ 20.
+Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
 ## The set hash
 
 ```
-SET-SHA256  b46f135552f477c6075a96c149733457c12dc91e70a571518ed8f268cbeded67
+SET-SHA256  5d4fec21f423623f11abdefd32c7beca4c629afe2b0b6cfa3b04fe65f24602f4
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -899,6 +952,7 @@ open and which this file does not settle.
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
 | `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
 | `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
+| `condense-memory` | `2c150c0b67c0a3342edb6429dfb71ef05c010501e8488a88c26a3757108afc93` |
 | `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |
 | `dashboard-design` | `118088e410b5fe2bf03f9b4b5eacec86735cee3be56d4f2b201f841e86e9bdaf` |
 | `decision-record` | `5003c69b353baf1a6cd25b679d029f1988a83482cf2664f316d7c451d7a906d1` |
@@ -1058,6 +1112,7 @@ open and which this file does not settle.
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
 | `adversarial-review` | `4656cdc7fd9bc9517d7a2a27cb48c1dfa863c93bf87531292e46bdc85b6dc7d4` |
 | `agent-security-review` | `8c87aad7d61400da983130cef3415fb9e146d088ff30f47215481c5f692a4d1f` |
+| `agents-md-thin-root` | `0354e6ed5c3f0870428e1693db07ccecf30d084300091b2f0b454231ce1dbfeb` |
 | `ai-code-blindspots` | `27a9e87dabf2d158b5f646739c69222b534b3ea2420a099a67bf85c00ea3ba23` |
 | `ai-council` | `708b7033a71f6f4297883ff95464c7efb04c1bf559b3ef62e5a9cdbbc1d20231` |
 | `alerting-doctrine` | `bded213edcbeeee6e3bf078e478ab4fdaa553855bdafda147813cf6198d8b8ba` |
@@ -1087,6 +1142,7 @@ open and which this file does not settle.
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
 | `database` | `07b320a1bcde1f8565aa1cae12d383b765fd1a9d0289703fccfa79f7486b5688` |
+| `description-assist` | `529c0051f8a8fb9d125b4c977e1fe8e7731e28d885c486d297070261ec7a85ab` |
 | `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
 | `design-system-capture` | `afdefd4e0141ef85eb7277def08c84abf1bf4b9f30d7cbed32a4bc39039b23f6` |
 | `design-tokens` | `a39661a7b95f92c7f649d4a82b33c07be346053d4529ae7a6a9626609b30be40` |
@@ -1100,6 +1156,7 @@ open and which this file does not settle.
 | `existing-ui-audit` | `1cec11b0fc1696d5186a30c8a73fe3b10efa7ccb9a956d17a995e7415180a35e` |
 | `experiment-loop` | `7b64978277e8b29b2e58080914329d14274375f0195b59119cad7cede6ec55c0` |
 | `feature-planning` | `53747ead011ed29c480d407f66ff3803b43e585f390916ce0e5187340973142c` |
+| `finishing-a-development-branch` | `f6fcb2c703ca443570d0d42fab5f5222e2232b1f8043c59e64c9369143a02aa7` |
 | `flux` | `6af79f646de538883690b4ae485055191d08049df947dd7da4c949b7523dedf4` |
 | `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
 | `form-handler` | `5e88a2223f79b275411ba720155768414f4fe5bd99d8099a381ed9103e511805` |
@@ -1133,6 +1190,7 @@ open and which this file does not settle.
 | `markitdown` | `663ee4c4f9d5c707ff96208d1723d9817639fca7c00b346e43be2cb557610f6a` |
 | `messaging-architecture` | `884739cdfadce5039917772df035f19a4ca8f5863fd1ab57bcb023aa183421b0` |
 | `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
+| `motion-choreographer` | `8c252805f97ee03e9ff3513172a8b04d7700e6d4f1ad12b0c9cfaefd326df454` |
 | `nda-triage` | `01e4becd20b129780d82d2889099f07a8fe4ee241b31f909d1084af427f4323d` |
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
 | `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
@@ -1147,10 +1205,14 @@ open and which this file does not settle.
 | `prompt-validator` | `daeecf1063775e3c4671de74f3b292fe30fb6d3e4ce8e1c490c2935ef5e5af07` |
 | `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
+| `receiving-code-review` | `7ee75a93ea97aa344ada7d026d6b59f99e0d6823dd46f6877c579f2321806d78` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
 | `release-comms` | `d9ca8cc440910c5a91857155379b16a52cbe0f7c33defdfd2a2429ac8f807840` |
 | `repomix-packer` | `62489a82ccd7a01c53d8a4ca265a3f9249782c12d5b74ac7ae2e3d1a12df478e` |
+| `requesting-code-review` | `af73c82511d68f73d6ac74b3ccad49d6fd2d18b66127eebf6b136d0d080e4216` |
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
+| `rtk-output-filtering` | `39b3821f591c1b3ca5c5b5792636ba1f8ada85ac997ab91bbb966bade346323f` |
+| `rule-writing` | `c03c83678a07e7c08201aa06fb1109bad1270a0d9883d14508cda496c21dbe0f` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
 | `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
@@ -1161,6 +1223,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `sql-writing` | `3afe3f13210573d0e6f41be15836f3be0b3c01bc7db3a3625a35fb64e64356df` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
+| `subagent-orchestration` | `a450b071cba1e1c54bd00c6879165cf4146174dba54de8266e6a4971aa7634c2` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
 | `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
