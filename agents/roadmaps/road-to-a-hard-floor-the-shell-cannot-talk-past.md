@@ -325,6 +325,7 @@ Clean-room, built from published bypass classes and this tree's own defects (K2)
 - [x] **7.1 README and the profile table** (`README.md:282`) say, per host, which layer carries
       the floor (`hook` or `manual-only`) and that it is "a guardrail, not a security boundary".
       verify: `grep -c "a guardrail, not a security boundary" README.md` -> /^[1-9]/
+      *Delivered 2026-10-18 as the phrase plus a link: README sits exactly at its 4,849-word budget on `main`, so the per-host layer lives in the linked `enforcement-by-host` table rather than in README prose.*
 - [x] **7.2 The `claude` destructive cell separates binding from guard.** Until 4.2 enforces,
       `docs/enforcement-by-host.md:417` says the slot can refuse and no bound concern recognises
       a typed op; after, it names `destructive-consequence`.

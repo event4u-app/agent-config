@@ -279,9 +279,7 @@ UI-shaped work routes to one of three directive sets — `ui` (full audit→desi
 
 ### Profiles — how much governance gets loaded
 
-Safety floor (non-destructive defaults · ask-before-guessing · mirror-the-user's-language) ships in **every** profile as rules. What changes is how much extra coaching gets pulled in.
-
-Which layer carries the destructive-action floor depends on the host, not the profile: on `claude` the `pre_tool_use` slot is bound and can refuse (`hook`), though no bound concern recognises a destructive typed op yet; on every other host it is `manual-only` — held by the model and by you. Per-host table: [`enforcement-by-host`](docs/enforcement-by-host.md). Either way the floor is a guardrail, not a security boundary — the OS sandbox is the boundary.
+Safety floor (non-destructive defaults · ask-before-guessing · mirror-the-user's-language) ships in **every** profile, as [a guardrail, not a security boundary](docs/enforcement-by-host.md). Profiles add coaching.
 
 | Profile | What you get | When to pick it |
 |---|---|---|
