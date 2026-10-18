@@ -223,12 +223,18 @@ the same thing in all of them.
       Done 2026-10-16: named with today's uninstall semantics (reported as
       skipped, left in place), plus the ledger file in the runtime-root table
       and the kind in `installed-tools-lockfile.md`.
-- [ ] **3.3 Close the `$HOME`-leak gap.** Add the manifest to
-      `src/config/gitignore-block.txt`, and reconcile `README.md:357` with
-      `docs/contracts/agents-layout.md:71` so the consumer case is governed by
-      one sentence rather than by neither.
-      The two documents state the same rule for the consumer tree.
-      verify: `grep -c installed-tools src/config/gitignore-block.txt` -> /^[1-9][0-9]*$/
+- [ ] **3.3 Close the `$HOME`-leak gap.** Re-cut 2026-10-18 to blocker
+      `global-entries-consumer-lock` option (b′): a consumer's
+      `agents/installed-tools.lock` keeps its global-scope entries (so `sync`
+      still replays them for a new team member) but no longer records their
+      absolute `files[]`; the user-scoped ledger holds global ownership. The
+      lock stays tracked-durable and out of `src/config/gitignore-block.txt`,
+      and `README.md:357` and `docs/contracts/agents-layout.md` keep stating one
+      rule. The change states whether `files` is omitted or empty for a global
+      entry, audits every reader of the lock (`validate`, uninstall, migration,
+      drift checks), and handles existing committed global entries that carry
+      absolute paths.
+      verify: a test runs a global install from a project with settings and asserts the lock's global-scope entries carry no `$HOME`-rooted path, `sync` still replays them, the ledger still holds their paths and digests, and `validate` accepts the lock
       Open 2026-10-16 — the step's premise moved. `docs/contracts/agents-layout.md`
       (the `installed-tools.lock` row) now governs the consumer case explicitly:
       tracked-durable, deliberately absent from the gitignore block, because
@@ -321,9 +327,13 @@ the same thing in all of them.
 
 ### blocker: global-entries-in-the-consumer-lock
 
-- **Status:** open — escalated 2026-10-18 after an AI council split (2/2
-  concluded, `anthropic` DECIDE (b), `openai` ESCALATE (b)); record at
-  `agents/evidence/council/ownership-record-residue-20261018.md`.
+- **Status:** resolved — (b′): keep global entries in a consumer's lock, stop
+  recording their absolute `files[]`. Decided by: AI council (2/2, 2026-10-18),
+  under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record
+  `agents/evidence/council/global-entries-consumer-lock-20261018.md`. Step 3.3's
+  verify line and AC-8's first half are re-cut to it. Was: escalated
+  2026-10-18 after an earlier round split on the venue (`anthropic` DECIDE (b),
+  `openai` ESCALATE (b); `agents/evidence/council/ownership-record-residue-20261018.md`).
 - **Owner:** owner — the transition changes what consumers commit to
   `agents/installed-tools.lock`, which the council could not agree is internal.
 - **Blocks:** step 3.3 and the first half of AC-8.
@@ -358,6 +368,7 @@ the same thing in all of them.
 | D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |
 | D5 | reversible-technical | agent | The doctor fix (3.1) is sequenced before Phase 2 lands | it makes the disagreement visible, and a visible disagreement is what makes Phase 2's parity test meaningful | 3.1 turns out to depend on the widened classifier |
 | D6 | reversible-technical | council:agents/evidence/council/ownership-record-residue-20261018.md | **3.4 closes on its routing; the flags' behaviour moves to a stub.** If `adopt` / `reset` ship they ship as flags, and what they do is specified in `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md` before any implementation | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00. Both seats: implementing with agent-chosen semantics is owner-reserved (cannot be bounded from available evidence) | approved semantics and acceptance tests make either flag bounded and implementation-ready |
+| D7 | product-owned | council:agents/evidence/council/global-entries-consumer-lock-20261018.md | Blocker `global-entries-consumer-lock` → (b′): a consumer's lock keeps global-scope entries for `sync` replay and stops recording their absolute `files[]`; the lock stays tracked-durable and out of the gitignore block | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); `sync` reads `name`, `scope`, `bridge_marker` and never `files[]` (`cmd_sync.ts:166-182, :343-355`) | a reader of the lock other than `sync` is found that needs a global entry's `files[]` |
 
 ## What this roadmap deliberately does not do
 
@@ -369,7 +380,7 @@ the same thing in all of them.
   that record, which is a different question.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -377,7 +388,7 @@ the same thing in all of them.
 | 2 | The council round stalls and Phase 2 never starts | product | A blocked phase in a ready roadmap decays into a parked one. | Phases 0, 1 and 3.1 deliver value without it, and the blocker's "if you do nothing" names the resulting state plainly rather than implying the file is stuck. | Phase 0 — Resolve the lock, not the symptom |
 | 3 | The schema bump breaks the sibling's deletion allowlist | implementation | Two roadmaps read one file and one of them is a data-loss fix. | D2 makes the bump additive and 2.1 asserts a schema-1 fixture still loads; the sibling's containment test runs in the same suite. | Phase 2 — Two digests, one classifier |
 | 4 | The parity fixture is satisfied by three readers sharing one bug | implementation | Agreement is not correctness. | The parity test is a cross-check on top of 2.2's table-driven test, not instead of it; the table enumerates all seven states independently. | Phase 2 — Two digests, one classifier |
-| 5 | Gitignoring the manifest breaks a team that committed it deliberately | product | Someone relies on the committed lock for reproducibility. | 3.3 reconciles the two documents rather than picking a side silently; `installed-tools.lock` and the ownership manifest are different files and the change names which is which. | Phase 3 — Say the same thing on every surface |
+| 5 | Gitignoring the manifest breaks a team that committed it deliberately | product | Someone relies on the committed lock for reproducibility. | Re-cut 2026-10-18 to option (b′): the lock is not gitignored and keeps its global entries, so `sync` replay survives; only the absolute `files[]` of global entries leave it, and 3.3 audits every reader of the lock before they do. | Phase 3 — Say the same thing on every surface |
 | 6 | The first install after the ledger ships is loud for people who edited nothing | product | For a consumer whose global files were deployed before digests existed, 2.4 cannot tell an untouched older version from an edit, so every such file that differs from the new package content is preserved with a sidecar and the run exits 3. | The equality test removes every file that provably matches, so the burst is bounded to files that genuinely differ; the report line is its own message naming the cause rather than claiming an edit; `--force` is the one-command escape and is named in it. The council weighed this against silent loss and took the recoverable direction — the cost is a confusing install, and the alternative is an unrecoverable one. | Phase 2 — Two digests, one classifier |
 | 7 | Preservation delays the ambiguity rather than resolving it | implementation | A preserved file was never installed, so the run records the STAGED digest for it. Until the consumer merges the sidecar, the path keeps classifying as divergent. | That is the designed behaviour and not a leak: from the second install the path is `recorded-modified` on the ordinary path rather than on the migration branch, so the one-off message appears once. Both council seats named this explicitly, and the record states it so a future reader does not mistake the delay for a bug. | Phase 2 — Two digests, one classifier |
 
@@ -397,14 +408,11 @@ the same thing in all of them.
       asserted by one test.
 - [x] **AC-7** A schema-1 inventory still loads, and the sibling roadmap's
       containment test is green in the same run.
-- [ ] **AC-8** `grep -c installed-tools src/config/gitignore-block.txt` ≥ 1,
-      and `grep -c sidecar docs/contracts/install-layout.md` ≥ 1.
-      Second half satisfied by 3.2. The first half is **owner-reserved and
-      arguably wrong as written**: it asks for a gitignore entry that
-      `docs/contracts/agents-layout.md` and `README.md` jointly forbid, so
-      meeting it would reverse a recorded contract. 3.3 states the narrower
-      gap that remains. This criterion closes by being re-cut or by an owner
-      decision, not by an edit.
+- [ ] **AC-8** A global install run from a consumer project with settings
+      writes no `$HOME`-rooted path into that project's
+      `agents/installed-tools.lock` while `sync` still replays its global
+      entries (3.3, re-cut 2026-10-18 to option (b′)), and
+      `grep -c sidecar docs/contracts/install-layout.md` ≥ 1 (satisfied by 3.2).
 - [ ] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
       run; `check_pack_size` and `check_gate_completeness` are red on
       `main@8c90aad26` independently of this branch.
