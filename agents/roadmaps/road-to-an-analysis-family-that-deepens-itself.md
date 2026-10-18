@@ -478,20 +478,35 @@ file; `council:pr` is unchanged.
 
 ## Phase 6 — Router, registries, retro record and calibration
 
-- [ ] **6.1 Router.** `analyze/command.md` gains keyword rows and menu entries
+- [x] **6.1 Router.** `analyze/command.md` gains keyword rows and menu entries
       for inbox, conformance, roadmap-repos, the source door, and-optimize and
       pr; the escape lists every `routes_to` entry, counted from `routes_to`
       rather than written as a number.
       verify: the dispatcher's eval set routes one prompt per `routes_to` entry
-      to that entry.
-- [ ] **6.2 Registries and references.** `docs/contracts/command-clusters.md`,
+      to that entry. Done 2026-10-19: eleven entries, each with a table row, a
+      keyword row, a menu entry and one eval case
+      (`tests/scripts/analyze_router_routes.test.ts`, a dropped menu entry seen
+      red); the escape reads `routes_to`.
+- [x] **6.2 Registries and references.** `docs/contracts/command-clusters.md`,
       `src/flows/surface-map.yaml`, `docs/command-flows.md`, `docs/catalog.md`,
       the analysis-workbench and meta READMEs, `pack.yaml`, the evals, both
       limits tests, and every skill or rule naming `analyze-repo` or
       `optimize-deep`.
       verify: `./scripts-run src/scripts/check_references` -> 0 — and
       `grep -rn 'optimize:deep' src docs | grep -v replaces` returns only alias
-      lines.
+      lines. Done 2026-10-19: clusters table, surface map, both packs and READMEs,
+      catalog, index, command flows and evals regenerated or edited; the
+      remaining hits are alias lines, ADR-288's record and archived changelogs.
+- [ ] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
+      it `analyze:reference`; it still ships as `analyze-repo` (the skills and
+      the `external-reference-deep-dive` rule name it correctly today). Moving
+      `analyze/repo/command.md` moves the file whose five mechanisms carry the
+      pre-registered claim pinned in 4.1, so the rename waits on that claim's
+      owner: either the observation roadmap records the move as a known delta,
+      or the rename lands after the observation runs.
+      verify: `analyze/reference/command.md` exists with `replaces:` carrying
+      `analyze-repo`, `analyze:repo`, `analyze-reference-repo` and
+      `analyze:reference-repo`, and the observation roadmap names the move.
 - [x] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
       exchange — top-tier items added / changed / killed, `already-fixed` rate,
       gain estimate, seats used and failed, roadmaps emitted, recurrence hits,
@@ -526,6 +541,7 @@ file; `council:pr` is unchanged.
 **Rollback:** router rows are additive; revert them.
 
 > **Screen 2026-10-18 (PR #2461).** Open and buildable, next in order: 4.5, the `analyze:pr` command (5.2, then 1.3), 3.4, 6.1, 6.2, then the 3.5 replay.
+> **Screen 2026-10-19.** 1.3, 3.4, 4.5, 5.2, 5.3, 6.1 and 6.2 closed. Open: 3.5 (a model-driven replay, own session), 6.2b (rename, waits on the 4.1 claim pin).
 > Gated: 6.5 waits on the observation roadmap's answer; 6.6 waits on ten recorded runs (zero exist).
 
 ## Blockers

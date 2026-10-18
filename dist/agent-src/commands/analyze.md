@@ -2,13 +2,13 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
-argument-hint: "[postmortem|premortem|decision|near-miss|incident|repo|roadmap-repos|inbox] [subject]"
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|repo|roadmap-repos|inbox|conformance|and-optimize|pr] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-repo, analyze-roadmap-repos, analyze-inbox, analyze-conformance]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-repo, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr]
 replaces: []
 visibility: advanced
-description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, repo, or inbox-artifact analysis.
+description: Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, roadmap-repos, inbox-artifact, conformance, this-project or pull-request analysis.
 cluster: analyze
 type: orchestrator
 suggestion:
@@ -41,6 +41,8 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:roadmap-repos` | `analyze/roadmap-repos/command.md` | Walk the estate's encrypted reference tokens and feed each unique repo through `repo`, one subagent at a time |
 | `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification + step reproduction against the current tree + artefact mapping + roadmap |
 | `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
+| `/analyze:and-optimize` | `analyze/and-optimize/command.md` | Analyse this project, repository or module and improve it → analysts, exchange, council, ready roadmaps, PR (alias: `/optimize:deep`) |
+| `/analyze:pr` | `analyze/pr/command.md` | Run the loops and councils on an existing pull request → a read-only verdict by default, `--optimize` to push tested fixes |
 
 ## Dispatch
 
@@ -64,7 +66,12 @@ match:
 | "pre-mortem", "what could go wrong", "imagine failure", "vor dem Start" | `premortem` |
 | "decision review", "ADR", "did this hold up", "rückblick Architektur" | `decision` |
 | "production is down", "active incident", "Vorfall", "Prod ist down" | `incident` |
-| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor" | `repo` |
+| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor", "learn from that project" | `repo` |
+| "every reference repo in the roadmaps", "harvest the encrypted reference tokens", "all referenced repos" | `roadmap-repos` |
+| "agents/tmp", "the inbox", "dropped file", "transcript", "review someone dropped" | `inbox` |
+| "rule violations", "did the sessions follow the rules", "conformance", "Regelverstöße" | `conformance` |
+| "optimize this project", "deep optimization pass", "improve this module", "analysiere und verbessere" | `and-optimize` |
+| PR URL / `#<number>`, "this pull request", "review the PR in depth", "PR analysieren" | `pr` |
 
 Assign a confidence level (high / medium / low) per framework based on
 signal count. A framework with zero signals gets `low`.
@@ -83,7 +90,12 @@ escape:
 > 4. [low] Decision review (`/analyze:decision`) — did a past architectural decision hold up?
 > 5. [low] Incident (`/analyze:incident`) — full live-incident coordination + RCA + post-mortem
 > 6. [low] Reference repo (`/analyze:repo`) — deep-dive an external repo → comparison + adoption plan
-> 7. Describe in your own words — I'll re-classify
+> 7. [low] Reference repos of the estate (`/analyze:roadmap-repos`) — every repo the roadmaps reference, one at a time
+> 8. [low] Inbox (`/analyze:inbox`) — a dropped file in `agents/tmp/` → verified claims + roadmaps
+> 9. [low] Conformance (`/analyze:conformance`) — recent sessions against the rules
+> 10. [low] This project (`/analyze:and-optimize`) — analyse and improve the current project, repository or module
+> 11. [low] Pull request (`/analyze:pr`) — loops and councils on an existing PR, feedback by default
+> 12. Describe in your own words — I'll re-classify
 
 **Empfehlung:** 1
 
@@ -97,8 +109,9 @@ Ask one question (per `ask-when-uncertain`):
 > What happened or what are you trying to analyse?
 
 Re-run Step 2 with the answer. Present the menu again. Do not loop
-more than twice — on the third attempt, show all six options unranked
-and let the user pick.
+more than twice — on the third attempt, show every `routes_to` entry of
+this file's frontmatter unranked (the list is read from `routes_to`, never
+counted by hand) and let the user pick.
 
 ### 5. Unknown sub-command
 
@@ -118,7 +131,10 @@ and ask which one was intended. One question, no guessing.
   exception:** `roadmap-repos` invokes `repo` once per repository, each in its
   own subagent, sequentially — never in the orchestrator's own turn and never as
   a fan-out. It is the only sub-command permitted to invoke another, and it may
-  invoke only `repo`.
+  invoke only `repo`. **Second exception (ADR-288):** an analysis door
+  (`repo`, `and-optimize`, `pr`, `inbox`) invokes the engine's *stages* —
+  scope, analysts, exchange, gate, emit, validate, publish — never another
+  door.
 - **Memory loop applies** — every sub-command that produces an
   analysis output MUST draft a memory candidate via
   `/memory propose` per

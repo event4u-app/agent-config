@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **748 public artefacts** shipped by
+Consumer-facing catalog of all **749 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -454,7 +454,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (206)
+## Commands (207)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -475,13 +475,15 @@ are excluded.
 | command | [`analytics`](../dist/agent-src/commands/analytics.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../dist/agent-src/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../dist/agent-src/commands/analytics/show.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
-| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, repo, or inbox-artifact analysis. |
+| command | [`analyze`](../dist/agent-src/commands/analyze.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, reference-repo, roadmap-repos, inbox-artifact, conformance, this-proj… |
+| command | [`analyze-and-optimize`](../dist/agent-src/commands/analyze/and-optimize.md) | cluster: analyze | Analyse this project, repository or module and improve it — independent analysts reading code, an exchange, the council, validated ready roadmaps, PR, then N refinement loops (default 3). E.g. 'run a… |
 | command | [`analyze-conformance`](../dist/agent-src/commands/analyze/conformance.md) | cluster: analyze | Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable. |
 | command | [`analyze-decision`](../dist/agent-src/commands/analyze/decision.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
 | command | [`analyze-inbox`](../dist/agent-src/commands/analyze/inbox.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each. |
 | command | [`analyze-incident`](../dist/agent-src/commands/analyze/incident.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../dist/agent-src/commands/analyze/near-miss.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../dist/agent-src/commands/analyze/postmortem.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
+| command | [`analyze-pr`](../dist/agent-src/commands/analyze/pr.md) | cluster: analyze | Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch. |
 | command | [`analyze-premortem`](../dist/agent-src/commands/analyze/premortem.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-repo`](../dist/agent-src/commands/analyze/repo.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../dist/agent-src/commands/analyze/roadmap-repos.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-repo, one subagent at a time, without producing one roadmap per repository. |
@@ -578,7 +580,6 @@ are excluded.
 | command | [`optimize`](../dist/agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop) |
 | command | [`optimize-agents-dir`](../dist/agent-src/commands/optimize/agents-dir.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
 | command | [`optimize-augmentignore`](../dist/agent-src/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
-| command | [`optimize-deep`](../dist/agent-src/commands/optimize/deep.md) | cluster: optimize | Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'. |
 | command | [`optimize-project`](../dist/agent-src/commands/optimize/project.md) | cluster: optimize | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
 | command | [`optimize-prompt`](../dist/agent-src/commands/optimize/prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize-rtk`](../dist/agent-src/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
