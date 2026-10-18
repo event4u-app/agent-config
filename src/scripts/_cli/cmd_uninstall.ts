@@ -755,6 +755,14 @@ function _uninstall_project(opts: Options): number {
             continue;
         }
 
+        if (!_is_v2_entry(entry) && entry['scope'] === 'global') {
+            // A global entry records no files[] (the user-scoped ledger owns
+            // them), and the project-marker map below names a PROJECT file the
+            // global install never wrote. `uninstall --global` removes its content.
+            _print(_stdout, `  · ${tool}: global-scope entry removed (content: \`uninstall --global\`)`);
+            if (!opts.dry_run) removed_names.push(tool);
+            continue;
+        }
         if (!_is_v2_entry(entry)) {
             // v1 entry — keep the legacy single-marker behaviour.
             const [line, removed] = _remove_project_marker(project_root, tool, {

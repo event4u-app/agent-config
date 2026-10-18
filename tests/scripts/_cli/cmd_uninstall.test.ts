@@ -187,3 +187,36 @@ describe('cmd_uninstall — global scope', () => {
         expect(t.status).toBe(0);
     });
 });
+
+// ---------------------------------------------------------------------------
+// project scope — a global-scope entry recorded without files[]
+// ---------------------------------------------------------------------------
+
+// Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a consumer
+// lock keeps its global-scope entries but no longer records their files[]. An
+// entry without files[] used to fall through to the legacy project-marker map,
+// which for a global entry deletes a PROJECT file the global install never
+// wrote — `.cursor/hooks.json` here.
+describe('cmd_uninstall — project scope, global entry without files[]', () => {
+    it('removes the entry and leaves the project bridge marker alone', () => {
+        const root = freshRoot();
+        fs.mkdirSync(path.join(root, '.cursor'), { recursive: true });
+        const marker = path.join(root, '.cursor', 'hooks.json');
+        fs.writeFileSync(marker, '{"theirs": true}\n');
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        const lock = path.join(root, 'agents', 'installed-tools.lock');
+        fs.writeFileSync(
+            lock,
+            'schema_version: 2\nagent_config_version: "0.0.0"\ntools:\n' +
+                '  - name: cursor\n    scope: global\n    bridge_marker: ~/.cursor/\n' +
+                '    installed_at: "2026-10-18"\n',
+        );
+        const t = runInProc(main, ['--tools=cursor'], {
+            cwd: root,
+            env: { AGENT_CONFIG_ROOT_OVERRIDE: '1', AGENT_CONFIG_PROJECT_ROOT: root },
+        });
+        expect(t.status, t.stdout + t.stderr).toBe(0);
+        expect(fs.readFileSync(marker, 'utf8')).toBe('{"theirs": true}\n');
+        expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
+    });
+});
