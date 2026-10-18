@@ -88,7 +88,7 @@ import * as mcp_consent from './_lib/mcp_consent_residual.js';
 import * as scoped_projection from './_lib/scoped_projection.js';
 import { createConflictTracker } from '../install/conflictTracker.js';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from '../install/fsPrimitives.js';
-import { filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
+import { dropGlobalScopeFiles, filesByToolFromBridges as _files_by_tool_from_bridges, filesByToolFromDeploy as _files_by_tool_from_deploy, hydrateRecordedInventories, preservedIndex, readRecordedByTool, reconcileToolFiles, type ManifestFileEntry } from '../install/manifestFiles.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS } from '../install/preserve.js';
 import { recordGlobalDeploy, retainedFileMessage } from '../install/ownershipLedger.js';
 import * as surface_tiers from './_lib/surface_tiers.js';
@@ -2313,7 +2313,7 @@ function _update_installed_tools_manifest(
         }
     }
 
-    installed_tools.write_manifest(target, version, entries);
+    installed_tools.write_manifest(target, version, dropGlobalScopeFiles(entries));
     if (!state.QUIET) {
         const rel = isRelativeTo(target, project_root) ? path.relative(project_root, target) : target;
         info(`Manifest updated: ${rel}`);
@@ -2854,6 +2854,15 @@ function _deploy_claude_desktop(
         bundles_dir,
         bundle_count,
     );
+    // The marker's digest lived only in a project lock's files[], which a
+    // global entry no longer records; the user-scoped ledger holds it instead.
+    const anchor_raw = USER_SCOPE_PATHS['claude-desktop'] as string;
+    recordGlobalDeploy({
+        toolId: 'claude-desktop', anchorRaw: anchor_raw, anchor: expanduser(anchor_raw),
+        currentFiles: new Set(['agent-config.md']), destSubs: [], packageTag: PACKAGE_TAG_ID,
+        preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged,
+        recordedFor: tracker.recordedDigest,
+    });
     return [bundle_count, 0, 'deployed', [bundles_dir, ...marker_paths]];
 }
 

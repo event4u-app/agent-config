@@ -10376,6 +10376,12 @@ function preservedIndex(preservedTargets, staged) {
   }
   return out;
 }
+function dropGlobalScopeFiles(entries) {
+  for (const entry of entries) {
+    if (entry["scope"] === "global") entry["files"] = [];
+  }
+  return entries;
+}
 
 // src/install/ownershipLedger.ts
 import * as fs13 from "node:fs";
@@ -22691,7 +22697,7 @@ function _update_installed_tools_manifest(project_root, tools, scope, force, fil
       throw exc;
     }
   }
-  write_manifest(target, version, entries);
+  write_manifest(target, version, dropGlobalScopeFiles(entries));
   if (!state.QUIET) {
     const rel = isRelativeTo(target, project_root) ? path36.relative(project_root, target) : target;
     info(`Manifest updated: ${rel}`);
@@ -23069,6 +23075,18 @@ function _deploy_claude_desktop(force, package_root, lockfile_path2) {
     bundles_dir,
     bundle_count
   );
+  const anchor_raw = USER_SCOPE_PATHS["claude-desktop"];
+  recordGlobalDeploy({
+    toolId: "claude-desktop",
+    anchorRaw: anchor_raw,
+    anchor: expanduser8(anchor_raw),
+    currentFiles: /* @__PURE__ */ new Set(["agent-config.md"]),
+    destSubs: [],
+    packageTag: PACKAGE_TAG_ID,
+    preserved: tracker.conflictState.preserved,
+    staged: tracker.conflictState.staged,
+    recordedFor: tracker.recordedDigest
+  });
   return [bundle_count, 0, "deployed", [bundles_dir, ...marker_paths]];
 }
 var _CLAUDE_FLAT_WRAPPER_EXTRA = /* @__PURE__ */ new Set(["commit"]);

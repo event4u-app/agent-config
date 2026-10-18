@@ -71,14 +71,14 @@ tools:
 | `bridge_marker` | str | yes | absolute / `~`-prefixed for global; repo-relative for project |
 | `installed_at` | str | yes | ISO date; informational only |
 | `status` | str | no | `installed` (default when absent) or `uninstalling`; two-phase uninstall (P2.2). A crashed uninstall leaves the entry in `uninstalling` — `agent-config prune --resume-uninstall` sweeps only those entries' `files[]` without touching healthy tools or unmanaged drift. |
-| `files` | list[obj] | no | content the installer deployed for this tool |
+| `files` | list[obj] | no | content the installer deployed for this tool. **Omitted on every `scope: global` entry**: those paths are `$HOME`-rooted and the lock is committed in a consumer repo, so global ownership lives in the user-scoped deploy inventory (`deployed-files.json`, see [`install-layout.md`](install-layout.md)) instead. The entry itself stays, because `sync` replays a global install from `name`, `scope` and `bridge_marker` alone. A lock written before this rule loses its global `files[]` on the next install. |
 | `merged_keys` | list[obj] | no | named keys this tool inserted into shared JSON files |
 
 ### `files[]` entries
 
 | Field | Type | Notes |
 |---|---|---|
-| `path` | str | repo-relative for project-scope, `~`-prefixed for global |
+| `path` | str | repo-relative (or absolute) for project-scope; never written for a global entry — see `files` above |
 | `kind` | str | one of `FILE_KINDS = {bridge, deployed, marker}` |
 | `sha256` | str / null | 64 hex chars of the file's SHA-256 at install time, or `null` for markers / pointers without content |
 
