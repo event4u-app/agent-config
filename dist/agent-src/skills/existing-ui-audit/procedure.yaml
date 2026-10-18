@@ -1,0 +1,44 @@
+schema_version: 1
+brief:
+  goal: Inventory the existing UI surface into state.ui_audit so design and apply reuse what exists.
+  inputs:
+  - state.stack.frontend
+  - state.input
+  done_when: state.ui_audit carries every Output format key and the tree agrees with its inventory.
+steps:
+- id: inspect-stack-and-input
+  file: references/steps/00-inspect-stack-and-input.md
+  exit: judgement
+- id: enumerate-components
+  file: references/steps/01-enumerate-components.md
+  exit: 'check: ui-audit-components-in-tree'
+- id: detect-component-taxonomy
+  file: references/steps/01b-detect-component-taxonomy.md
+  exit: 'check: ui-audit-taxonomy-root-in-tree'
+- id: identify-design-system
+  file: references/steps/02-identify-design-system.md
+  exit: judgement
+- id: detect-design-tokens
+  file: references/steps/03-detect-design-tokens.md
+  exit: judgement
+- id: detect-shadcn-inventory
+  file: references/steps/04-detect-shadcn-inventory.md
+  exit: judgement
+- id: live-storybook-read
+  file: references/steps/04b-live-storybook-read.md
+  exit: judgement
+- id: list-reusable-patterns
+  file: references/steps/05-list-reusable-patterns.md
+  exit: 'check: ui-audit-patterns-in-tree'
+- id: match-candidates
+  file: references/steps/06-match-candidates.md
+  exit: 'check: ui-audit-candidates-from-inventory'
+- id: greenfield-branch
+  file: references/steps/07-greenfield-branch.md
+  exit: 'check: ui-audit-greenfield-consistent'
+- id: a11y-baseline
+  file: references/steps/08-a11y-baseline.md
+  exit: judgement
+- id: validate-and-write
+  file: references/steps/09-validate-and-write.md
+  exit: 'check: ui-audit-complete'
