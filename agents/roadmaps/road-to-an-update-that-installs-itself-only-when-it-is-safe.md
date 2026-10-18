@@ -312,11 +312,11 @@ had already happened.
   the blocker above is why that is a decision rather than an omission.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. | Phase 1 measures it before anything is built on it, and 1.2 makes a non-zero count block the design rather than annotate it; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
+| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. **Measured 2026-10-18: 490 of 4,190 hook invocations failed during four swaps**, and the missing-binary window also makes a fail-closed guard exit 0 unseen. | The count was non-zero, so 1.2 took the blocking branch: the production wiring of `upgrade --unattended` refuses to swap until step 1.4 lifts the session register to global scope; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
 | 2 | A version that cannot start is installed | implementation | An `engines` floor the local runtime does not satisfy takes every hook down at once. | The engines comparison is a refusal gate in 2.1, inherited from the sibling's classifier; 2.3 restores the previous version on any failure. | Phase 2 — A safety envelope on the verb that already exists |
 | 3 | The new session concern costs latency on every session | product | A per-session probe on a surface that currently costs nothing. | 1.3 baselines before, 3.1 budgets to 1 s and fails open, and the day throttle already exists. | Phase 3 — Delivery into the session, without entering the model |
 | 4 | A user is silently moved onto a default they did not pick | product | The opt-in becomes a default by momentum rather than by decision. | 4.1 makes an absent key behave as today, asserted against recorded output; the second blocker makes the flip an owner decision with a recorded answer. | Phase 4 — Consent and rollout, nothing flipped silently |
