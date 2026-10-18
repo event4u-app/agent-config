@@ -23,6 +23,8 @@ import {
     validate,
     type YamlValue,
 } from '../../src/scripts/validate_frontmatter.js';
+import { nativeFieldLines } from '../../src/scripts/_lib/subagent_native_fields.js';
+import { render_floor } from '../../src/scripts/generate_subagent_floor.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const _REPO = path.resolve(_HERE, '..', '..');
@@ -104,5 +106,88 @@ describe('subagent-v1 contract', () => {
     it('schema_version is pinned to subagent-v1', () => {
         const data = _frontmatterOf(_UNIT);
         expect(data.schema_version).toBe('subagent-v1');
+    });
+});
+
+// road-to-a-cold-start-paid-once, Phase 2. The schema opens the host's reuse
+// and loading knobs under vendor-neutral names; only the projector knows the
+// host spelling, the way it already does for `model_tier`.
+describe('subagent-v1 reuse and loading fields', () => {
+    const schema = load_schema('subagent');
+    const _AGENTS = path.join(_REPO, 'src', 'subagents');
+    const _definitions = (): string[] =>
+        fs
+            .readdirSync(_AGENTS)
+            .filter((f) => f.endsWith('.md') && !f.startsWith('_'))
+            .map((f) => path.join(_AGENTS, f));
+
+    it('reuse-field-projects-to-host-spelling', () => {
+        const data = _frontmatterOf(_UNIT);
+        Object.assign(data, {
+            reuse: 'continuity',
+            max_turns: 12,
+            background: true,
+            preload_skills: ['quality-tools'],
+            omit_project_instructions: true,
+            cache_ttl: '1h',
+        });
+        data.tools = ['Read', 'SendMessage'];
+        expect(validate(data, schema).map((e) => `${e.path}: ${e.message}`)).toEqual([]);
+
+        const lines = nativeFieldLines(data as Record<string, unknown>);
+        expect(lines).toContain('maxTurns: 12\n');
+        expect(lines).toContain('background: true\n');
+        expect(lines).toContain('skills: [quality-tools]\n');
+        expect(lines).toContain('omitClaudeMd: true\n');
+        // No neutral spelling leaks into the native file, and the two fields
+        // with no per-definition host key stay with their readers.
+        for (const neutral of ['reuse', 'max_turns', 'preload_skills', 'omit_project_instructions', 'cache_ttl']) {
+            expect(lines).not.toMatch(new RegExp(`^${neutral}:`, 'm'));
+        }
+        expect(nativeFieldLines({ reuse: 'never' })).toBe('');
+    });
+
+    it('rejects a reuse class outside continuity / never', () => {
+        const data = _frontmatterOf(_UNIT);
+        data.reuse = 'sometimes';
+        expect(validate(data, schema).some((e) => e.path === '$.reuse')).toBe(true);
+    });
+
+    it('package-workers-preload-nothing', () => {
+        const floor = render_floor();
+        for (const name of ['ac-worker', 'ac-researcher']) {
+            const file = path.join(_AGENTS, `${name}.md`);
+            const data = _frontmatterOf(file);
+            apply_schema_defaults(data, schema);
+            expect(validate(data, schema).map((e) => `${name} ${e.path}: ${e.message}`)).toEqual([]);
+            expect(data.name).toBe(name);
+            expect(data.reuse).toBe('continuity');
+            // Ships empty: a preload is paid on every cold start (2.3).
+            expect(data.preload_skills ?? []).toEqual([]);
+            // D7: the host default TTL until Phase 1's gap reading says otherwise.
+            expect(data.cache_ttl).toBeUndefined();
+            expect(fs.readFileSync(file, 'utf-8')).toContain(floor);
+        }
+        const researcher = _frontmatterOf(path.join(_AGENTS, 'ac-researcher.md'));
+        for (const tool of researcher.tools as string[]) {
+            expect(tool).not.toMatch(/^(Write|Edit|NotebookEdit|Bash)\b/);
+        }
+    });
+
+    it('judges-are-never-reusable', () => {
+        // Judge Iron Law (subagent-orchestration): no judge on the same model and
+        // context. Every definition that judges, reviews or validates declares
+        // `reuse: never`, so the law is a field the decision function reads.
+        const judging = /judge|review|validat|audit/i;
+        let seen = 0;
+        for (const file of _definitions()) {
+            const data = _frontmatterOf(file);
+            expect(data.reuse, `${path.basename(file)} must declare reuse`).toBeDefined();
+            if (judging.test(String(data.name)) || judging.test(String(data.description))) {
+                expect(data.reuse, path.basename(file)).toBe('never');
+                seen++;
+            }
+        }
+        expect(seen).toBeGreaterThan(0);
     });
 });
