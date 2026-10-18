@@ -53,21 +53,29 @@ The subset, by claim id, read against the ledger on 2026-10-16:
 
 | Claim id | Status | Evidence class today |
 |---|---|---|
-| `surgical-uninstall` | backed | `exec:` — unit tests under `tests/lib/`, not this harness |
+| `surgical-uninstall` | backed | `exec:` — `tests/install/uninstall_shared_host_config_real_install.test.ts`, this harness, plus the `tests/lib/` unit suites |
 | `host-agent-count` | backed | `exec:` — `tests/install/toolDetection.test.ts`, this harness |
 | `install-audit-clean` | backed | pointer — a workflow step |
 | `hook-dispatch-latency` | backed | pointer — `docs/hook-latency.json` |
-| `default-install-context-cost` | backed | `exec:` — `update_counts --check`, a count of this repository |
+| `default-install-context-cost` | backed | `exec:` — `tests/install/default_install_skill_count_real_install.test.ts`, this harness |
 | `thin-inject-delivery-equivalence` | backed | pointer — a bench report |
 | `mcp-registered-server-standing-cost` | backed | pointer — a metrics file |
 | `skill-tiering-h2-costs-more-by-default` | backed | pointer — an analysis file |
-| `scope-dedup-cold-start-reduction` | backed | pointer — a context file |
 | `council-fallback-loses-zero-seats` | backed | `exec:` — unit tests under `tests/scripts/` |
 | `gated-platform-reads` | backed | pointer — `docs/benchmark.md` |
 | `no-runtime-daemon` | withdrawn | — |
 
 `tests/scripts/consumer_harness_contract.test.ts` fails when an id in this table
 leaves the ledger or changes status, so the subset cannot drift silently.
+
+**Removed from the subset on 2026-10-18:** `scope-dedup-cold-start-reduction`.
+Its own claim text states the figure is fixture-measured on byte-identical
+projections and "currently unreachable for production installs", so the reading
+is about the fixture, which is the exclusion in the definition above. It stays
+`backed` on its pointer; a production install that realises the saving would be
+a new claim and would belong in this table. The other fixture- and bench-backed
+rows stay: each of their claim sentences asserts something about what a shipped
+install does, so the exclusion does not reach them.
 
 ## What this file does not do
 
