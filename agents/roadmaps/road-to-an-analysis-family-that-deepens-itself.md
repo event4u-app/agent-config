@@ -595,7 +595,7 @@ file; `council:pr` is unchanged.
 Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim to `agents/evidence/analysis/analysis-family-context-and-sources-085ec41ff.md`.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -603,9 +603,9 @@ Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim t
 | 2 | Cost explosion | implementation | Three analysts × loops × exchange multiply tokens many times over a single session | `--quick` and size-based effort scaling (2.4), budget cap (2.2), plateau beyond loop 3 (2.3), gain gate (2.6) | Phase 2 — The run core |
 | 3 | Agreement mistaken for convergence | product | Analysts or seats converge under conformity and drop a correct minority | facts by the tree, `evaluateStop` before the cost stop, minority audit (2.5, 2.6) | Phase 2 — The run core |
 | 4 | False depth | product | Loops that re-read their own draft are counted as progress | evidence tiers; `no-external-signal` loops do not count (2.3) | Phase 2 — The run core |
-| 5 | Unbounded remote mutation | implementation | Pushes or PRs repeat, hit the wrong branch or carry unexpected files | run states, idempotency key, expected-head check, allowed path set (2.2, 3.3, D7) | Phase 3 — The final stage: emit, validate, publish, and `analyze:inbox` |
+| 5 | Unbounded remote mutation | implementation | Pushes or PRs repeat, hit the wrong branch or carry unexpected files | run states, idempotency key, expected-head check, allowed path set (2.2, 3.3, D7); `analyze:pr --optimize` pushes only to an open, writable, same-repository PR branch on the expected head, else a patch file, and its port has no merge (5.3) | Phase 3 — The final stage: emit, validate, publish, and `analyze:inbox` |
 | 6 | Untrusted input steers the run | implementation | Source files, articles or recovered transcripts carry instructions | adapters with caps, content as data, recovered turns never bind (3.4, 4.2) | Phase 4 — The source door and `analyze:and-optimize` |
-| 7 | Claim voided by engine changes | product | Editing the five claimed mechanisms after the recorded pin voids the pre-registered claim | claim pin and known-delta record (4.1), observation slots (6.5) | Phase 4 — The source door and `analyze:and-optimize` |
+| 7 | Claim voided by engine changes | product | Editing the five claimed mechanisms after the recorded pin voids the pre-registered claim | claim pin and known-delta record (4.1), observation slots (6.5); the source door's rename waits on that pin (6.2b) | Phase 4 — The source door and `analyze:and-optimize` |
 | 8 | Silent default change | implementation | Standalone `analyze:inbox` and `--mode=plan` start pushing without the operator expecting it | the ADR records the changed default (1.2); `--no-pr` and `--mode=plan` stop before any push (3.3, 3.4) | Phase 1 — Decide the shape before building it |
 
 ## Acceptance Criteria
