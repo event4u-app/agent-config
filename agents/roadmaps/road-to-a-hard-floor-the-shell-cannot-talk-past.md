@@ -77,6 +77,20 @@ private recovery-ref namespace precedent `refs/agent-config/rewrites/` (archived
 
 **Measured headroom that bounds this work:** the composed hook bundle is 1,540,885 B against a
 1,550,000 B ceiling, 293 modules (`check_hook_bundle_composition`, 2026-10-12) — 9,115 B.
+**Re-measured 2026-10-18 at `main@1876e1860`: 1,546,313 B — 3,687 B.**
+
+> **Drain screen, 2026-10-18 (`/roadmap:process-full`).** Delivered on this pass: 7.1–7.4
+> (doc and doctor surfaces, none gated). Phase 0 is implemented on branch
+> `drain/road-to-a-hard-floor-the-shell-cannot-talk-past-20261018` and **not landed**: four
+> provider-diverse modification-review rounds produced no round where both seats passed, and
+> the drain caps one target at four, so its ratification record reads `refused` and the push
+> gate refuses it — a fifth round or the owner's decision is owed. Phase 0 also uses 3,581 of
+> the 3,687 B above, so **1.1–1.7 cannot land before 1.8's parser deletions** in the same PR,
+> and every step of Phases 1–6 touches a gated hook surface that needs its own cleared review.
+> Deferred items re-checked, none resolvable now: 1.9 and 7.5 wait on
+> `road-to-typed-grants-that-persist` blocker `kernel-guard-first-crossing` (open); 4.5 waits
+> on that roadmap's 3.1 (itself `[~]`); 4.6's blocker is resolved, but the vote is a branch of
+> the 4.1 concern, which does not exist yet.
 
 ## Design principles
 
@@ -308,19 +322,19 @@ Clean-room, built from published bypass classes and this tree's own defects (K2)
 
 ## Phase 7 — Surfaces tell the truth
 
-- [ ] **7.1 README and the profile table** (`README.md:282`) say, per host, which layer carries
+- [x] **7.1 README and the profile table** (`README.md:282`) say, per host, which layer carries
       the floor (`hook` or `manual-only`) and that it is "a guardrail, not a security boundary".
       verify: `grep -c "a guardrail, not a security boundary" README.md` -> /^[1-9]/
-- [ ] **7.2 The `claude` destructive cell separates binding from guard.** Until 4.2 enforces,
+- [x] **7.2 The `claude` destructive cell separates binding from guard.** Until 4.2 enforces,
       `docs/enforcement-by-host.md:417` says the slot can refuse and no bound concern recognises
       a typed op; after, it names `destructive-consequence`.
       verify: `grep -c "no bound concern recognises" docs/enforcement-by-host.md` -> /^[1-9]/
-- [ ] **7.3 `hooks_doctor.ts` reports posture, read-only**, in the `host_permission_checks`
+- [x] **7.3 `hooks_doctor.ts` reports posture, read-only**, in the `host_permission_checks`
       pattern: sandbox enabled, fail-if-unavailable, unsandboxed escape hatch, whether the hook
       runtime resolves (D12's `exit 0` path named "floor not running"), and whether another
       `PreToolUse` hook is registered that could rewrite the command after this verdict.
-      verify: `npx vitest run tests/scripts/hooks_doctor.test.ts --reporter=verbose` -> /✓.*floor-not-running/ <!-- ref-ignore -->
-- [ ] **7.4 Hand D14 to the hook-lowering line** as a re-probe spec — the second CLI host's
+      verify: `npx vitest run tests/scripts/hooks/floor_posture.test.ts --reporter=verbose` -> /✓.*floor-not-running/
+- [x] **7.4 Hand D14 to the hook-lowering line** as a re-probe spec — the second CLI host's
       `PreToolUse` with a structured deny on stdout and exit 0 — written into
       `agents/roadmaps/stubs/road-to-host-primitive-lowering.md`; recorded, not executed here.
       verify: `grep -c "structured deny on stdout" agents/roadmaps/stubs/road-to-host-primitive-lowering.md` -> /^[1-9]/
