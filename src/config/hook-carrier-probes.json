@@ -1,0 +1,30 @@
+{
+  "_comment": "First-host probes for road-to-a-hook-carrier-that-is-never-silent 0.2, in the row shape of host-injection-effect.json (validated by recordProblems in src/scripts/_lib/injection_effect.ts) plus a host and an expiry. Each row stays `unobserved` until a live session on the named host observes it; an `observed-*` row needs host_version, transcript and date. Nothing here may be inferred from the hook command or from a test fixture — the fixtures in tests/install/hook_carrier_never_silent.test.ts run the command under /bin/sh, which is not the host.",
+  "session-start-stdout-reaches-model": {
+    "host": "claude",
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "expiry": "2027-01-18",
+    "reason": "Probe (a): plain stdout printed by a shell branch of a SessionStart command — the dead-carrier line of step 3.1, which runs without node — reaches the model's context, and the documented 10,000-character cap holds. Not yet observed in a live session; the dispatcher's own SessionStart output reaching the model is a different path and does not answer it."
+  },
+  "launcher-path-terminal-vs-app": {
+    "host": "claude",
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "expiry": "2027-01-18",
+    "reason": "Probe (b): the PATH a terminal launch and an app launch hand the hook process on one machine. Step 2.1 removes the dependency on it for a staged machine, so the answer now bounds only unstaged machines and the plugin channel; it still needs one observation per launch kind on one machine."
+  },
+  "rule-file-replaced-mid-session": {
+    "host": "claude",
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "expiry": "2027-01-18",
+    "reason": "Probe (c): a rule file replaced on disk mid-session — what other live sessions see on their next load. Step 3.2 restores by an atomic rename per file and never removes one (D3), which is safe under either answer; the observation decides whether a restore reaches a second live session at all."
+  }
+}
