@@ -104,7 +104,7 @@ governed by capture-time guards and a human accept; neither may write
   is tallied and surfaces as a promotion CANDIDATE, never an automatic promotion.
 
 Mechanics, guard classes, the shared ≤5 cap and the router table:
-[`user-memory-channels`](../../agent-src/contexts/execution/user-memory-channels.md).
+[`user-memory-channels`](../../contexts/execution/user-memory-channels.md).
 Read it before touching either path — the guards are restated there, not linked.
 ### Phase 3 — CONSOLIDATE
 
@@ -397,4 +397,4 @@ something already known, not a first-time explanation.
 
 ## Runnable example
 
-See [`user-memory-channels`](../../agent-src/contexts/execution/user-memory-channels.md) § Runnable example — moved there with the channel mechanics it exercises.
+See [`user-memory-channels`](../../contexts/execution/user-memory-channels.md) § Runnable example — moved there with the channel mechanics it exercises.

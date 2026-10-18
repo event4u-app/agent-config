@@ -98,7 +98,7 @@ must be re-confirmed against the live source before use. Cards pass the
 `check_knowledge_cards.ts` pointer-CI (size ≤ 150, mandatory authoritative
 pointer, trust tagging, multi-evidence consistency). See
 [`source-discovery`](../source-discovery/SKILL.md) for when a structure is
-card-worthy and [`evidence-discipline`](../../agent-src/contexts/execution/evidence-discipline.md)
+card-worthy and [`evidence-discipline`](../../contexts/execution/evidence-discipline.md)
 for the full model.
 
 ### Knowledge pages — the typed sibling directories
@@ -107,7 +107,7 @@ Alongside knowledge cards, `agents/knowledge/{sessions,concepts,procedures,decis
 holds team-shared knowledge that grows **while working the project** —
 coding standards observed, module structure, API endpoint shapes, recurring
 mistakes, small decisions not big enough for an ADR. Fill new pages from the
-[`knowledge-pages`](../../agent-src/templates/contexts/knowledge-pages.md)
+[`knowledge-pages`](../../templates/contexts/knowledge-pages.md)
 template.
 
 **Retrieval protocol — index-first, then grep, then read.** Read

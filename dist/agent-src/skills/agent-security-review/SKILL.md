@@ -21,7 +21,7 @@ code vulnerabilities, this skill asks: *given this assembled agent config
 (rules, skills, MCP servers, hooks, permissions, memory), how would an attacker
 turn it against its owner, and what defensive gap lets them?*
 
-Pairs the static signal from [`/security-audit-config`](../../agent-src/commands/) with an
+Pairs the static signal from [`/security-audit-config`](../../commands/) with an
 adversarial three-lens pass. Output is **decision support** — surface the
 trade-off, name the gap; the human decides.
 
@@ -126,6 +126,6 @@ Recommend controls; never auto-apply config changes (per
 
 ## See also
 
-- [`/security-audit-config`](../../agent-src/commands/) — the static A–F counterpart.
+- [`/security-audit-config`](../../commands/) — the static A–F counterpart.
 - [`untrusted-input-defense`](../../rules/untrusted-input-defense.md), [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) — the prevention rules.
 - [`threat-modeling`](../threat-modeling/SKILL.md), [`judge-security-auditor`](../judge-security-auditor/SKILL.md), [`ai-council`](../ai-council/SKILL.md).

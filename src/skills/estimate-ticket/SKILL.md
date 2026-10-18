@@ -195,5 +195,5 @@ copy-paste instructions if missing.
 
 - [`refine-ticket`](../refine-ticket/SKILL.md) — sibling; refine first if the ticket is vague
 - [`jira-ticket`](../../commands/jira-ticket.md) — ticket loader
-- [`feature-plan`](../../commands/feature-plan.md) — downstream planning
+- [`feature-plan`](../../commands/feature/plan.md) — downstream planning
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — drafting protocol

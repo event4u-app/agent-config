@@ -56,7 +56,7 @@ Before presenting any options, gather context. Do not assume — check:
 
 If a PR already exists for this branch, **stop** — this is not a
 finishing step, route to [`receiving-code-review`](../receiving-code-review/SKILL.md)
-or [`fix-pr-comments`](../../commands/fix-pr-comments.md) instead.
+or [`fix-pr-comments`](../../commands/fix/pr-comments.md) instead.
 
 ### 2. Verify readiness
 
@@ -111,8 +111,8 @@ a different sub-procedure (steps 5a–5d).
 1. Ensure the branch is up to date with the base →
    [`prepare-for-review`](../../commands/prepare-for-review.md)
 2. Self-review the full diff → [`review-changes`](../../commands/review/changes.md)
-3. Write the PR description → [`create-pr-description`](../../commands/create-pr/description-only.md)
-4. Open the PR → [`create-pr`](../../commands/create-pr.md)
+3. Write the PR description → [`create-pr-description`](../../commands/pr/create/description-only.md)
+4. Open the PR → [`create-pr`](../../commands/pr/create.md)
 5. Confirm the PR opened green, not red
 
 See [`requesting-code-review`](../requesting-code-review/SKILL.md) for
@@ -232,7 +232,7 @@ After the chosen option completes, report:
   [`commit`](../../commands/commit.md),
   [`conventional-commits-writing`](../conventional-commits-writing/SKILL.md)
 * Self-review walkthrough → [`review-changes`](../../commands/review/changes.md)
-* Creating the PR → [`create-pr`](../../commands/create-pr.md)
+* Creating the PR → [`create-pr`](../../commands/pr/create.md)
 * Processing review comments after the PR is open →
   [`receiving-code-review`](../receiving-code-review/SKILL.md)
 

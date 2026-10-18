@@ -9,7 +9,7 @@
     "adversarial-review": 7860,
     "agent-docs-writing": 18341,
     "agent-security-review": 6120,
-    "agents-md-thin-root": 13263,
+    "agents-md-thin-root": 13319,
     "ai-code-blindspots": 13262,
     "ai-council": 21697,
     "alerting-doctrine": 8755,
@@ -328,6 +328,12 @@
     "worktree-lifecycle": 9515
   },
   "raised": [
+    {
+      "skill": "agents-md-thin-root",
+      "old": 13263,
+      "new": 13319,
+      "reason": "The four Wrong-vs-right pointer examples moved from blockquotes into fenced blocks: as live links they resolved to nothing in the delivered skill, which the widened link gate now fails. road-to-steps-the-skill-cannot-skip AC-1."
+    },
     {
       "skill": "ai-code-blindspots",
       "old": 12686,
