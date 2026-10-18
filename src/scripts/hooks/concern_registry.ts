@@ -55,6 +55,7 @@ import { main as blockKernelRuleWritesMain } from './block_kernel_rule_writes.js
 import { main as blockPlumbingWritesMain } from './block_plumbing_writes.js';
 import { main as blockConfigWeakeningMain } from './block_config_weakening.js';
 import { main as blockSpeakingInboxDirMain } from './block_speaking_inbox_dir.js';
+import { main as blockCredentialReadsMain } from './block_credential_reads.js';
 import { main as oneQuestionPerAskMain } from './one_question_per_ask_hook.js';
 import { main as rtkWrapMain } from './rtk_wrap_hook.js';
 import { _main as designPassMain } from './design_pass_hook.js';
@@ -122,6 +123,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/block_plumbing_writes.ts': blockPlumbingWritesMain as ConcernMain,
     'src/scripts/hooks/block_config_weakening.ts': blockConfigWeakeningMain as ConcernMain,
     'src/scripts/hooks/block_speaking_inbox_dir.ts': blockSpeakingInboxDirMain as ConcernMain,
+    'src/scripts/hooks/block_credential_reads.ts': blockCredentialReadsMain as ConcernMain,
     'src/scripts/hooks/one_question_per_ask_hook.ts': oneQuestionPerAskMain as ConcernMain,
     'src/scripts/hooks/rtk_wrap_hook.ts': rtkWrapMain as ConcernMain,
     'src/scripts/hooks/design_pass_hook.ts': designPassMain as ConcernMain,

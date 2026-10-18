@@ -81,6 +81,25 @@ const BLOCKING_ALLOWLIST = new Set([
     //
     // Kill switch: AGENT_CONFIG_ALLOW_SPEAKING_INBOX=1.
     'block-speaking-inbox-dir',
+    // road-to-one-detector-and-the-senders-we-own 1.1. It refuses a READ of a
+    // credential-class file and a command that prints the environment. The
+    // three questions, on this concern's own terms:
+    //
+    //   · SCOPE. A closed class list in _lib/credential_files.ts, decided from
+    //     the path alone: env files (`.env.example` and the other template
+    //     names pass), private keys, cloud/CLI and package-registry credential
+    //     files. A write-only tool and a name-only tool (Glob, LS) pass, and a
+    //     credential path handed to a command that does not print it (`ls`,
+    //     `cp`, `rm`, staging it in version control) passes.
+    //   · fail_closed: FALSE. A detected read refuses; a malformed envelope or a
+    //     crash allows, so the guard is never why an unrelated call fails.
+    //   · WHY REFUSAL RATHER THAN A NUDGE. What a session reads is sent to the
+    //     model provider; a warning arrives after the value already left. A
+    //     value never read cannot leak through any later bug. It is best-effort
+    //     over the shapes it recognises, not a boundary.
+    //
+    // Kill switch: AGENT_CONFIG_ALLOW_CREDENTIAL_READS=1.
+    'block-credential-reads',
     // road-to-agent-behavior-conformance. It refuses only what a rule already
     // declares never-autonomous — the deliberate decision this allowlist
     // exists to record:

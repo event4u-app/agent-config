@@ -570,6 +570,32 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
         expect(kinds(res.violations)).toContain('stale_review');
     });
 
+    // Contract § 1, "Residual (accepted)": a substantial change and a review stamp
+    // on ONE day pass, or "changed and reviewed today" is unsatisfiable — the
+    // marker takes a bare date, so a second same-day review has no later value
+    // to write. The baseline is the newest commit of the stamp's run dated on or
+    // before the stamp; a next-day change is still caught (the test above).
+    it('substantial change committed the SAME day as the stamp → fresh (contract residual)', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        const reviewed =
+            '<!-- risk-review: v1 | reviewed: 2026-02-01 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(p, planWith(reviewed), 'utf-8');
+        commitAll(tmp, '2026-02-01'); // introduces the stamp
+
+        fs.writeFileSync(p, `${planWith(reviewed)}\n## Phase 3: New scope\n\n- [ ] **Step 1:** more work\n`, 'utf-8');
+        commitAll(tmp, '2026-02-01'); // same day, stamp unchanged
+
+        const res = mod.checkFile(p);
+        expect(kinds(res.violations)).not.toContain('stale_review');
+        expect(res.status).toBe('ok');
+
+        // The next day's substantial change, stamp still unchanged, is stale.
+        fs.writeFileSync(p, `${planWith(reviewed)}\n## Phase 3: New scope\n\n- [ ] **Step 1:** more work\n- [ ] **Step 2:** still more\n`, 'utf-8');
+        commitAll(tmp, '2026-02-02');
+        expect(kinds(mod.checkFile(p).violations)).toContain('stale_review');
+    });
+
     it('register just written on an untracked file → fresh (no stale violation)', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');

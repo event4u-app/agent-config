@@ -15,12 +15,13 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { independenceFields, type ContextRelation, type IndependenceFields } from './_lib/review_independence.js';
+import { ANALYST_BOUNDS } from './ai_council/cli_agency_bounds.js';
 
 export const DEFAULT_ANALYSTS = 3;
 export const MAX_ANALYSTS = 5;
 export const DROPS_REL = 'agents/tmp';
 
-export type AnalystMode = 'subagent' | 'external';
+export type AnalystMode = 'subagent' | 'external' | 'cli';
 export type AnalystPhase = 'seed' | 'deepen';
 export const HANDOFF_PHASES = ['seed', 'deepen', 'exchange'] as const;
 export type HandoffPhase = (typeof HANDOFF_PHASES)[number];
@@ -85,7 +86,12 @@ export function stampOutput(input: {
     consulted: string[];
 }): AnalystOutput {
     let family: string;
-    if (input.mode === 'subagent') {
+    if (input.mode === 'cli') {
+        if (input.family === undefined || !KNOWN_FAMILIES.has(input.family)) {
+            throw new AnalystError(`${input.analyst_id}: a cli analyst needs a known provider family, got ${String(input.family)}`);
+        }
+        family = input.family;
+    } else if (input.mode === 'subagent') {
         if (input.family !== undefined && input.family !== input.hostFamily) {
             throw new AnalystError(
                 `${input.analyst_id}: a subagent analyst runs in the host family ${input.hostFamily}, not ${input.family}`,
@@ -95,7 +101,7 @@ export function stampOutput(input: {
     } else {
         family = input.family ?? 'unknown';
     }
-    const relation: ContextRelation = input.context_relation ?? (input.mode === 'subagent' ? 'fresh' : 'unknown');
+    const relation: ContextRelation = input.context_relation ?? (input.mode === 'external' ? 'unknown' : 'fresh');
     const members = KNOWN_FAMILIES.has(family) && KNOWN_FAMILIES.has(input.hostFamily) ? [input.hostFamily, family] : [];
     return {
         analyst_id: input.analyst_id,
@@ -107,6 +113,25 @@ export function stampOutput(input: {
         consulted: [...input.consulted],
         ...independenceFields(members, relation),
     };
+}
+
+export interface CliAnalystCommand {
+    binary: string;
+    argv: readonly string[];
+    promptVia: 'stdin' | 'argv';
+}
+
+/**
+ * The spawn line of a `cli:<provider>` analyst, from the read-only analyst
+ * profile — never the seat bound. A member whose profile was refused or never
+ * probed has no analyst mode at all.
+ */
+export function cliAnalystCommand(member: string): CliAnalystCommand {
+    const b = ANALYST_BOUNDS.find((x) => x.member === member);
+    if (b === undefined || b.bound.length === 0) {
+        throw new AnalystError(`${member}: no probed read-only analyst profile in cli_agency_bounds.ts`);
+    }
+    return { binary: b.binary, argv: [...b.bound], promptVia: b.prompt_via };
 }
 
 /** Every reason a round's seed and deepen outputs are not independent. Empty means clean. */

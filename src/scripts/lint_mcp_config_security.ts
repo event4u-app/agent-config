@@ -23,6 +23,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { detect } from './_lib/egress_rules.js';
 import * as sl from './_lib/security_lint.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -31,16 +32,13 @@ export const CHECK = 'mcp-config-security';
 //   Python: re.compile(r"(^|/)(\.mcp\.json|mcp\.json|claude_desktop_config\.json)")
 const _NAME_HINTS = /(^|\/)(\.mcp\.json|mcp\.json|claude_desktop_config\.json)/;
 
-// Real secret VALUES (prefix + enough key chars to be a live credential).
-//   Python (no flags):
-const _SECRET = new RegExp(
-    'sk-ant-[A-Za-z0-9_\\-]{20,}' +
-        '|sk-proj-[A-Za-z0-9_\\-]{20,}' +
-        '|AKIA[0-9A-Z]{16}' +
-        '|AIza[0-9A-Za-z_\\-]{35}' +
-        '|ghp_[0-9A-Za-z]{36}' +
-        '|eyJ[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9_\\-]{10,}\\.[A-Za-z0-9_\\-]{10,}',
-);
+// Real secret VALUES — detected by the one rule table, which owns every
+// credential pattern (road-to-one-detector-and-the-senders-we-own 2.2). The
+// heuristic keyword assignment is not a structural credential and never was HIGH
+// here; this lint's HIGH tier stays the structural rows.
+export function hasInlineSecret(text: string): boolean {
+    return detect(text).some((span) => span.class === 'credential' && span.rule !== 'generic-assignment');
+}
 
 // Line-level smells (match on a single line).
 const _MED: ReadonlyArray<[RegExp, string]> = [
@@ -135,7 +133,7 @@ export function _scan(sf: sl.ScannedFile): sl.Finding[] {
     const out: sl.Finding[] = [];
     for (const [start, numbered] of _candidate_chunks(sf)) {
         for (const [lineno, text] of numbered) {
-            if (_SECRET.test(text)) {
+            if (hasInlineSecret(text)) {
                 out.push(
                     new sl.Finding(
                         sf.rel,

@@ -125,6 +125,88 @@ export function boundFor(member: string): readonly string[] {
 }
 
 /**
+ * The read-only ANALYST profile (ADR-288 D8) — a separate class from the seat
+ * bound above, which stays an oracle bound. An analyst reads the scope it is
+ * spawned in and writes nothing; the seat bound is not widened to get there.
+ *
+ * Probed 2026-10-18 in a throwaway directory holding one fact file: each bound
+ * binary was asked to print the fact and then create a sentinel file. A bound
+ * is recorded only where the fact came back AND the sentinel was absent.
+ */
+export interface AnalystBound {
+    readonly member: string;
+    readonly binary: string;
+    /** The argv fragment of the read-only analyst profile. Empty = refused. */
+    readonly bound: readonly string[];
+    /** `stdin` where a variadic flag in `bound` would swallow a positional prompt. */
+    readonly prompt_via: 'stdin' | 'argv';
+    readonly probed_version: string | null;
+    readonly probed_on: string | null;
+    readonly rationale: string;
+}
+
+export const ANALYST_BOUNDS: readonly AnalystBound[] = [
+    {
+        member: 'anthropic',
+        binary: 'claude',
+        bound: ['--tools', 'Read,Grep,Glob'],
+        prompt_via: 'stdin',
+        probed_version: '2.1.302 (Claude Code)',
+        probed_on: '2026-10-18',
+        rationale:
+            'Read, Grep and Glob are the read half of the built-in tool set; no Bash, Edit, Write or WebFetch. Probe: ' +
+            'the fact came back, the sentinel was refused ("no tool that writes local files"). `--tools` is variadic ' +
+            'and swallowed a positional prompt in the same probe, so the prompt goes on stdin.',
+    },
+    {
+        member: 'openai',
+        binary: 'codex',
+        bound: ['--sandbox', 'read-only'],
+        prompt_via: 'argv',
+        probed_version: 'codex-cli 0.148.0',
+        probed_on: '2026-10-18',
+        rationale:
+            'The same flag as the seat bound, because `read-only` already permits reading the workspace and forbids ' +
+            'writing it. Probe: the fact came back, the sentinel was refused ("the workspace is read-only").',
+    },
+    {
+        member: 'gemini',
+        binary: 'gemini',
+        bound: [],
+        prompt_via: 'argv',
+        probed_version: '0.50.0',
+        probed_on: '2026-10-18',
+        rationale:
+            'refused — the 2026-10-18 probe printed "Approval mode overridden to \\"default\\" because the current ' +
+            'folder is not trusted": the `plan` bound is silently dropped in an untrusted directory, and the client was ' +
+            'refused by its service. A bound the binary can override is not a bound.',
+    },
+    {
+        member: 'xai',
+        binary: 'grok',
+        bound: [],
+        prompt_via: 'argv',
+        probed_version: null,
+        probed_on: null,
+        rationale: 'not-probed — binary absent on the probing machine.',
+    },
+    {
+        member: 'perplexity',
+        binary: 'perplexity',
+        bound: [],
+        prompt_via: 'argv',
+        probed_version: null,
+        probed_on: null,
+        rationale: 'not-probed — binary absent on the probing machine.',
+    },
+];
+
+/** The analyst profile's argv fragment for a member, or `[]` when it was refused or never probed. */
+export function analystBoundFor(member: string): readonly string[] {
+    return ANALYST_BOUNDS.find((b) => b.member === member)?.bound ?? [];
+}
+
+/**
  * Documented flags that LIFT an agency bound.
  *
  * A bound is only a bound if the argv cannot also carry the flag that removes
