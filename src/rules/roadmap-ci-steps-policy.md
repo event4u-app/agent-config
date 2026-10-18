@@ -66,8 +66,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 
 ## See also
 
-- [`contexts/execution/roadmap-ci-steps-mechanics`](../contexts/execution/roadmap-ci-steps-mechanics.md)
-  — the migrated body.
 - [`verify-before-complete`](verify-before-complete.md) — the
   Iron Law this rule narrows; carve-out cites it.
 - [`roadmap-progress-sync`](roadmap-progress-sync.md) — inline flip

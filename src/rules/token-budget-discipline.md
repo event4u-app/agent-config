@@ -51,7 +51,7 @@ A skill claiming `rich` MUST satisfy ALL three:
    carry a `load_context` pointer instead.
 
 3. **≤ 15 % of the suite's skills may claim `rich`** — the CI linter counts
-   rich-tagged skills and hard-fails if the ratio is exceeded. With 300 skills
+   rich-tagged skills and hard-fails if the ratio is exceeded. With 301 skills
    the cap is ~45. Do not claim `rich` for convenience; claim it only for
    irreducible-complexity skills.
 

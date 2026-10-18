@@ -11,7 +11,7 @@
 meta:
   generated_by: generate_capabilities_index
   purpose: "Machine-readable coverage index so external reviews stop re-proposing what already ships."
-  skills_total: 300
+  skills_total: 301
   commands_total: 205
   capability_areas: 31
   gaps: 0
@@ -60,9 +60,9 @@ capability_areas:
       description: "Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge."
       size_class: "medium"
       coverage: strong
-      skill_count: 9
+      skill_count: 10
       command_count: 4
-      skills: ["design-intelligence", "design-system-capture", "design-tokens", "design-variations", "html-deck", "iconography", "svg-authoring", "typography-system", "wireframe"]
+      skills: ["design-intelligence", "design-system-capture", "design-tokens", "design-variations", "html-deck", "iconography", "svg-authoring", "type-design", "typography-system", "wireframe"]
       commands: ["design-system", "design-system-capture", "design-system-generate", "design-system-import"]
     - id: git
       label: "Git"

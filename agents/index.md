@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **747 artefacts** in this package.
+Maintainer-facing index of all **748 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > **Drift check:** `./scripts-run src/scripts/generate_index --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (300)
+## Skills (301)
 
 | kind | name | source | description |
 |---|---|---|---|
@@ -294,6 +294,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`throughput-vs-morale-tradeoff`](../src/skills/throughput-vs-morale-tradeoff/SKILL.md) | official | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../src/skills/token-optimizer/SKILL.md) | official | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset. |
 | skill | [`traefik`](../src/skills/traefik/SKILL.md) | official | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
+| skill | [`type-design`](../src/skills/type-design/SKILL.md) | official | Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font. |
 | skill | [`typography-system`](../src/skills/typography-system/SKILL.md) | official | Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale. |
 | skill | [`ui-apply-generic`](../src/skills/ui-apply-generic/SKILL.md) | official | Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus. |
 | skill | [`ui-component-architect`](../src/skills/ui-component-architect/SKILL.md) | official | Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui. |
