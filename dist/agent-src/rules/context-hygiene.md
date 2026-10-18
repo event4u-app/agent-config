@@ -130,5 +130,4 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 
 ## See also
 
-- [`guideline:agent-infra/context-hygiene-mechanics`](../guidelines/agent-infra/context-hygiene-mechanics.md) — templates + per-host procedures.
 - [`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md) — the read-loop debug procedure.

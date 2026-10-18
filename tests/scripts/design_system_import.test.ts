@@ -13,7 +13,8 @@
  * end-to-end import would otherwise hide.
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -26,6 +27,7 @@ import {
     resolveAlias,
     roleName,
 } from '../../src/scripts/_lib/design_system_import.js';
+import { importClaudeDesignSnapshot } from '../../src/scripts/_lib/design_system_claude_design.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(HERE, 'fixtures', 'design-system-import');
@@ -583,5 +585,86 @@ describe('CLI contract', () => {
         expect(r.status).toBe(0);
         expect(r.stdout).toContain('observed, not authoritative');
         expect(r.stdout).toContain('lane: native');
+    });
+});
+
+// road-to-a-canvas-the-code-owns 3.2 — the `claude-design` lane, snapshot input.
+describe('claude-design lane (snapshot directory)', () => {
+    function snapshot(files: Record<string, string>): string {
+        const dir = mkdtempSync(path.join(tmpdir(), 'cd-snapshot-'));
+        for (const [rel, text] of Object.entries(files)) {
+            mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+            writeFileSync(path.join(dir, rel), text);
+        }
+        return dir;
+    }
+    const BASE = {
+        'source.json': JSON.stringify({ source: { kind: 'url', ref: 'canvas://project/demo', captured_at: '2026-10-18' } }),
+        'styles/theme.css': [
+            ':root { --color-blue-600: #2563eb; --color-primary: var(--color-blue-600); --radius-md: 8px; }',
+            ':root { --space-2: 8px; --font-body: "Inter", sans-serif; --color-link: var(--color-missing); }',
+            '[data-theme="dark"] { --color-primary: #60a5fa; }',
+            '.btn { color: var(--color-primary); border-color: var(--color-ghost); }',
+        ].join('\n'),
+        'components/Button.d.ts':
+            'export interface ButtonProps {\n  variant?: "primary" | "ghost";\n  size: "sm" | "md";\n  onClick?: () => void;\n}\nexport declare function Button(props: ButtonProps): JSX.Element;\n',
+        'guidelines/usage.md': '# Buttons\n\nOne primary action per view.\n',
+        'previews/button.html': '<button>Hi</button>',
+    };
+
+    it('claude-design: maps tokens, the custom-property closure, contracts and guidelines', () => {
+        const r = importClaudeDesignSnapshot(snapshot(BASE));
+        expect(r.ok).toBe(true);
+        if (!r.ok) return;
+        const ds = r.design_system;
+        expect(r.lane).toBe('claude-design');
+        expect(ds.source.ref).toBe('canvas://project/demo');
+        expect(ds.colors?.light?.['primary']).toBe('#2563eb');
+        expect(ds.colors?.dark?.['primary']).toBe('#60a5fa');
+        expect(ds.radius?.['md']).toBe('8px');
+        expect(ds.spacing?.scale).toEqual(['8px']);
+        expect(ds.typography?.families?.[0]).toEqual({ role: 'body', name: 'Inter', bundled_local: false });
+        expect(ds.components).toEqual([{ name: 'Button', observed: { props: ['onClick', 'size', 'variant'] } }]);
+        expect(ds._meta?.['alias_of']).toMatchObject({ 'css:--color-primary': '--color-blue-600' });
+        expect(ds._meta?.['component_paths']).toEqual({ Button: 'components/Button.d.ts' });
+        expect(ds._meta?.['guidelines']).toEqual([{ path: 'guidelines/usage.md', text: BASE['guidelines/usage.md'] }]);
+    });
+
+    it('claude-design: lists every var() with no declaration in the closure', () => {
+        const r = importClaudeDesignSnapshot(snapshot(BASE));
+        if (!r.ok) throw new Error(r.reason);
+        expect(r.design_system._meta?.['unresolved_custom_properties']).toEqual(['--color-ghost', '--color-missing']);
+        // the dangling alias is kept as observation, never invented into a colour
+        expect(r.design_system.colors?.light?.['link']).toBeUndefined();
+        expect(r.design_system._meta?.['unmapped_custom_properties']).toMatchObject({ '--color-link': 'var(--color-missing)' });
+    });
+
+    it('claude-design: keeps unknown files in _meta.unmapped, never drops them', () => {
+        const r = importClaudeDesignSnapshot(snapshot(BASE));
+        if (!r.ok) throw new Error(r.reason);
+        expect(r.design_system._meta?.['unmapped']).toEqual(['previews/button.html']);
+    });
+
+    it('claude-design: provenance is mandatory', () => {
+        const { 'source.json': _drop, ...rest } = BASE;
+        const r = importClaudeDesignSnapshot(snapshot(rest));
+        expect(r.ok).toBe(false);
+        if (!r.ok) expect(r.reason).toMatch(/no provenance/);
+        const withFlag = importClaudeDesignSnapshot(snapshot(rest), { kind: 'dir', ref: './export' });
+        expect(withFlag.ok && withFlag.design_system.source._meta?.provenance_origin).toBe('caller');
+    });
+
+    it('claude-design: a JSON file forced to the lane is refused, not mapped as another lane', () => {
+        const r = importDesignSystem({ colors: {} }, { kind: 'dir', ref: '.' }, 'claude-design');
+        expect(r.ok).toBe(false);
+    });
+
+    it('claude-design: the CLI routes a directory to the lane', () => {
+        const proc = spawnSync(path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx'), [CLI, snapshot(BASE), '--format', 'summary'], {
+            encoding: 'utf8',
+            timeout: 60_000,
+        });
+        expect(proc.status).toBe(0);
+        expect(proc.stdout).toContain('lane: claude-design');
     });
 });

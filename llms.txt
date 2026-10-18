@@ -289,6 +289,7 @@ threat-modeling: Use when adding auth, webhooks, uploads, queues, secrets, tenan
 throughput-vs-morale-tradeoff: Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'.
 token-optimizer: Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — decision tree keyed by intent citing the canonical token-saving asset.
 traefik: Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing.
+type-design: Build an original font from lettering or a brief — measured spec, code-built outlines, gated build, rendered proof. Use to turn a wordmark into a font.
 typography-system: Derive a type system from a style constraint — font pairings, scale/line-height/weights, DTCG tokens via design-tokens. Use to choose fonts or build a typographic scale.
 ui-apply-generic: Use when implementing a UI brief on a stack with no framework executor — Svelte, Astro, Angular, plain HTML. Stack-independent sibling of react-shadcn-ui; idiom from the stack corpus.
 ui-component-architect: Shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — on 'split this component'. Feeds react-shadcn-ui.

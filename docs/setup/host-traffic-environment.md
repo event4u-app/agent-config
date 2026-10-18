@@ -154,6 +154,26 @@ either suppresses no telemetry, no update check and no download.
 consumer reading `set` on a traffic variable can tell that this package was not
 the one that set it.
 
+### Addendum 2026-10-14 — a third row, for concurrency
+
+**Owner-approved 2026-10-14.** The allow table gains one row, and it is not a
+traffic variable:
+
+| Variable | Written by this package? | Settings key |
+|---|---|---|
+| `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` | when the key is set | `subagents.max_parallel` |
+
+It bounds how many subagents the host runs **at once**, never whether a call, an
+update check or a download happens, so the invariant above holds unchanged. No
+settings key was added: `subagents.max_parallel` already existed, and the
+settings template ships it at `3`, so a consumer whose settings file carries the
+template value now has the host enforce what the model was only asked to read.
+
+What it does **not** establish: whether the host counts a resumed worker against
+the cap. That is unobserved, and nothing here claims the host bounds resumes.
+
+The traffic variables stay unwritable; this addendum widens nothing on that side.
+
 ## See also
 
 - [`enterprise-and-offline.md`](enterprise-and-offline.md) — installing where the public registry is unreachable.

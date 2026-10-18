@@ -65,6 +65,7 @@ import {
     _to_delivery,
     _to_v0_dict,
 } from './state_io.js';
+import { run_procedure } from './procedure/run.js';
 import type { WorkState } from './state.js';
 
 /**
@@ -89,6 +90,22 @@ export function main(argv: string[] | null = null): number {
         throw exc;
     }
     const state_file: string = args.state_file;
+
+    if (args.procedure !== undefined) {
+        const r = run_procedure({
+            skill: args.procedure,
+            projectRoot: process.cwd(),
+            stateFile: state_file,
+            confirm: args.procedure_confirm ?? null,
+            restart: args.procedure_restart === true,
+        });
+        (r.code === 2 ? process.stderr : process.stdout).write(`${r.output}\n`);
+        return r.code;
+    }
+    if (args.procedure_confirm !== undefined || args.procedure_restart === true) {
+        process.stderr.write('error: --procedure-confirm and --procedure-restart need --procedure <skill>\n');
+        return 2;
+    }
 
     const runner = new HookRunner(_build_hook_registry(args));
 

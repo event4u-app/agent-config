@@ -94,6 +94,7 @@ import { event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { project_settings_path } from '../_lib/agent_settings.js';
 import { _is_source_repo } from './cmd_refresh.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { parse_version } from '../_lib/version_order.js';
 
 const PACKAGE_NAME = '@event4u/agent-config';
 const PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
@@ -409,10 +410,12 @@ interface Args {
     check: boolean;
     dry_run: boolean;
     converge: boolean;
+    unattended: boolean;
+    skip: string | null;
 }
 
 const PROG = 'agent-config upgrade';
-const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--converge]\n`;
+const USAGE = `usage: ${PROG} [-h] [--check] [--dry-run] [--converge] [--unattended] [--skip VERSION]\n`;
 
 function _argError(msg: string): never {
     _stderr.write(USAGE);
@@ -421,7 +424,7 @@ function _argError(msg: string): never {
 }
 
 function _parse(argv: string[]): Args {
-    const args: Args = { check: false, dry_run: false, converge: false };
+    const args: Args = { check: false, dry_run: false, converge: false, unattended: false, skip: null };
     const positionals: string[] = [];
     let i = 0;
     while (i < argv.length) {
@@ -457,6 +460,23 @@ function _parse(argv: string[]): Args {
             i += 1;
             continue;
         }
+        if (flag === '--unattended') {
+            if (inlineVal !== null) {
+                _argError(`argument --unattended: ignored explicit argument '${inlineVal}'`);
+            }
+            args.unattended = true;
+            i += 1;
+            continue;
+        }
+        if (flag === '--skip') {
+            const value = inlineVal ?? argv[i + 1];
+            if (value === undefined || value === '' || (inlineVal === null && value.startsWith('-'))) {
+                _argError('argument --skip: expected one argument');
+            }
+            args.skip = lstripV(value.trim());
+            i += inlineVal === null ? 2 : 1;
+            continue;
+        }
         if (a.startsWith('-') && a !== '-') {
             _argError(`unrecognized arguments: ${a}`);
         }
@@ -465,6 +485,15 @@ function _parse(argv: string[]): Args {
     }
     if (positionals.length > 0) {
         _argError(`unrecognized arguments: ${positionals.join(' ')}`);
+    }
+    if (args.unattended && (args.check || args.converge || args.skip !== null)) {
+        _argError('argument --unattended: not allowed with --check, --converge or --skip');
+    }
+    if (args.skip !== null && (args.check || args.dry_run || args.converge)) {
+        _argError('argument --skip: not allowed with --check, --dry-run or --converge');
+    }
+    if (args.skip !== null && parse_version(args.skip) === null) {
+        _argError(`argument --skip: '${args.skip}' is not a version`);
     }
     return args;
 }
@@ -484,6 +513,13 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
     const out = options.out ?? _stdout;
     const err = options.err ?? _stderr;
     const args = _parse(argv ?? process.argv.slice(2));
+
+    if (args.skip !== null || args.unattended) {
+        const unattended = await import('./upgrade_unattended.js');
+        return args.skip !== null
+            ? unattended.skip_version(args.skip, out)
+            : unattended.run_unattended_default({ dryRun: args.dry_run, out, err, agentConfigBin: _agent_config_bin() });
+    }
 
     const installed =
         options.installed !== undefined && options.installed !== null

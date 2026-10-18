@@ -3,7 +3,7 @@ title: Key Commands
 description: The agent commands you'll reach for most, with a pointer to the full catalog.
 ---
 
-The commands most worth knowing. For the exhaustive list of all 205, see the
+The commands most worth knowing. For the exhaustive list of all 206, see the
 [Catalog](/agent-config/catalog/) or
 [`docs/catalog.md`](https://github.com/event4u-app/agent-config/blob/main/docs/catalog.md).
 

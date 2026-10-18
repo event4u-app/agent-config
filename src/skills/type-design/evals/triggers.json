@@ -1,0 +1,19 @@
+{
+  "skill": "type-design",
+  "last_eval": "2026-10-18",
+  "description": "6 exemplars + 5 near-misses + 1 counterexample. Exemplars cover both entry paths — lettering (a wordmark image, an SVG wordmark, a hand-lettered raster) and a written brief — plus the German phrasing of the wordmark case. Near-misses are the neighbours that share the vocabulary and are somebody else's job: choosing or pairing an existing font (typography-system), building a type scale (typography-system), making a logo (logo-generation), tracing one icon or mark (svg-authoring), and an icon font from an existing set (iconography). The counterexample guards the over-trigger direction: a build failure that names a font file and a build without any type design in it.",
+  "queries": [
+    {"q": "turn our wordmark PNG into a full font — the rest of the alphabet in the same style", "trigger": true, "class": "exemplar"},
+    {"q": "mach aus unserem Schriftzug eine komplette Schrift, mit Umlauten und ß", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "design an original display typeface for our brand from this brief: geometric, high contrast, flat terminals", "trigger": true, "class": "exemplar"},
+    {"q": "I hand-lettered these six letters — can you extend them into a typeable font with woff2 output?", "trigger": true, "class": "exemplar"},
+    {"q": "we have the logo as SVG; build a matching font so the team can set headlines in it", "trigger": true, "class": "exemplar"},
+    {"q": "create a custom font file from scratch for our product, with kerning and a specimen page", "trigger": true, "class": "exemplar"},
+    {"q": "pick a heading and body font pairing for our SaaS site", "trigger": false, "class": "near-miss", "note": "choosing existing fonts → typography-system"},
+    {"q": "build a modular type scale with DTCG tokens", "trigger": false, "class": "near-miss", "note": "type scale → typography-system"},
+    {"q": "generate a logo for my bakery called Golden Crust", "trigger": false, "class": "near-miss", "note": "a logo, not a font → logo-generation"},
+    {"q": "trace this PNG icon into a clean SVG", "trigger": false, "class": "near-miss", "note": "one vector asset → svg-authoring"},
+    {"q": "build an icon font from our Lucide icons", "trigger": false, "class": "near-miss", "note": "icon set delivery → iconography"},
+    {"q": "the Docker build fails because a font file is missing from the image — fix the COPY step", "trigger": false, "class": "counterexample", "note": "says font and build without any type design → a container fix"}
+  ]
+}

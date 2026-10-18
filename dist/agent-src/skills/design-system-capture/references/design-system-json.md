@@ -71,6 +71,10 @@
 - **`bundled_local`** on a font family is a flag, not an instruction: the
   package never downloads or bundles fonts (out of scope) — it records that the
   source did.
+- **A custom family** (built with `type-design`, or commissioned) adds
+  `"custom": { "spec": "<path to font-spec.yaml>", "license": "<as stated, or unknown>" }`
+  to its `families[]` entry. The license is recorded as given, never inferred;
+  `bundled_local` stays the separate flag it is.
 - **`motion` has a consumer.** It sits outside the DTCG mapping above, and for
   a long time that meant nothing read it at all: the block was written by
   capture and consumed by nobody, so easing and duration were re-derived from
@@ -108,7 +112,7 @@ tool's output becomes that shape, so the answer to *"which crawler?"* lives in
 the contract rather than in somebody's memory.
 
 `src/scripts/design_system_import.ts` is a **pure, offline file transform** with
-three input lanes. It reads a file and writes the contract shape to stdout — no
+three file lanes and one snapshot-directory lane. It reads files and writes the contract shape to stdout — no
 network, no browser, no crawl. That is the lock restated as code: a transform
 that fetched would quietly become the crawler this package does not ship.
 
@@ -117,6 +121,7 @@ that fetched would quietly become the crawler this package does not ship.
 | `native` | an existing `design-system.json` | Validates `source`, carries every other key verbatim. Past provenance the validation is **report-only** — a key whose shape contradicts the contract is flagged and kept, never dropped, because the import is a proposal a human reads. |
 | `dtcg` | a W3C DTCG token file (`{$value, $type}` leaves) | Buckets by `$type`, so it works on any authoring tool's layering — **with two stated path exceptions**: `dimension` / `number` is genuinely ambiguous in DTCG (spacing, radius and font size share it), so the path breaks that tie, and a path segment named `dark` files a colour under the dark theme. Both are inferences and both are reported in the notes. Resolves `{alias.references}` to their values and keeps each reference under `_meta.alias_of` (token path → referenced path); a reference that loops is kept verbatim and listed under `_meta.alias_cycles`, not reported as undefined. Tokens with no contract bucket land in `_meta.unmapped` — which is why `component.button.paddingX` lands there rather than under spacing. |
 | `dembrandt` | an extraction tool's raw JSON | Matches the documented top-level key names and accepts a small set of shapes per bucket. Motion durations/easings become the `motion` block; per-context profiles, hover deltas, WCAG results and breakpoints are **observation** and land in `_meta`. |
+| `claude-design` | a snapshot **directory** the user exported from the host's design canvas | Reads `tokens.json` and any `name.tokens.json` through the `dtcg` mapper, the stylesheets' custom-property closure (aliases under `_meta.alias_of` as `css:--name`, every undeclared `var()` under `_meta.unresolved_custom_properties`), component contracts from `.d.ts` (`_meta.component_paths`), guidelines verbatim under `_meta.guidelines`, and lists every other file under `_meta.unmapped`. Provenance from `source.json` or the flags. Nothing in the snapshot is executed, imported or followed. The host's own local bundle is a separate input that waits on an observed layout. |
 
 ```bash
 # The command is the supported entry point:
@@ -124,7 +129,7 @@ that fetched would quietly become the crawler this package does not ship.
 
 # Or call the transform directly, from an installed package:
 npx tsx node_modules/@event4u/agent-config/src/scripts/design_system_import.ts <file> \
-    [--lane native|dtcg|dembrandt] \
+    [--lane native|dtcg|dembrandt|claude-design] \
     [--source-kind url|repo|dir --source-ref <ref>] [--captured-at <ISO>] \
     [--format json|summary]
 ```

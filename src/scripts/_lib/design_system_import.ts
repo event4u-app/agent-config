@@ -48,8 +48,8 @@
  * confirmation; it never writes `DESIGN.md` and never resolves a brand conflict.
  */
 
-/** The three documented input lanes. */
-export type Lane = 'native' | 'dtcg' | 'dembrandt';
+/** The three documented file lanes, plus the snapshot-directory lane (`design_system_claude_design.ts`). */
+export type Lane = 'native' | 'dtcg' | 'dembrandt' | 'claude-design';
 
 /** Provenance block — mandatory, per the contract's `source` rule. */
 export interface SourceBlock {
@@ -1051,6 +1051,9 @@ export function importDesignSystem(
             reason:
                 'no lane matched — expected a native artifact (with a `source` block), a DTCG token file ({$value,$type} leaves), or an extraction output carrying at least one documented key (colors, typography, spacing, borders, shadows, motion, components, breakpoints, wcag)',
         };
+    }
+    if (lane === 'claude-design') {
+        return { ok: false, lane, reason: 'claude-design lane rejected — it reads a snapshot directory, not a JSON file' };
     }
     if (lane === 'native') return mapNative(input);
 

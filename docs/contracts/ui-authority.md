@@ -107,6 +107,7 @@ src/skills/` names **only** this list. Adding a consumer means adding it here.
 |---|---|---|
 | [`fe-design`](../../src/skills/fe-design/SKILL.md) | `surface_mode`, `register`, `change_intent` | carry its own mode table, or vary a quality floor by mode |
 | [`design-review`](../../src/skills/design-review/SKILL.md) | `surface_mode`, `change_intent`, `verification` | vary the Q1–Q6 floor set by mode |
+| [`/design-system:sync`](../../src/domains/engineering-base/design-system/sync/command.md) (`src/scripts/_lib/design_sync_reconcile.ts`) | `primary_source`, `change_intent`, `constraints`, `conflicts`, `verification` — one resolver call per scope | rank conflicting values itself; a posture pre-fills a row, the user disposes it |
 
 **Quality floors do not vary by surface mode.** Density, hierarchy and
 expressiveness defaults do; contrast, font size, line length, reduced motion,

@@ -71,6 +71,13 @@ const CROSS_SKILL_TARGET = /^\.\.\/[a-z0-9-]+\/SKILL\.md(?:#.*)?$/;
  */
 export const SIBLING_LINK_CEILING = 7;
 
+/**
+ * A procedure's step files (road-to-steps-the-skill-cannot-skip Phase 4) are the
+ * body split in order, not reference material, so the links they carry are the
+ * head's links and none of them counts as a sibling link.
+ */
+const STEPS_DIR = path.join('references', 'steps');
+
 /** The skill subdirectories a `SKILL.md` link may point into. */
 const OWN_SKILL_DIRS = /^(?:\.\/)?(?:references|scripts|assets|examples)\//;
 
@@ -265,7 +272,8 @@ export function run(root: string, ledger?: GateLedger): ReachReport {
                     resolved !== null &&
                     resolved !== ref &&
                     resolved.endsWith('.md') &&
-                    resolved.startsWith(path.join(skillDir, 'references') + path.sep)
+                    resolved.startsWith(path.join(skillDir, 'references') + path.sep) &&
+                    !ref.startsWith(path.join(skillDir, STEPS_DIR) + path.sep)
                 ) {
                     siblingLinks.push({ file: rel, target });
                 }

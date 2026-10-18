@@ -61,11 +61,12 @@ commands:
 
   implementation:
     - bug/fix
-    - design
+    - agent-design
     - design-system
     - design-system/capture
     - design-system/generate
     - design-system/import
+    - design-system/sync
     - tests/e2e-heal
     - tests/e2e-plan
     - feature/dev

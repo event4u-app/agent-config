@@ -72,13 +72,13 @@ None of this is rebuilt here.
 
 ## Phase 1 — Measure the hazard before building on it
 
-- [ ] **1.1 Probe the mid-session swap.** Run an `upgrade` activation while a
+- [x] **1.1 Probe the mid-session swap.** Run an `upgrade` activation while a
       second session fires hooks, including the fail-closed guards. Record
       every error, with its event and its exit code.
       verify: the probe log is committed under `agents/evidence/` with a
       numeric error count and an `evidence-type` marker. A probe with no
       recorded count has not measured anything.
-- [ ] **1.2 Branch on the count.** Zero errors → stage-and-activate-at-a-
+- [x] **1.2 Branch on the count.** Zero errors → stage-and-activate-at-a-
       boundary ships as Phase 2 describes. Non-zero → activation waits on a
       live-session register, which requires lifting
       `src/scripts/session_register_hook.ts` from repository scope to global
@@ -86,10 +86,27 @@ None of this is rebuilt here.
       below.
       verify: the branch taken is recorded in `## Decisions` as D6 with the
       count that chose it.
-- [ ] **1.3 Baseline the hook budget.** p50 and p95 hook latency and bytes
+- [x] **1.3 Baseline the hook budget.** p50 and p95 hook latency and bytes
       before any new concern lands, so Phase 3 has something to be measured
       against.
       verify: the figures are in the same evidence file as 1.1.
+- [ ] **1.4 Lift the live-session register to global scope.** 1.2 took the
+      non-zero branch (D6: 490 failed hook invocations of 4,190 during four
+      swap rounds), so activation waits on a register that can say no session
+      is live on this machine. Today `src/scripts/session_register_hook.ts`
+      registers sessions per repository only. Until this lands,
+      `ACTIVATION_BLOCKED` in `src/scripts/_cli/upgrade_unattended.ts` keeps the
+      production wiring of `upgrade --unattended` from swapping anything.
+      verify: a fixture with a live session registered from a second
+      repository makes the unattended run refuse, and one with none lets it
+      reach the swap.
+
+> **Measured 2026-10-18:** `agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md`.
+> The 487 exit-127 failures are the binary missing from `PATH` while npm
+> replaces it; under the real hook wrapper that window also makes a
+> fail-closed `pre_tool_use` guard silently exit 0. Steps 3.2, 4.2 and 4.3
+> activate or install, so they wait on 1.4; 3.1, 3.3–3.5 and 4.1 do not swap
+> anything and can land before it.
 
 ## Phase 2 — A safety envelope on the verb that already exists
 
@@ -99,22 +116,29 @@ None of this is rebuilt here.
       (`publish-npm.yml:62`), a `deprecated` check in the same fetch, and the
       `engines` comparison from the sibling roadmap.
       verify: a fixture per gate shows the refusal and its reason.
-- [ ] **2.2 Single-flight.** A lock with a TTL and an owner PID under
+      *Open on one gate (2026-10-18).* The flag, the age, `deprecated`,
+      `engines` and impact-map gates landed with a refusal fixture each. The
+      provenance gate checks that an attestation is present and carries an
+      SLSA provenance predicate; it does **not** verify the attestation's
+      signature or tie it to `publish-npm.yml`. That verification is what
+      keeps this step open. Harmless today: the production wiring swaps
+      nothing until 1.4.
+- [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.
       verify: two concurrent invocations produce exactly one install and one
       recorded refusal.
-- [ ] **2.3 Failure restores and degrades.** Any failure restores the
+- [x] **2.3 Failure restores and degrades.** Any failure restores the
       previous version and drops to `notify` with the reason. `EACCES` prints
       the exact command to run and never invokes `sudo`.
       verify: fault injection for offline, 403, 404, disk full, SIGTERM,
       partial settings sync and a concurrent caller — after each, the
       installed version equals the version before.
-- [ ] **2.4 Global surfaces only.** The unattended path never touches
+- [x] **2.4 Global surfaces only.** The unattended path never touches
       `agent_config_version` (`cmd_update.ts:11-13`) and never writes into a
       project.
       verify: a project carrying a pin is byte-identical before and after.
-- [ ] **2.5 Add `--skip <version>`, and do not add `--to`.** `update --to`
+- [x] **2.5 Add `--skip <version>`, and do not add `--to`.** `update --to`
       already exists (`cmd_update.ts:412`); a second near-identical flag on
       the confusable verb is the defect its sibling roadmap is fixing.
       verify: `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` -> /^0$/
@@ -164,7 +188,7 @@ None of this is rebuilt here.
       **asked**, never flipped.
       verify: a fixture asserts zero prompts under CI, non-TTY, headless,
       `--json` output and a subagent run.
-- [ ] **4.4 A pin advisor for teams.** `update --check` in a pinned project
+- [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
       It proposes; it never moves the pin.
       verify: the command's exit code and the pin are unchanged by it.
@@ -177,7 +201,7 @@ None of this is rebuilt here.
 
 ### blocker: node-floor-raise
 
-- **Status:** open
+- **Status:** open — owner-reserved (council 2026-10-16, 2/2 ESCALATE: dropping Node 20 removes a compatibility commitment; both recommend (a) as a semver-major). Re-checked 2026-10-18, still unmet: `package.json` reads `"node": ">=20.11.0"` and no record under `docs/decisions/` names a Node floor.
 - **Owner:** repository owner
 - **Blocks:** step 4.5 only. Phases 1–3 and steps 4.1–4.4 run without it.
 - **What to do:** pick exactly one — (a) raise `engines.node` to `>=22` in the
@@ -223,7 +247,7 @@ None of this is rebuilt here.
 
 ### blocker: auto-default-for-existing-installs
 
-- **Status:** open
+- **Status:** open — owner-reserved on the escalation condition (council 2026-10-16 split: `anthropic` DECIDE (b), `openai` ESCALATE (a)); no round 2 was run because no input has changed since. Re-checked 2026-10-18, still unmet: no ADR under `docs/decisions/` records (a), (b) or (c).
 - **Owner:** repository owner
 - **Blocks:** step 4.3's default. The question is not whether `auto` exists —
   4.1 ships it as an opt-in — but whether an install that already exists may
@@ -274,7 +298,7 @@ None of this is rebuilt here.
 | D3 | critical-technical | evidence | Remote release-note text never enters model context | it is attacker-influenceable input on a path that would otherwise reach the model | never |
 | D4 | contested-technical | evidence | Ring 0 is the existing `next` dist-tag, not a new voluntary diagnostic ring | the channel already exists at `publish-npm.yml:154-168`; a second ring is a second thing to maintain | the channel is retired |
 | D5 | critical-technical | evidence | Uncertainty never resolves to `auto` | inherited from the classifier's own rule; an updater that guesses is the failure this file exists to avoid | never |
-| D6 | contested-technical | agent | Let the Phase 1.1 probe's error count decide whether activation needs a global live-session register, and design nothing on either assumption before it | the hazard is unmeasured, and a design built on a guess about it is the failure this phase exists to prevent | the probe is re-run on a host with different hook timing |
+| D6 | contested-technical | agent | Let the Phase 1.1 probe's error count decide whether activation needs a global live-session register, and design nothing on either assumption before it | the hazard is unmeasured, and a design built on a guess about it is the failure this phase exists to prevent. **Branch taken 2026-10-18: non-zero.** The 1.1 probe counted **490** failed hook invocations of **4,190** fired during four swap rounds (16.4.0 ⇄ 16.5.0; 487 exit-127, 3 exit-1), against 0 of 100 in the baseline — so activation waits on a global live-session register (step 1.4) | the probe is re-run on a host with different hook timing |
 
 D6 closes a deferral, not a design: what was decided is that the register
 question is settled by the Phase 1.1 probe's error count rather than by
@@ -295,11 +319,11 @@ had already happened.
   the blocker above is why that is a decision rather than an omission.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. | Phase 1 measures it before anything is built on it, and 1.2 makes a non-zero count block the design rather than annotate it; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
+| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. **Measured 2026-10-18: 490 of 4,190 hook invocations failed during four swaps**, and the missing-binary window also makes a fail-closed guard exit 0 unseen. | The count was non-zero, so 1.2 took the blocking branch: the production wiring of `upgrade --unattended` refuses to swap until step 1.4 lifts the session register to global scope; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
 | 2 | A version that cannot start is installed | implementation | An `engines` floor the local runtime does not satisfy takes every hook down at once. | The engines comparison is a refusal gate in 2.1, inherited from the sibling's classifier; 2.3 restores the previous version on any failure. | Phase 2 — A safety envelope on the verb that already exists |
 | 3 | The new session concern costs latency on every session | product | A per-session probe on a surface that currently costs nothing. | 1.3 baselines before, 3.1 budgets to 1 s and fails open, and the day throttle already exists. | Phase 3 — Delivery into the session, without entering the model |
 | 4 | A user is silently moved onto a default they did not pick | product | The opt-in becomes a default by momentum rather than by decision. | 4.1 makes an absent key behave as today, asserted against recorded output; the second blocker makes the flip an owner decision with a recorded answer. | Phase 4 — Consent and rollout, nothing flipped silently |
@@ -308,18 +332,18 @@ had already happened.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** The Phase 1 probe log exists under `agents/evidence/` with a
+- [x] **AC-1** The Phase 1 probe log exists under `agents/evidence/` with a
       numeric error count, and `auto` ships nowhere while that count is
       non-zero and the session register is repository-scoped.
 - [ ] **AC-2** Under `CI=1`, a non-TTY stdout, a source checkout and
       `AGENT_CONFIG_NO_UPDATE_CHECK=1`, an end-to-end run produces zero
       filesystem writes outside the state file, asserted by a tree diff.
-- [ ] **AC-3** A project carrying `agent_config_version` is byte-identical
+- [x] **AC-3** A project carrying `agent_config_version` is byte-identical
       before and after an unattended run.
-- [ ] **AC-4** For each of offline, 403, 404, disk-full, SIGTERM and EACCES,
+- [x] **AC-4** For each of offline, 403, 404, disk-full, SIGTERM and EACCES,
       the installed version after the run equals the version before, and a
       reason is printed.
-- [ ] **AC-5** A release published less than 72 h ago, or carrying
+- [x] **AC-5** A release published less than 72 h ago, or carrying
       `deprecated`, or with unmet `engines`, or with missing provenance, is
       never installed unattended.
 - [ ] **AC-6** A settings file with no `update:` block produces byte-identical
@@ -327,7 +351,7 @@ had already happened.
 - [ ] **AC-7** The ring-0 exit record is committed before step 4.3 lands.
 - [ ] **AC-8** No fetched release-note text reaches model context, asserted by
       a fixture with a hostile remote changelog.
-- [ ] **AC-9** `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
+- [x] **AC-9** `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
 - [ ] **AC-10** `task ci` green.
 
 ## Provenance

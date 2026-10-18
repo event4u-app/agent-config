@@ -135,11 +135,25 @@ needs a transcript.
   (e) `skillOverrides: name-only` — read from the search roadmap's 0.1 evidence
   file, not re-probed.
   verify: one row per item.
+  PARTIAL 2026-10-18: `src/config/skill-lifecycle-probes.json` carries one row
+  per item on build 2.1.302, checked by `tests/scripts/skill_lifecycle_probes.test.ts`.
+  (a) symlink is observed-true but races the directory watcher — one of two
+  sessions missed on the first call and launched on one retry. (b) is
+  observed-true: a removal never withdraws a listing entry; a resumed session
+  refuses the removed skill, while a session that stayed live keeps launching
+  it as long as the symlink target exists. (d) is observed-true: the host runs
+  `context: large` inline, neither forking nor erroring. (e) is read from the
+  search roadmap's 0.1 evidence. Two cells stay `unobserved`: (a) as a copy and
+  (c) the documented `reloadSkills` flag — the host's auto-mode permission
+  classifier refused both set-ups in this lane, so they need an owner-run probe.
 - [ ] **0.3 Second-host probes:** live pickup delay under `.agents/skills`,
   omission order and the verbatim warning, whether an implicit-disabled skill
   counts against the budget, and double listing on hosts that read both
   `.claude/skills` and `.agents/skills`.
   verify: rows per item; untested hosts stay `unobserved`.
+  Not run 2026-10-18: a `codex exec` probe under a scratch `HOME` was refused
+  by the host's auto-mode permission classifier before it started, so no row
+  exists yet. Needs an owner-run probe.
 
 ## Phase 1 — Give the host its key back
 
@@ -191,14 +205,27 @@ needs a transcript.
   forced empty the test failed.
   verify: scratch-`HOME` default install with MCP disabled — a query for an
   uninstalled skill returns it, labelled `not-installed`.
-- [ ] **2.2 Declare reach.** `doctor` prints installed / described / name-only /
+- [x] **2.2 Declare reach.** `doctor` prints installed / described / name-only /
   reachable-not-installed / degraded counts; they sum to the authored count.
   verify: snapshot test; the sum equals the authored count.
-- [ ] **2.3 Degraded is never called reach.** A skill reachable only through a
+  Done 2026-10-18: `agent-config doctor --check skill-reach`
+  (`src/scripts/_lib/skill_reach.ts`, wired through `install_reach_checks`, so
+  `cmd_doctor.ts` did not grow). Six buckets, set by an AI council the same day
+  (D6): installed as described / name-only / unlisted, and not installed as
+  reachable-not-installed / degraded / unreachable by the best available path;
+  `installed` is the subtotal. `tests/scripts/skill_reach.test.ts` pins a
+  six-skill fixture in an inline snapshot and checks the real projection with an
+  empty home sums to its authored count. On the maintainer machine it read
+  300 installed, 1 reachable-not-installed, of 301.
+- [x] **2.3 Degraded is never called reach.** A skill reachable only through a
   text read that drops declared properties is counted `degraded`, never
   `reachable`.
   verify: fixture skill with a command and a flow read through MCP is counted
   `degraded`.
+  Done 2026-10-18: through MCP a skill declaring any key outside the carried set
+  is `degraded`; through the shell text read, one declaring a key the host applies
+  (its documented keys minus the descriptive ones) is `degraded`. With the
+  `degraded` branch neutralised, three of seven tests failed.
 
 ## Phase 3 — Fork what ends in a report
 
@@ -207,6 +234,13 @@ needs a transcript.
   Only report skills are fork candidates.
   verify: deterministic classification, every skill in exactly one class; the
   six D2 skills classified first.
+  Done 2026-10-18: `src/config/skill-output-shape.json` lists all 301 skills —
+  67 `report`, 234 `standing` — against a stated criterion, with the six D2
+  skills under `first`, all `report`. Shape set by an AI council the same day
+  (D7): every skill listed by hand, conservative `standing` where unclear, and
+  `default: standing` only for a name missing at runtime.
+  `tests/scripts/skill_output_shape.test.ts` asserts set equality with
+  `src/skills`, so a new skill fails until it is classified.
 - [ ] **3.2 Pilot, first host only.** `context: fork` on at most five report
   skills, projected for the first host only; every other host gets the body.
   Pre-register: main-conversation tokens per invocation, outcome on host-graded
@@ -325,6 +359,15 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   `_prune_scoped_modules` (`src/install/install.ts:3302`) keep every skill a
   surviving artefact declares. Additive only: delivery grows, never shrinks.
   verify: `./scripts-run src/scripts/count_scoped_projection --json` -> 0
+  Escalated 2026-10-18, not executed. Reproduced offline: 28 edges, 13 distinct
+  skills, every declaring artefact an untagged command that survives the prune.
+  An AI council (both seats, `agents/evidence/council/skills-arrive-reach-shape-20261018.md`)
+  returned ESCALATE: every remedy — keep the skills, prune the commands, or treat
+  `skills:` and `requires_skills:` differently — redefines what "writes the active
+  pack only" (`README.md:59`) promises. The owner question it drafted: may the
+  default projection include the skills that surviving artefacts declare? Yes →
+  keep both `skills:` and `requires_skills:` targets and regenerate the claims;
+  no → prune the declaring commands; or wait for `which-completeness-skills-owe`.
 - [x] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
   list. Measured population in the source tree at `5fa963cec`: **2**
   (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small
@@ -346,7 +389,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ### blocker: which-completeness-skills-owe
 
-- **Status:** open — raised 2026-10-12 by round inbox-2026-10-n; the supplied plans cite an owner directive of 2026-08-30 against a silent subset, which no file in `agents/` or `docs/` records, and the same round asks for a minimal install
+- **Status:** open — owner-reserved (council 2026-10-16, 2/2 ESCALATE, both recommending (b)); re-checked 2026-10-18, still unmet: no ADR under `docs/decisions/` names this blocker, and `README.md:59` still reads "Pack-scoped install — writes the active pack only". Raised 2026-10-12 by round inbox-2026-10-n; the supplied plans cite an owner directive of 2026-08-30 against a silent subset, which no file in `agents/` or `docs/` records, and the same round asks for a minimal install
 - **Owner:** owner — what a consumer is promised to receive is a public product statement (`README.md:59`)
 - **Class:** 3
 - **Ownership:** product-owned
@@ -405,6 +448,8 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 | D2 | reversible-technical | agent | Only report skills may fork | A forked run sees no conversation and leaves nothing for later turns | the 3.2 pilot shows a standing skill losing nothing when forked |
 | D3 | reversible-technical | agent | Materialisation runs on the second host first | That host omits skills over budget; on the first host the listing override does the same job with no file churn | 0.2 shows the first host cannot pick up a written skill at all |
 | D4 | product-owned | owner | Land as a new file rather than un-park `road-to-skill-menu-economy` | Operator instruction of 2026-10-12 to land this round's roadmaps; the menu file stays parked on its own condition | the menu file's condition (iii) closes |
+| D6 | reversible-technical | council:skills-arrive-reach-shape-20261018 | The reach report has six buckets: installed as described / name-only / unlisted, not installed as reachable-not-installed / degraded / unreachable by the best available path; it ships as a `doctor` check, not a new command | AI council 2026-10-18, both seats DECIDE; a five-bucket partition assumed every uninstalled skill is reachable | a host gains a read path that carries host-applied keys |
+| D7 | reversible-technical | council:skills-arrive-reach-shape-20261018 | Output shape is a committed data file listing every skill by hand; the class is standing wherever the call was unclear, and standing is also the runtime default for a missing name | AI council 2026-10-18; a frontmatter key would spend 301 skill byte budgets and a heuristic over prose is not deterministic | 3.2 shows a skill classed standing losing nothing when forked |
 | D5 | product-owned | owner | Option (a) on `listing-override-write-is-owner-owned`: write `skillOverrides` for package-owned skills into the user-global host settings, never over a user value, removed on uninstall, no settings key — an owner lowering of the recorded never-write commitment | Owner chat answer "1", 2026-10-14; the advisory option hands the user the configuration the 2026-10-12 directive removes | a host build changes what `name-only` does, or a consumer reports a value of theirs touched |
 
 ## Kill register
@@ -437,11 +482,11 @@ pooling skill payloads across subagent spawns — neither was argued by any plan
 beyond its name.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A materialised skill arrives one turn late | product | The host may not pick up a written skill in the same turn. | 0.2 (a) decides same-turn pickup; 4.2 materialises at the earliest deterministic point; 5.1 counts misses. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
+| 1 | A materialised skill arrives one call late | product | 0.2 (a) observed same-turn pickup for a symlink, but one of two sessions missed the first call and launched on a retry: the directory watcher races the write. | 4.2 materialises at the earliest deterministic point and retries once on `Unknown skill`; 5.1 counts misses. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
 | 2 | Two sessions, one directory | implementation | A removal in one session pulls a skill from another. | 4.4 leases; never remove under a live lease; 0.2 (b) measures first. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
 | 3 | A fork hides context a skill needed | product | A forked run sees no conversation. | Only report skills (3.1); harm guard in 3.2. | Phase 3 — Fork what ends in a report |
 | 4 | Host contracts move | implementation | A host version changes pickup, budget or key semantics. | Expiring rows (Phase 0); digest watch (6.2); 1.2's key list expires. | Phase 0 — Probe the host contracts before building on them |
@@ -453,7 +498,9 @@ beyond its name.
 - [ ] AC-1 — Every skill is reachable on every host with native skills; `doctor`'s
   installed / described / name-only / reachable-not-installed / degraded counts sum
   to the authored count.
-- [ ] AC-2 — No package-owned skill frontmatter key equals a host-documented key.
+- [x] AC-2 — No package-owned skill frontmatter key equals a host-documented key.
+  Verified 2026-10-18: `validate_frontmatter` (which carries 1.2's
+  `host-key-collision` row) read 456 artefacts, 0 failing.
 - [ ] AC-3 — The fork pilot has a pre-registered, labelled result.
 - [ ] AC-4 — On the second host a fresh session shows no omission warning and every
   non-resident skill is reachable by 4.2's triggers.

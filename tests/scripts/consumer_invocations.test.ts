@@ -26,6 +26,9 @@ const FRAGILE = 'npx tsx node_modules/@event4u/agent-config/src/';
 const BASELINE: Record<string, number> = {
     'src/domains/engineering-base/design-system/generate/command.md': 1,
     'src/domains/engineering-base/design-system/import/command.md': 1,
+    // Sibling of :import and :generate, one site; no consumer verb exists for the
+    // sync script either (road-to-a-canvas-the-code-owns 4.2, 2026-10-18).
+    'src/domains/engineering-base/design-system/sync/command.md': 1,
     'src/domains/git/pr/create/command.md': 1,
     'src/domains/meta/sync/gitignore/fix/command.md': 2,
     'src/skills/agent-security-review/SKILL.md': 1,
