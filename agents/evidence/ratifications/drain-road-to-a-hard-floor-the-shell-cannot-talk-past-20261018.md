@@ -41,10 +41,10 @@ and no ask. One edit widens: `isInsideWorkingTree` now reads `./...` and
 intentional expansion — the reason `confirmed-non-expanding` was never the
 right label even had both seats passed.
 
-## The review — four rounds, both seats each round, CLI only, nothing billed
+## The review — five rounds, both seats each round, CLI only, nothing billed
 
 Prompts, committed verbatim: `agents/evidence/council/hard-floor-phase0-review-20261018.question.md`
-and its `-r2`, `-r3`, `-r4` siblings.
+and its `-r2`, `-r3`, `-r4`, `-r5` siblings.
 
 | Round | Reviewed | anthropic/claude-sonnet-4-5 | openai/codex-default | Finding acted on |
 |---|---|---|---|---|
@@ -52,19 +52,28 @@ and its `-r2`, `-r3`, `-r4` siblings.
 | 2 | `0bb4500bc` | ratified | refused (dealbreaker) | dash-led separate option values; in-tree symlinks to outside |
 | 3 | `27249a222` | confirmed-non-expanding | no stance line | resolver fell back to lexical on `EACCES`/`ELOOP` |
 | 4 | `6161a2b06` | refused | no stance line | unquoted globs expand after the check (`cat le*` reaches an outward symlink) |
+| 5 | `9bab7bf22` (`d606eaa5d` merged with `origin/main`; gated files unchanged) | refused (dealbreaker) | no stance line, REQUEST_CHANGES | an in-tree **dangling** symlink to an absent outside target: `realpathSync` reports `ENOENT`, the resolver reads it as a missing suffix and keeps the lexical answer, so `sort -o out src/input` still gets the allow |
 
 Round 3's first attempt lost the openai seat to an exhausted local counter; the
 counter was reset and the round re-run through the CLI, per the owner's
 standing instruction. Only the re-run is counted.
 
 `d606eaa5d` fixes the round-4 finding (an unquoted glob anywhere is a candidate
-nothing confines) and was **not reviewed**: the drain caps one target at four
-rounds. Every mechanism the branch adds has a sensitivity probe that reds its
-own rows when removed (eleven probes).
+nothing confines). Round 5 reviewed it on 2026-10-18, under the owner's
+instruction of that day to resolve the open decisions in the council and his
+standing delegation of 2026-10-16. Both seats accept the glob fix and name one
+new blocker: on `ENOENT` the resolver must `lstat` the failing component and
+withhold when it exists as a symbolic link, recursing to the parent only when
+the component is genuinely absent; with end-to-end rows through
+`_permission_for` for a dangling link (write- and read-shaped) and a control
+row for a genuinely missing suffix. Not fixed here: a split or refused round
+stops the item. Every mechanism the branch adds has a sensitivity probe that
+reds its own rows when removed (eleven probes).
 
 ## What is left for the owner
 
-- Run a fifth round on `d606eaa5d`, or accept the change on the record above.
+- Fix the dangling-symlink finding of round 5 and run a sixth round, or accept
+  the change on the record above.
 - No kill switch exists for category A (round 3 asked for one); withdrawing it
   means reverting `permission_gate.ts`. Adding one is a new settings key.
 - The hook bundle sits 106 B under its ceiling after this change.
