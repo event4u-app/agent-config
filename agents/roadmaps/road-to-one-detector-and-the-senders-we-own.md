@@ -82,7 +82,9 @@ is open.
   before it can land.
 - **2026-10-18:** 2.2 landed with its ratification record; its two
   remainders without a vendor literal became 2.7.
-- **Next in order:** 2.3, 3.2, 3.3.
+- **2026-10-18:** the engine became a conditional chunk (2.2b, D9), which is what
+  2.3 to 2.5 and 3.2 needed: their bytes now land in the chunk, under its own ceiling.
+- **Next in order:** 1.1, 2.3, 3.2, 3.3.
 
 ## What this roadmap deliberately does not do
 
@@ -109,6 +111,7 @@ is open.
 | D6 | reversible-technical | agent | Settings block `egress.placeholders`, not `privacy.egress` | A key named "privacy" reads as the guarantee N1 exists to avoid | — |
 | D7 | reversible-technical | agent | Reading local `.env*` values into memory to build an exact-match set is in scope; nothing derived from them is written | The only detector for a password with no recognisable shape | — |
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | Consumer-facing default; this roadmap ships every replacement path behind `egress.placeholders.mode: off` and decides nothing for consumers | asked at `road-to-placeholders-on-the-wire` blocker `default-mode-for-consumers` |
+| D9 | reversible-technical | council:one-detector-bundle-budget-20261018 | The engine leaves the dispatch bundle as a conditional chunk with its own ceiling, and the linearity prose leaves the engine; an unavailable engine withholds every body in `protect` and `strict`, records the miss in `observe`, is never loaded in `off` | Measured 2026-10-18: 3,155 B of bundle headroom against 12–15 KB of queued engine work; the SVG rule set set the chunk precedent. Two-provider council (anthropic, openai), 2/2, options C and B, with the per-mode failure table, a schema handshake and a chunk budget as conditions; the prompt is `agents/evidence/council/one-detector-bundle-budget-20261018.question.md` | the chunk load costs a measurable latency in a non-`off` mode, or a host installs `dispatch.js` without its siblings |
 
 ## Phase 0 — Contract, census, pre-registration (no product code)
 
@@ -259,6 +262,21 @@ read cannot leak through any later bug.
       `task ci`), registered in `src/config/gate-coverage.yml` with a
       create-only canary seen red. `check_secret_leak --all` stays green with the
       six added rows. The two remainders above move to 2.7.
+- [x] **2.2b The engine is a conditional chunk (D9).** The rule table, the token
+      grammar and the commit scanner leave `dist/hooks/dispatch.js` for
+      `egress_engine.chunk.cjs`, loaded only when a caller needs detection,
+      refused when missing, altered, without a sidecar, of another schema or
+      unloadable; the per-rule linearity prose moves to a test-only module; the
+      chunk carries its own ceiling.
+      verify: `npx vitest run tests/scripts/hooks/egress_engine_chunk.test.ts` -> 0 (every refusal reason, and each mode with the engine unavailable); `./scripts-run src/scripts/check_hook_bundle_composition` reports the dispatch bundle and the chunk under their ceilings.
+      **Done 2026-10-18:** the dispatch bundle reads 1,530,696 B (from 1,546,845)
+      and the chunk 18,478 B against its 28,000 B ceiling. The two other bundled
+      importers stopped being static edges: the subagent capsule loads the chunk
+      and rejects an envelope it cannot scan, and `ai_council/config.ts` reads
+      `_lib/egress_prefixes.ts`, a generated projection of the prefix list that a
+      test and `check_credential_spelling` hold equal to the table. Probed end to
+      end on the built bundle: in `observe` it counted a planted token, and with
+      the chunk moved away it recorded `engine-unavailable`.
 - [ ] **2.3 Validators for the identifier class:** IBAN by country length and
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own

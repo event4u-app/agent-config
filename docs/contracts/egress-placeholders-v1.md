@@ -195,7 +195,7 @@ None. The credential rows match everything the commit-time scanner matched
 before they moved into the rule table. `jwt` and `db-connection-uri`, whose
 unbounded pre-move forms were quadratic on a hostile input, now make one
 attempt per character run and consume the run up to its first possible start
-atomically; their `linearity` fields state why that loses nothing.
+atomically; their `LINEARITY` entries state why that loses nothing.
 `DETECTION_CEILINGS` stays as the place a future ceiling would be declared; a
 test fails when a listed ceiling no longer loses its case, and the parity suite
 fails on any loss that is not listed.
@@ -206,9 +206,14 @@ replacement therefore sees at least what the scanner sees, and more — an
 assignment split across lines (`password =` then the value on the next line)
 is replaced but not reported at commit time. A test pins both directions.
 
-Every other rule states in its `linearity` field why it runs in linear time
-without a bound, and matches a value of any length whole, so a replacement never
-leaves a suffix in plaintext.
+Every other rule states in its `LINEARITY` entry (`_lib/egress_rules_linearity.ts`,
+kept out of the shipped engine because no runtime path reads it) why it runs in
+linear time without a bound. A rule whose vendor format has a variable length
+matches a value of any length whole, so a replacement never leaves a suffix in
+plaintext. Three shapes are fixed-length by vendor format (`aws-access-key`,
+`google-api-key`, the classic `github-pat`) and match exactly that length; a
+masking consumer whose own reading was a longer run keeps it
+(`workspace_secrets`, pinned by `egress_legacy_superset.test.ts`).
 
 ## The egress stage and its two views
 
@@ -234,6 +239,29 @@ of one envelope through the payload-shape planner:
   carrying `_agent_config_egress_withheld` and the rule id), never partly
   replaced; any other failure of the stage withholds every body and is
   recorded as a `stage-error` refusal.
+
+**The engine is a conditional chunk.** The rule table, the token grammar and the
+commit scanner are not part of `dist/hooks/dispatch.js`: `build:hook-chunks`
+emits them as `dist/hooks/egress_engine.chunk.cjs` with a digest sidecar, and
+`hooks/egress_engine_loader.ts` loads the chunk only when a caller needs
+detection — the stage when its mode is not `off`, the subagent capsule when it
+validates an envelope. The loader refuses a chunk that is missing, that does not
+match its sidecar or has none, whose `ENGINE_SCHEMA` is not the one it was built
+against, or that does not load; each is a value, never a throw. What an
+unavailable engine means is fixed per mode:
+
+| Mode | Engine unavailable |
+|---|---|
+| `off` | the engine is never loaded |
+| `observe` | no view changes; the record carries an `engine-unavailable` refusal per scanned field |
+| `protect`, `strict` | every body is withheld from the placeholder view, recorded as `engine-unavailable` |
+
+The subagent capsule rejects an envelope it cannot scan. The chunk carries its
+own byte ceiling in `src/config/hook-bundle-budget.json` (`chunks`), raised only
+with a `raise_log` entry that names it. The one bundled module that needs the
+raw-key prefix list (`ai_council/config.ts`) reads `_lib/egress_prefixes.ts`, a
+generated projection of the table that a test and `check_credential_spelling`
+both hold equal to it.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and
