@@ -294,6 +294,7 @@ documentation.
       subscription `rate_limit` never downshifts. The rule was council-decided,
       so the change lands with its council ratification artefact.
       verify: `npx vitest run tests/scripts/_lib_subagent_steering.test.ts -t rate-limit-never-redispatches-same-turn --reporter=verbose` -> /✓.*rate-limit-never-redispatches-same-turn/
+      Open 2026-10-18, council-refused three rounds (anthropic + openai seats, 2026-10-18), not shipped. The split itself was not contested; every round refused the state machine around it. Rounds 1–2 closed a double downshift via the post-recovery path, billing class as discriminator, an undefined recovery signal, unbounded parking, N=3 accounting, turn boundaries, a missing classifier and a helper that returned no next state. Round 3 left four open: a timeout after a partial response is still retried (discarding the late result does not stop the original run, so non-idempotent work can duplicate); "no status and no bytes" is not proof of a transport failure; a `Retry-After` longer than the run conflicts with the overloaded branch's same-turn redispatch; and the function does not refuse an already-exhausted slot. Residue for the next attempt, which starts from those four and needs an explicit idempotency or read-only precondition for a retried subagent.
 - [ ] **4.5 The same guard reads the window.** While a recent host-sourced
       `quota_parked` marker exists, the shadow verdict for a new `Agent` call is
       `would_wait`, and after 3.6 a denial whose reason says "resume or run

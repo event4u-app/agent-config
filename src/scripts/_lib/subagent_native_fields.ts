@@ -11,13 +11,11 @@
  *    definition. The host has no per-definition reuse key; writing one would be
  *    a line the host ignores and a reader might mistake for an enforced switch.
  *  - `cache_ttl` has no per-definition host key either — the host's TTL knob is
- *    a settings value, and decision D7 of road-to-a-cold-start-paid-once keeps it
- *    unset until a measured gap distribution says otherwise.
+ *    a settings value.
  *
- * `omit_project_instructions` → `omitClaudeMd` is the host string read from the
- * installed binary (road-to-a-cold-start-paid-once § Context), not an observed
- * behaviour; step 1.7 observes it and step 2.5 decides whether any shipped
- * definition sets it. None does today, so nothing emits it.
+ * `omit_project_instructions` → `omitClaudeMd` is a string read from the
+ * installed host binary, not an observed behaviour, so no shipped definition
+ * sets it until the skip has been measured.
  */
 
 export function nativeFieldLines(fm: Record<string, unknown>): string {
