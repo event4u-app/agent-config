@@ -61,6 +61,13 @@ export interface ParsedArgs {
     persona: string | null;
     no_hooks: boolean;
     hooks_config: string | null;
+    /**
+     * The procedure cursor (road-to-steps-the-skill-cannot-skip 5.5). Set only
+     * when passed, so every existing invocation parses to the namespace it did.
+     */
+    procedure?: string;
+    procedure_confirm?: string;
+    procedure_restart?: boolean;
 }
 
 /** Thrown internally to mirror argparse's exit-2 error path. */
@@ -93,6 +100,9 @@ const OPTIONS: OptionSpec[] = [
     { flag: '--persona', dest: 'persona', takesValue: true },
     { flag: '--no-hooks', dest: 'no_hooks', takesValue: false },
     { flag: '--hooks-config', dest: 'hooks_config', takesValue: true },
+    { flag: '--procedure', dest: 'procedure', takesValue: true },
+    { flag: '--procedure-confirm', dest: 'procedure_confirm', takesValue: true },
+    { flag: '--procedure-restart', dest: 'procedure_restart', takesValue: false },
 ];
 
 // `-h` / `--help` is an implicit argparse optional; included as a prefix

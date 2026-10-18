@@ -39,6 +39,19 @@ A **project analysis** is a systematic walkthrough of the entire codebase that:
 
 It orchestrates other skills and commands to produce a comprehensive picture.
 
+The order is held by [`procedure.yaml`](procedure.yaml). Run the analysis phases one at a time, in order, and start a step only after the one before it has met its exit. A `judgement` exit is sequenced, not verified: state what you decided before moving on.
+
+1. [Phase 1: Project overview](references/steps/01-project-overview.md) — exit: `check: analysis-overview-matches-manifests`
+2. [Phase 2: Architecture](references/steps/02-architecture.md) — exit: `exists: agents/evidence/analysis/architecture`
+3. [Phase 3: Data layer](references/steps/03-data-layer.md) — exit: `exists: agents/evidence/analysis/models`
+4. [Phase 4: Business domains](references/steps/04-business-domains.md) — exit: `exists: agents/evidence/analysis/domains`
+5. [Phase 5: API surface](references/steps/05-api-surface.md) — exit: `exists: agents/evidence/analysis/api`
+6. [Phase 6: Service map](references/steps/06-service-map.md) — exit: `exists: agents/evidence/analysis/services/service-map.md`
+7. [Phase 7: Module inventory (if modules exist)](references/steps/07-module-inventory.md) — exit: `judgement`
+8. [Phase 8: Infrastructure & testing](references/steps/08-infrastructure-and-testing.md) — exit: `exists: agents/evidence/analysis/testing/test-map.md`
+9. [Phase 9: Agent docs audit](references/steps/09-agent-docs-audit.md) — exit: `judgement`
+10. [Phase 10: Gap analysis & action plan](references/steps/10-gap-analysis.md) — exit: `judgement`
+
 ## Analysis output
 
 All analysis results are written to `agents/evidence/analysis/` in a structured directory layout.
@@ -243,80 +256,6 @@ After detecting **any** match, record the stack in the analysis output and selec
 | Editor config | `.editorconfig`                                                                                                                                                     |
 | Code review   | `CODEOWNERS`, PR templates (`.github/pull_request_template.md`)                                                                                                     |
 | Dependencies  | Lockfile presence: `composer.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `uv.lock`, `go.sum`, `Cargo.lock`                            |
-
-## Analysis phases
-
-### Phase 1: Project overview
-
-- Read `AGENTS.md`, `.github/copilot-instructions.md`, `README.md`
-- Detect framework, version, tech stack
-- Identify build tools and quality tooling
-- Classify: legacy vs. modern, monolith vs. modular
-- **Output:** `agents/evidence/analysis/overview.md`
-
-### Phase 2: Architecture
-
-- Map directory structure (top 3 levels)
-- Identify architectural patterns (MVC, modules, services, repositories)
-- Detect multi-tenancy, queue system, caching
-- Count: models, controllers, services, jobs, commands
-- **Output:** `agents/evidence/analysis/architecture/*.md`
-
-### Phase 3: Data layer
-
-- List all models with their connections, tables, and key relationships
-- Map database schema: tables, foreign keys, indexes
-- Document multi-tenant split (which tables in which DB)
-- **Output:** `agents/evidence/analysis/models/api-database.md`, `customer-database.md`
-
-### Phase 4: Business domains
-
-- Identify domains from models, services, routes, and directory structure
-- For each domain: map models → services → controllers → jobs → events
-- Document business rules and data flows
-- Document inter-domain dependencies
-- **Output:** `agents/evidence/analysis/domains/{domain}.md` (one per domain)
-
-### Phase 5: API surface
-
-- List all endpoints with controller, request, resource, OpenAPI attributes
-- Document request/response contracts (field names, types, validation rules)
-- Map version differences (v1 vs v2)
-- **Output:** `agents/evidence/analysis/api/endpoints-v1.md`, `endpoints-v2.md`, `contracts.md`
-
-### Phase 6: Service map
-
-- List all services with purpose, key methods, and dependencies
-- Map service → repository → model relationships
-- Identify God services (too many responsibilities)
-- **Output:** `agents/evidence/analysis/services/service-map.md`
-
-### Phase 7: Module inventory (if modules exist)
-
-- List all modules with purpose
-- For each module: structure, public API, internal components, tests
-- Check for module-level agent docs
-- **Output:** `agents/evidence/analysis/modules/{module}.md` (one per module)
-
-### Phase 8: Infrastructure & testing
-
-- Docker setup, CI/CD pipelines, deployment
-- Test suites, coverage areas, test data strategy
-- **Output:** `agents/evidence/analysis/architecture/infrastructure.md`, `agents/evidence/analysis/testing/test-map.md`
-
-### Phase 9: Agent docs audit
-
-- List all existing docs in `agents/reference/docs/`, `agents/settings/contexts/`, module `agents/`
-- Check for outdated docs (reference deleted files/classes)
-- Identify undocumented areas
-- Check for stale roadmaps
-
-### Phase 10: Gap analysis & action plan
-
-- Modules without context docs → offer `/context-create`
-- Complex services without docs → offer `/context-create`
-- Existing docs that reference deleted code → offer `/context-refactor`
-- Stale roadmaps (all steps done) → suggest archiving
 
 ## Integration with other skills
 

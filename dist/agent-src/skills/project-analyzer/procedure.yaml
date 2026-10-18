@@ -1,0 +1,39 @@
+schema_version: 1
+brief:
+  goal: Write a structured analysis of the project under agents/evidence/analysis/ that someone could
+    rebuild it from.
+  inputs:
+  - the project tree
+  - AGENTS.md, README.md and the package manifests
+  done_when: Every in-scope phase has written its output file and the gap analysis names its follow-ups.
+steps:
+- id: project-overview
+  file: references/steps/01-project-overview.md
+  exit: 'check: analysis-overview-matches-manifests'
+- id: architecture
+  file: references/steps/02-architecture.md
+  exit: 'exists: agents/evidence/analysis/architecture'
+- id: data-layer
+  file: references/steps/03-data-layer.md
+  exit: 'exists: agents/evidence/analysis/models'
+- id: business-domains
+  file: references/steps/04-business-domains.md
+  exit: 'exists: agents/evidence/analysis/domains'
+- id: api-surface
+  file: references/steps/05-api-surface.md
+  exit: 'exists: agents/evidence/analysis/api'
+- id: service-map
+  file: references/steps/06-service-map.md
+  exit: 'exists: agents/evidence/analysis/services/service-map.md'
+- id: module-inventory
+  file: references/steps/07-module-inventory.md
+  exit: judgement
+- id: infrastructure-and-testing
+  file: references/steps/08-infrastructure-and-testing.md
+  exit: 'exists: agents/evidence/analysis/testing/test-map.md'
+- id: agent-docs-audit
+  file: references/steps/09-agent-docs-audit.md
+  exit: judgement
+- id: gap-analysis
+  file: references/steps/10-gap-analysis.md
+  exit: judgement

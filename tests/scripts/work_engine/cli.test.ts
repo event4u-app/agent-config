@@ -178,3 +178,27 @@ describe('cli main — argparse exit codes', () => {
         expect(r.status).toBe(2);
     });
 });
+
+describe('cli main — the procedure cursor flag', () => {
+    it('procedure-flag: --procedure starts the cursor on a pilot and hands out its first step', () => {
+        const r = norm(runTs(tmpTs, ['--procedure', 'existing-ui-audit']));
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain('step 1 of 12 (inspect-stack-and-input)');
+        const saved = JSON.parse(fs.readFileSync(path.join(tmpTs, '.work-state.json'), 'utf8')) as {
+            input: { kind: string; data: { skill: string } };
+        };
+        expect(saved.input.kind).toBe('procedure');
+        expect(saved.input.data.skill).toBe('existing-ui-audit');
+    });
+
+    it('procedure-flag: --procedure-confirm without --procedure exits 2 and writes nothing', () => {
+        const r = norm(runTs(tmpTs, ['--procedure-confirm', 'x']));
+        expect(r.status).toBe(2);
+        expect(fs.existsSync(path.join(tmpTs, '.work-state.json'))).toBe(false);
+    });
+
+    it('procedure-flag: without the flag a procedure state file is refused by the ordinary path', () => {
+        expect(runTs(tmpTs, ['--procedure', 'existing-ui-audit']).status).toBe(1);
+        expect(norm(runTs(tmpTs, ['--no-hooks'])).status).toBe(2);
+    });
+});
