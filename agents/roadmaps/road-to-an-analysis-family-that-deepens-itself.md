@@ -500,6 +500,9 @@ file; `council:pr` is unchanged.
 **Exit:** router and registries consistent; `run.json` read by the retro.
 **Rollback:** router rows are additive; revert them.
 
+> **Screen 2026-10-18 (PR #2461).** Open and buildable, next in order: 4.5, the `analyze:pr` command (5.2, then 1.3), 3.4, 6.1, 6.2, then the 3.5 replay.
+> Gated: 6.5 waits on the observation roadmap's answer; 6.6 waits on ten recorded runs (zero exist).
+
 ## Blockers
 
 ### blocker: source-fetch-authorization
