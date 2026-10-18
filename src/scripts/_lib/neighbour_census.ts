@@ -39,6 +39,7 @@ import {
     classifyCompat,
     fileDigest,
     makeSkillOriginResolver,
+    packageClaimedPaths,
     qualifiedSkillName,
     scanVerdict,
     type Compat,
@@ -532,12 +533,18 @@ export interface CensusOptions {
     scanCache?: ScanCache | null;
     /** Clock, for the MCP use window. Injected so a fixture can pin the day. */
     now?: Date;
+    /** Deploy-inventory location override (fixtures); default the user-scoped ledger. */
+    inventoryFile?: string;
 }
 
 /** Run the whole census for one consumer root. */
 export function census(projectRoot: string, opts: CensusOptions = {}): NeighbourCensus {
     const gated = opts.gatedEvents ?? new Set<string>();
-    const owned = new Set(readRecordedHashes(manifest_path(projectRoot), projectRoot).keys());
+    // The ledger half: a global entry in the lock records no files[].
+    const owned = new Set([
+        ...readRecordedHashes(manifest_path(projectRoot), projectRoot).keys(),
+        ...(packageClaimedPaths(projectRoot, opts.inventoryFile) ?? []),
+    ]);
     const home = opts.homeRoot ?? os.homedir();
 
     const hosts: HostCensus[] = [];

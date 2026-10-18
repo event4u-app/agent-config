@@ -9,6 +9,7 @@
  * loads on every dispatch, under a ceiling `check_hook_bundle_composition` holds.
  * So the primitives live here, importing only the manifest reader, and the census
  * re-exports them — one definition, two call sites, no second module graph.
+ * (`user_global_paths` is the one other import: it locates the deploy inventory.)
  *
  * ORIGIN IS READ FROM A CLAIM RECORD, NEVER INFERRED FROM A ROOT. The temptation
  * is to call `~/.claude/skills` foreign and the workspace ours. That is wrong in
@@ -26,6 +27,7 @@ import * as path from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 import { manifest_path } from './installed_tools.js';
+import { write_target } from './user_global_paths.js';
 
 /**
  * Where a RANKED skill came from — a question about AUTHORSHIP.
@@ -94,7 +96,10 @@ export function splitQualifiedName(qualified: string): { origin: SkillOrigin; na
  * budget this whole module was split out to protect. The `~` expansion below is
  * the same one all three use.
  */
-export function packageClaimedPaths(projectRoot: string): ReadonlySet<string> | null {
+export function packageClaimedPaths(
+    projectRoot: string,
+    inventoryFile: string = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] || write_target('deployed-files.json'),
+): ReadonlySet<string> | null {
     const manifest = manifest_path(projectRoot);
     let doc: unknown;
     try {
@@ -117,6 +122,21 @@ export function packageClaimedPaths(projectRoot: string): ReadonlySet<string> | 
             if (typeof raw !== 'string' || raw === '') continue;
             out.add(path.resolve(projectRoot, _expanduser(raw)));
         }
+    }
+    // A global entry records no files[]: the user-scoped deploy inventory is
+    // where its paths live (`global_deploy_inventory.ts`), so it claims them.
+    try {
+        const inv = JSON.parse(fs.readFileSync(_expanduser(inventoryFile), 'utf-8')) as {
+            tools?: Record<string, { anchor?: unknown; files?: unknown }>;
+        };
+        for (const t of Object.values(inv.tools ?? {})) {
+            if (typeof t?.anchor !== 'string' || !Array.isArray(t.files)) continue;
+            for (const rel of t.files) {
+                if (typeof rel === 'string') out.add(path.resolve(_expanduser(t.anchor), rel));
+            }
+        }
+    } catch {
+        // No inventory: the lock's own claims are the whole answer.
     }
     return out;
 }

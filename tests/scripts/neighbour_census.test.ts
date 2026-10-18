@@ -465,3 +465,24 @@ describe('the doctor surfaces (2.1 verify, 2.6)', () => {
         expect(text).toContain('no label here refuses anything');
     });
 });
+
+describe('a global skill the user-scoped ledger lists is ours, not a neighbour', () => {
+    // Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a
+    // consumer lock no longer records a global entry's files[], so the deploy
+    // inventory is the only record that the skill under ~/.claude/skills is ours.
+    it('excludes the ledger-listed skill and keeps the unlisted one', () => {
+        const project = tmp();
+        const home = plantedHome();
+        write(project, 'agents/installed-tools.lock', 'schema_version: 2\ntools:\n  - name: claude-code\n    scope: global\n');
+        write(home, '.claude/skills/ours/SKILL.md', '---\nname: ours\ndescription: x\n---\n');
+        write(home, '.claude/skills/theirs/SKILL.md', '---\nname: theirs\ndescription: y\n---\n');
+        const inventoryFile = path.join(home, 'deployed-files.json');
+        write(
+            home,
+            'deployed-files.json',
+            JSON.stringify({ tools: { 'claude-code': { anchor: `${home}/.claude/`, files: ['skills/ours/SKILL.md'] } } }),
+        );
+        const c = census(project, { homeRoot: home, inventoryFile });
+        expect(c.skills.map((s) => s.id)).toStrictEqual(['user:theirs']);
+    });
+});
