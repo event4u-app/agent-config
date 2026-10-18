@@ -147,6 +147,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/execution/analysis-loop.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md": {
       "kind": "context",
       "rule_type": null,
@@ -4202,6 +4208,13 @@
     {
       "source": ".agent-src.uncondensed/contexts/documentation-hierarchy.md",
       "target": ".agent-src.uncondensed/contexts/documentation-hierarchy.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/analysis-loop.md",
+      "target": ".agent-src.uncondensed/contexts/execution/analysis-loop.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

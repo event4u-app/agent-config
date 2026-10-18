@@ -7,8 +7,8 @@
  * Nothing here executes the source. A clone is pinned by reading `.git/HEAD`
  * and its refs as files, because even `git rev-parse` would honour the clone's
  * own config. An archive is parsed, never unpacked: an entry that would land
- * outside the archive refuses the whole source. Network kinds belong to step
- * 4.2b and fail here with the blocker's name.
+ * outside the archive refuses the whole source. Network kinds go through
+ * `network_sources.ts` and fail here with a pointer there.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -54,7 +54,7 @@ function treeDigest(files: Record<string, string>): string {
 
 function unsupported(arg: string, why: string): SourceError {
     return new SourceError(
-        `${arg}: ${why} — only local paths, tar archives and present clones are read until blocker ${FETCH_BLOCKER} is wired (step 4.2b)`,
+        `${arg}: ${why} — resolveSource reads local paths, tar archives and present clones; a network source goes through network_sources.ts under the fetch answer of ${FETCH_BLOCKER} (ADR-288 D7)`,
     );
 }
 
