@@ -126,6 +126,27 @@ describe('the tool and command surface', () => {
         }
     });
 
+    it('judges a wrapped segment conservatively, and splices env -S into env (council round 4c, third pass)', () => {
+        for (const cmd of [
+            "env -S 'cat' .env",
+            "env -S '-u PATH cat .env'",
+            "env -S'cat .env'",
+            'env -iu PATH',
+            'cp -vt backup .env',
+            'mv -ft backup .env',
+            'cp -tbackup .env',
+            'sudo -nu root cat .env',
+            'timeout .5s cat .env',
+            'xargs -a list.txt cat .env',
+            'sudo -E env',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
+        }
+        for (const cmd of ['sudo -nu root ls /root', 'timeout .5s npm test', 'cp -vt backup .env.example', 'env -i PATH=/bin node app.js']) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(0);
+        }
+    });
+
     it('a .pem counts only when a name token says key, and only an absolute /proc path is the environment', () => {
         expect(credentialFileClass('certs/monkey.pem')).toBeNull();
         expect(credentialFileClass('certs/secretary-ca.pem')).toBeNull();
@@ -137,6 +158,8 @@ describe('the tool and command surface', () => {
 
     it('names a Windows path by its basename only', () => {
         const r = verdictFor('Read', { file_path: 'C:\\Users\\someone\\project\\.env' });
+        expect(r).not.toBeNull();
+        expect(r?.class).toBe('env-file');
         expect(r?.what).toBe('`.env`');
     });
 

@@ -105,139 +105,76 @@ const NON_READING_COMMANDS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * Words that run the command after them, each with the options that take a
- * separate argument — `sudo -u root env` runs `env`, not `root`. A `--long=value`
- * form and an unlisted flag take none. `timeout` also takes one duration.
+ * Words that run the command after them: `sudo`, `nice`, `timeout`, …. Their
+ * option grammars differ and clustering (`sudo -nu root`) defeats any table of
+ * them, so a segment that starts with one is judged conservatively instead of
+ * parsed: any credential path anywhere in it refuses, and so does an `env` or a
+ * `printenv` anywhere in it.
  */
-const WRAPPER_ARG_FLAGS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
-    ['command', new Set<string>()],
-    ['builtin', new Set<string>()],
-    ['exec', new Set(['-a'])],
-    ['nohup', new Set<string>()],
-    ['sudo', new Set(['-u', '-g', '-U', '-C', '-h', '-p', '-r', '-t', '-D', '-R', '--user', '--group', '--other-user', '--close-from', '--host', '--prompt', '--role', '--type', '--chdir', '--chroot'])],
-    ['doas', new Set(['-u', '-C'])],
-    ['nice', new Set(['-n', '--adjustment'])],
-    ['timeout', new Set(['-s', '--signal', '-k', '--kill-after'])],
-    ['stdbuf', new Set(['-i', '-o', '-e', '--input', '--output', '--error'])],
-    ['time', new Set(['-f', '--format', '-o', '--output'])],
+const WRAPPERS: ReadonlySet<string> = new Set([
+    'command', 'builtin', 'exec', 'nohup', 'sudo', 'doas', 'nice', 'timeout', 'stdbuf', 'time', 'xargs', 'watch', 'unbuffer',
 ]);
-
-/** `env`'s own options that take an argument; `-S` / `--split-string` carries a command. */
-const ENV_ARG_FLAGS: ReadonlySet<string> = new Set(['-u', '--unset', '-C', '--chdir', '-S', '--split-string']);
-
-const base = (w: string): string => w.replace(/^.*\//, '');
-
-/** Index of the first word after a run of options, skipping each listed flag's separate argument. */
-function skipOptions(words: readonly string[], i: number, argFlags: ReadonlySet<string>): number {
-    while (i < words.length) {
-        const w = words[i] as string;
-        if (w === '--') return i + 1;
-        if (!w.startsWith('-') || w === '-') return i;
-        i += argFlags.has(w) ? 2 : 1;
-    }
-    return i;
-}
 
 /** `git` subcommands that name a path without printing its content. */
 const NON_READING_GIT: ReadonlySet<string> = new Set(['add', 'rm', 'mv', 'check-ignore', 'ls-files', 'status']);
 
-/** Split one command segment into words, dropping quotes; redirection operators stay attached to nothing. */
+/**
+ * Split one command segment into words the way the shell joins them: quoted
+ * and unquoted runs with no space between them are one word (`-S'cat .env'` is
+ * `-Scat .env`), quotes are removed, and a backslash escapes the next character.
+ */
 export function commandWords(segment: string): string[] {
     const words: string[] = [];
-    const re = /"((?:[^"\\]|\\.)*)"|'([^']*)'|(\S+)/g;
-    for (const m of segment.matchAll(re)) words.push(m[1] ?? m[2] ?? m[3] ?? '');
+    let word = '';
+    let inWord = false;
+    for (let i = 0; i < segment.length; i += 1) {
+        const ch = segment[i] as string;
+        if (/\s/.test(ch)) {
+            if (inWord) words.push(word);
+            word = '';
+            inWord = false;
+            continue;
+        }
+        inWord = true;
+        if (ch === "'") {
+            const end = segment.indexOf("'", i + 1);
+            word += segment.slice(i + 1, end === -1 ? segment.length : end);
+            i = end === -1 ? segment.length : end;
+        } else if (ch === '"') {
+            let j = i + 1;
+            for (; j < segment.length && segment[j] !== '"'; j += 1) {
+                if (segment[j] === '\\' && j + 1 < segment.length) j += 1;
+                word += segment[j];
+            }
+            i = j;
+        } else if (ch === '\\' && i + 1 < segment.length) {
+            word += segment[i + 1];
+            i += 1;
+        } else {
+            word += ch;
+        }
+    }
+    if (inWord) words.push(word);
     return words;
 }
 
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
 const REDIRECT_PREFIX = /^(?:\d*[<>]{1,2}&?|&>{1,2})/;
+const VARIABLE_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 type Verdict = { class: CredentialFileClass; what: string } | null;
-
-const named = (cls: CredentialFileClass, p: string): Verdict => ({ class: cls, what: `\`${credentialBasename(p)}\`` });
 
 /** The basename a refusal may name: backslashes read as separators, so no Windows path leaks whole. */
 export function credentialBasename(p: string): string {
     return path.posix.basename(p.replace(/\\/g, '/'));
 }
 
-/** Why a command segment is refused, or null. `segment` starts at its command word. */
-export function segmentVerdict(segment: string, depth = 0): Verdict {
-    const words = commandWords(segment);
-    let i = 0;
-    for (;;) {
-        while (i < words.length && ASSIGNMENT.test(words[i] as string)) i += 1;
-        const head = base(words[i] ?? '');
-        if (head === 'env') {
-            // `env` either prints the environment or runs the command after its
-            // options and assignments; `-S` carries a command string of its own.
-            let j = i + 1;
-            while (j < words.length) {
-                const w = words[j] as string;
-                if (w === '--') {
-                    j += 1;
-                    break;
-                }
-                if (!w.startsWith('-') || w === '-') break;
-                const split = w === '-S' || w === '--split-string' ? words[j + 1] : /^(?:-S|--split-string=)(.+)$/.exec(w)?.[1];
-                if (split !== undefined && depth < 3) {
-                    const inner = segmentVerdict(split, depth + 1);
-                    if (inner !== null) return inner;
-                }
-                j += ENV_ARG_FLAGS.has(w) ? 2 : 1;
-            }
-            while (j < words.length && ASSIGNMENT.test(words[j] as string)) j += 1;
-            if (j >= words.length) return { class: 'process-environment', what: '`env`' };
-            i = j;
-            continue;
-        }
-        const argFlags = WRAPPER_ARG_FLAGS.get(head);
-        if (argFlags === undefined) break;
-        i = skipOptions(words, i + 1, argFlags);
-        if (head === 'timeout' && /^\d+(?:\.\d+)?[smhd]?$/.test(words[i] ?? '')) i += 1;
-    }
-    const cmd = base(words[i] ?? '');
-    const args = words.slice(i + 1);
-    const operands = args.filter((a) => !a.startsWith('-'));
+const named = (cls: CredentialFileClass, p: string): Verdict => ({ class: cls, what: `\`${credentialBasename(p)}\`` });
+const base = (w: string): string => w.replace(/^.*\//, '');
 
-    // Printing the whole environment: `printenv` with no name, `export` with no
-    // name, a bare `set` (`set -e` only sets options), and `declare -x|-p` with
-    // no name.
-    const dumpsEnv =
-        (cmd === 'printenv' && operands.length === 0) ||
-        (cmd === 'export' && operands.length === 0) ||
-        (cmd === 'set' && args.length === 0) ||
-        ((cmd === 'declare' || cmd === 'typeset') && operands.length === 0 && args.some((a) => /^-[a-zA-Z]*[xp]/.test(a)));
-    if (dumpsEnv) return { class: 'process-environment', what: `\`${cmd}\`` };
-
-    // A copy or a rename reads its sources and only writes its destination:
-    // `cp .env.example .env` creates the file, while `cp .env /dev/stdout` prints
-    // it and `cp .env x` or `mv .env x` launders it for the next command. With a
-    // target directory (`-t DIR`, `--target-directory=DIR`) every operand is a
-    // source.
-    if (cmd === 'cp' || cmd === 'mv') {
-        const sources: string[] = [];
-        let targetGiven = false;
-        for (let k = 0; k < args.length; k += 1) {
-            const a = args[k] as string;
-            if (a === '-t' || a === '--target-directory' || a === '-S' || a === '--suffix') {
-                if (a === '-t' || a === '--target-directory') targetGiven = true;
-                k += 1;
-            } else if (/^(?:-t.+|--target-directory=.*)$/.test(a)) {
-                targetGiven = true;
-            } else if (!a.startsWith('-')) {
-                sources.push(a);
-            }
-        }
-        for (const src of targetGiven ? sources : sources.slice(0, -1)) {
-            const cls = credentialFileClass(src);
-            if (cls !== null) return named(cls, src);
-        }
-        return null;
-    }
-    const reads = !(NON_READING_COMMANDS.has(cmd) || (cmd === 'git' && NON_READING_GIT.has(operands[0] ?? '')));
-    if (!reads) return null;
-    for (const w of words.slice(i + 1)) {
+/** The first credential path among `words` — as a word, a redirect target or an option value. */
+function credentialAmong(words: readonly string[]): Verdict {
+    for (const w of words) {
         const target = w.replace(REDIRECT_PREFIX, '');
         // `--config=.env`, `--defaults-file=~/.my.cnf`: the value of an option is a path too.
         const candidates = target.includes('=') ? [target, target.slice(target.indexOf('=') + 1)] : [target];
@@ -247,4 +184,111 @@ export function segmentVerdict(segment: string, depth = 0): Verdict {
         }
     }
     return null;
+}
+
+/**
+ * `env`'s arguments with each `-S`/`--split-string` value spliced in as the
+ * arguments it stands for, then its options and assignments skipped. Returns the
+ * command it runs, or an empty list when it runs none and prints the
+ * environment. A short option cluster ending in `u`, `C` or `S` takes the next
+ * word, `--unset`/`--chdir` take the next word, and a `NAME` operand after them
+ * is the variable they name.
+ */
+export function envCommand(args: readonly string[]): string[] {
+    const stream: string[] = [];
+    for (let k = 0; k < args.length; k += 1) {
+        const a = args[k] as string;
+        if (a === '-S' || a === '--split-string') {
+            stream.push(...commandWords(args[k + 1] ?? ''));
+            k += 1;
+        } else if (/^--split-string=/.test(a) || /^-[a-zA-Z]*S.+$/.test(a)) {
+            stream.push(...commandWords(a.startsWith('--') ? a.slice('--split-string='.length) : a.slice(a.indexOf('S') + 1)));
+        } else {
+            stream.push(a);
+        }
+    }
+    let i = 0;
+    while (i < stream.length) {
+        const w = stream[i] as string;
+        if (w === '--') {
+            i += 1;
+            break;
+        }
+        if (w.startsWith('-') && w !== '-') {
+            i += w === '--unset' || w === '--chdir' || /^-[a-zA-Z]*[uC]$/.test(w) ? 2 : 1;
+            continue;
+        }
+        if (ASSIGNMENT.test(w)) {
+            i += 1;
+            continue;
+        }
+        break;
+    }
+    while (i < stream.length && ASSIGNMENT.test(stream[i] as string)) i += 1;
+    return stream.slice(i);
+}
+
+/**
+ * The sources of a `cp` or `mv`: every operand but the destination, or every
+ * operand when a target directory is named (`-t DIR`, a cluster ending in `t`,
+ * `-tDIR`, `--target-directory[=DIR]`). `-S`/`--suffix` take the next word.
+ */
+export function copySources(args: readonly string[]): string[] {
+    const operands: string[] = [];
+    let targetGiven = false;
+    for (let k = 0; k < args.length; k += 1) {
+        const a = args[k] as string;
+        if (a === '--target-directory' || /^-[a-zA-Z]*t$/.test(a)) {
+            targetGiven = true;
+            k += 1;
+        } else if (/^--target-directory=/.test(a) || /^-[a-zA-Z]*t.+$/.test(a)) {
+            targetGiven = true;
+        } else if (a === '-S' || a === '--suffix') {
+            k += 1;
+        } else if (!a.startsWith('-') || a === '-') {
+            operands.push(a);
+        }
+    }
+    return targetGiven ? operands : operands.slice(0, -1);
+}
+
+/** Why a command segment is refused, or null. `segment` starts at its command word. */
+export function segmentVerdict(segment: string, depth = 0): Verdict {
+    const words = commandWords(segment);
+    let i = 0;
+    while (i < words.length && ASSIGNMENT.test(words[i] as string)) i += 1;
+    const cmd = base(words[i] ?? '');
+    const args = words.slice(i + 1);
+
+    if (WRAPPERS.has(cmd)) {
+        if (args.some((a) => base(a) === 'env' || base(a) === 'printenv')) {
+            return { class: 'process-environment', what: `\`${cmd} … env\`` };
+        }
+        return credentialAmong(args);
+    }
+    if (cmd === 'env') {
+        const ran = envCommand(args);
+        if (ran.length === 0) return { class: 'process-environment', what: '`env`' };
+        if (depth >= 3) return credentialAmong(ran);
+        return segmentVerdict(ran.map((w) => (/\s/.test(w) ? `'${w}'` : w)).join(' '), depth + 1) ?? credentialAmong(args);
+    }
+
+    const operands = args.filter((a) => !a.startsWith('-'));
+    // Printing the whole environment: `printenv` with no name, `export` with no
+    // name, a bare `set` (`set -e` only sets options), and `declare -x|-p` with
+    // no name.
+    const dumpsEnv =
+        (cmd === 'printenv' && !operands.some((a) => VARIABLE_NAME.test(a))) ||
+        (cmd === 'export' && operands.length === 0) ||
+        (cmd === 'set' && args.length === 0) ||
+        ((cmd === 'declare' || cmd === 'typeset') && operands.length === 0 && args.some((a) => /^-[a-zA-Z]*[xp]/.test(a)));
+    if (dumpsEnv) return { class: 'process-environment', what: `\`${cmd}\`` };
+
+    // A copy or a rename reads its sources and only writes its destination:
+    // `cp .env.example .env` creates the file, while `cp .env /dev/stdout` prints
+    // it and `cp .env x` or `mv .env x` launders it for the next command.
+    if (cmd === 'cp' || cmd === 'mv') return credentialAmong(copySources(args));
+
+    const reads = !(NON_READING_COMMANDS.has(cmd) || (cmd === 'git' && NON_READING_GIT.has(operands[0] ?? '')));
+    return reads ? credentialAmong(args) : null;
 }
