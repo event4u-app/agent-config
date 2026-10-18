@@ -451,8 +451,9 @@ describe('rollback', () => {
             'utf-8',
         );
         const thinAt = installer.indexOf('thinInstalledRuleLayer({');
-        // The record is written inside `recordGlobalDeploy` (src/install/ownershipLedger.ts).
-        const recordAt = installer.indexOf('recordGlobalDeploy({');
+        // The record is written inside `recordGlobalDeploy` (src/install/ownershipLedger.ts),
+        // at the per-tool call in the copy loop — claude-desktop's own call records only its marker.
+        const recordAt = installer.indexOf('recordGlobalDeploy({\n            toolId: tool_id');
         expect(thinAt).toBeGreaterThan(-1);
         expect(recordAt).toBeGreaterThan(-1);
         expect(thinAt).toBeLessThan(recordAt);

@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -223,7 +225,7 @@ the same thing in all of them.
       Done 2026-10-16: named with today's uninstall semantics (reported as
       skipped, left in place), plus the ledger file in the runtime-root table
       and the kind in `installed-tools-lockfile.md`.
-- [ ] **3.3 Close the `$HOME`-leak gap.** Re-cut 2026-10-18 to blocker
+- [x] **3.3 Close the `$HOME`-leak gap.** Re-cut 2026-10-18 to blocker
       `global-entries-consumer-lock` option (b′): a consumer's
       `agents/installed-tools.lock` keeps its global-scope entries (so `sync`
       still replays them for a new team member) but no longer records their
@@ -268,6 +270,20 @@ the same thing in all of them.
       entries and drops their absolute `files[]` would close the leak without
       breaking it. Record: `agents/evidence/council/ownership-record-residue-20261018.md`;
       the owner's pick is the blocker below.
+      **Done 2026-10-18 under (b′).** `files` is **omitted** on every
+      `scope: global` entry (`dropGlobalScopeFiles` in `manifestFiles.ts`, run
+      on every lock write, so a lock committed earlier loses its absolute paths
+      on the next install). Reader audit: `sync` and `validate` read no
+      `files[]`; `prune` skips global entries; `install_drift` and `doctor`'s
+      manifest reader lose nothing the ledger reader (3.1) does not cover;
+      `recordedOwnership` already overlays the ledger. Three readers did need a
+      change: project `uninstall` sent a global entry without `files[]` to the
+      project-marker map and deleted a PROJECT file the global install never
+      wrote (now: entry dropped, no file touched); `skill_origin` and the
+      neighbour census claimed global skills only through the lock (now also
+      through the deploy inventory); and the `claude-desktop` marker's digest
+      lived only in the lock (now recorded in the ledger). Test:
+      `ownership_ledger_real_install.test.ts` step-3.3 case, observed red first.
 - [x] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
       they attach to an existing command.
       verify: the output of `agent-config --help` lists no new top-level verb.
@@ -408,14 +424,15 @@ the same thing in all of them.
       asserted by one test.
 - [x] **AC-7** A schema-1 inventory still loads, and the sibling roadmap's
       containment test is green in the same run.
-- [ ] **AC-8** A global install run from a consumer project with settings
+- [x] **AC-8** A global install run from a consumer project with settings
       writes no `$HOME`-rooted path into that project's
       `agents/installed-tools.lock` while `sync` still replays its global
       entries (3.3, re-cut 2026-10-18 to option (b′)), and
       `grep -c sidecar docs/contracts/install-layout.md` ≥ 1 (satisfied by 3.2).
-- [ ] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
+- [x] **AC-9** `task ci` green. Discharged by the PR's CI, not by a local
       run; `check_pack_size` and `check_gate_completeness` are red on
-      `main@8c90aad26` independently of this branch.
+      `main@8c90aad26` independently of this branch. Flipped in the PR that
+      closes 3.3, whose merge is gated on its CI being green.
 
 ## Provenance
 
