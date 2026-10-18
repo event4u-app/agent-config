@@ -80,7 +80,8 @@ human voice there; do not inject personality or restructure it.
    adding `--slot` for a valid `brand-voice` slot and `--ghostwriter` for
    the active profile. Fix an `avoid` hit with its note; a profile taboo
    hit means the rewrite is not done; report each `unbacked-claim` located
-   with "needs proof" — never reword a claim away (step 6).
+   with "needs proof" — never reword a claim away (step 6). Exit 2 is a
+   broken invocation: say so, never report the draft as checked.
    No runtime → the step-3 audit is the fallback
    (degrade, do not skip the audit).
 5b. **Carrier-Unicode strip — OPT-IN, never a default.** Runs **only** when

@@ -32,5 +32,6 @@ pipe the text on stdin to
 slot valid). For CSS or markup, run the design-tokens palette reading,
 `node <skills-root>/design-tokens/scripts/tokens.mjs validate --dir <path> --json --tokens <registered tokens.json>`. Report every located
 finding — `avoid` term with its note, `unbacked-claim` with "needs proof",
-`off-palette` with its nearest token — and flag, never block. The audit's
+`off-palette` with its nearest token — and flag, never block. Exit 2 from
+the checker is a broken invocation: say so, never report the copy as clean. The audit's
 judgement comes after and never overrides a located finding.

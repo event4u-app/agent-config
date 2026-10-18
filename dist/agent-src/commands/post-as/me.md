@@ -98,7 +98,8 @@ the loaded fingerprint (sentence-length ±25 %, pace),
 
 ### 5b. Check the finished draft
 
-Pipe the body on stdin — this command never writes the draft to disk:
+Pipe the step-5 block on stdin — this command never writes the draft to
+disk; the checker scans inside a single wrapping fence:
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
@@ -109,7 +110,8 @@ Pass `--slot` only when `agent-config brand:status --json` reports the
 `brand-voice` slot valid. Claim phrases are checked either way; the
 user's own `style.avoid` is not read (`.agent-user.md` v1 has no such
 field). Findings flag without blocking: print each after the fenced
-block with its line and its note or the missing proof. No runtime → say
+block with its line and its note or the missing proof. Exit 2 is a broken
+invocation: say so and never present the draft as checked. No runtime → say
 so in one line.
 
 ### 6. Disclosure footer (omitted — user is the author)
