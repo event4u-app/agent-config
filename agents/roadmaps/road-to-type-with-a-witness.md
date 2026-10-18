@@ -206,7 +206,7 @@ estate_growth_exempt: "2026-10-18 change: one skill (`type-design`) and its desc
       existing `svg-witness-tests` job (`.github/workflows/tests.yml:543`) on
       ubuntu and macOS.
       verify: `npx vitest run tests/cli/ui_render_asset_font_state.test.ts --reporter=verbose` -> /✓.*load-waited-for-delayed-face/
-      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed.
+      Done 2026-10-17: `tests/_lib/test_truetype_face.ts`; the two suites reach the `svg-witness-tests` job through an import in `ui_render_asset_profile.test.ts` (no workflow edit) and join `BROWSER_SUITES` in `vitest.config.ts`, so the verify lines of 1.1-1.4 run with `AGENT_CONFIG_BROWSER_SUITES=1`, as the asset profile suite does. Seen red: with the error, synthesis and wait branches neutralised, three cases failed. Checked 2026-10-18 for AC-1: `SVG Witness Tests` on ubuntu-latest and macos-latest passed on PR #2430 (run 38987233705), and both job logs carry the font-state cases.
 
 ## Phase 2 — Two delivery tells under the delivery owner
 
@@ -527,7 +527,6 @@ skill.
 - [x] AC-1 — The asset witness reports `loaded`, `error` and `synthesised` for
       the three in-memory fixtures on ubuntu and macOS, and the page profile
       reports a painted family beside the declared one.
-      Checked 2026-10-18: `SVG Witness Tests` on ubuntu-latest and macos-latest passed on PR #2430 (run 38987233705), and both job logs carry the font-state cases.
 - [x] AC-2 — T11 and T12 sit in the catalogue with fixtures, and the parity
       lint is green.
 - [x] AC-3 — `svg-structure-filled-counter` flags the two-circle disc and not
