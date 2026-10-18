@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as http from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -162,5 +162,30 @@ describe('cloneRepoSource (step 4.2b)', () => {
         await expect(cloneRepoSource(`file://${origin}`, path.join(work, 'run2'), { network: false })).rejects.toThrow(/no-network/);
         await expect(cloneRepoSource(`file://${origin}`, path.join(work, 'run3'), { network: true })).rejects.toThrow(/scheme/);
         fs.rmSync(work, { recursive: true, force: true });
+    });
+
+    it('refuses to follow a redirect during the clone, so a hop to a private host is never contacted', async () => {
+        // The clone is synchronous, so the fixture servers run in a child process.
+        const work = fs.mkdtempSync(path.join(os.tmpdir(), 'clone-redirect-'));
+        const hits = path.join(work, 'hits');
+        const script = [
+            "const http = require('node:http'); const fs = require('node:fs');",
+            `const hits = ${JSON.stringify(hits)}; fs.writeFileSync(hits, '0');`,
+            "const target = http.createServer((q, r) => { fs.writeFileSync(hits, String(Number(fs.readFileSync(hits, 'utf8')) + 1)); r.writeHead(404); r.end(); });",
+            "target.listen(0, '127.0.0.1', () => { const t = target.address().port;",
+            "  const red = http.createServer((q, r) => { r.writeHead(301, { location: 'http://127.0.0.1:' + t + q.url }); r.end(); });",
+            "  red.listen(0, '127.0.0.1', () => process.stdout.write(String(red.address().port) + '\\n')); });",
+        ].join('\n');
+        const child = spawn(process.execPath, ['-e', script], { stdio: ['ignore', 'pipe', 'inherit'] });
+        try {
+            const port = await new Promise<string>((resolve) => child.stdout.once('data', (d: Buffer) => resolve(d.toString().trim())));
+            await expect(
+                cloneRepoSource(`http://127.0.0.1:${port}/repo.git`, path.join(work, 'run'), { network: true, hostAllowlistForTests: ['127.0.0.1'] }),
+            ).rejects.toThrow();
+            expect(fs.readFileSync(hits, 'utf8')).toBe('0');
+        } finally {
+            child.kill();
+            fs.rmSync(work, { recursive: true, force: true });
+        }
     });
 });

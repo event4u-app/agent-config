@@ -8,7 +8,8 @@
  * network content stays excluded. So a URL carrying credentials is refused, a
  * host resolving to a private, loopback or link-local address is refused at
  * every redirect hop, redirects and body size are capped, no auth header is
- * ever sent, and a clone runs with hooks disabled and is never executed.
+ * ever sent, and a clone runs with hooks disabled, follows no redirect and is
+ * never executed.
  * DNS is checked before the request, not pinned for it; a rebinding resolver
  * between the two is the residual this module does not close.
  *
@@ -145,8 +146,9 @@ export async function cloneRepoSource(raw: string, workDir: string, opts: Networ
     fs.mkdirSync(workDir, { recursive: true });
     // An inherited GIT_DIR (a hook, a worktree) would point the clone at the caller's repository.
     const { GIT_DIR: _d, GIT_WORK_TREE: _w, GIT_INDEX_FILE: _i, ...env } = process.env;
+    // git follows the first redirect by default, and only the URL above was validated: refuse every hop.
     const git = (args: string[], cwd?: string): void => {
-        execFileSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'protocol.ext.allow=never', ...args], {
+        execFileSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'protocol.ext.allow=never', '-c', 'http.followRedirects=false', ...args], {
             cwd,
             stdio: 'pipe',
             env: { ...env, GIT_TERMINAL_PROMPT: '0' },
