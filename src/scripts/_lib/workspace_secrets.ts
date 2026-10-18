@@ -1,13 +1,13 @@
 /**
  * Shared secret-detection + scrub primitives for the workspace stores.
  *
- * TypeScript twin of `src/cli/python/workspace_secrets.py` (ADR-200,
- * py2ts Phase 1). Lives under `src/scripts/_lib/` because a shipped module
+ * Lives under `src/scripts/_lib/` because a shipped module
  * (`cross_repo_retrieve.ts`) reads it and `src/cli/` is not in the package;
  * `src/cli/python/workspace_secrets.ts` re-exports it for the workspace stores.
- * Byte-for-byte behavioral mirror — same exported snake_case names, same regex
- * semantics (Python `re` → JS `RegExp`), same `subn`/`finditer` counting, same
- * `scrub_obj` depth + cycle guard, same `[SECRET]` placeholder.
+ * The contract — the exported names, the per-call match counts, `scrub_obj`'s
+ * depth and cycle guard and the `[SECRET]` placeholder — is pinned by
+ * `tests/scripts/cli/python/workspace_secrets.test.ts`, and what it detects by
+ * `egress_legacy_superset.test.ts`.
  *
  * Near-leaf module — its one import is the pure rule table (no I/O) — so the
  * hot-path analytics `emit()` and the heavier `knowledge_ingest` can both

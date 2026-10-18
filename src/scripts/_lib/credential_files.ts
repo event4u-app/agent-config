@@ -46,6 +46,7 @@ const SSH_KEY = /^id_(?:rsa|dsa|ecdsa|ed25519)(?:_sk)?$/;
 const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> = [
     ['.aws/credentials', 'cloud-credentials'],
     ['.config/gcloud/application_default_credentials.json', 'cloud-credentials'],
+    // cache-invalidation: not a cache this package writes — gcloud's own credential store, named only to refuse reading it
     ['.config/gcloud/credentials.db', 'cloud-credentials'],
     ['.azure/accessTokens.json', 'cloud-credentials'],
     ['.azure/msal_token_cache.json', 'cloud-credentials'],
