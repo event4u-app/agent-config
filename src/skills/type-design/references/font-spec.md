@@ -39,7 +39,7 @@ spacing:                     # sidebearings in font units, per edge class
 
 coverage: "latin-basic"      # wordmark | latin-basic | latin-de
 
-licence:
+license:
   id: "unknown"              # the answer the person gave, or unknown
   url: ""
   name_table: true           # written into the name table at build
@@ -69,7 +69,7 @@ source:
   strokes end, and what sits at their ends.
 - **`spacing`** — sidebearings per edge class, set on H, n, O and o before any
   other glyph (gates § 4).
-- **`licence`** — never filled by default (`SKILL.md` § Licence).
+- **`license`** — never filled by default (`SKILL.md` § License).
 - **`source`** — path A only: the file, its rights class from the rights gate,
   its digest, whether its resolution is enough for fidelity, and the locked
   glyphs.

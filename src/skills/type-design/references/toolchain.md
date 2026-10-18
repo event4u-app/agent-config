@@ -5,7 +5,7 @@ an isolated environment **in the consumer's tree**, from the exact versions
 below. A version moves only by a pull request that repeats the intake below for
 the new version — never floating, never `latest`.
 
-| Role | Package | Pin | Licence |
+| Role | Package | Pin | License |
 |---|---|---|---|
 | outline library, compiler back end | `fonttools` | `fonttools==4.66.1` | MIT |
 | path booleans (overlap removal) | `skia-pathops` | `skia-pathops==0.9.2` | BSD-3-Clause |
@@ -14,13 +14,20 @@ the new version — never floating, never `latest`.
 | shaping binding (feature checks) | `uharfbuzz` | `uharfbuzz==0.56.2` | Apache-2.0 |
 | raster tracer | `vtracer` | `vtracer==0.6.15` | MIT |
 
-```bash
-python3 -m venv .type-design/venv
-.type-design/venv/bin/pip install \
-  'fonttools==4.66.1' 'skia-pathops==0.9.2' 'ufoLib2==0.18.1' \
-  'fontmake==3.12.1' 'uharfbuzz==0.56.2' 'vtracer==0.6.15'
-.type-design/venv/bin/pip freeze > .type-design/requirements.lock
+Write the pins to `.type-design/pins.txt` in the consumer tree:
+
+```text
+fonttools==4.66.1
+skia-pathops==0.9.2
+ufoLib2==0.18.1
+fontmake==3.12.1
+uharfbuzz==0.56.2
+vtracer==0.6.15
 ```
+
+Create a virtual environment under `.type-design/`, install that file into it
+with the environment's own package installer, and freeze the resolved set to
+`.type-design/pins.lock`.
 
 Commit the lock file with the font sources: `fontmake` resolves further packages
 (`ufo2ft`, `glyphsLib`, `fontMath`), and the lock records which ones built this

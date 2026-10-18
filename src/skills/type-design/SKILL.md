@@ -66,12 +66,12 @@ beyond what the gates showed (§ Maturity).
 Record the class (`own`, `commissioned`, `typeface-named`, `third-party`,
 `unknown`) in the spec's source block.
 
-## Licence — asked, never stamped
+## License — asked, never stamped
 
-Ask which licence the new font carries. Record the answer in `font-spec.yaml`
-and in the font's name table (licence description and URL). With no answer the
-licence is `unknown`, written as such in both places. **Never** choose one on
-the person's behalf: a default licence is a commitment made for someone else.
+Ask which license the new font carries. Record the answer in `font-spec.yaml`
+and in the font's name table (license description and URL). With no answer the
+license is `unknown`, written as such in both places. **Never** choose one on
+the person's behalf: a default license is a commitment made for someone else.
 
 ## No freehand outlines
 
@@ -89,7 +89,7 @@ spec is missing a parameter — add it.
 1. **Spec first** — write `font-spec.yaml` per
    [`references/font-spec.md`](references/font-spec.md): units per em, vertical
    metrics, stems, contrast, stress angle, overshoot, aperture, terminals,
-   spacing, the coverage tier, licence and source blocks.
+   spacing, the coverage tier, license and source blocks.
 2. **Path A — from lettering** (raster or SVG, including a wordmark just made by
    `logo-generation` or `image-generation`):
    1. **Ingest** — parse the SVG, or threshold and deskew the raster.
@@ -140,7 +140,7 @@ spec is missing a parameter — add it.
 UFO source, `font-spec.yaml`, built `woff2` and `ttf`, the proof page with its
 PNG, and the QA report — at the location `design-system-capture` conventions
 give the project's design-system assets, **never inside the package**. Record
-the family there as a custom family with its source and licence.
+the family there as a custom family with its source and license.
 
 ### Maturity — exactly one label
 
@@ -154,7 +154,7 @@ Never a claim the run cannot show.
 
 ## Output format
 
-1. **QA report** — coverage tier, maturity label, the licence (or `unknown`),
+1. **QA report** — coverage tier, maturity label, the license (or `unknown`),
    the rights class, and each gate with its measured value, threshold and
    result.
 2. **Witness reading** — the face state the asset profile reported for the new
@@ -179,7 +179,7 @@ Never a claim the run cannot show.
 
 - Do NOT trace lettering whose rights class is `third-party` or `unknown`.
 - Do NOT write or ship glyph path data by hand.
-- Do NOT stamp a licence the person did not give.
+- Do NOT stamp a license the person did not give.
 - Do NOT claim a coverage tier the font does not cover, or `validated-static`
   with a gate open.
 - Do NOT write outputs into the package, or add a font binary to it.
