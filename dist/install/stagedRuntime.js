@@ -3,7 +3,7 @@
  * machine root (`~/.event4u/agent-config/runtime/`).
  *
  * road-to-a-hook-carrier-that-is-never-silent Phases 1–3. An `npx` install runs
- * from `<npm cache>/_npx/<hash>/node_modules/@event4u/agent-config`, a directory
+ * from a package directory inside the npm cache (`_npx`), a directory
  * the package manager may clear at any time, and leaves nothing on `PATH`. Every
  * absolute pointer a thinned stub carries and every carrier path the hook command
  * tries therefore resolves HERE, in a directory the package owns.
@@ -16,7 +16,7 @@
  *     runtime/v-…/dist/agent-src/…  rule bodies the stubs point at, with the
  *                                   trees their relative links resolve into
  *     runtime/v-…/src/scripts/ (data files only), src/config/, package.json,
- *     runtime/v-…/node_modules/yaml
+ *     the `yaml` package, in a `node_modules` directory of the stage
  *                                   what the bundle reads from its package root
  *     runtime/v-…/claude-rules/     the installed claude layer before thinning,
  *                                   stamped files only — the copy a dead carrier
@@ -62,7 +62,7 @@ export const STAGED_ENTRIES = [
  */
 /**
  * Packages the bundle still resolves at run time (a `createRequire` the bundler
- * cannot inline). Each is copied to `<stage>/node_modules/<name>` from wherever
+ * cannot inline). Each is copied into the stage's own `node_modules` from wherever
  * the package root resolves it; `yaml` has no dependencies of its own.
  */
 export const STAGED_RUNTIME_DEPS = ['yaml'];
