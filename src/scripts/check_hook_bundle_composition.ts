@@ -212,6 +212,9 @@ export function buildChunkBytes(root: string, entry: string): number {
  */
 export function chunkCoverageFindings(defined: readonly string[], budgets: readonly ChunkBudget[]): string[] {
     const out: string[] = [];
+    const twice = (xs: readonly string[]): string[] => [...new Set(xs.filter((x, i) => xs.indexOf(x) !== i))];
+    for (const d of twice(defined)) out.push(`chunk ${d} is defined more than once in hook_chunks.mjs`);
+    for (const d of twice(budgets.map((b) => b.entry))) out.push(`chunk ${d} has more than one ceiling in ${BUDGET_REL}`);
     const budgeted = new Set(budgets.map((b) => b.entry));
     for (const d of defined) if (!budgeted.has(d)) out.push(`chunk ${d} is built by hook_chunks.mjs but has no ceiling in ${BUDGET_REL}`);
     for (const b of budgets) if (!defined.includes(b.entry)) out.push(`ceiling for ${b.entry} names no chunk hook_chunks.mjs builds`);

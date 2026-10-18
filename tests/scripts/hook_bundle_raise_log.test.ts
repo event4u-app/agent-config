@@ -157,6 +157,14 @@ describe('chunk builds — one definition, used by the build and by the gate', (
         expect(findings.some((f) => f.includes('c.ts') && f.includes('names no chunk'))).toBe(true);
     });
 
+    it('a chunk defined twice, and a chunk with two ceilings, are findings', () => {
+        const dupDefined = chunkCoverageFindings(['a.ts', 'a.ts'], [{ entry: 'a.ts', maxBytes: 1 }]);
+        expect(dupDefined.some((f) => f.includes('defined more than once'))).toBe(true);
+        const dupBudget = chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }, { entry: 'a.ts', maxBytes: 2 }]);
+        expect(dupBudget.some((f) => f.includes('more than one ceiling'))).toBe(true);
+        expect(chunkCoverageFindings(['a.ts'], [{ entry: 'a.ts', maxBytes: 1 }])).toEqual([]);
+    });
+
     it('the build script writes every defined chunk and a matching digest sidecar', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'chunk-main-'));
         try {
