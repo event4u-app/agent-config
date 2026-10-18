@@ -16,11 +16,11 @@
  * thin stubs were on disk. The caller gathers the evidence; this function only
  * weighs it, and holds no I/O of its own beyond the brake-table loader.
  *
- * TWO INPUTS DO NOT EXIST YET, AND THEIR ABSENCE IS `full`. The arrival record
- * (step 2.1) and the carrier probe (road-to-a-hook-carrier-that-is-never-silent
- * step 2.2) are typed here as the minimum this function needs from them. Until a
- * producer exists the caller passes `null` / `'unknown'`, which is the shipped
- * behaviour: every machine stays on today's full form.
+ * ABSENT EVIDENCE IS `full`. The arrival record (step 2.1) and the carrier
+ * probe (road-to-a-hook-carrier-that-is-never-silent step 2.2) are typed here
+ * as the minimum this function needs from them; `layer_form_evidence.ts` reads
+ * both from the machine, and where either is missing the caller passes `null` /
+ * `'unknown'`, so the machine stays on today's full form.
  *
  * `deliveryObserved` IS STRICTER THAN THE STEP'S WORDING, DELIBERATELY. The step
  * asks for "delivery mechanics observed" in `host-injection-effect.json`, but
@@ -245,16 +245,4 @@ export function shadowLayerFormCheck(gather: (host: string) => LayerFormInput): 
         message: `shadow decision, nothing on disk changed — ${parts.join(' · ')}`,
         remedy: '',
     };
-}
-
-/** The doctor entry point: shipped evidence at the installed package's own version. */
-export function layerFormDoctorCheck(packageRoot: string): ReturnType<typeof shadowLayerFormCheck> {
-    let version = 'unknown';
-    try {
-        const raw = JSON.parse(fs.readFileSync(path.join(packageRoot, 'package.json'), 'utf-8')) as { version?: unknown };
-        if (typeof raw.version === 'string' && raw.version.trim()) version = raw.version.trim();
-    } catch {
-        // An unreadable package.json leaves the version unknown; no package-version brake row can match it.
-    }
-    return shadowLayerFormCheck(gatherShippedEvidence(packageRoot, version));
 }

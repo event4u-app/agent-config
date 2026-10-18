@@ -129,11 +129,21 @@ Nothing is sent without the person's word in that turn.
 > identity") has no commit to set an identity on until 2.1 creates one. Both
 > are correctly sequenced behind it; neither is blocked on the detector table,
 > and that distinction is worth keeping for whoever takes this next.
+> *(Superseded 2026-10-17: 2.1 and 2.3 are built — see D6.)*
 
-- [ ] **2.1 The release builds a clean patch first.** In an isolated checkout of
+- [x] **2.1 The release builds a clean patch first.** In an isolated checkout of
       this package, one commit on the package base; the gate walks every object
       reachable from it that is not on the base, plus branch name, commit
       identity, commit message, diff, title and body.
+      **Done 2026-10-17 (D6):** the "isolated checkout" is a temporary index
+      with no working tree — `read-tree` of `origin/main`, `apply --cached` of
+      the author branch's net diff (`origin/main...<branch>`, binary, no
+      textconv or external driver), `write-tree`, `commit-tree` — and the
+      commit is pushed by sha onto `retro/<fp8>`. Nothing from the branch's
+      history leaves: its name, its commits, content added and later removed.
+      The floor walks `rev-list --objects <base>..<sha>`: each commit object
+      raw, each tree and blob path, each blob whole. Tested against a real bare
+      repository, not a scripted argv.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t release-scans-whole-object-graph --reporter=verbose` -> /✓.*release-scans-whole-object-graph/
 - [x] **2.2 Against the detector table and the consumer's own identifiers.** The
       scan uses the detector table of `road-to-one-detector-and-the-senders-we-own`
@@ -155,8 +165,15 @@ Nothing is sent without the person's word in that turn.
       and still open, so a company e-mail whose domain is not a consumer
       identifier passes — 2.3 here closes that.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t consumer-identifier-in-diff-refuses --reporter=verbose` -> /✓.*consumer-identifier-in-diff-refuses/
-- [ ] **2.3 Identity.** The commit uses a noreply identity; a configured identity
+- [x] **2.3 Identity.** The commit uses a noreply identity; a configured identity
       with a company domain is never used.
+      **Done 2026-10-17:** `<id>+<login>@users.noreply.github.com` of the
+      account `gh` is signed in as — already visible on the pull request — set
+      for author and committer through the environment, which overrides any
+      configured identity; dated in UTC so no timezone offset leaves; unsigned.
+      The built commit object is read back and refused unless every identity
+      line carries exactly that address. No resolvable identity → no push, the
+      ladder starts at the issue.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t company-identity-is-never-committed --reporter=verbose` -> /✓.*company-identity-is-never-committed/
 
 ## Phase 3 — Synthesised, clustered, drafted
@@ -166,6 +183,14 @@ Nothing is sent without the person's word in that turn.
       `falsifier`, a synthetic package fixture — with no transcript text, no
       local key and no free-text project context.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t payload-has-only-closed-fields --reporter=verbose` -> /✓.*payload-has-only-closed-fields/
+      **Open for a named reason, re-measured 2026-10-17:** `principle` and
+      `mechanism` are still on no record — `DefectFinding` carries neither, and
+      the retro's `Candidate` carries `subject`, `falsifier` and
+      `counter_hypothesis` but no `principle`. The producer is
+      `road-to-a-retro-the-merge-runs` step 4.4 ("package findings become
+      self-repair records"), open and in flight in a parallel lane; defining
+      the fields here first would fix the producer's schema from the consumer's
+      side. 3.2 waits on the same field.
 - [ ] **3.2 A mechanism fingerprint.** For records carrying `target` and
       `principle`, the fingerprint hashes those instead of the evidence, so the
       F5 pair clusters.
@@ -177,8 +202,11 @@ Nothing is sent without the person's word in that turn.
       alone would cluster two different mechanisms found in the same file, so
       the half-built version is worse than the evidence hash it replaces.
       verify: `npx vitest run tests/scripts/self_repair.test.ts -t same-mechanism-same-fingerprint --reporter=verbose` -> /✓.*same-mechanism-same-fingerprint/
-- [ ] **3.3 Draft, and a neutral branch.** `--draft` on every pull request; the
+- [x] **3.3 Draft, and a neutral branch.** `--draft` on every pull request; the
       branch is `retro/<fingerprint[:8]>`.
+      **Branch half done 2026-10-17 with 2.1:** the commit is pushed as
+      `<sha>:refs/heads/retro/<fp8>` and `gh pr create` names it in `--head` on
+      both rungs (the fork rung as `<login>:retro/<fp8>`).
       **Half landed 2026-10-14, half sequenced.** F4 is closed: `prArgs` now
       carries `--draft` before `--title`, on **both** rungs of the ladder — the
       direct-push one and the fork one. The two share one `prArgs` array, so
@@ -214,13 +242,20 @@ Nothing is sent without the person's word in that turn.
 > session with explicit permission to take that observation, and D5's current
 > option (b) is what holds until then — consumers send issues.
 
-- [ ] **4.1 The person approves what is sent.** `--dry-run` shows every byte;
+- [x] **4.1 The person approves what is sent.** `--dry-run` shows every byte;
       the release accepts only an approval bound to the digest of those bytes
       through `self_repair_class_b`, or through the self-modification roadmap's
       `subjectDigest` if that lands first — one primitive, the other's reason
       recorded in the step's commit.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t changed-bytes-void-approval --reporter=verbose` -> /✓.*changed-bytes-void-approval/
-- [ ] **4.2 A consumer reaches an issue, not yet a pull request (D5).** From a
+      **Done 2026-10-17:** `_lib/self_repair_outgoing.ts` renders branch,
+      identity, commit message, diff, title, body and the fallback issue as one
+      length-sectioned text; the dry run prints it with its SHA-256, and the
+      release refuses unless `--approve <digest>` names the bytes it recomputes
+      at send time — through `self_repair_class_b`'s `approve`. `subjectDigest`
+      is not used: it digests the gated paths of a ratification subject at a
+      revision, not an arbitrary outgoing payload.
+- [x] **4.2 A consumer reaches an issue, not yet a pull request (D5).** From a
       consumer project the ladder stops at the issue step; a pull request is
       opened only from a checkout of this package, and `AGENT_CONFIG_SOURCE` is
       documented as that checkout's pointer. In the same step, a threat-model
@@ -230,6 +265,16 @@ Nothing is sent without the person's word in that turn.
       if the fork PR adds no project linkage beyond the issue, D5 reopens toward
       an ephemeral-checkout pull request from consumers.
       verify: `ls agents/evidence/analysis/` -> /upstream-fork-pr-linkage/
+      **Done 2026-10-17:** `findAgentConfigCheckout` honours
+      `AGENT_CONFIG_SOURCE` only when the working directory is inside the
+      checkout it names, so set in a consumer project it widens nothing; the
+      command documents it. The matrix
+      (`agents/evidence/analysis/upstream-fork-pr-linkage-2026-10-17.md`) was
+      measured read-only on a live forge without opening anything: a fork PR,
+      as the release now builds it, adds no consumer-project linkage over an
+      issue — D5's literal condition is met — but it is not deletable where an
+      issue is, so a floor miss is permanent. The reopen went to the council
+      (D7): split, D5 unchanged.
 - [x] **4.3 The remaining identity is said out loud.** The dry run states which
       account will appear on the pull request (blocker below).
       **Done 2026-10-17:** unlike 4.1 it needs no 2.1 bytes — `renderDryRun`
@@ -247,6 +292,10 @@ Nothing is sent without the person's word in that turn.
 > retro run to attach an offer to, so neither step is buildable here, and
 > building a stub to attach one to would create the second outward route K1
 > forbids.
+> *(Re-measured 2026-10-17: `retro.ts` and `tests/scripts/retro.test.ts` now
+> exist, but a retro run still produces no package record — that is retro
+> step 4.4, open — and `/retro status` is retro step 2.5, open. Both steps
+> here stay sequenced behind them.)*
 
 - [ ] **5.1 At most one offer per run.** A retro run whose package record passes
       the canonical threshold appends one release offer to its output; sending
@@ -279,6 +328,8 @@ Nothing is sent without the person's word in that turn.
 | D3 | reversible-technical | agent | No organisation-level intermediate stage now | `stubs/road-to-org-telemetry-sink` is unscheduled, and creating a sink is an owner act | that stub is scheduled |
 | D5 | reversible-technical | council:2026-10-12-upstream-account-visibility | Consumer projects send issues; pull requests come only from a checkout of this package, until 4.2's matrix shows a fork PR adds no project linkage over an issue; until then AC-5 reads as reached by the issue step, and its wording is corrected at the next risk review | Both seats (anthropic, openai): not owner-reserved — every send is an explicit per-turn act and the issue route already shows the account. Choice split: anthropic (a) with an escape hatch, openai (b) because a fork PR adds a durable fork relationship and event metadata an issue does not. Tie-break: on a privacy split the option revealing less wins until evidence; dissent recorded here | 4.2's matrix finds no linkage beyond the issue |
 | D4 | reversible-technical | agent | No automatic upstream and no automerge of a retro pull request, in this repository either | `self-repair-loop` requires the person's word for the outward step | — |
+| D6 | reversible-technical | agent | Step 2.1's isolated checkout is a temporary index with no working tree, and the commit is pushed by sha | A worktree would run the package's commit hooks without its dependencies and leave a checkout to clean up; plumbing reaches the same property — only the net diff on the base leaves — with nothing on disk but a temp dir | a hook must run on the synthesised commit |
+| D7 | critical-technical | council:2026-10-17-d5-reopen-fork-pr | D5 is NOT reopened; the reopen is owner residue, since one seat named an owner-reserved dimension (irreversible external consequence). Its condition fires literally (matrix: no consumer-project linkage), but the seats split: anthropic (a) reopen, council-decidable — the digest approval is the protection for the floor's gap; openai (b) keep — a matching digest proves integrity, not that the person recognised a company term, and widening irreversible consequences is owner-reserved. A split escalates; the less-revealing option stands until the owner decides | `agents/evidence/analysis/upstream-fork-pr-linkage-2026-10-17.md` | the owner decides, or the detector table's identifier class lands |
 
 ## What this roadmap deliberately does not do
 
@@ -302,9 +353,9 @@ Nothing is sent without the person's word in that turn.
 
 - [ ] **AC-1** No document in the tree sends a contributor to a path, script or
       file that does not exist.
-- [ ] **AC-2** A release whose branch, identity, message or diff carries a
+- [x] **AC-2** A release whose branch, identity, message or diff carries a
       consumer identifier is refused, with the finding named.
 - [ ] **AC-3** The same mechanism from two projects produces one fingerprint.
-- [ ] **AC-4** Every upstream pull request is a draft with a noreply identity,
+- [x] **AC-4** Every upstream pull request is a draft with a noreply identity,
       and changing one byte after approval voids the approval.
 - [ ] **AC-5** A consumer install reaches the pull-request step of the ladder.

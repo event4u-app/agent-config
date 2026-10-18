@@ -1,6 +1,7 @@
 {
   "last_eval": "2026-06-16",
   "should_trigger": [
+    "Generate a banner for our product launch — use the brand colors from tokens.json",
     "Generate a banner for our product launch — use the brand colors from .tokens.json",
     "Create a social card for the Open Graph meta tag, 1200×630, matching our brand palette",
     "Make a LinkedIn cover image using our brand typography and voice",

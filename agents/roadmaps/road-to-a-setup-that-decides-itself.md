@@ -125,6 +125,7 @@ with that file.
   resolved form. These are the "today" arm of Phase 5.
   verify: two runs at one commit are byte-equal; every row names its commit;
   run at `d760ecbde` the installed row reads 106 files / 369,415 bytes.
+  Re-screened 2026-10-18, still open: a scratch-`HOME` install is the reproducible path (the carrier roadmap's 0.1 census already stages one per install path), but a byte-equal fixture also has to exclude the install-date and machine-path fields the receipt writes, and naming that exclusion set is the decision this step still lacks. Not forced: nothing on disk moves before 5.3.
   Open 2026-10-16: the instrument exists (`src/scripts/installed_layer_report.ts`), the per-host fixture set does not. The 106 / 369,415 row is a reading of one maintainer machine's `~/.claude/rules`, not of a scratch-`HOME` install at that commit, so the step needs a decision on which install path the fixture is taken from before it can be byte-reproducible.
 - [ ] **0.2 Corpus by reuse.** The comparison set is the routing matrix, the
   train slice of the trigger corpus, the host-graded cases and the conformance
@@ -144,24 +145,29 @@ with that file.
   removable on hook failure, duplicate events, session-start regression or
   unexplained test breaks.
   verify: the stub's re-entry probe returns `1` and `1`.
-  Open 2026-10-16: binding a host event edits the hook manifest and what every consumer's `.claude/settings.json` receives — hook plumbing, which an autonomous drain lane does not edit. Needs a lane with that surface in scope.
-- [ ] **1.2 Negative controls for the observer.** Event unavailable on
+  Open 2026-10-18 — the observer is built, its binding is not shipped. The concern `instructions-observer` (`src/scripts/hooks/instructions_observer_hook.ts`, kill switch `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off`) writes one capture line per event to `<machine root>/runtime/arrivals/<session>.jsonl` through one `O_NOFOLLOW|O_NONBLOCK` descriptor, owner-only, 50 sessions × 256 KiB retained; classification runs at read time (`_lib/instructions_loaded_classify.ts`). It is in no manifest row and not in the concern registry, so the probe still reads `0` and `0`. The binding (vocabulary, alias, platform row, registry entry) was written and then taken out of this change, for two reasons that are both recorded here rather than worked around:
+  (1) **Council modification review, 2026-10-18, anthropic + openai, seven rounds (the first two attempts timed out on both seats), all subscription-authed, nothing billed — no round reached a pass.** Each round closed real defects and raised new ones: a racy shared rotation file (→ one file per session), an order-sensitive record under asynchronous delivery (→ a set, D7), an unsanitised session id, an all-or-nothing reader, a recreated file skipping its prune, a check-then-append symlink race (→ one no-follow descriptor), a fail-open boundary that had slipped, a FIFO that could stall the open. Round 7's open items — verify the `arrivals` directory itself (not a symlink, owned, `0700`) before opening anything in it; give the `arrivals.last-error` marker the same no-follow, non-blocking, owner-only treatment as the session files; a test that a torn trailing line is skipped — are done in this change, outside the bundle, so round 8 reviews them with the binding instead of re-deriving them.
+  (2) **The dispatcher bundle has no room for them.** With the binding in and before the round-7 items, it measured 1,549,991 B against its 1,550,000 B ceiling (`src/config/hook-bundle-budget.json`); the round-7 items cost more than the 9 B left. Raising `max_bytes` is a ratchet move recorded in that file's `raise_log` and is the owner's, and a sibling change moving the egress engine into a conditional chunk would free room without one. Either unblocks this step; the review then resumes at round 8.
+- [x] **1.2 Negative controls for the observer.** Event unavailable on
   the host version, events reordered, malformed payload, duplicate call: each is
   recorded as `unknown`, never as arrival.
   verify: one fixture per control; none produces an arrival record.
+  Landed 2026-10-18: `tests/scripts/arrival_record.test.ts` — one fixture per control plus lost start-up events and mixed host versions; each yields a record with `status: unknown` and no layer-form evidence. Sensitivity shown by neutralising the duplicate check: that control went red. *Correction to the step:* "events reordered" cannot be a signal here. The host runs the event asynchronously, so disk order is scheduler order, and a rule that made reordering `unknown` would turn most real sessions into unknowns (the council's openai seat, round 1). The record is built as a set instead, and the reorder fixture asserts that a shuffled sequence yields exactly the in-order record — order can neither create nor remove an arrival. Recorded as D7.
 
 ## Phase 2 — An arrival record per session, on the ladder
 
-- [ ] **2.1 The record.** Per session: host version, launch context where
+- [x] **2.1 The record.** Per session: host version, launch context where
   exposed, which package rule files loaded and why (`load_reason`), whether the
   dispatcher was reached. It is the observable predicate of the ladder's
   `visible` rung for standing rules — no new state vocabulary. Names, counts and
   enums only.
   verify: a fixture produces one record; the schema rejects a body or prompt
   field; `activation_ladder` maps the record to `visible`.
-- [ ] **2.2 Hand it to its waiting consumer.** The installed-layer
+  Landed 2026-10-18: `src/scripts/_lib/arrival_record.ts` — `buildArrivalRecord`, the closed-shape `validateArrivalRecord`, `arrivalReceipts` onto the ladder's `ActivationReceipt`, and `arrivalEvidence` in the shape 3.1 already typed. Host version is read from the host's `AI_AGENT` string and launch context from `CLAUDE_CODE_ENTRYPOINT`; where neither is exposed the field is `null`, which 3.1 reads as a version mismatch and so as `full`.
+- [x] **2.2 Hand it to its waiting consumer.** The installed-layer
   roadmap's step 2.1 reads this record.
   verify: that step's verify line has an input.
+  Landed 2026-10-18: `./scripts-run src/scripts/arrival_report` prints one block per session with a `host version` line, which is the token the installed-layer step 2.1 verify greps; that step now names it as its input. The tool exists; data begins to arrive only once 1.1's binding ships, so the consumer's verify has an input and, until then, an empty one.
 
 ## Phase 3 — The package decides; no key does
 
@@ -193,25 +199,40 @@ with that file.
   carrier does.
   verify: fresh-`HOME` fixture — session 1 full, session 2 thinned, only with
   the record present; a record missing a standing law yields `demoted`.
+  Open 2026-10-18, screened: two independent stops. (1) Its latency budget is "fixed from 0.1's measurement", and 0.1 is open. (2) The promotion runs in the `session_start` concern, inside the dispatcher bundle, whose ceiling 1.1's binding alone already exhausts (1,549,991 B of 1,550,000 with it in, see 1.1). A thin pass in that concern needs either a raised `max_bytes` (a ratchet move recorded in `hook-bundle-budget.json`'s `raise_log`, an owner decision) or bytes removed elsewhere first. Nothing promotes before 5.3 in any case, so leaving it open costs no behaviour.
 - [x] **3.4 A release brake the maintainer owns.** A shipped table row forces
   `full` for a host version or a package version. It is the operator rollback,
   not a consumer surface.
   verify: a row for a fixture host version forces `full`.
   Landed 2026-10-16: table `src/config/layer-form-brakes.json` (empty), read by `loadBrakes`; an unreadable or malformed table holds the brake on.
-- [ ] **3.5 A user brake that is not a setting.** `install --full` writes one
+- [x] **3.5 A user brake that is not a setting.** `install --full` writes one
   field into the install receipt; only 3.1 reads it; no settings key, schema
   entry or wizard question.
   verify: receipt fixture with the field forces `full`; the settings schema has
   no matching key.
+  Landed 2026-10-18: `src/install/userPin.ts` writes `user_pin` into `runtime/carrier.json` (the receipt the carrier probe already writes, which now keeps fields it does not own); `prepareClaudeCarrier` refuses to thin while it is there, and `withMachineEvidence` hands it to 3.1 for every host. Sticky across a plain `install` and upgrades; `uninstall` removes it with the runtime directory. Tests: `hook_carrier_never_silent.test.ts` (pin on a reached carrier, survives a probe rewrite and a plain install) and `layer_form_evidence.test.ts` (`user-pin` on all three thinnable hosts). `grep -c user_pin src/server/schemas/settings.ts` reads 0. Documented in `docs/installation.md`.
 - [ ] **3.6 The project tree uses the same function**, with the project's own
   dispatcher as its carrier.
   verify: ADR-267's three corpus figures reproduce, and
   `./scripts-run src/scripts/check_host_tree_parity` -> 0
-- [ ] **3.7 Declare it.** `doctor` and the receipt print form, reason code, last
+  Open 2026-10-18, screened: the project tree on the first host runs `delivery` today (ADR-267). Routed through 3.1 as it stands, it would read `delivery-unobserved` and fall back to full — a default change for every project tree on that host that is not a "no worse" move and has no consent behind it. The step needs either a project-tree effect row the function can read as observed, or a decision that the project tree keeps ADR-267's evidence as its proof; neither is in the tree.
+- [x] **3.7 Declare it.** `doctor` and the receipt print form, reason code, last
   arrival record and demotion state per layer and host.
   verify: snapshot per reason code.
+  Landed 2026-10-18: `doctor --check layer-form` now decides on the machine's evidence (`src/scripts/_lib/layer_form_evidence.ts`) and prints per host `would-be: <form> (<reason>)`, the last arrival record, and the claude layer's state on disk with the pin; the install receipt prints the carrier probe and demotion lines it already printed plus the pin line. `layer_form_evidence.test.ts` pins one line per reason code, all twelve. Live on this machine it reads `would-be: full (delivery-unobserved)` for all three hosts and "the observer has not seen a session". The current host version is read from the host's own hook environment, so once a host's effect row is observed, a `doctor` run from a plain terminal reads `arrival-host-version-mismatch` — named here because it is what a maintainer will see first.
 
 ## Phase 4 — Remove the keys through the release, loudly
+
+> **Screened 2026-10-18 — not executed by a drain lane.** Blocker
+> `what-a-minor-may-remove` closed 2026-10-14 on option (c): a key may leave in a
+> minor only when no consumer can rely on it. `lean_projection.mode: delivery`
+> written user-globally is a live opt-in that thins `~/.claude/rules`
+> (`installerThinsHost`), and `projection.mode: tiered` is still acted on by
+> `install.ts`, so removing either is relied-on behaviour and fixes the next
+> release as a major. Landing that on `main` is a release commitment, which is
+> owner-reserved; the owner's 2026-10-12 directive orders the removal, not its
+> release class or timing. 4.1's ADR carries that choice and is not written ahead
+> of it.
 
 - [ ] **4.1 One ADR.** It records the key removal and the computed decision, and
   supersedes ADR-267 decision 3 (rollback is one setting), ADR-278 (the
@@ -248,6 +269,12 @@ with that file.
   lands on `eager-all` / `legacy-all`.
 
 ## Phase 5 — Prove "not worse" once, then enable
+
+> **Screened 2026-10-18 — waits on accrued data.** The computed arm needs a
+> machine where 3.1 can return `thinned`, which needs arrival records from real
+> sessions under the binding landed in 1.1 and an observed effect row in
+> `host-injection-effect.json` (owned by `road-to-delivery-on-hook-hosts`); the
+> today arm needs 0.1's fixtures. Neither exists on the day the observer ships.
 
 - [ ] **5.1 Pre-register.** Arms per host: today (0.1) vs computed (Phase 3).
   Primary: host-graded and conformance cases with D2's margin fixed before the
@@ -293,6 +320,7 @@ with that file.
 | D4 | reversible-technical | agent | The forms stay an internal enum after the keys go | The delivery experiment uses the modes as arms (`delivery_arm_experiment.ts`) | the experiment closes |
 | D5 | reversible-technical | agent | Thinnable hosts stay `THINNABLE_HOSTS` (claude-code, cursor, cline); each needs its own observed row before 3.1 can thin it | Binding and effect are separate axes (`host-injection-effect.json` `_comment`) | — |
 | D6 | product-owned | owner | Blocker `instruction-load-observer-has-no-scheduled-owner` → (a): this file schedules the `InstructionsLoaded` binding as steps 1.1–2.2, absorbing stub step 3.0 with its kill switch | owner answer 2026-10-15 to the PR #2373 report, the subject's eighth arrival | the kill switch fires, or the host drops the event |
+| D7 | reversible-technical | agent | The arrival record is a set per session: reordered events are not `unknown`, lost start-up events are | The host documents `InstructionsLoaded` as asynchronous; parallel hooks reach disk in scheduler order; council openai seat, 2026-10-18 round 1, refused the order-sensitive form | the host starts delivering the event synchronously with a sequence number |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->

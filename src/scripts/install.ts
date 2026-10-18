@@ -119,6 +119,7 @@ import {
 } from '../install/installThinLayer.js';
 import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
 import { deployClaudeCarrier } from '../install/stagedRuntime.js';
+import { mergeToolsAliases as _merge_tools_aliases } from '../install/toolsArg.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
 import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
@@ -351,6 +352,7 @@ const LEGACY_RENAME_MAP: Record<string, string> = {
 const state = {
     QUIET: false,
     PROGRESS_NDJSON: false,
+    FULL_PIN: false,
 };
 
 function _emit_progress(obj: Record<string, unknown>): void {
@@ -1938,6 +1940,8 @@ interface Options {
     interactive: boolean;
     no_ui: boolean;
     dry_run: boolean;
+    /** `--full`: write the sticky user pin into the install receipt (`src/install/userPin.ts`). */
+    full: boolean;
     apply_payload: string | null;
     /**
      * Which rule layer owns the corpus when both `~/.claude/rules/` and
@@ -3019,7 +3023,7 @@ function _deploy_global_content(
             // Steps 1.1 and 1.4 of road-to-an-installed-layer-that-is-thinned;
             // both modules' headers carry the reasoning.
             deployClaudeCarrier({
-                packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn,
+                packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn, userPin: state.FULL_PIN,
                 wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
                 thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot })),
             });
@@ -3744,18 +3748,6 @@ function arrayStrEqual(a: string[], b: string[]): boolean {
 
 // --- Argument parsing ---
 
-function _merge_tools_aliases(tools: string | null, ai: string | null): string {
-    const items: string[] = [];
-    for (const raw of [tools, ai]) {
-        if (!raw) continue;
-        for (const piece of raw.split(',')) {
-            const stripped = piece.trim();
-            if (stripped && !items.includes(stripped)) items.push(stripped);
-        }
-    }
-    return items.length > 0 ? items.join(',') : 'all';
-}
-
 const PROG = 'agent-config install';
 // Verbatim argparse usage block at COLUMNS=80 (captured from the .py). The
 // `--help` BODY (per-flag descriptions) is a documented divergence — argparse
@@ -3768,7 +3760,7 @@ const USAGE =
     '                  [--windsurf-user-hooks] [--gemini-user-hooks]\n' +
     '                  [--project PROJECT] [--package PACKAGE] [--quiet]\n' +
     '                  [--tools TOOLS] [--ai AI] [--packs PACKS] [--core-only]\n' +
-    '                  [--no-smoke] [--global]\n' +
+    '                  [--no-smoke] [--global] [--full]\n' +
     '                  [--scope {project,global,prompt,auto}]\n' +
     '                  [--layer {global,project,both-acknowledged}]\n' +
     '                  [--custom-path CUSTOM_PATH] [--offline] [--minimal]\n' +
@@ -3793,6 +3785,7 @@ const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--interactive': 'interactive',
     '--no-ui': 'no_ui',
     '--dry-run': 'dry_run',
+    '--full': 'full',
 };
 
 const _VALUE_FLAGS: Record<string, keyof Options> = {
@@ -3842,6 +3835,7 @@ function parse_options(argv: string[]): Options {
         interactive: false,
         no_ui: false,
         dry_run: false,
+        full: false,
         apply_payload: null,
         layer: null,
     };
@@ -4553,6 +4547,7 @@ function pyRepr(v: unknown): string {
 function main(argv: string[]): number {
     const opts = parse_options(argv);
     state.QUIET = opts.quiet;
+    state.FULL_PIN = opts.full;
 
     if (opts.apply_payload) {
         const payload_path = resolvePath(opts.apply_payload);

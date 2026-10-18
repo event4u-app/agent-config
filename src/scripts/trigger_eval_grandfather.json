@@ -20,7 +20,6 @@
     "competitive-positioning",
     "composer-packages",
     "condense-memory",
-    "content-funnel-design",
     "context-document",
     "contracts-cognition",
     "copilot-agents-optimization",
@@ -48,7 +47,6 @@
     "funnel-analysis",
     "github-ci",
     "grafana",
-    "gtm-launch",
     "guideline-writing",
     "hiring-loop-design",
     "jobs-events",
@@ -75,7 +73,6 @@
     "mcp-builder",
     "md-language-check",
     "memory-consolidation",
-    "messaging-architecture",
     "migration-architect",
     "mobile-e2e-strategy",
     "module-detect-on-the-fly",
@@ -117,7 +114,6 @@
     "receiving-code-review",
     "recursive-verification",
     "refine-prompt",
-    "release-comms",
     "requesting-code-review",
     "retention-loops",
     "rice-prioritization",
@@ -152,7 +148,6 @@
     "verify-completion-evidence",
     "video-director",
     "vision-articulation",
-    "voc-extract",
-    "voice-and-tone-design"
+    "voc-extract"
   ]
 }

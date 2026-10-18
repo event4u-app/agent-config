@@ -243,6 +243,53 @@ describe('DTCG alias chains are kept, cycles are named', () => {
         expect(outcome.notes.join(' ')).toContain('does not define');
     });
 
+    // road-to-a-brand-the-tree-can-check 3.5 — one row, added after canvas 3.1.
+    // Stable DTCG 2025.10 makes a colour `$value` an object, so an alias onto
+    // one resolves to nothing this adapter can map. Before this row that read
+    // exactly like a pointer at a token the file never defined: same verbatim
+    // reference, same note. The two need opposite actions, so they stay apart.
+    it('alias-object-value: an unmappable target is not a missing one', () => {
+        const objectValued = importDesignSystem(
+            {
+                color: {
+                    blue: {
+                        600: {
+                            $value: { colorSpace: 'srgb', components: [0.15, 0.39, 0.92], hex: '#2563EB' },
+                            $type: 'color',
+                        },
+                    },
+                },
+                action: { primary: { $value: '{color.blue.600}', $type: 'color' } },
+            },
+            PROVENANCE,
+        );
+        expect(objectValued.ok).toBe(true);
+        if (!objectValued.ok) return;
+        // It exists — the adapter says so by listing the target, not the alias.
+        expect(objectValued.design_system._meta?.['unmapped']).toMatchObject({
+            'color.blue.600': '<non-scalar $value>',
+        });
+        expect(objectValued.design_system._meta?.['alias_of']).toMatchObject({
+            'action.primary': 'color.blue.600',
+        });
+        expect(objectValued.design_system._meta?.['alias_cycles']).toBeUndefined();
+        const objectNotes = objectValued.notes.join(' ');
+        expect(objectNotes).toContain('DOES define');
+        expect(objectNotes).not.toContain('does not define');
+
+        // The missing target keeps the other note and lists nothing as unmapped.
+        const missing = importDesignSystem(
+            { action: { primary: { $value: '{color.blue.600}', $type: 'color' } } },
+            PROVENANCE,
+        );
+        expect(missing.ok).toBe(true);
+        if (!missing.ok) return;
+        expect(missing.design_system._meta?.['unmapped']).toBeUndefined();
+        const missingNotes = missing.notes.join(' ');
+        expect(missingNotes).toContain('does not define');
+        expect(missingNotes).not.toContain('DOES define');
+    });
+
     it('alias-record: a two-token loop names both members', () => {
         const outcome = importDesignSystem(
             {

@@ -135,7 +135,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 32 -> 34 on 2026-10-16b: road-to-steps-the-skill-cannot-skip touched
         // `design-review` (0x1d = 29) and `roadmap-management` (0x07 = 7), both
         // below the ceiling, so both seal. The claim's scope moves to 18 of 34.
-        expect(sealed.length).toBe(34);
+        //
+        // 34 -> 35 on 2026-10-17: road-to-a-brand-the-tree-can-check 4.3/6.1/7.1
+        // touched five skills that owed a corpus. `gtm-launch` is 0x28 = 40 and
+        // seals; the other four train. The claim's scope moves to 18 of 35.
+        expect(sealed.length).toBe(35);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -312,9 +316,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         //
         // 148 -> 151 on 2026-10-16b: `design-review` and `roadmap-management`
         // seal (32 -> 34), `skill-reviewer` trains (116 -> 117).
+        //
+        // 151 -> 156 on 2026-10-17: the five brand-roadmap skills gain a corpus;
+        // `gtm-launch` seals (34 -> 35) and four train (117 -> 121).
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(151);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(34);
+        expect(all.length).toBe(156);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(35);
     });
 });
 
@@ -371,7 +378,10 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // train; `deep-reading-analyst` seals and is absent here.
         // 116 -> 117 on 2026-10-16b: `skill-reviewer` trains; `design-review`
         // and `roadmap-management` seal and are absent here.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(117);
+        // 117 -> 121 on 2026-10-17: `content-funnel-design`, `messaging-architecture`,
+        // `release-comms` and `voice-and-tone-design` train; `gtm-launch` seals
+        // and is absent here.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(121);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

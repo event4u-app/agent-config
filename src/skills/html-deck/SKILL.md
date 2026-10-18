@@ -87,9 +87,14 @@ The deck surface's floor (per
 4. **Build slide-by-slide, reveal early.** Show the file at 1–2 slides —
    don't perfect 15 in private. Per slide: one primary message; **type
    floors on a 1080p canvas: body ≥24px (32px+ preferred), headlines
-   60–96px+**; tokens from the active brand/design system (precedence per
+   60–96px+**; tokens from the active brand/design system — ask the resolver
+   for it (`./agent-config brand:status --json`) before the first colour or
+   type choice and take values only from the `sources[]` it reports valid,
+   never from a token file you located yourself; precedence per
    `brand-source-of-truth`, emission per
-   [`design-tokens`](../design-tokens/SKILL.md)); honest placeholders for
+   [`design-tokens`](../design-tokens/SKILL.md). A `bare` reading, or no valid
+   source for the axis in hand, means the deck's palette and type come from
+   the brief and are **labelled `corpus-sourced`** in the hand-back; honest placeholders for
    missing imagery (striped background + monospace size label — see
    [`fe-design § Craft details`](../fe-design/SKILL.md)); cut filler slides
    ("Why choose us?", "About this deck") and data that doesn't support the

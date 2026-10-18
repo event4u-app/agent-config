@@ -61,6 +61,12 @@ nothing to apply to.
   view and the placeholder view exists from `protect` upward, so the store is
   written only from `protect`; in `observe` the stage counts what it would store.
 
+**Screen 2026-10-18 (`main@3f8c98e74`), nothing executable.** Placeholders 1.1
+(ADR-285) and 1.2 have landed and `src/scripts/hooks/egress_stage.ts` exists;
+placeholders 1.3 is open on its one release of readings, so D8's wait holds as
+recorded. 1.3 and 1.4 here are dated on or after 2026-10-29; a run before then
+is labelled PEEK and counts for nothing.
+
 **Unblock events, unchanged in kind:** 1.2 is buildable now (a report, not a
 store). 1.3 and 1.4 wait on the window. Phase 2 waits on placeholders 1.1's ADR and
 its 1.2/1.3 (D8). Open contracts before 2.1 is built: whether 2.4's range is in

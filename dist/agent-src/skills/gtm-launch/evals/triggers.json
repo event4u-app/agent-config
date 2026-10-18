@@ -1,0 +1,15 @@
+{
+  "skill": "gtm-launch",
+  "last_eval": "2026-10-17",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers a readiness-first wave plan, inverting a date-first launch, a retro naming missing audience-by-wave logic, and a German phrasing. Should-not covers the three neighbours the skill routes to (announcement copy, the message stack, retention loops) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "plan the alpha, beta and GA waves for this launch keyed to audience and proof", "trigger": true, "class": "exemplar"},
+    {"q": "we picked a launch date first — invert it so an unmet gate stops a wave", "trigger": true, "class": "exemplar"},
+    {"q": "the last launch landed soft because nobody knew which audience each wave was for", "trigger": true, "class": "exemplar"},
+    {"q": "wir brauchen einen Wellenplan für den Launch, nicht nur ein Datum", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "write the announcement email for the feature we shipped yesterday", "trigger": false, "class": "near-miss", "note": "shipped-change comms is release-comms"},
+    {"q": "lock the primary message and the three supporting ones before we write anything", "trigger": false, "class": "near-miss", "note": "the message stack is messaging-architecture"},
+    {"q": "design the loop that brings users back in week two", "trigger": false, "class": "near-miss", "note": "post-launch retention is retention-loops"},
+    {"q": "our staging database needs a schema migration before Friday", "trigger": false, "class": "counterexample"}
+  ]
+}

@@ -103,7 +103,10 @@ Reproduced on 2026-10-01:
 ## Phase 2 — Records from opted-in machines
 
 - [ ] **2.1 An arrival record per host version.** Input: the record of
-      `road-to-a-setup-that-decides-itself` step 2.1 — run after it lands. From the instruction-load
+      `road-to-a-setup-that-decides-itself` step 2.1, landed 2026-10-18 —
+      `./scripts-run src/scripts/arrival_report > agents/evidence/analysis/installed-arrival-<date>.md`
+      on an opted-in machine prints one block per session, each with a
+      `host version` line. From the instruction-load
       observer — step 3.0 of `stubs/road-to-instructions-loaded-observer.md`,
       NOT the carrier roadmap's step 0.2, which the owner cancelled on
       2026-10-06 (D10 there) and which moved the observer to that stub — one
