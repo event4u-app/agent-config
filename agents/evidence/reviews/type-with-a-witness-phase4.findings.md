@@ -1,12 +1,12 @@
 # Findings: type-with-a-witness-phase4
-<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: f3479075d66432d1fb75962c7c0ae2bba093f0ccbd646b9abe77ef65b689a432 | diff: 6616702b1eed103549b882166f281ed2a6d9c7a7 | reviewer: r2-fresh-subagent-type-with-a-witness-phase4 | prompt_hash: 58a8a77ca297828bbf8113fe65012317f00cae000b708af30639c2823250a26b -->
+<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: 14bef3e1ad8717acb264c9d3fcb527bffac7960d27fb14b88a0649f6d650d07b | diff: 89f77176e12856ad57e8b96456553dce5b3fb4ae | reviewer: r2-fresh-subagent-type-with-a-witness-phase4 | prompt_hash: 58a8a77ca297828bbf8113fe65012317f00cae000b708af30639c2823250a26b -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-type-with-a-witness-phase4"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 6616702b1eed103549b882166f281ed2a6d9c7a7
-  scope_hash: f3479075d66432d1fb75962c7c0ae2bba093f0ccbd646b9abe77ef65b689a432
+  diff_sha: 89f77176e12856ad57e8b96456553dce5b3fb4ae
+  scope_hash: 14bef3e1ad8717acb264c9d3fcb527bffac7960d27fb14b88a0649f6d650d07b
   roadmap: agents/roadmaps/road-to-type-with-a-witness.md
   roadmap_hash: 5ab49600ccbb0045a59f765e83735c7aeaa133eb18bc62cc8dac8a8f4f6b8bbf
   ac_hash: 8c4f8e7d5345fc7f254b75620700125d6016d3b12e0d42cb9c7c253889f4545c
