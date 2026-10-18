@@ -781,8 +781,9 @@ confines the argument shapes it can see — positionals, `--flag=value` values, 
 tail of a single-dash token (`sort -o/path`), any dash-led token containing `/`
 (which may be the previous option's value, `sort -o --/../x`) and everything after
 `--` — to the working tree,
-refuses a path segment the shell could glob to `..` (`.*`, `.?`, a bracket
-expression), admits `git branch` only in its observational forms (listing, `-a`,
+refuses any argument with an unquoted glob (`*`, `?`, `[`), because the shell expands
+it after the check and its result is never seen (`.*` reaches `..`, `le*` an outward
+symlink; `ls src/*.ts` loses its allow as the price), admits `git branch` only in its observational forms (listing, `-a`,
 `-r`, `-v`, `--show-current`, `--merged`/`--contains` filters), and the allow's
 reason names the working tree only when a path was actually confined for that
 call. Withholding an allow returns the host's own confirmation; it never adds a

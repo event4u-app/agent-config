@@ -528,11 +528,28 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
             fs.symlinkSync(path.join(outside, 'secret'), path.join(tree, 'link'));
             fs.symlinkSync(outside, path.join(tree, 'linkdir'));
             fs.symlinkSync(path.join(tree, 'src'), path.join(tree, 'inner'));
-            for (const cmd of ['cat link', 'cat linkdir/secret', 'sort -o linkdir/new src/a.ts']) {
+            // Round 4: a glob is expanded after the check, so `li*` reaches `link`.
+            for (const cmd of [
+                'cat link',
+                'cat linkdir/secret',
+                'sort -o linkdir/new src/a.ts',
+                'cat li*',
+                'cat l?nk',
+                'cat l[i]nk',
+                'grep -r x --include=li*',
+                'grep li* src',
+                'ls src/*.ts',
+            ]) {
                 expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(false);
             }
             expect(isCategoryA('Read', { file_path: path.join(tree, 'link') }, tree)).toBe(false);
-            for (const cmd of ['cat src/a.ts', 'cat inner/a.ts', 'sort -o src/new.txt src/a.ts']) {
+            for (const cmd of [
+                'cat src/a.ts',
+                'cat inner/a.ts',
+                'sort -o src/new.txt src/a.ts',
+                "grep -r x --include='*.ts' src",
+                'grep -r x --include="*.ts" src',
+            ]) {
                 expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(true);
             }
             expect(isCategoryA('Read', { file_path: path.join(tree, 'inner', 'a.ts') }, tree)).toBe(true);

@@ -285,12 +285,6 @@ const NON_OPENING_HEADS = /^(pwd|echo|basename|dirname|date|which)$/;
 const PATTERN_GIVEN = /^(-e|--regexp|-f|--file)(=|$)/;
 
 /**
- * A path segment the shell may expand to `..`: `.*`, `.?`, or any bracket
- * expression. Refused rather than modelled — the classifier never globs.
- */
-const DOT_GLOB_SEGMENT = /^\.[^/]*[*?]|\[/;
-
-/**
  * Every argument of a Bash command that may name a filesystem location.
  *
  * Positionals, flag inline values and the tail of a single-dash token
@@ -305,7 +299,12 @@ function _pathArguments(argv: readonly string[], head: string): string[] {
     let patternPending = grep && !argv.some((t) => PATTERN_GIVEN.test(t));
     let endOfOptions = false;
     for (let i = 1; i < argv.length; i++) {
-        const token = (argv[i] as string).replace(/["']/g, "");
+        const raw = argv[i] as string;
+        // An unquoted glob is expanded after this check, so what it selects
+        // (`.*` to `..`, `le*` to an outward symlink) is never seen. "*" is a
+        // candidate nothing confines.
+        if (/[*?[]/.test(raw.replace(/'[^']*'|"[^"]*"/g, ""))) out.push("*");
+        const token = raw.replace(/["']/g, "");
         if (!endOfOptions && token === "--") {
             endOfOptions = true;
         } else if (endOfOptions || !_isFlag(token)) {
@@ -331,7 +330,7 @@ function _pathArguments(argv: readonly string[], head: string): string[] {
 const UNROOTED = path.resolve("/agent-config-unrooted");
 
 function _confined(candidate: string, workingTree: string): boolean {
-    if (candidate.startsWith("~") || candidate.split("/").some((seg) => DOT_GLOB_SEGMENT.test(seg))) return false;
+    if (candidate.startsWith("~") || candidate === "*") return false;
     return _reallyInside(candidate, workingTree.trim() ? workingTree : UNROOTED);
 }
 
