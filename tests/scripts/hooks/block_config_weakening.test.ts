@@ -7,6 +7,8 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import { load as jsYamlLoad } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
@@ -595,6 +597,18 @@ describe('block_config_weakening — differential: the two readers refuse the sa
 });
 
 // road-to-a-canvas-the-code-owns 7.1 — visual baselines are a review surface.
+// The council review of 2026-10-18 (round 1) asked for the authority-monotonicity
+// cases: no path or payload that blocked before may warn after.
+const HOOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'src', 'scripts', 'hooks', 'block_config_weakening.ts');
+function runHook(envelope: Record<string, unknown>): { status: number | null; stdout: string } {
+    const r = spawnSync(path.resolve(path.dirname(HOOK), '..', '..', '..', 'node_modules', '.bin', 'tsx'), [HOOK], {
+        input: JSON.stringify(envelope),
+        encoding: 'utf-8',
+        timeout: 60_000,
+    });
+    return { status: r.status, stdout: r.stdout ?? '' };
+}
+
 describe('block_config_weakening — snapshot surfaces', () => {
     it('snapshot: classifies baseline image directories as advisory', () => {
         expect(classify_target('tests/e2e/home.spec.ts-snapshots/home-chromium.png')).toBe('advisory');
@@ -603,16 +617,33 @@ describe('block_config_weakening — snapshot surfaces', () => {
         expect(classify_target('docs/snapshots/readme.md')).toBeNull();
     });
 
-    it('snapshot: warns on a visual-runner baseline update with the acceptance step', () => {
-        const w = snapshotUpdateWarning('npx playwright test --update-snapshots');
-        expect(w).toMatch(/diff/);
-        expect(w).toMatch(/commit of its own/);
-        expect(snapshotUpdateWarning('npx vitest run --update-snapshots tests/unit')).toBeNull();
-        expect(snapshotUpdateWarning('npx playwright test')).toBeNull();
+    it('snapshot: a blocking class inside a snapshot directory keeps its class', () => {
+        expect(classify_target('component-snapshots/.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('__screenshots__/.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('a.spec.ts-snapshots/lint_allowlist.json')).toBe('allowlist');
     });
 
-    it('snapshot: an advisory snapshot write warns, never blocks', () => {
-        const d = decide('advisory', 'tests/e2e/a.spec.ts-snapshots/a.png', 1, 1);
-        expect(d.action).toBe('warn');
+    it('snapshot: warns on a visual-runner baseline update from a shell tool only', () => {
+        const cmd = 'npx playwright test --update-snapshots';
+        const w = snapshotUpdateWarning('Bash', cmd);
+        expect(w).toMatch(/diff/);
+        expect(w).toMatch(/commit of its own/);
+        expect(snapshotUpdateWarning('launch-process', cmd)).toBe(w);
+        // an edit payload carrying a `command` field never pre-empts its path decision
+        expect(snapshotUpdateWarning('Edit', cmd)).toBeNull();
+        expect(snapshotUpdateWarning('Write', cmd)).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx vitest run --update-snapshots tests/unit')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', undefined)).toBeNull();
+    });
+
+    it('snapshot: a snapshot write warns with the acceptance step, a shell update warns, neither blocks', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bcw-snap-'));
+        const write = runHook({ tool_name: 'Write', cwd: root, tool_input: { file_path: 'tests/e2e/a.spec.ts-snapshots/a.png', content: 'x' } });
+        expect(write.status).toBe(2);
+        expect(write.stdout).toMatch(/a\.spec\.ts-snapshots\/a\.png: baseline update.*commit of its own/);
+        const bash = runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test --update-snapshots' } });
+        expect(bash.status).toBe(2);
+        expect(runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test' } }).status).toBe(0);
     });
 });

@@ -140,10 +140,16 @@ export const SETTINGS_CLASSES_RELATIVE = 'docs/contracts/settings-classes.md';
 /** Visual baselines: accepted by a human, never by the run that produced them. */
 const SNAPSHOT_DIR = /(^|\/)([^/]+-snapshots|__screenshots__)\//;
 
+const SNAPSHOT_ACCEPTANCE =
+    'baseline update: show the image diff to the user and land the new baselines in a commit of its own, on the pinned renderer.';
+/** Shell tools only: an edit payload carrying a `command` field must never pre-empt a path decision. */
+const SHELL_TOOL = /^(bash|bashtool|shell|launch[-_]process)$/i;
+
 /** A visual-runner baseline update, answered with the acceptance step. Warn only. */
-export function snapshotUpdateWarning(command: string): string | null {
+export function snapshotUpdateWarning(tool: string, command: unknown): string | null {
+    if (!SHELL_TOOL.test(tool) || typeof command !== 'string') return null;
     if (!/--update-snapshots\b/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
-    return 'baseline update: show the image diff to the user and land the new baselines in a commit of its own, on the pinned renderer.';
+    return SNAPSHOT_ACCEPTANCE;
 }
 
 /** Classify a target path into a config surface, or null for everything else. */
@@ -156,7 +162,7 @@ export function classify_target(p: string): ConfigKind {
     if (/(^|-)baselines?\.json$/.test(base)) {
         return 'advisory';
     }
-    if (/-budget(s)?\.(json|ya?ml)$/.test(base) || base === 'budgets.yml' || SNAPSHOT_DIR.test(posix)) {
+    if (/-budget(s)?\.(json|ya?ml)$/.test(base) || base === 'budgets.yml') {
         return 'advisory';
     }
     // `settings.json` only under a host directory: the bare name is common
@@ -168,7 +174,8 @@ export function classify_target(p: string): ConfigKind {
     if (CLASS_C_BASENAMES.includes(base)) {
         return 'class-c';
     }
-    return null;
+    // Last, so a blocking class above is never downgraded by its directory.
+    return SNAPSHOT_DIR.test(posix) ? 'advisory' : null;
 }
 
 /**
@@ -603,7 +610,7 @@ export function main(): number {
     }
 
     const { tool, paths, ti } = _extract(envelope);
-    const snap = typeof ti?.['command'] === 'string' ? snapshotUpdateWarning(ti['command']) : null;
+    const snap = snapshotUpdateWarning(tool, ti?.['command']);
     if (snap !== null) {
         process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: snap })}\n`);
         return EXIT_WARN;
@@ -618,6 +625,7 @@ export function main(): number {
     const sidRaw = envelope['session_id'] ?? envelope['sessionId'];
     const session = typeof sidRaw === 'string' && sidRaw ? sidRaw : 'default';
 
+    let snapWarn: string | null = null;
     for (const p of paths) {
         const kind = classify_target(p);
         if (kind === null) {
@@ -639,7 +647,11 @@ export function main(): number {
             return EXIT_BLOCK;
         }
 
-        const added = SNAPSHOT_DIR.test(p.split(path.sep).join('/')) ? 1 : added_entries(ti, on_disk);
+        if (kind === 'advisory' && SNAPSHOT_DIR.test(p.split(path.sep).join('/'))) {
+            snapWarn = `${path.relative(root, abs) || p}: ${SNAPSHOT_ACCEPTANCE}`;
+            continue;
+        }
+        const added = added_entries(ti, on_disk);
         if (added <= 0) {
             continue;
         }
@@ -654,6 +666,10 @@ export function main(): number {
             process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: d.reason })}\n`);
             return EXIT_WARN;
         }
+    }
+    if (snapWarn !== null) {
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: snapWarn })}\n`);
+        return EXIT_WARN;
     }
     return EXIT_ALLOW;
 }
