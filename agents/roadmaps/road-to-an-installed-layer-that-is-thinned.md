@@ -363,7 +363,7 @@ Added by round `inbox-2026-10-t`. It is one defect on the surface this file
 already owns — what the install puts where — so it lands here as a phase
 rather than as a ninth roadmap.
 
-- [ ] **4.1 Establish what the host actually reads, before changing the
+- [x] **4.1 Establish what the host actually reads, before changing the
       delivery.** `src/install/wizard-plan.ts:48` anchors this host at
       `~/.codex/` and `:150` sends it the full skill bundle;
       `docs/contracts/install-layout.md:152` records the delivered set as
@@ -374,18 +374,33 @@ rather than as a ninth roadmap.
       and record the answer.
       verify: the finding lands under `agents/evidence/analysis/` with an
       `evidence-type` marker, naming the host build it was taken against.
-- [ ] **4.2 Make the delivery match the reading, or make the claim match the
+      **Done 2026-10-18** against `codex-cli 0.148.0`:
+      `agents/evidence/analysis/codex-global-delivery-reading-2026-10-18.md`. With
+      `HOME` and `CODEX_HOME` on a scratch directory, `codex debug prompt-input`
+      (no model call) listed a canary skill from `skills/` and the body of a
+      `~/.codex/AGENTS.md` when one existed; canaries in `rules/*.md`,
+      `commands/*.md` and `personas/*.md` did not appear. The round's finding
+      holds: three of the four delivered subtrees are inert on this build.
+- [x] **4.2 Make the delivery match the reading, or make the claim match the
       delivery.** If 4.1 shows the namespace is not read as instructions, write
       what the host does read; if it shows the delivery is fine, correct the
       round's finding in the same change. One of the two ships — a probe whose
       outcome changes nothing was not worth taking.
       verify: `README.md:349` and `docs/contracts/install-layout.md:152` agree
       with the 4.1 record, asserted by a fixture over the two files.
-- [ ] **4.3 Do not generalise from one host.** The check added in 4.2 asserts
+      **Done 2026-10-18 on the claim side** (D9):
+      `docs/contracts/install-layout.md:152` now states that only `skills/` is
+      read and that no `~/.codex/AGENTS.md` is written. `README.md:349` is a
+      project-scope row whose `AGENTS.md` claim the probe's project case
+      confirmed, so it needed no edit. Fixture:
+      `tests/contracts/codex_delivery_claim.test.ts`, seen red on the old row.
+- [x] **4.3 Do not generalise from one host.** The check added in 4.2 asserts
       agreement between the claim and the delivery for this host only. Whether
       other hosts have the same gap is a separate measurement and is not
       assumed here.
       verify: the fixture names the host it covers.
+      **Done 2026-10-18:** the fixture's header names codex as the only host
+      covered, and every assertion reads the codex row by its `~/.codex/` anchor.
 
 ## What this roadmap deliberately does not do
 
@@ -470,6 +485,7 @@ rather than as a ninth roadmap.
 | D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable. **Amended 2026-10-12, on the council's Q1 finding that the original wording admitted two readings.** The intended reading is the NARROW one: D6 settles the mechanism it tested — a hard gate at 75,000 — and does not bar every hard gate forever. A different mechanism is not governed by it and may be proposed. What governs a different mechanism is D7 | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
 | D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
 | D8 | deterministic | evidence | `default-flip-of-the-installed-layer` is an **accrual wait on a named, scheduled producer** — step 2.2 of `road-to-a-setup-that-decides-itself` — and not the dead end its Status field described. Its resolution clause now names that producer and step 2.1's three assertions instead of a closed step | Measured 2026-10-16 while a council round was running on the premise that no scheduled file could produce the record. The premise is refuted inside this very file: the sibling blocker `arrival-record-needs-a-cancelled-observer`, one entry above, has read `resolved` since 2026-10-15 recording that the owner scheduled stub step 3.0 as steps 1.1–2.2 of `road-to-a-setup-that-decides-itself` (`status: ready`), whose step 2.2 reads "Hand it to its waiting consumer. The installed-layer roadmap's step 2.1 reads this record." D10 cancelled a **carrier**, not the instrument, which this roadmap's own step 2.1 states in its first sentence | the setup roadmap's step 2.2 is cut, deferred or re-scoped away from this consumer · the arrival record lands without step 2.1's three assertions |
+| D9 | reversible-technical | agent | Step 4.2 ships on the **claim** side: the install-layout row records what Codex reads of the global delivery. Writing a `~/.codex/AGENTS.md` (the delivery side) is not taken here | It writes into a user-owned global file on every Codex install at the next upgrade, and what it should carry is undecided: the rule layer is roughly ten times Codex's default 32 KiB instructions budget. A consumer-facing default change of that kind is the owner's to make | the owner asks for the delivery side, or a later Codex build reads `rules/*.md` |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->

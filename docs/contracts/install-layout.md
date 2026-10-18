@@ -149,7 +149,7 @@ User-scope anchor roots are `USER_SCOPE_PATHS`; deployed subtrees are
 | windsurf | `~/.codeium/windsurf/` | `rules/` |
 | cline | `~/Documents/Cline/Rules/` | flat `rules/` (no sub-prefix) |
 | gemini-cli | `~/.gemini/` | `rules/`, `skills/`, `commands/`, `personas/` |
-| codex | `~/.codex/` | `rules/`, `skills/`, `commands/`, `personas/` |
+| codex | `~/.codex/` | `rules/`, `skills/`, `commands/`, `personas/` — read by the host: `skills/` only; `rules/`, `commands/` and `personas/` are delivered but not read as instructions, and no `~/.codex/AGENTS.md` is written (codex-cli 0.148.0, [probe](../../agents/evidence/analysis/codex-global-delivery-reading-2026-10-18.md)) |
 | continue / roocode / kilocode / qoder / opencode / trae / codebuddy | `~/.continue/`, `~/.roo/`, `~/.kilocode/`, `~/.qoder/`, `~/.opencode/`, `~/.trae/`, `~/.codebuddy/` | claude-code bundle |
 | antigravity | `~/.agents/` | claude-code bundle |
 | droid | `~/.factory/` | claude-code bundle |
