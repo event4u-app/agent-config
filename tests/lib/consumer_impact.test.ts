@@ -78,6 +78,49 @@ describe('parse_impact_trailers', () => {
     });
 });
 
+describe('parse_impact_trailers — GitHub squash-merge bodies', () => {
+    const coauthor = 'Co-authored-by: Claude <noreply@anthropic.com>\n';
+
+    it('reads a trailer block that GitHub buried above its Co-authored-by paragraph', () => {
+        const body =
+            '* feat(x): one\n\nProse about the change.\n\nConsumer-Impact: notice\nCo-Authored-By: a <a@example.com>\n\n' +
+            '* docs(x): two\n\n---------\n\n' +
+            coauthor;
+        expect(parse_impact_trailers(body)).toEqual({ impact: 'notice', recorded: true, invalid: null, security: false });
+    });
+
+    it('takes the most severe value across the squashed commits, as a release span does', () => {
+        const body =
+            '* fix(a): one\n\nConsumer-Impact: automatic\n\n* fix(b): two\n\nConsumer-Impact: notice\nSecurity: yes\n\n' +
+            '* fix(c): three\n\nConsumer-Impact: automatic\n\n' +
+            coauthor;
+        expect(parse_impact_trailers(body)).toEqual({ impact: 'notice', recorded: true, invalid: null, security: true });
+    });
+
+    it('still refuses two different values inside one trailer block', () => {
+        const body = '* fix(a): one\n\nConsumer-Impact: none\nConsumer-Impact: action\n\n' + coauthor;
+        const t = parse_impact_trailers(body);
+        expect(t.recorded).toBe(false);
+        expect(t.invalid).toContain('conflicting');
+    });
+
+    it('refuses the squash when any block carries an invalid key or value', () => {
+        expect(parse_impact_trailers('Consumer-Impact: huge\n\nConsumer-Impact: notice\n\n' + coauthor).invalid).toContain('huge');
+        expect(parse_impact_trailers('consumer-impact: notice\n\n' + coauthor).invalid).toContain('Consumer-Impact');
+    });
+
+    it('does not count a Consumer-Impact line inside prose, a quote or a code fence', () => {
+        const prose = 'The squashed PR said Consumer-Impact: action in passing.\n\n' + coauthor;
+        const quoted = 'Reviewer wrote:\n> Consumer-Impact: action\nso we kept it.\n\n' + coauthor;
+        const fenced = 'Example:\n```\nConsumer-Impact: action\n```\n\n' + coauthor;
+        const indented = 'Example:\n\n    Consumer-Impact: action\n\n' + coauthor;
+        const spacedFence = '```\n\nConsumer-Impact: action\n\n```\n\n' + coauthor;
+        for (const body of [prose, quoted, fenced, indented, spacedFence]) {
+            expect(parse_impact_trailers(body)).toEqual({ impact: 'none', recorded: false, invalid: null, security: false });
+        }
+    });
+});
+
 describe('breaking detection — independent of the conventional subject parse', () => {
     const sha = 'e'.repeat(40);
     const breaking: Array<[string, string]> = [

@@ -53,14 +53,42 @@ export function parse_commit_log(raw: string): CommitRecord[] {
 const TRAILER_LINE = /^(BREAKING CHANGE|[A-Za-z0-9][A-Za-z0-9-]*):[ \t]*(.*?)[ \t]*$/;
 
 /**
- * The body's Git trailer block: its final paragraph, and only when every line of
- * it is a `Key: value` trailer or an indented continuation. A `Key:` line quoted
- * in prose, or sitting in an earlier paragraph, is not a trailer.
+ * Every Git trailer block in the body: each paragraph whose every line is a
+ * `Key: value` trailer or an indented continuation. Not only the final one — a
+ * GitHub squash merge folds each squashed commit's trailers into an earlier
+ * paragraph and closes the body with its own `Co-authored-by:` paragraph. A
+ * paragraph holding any other line, or any part of a code fence, is not a block.
  */
-export function trailer_block(body: string): Array<[key: string, value: string]> {
-    const paragraphs = body.replace(/\r\n/g, '\n').trim().split(/\n[ \t]*\n/);
+export function trailer_blocks(body: string): Array<Array<[key: string, value: string]>> {
+    const blocks: Array<Array<[string, string]>> = [];
+    let para: string[] = [];
+    let tainted = false;
+    let fenced = false;
+    const flush = (): void => {
+        const block = tainted ? [] : parse_trailer_paragraph(para);
+        if (block.length > 0) blocks.push(block);
+        para = [];
+        tainted = false;
+    };
+    for (const line of body.replace(/\r\n/g, '\n').split('\n')) {
+        if (/^[ \t]*(```|~~~)/.test(line)) {
+            fenced = !fenced;
+            tainted = true;
+        } else if (fenced) {
+            tainted = true;
+        } else if (/^[ \t]*$/.test(line)) {
+            flush();
+        } else {
+            para.push(line);
+        }
+    }
+    flush();
+    return blocks;
+}
+
+function parse_trailer_paragraph(lines: readonly string[]): Array<[string, string]> {
     const out: Array<[string, string]> = [];
-    for (const line of (paragraphs[paragraphs.length - 1] ?? '').split('\n')) {
+    for (const line of lines) {
         if (/^[ \t]+\S/.test(line) && out.length > 0) continue;
         const m = TRAILER_LINE.exec(line);
         if (!m) return [];
@@ -69,19 +97,37 @@ export function trailer_block(body: string): Array<[key: string, value: string]>
     return out;
 }
 
-export function parse_impact_trailers(body: string): ImpactTrailers {
-    const block = trailer_block(body);
-    const security = block.some(([k, v]) => k === 'Security' && v === 'yes');
+type BlockImpact = Omit<ImpactTrailers, 'security'>;
+
+function block_impact(block: ReadonlyArray<[string, string]>): BlockImpact | null {
     const variant = block.find(([k]) => k !== 'Consumer-Impact' && k.toLowerCase() === 'consumer-impact');
-    if (variant) return { ...NO_IMPACT_TRAILERS, invalid: `key '${variant[0]}' (spell it Consumer-Impact)`, security };
+    if (variant) return { impact: 'none', recorded: false, invalid: `key '${variant[0]}' (spell it Consumer-Impact)` };
     const values = [...new Set(block.filter(([k]) => k === 'Consumer-Impact').map(([, v]) => v))];
-    if (values.length === 0) return { ...NO_IMPACT_TRAILERS, security };
-    if (values.length > 1) return { ...NO_IMPACT_TRAILERS, invalid: `conflicting values '${values.join("', '")}'`, security };
+    if (values.length === 0) return null;
+    if (values.length > 1) return { impact: 'none', recorded: false, invalid: `conflicting values '${values.join("', '")}'` };
     const value = values[0]!;
     if ((CONSUMER_IMPACT_VALUES as readonly string[]).includes(value)) {
-        return { impact: value as ConsumerImpact, recorded: true, invalid: null, security };
+        return { impact: value as ConsumerImpact, recorded: true, invalid: null };
     }
-    return { ...NO_IMPACT_TRAILERS, invalid: `value '${value}'`, security };
+    return { impact: 'none', recorded: false, invalid: `value '${value}'` };
+}
+
+/**
+ * One block decides by the single-commit contract. Several blocks are a squash
+ * of several commits: an invalid block refuses the whole body, otherwise the
+ * most severe value wins — the reduction `release_impact_entry` applies to a span.
+ */
+export function parse_impact_trailers(body: string): ImpactTrailers {
+    const blocks = trailer_blocks(body);
+    const security = blocks.some((b) => b.some(([k, v]) => k === 'Security' && v === 'yes'));
+    let best: BlockImpact | null = null;
+    for (const block of blocks) {
+        const r = block_impact(block);
+        if (r === null) continue;
+        if (r.invalid !== null) return { ...r, security };
+        if (best === null || IMPACT_RANK[r.impact] > IMPACT_RANK[best.impact]) best = r;
+    }
+    return best === null ? { ...NO_IMPACT_TRAILERS, security } : { ...best, security };
 }
 
 /**
@@ -127,7 +173,7 @@ export function impact_span_verdict(commits: readonly ImpactCommit[]): { exit: n
         message:
             'release span carries a breaking subject with no valid Consumer-Impact trailer:\n' +
             `${lines.join('\n')}\n` +
-            `Each needs one 'Consumer-Impact: ${CONSUMER_IMPACT_VALUES.join(' | ')}' trailer in the body's final paragraph ` +
+            `Each needs one 'Consumer-Impact: ${CONSUMER_IMPACT_VALUES.join(' | ')}' trailer in a trailer-only paragraph of the body ` +
             '(CONTRIBUTING.md § Versioning policy).',
     };
 }
