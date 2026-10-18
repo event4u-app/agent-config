@@ -7,6 +7,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    dropGlobalScopeFiles,
     filesByToolFromDeploy,
     hydrateRecordedInventories,
     preservedIndex,
@@ -137,5 +138,18 @@ describe('readRecordedByTool / hydrateRecordedInventories', () => {
         hydrateRecordedInventories(fresh, readRecordedByTool(manifest, root));
 
         expect(fresh[0]?.['files']).toEqual([{ path: '/x/new.md' }]);
+    });
+});
+
+describe('dropGlobalScopeFiles — only for tools whose global deploy ran', () => {
+    it('strips a deployed global entry and keeps the lock-only digests of every other entry', () => {
+        const files = [{ path: '/home/u/.cursor/rules/a.md', kind: 'deployed', sha256: 'aa' }];
+        const entries = [
+            { name: 'cursor', scope: 'global', files: [...files] },
+            { name: 'claude-code', scope: 'global', files: [...files] },
+            { name: 'augment', scope: 'project', files: [...files] },
+        ];
+        dropGlobalScopeFiles(entries, new Set(['cursor', 'augment']));
+        expect(entries.map((e) => e.files.length)).toEqual([0, 1, 1]);
     });
 });
