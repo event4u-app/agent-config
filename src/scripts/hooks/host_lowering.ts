@@ -114,6 +114,24 @@ export interface SlotRow {
     matcher?: string;
 }
 
+/** The three channels a host may let this package rewrite, and the slot each rides on. */
+export const REWRITE_CHANNELS = ['output', 'input', 'prompt'] as const;
+export type RewriteChannel = (typeof REWRITE_CHANNELS)[number];
+export const REWRITE_CHANNEL_SLOT: Readonly<Record<RewriteChannel, string>> = {
+    output: 'post_tool_use',
+    input: 'pre_tool_use',
+    prompt: 'user_prompt_submit',
+};
+export const REWRITE_MODES = ['replace', 'gate', 'none'] as const;
+export type RewriteMode = (typeof REWRITE_MODES)[number];
+
+/** One dated answer on the rewrite axis. `mode` stays a raw string so the linter can name a bad one. */
+export interface RewriteAnswer {
+    mode: string;
+    answered_at: string | null;
+    docs_url: string | null;
+}
+
 export interface SurfaceRow {
     entry_shape: string;
     json_shape: string;
@@ -123,6 +141,14 @@ export interface SurfaceRow {
     verified: VerifiedBlock | null;
     /** Insertion-ordered: bridge entries are written in this order. */
     slots: Map<string, SlotRow>;
+    /** Keyed by channel as written, unknown keys included; an absent channel is `none`. */
+    rewrite: Map<string, RewriteAnswer>;
+}
+
+/** What this package may do to a channel on this row: anything not stated as a known mode is `none`. */
+export function rewriteModeFor(row: SurfaceRow, channel: RewriteChannel): RewriteMode {
+    const mode = row.rewrite.get(channel)?.mode;
+    return (REWRITE_MODES as readonly string[]).includes(mode ?? '') ? (mode as RewriteMode) : 'none';
 }
 
 export type HostLowering = Map<string, Map<string, SurfaceRow>>;
@@ -194,7 +220,17 @@ function _structure(raw: Record<string, unknown> | null): HostLowering {
                 if (typeof rv['matcher'] === 'string') row.matcher = rv['matcher'];
                 slots.set(slot, row);
             }
+            const rewrite = new Map<string, RewriteAnswer>();
+            for (const [ch, av] of Object.entries((s['rewrite'] ?? {}) as Record<string, unknown>)) {
+                const a = (av ?? {}) as Record<string, unknown>;
+                rewrite.set(ch, {
+                    mode: String(a['mode'] ?? ''),
+                    answered_at: _asString(a['answered_at']),
+                    docs_url: _asString(a['docs_url']),
+                });
+            }
             surfaces.set(surface, {
+                rewrite,
                 entry_shape: String(s['entry_shape'] ?? 'none'),
                 json_shape: String(s['json_shape'] ?? 'none'),
                 fail_policy: String(s['fail_policy'] ?? 'discard'),

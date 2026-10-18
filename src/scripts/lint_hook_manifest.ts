@@ -34,7 +34,14 @@ import { parse as parseYaml } from "yaml";
 
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import { asOf } from "./_lib/as_of.js";
-import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
+import {
+  parseHostLowering,
+  REWRITE_CHANNEL_SLOT,
+  REWRITE_CHANNELS,
+  REWRITE_MODES,
+  type HostLowering,
+  type RewriteChannel,
+} from "./hooks/host_lowering.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
 
@@ -771,6 +778,57 @@ export function _check_host_lowering(
     }
   }
   _check_slot_answers(table, errors);
+  _check_rewrite_axis(table, errors, today);
+}
+
+/**
+ * The rewrite axis says what this package may do to a channel on a host. A
+ * `replace` needs a row that can carry one to the host — a native envelope, a
+ * propagating trampoline, a current `verified` block, a bound slot — because a
+ * substitution the host never receives leaves the original in place while the
+ * table claims otherwise. A `gate` needs a slot that honours a refusal.
+ */
+export function _check_rewrite_axis(table: HostLowering, errors: string[], today: string): void {
+  for (const [host, surfaces] of table) {
+    for (const [surface, row] of surfaces) {
+      for (const [channel, answer] of row.rewrite) {
+        const where = `host_lowering ${host}/${surface}/${channel}`;
+        if (!(REWRITE_CHANNELS as readonly string[]).includes(channel)) {
+          errors.push(`${where}: rewrite-axis-malformed — unknown channel; the axis has ${REWRITE_CHANNELS.join(", ")}.`);
+          continue;
+        }
+        if (!(REWRITE_MODES as readonly string[]).includes(answer.mode)) {
+          errors.push(`${where}: rewrite-axis-malformed — unknown mode '${answer.mode}'; one of ${REWRITE_MODES.join(", ")}.`);
+          continue;
+        }
+        if (answer.answered_at === null || !/^\d{4}-\d{2}-\d{2}$/.test(answer.answered_at)) {
+          errors.push(`${where}: rewrite-axis-malformed — no \`answered_at\` ISO date; the axis is dated like every column.`);
+          continue;
+        }
+        if (answer.mode === "none") continue;
+        if (answer.docs_url === null && row.verified?.docs_url == null) {
+          errors.push(`${where}: rewrite-axis-malformed — '${answer.mode}' with no citation on the answer or the row.`);
+        }
+        const slot = row.slots.get(REWRITE_CHANNEL_SLOT[channel as RewriteChannel]);
+        if (answer.mode === "replace") {
+          const why: string[] = [];
+          if (row.json_shape === "none") why.push("the row has no native envelope (`json_shape: none`)");
+          if (row.fail_policy !== "propagate") why.push(`the trampoline does not propagate (\`fail_policy: ${row.fail_policy}\`)`);
+          if (row.verified === null) why.push("the row is unverified");
+          else if (row.verified.expires < today) why.push(`the row expired ${row.verified.expires}`);
+          if (slot === undefined) why.push(`this package binds no \`${REWRITE_CHANNEL_SLOT[channel as RewriteChannel]}\` slot here`);
+          if (why.length > 0) {
+            errors.push(`${where}: rewrite-toward-non-replace-host-refused — ${why.join("; ")}.`);
+          }
+        } else if (slot === undefined || slot.block_exit === null) {
+          errors.push(
+            `${where}: rewrite-gate-without-refusal — \`gate\` needs a slot that honours a refusal, ` +
+              `and \`${REWRITE_CHANNEL_SLOT[channel as RewriteChannel]}\` carries no \`block_exit\` here.`,
+          );
+        }
+      }
+    }
+  }
 }
 
 /**

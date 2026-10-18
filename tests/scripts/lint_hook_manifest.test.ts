@@ -8,6 +8,7 @@ import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
+import { parseHostLowering, REWRITE_CHANNELS, rewriteModeFor } from "../../src/scripts/hooks/host_lowering.js";
 import { CONCERN_REGISTRY } from "../../src/scripts/hooks/concern_registry.js";
 import { _load_yaml } from "../../src/scripts/hooks/dispatch_hook.js";
 
@@ -409,5 +410,87 @@ describe("rewrite-concern-refused — no concern may produce a rewrite (ADR-285)
     const r = run(VALID.replace("    fail_closed: false\n    effect: context\n", "    fail_closed: false\n    severity: blocking\n    effect: permission\n"));
     expect(r.code).toBe(1);
     expect(r.text).toMatch(/concerns\.session-canary: execution-view-not-granted/);
+  });
+});
+
+describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
+  const COMMITTED_LOWERING = path.join(REPO_ROOT, "src", "scripts", "hooks", "host_lowering.yaml");
+  const TODAY = "2026-10-18";
+
+  /** The committed table with one host row's `any:` surface given extra lines. */
+  function lowering(host: string, extra: string): string {
+    const text = fs.readFileSync(COMMITTED_LOWERING, "utf-8");
+    const anchor = `\n  ${host}:\n    surfaces:\n      any:\n`;
+    if (!text.includes(anchor)) throw new Error(`fixture anchor for ${host} not found`);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "host-lowering-rewrite-"));
+    tmpDirs.push(dir);
+    const p = path.join(dir, "host_lowering.yaml");
+    fs.writeFileSync(p, text.replace(anchor, `${anchor}${extra}`), "utf-8");
+    return p;
+  }
+
+  function run(loweringPath: string): { code: number; text: string } {
+    const chunks: string[] = [];
+    const realErr = process.stderr.write.bind(process.stderr);
+    const realOut = process.stdout.write.bind(process.stdout);
+    const sink = (c: unknown): boolean => {
+      chunks.push(String(c));
+      return true;
+    };
+    process.stderr.write = sink as typeof process.stderr.write;
+    process.stdout.write = sink as typeof process.stdout.write;
+    try {
+      return { code: lint(REAL_MANIFEST, false, loweringPath, TODAY), text: chunks.join("") };
+    } finally {
+      process.stderr.write = realErr;
+      process.stdout.write = realOut;
+    }
+  }
+
+  it("the committed table passes and states claude's three channels", () => {
+    const r = run(COMMITTED_LOWERING);
+    expect(r.text).not.toMatch(/rewrite-/);
+    expect(r.code).toBe(0);
+    const row = parseHostLowering(fs.readFileSync(COMMITTED_LOWERING, "utf-8")).get("claude")?.get("any");
+    expect(row).toBeDefined();
+    expect(rewriteModeFor(row!, "input")).toBe("replace");
+    expect(rewriteModeFor(row!, "prompt")).toBe("gate");
+    expect(rewriteModeFor(row!, "output")).toBe("none");
+  });
+
+  it("an absent axis reads as none on every channel", () => {
+    const row = parseHostLowering(fs.readFileSync(COMMITTED_LOWERING, "utf-8")).get("augment")?.get("any");
+    for (const ch of REWRITE_CHANNELS) expect(rewriteModeFor(row!, ch)).toBe("none");
+  });
+
+  it("rewrite-toward-non-replace-host-refused: replace on a row with no native envelope is refused", () => {
+    const r = run(lowering("augment", "        rewrite:\n          input: { mode: replace, answered_at: 2026-10-18 }\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/host_lowering augment\/any\/input: rewrite-toward-non-replace-host-refused/);
+  });
+
+  it("rewrite-toward-non-replace-host-refused: replace on a channel whose slot this package does not bind is refused", () => {
+    const r = run(lowering("codex", "        rewrite:\n          output: { mode: replace, answered_at: 2026-10-18 }\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/host_lowering codex\/any\/output: rewrite-toward-non-replace-host-refused/);
+  });
+
+  it("rewrite-gate-without-refusal: gate on a slot that honours no refusal is refused", () => {
+    const r = run(lowering("augment", "        rewrite:\n          prompt: { mode: gate, answered_at: 2026-10-18 }\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/host_lowering augment\/any\/prompt: rewrite-gate-without-refusal/);
+  });
+
+  it("rewrite-axis-malformed: an undated answer, an unknown channel and an unknown mode are refused", () => {
+    const r = run(
+      lowering(
+        "augment",
+        "        rewrite:\n          input: { mode: none }\n          request: { mode: none, answered_at: 2026-10-18 }\n          output: { mode: maybe, answered_at: 2026-10-18 }\n",
+      ),
+    );
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/augment\/any\/input: rewrite-axis-malformed — no `answered_at`/);
+    expect(r.text).toMatch(/augment\/any\/request: rewrite-axis-malformed — unknown channel/);
+    expect(r.text).toMatch(/augment\/any\/output: rewrite-axis-malformed — unknown mode/);
   });
 });

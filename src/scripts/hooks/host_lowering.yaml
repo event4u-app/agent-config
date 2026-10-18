@@ -101,6 +101,19 @@ hosts:
           probe_at: 2026-09-06
           host_version: 2.1.263
           expires: 2027-09-06
+        # What this package may do to each channel, never what it does today:
+        # nothing emits a rewrite until the egress stage arms one. `input` rests
+        # on the 2026-08-23 read of Claude Code 2.1.241 (`updatedInput`,
+        # PreToolUse only, schema-validated), recorded in
+        # docs/contracts/hook-architecture-v1.md; a confined session may refuse
+        # it, which no probe has answered yet. `prompt` is a refusal, because
+        # UserPromptSubmit can block a prompt and cannot replace it. `output`
+        # stays `none` until a probe shows what the host does with a replaced
+        # tool result. A row with no `rewrite:` is `none` on every channel.
+        rewrite:
+          output: { mode: none,    answered_at: 2026-10-18 }
+          input:  { mode: replace, answered_at: 2026-08-23, docs_url: docs/contracts/hook-architecture-v1.md }
+          prompt: { mode: gate,    answered_at: 2026-09-29 }
         slots:
           session_start:      { native: SessionStart,      block_exit: null, answered_at: 2026-09-29 }
           session_end:        { native: SessionEnd,        block_exit: null, answered_at: 2026-09-29 }
