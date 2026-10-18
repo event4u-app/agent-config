@@ -4,6 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that the global deploy manifest is written only when the install ran from a directory carrying project settings (install.ts:3531-3537), that an absent record classifies as `unknown` and `decideDeployWrite` returns `write` for it (preserve.ts, recordedOwnership.ts:57-78), so whether a consumer's edit to a globally installed file survives depends on the working directory the install was run from; that the deploy inventory records relative paths and no digest (global_deploy_inventory.ts, 0 hash hits), so the reaper deletes an edited file the package retires; and that `cmd_doctor.ts:597` skips every non-project-scoped tool, so doctor reports green while the installer reports not-current. No active, parked or stub roadmap owns this: the one adjacent stub, road-to-per-repository-install-verification, is itself blocked on ADR-020 and records that no manifest writer was added. Archiving or parking costs more because the loss is a consumer's own edit and is silent; merging into road-to-an-uninstall-that-only-removes-what-it-brought would put that file's data-loss fix behind this file's council round."
+estate_growth_exempt: "2026-10-18: adds one open blocker, global-entries-in-the-consumer-lock. It is a newly classified decision, not a repaired undercount: step 3.3 was already open and owner-labelled in prose, and an AI council round that day split on its venue, so the escalation now has the structured form roadmap:resolve-blockers and stubs:due read instead of living only in a step note."
 relates:
   - slug: road-to-an-uninstall-that-only-removes-what-it-brought
     relation: extends
@@ -249,7 +250,19 @@ the same thing in all of them.
       than it was, because Phase 2 gives global ownership a home of its own,
       so dropping those entries from the project lock loses nothing. It still
       changes what consumers commit, so it stays the owner's.
-- [ ] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
+      **Put to the AI council 2026-10-18 — split, so it escalates.** Both seats
+      recommend the narrow fix (stop writing global-scope entries into a
+      consumer's lock); `anthropic` read it as council-decidable, `openai` as a
+      change to a public compatibility commitment. A reader audit after the
+      round found the commitment is real: `cmd_sync.ts:166-182, :343-355`
+      replays a `--scope=global` install from the lock's global entries — the
+      new-team-member workflow `README.md:357` promises, which a per-user
+      ledger cannot serve. `sync` reads `name`, `scope` and `bridge_marker` and
+      never the per-entry `files[]`, so a narrower variant that keeps global
+      entries and drops their absolute `files[]` would close the leak without
+      breaking it. Record: `agents/evidence/council/ownership-record-residue-20261018.md`;
+      the owner's pick is the blocker below.
+- [x] **3.4 `adopt` and `reset` are flags, not verbs.** ADR-041 is accepted;
       they attach to an existing command.
       verify: the output of `agent-config --help` lists no new top-level verb.
       Open 2026-10-16: no flag implemented. What `adopt` (record an edit as
@@ -268,6 +281,14 @@ the same thing in all of them.
       a consumer most plausibly wants is "record the bytes I have as ours",
       which is precisely the ownership assertion the council declined to make
       automatically. That is a product decision, not a drain edit.
+      **Closed 2026-10-18 by AI council verdict (b)**, 2/2, no split, $0.00
+      (`agents/evidence/council/ownership-record-residue-20261018.md`, D6):
+      the step is satisfied by its verify line plus the routing decision, and
+      the unspecified behaviour moves to
+      `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md`.
+      Both seats held that implementing the flags with agent-chosen semantics
+      is owner-reserved (*cannot be bounded from available evidence*).
+      `agent-config --help` re-run 2026-10-18: no `adopt` or `reset` verb.
 
 ## Blockers
 
@@ -298,6 +319,35 @@ the same thing in all of them.
   an honest state and a bad one — the losses are pinned and unfixed, and the
   next install still decides a user's edits by working directory.
 
+### blocker: global-entries-in-the-consumer-lock
+
+- **Status:** open — escalated 2026-10-18 after an AI council split (2/2
+  concluded, `anthropic` DECIDE (b), `openai` ESCALATE (b)); record at
+  `agents/evidence/council/ownership-record-residue-20261018.md`.
+- **Owner:** owner — the transition changes what consumers commit to
+  `agents/installed-tools.lock`, which the council could not agree is internal.
+- **Blocks:** step 3.3 and the first half of AC-8.
+- **What to do:** pick one —
+  (a) add the lock to `src/config/gitignore-block.txt` as 3.3 is written,
+  reversing the tracked-durable row in `docs/contracts/agents-layout.md` and the
+  team workflow in `README.md:357`;
+  (b) stop writing global-scope entries into a consumer's lock, which also
+  stops `agent-config sync` replaying global installs for a new team member
+  (`src/scripts/_cli/cmd_sync.ts:343-355`);
+  (b′) keep global entries but stop recording their absolute `files[]` in the
+  consumer's lock, since the user-scoped ledger now holds global ownership and
+  `sync` never reads `files[]`;
+  (c) keep today's behaviour and re-cut 3.3 and AC-8 to the agreed rule the two
+  documents already state.
+- **Resolved when:** the owner's pick is recorded here as `Status: resolved —
+  <pick>`, and 3.3's verify line and AC-8's first half are re-cut to that pick.
+- **Recommendation:** (b′). It closes the `$HOME` leak the step exists for,
+  keeps the `sync` capability both seats wanted preserved, and relies on the
+  ledger exactly as D1 bounds it — ownership metadata, not artefact selection.
+- **If you do nothing:** a global install run from a consumer project with
+  settings keeps writing the installing user's absolute home paths into a file
+  that team commits; nothing is lost, and the leak stays.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -307,6 +357,7 @@ the same thing in all of them.
 | D3 | critical-technical | council:agents/evidence/council/ownership-unknown-arm-20261017.md | **(d) — `unknown` preserves a path the ledger lists UNLESS equality with what the run would write is provable.** Equality proves writing cannot destroy an edit; inequality proves nothing, because an edited file and an untouched older version are indistinguishable without a recorded digest, and overwriting on "proves nothing" accepts irreversible loss knowingly. A genuinely unrecorded path still writes — the noise `preserve.ts` argues against is real for files this tree has no record of, and a ledger listing IS a record | AI council 2026-10-17, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). Both seats also corrected the draft's claim that preservation resolves the ambiguity after one install: a preserved file was never installed, so the delay is one cycle at best and persists until the sidecar is merged | the package content for the affected files is shown not to have changed across the ledger-addition upgrade · a migration `rc=3` is shown to break supported automation and no message fixes it · conflict resolution gains a step that establishes ownership explicitly |
 | D4 | deterministic | agent | `adopt` / `reset` ship as flags | ADR-041 accepted | ADR-041 is superseded |
 | D5 | reversible-technical | agent | The doctor fix (3.1) is sequenced before Phase 2 lands | it makes the disagreement visible, and a visible disagreement is what makes Phase 2's parity test meaningful | 3.1 turns out to depend on the widened classifier |
+| D6 | reversible-technical | council:agents/evidence/council/ownership-record-residue-20261018.md | **3.4 closes on its routing; the flags' behaviour moves to a stub.** If `adopt` / `reset` ship they ship as flags, and what they do is specified in `agents/roadmaps/stubs/road-to-adopt-and-reset-flags-with-a-specification.md` before any implementation | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00. Both seats: implementing with agent-chosen semantics is owner-reserved (cannot be bounded from available evidence) | approved semantics and acceptance tests make either flag bounded and implementation-ready |
 
 ## What this roadmap deliberately does not do
 
