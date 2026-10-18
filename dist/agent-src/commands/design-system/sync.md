@@ -71,7 +71,10 @@ engine), whose coverage records each mechanic as honoured, translated or flagged
 The brief carries the tier names the project's taxonomy detector recorded, and no
 tier when it recorded none. Imported values go to
 [`design-system-capture`](../../skills/design-system-capture/SKILL.md)'s
-per-field import; `DESIGN.md` is not written from here.
+per-field import; `DESIGN.md` is not written from here. `reconcile` also prints
+one [`design-review`](../../skills/design-review/SKILL.md) fidelity-matrix row
+per reconciled component, its evidence kind named: an element screenshot when
+the ledger lists a baseline for it, `not-implemented` with the reason otherwise.
 
 ## Then the user runs the host sync
 

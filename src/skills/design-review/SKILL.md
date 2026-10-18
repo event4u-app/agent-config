@@ -278,9 +278,6 @@ reading it and never working it as one.
 
 | Chapter | Claim it makes | Evidence | Status |
 
-For a design system synced to the host's canvas, `/design-system:sync reconcile`
-prints one such row per reconciled component from its ledger, evidence kind named.
-
 **Evidence is exactly one of four kinds**, and the row names which:
 
 1. **Element-scoped screenshot baseline** — `toHaveScreenshot` on the component,
