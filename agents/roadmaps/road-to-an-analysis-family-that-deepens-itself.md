@@ -425,12 +425,14 @@ names; revert the move and the aliases.
 
 ## Phase 5 — `analyze:pr`
 
-- [ ] **5.1 Find the PR (directive a).** Argument (URL or number), else the
+- [x] **5.1 Find the PR (directive a).** Argument (URL or number), else the
       current branch's open PR (`gh pr view`), else the PR the conversation
       already named, else one question; zero or several candidates → ask for
       the link. Base and head SHAs pinned.
       verify: argument, branch and conversation fixtures resolve without a
-      question; an ambiguous fixture asks once.
+      question; an ambiguous fixture asks once. Done 2026-10-18 in
+      `src/scripts/analysis_pr_target.ts` (several-candidates case seen red); a
+      named PR that is not open asks instead of falling through to the branch.
 - [ ] **5.2 Feedback by default, read-only.** PR head in a throwaway worktree;
       the PR body is a claim set (inbox Phase 4); `review:changes` judges on
       `base..head`, then 2.3–2.6, `council:pr` as seat runner, a disprove pass
