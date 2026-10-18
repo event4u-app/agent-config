@@ -32,6 +32,30 @@ function print(line = ''): void {
     process.stdout.write(`${line}\n`);
 }
 
+/** Visible status → glyph map (`warn` keeps a trailing space for alignment). */
+export const STATUS_SYMBOLS: Record<string, string> = {
+    ok: '✅',
+    warn: '⚠️ ',
+    fail: '❌',
+    skipped: '⏭️ ',
+};
+
+/** The check rows in text mode — moved here with `STATUS_SYMBOLS` to pay for `update_verdict`. */
+export function _emit_checks_text(checks: Dict[]): void {
+    if (checks.length === 0) {
+        return;
+    }
+    print('checks:');
+    for (const c of checks) {
+        const sym = STATUS_SYMBOLS[c['status'] as string] ?? '?';
+        print(`  ${sym} ${c['id']}: ${c['message']}`);
+        if (c['status'] !== 'ok' && c['remedy']) {
+            print(`      fix: ${c['remedy']}`);
+        }
+    }
+    print('');
+}
+
 export function _emit_text(
     project_root: string,
     missing: Dict[],

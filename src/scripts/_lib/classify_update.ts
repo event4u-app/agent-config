@@ -8,7 +8,7 @@
  * Pure by contract: no filesystem, no network, no process state. The caller
  * gathers the inputs — the cached registry document, the running Node version, the
  * install origin `classify_install_origin` already detects — and this only
- * decides. Nothing acts on the verdict yet; `doctor --json` is the surface it is
+ * decides. `doctor --json` reports the verdict read-only (`update_verdict`), the surface it is
  * meant to be reported on.
  *
  * The one invariant everything else serves: uncertainty of any kind never

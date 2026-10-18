@@ -192,11 +192,29 @@ output. It is the classifier and the data behind it.
       prerelease Node runtime is an uncertainty (`notify`), the same policy
       as a prerelease candidate, because the `engines.node` subset does not
       reproduce npm's prerelease range bounds.
-- [ ] **4.3 Expose it read-only.** `doctor --json` reports the verdict and its
+- [x] **4.3 Expose it read-only.** `doctor --json` reports the verdict and its
       reasons. Nothing acts on it in this roadmap.
       verify: the banner, `upgrade` and `update` emit byte-identical output on
       the existing fixtures — a diff of recorded stdout before and after.
-      Open (2026-10-16): the verdict has nothing true to report from yet.
+      Landed (2026-10-18): `doctor --json` carries an `update_verdict` block
+      from `src/scripts/_cli/doctor_update_verdict.ts` — installed, the cached
+      candidate, the origin, `action`, `reasons`, and a `not_cached` list
+      naming the five registry fields the probe cache does not keep. Both
+      objections below were answered without changing a state file: doctor
+      reads `update-check.json` and never writes it or queries the registry,
+      and the fields it cannot see reach `classifyUpdate` as unknowns, so the
+      verdict can be `notify` or `none` but never `auto` (asserted, and seen
+      red by feeding it a clean known input). `cmd_doctor.ts` paid for its two
+      lines by moving `STATUS_SYMBOLS` and `_emit_checks_text` verbatim into
+      `_doctor_emit.ts` (3,560 -> 3,539; the size ratchet lowered to 17,386).
+      Byte-identity: the esbuild import closure of `check_update_banner.ts`,
+      `cmd_upgrade.ts` and `cmd_update.ts` (27 files) shares no file with this
+      change, and their five suites (85 tests) pass unchanged; this roadmap's
+      only earlier edit there (#2421) added an export nothing on those paths
+      calls. A source checkout is detected by a `.git` entry at the package
+      root, because `dist/agent-src/` ships in every tarball.
+      Test: `tests/scripts/doctor_update_verdict.test.ts`.
+      Was open (2026-10-16): the verdict has nothing true to report from yet.
       The cached `update-check.json` keeps only `last_seen_version`, so
       `engines`, `agentConfig.impact`, `dist.attestations` and
       `deprecated` — all present in the `/latest` document per D4 — would
@@ -322,13 +340,21 @@ direct check named in the revisit column.
 - [ ] **AC-4** Over a ≥ 40-case matrix, `classifyUpdate` returns `ask` for
       every input whose `engines.node` is unsatisfied, and `auto` for **no**
       input carrying an unknown, a missing provenance or a project pin.
+      Open for the owner (2026-10-18): the AI council split on whether this
+      text may be amended to the shipped `action` form — `anthropic` (3) leave
+      it with the owner, `openai` (1) amend with ordered wording. Both agree
+      the shipped behaviour is right. Record and the proposed wording:
+      `agents/evidence/council/release-impact-ac4-wording-20261018.md`.
 - [x] **AC-5** `classifyUpdate` performs no filesystem or network access,
       asserted by a test that calls it with a frozen input.
-- [ ] **AC-6** The banner, `upgrade` and `update` produce byte-identical
+- [x] **AC-6** The banner, `upgrade` and `update` produce byte-identical
       recorded stdout before and after the whole change.
+      (Evidence under step 4.3: no file in their import closure changed.)
 - [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
 - [ ] **AC-8** `task ci` green.
+      (Closes with the PR that closes this file: the remote pipeline is the
+      authoritative run, and a green it has not yet reported is not evidence.)
 
 ## Provenance
 

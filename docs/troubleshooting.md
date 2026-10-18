@@ -286,6 +286,20 @@ local. The rows then read `unread` rather than `false`: a row nobody looked at
 and a row the forge refuted are different repairs, and the block keeps them
 apart.
 
+### What `doctor --json`'s `update_verdict` block means
+
+`update_verdict` reports what an update to the newest version the daily update
+probe has cached would do on this machine: `auto`, `ask`, `notify`, `none`, or
+`action` (this machine cannot run it), with the `reasons` behind it. It is a
+report — nothing acts on it — and it is read offline: `doctor` reads the cached
+`update-check.json` and never writes it or queries the registry.
+
+The cache keeps only the version, so the fields listed under `not_cached` (the
+impact map, `engines`, the provenance attestation, publish time, `deprecated`)
+reach the verdict as unknowns, and an unknown never comes out `auto`. A
+`candidate` of `null` means the probe has not run yet. CI,
+`AGENT_CONFIG_NO_UPDATE_CHECK=1` and a source checkout report `none`.
+
 ### Project files look stale after a package update
 
 Project-local projections are only rewritten on an explicit refresh:
