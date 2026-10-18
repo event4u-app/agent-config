@@ -177,7 +177,7 @@ None of this is rebuilt here.
 
 ### blocker: node-floor-raise
 
-- **Status:** open
+- **Status:** open — owner-reserved (council 2026-10-16, 2/2 ESCALATE: dropping Node 20 removes a compatibility commitment; both recommend (a) as a semver-major). Re-checked 2026-10-18, still unmet: `package.json` reads `"node": ">=20.11.0"` and no record under `docs/decisions/` names a Node floor.
 - **Owner:** repository owner
 - **Blocks:** step 4.5 only. Phases 1–3 and steps 4.1–4.4 run without it.
 - **What to do:** pick exactly one — (a) raise `engines.node` to `>=22` in the
@@ -223,7 +223,7 @@ None of this is rebuilt here.
 
 ### blocker: auto-default-for-existing-installs
 
-- **Status:** open
+- **Status:** open — owner-reserved on the escalation condition (council 2026-10-16 split: `anthropic` DECIDE (b), `openai` ESCALATE (a)); no round 2 was run because no input has changed since. Re-checked 2026-10-18, still unmet: no ADR under `docs/decisions/` records (a), (b) or (c).
 - **Owner:** repository owner
 - **Blocks:** step 4.3's default. The question is not whether `auto` exists —
   4.1 ships it as an opt-in — but whether an install that already exists may
