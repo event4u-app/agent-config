@@ -504,14 +504,14 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
   names.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The split makes a pilot less followed, not more | product | A head that keeps less than it should is loaded and not applied (`skill-writing:121-122`). | 2.1 keeps every write heuristic and all required sections in the head; arm B isolates the split's own effect; F1 stops the rollout. | Phase 6 — Measure before anything becomes a default |
 | 2 | The cursor costs more rounds than it saves | product | Each step adds at least one round; the gain may not cover it. | One call per step (5.2); rounds are a pre-registered metric; D8's bar includes them. | Phase 5 — The cursor in the `/work` engine (default-off) |
 | 3 | The compaction line re-runs a finished step | implementation | A position line read as an instruction executes a `SUCCESS` step again. | State phrasing, disk-only source, provenance in the line; F5 removes the line on any occurrence. | Phase 5 — The cursor in the `/work` engine (default-off) |
-| 4 | Widening the link gate reds unrelated skills | implementation | 1.1 surfaces 40 unresolved links at once. | 1.2 repairs them in the same change; `docs/` links are a reported class, not a failure. | Phase 1 — Links the gate can see |
+| 4 | Widening the link gate reds unrelated skills | implementation | 1.1 surfaced 40 unresolved links at once; the AC-1 widening to links leaving the skill directory surfaced 84 more. | 1.2 repairs them in the same change; `docs/` links and repo-only targets are reported classes, not failures. Held through AC-1 (2026-10-18): 30 rewritten by the projection, 25 repaired, 36 reported. | Phase 1 — Links the gate can see |
 | 5 | The measurement is spend-bearing | product | Three arms × three runs × 20 tasks (two pilots, D16) cost model calls. | Pre-registration fixes the size before the first run; the run is the operator's call and is not started by this roadmap's authoring. | Phase 6 — Measure before anything becomes a default |
 | 6 | A new lint and a new test file trip size and gate ratchets | implementation | New gates are counted by coverage ratchets. | Register each gate with its scanned count and self-test in the change that adds it. | Phase 3 — A procedure as data, with no runtime |
 | 7 | A shape check passes for work that was not done | implementation | A check that a state key exists proves the agent wrote something, not that the inventory is right, so the cursor would advance on a claim. | D15: only a check that corroborates the output against the repository counts as a verified exit; a judgement step is labelled sequenced and goes through 5.7's adjudication protocol. | Phase 4 — Three pilots, split without losing a line |

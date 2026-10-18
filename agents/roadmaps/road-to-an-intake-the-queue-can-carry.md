@@ -171,35 +171,35 @@ files as there were findings without an owner.
 
 ## Phase 4 — A digest an outside session reads first
 
-- [ ] **4.1 One generated, tracked digest.** `agents/roadmaps/OWNED.md`, one row
-      per active and parked roadmap: slug, the owned defect in at most 20 words,
-      status, and the paths it cites most. Generated, drift-checked, at most
-      4,000 tokens, no external source names.
+- [x] **4.1 One generated, tracked digest.** `agents/roadmaps-owned.md`, one row
+      per active, parked and stub roadmap: slug, directory, status, and the owned
+      defect in at most 20 words. Generated, drift-checked, inside its token
+      budget, no external source names.
       verify: `./scripts-run src/scripts/generate_owned_digest --check` -> 0
-      > **Not started 2026-10-16, for two reasons found while screening it.**
-      > (1) D6's arithmetic does not hold at today's count: 30 active plus 104
-      > `later/` files is 134 rows, and 4,000 tokens is ~30 per row, while 20
-      > words alone are ~27 before slug, status and paths. The budget, the word
-      > cap or the row set has to move first, and D6 is the decision to reopen.
-      > (2) `agents/roadmaps/OWNED.md` sits inside `agents/roadmaps/*.md`, the
-      > glob `lint_roadmap_complexity`, `check_roadmap_trackable` and the estate
-      > gate read as the active tree; it would be judged as a roadmap unless
-      > each gate's exclusion list gains it, or the digest lives outside that
-      > glob. Either choice belongs with the D6 reopen, not with a drain.
-      > **Re-screened 2026-10-17, and (1) is now measured rather than
-      > estimated.** The row set at this commit is 33 active and 103 `later/`
-      > files, 136 rows; the 136 slugs alone are ~1,460 tokens, and 136
-      > descriptions at the 20-word cap add ~3,540, so the pair already exceeds
-      > the 4,000-token budget before status and paths. Counting the 132
-      > `stubs/` files as parked too takes slugs alone to ~2,870. The reopen is
-      > therefore unavoidable, and it is **not taken here**: it is
-      > reversible-technical and so council-decidable, and both council seats
-      > returned `0/2 present — INCONCLUSIVE` on 2026-10-17, which routes the
-      > decision to the owner rather than to the drain.
-- [ ] **4.2 The intake reads it before deep work.** `/analyze:inbox` Phase 2
+      > **Landed 2026-10-19, reshaped by the AI council**
+      > (`agents/evidence/council/intake-owned-digest-2026-10-19.md`, 2/2 on
+      > location, tracking and parked rows). Moved out of `agents/roadmaps/`,
+      > whose glob ~60 readers treat as the active tree; paths dropped (both
+      > seats: citation frequency is not ownership, and paths churn); stubs
+      > kept as rows because 6 of the 11 replayed arrivals landed on one. The
+      > row holds the first sentence of `## Goal`, else the title, so a
+      > checkbox flip never changes it. D6 is reopened: 8,418 tokens measured
+      > (`cl100k_base`) against a 10,000 budget, and over budget fails rather
+      > than truncating. Drift is checked by `check_generator_sync` (triple
+      > `owned-digest`), and a conflict on the file is regenerated
+      > (`sync_pr_branch`). A replay over 30 days of `main` shows 124 of 354
+      > roadmap-touching commits would change it, so the header carries no row
+      > count, the one line every landing would rewrite.
+- [x] **4.2 The intake reads it before deep work.** `/analyze:inbox` Phase 2
       consults the digest for the `recurrence` column before the Phase 4c grep,
       so a re-arrived subject is visible in the triage table at the first look.
-      verify: `grep -c 'OWNED.md' src/domains/analysis-workbench/analyze/inbox/command.md` -> /^[1-9]/
+      verify: `grep -c 'roadmaps-owned.md' src/domains/analysis-workbench/analyze/inbox/command.md` -> /^[1-9]/
+      > **Landed 2026-10-19.** Additive by construction, as both council seats
+      > required before an intake reads it: a row is written as
+      > `owner?: <slug>`, confirmed by opening that roadmap before Phase 5
+      > lands anything on it, and the Phase 4c search still runs in full. An
+      > absent or stale digest is skipped. Whether the shortlist is accurate is
+      > the labelled reading openai asked for; Phase 6.2 records it.
 
 ## Phase 5 — Three folds, each decided with a burial check
 
@@ -244,6 +244,12 @@ files as there were findings without an owner.
       inbox round and the share of findings that landed as arrivals, beside the
       dashboard ages from Phase 3.
       verify: `grep -c 'arrival share' agents/evidence/analysis/intake-replay-*.md` -> /^[1-9]/
+      > **Re-screened 2026-10-19: not due.** The window opens four weeks after
+      > the Phase 2 report-only half landed (2026-10-16), so 2026-11-13 at the
+      > earliest; recording it earlier would measure a window that has not
+      > elapsed. When it runs it also reads how many `owner?:` candidates the
+      > digest (4.1/4.2) put in the triage table held when their roadmap was
+      > opened — the accuracy reading the 2026-10-19 council asked for.
 
 ## Handoffs — found here, owned elsewhere
 
@@ -283,7 +289,7 @@ files as there were findings without an owner.
 | D3 | reversible-technical | evidence | The relation rule lives in `_check_relates`, not `lint_blocker_citations` | `lint_blocker_citations.ts:1-24` checks citation line numbers; `lint_roadmap_complexity.ts:468` checks relations | — |
 | D4 | reversible-technical | agent | Park proposals are listed, never executed; 21 days; renewal is one line | Dropping or parking an item is a user disposition (`roadmap-progress-sync`); a listing costs nothing | proposals are renewed by reflex without a reason |
 | D5 | reversible-technical | agent | No generated `touches:` hotspot field | No collision count was measured; `/roadmap:next` already screens worktrees held by a foreign branch | a measured merge-conflict rate between parallel drains |
-| D6 | reversible-technical | agent | The digest budget is 4,000 tokens | One row per file at ≤ 20 words fits 130 files in that budget | the digest is truncated or unread in Phase 6 |
+| D6 | reversible-technical | council:agents/evidence/council/intake-owned-digest-2026-10-19.md | The digest budget is 10,000 tokens (reopened 2026-10-19 from 4,000), over budget fails and never truncates; rows are active, parked and stub roadmaps without paths, in `agents/roadmaps-owned.md` | `agents/evidence/council/intake-owned-digest-2026-10-19.md`: 2/2 on location, tracking, parked rows and fail-closed; the number and the stub rows settled on measurement (8,418 tokens; 6 of 11 replayed arrivals on stubs). The 4,000 figure assumed ~130 rows at ≤ 20 words and fit neither the row set nor the words | the digest is truncated or unread in Phase 6, or `pr_conflict_census` shows conflicts on it outweigh a tree-only reader |
 | D7 | reversible-technical | evidence | The 85k milestone is marked as without a mechanism now; no miss is recorded for 2026-11-10 before that date | The council's 2026-08-24 hold decision (`preamble-payload-budget.json:117`) keeps the date falsifiable and forbids recording a miss early; the fired `revisit_if` (`:68`) concerns the 85k mechanism, not the date | the 2026-11-10 measurement lands |
 | D8 | reversible-technical | evidence | Verify lines naming a test this step writes stay as written | `closure_scan` lists them as `unfalsifiable-verify` because the test does not exist yet; each step writes it first, and the listing is non-blocking (`closure_scan.ts:41`) | a step lands without its named test |
 
@@ -301,14 +307,14 @@ files as there were findings without an owner.
   H1 and H2 are offers in their form.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The owner-search quote becomes boilerplate | product | Authors paste an empty grep that never searched the defect's identifiers. | 2.1 checks the quote names the command and its result; Phase 6 reads whether arrivals rose. | Phase 2 — An addition shows the owner search it ran |
 | 2 | A fold buries open steps | implementation | Moving steps between files drops one. | 5.2's burial check compares open checkboxes before and after; the council decides each pair. | Phase 5 — Three folds, each decided with a burial check |
 | 3 | Park proposals are read as orders | product | A listed file is parked without a decision. | Proposals are text only; K1; renewal is one line. | Phase 3 — Age is visible, and a stall reaches a decision |
-| 4 | The digest goes stale or grows past its budget | implementation | A generated file drifts from the tree. | `--check` drift mode; budget asserted by the generator. | Phase 4 — A digest an outside session reads first |
+| 4 | The digest goes stale or grows past its budget | implementation | A generated file drifts from the tree, or merge conflicts on it pile up. | `check_generator_sync` drift triple; budget asserted by the generator, fail-closed; no aggregate header line; conflicts regenerated by `sync_pr_branch`. | Phase 4 — A digest an outside session reads first |
 | 5 | Tightening the exemption reds a legitimate addition | implementation | A file with a real reason but no quoted search is refused. | Only additions are read; the message names the expected shape. | Phase 2 — An addition shows the owner search it ran |
 
 ## Acceptance Criteria
