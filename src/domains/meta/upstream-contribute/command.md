@@ -21,11 +21,12 @@ packs:
 This command is a **front on one outward step**, not a second way out. It
 decides *what* is worth contributing and hands the finding to
 `self-repair:release`, which owns the branch, the commit identity, the privacy
-floor over the record text and the pushed commits, and the pull-request or
-issue route. Over the branch name, commit identity, message and diff that floor
-checks credentials and the consumer's own identifiers only — a company e-mail
-whose domain is neither still passes, and until the identifier class lands the
-author is what stands between it and a public forge.
+floor over the record text and every pushed object, and the pull-request or
+issue route. It pushes one commit built on `origin/main` from the branch's net
+change, on `retro/<fingerprint>`, under the signed-in account's noreply
+identity. Over that commit the floor checks credentials and the consumer's own
+identifiers only — a name in the diff that is neither still passes, so read
+the diff in the dry run.
 
 ```
 ONE WAY OUT. THIS COMMAND NEVER PUSHES, NEVER OPENS A PULL REQUEST,
@@ -102,14 +103,13 @@ Show the user what would leave the machine, before anything leaves it:
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run prints the resolved route and every byte of the title and body.
-It touches no network. Read it with the user; a refusal from the privacy
-floor is final and the finding stays local.
-
-**The account, the branch name and the diff are NOT printed.** They are the
-output of a payload builder that does not exist yet — steps 2.1 and 4.3 of
-`road-to-one-upstream-that-checks-what-leaves`. Say so; never reconstruct
-them, because a fabricated pre-send check is worse than a short one.
+The dry run prints where the send goes — repository, account, route and its
+fallback rungs, push remote, base commit — and what it carries — branch name,
+commit identity and message, diff, title, body, and the issue the ladder falls
+back to — then the digest of all of it. The one byte outside the digest is the
+commit date, set at send time in UTC. A blob that is not UTF-8 text is refused,
+not scanned. It reads GitHub and the local repository and writes to neither. Read it with the user; a refusal from
+the privacy floor is final and the finding stays local.
 
 **No record yet?** Then there is nothing to release, and no command here
 makes one. `self-repair:status` LISTS records, and it plus `self-repair:release`
@@ -135,16 +135,19 @@ pull request exists.
 ### 6. Send, once, with the user's word in that turn
 
 ```bash
-./agent-config self-repair:release <fingerprint>
+./agent-config self-repair:release <fingerprint> --approve <digest>
 ```
 
-Running that command IS the user's word. It is a Hard-Floor action under
+Running that command IS the user's word, and the digest names the bytes it
+covers: anything changed since the dry run voids it. It is a Hard-Floor action under
 `non-destructive-by-default`, so no standing instruction, autonomy setting or
 earlier approval substitutes for it.
 
-The ladder chooses the vehicle: a pull request from a checkout of this
-package, an issue otherwise, and a local record when nothing may leave.
-Degrading never widens what leaves the machine, only the vehicle.
+The ladder chooses the vehicle: a pull request only when the release runs
+from a checkout of this package — `AGENT_CONFIG_SOURCE` names that checkout
+when the command runs inside it by another path, and set in a consumer project
+it widens nothing — an issue otherwise, and a local record when nothing may
+leave. Degrading never widens what leaves the machine, only the vehicle.
 
 ### 7. Remind about local override cleanup
 
