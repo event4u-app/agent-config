@@ -303,6 +303,8 @@ two new scripts and the context file are additive; deleting them restores today.
       hand-back were seen red by neutralising each check. The isDraft read is the
       port's `gh pr view --json isDraft`; its first live exercise is the first
       publication after 3.5, which itself runs `--no-pr`.
+      2026-10-18: council review of #2461 (2/2) found the stage trusted its caller (branch, lease, base SHA, allowed set, body,
+      clone redirects); fixed before any caller exists via `PublicationTarget`, a leased push and run-directory inputs.
 - [ ] **3.4 `analyze:inbox` becomes the final stage.** Replace the
       branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
       engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
