@@ -264,8 +264,11 @@ function _remove_project_marker(
 /**
  * Delete the files a previous global deploy RECORDED writing under `anchor`.
  *
- * This used to be `fs.rmSync(target, { recursive: true })` on the anchor
- * itself. The anchors are whole host configuration roots — `~/.claude/`,
+ * This used to call `fs.rmSync` recursively on the resolved anchor itself —
+ * spelled out rather than quoted, because AC-2 of
+ * `road-to-an-uninstall-that-only-removes-what-it-brought` greps this file for
+ * that exact call and a comment reproducing it would read as a survivor.
+ * The anchors are whole host configuration roots — `~/.claude/`,
  * `~/.codex/`, `~/.config/zed/` — so a purge took everything under them,
  * whoever wrote it, including a host's own credentials file. That is not a
  * quirk this port replicated from Python deliberately; it is a defect, and the
@@ -821,6 +824,54 @@ function _uninstall_project(opts: Options): number {
     return 0;
 }
 
+/**
+ * Tools whose anchor still holds files the deploy inventory records.
+ *
+ * The lockfile is what makes a purge possible at all: `_uninstall_global`
+ * resolves the tool set from it, so a run that finds no lockfile prints
+ * `no tools to uninstall` and returns before the deletion function is
+ * reached. Deleting the lockfile while recorded content is still on disk
+ * therefore does not merely lose a record — it strands the content, because
+ * the inventory is a deletion ALLOWLIST (D1) and there is deliberately no
+ * path that deletes without one.
+ *
+ * Measured end to end on 2026-10-16: `uninstall --global` then
+ * `uninstall --global --purge` gave `plain_rc=0 purge_after_rc=1
+ * files_left=892`. The sibling unit case passed throughout, because the
+ * defect sits between the deletion function and the lockfile block that runs
+ * after it.
+ *
+ * An unreadable record counts as content left, deliberately: that is the
+ * state in which the lockfile is most needed and least able to prove it.
+ */
+function _tools_with_recorded_content_left(tools: readonly string[]): string[] {
+    const left: string[] = [];
+    for (const tool of tools) {
+        const anchor = USER_SCOPE_PATHS[tool];
+        if (!anchor) {
+            continue;
+        }
+        const target = expanduser(anchor);
+        if (!_exists(target)) {
+            continue;
+        }
+        let recorded: ReadonlySet<string>;
+        try {
+            recorded = global_deploy_inventory.recorded_rel_files(tool, target);
+        } catch {
+            left.push(tool);
+            continue;
+        }
+        for (const rel of recorded) {
+            if (_exists(path.join(target, rel))) {
+                left.push(tool);
+                break;
+            }
+        }
+    }
+    return left;
+}
+
 function _uninstall_global(opts: Options): number {
     const lock_path = installed_lock.lockfile_path();
     const write_path = installed_lock.lockfile_write_path();
@@ -918,18 +969,33 @@ function _uninstall_global(opts: Options): number {
                 `✅  lockfile updated (${tools.length} entries removed, ${remaining.length} kept)`,
             );
         } else {
-            // Python iterates a set `{lock_path, write_path}` (order
-            // irrelevant — both unlinks are best-effort, no output depends
-            // on order); a deduped list reproduces it.
-            const targets = lock_path === write_path ? [write_path] : [lock_path, write_path];
-            for (const target of targets) {
-                try {
-                    fs.unlinkSync(target);
-                } catch {
-                    // pass
+            // Nothing is left to KEEP in the lockfile — but that is not the
+            // same question as whether the lockfile may go. See
+            // `_tools_with_recorded_content_left`: the record is the only
+            // route to the content it records.
+            const stranded = refused ? tools : _tools_with_recorded_content_left(tools);
+            if (stranded.length) {
+                _print(
+                    _stdout,
+                    `ℹ️   lockfile kept (${write_path}) — ${stranded.join(', ')} still holds ` +
+                        'files this package recorded writing; `--purge` removes them, and ' +
+                        'without this record nothing can',
+                );
+            } else {
+                // Python iterates a set `{lock_path, write_path}` (order
+                // irrelevant — both unlinks are best-effort, no output depends
+                // on order); a deduped list reproduces it.
+                const targets =
+                    lock_path === write_path ? [write_path] : [lock_path, write_path];
+                for (const target of targets) {
+                    try {
+                        fs.unlinkSync(target);
+                    } catch {
+                        // pass
+                    }
                 }
+                _print(_stdout, `✅  lockfile deleted (${write_path})`);
             }
-            _print(_stdout, `✅  lockfile deleted (${write_path})`);
         }
     }
     return refused ? 1 : 0;

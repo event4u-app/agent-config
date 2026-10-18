@@ -43,6 +43,17 @@ This is why an install-layout change no longer needs to trip a Major on its own:
 migration path turn it into a deprecation-gated minor change. The cadence note below predates that rule
 and describes the historical reason majors were frequent.
 
+## Pending — landed on `main`, not yet in a released major
+
+A row here has shipped in no release. It carries no version, because the
+version it lands in is a release decision and writing a guess would be the
+pinned-release-target this repository refuses elsewhere. The release that
+carries it moves the row into the table below with its number and date.
+
+| Landed | What changes | Migration |
+|---|---|---|
+| 2026-10-16 / 2026-10-17 | **`uninstall --global --purge` stops being a recursive delete of the host anchor.** Old scope: `fs.rmSync(anchor, { recursive: true })` on whole host configuration roots — `~/.claude/`, `~/.codex/`, `~/.config/zed/` — so everything under them went, whoever wrote it. New scope: only the anchor-relative paths this package's own deploy inventory recorded writing; the anchor itself is never removed, directories are pruned only when left empty, a recorded symlink is unlinked rather than followed, and a purge with no readable inventory for that anchor exits 1 having deleted nothing. A second change in the same area: a plain `uninstall --global` now keeps the lockfile while recorded content is still on disk, where it used to delete it. | Anyone who used `--purge` as a host-configuration reset gets strictly less removed and must delete the rest with the host's own tooling — this package deletes only what it can prove it wrote. Nobody who used it to uninstall this package needs to do anything. A kept lockfile is removed by the `--purge` run that follows it. |
+
 ## Breaking changes by major
 
 | Version | Date | What broke | Migration | Consumer impact |
