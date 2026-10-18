@@ -141,9 +141,10 @@ export function commandWords(segment: string): string[] {
             word += segment.slice(i + 1, end === -1 ? segment.length : end);
             i = end === -1 ? segment.length : end;
         } else if (ch === '"') {
+            // Inside double quotes a backslash escapes only $ ` " \ and a newline.
             let j = i + 1;
             for (; j < segment.length && segment[j] !== '"'; j += 1) {
-                if (segment[j] === '\\' && j + 1 < segment.length) j += 1;
+                if (segment[j] === '\\' && j + 1 < segment.length && '$`"\\\n'.includes(segment[j + 1] as string)) j += 1;
                 word += segment[j];
             }
             i = j;
@@ -159,7 +160,6 @@ export function commandWords(segment: string): string[] {
 }
 
 const ASSIGNMENT = /^[A-Za-z_][A-Za-z0-9_]*=/;
-const REDIRECT_PREFIX = /^(?:\d*[<>]{1,2}&?|&>{1,2})/;
 const VARIABLE_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
 type Verdict = { class: CredentialFileClass; what: string } | null;
@@ -172,18 +172,30 @@ export function credentialBasename(p: string): string {
 const named = (cls: CredentialFileClass, p: string): Verdict => ({ class: cls, what: `\`${credentialBasename(p)}\`` });
 const base = (w: string): string => w.replace(/^.*\//, '');
 
-/** The first credential path among `words` — as a word, a redirect target or an option value. */
-function credentialAmong(words: readonly string[]): Verdict {
-    for (const w of words) {
-        const target = w.replace(REDIRECT_PREFIX, '');
-        // `--config=.env`, `--defaults-file=~/.my.cnf`: the value of an option is a path too.
-        const candidates = target.includes('=') ? [target, target.slice(target.indexOf('=') + 1)] : [target];
+/**
+ * The first credential path mentioned anywhere in `text`, read from the raw
+ * characters rather than from parsed words: the text is cut at every character
+ * a path cannot hold unquoted — whitespace, quotes, redirections, pipes,
+ * separators, parentheses, `=`, `,`, backticks — so `cat<.env`, `--config=.env`
+ * and `<(cat .env)` all expose the path, and an attached short option
+ * (`xargs -a.env`) is read both whole and without its `-x` prefix. Backslashes
+ * read as separators, so a Windows path is a path.
+ */
+export function credentialMention(text: string): Verdict {
+    for (const raw of text.replace(/\\/g, '/').split(/[\s'"<>|;&()`=,]+/)) {
+        if (raw === '') continue;
+        const candidates = raw.startsWith('-') ? [raw, raw.replace(/^-+[A-Za-z]?/, '')] : [raw];
         for (const c of candidates) {
-            const cls = credentialFileClass(c);
+            const cls = c === '' ? null : credentialFileClass(c);
             if (cls !== null) return named(cls, c);
         }
     }
     return null;
+}
+
+/** The first credential path among parsed words (each judged as raw text). */
+function credentialAmong(words: readonly string[]): Verdict {
+    return credentialMention(words.join(' '));
 }
 
 /**
@@ -264,7 +276,7 @@ export function segmentVerdict(segment: string, depth = 0): Verdict {
         if (args.some((a) => base(a) === 'env' || base(a) === 'printenv')) {
             return { class: 'process-environment', what: `\`${cmd} … env\`` };
         }
-        return credentialAmong(args);
+        return credentialMention(segment);
     }
     if (cmd === 'env') {
         const ran = envCommand(args);
@@ -290,5 +302,5 @@ export function segmentVerdict(segment: string, depth = 0): Verdict {
     if (cmd === 'cp' || cmd === 'mv') return credentialAmong(copySources(args));
 
     const reads = !(NON_READING_COMMANDS.has(cmd) || (cmd === 'git' && NON_READING_GIT.has(operands[0] ?? '')));
-    return reads ? credentialAmong(args) : null;
+    return reads ? credentialMention(segment) : null;
 }

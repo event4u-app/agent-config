@@ -147,6 +147,24 @@ describe('the tool and command surface', () => {
         }
     });
 
+    it('reads credential paths from the raw text, not only from parsed words (council round 4c, fourth pass)', () => {
+        for (const cmd of [
+            'cat<.env',
+            'cat<".env"',
+            'head<certs/tls.key',
+            'node app.js<config/.env.local',
+            'xargs -a.env echo',
+            'cat "C:\\Users\\someone\\project\\.env"',
+            'diff --from-file=.env a b',
+            'paste - <(cat .env)',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
+        }
+        for (const cmd of ['cat<notes.txt', 'xargs -a list.txt echo', 'cat "C:\\Users\\someone\\project\\.env.example"']) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(0);
+        }
+    });
+
     it('a .pem counts only when a name token says key, and only an absolute /proc path is the environment', () => {
         expect(credentialFileClass('certs/monkey.pem')).toBeNull();
         expect(credentialFileClass('certs/secretary-ca.pem')).toBeNull();
