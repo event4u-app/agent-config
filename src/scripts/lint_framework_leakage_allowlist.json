@@ -28,6 +28,11 @@
       "reason": "Tool-intrinsic install lines — markitdown IS a pip package; the install command is the tool's identity, not stack leakage."
     },
     {
+      "file": "src/skills/type-design/references/toolchain.md",
+      "anchor": ".type-design/venv/bin/pip install \\",
+      "reason": "Tool-intrinsic install line — the type-design toolchain IS a pinned set of pip packages run peer-side (decision A2 of road-to-type-with-a-witness, markitdown precedent); the install command is the toolchain's identity, not stack leakage."
+    },
+    {
       "file": "src/skills/module-management/SKILL.md",
       "anchor": "### Laravel HMVC carve-out",
       "reason": "Canonical multi-stack module catalogue (Laravel HMVC / Symfony DDD / Node / Python sections) — keep-in-place is a recorded council decision; per-stack sections sit farther apart than the ±10-line window."
