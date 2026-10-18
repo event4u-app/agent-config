@@ -1,10 +1,10 @@
 // check_voice_lexicon — "never say X" and "this claim needs a proof", checked
 // on the finished draft (road-to-a-brand-the-tree-can-check 0.4, 5.1-5.3).
 //
-// The 5.3 negative-corpus bar is not asserted here: its pre-registered first
-// measurement read 0.28 hits per 10k words against a bar of 0.1, and the
-// registry may not be tuned after that run (E8); the reading is kept with the
-// roadmap step rather than in this file.
+// The 5.3 negative-corpus bar is asserted over corpus v2 only: v1's first
+// measurement missed (0.28 per 10k), so registry v2 and a corpus it was not
+// revised against were pre-registered before v2 was scanned (E8). Readings:
+// agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md and -10-19.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -241,5 +241,25 @@ describe('check_voice_lexicon — claim-shapes', () => {
     it('claim-shapes: no English registry entry is a single bare word (NG-10)', () => {
         const bare = CLAIM_PHRASES.filter((p) => p.language === 'en' && !/[\s\-.]/u.test(p.phrase)).map((p) => p.phrase);
         expect(bare).toEqual([]);
+    });
+});
+
+describe('check_voice_lexicon — negative-corpus', () => {
+    it('negative-corpus: registry v2 stays at or under 0.1 claim hits per 10k words on the pre-registered v2 corpus', () => {
+        const listFile = path.join(REPO_ROOT, 'tests', 'fixtures', 'voice-lexicon', 'negative-corpus-v2.txt');
+        const files = fs
+            .readFileSync(listFile, 'utf8')
+            .split('\n')
+            .filter((l) => l.trim() !== '' && !l.startsWith('#'));
+        expect(files.length).toBeGreaterThan(100);
+        let words = 0;
+        let hits = 0;
+        for (const rel of files) {
+            const text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+            words += text.split(/\s+/u).filter(Boolean).length;
+            hits += scanClaims(text, [], NOW).length;
+        }
+        expect(words).toBeGreaterThan(50_000);
+        expect((hits / words) * 10_000).toBeLessThanOrEqual(0.1);
     });
 });

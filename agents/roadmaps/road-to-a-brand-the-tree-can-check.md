@@ -429,7 +429,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       `exclude` to `analyzeText`; an unknown id is a lint error.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t tell-exemptions --reporter=verbose` -> /✓.*tell-exemptions/
       Done 2026-10-17: the slot's ids go to `analyzeText` as `exclude`; an id outside `ALL_TELL_RULES` is a `brand_voice_slot` issue (`tell_exemptions[i]`), and the CLI refuses an invalid slot with exit 2. Tells are reported beside the findings and never change the exit code.
-- [ ] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
+- [x] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
       registry of English and German claim *phrases* (superlative, comparative,
       absolute, certification, guarantee forms — never bare words). A hit not
       covered by a slot `claims[]` entry, or covered by an expired one, is an
@@ -439,6 +439,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       at hint severity until a German negative corpus is registered.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t "claim-shapes|negative-corpus" --reporter=verbose` -> /✓.*claim-shapes[\s\S]*✓.*negative-corpus/
       Open 2026-10-17: the registry (`src/scripts/_lib/claim_phrases.ts`) and the corpus list (`tests/fixtures/voice-lexicon/negative-corpus.txt`, 183 contract docs) were committed before the first run; the `claim-shapes` cases pass and the scan is live at `warning`/`hint`. The first measurement missed the bar — 8 hits over 283,204 words, 0.28 per 10k against 0.1, all false positives from three phrases (`unmatched`, `beats every`, `never fails`) — recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md`. E8 forbids tuning after the first run, so no registry edit and no bar test landed; closing needs a fresh pre-registration against a corpus the revision was not chosen on.
+      Done 2026-10-19: the fresh pre-registration landed in its own commit before any scan — registry v2 drops the four English single-word entries NG-10 already excludes (`unmatched`, `unrivaled`, `unrivalled`, `unhackable`; a `claim-shapes` case pins it, seen red), keeps `beats every` and `never fails`, and corpus v2 is 111 `docs/guidelines` files never scanned before. Reading: 0 hits in 97,835 words, bar met; `negative-corpus` asserts it and turned red under a planted noisy phrase. Recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md`, including the v1-corpus figure under v2 (0.105) labelled as not evidence.
 - [ ] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
       `humanizer` and `/brand:review` run 5.1-5.3 on the finished draft. A
       ghostwriter taboo hit aborts as documented; brand findings are located,
