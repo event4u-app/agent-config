@@ -22,6 +22,7 @@ import {
     scanClaims,
     scanLexicon,
     unknownTellIds,
+    unwrapSingleFence,
     type LexiconTerm,
 } from '../../src/scripts/check_voice_lexicon.js';
 import { validateBrandVoiceSlotText } from '../../src/scripts/_lib/brand_voice_slot.js';
@@ -252,9 +253,15 @@ describe('check_voice_lexicon — negative-corpus', () => {
             .split('\n')
             .filter((l) => l.trim() !== '' && !l.startsWith('#'));
         expect(files.length).toBeGreaterThan(100);
+        // A live ratchet over the registered list, not a replay of the
+        // registered run (that reading is frozen in the 2026-10-19 evidence
+        // note): a guideline later deleted is dropped, never an ENOENT, and a
+        // claim phrase later written into one reds here on purpose.
+        const present = files.filter((rel) => fs.existsSync(path.join(REPO_ROOT, rel)));
+        expect(present.length, 'most of the registered corpus must still exist').toBeGreaterThan(100);
         let words = 0;
         let hits = 0;
-        for (const rel of files) {
+        for (const rel of present) {
             const text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
             words += text.split(/\s+/u).filter(Boolean).length;
             hits += scanClaims(text, [], NOW).length;
@@ -270,6 +277,26 @@ describe('check_voice_lexicon — draft-surfaces', () => {
         const r = run(['--draft', '-', '--ghostwriter', gw], 'A real game-changer.\n');
         expect(r.status).toBe(1);
         expect(r.stdout).toMatch(/^-:1:\d+ error avoid "game-changer"/mu);
+    });
+
+    it('draft-surfaces: a draft piped as printed — one fenced block — is scanned, not exempted', () => {
+        const gw = write('gw.md', GHOSTWRITER_PROFILE);
+        const r = run(['--draft', '-', '--ghostwriter', gw], '```markdown\nIntro.\nA real game-changer.\n```\n');
+        expect(r.status).toBe(1);
+        expect(r.stdout).toMatch(/^-:3:\d+ error avoid "game-changer"/mu);
+        const twoFences = '```\na\n```\ntext\n```\nb\n```\n';
+        expect(unwrapSingleFence(twoFences)).toBe(twoFences);
+    });
+
+    it('draft-surfaces: every surface says what exit 2 means', () => {
+        for (const rel of [
+            'src/domains/gtm-marketing/ghostwriter/write/command.md',
+            'src/domains/gtm-marketing/post-as/me/command.md',
+            'src/skills/humanizer/SKILL.md',
+            'src/domains/brand/brand/review/command.md',
+        ]) {
+            expect(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'), rel).toMatch(/[Ee]xit \*{0,2}2\*{0,2} /u);
+        }
     });
 
     it('draft-surfaces: every drafting surface runs the checker on its finished draft', () => {

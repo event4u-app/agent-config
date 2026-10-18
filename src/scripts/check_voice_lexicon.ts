@@ -330,7 +330,47 @@ function parseArgs(argv: readonly string[]): Args | string {
     return { draft, slot, ghostwriter, json, now };
 }
 
-function readOrNull(p: string | number): string | null {
+/**
+ * Read stdin to EOF. fd 0 may arrive non-blocking (a host pipe, or any earlier
+ * `process.stdin` access), where `readFileSync(0)` throws EAGAIN mid-payload;
+ * so read in chunks and wait out EAGAIN. Like `cat`, an unpiped TTY waits for
+ * input — the drafting surfaces always pipe.
+ */
+function readStdin(): string | null {
+    const chunks: Buffer[] = [];
+    const buf = Buffer.alloc(65536);
+    const pause = new Int32Array(new SharedArrayBuffer(4));
+    for (;;) {
+        let n: number;
+        try {
+            n = fs.readSync(0, buf, 0, buf.length, null);
+        } catch (exc) {
+            if ((exc as NodeJS.ErrnoException).code === 'EAGAIN') {
+                Atomics.wait(pause, 0, 0, 10);
+                continue;
+            }
+            return null;
+        }
+        if (n === 0) return Buffer.concat(chunks).toString('utf-8');
+        chunks.push(Buffer.from(buf.subarray(0, n)));
+    }
+}
+
+/**
+ * A drafting command prints its draft as ONE fenced block, and fenced text is
+ * exempt — so a draft piped as printed would scan as empty. When the whole input
+ * is a single fence, blank the two fence lines and scan the body; offsets hold.
+ */
+export function unwrapSingleFence(text: string): string {
+    const m = /^(\s*)(```|~~~)[^\n]*\n([\s\S]*?)\n\2[ \t]*(\n\s*)?$/.exec(text);
+    if (m === null || (m[3] ?? '').includes(m[2] as string)) return text;
+    const open = text.indexOf('\n', (m[1] ?? '').length);
+    const close = text.lastIndexOf(m[2] as string);
+    const blank = (s: string): string => s.replace(/[^\n]/g, ' ');
+    return blank(text.slice(0, open)) + text.slice(open, close) + blank(text.slice(close));
+}
+
+function readOrNull(p: string): string | null {
     try {
         return fs.readFileSync(p, 'utf-8');
     } catch {
@@ -345,11 +385,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 2;
     }
     // `-` reads stdin: a drafting command that prints only must not write its draft to disk.
-    const draft = readOrNull(args.draft === '-' ? 0 : args.draft);
-    if (draft === null) {
-        process.stderr.write(`draft not readable: ${args.draft}\n`);
+    const raw = args.draft === '-' ? readStdin() : readOrNull(args.draft);
+    if (raw === null) {
+        process.stderr.write(`draft not readable: ${args.draft === '-' ? 'stdin (pipe the draft)' : args.draft}\n`);
         return 2;
     }
+    const draft = unwrapSingleFence(raw);
     const terms: LexiconTerm[] = [];
     let claims: ClaimEntry[] = [];
     let tellExemptions: string[] = [];
