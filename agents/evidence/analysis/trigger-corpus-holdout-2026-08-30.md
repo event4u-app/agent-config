@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 151 files, 34 holdout and 117 train.** That bullet read
+- **Now: 156 files, 35 holdout and 121 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -33,7 +33,8 @@ beside it.
   the **holdout** side, and scoped accordingly), § Growth 2026-10-01b,
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
-  § Growth — 2026-10-14e, § Growth — 2026-10-16 and § Growth — 2026-10-16b; the
+  § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b and
+  § Growth — 2026-10-17; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -551,10 +552,105 @@ reads 149 grandfathered, the shrink-only direction.
 `routing_signal_measurement.test.ts` were run after the final edit to any file in
 the set.
 
+## Growth — 2026-10-17, five corpora; one seals
+
+```
+FIVE ROWS ADDED: FOUR TRAIN, ONE HOLDOUT. THE SEALED SET MOVES 34 -> 35.
+NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
+RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
+```
+
+**What changed.** `road-to-a-brand-the-tree-can-check` steps 4.3, 6.1 and 7.1
+gave the `brand-voice` context-spine slot one writer and six readers, which
+edited five skill bodies that carried no corpus, and
+`check_routing_coverage` requires one from every touched skill. Each gained
+**8** labelled queries — 4 exemplars of which one is German, 3 near-misses and
+1 counterexample — except `voice-and-tone-design`, which gained **9** (a fifth
+exemplar for writing the slot itself). 41 cases in all.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `content-funnel-design` | train | `0x49` | 73 ≥ 51 |
+| `gtm-launch` | holdout | `0x28` | 40 < 51 |
+| `messaging-architecture` | train | `0x48` | 72 ≥ 51 |
+| `release-comms` | train | `0xe9` | 233 ≥ 51 |
+| `voice-and-tone-design` | train | `0x59` | 89 ≥ 51 |
+
+**One row seals, and nobody chose it.** The rule is a hash of the directory
+name. The sealed set moves **34 -> 35**, the train set **117 -> 121**, and the
+realised split is **35/156 = 22.44 %** against the rule's 19.9 % target. AC-6
+still rests on the same 18 rows, so it is now 18 of 35; a proposer evaluated
+against this holdout must exclude `gtm-launch` or say it is using a row whose
+seal is younger than the evaluation. The near-misses in `gtm-launch`'s corpus
+name `release-comms`, `messaging-architecture` and `retention-loops`, which are
+the three its own body routes to — so the sealed row encodes a routing boundary
+the skill already states, not one invented for the corpus.
+
+**Both train-side measurements were re-taken, after the skill edits.**
+`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
+on the false-activation guard — false activation 5.776 -> **6.14 pp** against
+the +2.0 pp guard, delta-recall 2.269 -> **3.22 pp** (still below the 5.0 pp
+bar), McNemar p 0.3616 -> **0.1783**, train corpora 117 -> **121**, cases 1127
+-> **1160**, catalogue 300. `delivery-set-measurement-2026-08-31.json`:
+precision@5 80.645 -> **81.00 %**, recall@5 61.082 -> **60.68 %**, recall loss
+38.918 -> **39.32 pp** — the ceiling stays **BREACHED** — false activation@5
+15.162 -> **14.74 %**, context cost 230 -> **229.9** tokens against the 500
+target, still **MET**. Neither verdict changes in kind.
+
+**The standing repair was followed, and both gates were run.**
+`trigger_corpus_holdout_pin.test.ts` reproduces every row and the set hash, and
+`routing_signal_measurement.test.ts` § 5.1 agrees that `gtm-launch` is on the
+holdout side and that no train case belongs to a sealed skill. Running only the
+first would have accepted a row written into the wrong table, which is the
+failure the 2026-10-16 section recorded.
+
+**The residual named since 2026-09-19 is unchanged and was paid again.**
+`SET-SHA256` is computed over the undivided list, so it moves whenever the
+corpus grows on either side and cannot on its own distinguish "grew" from
+"edited a frozen file". The per-row table above is what distinguishes them.
+
+## Re-pin — 2026-10-17b, two train corpora re-hashed, on top of the five-corpus growth
+
+```
+THE ROWS ARE NOT NEW. BOTH ARE TRAIN-SIDE RE-HASHES, TAKEN AFTER THE GROWTH ABOVE.
+NO HOLDOUT FILE'S BYTES CHANGED; THE SEALED SET STAYS AT 35.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN ON THE COMBINED TREE.
+```
+
+**What changed.** `road-to-a-brand-the-tree-can-check` step 1.2 aligned every
+authored surface on `tokens.json`; its eval half was deferred on exactly this
+re-pin, and the same change now owns the corpus, so it lands here. Both corpora
+**keep** the dotted `.tokens.json` utterance and **gain** the plain one: the
+resolver reads `tokens.json`, and a consumer who followed this package's own
+earlier wording types the dotted name, so routing must answer both. Removing
+the dotted utterance would delete the near-miss the defect actually produces.
+`brand-to-tokens` goes 10 -> 12 queries (the lint asks a diff-touched corpus for a declared class on every case, a German positive and a counterexample, so the whole file is annotated rather than only the new line), `brand-asset-generation` 10 -> 11.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `brand-asset-generation` | train | `0xc7` = 199 ≥ 51 | re-hashed |
+| `brand-to-tokens` | train | `0x4f` = 79 ≥ 51 | re-hashed |
+
+**Both train-side measurements were re-taken on that tree**, and re-taken
+again after the full class annotation the lint asked for, so the figures below
+are the final ones rather than the first pass.
+`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
+on the false-activation guard — false activation **6.14 pp** against +2.0,
+delta-recall 3.22 -> **3.204 pp** (still below the 5.0 pp bar), McNemar p
+0.1783 -> **0.1808**, cases 1160 -> **1163**, train corpora **121**, catalogue
+300. `delivery-set-measurement-2026-08-31.json`: precision@5 81.00 ->
+**81.264 %**, recall@5 60.68 -> **60.708 %**, recall loss 39.32 ->
+**39.292 pp** — the ceiling stays **BREACHED** — false activation@5 14.74 ->
+**14.561 %**, context cost **229.9** tokens against the 500 target, still
+**MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**, for the reason the 2026-10-16
+section records: the pin test alone cannot see which table a row sits in.
+
 ## The set hash
 
 ```
-SET-SHA256  54986392b12c4bfb4d99dbf3e43a57868652aa41350ccd4e5811728d6110b6e5
+SET-SHA256  e40c3f3b73dc4e2d82fc46eb2061848fe0731a34937bce6b0f29eaeccb50e4c8
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -774,6 +870,7 @@ open and which this file does not settle.
 | `deep-reading-analyst` | `9d4e5e7f05961f470696e0ea80a47b9bd0eecdc83139817ee430ebdc86865722` |
 | `design-review` | `78a22cccbd6964d28931c1ec0cefab69b30b93d479ca4966ab1b42dfb2ea3181` |
 | `fe-design` | `bfc10d1fce9264a9b9e6a542354b1f679dec12331a605c97c4615795a804cc3e` |
+| `gtm-launch` | `c91ef7c0f77f490420f394ca4cc227a5df98aed4b6e1bffd557ea600115140d4` |
 | `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
 | `judge-injection-defense` | `dad5757b5ee71d78b761467d007d18c18fb3d440d1e1f5eb54ca10b4ce6d156f` |
 | `judge-spec-compliance` | `6d7e5525d88e4c4b26c963103f43f7e95d997337ff3d624fea31a757363f653e` |
@@ -937,17 +1034,18 @@ open and which this file does not settle.
 | `blade-ui` | `4231ec1aed4180304c75e1b958a24703e9d9cf27d92a31c40c1bcbec92caf83a` |
 | `blameless-post-mortem` | `719dabb662d9937dabb178d097dc73e458c6b31210532b309896580aefd6c48c` |
 | `blast-radius-analyzer` | `353806c436295cd6e83c4e9e7ac0e4de61501e01cec65a9b0d57e2c183f9a391` |
-| `brand-asset-generation` | `ebbc94b7467f4240ec56d8b95ee2aae225540e8e51f665edfd7a9704be5dd731` |
+| `brand-asset-generation` | `9ba310ecfbc2139f668d340183fb82f03bec9bcfbb3a504739aeda2ed9dfb3ef` |
 | `brand-audit` | `77bbac810a28d2c0fba32c6ce75e38e50aff783ce8775e4bc215893e04a42a8c` |
 | `brand-identity` | `50be404a9317ca4321de6966c84815d23721bfb092bf90c4f24ae781b26c1caf` |
 | `brand-strategy` | `8a9a7ea586b7de9e0a3b7a8e0b3ffd776ca1260ab79d77b2804ed4c9e6911606` |
-| `brand-to-tokens` | `b58dc2a919d0f8a242120e4b04853546c226c4e22645919f0bee39e799bcc094` |
+| `brand-to-tokens` | `b4a6926a805c848bf94ee9b6a037b796c0ac416077d0a5474bafcf63f1ded411` |
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
 | `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
 | `competitive-moat-analysis` | `e149d75967c3d407ba74512527934b77fb3ede128c1bbcdecdd88e3c51448b67` |
 | `complexity-first-planning` | `7377795a8aca39c574ed4a1bc2074f7da451bf1ce7095bdb0ccdc50e60b9757b` |
+| `content-funnel-design` | `ff3ef395d13b32818a54bffd7eefa3eb4258c2f97c578c649c5a673f039171b1` |
 | `context-authoring` | `0c3412f197fb3b5210496e39bfe5dc286b1348651fa132c4ade4cb43617f05b7` |
 | `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
 | `corpus-grounding` | `f87d7497f5705b0ef84bd61137623984faaac39f202bf9f5fea206855fbd6c3f` |
@@ -998,6 +1096,7 @@ open and which this file does not settle.
 | `llm-provider-knowledge` | `9cfb3639dd7dee51520aebf2f180ce41ae752229b76716774468f6a9598461a1` |
 | `logging-monitoring` | `5e8406b3c814db3d1e100a1c817a9fce388afd40f4f3caa8230cd8f69e44f0f4` |
 | `markitdown` | `663ee4c4f9d5c707ff96208d1723d9817639fca7c00b346e43be2cb557610f6a` |
+| `messaging-architecture` | `884739cdfadce5039917772df035f19a4ca8f5863fd1ab57bcb023aa183421b0` |
 | `monorepo-workspace` | `766a958aae4898bd938e493be8597b6d8b9ee38914ed95ab87ed867422e38233` |
 | `nda-triage` | `01e4becd20b129780d82d2889099f07a8fe4ee241b31f909d1084af427f4323d` |
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
@@ -1014,6 +1113,7 @@ open and which this file does not settle.
 | `react-shadcn-ui` | `e6d4b560f29a896c9332bdc629ef8e7b39a3129046a6f512b98458b2e012cfb6` |
 | `reasoning-orchestrator` | `a968ef1f04693b46eb3838b43eb83b092429149069599c3aef2c2e4628701b85` |
 | `refine-ticket` | `bab09021f8664cd0676e9613bd511a3f87d115583ea5f4639fb4800df9715328` |
+| `release-comms` | `d9ca8cc440910c5a91857155379b16a52cbe0f7c33defdfd2a2429ac8f807840` |
 | `repomix-packer` | `62489a82ccd7a01c53d8a4ca265a3f9249782c12d5b74ac7ae2e3d1a12df478e` |
 | `roadmap-writing` | `3559ef4117112f053288fb55da5b3ced3cebe2ab914e2e5d82e8f726f20339d2` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
@@ -1037,6 +1137,7 @@ open and which this file does not settle.
 | `upstream-contribute` | `563a1ab0381b7a96f9a993381119403f81064426d7b3aaf17fbf81467534cdea` |
 | `using-git-worktrees` | `66f8a8709d975f3c98103341469ea0af34b909ce1ca7042170690707a61878da` |
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
+| `voice-and-tone-design` | `46bb583e7a1f37eb25c2b19033deef99bf70f8273197e477998989285e5296e7` |
 | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
 | `workspace-link` | `b4733d41b6460c62cfb91bbbdaf6e764124d115035ee6d780f782ca4e3aae675` |
 

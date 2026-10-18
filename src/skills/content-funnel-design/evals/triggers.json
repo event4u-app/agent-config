@@ -1,0 +1,15 @@
+{
+  "skill": "content-funnel-design",
+  "last_eval": "2026-10-17",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers mapping content shapes onto funnel stages, a leaking stage with no asset that would catch it, re-mapping after an ICP change, and a German phrasing that never names a funnel. Should-not covers the three neighbours the skill's own routing names (cadence, quantitative drop-off, drafting the asset) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "which content shape belongs at each funnel stage for our mid-market buyer", "trigger": true, "class": "exemplar"},
+    {"q": "consideration is leaking and we have no asset that would catch anyone there", "trigger": true, "class": "exemplar"},
+    {"q": "we changed ICP — remap our content shapes per stage, the old mapping was inherited", "trigger": true, "class": "exemplar"},
+    {"q": "ordne unsere Inhalte den Phasen zu, im Moment schreibt jeder was er mag", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "what should our publishing cadence be — weekly or twice a month", "trigger": false, "class": "near-miss", "note": "cadence is editorial-calendar, not stage-to-shape mapping"},
+    {"q": "why did signup-to-activation drop 12 points last month", "trigger": false, "class": "near-miss", "note": "quantitative drop-off is funnel-analysis"},
+    {"q": "write the comparison page we agreed belongs at the decision stage", "trigger": false, "class": "near-miss", "note": "drafting the asset is downstream of this skill"},
+    {"q": "our nightly backup job has been failing silently for a week", "trigger": false, "class": "counterexample"}
+  ]
+}

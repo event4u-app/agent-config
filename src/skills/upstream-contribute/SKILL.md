@@ -47,22 +47,24 @@ THIS SKILL NEVER PUSHES, NEVER OPENS A PULL REQUEST, AND NEVER WRITES
 A SECOND, HAND-CONDENSED COPY OF AN ARTIFACT.
 EVERY BYTE THAT LEAVES — BRANCH NAME, COMMIT IDENTITY, COMMIT MESSAGE,
 DIFF, TITLE, BODY — LEAVES THROUGH `self-repair:release`.
-TODAY THAT ROUTE SCANS THEM FOR CREDENTIALS AND THE CONSUMER'S OWN NAMES ONLY.
-AN E-MAIL OR NAME OUTSIDE THOSE PASSES, AND SAYING SO IS THE POINT: AN
-UNSCANNED BYTE A READER BELIEVES WAS SCANNED IS THE WORSE STATE.
+THE COMMIT IDENTITY IS NOREPLY BY CONSTRUCTION; THE REST IS SCANNED FOR
+CREDENTIALS AND THE CONSUMER'S OWN NAMES ONLY. A NAME IN THE DIFF OUTSIDE
+THOSE PASSES, AND SAYING SO IS THE POINT: AN UNSCANNED BYTE A READER
+BELIEVES WAS SCANNED IS THE WORSE STATE.
 A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 ```
 
 `self-repair:release` carries the privacy floor over the record text, a
-payload floor over the pushed commits, the may-not-modify deny list, the route ladder (pull request, then issue, then a
-local record). The per-turn Hard-Floor word is the person's: `releaseCmd` has
-no prompt, and invoking it IS the confirmation. A checkbox in a skill
+payload floor over every object it pushes, the may-not-modify deny list, the
+route ladder (pull request, then issue, then a local record) and an approval
+bound to the digest of the exact bytes. The per-turn Hard-Floor word is the
+person's: `--approve <digest>` IS the confirmation. A checkbox in a skill
 carries none of them, which is why this skill asks a *worth it* question and
 nothing else.
 
-The payload floor reads credentials from the detector table and the
-consumer's identifiers from `check_portability`; a finding skips the push. A
-company e-mail outside those passes: read the commit identity before the send.
+It pushes one commit built on `origin/main` from the branch's net change, as
+the account's noreply identity. The floor reads credentials and the consumer's
+identifiers; a finding skips the push.
 
 ## Core principles
 
@@ -215,13 +217,9 @@ record the rationale in the finding.
 ./agent-config self-repair:release <fingerprint> --dry-run
 ```
 
-The dry run resolves the route and prints the account, title and body in
-full. It only reads GitHub and creates or modifies nothing.
-
-**It does NOT print the branch name or the diff — never invent them.** Those
-are the output of a payload builder that does not exist yet (step 2.1 of
-`road-to-one-upstream-that-checks-what-leaves`). Read what it printed with the
-user and say the rest is unshown.
+The dry run prints the destination (repository, account, route, remote, base)
+and every byte that may leave except the commit date, then their digest. It
+creates nothing. Read it with the user.
 
 A refusal from the privacy floor is **final**: the finding stays local. There
 is no scrubbing pass, because a rewritten identifier is still a leaked one.
@@ -237,16 +235,16 @@ Outside a checkout the package CI runs after the issue or pull request exists.
 ### 6. Send — one command, one turn, one word
 
 ```bash
-./agent-config self-repair:release <fingerprint>
+./agent-config self-repair:release <fingerprint> --approve <digest>
 ```
 
 Running that command IS the user's word, and it is a Hard-Floor action under
 `non-destructive-by-default`. No autonomy setting, standing instruction or
 earlier consent substitutes for it.
 
-The ladder picks the vehicle: a pull request from a checkout of this package,
-an issue otherwise, a local record when nothing may leave. Degrading changes
-the vehicle, never what leaves.
+A byte changed since the dry run voids the approval. The ladder picks the
+vehicle: a pull request only when the release runs from a checkout of this
+package, an issue otherwise, a local record when nothing may leave.
 
 ### 7. After merge — clean up override
 
@@ -268,8 +266,8 @@ replaces the local override.
 
 1. Summary of what is being contributed (type, name, why)
 2. The source path under `src/` that the contribution targets
-3. The dry-run output verbatim — route, account, title, body. A field it did not print
-   is reported as unshown, never filled in
+3. The dry-run output verbatim — destination, payload, digest. A field it did
+   not print is reported as unshown, never filled in
 4. The one command the user runs to send it, and nothing executed on their behalf
 5. Reminder to clean up the local override after the contribution merges
 

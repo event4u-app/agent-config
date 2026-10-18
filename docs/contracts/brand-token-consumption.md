@@ -22,14 +22,18 @@ build time:
 | Artifact | Producer | Shape |
 |---|---|---|
 | `tokens.json` | [`brand-to-tokens`](../../src/skills/brand-to-tokens/SKILL.md) | DTCG (`$value` / `$type`) token tree — colour, type, spacing, radius. The same file `src/skills/design-tokens/scripts/tokens.ts` emits CSS vars + Tailwind from. |
-| voice profile | [`brand-strategy`](../../src/skills/brand-strategy/SKILL.md) / [`brand-identity`](../../src/skills/brand-identity/SKILL.md) | the confirmed voice traits + do/don't (3-5 traits) used to seed microcopy register. |
+| voice profile — the `brand-voice` slot at `agents/context-spine/brand-voice.md` | [`voice-and-tone-design`](../../src/skills/voice-and-tone-design/SKILL.md), the only writer | three `{is, is_not, proof}` attributes, a tone matrix by context, `avoid[]` terms and `claims[]`, schema-checked by `src/scripts/_lib/brand_voice_slot.ts`. `brand-strategy` hands it a voice direction and authors no competing trait list. |
 
 **Read contract (frozen v1):**
 
 - The scaffold step reads `tokens.json` as a DTCG document — never a
   pack-brand-internal format. Style Dictionary / Tokens Studio round-trip is the
   sanctioned external transform.
-- It reads the voice profile as a list of `{trait, do, don't}` records.
+- It reads the voice profile from the `brand-voice` context-spine slot
+  (`agents/context-spine/brand-voice.md`) as three `{is, is_not, proof}`
+  attributes plus the tone matrix — never as a free-form trait list, and never
+  from a second file. Only a schema-valid slot counts; an invalid one reads as
+  absent (see the state table below).
 - Absence of either artifact is **not an error** — it means greenfield with no
   brand layer. The scaffold step then proceeds on the brief and SHOULD invoke
   `brand-strategy` / `brand-identity` to define the tokens first (graceful, like

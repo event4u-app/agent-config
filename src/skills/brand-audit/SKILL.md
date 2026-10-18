@@ -3,6 +3,7 @@ model_tier: inherit
 name: brand-audit
 description: "Audit how a brand is currently expressed across touchpoints and flag drift from its defined tokens, voice, and strategy. Use to inventory and critique an existing brand before changing it."
 domain: engineering
+context_spine: [brand-voice]
 personas:
   - brand-strategist
 workspaces:
@@ -33,7 +34,7 @@ Method skill. Inventories current brand expression across touchpoints and flags 
 
 ## Procedure
 
-1. **Gather the source of truth.** Collect the consumer brand's defined tokens (palette, type scale, logo rules), voice profile, and strategy doc if they exist. Consumer brand definition is authoritative; corpus defaults are gap-fill only.
+1. **Gather the source of truth.** Run `brand:status --json` and take the sources it reports: the registered `tokens.json` and the **`brand-voice`** slot (`agents/context-spine/brand-voice.md`) — three `{is, is_not, proof}` attributes, the tone matrix, `avoid[]`, `claims[]`; only a schema-valid slot counts. Add logo rules and the strategy doc if they exist. Consumer brand definition is authoritative; corpus defaults are gap-fill only. **No valid slot makes every voice observation `undefined`, never `drift`** — there is nothing to diverge from. <!-- ref-ignore -->
 2. **Inventory current expression per touchpoint.** Cover logo usage, colour palette, typography, voice/copy tone, imagery style, and iconography across the relevant surfaces (site, app, decks, marketing, docs).
 
    **Personal and company profile surfaces, including LinkedIn, X, and GitHub

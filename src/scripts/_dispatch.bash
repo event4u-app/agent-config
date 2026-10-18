@@ -180,7 +180,8 @@ Tier 1 — power-user (release shape, audit, migration):
   self-repair:release        Publish one defect record — a PR when the fix can be
                              pushed, else an issue. Running it is your Hard-Floor
                              confirmation.
-                             Usage: self-repair:release <fingerprint> [--dry-run]
+                             Usage: self-repair:release <fingerprint> --dry-run
+                                    self-repair:release <fingerprint> --approve <digest>
   decision:memo              Record or list a question the run resolved without
                              asking you, so it stays reviewable afterwards.
                              Local-only (gitignored); the locked decision
