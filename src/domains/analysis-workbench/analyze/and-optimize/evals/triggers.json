@@ -1,5 +1,5 @@
 {
-  "skill": "optimize-deep",
+  "skill": "analyze-and-optimize",
   "should_trigger": [
     "Run a deep optimization pass over this package and open a PR with the roadmap",
     "Analysiere das Repo in der Tiefe, hinterfrage alle ADRs und erstelle eine Refactoring-Roadmap mit PR",

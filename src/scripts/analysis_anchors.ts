@@ -54,7 +54,8 @@ const TEST_FILE = /(\.|_)(test|spec)\.[a-z]+$|^test_.*\.py$|Test\.php$/;
 const SKIPPED = /\b(?:it|test|describe)\.skip\(|\bxit\(|@pytest\.mark\.skip|markTestSkipped\(|\bt\.Skip\(/;
 const MARKER = /\b(FIXME|TODO)\b[:(]?\s*(.*)$/;
 
-function walk(root: string, rel = ''): string[] {
+/** Every non-hidden file under `root`, relative and sorted, skipping build and dependency trees. */
+export function walk(root: string, rel = ''): string[] {
     const out: string[] = [];
     for (const entry of fs.readdirSync(path.join(root, rel), { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
         if (entry.name.startsWith('.') || SKIP_DIRS.has(entry.name)) continue;
