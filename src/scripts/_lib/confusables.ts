@@ -49,6 +49,25 @@ export const CONFUSABLE_FOREIGN: ReadonlySet<number> = new Set([
     0x03a1 /*Ρ→P*/, 0x03a4 /*Τ→T*/, 0x03a5 /*Υ→Y*/, 0x03a7 /*Χ→X*/, 0x0392 /*Β→B*/,
 ]);
 
+/**
+ * The basic-Latin twin of each confusable foreign letter that has one, for a
+ * detector that folds a lookalike back before matching. Every key is in
+ * `CONFUSABLE_FOREIGN`, which a test holds.
+ */
+export const LATIN_TWIN: ReadonlyMap<number, string> = new Map([
+    [0x0430, 'a'], [0x0435, 'e'], [0x043e, 'o'], [0x0440, 'p'], [0x0441, 'c'],
+    [0x0443, 'y'], [0x0445, 'x'], [0x0455, 's'], [0x0456, 'i'], [0x0458, 'j'],
+    [0x04bb, 'h'], [0x0501, 'd'], [0x051b, 'q'],
+    [0x0410, 'A'], [0x0412, 'B'], [0x0415, 'E'], [0x041a, 'K'], [0x041c, 'M'],
+    [0x041d, 'H'], [0x041e, 'O'], [0x0420, 'P'], [0x0421, 'C'], [0x0422, 'T'],
+    [0x0423, 'Y'], [0x0425, 'X'], [0x0405, 'S'], [0x0406, 'I'], [0x0408, 'J'],
+    [0x03b1, 'a'], [0x03b5, 'e'], [0x03bf, 'o'], [0x03bd, 'v'], [0x03c1, 'p'],
+    [0x03c5, 'u'], [0x03c7, 'x'], [0x03ba, 'k'],
+    [0x0391, 'A'], [0x0392, 'B'], [0x0395, 'E'], [0x0396, 'Z'], [0x0397, 'H'],
+    [0x0399, 'I'], [0x039a, 'K'], [0x039c, 'M'], [0x039d, 'N'], [0x039f, 'O'],
+    [0x03a1, 'P'], [0x03a4, 'T'], [0x03a5, 'Y'], [0x03a7, 'X'],
+]);
+
 type ScriptName = 'latin' | 'cyrillic' | 'greek' | 'other';
 
 function _script_of(ch: string): ScriptName {
