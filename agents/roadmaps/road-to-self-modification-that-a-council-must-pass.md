@@ -966,6 +966,24 @@ gaps again; the binding closes replay, and nothing else.
       writer only behind a session record bound to the reviewed revision and the
       committed prompt package.
 
+      **The split, attempted again 2026-10-19; still open.** The first item of
+      that list is built: `deriveModificationOutcome` with `requiredProviders`
+      refused unless a positive integer, prototype-free seat maps, and the
+      contract claiming a clearer interface rather than an enforced one. Round 1
+      found a real defect the list had not named — a seat value outside the
+      vocabulary, as parsed JSON can carry, was counted and could derive
+      `accepted` — and it was fixed with a run-time check seen red. Round 2:
+      anthropic `ratified`; openai closed `APPROVE` on the lens line and, in
+      both rounds, wrote no stance line, so the record reads it as
+      `no-final-verdict` and does not pass on diversity
+      (`agents/evidence/ratifications/drain-outcome-split-20261019.md`). The
+      change is on its own pull request for the owner, because the merge gate
+      routes the council's code and the ratification contract `needs-owner`.
+      Open until the split lands and the writer behind it — item 2, the
+      provenance answer — exists. A finding about the review verb itself: under
+      `--prompt-mode pr` the openai seat follows the lens's own closing line,
+      not the stance line the question asks for.
+
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
 > **Note, 2026-10-15** — `road-to-a-danger-gate-that-sees-what-governs`
