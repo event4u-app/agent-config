@@ -1,0 +1,41 @@
+{
+  "id": "cand-ui-06",
+  "pilot": "existing-ui-audit",
+  "input": "Add a pricing section to the landing page.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.design_tokens.colors",
+      "op": "mentions_all",
+      "values": [
+        "brand-ink",
+        "brand-sand",
+        "alert-coral"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.design_tokens.spacing",
+      "op": "mentions_all",
+      "values": [
+        "gutter",
+        "section-gap"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.design_tokens",
+      "op": "mentions_none",
+      "values": [
+        "bg-brand-ink",
+        "px-gutter",
+        "py-section-gap",
+        "bg-alert-coral",
+        "px-4"
+      ]
+    }
+  ]
+}

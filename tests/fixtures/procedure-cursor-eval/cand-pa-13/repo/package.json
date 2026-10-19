@@ -1,0 +1,13 @@
+{
+  "name": "rate-card-service",
+  "version": "3.2.0",
+  "private": true,
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "dependencies": {
+    "koa": "^2.15.3",
+    "@koa/router": "^12.0.1"
+  }
+}

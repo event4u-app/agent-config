@@ -1,0 +1,20 @@
+{
+  "name": "acme/receivables",
+  "type": "project",
+  "require": {
+    "php": "^8.2"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Acme\\Receivables\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Acme\\Receivables\\Tests\\": "tests/"
+    }
+  }
+}

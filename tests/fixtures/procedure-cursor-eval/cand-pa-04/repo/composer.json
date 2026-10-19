@@ -1,0 +1,16 @@
+{
+  "name": "acme/parcel-desk",
+  "type": "project",
+  "require": {
+    "php": ">=8.2",
+    "symfony/framework-bundle": "7.1.*",
+    "symfony/console": "7.1.*",
+    "doctrine/orm": "^3.2",
+    "doctrine/doctrine-bundle": "^2.12"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/"
+    }
+  }
+}
