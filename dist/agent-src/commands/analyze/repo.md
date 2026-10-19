@@ -121,6 +121,14 @@ read-ceiling line naming the bound that fired.
 
 ### 1. Resolve scope from the invocation — do not ask
 
+Two scopes, and the run states both before it reads anything. The **local**
+scope — which project or module the findings land in — is resolved with
+`src/scripts/analysis_target.ts` and printed first as the scope line
+[`analysis-loop`](../../contexts/execution/analysis-loop.md) defines:
+`Scope: <repo|module|subdir> <name> at <path> (anchor: <…>)`. Inside a module
+the scope is the module, with or without a marker in its own `agents/`, and the
+outer project stays `project_root`. The **reference** scope is the argument.
+
 Scope comes from the arguments, never from a prompt. A bare repository argument
 means **full scope**; `--focus=<area>` means focused. **Ask nothing before the
 first fetch.** The four-option menu this step used to open with cost one prompt
@@ -559,6 +567,13 @@ host retains a subagent's arguments in a transcript or audit log is
 host-dependent and was not verifiable from this tree. That is stated rather than
 asserted away — the indirection is cheap enough not to need a proven threat, and
 claiming a proven one would be a claim this package cannot support.
+
+**Run record.** Every run writes `run.json` for its round through
+`src/scripts/analysis_run_record.ts` — one row per analyst and loop, the
+stages, seats used and failed, and the gain estimate. It is written whatever
+the run's end state, including `handed-back`, because the retro's
+`analysis-run` unit reads adoption per run and a missing record reads as a run
+that never happened. An unread turnaround is `missing`, never `0`.
 
 ### 8. Close the loop — offer the ledger rows
 
