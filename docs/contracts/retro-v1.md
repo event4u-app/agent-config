@@ -97,6 +97,13 @@ Every durable learning routes to exactly one target:
 
 Nothing is written into an always-loaded file, a rule or a skill.
 
+A `package-record` carries the candidate's claim in the record's optional claim
+fields: `subject` → `principle` (a lowercase slug of at most 80 characters),
+`falsifier` → `falsifier` (one line of at most 160). `mechanism` has no
+candidate field and stays unset. The record validates these shapes on write and
+the privacy floor scans them; neither the record key nor any outgoing body reads
+them yet.
+
 ## Caps
 
 - At most **one** durable learning per unit.
