@@ -21,7 +21,7 @@ self_contained: true
 workspaces: [engineering]
 packs: [brand]
 enforced_by:
-  - "instruction-only: no checker reads emitted output yet"
+  - "instruction-only: check_voice_lexicon runs if invoked"
 obligation_frequency: "per-edit"
 ---
 

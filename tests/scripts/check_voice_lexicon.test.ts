@@ -1,10 +1,10 @@
 // check_voice_lexicon — "never say X" and "this claim needs a proof", checked
 // on the finished draft (road-to-a-brand-the-tree-can-check 0.4, 5.1-5.3).
 //
-// The 5.3 negative-corpus bar is not asserted here: its pre-registered first
-// measurement read 0.28 hits per 10k words against a bar of 0.1, and the
-// registry may not be tuned after that run (E8); the reading is kept with the
-// roadmap step rather than in this file.
+// The 5.3 negative-corpus bar is asserted over corpus v2 only: v1's first
+// measurement missed (0.28 per 10k), so registry v2 and a corpus it was not
+// revised against were pre-registered before v2 was scanned, so the bar is not
+// tuned to the corpus that measures it.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -22,9 +22,11 @@ import {
     scanClaims,
     scanLexicon,
     unknownTellIds,
+    unwrapSingleFence,
     type LexiconTerm,
 } from '../../src/scripts/check_voice_lexicon.js';
 import { validateBrandVoiceSlotText } from '../../src/scripts/_lib/brand_voice_slot.js';
+import { CLAIM_PHRASES } from '../../src/scripts/_lib/claim_phrases.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_voice_lexicon.ts');
@@ -82,8 +84,8 @@ function write(name: string, body: string): string {
     return p;
 }
 
-function run(args: string[]): { status: number | null; stdout: string; stderr: string } {
-    const r = spawnSync(TSX, [SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
+function run(args: string[], input?: string): { status: number | null; stdout: string; stderr: string } {
+    const r = spawnSync(TSX, [SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT, input });
     return { status: r.status, stdout: r.stdout, stderr: r.stderr };
 }
 
@@ -235,5 +237,93 @@ describe('check_voice_lexicon — claim-shapes', () => {
     it('claim-shapes: German phrases are hints, bare words never fire, quoted claims are exempt', () => {
         const found = scanClaims('Wir sind Marktführer.\nThe only way, the best tool.\nThey said "number one".\n', [], NOW);
         expect(found.map((f) => [f.line, f.severity])).toEqual([[1, 'hint']]);
+    });
+
+    it('claim-shapes: no English registry entry is a single bare word (NG-10)', () => {
+        const bare = CLAIM_PHRASES.filter((p) => p.language === 'en' && !/[\s\-.]/u.test(p.phrase)).map((p) => p.phrase);
+        expect(bare).toEqual([]);
+    });
+});
+
+describe('check_voice_lexicon — negative-corpus', () => {
+    it('negative-corpus: registry v2 stays at or under 0.1 claim hits per 10k words on the pre-registered v2 corpus', () => {
+        const listFile = path.join(REPO_ROOT, 'tests', 'fixtures', 'voice-lexicon', 'negative-corpus-v2.txt');
+        const files = fs
+            .readFileSync(listFile, 'utf8')
+            .split('\n')
+            .filter((l) => l.trim() !== '' && !l.startsWith('#'));
+        expect(files.length).toBeGreaterThan(100);
+        // A live ratchet over the registered list, not a replay of the
+        // registered run (that reading is frozen in the 2026-10-19 evidence
+        // note): a guideline later deleted is dropped, never an ENOENT, and a
+        // claim phrase later written into one reds here on purpose.
+        const present = files.filter((rel) => fs.existsSync(path.join(REPO_ROOT, rel)));
+        expect(present.length, 'most of the registered corpus must still exist').toBeGreaterThan(100);
+        let words = 0;
+        let hits = 0;
+        for (const rel of present) {
+            const text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+            words += text.split(/\s+/u).filter(Boolean).length;
+            hits += scanClaims(text, [], NOW).length;
+        }
+        expect(words).toBeGreaterThan(50_000);
+        expect((hits / words) * 10_000).toBeLessThanOrEqual(0.1);
+    });
+});
+
+describe('check_voice_lexicon — draft-surfaces', () => {
+    it('draft-surfaces: --draft - reads the finished draft from stdin, so no surface writes it to disk', () => {
+        const gw = write('gw.md', GHOSTWRITER_PROFILE);
+        const r = run(['--draft', '-', '--ghostwriter', gw], 'A real game-changer.\n');
+        expect(r.status).toBe(1);
+        expect(r.stdout).toMatch(/^-:1:\d+ error avoid "game-changer"/mu);
+    });
+
+    it('draft-surfaces: a draft piped as printed — one fenced block — is scanned, not exempted', () => {
+        const gw = write('gw.md', GHOSTWRITER_PROFILE);
+        const r = run(['--draft', '-', '--ghostwriter', gw], '```markdown\nIntro.\nA real game-changer.\n```\n');
+        expect(r.status).toBe(1);
+        expect(r.stdout).toMatch(/^-:3:\d+ error avoid "game-changer"/mu);
+        for (const fenced of [
+            '````markdown\nA real game-changer.\n````\n',
+            '```\nA real game-changer.\n   ```\n',
+            '~~~\nA real game-changer.\n~~~~\n',
+            '```\nIntro.\n```js\nx\n```\nA real game-changer.\n```\n',
+        ]) {
+            const unwrapped = unwrapSingleFence(fenced);
+            expect(unwrapped.split('\n').length).toBe(fenced.split('\n').length);
+            expect(blankExempt(unwrapped)).toContain('game-changer');
+        }
+        expect(unwrapSingleFence('Plain.\n```\ncode\n```\n')).toBe('Plain.\n```\ncode\n```\n');
+    });
+
+    it('draft-surfaces: an empty or unpiped draft is exit 2, never a clean pass', () => {
+        const r = run(['--draft', '-'], '');
+        expect(r.status).toBe(2);
+        expect(r.stderr).toMatch(/draft is empty/);
+    });
+
+    it('draft-surfaces: every surface says what exit 2 means', () => {
+        for (const rel of [
+            'src/domains/gtm-marketing/ghostwriter/write/command.md',
+            'src/domains/gtm-marketing/post-as/me/command.md',
+            'src/skills/humanizer/SKILL.md',
+            'src/domains/brand/brand/review/command.md',
+        ]) {
+            expect(fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8'), rel).toMatch(/[Ee]xit \*{0,2}2\*{0,2} /u);
+        }
+    });
+
+    it('draft-surfaces: every drafting surface runs the checker on its finished draft', () => {
+        const surfaces = [
+            'src/domains/gtm-marketing/ghostwriter/write/command.md',
+            'src/domains/gtm-marketing/post-as/me/command.md',
+            'src/skills/humanizer/SKILL.md',
+            'src/domains/brand/brand/review/command.md',
+        ];
+        for (const rel of surfaces) {
+            const body = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+            expect(body, rel).toContain('check_voice_lexicon.ts --draft -');
+        }
     });
 });
