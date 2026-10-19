@@ -460,7 +460,7 @@ file; `council:pr` is unchanged.
       or the rename lands after the observation runs.
       verify: `analyze/reference/command.md` exists with `replaces:` carrying
       `analyze-repo`, `analyze:repo`, `analyze-reference-repo` and
-      `analyze:reference-repo`, and the observation roadmap names the move.
+      `analyze:reference-repo`, and the observation roadmap names the move. *Council 2026-10-19 split (D19): owner decision.*
 - [x] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
       exchange — top-tier items added / changed / killed, `already-fixed` rate,
       gain estimate, seats used and failed, roadmaps emitted, recurrence hits,
@@ -480,7 +480,7 @@ file; `council:pr` is unchanged.
       repository as the observation runs of `reference-loop-upgrade-value`, with
       the shadow arm its protocol requires — or decline, recorded.
       verify: `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
-      records the offer and its answer.
+      records the offer and its answer. *Council 2026-10-19 split (D19): owner decision.*
 - [ ] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
       rule and slicing size from `run.json` under 1.4's falsification rule (one
       vs three analysts, one vs three loops, with and without the exchange);
@@ -541,6 +541,7 @@ file; `council:pr` is unchanged.
 | D16 | deterministic | evidence | The other 23 closure-scan hits are lexical, not open decisions: `merge`/`publish` inside a slug, a kill row or a calibration step; `contradicts` inside a rule clause (2.3, 3.4); `improve` inside the owner's quoted directives and evidence rows; each AC names its command or observable state | `./scripts-run src/scripts/closure_scan` on this file, 2026-10-15 | the scan's grammar changes and a hit survives a re-read |
 | D17 | product-owned | owner | Both owner blockers → (a): naming a source in the invocation authorises read-only fetches of it and the research step for that run (`source-fetch-authorization`); cross-family CLI analysts run under a separate read-only analyst profile, seat doctrine unchanged (`analyst-cli-agency`) | owner answers 2026-10-15 to the PR #2373 report | a fetch reaches private or authenticated content, or a probed binary writes outside its profile |
 | D18 | product-owned | owner | Step 3.1 encodes it, and AC-5's always-`ready` landing yields to the harvest intake limit decided in `road-to-agent-throughput-recovery` D8: while more than 8 `ready` roadmaps sit at 0 ticked steps, a new inbox roadmap lands `draft` | owner answered both on 2026-10-15; the later, explicit limit narrows the transcript's standing preference | the owner lifts or changes N |
+| D19 | product-owned | owner (pending) | 6.2b (rename now vs wait) and 6.5 (accept the slots conditionally vs decline) split 1:1 in the council; both seats agree a run before the shadow pin is resolved consumes no slot | `agents/evidence/council/analysis-family-rename-and-observation-slots.md` | the owner answers either question |
 ## Source disposition
 
 Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim to `agents/evidence/analysis/analysis-family-context-and-sources-085ec41ff.md`.
@@ -561,12 +562,12 @@ Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim t
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — From a subfolder each of the four doors prints the scope line before
+- [x] AC-1 — From a subfolder each of the four doors prints the scope line before
       any read; inside an enumerated or detected module it names the module, with
       or without a marker in the module's `agents/`, and keeps the outer project
-      as `project_root`.
-- [ ] AC-2 — Every loop, round and fix cycle of the four doors has a numeric cap in
-      a `limits:` block, and no door runs until a condition without one (ADR-118).
+      as `project_root`. Done 2026-10-19: `tests/scripts/analysis_target.test.ts` (subfolder, module with and without a marker) and `tests/scripts/analysis_doors_wiring.test.ts` (each door prints the line; the repo door lacked it, seen red).
+- [x] AC-2 — Every loop, round and fix cycle of the four doors has a numeric cap in
+      a `limits:` block, and no door runs until a condition without one (ADR-118). Done 2026-10-19: `analysis_doors_wiring.test.ts` — the inbox door had no `limits:` block (seen red), now pinned and restated.
 - [ ] AC-3 — Each seed and deepen output carries independence stamps and
       references no other analyst; each exchange records its cross-exam targets
       verbatim, a disagreement ledger and a minority audit.
@@ -576,15 +577,15 @@ Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim t
       roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
       block.
-- [ ] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`
+- [x] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`
       produces a typed anchor table or states feature mode, and never presents an
-      opportunity as a defect.
-- [ ] AC-7 — `analyze:pr` without an argument on a branch with an open PR finds it
+      opportunity as a defect. Done 2026-10-19: `tests/scripts/analysis_anchors.test.ts` (consumer fixture, feature mode, never-a-defect).
+- [x] AC-7 — `analyze:pr` without an argument on a branch with an open PR finds it
       without asking, writes nothing to the PR by default, and with `--optimize`
-      stops on a moved head and never merges.
-- [ ] AC-8 — An interrupted run resumes from its last completed state without a
-      second PR or duplicated output.
+      stops on a moved head and never merges. Done 2026-10-19: `analysis_pr_target`, `analysis_pr_review` and `analysis_pr_optimize` tests.
+- [x] AC-8 — An interrupted run resumes from its last completed state without a
+      second PR or duplicated output. Done 2026-10-19: `analysis_run.test.ts` (resume in emitted, publish once per key) and `analysis_publish.test.ts` (a re-run opens no second PR).
 - [ ] AC-9 — `run.json` exists for every run, and the retro roadmap carries the
       `analysis-run` unit that reads it.
-- [ ] AC-10 — `analyze:repo`, `analyze:reference-repo` and `optimize:deep` still
-      resolve as aliases in the projected tree.
+- [x] AC-10 — `analyze:repo`, `analyze:reference-repo` and `optimize:deep` still
+      resolve as aliases in the projected tree. Done 2026-10-19: `dist/agent-src/commands/analyze/{repo,and-optimize}.md` carry the `replaces:` aliases after `task generate-tools`.
