@@ -5,7 +5,10 @@ import {
     deriveModificationVerdict,
     readSeatConclusions,
 } from '../../../src/scripts/ai_council/modification_review.js';
-import { deriveRatificationHeader } from '../../../src/scripts/_lib/ratification_artifact.js';
+import {
+    deriveRatificationHeader,
+    type SeatVerdict,
+} from '../../../src/scripts/_lib/ratification_artifact.js';
 
 const R = 2;
 
@@ -30,7 +33,7 @@ describe('3.4 — the header and the disposition are two answers, never one', ()
         for (const seats of cases) {
             const asSeat = Object.fromEntries(
                 Object.entries(seats).map(([k, v]) => [k, v ?? 'no-final-verdict']),
-            );
+            ) as Record<string, SeatVerdict>;
             expect(deriveModificationOutcome(seats, R).header).toEqual(
                 deriveRatificationHeader(asSeat),
             );

@@ -79,3 +79,8 @@ review verb, recorded here and in the roadmap.
 
 The suggested extra test cases were not added after the review: an edit after
 the seats answered would be content no seat saw.
+
+One edit followed round 2, and it is named so nobody has to find it: the
+pre-push typecheck refused a test's `Object.fromEntries` value as `string`
+rather than `SeatVerdict`, and a type assertion was added to that line. No
+assertion, case or source line changed.
