@@ -1,0 +1,3 @@
+.dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); }
+.dialog-content { padding: 1.5rem; border-radius: 8px; background: #fff; }
+.hint-tooltip { font-size: 0.75rem; }

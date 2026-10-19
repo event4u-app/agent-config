@@ -1,0 +1,24 @@
+{
+  "id": "cand-ui-15",
+  "pilot": "existing-ui-audit",
+  "input": "Add a slideshow viewer to the photo gallery.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.a11y_baseline",
+      "op": "mentions_all",
+      "values": [
+        "jsx-a11y/alt-text",
+        "jsx-a11y/click-events-have-key-events",
+        "jsx-a11y/label-has-associated-control"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.a11y_baseline",
+      "op": "not_empty"
+    }
+  ]
+}

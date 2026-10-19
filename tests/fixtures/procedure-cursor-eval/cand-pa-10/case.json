@@ -1,0 +1,13 @@
+{
+  "id": "cand-pa-10",
+  "pilot": "project-analyzer",
+  "input": "Analyse this project and document its business domains.",
+  "success": [
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/domains",
+      "op": "min_files",
+      "min": 3
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "cand-pa-09",
+  "pilot": "project-analyzer",
+  "input": "Analyse this project and map which modules have test coverage.",
+  "success": [
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/testing/test-map.md",
+      "op": "mentions_all",
+      "values": [
+        "Dunning",
+        "Vouchers"
+      ]
+    }
+  ]
+}

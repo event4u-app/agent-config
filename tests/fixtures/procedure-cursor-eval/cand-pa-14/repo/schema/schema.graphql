@@ -1,0 +1,23 @@
+schema {
+  query: LedgerQuery
+  mutation: LedgerMutation
+  subscription: LedgerSubscription
+}
+
+type Entry {
+  id: ID!
+  account: String!
+  amountCents: Int!
+}
+
+type LedgerQuery {
+  entries(account: String!): [Entry!]!
+}
+
+type LedgerMutation {
+  postEntry(account: String!, amountCents: Int!): Entry!
+}
+
+type LedgerSubscription {
+  entryPosted(account: String!): Entry!
+}

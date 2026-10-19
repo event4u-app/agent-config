@@ -1,0 +1,15 @@
+{
+  "name": "report-dispatch",
+  "version": "1.4.0",
+  "private": true,
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "worker": "node src/workers/ReportMailerWorker.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "bullmq": "^5.7.0",
+    "ioredis": "^5.4.1"
+  }
+}

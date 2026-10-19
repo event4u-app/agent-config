@@ -1,0 +1,17 @@
+{
+  "id": "cand-ui-14",
+  "pilot": "existing-ui-audit",
+  "input": "Build a data table with filters for the shipments page.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.candidates",
+      "op": "mentions_all",
+      "values": [
+        "OrdersTable",
+        "CustomerLedgerTable"
+      ]
+    }
+  ]
+}
