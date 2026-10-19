@@ -184,6 +184,48 @@ export const ANCHOR_PATHS: readonly string[] = [
     'src/scripts/check_platform_anchor.ts',
 ];
 
+/**
+ * The two modules that decide what the review ASKS and what its answers add up
+ * to: the question list and the verdict rule.
+ *
+ * Step 4.1 of `road-to-self-modification-that-a-council-must-pass`. The
+ * import-closure criterion of 2026-10-15 gates every module this gate loads,
+ * and the gate does not load these two — it recomputes the digest and reads
+ * only the record. So the reviewer's deciding modules sat outside what the
+ * reviewer reviews, and a change to the question set or the verdict rule could
+ * be made with no record at all.
+ *
+ * They are modules of their OWN for exactly this reason, and the rest of
+ * `src/scripts/ai_council/` stays ungated on purpose: gating prompts,
+ * transports, the tally or the chairman would price every routine council edit
+ * at the rate of a governance change, which is the pressure that eventually
+ * weakens a gate.
+ *
+ * DELIBERATELY ABSENT, and recorded here rather than left to be inferred: the
+ * contract `docs/contracts/ratification-artifact.md` and the writer CLIs, which
+ * step 4.1 as drafted named. The gate's `MECHANISM_IMPORT_PATHS` header carries
+ * an owner decision of 2026-10-15 keeping them outside; widening to them is a
+ * reopening of that decision and is not an agent's to take.
+ */
+export const REVIEWER_PATHS: readonly string[] = [
+    'src/scripts/ai_council/modification_review_questions.ts',
+    'src/scripts/ai_council/modification_review.ts',
+];
+
+/**
+ * The high-consequence rule class and the criterion that selects it.
+ *
+ * Step 4.2. The list is watched so that a change cannot DROP a member in order
+ * to edit the rule it names; the schema is watched because the criterion that
+ * produced the list lives in its `consequence_class` property, and a criterion
+ * nobody ratified selects a class nobody ratified. The schema is shared by
+ * every rule, so any edit to it needs a record.
+ */
+export const CONSEQUENCE_CLASS_PATHS: readonly string[] = [
+    'src/config/rule-consequence-class.json',
+    'src/scripts/schemas/rule.schema.json',
+];
+
 /** Governance hooks: the blocking PreToolUse guards. */
 const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
 
@@ -342,6 +384,11 @@ export interface GatedPaths {
     governanceHooks: string[];
     /** Hook-plumbing sources — manifest, host lowering, dispatchers, budgets. */
     plumbing: string[];
+    /**
+     * Rules in the high-consequence class of `rule-consequence-class.json` that
+     * are NOT among the nine kernel rules. Step 4.2: rule law beyond the kernel.
+     */
+    consequenceRules: string[];
     self: boolean;
 }
 
@@ -357,19 +404,65 @@ export function isMechanismPath(p: string): boolean {
         p === POLICY_PATH ||
         p === WORKFLOW_PATH ||
         ANCHOR_PATHS.includes(p) ||
-        MECHANISM_IMPORT_PATHS.includes(p)
+        MECHANISM_IMPORT_PATHS.includes(p) ||
+        REVIEWER_PATHS.includes(p) ||
+        CONSEQUENCE_CLASS_PATHS.includes(p)
     );
+}
+
+/**
+ * The high-consequence rule slugs, read from the gate's OWN tree.
+ *
+ * From the script's tree and never from `--root`, for the reason the quorum
+ * policy is read that way: in CI this code is the base revision's, so a
+ * candidate that removed a member from the list would still be judged against
+ * the list the base carries. Reading it from the head would let a change drop a
+ * member in order to edit the rule that member names — the exact move the list
+ * is on the watch list to make visible.
+ *
+ * A missing or unparseable file yields an EMPTY set, not a refusal, and the
+ * asymmetry with the quorum policy is deliberate: the policy decides whether a
+ * control can measure at all, while this list only WIDENS the gated set. An
+ * empty list falls back to the kernel-and-hooks reach the gate had before step
+ * 4.2, which is the pre-existing floor rather than an open door.
+ */
+let consequenceSlugCache: ReadonlySet<string> | null = null;
+
+export function consequenceRuleSlugs(repoRoot: string = REPO): ReadonlySet<string> {
+    if (repoRoot === REPO && consequenceSlugCache !== null) {
+        return consequenceSlugCache;
+    }
+    let slugs: ReadonlySet<string> = new Set<string>();
+    try {
+        const raw = fs.readFileSync(
+            path.join(repoRoot, CONSEQUENCE_CLASS_PATHS[0] as string),
+            'utf8',
+        );
+        const parsed = JSON.parse(raw) as { members?: unknown };
+        const members = parsed.members;
+        if (members !== null && typeof members === 'object' && !Array.isArray(members)) {
+            slugs = new Set(Object.keys(members as Record<string, unknown>));
+        }
+    } catch {
+        slugs = new Set<string>();
+    }
+    if (repoRoot === REPO) {
+        consequenceSlugCache = slugs;
+    }
+    return slugs;
 }
 
 /** Partition a changed-file list into the surfaces this gate watches. */
 export function classifyPaths(
     files: readonly string[],
     derived: readonly string[] = derivedPlumbing(),
+    consequence: ReadonlySet<string> = consequenceRuleSlugs(),
 ): GatedPaths {
     const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
     const plumbing: string[] = [];
+    const consequenceRules: string[] = [];
     let self = false;
     for (const raw of files) {
         const p = raw.replace(/\\/g, '/').trim();
@@ -385,6 +478,10 @@ export function classifyPaths(
             kernelRules.push(p);
             continue;
         }
+        if (m !== null && consequence.has(m[1] ?? '')) {
+            consequenceRules.push(p);
+            continue;
+        }
         if (GOVERNANCE_HOOK_RE.test(p)) {
             governanceHooks.push(p);
             continue;
@@ -393,7 +490,7 @@ export function classifyPaths(
             plumbing.push(p);
         }
     }
-    return { kernelRules, governanceHooks, plumbing, self };
+    return { kernelRules, governanceHooks, plumbing, consequenceRules, self };
 }
 
 /** True when anything in the diff requires a ratification artifact. */
@@ -402,6 +499,7 @@ export function requiresRatification(gated: GatedPaths): boolean {
         gated.kernelRules.length > 0 ||
         gated.governanceHooks.length > 0 ||
         gated.plumbing.length > 0 ||
+        gated.consequenceRules.length > 0 ||
         gated.self
     );
 }
@@ -561,6 +659,7 @@ export function evaluate(
         ...gated.kernelRules,
         ...gated.governanceHooks,
         ...gated.plumbing,
+        ...gated.consequenceRules,
         ...files.map((f) => f.replace(/\\/g, '/').trim()).filter(isMechanismPath),
     ]);
     const artifactSet = new Set(ratificationArtifactsIn(files));
@@ -632,7 +731,8 @@ export function evaluate(
 
     if (!requiresRatification(gated)) {
         lines.push(
-            '✅  no kernel rule, governance hook, hook-plumbing source or self edit in the ' +
+            '✅  no kernel rule, high-consequence rule, governance hook, hook-plumbing ' +
+                'source or self edit in the ' +
                 'diff — nothing to ratify',
         );
         close(true);
@@ -641,9 +741,16 @@ export function evaluate(
 
     const touched = [
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
+        ...gated.consequenceRules.map((p) => `high-consequence rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
         ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
-        ...(gated.self ? ['the ratification mechanism itself (gate, its imports, policy or workflow)'] : []),
+        ...(gated.self
+            ? [
+                  'the ratification mechanism itself (gate, its imports, policy, workflow, ' +
+                      'the review\u2019s question list and verdict rule, or the ' +
+                      'high-consequence rule class and its criterion)',
+              ]
+            : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
     for (const t of touched) {

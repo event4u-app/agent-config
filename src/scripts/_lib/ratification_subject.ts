@@ -465,7 +465,16 @@ export function gatedFilesOf(
 ): readonly string[] {
     const normalized = files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => f !== '');
     const g = derived === undefined ? classifyPaths(normalized) : classifyPaths(normalized, derived);
-    const out = new Set<string>([...g.kernelRules, ...g.governanceHooks, ...g.plumbing]);
+    const out = new Set<string>([
+        ...g.kernelRules,
+        ...g.governanceHooks,
+        ...g.plumbing,
+        // Step 4.2. Omitting this class would leave a surface the gate REFUSES
+        // and the digest does not cover: the refusal names the rule and the
+        // `subject` says nothing about its bytes, so no record answers for them.
+        // Both limbs or neither.
+        ...g.consequenceRules,
+    ]);
     for (const f of normalized) {
         if (isMechanismPath(f)) out.add(f);
     }

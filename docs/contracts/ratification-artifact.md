@@ -22,6 +22,40 @@ THE PARTY GAINING THE AUTHORITY IS NEVER THE PARTY RECORDING THE RATIFICATION.
 PROVIDER DIVERSITY IS REQUIRED WHERE TWO PROVIDERS ARE CONFIGURED.
 ```
 
+### Which surfaces are gated
+
+The gate partitions a diff into five, and the list is here because a reader who
+knows only the Iron Law above cannot tell which files it reaches:
+
+1. **the nine kernel rules** — by name, from `_lib/kernel_rules.ts`;
+2. **the high-consequence rule class** — the members of
+   `src/config/rule-consequence-class.json`, selected by the `consequence_class`
+   criterion in `rule.schema.json` rather than by a list the gate keeps. 28 at
+   the time of writing. The list and the schema are themselves watched, so a
+   change cannot drop a member in order to edit the rule that member names, and
+   the list is read from the **gate's own tree** — never from `--root` — because
+   in CI the gate is the base revision's and a candidate that shortened the list
+   would otherwise be judged against its own shortened copy;
+3. **governance hooks** — the blocking `block_*` PreToolUse guards;
+4. **hook-plumbing sources** — the files that decide which concern runs, on
+   which host, under which budget;
+5. **the review mechanism itself** — this gate, its reader, its policy, its
+   workflow, the platform anchor, the modules of its own import closure, and the
+   question list and verdict rule named in § The modification review asks a
+   fixed set. Condition 4 of § When the user decides already reserved "the
+   modules that … ask the questions and derive the verdict" to the owner; the
+   gate did not watch them until step 4.1 of
+   `road-to-self-modification-that-a-council-must-pass`, so the reservation was
+   a claim this contract made and the gate did not keep.
+
+**A missing or unparseable class list widens nothing and refuses nothing**, and
+that asymmetry with the quorum policy is deliberate rather than an oversight:
+the policy fails closed because it decides whether a control can measure at all,
+while this list only WIDENS the gated set, so failing closed on it would red
+every kernel change over a file whose absence costs only the widening. The
+fallback is the kernel-and-hooks reach the gate had before the class existed —
+a pre-existing floor, not an open door.
+
 ## Where it lives
 
 `agents/evidence/ratifications/<slug>.md` — one file per change, in one

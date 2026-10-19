@@ -394,10 +394,19 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
 
     const gated = classifyPaths(all);
     if (requiresRatification(gated)) {
-        const gatedPaths = [...gated.kernelRules, ...gated.governanceHooks, ...gated.plumbing];
+        const gatedPaths = [
+            ...gated.kernelRules,
+            // The high-consequence rule class. Omitting it would let
+            // `requiresRatification` report the surface as gated while the
+            // NAMED path list stayed empty, so a PR touching only such a rule
+            // would carry the governance reason with nothing under it.
+            ...gated.consequenceRules,
+            ...gated.governanceHooks,
+            ...gated.plumbing,
+        ];
         add(
             'governance-surface',
-            'check_kernel_edit_ratified — kernel rule, governance hook, hook plumbing or the ratification mechanism',
+            'check_kernel_edit_ratified — kernel rule, high-consequence rule, governance hook, hook plumbing or the ratification mechanism',
             gatedPaths.length > 0 ? gatedPaths : all.filter((p) => classifyPaths([p]).self),
         );
     }
