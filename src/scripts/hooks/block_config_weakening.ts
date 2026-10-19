@@ -170,8 +170,11 @@ function runsSnapshotUpdate(words: string[]): boolean {
         skipOptions();
     }
     if (/^(ba|z|da)?sh$/.test(at(i))) {
-        const c = words.findIndex((w, k) => k > i && /^-\w*c\w*$/.test(w));
-        return c > 0 && shellSegments(at(c + 1)).some(runsSnapshotUpdate);
+        // Only the option prefix: a `-c` after the script operand or after `--` is an argument.
+        for (let k = i + 1; at(k).startsWith('-') && at(k) !== '--'; k += at(k) === '-o' ? 2 : 1) {
+            if (/^-\w*c\w*$/.test(at(k))) return shellSegments(at(k + 1)).some(runsSnapshotUpdate);
+        }
+        return false;
     }
     if (LAUNCHERS.has(at(i))) i++;
     else if (PACKAGE_MANAGERS.has(at(i))) {

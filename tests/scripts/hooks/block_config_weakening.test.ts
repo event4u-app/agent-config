@@ -670,6 +670,9 @@ describe('block_config_weakening — snapshot surfaces', () => {
             'npx playwright --version -u',
             'yarn run test:visual -u',
             'pnpm jest -u',
+            "bash script.sh -c 'npx playwright test -u'",
+            "bash -- -c 'npx playwright test -u'",
+            'sudo npx playwright test -u',
         ]) {
             expect(snapshotUpdateWarning('Bash', cmd), cmd).toBeNull();
         }
@@ -705,6 +708,8 @@ describe('block_config_weakening — snapshot surfaces', () => {
             'env --chdir web npx playwright test -u',
             'npx play\\\nwright test -u',
             'npx playwright test "-\\\nu"',
+            "bash -o pipefail -c 'npx playwright test -u | tee log'",
+            "bash -e -x -c 'npx playwright test -u'",
         ]) {
             expect(snapshotUpdateWarning('Bash', cmd), cmd).not.toBeNull();
         }
