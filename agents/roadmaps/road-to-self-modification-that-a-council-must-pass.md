@@ -966,6 +966,24 @@ gaps again; the binding closes replay, and nothing else.
       writer only behind a session record bound to the reviewed revision and the
       committed prompt package.
 
+      **The split, attempted again 2026-10-19; still open.** The first item of
+      that list is built: `deriveModificationOutcome` with `requiredProviders`
+      refused unless a positive integer, prototype-free seat maps, and the
+      contract claiming a clearer interface rather than an enforced one. Round 1
+      found a real defect the list had not named — a seat value outside the
+      vocabulary, as parsed JSON can carry, was counted and could derive
+      `accepted` — and it was fixed with a run-time check seen red. Round 2:
+      anthropic `ratified`; openai closed `APPROVE` on the lens line and, in
+      both rounds, wrote no stance line, so the record reads it as
+      `no-final-verdict` and does not pass on diversity
+      (`agents/evidence/ratifications/drain-outcome-split-20261019.md`). The
+      change is on its own pull request for the owner, because the merge gate
+      routes the council's code and the ratification contract `needs-owner`.
+      Open until the split lands and the writer behind it — item 2, the
+      provenance answer — exists. A finding about the review verb itself: under
+      `--prompt-mode pr` the openai seat follows the lens's own closing line,
+      not the stance line the question asks for.
+
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
 > **Note, 2026-10-15** — `road-to-a-danger-gate-that-sees-what-governs`
@@ -996,6 +1014,36 @@ gaps again; the binding closes replay, and nothing else.
       say out loud — each reviewer path enters `gatedFilesOf`, so it is covered by
       the digest and not only by the refusal. 14 tests.
 
+      **Rebuilt 2026-10-19, reviewed, and REFUSED 2/2 — still open.** The step
+      is also NARROWER than it was drafted, because the tree moved under it.** Two of the five paths 4.1
+      named no longer need this step and one is now refused to it:
+      `_lib/ratification_subject.ts` joined the gated set on 2026-10-15 through
+      `MECHANISM_IMPORT_PATHS` (#2379, stages 1 and 2), which also replaced the
+      2026-10-12 `SELF_SURFACE` constant with a single `isMechanismPath`
+      predicate the digest and the classification already share — so the
+      digest-invisibility defect that commit was written to prevent is closed by
+      a better mechanism than the one this step proposed, and `SELF_SURFACE` is
+      deliberately NOT reintroduced. `_lib/ratification_record_writer.ts` does
+      not exist: 3.4 is open, and a watch-list entry for an absent file gates
+      nothing. **`docs/contracts/ratification-artifact.md` is left out on an
+      owner decision of 2026-10-15**, recorded in the gate's own
+      `MECHANISM_IMPORT_PATHS` header beside the writer CLIs; widening to it
+      would reopen that decision, which is not an agent's to take, so the
+      omission is pinned by a test rather than left to be read as an oversight.
+      What remained owed, and is what landed: `modification_review_questions.ts`
+      and `modification_review.ts` — the question list and the verdict rule. The
+      gate does not import them, so the import-closure criterion never reached
+      them, and condition 4 of `ratification-artifact.md` § When the user
+      decides had reserved "the modules that … ask the questions and derive the
+      verdict" to the owner since it was written. **The reservation was a claim
+      the contract made and the gate did not keep**; this closes that gap and
+      widens no authority — it narrows the agent's. 13 tests, six of them
+      polarity partners (`prompts.ts`, `stance_tally.ts`, `quorum.ts`,
+      `council_cli.ts`, `chairman.ts` and this suite's own file stay ungated,
+      and an ordinary council edit still has nothing to ratify). Seen red for
+      the intended reason: removing `REVIEWER_PATHS` from `isMechanismPath`
+      drops 4 of 13 and leaves the 9 that should stay green.
+
       **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
       carried it, on the reviewers’ own reasoning.** The modification review
       refused that branch 2/2 on `smaller-change`, and the code of this step is
@@ -1024,6 +1072,32 @@ gaps again; the binding closes replay, and nothing else.
       a file whose absence costs only the widening. 9 tests, with both polarities —
       a class member outside the kernel reds, a rule outside the class does not, and
       a kernel rule is still reported as a kernel rule rather than reclassified.
+
+      **Rebuilt 2026-10-19 in the shape the 2026-10-12 commit described, and
+      REFUSED 2/2 on two dealbreakers — still open.** `GatedPaths` gained
+      `consequenceRules`, fed by `consequenceRuleSlugs()`, which reads the 28
+      members from the gate's OWN tree and never from `--root` — in CI this code
+      is the base revision's, so a candidate that dropped a member would
+      otherwise be judged against its own shortened list. The list and
+      `rule.schema.json` joined `isMechanismPath`, so the drop-then-edit move
+      carries a record either way, and that exact diff is a test. The fail-open
+      asymmetry it carried — a missing or unparseable list yielding an EMPTY set
+      rather than a refusal, on the argument that this list only WIDENS — is
+      **the first of the two dealbreakers below**, and is not to be rebuilt. The
+      contract paragraph that would have written it down was reverted with the
+      code.
+      **One defect the test caught that the 2026-10-12 shape did not pin on this
+      limb:** `gatedFilesOf` built its set from the kernel, hook and plumbing
+      lists plus the mechanism paths, and nothing added `consequenceRules` — so
+      a class member was REFUSED by the gate and covered by no digest, which is
+      the "gated by the refusal, bound by no record" failure in the one place
+      this round could still reach it. Fixed in `_lib/ratification_subject.ts`
+      in the same change. 8 tests, with both polarities — a class member outside
+      the kernel reds, a rule outside the class does not, and a kernel rule is
+      still reported as a kernel rule rather than reclassified. Seen red for the
+      intended reason on all three mechanisms independently: dropping the
+      classification branch fails 1 of 8, dropping the watch-list entry fails 2
+      of 8, and the digest limb was red before the fix above.
 
       **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
       carried it, on the reviewers’ own reasoning.** The modification review
@@ -1063,6 +1137,68 @@ gaps again; the binding closes replay, and nothing else.
       `block_kernel_rule_writes.ts` only imports `kernel_rules.ts`. The verify
       grep reads 0, and `check_kernel_edit_ratified_header_claims.test.ts` keeps
       the header's claim true against both guards.
+
+
+      **The round of 2026-10-19 and what the next attempt starts from.** Record:
+      `agents/evidence/ratifications/drain-self-modification-4-1-4-2-20261019.md`;
+      prompt and both seat texts committed verbatim beside it under
+      `agents/evidence/council/`. One round, both seats, quorum 2 of 2, nothing
+      billed. anthropic `refused` (92), openai `refused` (97). The code was
+      reverted to `origin/main` and verified as an EMPTY net diff per file.
+
+      Two dealbreakers, both on 4.2, and both correct:
+
+      1. **The class list failed OPEN.** Every read, parse or shape failure
+         became an empty set, so an unreadable list silently removed protection
+         from 28 rules while the gate kept exiting 0. The step's own
+         "this list only WIDENS" argument is the sentence both seats rejected:
+         if the list is missing it does not cost only the widening, it costs the
+         whole protection. A test had codified the behaviour, which is how the
+         argument stopped being re-examined. **Fix: fail closed, as the quorum
+         policy does.**
+      2. **Membership was not resolved at the revision the subject binds to.**
+         The slugs were read from the working tree while the digest is taken
+         from Git objects at an explicit revision (D13). openai named the
+         asymmetry: dropping a member while editing its rule IS caught, because
+         the base list still carries it; **adding** a member while editing that
+         newly consequential rule is not, because the base list does not — so
+         the diff needs a record while that rule's bytes may sit outside the
+         digest the record carries. It contradicts the "both limbs or neither"
+         invariant `_lib/ratification_subject.ts` states.
+
+      **Why 4.1 was not simply staged alone, which was the first instinct.**
+      Neither dealbreaker names 4.1, so the 2026-10-12 move — narrow and re-run —
+      looked available. Both seats independently close that path for another
+      reason: the reviewer boundary 4.1 draws is **asserted, not evidenced**.
+      No dependency or behavioural evidence shows that the deliberately ungated
+      `prompts.ts` (prompt text), `quorum.ts` (who is eligible), `stance_tally.ts`
+      (how answers are counted) and `chairman.ts` (orchestration) cannot change
+      what is asked, counted or accepted. The step's pricing-pressure answer is
+      about COST and does not answer the AUTHORITY question; the polarity tests
+      prove those paths stay editable, not that they lack governing authority.
+      **So 4.1's next attempt owes that evidence — a dependency argument or a
+      measurement — before, not after, the review.**
+
+      Also recorded, not folded in: `rule.schema.json` is shared by every rule,
+      so gating it prices every unrelated schema edit as a governance event, and
+      both seats suggest extracting the `consequence_class` criterion into a
+      dedicated governed file; the slug cache is never invalidated; a listed slug
+      with no rule file, a non-string key and a `__proto__` key are all accepted;
+      and the fail-open path wrote no audit trail.
+
+      **What the tree changed under 4.1 since it was drafted**, which stands
+      whatever shape the next attempt takes: `_lib/ratification_subject.ts` is
+      already gated through `MECHANISM_IMPORT_PATHS` (2026-10-15, #2379), which
+      also replaced the 2026-10-12 `SELF_SURFACE` constant with the single
+      `isMechanismPath` predicate the digest and the classification share — so
+      `SELF_SURFACE` should NOT be reintroduced.
+      `_lib/ratification_record_writer.ts` does not exist while 3.4 is open, and
+      a watch-list entry for an absent file gates nothing.
+      `docs/contracts/ratification-artifact.md` is held outside by an **owner
+      decision of 2026-10-15** recorded in the gate's own
+      `MECHANISM_IMPORT_PATHS` header beside the writer CLIs; widening to it
+      reopens that decision, which is not an agent's to take. What is left owed
+      by 4.1 is therefore the question list and the verdict rule alone.
 
 ## Phase 5 — A council that cannot settle it stops the run for the user
 

@@ -167,7 +167,7 @@ pre-registration in place, settings lint green with the new key.*
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t review-instruction-is-data --reporter=verbose` -> /✓.*review-instruction-is-data/
       *Done 2026-10-17: review comments and bodies are quoted (500 chars) with
       the scanner's verdict; no transcript is read (D12).*
-- [ ] **1.5 Facts for an analysis run (unit kind `analysis-run`).** The fact
+- [x] **1.5 Facts for an analysis run (unit kind `analysis-run`).** The fact
       reader takes `--analysis-run <round-id>`, reads that round's `run.json`
       (`agents/runtime/analysis/<round-id>/run.json`, written by the analysis
       doors of ADR-288) and reports adoption per run, source and analyst: done
@@ -176,6 +176,19 @@ pre-registration in place, settings lint green with the new key.*
       rule and every target stay this file's. Offering `analyze:and-optimize
       --scope=<area>` at three recurrences on one area stays off by default.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t analysis-run-reads-run-json --reporter=verbose` -> /✓.*analysis-run-reads-run-json/
+      *Done 2026-10-19: `retro_facts --analysis-run <round-id>` reads the
+      round's `run.json` through `readRunJson`, so an invalid record is an error
+      and never a partial reading. Adoption is taken per emitted roadmap and
+      **only once that roadmap is archived** — an active, parked or stub file
+      reads `missing`, never `{done: 0}`, because its open steps may yet be done
+      or cancelled; the run-level sum is taken only when every emitted roadmap
+      is archived, and a run that emitted none is `not-applicable`. Adoption per
+      analyst is always `not-applicable`: `run.json` records the emitted
+      roadmaps and the analysts and nothing joining the two, so a per-analyst
+      number would rest on no record. What it does carry per analyst is the
+      contribution — loops and top-tier added/changed/killed. The contract gains
+      the unit kind and both limits. Sensitivity: neutralising the archived gate
+      reds the named case.*
 
 ## Phase 2 — `/retro` by hand
 

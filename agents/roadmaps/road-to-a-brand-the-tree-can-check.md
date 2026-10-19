@@ -13,6 +13,7 @@ relates:
   - slug: road-to-type-with-a-witness
     relation: disjoint
     note: "Active. Font construction and the font witness; nothing here touches type carriers or font licensing."
+estate_growth_exempt: "Raises open_blockers by 2, and both are a correction rather than growth: steps 5.5 and 6.3 were already blocked on an owner decision and carried that as prose `Open` notes no gate, dashboard or `open_blockers` reading could see. Recording them changes nothing about what is open — it makes the two already-open items countable, which is what this ratchet measures. The same change closes 5.6, so the roadmap's own open count falls from 6 to 5."
 estate_offset_exempt: "Adds one active roadmap. Archiving, parking or merging each cost more: no active, later or stub roadmap owns brand-state reporting, an organisational voice primitive, a lexicon or claim check on drafted prose, the ghostwriter ignore path, or brand reads in producer skills (rg over agents/roadmaps for brand-voice, tokens.json, reference/ghostwriter, taboo, claim, 2025.10 at main@085ec41ff returns only archived files and the parked lexicon roadmap); canvas owns only the visual finding and the import lane. Step 5.7 archives later/road-to-voice-negative-lexicon when Phase 5 lands, so the later estate shrinks by one."
 ---
 # Road to a brand the tree can check
@@ -453,10 +454,45 @@ irreversible-external-action row of `non-destructive-by-default`).
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
       Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
       Still open 2026-10-19, unchanged: the step's own condition is false, and closing it either way — `[-]` because the condition never fired, or a bare field because the middle branch reads "schema field only" — is the owner's call, not a run's.
-- [ ] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
+      <!-- blocked-by: user-negative-lexicon-schema | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
+- [x] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
       branch commits; not in default CI.
       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
       Open 2026-10-17: the persisted-prose target checks agent-authored PR text against the user's own `style.avoid` (the parked design's Phase 2), which does not exist until 5.5.
+      Done 2026-10-19 on a narrower reading of the same step, stated because it
+      reverses the note above. The parked design separates the two halves
+      itself: its **Phase 1** is the user schema field and its **Phase 2** is
+      the enforcement surface — "`check_voice_lexicon.ts` over PR title/body +
+      branch commit messages, wired through `assertScanned` (empty lexicon →
+      SKIPPED with reason, never a green nothing). Opt-in Taskfile target
+      only." Phase 2 names no lexicon source, and `assertScanned` is the design's
+      own accommodation for a lexicon that is not there yet, so the target does
+      not wait on 5.5 — it gains the user source when 5.5 lands, exactly as the
+      checker's own header already says. `task voice-lexicon` composes the PR
+      title/body (`gh pr view`, skipped when `gh` is absent) and
+      `git log --format=%B "${BASE:-origin/main}"..HEAD`, and pipes them to the
+      checker's stdin draft with `--slot` when the slot file exists. Brand
+      findings are `warning`, so the target flags and never blocks; a branch
+      level with its base and carrying no PR text reports "nothing to check" and
+      exits 0 rather than surfacing the checker's empty-draft exit 2 (found by
+      running it, fixed with a case seen red). The target is in `content.yml`
+      and in no `ci*` chain and no workflow, which is the half a text assertion
+      cannot carry, so `voice_lexicon_task.test.ts` asserts it. The behaviour
+      cases **extract the target's own command block and execute it** in a
+      scratch git repository with a stubbed `gh`; a sabotage probe dropping
+      `--slot` from the pipeline turned both hit cases red while the control and
+      the SKIPPED case stayed green. No doc enumerates task targets in this
+      tree (`rg` for two existing target names over `docs/` and `src/` returns
+      nothing), so the `desc` field is the whole documented surface and no doc
+      edit is owed.
+      "Not in default CI" is recorded where the tree checks it rather than
+      asserted: `check_gate_reachability --gate` reds any gate-shaped target
+      reachable from neither `task ci` nor a workflow unless
+      `src/config/gate-reachability-exemptions.json` carries the reason AND
+      what would make it run. The row names both, including the half worth
+      keeping visible — wiring it in THIS repository would scan an absent
+      slot and exit green every run, which is the gate-that-scans-nothing
+      shape, not enforcement.
 - [x] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
       `later/road-to-voice-negative-lexicon.md` moves to `archive/` with a
       pointer to this file.
@@ -504,12 +540,15 @@ irreversible-external-action row of `non-destructive-by-default`).
       honest null recorded.
       verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> 0
       Open 2026-10-19: the prompt set E8 left open is now pre-registered and committed before any run — `tests/fixtures/brand-voice-read-rate/prompts.json`, 30 reader prompts (five per 6.1 reader), 10 unrelated prompts, and the read-event and routing protocol. The run itself is not taken here: it is 40 fresh paid host sessions in a scratch consumer project under a clean HOME (an in-repo `claude -p` measures this package's own rules, not the host), which is the operator's spend call. No reading exists, so 6.4, AC-7 and AC-9 wait on it.
+      Still open 2026-10-19: the drain run re-checked the premise instead of repeating the note. Nothing changed — the fixture is pre-registered and frozen, and what remains is 40 fresh paid host sessions under a clean HOME, an undelegated spend decision. Recorded as a blocker so the dashboard and `open_blockers` see it rather than a prose note.
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 - [ ] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
       concern `brand-voice-card` registered in `src/config/hook-token-budget.json`
       at the measured card size (three attributes, `avoid` terms, one sample);
       emitted only when a routed reader skill runs and the slot is valid; shaped
       by `injection_budget.ts`; Claude Code first. 0.6 stays green.
       verify: `npx vitest run tests/scripts/hooks -t "brand-voice-card|no-brand-bytes" --reporter=verbose` -> /✓.*brand-voice-card[\s\S]*✓.*no-brand-bytes/
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 
 ## Phase 7 — Intake and proof
 
@@ -606,10 +645,12 @@ Carried from the supplied plans' kill register; each was judged and not taken.
       a quoted one does not.
 - [ ] AC-7 — A non-brand task in a fully branded project carries zero brand
       bytes, before and after any carrier.
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 - [x] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
       `instruction-only`, and no file calls `brand-consistency` a gate.
 - [ ] AC-9 — A runtime carrier exists only if the recorded read-rate
       measurement missed its pre-registered bar.
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 
 ## Decisions
 
@@ -630,14 +671,34 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 | E13 | reversible-technical | evidence | AC-6 and AC-8 closed 2026-10-19 with 5.4. AC-6: the four surfaces run `check_voice_lexicon` on the finished draft; the checker's located findings and quoted-text exemption are tested. AC-8: `enforced_by` names the checker under `instruction-only`; the one remaining "validation gate" wording is ADR-210's decision table, a historical record left verbatim by the same convention 1.2 applies to ADR-061. | `draft-surfaces`, `lexicon`, `control` cases in `check_voice_lexicon.test.ts`; `rg -n 'brand-consistency' src docs` | the checker becomes a CI sweep (then `validator:`), or ADR-210 is amended |
 | E14 | reversible-technical | evidence | AC-1..AC-5 closed 2026-10-19 on fresh runs: AC-1 — `brand:status` computes per call and the 7.2 "exploration without lock" leg shows no file is added; AC-2 — `token-name-parity` green and `BRAND_TOKEN_PATHS` exported once (`src/shared/brandTokenPaths.ts`); AC-3 — the managed block covers both paths, `lint_ghostwriter_source` scans both, 0 tracked profiles, and this repository's own `.gitignore` now carries the same four lines, which it lacked (its managed block predates 1.1); AC-4 — `state-fixtures`, `shadowed`, `invalid`; AC-5 — `dtcg-2025`. AC-7 and AC-9 stay open on 6.3: neither can be judged before the read-rate reading decides whether a carrier exists. | `vitest run` over `brand_status`, `brand_scenarios`, `lint_ghostwriter_source`, `skills_design_tokens_tokens` (80 + 16 pass); `git check-ignore --no-index` | a carrier lands (re-check AC-7) |
 
+## Blockers
+
+### blocker: user-negative-lexicon-schema
+- **Status:** open — raised 2026-10-19 by the drain run that closed 5.6. Not a new finding: step 5.5 carried the same question as a prose `Open` note on 2026-10-17 and again on 2026-10-19, where no gate and no dashboard could see it. The note is the reason this entry exists, not evidence that the question moved.
+- **Owner:** maintainer — `.agent-user.md` is a consumer-written file, so a field added to its schema is a forward compatibility commitment the package must keep honouring once a consumer writes it. That is the owner-reserved "public or compatibility commitment" row, not a reversible-internal change, which is why it is not taken to the council.
+- **Blocks:** step 5.5. Step 5.6 no longer waits here — the opt-in target ships with the lexicon sources that exist and gains the user source when this is decided. Nothing else in the roadmap depends on it.
+- **What to do:** pick exactly one — (a) add `avoid` to the `style` object in `src/shared/userMd/schema.ts:39-43` as an optional array of `{ pattern (1-64 chars), match: word|substring, note? }`, max 32, no regex (NG-6), defaulting to `[]`, then wire the `user` branch `src/scripts/check_voice_lexicon.ts` already types (`TermSource = 'brand' | 'ghostwriter' | 'user'`, `SEVERITY_BY_SOURCE.user = 'warning'`) and add the field to the `/agents:user` templates; or (b) take the parked design's full Phase 1 — (a) plus `voice_samples: string[]` (max 3 × 1,200 chars) replacing the single `voice_sample`, with a v1-accepting reader, which also reopens the 100-line cap of `/agents user accept` the parked design flags as an explicit contract decision; or (c) mark 5.5 `[-]` cancelled, because the step's own condition ("only if 5.0 says build") did not fire and the spike's verdict was *schema field only, validator YAGNI*.
+- **Resolved when:** `rg -n 'avoid' src/shared/userMd/schema.ts` matches and `npx vitest run tests/scripts/check_voice_lexicon.test.ts` is green with a user-source case, or step 5.5 reads `[-]` with the reason recorded at the step.
+- **Recommendation:** (a). The spike verdict is literally *schema field only*, so the narrow field is the branch its own measurement points at, and it is additive and optional — no consumer must set it and nothing reads it when it is absent. (b) carries a breaking rename and a separate cap decision that this roadmap never scoped. (c) throws away a field the checker is already typed for.
+- **If you do nothing:** 5.6's target keeps checking the brand slot and the claim registry and reports `SKIPPED` wherever no lexicon is reachable; nothing regresses, and the personal half of "never say X" stays unbuilt.
+
+### blocker: slot-read-rate-measurement-spend
+- **Status:** open — raised 2026-10-19 by the drain run; the measurement's inputs are complete and frozen (`tests/fixtures/brand-voice-read-rate/prompts.json`, pre-registered before any run, 30 reader prompts and 10 unrelated), so what is missing is authorization to spend, not design.
+- **Owner:** maintainer — the protocol is 40 fresh paid host sessions (`claude -p`, one per prompt) in a scratch consumer project under a clean HOME. That is undelegated spend above any threshold a drain run holds, and an in-repo probe cannot substitute: it would measure this package's own rules rather than a consumer install.
+- **Blocks:** steps 6.3 and 6.4, and acceptance criteria AC-7 and AC-9. 6.4 is conditional on the reading ("only if 6.3 fails"), so neither it nor the two criteria can be judged either way before the run.
+- **What to do:** pick exactly one — (a) authorize the run and execute the protocol in `tests/fixtures/brand-voice-read-rate/prompts.json` verbatim, recording the result in `agents/evidence/analysis/spine-slot-read-rate.md` with per-run activated skill and read events, after which 6.4 is decided by the bar (E8: ≥ 95 % reader reads, 0 unrelated reads); or (b) narrow 6.3 to a cheaper reading the operator names, re-pre-registering N and the bar before it runs, since E8 forbids tuning after the first run; or (c) record an honest null — "not measured, no carrier" — mark 6.3 and 6.4 `[-]`, and close AC-9 on the absence of a carrier while AC-7 rests on 0.6's standing guard.
+- **Resolved when:** `agents/evidence/analysis/spine-slot-read-rate.md` exists with the pre-registered N and bar and a verdict, or 6.3 and 6.4 read `[-]` with the reason recorded at the step.
+- **Recommendation:** (c) if no slot of paid measurement time is being spent this cycle, (a) if one is. The decision 6.3 feeds is only whether to build a runtime carrier, and NG-8 plus risk-register row 5 already bias that to "no carrier"; 0.6 keeps the zero-brand-bytes floor green either way, so a deferred reading costs nothing except AC-7 and AC-9 staying open. (b) is last: a second pre-registration spends the design work again for a weaker reading.
+- **If you do nothing:** Phases 0-5 and 7 stay closed and the roadmap stays active on four items, none of which changes behaviour in the tree.
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude-opus -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Profiles already tracked | product | A consumer or this repo committed a real-person profile under the unignored path before 1.1 lands | 0.7 counts tracked files first; a non-zero count stops Phase 1 and reaches the owner; no history rewrite without the owner | Phase 0 — Control readings (red first) |
 | 2 | Token rename misses a writer | implementation | A surface keeps telling consumers to write the dotted file | 0.1 asserts parity over every authored surface; `brand:status` keeps flagging near-misses | Phase 1 — Small truths (one immediate PR) |
-| 3 | Claim phrases fire on ordinary prose | product | Advisory findings become noise and get ignored | phrase-level only, pre-registered corpus and ceiling (E8), German at hint severity | Phase 5 — One checker for three voices and for claims |
+| 3 | Claim phrases fire on ordinary prose | product | Advisory findings become noise and get ignored | phrase-level only, pre-registered corpus and ceiling (E8), German at hint severity. Re-reviewed 2026-10-19: corpus v2 read 0 hits in 97,835 words, so the bar is met on the measured corpus — but 5.6 now runs the same registry over commit messages and PR bodies, a corpus the bar was never measured on. Bounded rather than re-measured: the target is opt-in, its findings are `warning`, and it exits 0, so a noisy reading costs an opt-in reader attention and nothing in CI. | Phase 5 — One checker for three voices and for claims |
 | 4 | Slot becomes a second token store | implementation | Colours or type values drift into the voice slot | 4.2 schema has no visual fields; AC-1; NG-5 | Phase 4 — One voice slot, one shape |
 | 5 | Carrier built without need | implementation | A hook adds bytes to every turn | 6.4 runs only if 6.3 misses its pre-registered bar; 0.6 and AC-7 guard zero bytes off-brand | Phase 6 — Readers, producers, and a carrier only if measured |
 | 6 | Canvas and this file edit one test | implementation | Both touch `design_system_import.test.ts` | 3.5 waits for canvas 3.1 and adds one row only | Phase 3 — The stable token format |

@@ -191,6 +191,52 @@ Reproduced on 2026-10-01:
 > `instructionsLoadedRecord()` existing only to report the record's absence.
 > Both remain externally impossible for the agent, which is the only blocker
 > class ADR-237 leaves standing. The markers stay as written.
+>
+> **Re-screened 2026-10-19 under `/roadmap:process-full`, against the tree
+> rather than against the note above, and two of the three readings have moved.**
+>
+> **2.1 — the producer now exists and has nothing to print.** `./scripts-run
+> src/scripts/arrival_report` runs and answers *"no arrival record in
+> `~/.event4u/agent-config/runtime/arrivals` — the observer has not seen a
+> session"*, `scanned: 0`. So the instrument is no longer missing: steps 2.1 and
+> 2.2 of `road-to-a-setup-that-decides-itself` landed it on 2026-10-18. What is
+> missing is the EVENT that fills it, and that is step **1.1 Bind
+> `InstructionsLoaded`** of the same file, which is still open. The gate has
+> therefore narrowed from "no scheduled file owns the observer" to "one open
+> step in a named sibling roadmap", and it is still not a step this file can
+> execute. `ls agents/evidence/analysis/ | grep installed-arrival` returns
+> nothing, as it has since 2026-10-10.
+>
+> **2.3 — the corpus grew and stayed synthetic, which is the same finding with
+> a larger denominator.** `~/.event4u/agent-config/state/rule-inject/` now holds
+> **44** project keys against the 16 of 2026-10-12, and `ls | grep -vc
+> '^injection-dispatch-'` returns **0** — every one is still a key the hook's own
+> test suite writes. Zero rows come from a real session. The instrument exists
+> and is still empty, and its second half still needs a transcript reader nothing
+> here binds.
+>
+> **2.4 — its deliverable has landed and its verify has not, and those are two
+> different sentences.** The step asks to "record the new exposure state beside
+> `src/config/host-injection-effect.json:8` without changing that file's
+> verdict". That record now exists as `_claude_thinned_layer_exposure`, carried
+> under an underscore key on the `_cursor_md_tree_loaded` precedent so the
+> `claude` row keeps answering only its own question and keeps its `unobserved`
+> state. Measured against the real corpus with the installer's own
+> `thinInstalledRuleLayer`: of 121 installed rules, 100 thin and 21 stay full;
+> of the 100, **78 are pointer-only** — 223,427 source characters of obligation
+> text that the user-global channel no longer carries at all — and 22 are
+> stub-plus-law, where the law stays in both channels and only the mechanics
+> leave. That is the duplicate-exposure confound `road-to-delivery-on-hook-hosts`
+> records as making E3's measurable set empty, and it is absent for those 78 on
+> an opted-in install.
+>
+> **The box stays open, and the reason is worth naming rather than working
+> around.** 2.4's verify line greps `installed-arrival-*.md` for `thinned`,
+> which is 2.1's record — so as written the step cannot close before 2.1,
+> whatever is recorded in the config file. Whether that verify matches the
+> deliverable the step's own prose names is a real question and is deliberately
+> left open here: rewriting a verify line to make a box closable is the one
+> repair this run will not make.
 
 ## Phase 3 — The default, decided
 
@@ -285,6 +331,34 @@ Reproduced on 2026-10-01:
       which costs two real installs per CI run. Neither exists. Noted rather than
       built, because the council was asked whether to build it and said not in
       this shape.
+
+      **Measured 2026-10-19, and one of the two reasons above is now
+      discharged.** D7's `revisit if` names the condition exactly — "a normaliser
+      exists and is shown environment-independent across at least two differing
+      root lengths" — and that is what was built, as a MEASUREMENT and nothing
+      else: `src/scripts/_lib/installed_layer_normalise.ts` substitutes every
+      absolute path for a fixed token, `readLayer` carries `normalised_chars`
+      beside `chars` per file, per layer and in the total, and the report prints
+      both lines adjacent and labelled. No gate, no threshold, no stored number —
+      the mechanism the council returned REQUEST_CHANGES on was a stored baseline
+      over an UN-normalised figure, which is a different mechanism and stays
+      rejected. Shown over the real corpus (`dist/agent-src/rules`, 121 files,
+      staged twice through `thinInstalledRuleLayer` with nothing different but
+      the pointer root): a 50-character root delta moves the raw total by
+      **5,000** characters — one per stub per character, over the 100 stubs this
+      corpus thins — and moves the normalised total by **0**, which reads
+      **106,806** under both roots. Record:
+      `agents/evidence/analysis/installed-layer-normalised-measurement-2026-10-19.md`.
+      Sensitivity checked by neutralising the substitution to the identity: 5 of
+      10 cases go red including the two-root one, while the raw control stays
+      green.
+      **Still open, on the corpus and only on the corpus now.** 106,806 plus
+      10 % is 117,487, and the step's own text caps the ceiling at 75,000, so a
+      gate landed today would be red on `main` exactly as D6 found — roughly
+      32,000 characters above where a 75,000 ceiling could mean anything. That is
+      a matter for the full-bodied set, which this roadmap's "What this roadmap
+      deliberately does not do" excludes. What changed is that the measurement
+      question is answered and the corpus question is all that is left.
 - [x] **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
       projector to the installer, records why the template value is not a
       consent, and marks ADR-228's global-layer statement superseded.
@@ -483,7 +557,7 @@ rather than as a ninth roadmap.
 | D4 | product-owned | owner | Whether the default flips | Consumer-facing default change; blocker `default-flip-of-the-installed-layer` | — |
 | D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
 | D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable. **Amended 2026-10-12, on the council's Q1 finding that the original wording admitted two readings.** The intended reading is the NARROW one: D6 settles the mechanism it tested — a hard gate at 75,000 — and does not bar every hard gate forever. A different mechanism is not governed by it and may be proposed. What governs a different mechanism is D7 | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
-| D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | a normaliser exists and is shown environment-independent across at least two differing root lengths, or the base-ref form is built; either reopens 3.2 without reopening D6 |
+| D7 | reversible-technical | council:installed-layer-ceiling-mechanism-2026-10-12 | a ceiling over the installed layer may not rest on a STORED baseline, in any shape, until the measurement is environment-independent; the acceptable forms are a normalised total (every absolute-path occurrence stripped or substituted, with tests over differing root lengths) or a base-ref comparison that stores nothing and requires `head <= base` | the stub body pointer is absolute, so the total moves by 89 chars per char of package-root prefix (3,738 = 42 x 89 between two real readings), and a ratchet over a drifting number locks at the shortest path any runner ever had; `estate-count-budget.json` was deleted from this repository for exactly that failure. Reading degraded: 1 of 2 seats present, openai seat `os_error: ENOBUFS`. The seat's separate claim of a 4,139-char unexplained variance is WRONG — that figure is the stub-form change (111,197 -> 107,058) and reconciles; the structural half it does not touch is what this decision rests on | **FIRST LIMB MET 2026-10-19** — the normaliser exists (`src/scripts/_lib/installed_layer_normalise.ts`) and is shown environment-independent over the real corpus at two root lengths differing by 50 characters: raw total +5,000, normalised total +0 at 106,806 both times (`agents/evidence/analysis/installed-layer-normalised-measurement-2026-10-19.md`). So 3.2 is reopened on D7's own terms and D6 is not reopened. The base-ref form was not built and is not needed for this limb. What a ceiling still waits on is the CORPUS, not the measurement |
 | D8 | deterministic | evidence | `default-flip-of-the-installed-layer` is an **accrual wait on a named, scheduled producer** — step 2.2 of `road-to-a-setup-that-decides-itself` — and not the dead end its Status field described. Its resolution clause now names that producer and step 2.1's three assertions instead of a closed step | Measured 2026-10-16 while a council round was running on the premise that no scheduled file could produce the record. The premise is refuted inside this very file: the sibling blocker `arrival-record-needs-a-cancelled-observer`, one entry above, has read `resolved` since 2026-10-15 recording that the owner scheduled stub step 3.0 as steps 1.1–2.2 of `road-to-a-setup-that-decides-itself` (`status: ready`), whose step 2.2 reads "Hand it to its waiting consumer. The installed-layer roadmap's step 2.1 reads this record." D10 cancelled a **carrier**, not the instrument, which this roadmap's own step 2.1 states in its first sentence | the setup roadmap's step 2.2 is cut, deferred or re-scoped away from this consumer · the arrival record lands without step 2.1's three assertions |
 | D9 | reversible-technical | agent | Step 4.2 ships on the **claim** side: the install-layout row records what Codex reads of the global delivery. Writing a `~/.codex/AGENTS.md` (the delivery side) is not taken here | It writes into a user-owned global file on every Codex install at the next upgrade, and what it should carry is undecided: the rule layer is roughly ten times Codex's default 32 KiB instructions budget. A consumer-facing default change of that kind is the owner's to make | the owner asks for the delivery side, or a later Codex build reads `rules/*.md` |
 
@@ -601,3 +675,34 @@ against the tree instead of against its marker:
   precondition (an environment-independent measurement) is still unbuilt. A
   ceiling at "measured plus 10 %, never above 75,000" would be red on `main` on
   landing, so 3.2 stays open for the reason already recorded under it.
+
+**Re-screened 2026-10-19 at `main` @ `d8c4ece2d` — D7's precondition is now
+built, and no open step closes.** Full per-step readings sit beside the steps
+themselves; the two Acceptance Criteria are carried here rather than in their
+own bodies, for the reason this section's opening note gives.
+
+- **AC-1, the corpus half, re-read 2026-10-19.** Staged rather than installed:
+  the real `dist/agent-src/rules` copied into a temporary directory and thinned
+  by the installer's own `thinInstalledRuleLayer`, which is the same writer the
+  install step calls. 121 files, 100 thinned, 21 kept full by `build_thin`'s own
+  predicate. Raw total at a 2-character pointer root: **111,084** characters —
+  113 below the 2026-10-06 install reading of 111,197, which is what a staged
+  thinning against a shorter root should read, so the two agree rather than
+  diverge. NOT an install into an empty `HOME`, and therefore not a substitute
+  for AC-1's own reading: it carries the rule layer only, and AC-1 asks about an
+  install. It is recorded because it answers the corpus question AC-1 waits on,
+  and it answers it the same way: **not met**, by roughly 36,000 characters,
+  and nothing in this change moves the corpus.
+- **AC-1, normalised.** The same corpus reads **106,806** normalised characters,
+  identical under a root 50 characters longer. That figure is the one a future
+  ceiling may be compared against; it is not a smaller corpus, only a stable
+  reading of the same one.
+- **AC-2, re-measured 2026-10-19: still zero records, and the gate has moved
+  one step closer.** `./scripts-run src/scripts/arrival_report` now exists and
+  runs — it answers "no arrival record in
+  `~/.event4u/agent-config/runtime/arrivals` — the observer has not seen a
+  session", `scanned: 0`. The producer landed on 2026-10-18 as steps 2.1 and 2.2
+  of `road-to-a-setup-that-decides-itself`; what is still open is step **1.1
+  Bind `InstructionsLoaded`** of that file, which is the event that fills it.
+  So AC-2's wait is no longer on an unscheduled instrument but on one open step
+  in a named sibling roadmap, and it is still not work this file can do.

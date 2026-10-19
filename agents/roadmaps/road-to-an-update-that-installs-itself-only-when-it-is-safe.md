@@ -123,13 +123,27 @@ None of this is rebuilt here.
       signature or tie it to `publish-npm.yml`. That verification is what
       keeps this step open. Harmless today: the production wiring swaps
       nothing until 1.4.
-      *Found 2026-10-18, also open here:* `running_origin()` in
-      `upgrade_unattended.ts` takes `_is_source_repo(packageRoot)` for a source
-      checkout, and that probe answers true on `dist/agent-src/` — which every
-      published tarball ships — so an installed package reads as a source
-      checkout and the unattended run would always be suppressed. Same
-      harmlessness as above until 1.4; the fix is the `.git`-at-package-root
-      test `doctor_update_verdict.ts` uses, with a fixture for each shape.
+      *The `running_origin` half is fixed (2026-10-19).* `_is_source_repo`
+      answers "am I standing in an agent-config tree", and **both** of its
+      positive signals — a `dist/agent-src/` directory and a `package.json`
+      named `@event4u/agent-config` — are in every published tarball, so every
+      installed package read as a source checkout and `quiet_context`
+      suppressed the unattended run on all of them. The `.git`-at-package-root
+      test is now the one shared definition
+      (`doctor_install_mode.isSourceCheckoutPackage`), used by
+      `running_origin` and by `doctor_update_verdict` so the two cannot drift;
+      `_is_source_repo` itself is unchanged, because its three remaining
+      callers ask the question it actually answers. Measured on a real packaged
+      install (`npm pack` → `npm install --omit=dev --ignore-scripts` into an
+      empty directory outside the repo → `upgrade --unattended --dry-run`):
+      **before** `not installing — suppressed: source checkout`, **after**
+      `not installing (installed: 16.5.0) — candidate 16.5.0 is not newer than
+      16.5.0` — the origin gate now passes and the refusal is the honest one.
+      A real checkout still reads `source-checkout`.
+      **This step stays open on the provenance gate alone:** the attestation's
+      signature is still unverified and untied to `publish-npm.yml`
+      (`unattended_gates.ts:41`), which is supply-chain verification work with
+      its own threat pass, not a line in this fix.
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.

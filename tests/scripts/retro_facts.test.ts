@@ -8,7 +8,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { derive_session_tag } from '../../src/scripts/chat_history.js';
 import { eolSessionKey, eolStateFile, emptyCounters } from '../../src/scripts/_lib/session_eol.js';
 import type { ForgeApi } from '../../src/scripts/_lib/forge_reader.js';
+import { buildRunJson, writeRunJson, type RunJsonInput } from '../../src/scripts/analysis_run_record.js';
 import {
+    readAnalysisRunFacts,
     readDrainRow,
     readPrFacts,
     readSessionFacts,
@@ -327,5 +329,125 @@ describe('retro_facts — session', () => {
         expect(measured(facts.turns)).toBe(9);
         expect(fs.realpathSync(measured(facts.found_in))).toBe(fs.realpathSync(wt));
         expect(measured(facts.workspaces).length).toBe(2);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Analysis run (unit kind `analysis-run`)
+// ---------------------------------------------------------------------------
+
+function writeRun(root: string, roundId: string, over: Partial<RunJsonInput> = {}): void {
+    const ledger = [
+        {
+            loop: 1,
+            lens: 'coverage' as const,
+            status: 'counted' as const,
+            items: [
+                {
+                    id: 'i1',
+                    change: 'added' as const,
+                    evidence: [{ source_identity: 's', digest: 'd', method: 'm', claim: 'supported' as const, tier: 'executed' as const }],
+                },
+            ],
+        },
+    ];
+    const doc = buildRunJson({
+        run_id: roundId,
+        door: 'inbox',
+        started_at: '2026-10-18T10:00:00Z',
+        ended_at: '2026-10-18T10:30:00Z',
+        final_state: 'done',
+        analysts: [{ analyst_id: 'a1', mode: 'subagent', family: 'claude', ledger, tokens: 1_000 }],
+        exchange: null,
+        gain: { offered: false, band: 'low', reason: 'none' },
+        seats: { used: ['anthropic'], failed: [] },
+        roadmaps_emitted: [],
+        recurrence_hits: 0,
+        ci_rounds: 1,
+        turnaround: null,
+        ...over,
+    });
+    writeRunJson(path.join(root, 'agents', 'runtime', 'analysis', roundId), doc);
+}
+
+function writeRoadmap(root: string, rel: string, body: string): void {
+    const file = path.join(root, 'agents', 'roadmaps', rel);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, body);
+}
+
+const STEPS = ['- [x] done one', '- [x] done two', '- [-] cancelled one', '- [~] deferred one', '- [ ] still open'].join('\n');
+
+describe('retro_facts — analysis run', () => {
+    it('analysis-run-reads-run-json', () => {
+        const root = tmp();
+        writeRun(root, 'inbox-2026-10-x', { roadmaps_emitted: ['road-to-archived-one', 'road-to-still-active'] });
+        writeRoadmap(root, 'archive/road-to-archived-one.md', STEPS);
+        writeRoadmap(root, 'road-to-still-active.md', STEPS);
+
+        const facts = readAnalysisRunFacts({ roundId: 'inbox-2026-10-x', root });
+
+        expect(facts.unit).toBe('analysis-run');
+        expect(facts.round_id).toBe('inbox-2026-10-x');
+        expect(measured(facts.source)).toBe('inbox');
+        expect(measured(facts.roadmaps_emitted)).toEqual(['road-to-archived-one', 'road-to-still-active']);
+
+        const per = measured(facts.adoption_per_roadmap);
+        expect(per).toHaveLength(2);
+        expect(measured(per[0]!.steps)).toEqual({ done: 2, cancelled: 1 });
+        expect(per[0]!.archived).toBe(true);
+        // Still active: adoption is not readable yet, and that is `missing`, never 0.
+        expect(per[1]!.archived).toBe(false);
+        expect(per[1]!.steps.status).toBe('missing');
+
+        // One roadmap still active means the run-level reading is not taken.
+        expect(facts.adoption.status).toBe('missing');
+
+        const analysts = measured(facts.analysts);
+        expect(analysts).toHaveLength(1);
+        expect(analysts[0]!.analyst_id).toBe('a1');
+        expect(analysts[0]!.loops).toBe(1);
+        expect(analysts[0]!.top_tier).toEqual({ added: 1, changed: 0, killed: 0 });
+        // run.json attributes no emitted roadmap to an analyst, so per-analyst
+        // adoption is a named absence rather than a number nobody measured.
+        expect(facts.adoption_per_analyst.status).toBe('not-applicable');
+    });
+
+    it('a run whose every emitted roadmap is archived reads a run-level adoption', () => {
+        const root = tmp();
+        writeRun(root, 'inbox-2026-10-y', { roadmaps_emitted: ['road-to-a', 'stubs/road-to-b'] });
+        writeRoadmap(root, 'archive/road-to-a.md', STEPS);
+        writeRoadmap(root, 'archive/stubs/road-to-b.md', '- [x] one\n- [-] two');
+
+        const facts = readAnalysisRunFacts({ roundId: 'inbox-2026-10-y', root });
+        expect(measured(facts.adoption)).toEqual({ done: 3, cancelled: 2 });
+    });
+
+    it('a run that emitted no roadmap has a not-applicable adoption, never 0', () => {
+        const root = tmp();
+        writeRun(root, 'inbox-2026-10-z');
+        const facts = readAnalysisRunFacts({ roundId: 'inbox-2026-10-z', root });
+        expect(measured(facts.roadmaps_emitted)).toEqual([]);
+        expect(facts.adoption.status).toBe('not-applicable');
+        expect(measured(facts.analysts)).toHaveLength(1);
+    });
+
+    it('an emitted roadmap no directory holds reads as missing, not as zero adoption', () => {
+        const root = tmp();
+        writeRun(root, 'inbox-2026-10-w', { roadmaps_emitted: ['road-to-nowhere'] });
+        const facts = readAnalysisRunFacts({ roundId: 'inbox-2026-10-w', root });
+        const per = measured(facts.adoption_per_roadmap);
+        expect(per[0]!.archived).toBe(false);
+        expect(per[0]!.steps.status).toBe('missing');
+        expect(facts.adoption.status).toBe('missing');
+    });
+
+    it('no run.json for the round is missing, and never an invented run', () => {
+        const root = tmp();
+        const facts = readAnalysisRunFacts({ roundId: 'inbox-2026-10-absent', root });
+        expect(facts.source.status).toBe('missing');
+        expect(facts.analysts.status).toBe('missing');
+        expect(facts.adoption.status).toBe('missing');
+        expect(facts.adoption_per_roadmap.status).toBe('missing');
     });
 });
