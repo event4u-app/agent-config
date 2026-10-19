@@ -124,7 +124,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let record: RunRecord;
     try {
         record = loadRun(runDir);
-        const res = validateEmitted({ runDir, record, projectRoot: root, files, councilDissent: argv.includes('--council-dissent'), runner });
+        const res = validateEmitted({ runDir, record, projectRoot: root, files, councilDissent: argv.includes('--council-dissent'), ...(runner === undefined ? {} : { runner }) });
         for (const f of res.failures) process.stdout.write(`${f}\n`);
         process.stdout.write(`analysis_validate: ${res.record.state}${contentOnly ? ' (tree gates skipped: --content-only)' : ''}\n`);
         return res.failures.length === 0 ? 0 : 1;
