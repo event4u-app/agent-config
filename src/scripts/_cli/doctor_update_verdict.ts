@@ -11,14 +11,13 @@
  * piped `doctor --json` does not report itself as non-interactive.
  */
 import * as fs from 'node:fs';
-import * as path from 'node:path';
 
 import * as agent_settings from '../_lib/agent_settings.js';
 import { classifyUpdate, type InstallOrigin } from '../_lib/classify_update.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { STATE_FILENAME, classify_install_origin } from '../_lib/update_check.js';
-import { _is_global_only_consumer } from './doctor_install_mode.js';
+import { _is_global_only_consumer, isSourceCheckoutPackage } from './doctor_install_mode.js';
 
 export interface UpdateVerdictSources {
     readonly installed: string | null;
@@ -84,15 +83,16 @@ function readProjectPin(projectRoot: string): string | null {
 }
 
 /**
- * Gather the sources and report. A source checkout is a package root with a
- * `.git` entry — npm never ships one, while `dist/agent-src/` is in every
- * published tarball and so cannot tell the two apart.
+ * Gather the sources and report. The source-checkout test is shared with
+ * `upgrade --unattended` (`isSourceCheckoutPackage`) so the two surfaces cannot
+ * drift: both ask whether the running package is a checkout or a release, and a
+ * `.git` entry is the only signal that answers it.
  */
 export function updateVerdictFor(projectRoot: string, packageRoot: string, installed: string | null): Record<string, unknown> {
     const state = readCachedUpdateState();
     const projectPin = readProjectPin(projectRoot);
     const seen = state['last_seen_version'];
-    const origin: InstallOrigin = fs.existsSync(path.join(packageRoot, '.git'))
+    const origin: InstallOrigin = isSourceCheckoutPackage(packageRoot)
         ? 'source-checkout'
         : classify_install_origin({
               package_root: packageRoot,

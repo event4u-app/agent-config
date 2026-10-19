@@ -32,7 +32,7 @@ import * as installed_lock from '../_lib/installed_lock.js';
 import { classify_install_origin } from '../_lib/update_check.js';
 import { event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
-import { _is_source_repo } from './cmd_refresh.js';
+import { isSourceCheckoutPackage } from './doctor_install_mode.js';
 
 export const PACKAGE_NAME = '@event4u/agent-config';
 export const PACKUMENT_URL = `https://registry.npmjs.org/${PACKAGE_NAME}`;
@@ -355,10 +355,22 @@ export function is_alive(pid: number): boolean {
     }
 }
 
-function running_origin(): InstallOrigin {
-    const root = resolvePackageRoot(import.meta.url);
-    if (_is_source_repo(root)) return 'source-checkout';
+/**
+ * The install origin of a package root, as the unattended gates read it.
+ *
+ * Exported because `running_origin` resolves its own root from `import.meta.url`
+ * and so cannot be pointed at a fixture: in this repository the answer is
+ * legitimately `source-checkout`, and a test calling it here would pass for the
+ * wrong reason. The distinguishing input is a tree that carries the shipped
+ * `dist/agent-src/` and no `.git`.
+ */
+export function originForPackageRoot(root: string): InstallOrigin {
+    if (isSourceCheckoutPackage(root)) return 'source-checkout';
     return classify_install_origin({ package_root: root, project_pin: null, latest: null, is_global_consumer: false });
+}
+
+function running_origin(): InstallOrigin {
+    return originForPackageRoot(resolvePackageRoot(import.meta.url));
 }
 
 /** `upgrade --skip <version>` — never install that version unattended. */
