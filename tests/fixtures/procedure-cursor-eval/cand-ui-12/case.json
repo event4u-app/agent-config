@@ -1,0 +1,16 @@
+{
+  "id": "cand-ui-12",
+  "pilot": "existing-ui-audit",
+  "input": "Add a ticket priority badge to the portal overview.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.component_root",
+      "op": "equals",
+      "values": [
+        "packages/ui"
+      ]
+    }
+  ]
+}

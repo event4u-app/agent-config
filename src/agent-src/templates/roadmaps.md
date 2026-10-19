@@ -148,6 +148,15 @@ that was never a judgement call.
     scope laundering. Only an item that **cannot** be executed now qualifies.
     Contract: `agents/roadmaps/*` · `src/agent-src/scripts/archive_completed_roadmaps.ts`
     § `deferralProblems` · `tests/scripts/archive_deferral_resolution.test.ts`.
+17c. **A step that waits on a date is written as a stub, not as a step.**
+    A measurement window, a soak, "four weeks after X lands" — work that
+    needs elapsed time rather than effort — goes into a `stubs/` entry with
+    its trigger when the roadmap is authored, not into the roadmap's phases.
+    Left inside, it holds a roadmap whose work is done at `count_open > 0`,
+    and a drain can never close it: on 2026-10-19 about a fifth of the active
+    estate's open steps were such waits. `lint_roadmap_complexity` warns on an
+    open step whose block pairs a wait word with a date after today — the same
+    reading `roadmap_drain_queue` classifies as `time`.
 17. **Follow-up roadmaps from deferred items carry `parent_roadmap`.**
     When a roadmap closes with `[~]` deferred items, the
     [`roadmap-management`](../skills/roadmap-management/SKILL.md) skill

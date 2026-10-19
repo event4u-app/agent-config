@@ -1,0 +1,8 @@
+{
+  "name": "quota-dashboard",
+  "version": "0.2.0",
+  "main": "src/index.js",
+  "dependencies": {
+    "quota-engine": "0.5.0"
+  }
+}

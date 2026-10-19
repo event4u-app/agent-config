@@ -1,0 +1,15 @@
+services:
+  ledger-api:
+    build: ./api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ingest-relay
+  statement-renderer:
+    build: ./renderer
+    environment:
+      OUTPUT_DIR: /var/statements
+  ingest-relay:
+    build: ./relay
+    environment:
+      UPSTREAM_URL: http://ledger-api:8080/ingest
