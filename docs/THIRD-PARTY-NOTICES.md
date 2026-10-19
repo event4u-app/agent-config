@@ -23,3 +23,30 @@
 - **Files:** `src/scripts/cost/budget.mjs`, `src/scripts/cost/track.mjs`
 - **Transformation:** Forked from the upstream cost-tracker plugin's budget.mjs and track.mjs, then re-derived against a store this repository already had. The upstream persists through an MCP memory tool (`mcp__claude-flow__memory_store`); that dependency is removed entirely and replaced with a local append-only JSONL at agents/cost-tracking/sessions.jsonl plus a budget.json beside it, so the scripts run under bare `node` with no MCP server present — which is what lets them ship to consumers as plain .mjs (the /cost:report command doc states why tsx is not available on that path). track.mjs additionally gained dedup and a main/subagent split whose logic is MIRRORED, not imported, from src/scripts/_lib/cc_transcript.ts, and pricing constants are kept in sync with REFERENCE.md rather than carried from upstream. The borrow is recorded here rather than as an in-file source name because MIT requires the copyright and permission notice to travel with copies, not to sit inside each source file: docs/THIRD-PARTY-NOTICES.md is generated from this ledger and is shipped in package.json's files list in the same change, which is what actually discharges the obligation for a consumer who receives src/scripts/ from npm.
 - **Cleared by:** human
+
+## https://github.com/google/fonts
+
+- **License:** OFL-1.1
+- **Source SHA:** 47d54ca1ebb14fd864695f1d39dc734f39017c33
+- **Borrowed:** 2026-10-19
+- **Files:** `tests/fixtures/fonts/poppins/Poppins-Regular.ttf`, `tests/fixtures/fonts/poppins/OFL.txt`
+- **Transformation:** Not a code borrow and deliberately not transformed: the geometric sans is vendored byte-for-byte as held-out ground truth for the type-reconstruction benchmark (internal/bench/type-reconstruction-PREREG.md), its license text committed beside it. No outline, table or name changes, so the Reserved Font Name clause is not engaged. Repository-only under the 2026-10-16 council amendment: tests/ is outside package.json#files, export-ignored and docker-ignored, and tests/scripts/typeface_fixture_bound.test.ts checks the produced npm tarball, git archive and container contexts.
+- **Cleared by:** ledger
+
+## https://github.com/google/fonts
+
+- **License:** OFL-1.1
+- **Source SHA:** 47d54ca1ebb14fd864695f1d39dc734f39017c33
+- **Borrowed:** 2026-10-19
+- **Files:** `tests/fixtures/fonts/lato/Lato-Regular.ttf`, `tests/fixtures/fonts/lato/OFL.txt`
+- **Transformation:** Not a code borrow and deliberately not transformed: the humanist sans is vendored byte-for-byte as held-out ground truth for the type-reconstruction benchmark (internal/bench/type-reconstruction-PREREG.md), its license text committed beside it. No outline, table or name changes, so the Reserved Font Name clause is not engaged. Repository-only under the 2026-10-16 council amendment: tests/ is outside package.json#files, export-ignored and docker-ignored, and tests/scripts/typeface_fixture_bound.test.ts checks the produced npm tarball, git archive and container contexts.
+- **Cleared by:** ledger
+
+## https://github.com/google/fonts
+
+- **License:** OFL-1.1
+- **Source SHA:** 47d54ca1ebb14fd864695f1d39dc734f39017c33
+- **Borrowed:** 2026-10-19
+- **Files:** `tests/fixtures/fonts/pt-serif/PT_Serif-Web-Regular.ttf`, `tests/fixtures/fonts/pt-serif/OFL.txt`
+- **Transformation:** Not a code borrow and deliberately not transformed: the serif is vendored byte-for-byte as held-out ground truth for the type-reconstruction benchmark (internal/bench/type-reconstruction-PREREG.md), its license text committed beside it. No outline, table or name changes, so the Reserved Font Name clause is not engaged. Repository-only under the 2026-10-16 council amendment: tests/ is outside package.json#files, export-ignored and docker-ignored, and tests/scripts/typeface_fixture_bound.test.ts checks the produced npm tarball, git archive and container contexts.
+- **Cleared by:** ledger

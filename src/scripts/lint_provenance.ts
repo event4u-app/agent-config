@@ -76,6 +76,7 @@ const WEAK_COPYLEFT_SPDX_IDS = [
     'LGPL-2.1-only', 'LGPL-2.1-or-later', 'LGPL-2.1',
     'LGPL-3.0-only', 'LGPL-3.0-or-later', 'LGPL-3.0',
     'EPL-1.0', 'EPL-2.0', 'CDDL-1.0', 'CDDL-1.1',
+    'OFL-1.1',
 ];
 // The conservative fallback deny set (GPL/AGPL/SSPL family) — see the header
 // comment. Also part of the known-SPDX-id catalog, so a real GPL/AGPL/SSPL

@@ -39,6 +39,8 @@ commands:
     - analyze/roadmap-repos
     - analyze/inbox
     - analyze/conformance
+    - analyze/and-optimize
+    - analyze/pr
     - analyze/decision
     - analyze/incident
     - analyze/near-miss
@@ -52,7 +54,6 @@ commands:
     - feature/plan
     - feature/refactor
     - feature/roadmap
-    - optimize/deep
     - optimize/project
     - project
     - project/analyze
