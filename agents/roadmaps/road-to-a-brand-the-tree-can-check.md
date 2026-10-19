@@ -485,6 +485,14 @@ irreversible-external-action row of `non-destructive-by-default`).
       tree (`rg` for two existing target names over `docs/` and `src/` returns
       nothing), so the `desc` field is the whole documented surface and no doc
       edit is owed.
+      "Not in default CI" is recorded where the tree checks it rather than
+      asserted: `check_gate_reachability --gate` reds any gate-shaped target
+      reachable from neither `task ci` nor a workflow unless
+      `src/config/gate-reachability-exemptions.json` carries the reason AND
+      what would make it run. The row names both, including the half worth
+      keeping visible — wiring it in THIS repository would scan an absent
+      slot and exit green every run, which is the gate-that-scans-nothing
+      shape, not enforcement.
 - [x] **5.7 Absorb the parked roadmap.** Once 5.1 ships,
       `later/road-to-voice-negative-lexicon.md` moves to `archive/` with a
       pointer to this file.
