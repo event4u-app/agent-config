@@ -354,6 +354,11 @@ export interface Throughput {
     pauses: { total: number; night: number; day: number; unknown: number; pausedMinutes: number; unresolved: number };
     /** `git push` calls and their median wall-clock, pre-push hook included. */
     push: { calls: number; medianSeconds: number | null };
+    /**
+     * Step 2.1's unit: `nightKey` nights holding an assistant turn, and those of
+     * them that also hold a usage-limit banner. Sorted `YYYY-MM-DD`, no text.
+     */
+    nights: { active: string[]; paused: string[] };
 }
 
 const TURN_END_NAMED = TURN_END_CLASSES.filter((c) => c !== 'unknown');
@@ -379,6 +384,8 @@ export function measureDetailed(files: readonly string[]): {
     const turnEndTexts: string[] = [];
     const pauses: Throughput['pauses'] = { total: 0, night: 0, day: 0, unknown: 0, pausedMinutes: 0, unresolved: 0 };
     const pushSeconds: number[] = [];
+    const activeNights = new Set<string>();
+    const pauseNights = new Set<string>();
 
     for (const file of files) {
         let sawFloor = false;
@@ -402,8 +409,10 @@ export function measureDetailed(files: readonly string[]): {
                 const t = ms(e['timestamp']);
                 pauses.total += 1;
                 if (t === null) pauses.unknown += 1;
-                else if (nightKey(t) !== null) pauses.night += 1;
-                else pauses.day += 1;
+                else if (nightKey(t) !== null) {
+                    pauses.night += 1;
+                    pauseNights.add(nightKey(t) as string);
+                } else pauses.day += 1;
                 if (pauseOpen) pauses.unresolved += 1;
                 pauseOpen = true;
                 pausedAt = t;
@@ -456,6 +465,9 @@ export function measureDetailed(files: readonly string[]): {
             }
 
             if (e['type'] !== 'assistant') continue;
+            const turnAt = ms(e['timestamp']);
+            const turnNight = turnAt === null ? null : nightKey(turnAt);
+            if (turnNight !== null) activeNights.add(turnNight);
             const rid = e['requestId'];
             if (typeof rid === 'string' && rid !== '') requestIds.add(rid);
 
@@ -528,6 +540,10 @@ export function measureDetailed(files: readonly string[]): {
         turnEnds: tallyExclusive(turnEndTexts, TURN_END_NAMED, (t) => [classifyTurnEnd(t)]),
         pauses,
         push: { calls: pushSeconds.length, medianSeconds: median(pushSeconds) },
+        nights: {
+            active: [...activeNights].sort(),
+            paused: [...pauseNights].filter((n) => activeNights.has(n)).sort(),
+        },
     };
     return { turnaround, blocking: blockingCalls, throughput };
 }
@@ -608,6 +624,12 @@ export function parseWindows(value: string): Array<[string, string]> | null {
     return out;
 }
 
+/** Night keys inside an inclusive `FROM..TO` range. */
+function inRange(nights: readonly string[], range: string): number {
+    const [from, to] = range.split('..') as [string, string];
+    return nights.filter((n) => n >= from && n <= to).length;
+}
+
 function renderThroughput(tp: Throughput, refusals: RefusalStats, git: readonly GitReading[], st: Standing): string {
     const p50 = (x: number | null, unit: string): string => (x === null ? 'n/a' : `${String(Math.round(x * 10) / 10)} ${unit}`);
     const per = (n: number, d: number): string => (d === 0 ? '0' : String(Math.round((n / d) * 10) / 10));
@@ -616,6 +638,7 @@ function renderThroughput(tp: Throughput, refusals: RefusalStats, git: readonly 
         ...Object.entries(tp.turnEnds.rows).map(([c, n]) => `    ${c.padEnd(16)}${String(n)}`),
         `  usage-limit pauses           ${String(tp.pauses.total)} (night ${String(tp.pauses.night)}, day ${String(tp.pauses.day)}, unknown ${String(tp.pauses.unknown)}), ` +
             `${String(tp.pauses.pausedMinutes)} min paused, ${String(tp.pauses.unresolved)} without a reset`,
+        `  paused nights                ${String(tp.nights.paused.length)} of ${String(tp.nights.active.length)} active night(s)`,
         `  turn-end refusals            ${String(refusals.total)} in ${String(refusals.sessionsWithRefusals)} session(s) with a refusal — ` +
             `the whole refusal store, ${(refusals.earliest ?? '-').slice(0, 10)}..${(refusals.latest ?? '-').slice(0, 10)}, not the --limit window`,
         ...DETECTOR_IDS.map((d) => `    ${d.padEnd(18)}${String(refusals.byDetector[d])}`),
@@ -635,6 +658,7 @@ function renderThroughput(tp: Throughput, refusals: RefusalStats, git: readonly 
             `  git ${g.range} @ ${g.ref} · ${String(g.calendarNights)} night(s), ${String(g.nights)} with a commit (22:00–08:00 Europe/Berlin)`,
             `    commits ${String(g.commits)} (${per(g.commits, g.calendarNights)}/night), naming a PR ${String(g.prCommits)} (${per(g.prCommits, g.calendarNights)}/night) · true merges ${String(g.trueMerges)}`,
             `    net ticked steps ${String(g.netTicked)} (${per(g.netTicked, g.calendarNights)}/night) · roadmaps archived ${String(g.archived)}`,
+            `    paused nights ${String(inRange(tp.nights.paused, g.range))} of ${String(inRange(tp.nights.active, g.range))} active (transcripts in the --limit window)`,
         );
     }
     lines.push('');
@@ -726,6 +750,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         turnEnds: tallyExclusive([], TURN_END_NAMED, () => []),
         pauses: { total: 0, night: 0, day: 0, unknown: 0, pausedMinutes: 0, unresolved: 0 },
         push: { calls: 0, medianSeconds: null },
+        nights: { active: [], paused: [] },
     };
     const workspace = arg('--workspace', REPO_ROOT);
     const ref = arg('--ref', 'HEAD');
