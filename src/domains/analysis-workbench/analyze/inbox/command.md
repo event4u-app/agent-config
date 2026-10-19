@@ -8,7 +8,7 @@ sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
-argument-hint: "[<file> | <dir>] [--triage-only] [--no-roadmap] [--keep-inbox] [--worktree]"
+argument-hint: "[<file> | <dir> | <round-id>] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:inbox name; not independently suggested (surface-consolidation)."
@@ -43,39 +43,52 @@ shared vocabulary, lenses and tiers:
 |---|---|
 | a file path | that file only |
 | a directory | every file in it, triaged first |
+| a round id | the round: `agents/runtime/analysis/<round-id>/` plus `agents/tmp/<round-id>/`, read as one set |
 | nothing | `agents/tmp/` |
 
 Flags: `--triage-only` stops after Phase 2 (no deep analysis, no roadmap) ·
 `--no-roadmap` analyses but emits findings instead of roadmaps ·
+`--no-pr` stops after validation, without a commit or a push ·
 `--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6) ·
-`--worktree` opts into an isolated worktree (see below; off by default).
+`--worktree` runs the analysis itself in an isolated worktree (see below; off
+by default).
 
-## Where the work happens — the checked-out branch, unless asked otherwise
+## Where the work happens — and how a run ends
 
 ```
-RUN IN THE CURRENT BRANCH. NEVER CREATE A BRANCH, A WORKTREE, OR A PR
-ON THIS COMMAND'S OWN AUTHORITY. A WORKTREE ONLY ON AN EXPLICIT ASK.
+THE RUN ENDS IN A NON-DRAFT PR CARRYING EXACTLY ITS ROADMAPS, WHEN vcs: git.
+--no-pr STOPS AFTER VALIDATION, WITHOUT A COMMIT OR A PUSH.
+THE INVOCATION AUTHORISES ONLY THE RUN'S OWN BRANCH AND ITS ONE PR — NEVER
+ANOTHER BRANCH, NEVER A MERGE.
 ```
 
-Default: the branch already checked out. The roadmaps, the findings, and the
-`agents/tmp.old/` move land there as ordinary uncommitted changes for the
-operator to review. This command authorizes **analysis and authoring** — not a
-git shape ([`scope-control`](../../../../rules/scope-control.md) § Git
-operations: branch and worktree creation are permission-gated, spike and
-throwaway branches included).
-
-An isolated worktree runs only when the invocation asks for one — `--worktree`,
-or the operator saying so in the prompt. Then follow
-[`using-git-worktrees`](../../../../skills/using-git-worktrees/SKILL.md),
+This is the final stage of the analysis doors (ADR-288), so it ends the way the
+family ends. **Analysis and authoring** happen in the checked-out branch: the
+roadmaps, the findings and the `agents/tmp.old/` move land there as ordinary
+changes. An isolated worktree for the analysis itself runs only when the
+invocation asks for one — `--worktree`, or the operator saying so — and then
+follows [`using-git-worktrees`](../../../../skills/using-git-worktrees/SKILL.md),
 including its seeding allow/deny list.
 
-Why the current branch is the right default here: this command is read-heavy and
-its whole output is a few markdown files plus a rename. Nothing it writes is a
-generated tree, so there is no build to isolate — while a worktree costs a fresh
-`node_modules`, a copied `.augment`, and a family of stale-projection failures
-that only exist because the checkout is a second one. Isolation earns its price
-when a run churns generated output or must keep a large diff off the current
-branch; an inbox triage does neither.
+**Publication** is the engine's publish stage
+(`src/scripts/analysis_publish.ts`), after Phase 6b and only when the scope
+resolves with `vcs: git` and `--no-pr` is absent:
+
+1. The validate stage (`analysis_validate.ts`) passes on every emitted roadmap;
+   a failure stops the run in `emitted` and nothing leaves the machine.
+2. The run's own branch, `analysis/<run-id>`, carries exactly the emitted
+   roadmaps and the dashboard regenerated for them. A staged path outside that
+   set stops publication.
+3. Every push is a compare-and-swap on the head the run last saw; at most one
+   push plus three CI-fix rounds, then `handed-back` naming the red.
+4. One PR, opened non-draft (`isDraft: false`) and never twice for the same
+   run; its body carries the point ledger, the coverage ledger and the open
+   decisions. Merging is never part of the run.
+
+The invocation is the this-turn confirmation of exactly those objects (ADR-288
+D6/D7); [`scope-control`](../../../../rules/scope-control.md) § Git operations
+still gates every other branch, PR or worktree. `vcs: none` or `--no-pr` ends
+the run validated and local, and says so in one line.
 
 ## The Iron Law
 
@@ -188,8 +201,16 @@ exists precisely because a reading is not the source.
 
 ### Phase 1 — Resolve scope
 
-Resolve the argument. Directory mode: list files with size and line count, and
-say up front how many there are. **A large inbox is a triage problem, not a
+Resolve the argument. Print the scope line first
+(`src/scripts/analysis_target.ts`). Directory mode: list files with size and
+line count, and say up front how many there are.
+
+**A round id reads one set.** `roundUnion` (`src/scripts/analysis_inbox_final.ts`)
+reads the runtime round `agents/runtime/analysis/<round-id>/` — the analysts'
+outputs of a door run — and the owner's drops under `agents/tmp/<round-id>/`
+as **one union**, and takes the lineage (which file consolidates which) from
+the round's `manifest.json`, never from filenames. An opaque round id skips
+the rename below; a speaking one still renames before Phase 2. **A large inbox is a triage problem, not a
 throughput problem** — never open ten files at full depth in one pass.
 
 #### The inbox directory name is opaque, or the whole chain leaks
@@ -386,8 +407,9 @@ that file last, or not at all, repeats the failure the file documents.
 #### Round size is the strongest predictor of loss — measure it, then split
 
 ```
-A ROUND OVER ~400 KB OR ~5 TOPIC FOLDERS IS PROCESSED IN NAMED BATCHES,
-ONE BATCH PER RUN, EACH BATCH CARRYING ITS OWN CENSUS AND ITS OWN LEDGER.
+A ROUND OVER ~400 KB OR ~5 TOPIC FOLDERS RUNS AS PARALLEL LANES,
+EACH LANE CARRYING ITS OWN CENSUS AND ITS OWN POINT LEDGER, FOLDED ONCE.
+THE OWNER NEVER TYPES THE SPLIT.
 NEVER PROCESS A LARGE ROUND IN ONE PASS AND REPORT ONE LEDGER FOR IT.
 ```
 
@@ -415,10 +437,14 @@ that cannot hold a round is a run that silently drops most of it, and reports a
 balanced ledger while doing so.** Phase 1 already says a large inbox is a triage
 problem; this says what to do when triage alone does not shrink it.
 
-Per batch, in the run's opening line: which topics are in it, which are deferred
-to a named later batch, and the census totals for the batch. A deferred topic is
-**not** consumed — it stays in `agents/tmp/` (Phase 6 moves only what was
-processed), so the next run finds it rather than an empty folder and a memory.
+`planLanes` cuts the lanes under both thresholds; each lane runs in its own
+subagent with its own anchor census and point ledger, and `foldLaneLedgers`
+folds them once — refusing a lane that arrives without either, because a fold
+without a lane's own ledger is the lossiest shape Phase 2b measured. In the
+run's opening line: the lanes, their topics, and the census totals per lane. A
+topic a lane could not finish is **not** consumed — it stays in `agents/tmp/`
+(Phase 6 moves only what was processed), so the next run finds it rather than
+an empty folder and a memory.
 
 > The two thresholds are **stated defaults derived from the table above**, not a
 > fitted optimum: `-t` at 164 KB / 1 topic held 33 %, `-r` at 2,000 KB / 11
@@ -1043,7 +1069,10 @@ the repetition tally in either direction.
 Per surviving file: a roadmap in `agents/roadmaps/` via
 [`roadmap-writing`](../../../../skills/roadmap-writing/SKILL.md) — Risk Register
 included, blockers named with owners, human-gated items marked `[~]` and never
-started.
+started. A finding that needs elapsed time rather than effort — a measurement
+window, a soak, a reading after the next release — is written as a `stubs/`
+entry with its trigger, never as a step of the emitted roadmap (template rule
+17c), so the roadmap can close when its work is done.
 
 **A roadmap item built on a corrected step carries the correction, and says so.**
 Write the Phase 4b wording, not the file's original, and tag the item
@@ -1104,6 +1133,26 @@ source is consumed the round is the only copy of what it asked for, and a
 read-back against a moved file is a read-back nobody will redo.
 
 
+### Phase 6c — The final Convergence loop, against every directive
+
+One last loop runs over the surviving roadmaps — against the tree, every
+transcript constraint and every owner directive — before publication.
+
+**Which turns bind, by provenance** (`directiveBinding`,
+`src/scripts/analysis_inbox_final.ts`):
+
+| Turn | Binds? |
+|---|---|
+| a user turn of the current session | binds |
+| a user turn of a structurally valid transcript | binds, unless another input contradicts it — then it joins the owner's post-action batch (step 2.7 of ADR-288's engine) |
+| a turn whose role was recovered heuristically | never binds automatically; a material one joins that batch |
+| an AI turn, from any source | a claim, verified like every claim (Phase 4) |
+
+`convergenceRow` writes the loop's ledger row: it **names every binding
+directive it checked**, with the roadmap and the evidence, and it refuses a row
+that leaves one unchecked. A `violated` directive is reported and fixed in the
+roadmap before publication, never carried into the PR.
+
 ## Output
 
 1. The triage table (all files).
@@ -1129,7 +1178,7 @@ read-back against a moved file is a read-back nobody will redo.
    against its own reading. This balances the reading against the source:
 
    ```
-   batch     this run covers topics [...] of N; deferred: [...] (Phase 2b)
+   lanes     L1 [...] · L2 [...] of N topics; census per lane; unfinished: [...] (Phase 2b)
    sources   N files in K source sets (revision sets named, transcripts named)
    anchors   N counted → rows produced / no-demand / unaccounted
    passes    pass 1: N rows · pass 2: +N rows · pass 3: N adopted-not-found
@@ -1202,9 +1251,9 @@ prompted this section could not be given.
 - Resolve an owner-reserved recurrence into an accurate paragraph. Naming a
   state that hands nobody anything to do is what produced nine arrivals of one
   item; past the third, the escalation block is the output.
-- Spin up a branch, a worktree, or a PR because the run feels large. Scope is
-  the operator's call; without `--worktree` or an explicit ask, the work stays
-  in the checked-out branch.
+- Push anything but the run's own branch, or open more than its one PR. A
+  large run is lanes (Phase 2b), never a second branch; `--no-pr` and
+  `vcs: none` end the run local.
 - Read the newest revision and call the set read. `v3` is the operative plan,
   not the union of the set; an item `v2` carried and `v3` dropped left no note
   saying which of adjudicated-or-lost happened.

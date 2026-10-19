@@ -1,0 +1,12 @@
+{
+  "name": "vue-checkout",
+  "private": true,
+  "version": "0.1.0",
+  "dependencies": {
+    "vue": "^3.4.38"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.2",
+    "vite": "^5.4.2"
+  }
+}

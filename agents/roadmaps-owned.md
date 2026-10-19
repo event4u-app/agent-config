@@ -36,7 +36,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-steps-the-skill-cannot-skip | active | ready | A skill whose procedure has grown past what an agent follows reliably can be split into step files without losing … |
 | road-to-svg-witness-provenance | active | draft | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-tool-results-that-leave-a-handle | active | ready | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
-| road-to-type-with-a-witness | active | ready | The typography guidance an agent receives has one value per question, and every capability `typography-system` claims to carry exists in … |
 | road-to-typed-grants-that-persist | active | draft | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
@@ -118,6 +117,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-release-finding-ordering | later | later | Road to the release-finding ordering guarantee |
 | road-to-release-holds-that-refuse | later | later | A roadmap declares, in a form one evaluator reads, exactly which of its intermediate tree states must not be published … |
 | road-to-residual-interruption-measurement | later | later | Road to the residual-interruption measurement |
+| road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-routing-assurance-live-floors | later | later | Road to routing assurance — the live-harness floors |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
 | road-to-skill-ecosystem-capability-queue | later | later | Road to the capability queue — everything capability-shaped, waiting on a capacity slot |

@@ -1,0 +1,15 @@
+{
+  "id": "cand-pa-02",
+  "pilot": "project-analyzer",
+  "input": "Analyse this Express service and map its runtime services and background workers.",
+  "success": [
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/services/service-map.md",
+      "op": "mentions_all",
+      "values": [
+        "ReportMailerWorker"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "id": "cand-pa-15",
+  "pilot": "project-analyzer",
+  "input": "Analyse this repository and describe its stack.",
+  "success": [
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/overview.md",
+      "op": "exists"
+    },
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/overview.md",
+      "op": "mentions_none",
+      "values": [
+        "Laravel",
+        "Symfony",
+        "Express",
+        "Next.js",
+        "Django",
+        "Rails"
+      ]
+    }
+  ]
+}

@@ -16,7 +16,7 @@ import { parse } from 'yaml';
 
 const HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(HERE), '..', '..');
-const COMMAND = path.join(ROOT, 'src/domains/meta/optimize/deep/command.md');
+const COMMAND = path.join(ROOT, 'src/domains/analysis-workbench/analyze/and-optimize/command.md');
 const FIXTURES = path.join(ROOT, 'tests/optimize-deep/eval-fixtures.md');
 
 function frontmatter(text: string): Record<string, unknown> {

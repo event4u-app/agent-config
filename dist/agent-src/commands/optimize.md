@@ -5,7 +5,7 @@ disable-model-invocation: true
 argument-hint: "[skills|agents-dir|augmentignore|rtk|project|prompt|deep] [args]"
 pack: meta
 intent: "Optimization dispatcher — skills, rtk, augmentignore, agents-dir, project sweep, prompt, deep autonomous loop"
-routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir, optimize-project, optimize-prompt, optimize-deep]
+routes_to: [optimize-skills, optimize-rtk, optimize-augmentignore, optimize-agents-dir, optimize-project, optimize-prompt, analyze-and-optimize]
 replaces: []
 visibility: advanced
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop)
@@ -41,7 +41,7 @@ the **agent layer** (skills, agents-dir, augmentignore, rtk), the **project**
 | `/optimize rtk` | `commands/optimize/rtk.md` | Create or refine project-local rtk filters |
 | `/optimize project` | `commands/optimize/project.md` | Project-wide optimization sweep — inventory roadmaps/ADRs/agent folders, challenge stale decisions, emit new roadmap(s) |
 | `/optimize prompt` | `commands/optimize/prompt.md` | Optimize a raw prompt for ChatGPT/Claude/Gemini via the 4-D methodology |
-| `/optimize deep` | `commands/optimize/deep.md` | Autonomous deep-refactoring loop — subagent analysis, council, central + sub-roadmaps, PR, N refinement loops (default 3) |
+| `/optimize deep` | `commands/analyze/and-optimize.md` | Alias of `/analyze:and-optimize` (ADR-288) — the autonomous deep-improvement loop: analysts, council, central + sub-roadmaps, PR, N refinement loops (default 3) |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
@@ -50,7 +50,8 @@ Sub-command names match the locked contract in
 
 1. Parse the user's argument: `/optimize <sub-command> [args]`.
 2. Look up the sub-command in the table above.
-3. Load the body of the corresponding `commands/optimize/<sub>.md` file and
+3. Load the body of the file the table names (`commands/optimize/<sub>.md`;
+   `deep` is the alias of `commands/analyze/and-optimize.md`) and
    follow its `## Steps` (or `## Instructions`) section verbatim.
 4. If the sub-command is unknown or missing, print the menu and ask:
 

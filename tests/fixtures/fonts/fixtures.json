@@ -1,0 +1,37 @@
+{
+  "_comment": "Held-out truth for the type-reconstruction benchmark (internal/bench/type-reconstruction-PREREG.md). Bound and admission rule: README.md beside this file. Checked by tests/scripts/typeface_fixture_bound.test.ts.",
+  "admitted_by": "agents/evidence/council/benchmark-fixture-fonts-20261016.md",
+  "source": {
+    "url": "https://github.com/google/fonts",
+    "sha": "47d54ca1ebb14fd864695f1d39dc734f39017c33"
+  },
+  "families": [
+    {
+      "dir": "poppins",
+      "file": "Poppins-Regular.ttf",
+      "spdx": "OFL-1.1",
+      "license_file": "OFL.txt",
+      "upstream_path": "ofl/poppins/Poppins-Regular.ttf",
+      "sha256": "7e65201e9b79159e2300267cc885e16c8dcef2424cdfa09a29bfb0980a94a7ba",
+      "decision": "initial set, admitted with the benchmark (step 5.8): a geometric sans"
+    },
+    {
+      "dir": "lato",
+      "file": "Lato-Regular.ttf",
+      "spdx": "OFL-1.1",
+      "license_file": "OFL.txt",
+      "upstream_path": "ofl/lato/Lato-Regular.ttf",
+      "sha256": "d636e4683231f931eda222d588e944d082bfd3bdba02f928bee461c0f185b251",
+      "decision": "initial set, admitted with the benchmark (step 5.8): a humanist sans"
+    },
+    {
+      "dir": "pt-serif",
+      "file": "PT_Serif-Web-Regular.ttf",
+      "spdx": "OFL-1.1",
+      "license_file": "OFL.txt",
+      "upstream_path": "ofl/ptserif/PT_Serif-Web-Regular.ttf",
+      "sha256": "a4951fade06ff8f09b7673aa81ffb65a8cd409e24d3289a6dc670bc4dda2557a",
+      "decision": "initial set, admitted with the benchmark (step 5.8): a serif"
+    }
+  ]
+}

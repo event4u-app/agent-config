@@ -1,0 +1,26 @@
+{
+  "id": "cand-ui-02",
+  "pilot": "existing-ui-audit",
+  "input": "Add an audit log page to the console app.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.shadcn_inventory",
+      "op": "mentions_all",
+      "values": [
+        "new-york",
+        "stone"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.component_root",
+      "op": "mentions_all",
+      "values": [
+        "apps/console"
+      ]
+    }
+  ]
+}
