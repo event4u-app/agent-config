@@ -52,8 +52,10 @@ import { GLOBAL_DEPLOY_SOURCES } from '../install/wizard-plan.js';
 import { modelListingBudget } from './_lib/host_listing_model.js';
 import {
     compute_active_pack_ids,
+    declared_skill_closure,
     is_pruned_under_scoped,
     load_packs_registry,
+    projected_command_files,
 } from './_lib/scoped_projection.js';
 import { USER_SCOPE_PATHS } from './install.js';
 import { iter_skills, REPO_ROOT } from './update_counts.js';
@@ -131,7 +133,8 @@ function rootRead(host: string, root: string): CensusRow['root_read'] {
 
 export function build_census(entries: readonly SkillEntry[], package_root: string = REPO_ROOT): Census {
     const active = compute_active_pack_ids(load_packs_registry(package_root), []);
-    const scoped = entries.filter((e) => !is_pruned_under_scoped(e.path, active));
+    const kept = declared_skill_closure([...entries.map((e) => e.path), ...projected_command_files(package_root)], active);
+    const scoped = entries.filter((e) => !is_pruned_under_scoped(e.path, active, kept));
     const paths: Array<['default' | 'full', readonly SkillEntry[]]> = [
         ['default', scoped],
         ['full', entries],

@@ -8875,13 +8875,56 @@ function compute_active_pack_ids(packs, runtime_active_packs) {
   }
   return active;
 }
-function is_pruned_under_scoped(md_path, active_ids) {
+function is_pruned_under_scoped(md_path, active_ids, kept = /* @__PURE__ */ new Set()) {
+  if (path7.basename(md_path) === "SKILL.md" && kept.has(path7.basename(path7.dirname(md_path)))) {
+    return false;
+  }
   const packs = frontmatter_packs(md_path);
   if (packs.size === 0) return false;
   for (const id of packs) {
     if (active_ids.has(id)) return false;
   }
   return true;
+}
+function declared_skills(md_path) {
+  let text;
+  try {
+    text = fs7.readFileSync(md_path, "utf-8");
+  } catch {
+    return [];
+  }
+  if (!text.startsWith("---")) return [];
+  const end = text.indexOf("\n---", 3);
+  const fm = yamlSafeLoad(end !== -1 ? text.slice(3, end) : text.slice(3));
+  if (!isPlainObject2(fm)) return [];
+  const out = [];
+  for (const key of ["skills", "requires_skills"]) {
+    const v = fm[key];
+    if (Array.isArray(v)) out.push(...v.filter((s) => typeof s === "string"));
+  }
+  return out;
+}
+function declared_skill_closure(artefacts, active_ids) {
+  const all = [...artefacts];
+  const skill_md = /* @__PURE__ */ new Map();
+  for (const p of all) {
+    if (path7.basename(p) === "SKILL.md") skill_md.set(path7.basename(path7.dirname(p)), p);
+  }
+  const kept = /* @__PURE__ */ new Set();
+  let frontier = all.filter((p) => !is_pruned_under_scoped(p, active_ids));
+  while (frontier.length > 0) {
+    const next = [];
+    for (const p of frontier) {
+      for (const name of declared_skills(p)) {
+        if (kept.has(name)) continue;
+        kept.add(name);
+        const target = skill_md.get(name);
+        if (target !== void 0 && is_pruned_under_scoped(target, active_ids)) next.push(target);
+      }
+    }
+    frontier = next;
+  }
+  return kept;
 }
 var RULE_PACKS_AUTO = "auto";
 function resolve_rule_pack_scope(raw, package_root, runtime_active_packs = []) {
@@ -8951,6 +8994,11 @@ function prune_modules_by(deploy_results, is_pruned) {
     adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
   }
   return [pruned, adjusted];
+}
+function prune_scoped_modules(deploy_results, active_ids) {
+  const artefacts = Object.values(deploy_results).flatMap(([, , , paths]) => paths).filter((p) => path7.basename(p) === "SKILL.md" || p.split(path7.sep).includes("commands") && path7.extname(p) === ".md");
+  const kept = declared_skill_closure(artefacts, active_ids);
+  return prune_modules_by(deploy_results, (p) => is_pruned_under_scoped(p, active_ids, kept));
 }
 function prune_lab_modules(deploy_results, lab_ids) {
   return prune_modules_by(deploy_results, (p) => is_lab_artefact(p, lab_ids));
@@ -11350,10 +11398,10 @@ import {
   unlinkSync as unlinkSync6,
   writeSync
 } from "node:fs";
-import { dirname as dirname7, join as join19 } from "node:path";
+import { dirname as dirname8, join as join19 } from "node:path";
 function atomicWriteFile(target, data, options = {}) {
   const mode = options.mode ?? 420;
-  const parent = dirname7(target);
+  const parent = dirname8(target);
   mkdirSync6(parent, { recursive: true });
   const tmp = join19(parent, `.tmp.${process.pid}.${randSuffix()}`);
   let fd = null;
@@ -12678,8 +12726,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename9 = path23.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename9)) {
+  const basename10 = path23.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename10)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -23364,12 +23412,7 @@ function _rule_filter_for_source(src_rel, scope) {
   if (src_rel !== RULE_SOURCE_REL) return null;
   return (srcFile) => ruleFileArrives(srcFile, scope) && !isExclusivelyPackageOnly(srcFile);
 }
-function _prune_scoped_modules(deploy_results, active_ids) {
-  return _prune_modules_by(
-    deploy_results,
-    (p) => is_pruned_under_scoped(p, active_ids)
-  );
-}
+var _prune_scoped_modules = prune_scoped_modules;
 function install_global(tools, force, project_root = null, core_only = false) {
   const migrated = migrate_legacy_namespace();
   if (migrated && !state.QUIET) {
