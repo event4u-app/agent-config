@@ -569,3 +569,25 @@ tasks:
   move-artefact:
     desc: "Phase 4.5 (ADR-017) — move a skill/rule/command between packs via `git mv` + frontmatter rewrite. Flags forwarded after `--`."
     cmd: ./scripts-run src/scripts/move_artefact {{.CLI_ARGS}}
+
+  voice-lexicon:
+    silent: true
+    desc: "OPT-IN (never in default CI) — run check_voice_lexicon over this branch's PERSISTED prose: the PR title/body and the branch commit messages. Brand findings flag, they never block; a style gate in a team's default pipeline is a social bug."
+    cmds:
+      - |
+        base="${BASE:-origin/main}"
+        slot="agents/context-spine/brand-voice.md"
+        if [ -f "$slot" ]; then slot_arg="--slot $slot"; else slot_arg=""; fi
+        prose=$({ if command -v gh >/dev/null 2>&1; then
+            gh pr view --json title,body --jq '"# " + .title + "\n\n" + .body' 2>/dev/null || true
+          fi
+          printf '\n\n'
+          git log --format=%B "$base"..HEAD 2>/dev/null || true
+        })
+        # Level with the base and no PR yet is the ordinary start of a change,
+        # not an unusable invocation — do not surface the checker's exit 2.
+        if [ -z "$(printf '%s' "$prose" | tr -d '[:space:]')" ]; then
+          echo "no persisted prose on this branch yet (no PR text, no commits vs $base) — nothing to check"
+          exit 0
+        fi
+        printf '%s\n' "$prose" | ./scripts-run src/scripts/check_voice_lexicon --draft - $slot_arg
