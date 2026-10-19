@@ -296,14 +296,7 @@ two new scripts and the context file are additive; deleting them restores today.
       verify: a publication fixture refuses a staged file outside the allowed
       set, a re-run opens no second PR, a fourth red CI round ends in
       `handed-back`, and the opened PR reads `isDraft: false` in
-      `gh pr view --json isDraft`. Done 2026-10-18 in `src/scripts/analysis_publish.ts`
-      over a `PublishPort` (in-memory remote in `tests/scripts/analysis_publish.test.ts`,
-      git and gh in `gitGhPort`); the outside-path refusal and the fourth-red
-      hand-back were seen red by neutralising each check. The isDraft read is the
-      port's `gh pr view --json isDraft`; its first live exercise is the first
-      publication after 3.5, which itself runs `--no-pr`.
-      2026-10-18: council review of #2461 (2/2) found the stage trusted its caller (branch, lease, base SHA, allowed set, body,
-      clone redirects); fixed before any caller exists via `PublicationTarget`, a leased push and run-directory inputs.
+      `gh pr view --json isDraft`. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 3.3.
 - [x] **3.4 `analyze:inbox` becomes the final stage.** Replace the
       branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
       engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
@@ -323,13 +316,7 @@ two new scripts and the context file are additive; deleting them restores today.
       verify: `grep -c 'NEVER CREATE A BRANCH'
       src/domains/analysis-workbench/analyze/inbox/command.md` is 0 (1 today);
       `analyze/inbox/evals/triggers.json` holds a `--no-pr` case; the final
-      loop's ledger row names every directive it checked. Done 2026-10-19: the
-      ban is replaced by § Where the work happens (publish via
-      `analysis_publish.ts`, `--no-pr`, `vcs: none`); `roundUnion`,
-      `directiveBinding`, `convergenceRow`, `planLanes` and `foldLaneLedgers`
-      in `src/scripts/analysis_inbox_final.ts` (unchecked-directive, contradicted
-      transcript turn and ledger-less lane cases seen red); Phase 1 reads the
-      round union, Phase 2b runs lanes, Phase 6c is the final loop.
+      loop's ledger row names every directive it checked. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 3.4.
 - [ ] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
       `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of them seven
       files) with `--no-pr`, no network and `subagent` analysts — the first slice
@@ -378,13 +365,7 @@ today's analysis-only behaviour.
       in `intake.md`.
       verify: a connected fixture run's ledger carries one coded web row and no
       source name in any tracked output; a `--no-network` run completes labelled
-      degraded. Done 2026-10-18 in `src/scripts/network_sources.ts`: URL reads with
-      credential, scheme and private-address refusal at every redirect hop,
-      redirect and size caps (private-host refusal seen red); depth-1 clones
-      with hooks off and the pin checked; the S1, S2 codebook with `ENC1:`
-      identities in `intake.md`; the research brief in the analyst prompt. DNS
-      is checked before the request, not pinned for it — the rebinding residual
-      is named in the module.
+      degraded. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.2b.
 - [x] **4.3 Anchor profiles — defects and opportunities (directive g).** The
       anchor table reads what the scope has, in order: failing or skipped tests,
       open issues (`gh` when present), TODO/FIXME census, roadmaps, ADRs,
@@ -396,12 +377,7 @@ today's analysis-only behaviour.
       `visibility: internal` (F17).
       verify: a run against a consumer fixture without `docs/CLAIMS.md` produces
       a non-empty typed anchor table or states feature mode, and
-      `./scripts-run src/scripts/lint_framework_leakage` passes on the door files. Done
-      2026-10-18 in `src/scripts/analysis_anchors.ts` (issue default type seen red
-      as `defect`); `analyze:repo` § 1a documents it, both doors carry the
-      `engineering` workspace and stay `internal`. Failing tests need a run and
-      come from the door, not the census; stack axes from `project-analysis-core`
-      are not wired here.
+      `./scripts-run src/scripts/lint_framework_leakage` passes on the door files. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.3.
 - [x] **4.4 Several sources, one gap one roadmap; prompts for external
       analysts (directive i).** `<door> <a> <b> …` runs one lane per source and
       folds so one gap is one roadmap; `analyze:roadmap-repos` keeps dispatching
@@ -410,10 +386,7 @@ today's analysis-only behaviour.
       sessions outside this host, replacing the re-typed one.
       verify: a two-source fixture yields one roadmap for a shared gap, and
       `--emit-prompts` output contains the `handoff: v1` frontmatter block and
-      all three lens questions. Done 2026-10-18 in `src/scripts/analysis_prompts.ts`
-      (`foldLanes` keyed by tree anchor, seen red keyed by finding id;
-      `emitPrompts` and its CLI), wired into the `analyze:repo` door text and
-      argument hint; the emitted frontmatter parses through `parseHandoff`.
+      all three lens questions. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.4.
 - [x] **4.5 `analyze:and-optimize` (directive a).** `optimize:deep` moves to
       `analyze/and-optimize/` with `replaces: [optimize-deep, optimize:deep]`;
       its `limits:` block and `tests/scripts/optimize_deep_limits.test.ts` carry
@@ -423,14 +396,7 @@ today's analysis-only behaviour.
       stay as they are (D11).
       verify: the carried limits test passes at the new path, `optimize:deep`
       still resolves in the projected tree after `task generate-tools`, and in a
-      module fixture every reader's path lies under the module root. Done
-      2026-10-19: moved to `src/domains/analysis-workbench/analyze/and-optimize/`
-      with `replaces: [optimize-deep, optimize:deep]`, `/optimize deep` routes
-      there, the limits test passes at the new path unchanged otherwise; the
-      projected door carries both aliases (`tests/scripts/analysis_and_optimize.test.ts`);
-      `readSet` in `src/scripts/analysis_and_optimize.ts` reads anchors and code
-      under the scope root (module case seen red with `project_root`); Steps
-      0–5 re-expressed over 2.1–3.3.
+      module fixture every reader's path lies under the module root. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.5.
 
 **Exit:** the source door and and-optimize complete a fixture run each from a
 subfolder and from a module. **Rollback:** the `replaces:` aliases keep the old
@@ -454,12 +420,7 @@ names; revert the move and the aliases.
       introduced here or pre-existing. `--comment` posts; default posts nothing.
       verify: a fixture PR with a planted defect reports it with `file:line`; a
       clean fixture reports "no finding above threshold" and makes no `gh`
-      write call. Done 2026-10-19: `src/domains/analysis-workbench/analyze/pr/command.md`
-      over `reviewPr` in `src/scripts/analysis_pr_review.ts` (throwaway
-      worktree, same-family disprover refused, threshold 0.7, dedupe,
-      introduced-vs-pre-existing from the diff); the unconditional-comment and
-      same-family cases were seen red. Finding the defect stays model work in
-      the door; the module decides what of it is reported.
+      write call. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 5.2.
 - [x] **5.3 `--optimize` (directive a).** Eligibility first: PR open, head branch
       writable, not a fork — otherwise a patch file plus the verdict. Each fix
       records one test disposition (regression test seen red, existing test seen
@@ -469,9 +430,7 @@ names; revert the move and the aliases.
       three rounds. Never merges, never approves its own changes.
       verify: a fixture PR converges in at most three rounds with one
       disposition per fix, a moved-head fixture stops before pushing, and a fork
-      fixture yields a patch file. Done 2026-10-19 in `src/scripts/analysis_pr_optimize.ts`
-      (moved-head and round-cap cases seen red); the port has no merge and no
-      approve, and the push leases the expected head.
+      fixture yields a patch file. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 5.3.
 
 **Exit:** the three fixtures above green. **Rollback:** delete the new command
 file; `council:pr` is unchanged.
@@ -483,10 +442,7 @@ file; `council:pr` is unchanged.
       pr; the escape lists every `routes_to` entry, counted from `routes_to`
       rather than written as a number.
       verify: the dispatcher's eval set routes one prompt per `routes_to` entry
-      to that entry. Done 2026-10-19: eleven entries, each with a table row, a
-      keyword row, a menu entry and one eval case
-      (`tests/scripts/analyze_router_routes.test.ts`, a dropped menu entry seen
-      red); the escape reads `routes_to`.
+      to that entry. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 6.1.
 - [x] **6.2 Registries and references.** `docs/contracts/command-clusters.md`,
       `src/flows/surface-map.yaml`, `docs/command-flows.md`, `docs/catalog.md`,
       the analysis-workbench and meta READMEs, `pack.yaml`, the evals, both
@@ -494,9 +450,7 @@ file; `council:pr` is unchanged.
       `optimize-deep`.
       verify: `./scripts-run src/scripts/check_references` -> 0 — and
       `grep -rn 'optimize:deep' src docs | grep -v replaces` returns only alias
-      lines. Done 2026-10-19: clusters table, surface map, both packs and READMEs,
-      catalog, index, command flows and evals regenerated or edited; the
-      remaining hits are alias lines, ADR-288's record and archived changelogs.
+      lines. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 6.2.
 - [ ] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
       it `analyze:reference`; it still ships as `analyze-repo` (the skills and
       the `external-reference-deep-dive` rule name it correctly today). Moving
@@ -512,10 +466,7 @@ file; `council:pr` is unchanged.
       gain estimate, seats used and failed, roadmaps emitted, recurrence hits,
       tokens, wall-clock; question and CI-round counts via `probe_turnaround`.
       verify: after a fixture run `run.json` validates against its schema and
-      carries one row per analyst and loop. Done 2026-10-18 in
-      `src/scripts/analysis_run_record.ts` (built, validated, written atomically;
-      an unread turnaround or exchange is `missing`, never 0). No door writes it
-      yet: that is the door wiring of 3.4, 4.5 and 5.2.
+      carries one row per analyst and loop. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 6.3.
 - [x] **6.4 Retro unit `analysis-run` (directive h).** Add the unit kind as a
       step plus an `Arrivals:` line to `road-to-a-retro-the-merge-runs` Phase 1
       (owner-first): its fact reader reads `run.json` and reports adoption (done
