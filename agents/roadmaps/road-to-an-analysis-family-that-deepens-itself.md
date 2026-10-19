@@ -9,7 +9,7 @@ relates:
   - slug: road-to-a-retro-the-merge-runs
     relation: extends
     note: "Step 6.4 adds one unit kind (`analysis-run`) to that file's fact readers. Triage, the one-learning-per-unit rule and every target stay the retro's; this file only produces the run record."
-  - slug: road-to-an-intake-the-queue-can-carry
+  - slug: later/road-to-an-intake-the-queue-can-carry
     relation: disjoint
     note: "Step 3.1 applies that file's owner-first landing rule (a finding with an owner lands as a step plus an `Arrivals:` line) by hand until that file ships it as a gate; nothing here re-plans it."
   - slug: road-to-steps-the-skill-cannot-skip

@@ -1,6 +1,21 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-11-13
+estate_growth_exempt: "Moves one roadmap from the active tree into `later/`: active_roadmaps falls by one, later_roadmaps rises by one, so the work is not new. Every open item is gated on elapsed time: step 6.2 measures a four-week report-only window that opens 2026-11-13, step 2.1 turns the warning into a refusal only on that window's false-refusal rate and its own council round, and AC-2 and AC-6 read those two results. No inbox round was consumed after 2026-10-16, so nothing can be measured earlier."
+entry_condition:
+  what: >
+    Step 6.2's report-only window over real additions has elapsed, so the
+    `unsearched` warning of step 2.1 has a measurable false-refusal rate.
+    Checkable without judgement: `date -u +%F` is 2026-11-13 or later, and at
+    least one inbox round consumed after 2026-10-16 sits in `agents/tmp.old/`.
+  when: >
+    Calendar-bound: four weeks after the Phase 2 report-only half landed on
+    2026-10-16, so 2026-11-13 at the earliest. `review_by` is that date.
+  who: >
+    An implementer runs 6.2 and then the 2.1 council round; the council
+    decides whether the warning becomes a refusal. No owner decision is
+    pending.
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-q measured at 9a943f30c that 28 of 29 active roadmaps carry estate_offset_exempt, 18 have no ticked step, four depends declarations are false, and the dashboard shows no age. No active roadmap owns the intake side of the estate: a grep over agents/roadmaps/{*,later,stubs} for exemption_shape, days since and park proposal returns nothing, and stubs/road-to-estate-triage-remaining-batches owns verdict rows for the existing estate, not what an addition must show. Archiving or parking costs more because the defect is the inflow itself and would keep arriving; merging into the triage stub would put a live inflow fix behind a parked batch plan. Phase 5 folds three active pairs, so this file is net negative once it runs."
