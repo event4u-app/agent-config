@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { EDIT_TOOLS } from '../../../src/scripts/minimal_safe_diff_hook.js';
 
 import { load as jsYamlLoad } from 'js-yaml';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
     SESSION_ENTRY_CAP,
@@ -26,6 +26,7 @@ import {
     findPackageRoot,
     count_entries,
     decide,
+    evaluate,
     parseSettingsDoc,
     snapshotUpdateWarning,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
@@ -656,5 +657,28 @@ describe('block_config_weakening — snapshot surfaces', () => {
         const bash = runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test --update-snapshots' } });
         expect(bash.status).toBe(2);
         expect(runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test' } }).status).toBe(0);
+    });
+
+    // Council round 4 (2026-10-19): the warning must not depend on shell and edit
+    // tools being disjoint — an overlap still warns, and a path block still wins.
+    it('snapshot: a shell name that is also an edit tool still warns, and a path block wins over it', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bcw-overlap-'));
+        const overlap = new Set([...EDIT_TOOLS, 'Bash']);
+        const cmd = 'npx playwright test --update-snapshots';
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            expect(evaluate({ tool_name: 'Bash', cwd: root, tool_input: { command: cmd } }, overlap)).toBe(2);
+            const many = JSON.stringify(Array.from({ length: SESSION_ENTRY_CAP + 1 }, (_, i) => `e${i}`));
+            const blocked = evaluate(
+                { tool_name: 'Bash', cwd: root, session_id: 'overlap', tool_input: { command: cmd, file_path: 'lint_x_allowlist.json', content: many } },
+                overlap,
+            );
+            expect(blocked).toBe(1);
+        } finally {
+            out.mockRestore();
+            err.mockRestore();
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 });

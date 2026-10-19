@@ -608,14 +608,18 @@ export function main(): number {
     if (!_isObject(envelope)) {
         return EXIT_ALLOW;
     }
+    return evaluate(envelope);
+}
 
+/** The decision for one envelope; `editTools` is a parameter only so a test can make a shell name overlap it. */
+export function evaluate(envelope: JsonObject, editTools: ReadonlySet<string> = EDIT_TOOLS): number {
     const { tool, paths, ti } = _extract(envelope);
-    if (!tool || !EDIT_TOOLS.has(tool) || ti === null) {
-        // Reached only by a call that was ALLOW before this branch existed, so the
-        // shell warning can never stand in for a path decision.
-        const snap = EDIT_TOOLS.has(tool) ? null : snapshotUpdateWarning(tool, ti?.['command']);
-        if (snap === null) return EXIT_ALLOW;
-        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: snap })}\n`);
+    // Computed for every tool and emitted only where no path decision is left,
+    // so a shell name that is also an edit tool still warns and never pre-empts a block.
+    const cmdWarn = snapshotUpdateWarning(tool, ti?.['command']);
+    if (!tool || !editTools.has(tool) || ti === null) {
+        if (cmdWarn === null) return EXIT_ALLOW;
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: cmdWarn })}\n`);
         return EXIT_WARN;
     }
 
@@ -625,7 +629,7 @@ export function main(): number {
     const sidRaw = envelope['session_id'] ?? envelope['sessionId'];
     const session = typeof sidRaw === 'string' && sidRaw ? sidRaw : 'default';
 
-    let snapWarn: string | null = null;
+    let snapWarn: string | null = cmdWarn;
     for (const p of paths) {
         const kind = classify_target(p);
         if (kind === null) {
