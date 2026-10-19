@@ -6,6 +6,7 @@ execution:
 depends:
   - road-to-one-detector-and-the-senders-we-own
 estate_offset_exempt: "Round inbox-2026-10-o reproduced at 2bc5715c7 that the self-repair privacy floor scans only record text while the release pushes a whole branch (self_repair.ts:236-238 vs self_repair_cli.ts:291, :317), that the same mechanism from two projects gets two fingerprints (executed: 15b30f56 vs ec8a7aee), that an upstream PR is not opened as a draft (self_repair_cli.ts:324), and that a consumer install always degrades to an issue (findAgentConfigCheckout returns null outside an agent-config checkout). No active, later or stub roadmap owns the egress ladder or /upstream-contribute; road-to-one-detector-and-the-senders-we-own owns the detector table this file consumes, not the ladder. Archiving or parking costs more because Phase 1 is executable now and fixes three documents that send contributors to paths that do not exist; merging into the detector roadmap would put a ladder rebuild behind a scanner."
+estate_growth_exempt: "open_blockers 65 -> 66, measured by check_estate_count at this change: one blocker here (upstream-body-and-mechanism-key). It records the owner residue the council round of 2026-10-19 (D9) escalated rather than closed — which bytes may leave in the upstream body, and whether the cross-installation fingerprint may change shape — and it registers a hold that until now existed only as prose in two step bodies and a decision row, where no gate and no drain screen could read it. It blocks only steps 3.1, 3.2 and AC-3."
 relates:
   - slug: road-to-one-detector-and-the-senders-we-own
     relation: depends
@@ -178,7 +179,7 @@ Nothing is sent without the person's word in that turn.
 
 ## Phase 3 — Synthesised, clustered, drafted
 
-- [ ] **3.1 Synthesised, not redacted.** The upstream payload is built from
+- [ ] <!-- blocked-by: upstream-body-and-mechanism-key | asked: no — the council round of 2026-10-19 (D9) settled the record half and escalated this one; the owner has not been asked, and this blocker is the offer --> **3.1 Synthesised, not redacted.** The upstream payload is built from
       closed fields only — `target`, `defect_class`, `principle`, `mechanism`,
       `falsifier`, a synthetic package fixture — with no transcript text, no
       local key and no free-text project context.
@@ -223,7 +224,7 @@ Nothing is sent without the person's word in that turn.
       to build when he does.
       The landed half is pinned by the four claim-field cases in
       `tests/scripts/self_repair.test.ts`, each watched red.
-- [ ] **3.2 A mechanism fingerprint.** For records carrying `target` and
+- [ ] <!-- blocked-by: upstream-body-and-mechanism-key | asked: no — the council round of 2026-10-19 (D9) settled the record half and escalated this one; the owner has not been asked, and this blocker is the offer --> **3.2 A mechanism fingerprint.** For records carrying `target` and
       `principle`, the fingerprint hashes those instead of the evidence, so the
       F5 pair clusters.
       **Open for a named reason, executed 2026-10-14:** `DefectFinding` carries
@@ -344,14 +345,30 @@ Nothing is sent without the person's word in that turn.
 > *(Re-measured 2026-10-19: retro 4.4 and 2.5 are both still open, 2.5 for an
 > owner-reserved reason — it is a new consumer command. Unchanged.)*
 
-- [ ] **5.1 At most one offer per run.** A retro run whose package record passes
+- [~] **5.1 At most one offer per run.** A retro run whose package record passes
       the canonical threshold appends one release offer to its output; sending
       still needs the person's word in that turn.
       verify: `npx vitest run tests/scripts/retro.test.ts -t at-most-one-upstream-offer --reporter=verbose` -> /✓.*at-most-one-upstream-offer/
-- [ ] **5.2 A leak stops the offers.** Any egress or authorisation leak found
+      **Deferred 2026-10-19, fourth measurement.** `retro.ts` exports
+      `TARGETS` with `package-record` and the `ANALYSE_AT` threshold, so the
+      classification half exists — but retro step 4.4 still produces no
+      package record for an offer to be about, and building one here to
+      attach an offer to is the second outward route K1 forbids. Three prior
+      sessions reached the same reading (2026-10-14, 2026-10-17, 2026-10-19)
+      and no new evidence has arrived since, so the glyph now says what the
+      prose already said. **Un-defers to `[ ]`** when
+      `road-to-a-retro-the-merge-runs` step 4.4 closes; the drain queue has
+      no class for a wait on another roadmap's open step, so a `[ ]` here
+      reads as runnable work and sends a lane to a step it cannot build.
+- [~] **5.2 A leak stops the offers.** Any egress or authorisation leak found
       after release turns offers off until the owner decides, and `/retro status`
       says so.
       verify: `npx vitest run tests/scripts/retro.test.ts -t leak-turns-offers-off --reporter=verbose` -> /✓.*leak-turns-offers-off/
+      **Deferred 2026-10-19, same measurement.** Its second half — "`/retro
+      status` says so" — is retro step 2.5, open and owner-reserved there as
+      a new consumer command, and a kill switch with nothing to switch off
+      is 5.1's offer. **Un-defers to `[ ]`** with 5.1, once retro 4.4 and
+      2.5 both close.
 
 ## Blockers
 
@@ -365,6 +382,38 @@ Nothing is sent without the person's word in that turn.
 - **If you do nothing:** consumers keep the issue route only, which reveals the same account, and the owner's "neutral pull request" never exists.
 - **What to do:** pick exactly one — (a) accept and state it in every dry run (step 4.3); or (b) issues only from consumers, pull requests only from a checkout of this package; or (c) commission a relay design as its own roadmap and keep 4.2 blocked until it lands.
 - **Resolved when:** this entry's Status reads resolved and step 4.2 carries no blocked-by marker, or 4.2 is re-scoped to option (b). Resolved 2026-10-12: 4.2 re-scoped to (b) and measures whether (a) is safe.
+
+### blocker: upstream-body-and-mechanism-key
+- **Status:** open
+- **Owner:** maintainer
+- **Ownership:** product-owned
+- **Blocks:** steps 3.1 and 3.2 and AC-3. Nothing else: the record fields, the
+  whole-payload floor, the draft flag, the noreply identity, the digest-bound
+  approval and the consumer issue route are all landed and unaffected.
+- **Question:** Which bytes may leave in the upstream body — and may the
+  cross-installation fingerprint change shape?
+- **Recommendation:** (a). It is the reading D9 named as the one to build, it
+  removes two free-text fields from what leaves rather than relying on a reader
+  to recognise a company term in them, and it leaves the key alone until a
+  corpus exists to justify changing a public contract.
+- **If you do nothing:** the upstream body keeps carrying today's
+  evidence-bearing text, which the openai seat said may not stand indefinitely;
+  AC-3 stays open with no path, and the two steps keep reading as runnable work
+  to every lane that screens this file.
+- **What to do:** pick exactly one —
+  (a) body from `target`, `defect_class` and `principle` only, built in
+  `src/scripts/_lib/self_repair_outgoing.ts` with `renderReport` left for the
+  local and Class-B case, and the fingerprint in
+  `src/scripts/_lib/self_repair.ts` left on the evidence hash until a corpus
+  shows one subject per mechanism; or
+  (b) keep today's evidence-bearing body for records without `principle` and
+  switch to (a) once a producer sets the field — name the release or the date
+  at which the switch is no longer optional; or
+  (c) send `mechanism` and `falsifier` upstream as well, accepting that both
+  are free text whatever their field name, and adopt a versioned
+  `defect_class | target | principle` key in the same change.
+- **Resolved when:** this entry's Status reads resolved and steps 3.1, 3.2 and
+  AC-3 carry no blocked-by marker, or each is re-scoped to the option chosen.
 
 ## Decisions
 
@@ -405,7 +454,7 @@ Nothing is sent without the person's word in that turn.
       file that does not exist.
 - [x] **AC-2** A release whose branch, identity, message or diff carries a
       consumer identifier is refused, with the finding named.
-- [ ] **AC-3** The same mechanism from two projects produces one fingerprint.
+- [ ] <!-- blocked-by: upstream-body-and-mechanism-key | asked: no — the council round of 2026-10-19 (D9) settled the record half and escalated this one; the owner has not been asked, and this blocker is the offer --> **AC-3** The same mechanism from two projects produces one fingerprint.
 - [x] **AC-4** Every upstream pull request is a draft with a noreply identity,
       and changing one byte after approval voids the approval.
 - [x] **AC-5** A consumer install reaches the issue step of the ladder; the
