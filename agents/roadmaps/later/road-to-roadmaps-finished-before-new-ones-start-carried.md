@@ -9,6 +9,10 @@ entry_condition:
   when: after five drains run on that main, whenever the owner starts them
   who: owner
 review_by: 2026-12-31
+relates:
+  - slug: road-to-agent-throughput-recovery
+    relation: disjoint
+    note: "Its step 2.3 re-decides the two-lane provision (D10 there, D2 of the parent) on cost and conflict figures. 6.1 here reads completion outcomes; neither re-plans the other."
 ---
 # Road to roadmaps finished before new ones start — carried
 
@@ -30,6 +34,26 @@ left to read as finished.
       verify: an evidence file with the same table shape as the 2026-10-19
       reading; complete-share, intermediate PRs per roadmap, and unstarted
       roadmaps started while a started one was runnable.
+      Read for OUTCOME, not only function (owner review 2026-10-19): the same
+      file also states, against the 2026-09-20..10-19 baseline, roadmaps archived
+      per drain, open steps left behind per drain (partial roadmaps the drain
+      touched and did not close), and items carried out of a roadmap per
+      archive. The contract works only if archives rise while left-behind and
+      carried items fall; a higher lane complete-share with the same archive
+      rate is not a success.
+- [ ] **6.2 Make `complete` mean finished, not only zero open boxes.** Today a
+      roadmap is `complete` at `count_open == 0` with an open PR on green CI.
+      Owner review 2026-10-19 named four gaps, each to be closed in
+      `/roadmap:process-full` § Terminal outcomes and in the archive sweep:
+      every acceptance criterion is `[x]` with its evidence line (a `[~]` AC
+      blocks `complete`); CI is green on the head that is merged, not an earlier
+      one; the independent completion review the change class requires has a
+      recorded verdict; and every item carried out of the roadmap is listed in
+      the PR body with its destination and why it could not run — a carry of
+      runnable work is refused, as it already is for `[~]` in template rule 17b.
+      verify: a sweep test over a fixture roadmap with all steps `[x]` and one
+      `[~]` AC refuses `complete`; a fixture carrying a runnable step is refused;
+      both seen red with the new check neutralised.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: archive-sweep/auto-carry -->

@@ -494,7 +494,16 @@ What ships is not those runs but the contract that replaces them: the canonical
 brief in `/roadmap:process-full` § Lanes, the finish-first order of
 `roadmap_drain_queue`, and the cap below. (The AI council was asked; only one
 seat could answer, it favoured keeping lanes staged, and without convergence the
-decision went to the owner.) The shape:
+decision went to the owner.)
+
+**Provisional, and on a dated re-decision.** A later two-seat round read the
+change as inside `road-to-agent-throughput-recovery` AC-3, which held lane
+changes until that roadmap's Phase 2 verdict. The owner's decision stands as a
+recorded exception to that hold (D10 there), not a lifting of it: step 2.3 of
+that roadmap compares two-lane against one-lane drains on cost, rate-limit
+pauses, conflicts, follow-up fixes and roadmaps archived, and a negative or
+split result goes back to the council. Until then the cap stays at two and is
+never raised. The shape:
 
 - **Cap: two lanes** in the first iteration — a recorded decision
   (`decision 2026-08-20`, AI council 2/2 on the `autonomy-defaults-sheet`
