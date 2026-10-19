@@ -198,9 +198,10 @@ NEVER "ALWAYS FORK" — THE BENEFIT CANNOT BE PREDICTED BEFORE THE FORK HAPPENS.
 | Needs isolation, a different tool set, or nested dispatch | `subagent` — a fork cannot nest and cannot change tools |
 | Ambiguous / host has no fork primitive | `subagent` — the only primitive this suite's `Agent`-tool dispatch uses today |
 
-A fork forces background mode, which changes the tool set and therefore
-invalidates the very prefix that motivated the fork — so a slice that would
-need a different tool set mid-flight is a `subagent` candidate even when it
+A fork forces background mode. Where the host row says
+`fork_shares_cache: true` that keeps the parent's prefix and tool pool
+(observed on Claude Code 2.1.302); a fork still cannot change its tools, so a
+slice that would need a different tool set mid-flight is a `subagent` candidate even when it
 started as a fork candidate. This output never downgrades the form or tier
 decisions above; it only picks the primitive once a `parallel` / `steps` /
 `judge` form has already been selected. See
