@@ -72,6 +72,17 @@ A / B / C, and runs:
 Facts are settled by the tree, never by majority. A minority finding is
 accepted or rejected with a reason, never dropped (`auditMinorityRetention`).
 
+**After every exchange the run prints the gate's numbers** — `reason`,
+`settleable`, `band` and `estimate`, the four fields `analysis_gate.ts`
+returns. A gate whose numbers stay inside the process cannot be audited
+afterwards: the run reads as *"it ran one more round"* with no trace of why.
+
+**An offer is not a decision.** `offer: true` says a further round is
+affordable and plannable, never that it happens. A further round runs only on
+a **recorded council** verdict or a **recorded owner** answer, written where
+the run's reader finds it; the estimate is an input to that decision and never
+a substitute for it.
+
 ## Evidence tiers
 
 | Tier | Means | Counts for stopping or "verified" |
