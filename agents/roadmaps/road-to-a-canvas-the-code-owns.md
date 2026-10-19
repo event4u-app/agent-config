@@ -302,7 +302,7 @@ deleted or left as a silent twin without a row the user has seen.
       `--update-snapshots` on a visual runner warns with the acceptance step. Warn,
       never block (`block_config_weakening.ts:28-33`). Measure the hook bundle
       before and after.
-      (2026-10-18: own PR, the hook is a governance surface with its own ratification; bundle 1,547,451 to 1,548,609 B of 1,550,000 B; reshaped after council review rounds 1 and 2.)
+      (2026-10-18/19: own PR, the hook is a governance surface with its own ratification; six council rounds, ratified `confirmed-non-expanding` 2/2 in round 6; bundle 1,546,036 B of 1,550,000 B.)
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts -t snapshot --reporter=verbose` -> /✓.*snapshot/
 - [x] **7.2 Baseline stamp.** Baselines touched in a run are listed in the ledger
       with the projection commit; `verify` reports a baseline older than the current
