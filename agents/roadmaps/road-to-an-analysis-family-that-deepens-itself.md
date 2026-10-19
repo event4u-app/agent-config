@@ -4,7 +4,8 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-s verified at 085ec41ff that the practised analysis pipeline (independent analysts, three deepening loops each, an exchange that deepens three more times, a gain-gated extra round, a final inbox pass landing ready roadmaps, a ready PR) exists nowhere in the tree: no analyze command resolves its scope, the four exchange instruments in src/scripts/ai_council/ have zero production callers, analyze:inbox forbids the PR every round ends in, and a module without a marker resolves to the repository root (reproduced on a fixture). No active, parked or stub roadmap owns this: agent-config roadmap:context reports no sibling on the topic across 1,069 roadmap files, and a grep for repo-loop over agents/roadmaps and src returns nothing. This is the third arrival of the subject (inbox-2026-09-r, inbox-2026-09-aa, inbox-2026-10-s) and the first with an explicit owner order to build it; folding it into a neighbour would bury a four-command surface change inside a roadmap that owns a different defect."
-estate_growth_exempt: "Authorises exactly two dimensions for this change: active_roadmaps +1 (this file, the only landing of a subject arriving for the third time, ordered by the owner on 2026-10-15) and open_blockers +2 (source-fetch-authorization and analyst-cli-agency). Both blockers are owner-reserved trust boundaries a council cannot clear: the first restates a fetch decision the parked observation roadmap already records as the maintainer's alone, the second widens the agency of binaries the council doctrine defines as oracles. Each blocks one deferred step only (4.2b, 2.4b); every other step, including the read-only first slice, runs without them."
+estate_growth_exempt: "open_blockers +4, active_roadmaps +0, nothing archived — four blockers discovered while doing the work. Each was already a real hold stated in this file's own prose or screen note: 3.5 (its replay round is gitignored and absent from every checkout), 6.2b (the rename moves the file carrying step 4.1's claim pin), 6.5 (the observation slots belong to a claim parked behind two owner-reserved blockers) and 6.6 (zero of the ten runs it reads exist). A prose hold is invisible to screenRoadmap, which read all 14 open items as runnable and dispatched a drain lane onto four steps none of which was runnable; registering them is what makes the file read decide instead of continue. All four are owner questions this lane holds no channel to ask, so none could be closed instead of filed. This supersedes the previous claim of active_roadmaps +1 and open_blockers +2 (source-fetch-authorization, analyst-cli-agency), both now resolved with their only blocked sub-steps 4.2b and 2.4b closed on 2026-10-18; this change also corrects both rows, which still claimed those sub-steps were open."
+
 relates:
   - slug: road-to-a-retro-the-merge-runs
     relation: extends
@@ -28,13 +29,10 @@ relates:
 # Road to an analysis family that deepens itself
 
 > **Source:** `agents/tmp.old/inbox-2026-10-s/` — the owner's transcript of
-> 2026-10-15 (binding), two seed plans and two exchange-round plans from three
-> separate sessions, and one two-seat council review of an earlier revision
-> (all proposals; Source A = one outside session's seed and exchange final,
-> Source B = a second outside seed, Source C = this host's exchange output).
-> Verified claim by claim against `085ec41ff` on 2026-10-15;
-> the plans were drafted against `0c2abb297`, and of the five commits between,
-> only `26dd1905e` and `7c728f35b` touch this family (`analyze/repo` § 2b).
+> 2026-10-15 (binding) plus four outside plans and one council review (all
+> proposals). Verified claim by claim against `085ec41ff`; the source set, its
+> three coded sessions and the drafting-pin delta are in § Source disposition's
+> evidence page.
 >
 > **Arrivals:** 3 — latest `inbox-2026-10-s` (2026-10-15); earlier:
 > `inbox-2026-09-aa` (declined: "a naming the owner stated wanting, not a
@@ -75,6 +73,7 @@ verdict). Every loop is capped, every run leaves a `run.json` the retro reads.
 ## Context — what the tree shows at `085ec41ff`
 
 Findings F1–F18, each with its anchor, moved verbatim to `agents/evidence/analysis/analysis-family-context-and-sources-085ec41ff.md`.
+Step completion records live in `agents/evidence/analysis/analysis-family-step-records.md`; a step row cites it as `record § N`.
 
 ## Phase 1 — Decide the shape before building it
 
@@ -86,44 +85,20 @@ Findings F1–F18, each with its anchor, moved verbatim to `agents/evidence/anal
       so `harvest` collides with the command feeding this one. `analyze:repo`
       and `analyze:reference-repo` stay `replaces:` aliases. Reversible-internal.
       verify: `agents/evidence/council/analysis-family-naming.md` exists and names
-      the chosen door, and step 1.2's ADR cites it. Done 2026-10-18: the council
-      (2/2 seats, peer review, $0) converged on a fourth name, `analyze:reference`;
-      ADR-288 D1 cites the record.
-- [x] **1.2 One ADR for the family.** Records: the four doors (the foreign-source
-      door per 1.1; `optimize:deep` renamed `analyze:and-optimize` with an alias;
-      `analyze:pr` new; `analyze:inbox` as the final stage); the analyst class
-      beside council member and implementer (D3); rounds under
-      `agents/runtime/analysis/<round-id>/` (D9); the second chaining exception —
-      a door invokes stages, never another door; the changed default end state
-      (ready PR, `--mode=plan` and `--no-pr` stop after validation without a
-      push — an explicit contract change, not a silent one); the push model
-      (D7); the owner's fetch and analyst-agency answers (D17); ADR-118 conformance — every loop, round and fix cycle carries a
-      numeric cap in the door's `limits:` block, no run-until-condition; no
-      `docs/contracts/` loop contract (D10). Alternatives: keep the optimize
-      cluster; one monolithic `/analyze`.
+      the chosen door, and step 1.2's ADR cites it. Done 2026-10-18; record § 1.1.
+- [x] **1.2 One ADR for the family.** Records the four doors, the analyst class,
+      the round layout, the chaining exception, the changed default end state, the
+      push model, both owner answers and ADR-118 conformance; what each clause
+      says, and the two alternatives weighed, are in record § 1.2-spec.
       verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0 — and one
       new file under `docs/decisions/` reads `status: accepted` and names all
-      four doors. Done 2026-10-18:
-      `docs/decisions/ADR-288-analysis-family-one-engine-four-doors.md`, both
-      owner answers recorded as D7 and D8.
+      four doors. Done 2026-10-18; record § 1.2.
 - [x] **1.3 The context file.** `src/agent-src/contexts/execution/analysis-loop.md`,
-      loaded on demand (0 standing tokens): vocabulary (*pass* is an inbox
-      extraction read, *loop* a deepening iteration, *round* one exchange); the
-      brief lifecycle (frozen after scope resolution and at most one blocking
-      scope question; a mid-run owner message opens a new brief revision,
-      recorded); the loop shape (`Loop N/M — lens — falsifiable goal — inputs —
-      must produce — stop-if`); the lenses of 2.3 and 2.5; evidence tiers
-      (`executed`, `read`, `claimed`, `inferred` — only the first two count for
-      stopping or "verified"); council roles (seat, synthesizer, gate judge;
-      quorum two seats from two providers, else `single-voice`); the `handoff-v1`
-      shape for external analysts (frontmatter `handoff: v1`, `phase`, `loop`,
-      `pin`, `consolidates:` — the key `lint_consolidation_lineage` reads;
-      sections Findings vs tree · Kills · Decisions · Steps with `verify:` · Loop
-      log; source names only in an `*.annex.md`).
+      loaded on demand (0 standing tokens): vocabulary, brief lifecycle, loop
+      shape, the lenses of 2.3 and 2.5, evidence tiers, council roles and the
+      `handoff-v1` shape — each clause in record § 1.3-spec.
       verify: `./scripts-run src/scripts/check_references` -> 0 — and each of the
-      four door files links the context file. Done 2026-10-19: `analyze:pr`
-      (5.2) links it as the fourth door, beside `analyze:repo`, `analyze:inbox`
-      and `analyze:and-optimize`; `check_references` -> 0.
+      four door files links the context file. Done 2026-10-19; record § 1.3.
 - [x] **1.4 Pre-register before any code.** In the ADR of 1.2: the metric per
       door, always a count of decidable items — source door: rows anchored on
       both sides (today's `analyze/repo` metric); and-optimize: steps with a
@@ -135,10 +110,7 @@ Findings F1–F18, each with its anchor, moved verbatim to `agents/evidence/anal
       among them), and the falsification rule: a default whose stage moves the
       metric by zero on more than half of the first ten runs is lowered.
       verify: `grep -c 'falsification' docs/decisions/ADR-*analysis-family*.md` -> /[1-9]/
-      ≥ 1 and the ADR names a metric for each of the four doors. Done 2026-10-18
-      in ADR-288 D9. The 40-file small-scope size and the 1,500,000-token round
-      ceiling are stated defaults under its Assumptions, not measurements; the
-      slicing size is the inbox's own measured 400 KB / 5-topic threshold.
+      ≥ 1 and the ADR names a metric for each of the four doors. Done 2026-10-18; record § 1.4.
 
 **Exit:** ADR accepted, council record present, context file linked. **Rollback:**
 the ADR moves to `superseded`; nothing else exists yet.
@@ -182,31 +154,17 @@ the ADR moves to `superseded`; nothing else exists yet.
       refuses an illegal transition, and stops at the budget cap in
       `handed-back`. Done 2026-10-16 (resume and budget cases seen red).
 - [x] **2.3 Lenses and the loop ledger (directive c).** Each analyst runs seed +
-      three loops, each over its analysis **and** its roadmap: **Coverage** (what
-      is there; code, not the README; what is wrongly marked missing),
-      **Adversary** (every retained item tested against named counter-hypotheses
-      — already present, contradicts a recorded decision, only different, cost,
-      license — killing nothing is legal when every test is recorded),
-      **Overbuild & sequencing** (smallest rung, duplicates folded, order). Each
-      loop appends a ledger row: lens, added / changed / killed items, each with
-      an evidence object (source identity and digest, method, claim supported or
-      refuted, tier). A loop with no `executed` or `read` evidence tied to a
-      changed conclusion is `no-external-signal` and does not count. All three
-      lenses always run; loops 4–5 (`--loops`, cap 5) run only while the previous
-      loop added a top-tier item; the summary prints the real count.
+      three loops over its analysis **and** its roadmap — Coverage, Adversary,
+      Overbuild & sequencing — each appending a ledger row with an evidence
+      object; the three lens definitions, when a loop counts as
+      `no-external-signal`, and the loops 4–5 condition are in record § 2.3-spec.
       verify: `npx vitest run tests/scripts/analysis_ledger.test.ts` -> 0 — rejects a
       loop without top-tier evidence, never stops before the three lenses ran,
       and stops loop 4 after a plateaued loop 3. Done 2026-10-16 (seen red).
-- [x] **2.4 The analyst class (directive c).** Reads the scope (the web once
-      `source-fetch-authorization` allows), writes only into its own round
-      folder, never runs project scripts, never pushes. Modes: `subagent` (same
-      family, fresh context) and `external` (a `handoff-v1` file the owner drops
-      into `agents/tmp/<round-id>/` — today's practice). Every
-      analyst gets the same brief; outputs carry family and `context_relation`
-      from `src/scripts/_lib/review_independence.ts`; no seed or deepen output
-      sees another analyst's; a same-family analyst is never stamped
-      cross-family. Default 3 analysts; `--quick` or a scope under the
-      pre-registered size runs 1 analyst and no exchange.
+- [x] **2.4 The analyst class (directive c).** Reads the scope, writes only into
+      its own round folder, never runs project scripts, never pushes; modes
+      `subagent` and `external`, one shared brief, independence stamps, default 3
+      analysts with a `--quick` single-analyst path — record § 2.4-spec.
       verify: a fixture round with two `subagent` analysts and one `external`
       drop yields three independence-stamped outputs with identical brief
       digests, none referencing another before the exchange; a `--quick` run
@@ -215,12 +173,7 @@ the ADR moves to `superseded`; nothing else exists yet.
       the council's binaries under a separate analyst bound in
       `cli_agency_bounds.ts`.
       verify: a probed binary runs a fixture analysis read-only and its output is
-      stamped `cross-family`. Done 2026-10-18: `ANALYST_BOUNDS` in
-      `cli_agency_bounds.ts` beside the unchanged seat bounds, `cli` mode and
-      `cliAnalystCommand` in `analysis_analysts.ts` (seen red). Live probe
-      `agents/evidence/analysis/analyst-cli-profile-probe-2026-10-18.md`: claude
-      and codex read the fixture and refused the sentinel; gemini drops its
-      bound in an untrusted folder and is refused.
+      stamped `cross-family`. Done 2026-10-18; record § 2.4b.
 - [x] **2.5 Exchange that deepens instead of agreeing (directive c).** Each
       analyst receives the others' final analysis and roadmap, relabelled A/B/C,
       and runs three reconcile loops: **Inventory** (every foreign claim checked
@@ -233,21 +186,11 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: a fixture exchange records the cross-exam targets verbatim, a
       disagreement ledger per analyst and a minority audit with zero silent
       drops. Done 2026-10-17 in `src/scripts/analysis_exchange.ts` (tier settlement and silent-drop cases seen red).
-- [x] **2.6 Council as judge, then the gain gate (directive d).** The council
-      receives the converged outputs (host unmarked, `council run --input-mode
-      roadmap --peer-review`, prompts stored beside the verdict) and judges only
-      what stays contested: priorities, integration risk, judgement calls.
-      Conflicts resolve by tier; equal-tier contradictions stay named; on safety
-      or data-integrity questions a critical dissent outweighs a majority; a
-      failed seat degrades to `single-voice`, said. Then `evaluateStop`
-      (anti-conformity repair before the cost stop) and `scoreNextCall` on the
-      disagreement ledger, as an estimate. Until 6.6 calibrates it, one more
-      round is offered only when a named open conflict or a high-impact
-      `claimed`-tier item has an executable verification plan inside the
-      remaining budget. The council decides first; on a split, or above the
-      ceiling, the owner gets **one** question — items it would settle, cost, a
-      gain band (low / medium / high with reasons, no uncalibrated percentage),
-      options *one more / focused on the named items / stop*. Cap: three rounds.
+- [x] **2.6 Council as judge, then the gain gate (directive d).** The council judges
+      only what stays contested; conflicts resolve by tier; then `evaluateStop`
+      and `scoreNextCall` decide whether one more round is offered, the council
+      first and the owner once — the ordering, the quorum rule, the gain band
+      and the three-round cap are in record § 2.6-spec.
       verify: ledger fixtures — plateaued, conflict with a plan, conflict without
       a plan, exhausted arguments — produce no offer, one offer, no offer, no
       offer; a one-seat fixture is labelled `single-voice`. Done 2026-10-17 in `src/scripts/analysis_gate.ts` (exhausted and critical-dissent cases seen red); the gate composes the instruments, the council call itself stays with the doors. Open owner question (council test review of PR #2432, 2026-10-17, both seats): the gate withholds a round when `evaluateStop` says the arguments are exhausted and reports no saved call or saved cost for it; whether a withheld round counts as a saved call, and where that figure is reported, is owner policy and is not decided here. The early-stop savings test pins today's behaviour and no longer claims savings are zero. The same review fixed three gate defects: the round cap is checked before the predicate, settleable items must fit the remaining budget together, and a conflict with no sides is refused.
@@ -296,27 +239,16 @@ two new scripts and the context file are additive; deleting them restores today.
       verify: a publication fixture refuses a staged file outside the allowed
       set, a re-run opens no second PR, a fourth red CI round ends in
       `handed-back`, and the opened PR reads `isDraft: false` in
-      `gh pr view --json isDraft`. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 3.3.
+      `gh pr view --json isDraft`. Done 2026-10-18; record § 3.3.
 - [x] **3.4 `analyze:inbox` becomes the final stage.** Replace the
-      branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
-      engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
-      command reads a runtime round (`agents/runtime/analysis/<round-id>/`) plus
-      the owner's drops under `agents/tmp/<round-id>/` as one union, skips the
-      Phase 1 rename for opaque ids, and reads lineage from the round manifest.
-      Directives by provenance: current-session user turns bind; user turns of a
-      structurally valid transcript bind unless another input contradicts them;
-      heuristically recovered roles never bind automatically (a material one
-      joins 2.7's batch); AI turns are claims. One final Convergence loop runs
-      over the surviving roadmaps against the tree, every transcript constraint
-      and every owner directive. A round above 1.4's slicing size runs as
-      parallel lanes, **each with its own census and point ledger**, folded once
-      — the owner never types the split. `corrected-from-reproduction`: the plans
-      sliced without per-lane ledgers, the shape the inbox's Phase 2b measured
-      as the lossiest.
+      branch/worktree/PR ban with the engine's publish step; read the runtime
+      round and the owner's drops as one union; bind directives by provenance;
+      run one final Convergence loop; split a large round into lanes with their
+      own ledgers — each clause in record § 3.4-spec.
       verify: `grep -c 'NEVER CREATE A BRANCH'
       src/domains/analysis-workbench/analyze/inbox/command.md` is 0 (1 today);
       `analyze/inbox/evals/triggers.json` holds a `--no-pr` case; the final
-      loop's ledger row names every directive it checked. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 3.4.
+      loop's ledger row names every directive it checked. Done 2026-10-19; record § 3.4.
 - [x] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
       `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of them seven
       files) with `--no-pr`, no network and `subagent` analysts — the first slice
@@ -328,7 +260,9 @@ two new scripts and the context file are additive; deleting them restores today.
       inbox reads a round union (3.4), but the replay is a model-driven run —
       three `subagent` analysts with seed, three lenses and an exchange over a
       452 KB round that lives only in the maintainer's local `agents/tmp.old/`
-      — and needs its own session, not a drain lane.* Done 2026-10-19: `validated`, 0 remote calls, 17-file lineage, 0 roadmaps per topic (15 owned arrivals); record: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`.
+      — and needs its own session, not a drain lane.* Done 2026-10-19 in its
+      own session: `validated`, 0 remote calls, 17-file lineage, 0 roadmaps per
+      topic (15 owned arrivals); record: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`.
 
 **Exit:** a replayed round lands validated `ready` roadmaps locally; 3.3 green on
 a fixture remote. **Rollback:** revert 3.4's command edit; the inbox returns to
@@ -365,7 +299,7 @@ today's analysis-only behaviour.
       in `intake.md`.
       verify: a connected fixture run's ledger carries one coded web row and no
       source name in any tracked output; a `--no-network` run completes labelled
-      degraded. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.2b.
+      degraded. Done 2026-10-18; record § 4.2b.
 - [x] **4.3 Anchor profiles — defects and opportunities (directive g).** The
       anchor table reads what the scope has, in order: failing or skipped tests,
       open issues (`gh` when present), TODO/FIXME census, roadmaps, ADRs,
@@ -377,7 +311,7 @@ today's analysis-only behaviour.
       `visibility: internal` (F17).
       verify: a run against a consumer fixture without `docs/CLAIMS.md` produces
       a non-empty typed anchor table or states feature mode, and
-      `./scripts-run src/scripts/lint_framework_leakage` passes on the door files. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.3.
+      `./scripts-run src/scripts/lint_framework_leakage` passes on the door files. Done 2026-10-18; record § 4.3.
 - [x] **4.4 Several sources, one gap one roadmap; prompts for external
       analysts (directive i).** `<door> <a> <b> …` runs one lane per source and
       folds so one gap is one roadmap; `analyze:roadmap-repos` keeps dispatching
@@ -386,7 +320,7 @@ today's analysis-only behaviour.
       sessions outside this host, replacing the re-typed one.
       verify: a two-source fixture yields one roadmap for a shared gap, and
       `--emit-prompts` output contains the `handoff: v1` frontmatter block and
-      all three lens questions. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.4.
+      all three lens questions. Done 2026-10-18; record § 4.4.
 - [x] **4.5 `analyze:and-optimize` (directive a).** `optimize:deep` moves to
       `analyze/and-optimize/` with `replaces: [optimize-deep, optimize:deep]`;
       its `limits:` block and `tests/scripts/optimize_deep_limits.test.ts` carry
@@ -396,7 +330,7 @@ today's analysis-only behaviour.
       stay as they are (D11).
       verify: the carried limits test passes at the new path, `optimize:deep`
       still resolves in the projected tree after `task generate-tools`, and in a
-      module fixture every reader's path lies under the module root. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 4.5.
+      module fixture every reader's path lies under the module root. Done 2026-10-19; record § 4.5.
 
 **Exit:** the source door and and-optimize complete a fixture run each from a
 subfolder and from a module. **Rollback:** the `replaces:` aliases keep the old
@@ -420,7 +354,7 @@ names; revert the move and the aliases.
       introduced here or pre-existing. `--comment` posts; default posts nothing.
       verify: a fixture PR with a planted defect reports it with `file:line`; a
       clean fixture reports "no finding above threshold" and makes no `gh`
-      write call. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 5.2.
+      write call. Done 2026-10-19; record § 5.2.
 - [x] **5.3 `--optimize` (directive a).** Eligibility first: PR open, head branch
       writable, not a fork — otherwise a patch file plus the verdict. Each fix
       records one test disposition (regression test seen red, existing test seen
@@ -430,7 +364,7 @@ names; revert the move and the aliases.
       three rounds. Never merges, never approves its own changes.
       verify: a fixture PR converges in at most three rounds with one
       disposition per fix, a moved-head fixture stops before pushing, and a fork
-      fixture yields a patch file. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 5.3.
+      fixture yields a patch file. Done 2026-10-19; record § 5.3.
 
 **Exit:** the three fixtures above green. **Rollback:** delete the new command
 file; `council:pr` is unchanged.
@@ -442,7 +376,7 @@ file; `council:pr` is unchanged.
       pr; the escape lists every `routes_to` entry, counted from `routes_to`
       rather than written as a number.
       verify: the dispatcher's eval set routes one prompt per `routes_to` entry
-      to that entry. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 6.1.
+      to that entry. Done 2026-10-19; record § 6.1.
 - [x] **6.2 Registries and references.** `docs/contracts/command-clusters.md`,
       `src/flows/surface-map.yaml`, `docs/command-flows.md`, `docs/catalog.md`,
       the analysis-workbench and meta READMEs, `pack.yaml`, the evals, both
@@ -450,7 +384,7 @@ file; `council:pr` is unchanged.
       `optimize-deep`.
       verify: `./scripts-run src/scripts/check_references` -> 0 — and
       `grep -rn 'optimize:deep' src docs | grep -v replaces` returns only alias
-      lines. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 6.2.
+      lines. Done 2026-10-19; record § 6.2.
 - [ ] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
       it `analyze:reference`; it still ships as `analyze-repo` (the skills and
       the `external-reference-deep-dive` rule name it correctly today). Moving
@@ -460,13 +394,14 @@ file; `council:pr` is unchanged.
       or the rename lands after the observation runs.
       verify: `analyze/reference/command.md` exists with `replaces:` carrying
       `analyze-repo`, `analyze:repo`, `analyze-reference-repo` and
-      `analyze:reference-repo`, and the observation roadmap names the move. *Council 2026-10-19 split (D19): owner decision.*
+      `analyze:reference-repo`, and the observation roadmap names the move. *Council 2026-10-19 split 1:1 (D19): owner decision.*
+      <!-- blocked-by: source-door-rename-waits-on-the-claim-pin | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
 - [x] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
       exchange — top-tier items added / changed / killed, `already-fixed` rate,
       gain estimate, seats used and failed, roadmaps emitted, recurrence hits,
       tokens, wall-clock; question and CI-round counts via `probe_turnaround`.
       verify: after a fixture run `run.json` validates against its schema and
-      carries one row per analyst and loop. Done 2026-10-18; record: `agents/evidence/analysis/analysis-family-step-records.md` § 6.3.
+      carries one row per analyst and loop. Done 2026-10-18; record § 6.3.
 - [x] **6.4 Retro unit `analysis-run` (directive h).** Add the unit kind as a
       step plus an `Arrivals:` line to `road-to-a-retro-the-merge-runs` Phase 1
       (owner-first): its fact reader reads `run.json` and reports adoption (done
@@ -480,26 +415,36 @@ file; `council:pr` is unchanged.
       repository as the observation runs of `reference-loop-upgrade-value`, with
       the shadow arm its protocol requires — or decline, recorded.
       verify: `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
-      records the offer and its answer. *Council 2026-10-19 split (D19): owner decision.*
+      records the offer and its answer. *Council 2026-10-19 split 1:1 (D19): owner decision.*
+      <!-- blocked-by: observation-slots-are-the-claim-owners-to-spend | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
 - [ ] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
       rule and slicing size from `run.json` under 1.4's falsification rule (one
       vs three analysts, one vs three loops, with and without the exchange);
       publish nulls; lower a stage that moved nothing.
       verify: the ADR of 1.2 records the ten-run reading, or states that fewer
       than ten runs exist.
+      <!-- blocked-by: ten-recorded-runs-do-not-exist | asked: no — nothing to ask until ten runs exist; the batch belongs to the next owner round -->
 
 **Exit:** router and registries consistent; `run.json` read by the retro.
 **Rollback:** router rows are additive; revert them.
 
 > **Screen 2026-10-18 (PR #2461).** Open and buildable, next in order: 4.5, the `analyze:pr` command (5.2, then 1.3), 3.4, 6.1, 6.2, then the 3.5 replay.
 > **Screen 2026-10-19.** 1.3, 3.4, 4.5, 5.2, 5.3, 6.1 and 6.2 closed. Open: 3.5 (a model-driven replay, own session), 6.2b (rename, waits on the 4.1 claim pin).
-> **Screen 2026-10-19, later.** 3.5 replayed and validated; AC-1–AC-10 closed. Open: 6.2b and 6.5 (owner, D19), 6.6 (ten runs; one exists).
 > Gated: 6.5 waits on the observation roadmap's answer; 6.6 waits on ten recorded runs (zero exist).
+> **Screen 2026-10-19b (drain lane).** Nine criteria closed on executed evidence;
+> AC-5 held with 3.5. All four open STEPS carried a prose-only hold, so the queue
+> read its 14 open items — 4 steps plus 10 criteria — as 14 runnable and dispatched
+> a lane. The criteria were real work and nine of them closed here; not one of the
+> four steps was runnable. With the holds registered the reading is `open 5 ·
+> runnable 0 · decide`. *Not taken:* the `later/` disposition — the gates are owner questions,
+> not external triggers, and moving the file would repath its slug in ADR-288,
+> three roadmaps and six evidence files for no change in what runs.
+> **Screen 2026-10-19c.** 3.5 replayed in its own session and validated; AC-5 closed with it. Open: 6.2b and 6.5 (owner, D19 — the council split), 6.6 (ten runs; one exists).
 
 ## Blockers
 
 ### blocker: source-fetch-authorization
-- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report: an invocation naming a source authorises read-only fetches of that source plus the research step for that run; secrets and private network content stay excluded. Step 1.2's ADR records it, and the observation roadmap's `entry_condition` now says so (D17); step 4.2b is open.
+- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report: an invocation naming a source authorises read-only fetches of that source plus the research step for that run; secrets and private network content stay excluded. Step 1.2's ADR records it, and the observation roadmap's `entry_condition` now says so (D17). Step 4.2b, the only step it ever blocked, closed on 2026-10-18 — corrected 2026-10-19, this line still read "step 4.2b is open".
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 4.2b only (network sources and web research); local sources, every other phase and the read-only first slice run without it
@@ -510,7 +455,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** the ADR of step 1.2 records the option and the observation roadmap's `entry_condition` agrees with it.
 
 ### blocker: analyst-cli-agency
-- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report: `cli:<provider>` analysts run under a separate read-only analyst profile in `src/scripts/ai_council/cli_agency_bounds.ts`; council seats stay oracles. Step 1.2's ADR records it (D17); step 2.4b is open.
+- **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report: `cli:<provider>` analysts run under a separate read-only analyst profile in `src/scripts/ai_council/cli_agency_bounds.ts`; council seats stay oracles. Step 1.2's ADR records it (D17). Step 2.4b, the only step it ever blocked, closed on 2026-10-18 — corrected 2026-10-19, this line still read "step 2.4b is open".
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 2.4b only; `subagent` and `external` analysts proceed and are stamped `same-family` honestly
@@ -519,6 +464,50 @@ file; `council:pr` is unchanged.
 - **If you do nothing:** analysts are `subagent` or `external`; cross-family analysis happens only through owner-dropped `handoff-v1` files.
 - **What to do:** pick exactly one — (a) allow `cli:<provider>` analysts under a separate read-only analyst profile in `src/scripts/ai_council/cli_agency_bounds.ts`, recorded in the ADR of step 1.2; or (b) cross-family analysis only through the `external` mode; or (c) postpone until `run.json` shows whether a same-family exchange adds top-tier items (step 6.6).
 - **Resolved when:** the ADR of step 1.2 records the option.
+
+### blocker: replay-round-is-maintainer-local
+- **Status:** open — registered 2026-10-19 from prose that read runnable to the drain queue.
+- **Owner:** user
+- **Ownership:** product-owned
+- **Blocks:** step 3.5 and AC-5 only; every other step and criterion of this file is closed or held elsewhere
+- **Question:** Where does the 3.5 replay run? Its named input, `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of seven files, 452 KB), is gitignored and absent from every checkout and worktree of this repository; the replay is also a model-driven run — three `subagent` analysts, seed plus three lenses, then an exchange — not a script a lane can execute.
+- **Recommendation:** the maintainer runs it in an interactive session on the machine that holds the round, with `--no-pr`, no network and `subagent` analysts, and drops the resulting `run.json` under `agents/runtime/analysis/`. Nothing a lane can substitute for it produces the evidence AC-5 asks for.
+- **If you do nothing:** 3.5 and AC-5 stay open, 3.3 stays disabled on a fixture remote, and the engine ships verified on fixture rounds only — which is what the closed criteria above say, honestly, today.
+- **What to do:** pick exactly one — (a) the maintainer runs the replay in an interactive session and records it; or (b) a committed fixture round replaces `agents/tmp.old/inbox-2026-10-s/` as 3.5's target, and the step is rewritten to name it; or (c) 3.5 and AC-5 are cancelled and the engine is accepted on fixture evidence alone.
+- **Resolved when:** a replay run exists with its lineage table and `run.json`, or the step names a committed target, or the owner cancels it.
+
+### blocker: source-door-rename-waits-on-the-claim-pin
+- **Status:** open — registered 2026-10-19; step 6.2b stated the hold in prose, which the drain queue cannot read.
+- **Owner:** user
+- **Ownership:** product-owned
+- **Blocks:** step 6.2b only; every other registry row of Phase 6 landed with the door under its current name
+- **Question:** May `analyze/repo/command.md` move to `analyze/reference/command.md` before the observation runs? The file carries the five mechanisms pinned by step 4.1 for the pre-registered claim `reference-loop-upgrade-value`, and the pin is checkable only as `git diff 835660b0d..HEAD -- <that path>` — a path a rename removes.
+- **Recommendation:** record the move as a post-pin known delta in `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` first, then rename. That file's own § Claim pin already carries a registration-to-pin delta table; a post-pin section is additive and keeps the pin checkable. This lane did not write it because the claim's integrity is the owner's, and that roadmap states in two places that a lane holds no authority to edit its pinned record.
+- **If you do nothing:** the door keeps shipping as `analyze-repo`; ADR-288 D1 and the skills already name `analyze:reference`, so the tree stays one rename away from agreeing with itself, and `analysis_family_aliases.test.ts` pins the current spelling so the drift cannot widen silently.
+- **What to do:** pick exactly one — (a) record the move as a post-pin known delta in the observation roadmap, then land the rename with all four `replaces:` spellings; or (b) hold the rename until the observation runs are done; or (c) drop the rename and amend ADR-288 D1 to keep `analyze:repo`.
+- **Resolved when:** the observation roadmap names the move, or the observation runs are recorded, or ADR-288 D1 is amended.
+
+### blocker: observation-slots-are-the-claim-owners-to-spend
+- **Status:** open — registered 2026-10-19; step 6.5 stated the hold in a screen note, which the drain queue cannot read.
+- **Owner:** user
+- **Ownership:** product-owned
+- **Blocks:** step 6.5 only
+- **Question:** Are the first two source-door runs on this repository offered as the observation runs of `reference-loop-upgrade-value`? The offer is recorded in a roadmap parked behind two owner-reserved blockers of its own (`shadow-pin-is-post-upgrade`, `fetch-is-owner-reserved`), and an invalid pair spends a slot that cannot be withdrawn from a pre-registered measurement.
+- **Recommendation:** decline for now and record the decline, because the shadow comparator that an observation run would be measured against is recorded there as known-invalid and un-ratified. An offer accepted against it would spend a slot on a comparison that file already calls inadmissible.
+- **If you do nothing:** step 6.5 stays open and no slot is spent — which is the safe state, and the reason this is a blocker rather than a decision a lane may take.
+- **What to do:** pick exactly one — (a) offer the first two runs with the shadow arm the protocol requires, recorded in the observation roadmap; or (b) decline, recorded there with the reason; or (c) defer until that file's own two blockers fall.
+- **Resolved when:** `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` records the offer and its answer.
+
+### blocker: ten-recorded-runs-do-not-exist
+- **Status:** open — registered 2026-10-19; step 6.6's precondition was stated only in a screen note.
+- **Owner:** user
+- **Ownership:** product-owned
+- **Blocks:** step 6.6 only
+- **Question:** May the calibration run on fewer than ten records? Nothing is contested — the step reads ten `run.json` records under `agents/runtime/analysis/`, and that directory does not exist. A falsification pass over zero runs reports nothing and would still look like a completed step.
+- **Recommendation:** leave it open until the records exist. Calibrating on fewer than ten, or recording "fewer than ten runs exist" as the reading, would close the step without answering the question it was written to answer — one versus three analysts, one versus three loops, with and without the exchange.
+- **If you do nothing:** the defaults of 1.4 stay the stated defaults they already declare themselves to be, and no stage is lowered on an unmeasured reading.
+- **What to do:** pick exactly one — (a) wait until ten runs are recorded, then calibrate; or (b) lower the threshold to a number the owner names and calibrate on that; or (c) cancel the calibration step and keep the defaults permanently.
+- **Resolved when:** ten `run.json` records exist and the ADR of 1.2 carries the reading, or the owner lowers the threshold, or the step is cancelled.
 
 ## Decisions
 
@@ -563,30 +552,44 @@ Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim t
 
 ## Acceptance Criteria
 
+Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-family-step-records.md` § AC-1 … § AC-10 (lightweight cap).
+
 - [x] AC-1 — From a subfolder each of the four doors prints the scope line before
       any read; inside an enumerated or detected module it names the module, with
       or without a marker in the module's `agents/`, and keeps the outer project
-      as `project_root`. Done 2026-10-19: `tests/scripts/analysis_target.test.ts` (subfolder, module with and without a marker) and `tests/scripts/analysis_doors_wiring.test.ts` (each door prints the line; the repo door lacked it, seen red).
+      as `project_root`. Met 2026-10-19 at contract level: the resolver is executed
+      by its suite, the printing obligation is read in each door's text — no door
+      was run, for the reason AC-9 states.
 - [x] AC-2 — Every loop, round and fix cycle of the four doors has a numeric cap in
-      a `limits:` block, and no door runs until a condition without one (ADR-118). Done 2026-10-19: `analysis_doors_wiring.test.ts` — the inbox door had no `limits:` block (seen red), now pinned and restated.
+      a `limits:` block, and no door runs until a condition without one (ADR-118).
+      Met 2026-10-19.
 - [x] AC-3 — Each seed and deepen output carries independence stamps and
       references no other analyst; each exchange records its cross-exam targets
-      verbatim, a disagreement ledger and a minority audit. Done 2026-10-19 on the 3.5 replay: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md` (stamps `same-family`, two cross-exam targets quoted verbatim, three ledgers, 0 silent drops).
+      verbatim, a disagreement ledger and a minority audit. Met 2026-10-19.
 - [x] AC-4 — After every exchange the run shows the gate's numbers, and a further
-      round happened only on a recorded council or owner decision. Done 2026-10-19: the replay's gate reads `offer: false`, `no-plannable-item`, and no further round ran (`agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`).
+      round happened only on a recorded council or owner decision. Met 2026-10-19 at
+      contract level: the gate is executed by its suite, the showing and
+      recorded-decision obligations are read in the shared context — no exchange was
+      run, for the reason AC-9 states.
 - [x] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
       roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
-      block. Done 2026-10-19 under `--no-pr`: every finding was owned, so the run landed arrivals and no roadmap (D18 governs a landing above the intake limit) (`agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`).
+      block. Done 2026-10-19 under `--no-pr`: every finding of the replayed round
+      was owned, so it landed arrivals and no roadmap (D18 governs a landing above
+      the intake limit); record: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`.
 - [x] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`
       produces a typed anchor table or states feature mode, and never presents an
-      opportunity as a defect. Done 2026-10-19: `tests/scripts/analysis_anchors.test.ts` (consumer fixture, feature mode, never-a-defect).
+      opportunity as a defect. Met 2026-10-19.
 - [x] AC-7 — `analyze:pr` without an argument on a branch with an open PR finds it
       without asking, writes nothing to the PR by default, and with `--optimize`
-      stops on a moved head and never merges. Done 2026-10-19: `analysis_pr_target`, `analysis_pr_review` and `analysis_pr_optimize` tests.
+      stops on a moved head and never merges. Met 2026-10-19.
 - [x] AC-8 — An interrupted run resumes from its last completed state without a
-      second PR or duplicated output. Done 2026-10-19: `analysis_run.test.ts` (resume in emitted, publish once per key) and `analysis_publish.test.ts` (a re-run opens no second PR).
+      second PR or duplicated output. Met 2026-10-19.
 - [x] AC-9 — `run.json` exists for every run, and the retro roadmap carries the
-      `analysis-run` unit that reads it. Done 2026-10-19: every door names `run.json` (`analysis_doors_wiring.test.ts`), the replay wrote one, `analysis_run_record --run` checks it; the retro carries step 1.5.
-- [x] AC-10 — `analyze:repo`, `analyze:reference-repo` and `optimize:deep` still
-      resolve as aliases in the projected tree. Done 2026-10-19: `dist/agent-src/commands/analyze/{repo,and-optimize}.md` carry the `replaces:` aliases after `task generate-tools`.
+      `analysis-run` unit that reads it. Met 2026-10-19: all four doors name
+      `analysis_run_record.ts` in their own flow — three did not until the R2
+      review found the gap — and the retro carries the unit.
+- [x] AC-10 — `analyze:reference-repo` and `optimize:deep` still resolve as
+      `replaces:` aliases in the projected tree, and `analyze:repo` still resolves
+      as the door's own live name until 6.2b renames it — the colon spelling is the
+      invocation form of `analyze-repo`, not a separate entry. Met 2026-10-19.

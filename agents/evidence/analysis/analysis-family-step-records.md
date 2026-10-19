@@ -97,5 +97,203 @@ remaining hits are alias lines, ADR-288's record and archived changelogs.
 
 Done 2026-10-18 in
 `src/scripts/analysis_run_record.ts` (built, validated, written atomically;
-an unread turnaround or exchange is `missing`, never 0). No door writes it
-yet: that is the door wiring of 3.4, 4.5 and 5.2.
+an unread turnaround or exchange is `missing`, never 0). Corrected 2026-10-19:
+this read "No door writes it yet: that is the door wiring of 3.4, 4.5 and 5.2"
+while all three of those steps were closed `[x]`, so the writer's only caller
+was `analyze:pr` and nothing owned the gap. All four doors now name the writer
+in their own flow, pinned per door by
+`tests/scripts/analysis_run_record_doors.test.ts`.
+
+## AC-1
+
+`analysis_target.test.ts` (15 cases) pins the resolver's module and `project_root`
+semantics; `analysis_scope_line_doors.test.ts` is the per-door half and was red on
+`analyze/repo`, which named neither the scope line nor the resolver, until its § 1
+was given both.
+
+## AC-2
+
+`analyze:inbox` was the one door shipping its caps in prose alone and now carries
+the same five keys as its siblings, pinned by `analyze_inbox_limits.test.ts` beside
+`analyze_repo_limits`, `analyze_pr_limits` and `optimize_deep_limits`.
+
+## AC-3
+
+`analysis_analysts.test.ts` (19 cases, including an output that consulted another
+analyst before the exchange, and a subagent never stamped cross-family) and
+`analysis_exchange.test.ts` (9 cases, including a minority finding dropped silently
+and one mentioned without a disposition).
+
+## AC-4
+
+`analysis_gate.test.ts` (17 cases) pinned the decision half only. The shared
+context now carries the showing half — the four returned fields printed after every
+exchange, and an offer is affordability rather than a decision — pinned by
+`analysis_gate_surfacing.test.ts`, red before the edit.
+
+## AC-5
+
+Held. The mechanism is pinned on fixture rounds (`analysis_inbox_final`,
+`analysis_publish`, `analysis_questions`); the replayed round this criterion names
+is step 3.5, whose inputs are not in the repository. Blocker
+`replay-round-is-maintainer-local`.
+
+## AC-6
+
+`analysis_anchors.test.ts` carries exactly those three cases, plus the no-signal
+fixture that states feature mode anchored on `--goal`.
+
+## AC-7
+
+`analysis_pr_target.test.ts` (6 cases), `analysis_pr_optimize.test.ts` (10,
+including a moved head stopping before the push and a fork yielding a patch) and
+`analyze_pr_limits.test.ts` (the door makes no `gh` write call and never merges).
+
+## AC-8
+
+`analysis_run.test.ts` resumes a run killed in `emitted` without re-emitting and
+reports a moved head instead of continuing; `analysis_publish.test.ts` opens no
+second PR on a re-run and hands back when the remote head moves mid-push.
+
+## AC-9
+
+Closed 2026-10-19. The first version of this section closed the criterion at
+mechanism level while three of the four doors never called the writer — found
+by the R2 review (round b, finding 1) and fixed by wiring all four, pinned by
+`tests/scripts/analysis_run_record_doors.test.ts`.
+
+`analysis_run.test.ts` persists the record under
+`agents/runtime/analysis/<round-id>/` and `analysis_run_record.test.ts` round-trips
+it with one row per analyst and loop; the retro file names `analysis-run` five
+times. Stated plainly: the evidence is fixture runs — zero production runs exist,
+which is what step 6.6 is held on, not this criterion.
+
+## AC-10
+
+`analysis_family_aliases.test.ts` reads the projected frontmatter under
+`dist/agent-src/commands/analyze/` — `analyze:reference-repo` and `optimize:deep`
+as `replaces:` entries, `analyze:repo` as the live name until 6.2b renames it.
+Sensitivity probed by removing one alias and watching the case go red.
+
+## 1.1
+
+Done 2026-10-18: the council (2/2 seats, peer review, $0) converged on a fourth
+name, `analyze:reference`; ADR-288 D1 cites the record.
+
+## 1.2
+
+Done 2026-10-18: `docs/decisions/ADR-288-analysis-family-one-engine-four-doors.md`,
+both owner answers recorded as D7 and D8.
+
+## 1.3
+
+Done 2026-10-19: `analyze:pr` (5.2) links it as the fourth door, beside
+`analyze:repo`, `analyze:inbox` and `analyze:and-optimize`; `check_references` -> 0.
+
+## 1.4
+
+Done 2026-10-18 in ADR-288 D9. The 40-file small-scope size and the
+1,500,000-token round ceiling are stated defaults under its Assumptions, not
+measurements; the slicing size is the inbox's own measured 400 KB / 5-topic
+threshold.
+
+## 2.4b
+
+Done 2026-10-18: `ANALYST_BOUNDS` in `cli_agency_bounds.ts` beside the unchanged
+seat bounds, `cli` mode and `cliAnalystCommand` in `analysis_analysts.ts` (seen
+red). Live probe `agents/evidence/analysis/analyst-cli-profile-probe-2026-10-18.md`:
+claude and codex read the fixture and refused the sentinel; gemini drops its bound
+in an untrusted folder and is refused.
+
+## 1.2-spec
+
+Records: the four doors (the foreign-source door per 1.1; `optimize:deep` renamed
+`analyze:and-optimize` with an alias; `analyze:pr` new; `analyze:inbox` as the
+final stage); the analyst class beside council member and implementer (D3); rounds
+under `agents/runtime/analysis/<round-id>/` (D9); the second chaining exception — a
+door invokes stages, never another door; the changed default end state (ready PR,
+`--mode=plan` and `--no-pr` stop after validation without a push — an explicit
+contract change, not a silent one); the push model (D7); the owner's fetch and
+analyst-agency answers (D17); ADR-118 conformance — every loop, round and fix cycle
+carries a numeric cap in the door's `limits:` block, no run-until-condition; no
+`docs/contracts/` loop contract (D10). Alternatives: keep the optimize cluster; one
+monolithic `/analyze`.
+
+## 1.3-spec
+
+`src/agent-src/contexts/execution/analysis-loop.md`, loaded on demand (0 standing
+tokens): vocabulary (*pass* is an inbox extraction read, *loop* a deepening
+iteration, *round* one exchange); the brief lifecycle (frozen after scope
+resolution and at most one blocking scope question; a mid-run owner message opens a
+new brief revision, recorded); the loop shape (`Loop N/M — lens — falsifiable goal
+— inputs — must produce — stop-if`); the lenses of 2.3 and 2.5; evidence tiers
+(`executed`, `read`, `claimed`, `inferred` — only the first two count for stopping
+or "verified"); council roles (seat, synthesizer, gate judge; quorum two seats from
+two providers, else `single-voice`); the `handoff-v1` shape for external analysts
+(frontmatter `handoff: v1`, `phase`, `loop`, `pin`, `consolidates:` — the key
+`lint_consolidation_lineage` reads; sections Findings vs tree · Kills · Decisions ·
+Steps with `verify:` · Loop log; source names only in an `*.annex.md`).
+
+## 2.3-spec
+
+Each analyst runs seed + three loops, each over its analysis **and** its roadmap:
+**Coverage** (what is there; code, not the README; what is wrongly marked
+missing), **Adversary** (every retained item tested against named
+counter-hypotheses — already present, contradicts a recorded decision, only
+different, cost, license — killing nothing is legal when every test is recorded),
+**Overbuild & sequencing** (smallest rung, duplicates folded, order). Each loop
+appends a ledger row: lens, added / changed / killed items, each with an evidence
+object (source identity and digest, method, claim supported or refuted, tier). A
+loop with no `executed` or `read` evidence tied to a changed conclusion is
+`no-external-signal` and does not count. All three lenses always run; loops 4–5
+(`--loops`, cap 5) run only while the previous loop added a top-tier item; the
+summary prints the real count.
+
+## 2.4-spec
+
+Reads the scope (the web once `source-fetch-authorization` allows), writes only
+into its own round folder, never runs project scripts, never pushes. Modes:
+`subagent` (same family, fresh context) and `external` (a `handoff-v1` file the
+owner drops into `agents/tmp/<round-id>/` — today's practice). Every analyst gets
+the same brief; outputs carry family and `context_relation` from
+`src/scripts/_lib/review_independence.ts`; no seed or deepen output sees another
+analyst's; a same-family analyst is never stamped cross-family. Default 3 analysts;
+`--quick` or a scope under the pre-registered size runs 1 analyst and no
+exchange.
+
+## 3.4-spec
+
+Replace the
+branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
+engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
+command reads a runtime round (`agents/runtime/analysis/<round-id>/`) plus
+the owner's drops under `agents/tmp/<round-id>/` as one union, skips the
+Phase 1 rename for opaque ids, and reads lineage from the round manifest.
+Directives by provenance: current-session user turns bind; user turns of a
+structurally valid transcript bind unless another input contradicts them;
+heuristically recovered roles never bind automatically (a material one
+joins 2.7's batch); AI turns are claims. One final Convergence loop runs
+over the surviving roadmaps against the tree, every transcript constraint
+and every owner directive. A round above 1.4's slicing size runs as
+parallel lanes, **each with its own census and point ledger**, folded once
+— the owner never types the split. `corrected-from-reproduction`: the plans
+sliced without per-lane ledgers, the shape the inbox's Phase 2b measured
+as the lossiest.
+
+## 2.6-spec
+
+The council
+receives the converged outputs (host unmarked, `council run --input-mode
+roadmap --peer-review`, prompts stored beside the verdict) and judges only
+what stays contested: priorities, integration risk, judgement calls.
+Conflicts resolve by tier; equal-tier contradictions stay named; on safety
+or data-integrity questions a critical dissent outweighs a majority; a
+failed seat degrades to `single-voice`, said. Then `evaluateStop`
+(anti-conformity repair before the cost stop) and `scoreNextCall` on the
+disagreement ledger, as an estimate. Until 6.6 calibrates it, one more
+round is offered only when a named open conflict or a high-impact
+`claimed`-tier item has an executable verification plan inside the
+remaining budget. The council decides first; on a split, or above the
+ceiling, the owner gets **one** question — items it would settle, cost, a
+gain band (low / medium / high with reasons, no uncalibrated percentage),
+options *one more / focused on the named items / stop*. Cap: three rounds.

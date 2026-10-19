@@ -59,6 +59,30 @@ Flags: `--triage-only` stops after Phase 2 (no deep analysis, no roadmap) ·
 `--worktree` runs the analysis itself in an isolated worktree (see below; off
 by default).
 
+## Enforced limits
+
+The frontmatter `limits:` block is the machine-readable pin
+(`tests/scripts/analyze_inbox_limits.test.ts` fails when flow and pin drift);
+the phases below are the enforcement. The fourth door of ADR-288 carries the
+same five keys as its three siblings, mapped onto the work it actually does:
+
+- `mode_default: execute` — unlike the three analysing doors, a round that
+  validates **publishes**: the run's own branch and one non-draft PR (§ Where
+  the work happens). `--no-pr`, `--no-roadmap`, `--triage-only` and `vcs: none`
+  each stop earlier, and the run says in one line which of them it obeyed.
+- `max_iterations: 3` and `hard_ceiling: 3` — the extraction loop is capped at
+  three passes (§ The three-pass contract). The ceiling equals the default
+  because no flag raises it: a fourth pass is not reachable from the surface.
+- `no_gain_stop: 1` — one pass that adds no row ends the loop; the run names
+  whether it converged or hit the cap, and these are different findings.
+- `target_metric: required` — the anchor census is counted over the source's
+  own enumerable structure **before** the first extraction (Phase 2b), so the
+  denominator the run is measured against exists before pass 1 reads anything.
+
+Per-file reproduction carries its own three-part ceiling (12 steps, 20 minutes,
+3 attempts per step, whichever fires first) — that bound is a probe budget
+rather than a loop budget, and it is stated where it fires.
+
 ## Where the work happens — and how a run ends
 
 ```
@@ -95,19 +119,6 @@ The invocation is the this-turn confirmation of exactly those objects (ADR-288
 D6/D7); [`scope-control`](../../../../rules/scope-control.md) § Git operations
 still gates every other branch, PR or worktree. `vcs: none` or `--no-pr` ends
 the run validated and local, and says so in one line.
-
-## Enforced limits
-
-The `limits:` block pins every loop of this door; the body below obeys it.
-
-- **`mode_default: execute`** — the run ends in a non-draft PR when the scope
-  has `vcs: git`; `--no-pr` stops after validation (§ Where the work happens).
-- **`max_iterations: 3`, `hard_ceiling: 3`** — extraction is at most three
-  passes, and no flag raises that (§ The three-pass contract).
-- **`no_gain_stop: 1`** — a pass 2 that adds no row ends extraction.
-- **`target_metric: required`** — the anchor census is counted before pass 1;
-  the point ledger balances against it (Phase 3).
-- Publication: at most one push plus three CI-fix rounds, then `handed-back`.
 
 ## The Iron Law
 
@@ -1214,11 +1225,16 @@ roadmap before publication, never carried into the PR.
 
 5. **Owner decisions required**, if any — the escalation block from Phase 5,
    at the top of the reply rather than at the end.
-5b. `run.json` per `src/scripts/analysis_run_record.ts`, in the run's folder
-   under `agents/runtime/analysis/<round-id>/`.
 6. One closing summary: files in, roadmaps out, items prevented by
    `already-fixed`, and steps corrected by reproduction — plus the reproduction
    ceiling that fired, if one did, and what it dropped.
+
+**Run record.** Every run writes `run.json` for its round through
+`src/scripts/analysis_run_record.ts` — one row per analyst and loop, the
+stages, seats used and failed, and the gain estimate. It is written whatever
+the run's end state, including `handed-back`, because the retro's
+`analysis-run` unit reads adoption per run and a missing record reads as a run
+that never happened. An unread turnaround is `missing`, never `0`.
 
 ## Honest enforcement — `instruction-only`
 

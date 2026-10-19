@@ -212,6 +212,13 @@ always-active PR-surface rules govern the body and reply shape; do not
 restate them here. The publish stage (`analysis_publish.ts`) does it: own
 branch only, the allowed path set, a leased push, a non-draft PR exactly once.
 
+**Run record.** Every run writes `run.json` for its round through
+`src/scripts/analysis_run_record.ts` — one row per analyst and loop, the
+stages, seats used and failed, and the gain estimate. It is written whatever
+the run's end state, including `handed-back`, because the retro's
+`analysis-run` unit reads adoption per run and a missing record reads as a run
+that never happened. An unread turnaround is `missing`, never `0`.
+
 ### Step 6 — Refinement loops (×N, execute mode only)
 
 Each loop: (a) re-read the roadmap set with fresh subagent reviewers
@@ -232,7 +239,6 @@ description's changelog section, not a comment (`no-pr-progress-comments`).
 - Central + sub-roadmaps on the branch, dashboard regenerated.
 - Council artifacts under `agents/runtime/council/` (local-only, auto-pruned).
 - A one-paragraph verdict per refinement loop: what changed, what converged.
-- `run.json` per `src/scripts/analysis_run_record.ts`, in the run's folder.
 
 ## Removal is one of the outputs
 

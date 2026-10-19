@@ -60,3 +60,14 @@ catch-up jobs → K4; blind A/B and canary → 6.6.
 
 | K14 | A separate evidence file for the directives; inbox step files; a percentage on the extra-round offer; three roadmaps instead of one | directives sit in this header; step files are `road-to-steps-the-skill-cannot-skip`'s; 2.6 gives a band; one shared first slice |
 | K15 | Source C's "evidence beyond the tree" (`--sessions=N` session digests as an input of `analyze:and-optimize`), found undispositioned by the 3.5 replay on 2026-10-19 | the scope's open roadmaps and `later/` resume conditions are already read (and-optimize Step 0.5, the anchor table); session digests stay `analyze:conformance`'s, and no owner directive asks for them; revisit if the retro's `analysis-run` reader shows a run missed a finding a session digest held |
+
+## Source set and drafting pin — moved verbatim from the roadmap header 2026-10-19
+
+`agents/tmp.old/inbox-2026-10-s/` — the owner's transcript of 2026-10-15
+(binding), two seed plans and two exchange-round plans from three separate
+sessions, and one two-seat council review of an earlier revision (all proposals;
+Source A = one outside session's seed and exchange final, Source B = a second
+outside seed, Source C = this host's exchange output). Verified claim by claim
+against `085ec41ff` on 2026-10-15; the plans were drafted against `0c2abb297`,
+and of the five commits between, only `26dd1905e` and `7c728f35b` touch this
+family (`analyze/repo` § 2b).
