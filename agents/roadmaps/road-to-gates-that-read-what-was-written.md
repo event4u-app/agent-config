@@ -231,11 +231,11 @@ changes what either gate is for.
 - It does not add a command classifier to the guard. D2 records why.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-16 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Narrowing the guard reopens the bypass its docstring records | implementation | A quoted-literal exemption is an exemption, and a creation can be written as one. | 3.3 excludes only a quoted literal passed to a command that writes nothing, and the heredoc-`makedirs` case — the exact input the raw scan exists for — is a block-case in the same test. Both polarities are asserted. | Phase 3 — The guard judges a write, not a mention |
+| 1 | Narrowing the guard reopens the bypass its docstring records | implementation | A quoted-literal exemption is an exemption, and a creation can be written as one. | **Unbuilt as of 2026-10-19 — this mitigation is planned, not in place.** A first attempt was put to the council and **refused 2/2** (`agents/evidence/ratifications/drain-road-to-gates-that-read-what-was-written-20261019z.md`) and reverted; Phase 3 carries no closed step. When rebuilt, 3.3 must exclude only a quoted literal passed to a command that writes nothing, with the heredoc-`makedirs` case — the exact input the raw scan exists for — asserted as a block-case in the same test, both polarities. | Phase 3 — The guard judges a write, not a mention |
 | 2 | The already-exists carve-out lets a rename be skipped | product | A speaking directory that exists keeps working, so nobody renames it. | That is already the behaviour on the `_PATH_KEYS` path, and the carve-out's own comment states the reason: refusing every later write wedges the round without removing the name. The rename obligation is the naming rule's, not the guard's. | Phase 3 — The guard judges a write, not a mention |
 | 3 | The lineage fix hides a real missing parent | implementation | Stripping quotes makes more strings resolve, so a genuinely absent parent could start resolving to something. | A stripped quote changes only the token boundary, never the slug; 1.1 asserts the resolved value exactly, and 2.3 pins the whole output over a real folder. | Phase 1 — The lineage gate parses what is declared |
 | 4 | The succession check mis-reads a legitimate omission as a succession | implementation | A file that declares `supersedes_proposals:` loosely gets a free pass. | 2.1 asserts the inverse pair still reports; the exemption is keyed on an explicit declaration, not on a date or an inference. | Phase 2 — The lineage gate can express direction |
