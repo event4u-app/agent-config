@@ -300,6 +300,7 @@ describe("main — the new sections", () => {
     expect(out).toMatch(/turn ends\s+3/);
     expect(out).toMatch(/structured-ask\s+1/);
     expect(out).toMatch(/usage-limit pauses\s+3 \(night 1, day 1, unknown 1\)/);
+    expect(out).toMatch(/paused nights\s+1 of 1 active night\(s\)/);
     expect(out).toMatch(/the whole refusal store, 2026-10-02\.\.2026-10-02, not the --limit window/);
     expect(out).toMatch(/turn-end refusals\s+3 in 1 session/);
     expect(out).toMatch(/language\s+2/);
@@ -307,5 +308,29 @@ describe("main — the new sections", () => {
     expect(out).toMatch(/standing rule files\s+1, 1 without/);
     expect(out).toMatch(/ready roadmaps at 0 ticked\s+\d+ of \d+/);
     expect(out).not.toMatch(/Open the PR/);
+  });
+});
+
+// Step 2.1's pre-registered rule reads paused nights over active nights, not
+// pause counts: a night is active when it holds an assistant turn, and paused
+// when it also holds a usage-limit banner. A banner on a night with no turn is
+// no observation of that night.
+describe("measureDetailed — paused nights over active nights (step 2.1)", () => {
+  it("counts distinct nights, and only paused nights that were active", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "probe-nights-"));
+    const a = (ts: string): unknown => ({ type: "assistant", requestId: ts, timestamp: ts, message: { role: "assistant", content: [{ type: "text", text: "ok" }] } });
+    const pause = (ts: string): unknown => ({ type: "system", subtype: "informational", timestamp: ts, content: "Usage limit reached · continuing automatically at 3am" });
+    const rows = [
+      a("2026-10-04T21:00:00.000Z"), // 23:00 Berlin, night 10-04
+      pause("2026-10-04T22:00:00.000Z"), // night 10-04
+      pause("2026-10-04T23:00:00.000Z"), // same night, counted once
+      a("2026-10-05T03:00:00.000Z"), // 05:00 Berlin, still night 10-04
+      a("2026-10-06T21:30:00.000Z"), // night 10-06, no pause
+      a("2026-10-07T10:00:00.000Z"), // day time, no night
+      pause("2026-10-08T21:00:00.000Z"), // night 10-08, no assistant turn
+    ];
+    fs.writeFileSync(path.join(dir, "n.jsonl"), rows.map((r) => JSON.stringify(r)).join("\n"));
+    const { throughput } = measureDetailed([path.join(dir, "n.jsonl")]);
+    expect(throughput.nights).toEqual({ active: ["2026-10-04", "2026-10-06"], paused: ["2026-10-04"] });
   });
 });
