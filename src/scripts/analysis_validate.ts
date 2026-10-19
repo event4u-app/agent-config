@@ -13,10 +13,10 @@
 import { spawnSync } from 'node:child_process';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { EVIDENCE_TIERS } from './analysis_ledger.js';
-import { RunError, transition, type RunRecord } from './analysis_run.js';
+import { RunError, loadRun, transition, type RunRecord } from './analysis_run.js';
 
 export const VALIDATION_GATES = [
     'lint_roadmap_complexity',
@@ -99,3 +99,49 @@ export function validateEmitted(input: {
     if (failures.length > 0) return { record: input.record, failures };
     return { record: transition(input.runDir, input.record, 'validated'), failures };
 }
+
+function flag(argv: readonly string[], name: string): string | null {
+    const i = argv.indexOf(`--${name}`);
+    return i >= 0 ? (argv[i + 1] ?? null) : null;
+}
+
+/**
+ * `analysis_validate --run <run-dir> --root <project-root> [--content-only] [<emitted file>…]`.
+ * `--content-only` skips the five tree gates and says so: they read this
+ * package's tree, so on another project they check nothing of it.
+ */
+export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    const runDir = flag(argv, 'run');
+    const root = flag(argv, 'root');
+    if (runDir === null || root === null) {
+        process.stderr.write('usage: analysis_validate --run <run-dir> --root <project-root> [--content-only] [<file>…]\n');
+        return 2;
+    }
+    const valued = new Set([runDir, root]);
+    const files = argv.filter((a) => !a.startsWith('--') && !valued.has(a));
+    const contentOnly = argv.includes('--content-only');
+    const runner: GateRunner | undefined = contentOnly ? () => ({ ok: true, detail: 'skipped (--content-only)' }) : undefined;
+    let record: RunRecord;
+    try {
+        record = loadRun(runDir);
+        const res = validateEmitted({ runDir, record, projectRoot: root, files, councilDissent: argv.includes('--council-dissent'), ...(runner === undefined ? {} : { runner }) });
+        for (const f of res.failures) process.stdout.write(`${f}\n`);
+        process.stdout.write(`analysis_validate: ${res.record.state}${contentOnly ? ' (tree gates skipped: --content-only)' : ''}\n`);
+        return res.failures.length === 0 ? 0 : 1;
+    } catch (err) {
+        process.stderr.write(`analysis_validate: ${err instanceof Error ? err.message : String(err)}\n`);
+        return 2;
+    }
+}
+
+function isCliEntry(): boolean {
+    if (process.argv[1] === undefined) return false;
+    try {
+        return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href ||
+            fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return false;
+    }
+}
+
+if (isCliEntry()) process.exit(main());
