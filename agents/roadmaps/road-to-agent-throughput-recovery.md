@@ -19,6 +19,9 @@ relates:
   - slug: road-to-a-cold-start-paid-once
     relation: disjoint
     note: "Owns warm workers and spawning into a rate-limit event. Phase 2 here decides whether tokens or wall-clock bind a night; that verdict is an input to it, not a re-plan of it."
+  - slug: road-to-roadmaps-finished-before-new-ones-start-carried
+    relation: disjoint
+    note: "Parked follow-up of the finish-first roadmap; it reads the next five drains for completion outcomes. Step 2.3 here re-decides the two-lane provision (D10) on cost and conflict figures; neither file re-plans the other."
 ---
 # Road to agent throughput recovery
 
@@ -232,6 +235,24 @@ the Acceptance Criteria held.
       `instruction-load-observer-has-no-scheduled-owner` in
       `road-to-a-setup-that-decides-itself` as dated evidence.
       verify: the blocker carries the line; neither depended roadmap's plan moves.
+- [ ] **2.3 Re-decide the two-lane provision (D2 of the finish-first roadmap).**
+      On 2026-10-19 the owner shipped parallel lanes under a canonical brief,
+      capped at two, while this roadmap's AC-3 and D3 still held lane changes
+      until 2.1's verdict; both council seats read that change as inside the
+      hold, and the owner decided against that reading provisionally (D10).
+      With 2.1's verdict and the same two windows, compare drain nights that
+      ran two lanes against nights that ran one, on six figures read from the
+      transcripts and `origin/main`: wall-clock per closed roadmap, tokens per
+      closed roadmap, usage-limit pauses, merge conflicts per merged PR,
+      follow-up fix commits per merged PR, and roadmaps archived per night.
+      Pre-register before reading: two lanes are **negative** when tokens per
+      closed roadmap rise by more than a quarter, or follow-up fixes or conflicts
+      per merged PR rise above their one-lane value, while roadmaps archived per
+      night do not rise. A negative or a split result goes to the AI council as
+      a re-decision of D10; a positive one records D10 as confirmed.
+      verify: a Decisions row records the six figures for both arms and the
+      verdict; on a negative or split result the council record is cited in it,
+      and `process-full` § Lanes is edited in the same change if the cap moves.
 
 ## Phase 3 — Take the CI wait out of the foreground, keep the settle
 
@@ -376,6 +397,7 @@ the Acceptance Criteria held.
 | D7 | reversible-technical | evidence | `/roadmap:next` keeps one invocation = one roadmap = one branch = one PR; no composite drain command and no bundling here | `roadmap/next/command.md:28`; merges per night are flat, work per merge fell | Phase 2 reads wall-clock-bound and lane conflicts are measured |
 | D8 | product-owned | owner | Harvest intake limit (5.3) → (a): a new inbox roadmap lands `draft` while more than 8 `ready` roadmaps sit at 0 ticked steps | owner answer 2026-10-15 to the PR #2373 report; 10 of 20 ready roadmaps at 0 that day | the 0-ticked share stays under 8 for a month, or the owner changes N |
 | D9 | reversible-technical | council:2026-10-17 | D7 revisited (3.1): no transition — (b) is not adopted, one seat chose (c) and one abstained, and under `decision-revisit-gate` an abstention escalates any later adoption of (b) rather than settling it; today's foreground wait stands until the share of `sleep-poll` that is CI polling, and how often a lane had a workable next step during a CI wait, are measured; 3.2 does not run before that | AI council 2026-10-17, anthropic + openai, 2/2 present, $0.00: anthropic (c); openai chose no option in its final round and named the obligation lifecycle (persistence, superseding push, cleanup, rollback) as unspecified; record `agents/evidence/council/ci-wait-foreground-2026-10-17.md` | more than 60 % of CI waits had a workable next step in the same lane, or `sleep-poll` is dominated by non-CI waits, or a mitigation without obligation state appears |
+| D10 | product-owned | owner | Provisional: parallel lanes ship under `process-full`'s canonical brief with a cap of two before 2.1's verdict, as a recorded exception to AC-3 and D3 rather than a lifting of them; 2.3 re-decides it | owner decision D2 of `archive/road-to-roadmaps-finished-before-new-ones-start.md` on 2026-10-19; AI council the same day, 2/2 present: both seats read the change as inside AC-3 (`openai`: the brief should wait for 2.1), split on shipping lanes | 2.3 reads negative or split, or a lane collision loses data |
 
 ## Kill register
 
@@ -411,6 +433,9 @@ the Acceptance Criteria held.
       self-repair queue.
 - [ ] AC-3 — Phase 2's verdict is recorded before any lane or settle change
       lands.
+      Exception on record, not a lifting: the owner shipped two-lane drains on
+      2026-10-19 ahead of the verdict (D10); 2.3 re-decides it, and this
+      criterion closes only once 2.3 has a recorded verdict.
 - [ ] AC-4 — Net ticked steps and merges per night exceed the baseline over two
       consecutive two-week windows, with the share of merged PRs needing a
       follow-up fix commit not above its baseline.
