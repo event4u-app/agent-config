@@ -148,12 +148,22 @@ const SHELL_TOOL = /^(bash|bashtool|shell|launch[-_]process)$/i;
 /** A visual-runner baseline update, answered with the acceptance step. Warn only. */
 export function snapshotUpdateWarning(tool: string, command: unknown): string | null {
     if (!SHELL_TOOL.test(tool) || typeof command !== 'string') return null;
-    if (!/--update-snapshots(?=\s|$)/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
+    if (!/--update-snapshots(?!=(false|none)\b)(?==\S|[\s;&|)]|$)/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
     return SNAPSHOT_ACCEPTANCE;
 }
 
 /** Classify a target path into a config surface, or null for everything else. */
 export function classify_target(p: string): ConfigKind {
+    // Last, so a blocking class is never downgraded by its directory.
+    return classify_config(p) ?? (isSnapshotPath(p) ? 'advisory' : null);
+}
+
+export function isSnapshotPath(p: string): boolean {
+    return SNAPSHOT_DIR.test(p.split(path.sep).join('/'));
+}
+
+/** The governance classes only — what the hook may block or warn on. A snapshot path is not one. */
+function classify_config(p: string): ConfigKind {
     const posix = p.split(path.sep).join('/');
     const base = posix.split('/').pop() ?? '';
     if (/_allowlist\.(json|txt)$/.test(base) || /^allowlist[-_.]/.test(base)) {
@@ -174,8 +184,7 @@ export function classify_target(p: string): ConfigKind {
     if (CLASS_C_BASENAMES.includes(base)) {
         return 'class-c';
     }
-    // Last, so a blocking class above is never downgraded by its directory.
-    return SNAPSHOT_DIR.test(posix) ? 'advisory' : null;
+    return null;
 }
 
 /**
@@ -631,8 +640,10 @@ export function evaluate(envelope: JsonObject, editTools: ReadonlySet<string> = 
 
     let snapWarn: string | null = cmdWarn;
     for (const p of paths) {
-        const kind = classify_target(p);
+        const kind = classify_config(p);
         if (kind === null) {
+            // A snapshot-only path takes the same skip as before; it only leaves a warning behind.
+            if (isSnapshotPath(p)) snapWarn = `${path.relative(root, path.isAbsolute(p) ? p : path.join(root, p)) || p}: ${SNAPSHOT_ACCEPTANCE}`;
             continue;
         }
         const abs = path.isAbsolute(p) ? p : path.join(root, p);
@@ -651,9 +662,6 @@ export function evaluate(envelope: JsonObject, editTools: ReadonlySet<string> = 
             return EXIT_BLOCK;
         }
 
-        // A snapshot path still runs every check below; only its warning text is deferred.
-        const isSnap = kind === 'advisory' && SNAPSHOT_DIR.test(p.split(path.sep).join('/'));
-        if (isSnap) snapWarn = `${path.relative(root, abs) || p}: ${SNAPSHOT_ACCEPTANCE}`;
         const added = added_entries(ti, on_disk);
         if (added <= 0) {
             continue;
@@ -665,7 +673,7 @@ export function evaluate(envelope: JsonObject, editTools: ReadonlySet<string> = 
             process.stderr.write(`block-config-weakening: BLOCKED — ${d.reason}\n`);
             return EXIT_BLOCK;
         }
-        if (d.action === 'warn' && !isSnap) {
+        if (d.action === 'warn') {
             process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: d.reason })}\n`);
             return EXIT_WARN;
         }

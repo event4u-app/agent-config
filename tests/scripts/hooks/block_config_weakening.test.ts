@@ -27,6 +27,7 @@ import {
     count_entries,
     decide,
     evaluate,
+    isSnapshotPath,
     parseSettingsDoc,
     snapshotUpdateWarning,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
@@ -639,6 +640,10 @@ describe('block_config_weakening — snapshot surfaces', () => {
         expect(snapshotUpdateWarning('Bash', 'npx playwright test')).toBeNull();
         expect(snapshotUpdateWarning('Bash', undefined)).toBeNull();
         expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=false')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=none')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=all')).toBe(w);
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots; git status')).toBe(w);
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots-foo')).toBeNull();
     });
 
     it('snapshot: no shell-tool name is an edit tool, so the shell warning never meets a path decision', () => {
@@ -657,6 +662,27 @@ describe('block_config_weakening — snapshot surfaces', () => {
         const bash = runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test --update-snapshots' } });
         expect(bash.status).toBe(2);
         expect(runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test' } }).status).toBe(0);
+    });
+
+    // Council round 5 (2026-10-19): a snapshot-shaped path takes exactly the skip it
+    // took before this change, so it can warn but never reach a blocking check.
+    it('snapshot: a snapshot-only path never enters the governance checks, even when it escapes the root', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bcw-escape-'));
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            for (const p of ['visual-snapshots/../../outside.txt', 'a.spec.ts-snapshots/a.png', '/abs/__screenshots__/b.png']) {
+                expect(isSnapshotPath(p), p).toBe(true);
+                expect(evaluate({ tool_name: 'Write', cwd: root, tool_input: { file_path: p, content: '[1,2,3]' } }), p).toBe(2);
+            }
+            // a governance class inside a snapshot directory still blocks as before
+            const many = JSON.stringify(Array.from({ length: SESSION_ENTRY_CAP + 1 }, (_, i) => `e${i}`));
+            expect(evaluate({ tool_name: 'Write', cwd: root, session_id: 'esc', tool_input: { file_path: 'x-snapshots/lint_x_allowlist.json', content: many } })).toBe(1);
+        } finally {
+            out.mockRestore();
+            err.mockRestore();
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 
     // Council round 4 (2026-10-19): the warning must not depend on shell and edit
