@@ -154,16 +154,36 @@ export function snapshotUpdateWarning(tool: string, command: unknown): string | 
 const VISUAL_RUNNERS = new Set(['playwright', 'test-storybook']);
 const LAUNCHERS = new Set(['npx', 'bunx', 'pnpx']);
 const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn', 'bun']);
+/** Launcher options whose value is the next word. */
+const VALUE_OPTIONS = new Set(['-p', '--package', '--filter', '-F', '-C', '--dir', '--cwd']);
 
 /** True when the segment starts a visual runner whose own arguments enable a baseline update. */
 function runsSnapshotUpdate(words: string[]): boolean {
+    const at = (k: number): string => words[k] ?? '';
     let i = 0;
-    while (i < words.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(words[i] ?? '')) i++;
-    if (LAUNCHERS.has(words[i] ?? '')) i++;
-    else if (PACKAGE_MANAGERS.has(words[i] ?? '') && ['exec', 'dlx', 'x'].includes(words[i + 1] ?? '')) i += 2;
-    while ((words[i] ?? '').startsWith('-')) i++;
-    if (!VISUAL_RUNNERS.has((words[i] ?? '').split('/').pop() ?? '')) return false;
-    return words.slice(i + 1).some((w) => w === '-u' || /^--update-snapshots(=(?!(false|none)$).+)?$/.test(w));
+    const skipOptions = (): void => {
+        while (at(i).startsWith('-') || /^[A-Za-z_]\w*=/.test(at(i))) i += VALUE_OPTIONS.has(at(i)) ? 2 : 1;
+    };
+    skipOptions();
+    if (at(i) === 'env') {
+        i++;
+        skipOptions();
+    }
+    if (/^(ba|z|da)?sh$/.test(at(i))) {
+        const c = words.findIndex((w, k) => k > i && /^-\w*c\w*$/.test(w));
+        return c > 0 && shellSegments(at(c + 1)).some(runsSnapshotUpdate);
+    }
+    if (LAUNCHERS.has(at(i))) i++;
+    else if (PACKAGE_MANAGERS.has(at(i))) {
+        i++;
+        skipOptions();
+        if (!['exec', 'dlx', 'x'].includes(at(i))) return false;
+        i++;
+    }
+    skipOptions();
+    if (!VISUAL_RUNNERS.has(at(i).split('/').pop() ?? '')) return false;
+    const args = words.slice(i + 1);
+    return !args.includes('--list') && args.some((w) => w === '-u' || /^--update-snapshots(=(?!(false|none)$).+)?$/.test(w));
 }
 
 /**

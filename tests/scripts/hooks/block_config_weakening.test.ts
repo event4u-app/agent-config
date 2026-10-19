@@ -663,6 +663,9 @@ describe('block_config_weakening — snapshot surfaces', () => {
             'npx jest --update-snapshots playwright',
             'npx playwright test # --update-snapshots',
             'cat playwright.config.ts -u',
+            'npx playwright test -u --list',
+            "sh -c 'echo playwright --update-snapshots'",
+            'env npx jest -u',
         ]) {
             expect(snapshotUpdateWarning('Bash', cmd), cmd).toBeNull();
         }
@@ -683,6 +686,13 @@ describe('block_config_weakening — snapshot surfaces', () => {
             './node_modules/.bin/playwright test --update-snapshots',
             'git stash; npx playwright test --update-snapshots',
             'npx playwright test \\\n  --update-snapshots',
+            'env CI=1 npx playwright test --update-snapshots',
+            'env -i PATH=/usr/bin npx playwright test -u',
+            "sh -c 'npx playwright test --update-snapshots'",
+            'bash -lc "cd web && npx playwright test -u"',
+            'npx --package @playwright/test playwright test -u',
+            'npx -p @playwright/test playwright test --update-snapshots',
+            'pnpm --filter web exec playwright test -u',
         ]) {
             expect(snapshotUpdateWarning('Bash', cmd), cmd).not.toBeNull();
         }
