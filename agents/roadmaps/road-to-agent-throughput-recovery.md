@@ -459,7 +459,7 @@ the Acceptance Criteria held.
 | K9 | a new `throughput:queue` CLI and job state machine | `ci_settle` already settles by head SHA and names the background form; 3.2 adds an obligation, not a scheduler | 3.2's fixture cannot be met without persisted state |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
