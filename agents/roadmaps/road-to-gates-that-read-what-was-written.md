@@ -101,12 +101,31 @@ changes what either gate is for.
 
 ## Phase 3 — The guard judges a write, not a mention
 
-> **Held, 2026-10-16 drain.** Every step edits
+> **Held, 2026-10-16 drain; built and refused 2/2, 2026-10-19.** Every step edits
 > `src/scripts/hooks/block_speaking_inbox_dir.ts`, a `pre_tool_use` deny guard
-> of the same class as `block_no_verify` and `block_config_weakening`. The
-> drain that ran Phases 1–2 was barred from editing deny guards, so this phase
-> was not started — no evidence about its design is implied. It needs a run
-> that is permitted to change a guard.
+> of the same class as `block_no_verify` and `block_config_weakening`, so the
+> diff carries a two-provider ratification record under
+> `agents/evidence/ratifications/`.
+>
+> **M6 was mis-attributed, and the probe says where it really lives.** The Bash
+> token path already reaches `verdictFor` and its already-exists branch. What
+> it did not reach is the right *base*: the guard read `project_dir`, a key no
+> producer sets (the dispatcher sends `workspace_root`, the native payload
+> `cwd`), so the exists-probe resolved against the hook's own cwd. With the
+> process standing in the tree the `ls` was allowed; standing anywhere else —
+> the parent checkout of a worktree session — it was refused. 3.2 fixes that
+> base, which is the same carve-out reached from both entry points.
+>
+> **The 2026-10-19 build was refused by the council, 2/2, and reverted.** Record:
+> `agents/evidence/ratifications/drain-road-to-gates-that-read-what-was-written-20261019z.md`.
+> Two high findings, both convergent: the remediation exemption trusted the
+> spelling `scripts-run` rather than a repository-anchored executable (a bare
+> name resolves through `PATH`), and one shared base cascade let `project_dir`
+> outrank the `cwd` a Bash command actually runs in. A next round needs a
+> tool-specific base, an anchored executable, suppression of the known-safe
+> plaintext occurrence rather than the whole command, and conflicting-field
+> regressions. The red observations below stay valid; the landed notes on
+> 3.1 and 3.3 describe the refused build, not the tree.
 
 - [ ] **3.1 Red first: the two commands this round was refused.** Pin both as
       polarity cases on `creatableTokens` and on the envelope path — a
@@ -117,6 +136,10 @@ changes what either gate is for.
       verify: the two allow-cases are red and the two block-cases are green
       before any change. A change that makes all four green without the first
       two having been red has not reproduced M5.
+      Observed 2026-10-19 at `1a334dd16`: 5 allow-cases red (the `ls`
+      against an envelope `cwd`, against `workspace_root`, against a wrapped
+      payload; the remediation naming a renamed directory; the literal deny
+      message line), every block-case green.
 - [ ] **3.2 Reach the already-exists carve-out from the Bash path.** A token
       naming a directory that exists on disk takes the same
       `directory already exists — rename, do not re-refuse` branch the
@@ -134,6 +157,12 @@ changes what either gate is for.
       verify: the `printf | link_crypto encrypt` case from 3.1 passes; a
       heredoc body calling `makedirs` on a speaking directory — the case the
       raw-command scan exists for — is still refused.
+      Landed narrower than the step's wording: the exemption is the one
+      remediation shape, matched on the whole command — a single-quoted
+      `printf '%s'` literal piped into `link_crypto encrypt` and nothing else.
+      D2 forbids a verb classifier; eight bypass shapes (a second segment,
+      `;`, `&&`, a newline, a redirect, `$(…)`, `| sh`, `decrypt`) are
+      block-cases in the same suite.
 - [ ] **3.4 Make the remediation reachable as written.** The command in the
       guard's error text must execute unchanged in a tree where the speaking
       directory exists.
