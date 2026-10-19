@@ -119,16 +119,15 @@ spec is missing a parameter — add it.
 6. **Build and gate** — UFO source → compiled `ttf` and `woff2`. Run every gate
    in [`references/gates.md`](references/gates.md); each prints a threshold and
    a failure message to act on.
-7. **Rendered proof** — generate a host page whose specimens are SVG `<text>`
+7. **Rendered proof** — generate a proof SVG whose specimens are `<text>`
    elements set in the new family (waterfall 12 to 72 px, `HHOHH nnonn`, every
    letter between n and n and between o and o, the kerning strings, the wordmark
-   text), with the built `woff2` beside it, and run the witness:
+   text), the built `woff2` in its own `@font-face`; witness the SVG itself
+   (an `.html` target reports no text — gates § 5):
    ```bash
-   agent-config ui:render proof/index.html --profile asset
+   agent-config ui:render proof/proof.svg --profile asset
    ```
-   The new family must read `loaded` — never `error`, `unloaded`, `timeout` or
-   `synthesised`. Open the
-   PNG and state what you saw.
+   The new family must read `loaded`. Open the PNG and state what you saw.
 8. **Fidelity (path A)** — the wordmark text set in the new font against the
    source by silhouette IoU (gates § 6); produce the diff overlay and look at it.
 9. **Fallback** — emit the metric-matched fallback `@font-face` (gates § 7).

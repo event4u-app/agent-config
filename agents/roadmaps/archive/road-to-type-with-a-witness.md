@@ -408,7 +408,7 @@ failure message the agent can act on.
       `@font-face` overrides for the new family, which is what T12 asks for.
       verify: `grep -c "size-adjust" src/skills/type-design/references/gates.md` -> /^[1-9]/
       Done 2026-10-18: gates § 7, deriving from the `design-asset-discipline` bullet rather than restating it.
-- [ ] **5.8 Pre-registered reconstruction benchmark — committed fixtures, per
+- [x] **5.8 Pre-registered reconstruction benchmark — committed fixtures, per
       the council's (a) of 2026-10-16.** Held-out real families live under
       `tests/fixtures/fonts/` <!-- ref-ignore -->, each with its licence text
       beside it and recorded in `docs/THIRD-PARTY-NOTICES.md`, outside the
@@ -423,22 +423,22 @@ failure message the agent can act on.
       the fixture identities are retained beside the verdict. A claim enters
       `docs/CLAIMS.md` only from this run.
       verify: the rendered proof exists for each family; a fixture's name does not appear in the input handed to the skill; the measurements and thresholds are committed with the verdict.
-      Open 2026-10-18 (screen): not executable in a drain lane. The run is a full path-A execution of `type-design` per family — the pinned peer-side toolchain installed, the construction and every gate run — by a generating session that is not the grader, after thresholds are frozen in a commit of their own. No fixture family is committed yet, so nothing here is half-done.
-- [ ] **5.9 The published archive carries no typeface binary.** The lock's one
+      Done 2026-10-19: verdict **`partial`** — one family of three passes (geometric sans, M1 0.752 against 0.75); the serif (M1 0.672, M3 24.3) and the humanist sans (M1 0.715) do not. No claim enters `docs/CLAIMS.md`. Thresholds and grader frozen in `1ba3ec047` before any run and unchanged; generating subagents saw only `lettering.png` and the brief (leak grep 0 hits); the orchestrator graded. Record: `internal/bench/type-reconstruction/run-2026-10-19/VERDICT.md`, raw `grade.json`, input and proof PNGs per run; generated fonts by SHA-256.
+- [x] **5.9 The published archive carries no typeface binary.** The lock's one
       bright line, verified against the produced archive rather than against the
       configuration that is supposed to produce it. The check also covers
       release archives, container build contexts and provenance bundles, because
       an exclusion from `package.json#files` is necessary and not sufficient.
       verify: the produced tarball carries no typeface binary and no fixture path — `npm pack --dry-run | grep -cE '[.](ttf|otf|woff2?|ttc)$'` -> /^0$/
-      Open 2026-10-18 (screen): gated on 5.8. The check binds the fixtures 5.8 commits; run today it reads 0 over a tree with no typeface binary at all, which is the vacuous zero this step exists to avoid claiming. It lands in the change that adds the first fixture.
-- [ ] **5.10 The fixture carve-out states its own bound.** The amendment covers
+      Done 2026-10-19: lands with the three committed fixtures, so the zero is not vacuous. `tests/scripts/typeface_fixture_bound.test.ts` reads the produced npm tarball, the produced `git archive` (release and Packagist), every Dockerfile's `COPY`/`ADD` and `.dockerignore`; the verify reads 0 against three tracked `.ttf` files.
+- [x] **5.10 The fixture carve-out states its own bound.** The amendment covers
       typeface families for this benchmark and nothing else: a later family
       joins by an explicit decision, never drive-by, and "openly licensed" means
       an OSI-approved SPDX identifier. Without the bound, "non-shipped binary
       fixtures" becomes a category that drifts into audio samples and image
       sets.
       verify: the bound and the SPDX restriction are written where the fixtures live, and a family carrying a non-OSI identifier is refused by the same check as 5.9
-      Open 2026-10-18 (screen): gated on 5.8 and 5.9 — "where the fixtures live" does not exist until 5.8 creates it, and the refusal is part of 5.9's check.
+      Done 2026-10-19: `tests/fixtures/fonts/README.md` § The bound states the four limits; `fixtures.json` names the admitting decision per family; the 5.9 test refuses a non-OSI identifier and a typeface binary with no admitting entry.
 
 ## Phase 6 — Third-party registry items are audited before `add`
 
@@ -535,12 +535,14 @@ skill.
 - [x] AC-4 — `type-design` passes the new-skill gate, the payload ceiling holds
       in the change that adds it, and the rights gate, the licence question and
       the no-freehand rule are in its body.
-- [ ] AC-5 — A path A run on a wordmark produces a font whose proof page reads
+- [x] AC-5 — A path A run on a wordmark produces a font whose proof page reads
       `loaded` in the witness and whose locked glyph clears the fidelity
       threshold, and a path B run from a brief produces a font whose four
       control glyphs were approved before the rest was built; both QA reports
       name the coverage tier and the maturity label.
-- [ ] AC-6 — The reconstruction benchmark has run once with frozen thresholds,
+      Done 2026-10-19: `agents/evidence/analysis/type-design-path-runs-20261019.md` — locked `M` 0.9992, proof `loaded` 27/27 with this branch's CLI; path B controls witnessed before the build, approved by the commissioning session, not a human.
+- [x] AC-6 — The reconstruction benchmark has run once with frozen thresholds,
       and its verdict is recorded, a null included.
+      Done 2026-10-19: `partial`, `internal/bench/type-reconstruction/run-2026-10-19/VERDICT.md`.
 - [x] AC-7 — A third-party registry item is routed through
       `supply-chain-intake` before `add`.

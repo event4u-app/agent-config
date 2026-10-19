@@ -31,3 +31,7 @@ agents/runtime
 # A/B benchmark clones (~145 MB of nested git worktrees) — never part of any
 # docker build context (the glama MCP build or the installer-e2e image).
 internal/bench
+
+# Typeface benchmark fixtures are repository-only (tests/fixtures/fonts/README.md);
+# no container build context may carry them.
+tests/fixtures/fonts

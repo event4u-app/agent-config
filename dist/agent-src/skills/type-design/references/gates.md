@@ -82,8 +82,9 @@ benchmark is what may move them; nothing else does.
 ## 5. Rendered proof
 
 The witness reading, not a gate script: `ui:render --profile asset` over the
-proof page reads `loaded` for the new family (`SKILL.md` step 7). `error`,
-`unloaded`, `timeout` or `synthesised` fails, and the agent has looked at the PNG.
+proof SVG reads `loaded` for the new family (`SKILL.md` step 7). `error`,
+`unloaded`, `timeout` or `synthesised` fails, and so does a reading with no text
+in it — the shape an HTML target produces. The agent has looked at the PNG.
 
 ## 6. Source fidelity — path A
 
