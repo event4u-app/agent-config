@@ -42,15 +42,32 @@ work has spent the one moment this package is not allowed to spend.
 A unit is one piece of finished work, identified locally by
 
 ```
-{repo, pr | session, merge_sha | tag, policy}
+{repo, pr | session | analysis-run, merge_sha | tag | round_id, policy}
 ```
 
 - `repo` — the repository the work happened in.
 - `pr` with `merge_sha` for a merged pull request; `session` with its session
-  `tag` for a session without one.
+  `tag` for a session without one; `analysis-run` with its `round_id` for one
+  analysis round (ADR-288), whose facts are read from that round's own
+  `run.json`.
 - `policy` — the version of this contract's triage policy that classified the
   unit. A new policy version is the only thing besides new evidence that reopens
   a disposition.
+
+### `analysis-run` — what adoption may be read from, and what may not
+
+An analysis round is adopted to the extent the roadmaps it emitted were worked.
+That reading is taken **only once a roadmap is archived**: while it is still
+active its open steps may yet be done or cancelled, so counting them earlier
+would score unfinished work as rejected. An active, parked or stub roadmap
+therefore reads `missing`, never `{done: 0}`, and the run-level sum is taken
+only when every emitted roadmap is archived.
+
+`run.json` records which roadmaps a run emitted and which analysts ran it, and
+nothing that joins the two. Adoption per analyst is consequently always
+`not-applicable` with that reason — attributing a roadmap's fate to one analyst
+would be a number no record supports. What a run *does* carry per analyst is its
+contribution: loops run and top-tier items added, changed and killed.
 
 The key never leaves the machine. It is also the **origin** of every intake
 signal a retro writes, because a free-form origin string does not separate
