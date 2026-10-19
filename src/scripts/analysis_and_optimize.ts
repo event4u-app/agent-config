@@ -26,7 +26,11 @@ export interface ReadSet {
 
 export function readSet(target: AnalysisTarget, opts: { goal?: string; issues?: readonly Issue[] } = {}): ReadSet {
     const root = target.scope_root;
-    const anchors = buildAnchorTable({ root, goal: opts.goal, issues: opts.issues });
+    const anchors = buildAnchorTable({
+        root,
+        ...(opts.goal === undefined ? {} : { goal: opts.goal }),
+        ...(opts.issues === undefined ? {} : { issues: opts.issues }),
+    });
     const code = walk(root)
         .filter((f) => CODE_EXT.test(f))
         .map((f) => path.join(root, f));
