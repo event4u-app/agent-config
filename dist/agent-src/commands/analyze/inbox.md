@@ -9,6 +9,12 @@ cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
 argument-hint: "[<file> | <dir> | <round-id>] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
+limits:
+  mode_default: execute
+  max_iterations: 3
+  hard_ceiling: 3
+  no_gain_stop: 1
+  target_metric: required
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:inbox name; not independently suggested (surface-consolidation)."
@@ -89,6 +95,19 @@ The invocation is the this-turn confirmation of exactly those objects (ADR-288
 D6/D7); [`scope-control`](../../../../rules/scope-control.md) § Git operations
 still gates every other branch, PR or worktree. `vcs: none` or `--no-pr` ends
 the run validated and local, and says so in one line.
+
+## Enforced limits
+
+The `limits:` block pins every loop of this door; the body below obeys it.
+
+- **`mode_default: execute`** — the run ends in a non-draft PR when the scope
+  has `vcs: git`; `--no-pr` stops after validation (§ Where the work happens).
+- **`max_iterations: 3`, `hard_ceiling: 3`** — extraction is at most three
+  passes, and no flag raises that (§ The three-pass contract).
+- **`no_gain_stop: 1`** — a pass 2 that adds no row ends extraction.
+- **`target_metric: required`** — the anchor census is counted before pass 1;
+  the point ledger balances against it (Phase 3).
+- Publication: at most one push plus three CI-fix rounds, then `handed-back`.
 
 ## The Iron Law
 
@@ -1195,6 +1214,8 @@ roadmap before publication, never carried into the PR.
 
 5. **Owner decisions required**, if any — the escalation block from Phase 5,
    at the top of the reply rather than at the end.
+5b. `run.json` per `src/scripts/analysis_run_record.ts`, in the run's folder
+   under `agents/runtime/analysis/<round-id>/`.
 6. One closing summary: files in, roadmaps out, items prevented by
    `already-fixed`, and steps corrected by reproduction — plus the reproduction
    ceiling that fired, if one did, and what it dropped.

@@ -121,6 +121,11 @@ read-ceiling line naming the bound that fired.
 
 ### 1. Resolve scope from the invocation — do not ask
 
+**Print the scope line first**, before any read or fetch: resolve the scope
+with `src/scripts/analysis_target.ts` and print `Scope: <repo|module|subdir>
+<name> at <path> (anchor: <…>)` (`analysis-loop` § The scope line). Inside a
+module the scope is the module and `project_root` stays the outer project.
+
 Scope comes from the arguments, never from a prompt. A bare repository argument
 means **full scope**; `--focus=<area>` means focused. **Ask nothing before the
 first fetch.** The four-option menu this step used to open with cost one prompt
@@ -401,6 +406,10 @@ of including the revision: the id is **stable** across two runs at the same
 revision, so a resumed or repeated run lands in the same directory; and it
 **differs** across revisions, so one repository at two historical pins is two
 pieces of evidence rather than one overwriting the other.
+
+**The run record** — `run.json` per `src/scripts/analysis_run_record.ts` —
+lands in the run's folder under `agents/runtime/analysis/<run-id>/`, never in
+the analysis document, and names no source.
 
 **The plaintext lives in exactly one place** — `identity` in the local
 manifest, `agents/.harvest-local/manifest.jsonl`, inside the same gitignored

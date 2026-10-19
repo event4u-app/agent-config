@@ -232,6 +232,7 @@ description's changelog section, not a comment (`no-pr-progress-comments`).
 - Central + sub-roadmaps on the branch, dashboard regenerated.
 - Council artifacts under `agents/runtime/council/` (local-only, auto-pruned).
 - A one-paragraph verdict per refinement loop: what changed, what converged.
+- `run.json` per `src/scripts/analysis_run_record.ts`, in the run's folder.
 
 ## Removal is one of the outputs
 
