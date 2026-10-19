@@ -350,7 +350,8 @@ consumer behaviour points at something that executes.
       repository's lockfile, not the consumer's tree.
       None of the five carries a public marker, so no public copy moved.
       `./scripts-run src/scripts/build_proof` exits 0 and `docs/proof.md` now
-      reads **20 of 58** exec-backed, plus 4 measured-in-repo, written from that run.
+      reads **22 of 60** exec-backed, plus 4 measured-in-repo, written from that run
+      on the branch merged with `main` (which had added two exec-backed rows).
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.

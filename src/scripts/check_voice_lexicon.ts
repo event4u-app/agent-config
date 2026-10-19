@@ -27,7 +27,7 @@
  * as SKIPPED with its reason, never as a clean pass.
  *
  * Usage:
- *   ./scripts-run src/scripts/check_voice_lexicon --draft <file>
+ *   ./scripts-run src/scripts/check_voice_lexicon --draft <file | ->
  *     [--slot agents/context-spine/brand-voice.md] [--ghostwriter <profile.md>]
  *     [--json] [--now YYYY-MM-DD]
  */
@@ -84,6 +84,8 @@ export function blankExempt(text: string): string {
     t = t.replace(/https?:\/\/\S+/g, blank);
     t = t
         .replace(/"[^"\n]{1,300}"/g, blank)
+        // German low-high quotes close on “, the English opener, so they run first.
+        .replace(/„[^“\n]{1,300}“/g, blank)
         .replace(/“[^”\n]{1,300}”/g, blank)
         .replace(/(^|[\s([{"“])'([^'\n]{1,120})'(?=[\s)\]},.!?;:"”]|$)/g, (m, lead: string, inner: string) =>
             inner.includes(' ') ? lead + blank(m.slice(lead.length)) : m,
@@ -328,6 +330,53 @@ function parseArgs(argv: readonly string[]): Args | string {
     return { draft, slot, ghostwriter, json, now };
 }
 
+/**
+ * Read stdin to EOF. fd 0 may arrive non-blocking (a host pipe, or any earlier
+ * `process.stdin` access), where `readFileSync(0)` throws EAGAIN mid-payload;
+ * so read in chunks and wait out EAGAIN. Like `cat`, an unpiped TTY waits for
+ * input — the drafting surfaces always pipe.
+ */
+function readStdin(): string | null {
+    const chunks: Buffer[] = [];
+    const buf = Buffer.alloc(65536);
+    const pause = new Int32Array(new SharedArrayBuffer(4));
+    for (;;) {
+        let n: number;
+        try {
+            n = fs.readSync(0, buf, 0, buf.length, null);
+        } catch (exc) {
+            if ((exc as NodeJS.ErrnoException).code === 'EAGAIN') {
+                Atomics.wait(pause, 0, 0, 10);
+                continue;
+            }
+            return null;
+        }
+        if (n === 0) return Buffer.concat(chunks).toString('utf-8');
+        chunks.push(Buffer.from(buf.subarray(0, n)));
+    }
+}
+
+/**
+ * A drafting command prints its draft as ONE fenced block, and fenced text is
+ * exempt — so a draft piped as printed would scan as empty. When the whole input
+ * is a single fence, blank the two fence lines and scan the body; offsets hold.
+ */
+export function unwrapSingleFence(text: string): string {
+    const lines = text.split('\n');
+    const first = lines.findIndex((l) => l.trim() !== '');
+    let last = lines.length - 1;
+    while (last > first && (lines[last] ?? '').trim() === '') last -= 1;
+    const open = /^\s*(`{3,}|~{3,})/.exec(lines[first] ?? '');
+    if (first < 0 || last <= first || open === null) return text;
+    const fence = open[1] as string;
+    const closeRe = new RegExp(`^\\s*${fence[0] === '`' ? '`' : '~'}{${fence.length},}\\s*$`);
+    if (!closeRe.test(lines[last] ?? '')) return text;
+    const blank = (l: string): string => l.replace(/[^\n]/g, ' ');
+    lines[first] = blank(lines[first] as string);
+    lines[last] = blank(lines[last] as string);
+    return lines.join('\n');
+}
+
 function readOrNull(p: string): string | null {
     try {
         return fs.readFileSync(p, 'utf-8');
@@ -342,11 +391,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         process.stderr.write(`${args}\n`);
         return 2;
     }
-    const draft = readOrNull(args.draft);
-    if (draft === null) {
-        process.stderr.write(`draft not readable: ${args.draft}\n`);
+    // `-` reads stdin: a drafting command that prints only must not write its draft to disk.
+    const raw = args.draft === '-' ? readStdin() : readOrNull(args.draft);
+    if (raw === null) {
+        process.stderr.write(`draft not readable: ${args.draft === '-' ? 'stdin (pipe the draft)' : args.draft}\n`);
         return 2;
     }
+    if (raw.trim() === '') {
+        process.stderr.write(`draft is empty: ${args.draft === '-' ? 'stdin (pipe the draft)' : args.draft}\n`);
+        return 2;
+    }
+    const draft = unwrapSingleFence(raw);
     const terms: LexiconTerm[] = [];
     let claims: ClaimEntry[] = [];
     let tellExemptions: string[] = [];

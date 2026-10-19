@@ -118,7 +118,30 @@ export interface DefectFinding {
      * worse than free text — it looks joined and joins to nothing.
      */
     proposes?: string[];
+    /**
+     * The canonical claim, a stable slug (`drain/baseline-drift`). A retro
+     * writes its `Candidate.subject` here; two syntheses that agree on the
+     * claim spell it identically, which is what lets two installations meet.
+     *
+     * Neither the key nor any outgoing body reads it: whether it may identify
+     * a record across installations, and whether it may leave the machine,
+     * are undecided, so it is carried and validated only.
+     */
+    principle?: string;
+    /** One bounded line naming how the defect happens. No producer field yet. */
+    mechanism?: string;
+    /** One bounded line naming what would refute the claim; a retro's `Candidate.falsifier`. */
+    falsifier?: string;
 }
+
+/** `principle` shape: non-empty lowercase segments joined by single `/`, `.`, `_` or `-`; at most 80 characters. */
+export const PRINCIPLE_RE = /^(?=.{1,80}$)[a-z0-9]+(?:[/._-][a-z0-9]+)*$/;
+
+/** Control characters, including the Unicode line and paragraph separators. */
+const CONTROL_RE = /[\u0000-\u001f\u007f\u2028\u2029]/;
+
+/** Length bound for `mechanism` and `falsifier`, the same as an evidence span. */
+export const MAX_CLAIM_LINE = 160;
 
 /** The four asset kinds a `target` entry may address. */
 export const TARGET_KINDS = ['rule', 'skill', 'command', 'hook'] as const;
@@ -234,7 +257,13 @@ export function sanitizeEvidence(raw: string): string {
  * of being scrubbed into publishable shape.
  */
 export function egressBlockedReason(record: DefectRecord, repoRoot?: string | null): string | null {
-    const result = redact_low_impact_entry(`${record.suggested_surface}\n${record.evidence}`, {
+    // Every free value the record carries, not only the two a report renders
+    // today — a field the floor never saw must not become sendable later by a
+    // renderer change alone.
+    const text = [record.suggested_surface, record.evidence, record.principle, record.mechanism, record.falsifier]
+        .filter((v): v is string => typeof v === 'string' && v.length > 0)
+        .join('\n');
+    const result = redact_low_impact_entry(text, {
         repoRoot: repoRoot ?? null,
     });
     if (result.ok) {
@@ -752,6 +781,15 @@ export function validateRecord(record: DefectRecord): string[] {
             out.push(`target '${value}' is not \`<rule|skill|command|hook>:<id>\``);
         }
     }
+    if (record.principle !== undefined && !PRINCIPLE_RE.test(record.principle)) {
+        out.push(`principle '${record.principle}' is not a lowercase slug of at most 80 characters`);
+    }
+    for (const field of ['mechanism', 'falsifier'] as const) {
+        const value = record[field];
+        if (value !== undefined && (value.trim() === '' || value.length > MAX_CLAIM_LINE || CONTROL_RE.test(value))) {
+            out.push(`${field} must be one non-empty line of at most ${MAX_CLAIM_LINE} characters`);
+        }
+    }
     return out;
 }
 
@@ -760,6 +798,20 @@ function _mergeIds(a: readonly string[] | undefined, b: readonly string[] | unde
     const out: string[] = [];
     for (const v of [...(a ?? []), ...(b ?? [])]) {
         if (!out.includes(v)) out.push(v);
+    }
+    return out;
+}
+
+const CLAIM_FIELDS = ['principle', 'mechanism', 'falsifier'] as const;
+
+// The three fields are one claim: they are adopted together from one source,
+// never merged per field, so a falsifier is never paired with a claim it was
+// not written for.
+function claimFields(existing: DefectFinding, finding: DefectFinding): Partial<DefectFinding> {
+    const source = CLAIM_FIELDS.some((f) => existing[f] !== undefined) ? existing : finding;
+    const out: Partial<DefectFinding> = {};
+    for (const field of CLAIM_FIELDS) {
+        if (source[field] !== undefined) out[field] = source[field];
     }
     return out;
 }
@@ -783,6 +835,8 @@ export function mergeRecord(
             status: 'open',
             ...(target.length > 0 ? { target } : {}),
             ...(proposes.length > 0 ? { proposes } : {}),
+            // A detector-opened record that a retro later names keeps the name.
+            ...claimFields(existing, finding),
         };
         // `open` carries no wake condition; a stale one would read as a park.
         delete merged.parked_until;
