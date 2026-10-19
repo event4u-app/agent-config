@@ -251,3 +251,22 @@ the same brief; outputs carry family and `context_relation` from
 analyst's; a same-family analyst is never stamped cross-family. Default 3 analysts;
 `--quick` or a scope under the pre-registered size runs 1 analyst and no
 exchange.
+
+## 3.4-spec
+
+Replace the
+branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
+engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
+command reads a runtime round (`agents/runtime/analysis/<round-id>/`) plus
+the owner's drops under `agents/tmp/<round-id>/` as one union, skips the
+Phase 1 rename for opaque ids, and reads lineage from the round manifest.
+Directives by provenance: current-session user turns bind; user turns of a
+structurally valid transcript bind unless another input contradicts them;
+heuristically recovered roles never bind automatically (a material one
+joins 2.7's batch); AI turns are claims. One final Convergence loop runs
+over the surviving roadmaps against the tree, every transcript constraint
+and every owner directive. A round above 1.4's slicing size runs as
+parallel lanes, **each with its own census and point ledger**, folded once
+— the owner never types the split. `corrected-from-reproduction`: the plans
+sliced without per-lane ledgers, the shape the inbox's Phase 2b measured
+as the lossiest.

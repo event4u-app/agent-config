@@ -20,6 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { evaluateGate, MAX_ROUNDS } from '../../src/scripts/analysis_gate.js';
+import type { StopInputs } from '../../src/scripts/ai_council/argument_exhaustion.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const CONTEXT = path.join(ROOT, 'src/agent-src/contexts/execution/analysis-loop.md');
@@ -34,18 +35,27 @@ describe('the gate is shown, not only obeyed', () => {
     });
 
     it('a further round needs a recorded decision, never the offer alone', () => {
-        expect(text).toMatch(/offer is not a decision|never the offer alone|an offer is not/iu);
+        expect(text).toMatch(/an offer is not a decision/iu);
         expect(text).toMatch(/recorded (council|owner)/iu);
     });
 
-    it('the printed fields are the ones the gate actually returns', () => {
-        const result = evaluateGate({ roundsCompleted: MAX_ROUNDS, items: [], remainingTokens: 0, stop: {
-            round: MAX_ROUNDS,
-            newArguments: 0,
-            repairedConformity: true,
-        } as never });
-        for (const field of ['reason', 'settleable', 'band', 'estimate']) {
-            expect(Object.keys(result)).toContain(field);
+    it('the printed fields are the ones the gate actually returns, on both branches', () => {
+        // Two paths, because the prose says the numbers are printed after EVERY
+        // exchange: the capped branch, which never evaluates the predicate, and
+        // an uncapped one that reaches the offer decision (R2 finding 11).
+        const stop: StopInputs = {
+            roundsCompleted: 1,
+            dissentRepairAttempted: true,
+            selfNearDuplicate: [true, true],
+            unresolvedAdversarialTriggers: 0,
+        };
+        const capped = evaluateGate({ roundsCompleted: MAX_ROUNDS, items: [], remainingTokens: 0, stop });
+        const uncapped = evaluateGate({ roundsCompleted: 0, items: [], remainingTokens: 0, stop });
+        expect(capped.reason).toBe('round-cap');
+        for (const result of [capped, uncapped]) {
+            for (const field of ['reason', 'settleable', 'band', 'estimate']) {
+                expect(Object.keys(result)).toContain(field);
+            }
         }
     });
 });

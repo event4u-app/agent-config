@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-s verified at 085ec41ff that the practised analysis pipeline (independent analysts, three deepening loops each, an exchange that deepens three more times, a gain-gated extra round, a final inbox pass landing ready roadmaps, a ready PR) exists nowhere in the tree: no analyze command resolves its scope, the four exchange instruments in src/scripts/ai_council/ have zero production callers, analyze:inbox forbids the PR every round ends in, and a module without a marker resolves to the repository root (reproduced on a fixture). No active, parked or stub roadmap owns this: agent-config roadmap:context reports no sibling on the topic across 1,069 roadmap files, and a grep for repo-loop over agents/roadmaps and src returns nothing. This is the third arrival of the subject (inbox-2026-09-r, inbox-2026-09-aa, inbox-2026-10-s) and the first with an explicit owner order to build it; folding it into a neighbour would bury a four-command surface change inside a roadmap that owns a different defect."
-estate_growth_exempt: "Four blockers discovered while doing the work, nothing archived. Each one was already a real hold stated in this file's own prose or screen note — 3.5 (its replay round is gitignored and absent from every checkout), 6.2b (the rename moves the file carrying step 4.1's claim pin), 6.5 (the observation slots belong to a claim parked behind two owner-reserved blockers) and 6.6 (zero of the ten runs it reads exist). A prose hold is invisible to screenRoadmap, which read all 14 open items as runnable and dispatched a drain lane onto a file with nothing to run; registering them is what makes the file read decide instead of continue. All four are owner questions this lane holds no channel to ask, so none could be closed instead of filed. The two blockers the earlier exemption authorised (source-fetch-authorization, analyst-cli-agency) are resolved and their only blocked sub-steps, 4.2b and 2.4b, closed on 2026-10-18; this change also corrects both rows, which still claimed those sub-steps were open."
+estate_growth_exempt: "open_blockers +4, active_roadmaps +0, nothing archived — four blockers discovered while doing the work. Each was already a real hold stated in this file's own prose or screen note: 3.5 (its replay round is gitignored and absent from every checkout), 6.2b (the rename moves the file carrying step 4.1's claim pin), 6.5 (the observation slots belong to a claim parked behind two owner-reserved blockers) and 6.6 (zero of the ten runs it reads exist). A prose hold is invisible to screenRoadmap, which read all 14 open items as runnable and dispatched a drain lane onto four steps none of which was runnable; registering them is what makes the file read decide instead of continue. All four are owner questions this lane holds no channel to ask, so none could be closed instead of filed. This supersedes the previous claim of active_roadmaps +1 and open_blockers +2 (source-fetch-authorization, analyst-cli-agency), both now resolved with their only blocked sub-steps 4.2b and 2.4b closed on 2026-10-18; this change also corrects both rows, which still claimed those sub-steps were open."
 
 relates:
   - slug: road-to-a-retro-the-merge-runs
@@ -251,21 +251,10 @@ two new scripts and the context file are additive; deleting them restores today.
       `handed-back`, and the opened PR reads `isDraft: false` in
       `gh pr view --json isDraft`. Done 2026-10-18; record § 3.3.
 - [x] **3.4 `analyze:inbox` becomes the final stage.** Replace the
-      branch/worktree/PR ban (`analyze/inbox/command.md:47-72`) with the
-      engine's publish step — default on when `vcs: git`, `--no-pr` to skip. The
-      command reads a runtime round (`agents/runtime/analysis/<round-id>/`) plus
-      the owner's drops under `agents/tmp/<round-id>/` as one union, skips the
-      Phase 1 rename for opaque ids, and reads lineage from the round manifest.
-      Directives by provenance: current-session user turns bind; user turns of a
-      structurally valid transcript bind unless another input contradicts them;
-      heuristically recovered roles never bind automatically (a material one
-      joins 2.7's batch); AI turns are claims. One final Convergence loop runs
-      over the surviving roadmaps against the tree, every transcript constraint
-      and every owner directive. A round above 1.4's slicing size runs as
-      parallel lanes, **each with its own census and point ledger**, folded once
-      — the owner never types the split. `corrected-from-reproduction`: the plans
-      sliced without per-lane ledgers, the shape the inbox's Phase 2b measured
-      as the lossiest.
+      branch/worktree/PR ban with the engine's publish step; read the runtime
+      round and the owner's drops as one union; bind directives by provenance;
+      run one final Convergence loop; split a large round into lanes with their
+      own ledgers — each clause in record § 3.4-spec.
       verify: `grep -c 'NEVER CREATE A BRANCH'
       src/domains/analysis-workbench/analyze/inbox/command.md` is 0 (1 today);
       `analyze/inbox/evals/triggers.json` holds a `--no-pr` case; the final
@@ -452,10 +441,11 @@ file; `council:pr` is unchanged.
 > **Screen 2026-10-19.** 1.3, 3.4, 4.5, 5.2, 5.3, 6.1 and 6.2 closed. Open: 3.5 (a model-driven replay, own session), 6.2b (rename, waits on the 4.1 claim pin).
 > Gated: 6.5 waits on the observation roadmap's answer; 6.6 waits on ten recorded runs (zero exist).
 > **Screen 2026-10-19b (drain lane).** Nine criteria closed on executed evidence;
-> AC-5 held with 3.5. All four holds above were prose-only, so the queue read all
-> 14 open items as runnable and dispatched a lane onto a file with nothing to run;
-> they are registered as blockers now and the reading is `open 5 · runnable 0 ·
-> decide`. *Not taken:* the `later/` disposition — the gates are owner questions,
+> AC-5 held with 3.5. All four open STEPS carried a prose-only hold, so the queue
+> read its 14 open items — 4 steps plus 10 criteria — as 14 runnable and dispatched
+> a lane. The criteria were real work and nine of them closed here; not one of the
+> four steps was runnable. With the holds registered the reading is `open 5 ·
+> runnable 0 · decide`. *Not taken:* the `later/` disposition — the gates are owner questions,
 > not external triggers, and moving the file would repath its slug in ADR-288,
 > three roadmaps and six evidence files for no change in what runs.
 
@@ -486,6 +476,7 @@ file; `council:pr` is unchanged.
 ### blocker: replay-round-is-maintainer-local
 - **Status:** open — registered 2026-10-19 from prose that read runnable to the drain queue.
 - **Owner:** user
+- **Ownership:** product-owned
 - **Blocks:** step 3.5 and AC-5 only; every other step and criterion of this file is closed or held elsewhere
 - **Question:** Where does the 3.5 replay run? Its named input, `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of seven files, 452 KB), is gitignored and absent from every checkout and worktree of this repository; the replay is also a model-driven run — three `subagent` analysts, seed plus three lenses, then an exchange — not a script a lane can execute.
 - **Recommendation:** the maintainer runs it in an interactive session on the machine that holds the round, with `--no-pr`, no network and `subagent` analysts, and drops the resulting `run.json` under `agents/runtime/analysis/`. Nothing a lane can substitute for it produces the evidence AC-5 asks for.
@@ -496,6 +487,7 @@ file; `council:pr` is unchanged.
 ### blocker: source-door-rename-waits-on-the-claim-pin
 - **Status:** open — registered 2026-10-19; step 6.2b stated the hold in prose, which the drain queue cannot read.
 - **Owner:** user
+- **Ownership:** product-owned
 - **Blocks:** step 6.2b only; every other registry row of Phase 6 landed with the door under its current name
 - **Question:** May `analyze/repo/command.md` move to `analyze/reference/command.md` before the observation runs? The file carries the five mechanisms pinned by step 4.1 for the pre-registered claim `reference-loop-upgrade-value`, and the pin is checkable only as `git diff 835660b0d..HEAD -- <that path>` — a path a rename removes.
 - **Recommendation:** record the move as a post-pin known delta in `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` first, then rename. That file's own § Claim pin already carries a registration-to-pin delta table; a post-pin section is additive and keeps the pin checkable. This lane did not write it because the claim's integrity is the owner's, and that roadmap states in two places that a lane holds no authority to edit its pinned record.
@@ -506,6 +498,7 @@ file; `council:pr` is unchanged.
 ### blocker: observation-slots-are-the-claim-owners-to-spend
 - **Status:** open — registered 2026-10-19; step 6.5 stated the hold in a screen note, which the drain queue cannot read.
 - **Owner:** user
+- **Ownership:** product-owned
 - **Blocks:** step 6.5 only
 - **Question:** Are the first two source-door runs on this repository offered as the observation runs of `reference-loop-upgrade-value`? The offer is recorded in a roadmap parked behind two owner-reserved blockers of its own (`shadow-pin-is-post-upgrade`, `fetch-is-owner-reserved`), and an invalid pair spends a slot that cannot be withdrawn from a pre-registered measurement.
 - **Recommendation:** decline for now and record the decline, because the shadow comparator that an observation run would be measured against is recorded there as known-invalid and un-ratified. An offer accepted against it would spend a slot on a comparison that file already calls inadmissible.
@@ -516,8 +509,9 @@ file; `council:pr` is unchanged.
 ### blocker: ten-recorded-runs-do-not-exist
 - **Status:** open — registered 2026-10-19; step 6.6's precondition was stated only in a screen note.
 - **Owner:** user
+- **Ownership:** product-owned
 - **Blocks:** step 6.6 only
-- **Question:** Nothing is contested — the calibration step reads ten `run.json` records under `agents/runtime/analysis/` and that directory does not exist. A falsification pass over zero runs reports nothing and would still look like a completed step.
+- **Question:** May the calibration run on fewer than ten records? Nothing is contested — the step reads ten `run.json` records under `agents/runtime/analysis/`, and that directory does not exist. A falsification pass over zero runs reports nothing and would still look like a completed step.
 - **Recommendation:** leave it open until the records exist. Calibrating on fewer than ten, or recording "fewer than ten runs exist" as the reading, would close the step without answering the question it was written to answer — one versus three analysts, one versus three loops, with and without the exchange.
 - **If you do nothing:** the defaults of 1.4 stay the stated defaults they already declare themselves to be, and no stage is lowered on an unmeasured reading.
 - **What to do:** pick exactly one — (a) wait until ten runs are recorded, then calibrate; or (b) lower the threshold to a number the owner names and calibrate on that; or (c) cancel the calibration step and keep the defaults permanently.
@@ -570,7 +564,9 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
 - [x] AC-1 — From a subfolder each of the four doors prints the scope line before
       any read; inside an enumerated or detected module it names the module, with
       or without a marker in the module's `agents/`, and keeps the outer project
-      as `project_root`. Met 2026-10-19.
+      as `project_root`. Met 2026-10-19 at contract level: the resolver is executed
+      by its suite, the printing obligation is read in each door's text — no door
+      was run, for the reason AC-9 states.
 - [x] AC-2 — Every loop, round and fix cycle of the four doors has a numeric cap in
       a `limits:` block, and no door runs until a condition without one (ADR-118).
       Met 2026-10-19.
@@ -578,7 +574,10 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
       references no other analyst; each exchange records its cross-exam targets
       verbatim, a disagreement ledger and a minority audit. Met 2026-10-19.
 - [x] AC-4 — After every exchange the run shows the gate's numbers, and a further
-      round happened only on a recorded council or owner decision. Met 2026-10-19.
+      round happened only on a recorded council or owner decision. Met 2026-10-19 at
+      contract level: the gate is executed by its suite, the showing and
+      recorded-decision obligations are read in the shared context — no exchange was
+      run, for the reason AC-9 states.
 - [ ] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
       roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
@@ -594,5 +593,7 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
       second PR or duplicated output. Met 2026-10-19.
 - [x] AC-9 — `run.json` exists for every run, and the retro roadmap carries the
       `analysis-run` unit that reads it. Met 2026-10-19 at mechanism level.
-- [x] AC-10 — `analyze:repo`, `analyze:reference-repo` and `optimize:deep` still
-      resolve as aliases in the projected tree. Met 2026-10-19.
+- [x] AC-10 — `analyze:reference-repo` and `optimize:deep` still resolve as
+      `replaces:` aliases in the projected tree, and `analyze:repo` still resolves
+      as the door's own live name until 6.2b renames it — the colon spelling is the
+      invocation form of `analyze-repo`, not a separate entry. Met 2026-10-19.
