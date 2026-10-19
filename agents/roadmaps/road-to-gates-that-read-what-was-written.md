@@ -101,14 +101,22 @@ changes what either gate is for.
 
 ## Phase 3 — The guard judges a write, not a mention
 
-> **Held, 2026-10-16 drain.** Every step edits
+> **Held, 2026-10-16 drain; executed 2026-10-19.** Every step edits
 > `src/scripts/hooks/block_speaking_inbox_dir.ts`, a `pre_tool_use` deny guard
-> of the same class as `block_no_verify` and `block_config_weakening`. The
-> drain that ran Phases 1–2 was barred from editing deny guards, so this phase
-> was not started — no evidence about its design is implied. It needs a run
-> that is permitted to change a guard.
+> of the same class as `block_no_verify` and `block_config_weakening`, so the
+> diff carries a two-provider ratification record under
+> `agents/evidence/ratifications/`.
+>
+> **M6 was mis-attributed, and the probe says where it really lives.** The Bash
+> token path already reaches `verdictFor` and its already-exists branch. What
+> it did not reach is the right *base*: the guard read `project_dir`, a key no
+> producer sets (the dispatcher sends `workspace_root`, the native payload
+> `cwd`), so the exists-probe resolved against the hook's own cwd. With the
+> process standing in the tree the `ls` was allowed; standing anywhere else —
+> the parent checkout of a worktree session — it was refused. 3.2 fixes that
+> base, which is the same carve-out reached from both entry points.
 
-- [ ] **3.1 Red first: the two commands this round was refused.** Pin both as
+- [x] **3.1 Red first: the two commands this round was refused.** Pin both as
       polarity cases on `creatableTokens` and on the envelope path — a
       read-only `ls` of an existing inbox directory, and a `printf` whose
       single-quoted literal names one. Both must be **allowed**; a `mkdir -p`
@@ -117,7 +125,11 @@ changes what either gate is for.
       verify: the two allow-cases are red and the two block-cases are green
       before any change. A change that makes all four green without the first
       two having been red has not reproduced M5.
-- [ ] **3.2 Reach the already-exists carve-out from the Bash path.** A token
+      Observed 2026-10-19 at `1a334dd16`: 5 allow-cases red (the `ls`
+      against an envelope `cwd`, against `workspace_root`, against a wrapped
+      payload; the remediation naming a renamed directory; the literal deny
+      message line), every block-case green.
+- [x] **3.2 Reach the already-exists carve-out from the Bash path.** A token
       naming a directory that exists on disk takes the same
       `directory already exists — rename, do not re-refuse` branch the
       `_PATH_KEYS` path already takes (`:338-341`). This alone clears M6 and
@@ -125,7 +137,7 @@ changes what either gate is for.
       the fix.
       verify: the `ls` case from 3.1 passes; `mkdir -p` into a **new**
       speaking directory is still refused.
-- [ ] **3.3 Do not judge a token inside a quoted literal as a target.**
+- [x] **3.3 Do not judge a token inside a quoted literal as a target.**
       `creatableTokens` splits on `'` and `"` among other characters, so a
       path inside a single-quoted string becomes a bare token. Keep the
       conservative scan, and exclude only the case M7 names: a token whose
@@ -134,7 +146,13 @@ changes what either gate is for.
       verify: the `printf | link_crypto encrypt` case from 3.1 passes; a
       heredoc body calling `makedirs` on a speaking directory — the case the
       raw-command scan exists for — is still refused.
-- [ ] **3.4 Make the remediation reachable as written.** The command in the
+      Landed narrower than the step's wording: the exemption is the one
+      remediation shape, matched on the whole command — a single-quoted
+      `printf '%s'` literal piped into `link_crypto encrypt` and nothing else.
+      D2 forbids a verb classifier; eight bypass shapes (a second segment,
+      `;`, `&&`, a newline, a redirect, `$(…)`, `| sh`, `decrypt`) are
+      block-cases in the same suite.
+- [x] **3.4 Make the remediation reachable as written.** The command in the
       guard's error text must execute unchanged in a tree where the speaking
       directory exists.
       verify: a test runs the literal command from the message against a
@@ -182,12 +200,12 @@ changes what either gate is for.
       produces no `omitted-sibling` finding; the inverse pair still does.
 - [x] **AC-4** A prose-named parent reports as `unresolvable-parent`, not
       `missing-parent`.
-- [ ] **AC-5** A read-only `ls` of an **existing** inbox directory and a
+- [x] **AC-5** A read-only `ls` of an **existing** inbox directory and a
       `printf` naming one inside a quoted literal are both allowed; a
       `mkdir -p`, a `>` redirect and a heredoc `makedirs` into a **new**
       speaking directory are all still refused. All five asserted in one
       polarity suite.
-- [ ] **AC-6** The remediation command printed in the guard's own error text
+- [x] **AC-6** The remediation command printed in the guard's own error text
       executes unblocked against a fixture.
 - [x] **AC-7** The defect-pattern sweep for `normalizeParent` without a quote
       strip is reported with its count and file list.
