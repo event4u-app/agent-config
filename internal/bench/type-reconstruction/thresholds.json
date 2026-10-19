@@ -1,0 +1,13 @@
+{
+  "family": {
+    "median_iou_min": 0.75,
+    "median_stem_deviation_max": 0.05,
+    "median_sidebearing_deviation_max": 20,
+    "gate_pass_rate_min": 0.75
+  },
+  "benchmark": {
+    "pass": "every family passes",
+    "partial": "at least one family passes and at least one does not",
+    "null": "no family passes"
+  }
+}
