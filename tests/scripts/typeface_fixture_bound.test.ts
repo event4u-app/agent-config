@@ -81,7 +81,9 @@ describe('typeface fixtures stay inside their bound', () => {
 
     it('refuses a family whose identifier is not OSI-approved', () => {
         const manifest = readManifest();
-        const bad = { ...manifest, families: [{ ...manifest.families[0], spdx: 'LicenseRef-Proprietary' }] };
+        const [first] = manifest.families;
+        if (first === undefined) throw new Error('fixtures.json lists no family');
+        const bad = { ...manifest, families: [{ ...first, spdx: 'LicenseRef-Proprietary' }] };
         expect(boundFindings(REPO_ROOT, bad, onDiskTypefaces()).join('\n')).toMatch(/not an OSI-approved identifier/);
     });
 
