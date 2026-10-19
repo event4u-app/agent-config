@@ -20,14 +20,12 @@ and keep the full search — this file only adds candidates to it.
 | road-to-agent-throughput-recovery | active | ready | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
 | road-to-an-analysis-family-that-deepens-itself | active | ready | One engine behind four commands. |
 | road-to-an-installed-layer-that-is-thinned | active | ready | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
-| road-to-an-intake-the-queue-can-carry | active | ready | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
 | road-to-authority-routing-mechanism | active | ready | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-consumer-invocations-that-install | active | draft | Every executable instruction in shipped text that runs one of this package's scripts uses a form that works from a … |
 | road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-gates-that-read-what-was-written | active | ready | Two gates stop reporting a finding the thing in front of them does not support. |
-| road-to-gates-that-run-where-the-consumer-stands | active | ready | The checking machinery this package applies to itself also runs over what a consumer's machine actually does, and every claim … |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-one-upstream-that-checks-what-leaves | active | ready | There is one way for a finding to leave a machine and become a pull request or issue against this … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
@@ -50,6 +48,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-ac-deep-capabilities | later | draft | Three deep capabilities are either proven to earn their cost on the default path, or closed with a recorded terminal … |
 | road-to-adversarial-verification-and-long-runs | later | later | Ask the owner stops being the quality and control loop. |
 | road-to-agent-config-next | later | draft | When this roadmap is resumed, the reader can tell — from measurements that already exist rather than from this document's … |
+| road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-obligation-row-that-names-its-writer-carried | later | later | Every step road-to-an-obligation-row-that-names-its-writer deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |
 | road-to-billing-cliff-detection | later | draft | An autonomous drain that crosses its Claude Code plan quota stops at the next clean boundary and asks, instead of … |

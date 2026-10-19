@@ -357,4 +357,71 @@ describe('check_claims — mechanism', () => {
         expect(r.stderr).toContain("ledger status is 'withdrawn', not 'backed'");
     });
 
+    // `measured-in-repo` is a finished measurement of a consumer-facing mechanism taken in the
+    // maintainer tree. Not `backed` (nothing ran on a consumer's machine) and not
+    // `unbacked` (the reading is finished, not owed), so it must say what it
+    // measured and what consumer-side evidence would promote it.
+    function measuredLedger(fields: string, status = 'measured-in-repo', evidence = 'docs/evidence.md#ANCHOR'): string {
+        return [
+            '# Claims Ledger',
+            '',
+            '### claim: bench-row',
+            '- claim: A shipped install does a measurable thing.',
+            '- kind: quant',
+            `- evidence: ${evidence}`,
+            `- status: ${status}`,
+            '- last_verified: 2026-10-19',
+            fields,
+            '',
+        ].join('\n');
+    }
+    const MEASURED_ON = '- measured_on: maintainer checkout, fixture corpus, one host';
+    const PROMOTION = '- promotion_evidence: a tests/install/ case that measures the same figure in a throwaway HOME';
+
+    it('accepts a measured-in-repo entry that names its subject and its promotion evidence', () => {
+        write('docs/CLAIMS.md', measuredLedger(`${MEASURED_ON}\n${PROMOTION}`));
+        write('README.md', 'No markers here.\n');
+        expect(run().code).toBe(0);
+    });
+
+    it('rejects a measured-in-repo entry with no promotion evidence', () => {
+        write('docs/CLAIMS.md', measuredLedger(MEASURED_ON));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('measured-in-repo entry names no `promotion_evidence`');
+    });
+
+    it('rejects a measured-in-repo entry that does not say what it measured on', () => {
+        write('docs/CLAIMS.md', measuredLedger(PROMOTION));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('measured-in-repo entry names no `measured_on`');
+    });
+
+    it('rejects a measured-in-repo entry whose report pointer does not resolve', () => {
+        write('docs/CLAIMS.md', measuredLedger(`${MEASURED_ON}\n${PROMOTION}`, 'measured-in-repo', 'docs/gone.md'));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('measured-in-repo entry has dangling evidence');
+    });
+
+    it('rejects promotion_evidence on an entry that is not measured-in-repo', () => {
+        write('docs/CLAIMS.md', measuredLedger(PROMOTION, 'backed'));
+        write('README.md', 'No markers here.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('promotion_evidence is only meaningful on a measured-in-repo entry');
+    });
+
+    it('refuses a marker in public prose for a measured-in-repo claim', () => {
+        write('docs/CLAIMS.md', measuredLedger(`${MEASURED_ON}\n${PROMOTION}`));
+        write('README.md', 'It does the thing.<!-- claim:bench-row -->\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain("ledger status is 'measured-in-repo', not 'backed'");
+    });
+
 });

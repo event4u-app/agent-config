@@ -329,8 +329,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 157 -> 167 on 2026-10-18b: ten skills whose links
         // `road-to-steps-the-skill-cannot-skip` AC-1 repaired gained a corpus;
         // `condense-memory` (0x01 = 1) seals (35 -> 36), nine train (122 -> 131).
+        //
+        // 167 -> 168 on 2026-10-19: `playwright-testing` (0x61 = 97) trains (131 -> 132).
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(167);
+        expect(all.length).toBe(168);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(36);
     });
 });
@@ -394,7 +396,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 121 -> 122 on 2026-10-18: `type-design` (0x43 = 67) trains.
         // 122 -> 131 on 2026-10-18b: nine AC-1 link-repair skills train;
         // `condense-memory` seals and is absent here.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(131);
+        // 131 -> 132 on 2026-10-19: `playwright-testing` (0x61 = 97) trains.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(132);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

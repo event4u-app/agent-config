@@ -1,0 +1,1 @@
+**Skipped:** no code surface for this completion — the diff changes one roadmap file under agents/roadmaps/ and nothing executable: a registered blocker, three blocked-by markers and two deferral glyphs, scope 444029ce1bc7170e1afa4f00f19d1303b4911e79d7715ab408bec8aa031608fe, declared 2026-10-19

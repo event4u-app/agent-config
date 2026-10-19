@@ -1,0 +1,63 @@
+{
+    "skill": "playwright-testing",
+    "last_eval": "2026-10-19",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-19 under road-to-a-canvas-the-code-owns step 7.3, which added the baseline-update sentence to this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover writing a spec, a visual-regression screenshot test, updating baselines, a Page Object for a checkout form, and a German variant. Near-misses are the three neighbours whose vocabulary overlaps — suite architecture (playwright-architect), mobile E2E framework choice (mobile-e2e-strategy), HTTP endpoint tests without a browser (api-testing). Counterexamples guard the 'screenshot' and 'test' homonyms outside browser automation.",
+    "queries": [
+        {
+            "q": "write a playwright test that logs in and checks the dashboard heading",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add a visual regression test for the pricing page with toHaveScreenshot",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "the button restyle broke three snapshot baselines, how do I update them properly?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "create a Page Object for the checkout form and use it in an E2E spec",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Schreib mir einen Playwright-Test, der das Kontaktformular ausfüllt und die Erfolgsmeldung prüft",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "design our E2E suite: how should we split fixtures and what runs in CI versus locally?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "suite architecture and the CI-vs-local split → playwright-architect"
+        },
+        {
+            "q": "should we use Detox or Maestro for end-to-end tests of our React Native app?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "mobile E2E framework choice → mobile-e2e-strategy"
+        },
+        {
+            "q": "write integration tests for the POST /orders endpoint, asserting the JSON response",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an HTTP endpoint test with no browser → api-testing"
+        },
+        {
+            "q": "take a screenshot of my terminal output and attach it to the bug report",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'screenshot' as a manual capture, not a visual assertion"
+        },
+        {
+            "q": "add a unit test for the price rounding helper in the cart module",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a unit test of a pure function, no browser automation"
+        }
+    ]
+}

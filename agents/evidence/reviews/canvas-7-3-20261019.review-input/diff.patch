@@ -1,0 +1,494 @@
+diff --git a/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json b/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
+index b37c3b1723a20e196605a66f48a13d28c25d8391..5259784e43f23914b39d1da7d390df9935176b01 100644
+--- a/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
++++ b/agents/evidence/analysis/delivery-set-measurement-2026-08-31.json
+@@ -18,25 +18,25 @@
+     "token_target": 500
+   },
+   "metrics": {
+-    "precision_at_k": 80.793,
+-    "recall_at_k": 60.093,
+-    "recall_loss_pp": 39.907,
++    "precision_at_k": 80.952,
++    "recall_at_k": 60.247,
++    "recall_loss_pp": 39.753,
+     "ceiling_met": false,
+     "recall_curve_pp": {
+-      "1": 40.839,
+-      "3": 53.727,
+-      "5": 60.093,
+-      "10": 68.789,
+-      "20": 75.621
++      "1": 40.832,
++      "3": 53.929,
++      "5": 60.247,
++      "10": 68.875,
++      "20": 75.655
+     },
+-    "false_activation_at_k": 14.815,
+-    "context_cost_tokens": 230.5,
++    "false_activation_at_k": 14.696,
++    "context_cost_tokens": 230.6,
+     "token_target_met": true,
+-    "benefit_unconditional": 60.093,
+-    "benefit_conditional_on_activation": 80.793,
+-    "adjudicated_deliveries": 479,
+-    "unadjudicated_deliveries": 5373,
+-    "tie_decided_cut_pp": 80.705
++    "benefit_unconditional": 60.247,
++    "benefit_conditional_on_activation": 80.952,
++    "adjudicated_deliveries": 483,
++    "unadjudicated_deliveries": 5419,
++    "tie_decided_cut_pp": 80.699
+   },
+   "set_compatibility": {
+     "shared_prompts": 15,
+@@ -145,7 +145,7 @@
+   "corpus": {
+     "partition": "train",
+     "holdout_sealed": true,
+-    "cases": 1265,
+-    "prompts": 1249
++    "cases": 1275,
++    "prompts": 1259
+   }
+ }
+diff --git a/agents/evidence/analysis/routing-body-signal-verdict.json b/agents/evidence/analysis/routing-body-signal-verdict.json
+index 00ace39b7e34cd46df5e0f854a4f6c927c43d20a..2763de4c9f69b7b1989894d5226962ef01a24f7d 100644
+--- a/agents/evidence/analysis/routing-body-signal-verdict.json
++++ b/agents/evidence/analysis/routing-body-signal-verdict.json
+@@ -3,7 +3,7 @@
+   "step": "5.1",
+   "roadmap": "road-to-governed-harness-evolution",
+   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
+-  "measured_at": "2026-10-18",
++  "measured_at": "2026-10-19",
+   "proxy_to_real_fidelity": {
+     "value": null,
+     "status": "unmeasured-by-construction",
+@@ -11,14 +11,14 @@
+   },
+   "body_signal": {
+     "verdict": "harmful",
+-    "reason": "false activation +5.64 pp breaches the +2.0 pp guard",
++    "reason": "false activation +5.75 pp breaches the +2.0 pp guard",
+     "k": 5,
+-    "delta_recall_pp": 3.106,
+-    "delta_false_activation_pp": 5.636,
+-    "p_value": 0.1768,
++    "delta_recall_pp": 2.928,
++    "delta_false_activation_pp": 5.751,
++    "p_value": 0.2018,
+     "discordant_positive_pairs": {
+       "gained": 109,
+-      "lost": 89
++      "lost": 90
+     },
+     "bars": {
+       "recall_gain_pp": 5,
+@@ -28,36 +28,36 @@
+     },
+     "arms": {
+       "description": {
+-        "positives": 644,
+-        "positiveHits": 387,
+-        "negatives": 621,
++        "positives": 649,
++        "positiveHits": 391,
++        "negatives": 626,
+         "negativeHits": 92
+       },
+       "description+body": {
+-        "positives": 644,
+-        "positiveHits": 407,
+-        "negatives": 621,
+-        "negativeHits": 127
++        "positives": 649,
++        "positiveHits": 410,
++        "negatives": 626,
++        "negativeHits": 128
+       }
+     },
+     "recall_pp": {
+-      "description": 60.093,
+-      "description+body": 63.199
++      "description": 60.247,
++      "description+body": 63.174
+     },
+     "false_activation_pp": {
+-      "description": 14.815,
+-      "description+body": 20.451
++      "description": 14.696,
++      "description+body": 20.447
+     }
+   },
+   "corpus": {
+     "partition": "train",
+     "holdout_sealed": true,
+-    "train_corpora": 131,
++    "train_corpora": 132,
+     "legacy_shaped_corpora": [
+       "brand-asset-generation",
+       "estimate-ticket"
+     ],
+-    "cases": 1265,
++    "cases": 1275,
+     "catalogue_size": 301
+   }
+ }
+diff --git a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+index 7c7ac85b695e8743a5cfa37a663aad97cac1dc1a..c4f985d9bfb4bce1a41eb8b1093b34ac85679861 100644
+--- a/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
++++ b/agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md
+@@ -23,7 +23,7 @@ beside it.
+ 
+ - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
+   and § Correction 2026-08-31 are about.
+-- **Now: 167 files, 36 holdout and 131 train.** That bullet read
++- **Now: 168 files, 36 holdout and 132 train.** That bullet read
+   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
+   when there had since been nine — it drifted 31 files behind the tree because
+   each growth after 2026-10-01 wrote its own section and left this line alone.
+@@ -34,7 +34,8 @@ beside it.
+   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
+   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
+   § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b,
+-  § Growth — 2026-10-17, § Growth — 2026-10-18 and § Growth — 2026-10-18b; the
++  § Growth — 2026-10-17, § Growth — 2026-10-18, § Growth — 2026-10-18b and
++  § Growth — 2026-10-19; the
+   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
+   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
+   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
+@@ -735,10 +736,46 @@ Neither verdict changes in kind.
+ **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+ and `routing_signal_measurement.test.ts` § 5.1.
+ 
++## Growth — 2026-10-19, one train corpus; the seal does not move
++
++```
++ONE ROW ADDED, TRAIN-SIDE. THE SEALED SET STAYS AT 36.
++NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
++RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
++```
++
++**What changed.** `road-to-a-canvas-the-code-owns` step 7.3 added one sentence
++to `playwright-testing`'s `SKILL.md` — baseline updates are shown as a diff and
++land in a commit of their own, on the pinned renderer — and
++`check_routing_coverage` requires a corpus from every touched skill. It gained
++**10** labelled queries: 5 exemplars of which one is German, 3 near-misses
++naming `playwright-architect`, `mobile-e2e-strategy` and `api-testing`, and 2
++counterexamples. The sentence changes no routing surface: no description and no
++trigger line moved.
++
++| Row | Partition | `sha256(name)[0:2]` | Bucket |
++|---|---|---|---|
++| `playwright-testing` | train | `0x61` | 97 ≥ 51 |
++
++**Both train-side measurements were re-taken, after the skill edit.**
++`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
++on the false-activation guard — false activation 5.636 -> **5.751 pp** against
++the +2.0 pp guard, delta-recall 3.106 -> **2.928 pp** (still below the 5.0 pp
++bar), McNemar p 0.1768 -> **0.2018**, train corpora 131 -> **132**, cases 1265
++-> **1275**, catalogue **301**. `delivery-set-measurement-2026-08-31.json`:
++precision@5 80.793 -> **80.952 %**, recall@5 60.093 -> **60.247 %**, recall
++loss 39.907 -> **39.753 pp** — the ceiling stays **BREACHED** — false
++activation@5 14.815 -> **14.696 %**, context cost 230.5 -> **230.6** tokens
++against the 500 target, still **MET**. No new jointly-wrong pair appears.
++Neither verdict changes in kind.
++
++**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
++and `routing_signal_measurement.test.ts` § 5.1.
++
+ ## The set hash
+ 
+ ```
+-SET-SHA256  5d4fec21f423623f11abdefd32c7beca4c629afe2b0b6cfa3b04fe65f24602f4
++SET-SHA256  2339756bf0af3f785d8e30ebc4cefa8b68f7f41508484e582fece4e68e17c5fe
+ ```
+ 
+ Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
+@@ -1195,6 +1232,7 @@ open and which this file does not settle.
+ | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
+ | `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
+ | `persona-improvement` | `510402b135807db3ead05e2e6ab3c315d86caeb55b7bf45b4919d2ba69e56804` |
++| `playwright-testing` | `0496ec7f1219c5e54bd7fcbe364d53c5671872fc0ae44deb7151aa3c170f2b62` |
+ | `po-discovery` | `ac9cf914b69004d4d351272fbaf790126ff6dd255263f8020213bded6226b8b5` |
+ | `prediction-pool-optimizer` | `5eab312a114476b7fc8dc1ef3846b40d759c0db580c75e14b7abbdc541bc2b7f` |
+ | `project-analysis-core` | `48fada14ae5c23d493aadc189db3256964da73ee2484e7ee6575556cc7b7435e` |
+diff --git a/agents/roadmaps/road-to-a-canvas-the-code-owns.md b/agents/roadmaps/road-to-a-canvas-the-code-owns.md
+index 9c04ad552db9b083afb4b353076e1221f820d917..10822c7d7ec431922b51882d359cb078c4a831d1 100644
+--- a/agents/roadmaps/road-to-a-canvas-the-code-owns.md
++++ b/agents/roadmaps/road-to-a-canvas-the-code-owns.md
+@@ -308,10 +308,11 @@ deleted or left as a silent twin without a row the user has seen.
+       with the projection commit; `verify` reports a baseline older than the current
+       projection as `stale`.
+       verify: `npx vitest run tests/scripts/design_sync_verify.test.ts -t stale-baseline --reporter=verbose` -> /✓.*stale-baseline/
+-- [ ] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
++- [x] **7.3 The taught line.** `playwright-testing/SKILL.md:143` gains one sentence:
+       baseline updates are shown as a diff and land in a commit of their own, on the
+       pinned renderer of `playwright-architect/SKILL.md:130-132`.
+       (2026-10-18 screen: open. Editing `playwright-testing` obliges a trigger corpus for it, and adding one re-seals five published measurements — the trigger-corpus holdout pin, the routing-signal verdict, the delivery-set record and the routing-coverage seed. That is its own change; the hook's warning text of 7.1 already carries the acceptance step.)
++      (2026-10-19: landed as its own change, as the screen asked — the sentence, a ten-case train-side corpus for `playwright-testing` (0x61 = 97), the coverage seed 0.5548 -> 0.5581, the holdout pin and both train-side measurements re-taken, neither verdict moving in kind.)
+       verify: `rg -n 'commit of their own' src/skills/playwright-testing/SKILL.md` -> /commit of their own/
+ 
+ ## Phase 8 — Review gates that read the projection
+diff --git a/dist/agent-src/skills/playwright-testing/SKILL.md b/dist/agent-src/skills/playwright-testing/SKILL.md
+index 8f88c6980e8ac8ee6d197a7812a2d49cdc326b35..c6398da7b53684e8a709649bc189ad0156edf042 100644
+--- a/dist/agent-src/skills/playwright-testing/SKILL.md
++++ b/dist/agent-src/skills/playwright-testing/SKILL.md
+@@ -141,6 +141,8 @@ test('homepage visual regression', async ({ page }) => {
+ - First run creates baseline screenshots.
+ - Subsequent runs compare against baselines.
+ - Update baselines: `npx playwright test --update-snapshots`.
++- Baseline updates are shown as a diff and land in a commit of their own, made on
++  the pinned Docker renderer `playwright-architect` names — never on host Chromium.
+ 
+ ## Viewport testing
+ 
+diff --git a/dist/agent-src/skills/playwright-testing/evals/triggers.json b/dist/agent-src/skills/playwright-testing/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ac564e01b37307a48131ece2097b1275977ca675
+--- /dev/null
++++ b/dist/agent-src/skills/playwright-testing/evals/triggers.json
+@@ -0,0 +1,63 @@
++{
++    "skill": "playwright-testing",
++    "last_eval": "2026-10-19",
++    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-19 under road-to-a-canvas-the-code-owns step 7.3, which added the baseline-update sentence to this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover writing a spec, a visual-regression screenshot test, updating baselines, a Page Object for a checkout form, and a German variant. Near-misses are the three neighbours whose vocabulary overlaps — suite architecture (playwright-architect), mobile E2E framework choice (mobile-e2e-strategy), HTTP endpoint tests without a browser (api-testing). Counterexamples guard the 'screenshot' and 'test' homonyms outside browser automation.",
++    "queries": [
++        {
++            "q": "write a playwright test that logs in and checks the dashboard heading",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "add a visual regression test for the pricing page with toHaveScreenshot",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "the button restyle broke three snapshot baselines, how do I update them properly?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "create a Page Object for the checkout form and use it in an E2E spec",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "Schreib mir einen Playwright-Test, der das Kontaktformular ausfüllt und die Erfolgsmeldung prüft",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "design our E2E suite: how should we split fixtures and what runs in CI versus locally?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "suite architecture and the CI-vs-local split → playwright-architect"
++        },
++        {
++            "q": "should we use Detox or Maestro for end-to-end tests of our React Native app?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "mobile E2E framework choice → mobile-e2e-strategy"
++        },
++        {
++            "q": "write integration tests for the POST /orders endpoint, asserting the JSON response",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "an HTTP endpoint test with no browser → api-testing"
++        },
++        {
++            "q": "take a screenshot of my terminal output and attach it to the bug report",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "'screenshot' as a manual capture, not a visual assertion"
++        },
++        {
++            "q": "add a unit test for the price rounding helper in the cart module",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a unit test of a pure function, no browser automation"
++        }
++    ]
++}
+diff --git a/src/config/routing-coverage-seed.json b/src/config/routing-coverage-seed.json
+index a908d3b011ff64bb550fdbd68c0ec37752e29843..d0daa2f81c4f58bb6ad43be62fea5794d2eed083 100644
+--- a/src/config/routing-coverage-seed.json
++++ b/src/config/routing-coverage-seed.json
+@@ -10,11 +10,11 @@
+     },
+     "seed": {
+         "rules": 0.9626,
+-        "skills": 0.5548
++        "skills": 0.5581
+     },
+     "seed_provenance": {
+         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
+-        "skills": "167 of 301 skills carry evals/triggers.json on 2026-10-18 (second growth that day); was 157 of 301 earlier that day, 156 of 300 on 2026-10-17, 151 of 300 on 2026-10-16, 148 of 300 earlier that day, 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
++        "skills": "168 of 301 skills carry evals/triggers.json on 2026-10-19; was 167 of 301 on 2026-10-18 (second growth that day), 157 of 301 earlier that day, 156 of 300 on 2026-10-17, 151 of 300 on 2026-10-16, 148 of 300 earlier that day, 142 of 300 on 2026-10-14, 141 of 300 earlier that day, 140 of 300 earlier still, 137 of 300 earlier still, 134 of 300 earlier still, 127 of 300 on 2026-10-12, 125 of 300 on 2026-10-11, 124 of 299 on 2026-10-10, 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
+     },
+     "history": [
+@@ -206,6 +206,13 @@
+             "from": 0.5216,
+             "to": 0.5548,
+             "reason": "road-to-steps-the-skill-cannot-skip AC-1 repaired dead SKILL.md links in ten skills that carried no corpus, so check_routing_coverage required one from each (157 -> 167 of 301). TEN cases each: 5 exemplars of which one is German, 3 near-misses, 2 counterexamples. ONE ROW SEALS: condense-memory is 0x01 = 1, below the holdout ceiling of 51; the other nine train. The sealed set moves 35 -> 36 and the train set 122 -> 131. BOTH published train-side measurements were re-taken after every skill edit was on disk: routing-body-signal-verdict.json still harmful (false activation +5.636 pp against the +2.0 pp guard, delta-recall +3.106 pp against the 5.0 pp bar, McNemar p 0.1768, train corpora 131, cases 1265, catalogue 301); delivery-set-measurement-2026-08-31.json precision@5 80.793 %, recall@5 60.093 %, false activation@5 14.815 %. Ten grandfather entries removed with the corpora, the shrink-only direction. The seed rises to the live value; it may never be LOWERED."
++        },
++        {
++            "date": "2026-10-19",
++            "scope": "skills",
++            "from": 0.5548,
++            "to": 0.5581,
++            "reason": "road-to-a-canvas-the-code-owns step 7.3 added one sentence to playwright-testing's SKILL.md, so check_routing_coverage required a corpus from the touched skill, which had none (167 -> 168 of 301). TEN cases: 5 exemplars of which one is German, 3 near-misses (playwright-architect, mobile-e2e-strategy, api-testing), 2 counterexamples. sha256('playwright-testing')[0:2] is 0x61 = 97, above the holdout ceiling of 51, so it trains (131 -> 132) and the sealed set stays at 36. BOTH published train-side measurements were re-taken after the skill edit was on disk: routing-body-signal-verdict.json still harmful (false activation +5.751 pp against the +2.0 pp guard, delta-recall +2.928 pp against the 5.0 pp bar, McNemar p 0.2018, train corpora 132, cases 1275, catalogue 301); delivery-set-measurement-2026-08-31.json precision@5 80.952 %, recall@5 60.247 %, false activation@5 14.696 %. One grandfather entry removed with the corpus, the shrink-only direction. The seed rises to the live value; it may never be LOWERED."
+         }
+     ]
+ }
+diff --git a/src/config/skill-body-budget.json b/src/config/skill-body-budget.json
+index 9e1e90a82bdb44d38772d6295e34fcfc2387cfb9..a5566042d13208cac88e8881a1c729594b708c98 100644
+--- a/src/config/skill-body-budget.json
++++ b/src/config/skill-body-budget.json
+@@ -212,7 +212,7 @@
+     "pixar-storyteller": 5247,
+     "playbook-authoring": 10751,
+     "playwright-architect": 5774,
+-    "playwright-testing": 11165,
++    "playwright-testing": 11333,
+     "po-discovery": 5282,
+     "positioning-strategy": 8376,
+     "prediction-pool-optimizer": 16448,
+@@ -615,6 +615,12 @@
+       "old": 15187,
+       "new": 15706,
+       "reason": "Step 5 runs the lexicon and claim pass on the finished draft over stdin and says what an avoid hit, a taboo hit, an unbacked claim and exit 2 each mean. road-to-a-brand-the-tree-can-check 5.4."
++    },
++    {
++      "skill": "playwright-testing",
++      "old": 11165,
++      "new": 11333,
++      "reason": "One taught line under the visual-regression section: baseline updates are shown as a diff and land in a commit of their own, on the pinned Docker renderer. road-to-a-canvas-the-code-owns 7.3."
+     }
+   ]
+ }
+diff --git a/src/scripts/trigger_eval_grandfather.json b/src/scripts/trigger_eval_grandfather.json
+index bf7d792190ee5081234ad134349407b3e0a0a061..8e62b6fc087c90a1a2c419f0ff1d9aeb0fa340ee 100644
+--- a/src/scripts/trigger_eval_grandfather.json
++++ b/src/scripts/trigger_eval_grandfather.json
+@@ -92,7 +92,6 @@
+     "pipeline-strategy",
+     "pixar-storyteller",
+     "playwright-architect",
+-    "playwright-testing",
+     "premortem",
+     "privacy-review",
+     "project-analysis-laravel",
+diff --git a/src/skills/playwright-testing/SKILL.md b/src/skills/playwright-testing/SKILL.md
+index b79d4008fe8cc2904c804eb65c662b18a03b029d..a1f7aa94e1c5275c1196fb0a06b59709f787d461 100644
+--- a/src/skills/playwright-testing/SKILL.md
++++ b/src/skills/playwright-testing/SKILL.md
+@@ -141,6 +141,8 @@ test('homepage visual regression', async ({ page }) => {
+ - First run creates baseline screenshots.
+ - Subsequent runs compare against baselines.
+ - Update baselines: `npx playwright test --update-snapshots`.
++- Baseline updates are shown as a diff and land in a commit of their own, made on
++  the pinned Docker renderer `playwright-architect` names — never on host Chromium.
+ 
+ ## Viewport testing
+ 
+diff --git a/src/skills/playwright-testing/evals/triggers.json b/src/skills/playwright-testing/evals/triggers.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ac564e01b37307a48131ece2097b1275977ca675
+--- /dev/null
++++ b/src/skills/playwright-testing/evals/triggers.json
+@@ -0,0 +1,63 @@
++{
++    "skill": "playwright-testing",
++    "last_eval": "2026-10-19",
++    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-19 under road-to-a-canvas-the-code-owns step 7.3, which added the baseline-update sentence to this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover writing a spec, a visual-regression screenshot test, updating baselines, a Page Object for a checkout form, and a German variant. Near-misses are the three neighbours whose vocabulary overlaps — suite architecture (playwright-architect), mobile E2E framework choice (mobile-e2e-strategy), HTTP endpoint tests without a browser (api-testing). Counterexamples guard the 'screenshot' and 'test' homonyms outside browser automation.",
++    "queries": [
++        {
++            "q": "write a playwright test that logs in and checks the dashboard heading",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "add a visual regression test for the pricing page with toHaveScreenshot",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "the button restyle broke three snapshot baselines, how do I update them properly?",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "create a Page Object for the checkout form and use it in an E2E spec",
++            "trigger": true,
++            "class": "exemplar"
++        },
++        {
++            "q": "Schreib mir einen Playwright-Test, der das Kontaktformular ausfüllt und die Erfolgsmeldung prüft",
++            "trigger": true,
++            "class": "exemplar",
++            "language": "de"
++        },
++        {
++            "q": "design our E2E suite: how should we split fixtures and what runs in CI versus locally?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "suite architecture and the CI-vs-local split → playwright-architect"
++        },
++        {
++            "q": "should we use Detox or Maestro for end-to-end tests of our React Native app?",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "mobile E2E framework choice → mobile-e2e-strategy"
++        },
++        {
++            "q": "write integration tests for the POST /orders endpoint, asserting the JSON response",
++            "trigger": false,
++            "class": "near-miss",
++            "note": "an HTTP endpoint test with no browser → api-testing"
++        },
++        {
++            "q": "take a screenshot of my terminal output and attach it to the bug report",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "'screenshot' as a manual capture, not a visual assertion"
++        },
++        {
++            "q": "add a unit test for the price rounding helper in the cart module",
++            "trigger": false,
++            "class": "counterexample",
++            "note": "a unit test of a pure function, no browser automation"
++        }
++    ]
++}
+diff --git a/tests/scripts/routing_signal_measurement.test.ts b/tests/scripts/routing_signal_measurement.test.ts
+index 726ce7e7c65e7ed23f0c9a8784893c9f773c4294..1facd19908454cc45cac3c324c531e9bd453a1f9 100644
+--- a/tests/scripts/routing_signal_measurement.test.ts
++++ b/tests/scripts/routing_signal_measurement.test.ts
+@@ -329,8 +329,10 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
+         // 157 -> 167 on 2026-10-18b: ten skills whose links
+         // `road-to-steps-the-skill-cannot-skip` AC-1 repaired gained a corpus;
+         // `condense-memory` (0x01 = 1) seals (35 -> 36), nine train (122 -> 131).
++        //
++        // 167 -> 168 on 2026-10-19: `playwright-testing` (0x61 = 97) trains (131 -> 132).
+         const all = corpusSkills(REPO);
+-        expect(all.length).toBe(167);
++        expect(all.length).toBe(168);
+         expect(all.filter((r) => r.partition === 'holdout').length).toBe(36);
+     });
+ });
+@@ -394,7 +396,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
+         // 121 -> 122 on 2026-10-18: `type-design` (0x43 = 67) trains.
+         // 122 -> 131 on 2026-10-18b: nine AC-1 link-repair skills train;
+         // `condense-memory` seals and is absent here.
+-        expect(new Set(cases.map((c) => c.skill)).size).toBe(131);
++        // 131 -> 132 on 2026-10-19: `playwright-testing` (0x61 = 97) trains.
++        expect(new Set(cases.map((c) => c.skill)).size).toBe(132);
+     });
+ 
+     it('both legacy-shaped train corpora are read, not silently dropped', () => {
