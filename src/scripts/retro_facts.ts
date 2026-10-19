@@ -33,6 +33,8 @@ import {
     type ForgeApi,
 } from './_lib/forge_reader.js';
 import { listRecords } from './_lib/self_repair_store.js';
+import { RUN_JSON, readRunJson, type Door, type RunJsonRow } from './analysis_run_record.js';
+import type { RunState } from './analysis_run.js';
 import { eolSessionKey, readEolCounters, type StoredEolCounters } from './_lib/session_eol.js';
 
 export type Fact<T> =
@@ -474,6 +476,199 @@ export function readSessionFacts(input: SessionFactsInput): SessionFacts {
 }
 
 // ---------------------------------------------------------------------------
+// Analysis run — the unit kind `analysis-run`
+// ---------------------------------------------------------------------------
+
+/**
+ * What one emitted roadmap shows about whether the run was adopted.
+ *
+ * Only an **archived** roadmap has a final reading: while it is still active,
+ * its open steps may yet be done or cancelled, so counting them now would score
+ * unfinished work as rejected. That state is `missing`, never `{done: 0}`.
+ */
+export interface RoadmapAdoption {
+    slug: string;
+    /** Which roadmap subdirectory held the file; `null` when none did. */
+    found_in: string | null;
+    archived: boolean;
+    steps: Fact<AdoptionCounts>;
+}
+
+export interface AdoptionCounts {
+    done: number;
+    cancelled: number;
+}
+
+/** One analyst's contribution to the run, as `run.json` records it. */
+export interface AnalystContribution {
+    analyst_id: string;
+    mode: RunJsonRow['mode'];
+    family: string;
+    loops: number;
+    top_tier: RunJsonRow['top_tier'];
+}
+
+export interface AnalysisRunFacts {
+    unit: 'analysis-run';
+    /** The identity part of the unit key for this kind: the analysis round. */
+    round_id: string;
+    /** The door the round came through — the run's source. */
+    source: Fact<Door>;
+    final_state: Fact<RunState>;
+    roadmaps_emitted: Fact<string[]>;
+    adoption_per_roadmap: Fact<RoadmapAdoption[]>;
+    /** Summed over the emitted roadmaps, and taken only once every one is archived. */
+    adoption: Fact<AdoptionCounts>;
+    /**
+     * Always a named absence: `run.json` records which roadmaps a run emitted
+     * and which analysts ran, and nothing that joins the two. Reporting a number
+     * here would attribute adoption to an analyst on no evidence.
+     */
+    adoption_per_analyst: Fact<Record<string, AdoptionCounts>>;
+    analysts: Fact<AnalystContribution[]>;
+    seats: Fact<{ used: string[]; failed: string[] }>;
+    recurrence_hits: Fact<number>;
+    ci_rounds: Fact<number>;
+    tokens: Fact<number>;
+    wall_clock_seconds: Fact<number>;
+}
+
+export interface AnalysisRunFactsInput {
+    roundId: string;
+    root: string;
+}
+
+/** Where `analysis_run_record.ts` writes the round's record. */
+export function analysisRunDir(root: string, roundId: string): string {
+    return path.join(root, 'agents', 'runtime', 'analysis', roundId);
+}
+
+/** Roadmap subdirectories a slug may resolve in; `archive` first because it decides the reading. */
+const ROADMAP_DIRS = ['archive', '', 'later', 'stubs', 'skipped'] as const;
+
+function normaliseSlug(slug: string): string {
+    return slug.replace(/^agents\/roadmaps\//, '').replace(/\.md$/, '');
+}
+
+/** `[x]` done and `[-]` cancelled; `[ ]` open and `[~]` deferred are neither. */
+export function countAdoption(markdown: string): AdoptionCounts {
+    let done = 0;
+    let cancelled = 0;
+    for (const line of markdown.split('\n')) {
+        const m = /^\s*-\s\[(.)\]\s/.exec(line);
+        if (m === null) continue;
+        if (m[1] === 'x' || m[1] === 'X') done += 1;
+        else if (m[1] === '-') cancelled += 1;
+    }
+    return { done, cancelled };
+}
+
+function roadmapAdoption(root: string, slug: string): RoadmapAdoption {
+    const rel = normaliseSlug(slug);
+    for (const dir of ROADMAP_DIRS) {
+        const file = path.join(root, 'agents', 'roadmaps', dir, `${rel}.md`);
+        if (!fs.existsSync(file)) continue;
+        const found = dir === '' ? '.' : dir;
+        if (dir !== 'archive') {
+            return {
+                slug: rel,
+                found_in: found,
+                archived: false,
+                steps: missing(`still in ${found}; only an archived roadmap has a final step reading`),
+            };
+        }
+        return { slug: rel, found_in: found, archived: true, steps: measured(countAdoption(fs.readFileSync(file, 'utf8'))) };
+    }
+    return { slug: rel, found_in: null, archived: false, steps: missing('no roadmap directory holds this slug') };
+}
+
+/**
+ * Facts for one analysis round: its door, its analysts, and whether the
+ * roadmaps it emitted were adopted — read from the round's own `run.json`
+ * (ADR-288 D9) and from the roadmap tree. No model, no transcript.
+ */
+export function readAnalysisRunFacts(input: AnalysisRunFactsInput): AnalysisRunFacts {
+    const dir = analysisRunDir(input.root, input.roundId);
+    let run;
+    try {
+        run = readRunJson(dir);
+    } catch (err) {
+        const reason = fs.existsSync(path.join(dir, RUN_JSON))
+            ? `${RUN_JSON} is unreadable: ${err instanceof Error ? err.message : String(err)}`
+            : `no ${RUN_JSON} under ${path.join('agents', 'runtime', 'analysis', input.roundId)}`;
+        return {
+            unit: 'analysis-run',
+            round_id: input.roundId,
+            source: missing(reason),
+            final_state: missing(reason),
+            roadmaps_emitted: missing(reason),
+            adoption_per_roadmap: missing(reason),
+            adoption: missing(reason),
+            adoption_per_analyst: notApplicable('run.json joins no emitted roadmap to an analyst'),
+            analysts: missing(reason),
+            seats: missing(reason),
+            recurrence_hits: missing(reason),
+            ci_rounds: missing(reason),
+            tokens: missing(reason),
+            wall_clock_seconds: missing(reason),
+        };
+    }
+
+    const per = run.roadmaps_emitted.map((slug) => roadmapAdoption(input.root, slug));
+    const unread = per.filter((p) => !p.archived);
+    const adoption: Fact<AdoptionCounts> =
+        per.length === 0
+            ? notApplicable('the run emitted no roadmap')
+            : unread.length > 0
+              ? missing(`${unread.length} of ${per.length} emitted roadmaps are not archived: ${unread.map((p) => p.slug).join(', ')}`)
+              : measured(
+                    per.reduce(
+                        (sum, p) => ({
+                            done: sum.done + (p.steps.status === 'measured' ? p.steps.value.done : 0),
+                            cancelled: sum.cancelled + (p.steps.status === 'measured' ? p.steps.value.cancelled : 0),
+                        }),
+                        { done: 0, cancelled: 0 },
+                    ),
+                );
+
+    const byAnalyst = new Map<string, AnalystContribution>();
+    for (const row of run.rows) {
+        const seen = byAnalyst.get(row.analyst_id);
+        if (seen === undefined) {
+            byAnalyst.set(row.analyst_id, {
+                analyst_id: row.analyst_id,
+                mode: row.mode,
+                family: row.family,
+                loops: 1,
+                top_tier: { ...row.top_tier },
+            });
+            continue;
+        }
+        seen.loops += 1;
+        seen.top_tier.added += row.top_tier.added;
+        seen.top_tier.changed += row.top_tier.changed;
+        seen.top_tier.killed += row.top_tier.killed;
+    }
+
+    return {
+        unit: 'analysis-run',
+        round_id: run.run_id,
+        source: measured(run.door),
+        final_state: measured(run.final_state),
+        roadmaps_emitted: measured([...run.roadmaps_emitted]),
+        adoption_per_roadmap: measured(per),
+        adoption,
+        adoption_per_analyst: notApplicable('run.json joins no emitted roadmap to an analyst'),
+        analysts: measured([...byAnalyst.values()]),
+        seats: measured({ used: [...run.seats.used], failed: [...run.seats.failed] }),
+        recurrence_hits: measured(run.recurrence_hits),
+        ci_rounds: measured(run.ci_rounds),
+        tokens: measured(run.tokens),
+        wall_clock_seconds: measured(run.wall_clock_seconds),
+    };
+}
+
+// ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
 
@@ -511,7 +706,16 @@ export function main(argv: readonly string[] = process.argv.slice(2), out = (s: 
         out(JSON.stringify(facts, null, 2));
         return 0;
     }
-    out('usage: retro_facts --pr N | --session ID | --tag TAG');
+    const round = argValue(argv, '--analysis-run');
+    if (round !== null) {
+        if (round === '' || round.startsWith('-')) {
+            out('retro_facts: --analysis-run needs an analysis round id');
+            return 2;
+        }
+        out(JSON.stringify(readAnalysisRunFacts({ roundId: round, root }), null, 2));
+        return 0;
+    }
+    out('usage: retro_facts --pr N | --session ID | --tag TAG | --analysis-run ROUND');
     return 2;
 }
 
