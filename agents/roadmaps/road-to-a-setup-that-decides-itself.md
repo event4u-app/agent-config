@@ -185,6 +185,7 @@ with that file.
   verify: table test — each condition failing alone yields `full`; a
   consequence-class rule is `full` under every input.
   Landed 2026-10-16: `src/scripts/_lib/layer_form_decision.ts` (`decideLayerForm`, `ruleForm`), test `tests/scripts/layer_form_decision.test.ts`. The arrival record and carrier probe enter as typed inputs with no producer yet, so every machine reads `full`. "Delivery mechanics observed" is read as `observed-true` in `host-injection-effect.json`, because that record has no mechanics field — stricter, never looser.
+  AC-2 closed on this step 2026-10-20 at `80809d5a0`: `npx vitest run tests/scripts/layer_form_decision.test.ts` — 31/31 green. Each single failing condition yields `full` with its own reason, the reason set is covered exactly once, and every consequence-class and safety-floor id is `full` under the all-hold input and every single-failure input. Sensitivity rests on construction: the input set includes the all-hold case, where an ordinary rule is asserted `thinned`, so a `ruleForm` that ignored either class would red on that id. The explicit sabotage probe (dropping the safety-floor branch) was refused by the host's auto-mode classifier and was not run; the edit was reverted before any commit.
 - [x] **3.2 Shadow first.** Until 5.3 enables it, the function runs and records
   what it would choose; `doctor` prints that as `would-be`, and nothing on disk
   changes.
@@ -354,7 +355,6 @@ with that file.
   tombstone; `doctor` names leftovers.
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
-  Closed 2026-10-20 at `80809d5a0`: `npx vitest run tests/scripts/layer_form_decision.test.ts` — 31/31 green. Each single failing condition yields `full` with its own reason, the reason set is covered exactly once, and every consequence-class and safety-floor id is `full` under the all-hold input and every single-failure input. Sensitivity rests on construction: the input set includes the all-hold case, where an ordinary rule is asserted `thinned`, so a `ruleForm` that ignored either class would red on that id. The explicit sabotage probe (dropping the safety-floor branch) was refused by the host's auto-mode classifier and was not run; the edit was reverted before any commit.
 - [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the
   record says why.
 - [ ] AC-4 — `check_host_tree_parity` green at every step.
