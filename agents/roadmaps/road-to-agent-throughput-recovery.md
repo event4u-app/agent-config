@@ -9,13 +9,13 @@ depends: [road-to-a-setup-that-decides-itself]
 relates:
   - slug: road-to-a-setup-that-decides-itself
     relation: depends
-    note: "Owns the blocker instruction-load-observer-has-no-scheduled-owner. Step 2.2 here adds dated evidence to it; no step here edits that file's plan."
+    note: "Its blocker instruction-load-observer-has-no-scheduled-owner resolved 2026-10-15 (D6 there: steps 1.1-2.2 schedule the binding). Step 2.2 here adds dated evidence beside D6; no step here edits that file's plan."
   - slug: road-to-an-installed-layer-that-is-thinned
     relation: depends
     note: "Owns thinning ~/.claude/rules. Not re-planned here."
   - slug: road-to-local-gates-wired-while-they-are-green
     relation: disjoint
-    note: "Its batches add ~20 gates per change to a required job with no paths filter (standing-payload-delta.yml:497, :555-563). Step 1.4 here asks it to report each batch's duration delta; it does not stop the drain."
+    note: "Archived. Its batches added ~20 gates per change to a required job with no paths filter; step 1.4 here asked for a duration line per batch and was met by #2440 (2.2g)."
   - slug: road-to-a-cold-start-paid-once
     relation: disjoint
     note: "Owns warm workers and spawning into a rate-limit event. Phase 2 here decides whether tokens or wall-clock bind a night; that verdict is an input to it, not a re-plan of it."
@@ -200,7 +200,7 @@ the Acceptance Criteria held.
       *corrected-from-reproduction*
       verify: a planted regression in a fixture store produces one queue line,
       and a run from a worktree without `--store` is reported as empty, not green.
-- [ ] **1.4 Price the gates the estate is adding.** Ask
+- [x] **1.4 Price the gates the estate is adding.** Done 2026-10-19 (read): the next batch PR after the ask, #2440 (2.2g, merged 2026-10-17), carries § "The duration line step 2.2 asks for" — p50 118 s over 25 runs before, 129 s after at `86b3a1c6e`, n=1, no causal claim; that roadmap is archived. Ask
       `road-to-local-gates-wired-while-they-are-green` to record, per batch, the
       change in the required job's duration. Do not stop the drain.
       verify: the next batch PR carries a before/after duration line.
@@ -229,12 +229,22 @@ the Acceptance Criteria held.
       window is read. The probe today prints pause counts, not distinct paused
       nights; the reading adds that count, and no threshold here moves once a
       window has been looked at. Open: the windows start after 1.4 closes.
+      <br>2026-10-19: 1.4 closes in this change, so window 1 starts the first
+      night after it merges. `probe_turnaround` now prints the rule's unit —
+      `paused nights P of A active`, overall and per `--git` window — counting a
+      paused night only when it was active (test seen red twice, with the
+      intersection and with the active set neutralised). No window was read.
 - [ ] **2.2 Put the stalled thinning in front of the owner with its run cost.**
       Add the 2.1 verdict, the floor figures and a `config_cost_report` run
       (delivered payload per asset) to blocker
       `instruction-load-observer-has-no-scheduled-owner` in
       `road-to-a-setup-that-decides-itself` as dated evidence.
       verify: the blocker carries the line; neither depended roadmap's plan moves.
+      <br>2026-10-19, *corrected-from-reproduction*: the blocker resolved on
+      2026-10-15 (owner option (a), D6 of that file — its steps 1.1–2.2 now
+      schedule the binding), so the dated evidence goes beside D6 there, and in
+      2.1's tokens-bound branch "the observer blocker is the lever" reads as
+      those scheduled steps. Still waits on 2.1's verdict.
 - [ ] **2.3 Re-decide the two-lane provision (D2 of the finish-first roadmap).**
       On 2026-10-19 the owner shipped parallel lanes under a canonical brief,
       capped at two, while this roadmap's AC-3 and D3 still held lane changes
@@ -277,6 +287,15 @@ the Acceptance Criteria held.
       resumed after a force-push to A reads the new head, never the old verdict.
       <br>2026-10-17: the council did not adopt it (D9: no transition, one abstention), so this step
       waits on D9's measurement and a specified obligation lifecycle.
+- [ ] **3.1a Take D9's measurement, so 3.2 has a reader.** Over the 2.1
+      windows, read (i) the share of `sleep-poll` blocking minutes that poll CI
+      (a `ci_settle`, `gh pr checks` or `gh run` command in the sleeping call)
+      against other waits, and (ii) of the CI waits a lane sat through, how many
+      had a workable next step in the same lane — an unticked step whose roadmap
+      was not the one waiting. Added 2026-10-19: D9 names both as its revisit
+      condition and no step owned them.
+      verify: a Decisions row records both figures with their denominators, and
+      D9's revisit-if is read against them.
 
 ## Phase 4 — Remove the misfires, from the classes that actually fired
 
@@ -300,6 +319,15 @@ the Acceptance Criteria held.
       split by source therefore needs a join from refusal digests to
       transcripts (`statePathFor` keys both on the session id), not the pin
       store. Open; the fix itself is a hook change and carries its own review.
+      <br>2026-10-19: **split table committed** —
+      `agents/evidence/analysis/language-refusals-by-pin-source-2026-10-19.md`.
+      Joined by `deriveSessionKey`, 109 of 125 refusals (22 of 35 sessions) reach
+      a transcript; 98 are misfires, 9 correct, 2 unknown. Largest class: a
+      session opened by a command, pinned `en` from the expanded command body
+      (the locale is `C.UTF-8` → `und`, so not the locale), never re-pinned
+      because every later wake is a task notification — 65 of 109. Still open:
+      the fixture red before the fix, and the fix, which is a
+      `language_mirror_hook.ts` change under ADR-268 § 4 like 4.3.
 - [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
       code.
@@ -344,9 +372,26 @@ the Acceptance Criteria held.
       error, and relaxing a guard's reach is the expansion direction however
       small. The pre-push preflight refused the push, correctly, and the
       commits were reset off the branch rather than forced past it.
+      <br>**2026-10-19, re-checked: the stated blocker is stale, the misfire is
+      not.** `block_no_verify.ts --command` still exits 1 on `git grep -n x`,
+      `git log -n 5` and `git push -n` at `355dbcc9f`. The binding obstacle is
+      now one step earlier than the ratification: the host's auto-mode
+      classifier denied the write to `block_no_verify.ts` itself as
+      self-modification (the guard governs this session's own shell), so no
+      lane can author the change, and the denial was recorded rather than
+      routed around. The red-first tests were written and seen red (14 allow
+      cases), then removed with the unlanded fix. **Design correction found on
+      the way:** a denylist of `commit`/`am` opens an alias bypass — `git ci -n`
+      with `ci = commit` resolves to `ci` — which breaks D5's superset claim.
+      The fix must be an ALLOWLIST of builtins where `-n` was verified
+      unrelated by `git <sub> -h` (add, branch, cherry-pick, clean, fetch, grep,
+      log, merge, mv, pull, push, rebase, revert, rev-list, rm, shortlog, show,
+      tag); git never lets an alias shadow a builtin, so an alias stays
+      blocked. Reopens when the owner (or a session the classifier permits)
+      lands it with the ADR-268 § 4 ratification.
       Reopening costs minutes once a seat answers; the design above is the
       whole of it.
-- [ ] **4.4 Run B and C through the existing demotion contract.** The shadow
+- [x] **4.4 Run B and C through the existing demotion contract.** Done 2026-10-19: both **floor not met — bar not readable**, no staged-demotion study authorised. B 116 eligible in 26 sessions (< 50; condition 4 reset by #2186/#2188 on 2026-10-03); C 166 in 77 sessions over 63 days, but condition 4 reset by the `verification_command.ts` changes of 2026-09-29..10-12 (71 in 24 since 2026-09-30). Q2 medians published, not read: B 1.5, C 1. Table in `agents/evidence/analysis/language-refusals-by-pin-source-2026-10-19.md`. The shadow
       record and the demotion contract exist (`turn_end_refusals.ts:18-28`); the
       "always armed" decision (`settings_removed_keys.ts:84-87`) is not
       reopened. Feed them the 4.1/4.2 counts.
@@ -427,9 +472,9 @@ the Acceptance Criteria held.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Phase 0's correction is on `main` with an independent review, and
+- [x] AC-1 — Phase 0's correction is on `main` with an independent review, and
       the two orphaned regressions have an owner.
-- [ ] AC-2 — The extended probe reproduces the Context figures from the tree,
+- [x] AC-2 — The extended probe reproduces the Context figures from the tree,
       its class rows sum to its totals, and a planted regression reaches the
       self-repair queue.
 - [ ] AC-3 — Phase 2's verdict is recorded before any lane or settle change
