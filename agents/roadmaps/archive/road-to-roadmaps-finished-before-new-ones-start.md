@@ -92,8 +92,8 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
       Law block that a lane pushes once, opens one PR after the last box flips,
       and that no PR of a lane's roadmap is merged before the lane reports
       `complete`. Local chunked commits stay.
-      verify: the Iron Law fence carries the three clauses; `check_condensation`
-      green after `task sync`.
+      verify: the Iron Law fence carries the three clauses, and the condensation
+      check is green after the sync.
       Done 2026-10-19: the Iron Law fence carries ONE ROADMAP, ONE PR (no push, PR or merge before the last step; delivery fixes to the same PR), no merge before the lane reports `complete`, and finish-before-start; asserted by the same test file.
 - [x] **1.4 Replace § 3d's "staged" paragraph.** Per the 1.1 verdict, either
       mark lanes shipped under the 1.2 brief with the two-lane cap, or record why
@@ -179,7 +179,7 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
       roadmap template and `/analyze:inbox` § roadmap emission: a step that waits
       on a calendar window, soak or release goes into a `stubs/` entry with its
       trigger, not into the implementable roadmap.
-      verify: `lint_roadmap_complexity` (or the template lint it calls) warns on
+      verify: the roadmap complexity lint (or the template lint it calls) warns on
       a `verify:` that names a future date inside a non-stub roadmap; a fixture
       shows the warning.
       Done 2026-10-19: template rule 17c and `/analyze:inbox` Phase 6 write dated waits as `stubs/` entries; `lint_roadmap_complexity` warns on an open step pairing a wait word with a future date (same reading as the queue). Tests 2 new, seen red with the warning neutralised.

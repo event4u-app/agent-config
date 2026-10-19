@@ -21,6 +21,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { granularity_problems } from './_lib/roadmap_granularity.js';
@@ -247,7 +248,7 @@ function lint_roadmap(
  * uses, so the lint and the queue cannot disagree on what is time-gated.
  */
 function _check_dated_waits(text: string, warnings: string[], today?: string): void {
-    const day = today ?? new Date().toISOString().slice(0, 10);
+    const day = today ?? asOf().toISOString().slice(0, 10);
     for (const step of screenRoadmap('', '', text, day).steps) {
         if (step.cls !== 'time') continue;
         warnings.push(
