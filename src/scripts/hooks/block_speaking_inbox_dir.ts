@@ -201,20 +201,6 @@ function _redirectTargets(segment: string): string[] {
 }
 
 /**
- * The remediation {@link denyMessage} prescribes, and nothing wider.
- *
- * Its plaintext IS the real source, which names the directory being renamed —
- * so once the rename has happened the guard refused the command it had just
- * asked for. Matched on the whole command rather than by classifying verbs
- * (that axis was tried and removed, see {@link isGlobOverAcceptableInboxDir}):
- * one single-quoted literal, which the shell cannot expand, piped into an
- * encrypt that writes only to stdout. Any second segment, redirect,
- * substitution or newline falls through to the unchanged token scan.
- */
-const ENCRYPT_REMEDIATION_RE =
-    /^\s*printf '%s' '[^'\n]*' \| (?:\.\/)?scripts-run src\/scripts\/_lib\/link_crypto encrypt\s*$/;
-
-/**
  * The tokens of a shell command whose CREATION this guard should judge.
  *
  * Every whitespace token, exactly as before this change — the classification
@@ -236,9 +222,6 @@ const ENCRYPT_REMEDIATION_RE =
  * without an envelope.
  */
 export function creatableTokens(command: string): string[] {
-    if (ENCRYPT_REMEDIATION_RE.test(command)) {
-        return [];
-    }
     const out: string[] = [];
     const segments = invokedSegments(command);
     for (const seg of segments) {
@@ -412,16 +395,7 @@ export function main(): number {
         if (ti === null) {
             return 0;
         }
-        // The base a relative path resolves against. `project_dir` alone was
-        // read, and no producer sets it: the dispatcher sends `workspace_root`
-        // and the native payload `cwd`. So the exists-probe fell back to the
-        // hook's own cwd — the parent checkout in a worktree session — and an
-        // existing round was judged new. The shell's `cwd` comes before the
-        // dispatcher's root because a command's relative paths resolve there.
-        const repoRoot =
-            [envelope['project_dir'], payload['cwd'], envelope['cwd'], envelope['workspace_root']].find(
-                (v): v is string => typeof v === 'string' && v.trim() !== '',
-            ) ?? '';
+        const repoRoot = typeof envelope['project_dir'] === 'string' ? envelope['project_dir'] : '';
         const rawTool = payload['tool_name'] ?? envelope['tool_name'];
         const toolName = typeof rawTool === 'string' ? rawTool.trim().toLowerCase() : '';
         const candidates: string[] = [];
