@@ -31,14 +31,71 @@ dispatch → monitor → status → escalate / kill
 - `subagents.max_parallel` caps concurrent dispatch. No speculative fan-out:
   a subagent is spawned only for a classified-delegable target, never on spec.
 
-## Transient-failure retry — tier downshift
+## Transient-failure retry — split by error class
 
-On a transient subagent failure (HTTP 429, 5xx, or timeout), retry **once** at
-the next-lower model tier (haiku → if already haiku, escalate to the `spawn_failure`
-counter) before counting a failed attempt. Maximum one downshift per subagent
-call. If the downshifted retry also fails, increment the `spawn_failure_rate`
-counter normally. Never downshift twice on the same slot — deterministic cap
-prevents silent drift to the cheapest model on every failure.
+**Only a retry-safe slice is retried.** A slice is re-dispatched after a
+transient failure only when it is declared read-only or idempotent: a subagent's
+first run may have acted before it failed, and discarding its late result does
+not stop it. Any other slice escalates to the orchestrator unretried, whatever
+the class, so the orchestrator can inspect what the first run did. The
+declaration comes from the dispatcher's own record made before the dispatch —
+the slice spec it wrote, or a definition whose tool grant holds no write tool —
+never from the subagent's output, status envelope or self-description. A slot
+whose N=3 budget is already spent is refused, never decided again. Counters and
+the time left are the dispatcher's own state, read once as own data; a
+malformed input (a missing slot or field, a field that is inherited or behind
+an accessor, an unknown error class, a `retry_safe` that is not a boolean, a
+tier off the ladder, a non-integer count, a negative or infinite time left)
+escalates unretried, moves no counter and carries no next state — the
+dispatcher's own slot stays the only record. A malformed raw failure is not
+transient.
+
+**Classify first, in this order.** Once any byte of the model's response
+arrived, nothing is transient — whatever the status or error type, an error
+event mid-stream included: the request may have been acted on. An error status
+line and its error body are not response bytes. Otherwise HTTP 429, or a
+provider error typed `rate_limit_error`, is `rate_limit`. HTTP 529, or a
+provider error typed `overloaded_error`, is `overloaded`. Any other 5xx is
+`server_error`. A client-side deadline is `timeout`, and a connection observed
+never to open (DNS failure, connection refused) is `server_error`. Anything else — no status and no bytes with no
+observed connect failure, a 4xx, a malformed response, a `BLOCKED` envelope —
+is not transient and escalates as below.
+
+**Counters belong to the slot.** One downshift and one park per slot, across
+every class and every attempt of it.
+
+**A valid `Retry-After` is binding, whatever the class.** No re-dispatch of the
+slot happens before it elapses — not on a quota notice, not on a new user turn.
+A wait the run cannot be shown to cover — longer than the time left, or the time
+left unknown — parks the slot instead of re-dispatching it in the same turn.
+
+**Rate limit — park, never re-dispatch in the same turn, never downshift.** On
+the measured host a same-turn retry is a fresh cold start sent into a limiter
+that is already saturated, and the limiter's scope (model, account or
+organisation) is not known, so a smaller model is no way around it on any
+billing class. The slice parks until a recovery signal: `Retry-After` elapsing
+when the response carried one; otherwise the host's quota-resume notice;
+otherwise the next user turn. Then the warm-worker reuse decision runs again (a
+wait past the cache TTL retires the worker and briefs a successor from its
+capsule) and the slice dispatches **at the same tier, as the same attempt**: a
+park is not a failed attempt. A second park on a slot, of any cause, is not
+taken; it consumes an attempt. If the run ends before a recovery signal
+arrives, the slice is returned as parked — neither failed nor verified.
+
+**Overloaded, 5xx or timeout — one downshift.** Retry **once** at the
+next-lower model tier before consuming an attempt. A slot that already
+downshifted, or sits at the lowest tier, consumes an attempt instead. A timed-out
+call may still complete: its late result is discarded unread, and the retry owns
+the slot — which is why only a retry-safe slice gets one.
+
+A consumed attempt increments `spawn_failure_rate` and spends one of the N=3
+budget; the next attempt dispatches at the slot's **original** tier, with no
+downshift left once one was taken. None is a verification failure — no output
+was accepted — so the verify-fail cascade below never starts from one.
+`classifyTransientFailure()` and `transientFailureAction()` in
+`_lib/subagent_steering.ts` are the tested reference: each failure maps to one
+transition and the slot's next counters. Neither dispatches anything; this text
+is what an orchestrating model reads.
 
 This is the only automatic response to a transient failure; structural or
 semantic errors (e.g. `BLOCKED` status envelope) do not trigger a tier
