@@ -4,11 +4,16 @@ status: ready
 execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-roadmaps-finished-before-new-ones-start
+entry_condition:
+  what: five `/roadmap:process-full --all` runs have completed on a main that carries the parent's lane brief and drain queue
+  when: after five drains run on that main, whenever the owner starts them
+  who: owner
+review_by: 2026-12-31
 ---
 # Road to roadmaps finished before new ones start — carried
 
 > **Source:** carried by the archival sweep on 2026-10-19 from
-> [`road-to-roadmaps-finished-before-new-ones-start`](archive/road-to-roadmaps-finished-before-new-ones-start.md), which closed every other step.
+> [`road-to-roadmaps-finished-before-new-ones-start`](../archive/road-to-roadmaps-finished-before-new-ones-start.md), which closed every other step.
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
