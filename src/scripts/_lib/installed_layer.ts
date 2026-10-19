@@ -59,6 +59,7 @@ import {
 } from './global_deploy_inventory.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE } from './user_global_paths.js';
 import { ruleBody, splitFrontmatter } from './rule_law_section.js';
+import { normaliseLayerText } from './installed_layer_normalise.js';
 
 /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
 export const TOP_FILES = 20;
@@ -72,6 +73,14 @@ export interface RuleFileReading {
     readonly file: string;
     /** Characters AFTER the frontmatter and block-comment strip. */
     readonly chars: number;
+    /**
+     * {@link chars}, with every absolute path substituted for a fixed token.
+     *
+     * The figure a comparison across two machines or two revisions may be read
+     * in — see `installed_layer_normalise.ts` for why `chars` alone cannot be.
+     * NEVER the answer to "what does the host load": that is `chars`.
+     */
+    readonly normalised_chars: number;
     /** False when the file carries a `paths:` key — then the host loads it on a path match. */
     readonly unconditional: boolean;
     /** True when the installed-tools manifest records this path, in either state. */
@@ -89,6 +98,8 @@ export interface LayerReading {
     readonly files: number;
     readonly unconditional: number;
     readonly chars: number;
+    /** {@link RuleFileReading.normalised_chars}, summed over the directory. */
+    readonly normalised_chars: number;
     readonly package_owned: number;
     readonly foreign: number;
     /**
@@ -199,6 +210,8 @@ export interface InstalledLayerReport {
         readonly files: number;
         readonly unconditional: number;
         readonly chars: number;
+        /** {@link LayerReading.normalised_chars}, summed over every layer. */
+        readonly normalised_chars: number;
         readonly package_owned: number;
         readonly foreign: number;
         readonly package_owned_chars: number;
@@ -313,6 +326,7 @@ export function readLayer(
         files: 0,
         unconditional: 0,
         chars: 0,
+        normalised_chars: 0,
         package_owned: 0,
         foreign: 0,
         package_owned_chars: 0,
@@ -351,6 +365,10 @@ export function readLayer(
             // a host loads" and "what a delivery carries" cannot drift into two
             // spellings of the same measurement.
             chars: ruleBody(text).length,
+            // THE SAME STRING, MEASURED TWICE. `chars` is what the host loads;
+            // this is that text with every absolute path substituted, so two
+            // machines with different package roots read one figure in common.
+            normalised_chars: normaliseLayerText(ruleBody(text)).length,
             unconditional: isUnconditional(text),
             package_owned: owned,
         });
@@ -370,6 +388,7 @@ export function readLayer(
         files: readings.length,
         unconditional: readings.filter((r) => r.unconditional).length,
         chars: readings.reduce((n, r) => n + r.chars, 0),
+        normalised_chars: readings.reduce((n, r) => n + r.normalised_chars, 0),
         package_owned: readings.filter((r) => r.package_owned).length,
         foreign: readings.filter((r) => !r.package_owned).length,
         package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
@@ -827,6 +846,7 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             files: acc.files + l.files,
             unconditional: acc.unconditional + l.unconditional,
             chars: acc.chars + l.chars,
+            normalised_chars: acc.normalised_chars + l.normalised_chars,
             package_owned: acc.package_owned + l.package_owned,
             foreign: acc.foreign + l.foreign,
             package_owned_chars: acc.package_owned_chars + l.package_owned_chars,
@@ -838,6 +858,7 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             files: 0,
             unconditional: 0,
             chars: 0,
+            normalised_chars: 0,
             package_owned: 0,
             foreign: 0,
             package_owned_chars: 0,
@@ -922,6 +943,16 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
             `${String(t.chars)} chars ` +
             `(${String(t.unconditional_chars)} standing + ${String(t.scoped_chars)} path-scoped), ` +
             `${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
+    );
+    // THE COMPARABLE FIGURE, ON ITS OWN LINE AND LABELLED AS WHAT IT IS. The
+    // TOTAL above is what the host loads on THIS machine and moves with the
+    // package root; this one does not, and is therefore the only one two runs
+    // may be compared in. Printing them adjacent is deliberate — a reader who
+    // sees one number cannot tell which question it answers.
+    out.push(
+        `  TOTAL (normalised) — ${String(t.normalised_chars)} chars, ` +
+            'every absolute path substituted; comparable across machines and revisions, ' +
+            'NOT what the host loads',
     );
     out.push(...renderHostLimitRows(report.limits));
     return out;
