@@ -59,3 +59,14 @@ catch-up jobs → K4; blind A/B and canary → 6.6.
 | K13 | The peer review's two "everyone missed" items — a 30-second read-only validator wedge, and whether AI-optimised plans are the right problem | the first names a product the source set does not mention (context drift in the seat); the second is answered by directive (a) |
 
 | K14 | A separate evidence file for the directives; inbox step files; a percentage on the extra-round offer; three roadmaps instead of one | directives sit in this header; step files are `road-to-steps-the-skill-cannot-skip`'s; 2.6 gives a band; one shared first slice |
+
+## Source set and drafting pin — moved verbatim from the roadmap header 2026-10-19
+
+`agents/tmp.old/inbox-2026-10-s/` — the owner's transcript of 2026-10-15
+(binding), two seed plans and two exchange-round plans from three separate
+sessions, and one two-seat council review of an earlier revision (all proposals;
+Source A = one outside session's seed and exchange final, Source B = a second
+outside seed, Source C = this host's exchange output). Verified claim by claim
+against `085ec41ff` on 2026-10-15; the plans were drafted against `0c2abb297`,
+and of the five commits between, only `26dd1905e` and `7c728f35b` touch this
+family (`analyze/repo` § 2b).
