@@ -537,6 +537,21 @@ current (unclassified, red) state — no check gets silently un-demoted.*
 
 *Record, required sequencing, item 8.*
 
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap; this marker records that the predecessor D18 asked for shares the gate of the steps it precedes, and asks nothing new --> **8.0 Freeze the evaluation protocol before any number is set** — D18's
+      repaired steps 1–4, as the non-closing predecessor both seats of the
+      2026-10-13 activation-bar round asked for. **This step does NOT satisfy
+      8.2.** It supplies the semantics 8.2's numbers need a referent for.
+      Freeze the decision surface (2.3–2.5), including abstention and
+      missing-evidence behaviour. Define the reference-label protocol and the
+      observation window, with indeterminate outcomes preserved and independent
+      adjudication named. Pre-register sampling, N, thresholds, confidence,
+      severity weighting and exclusions BEFORE any corpus label or verifier
+      output is disclosed. Freeze the verifier and contract hashes. D18's eight
+      disqualifiers stay disqualifying whatever rate is registered. Added
+      2026-10-19, the first calendar day the risk-register stamp could record
+      the change. The 2026-10-13 stamp had already been spent on the D13 repair.
+      verify: `test -f agents/evidence/analysis/authority-verifier-evaluation-protocol.md` -> 0
+
 - [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; this marker records which step it shares its gate with and asks nothing new. RE-SCREENED 2026-10-13 against the live forge, not against this marker: the gate still binds, and D16 now records WHY it is not merely unturned-on but unsatisfiable today — the separately authorised principal it requires does not exist on this repository --> **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
       (N decided by the council in 8.2) without gating anything — collect a
       false-positive / false-negative report comparing its verdicts against
@@ -594,7 +609,9 @@ current (unclassified, red) state — no check gets silently un-demoted.*
       the same wall step 6.1 documented and the D13 repair waited two days for.
       The predecessor is owed on the next calendar day; its content is fully
       specified in D18's record, so nothing is lost but a day.
-- [ ] **8.3 Activate the verifier as a required gate ONLY through the
+      **Landed 2026-10-19 as step 8.0**, blocked on the same gate, and marked
+      as not satisfying this step.
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — AC-3 puts Phase 8 last, and 8.3 activates the verifier that 8.0–8.2 evaluate. All three carry this gate, so 8.3 shares it. Marked 2026-10-19 so run-continuation stops reading it as runnable; the question is already registered and nothing new is asked --> **8.3 Activate the verifier as a required gate ONLY through the
       external bootstrap authorisation this roadmap's break-glass blocker
       (`break-glass-authority-and-bootstrap-approval`) names** — never
       silently, never on the agent's own determination that the shadow run
@@ -642,6 +659,11 @@ current (unclassified, red) state — no check gets silently un-demoted.*
       landing the widening anyway would ship a red gate. The sentence is still
       owed on the next calendar day, and it now sits here in full so that
       landing it is a copy rather than a re-derivation.
+      **Landed 2026-10-19, as a copy.** AC-4 now carries the version-binding
+      and kill-switch sentence, and the risk-register stamp moved to
+      `2026-10-19` in the same commit, so the gate compares against content
+      that was actually reviewed. D19's revisit condition is met by the AC
+      text. The kill switch itself is still unbuilt, and AC-4 stays open.
 
 *Exit: 8.3's six conditions each have a passing test and the bootstrap
 authorisation blocker is resolved. Rollback: the verifier stays shadow-only —
@@ -709,13 +731,14 @@ before 8.3 gates anything.*
 | D24 | contested-technical | council:2026-10-19 design, 2/2 present, blind peer review — convergent on Q1/Q2, **schema WITHHELD** | 7.1's taxonomy and vocabulary. (Q1) The classification registry uses **aspect-level rows**: one row per (check, aspect), one class per aspect, **no fifth class**. Missing evidence is an evaluation state that a run reports, never a registry field. A freshness window is an invariant with a time qualifier (clock source, window, grace). (Q2) *Derive mechanically* is **retired**. Fields are **computed** (`effective_gate`, never stored as authoritative), **governed assertions** (`required_gate`, `refresh_authority`, class), or **observed** runtime state. Provenance text is necessary and not sufficient, because approval must be enforced by repository controls. (Q3) **No schema now.** D22's order is reversed: aggregation truth table → rollback and activation boundaries → three fixtures (`check_gate_completeness`, `check_composite_arming`, `check_trigger_evals`) → a versioned report-only draft → all 16 registered, with the schema revised from what that shows → report-only consistency checks → separate approval before any class changes enforcement. | AI council 2026-10-19, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, blind peer review, 2/2, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-taxonomy-20261019.md` and its `.question.md`. The seats split on strength. openai would approve a non-authoritative report-only prototype; anthropic approves only semantic definitions and provenance requirements. The stricter reading was taken, so no schema file landed. Two truth-table cells are undecided: *snapshot below baseline* and *snapshot unavailable*. | a drafted aggregation truth table with those two cells proposed, plus a rollback policy, is put to the council. Or fixtures show every composite check has the same provenance, authority and evaluation behaviour across its aspects, which would rescue a single row per check |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-13 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Verdict-field split breaks existing consumers | implementation | Separating `verdict` into three fields (step 2.3) can silently desynchronise `check_kernel_edit_ratified.ts` / `_lib/ratification_artifact.ts` if the migration mapping is wrong, reopening the exact "false record" failure `ratification-artifact.md` was written to prevent. | Step 2.3 requires listing every existing consumer and its read-mode BEFORE any schema change lands; the verifier is built and shadow-run (step 8.1) before anything is gated on the new fields. | Phase 2, Phase 8 |
 | 2 | Concurrent work on the same contract surface | implementation | **This fired on 2026-10-12.** PR #2313 (`road-to-self-modification-that-a-council-must-pass` steps 1.4/1.5) rewrote the ladder section of `docs/contracts/ratification-artifact.md` — the council is now the review and the owner the approval, and the section gained an ADR-282 sentence — and added a dated paragraph to § Honest enforcement. Any Phase 1 or Phase 2 step here quoting the old ladder text is now quoting a revision that no longer exists. | `relates:` declares the `extends` relation; the Context and Prerequisites sections instruct re-reading the live contract at execution time rather than trusting this file's quoted text. | Phase 1, Phase 2 |
 | 3 | Activation without the full break-glass set | product | Flipping the verifier to a required gate (step 8.3) before all six break-glass stop conditions are implemented would recreate the dealbreaker the whole roadmap exists to close — a silent-fail-open path. | Step 8.3's own checklist names all six conditions and requires a passing test per condition before activation; the break-glass blocker is a structured, owner-routed gate, not a step the agent can self-clear. | Phase 8 |
+| 4 | Classification registry becomes an enforcement authority by accident | implementation | D24: once CI reads `gate-classification.yml`, it governs enforcement. If a class lands before the aggregation truth table and rollback policy exist, an asserted class could quietly loosen a gate. That is the bypass window D22 named, reached through a schema instead of a class edit. | D24 orders the truth table and rollback policy before the schema, and the first schema is report-only. Step 7.2 stays behind 7.1, and no class changes enforcement without a separate approval. | Phase 7 |
 
 ## Blockers
 
@@ -869,7 +892,15 @@ before 8.3 gates anything.*
 - [ ] AC-4 — The Phase 3 verifier is never activated as a required gate
       except through the `break-glass-authority-and-bootstrap-approval`
       blocker's resolution (Phase 8.3) — never on the agent's own
-      determination that a shadow run "looked good enough".
+      determination that a shadow run "looked good enough". The authorisation
+      binds immutable versions of the verifier, decision contract,
+      configuration, corpus protocol and enforcement mechanism, not an act in
+      time. Any change to one of them after activation needs the same
+      authorisation again. A kill switch exists before activation, with
+      automatic suspension on a critical false negative, a fail-open path,
+      evidence-integrity loss, contract or version drift, or sustained
+      operational failure beyond registered limits. The authority to suspend is
+      held separately from the authority to reactivate (D19).
 - [x] AC-5 — `task lint-roadmap-blockers`, `task lint-roadmap-complexity`,
       and `task lint-plan-risk-register` (or their direct `./scripts-run`
       equivalents) pass against this file.
