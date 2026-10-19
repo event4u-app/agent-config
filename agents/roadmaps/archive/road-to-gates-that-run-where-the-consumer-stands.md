@@ -178,7 +178,7 @@ consumer behaviour points at something that executes.
 
 ## Phase 4 — Point the claims at something that runs
 
-- [ ] **4.1 Give every consumer-facing claim an `exec:` pointer** into the
+- [x] **4.1 Give every consumer-facing claim an `exec:` pointer** into the
       harness, or mark it `unbacked` and say so. A pointer into this
       repository is not evidence for a claim about a consumer's machine.
       The measured exec share is written from the run's output, never predicted.
@@ -327,6 +327,30 @@ consumer behaviour points at something that executes.
       That is the defect L2 names and the move the 2026-10-17 pass already
       refused for `surgical-uninstall`; taking it here would repeat a refusal
       rather than reverse it.
+      **Result, fourth pass 2026-10-19 — closed.** The residue was put to the
+      AI council with the owner-reserved table attached (D7); both seats
+      answered DECIDE on every row, so none of it was owner-gated after all.
+      `council-fallback-loses-zero-seats` now carries `exec:` into
+      `tests/install/council_fallback_installed_copy_real_install.test.ts`: a
+      packed, installed copy driven through its own bin, with `claude`, `codex`
+      and `curl` substituted at the process boundary and no seam in shipped
+      code. A dead cli seat answers over the api rung when the budget permits
+      and stays absent with `fallback_skipped: cost_budget` when it refuses.
+      Seen red with the fake `curl` refusing every connection.
+      The four bench and fixture rows moved to a new ledger status,
+      `measured-in-repo`: a finished reading of a consumer-facing mechanism
+      taken in the maintainer tree, which may not carry a public marker and must
+      name `measured_on` and the `promotion_evidence` that would make it
+      `backed`. `check_claims` enforces all four requirements and was seen red
+      on each before it did.
+      `install-audit-clean` moved to `unbacked`, with the binding evidence named
+      on the row: a pre-release audit of the packed candidate installed into an
+      empty project plus a post-publish or scheduled audit of the published
+      artefact. That is debt, correctly filed — its step audits this
+      repository's lockfile, not the consumer's tree.
+      None of the five carries a public marker, so no public copy moved.
+      `./scripts-run src/scripts/build_proof` exits 0 and `docs/proof.md` now
+      reads **20 of 58** exec-backed, plus 4 measured-in-repo, written from that run.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
@@ -374,6 +398,7 @@ consumer behaviour points at something that executes.
 | D4 | product-owned | council:agents/evidence/council/owner-blocker-routing-20261016.md | **(b) — publish the re-derived figure as a reported, ungated number first, and exit on evidence rather than on the calendar.** Three months is the observation WINDOW, not the criterion. Before the first reading, freeze the methodology and publish it with every reading: definition, numerator, denominator, exclusions and the reproduction command. "Representative" is fixed up front as spanning at least three host platforms, fresh and upgrade installs, and minimal and full projection scopes. The window ENDS IN A DECISION — (a) ratchet or (c) one-off — never in a drift into permanent (b); too few observations extend the window rather than force a pick | AI council 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport), both seats `DECIDE`: the transition is reversible, weakens no floor and creates no ratchet, so it is not reserved. A ratchet makes the first observation load-bearing, and with no history there is no way to tell a real regression from denominator churn, a classification change, nondeterminism or ordinary variance. Both seats refused a fixed numeric variance threshold as unsupported for a discrete ratio over a small denominator | a material unexplained decline during the window, or evidence that the absent gate was exploited — either triggers review immediately rather than at the window's end |
 | D5 | reversible-technical | agent | A pointer into this repository does not back a claim about a consumer machine | it is the distinction that makes the 18-of-62 figure meaningful rather than an accounting detail | the claim vocabulary gains a third evidence class |
 | D6 | reversible-technical | agent | Step 2.2's "advisory by default, `manual` under `--strict`" is carried as a `warn` row: `doctor` and `--strict` exit 0 on it, `--strict --strict-level warn` fails | the doctor's published status vocabulary is `ok \| warn \| fail \| skipped`; a `manual` value would not reach the MCP `doctor_report` contract | the status vocabulary gains a value that means "needs a human" |
+| D7 | reversible-technical | council:agents/evidence/council/consumer-claims-residue-20261019.md | D5's revisit condition fired: the ledger gains a fourth non-`backed` status, `measured-in-repo`, for finished in-repo readings of consumer-facing mechanisms (R3-R6); `council-fallback-loses-zero-seats` is backed by an installed-copy harness case with transports substituted at the process boundary rather than by a seam in shipped code; `install-audit-clean` is `unbacked` until a packed-candidate and published-artefact audit binds it, and is not gated on every PR | both seats DECIDE on all six options, none crossed a reserved row: no row carries a public marker, the status change is reversible, and narrowing was rejected by both in favour of measuring the right subject. Both made the new status conditional on enforced `measured_on`, `promotion_evidence` and a resolving pointer | the new status collects a row whose reading is about a fixture rather than an install, or a `promotion_evidence` goes stale without anyone acting on it |
 
 ## What this roadmap deliberately does not do
 
@@ -410,10 +435,11 @@ consumer behaviour points at something that executes.
       fail.
 - [x] **AC-5** `docs/contracts/` carries a generated, drift-checked exit-code
       register for `init`, `sync`, `doctor` and `uninstall`.
-- [ ] **AC-6** `docs/proof.md`'s exec share is written from a `build_proof`
+- [x] **AC-6** `docs/proof.md`'s exec share is written from a `build_proof`
       run in the same change, and no consumer-facing claim is `backed` on a
       pointer into this repository alone.
-- [ ] **AC-7** `task ci` green.
+- [x] **AC-7** `task ci` green.
+      Satisfied by the remote CI on the closing PR's head, which runs the same pipeline.
 
 ## Provenance
 
