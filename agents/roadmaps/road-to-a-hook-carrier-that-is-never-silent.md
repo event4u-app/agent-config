@@ -198,6 +198,52 @@ routed rule body with nothing in the session saying so.
   `BREAKING_CHANGES.md` Pending row), so no note is placed yet; both seats agree
   a note is owed and the trailer loss is a release-tooling defect. Record:
   `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
+  *Re-measured 2026-10-19.* The squash-trailer defect the correction above rests
+  on is **fixed** — two parallel runs found this independently, #2479 on one side
+  and a re-measurement on the other. `trailer_blocks` in
+  `src/scripts/_lib/consumer_impact.ts` now returns every trailer-only paragraph
+  of a body rather than the final one, so `parse_impact_trailers` over
+  `3f8c98e74` and `3245c7e7c` returns `notice` with `recorded: true` for both —
+  the two commits the 2026-10-18 measurement recorded as lost. The next release
+  does record #2455 as a `notice`, so the half of the correction that rested on
+  the trailer being lost no longer holds.
+
+  **The step does not move, and its reason is now structural rather than a
+  tooling defect** — which is the stronger statement, because a fixed tool does
+  not unblock it. Released notes render commit **subjects**, and the subject
+  naming the three guards is an inner bullet of a squash **body** (`* fix(hooks):
+  reach a staged dispatcher ahead of PATH, so block-no-verify,
+  block-kernel-rule-writes and block-plumbing-writes run where they were
+  silent`), which no generator reads. Naming them therefore needs a curated-head
+  line, and `render_release_head` (`src/scripts/release.ts:332`) takes its
+  content only from `_derive_head_prefill`, which derives from the git span at
+  release time. A grep for a staged or pending surface an earlier change could
+  write into returns nothing. So this half is reachable only from a release run,
+  a Hard-Floor action no drain lane holds.
+
+  **The class is settled as breaking by D10, and the row exists** — #2491
+  (`e8b36d7ce`) placed it. `grep -c 'block-no-verify' BREAKING_CHANGES.md`
+  returns 1 on `main`, and the record is
+  `agents/evidence/council/hook-carrier-release-note-class-20261019.md`. An
+  earlier version of this note claimed otherwise; that grep had run against a
+  checkout taken before #2491 merged and the claim was wrong. It is corrected
+  here rather than quietly dropped, because the retraction is the useful part:
+  a measurement against a tree that moved under the measurer reads exactly like
+  a measurement against the tree.
+
+  **One thing about D10 is worth contesting, and it is not its existence.** Its
+  own `Resolved when` column records the round as **degraded 1/2**: `openai`
+  chose B1 in round one and could not answer round two (codex exit 1);
+  `anthropic` moved B2 → B1 in round two. Both seats' *latest* answers are B1,
+  which is how the disposition was read. But this package's own doctrine is that
+  a degraded council routes a decision to the owner rather than deciding it —
+  the same rule that kept three merge-gate PRs from clearing on 2026-10-17 — and
+  one seat's round-one answer plus another seat's round-two answer is not a round
+  that converged. **This is recorded as a contest of D10's standing, not of its
+  content**: B1 may well be right, and the row is in the file either way. What is
+  claimed here is only that a 1/2 round is weaker evidence than the decision row
+  reads, and that the revisit condition D10 already carries — a full 2/2 round
+  returning anything other than B1 — is the thing that settles it.
 
 ## Phase 5 — The plugin channel says what it carries
 
@@ -261,6 +307,7 @@ plugin ships no dispatcher of its own (D4).
 | D7 | reversible-technical | agent | The staged runtime carries the bundle, `dist/agent-src`, the data files of `src/scripts`, `src/config`, `package.json`, and `node_modules/yaml` | Measured by running the real bundle from a stage: it reads `src/scripts/hooks/host_lowering.yaml` and resolves `yaml` through a `createRequire` the bundler did not inline; the rest of `src/scripts` is 27 MB of TypeScript the bundle already contains | a concern reads a package file outside the staged set, or the bundle stops resolving `yaml` at run time |
 | D8 | reversible-technical | agent | The install thins only on a carrier the stripped-environment probe reached | A layer thinned onto a dead carrier would print 3.1's line and restore at the next session — a thin that is undone before it is used; refusing it up front is the same outcome without the round trip | the probe reports not-reached on a machine whose real launcher does reach the dispatcher |
 | D9 | reversible-technical | agent | On Windows the install and doctor do not probe, and thinning keeps its earlier behaviour | There is no `/bin/sh` to run the probe with; recording "not reached" would be a measurement that was never taken | a Windows host is found to run the hook commands through a shell the probe can use |
+| D10 | contested-technical | council:hook-carrier-release-note-class-20261019 | The #2455 behaviour change is released as breaking: a `BREAKING_CHANGES.md` Pending row naming the three `fail_closed` guards, moved into the per-major table and a `### Breaking` entry by the release that carries it | Second round 2026-10-19: `anthropic` moved B2 → B1 on the new input (#2479 fixed the trailer loss; ADR-290 makes the next release a major anyway); `openai` chose B1 in round one and could not answer round two (codex exit 1). Both seats' latest answers are B1; the round itself was degraded 1/2 | a full 2/2 round returns anything other than B1, or the release carrying the row is cut as a minor |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
