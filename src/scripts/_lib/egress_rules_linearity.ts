@@ -41,9 +41,10 @@ export const LINEARITY: Readonly<Record<string, string>> = {
     'email':
         'Starts only where no address character precedes; the local part is bounded at 64, each label at 63 and the labels at eight, and the label class must end on a dot, so an attempt reads a bounded window and backtracking inside it is bounded by those constants.',
     'phone-international':
-        'Starts only at a plus sign; each digit group is consumed atomically by a lookahead-plus-backreference of at most six digits, so groups split only at separators or the six-digit cap, and at most five groups follow: an attempt reads at most about 45 characters with no re-split.',
+        'Starts only at a plus sign; each digit group is either a parenthesised run of at most six digits or consumed atomically by a lookahead-plus-backreference of at most six, so groups split only at separators or the six-digit cap, and at most five groups follow: an attempt reads at most about 45 characters with no re-split.',
     'phone-national':
-        'Starts only at a zero after a non-word character; the area code is bounded at five digits and each of at most three groups is consumed atomically by a lookahead-plus-backreference of at most eight digits, so an attempt reads at most about 35 characters with no re-split.',
+        'Starts only at a zero after a non-word character; the area code, bare or parenthesised, is bounded at five digits and each of at most three groups is consumed atomically by a lookahead-plus-backreference of at most eight digits, so an attempt reads at most about 35 characters with no re-split.',
+    'phone-nanp': 'Fixed shape: a three-digit area code, bare or parenthesised, then three and four digits with single separators; an attempt reads at most sixteen characters.',
     'de-tax-id':
         'Starts only at a digit boundary; exactly ten repetitions of an optional space and one digit follow, so an attempt reads at most 21 characters.',
     'us-ssn': 'Fixed-length digit runs between hyphens: every attempt reads at most eleven characters.',

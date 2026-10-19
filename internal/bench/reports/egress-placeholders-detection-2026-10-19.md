@@ -18,14 +18,14 @@ passes everything.
 | `EMAIL` | 200 / 200 | ≥ 99% | pass |
 | `IBAN` (checksum-valid; DE, AT, NL, FR, CH; compact and spaced) | 200 / 200 | ≥ 99% | pass |
 | `CARD` (Luhn-valid, card word in the phrase) | 200 / 200 | reported, no bar | — |
-| `PHONE` (200 with country code, 200 national with a phone word) | 400 / 400 | reported, no bar | — |
+| `PHONE` (200 with country code, 200 national with a phone word; the North American row is not in W1) | 400 / 400 | reported, no bar | — |
 | `TAXID` (structured, ISO 7064 check digit, tax word in the phrase) | 200 / 200 | reported, no bar | — |
 
 ## (b) Precision on code — W4
 
 | Reading | Value | Bar | Verdict |
 |---|---|---|---|
-| tracked text files with any identifier detection | 21 of 14,268 (0.15%) | < 1% of files | pass |
+| tracked text files with any identifier detection | 20 of 14,274 (0.14%) | < 1% of files | pass |
 | labelled negatives with a detection (bad IBAN checksums, documentation and reserved domains, no-reply and GitHub noreply identities, card-shaped ids with no card word, hashes, UUIDs, dates after a diff marker, retina asset names, git remotes; 400 in all) | 0 | 0 | pass |
 
 ## What this does and does not show
@@ -35,7 +35,7 @@ passes everything.
   what their author meant them to accept and nothing about values phrased
   another way; phone, card and tax-ID recall is a property of the phrasing by
   design (PREREG (a)). An independent corpus is the next reading worth taking.
-- **The tree count includes true positives.** Most of the 21 files hold
+- **The tree count includes true positives.** Most of the 20 files hold
   deliberate synthetic PII in tests and evidence; they are counted as hits, not
   sorted, so the precision reading is a ceiling on false positives.
 - **Not measured here:** endpoints (c) round trip, (e) paired quality and (f)

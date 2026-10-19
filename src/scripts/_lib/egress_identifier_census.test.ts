@@ -5,7 +5,8 @@
  * matched tens of thousands of times over the tracked tree) re-run through the
  * table. A row that starts matching ordinary code or prose raises a count past
  * its ceiling and turns this red; lowering a ceiling after a precision gain is
- * the expected direction.
+ * the expected direction. A ceiling bounds false positives only: a row that
+ * stops detecting stays green here, which the rule tests guard instead.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -25,6 +26,7 @@ const CEILING: Readonly<Record<string, number>> = {
     email: 2,
     'phone-international': 0,
     'phone-national': 0,
+    'phone-nanp': 0,
     'de-tax-id': 0,
     'us-ssn': 0,
 };
@@ -36,12 +38,10 @@ describe('identifier census over src/ and docs/', () => {
             .filter(Boolean);
         const counts: Record<string, number> = Object.fromEntries(IDENTIFIER_RULES.map((r) => [r.rule, 0]));
         for (const f of files) {
-            let body: Buffer;
-            try {
-                body = fs.readFileSync(path.join(REPO, f));
-            } catch {
-                continue;
-            }
+            const full = path.join(REPO, f);
+            // A tracked path deleted in the working tree is not part of the corpus; any other read failure is.
+            if (!fs.existsSync(full)) continue;
+            const body = fs.readFileSync(full);
             if (body.length > 2_000_000 || body.includes(0)) continue;
             for (const s of detect(body.toString('utf8'))) {
                 if (s.class === 'identifier') counts[s.rule] = (counts[s.rule] ?? 0) + 1;

@@ -235,8 +235,9 @@ ordinary code and review text.
 | `iban` | `IBAN` | the country's registered length and ISO 13616 mod-97; spaced groups of four allowed |
 | `payment-card` | `CARD` | Luhn, no single repeated digit, **and** a card word within 48 characters |
 | `email` | `EMAIL` | label and TLD shape; documentation and reserved domains (RFC 2606, RFC 6761), no-reply senders, `git@` remotes, image-density and code file names excluded; the repository's own published identities allowlisted as keyed digests, never as addresses |
-| `phone-international` | `PHONE` | a `+` country code and 8–15 digits; a date after a diff marker is not a number |
-| `phone-national` | `PHONE` | a leading `0`, 7–13 digits **and** a phone word within 32 characters |
+| `phone-international` | `PHONE` | a `+` country code and 8–15 digits, a parenthesis only balanced; a date after a diff marker is not a number |
+| `phone-national` | `PHONE` | a leading `0`, 7–13 digits **and** a phone word within 32 characters; a parenthesis only balanced |
+| `phone-nanp` | `PHONE` | a North American area code, bare or parenthesised, then 3 and 4 digits **and** a phone word within 32 characters |
 | `de-tax-id` | `TAXID` | the repeated-digit structure and ISO 7064 MOD 11,10 **and** a tax-ID word within 48 characters |
 | `us-ssn` | `SSN` | no `000`, `666` or `9xx` area, no `00` group, no `0000` serial |
 
@@ -245,8 +246,12 @@ the commit-time scanner, the MCP config lint and the council bundler's line
 masking by filtering on class, the self-repair payload floor through
 `CREDENTIAL_RULES`. The class-tag redactor of knowledge ingestion
 and cross-repo retrieval reads `IDENTIFIER_RULES` through
-`src/scripts/_lib/identifier_redaction.ts`. Over the tracked tree the rows'
-counts are pinned as ceilings by `src/scripts/_lib/egress_identifier_census.test.ts`.
+`src/scripts/_lib/identifier_redaction.ts`, **recall-first**: a store that
+persists text has no reviewer after it, so the context requirements are dropped
+there while every checksum holds. Over `src/` and `docs/` the rows' counts are
+pinned as false-positive ceilings by
+`src/scripts/_lib/egress_identifier_census.test.ts`; a ceiling does not protect
+recall, the rule tests do.
 
 ## Detection ceilings
 

@@ -261,8 +261,10 @@ export function isValidGermanTaxId(value: string): boolean {
 
 /** US social security number: no 000, 666 or 9xx area, no 00 group, no 0000 serial. */
 export function isValidUsSsn(value: string): boolean {
-    const [area, group, serial] = value.split('-');
-    return area !== '000' && area !== '666' && !(area as string).startsWith('9') && group !== '00' && serial !== '0000';
+    const m = /^([0-9]{3})-([0-9]{2})-([0-9]{4})$/.exec(value);
+    if (m === null) return false;
+    const [, area, group, serial] = m as unknown as [string, string, string, string];
+    return area !== '000' && area !== '666' && !area.startsWith('9') && group !== '00' && serial !== '0000';
 }
 
 // Addresses that name no one: documentation and reserved domains (RFC 2606,
@@ -273,7 +275,7 @@ const EMAIL_EXCLUSIONS: readonly RegExp[] = [
     /^(?:no-?reply|do-?not-?reply|noreply\+[^@]*)@/i,
     /@users\.noreply\.github\.com$/i,
     /@[0-9]x\.[a-z]+$/i,
-    /\.(?:png|jpe?g|gif|svg|webp|ico|js|mjs|cjs|ts|tsx|css|json|md|ya?ml|lock)$/i,
+    /\.(?:png|jpe?g|gif|svg|webp|ico|js|mjs|cjs|ts|tsx|css|json|ya?ml|lock)$/i,
 ];
 
 /**
@@ -526,7 +528,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         type: 'PHONE',
         class: 'identifier',
         replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9+])\+[1-9][0-9]{0,2}(?:[ ./-]?\(?(?=([0-9]{1,6}))\1\)?){1,5}(?![0-9])/g,
+        pattern: /(?<![A-Za-z0-9+])\+[1-9][0-9]{0,2}(?:[ ./-]?(?:\([0-9]{1,6}\)|(?=([0-9]{1,6}))\1)){1,5}(?![0-9])/g,
         validator: phoneDigits(8, 15),
     },
     {
@@ -534,9 +536,17 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         type: 'PHONE',
         class: 'identifier',
         replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9+])\(?0[1-9][0-9]{1,4}\)?(?:[ ./-]?(?=([0-9]{2,8}))\1){1,3}(?![0-9])/g,
+        pattern: /(?<![A-Za-z0-9+(])(?:\(0[1-9][0-9]{1,4}\)|0[1-9][0-9]{1,4})(?:[ ./-]?(?=([0-9]{2,8}))\1){1,3}(?![0-9])/g,
         validator: phoneDigits(7, 13),
         context: { words: /\b(?:tel|telefon|telephone|phone|mobil|mobile|cell|fax|handy|call|ruf)\b/i, window: 32 },
+    },
+    {
+        rule: 'phone-nanp',
+        type: 'PHONE',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![A-Za-z0-9+(-])(?:\([2-9][0-9]{2}\) ?|[2-9][0-9]{2}[ .-])[2-9][0-9]{2}[ .-][0-9]{4}(?![0-9-])/g,
+        context: { words: /\b(?:tel|telephone|phone|mobile|cell|fax|call)\b/i, window: 32 },
     },
     {
         rule: 'de-tax-id',

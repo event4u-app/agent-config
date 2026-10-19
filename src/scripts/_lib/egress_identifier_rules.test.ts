@@ -15,6 +15,7 @@ import {
     IDENTIFIER_RULES,
     isValidGermanTaxId,
     isValidIban,
+    isValidUsSsn,
     passesLuhn,
 } from './egress_rules.js';
 
@@ -45,14 +46,17 @@ describe('identifier rows — positives', () => {
         expect(has(`Kreditkarte: ${CARD}`, 'payment-card')).toBe(true);
     });
 
-    it('an e-mail address at a real domain', () => {
+    it('an e-mail address at a real domain, a .md country domain included', () => {
         expect(has(`write to ${EMAIL} today`, 'email')).toBe(true);
+        expect(has(j('contact ', 'person', '@company.md'), 'email')).toBe(true);
     });
 
     it('a phone number with a country code, or a national one with a phone word', () => {
         expect(has(j('call +49 30 ', '1234 5678'), 'phone-international')).toBe(true);
         expect(has(j('Tel. 030 ', '1234 5678'), 'phone-national')).toBe(true);
         expect(has(j('Telefon: (0221) ', '98765-43'), 'phone-national')).toBe(true);
+        expect(has(j('call +49 (30) ', '1234 5678'), 'phone-international')).toBe(true);
+        expect(has(j('phone (212) ', '555-0142'), 'phone-nanp')).toBe(true);
     });
 
     it('a German tax ID with a tax word, and an SSN', () => {
@@ -104,6 +108,19 @@ describe('identifier rows — negatives', () => {
         expect(has('AuditLog\\n\\n@admin.register', 'email')).toBe(false);
     });
 
+    it('an unbalanced parenthesis is not part of a number', () => {
+        for (const text of [j('call +49 (30 ', '12345678'), j('call +49 30) ', '12345678')]) {
+            const span = detect(text).find((s) => s.type === 'PHONE');
+            const covered = span === undefined ? '' : text.slice(span.start, span.end);
+            expect(covered.includes('(') || covered.includes(')'), text).toBe(false);
+        }
+    });
+
+    it('the SSN validator answers false on any input that is not the shape', () => {
+        for (const v of ['', '123456789', '123-45-678', 'abc-de-fghi']) expect(isValidUsSsn(v), v).toBe(false);
+        expect(isValidUsSsn(SSN)).toBe(true);
+    });
+
     it('a national number with no phone word, and a date after a diff marker', () => {
         expect(has(j('ref 030 ', '1234 5678'), 'phone-national')).toBe(false);
         expect(has('decided on\n+2026-10-01 by the council', 'phone-international')).toBe(false);
@@ -124,7 +141,7 @@ describe('identifier rows — negatives', () => {
 
 describe('identifier rows — table invariants', () => {
     it('every identifier row is class identifier and carries a validator, a context or exclusions', () => {
-        expect(IDENTIFIER_RULES.length).toBe(7);
+        expect(IDENTIFIER_RULES.length).toBe(8);
         for (const r of IDENTIFIER_RULES) {
             expect(r.class).toBe('identifier');
             expect(r.validator !== undefined || r.context !== undefined || r.exclusions !== undefined, r.rule).toBe(true);

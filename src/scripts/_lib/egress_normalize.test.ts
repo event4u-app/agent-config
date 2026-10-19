@@ -40,7 +40,7 @@ describe('the smuggling fixtures', () => {
     });
 
     it('text with no hidden or confusable character detects exactly as detect()', () => {
-        const text = j('mail ', 'jane', '@acme-kunde.de and IBAN ', 'DE89370400440532013000');
+        const text = j('mail ', 'jane', '@acme-kunde.de and IBAN ', 'DE89', '3704', '0044', '0532', '0130', '00');
         expect(detectNormalized(text)).toEqual(detect(text));
     });
 

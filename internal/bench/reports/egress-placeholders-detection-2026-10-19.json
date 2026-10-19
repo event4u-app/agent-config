@@ -5,6 +5,7 @@
     "email",
     "phone-international",
     "phone-national",
+    "phone-nanp",
     "de-tax-id",
     "us-ssn"
   ],
@@ -43,8 +44,8 @@
     "git-remote": 0
   },
   "tree": {
-    "files": 14268,
-    "withHit": 21
+    "files": 14274,
+    "withHit": 20
   },
   "verdicts": {
     "a": true,
