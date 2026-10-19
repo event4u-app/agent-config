@@ -136,9 +136,7 @@ describe('check_roadmap_trackable — replicated dashboard helpers', () => {
 // The `relates:` ratchet — road-to-roadmap-situational-awareness § 4.2
 // ---------------------------------------------------------------------------
 
-describe('relates: ratchet — new roadmaps must declare relations, old ones are held', () => {
-    /** Baseline recorded when the check landed. Read from the committed file. */
-    const BASELINE = 9;
+describe('relates: ratchet — every active roadmap must declare relations', () => {
 
     function tree(count_without_relates: number, count_with: number): string {
         const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'crt-relates-'));
@@ -179,33 +177,24 @@ describe('relates: ratchet — new roadmaps must declare relations, old ones are
         }
     });
 
-    it('stays green at the baseline — pre-existing roadmaps are not retroactively broken', () => {
-        const tmp = tree(BASELINE, 0);
+    it('stays green when every roadmap declares the block', () => {
+        const tmp = tree(0, 3);
         try {
             const { code, out } = run(tmp);
-            expect(out).toContain(`${BASELINE} violation(s) at baseline`);
+            expect(out).toContain('0 violation(s), no baseline needed');
             expect(code).toBe(0);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }
     });
 
-    it('reds when one MORE roadmap arrives without the block', () => {
-        const tmp = tree(BASELINE + 1, 0);
+    it('reds on the first roadmap without the block — no baseline holds it', () => {
+        const tmp = tree(1, 3);
         try {
             const { code, out } = run(tmp);
             expect(code).toBe(1);
-            expect(out).toContain(`${BASELINE + 1} violation(s) against a baseline of ${BASELINE}`);
+            expect(out).toContain('1 violation(s) and no recorded baseline');
             expect(out).toContain('no `relates:` block in the frontmatter');
-        } finally {
-            fs.rmSync(tmp, { recursive: true, force: true });
-        }
-    });
-
-    it('stays green when the new roadmap DOES declare the block', () => {
-        const tmp = tree(BASELINE, 3);
-        try {
-            expect(run(tmp).code).toBe(0);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }
