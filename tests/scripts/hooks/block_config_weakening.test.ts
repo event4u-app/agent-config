@@ -646,8 +646,8 @@ describe('block_config_weakening — snapshot surfaces', () => {
         expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots-foo')).toBeNull();
     });
 
-    // Council round 6 (2026-10-19) residue: the flag match is lexical, so pin the
-    // shapes that only mention the flag or the runner without running an update.
+    // Residue of the snapshot-fence ratification (2026-10-19): the command check reads
+    // shell words, so pin the shapes that only mention the flag or the runner.
     it('snapshot: a command that only mentions the flag or the runner does not warn', () => {
         for (const cmd of [
             'echo "playwright --update-snapshots"',
@@ -700,6 +700,11 @@ describe('block_config_weakening — snapshot surfaces', () => {
             'yarn playwright test -u',
             'pnpm playwright test --update-snapshots',
             'bun x playwright test -u',
+            'env -u NODE_OPTIONS npx playwright test -u',
+            'env --unset NODE_OPTIONS npx playwright test --update-snapshots',
+            'env --chdir web npx playwright test -u',
+            'npx play\\\nwright test -u',
+            'npx playwright test "-\\\nu"',
         ]) {
             expect(snapshotUpdateWarning('Bash', cmd), cmd).not.toBeNull();
         }

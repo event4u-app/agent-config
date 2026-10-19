@@ -155,7 +155,7 @@ const VISUAL_RUNNERS = new Set(['playwright', 'test-storybook']);
 const LAUNCHERS = new Set(['npx', 'bunx', 'pnpx']);
 const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn', 'bun']);
 /** Launcher options whose value is the next word. */
-const VALUE_OPTIONS = new Set(['-p', '--package', '--filter', '-F', '-C', '--dir', '--cwd']);
+const VALUE_OPTIONS = new Set(['-p', '--package', '--filter', '-F', '-C', '--dir', '--cwd', '-u', '--unset', '--chdir']);
 
 /** True when the segment starts a visual runner whose own arguments enable a baseline update. */
 function runsSnapshotUpdate(words: string[]): boolean {
@@ -207,7 +207,9 @@ export function shellSegments(command: string): string[][] {
     };
     for (let i = 0; i < command.length; i++) {
         const c = command[i] ?? '';
-        if (quote !== null) {
+        if (c === '\\' && command[i + 1] === '\n' && quote !== "'") {
+            i++; // a line continuation contributes nothing, not even a word break
+        } else if (quote !== null) {
             if (c === quote) quote = null;
             else if (c === '\\' && quote === '"' && i + 1 < command.length) word += command[++i] ?? '';
             else word += c;
