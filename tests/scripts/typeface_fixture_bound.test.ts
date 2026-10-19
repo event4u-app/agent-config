@@ -109,9 +109,15 @@ describe('no published artefact carries a typeface binary', () => {
     }, 180_000);
 
     it('the produced git archive (release and Packagist tarballs) leaves the fixtures out', () => {
-        const r = run('sh', ['-c', 'set -o pipefail 2>/dev/null; git archive --format=tar --worktree-attributes HEAD | tar -t']);
-        expect(r.status, r.stderr).toBe(0);
-        const entries = r.stdout.split('\n').filter(Boolean);
+        // No shell pipe: ubuntu's /bin/sh is dash, where `set -o pipefail` exits 2.
+        const archive = spawnSync('git', ['archive', '--format=tar', '--worktree-attributes', 'HEAD'], {
+            cwd: REPO_ROOT,
+            maxBuffer: 1024 * 1024 * 1024,
+        });
+        expect(archive.status, archive.stderr?.toString()).toBe(0);
+        const listing = spawnSync('tar', ['-t'], { input: archive.stdout, encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 });
+        expect(listing.status, listing.stderr).toBe(0);
+        const entries = listing.stdout.split('\n').filter(Boolean);
         expect(entries.length).toBeGreaterThan(100);
         expect(entries.filter((p) => TYPEFACE_EXT.test(p) || p.startsWith(`${FIXTURE_DIR}/`))).toEqual([]);
     }, 180_000);
