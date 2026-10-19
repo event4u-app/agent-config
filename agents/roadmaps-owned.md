@@ -27,7 +27,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-gates-that-read-what-was-written | active | ready | Two gates stop reporting a finding the thing in front of them does not support. |
-| road-to-gates-that-run-where-the-consumer-stands | active | ready | The checking machinery this package applies to itself also runs over what a consumer's machine actually does, and every claim … |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-one-upstream-that-checks-what-leaves | active | ready | There is one way for a finding to leave a machine and become a pull request or issue against this … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
