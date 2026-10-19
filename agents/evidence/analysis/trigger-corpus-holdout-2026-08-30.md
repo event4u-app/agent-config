@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 167 files, 36 holdout and 131 train.** That bullet read
+- **Now: 168 files, 36 holdout and 132 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -34,7 +34,8 @@ beside it.
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
   § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b,
-  § Growth — 2026-10-17, § Growth — 2026-10-18 and § Growth — 2026-10-18b; the
+  § Growth — 2026-10-17, § Growth — 2026-10-18, § Growth — 2026-10-18b and
+  § Growth — 2026-10-19; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -735,10 +736,46 @@ Neither verdict changes in kind.
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
 
+## Growth — 2026-10-19, one train corpus; the seal does not move
+
+```
+ONE ROW ADDED, TRAIN-SIDE. THE SEALED SET STAYS AT 36.
+NO PRE-EXISTING CORPUS FILE WAS EDITED. BOTH TRAIN-SIDE MEASUREMENTS WERE
+RE-TAKEN AFTER EVERY SKILL EDIT WAS ON DISK.
+```
+
+**What changed.** `road-to-a-canvas-the-code-owns` step 7.3 added one sentence
+to `playwright-testing`'s `SKILL.md` — baseline updates are shown as a diff and
+land in a commit of their own, on the pinned renderer — and
+`check_routing_coverage` requires a corpus from every touched skill. It gained
+**10** labelled queries: 5 exemplars of which one is German, 3 near-misses
+naming `playwright-architect`, `mobile-e2e-strategy` and `api-testing`, and 2
+counterexamples. The sentence changes no routing surface: no description and no
+trigger line moved.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `playwright-testing` | train | `0x61` | 97 ≥ 51 |
+
+**Both train-side measurements were re-taken, after the skill edit.**
+`routing-body-signal-verdict.json`: verdict unchanged in kind, still `harmful`
+on the false-activation guard — false activation 5.636 -> **5.751 pp** against
+the +2.0 pp guard, delta-recall 3.106 -> **2.928 pp** (still below the 5.0 pp
+bar), McNemar p 0.1768 -> **0.2018**, train corpora 131 -> **132**, cases 1265
+-> **1275**, catalogue **301**. `delivery-set-measurement-2026-08-31.json`:
+precision@5 80.793 -> **80.952 %**, recall@5 60.093 -> **60.247 %**, recall
+loss 39.907 -> **39.753 pp** — the ceiling stays **BREACHED** — false
+activation@5 14.815 -> **14.696 %**, context cost 230.5 -> **230.6** tokens
+against the 500 target, still **MET**. No new jointly-wrong pair appears.
+Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
 ## The set hash
 
 ```
-SET-SHA256  5d4fec21f423623f11abdefd32c7beca4c629afe2b0b6cfa3b04fe65f24602f4
+SET-SHA256  2339756bf0af3f785d8e30ebc4cefa8b68f7f41508484e582fece4e68e17c5fe
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1195,6 +1232,7 @@ open and which this file does not settle.
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
 | `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
 | `persona-improvement` | `510402b135807db3ead05e2e6ab3c315d86caeb55b7bf45b4919d2ba69e56804` |
+| `playwright-testing` | `0496ec7f1219c5e54bd7fcbe364d53c5671872fc0ae44deb7151aa3c170f2b62` |
 | `po-discovery` | `ac9cf914b69004d4d351272fbaf790126ff6dd255263f8020213bded6226b8b5` |
 | `prediction-pool-optimizer` | `5eab312a114476b7fc8dc1ef3846b40d759c0db580c75e14b7abbdc541bc2b7f` |
 | `project-analysis-core` | `48fada14ae5c23d493aadc189db3256964da73ee2484e7ee6575556cc7b7435e` |
