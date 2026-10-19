@@ -195,7 +195,7 @@ read cannot leak through any later bug.
       so the published "writes no host setting" commitment keeps its single
       exception. The stronger sandbox and environment-scrub tiers are documented
       as user-enabled, never written into a project.
-      verify: `hooks:doctor` on a project without the rows prints every row and reports the tier; with the rows pasted it reports them present and prints none; `~/.claude/settings.json` is byte-identical before and after install and uninstall.
+      verify: on a project without the rows, `hooks:doctor` prints every row and reports the tier; with the rows pasted it reports them present and prints none; `~/.claude/settings.json` is byte-identical before and after install and uninstall.
 - [x] **1.3 Record what prevention cannot see** — a value printed by a program, a
       row returned by a database tool, a secret typed by the user — as fixtures
       that fail today and are referenced by the host-carrier roadmap's phases
