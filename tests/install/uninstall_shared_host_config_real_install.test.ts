@@ -94,6 +94,9 @@ describe('surgical-uninstall — a real global claude-code install and uninstall
         expect(pre.length, 'install wrote no PreToolUse group of its own').toBeGreaterThan(1);
         expect(JSON.stringify(pre[0])).toBe(JSON.stringify(FOREIGN_GROUP));
         expect(installed.theme).toBe('dark');
+        // The credential deny rows are offered by `hooks:doctor`, never written
+        // by the installer.
+        expect(installed).not.toHaveProperty('permissions');
 
         const un = spawnSync(TSX, [UNINSTALL, '--global', '--tools', 'claude-code'], {
             cwd,
