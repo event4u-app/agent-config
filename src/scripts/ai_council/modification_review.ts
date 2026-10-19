@@ -24,6 +24,12 @@
  */
 
 import { parse_stance_line } from './stance_tally.js';
+import {
+    SEAT_NO_FINAL_VERDICT,
+    deriveRatificationHeader,
+    type RatificationVerdict,
+    type SeatVerdict,
+} from '../_lib/ratification_artifact.js';
 
 /**
  * The closed vocabulary a seat may close on. Open it and a grep for a passing
@@ -66,7 +72,9 @@ export function seatConclusion(text: string): ModificationVerdictLabel | null {
 export function readSeatConclusions(
     replies: Readonly<Record<string, string>>,
 ): Record<string, ModificationVerdictLabel | null> {
-    const out: Record<string, ModificationVerdictLabel | null> = {};
+    // Prototype-free: on a plain object, assigning a seat named `__proto__`
+    // replaces the prototype and the seat silently disappears.
+    const out = Object.create(null) as Record<string, ModificationVerdictLabel | null>;
     for (const [seat, text] of Object.entries(replies)) {
         out[seat] = seatConclusion(text);
     }
@@ -74,7 +82,54 @@ export function readSeatConclusions(
 }
 
 /**
- * Derive the record's verdict. ONE rule, and the ORDER is the rule:
+ * A threshold that is not a positive integer is refused, never coerced. At zero
+ * or below, an empty council would satisfy it; a fraction or a non-finite value
+ * has no count of providers it could mean.
+ */
+function assertRequiredProviders(requiredProviders: number): void {
+    if (!Number.isInteger(requiredProviders) || requiredProviders < 1) {
+        throw new RangeError(
+            `requiredProviders must be a positive integer, got ${String(requiredProviders)}`,
+        );
+    }
+}
+
+/**
+ * Every seat value is checked at run time, because the declared type is erased
+ * and a seat map often arrives as parsed JSON. A value outside the closed
+ * vocabulary or `null` throws: counted, it would add a provider to the quorum
+ * and could fall through to acceptance.
+ */
+function concludedSeats(
+    seats: Readonly<Record<string, ModificationVerdictLabel | null>>,
+): [string, ModificationVerdictLabel][] {
+    const out: [string, ModificationVerdictLabel][] = [];
+    for (const [seat, value] of Object.entries(seats) as [string, unknown][]) {
+        if (value === null) continue;
+        if (
+            typeof value !== 'string' ||
+            !(MODIFICATION_VERDICT_LABELS as readonly string[]).includes(value)
+        ) {
+            throw new TypeError(
+                `seat ${JSON.stringify(seat)} carries ${JSON.stringify(value)}, not a modification verdict label or null`,
+            );
+        }
+        out.push([seat, value as ModificationVerdictLabel]);
+    }
+    return out;
+}
+
+/**
+ * Derive the review's DISPOSITION rule — what the run does next. It is not the
+ * artifact's `verdict` field: for one seat `ratified` and another without a
+ * final verdict this returns `non-convergent`, while the reader's
+ * `deriveRatificationHeader` returns `ratified` with one provider, and the
+ * reader refuses a record carrying this answer as `header-not-derived`.
+ * {@link deriveModificationOutcome} returns both answers under different names;
+ * this function stays exported, so that is a clearer interface, not an enforced
+ * one.
+ *
+ * ONE rule, and the ORDER is the rule:
  *
  *   1. any concluding seat on `refused`  → `refused`
  *   2. concluding providers < required   → `non-convergent`
@@ -90,11 +145,49 @@ export function deriveModificationVerdict(
     seats: Readonly<Record<string, ModificationVerdictLabel | null>>,
     requiredProviders: number,
 ): ModificationVerdict {
-    const concluded = Object.values(seats).filter(
-        (v): v is ModificationVerdictLabel => v !== null,
-    );
+    assertRequiredProviders(requiredProviders);
+    const concluded = concludedSeats(seats).map(([, v]) => v);
     if (concluded.includes('refused')) return 'refused';
     if (concluded.length < requiredProviders) return 'non-convergent';
     if (concluded.includes('ratified')) return 'ratified';
     return 'confirmed-non-expanding';
+}
+
+/**
+ * What a run does next. Never written into the artifact. A refusal and a short
+ * quorum stay apart because only the second is cured by asking again.
+ */
+export type ModificationDisposition = 'accepted' | 'refused' | 'quorum-short';
+
+export interface ModificationOutcome {
+    /** The header the record carries, from the one canonical derivation. */
+    header: { providers: string[]; verdict: RatificationVerdict };
+    /** Whether enough distinct providers concluded. */
+    quorumSatisfied: boolean;
+    disposition: ModificationDisposition;
+}
+
+/**
+ * The record's header and the run's disposition from one call, under different
+ * names. Throws a `RangeError` when `requiredProviders` is not a positive
+ * integer and a `TypeError` when a seat carries a value outside the vocabulary.
+ */
+export function deriveModificationOutcome(
+    seats: Readonly<Record<string, ModificationVerdictLabel | null>>,
+    requiredProviders: number,
+): ModificationOutcome {
+    assertRequiredProviders(requiredProviders);
+    const concluded = new Map(concludedSeats(seats));
+    const asSeatVerdicts = new Map<string, SeatVerdict>();
+    for (const seat of Object.keys(seats)) {
+        asSeatVerdicts.set(seat, concluded.get(seat) ?? SEAT_NO_FINAL_VERDICT);
+    }
+    const header = deriveRatificationHeader(asSeatVerdicts);
+    const quorumSatisfied = new Set(header.providers).size >= requiredProviders;
+    const verdict = deriveModificationVerdict(seats, requiredProviders);
+    let disposition: ModificationDisposition;
+    if (verdict === 'refused') disposition = 'refused';
+    else if (!quorumSatisfied || verdict === 'non-convergent') disposition = 'quorum-short';
+    else disposition = 'accepted';
+    return { header, quorumSatisfied, disposition };
 }
