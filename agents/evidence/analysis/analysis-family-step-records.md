@@ -97,8 +97,12 @@ remaining hits are alias lines, ADR-288's record and archived changelogs.
 
 Done 2026-10-18 in
 `src/scripts/analysis_run_record.ts` (built, validated, written atomically;
-an unread turnaround or exchange is `missing`, never 0). No door writes it
-yet: that is the door wiring of 3.4, 4.5 and 5.2.
+an unread turnaround or exchange is `missing`, never 0). Corrected 2026-10-19:
+this read "No door writes it yet: that is the door wiring of 3.4, 4.5 and 5.2"
+while all three of those steps were closed `[x]`, so the writer's only caller
+was `analyze:pr` and nothing owned the gap. All four doors now name the writer
+in their own flow, pinned per door by
+`tests/scripts/analysis_run_record_doors.test.ts`.
 
 ## AC-1
 
@@ -153,7 +157,12 @@ second PR on a re-run and hands back when the remote head moves mid-push.
 
 ## AC-9
 
-Closed at mechanism level. `analysis_run.test.ts` persists the record under
+Closed 2026-10-19. The first version of this section closed the criterion at
+mechanism level while three of the four doors never called the writer — found
+by the R2 review (round b, finding 1) and fixed by wiring all four, pinned by
+`tests/scripts/analysis_run_record_doors.test.ts`.
+
+`analysis_run.test.ts` persists the record under
 `agents/runtime/analysis/<round-id>/` and `analysis_run_record.test.ts` round-trips
 it with one row per analyst and loop; the retro file names `analysis-run` five
 times. Stated plainly: the evidence is fixture runs — zero production runs exist,
@@ -270,3 +279,21 @@ parallel lanes, **each with its own census and point ledger**, folded once
 — the owner never types the split. `corrected-from-reproduction`: the plans
 sliced without per-lane ledgers, the shape the inbox's Phase 2b measured
 as the lossiest.
+
+## 2.6-spec
+
+The council
+receives the converged outputs (host unmarked, `council run --input-mode
+roadmap --peer-review`, prompts stored beside the verdict) and judges only
+what stays contested: priorities, integration risk, judgement calls.
+Conflicts resolve by tier; equal-tier contradictions stay named; on safety
+or data-integrity questions a critical dissent outweighs a majority; a
+failed seat degrades to `single-voice`, said. Then `evaluateStop`
+(anti-conformity repair before the cost stop) and `scoreNextCall` on the
+disagreement ledger, as an estimate. Until 6.6 calibrates it, one more
+round is offered only when a named open conflict or a high-impact
+`claimed`-tier item has an executable verification plan inside the
+remaining budget. The council decides first; on a split, or above the
+ceiling, the owner gets **one** question — items it would settle, cost, a
+gain band (low / medium / high with reasons, no uncalibrated percentage),
+options *one more / focused on the named items / stop*. Cap: three rounds.

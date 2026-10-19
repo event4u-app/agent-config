@@ -568,6 +568,13 @@ host-dependent and was not verifiable from this tree. That is stated rather than
 asserted away — the indirection is cheap enough not to need a proven threat, and
 claiming a proven one would be a claim this package cannot support.
 
+**Run record.** Every run writes `run.json` for its round through
+`src/scripts/analysis_run_record.ts` — one row per analyst and loop, the
+stages, seats used and failed, and the gain estimate. It is written whatever
+the run's end state, including `handed-back`, because the retro's
+`analysis-run` unit reads adoption per run and a missing record reads as a run
+that never happened. An unread turnaround is `missing`, never `0`.
+
 ### 8. Close the loop — offer the ledger rows
 
 **Only after a roadmap draft is accepted** (option 1 or 2 above). This step

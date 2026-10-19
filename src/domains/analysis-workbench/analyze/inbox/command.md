@@ -1229,6 +1229,13 @@ roadmap before publication, never carried into the PR.
    `already-fixed`, and steps corrected by reproduction — plus the reproduction
    ceiling that fired, if one did, and what it dropped.
 
+**Run record.** Every run writes `run.json` for its round through
+`src/scripts/analysis_run_record.ts` — one row per analyst and loop, the
+stages, seats used and failed, and the gain estimate. It is written whatever
+the run's end state, including `handed-back`, because the retro's
+`analysis-run` unit reads adoption per run and a missing record reads as a run
+that never happened. An unread turnaround is `missing`, never `0`.
+
 ## Honest enforcement — `instruction-only`
 
 Nothing gates any of this. The three passes, the anchor census, the transcript

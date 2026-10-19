@@ -186,21 +186,11 @@ the ADR moves to `superseded`; nothing else exists yet.
       verify: a fixture exchange records the cross-exam targets verbatim, a
       disagreement ledger per analyst and a minority audit with zero silent
       drops. Done 2026-10-17 in `src/scripts/analysis_exchange.ts` (tier settlement and silent-drop cases seen red).
-- [x] **2.6 Council as judge, then the gain gate (directive d).** The council
-      receives the converged outputs (host unmarked, `council run --input-mode
-      roadmap --peer-review`, prompts stored beside the verdict) and judges only
-      what stays contested: priorities, integration risk, judgement calls.
-      Conflicts resolve by tier; equal-tier contradictions stay named; on safety
-      or data-integrity questions a critical dissent outweighs a majority; a
-      failed seat degrades to `single-voice`, said. Then `evaluateStop`
-      (anti-conformity repair before the cost stop) and `scoreNextCall` on the
-      disagreement ledger, as an estimate. Until 6.6 calibrates it, one more
-      round is offered only when a named open conflict or a high-impact
-      `claimed`-tier item has an executable verification plan inside the
-      remaining budget. The council decides first; on a split, or above the
-      ceiling, the owner gets **one** question — items it would settle, cost, a
-      gain band (low / medium / high with reasons, no uncalibrated percentage),
-      options *one more / focused on the named items / stop*. Cap: three rounds.
+- [x] **2.6 Council as judge, then the gain gate (directive d).** The council judges
+      only what stays contested; conflicts resolve by tier; then `evaluateStop`
+      and `scoreNextCall` decide whether one more round is offered, the council
+      first and the owner once — the ordering, the quorum rule, the gain band
+      and the three-round cap are in record § 2.6-spec.
       verify: ledger fixtures — plateaued, conflict with a plan, conflict without
       a plan, exhausted arguments — produce no offer, one offer, no offer, no
       offer; a one-seat fixture is labelled `single-voice`. Done 2026-10-17 in `src/scripts/analysis_gate.ts` (exhausted and critical-dissent cases seen red); the gate composes the instruments, the council call itself stays with the doors. Open owner question (council test review of PR #2432, 2026-10-17, both seats): the gate withholds a round when `evaluateStop` says the arguments are exhausted and reports no saved call or saved cost for it; whether a withheld round counts as a saved call, and where that figure is reported, is owner policy and is not decided here. The early-stop savings test pins today's behaviour and no longer claims savings are zero. The same review fixed three gate defects: the round cap is checked before the predicate, settleable items must fit the remaining budget together, and a conflict with no sides is refused.
@@ -592,7 +582,9 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
 - [x] AC-8 — An interrupted run resumes from its last completed state without a
       second PR or duplicated output. Met 2026-10-19.
 - [x] AC-9 — `run.json` exists for every run, and the retro roadmap carries the
-      `analysis-run` unit that reads it. Met 2026-10-19 at mechanism level.
+      `analysis-run` unit that reads it. Met 2026-10-19: all four doors name
+      `analysis_run_record.ts` in their own flow — three did not until the R2
+      review found the gap — and the retro carries the unit.
 - [x] AC-10 — `analyze:reference-repo` and `optimize:deep` still resolve as
       `replaces:` aliases in the projected tree, and `analyze:repo` still resolves
       as the door's own live name until 6.2b renames it — the colon spelling is the
