@@ -4,6 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-t reproduced two gate-parse defects at 5fa963cec, both while running this package's own documented procedure. `lint_consolidation_lineage.ts:177` strips comments but not quotes from a block-list parent entry while its sibling branch at :168 strips both, so a declared, present parent is reported twice — once as `missing-parent` and once as `omitted-sibling`; measured over one real folder, 2 of 3 findings were this one defect. `block_speaking_inbox_dir.ts` scans every whitespace token of a raw shell command (`creatableTokens`, :224-238) with no distinction between a path being created and a path merely mentioned, so it refused a read-only `ls` on a directory that already existed and refused the `link_crypto encrypt` call its own error message prescribes as the remediation. No active, parked or stub roadmap owns either: a grep over agents/roadmaps/{*,later,stubs} for lint_consolidation_lineage, normalizeParent, block_speaking_inbox_dir and creatableTokens returns nothing. Archiving or parking costs more because both defects fire on every future inbox round and one of them blocks the documented fix for the other; merging into a neighbour would put two four-line parser fixes behind an unrelated plan's blockers."
+estate_growth_exempt: "open_blockers 68 -> 69, measured by check_estate_count at this change: one blocker here (d1-reopen-helper-level-quote-strip). It creates no new hold. Step 1.1 has carried a dated `Held open, 2026-10-16` note in its body since the council split 1:1 on the helper-level quote strip, and AC-1 asserts the behaviour that split decided nothing about. Because `screenRoadmap` in src/scripts/roadmap_drain_queue.ts reads only `blocked-by` markers and dated waits, a prose hold is invisible to it and both items screened as runnable; one drain lane was spent on this file on 2026-10-19 for that reason. It blocks only 1.1's helper-level half and AC-1."
 relates: []   # scanned: 27 active + 104 later + 131 stub roadmap file(s); 0 sibling hits for lint_consolidation_lineage, normalizeParent, block_speaking_inbox_dir, creatableTokens or isAcceptableInboxDir
 ---
 # Road to gates that read what was written
@@ -44,7 +45,7 @@ changes what either gate is for.
 
 ## Phase 1 — The lineage gate parses what is declared
 
-- [ ] **1.1 Red first: pin the two inputs no test covers.** Add to
+- [ ] <!-- blocked-by: d1-reopen-helper-level-quote-strip | asked: no — the council of 2026-10-16 split 1:1 and the hold has sat in this step's body since; registering it here is the first time a gate or a drain screen can read it --> **1.1 Red first: pin the two inputs no test covers.** Add to
       `tests/scripts/lint_consolidation_lineage.test.ts`:
       `normalizeParent('"road-to-x" — note')` must equal `road-to-x`, and a
       `consolidates:` block list whose entries are quoted YAML scalars must
@@ -179,6 +180,41 @@ changes what either gate is for.
 | D4 | deterministic | evidence | A prose-named parent is a distinct finding, not a missing one | the round's one genuine finding is exactly this shape, and reporting it as `missing-parent` sends the reader looking for a file | — |
 | D5 | reversible-technical | agent | Both gates are fixed in one roadmap | they are the same failure — a parser reporting what its input does not say — and one of them blocks the documented remediation for the other | either fix grows past a few lines |
 
+## Blockers
+
+### blocker: d1-reopen-helper-level-quote-strip
+
+- **Status:** open — the hold is dated 2026-10-16 and has existed in step 1.1's
+  body ever since; this entry registers it, it does not create it.
+- **Owner:** council
+- **Blocks:** step 1.1's helper-level half and AC-1. Nothing else: 1.1's
+  block-list half landed and was observed red first, 1.2 is closed, and Phase 2
+  is unaffected. Phase 3 is held separately by its own council refusal (see
+  **What to do** below), not by this blocker.
+- **Question:** Does `normalizeParent` itself strip quotes — reopening D1 — or
+  does AC-1's wording get amended to match the sibling-branch fix D1 chose?
+- **Recommendation:** put it to the council as a D1 reopen with the evidence
+  that now exists, rather than re-running the 2026-10-16 question unchanged. A
+  split is not a decision, and repetition without new evidence is not a reason
+  to expect a different one.
+- **If you do nothing:** 1.1 and AC-1 keep reading as runnable work to every
+  lane that screens this file, because `screenRoadmap` in
+  `src/scripts/roadmap_drain_queue.ts` classes an open step runnable unless it
+  carries a `blocked-by` marker or a dated wait — a hold stated in prose is
+  invisible to it. One drain lane was already spent on this file on 2026-10-19
+  for exactly that reason.
+- **What to do:** the council of 2026-10-16 split 1:1
+  (`agents/evidence/council/lineage-gate-parse-and-direction-20261016.md`):
+  `openai` wanted the strip inside the helper with the global strip at `:168`
+  removed; `anthropic` preferred centralising on the merits but held D1 as
+  binding and recommended amending AC-1's wording instead. Pick one —
+  (a) reopen D1 and move the strip into `normalizeParent`, removing the
+  `:168` strip, with the four other call sites regression-tested; or
+  (b) keep D1 and amend AC-1 so it asserts the sibling-branch behaviour that
+  1.2 actually shipped.
+- **Resolved when:** a council round records a non-split verdict on (a) or (b)
+  in § Decisions, and 1.1 and AC-1 are closed or rewritten to match it.
+
 ## What this roadmap deliberately does not do
 
 - It does not change what either gate is for. The naming rule and the lineage
@@ -201,7 +237,7 @@ changes what either gate is for.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
+- [ ] <!-- blocked-by: d1-reopen-helper-level-quote-strip | asked: no — this criterion asserts the helper-level behaviour D1 declined; it stands or falls with the blocker's (a)/(b) choice --> **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
       and a quoted block-list `consolidates:` entry resolves; both cases were
       observed **red** first and the observation is in the PR.
 - [x] **AC-2** Re-running `lint_consolidation_lineage` over
