@@ -1,0 +1,7205 @@
+{
+  "seed": 20261019,
+  "documents": [
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH6096595292919363377 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR29 8700 1305 8558 8252 9446 534 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH54 0591 6809 1302 8919 8.",
+      "start": 26,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT13 8998 1526 0001 7023.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH76 3763 1062 5770 0376 5 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL40BPYQ1476888953 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR3249459909284034889789366.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR2340449393469442269826921.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL17 KAIB 8058 5160 30\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH0835868230120201519.",
+      "start": 26,
+      "end": 47
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL02HBAG8143944876 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE63 4905 5521 1518 8765 35\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL17 YDFV 7934 8383 97 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL73ILWL3152369482\nReference: INV-2041",
+      "start": 6,
+      "end": 24
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL08PSCO9401838491.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH2042610609917339048 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE36 1901 6301 0654 7786 47.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH79 9327 4876 5736 3642 6.",
+      "start": 26,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH4854043545194068048.",
+      "start": 26,
+      "end": 47
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR22 4430 4766 3974 2134 7451 904 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL63 PJBI 7221 2917 08\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT35 1506 7213 7411 3949 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR76 3293 0700 3662 6096 3916 872 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT20 7844 8483 3139 4495 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT239654203631840989 by Friday.",
+      "start": 30,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR37 8198 4292 7756 6356 5601 128.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH6774931728911283945\nReference: INV-2041",
+      "start": 6,
+      "end": 27
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL88ZSKJ3552906414.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT371479844236578176\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT115131193698174262 by Friday.",
+      "start": 30,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT146811385582669782\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR4995665852353088607271395\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR70 0251 9501 4834 1524 9749 005\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR65 1009 2591 7997 9547 7282 552.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR5946788738476335099778061 by Friday.",
+      "start": 30,
+      "end": 57
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH95 4192 8752 9278 0229 3 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL50EZPI9974621720.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE73 2776 6629 8632 9363 37\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH78 1890 4703 2018 5772 4\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE15054130740435040582\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE71 3496 6623 4158 0757 86 by Friday.",
+      "start": 30,
+      "end": 57
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT22 8762 6838 3290 3533 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH3809353104496804128 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR9692334391214096326154363\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH60 5276 2885 9619 9851 2 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL40 JNHG 8337 1890 04\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL13TSWD0191720187.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT59 5739 8681 4586 0442.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE57169444797758243032.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH07 4734 5931 7460 5584 9 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE50144942356734657266\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL68 JZBS 1662 2859 33 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE03 3478 6379 3303 5159 43.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH35 7984 5016 8414 9462 9 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT34 2563 9310 3387 4783 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH9421420703050490594 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT79 3405 5620 5312 4139.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE66814310528468315218\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL14 KQCB 2347 9083 53\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE87 2885 8707 5969 4895 92.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR89 7563 3770 6097 1617 5470 503.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH6212978025303278136\nReference: INV-2041",
+      "start": 6,
+      "end": 27
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT251220759403611936 by Friday.",
+      "start": 30,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL85 EEYQ 0257 5205 52\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT583142661670371782\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR9195799398710492475576944 by Friday.",
+      "start": 30,
+      "end": 57
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR7997437730418400791491206.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL65 YEZK 2395 7798 65 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR5990341734821866322063445.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH79 1701 7796 8722 2655 7 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL81PSBN6728166524\nReference: INV-2041",
+      "start": 6,
+      "end": 24
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH25 8357 6750 7877 9449 6\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT059087983767596680.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE29516938115905044542.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR66 4254 6523 1378 5993 3715 934 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH1201281952818906442 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH3771759965536779899 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH10 6510 0271 7825 4343 9\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE06262145595086861242\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH0599301651043025270.",
+      "start": 26,
+      "end": 47
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR47 6882 3584 0758 0897 6760 580\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL25SGVH3263293811\nReference: INV-2041",
+      "start": 6,
+      "end": 24
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT986957495593661007\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH5354275674398493828 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL71 GPDC 3465 4825 53 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE70522744500361945777 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL91TOUA9450772277 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT179605561418962159\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT22 9243 3714 5449 9784\nReference: INV-2041",
+      "start": 6,
+      "end": 30
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT220131028621478798.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR4473806090241014700358735.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR54 0647 8723 7137 6667 5309 821\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH8350045582548798538\nReference: INV-2041",
+      "start": 6,
+      "end": 27
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT73 5476 9688 0264 2390.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH15 6166 0504 0567 4187 0.",
+      "start": 26,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT049835131184024238 by Friday.",
+      "start": 30,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL41EPBH5890244937\nReference: INV-2041",
+      "start": 6,
+      "end": 24
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR84 8118 1965 2513 5464 2331 741.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL65 EZUA 6608 1974 04.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL91 PERM 5047 9360 21.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL45UXKT5891319790.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE07707633967971266253 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT940115518421183802.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT13 2707 9096 5936 7680 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR8926347920701657695630369\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL32 JXHF 5883 8793 14.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR4012791420662189719913948\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR7638288394304871238580908 by Friday.",
+      "start": 30,
+      "end": 57
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL19RFKK1295156483 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL77 XVGR 9302 1925 12\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE16466258706206191549 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR85 0577 4922 4475 2568 7694 243.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH91 4571 2834 5974 6234 1 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT76 7728 3882 0363 0134.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR44 7541 9912 9027 9204 4412 363 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE77 7924 9880 7398 7472 51.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH9310535977078907711 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT630530069089516767.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT12 3200 3557 1998 2907 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT30 9957 8035 2506 6610.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH3459470523831110978\nReference: INV-2041",
+      "start": 6,
+      "end": 27
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL82OIIM1172766210 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE24484958805700753580\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN CH11 6853 3612 1885 9165 2.",
+      "start": 26,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL52SBDS5518323082 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL74 BRQL 8077 6007 52\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT976278313005141829.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT226537139824888577 by Friday.",
+      "start": 30,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH15 6244 3011 6469 7272 7\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL41CLOB1426382323.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT05 9806 1907 1214 2686.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE90810439483663643699 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE25 2380 8346 1063 4267 73.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR04 8453 1684 6943 9781 5604 788.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT85 3300 3464 1654 1014 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL32BRXP1936066720 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT246508964723448150\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR46 3775 6676 6144 6777 0459 813 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH9119701458934147064 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT67 3085 1775 8324 4477.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE14 5569 2587 2306 5532 41 by Friday.",
+      "start": 30,
+      "end": 57
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH53 6797 2385 5982 5320 2 by Friday.",
+      "start": 30,
+      "end": 56
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT79 1830 2952 0424 9503 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT645308765809812865\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT29 4454 5748 5999 7236.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR25 4818 3146 8590 8567 9074 303\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL05 ZAXZ 5282 1909 33\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR60 7439 5014 4356 8999 1424 915 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT874015417876575657.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR40 1271 8109 5552 7382 0923 149 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR3391861565290225068184373.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT56 6140 2782 2012 1087 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE25 0927 6294 1839 8891 22\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE23484000193406832572\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE91 1888 2355 3076 3901 69 by Friday.",
+      "start": 30,
+      "end": 57
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT355849004031963003\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR38 9442 2025 5660 6929 9241 692\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL42 TRIO 0611 5552 79\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR74 3694 4100 4071 9902 2140 091.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE42 8338 4622 9591 1242 17.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT929533227809128195.",
+      "start": 26,
+      "end": 46
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL77 NCXX 9251 2848 73\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH2450952925503741378 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to NL53SODO4211685138 by Friday.",
+      "start": 30,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL62ATXV1764184170.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE84466377738245655206\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to AT16 7302 2838 3630 3664 by Friday.",
+      "start": 30,
+      "end": 54
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT47 4330 7034 9748 1208.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT52 2761 6559 0450 1323\nReference: INV-2041",
+      "start": 6,
+      "end": 30
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH5488542473195604153 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN AT34 4363 8882 3518 4726.",
+      "start": 26,
+      "end": 50
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR22 0831 8842 8536 0981 3549 114\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR55 5858 4462 1606 5302 9455 590\nReference: INV-2041",
+      "start": 6,
+      "end": 39
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR2258442957952641595457548\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH82 6160 3329 0867 1868 1\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL55BHZJ0602062599.",
+      "start": 26,
+      "end": 44
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: NL12 WNTV 2465 6807 55\nReference: INV-2041",
+      "start": 6,
+      "end": 28
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR70 0759 5244 4394 3230 8499 634.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE65 9293 6576 7902 7984 63\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT927965835421373424\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to CH2508332817766426277 by Friday.",
+      "start": 30,
+      "end": 51
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: DE98 9010 5475 8757 6925 09\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT13 4808 3545 8212 4790\nReference: INV-2041",
+      "start": 6,
+      "end": 30
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR75 2269 4136 9247 5174 1027 352.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR3882062684070118584793822.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL08 PVZF 4046 2258 02.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH18 9855 4666 5629 4559 8\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN FR87 4753 6044 6993 0739 9954 486.",
+      "start": 26,
+      "end": 59
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH97 6092 1648 4903 6351 5\nReference: INV-2041",
+      "start": 6,
+      "end": 32
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT581819724016016657\nReference: INV-2041",
+      "start": 6,
+      "end": 26
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH1114142005649347992\nReference: INV-2041",
+      "start": 6,
+      "end": 27
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to DE41680286274854998366 by Friday.",
+      "start": 30,
+      "end": 52
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL42 IVFS 0868 1144 95.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT55 2882 8903 5290 9824\nReference: INV-2041",
+      "start": 6,
+      "end": 30
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: AT51 8907 1027 8456 8969\nReference: INV-2041",
+      "start": 6,
+      "end": 30
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN DE35 3854 2304 9630 8631 06.",
+      "start": 26,
+      "end": 53
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: FR7906413894462660851256007\nReference: INV-2041",
+      "start": 6,
+      "end": 33
+    },
+    {
+      "type": "IBAN",
+      "text": "Kontoinhaber Muster, IBAN NL18 VQIM 8804 0507 05.",
+      "start": 26,
+      "end": 48
+    },
+    {
+      "type": "IBAN",
+      "text": "Bank: CH5310191523222881986\nReference: INV-2041",
+      "start": 6,
+      "end": 27
+    },
+    {
+      "type": "IBAN",
+      "text": "Please transfer the refund to FR70 8953 0374 0743 1959 6465 859 by Friday.",
+      "start": 30,
+      "end": 63
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: mnxjj.qvyiyy@mayxwoj-kunde.net",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to zcbtj.oioiaw@yyjnfen-post.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: tvrck.yuhmxi@yycvwyg-mail.net",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by ewisk.oiukzt@yrvxjlk-mail.de (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: trwsq.itedtn@kmyzuid-mail.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: ydyoe.vnrcqg@lwiqnzv-kunde.com",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by odpmv.lrrpsu@uirzodz-post.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to kbtwo.hcrzeb@gbreyzd-mail.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to fylvl.snqkfd@kqaccpk-kunde.net with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to jmbzv.sffwen@muiblhx-mail.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to aptfw.hugsqg@bqfrdvp-post.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: barbd.wcmdta@pqjazay-mail.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: qapxj.hakvql@ktugjrq-post.net",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by teics.kflmxd@qndydep-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: cgkdn.tyqqgw@wbdvtjw-mail.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by vuggo.xccdff@uyusfoi-post.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: moymf.lbkozk@ptayglv-mail.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: tbaed.najqxx@brmaneh-post.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: ilgjq.ygtcuf@gxmyuvc-mail.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: ctcgl.oowctn@pqsvias-post.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by mniuy.inmeds@wjcapkw-post.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to lvhtl.btohju@mivhkxi-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ixjop.klkbay@pijdode-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to mjhhd.loksab@dnixxkf-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to xhmxr.rtncoc@wtlozrd-kunde.eu with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by dpkyz.iykmkx@krmuonk-mail.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to sbwdk.akvras@exljbor-kunde.com with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by ukhla.uopexv@nqsezbn-mail.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ysyeg.czqnkp@yvljset-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: oyfrf.bdhjbj@sapfvtc-post.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by sqqii.bdrady@owzkgkx-post.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to zwqnk.hahrai@vvcjxyb-kunde.com with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: daqlu.lazjkq@zuvjmol-mail.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to jshbo.yonzdq@vhwebbv-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: slral.fzrige@wydadql-post.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by lctby.pajpkc@jplryyc-post.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to tbrid.xaeasu@pzlqmyc-post.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to yjndt.igfpfl@ysyccbw-kunde.io with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to izekh.qxnkrr@awsxlli-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: kditu.sdktnr@tvduanj-mail.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by skzcu.eqjgzq@oiacxqq-mail.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ftaio.rnixbn@hkuqyfk-mail.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by gspdl.giiwrw@lwzsnzl-kunde.de (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by xpgpk.lirumo@sdeaucy-post.de (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to qxrso.jtzvti@vvrjiaz-mail.eu with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: yktkx.zeuprc@dfaebsk-post.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by btjys.yterku@unyvopn-kunde.com (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: qykgi.kpvcfx@fwvxdda-mail.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: dbsvv.hcjwni@aajrjpy-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to tomet.offjmk@rwndmkl-kunde.io with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: juhio.uocqjh@esynwmz-post.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by chbio.ptkqsi@vyidecc-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by lbzur.qjtwqd@xrwlluz-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to msyum.nmbzjo@juzkdea-kunde.net with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to cscsy.jkrlef@mfxgrfe-mail.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: doshn.jvguxi@fvvlueh-post.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: jdnpt.qtiyub@zvwrglz-post.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: mqdzd.cbxdwx@qnbuufd-post.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to xdkop.ctvjyp@nwyvctk-kunde.com with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: srcgz.xwrmvr@hopiqwp-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by vegfz.vwssnk@ukpcusv-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ykubv.tabfaf@xmswhgq-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by faebr.rbuaqy@xtzfuno-post.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to rlvlx.uxmabr@xywyomg-post.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by klmjv.rijukr@uyzhlxr-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: doiaj.rlopxq@jezshfc-post.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: vuhjw.lprbsl@hgnzjiq-kunde.eu",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to coxur.vlpisg@abxtpya-kunde.eu with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by gnuxs.zagxye@xplzzwg-kunde.io (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to moinx.laqahg@rjvgzhf-kunde.io with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: zjpmb.iqzlib@jddoqew-mail.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to bmfnx.pyaolv@ybpywmg-post.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: kbohw.gsxwqm@waryony-kunde.eu",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to gwkgx.biwyum@xrawjku-post.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by umcxs.nzzwae@ldcedag-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by zkokh.jgezsl@wcrxxdb-post.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by aydip.nxyivy@kgfgixv-post.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by fybyk.qrfydd@ykwcdnd-post.de (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to gutmk.bdihbc@zqtuypj-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to wcsyz.tuirzp@bbpyeqf-mail.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by ymvyq.wxszdd@pptkkin-kunde.eu (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: xjbit.itqpkm@kujibzh-mail.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: ytzzv.aimsjl@ixwkpxo-post.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to tvlvl.dielzi@tdjrllp-kunde.eu with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to dinru.zxfgtq@ciibhvw-post.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by dxxdi.hcrehe@tijjefu-kunde.net (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by gzjaa.hxiryw@hchewlz-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to lwxkb.thpvmw@qaxuhnt-mail.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by urbiu.uziajb@jqxhmbq-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by grlri.zonlzo@mesvqfz-mail.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: hkqtu.uyyexl@egwnfmp-mail.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to dqdda.kmsdea@lxunfxg-mail.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to rnyhw.ngrrax@buqxfro-kunde.net with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by htxst.sszvis@slzojud-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to dfpku.ytcesq@srmwsyv-post.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to yynmt.ulxifa@wztdied-post.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to caubj.allhns@qrqqxbb-mail.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by jlsyt.asjbms@tmnphns-kunde.de (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by uvumn.crnuir@hcuhijp-mail.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to fjqzf.qpaynx@wydawcc-post.eu with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by asxwl.ntqjmq@mqqteog-mail.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to mogtl.twsqia@tqcfzzy-mail.eu with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to uvzqw.aepzra@wicjslk-kunde.eu with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to zolwu.usxrfj@khdrhsf-post.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by nsobe.gestel@yvwqcqb-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to pwdtx.fwhmdz@npyrwns-kunde.eu with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by cwvup.gdxilm@jwjeqwm-post.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by owtzo.cncggr@orpyntc-mail.de (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: jzrtp.bmvmvy@obxhkwg-post.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by gobpk.zspgwa@zlkrwjf-post.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to htdhq.rrbimb@docntaz-kunde.net with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to qrfhb.monvef@lwuyrmo-post.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by fodbt.azzgiz@tsxrtxr-kunde.net (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: kwlgi.mzndhp@xwjyemx-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: doqty.gfuzlc@nuxohws-kunde.eu",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by grgws.vrkylz@lqrqrup-mail.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to sosrc.fleghu@axwodcy-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to xofww.gjiluy@juqroqv-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: tqftr.eklgmz@fiyezrm-kunde.de",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to cxomg.dtppie@jxefsgf-post.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: agtpw.amizpf@ghlmvcj-post.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to dlpqu.jydgfs@pgsomxa-post.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by riueu.hojmqt@wchbupa-mail.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by tmdyg.ghshbd@nfjrmsv-post.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: qpdyd.ttoyks@svtwjbz-post.io",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to auzbv.vvrkrv@afkqyxy-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by edaxe.jukudf@mgozqvb-kunde.io (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: cwlqn.zvjqqm@lvwwzds-post.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: fmowj.itkaym@rpwujxl-kunde.eu",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by vxqpd.nnujdn@cltutzb-mail.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by nrjet.qwwknz@ewvanwp-kunde.com (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: dlewc.ciqttu@tocyqzn-kunde.de",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to jvgug.xrlbbi@piomylw-post.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: jgsgy.sncfcf@gegicgs-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: aplfx.sinynl@iizqqyi-kunde.eu",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by xqewf.mmlhvw@kzjkfqw-mail.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by zxvmb.rxkttx@jdfhvja-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ekgjy.jgkdkc@thvvwvy-mail.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to olmaj.uesnvg@njtagas-mail.eu with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: gafdu.ccoaum@hoaztdx-mail.net",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: cfxbs.dxsjaq@sbwahfn-mail.net",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by etdym.dtuvep@xxqvnvd-kunde.net (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by xsmrn.fhwzpj@yuzttmp-post.de (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: ocbuw.hvldzt@dgrgijn-mail.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: jcast.sqorso@dxshozd-kunde.com",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: eaqnm.owxehx@tyiwmfn-kunde.de",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: iurqk.eiaxjq@oqhhozy-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: uwwvn.jnundl@ufafrtm-mail.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to aaowj.bknimp@jaabwdi-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: jtopy.obkabc@nhbzfag-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: isszn.wpjmwu@aefgcra-kunde.net",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by erxho.xbrocq@nbogsho-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: rtszb.spowwd@gzaudmi-post.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: absnl.cmcdni@syakqhc-mail.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ovwbx.ivtfxm@lxwxfcd-mail.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to sgwsz.lvvlbo@cdtfemw-post.net with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by dpnqd.pzzhyt@edfvnfk-mail.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: rmscu.mblyke@uoqiqzh-mail.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: lphwd.dkbrxw@flaqbdx-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to trzgy.zuxpvf@yjfdxxr-post.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: jlwcg.abwcqg@cvpbuvo-mail.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by xysyo.resysp@modkepe-kunde.eu (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ftlua.kdybqq@mpzvybj-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by svcqq.gqobql@enfuknn-kunde.com (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by aasuv.bmekqr@fjdpnne-mail.io (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to oazqg.xnvmrt@owwuwnn-kunde.de with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by rowpq.uhpear@kwxalmr-mail.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by dldwu.qsyhws@ogcjhie-mail.de (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to atrib.gqnpqq@xwyoito-mail.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by bydqr.xwxtpi@qehhuzs-mail.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: rgokq.bjouac@svvgwzy-kunde.io",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by pjouv.oepsjn@qqvycuz-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to qlfjs.qjiyrq@gvmoohl-post.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: cbaku.vgjwlz@ycizxxm-kunde.de",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to twkud.onsdtc@fitxlsc-kunde.net with the signed form.",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to yooki.nnbqgm@hvlwgyn-mail.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by ojqrr.pxjoxg@gqlycjr-post.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: aqduk.naqbiy@lpgaeyc-mail.de",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by tlaue.knaaiw@agxmhde-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to vtkvo.mvxhoi@wxoamhh-post.de with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to vkglp.tocvtg@mvegzao-kunde.io with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to itllv.nokrol@rbexmhu-mail.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to ueepr.qaxfii@olvydxd-post.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to dzihq.xvfhbv@hgfhyqu-post.eu with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by tvkzw.zsbceg@ntfzrqi-kunde.com (customer).",
+      "start": 17,
+      "end": 47
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: knhgt.hwdfqn@vqtnpgz-kunde.de",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by opxgm.xnjyac@zuvunmd-post.com (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by vxmuj.xfuvyh@njujeew-mail.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: wpejz.ubuwxl@ibgppme-kunde.eu",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by cxksm.ruemqb@grnwrrv-post.eu (customer).",
+      "start": 17,
+      "end": 45
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to buwbn.dwgvmb@dvqdave-mail.io with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to qdukv.texzrm@avvirqr-kunde.io with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Ticket opened by pxoab.vedels@ifyuygx-post.net (customer).",
+      "start": 17,
+      "end": 46
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to hdwxo.ewnwcx@hziixsh-kunde.io with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: aejfy.uuxxmt@rjheghv-post.eu",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: ggwfw.ccnaxh@ionsvvg-kunde.com",
+      "start": 9,
+      "end": 39
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to eyuir.edycor@ygyxjld-post.com with the signed form.",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: kgwrc.ztcovn@kkoqhvl-mail.com",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "EMAIL",
+      "text": "Reply to rflvf.wvqbvz@jryvrlj-mail.eu with the signed form.",
+      "start": 9,
+      "end": 37
+    },
+    {
+      "type": "EMAIL",
+      "text": "Contact: owqwy.tcayuy@cwctsix-mail.net",
+      "start": 9,
+      "end": 38
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5284974492210473 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5285 3088 0417 0449 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3794 1843 2118 5668.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5227 6185 6945 3983.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4955 7649 1176 0989.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5145 6759 7597 9687 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5249082782668352, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4785567157806143, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4417 7368 2969 2878, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4873634397461643 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5196 6076 1091 6392.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4428261301401893 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3799 5150 0027 6523, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3723462619190236.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3752 2297 0188 1665.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5174731099793720 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5180060768094935.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5183184520579996, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5144 1158 9166 2985 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4928691020047343 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4181856434516090, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5214942184243032.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3709609733783696, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3786374915686334.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5211751512887284.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5139373668136934, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3720717823811494, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5206451389487410.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5240594462429441, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5239554089624314, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5200 5034 0019 2878 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5141 5302 5083 8468.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4190865439502137.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5176002397947170 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4460883742699618, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5280 5316 2373 3833 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5263976727355135, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5250 6559 2951 2165 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4462 8398 9997 0804, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3717 3315 1177 0593, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5168 3620 2025 4836 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4749426850411450.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5101883369909284 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5293334718789116.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5119573049070959, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3748668964603596.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5116 9225 7205 7177 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3788 6961 5192 7578, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5213855244289020.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5249374049189359, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5151 2971 2587 1069 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4303 7093 1966 1817.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5209 0558 3466 3645, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4508425468630429 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4283416265403921 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4985673021818799 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5118 8630 6224 2119, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5202338201995411, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5169993993886474 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5299 3817 1035 8519 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5284492841022234, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3773756533996738 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4603174054825977 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5220390560383331 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5194 9210 5481 2781.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4250 8182 8726 9942 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5186616801915651 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5153340389234174.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4038 7989 4859 5183, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5180 7533 2186 8874.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5150527371026617 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4742642932165842.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4293 1434 3217 1896 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3716 4217 3774 0610 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3767701721555902 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5298 3541 5322 2337 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3747410436654506 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5291 5487 6309 7842, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5131 5997 0602 4199.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5102242184387656 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5192570846869922, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4546 0300 9842 4906.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4587 6515 4634 0095.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5124263887946923 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5235 3554 5208 7889 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5233 6692 0499 3554, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3759 3908 8483 6240 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4952 5485 8948 1694 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5179957526695510, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3780807738151875.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5175196745080519 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3752 0652 0934 4057, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3724 6993 0477 5099.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5282 2904 5457 0867.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4525594134845296 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5109082044593298.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5119 7986 4548 4581, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5299 8214 8840 0084, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3739 6445 5083 5471 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5107592876579936 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4339 1418 4826 1844, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5247228183971927, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5143568880053478.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5142 2740 8458 6816.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4358414311315827 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3789 7755 9957 0486, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5142 8468 5581 6413, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5263 5823 1642 4272.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3781849162039159 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3774098921408623 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5104929813640830 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3717 3516 6541 0812, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3717 7120 6291 7339.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4211109888391949.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5272294017543215 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5126 1336 7593 9059.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4429241981774818.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5151985989529340, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4857 2960 9640 9073, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4876 7353 4775 3489.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3779976250180555.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3787468628472948 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4507077040394593, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5245338688741956, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5146 4559 3113 0702, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5211 3416 0856 5638, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5174 2334 5987 3150 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4833932307229079, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4631477631890588, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5250806375683386.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5139288330837075, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5234 9520 5537 8821.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3708786184223264, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5131 2249 5005 0077.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3702 1617 0989 9715, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5202 2064 4083 6904.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3707686131617041.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5155 2286 2230 4144 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4465 7377 8373 3840 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5229 2753 0914 0004.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4248274900027595 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4285 4691 8278 5399.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5199 5288 7201 7660, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5139475064445205 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3747 2138 5272 7800.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3719253731833415, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5138163111733796, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5199663189568541, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5116670580619666 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3707060134044043, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5216 2926 0712 2662 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4222 7159 9541 7612 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3795 2459 7359 3977, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3729935504560146.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5105 4809 3709 6953, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3714358646861875 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5113495050731848 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4729 9917 3728 3707 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5114 2115 3215 1524, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3724 8325 0957 5044, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5246 6054 4610 3482, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3788363151001371, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5105 8278 4175 5944 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5238919463209134.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5181 3047 0540 7027, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4775798551706926, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5109 4374 4691 9873, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3793 4657 0720 6215 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 3725101466185612.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5215831428016628 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4841226986110209 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5225 6473 7531 9775, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5123 0356 7190 3646, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5172946527910025, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4861 4998 8285 0872 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5148457434503904, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3788651967659493 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3755416391902425, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4438 5611 6305 5465.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3704990129019100 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5282 0556 6797 4200 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5108824561938096, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4422178766911602.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5164 6529 6580 6614 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4486 7257 5491 6259.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5246 5158 4331 1861.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5191276204873610 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5215 8165 5712 5357.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 3710416176901091, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5260757688033801.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 5221 8724 7433 0085, gültig bis 09/29.",
+      "start": 13,
+      "end": 32
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4007767393642540 failed.",
+      "start": 18,
+      "end": 34
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4819409417240708.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4499716374693001, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 3747 4209 3931 3229 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "Kreditkarte: 4701291282323020, gültig bis 09/29.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 4121 9388 1472 1251 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 4616738159605271.",
+      "start": 27,
+      "end": 43
+    },
+    {
+      "type": "CARD",
+      "text": "Payment with Visa 5171 4395 1802 3017 failed.",
+      "start": 18,
+      "end": 37
+    },
+    {
+      "type": "CARD",
+      "text": "The card number on file is 5144 2506 8904 8293.",
+      "start": 27,
+      "end": 46
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 453 8894 622 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 821 9794 697.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 095 8940 713 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 089 2710 971 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 163 6461 500",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 115 2496 003 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 749 6469 848",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 101 4095 551",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 750 2410 487",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 404 4905 255",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 685 5723 772",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 821 7586 180",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 924 7613 341",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 207 3441 583.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 212 6663 148",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 194 3329 850.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 775 7168 751.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 261 0098 028 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 705 1027 242",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 522 1207 183.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 456 5679 468.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 372 0964 737.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 244 9443 935",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 970 3253 570",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 679 0976 724 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 938 0127 761",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 441 9851 079 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 547 7972 873.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 337 7023 236.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 322 0004 963 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 636 6629 407 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 359 2423 535.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 918 8346 908.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 266 8236 370 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 150 3371 829",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 509 2208 545.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 740 3847 781 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 385 4258 786.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 488 2527 045 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 105 3167 917",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 281 5549 715.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 188 6644 688 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 748 3326 369",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 423 7135 195",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 579 0498 407 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 567 6743 512.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 524 5923 946",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 367 0431 582",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 756 2234 050 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 926 4162 008 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 076 4742 936",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 965 7778 560.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 457 0818 770.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 866 6153 360",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 256 0243 028.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 004 5933 485 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 762 8456 202",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 986 1048 672.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 097 0497 348.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 416 7705 511",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 307 1190 947",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 289 2042 869.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 501 0059 302.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 329 2736 253 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 889 2980 051 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 282 1483 681",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 123 2685 090 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 245 8758 163 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 399 3017 111",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 867 1084 791",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 236 8941 726 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 480 4514 317",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 990 1974 926 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 222 5708 033",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 027 5304 611.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 247 2915 801.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 191 4030 947.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 491 2491 979.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 070 3109 129.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 243 4232 328 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 970 0100 136",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 599 7902 671",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 611 3832 454 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 695 3464 689 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 082 2100 581 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 047 2389 740",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 772 7986 804",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 083 3335 476",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 681 1408 132 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 076 2743 072 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 971 2980 204.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 941 8062 417.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 305 4427 900",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 404 5960 476",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 692 0132 356.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 105 2056 891",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 611 8830 035 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 754 3818 934.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 964 3303 824 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 955 2551 579.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 594 4732 978",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 446 0829 926 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 697 7406 848",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 868 7352 379.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 761 2928 554 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 773 2934 302 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 857 2246 482",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 574 3285 534.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 553 1580 054 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 897 7610 093",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 327 6005 889",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 138 8175 082.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 176 3280 361",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 879 5028 515.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 988 0741 202",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 645 5421 517 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 955 3866 047 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 957 8393 067 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 218 1160 833 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 762 3600 034.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 010 1330 525",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 610 3118 718.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 422 3315 090.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 393 1576 515 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 037 0433 445",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 541 7411 212.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 694 4424 566",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 546 0325 605.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 964 3397 842 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 666 6959 487.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 177 3270 542 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 997 1261 930 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 393 0095 729",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 474 5184 255 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 790 9842 988",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 331 8146 383 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 323 3873 365.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 918 8964 086.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 345 0962 919",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 733 3382 911.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 735 7871 987.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 601 8446 385",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +1 789 8548 167.",
+      "start": 13,
+      "end": 28
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +33 166 0242 616 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 331 1471 275 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 850 8288 856 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 324 8527 230 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 348 6884 864 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 122 6638 185.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 761 9782 597.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 001 6226 667",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 043 6348 032",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 066 7534 087",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 024 0357 676.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 498 4991 477 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 071 7659 624",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 809 8204 588",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 830 4767 435.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +49 746 7861 219",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 379 8651 546.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 183 0731 560",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 170 5672 357",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 265 8418 622.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 624 8955 996",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 290 7146 834 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 894 0463 339 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +49 800 8434 285.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 552 8743 050 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +41 678 7228 524 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 884 2229 346",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 136 7084 000 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 606 8275 398",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 699 2658 284",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 335 6663 159.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 210 5016 293",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +41 330 8381 129.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 560 1582 761 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 990 0504 609",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 729 8802 414 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 519 9471 902",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 714 3520 852",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 754 7554 792 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +1 570 1490 775 after 5pm.",
+      "start": 16,
+      "end": 31
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +1 643 2638 910",
+      "start": 8,
+      "end": 23
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +43 712 0279 986 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 961 9569 240.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 301 7013 245",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +33 365 7044 789.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 049 1753 176.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 490 6278 960",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 739 8375 773.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 820 2044 655",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 770 1156 418.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 372 9875 738.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 284 3304 506",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +43 409 2045 926",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +33 717 6466 450",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Reachable at +43 859 8304 784.",
+      "start": 13,
+      "end": 29
+    },
+    {
+      "type": "PHONE",
+      "text": "Mobile: +41 206 2469 448",
+      "start": 8,
+      "end": 24
+    },
+    {
+      "type": "PHONE",
+      "text": "Call me back on +49 224 7989 602 after 5pm.",
+      "start": 16,
+      "end": 32
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0857 0569 441",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0612 6948 591, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0711 6372 773 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0321 9037 155, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0946 4287 200",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0226 6884 020, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0460 9841 776, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0372 9367 671, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0740 3746 192, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0958 6233 943 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0849 3955 173 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0999 6293 639, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0462 5671 489",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0200 1845 868 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0912 6170 485 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0294 8314 413 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0439 2008 914 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0199 9277 681, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0505 5885 243, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0943 7740 444 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0301 4067 827, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0329 5359 712 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0780 0184 459",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0509 1680 746, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0799 1739 323 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0246 5222 218, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0365 4538 177, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0992 7004 481, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0281 5616 841",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0366 3739 069",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0938 6498 125 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0387 3006 401",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0378 0970 435 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0401 4689 668, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0905 5866 371 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0669 7868 462 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0784 8958 841, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0784 2048 990",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0122 4035 645, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0921 1005 528",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0539 9811 312, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0982 1215 435, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0641 2534 363",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0652 5603 987, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0140 1367 515 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0623 2685 391, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0892 1961 092, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0377 7072 577",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0166 5673 854",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0370 9152 153",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0172 6267 243, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0566 3040 829",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0788 4504 366 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0201 8097 670",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0310 8457 653 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0302 6058 774",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0773 2058 985, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0565 4967 928",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0444 1341 288, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0302 0112 947",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0640 9174 266",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0972 7132 646, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0804 0346 144, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0876 6012 102, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0254 5331 967",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0851 7922 730 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0415 9919 442 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0838 9156 382 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0146 2370 159",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0896 3200 275 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0343 1995 230 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0599 0358 812 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0507 7642 340, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0711 9797 244, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0619 7443 819 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0300 1107 717",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0269 5459 897 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0757 2084 393, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0630 0069 533",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0865 4234 201 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0168 7136 567 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0214 1749 388 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0863 5489 656, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0827 1511 743, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0632 2178 489",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0961 3241 373",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0273 6700 051",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0600 6928 367, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0918 8935 811",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0713 2675 366, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0776 5620 742 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0544 8118 781",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0449 5206 864 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0982 6013 463, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0976 5502 747 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0172 3191 751 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0487 4461 174 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0229 7074 252 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0371 6663 493",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0216 2023 795",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0697 5791 171 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0930 3309 764 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0122 6770 280",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0267 2570 541",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0869 6172 915 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0357 7670 541, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0432 8984 707 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0726 3254 786 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0353 3898 190",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0578 6069 381, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0648 4951 007 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0379 5613 182 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0348 4756 002",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0438 3244 682, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0229 5043 015",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0553 4296 999",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0397 6813 225, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0824 1863 326 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0810 3910 550",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0827 3761 626",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0626 6836 344",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0195 9475 120 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0320 2432 293",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0657 5965 875",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0731 4417 218",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0901 2998 525",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0794 0054 056",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0325 8101 117",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0919 1648 311",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0802 1698 522",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0290 7812 445 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0161 0097 908, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0946 7061 067 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0836 4141 338, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0615 7668 033",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0514 8749 715 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0292 8217 771 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0349 0282 284",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0876 7761 407, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0332 4500 564, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0711 2083 972 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0359 2386 537",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0127 0931 505, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0825 2144 793 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0743 2815 351",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0176 9523 849, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0580 6465 860, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0733 2805 263 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0612 8956 530, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0432 6290 887, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0703 3981 838 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0164 2161 568 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0614 4186 133, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0953 6966 577, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0697 7367 722, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0977 8792 539 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0407 9206 435, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0549 1515 842 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0122 3861 665 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0219 7242 799 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0271 6002 638 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0400 2401 283 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0534 5624 965 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0368 0580 642",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0582 1048 243 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0401 3810 467",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0592 3957 863 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0731 3558 683 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0185 0962 984",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0808 6174 838",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0240 9705 829 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0392 5008 880",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0756 9338 931, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0507 6426 744 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0354 7275 419",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0771 6510 854, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0471 4031 273, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0952 5242 668, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0768 9009 035, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0637 4779 988 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0618 9868 797, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0781 6536 977",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0218 5490 303, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0586 5328 403 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0429 3307 736 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0147 8992 848, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0227 1755 361 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0220 7014 400 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0799 3632 161 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0121 3123 608 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0741 4601 759 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0160 5268 377",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Tel. 0731 7386 145 (Zentrale)",
+      "start": 5,
+      "end": 18
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0823 3001 987",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0958 5906 787, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0674 4491 304, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0864 4427 380",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Phone 0873 5653 329, ask for billing.",
+      "start": 6,
+      "end": 19
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0998 3885 330",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "PHONE",
+      "text": "Telefon: 0610 7212 367",
+      "start": 9,
+      "end": 22
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 83075169549 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 76482083899",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 86197303326 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 59686076129 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 59103986923 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 95201733387 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 55917405262",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 42518073930 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 17357468291 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 27378560979 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 59297913400 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 89176724377 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 83064759719 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 92874165603",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 65629376147",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 13536720490 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 63270584945 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 50497298318",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 78402449567",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 52756981545 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 54404167289 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 63729105999",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 18593703244 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 76340353128 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 51056247930",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 78927537148",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 23046659170",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 73411809157 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 89706532117 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 13508272422 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 69352438109 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 24063335182",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 14703608259 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 10279655548 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 85055719435",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 65727793102",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 67024538959 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 80736526144",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 63821940375 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 20108075632",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 50784861386 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 84473056944",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 46753087124",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 63748901449 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 36098216679 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 86145928738 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 13780542606 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 63478882956 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 46081376521",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 82246150237 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 11431278598",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 39182440678",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 10468112378 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 16478052668 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 76034392516 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 25070406897",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 24108835697 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 52536971843 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 40167811520 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 29937548600 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 56168390273",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 62958754351",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 79123648602 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 75504918237",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 66039764517",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 40555978319",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 68479254314",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 70106058237 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 76029538669 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 52074493683",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 29497168909",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 96047752830 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 38431527063 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 18580396742",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 13765626800 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 12930854758 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 76392048536",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 38675154202",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 79111463806 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 45162091713",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 20769813476",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 98271737606 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 24218329561",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 75483165959 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 46990725312",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 17749708257 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 16458690279 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 86411109726 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 67421030808 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 53383742966",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 38704715674",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 64179315127 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 81575295430 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 53940213837 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 62079819496 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 29735040614 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 98428306875",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 75309321847 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 81766549625 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 68940427549 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 91265874371 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 81453209177",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 61835744407 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 30534163786",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 19475637783 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 73158092243 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 76692854038",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 81843068754",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 69781033353 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 60326819577 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 76048935115 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 28749633136 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 47120035907 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 20187984867 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 53216970774",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 64506781695 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 89112735407",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 69327894591 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 97803268585 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 76838018257 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 57793207461",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 98246307443 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 14537855622 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 11795348026",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 45209391961",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 76954087379 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 40434876218 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 63602718464",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 21408516313 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 10256839458",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 18392070507 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 70284096510 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 19015832761 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 95564835120 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 47694340516 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 78346215028 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 47977608539",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 42713596052 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 28341652078",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 73440628195",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 97730215875",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 99268503710 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 73506249485 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 20545561877 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 57379781460 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 10492173157",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 39792958460 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 45200108375",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 17182961304",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 84900375165 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 11751246033 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 28670616946 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 73214905839 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 69294951739 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 20718977644 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 15321704861 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 19181504372 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 46830791000 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 58702693137 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 20818754866",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 71746237958",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 98602173343",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 45825935701",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 26484459377 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 59680842837 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 86031964652",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 20681057041",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 12549377804",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 29360583733 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 18924085679 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 72618344042 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 14703558958",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 39470421849",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 68412796653 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 69574083329",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 29054731879 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 18303639245 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 52013461893 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 42570189934 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 10484493523 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 14783289587 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 50114197360 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 30408207912 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 56082738815",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 14609807202 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 35926401177",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 45703826225",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 95023060746",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 90665736246",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 38891402863",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 69533072381",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 52648133934 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 15490003863 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 73186124592",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 60954163829 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 66046275831 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    },
+    {
+      "type": "TAXID",
+      "text": "Tax ID: 32616596874",
+      "start": 8,
+      "end": 19
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 25706719786 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Steuer-ID 48526314071 liegt vor.",
+      "start": 10,
+      "end": 21
+    },
+    {
+      "type": "TAXID",
+      "text": "Ihre Identifikationsnummer 17243588603 wurde geprüft.",
+      "start": 27,
+      "end": 38
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "identifierRules": [
+    "iban",
+    "payment-card",
+    "email",
+    "phone-international",
+    "phone-national",
+    "de-tax-id",
+    "us-ssn"
+  ],
+  "recall": {
+    "IBAN": {
+      "found": 200,
+      "total": 200
+    },
+    "EMAIL": {
+      "found": 200,
+      "total": 200
+    },
+    "CARD": {
+      "found": 200,
+      "total": 200
+    },
+    "PHONE": {
+      "found": 400,
+      "total": 400
+    },
+    "TAXID": {
+      "found": 200,
+      "total": 200
+    }
+  },
+  "negativeHits": {
+    "iban-bad-checksum": 0,
+    "fixture-address": 0,
+    "no-reply": 0,
+    "commit-identity": 0,
+    "card-shaped-no-context": 0,
+    "hash": 0,
+    "uuid": 0,
+    "diff-date": 0,
+    "retina-asset": 0,
+    "git-remote": 0
+  },
+  "tree": {
+    "files": 14268,
+    "withHit": 21
+  },
+  "verdicts": {
+    "a": true,
+    "b": true
+  }
+}
