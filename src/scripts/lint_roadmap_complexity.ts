@@ -21,9 +21,11 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { project_settings_path } from './_lib/agent_settings.js';
+import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { granularity_problems } from './_lib/roadmap_granularity.js';
+import { screenRoadmap } from './roadmap_drain_queue.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 /** Mirror `QUIET = "--quiet" in sys.argv` (computed at import). */
@@ -234,8 +236,26 @@ function lint_roadmap(
         _check_human_gate_phase_headings(text, warnings);
         _check_human_gate_exit_criteria(text, warnings);
         _check_external_population_gates(text, warnings);
+        _check_dated_waits(text, warnings);
     }
     return problems;
+}
+
+/**
+ * An open step that waits on a future date keeps an otherwise finished roadmap
+ * from reaching zero open steps, so a drain can never close it. Such a step
+ * belongs in a `stubs/` entry with its trigger. Same reading the drain queue
+ * uses, so the lint and the queue cannot disagree on what is time-gated.
+ */
+function _check_dated_waits(text: string, warnings: string[], today?: string): void {
+    const day = today ?? asOf().toISOString().slice(0, 10);
+    for (const step of screenRoadmap('', '', text, day).steps) {
+        if (step.cls !== 'time') continue;
+        warnings.push(
+            `step waits on a future date: "${step.text.slice(0, 80)}" — move it to a ` +
+                'stubs/ entry with its trigger so this roadmap can close when its work is done',
+        );
+    }
 }
 
 // Vague-step patterns (ask-when-uncertain trigger subset) — under
@@ -838,6 +858,7 @@ export {
     _frontmatter,
     _read_horizon_weeks,
     _read_complexity,
+    _check_dated_waits,
     lint_roadmap,
     main,
 };

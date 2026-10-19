@@ -1,0 +1,17 @@
+{
+  "skill": "analyze-pr",
+  "last_eval": "2026-10-19",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers running the analysis loops and councils on an existing pull request, feedback by default or applying fixes with --optimize. Should-not-trigger covers the neighbours that own a different surface: /review:changes (the working tree before a PR exists), /council:pr (one council opinion, no loops), /pr:merge (merging), /fix:pr-comments (answering review comments) and /create-pr (opening a PR).",
+  "queries": [
+    { "q": "analyse PR #2461 in depth with the loops and the council and give me findings with file:line", "trigger": true },
+    { "q": "run the analysis family on the open PR of this branch, read-only", "trigger": true },
+    { "q": "analysiere den PR https://github.com/o/r/pull/42 gründlich und optimiere ihn mit --optimize", "trigger": true },
+    { "q": "deep-review this pull request and push tested fixes to its branch", "trigger": true },
+    { "q": "/analyze:pr 42 --comment", "trigger": true },
+    { "q": "review my uncommitted changes before I open a PR", "trigger": false },
+    { "q": "ask the council for one opinion on PR 42", "trigger": false },
+    { "q": "merge PR 42 once CI is green", "trigger": false },
+    { "q": "fix and resolve the open review comments on my PR", "trigger": false },
+    { "q": "open a pull request for this branch", "trigger": false }
+  ]
+}

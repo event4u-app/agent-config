@@ -1,0 +1,17 @@
+{
+  "id": "cand-pa-03",
+  "pilot": "project-analyzer",
+  "input": "Analyse this Next.js app and document its HTTP API surface.",
+  "success": [
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/api",
+      "op": "mentions_all",
+      "values": [
+        "api/payouts",
+        "api/payee-verification",
+        "api/ledger-sync"
+      ]
+    }
+  ]
+}

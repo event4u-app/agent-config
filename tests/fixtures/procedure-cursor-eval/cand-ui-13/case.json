@@ -1,0 +1,34 @@
+{
+  "id": "cand-ui-13",
+  "pilot": "existing-ui-audit",
+  "input": "Add a credit note flow to the billing feature.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.patterns.forms",
+      "op": "mentions_all",
+      "values": [
+        "InvoiceForm"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.patterns.tables",
+      "op": "mentions_all",
+      "values": [
+        "InvoiceTable"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.patterns.modals",
+      "op": "mentions_all",
+      "values": [
+        "ConfirmVoidModal"
+      ]
+    }
+  ]
+}

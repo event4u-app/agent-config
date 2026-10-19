@@ -25,6 +25,50 @@
     {
       "prompt": "walk me through a structured incident analysis for the API downtime",
       "expected": "analyze"
+    },
+    {
+      "prompt": "run a post-mortem on last night's outage, it is resolved now",
+      "expected": "analyze-postmortem"
+    },
+    {
+      "prompt": "do a pre-mortem: imagine the billing migration failed — why?",
+      "expected": "analyze-premortem"
+    },
+    {
+      "prompt": "did the decision in ADR-12 to use a queue hold up?",
+      "expected": "analyze-decision"
+    },
+    {
+      "prompt": "that deploy almost wiped the cache — analyse the near miss",
+      "expected": "analyze-near-miss"
+    },
+    {
+      "prompt": "production is down right now, coordinate the incident",
+      "expected": "analyze-incident"
+    },
+    {
+      "prompt": "compare our installer with github.com/acme/tool and tell me what to adopt",
+      "expected": "analyze-repo"
+    },
+    {
+      "prompt": "analyse every reference repo the roadmaps point at, one by one",
+      "expected": "analyze-roadmap-repos"
+    },
+    {
+      "prompt": "work through the file someone dropped in agents/tmp",
+      "expected": "analyze-inbox"
+    },
+    {
+      "prompt": "did the last sessions follow the rules? audit them for violations",
+      "expected": "analyze-conformance"
+    },
+    {
+      "prompt": "run a deep optimization pass over this module and open the PR",
+      "expected": "analyze-and-optimize"
+    },
+    {
+      "prompt": "analyse PR #42 in depth and report findings with file:line",
+      "expected": "analyze-pr"
     }
   ]
 }

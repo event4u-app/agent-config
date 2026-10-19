@@ -1,0 +1,29 @@
+{
+  "id": "cand-pa-06",
+  "pilot": "project-analyzer",
+  "input": "Analyse this Node command-line tool and describe its stack.",
+  "success": [
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/overview.md",
+      "op": "mentions_all",
+      "values": [
+        "tidewatch",
+        "yargs",
+        "picocolors"
+      ]
+    },
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/api",
+      "op": "mentions_none",
+      "values": [
+        "GET /",
+        "POST /",
+        "PUT /",
+        "PATCH /",
+        "DELETE /"
+      ]
+    }
+  ]
+}

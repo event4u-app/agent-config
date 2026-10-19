@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 305
+- **artefacts**: 306
 
-## Commands (158)
+## Commands (159)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -25,8 +25,10 @@ Artefacts that maintain this package (agent-config itself).
 - **`agents-user-review`** — List buffered observations from the project-local and global observation buffers with numbered options to inspect or accept individually.
 - **`agents-user-show`** — Read-only render of the effective (merged) user profile — global profile.md plus project .agent-user.md. --audit renders the global layer raw for delete/revoke decisions.
 - **`agents-user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
+- **`analyze-and-optimize`** — Analyse and improve this project, repository or module — analysts reading code, exchange, council, ready roadmaps, PR, N refinement loops (default 3). E.g. 'run a deep optimization pass'.
 - **`analyze-conformance`** — Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable.
 - **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
+- **`analyze-pr`** — Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
 - **`analyze-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`analyze-roadmap-repos`** — Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-repo, one subagent at a time, without producing one roadmap per repository.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
@@ -87,7 +89,6 @@ Artefacts that maintain this package (agent-config itself).
 - **`optimize`** — Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop)
 - **`optimize-agents-dir`** — Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.
 - **`optimize-augmentignore`** — Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
-- **`optimize-deep`** — Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'.
 - **`optimize-project`** — Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'.
 - **`optimize-prompt`** — Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt.
 - **`optimize-rtk`** — Create or optimize project-local rtk filters based on the actual toolchain

@@ -1,0 +1,23 @@
+{
+  "description": "Known jsx-a11y violations accepted until the gallery redesign.",
+  "violations": [
+    {
+      "rule": "jsx-a11y/alt-text",
+      "file": "src/components/PhotoThumb.jsx",
+      "selector": "img.photo-thumb",
+      "severity": "error"
+    },
+    {
+      "rule": "jsx-a11y/click-events-have-key-events",
+      "file": "src/components/AlbumCard.jsx",
+      "selector": "div.album-card",
+      "severity": "error"
+    },
+    {
+      "rule": "jsx-a11y/label-has-associated-control",
+      "file": "src/components/CaptionField.jsx",
+      "selector": "label.caption-label",
+      "severity": "warn"
+    }
+  ]
+}
