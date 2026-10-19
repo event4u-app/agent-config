@@ -1,0 +1,22 @@
+{
+  "id": "cand-ui-10",
+  "pilot": "existing-ui-audit",
+  "input": "Add an appointment booking page.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.greenfield",
+      "op": "equals",
+      "values": [
+        true
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.greenfield_decision",
+      "op": "not_empty"
+    }
+  ]
+}

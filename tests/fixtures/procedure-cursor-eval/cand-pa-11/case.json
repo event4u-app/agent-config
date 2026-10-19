@@ -1,0 +1,17 @@
+{
+  "id": "cand-pa-11",
+  "pilot": "project-analyzer",
+  "input": "Analyse this project and document its infrastructure and testing setup.",
+  "success": [
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/architecture/infrastructure.md",
+      "op": "mentions_all",
+      "values": [
+        "ledger-api",
+        "statement-renderer",
+        "ingest-relay"
+      ]
+    }
+  ]
+}

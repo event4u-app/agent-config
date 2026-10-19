@@ -1,0 +1,9 @@
+{
+  "name": "billing-assets",
+  "private": true,
+  "version": "0.1.0",
+  "devDependencies": {
+    "vite": "^5.4.2",
+    "laravel-vite-plugin": "^1.0.5"
+  }
+}

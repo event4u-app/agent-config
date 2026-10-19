@@ -1,0 +1,28 @@
+{
+  "id": "cand-ui-08",
+  "pilot": "existing-ui-audit",
+  "input": "Add a gift-wrap option to the checkout.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.components",
+      "op": "mentions_all",
+      "values": [
+        "OrderSummaryCard",
+        "ShippingAddressForm",
+        "CouponBadge",
+        "CartDrawer"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.components",
+      "op": "every_has",
+      "values": [
+        "kind"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "cand-ui-05",
+  "pilot": "existing-ui-audit",
+  "input": "Add a related-posts list below each article.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.component_taxonomy",
+      "op": "equals",
+      "values": [
+        "none"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+@import "./tokens.css";
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-harbor-blue);
+  background: var(--color-fog-grey);
+}
+
+.callout {
+  padding: var(--space-loose);
+  border-radius: var(--radius-card);
+  border-left: 4px solid var(--color-sunset-orange);
+}
