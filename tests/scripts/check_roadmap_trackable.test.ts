@@ -199,4 +199,15 @@ describe('relates: ratchet — every active roadmap must declare relations', () 
             fs.rmSync(tmp, { recursive: true, force: true });
         }
     });
+
+    it('counts every roadmap without the block, not only the first', () => {
+        const tmp = tree(2, 1);
+        try {
+            const { code, out } = run(tmp);
+            expect(code).toBe(1);
+            expect(out).toContain('2 violation(s) and no recorded baseline');
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
 });
