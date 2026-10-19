@@ -263,7 +263,7 @@ export function isValidGermanTaxId(value: string): boolean {
 export function isValidUsSsn(value: string): boolean {
     const m = /^([0-9]{3})-([0-9]{2})-([0-9]{4})$/.exec(value);
     if (m === null) return false;
-    const [, area, group, serial] = m as unknown as [string, string, string, string];
+    const [area, group, serial] = [m[1] as string, m[2] as string, m[3] as string];
     return area !== '000' && area !== '666' && !area.startsWith('9') && group !== '00' && serial !== '0000';
 }
 
@@ -545,7 +545,7 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         type: 'PHONE',
         class: 'identifier',
         replacement: 'detection',
-        pattern: /(?<![A-Za-z0-9+(-])(?:\([2-9][0-9]{2}\) ?|[2-9][0-9]{2}[ .-])[2-9][0-9]{2}[ .-][0-9]{4}(?![0-9-])/g,
+        pattern: /(?<![A-Za-z0-9+(-])(?:\+?1[ .-]?)?(?:\([2-9][0-9]{2}\) ?|[2-9][0-9]{2}[ .-]?)[2-9][0-9]{2}[ .-]?[0-9]{4}(?![0-9-])/g,
         context: { words: /\b(?:tel|telephone|phone|mobile|cell|fax|call)\b/i, window: 32 },
     },
     {

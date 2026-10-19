@@ -237,7 +237,7 @@ ordinary code and review text.
 | `email` | `EMAIL` | label and TLD shape; documentation and reserved domains (RFC 2606, RFC 6761), no-reply senders, `git@` remotes, image-density and code file names excluded; the repository's own published identities allowlisted as keyed digests, never as addresses |
 | `phone-international` | `PHONE` | a `+` country code and 8–15 digits, a parenthesis only balanced; a date after a diff marker is not a number |
 | `phone-national` | `PHONE` | a leading `0`, 7–13 digits **and** a phone word within 32 characters; a parenthesis only balanced |
-| `phone-nanp` | `PHONE` | a North American area code, bare or parenthesised, then 3 and 4 digits **and** a phone word within 32 characters |
+| `phone-nanp` | `PHONE` | an optional `1`/`+1`, a North American area code bare or parenthesised, then 3 and 4 digits, separators optional, **and** a phone word within 32 characters |
 | `de-tax-id` | `TAXID` | the repeated-digit structure and ISO 7064 MOD 11,10 **and** a tax-ID word within 48 characters |
 | `us-ssn` | `SSN` | no `000`, `666` or `9xx` area, no `00` group, no `0000` serial |
 

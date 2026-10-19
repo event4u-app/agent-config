@@ -44,7 +44,7 @@ export const LINEARITY: Readonly<Record<string, string>> = {
         'Starts only at a plus sign; each digit group is either a parenthesised run of at most six digits or consumed atomically by a lookahead-plus-backreference of at most six, so groups split only at separators or the six-digit cap, and at most five groups follow: an attempt reads at most about 45 characters with no re-split.',
     'phone-national':
         'Starts only at a zero after a non-word character; the area code, bare or parenthesised, is bounded at five digits and each of at most three groups is consumed atomically by a lookahead-plus-backreference of at most eight digits, so an attempt reads at most about 35 characters with no re-split.',
-    'phone-nanp': 'Fixed shape: a three-digit area code, bare or parenthesised, then three and four digits with single separators; an attempt reads at most sixteen characters.',
+    'phone-nanp': 'Fixed shape: an optional country prefix of at most three characters, a three-digit area code bare or parenthesised, then three and four digits with optional single separators; every quantifier is bounded, so an attempt reads at most twenty characters.',
     'de-tax-id':
         'Starts only at a digit boundary; exactly ten repetitions of an optional space and one digit follow, so an attempt reads at most 21 characters.',
     'us-ssn': 'Fixed-length digit runs between hyphens: every attempt reads at most eleven characters.',
