@@ -15,6 +15,10 @@
  *
  * Every directory name below is invented. Nothing here names a real source.
  */
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -498,5 +502,116 @@ describe('main() — the envelope surface', () => {
     it('a path outside the inbox is untouched', () => {
         expect(run({ tool_input: { file_path: 'src/rules/source-confidentiality.md' } })).toBe(0);
         expect(run({ tool_input: { file_path: 'agents/tmp/scratch.ts' } })).toBe(0);
+    });
+});
+
+/**
+ * `road-to-gates-that-read-what-was-written` Phase 3 — a mention is not a
+ * creation, measured on the two commands one inbox round was refused.
+ *
+ * Probed before any change (2026-10-19): with the speaking directory present
+ * in the tree the envelope names, `ls -la <dir>/` was ALLOWED only when the
+ * hook process already stood in that tree. The guard read `project_dir`, a key
+ * no producer sets: the dispatcher sends `workspace_root` and the native
+ * payload sends `cwd`, so the exists-probe resolved against the hook's own cwd
+ * — in a worktree session that is the parent checkout, where the round does
+ * not exist. The remediation command in the deny message was refused whenever
+ * its plaintext named a directory that had already been renamed.
+ *
+ * Every name is invented and assembled at runtime.
+ */
+describe('a mention is not a creation — the commands a real round was refused', () => {
+    const speaking = ['a', 'speaking', 'round'].join('-');
+    const renamed = ['an', 'old', 'speaking', 'name'].join('-');
+    const fresh = ['a', 'new', 'speaking', 'round'].join('-');
+    const tree = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'speaking-inbox-')));
+    fs.mkdirSync(path.join(tree, 'agents', 'tmp', speaking), { recursive: true });
+
+    const run = (envelope: unknown): number => {
+        setHookStdinOverride(JSON.stringify(envelope));
+        try {
+            return main();
+        } finally {
+            clearHookStdinOverride();
+        }
+    };
+    const bash = (command: string, extra: Record<string, unknown> = { cwd: tree }): unknown => ({
+        tool_name: 'Bash',
+        ...extra,
+        tool_input: { command },
+    });
+    const remediation = (source: string): string =>
+        `printf '%s' '${source}' | ./scripts-run src/scripts/_lib/link_crypto encrypt`;
+
+    describe('allowed', () => {
+        it('a read-only ls of an EXISTING inbox directory, resolved against the envelope cwd', () => {
+            expect(run(bash(`ls -la agents/tmp/${speaking}/`))).toBe(0);
+        });
+
+        it('the same, when only the dispatcher field workspace_root names the tree', () => {
+            expect(run(bash(`ls -la agents/tmp/${speaking}/`, { workspace_root: tree }))).toBe(0);
+        });
+
+        it('the same, when the native payload is wrapped by the dispatcher', () => {
+            expect(
+                run({
+                    workspace_root: '/nonexistent-dispatcher-root',
+                    payload: { tool_name: 'Bash', cwd: tree, tool_input: { command: `ls -la agents/tmp/${speaking}/` } },
+                }),
+            ).toBe(0);
+        });
+
+        it('the remediation command naming a directory that was already renamed', () => {
+            expect(run(bash(remediation(`renamed from agents/tmp/${renamed}/`)))).toBe(0);
+            expect(
+                creatableTokens(remediation(`renamed from agents/tmp/${renamed}/`)).filter((t) =>
+                    t.includes('agents/tmp'),
+                ),
+            ).toEqual([]);
+        });
+    });
+
+    describe('still refused', () => {
+        it('mkdir -p into a NEW speaking directory, with the envelope naming the tree', () => {
+            expect(run(bash(`mkdir -p agents/tmp/${fresh}`))).toBe(1);
+            expect(run(bash(`mkdir -p agents/tmp/${fresh}`, { workspace_root: tree }))).toBe(1);
+        });
+
+        it('a > redirect into a new speaking directory', () => {
+            expect(run(bash(`echo hi > agents/tmp/${fresh}/note.md`))).toBe(1);
+        });
+
+        it('a heredoc body calling makedirs on a new speaking directory', () => {
+            expect(
+                run(bash(`python3 - <<'PY'\nimport os\nos.makedirs('agents/tmp/${fresh}')\nPY`)),
+            ).toBe(1);
+        });
+
+        it('the remediation shape is exempt only exactly as written', () => {
+            for (const command of [
+                `printf '%s' 'agents/tmp/${fresh}' | xargs mkdir -p`,
+                `${remediation('x')} > agents/tmp/${fresh}/note`,
+                `printf '%s' "$(mkdir -p agents/tmp/${fresh})" | ./scripts-run src/scripts/_lib/link_crypto encrypt`,
+                `${remediation(`agents/tmp/${fresh}`)}; mkdir -p agents/tmp/${fresh}`,
+                `${remediation(`agents/tmp/${fresh}`)} && mkdir -p agents/tmp/${fresh}`,
+                `${remediation(`agents/tmp/${fresh}`)}\nmkdir -p agents/tmp/${fresh}`,
+                `printf '%s' 'agents/tmp/${fresh}' | ./scripts-run src/scripts/_lib/link_crypto decrypt`,
+                `printf '%s' 'agents/tmp/${fresh}' | ./scripts-run src/scripts/_lib/link_crypto encrypt | sh`,
+            ]) {
+                expect(run(bash(command)), command).toBe(1);
+            }
+        });
+    });
+
+    it('the remediation printed in the deny message executes unblocked as written', () => {
+        const line = denyMessage(renamed)
+            .split('\n')
+            .find((l) => l.includes('link_crypto encrypt'));
+        expect(line).toBeDefined();
+        const command = (line as string)
+            .trim()
+            .replace('<the real source>', `renamed from agents/tmp/${renamed}/`);
+        expect(command).toBe(remediation(`renamed from agents/tmp/${renamed}/`));
+        expect(run(bash(command))).toBe(0);
     });
 });
