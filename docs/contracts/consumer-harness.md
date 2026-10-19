@@ -55,14 +55,14 @@ The subset, by claim id, read against the ledger on 2026-10-16:
 |---|---|---|
 | `surgical-uninstall` | backed | `exec:` — `tests/install/uninstall_shared_host_config_real_install.test.ts`, this harness, plus the `tests/lib/` unit suites |
 | `host-agent-count` | backed | `exec:` — `tests/install/toolDetection.test.ts`, this harness |
-| `install-audit-clean` | backed | pointer — a workflow step |
+| `install-audit-clean` | unbacked | pointer — a workflow step that audits this repository's lockfile, not the consumer's tree |
 | `hook-dispatch-latency` | backed | `exec:` — `tests/install/hook_dispatch_invocation_path_real_install.test.ts`, this harness; the millisecond figures stay CI-gate readings |
 | `default-install-context-cost` | backed | `exec:` — `tests/install/default_install_skill_count_real_install.test.ts`, this harness |
-| `thin-inject-delivery-equivalence` | backed | pointer — a bench report |
-| `mcp-registered-server-standing-cost` | backed | pointer — a metrics file |
-| `skill-tiering-h2-costs-more-by-default` | backed | pointer — an analysis file |
-| `council-fallback-loses-zero-seats` | backed | `exec:` — unit tests under `tests/scripts/` |
-| `gated-platform-reads` | backed | pointer — `docs/benchmark.md` |
+| `thin-inject-delivery-equivalence` | measured-in-repo | pointer — a bench report, with the harness case that would promote it |
+| `mcp-registered-server-standing-cost` | measured-in-repo | pointer — a metrics file, with the harness case that would promote it |
+| `skill-tiering-h2-costs-more-by-default` | measured-in-repo | pointer — an analysis file, with the harness case that would promote it |
+| `council-fallback-loses-zero-seats` | backed | `exec:` — `tests/install/council_fallback_installed_copy_real_install.test.ts`, this harness, transports substituted at the process boundary |
+| `gated-platform-reads` | measured-in-repo | pointer — `docs/benchmark.md`, with the installed-copy run that would promote it |
 | `no-runtime-daemon` | withdrawn | — |
 
 `tests/scripts/consumer_harness_contract.test.ts` fails when an id in this table

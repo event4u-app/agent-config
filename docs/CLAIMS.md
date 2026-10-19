@@ -50,6 +50,20 @@
   that retired it. Machine-checked: a withdrawal that cannot name its decision is
   an unexplained deletion wearing a status.
 
+- `status: measured-in-repo` entries are **finished readings taken in the wrong
+  place**: a bench, fixture or network measurement of something a shipped
+  install does, taken in this repository's maintainer tree. They are not `backed`
+  (nothing ran where the consumer stands) and not `unbacked` (the reading is
+  finished, not owed), so filing them under either misstates them. Every one
+  carries **`measured_on`** (the tree, corpus or environment the reading was
+  taken on) and **`promotion_evidence`** (the consumer-side evidence that would
+  make it `backed`), keeps a resolving report pointer, and is listed with both
+  in [`proof.md`](proof.md). Machine-checked, all four. Same enforcement as the
+  other non-`backed` statuses: a `measured-in-repo` claim may not carry a marker
+  in public prose. The status is deliberately narrow: a reading about a fixture
+  rather than about an install is not consumer-facing and stays where it is, and
+  a claim with no finished reading is `unbacked`.
+
 ## Entry schema
 
 ```
@@ -57,12 +71,13 @@
 - claim: <the sentence, roughly as it appears publicly>
 - kind: quant | qual | comparative
 - evidence: <pointer>            # see grammar below
-- status: backed | unbacked | resolved-null | withdrawn
+- status: backed | unbacked | resolved-null | withdrawn | measured-in-repo
 - last_verified: <YYYY-MM-DD>
 - retired_by: <ADR-NNN>          # required on withdrawn entries; the decision that retired it
 - superseded_by: <kebab-id>      # optional; resolved-null and withdrawn entries only
 - non_inference: <what this data does NOT license>   # optional; ratcheted on backed quant
 - retires_phrasings: <phrase> | <phrase>             # closed entries only; or `never-published — <reason>`
+- promotion_evidence: <consumer-side evidence>      # required on measured-in-repo entries, forbidden elsewhere
 ```
 
 **`non_inference` — the sentence that stops a number travelling.** A measured
@@ -382,7 +397,9 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - kind: quant
 - evidence: internal/bench/reports/thin-inject-2026-09-08.md#endpoints
 - non_inference: MEASURED ON A PROJECT-SCOPE TREE, which is not the tree a consumer gets. `model_rule_injection` resolves the router and the rule bodies from the repository root it is run in, so every figure in this row is the reach of the MAINTAINER checkout. A consumer install writes the global layer only (ADR-020), and the carrier's own resolution from `AGENT_CONFIG_PACKAGE_ROOT` is `road-to-a-rule-carrier-that-works-outside-the-repo` Phase 1 — unmerged at this writing. Until it merges, no number here licenses a statement about what a consumer receives. THE REACH FIGURES COME IN TWO UNITS AND THE ROW NAMES BOTH. Per RULE: 102/102 with `open_files` honoured, 99/102 with them ignored — a rule counts as reachable when ANY labelled positive matches, which is the unit the pre-registered bar is scored in. Per PROMPT over the same corpus: 307/335 ignored against 335/335 honoured. The two are not interchangeable, and a rule reachable on one of twelve positives is the same row as one reachable on all twelve in the first unit and eleven prompts apart in the second. The SUMMARY view of the same script prints 305/335 and 333/335 because `scoreExact` drops the case's `command` trigger; both readings are printed by `--endpoints` so neither view has to be trusted over the other. SCOPED TO ONE HOST BY CONSTRUCTION. The saving is measured on the tree Claude Code loads and licenses nothing about any other host — `lean_projection.hosts` defaults to `[claude-code]`, and every host outside that list receives byte-for-byte what `eager-all` writes, which is the opposite of a saving. Do not read a per-host figure as a per-install one. It is also NOT a behavioral claim: delivery equivalence means the same BYTES arrive on a trigger match, never that a session behaves the same way, and the instrument that could answer that is closed by ADR-202. The recall figure is over a LABELLED corpus of 101 rules, so it bounds the rules that carry fixtures and says nothing about the four trigger-less and three path-only rules, which are exempted from thinning entirely rather than delivered. It also says nothing about the PATH HALF of the 18 rules that carry both path-shaped and non-path triggers: `path_only_ids` exempts a rule only when EVERY trigger is path-shaped, so all 18 are thinned and their path route has no carrier — and each of them also has a prompt-matching positive, which is precisely why the labelled corpus cannot see the loss. They are not unreachable, and on Claude Code they never held a separate host-native path route to lose (`src/install/claudePathsPlan.ts:250` emits no `paths:` for a mixed-trigger rule on purpose, so under `eager-all` they loaded unconditionally); what is lost is the difference between unconditional and prompt-triggered. Receiver: `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`. The byte figures are chars/4 and the earlier corpus figures are exact BPE; the two units are not interchangeable and no delta is computed across them. Finally, the standing-payload gate `check_preamble_payload_budget` reads the projection SOURCE by default and its number is UNCHANGED by this flip at 138,200 — a reader comparing that gate before and after will correctly see no movement, because it measures a different surface from the one this claim reports.
-- status: backed
+- status: measured-in-repo
+- measured_on: maintainer checkout, project-scope tree, claude-code, widened corpus re-measured 2026-09-08
+- promotion_evidence: a tests/install/ case that installs globally into a throwaway HOME and holds every rule-inject delivery byte-equal to the rule body the installed router names
 - last_verified: 2026-09-08
 
 ### claim: ledger-exec-verifiability
@@ -549,15 +566,18 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - claim: A credential-free prescription layer reads content the host's own web tools cannot fetch at all — Reddit thread text (Atom feeds) AND comment ranking plus reply nesting (server-rendered HTML), and a single named tweet (the platform's own oEmbed endpoint). Measured 2026-07-25 from a residential network against a pre-registered 6-task-per-channel set with a native control and thresholds frozen before the run: reddit tier 1 6/6, reddit tier 2 6/6, twitter-oembed 6/6, native 0/6 on both Reddit tiers. Zero credentials, zero resident processes, zero auto-installs. Scope bounds that travel WITH the claim: (a) the twitter gap is narrower than 6/6 suggests — native also passed 2 of those 6 via third-party mirrors, so the channel earns its place only on tweets nothing mirrors; (b) reddit tier 2 is on an announced closing path and ships with a kill-switch keyed on an OBSERVED login wall; (c) youtube-transcripts is PARKED, not shipped — its backend is human-installed by contract and was never exercised; (d) residential network is load-bearing, and CI is explicitly not a bench environment.
 - kind: quant
 - evidence: docs/benchmark.md#ship-gated-reach
-- status: backed
+- status: measured-in-repo
+- measured_on: maintainer machine on a residential network, pre-registered 6-task-per-channel set, 2026-07-25
+- promotion_evidence: a dated run of the prescriptions an installed copy ships, against the same frozen task set from a throwaway HOME, committed with its raw results
 - last_verified: 2026-07-25
 
 ### claim: install-audit-clean
 - claim: A fresh registry install of this package carries zero high/critical npm-audit findings on the runtime dependency tree (0 vulnerabilities total at last verification), gated on every PR and every release PR.
 - kind: quant
 - evidence: .github/workflows/release-validation.yml#npm audit --omit=dev --audit-level=high
-- status: backed
-- last_verified: 2026-07-27
+- status: unbacked
+- last_verified: 2026-10-19
+<!-- MOVED TO UNBACKED 2026-10-19, and the reason is a subject mismatch rather than a failed audit. The step audits THIS repository's lockfile; no npm-shrinkwrap.json ships and 12 of the 13 runtime dependencies are caret ranges, so a consumer's fresh install resolves a different tree from the one the step reads. The claim is about the consumer's tree, so the step does not bind it. Not public copy: no marker carries this id. WHAT BINDS IT: an audit of the packed release candidate installed into an empty project (pre-release), plus the same audit of the published artefact after publish or on a schedule, distinguishing an advisory finding from a registry or network failure. AI council 2026-10-19, anthropic + openai, 2/2, both DECIDE: preserve the claim by measuring the right subject rather than narrowing it, and do not gate every PR on registry availability. -->
 
 ### claim: hook-dispatch-latency
 - claim: Hook dispatch runs as one precompiled node process with all concerns in-process, and the CI latency gate measures the REAL invocation path — the exact command hooks.json installs (bash wrapper + install-shape probes + dispatcher), via `bench_hook_latency --gate --via-cli`, whose per-event commands come from the same generator that writes hooks.json — not the bare bundle the pre-repair gate measured. The repair (road-to-hook-latency-repair) is pinned before/after on one machine in the committed baseline history: pre-fix CLI path pre_tool_use p95 164 ms → post-fix bundle-direct path p95 84 ms (darwin dev, warm cache, n=50 each; the pre-fix path measured ~450–500 ms/event on a 1-vCPU container). Budget re-derived 2026-08-19: pre_tool_use p95 175 ms (was 150), any event 250 ms on GitHub-hosted CI runners, both BLOCKING. The raise is measured rather than bent around a red check — 150 sat INSIDE the observed legitimate distribution (green main runs 115, 120, 146, 150, 150 ms; reds 151, 152, 152, 154 ms; a comment-only PR run at 157 ms) and failed 5 of 33 tests.yml runs on main over 2026-08-16..18, i.e. 15%, with hand re-runs as the standing workaround. The budget file records that distribution, the failure rate, the cited derivation rule and a revisit-if that routes the NEXT breach to the cause rather than to a third raise: a GREEN run whose p50 rises above 160 ms is the cost growing, not the runner. Down from ~1.6 s p50 on the retired CLI-to-bash-to-tsx per-concern-respawn chain.
@@ -850,9 +870,10 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 ### claim: council-fallback-loses-zero-seats
 - claim: An eligible mid-flight cli failure with a constructible api twin loses zero council seats WHEN THE PROJECTED-SPEND GATE PERMITS THE RETRY — the seat answers over the api rung instead of dropping out of the pass. A retry the budget REFUSES is outside the claim: the original failure stands, the seat is absent, and `fallback_skipped: cost_budget` says so.
 - kind: qual
-- evidence: exec:vitest run tests/scripts/ai_council/council_cli.test.ts -> 0
+- evidence: exec:vitest run tests/install/council_fallback_installed_copy_real_install.test.ts -> 0
 - status: backed
-- last_verified: 2026-08-19
+- last_verified: 2026-10-19
+<!-- EVIDENCE MOVED 2026-10-19: from the unit suite tests/scripts/ai_council/council_cli.test.ts, which fakes the transports inside the process, to a packed and installed copy driven through its own bin with `claude`, `codex` and `curl` substituted at the process boundary. No shipped code carries a seam for it. The unit suite still runs in the node-tests job; it is no longer what backs a claim about an installed copy. -->
 
 **The condition was added 2026-08-19, after a review found the unconditional
 wording refuted by its own evidence.** Recorded here rather than quietly
@@ -938,7 +959,9 @@ is the named exception in the claim itself.
 - claim: Registering an MCP server with this package costs standing context on every session, and the kernel server's 25-tool surface costs 4,603 tokens of it while the two-tool lite surface is capped at 600.
 - kind: quant
 - evidence: agents/evidence/metrics/mcp-tool-standing-cost.jsonl#tool_search_threshold
-- status: backed
+- status: measured-in-repo
+- measured_on: maintainer checkout, tool-schema token count of the kernel and lite MCP surfaces, 2026-09-08
+- promotion_evidence: a tests/install/ case that registers the installed MCP server in a throwaway HOME and counts the tool-schema tokens of the surface it actually serves
 - last_verified: 2026-09-08
 <!-- FIGURE MOVED 2026-09-08, and the claim is restated rather than re-verified at the old
      number: `road-to-a-graph-that-is-shipped` 4.1 registered five code-graph tools, taking
@@ -965,7 +988,9 @@ is the named exception in the claim itself.
 - claim: On a default Claude Code install `projection.mode: tiered` costs MORE standing context than `legacy-all` — 2,259 tokens against 1,956 — because the host already caps description delivery at roughly the Tier A set; the 82% saving exists only against a 100%-delivery counterfactual.
 - kind: quant
 - evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#H2
-- status: backed
+- status: measured-in-repo
+- measured_on: maintainer checkout, matrix arm H2 over the projected skill descriptions at the Claude Code delivery cap, 2026-08-23
+- promotion_evidence: a tests/install/ case that installs under projection.mode tiered and legacy-all into two throwaway HOMEs and counts the standing description tokens each delivers
 - last_verified: 2026-08-23
 ### claim: enforcement-undeclared-denominator
 - claim: Exactly one enforcement denominator is quotable, it names the frame that produced it, and no published doc restates it by hand.
