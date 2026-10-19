@@ -150,10 +150,19 @@ A token stands for one value inside one **issuing scope**. It carries four parts
   `internal/bench/egress-placeholders-PREREG.md` (endpoint d) among spellings that
   survive an unquoted shell word, YAML, JSON and an anchored regex; reading in
   `internal/bench/reports/egress-placeholders-fidelity-2026-10-15.md`. The
-  bracket form `[TYPE_n]` is excluded on that survival test. The variant suffix
-  is not yet part of the spelling; adding it is a change to this section. A
+  bracket form `[TYPE_n]` is excluded on that survival test. A
   surface that renders Markdown must escape a token, which renders as bold
   otherwise. Constant and recogniser: `src/scripts/_lib/egress_token.ts`.
+- **Variant: `__TYPE_n_fp_vK__`** — the K-th spelling (K from 2 to 99) of one
+  entity; the first spelling carries no suffix. Number and fingerprint come from
+  the canonical value, so `DE89 3704 …` and `DE893704…` share both and differ
+  only in the suffix, and each restores to its own bytes. The canonical form is
+  per type: `IBAN` drops whitespace and upper-cases, `CARD` drops spaces and
+  hyphens, `PHONE` drops spaces, parentheses, dots, hyphens and slashes; every
+  other type is its own canonical form, so two spellings of it are two entities.
+  The scope keeps a keyed digest per spelling, never the spelling of a
+  credential. The session table of the host carrier mints by spelling and
+  issues no variant yet: there, two spellings are two entities.
 
 ## The four published states
 
@@ -300,6 +309,21 @@ transcript file reads it from disk, raw; an operator-armed raw capture
 (`AGENT_HOOK_CAPTURE_DIR`) writes the received payload before the stage runs;
 and a guard's own refusal text, built from the execution view, is passed on as
 it is. Each is a residue of the view, not a covered surface.
+
+## Prevention tiers
+
+A value never read cannot leak through a later bug, so prevention sits before
+every replacement path. Three tiers, and who turns each on:
+
+| Tier | What it refuses | Who enables it |
+|---|---|---|
+| Read guard | a hooked file tool or shell command on a credential-class file, and environment dumps (`block-credential-reads`, classes in `src/scripts/_lib/credential_files.ts`) | this package, on every `pre_tool_use` slot it binds; refuses only where the slot honours a deny |
+| Native deny rows | the same classes, as the host's own `permissions.deny` rows | **the user** — `hooks:doctor` reports which rows are in force across the three Claude Code settings layers and prints the missing ones to paste (`src/scripts/_lib/credential_deny_rows.ts`). This package writes none: a written row would be a second exception to the published no-host-setting-write commitment (D10) |
+| Sandbox and a scrubbed environment | reads outside the sandbox, and values that were never in the session's environment | **the user** — `sandbox.enabled` in the host settings, and starting the session from an environment without the credential variables; never written into a project |
+
+The native rows cannot except a template, so `.env.*` is not offered (it would
+deny `.env.example`) and the value-holding suffixes are listed by name; the read
+guard covers every other name.
 
 ## Settings
 
