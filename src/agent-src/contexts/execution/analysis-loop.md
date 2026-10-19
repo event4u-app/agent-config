@@ -72,6 +72,18 @@ A / B / C, and runs:
 Facts are settled by the tree, never by majority. A minority finding is
 accepted or rejected with a reason, never dropped (`auditMinorityRetention`).
 
+## Stages a door runs from the shell
+
+```bash
+./scripts-run src/scripts/analysis_target                 # the scope line
+./scripts-run src/scripts/analysis_validate --run <run-dir> --root <project-root> <emitted file>…
+./scripts-run src/scripts/analysis_run_record --run <run-dir>   # checks run.json
+```
+
+`analysis_validate` moves an `emitted` run to `validated` or names each failure;
+`--content-only` skips the five tree gates and says so, for a run on a project
+whose tree those gates do not read.
+
 ## Evidence tiers
 
 | Tier | Means | Counts for stopping or "verified" |

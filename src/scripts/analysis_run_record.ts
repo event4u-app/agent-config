@@ -8,6 +8,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { TOP_TIERS, type Lens, type LoopRow } from './analysis_ledger.js';
 import type { AnalystMode } from './analysis_analysts.js';
@@ -177,3 +178,33 @@ export function readRunJson(runDir: string): RunJson {
     if (errors.length > 0) throw new Error(`run.json invalid: ${errors.join('; ')}`);
     return doc as RunJson;
 }
+
+/** `analysis_run_record --run <run-dir>`: validates the run's `run.json` and prints one summary line. */
+export function main(argv: readonly string[] = process.argv.slice(2)): number {
+    const i = argv.indexOf('--run');
+    const runDir = i >= 0 ? argv[i + 1] : undefined;
+    if (runDir === undefined) {
+        process.stderr.write('usage: analysis_run_record --run <run-dir>\n');
+        return 2;
+    }
+    try {
+        const doc = readRunJson(runDir);
+        process.stdout.write(`${doc.run_id} · ${doc.door} · ${doc.final_state} · ${doc.analysts} analysts · ${doc.rows.length} loop rows · ${doc.tokens} tokens\n`);
+        return 0;
+    } catch (err) {
+        process.stderr.write(`analysis_run_record: ${err instanceof Error ? err.message : String(err)}\n`);
+        return 1;
+    }
+}
+
+function isCliEntry(): boolean {
+    if (process.argv[1] === undefined) return false;
+    try {
+        return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href ||
+            fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return false;
+    }
+}
+
+if (isCliEntry()) process.exit(main());
