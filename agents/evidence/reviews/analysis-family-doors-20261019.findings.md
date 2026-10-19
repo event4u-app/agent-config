@@ -1,14 +1,14 @@
 # Findings: analysis-family-doors-20261019
-<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: 63baafdcbecf8bee360aaca152b5ec6d9ae34de97a2c4b3cf1fbe9e7e0b97407 | diff: dffa023775a19a6b3b97ea672942414b28f6e51f | reviewer: r2-fresh-subagent-analysis-family-doors-20261019 | prompt_hash: 35bf12ec18dc87104a30feae9b7a4c687f6c7ef499317847950a856824084b93 -->
+<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: 96e6fe29005dcad99e6d78601db9d174242ece8faf28c80f9a3eb26c4b278e7c | diff: 4b893f3b61c4dc08b0f655d2d1fd15cbfbd92004 | reviewer: r2-fresh-subagent-analysis-family-doors-20261019 | prompt_hash: 35bf12ec18dc87104a30feae9b7a4c687f6c7ef499317847950a856824084b93 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-analysis-family-doors-20261019"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: dffa023775a19a6b3b97ea672942414b28f6e51f
-  scope_hash: 63baafdcbecf8bee360aaca152b5ec6d9ae34de97a2c4b3cf1fbe9e7e0b97407
+  diff_sha: 4b893f3b61c4dc08b0f655d2d1fd15cbfbd92004
+  scope_hash: 96e6fe29005dcad99e6d78601db9d174242ece8faf28c80f9a3eb26c4b278e7c
   roadmap: agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md
-  roadmap_hash: d418bff98e4c2bc2a78b99efe4ff4f533c1ba648a8471e6e58aca92452a03309
+  roadmap_hash: 44194d186fbac848dc38254823bb5072d1ff464fac68d8bfbae325e5e929806e
   ac_hash: 576392c4edc3f50eb28f9db12266265f56eaa1ec6f162eca93ec2c921ba2fdae
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
@@ -26,3 +26,5 @@ dispatched: 2026-10-18T23:49:01Z
 | 7 | low | src/scripts/analysis_pr_review.ts:187 | The command doc defines the D9 metric as introduced findings with "a reproduction or a test", but `metric` counts only a non-empty `reproduction`; a finding backed by a test (no reproduction string) is not counted. | fixed | c6c1f4257 — metric counts reproduction or test; test seen red |
 | 8 | low | src/scripts/analysis_inbox_final.ts:143 | `foldLaneLedgers` sums census and points without checking for duplicate lane ids or a point id appearing in more than one lane, so a topic double-assigned across lanes is double-counted; it also refuses a lane with an empty point list even when its census is non-zero but nothing qualified. Separately, `roundUnion` (line 67) lets a malformed `manifest.json` escape as a raw `SyntaxError` and does not check that lineage values are string arrays. | fixed | c6c1f4257 — duplicate lane/point refused, empty point ledger with census accepted, manifest errors named; tests seen red |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+Re-bind note, 2026-10-19: after the fix pass the roadmap changed only by moving eleven dated completion notes verbatim to `agents/evidence/analysis/analysis-family-step-records.md` (cap fix, commit 4b893f3b6); its Acceptance Criteria are unchanged (`ac_hash` still verifies), so `roadmap_hash` was re-recorded rather than re-reviewed.
