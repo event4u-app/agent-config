@@ -191,6 +191,20 @@ Nothing is sent without the person's word in that turn.
       self-repair records"), open and in flight in a parallel lane; defining
       the fields here first would fix the producer's schema from the consumer's
       side. 3.2 waits on the same field.
+      **Re-measured 2026-10-19, and the wait is mutual.** Retro step 4.4 is
+      still open, and its own reason points back here: it "needs a unit-key
+      field on the self-repair record, whose shape the privacy floor and the
+      release path read". So each side names the other's shape as its reason.
+      The producer already has the field under another name: the retro's
+      `Candidate.subject` (`src/scripts/retro.ts`) is documented as the
+      canonical, stable claim two agreeing syntheses must spell identically —
+      which is what `principle` is for. A proposal to define `principle`,
+      `mechanism` and `falsifier` as optional fields here, map `subject` onto
+      `principle`, and render the upstream body from closed fields only (with
+      `renderReport` left for the local and Class-B case) was put to the
+      council. **Both seats were quota-exhausted (anthropic 50/50, openai
+      50/50); 0/2 answered, so nothing was decided.** Overriding a recorded
+      deferral needs that round first, so the step stays open until it runs.
 - [ ] **3.2 A mechanism fingerprint.** For records carrying `target` and
       `principle`, the fingerprint hashes those instead of the evidence, so the
       F5 pair clusters.
@@ -202,6 +216,9 @@ Nothing is sent without the person's word in that turn.
       alone would cluster two different mechanisms found in the same file, so
       the half-built version is worse than the evidence hash it replaces.
       verify: `npx vitest run tests/scripts/self_repair.test.ts -t same-mechanism-same-fingerprint --reporter=verbose` -> /✓.*same-mechanism-same-fingerprint/
+      **2026-10-19:** sequenced behind the same council round as 3.1 — the
+      fingerprint change is the proposal's second half, and it changes no
+      stored record because no producer sets `principle` yet.
 - [x] **3.3 Draft, and a neutral branch.** `--draft` on every pull request; the
       branch is `retro/<fingerprint[:8]>`.
       **Branch half done 2026-10-17 with 2.1:** the commit is pushed as
@@ -296,6 +313,8 @@ Nothing is sent without the person's word in that turn.
 > exist, but a retro run still produces no package record — that is retro
 > step 4.4, open — and `/retro status` is retro step 2.5, open. Both steps
 > here stay sequenced behind them.)*
+> *(Re-measured 2026-10-19: retro 4.4 and 2.5 are both still open, 2.5 for an
+> owner-reserved reason — it is a new consumer command. Unchanged.)*
 
 - [ ] **5.1 At most one offer per run.** A retro run whose package record passes
       the canonical threshold appends one release offer to its output; sending
@@ -330,6 +349,7 @@ Nothing is sent without the person's word in that turn.
 | D4 | reversible-technical | agent | No automatic upstream and no automerge of a retro pull request, in this repository either | `self-repair-loop` requires the person's word for the outward step | — |
 | D6 | reversible-technical | agent | Step 2.1's isolated checkout is a temporary index with no working tree, and the commit is pushed by sha | A worktree would run the package's commit hooks without its dependencies and leave a checkout to clean up; plumbing reaches the same property — only the net diff on the base leaves — with nothing on disk but a temp dir | a hook must run on the synthesised commit |
 | D7 | critical-technical | council:2026-10-17-d5-reopen-fork-pr | D5 is NOT reopened; the reopen is owner residue, since one seat named an owner-reserved dimension (irreversible external consequence). Its condition fires literally (matrix: no consumer-project linkage), but the seats split: anthropic (a) reopen, council-decidable — the digest approval is the protection for the floor's gap; openai (b) keep — a matching digest proves integrity, not that the person recognised a company term, and widening irreversible consequences is owner-reserved. A split escalates; the less-revealing option stands until the owner decides | `agents/evidence/analysis/upstream-fork-pr-linkage-2026-10-17.md` | the owner decides, or the detector table's identifier class lands |
+| D8 | reversible-technical | agent | Risk review 2026-10-19: AC-5 is reworded as D5 instructed ("corrected at the next risk review") and closed against `consumer-reaches-the-issue-step` in `tests/scripts/self_repair_release.test.ts`, watched red with the checkout condition removed from `chooseEgress`. AC-1 closed on the three Phase 1 documents plus the pipeline document and the privacy-floor rule — every backticked path resolves, or is a short-form mention of a file that exists, or is the seed path the rule names as deliberately absent — and on `check_references` (2,931 scanned, 0 broken). Rows 1–3 of the risk register re-read and kept; row 4 added | `npx vitest run tests/scripts/self_repair_release.test.ts` 30/30 · `./scripts-run src/scripts/check_references` exit 0 | the owner decides D7 — AC-5's wording then moves with it |
 
 ## What this roadmap deliberately does not do
 
@@ -341,21 +361,24 @@ Nothing is sent without the person's word in that turn.
 - **K5** No scanner of its own; the detector table is the dependency.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Company jargon without a literal identifier slips through | product | A term that names nothing but identifies the employer leaves in a principle field. | Closed fields only, the person sees every byte in the dry run, digest-bound approval. | Phase 3 — Synthesised, clustered, drafted |
 | 2 | Upstream pull requests flood the maintainer | product | Many installations open the same finding. | Mechanism fingerprint clusters them; the existing creation cap of 20 per 24 h; one offer per run. | Phase 5 — The retro may offer, never send |
 | 3 | The ephemeral checkout fails on a locked-down machine | implementation | No network or no git leaves the consumer without a route. | The ladder still degrades to an issue, which is today's behaviour. | Phase 4 — Approval of exact bytes, and a route from consumers |
+| 4 | Producer and consumer each wait on the other's record shape | implementation | Retro 4.4 waits on the record shape this file reads, and 3.1 / 3.2 here wait on a field the retro has not named, so neither side moves. | The proposal that breaks the wait is written into step 3.1 and goes to the council; `Candidate.subject` already carries the meaning `principle` needs. | Phase 3 — Synthesised, clustered, drafted |
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** No document in the tree sends a contributor to a path, script or
+- [x] **AC-1** No document in the tree sends a contributor to a path, script or
       file that does not exist.
 - [x] **AC-2** A release whose branch, identity, message or diff carries a
       consumer identifier is refused, with the finding named.
 - [ ] **AC-3** The same mechanism from two projects produces one fingerprint.
 - [x] **AC-4** Every upstream pull request is a draft with a noreply identity,
       and changing one byte after approval voids the approval.
-- [ ] **AC-5** A consumer install reaches the pull-request step of the ladder.
+- [x] **AC-5** A consumer install reaches the issue step of the ladder; the
+      pull-request step is reached from a checkout of this package (D5), until
+      the owner decides D7.
