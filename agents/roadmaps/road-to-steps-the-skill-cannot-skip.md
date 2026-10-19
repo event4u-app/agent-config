@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: "open_blockers +1: phase-6-spend-ceiling is newly discovered on 2026-10-19 — the AI council (D18, 2/2) held that the Phase 6 spend is owner-reserved because no delegated threshold exists, which no earlier record had established; it is not a repaired undercount."
-estate_offset_exempt: ""Round inbox-2026-10-q reproduced at 9a943f30c that 40 relative links inside delivered references/*.md and one skill-relative link in existing-ui-audit resolve to nothing while check_references and lint_skill_link_reach both report clean, and that no skill can have its procedure handed out one step at a time because the only enforced step runner iterates a fixed eight-step constant. No active roadmap owns either: a grep over agents/roadmaps/{*,later,stubs} for procedure.yaml, work --procedure and skill-relative returns nothing, later/road-to-guided-journeys owns the flow level that ADR-055 keeps a suggestion list, and road-to-skill-scripts-that-run-where-they-land owns script placeholders, not link depth. Archiving or parking costs more because Phase 1 is a shipped dead-link defect; merging into the flow-level plan would tie a skill-internal change to the schema-v2 event ADR-055 reserves."
+estate_offset_exempt: "Round inbox-2026-10-q reproduced at 9a943f30c that 40 relative links inside delivered references/*.md and one skill-relative link in existing-ui-audit resolve to nothing while check_references and lint_skill_link_reach both report clean, and that no skill can have its procedure handed out one step at a time because the only enforced step runner iterates a fixed eight-step constant. No active roadmap owns either: a grep over agents/roadmaps/{*,later,stubs} for procedure.yaml, work --procedure and skill-relative returns nothing, later/road-to-guided-journeys owns the flow level that ADR-055 keeps a suggestion list, and road-to-skill-scripts-that-run-where-they-land owns script placeholders, not link depth. Archiving or parking costs more because Phase 1 is a shipped dead-link defect; merging into the flow-level plan would tie a skill-internal change to the schema-v2 event ADR-055 reserves."
 relates:
   - slug: road-to-skills-that-arrive-when-called
     relation: extends
@@ -487,6 +487,12 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
 - **H4 → `later/road-to-corpus-knowledge-skills` (Arrivals line).** Working
   through a 100-page instruction set step by step with a checklist is that
   file's subject.
+- **H5 → no owner yet (found 2026-10-19).** No roadmap gate parses roadmap
+  frontmatter as YAML. One push of this file carried
+  `estate_offset_exempt: ""Round …` — invalid YAML (`yaml.parse` refuses it) —
+  and `check_estate_count`, `lint_roadmap_blockers` and the dashboard all read it
+  without complaint, because each extracts its keys by pattern. The merge-review
+  council caught it; a gate should have.
 
 ## Decisions
 
