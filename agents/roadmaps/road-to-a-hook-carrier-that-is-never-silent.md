@@ -198,14 +198,52 @@ routed rule body with nothing in the session saying so.
   `BREAKING_CHANGES.md` Pending row), so no note is placed yet; both seats agree
   a note is owed and the trailer loss is a release-tooling defect. Record:
   `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
-  *Note placed (2026-10-19):* #2479 fixed the trailer loss — the release parser
-  now reads `3f8c98e74` as `notice, recorded` — and a second council round
-  (D10) settled the class as breaking: `BREAKING_CHANGES.md` carries a Pending
-  row naming `block-no-verify`, `block-kernel-rule-writes` and
-  `block-plumbing-writes`. What stays open is only the release itself: the cut
-  that ships 2.1 moves that row into its per-major table and writes the
-  `### Breaking` CHANGELOG entry, and no release has been cut since 16.5.0.
-  Cutting one is a release action this roadmap does not own.
+  *Re-measured 2026-10-19.* The squash-trailer defect the correction above rests
+  on is **fixed** — two parallel runs found this independently, #2479 on one side
+  and a re-measurement on the other. `trailer_blocks` in
+  `src/scripts/_lib/consumer_impact.ts` now returns every trailer-only paragraph
+  of a body rather than the final one, so `parse_impact_trailers` over
+  `3f8c98e74` and `3245c7e7c` returns `notice` with `recorded: true` for both —
+  the two commits the 2026-10-18 measurement recorded as lost. The next release
+  does record #2455 as a `notice`, so the half of the correction that rested on
+  the trailer being lost no longer holds.
+
+  **The step does not move, and its reason is now structural rather than a
+  tooling defect** — which is the stronger statement, because a fixed tool does
+  not unblock it. Released notes render commit **subjects**, and the subject
+  naming the three guards is an inner bullet of a squash **body** (`* fix(hooks):
+  reach a staged dispatcher ahead of PATH, so block-no-verify,
+  block-kernel-rule-writes and block-plumbing-writes run where they were
+  silent`), which no generator reads. Naming them therefore needs a curated-head
+  line, and `render_release_head` (`src/scripts/release.ts:332`) takes its
+  content only from `_derive_head_prefill`, which derives from the git span at
+  release time. A grep for a staged or pending surface an earlier change could
+  write into returns nothing. So this half is reachable only from a release run,
+  a Hard-Floor action no drain lane holds.
+
+  **The class is settled as breaking by D10, and the row exists** — #2491
+  (`e8b36d7ce`) placed it. `grep -c 'block-no-verify' BREAKING_CHANGES.md`
+  returns 1 on `main`, and the record is
+  `agents/evidence/council/hook-carrier-release-note-class-20261019.md`. An
+  earlier version of this note claimed otherwise; that grep had run against a
+  checkout taken before #2491 merged and the claim was wrong. It is corrected
+  here rather than quietly dropped, because the retraction is the useful part:
+  a measurement against a tree that moved under the measurer reads exactly like
+  a measurement against the tree.
+
+  **One thing about D10 is worth contesting, and it is not its existence.** Its
+  own `Resolved when` column records the round as **degraded 1/2**: `openai`
+  chose B1 in round one and could not answer round two (codex exit 1);
+  `anthropic` moved B2 → B1 in round two. Both seats' *latest* answers are B1,
+  which is how the disposition was read. But this package's own doctrine is that
+  a degraded council routes a decision to the owner rather than deciding it —
+  the same rule that kept three merge-gate PRs from clearing on 2026-10-17 — and
+  one seat's round-one answer plus another seat's round-two answer is not a round
+  that converged. **This is recorded as a contest of D10's standing, not of its
+  content**: B1 may well be right, and the row is in the file either way. What is
+  claimed here is only that a 1/2 round is weaker evidence than the decision row
+  reads, and that the revisit condition D10 already carries — a full 2/2 round
+  returning anything other than B1 — is the thing that settles it.
 
 ## Phase 5 — The plugin channel says what it carries
 
