@@ -10,8 +10,9 @@
  *
  * Both council transports cross a process boundary — the cli rung spawns the
  * vendor binary, the api rung spawns `curl` — so this case needs no seam in
- * shipped code. It packs this checkout, installs the tarball into a throwaway
- * consumer project with `npm install --offline`, and runs the installed
+ * shipped code. It packs this checkout, lays the tarball out in a throwaway
+ * consumer project's `node_modules` with its declared dependencies linked, and
+ * runs the installed
  * `agent-config council:run --confirm` with fake `claude`, `codex` and `curl`
  * first on PATH. `claude` fails with a login error (`auth_rejected`, eligible
  * without any opt-in), `codex` answers, and `curl` answers only the Anthropic
@@ -25,13 +26,14 @@
  *      absent, `fallback_skipped: cost_budget` says so, and `curl` never ran.
  *
  * Two deviations from a bare consumer, both about reaching the code rather than
- * what it does: `tsx` is installed beside the package, because it is a dev
- * dependency and the dispatcher's own `npx tsx` fallback would otherwise need
- * the registry; and `npm pack --ignore-scripts` ships the `dist/` already built
+ * what it does: dependencies are this checkout's lockfile-resolved copies rather
+ * than a fresh range resolution, and `tsx` is linked beside the package because
+ * it is a dev dependency and the dispatcher's own `npx tsx` fallback would
+ * otherwise need the registry; and `npm pack --ignore-scripts` ships the `dist/` already built
  * here instead of rebuilding it (CI builds before Vitest).
  *
  * HOME and EVENT4U_CONFIG_HOME are injected, never inherited, per
- * `docs/contracts/consumer-harness.md`. Runtime: ~20 s (pack + offline install
+ * `docs/contracts/consumer-harness.md`. Runtime: ~20 s (pack + layout
  * once, then one council pass per case).
  */
 import { spawnSync } from 'node:child_process';
@@ -44,11 +46,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const BUILT_CLI = path.join(REPO_ROOT, 'dist', 'cli', 'agent-config.js');
-const TSX_VERSION = (
-    JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'node_modules', 'tsx', 'package.json'), 'utf8')) as {
-        version: string;
-    }
-).version;
 
 const TWIN_ANSWER = 'ANTHROPIC-API-TWIN-ANSWER';
 const CODEX_ANSWER = 'CODEX-SEAT-ANSWER';
@@ -86,25 +83,39 @@ beforeAll(() => {
     expect(tarball, 'npm pack produced no tarball').toBeDefined();
 
     project = path.join(installRoot, 'consumer');
-    fs.mkdirSync(project);
+    const installed = path.join(project, 'node_modules', '@event4u', 'agent-config');
+    fs.mkdirSync(installed, { recursive: true });
     fs.writeFileSync(path.join(project, 'package.json'), '{"name":"consumer","version":"1.0.0","private":true}\n');
-    // `--offline`: a cache miss fails here, as setup, instead of fetching.
-    const install = spawnSync(
-        'npm',
-        [
-            'install',
-            '--offline',
-            '--omit=dev',
-            '--ignore-scripts',
-            '--no-audit',
-            '--no-fund',
-            path.join(packDir, tarball as string),
-            `tsx@${TSX_VERSION}`,
-        ],
-        { cwd: project, encoding: 'utf8', timeout: 180_000 },
-    );
-    expect(install.status, `offline npm install of the tarball failed (setup, not validation):\n${install.stderr}`).toBe(0);
-    expect(fs.existsSync(path.join(project, 'node_modules', '.bin', 'agent-config'))).toBe(true);
+    const untar = spawnSync('tar', ['-xzf', path.join(packDir, tarball as string), '-C', installed, '--strip-components=1'], {
+        encoding: 'utf8',
+    });
+    expect(untar.status, `extracting the tarball failed:\n${untar.stderr}`).toBe(0);
+
+    // The tarball's declared runtime dependencies, plus `tsx`, are linked from
+    // this checkout's lockfile-resolved tree rather than resolved from the
+    // registry. A range resolution at test time depends on what the npm cache or
+    // the registry holds that day, which made the setup red on CI for a reason
+    // that is not a property of the package. Only the DECLARED dependencies are
+    // linked, so a module the shipped code imports without declaring it still
+    // fails to resolve from the installed copy.
+    const shipped = JSON.parse(fs.readFileSync(path.join(installed, 'package.json'), 'utf8')) as {
+        dependencies?: Record<string, string>;
+        bin?: Record<string, string>;
+    };
+    for (const dep of [...Object.keys(shipped.dependencies ?? {}), 'tsx']) {
+        const target = path.join(REPO_ROOT, 'node_modules', dep);
+        expect(fs.existsSync(target), `${dep} is not installed in this checkout`).toBe(true);
+        const link = path.join(project, 'node_modules', dep);
+        fs.mkdirSync(path.dirname(link), { recursive: true });
+        fs.symlinkSync(target, link);
+    }
+    const binDir = path.join(project, 'node_modules', '.bin');
+    fs.mkdirSync(binDir, { recursive: true });
+    const binRel = shipped.bin?.['agent-config'];
+    expect(binRel, 'the shipped package.json declares no agent-config bin').toBeDefined();
+    fs.symlinkSync(path.join(installed, binRel as string), path.join(binDir, 'agent-config'));
+    fs.symlinkSync(path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx'), path.join(binDir, 'tsx'));
+    expect(fs.existsSync(path.join(binDir, 'agent-config'))).toBe(true);
 }, 300_000);
 
 afterAll(() => {
