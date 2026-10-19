@@ -977,7 +977,7 @@ gaps again; the binding closes replay, and nothing else.
 > module this phase adds to the watch list is not yet on the merge gate's trust
 > chain unless it is named there too.
 
-- [ ] **4.1 The review's own code is a gated surface.** The gate's watch list
+- [x] **4.1 The review's own code is a gated surface.** The gate's watch list
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their
       own, an ordinary change to the council's prompts or transports stays
@@ -996,6 +996,36 @@ gaps again; the binding closes replay, and nothing else.
       say out loud — each reviewer path enters `gatedFilesOf`, so it is covered by
       the digest and not only by the refusal. 14 tests.
 
+      **Rebuilt and closed 2026-10-19, and the step is NARROWER than it was
+      drafted, because the tree moved under it.** Two of the five paths 4.1
+      named no longer need this step and one is now refused to it:
+      `_lib/ratification_subject.ts` joined the gated set on 2026-10-15 through
+      `MECHANISM_IMPORT_PATHS` (#2379, stages 1 and 2), which also replaced the
+      2026-10-12 `SELF_SURFACE` constant with a single `isMechanismPath`
+      predicate the digest and the classification already share — so the
+      digest-invisibility defect that commit was written to prevent is closed by
+      a better mechanism than the one this step proposed, and `SELF_SURFACE` is
+      deliberately NOT reintroduced. `_lib/ratification_record_writer.ts` does
+      not exist: 3.4 is open, and a watch-list entry for an absent file gates
+      nothing. **`docs/contracts/ratification-artifact.md` is left out on an
+      owner decision of 2026-10-15**, recorded in the gate's own
+      `MECHANISM_IMPORT_PATHS` header beside the writer CLIs; widening to it
+      would reopen that decision, which is not an agent's to take, so the
+      omission is pinned by a test rather than left to be read as an oversight.
+      What remained owed, and is what landed: `modification_review_questions.ts`
+      and `modification_review.ts` — the question list and the verdict rule. The
+      gate does not import them, so the import-closure criterion never reached
+      them, and condition 4 of `ratification-artifact.md` § When the user
+      decides had reserved "the modules that … ask the questions and derive the
+      verdict" to the owner since it was written. **The reservation was a claim
+      the contract made and the gate did not keep**; this closes that gap and
+      widens no authority — it narrows the agent's. 13 tests, six of them
+      polarity partners (`prompts.ts`, `stance_tally.ts`, `quorum.ts`,
+      `council_cli.ts`, `chairman.ts` and this suite's own file stay ungated,
+      and an ordinary council edit still has nothing to ratify). Seen red for
+      the intended reason: removing `REVIEWER_PATHS` from `isMechanismPath`
+      drops 4 of 13 and leaves the 9 that should stay green.
+
       **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
       carried it, on the reviewers’ own reasoning.** The modification review
       refused that branch 2/2 on `smaller-change`, and the code of this step is
@@ -1003,7 +1033,7 @@ gaps again; the binding closes replay, and nothing else.
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
 
-- [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
+- [x] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
       that list from its own tree, as it reads its policy, and the list and
@@ -1024,6 +1054,31 @@ gaps again; the binding closes replay, and nothing else.
       a file whose absence costs only the widening. 9 tests, with both polarities —
       a class member outside the kernel reds, a rule outside the class does not, and
       a kernel rule is still reported as a kernel rule rather than reclassified.
+
+      **Rebuilt and closed 2026-10-19, in the shape the 2026-10-12 commit
+      described, against the current gate.** `GatedPaths` gained
+      `consequenceRules`, fed by `consequenceRuleSlugs()`, which reads the 28
+      members from the gate's OWN tree and never from `--root` — in CI this code
+      is the base revision's, so a candidate that dropped a member would
+      otherwise be judged against its own shortened list. The list and
+      `rule.schema.json` joined `isMechanismPath`, so the drop-then-edit move
+      carries a record either way, and that exact diff is a test. The deliberate
+      asymmetry stands and is now also written in the contract: a missing or
+      unparseable list yields an EMPTY set rather than a refusal, because this
+      list only WIDENS, and the fallback is the kernel-and-hooks reach the gate
+      had before it.
+      **One defect the test caught that the 2026-10-12 shape did not pin on this
+      limb:** `gatedFilesOf` built its set from the kernel, hook and plumbing
+      lists plus the mechanism paths, and nothing added `consequenceRules` — so
+      a class member was REFUSED by the gate and covered by no digest, which is
+      the "gated by the refusal, bound by no record" failure in the one place
+      this round could still reach it. Fixed in `_lib/ratification_subject.ts`
+      in the same change. 8 tests, with both polarities — a class member outside
+      the kernel reds, a rule outside the class does not, and a kernel rule is
+      still reported as a kernel rule rather than reclassified. Seen red for the
+      intended reason on all three mechanisms independently: dropping the
+      classification branch fails 1 of 8, dropping the watch-list entry fails 2
+      of 8, and the digest limb was red before the fix above.
 
       **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
       carried it, on the reviewers’ own reasoning.** The modification review
