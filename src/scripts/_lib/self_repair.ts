@@ -134,8 +134,11 @@ export interface DefectFinding {
     falsifier?: string;
 }
 
-/** `principle` shape: lowercase segments joined by `/`, `.`, `_` or `-`. */
-export const PRINCIPLE_RE = /^[a-z0-9][a-z0-9/._-]{0,79}$/;
+/** `principle` shape: non-empty lowercase segments joined by single `/`, `.`, `_` or `-`; at most 80 characters. */
+export const PRINCIPLE_RE = /^(?=.{1,80}$)[a-z0-9]+(?:[/._-][a-z0-9]+)*$/;
+
+/** Control characters, including the Unicode line and paragraph separators. */
+const CONTROL_RE = /[\u0000-\u001f\u007f\u2028\u2029]/;
 
 /** Length bound for `mechanism` and `falsifier`, the same as an evidence span. */
 export const MAX_CLAIM_LINE = 160;
@@ -783,7 +786,7 @@ export function validateRecord(record: DefectRecord): string[] {
     }
     for (const field of ['mechanism', 'falsifier'] as const) {
         const value = record[field];
-        if (value !== undefined && (value.trim() === '' || value.length > MAX_CLAIM_LINE || /[\r\n]/.test(value))) {
+        if (value !== undefined && (value.trim() === '' || value.length > MAX_CLAIM_LINE || CONTROL_RE.test(value))) {
             out.push(`${field} must be one non-empty line of at most ${MAX_CLAIM_LINE} characters`);
         }
     }
@@ -799,11 +802,16 @@ function _mergeIds(a: readonly string[] | undefined, b: readonly string[] | unde
     return out;
 }
 
+const CLAIM_FIELDS = ['principle', 'mechanism', 'falsifier'] as const;
+
+// The three fields are one claim: they are adopted together from one source,
+// never merged per field, so a falsifier is never paired with a claim it was
+// not written for.
 function claimFields(existing: DefectFinding, finding: DefectFinding): Partial<DefectFinding> {
+    const source = CLAIM_FIELDS.some((f) => existing[f] !== undefined) ? existing : finding;
     const out: Partial<DefectFinding> = {};
-    for (const field of ['principle', 'mechanism', 'falsifier'] as const) {
-        const value = existing[field] ?? finding[field];
-        if (value !== undefined) out[field] = value;
+    for (const field of CLAIM_FIELDS) {
+        if (source[field] !== undefined) out[field] = source[field];
     }
     return out;
 }

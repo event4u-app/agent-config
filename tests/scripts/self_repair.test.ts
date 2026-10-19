@@ -305,6 +305,12 @@ describe('self-repair — claim fields a retro may set', () => {
         expect(validateRecord({ ...base, mechanism: 'two\nlines' }).join(' ')).toMatch(/mechanism/);
         expect(validateRecord({ ...base, falsifier: 'x'.repeat(161) }).join(' ')).toMatch(/falsifier/);
         expect(validateRecord({ ...base, falsifier: '   ' }).join(' ')).toMatch(/falsifier/);
+        for (const bad of ['drain//drift', 'drain/drift/', 'a..b', '/a', 'a'.repeat(81)]) {
+            expect(validateRecord({ ...base, principle: bad }).join(' '), bad).toMatch(/principle/);
+        }
+        for (const bad of ['a\tb', 'a\u0000b', 'a\u001b[31mb', 'a\u2028b']) {
+            expect(validateRecord({ ...base, mechanism: bad }).join(' '), JSON.stringify(bad)).toMatch(/mechanism/);
+        }
     });
 
     it('claim-fields-pass-the-privacy-floor', () => {
@@ -319,8 +325,10 @@ describe('self-repair — claim fields a retro may set', () => {
         const f: DefectFinding = { defect_class: base.defect_class, source: base.source, evidence: base.evidence, suggested_surface: base.suggested_surface };
         const named = mergeRecord(null, { ...f, principle: 'drain/baseline-drift', mechanism: 'm-line', falsifier: 'f-line' }, NOW);
         expect(named.fingerprint).toBe(mergeRecord(null, f, NOW).fingerprint);
-        const body = renderReport(named, 'issue');
-        for (const v of ['drain/baseline-drift', 'm-line', 'f-line']) expect(body).not.toContain(v);
+        for (const route of ['issue', 'pull-request'] as const) {
+            const body = renderReport(named, route);
+            for (const v of ['drain/baseline-drift', 'm-line', 'f-line']) expect(body, route).not.toContain(v);
+        }
     });
 
     it('a fold keeps a claim the first record did not have', () => {
@@ -330,6 +338,9 @@ describe('self-repair — claim fields a retro may set', () => {
         expect(second.principle).toBe('drain/baseline-drift');
         const third = mergeRecord(second, { ...f, principle: 'other/claim' }, LATER);
         expect(third.principle).toBe('drain/baseline-drift');
+        const fourth = mergeRecord(third, { ...f, principle: 'other/claim', falsifier: 'from another synthesis' }, LATER);
+        expect(fourth.principle).toBe('drain/baseline-drift');
+        expect(fourth.falsifier).toBeUndefined();
     });
 });
 
