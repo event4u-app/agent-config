@@ -179,10 +179,14 @@ Nothing is sent without the person's word in that turn.
 
 ## Phase 3 — Synthesised, clustered, drafted
 
-- [ ] <!-- blocked-by: upstream-body-and-mechanism-key | asked: no — the council round of 2026-10-19 (D9) settled the record half and escalated this one; the owner has not been asked, and this blocker is the offer --> **3.1 Synthesised, not redacted.** The upstream payload is built from
-      closed fields only — `target`, `defect_class`, `principle`, `mechanism`,
-      `falsifier`, a synthetic package fixture — with no transcript text, no
-      local key and no free-text project context.
+- [ ] **3.1 Synthesised, not redacted.** The upstream payload is built from
+      closed fields only — `target`, `defect_class`, `principle`, a synthetic
+      package fixture — with no transcript text, no local key, no free-text
+      project context, and neither `mechanism` nor `falsifier` (D10: both are
+      free text whatever their field name, so they stay local and are shown
+      during the digest approval). Built in
+      `src/scripts/_lib/self_repair_outgoing.ts`; `renderReport` stays for the
+      local and Class-B case.
       verify: `npx vitest run tests/scripts/self_repair_release.test.ts -t payload-has-only-closed-fields --reporter=verbose` -> /✓.*payload-has-only-closed-fields/
       **Open for a named reason, re-measured 2026-10-17:** `principle` and
       `mechanism` are still on no record — `DefectFinding` carries neither, and
@@ -222,9 +226,15 @@ Nothing is sent without the person's word in that turn.
       The step stays open until the owner decides; the less-revealing reading
       — body from `target`, `defect_class` and `principle` only — is the one
       to build when he does.
+      **Decided 2026-10-19 (D10):** that reading, by a second council round on
+      the narrowed proposal — 2/2 (a), both seats calling it not owner-reserved.
       The landed half is pinned by the four claim-field cases in
       `tests/scripts/self_repair.test.ts`, each watched red.
-- [ ] <!-- blocked-by: upstream-body-and-mechanism-key | asked: no — the council round of 2026-10-19 (D9) settled the record half and escalated this one; the owner has not been asked, and this blocker is the offer --> **3.2 A mechanism fingerprint.** For records carrying `target` and
+- [~] **3.2 A mechanism fingerprint.** Deferred 2026-10-19 by D10: the
+      fingerprint stays on the evidence hash until a corpus of records carrying
+      `principle` shows one subject per mechanism; re-opens when that corpus
+      exists. Changing the key earlier changes a cross-installation contract
+      on no evidence. For records carrying `target` and
       `principle`, the fingerprint hashes those instead of the evidence, so the
       F5 pair clusters.
       **Open for a named reason, executed 2026-10-14:** `DefectFinding` carries
@@ -384,7 +394,7 @@ Nothing is sent without the person's word in that turn.
 - **Resolved when:** this entry's Status reads resolved and step 4.2 carries no blocked-by marker, or 4.2 is re-scoped to option (b). Resolved 2026-10-12: 4.2 re-scoped to (b) and measures whether (a) is safe.
 
 ### blocker: upstream-body-and-mechanism-key
-- **Status:** open
+- **Status:** resolved 2026-10-19 — (a): body from `target`, `defect_class` and `principle` only, key unchanged; 3.1 re-scoped to it, 3.2 and AC-3 deferred `[~]` to a corpus (council: 2026-10-19, anthropic + openai, 2/2 (a), not owner-reserved, $0.00; record `agents/evidence/council/resolve-blockers-batch-20261019.md`, D10)
 - **Owner:** maintainer
 - **Ownership:** product-owned
 - **Blocks:** steps 3.1 and 3.2 and AC-3. Nothing else: the record fields, the
@@ -428,6 +438,7 @@ Nothing is sent without the person's word in that turn.
 | D7 | critical-technical | council:2026-10-17-d5-reopen-fork-pr | D5 is NOT reopened; the reopen is owner residue, since one seat named an owner-reserved dimension (irreversible external consequence). Its condition fires literally (matrix: no consumer-project linkage), but the seats split: anthropic (a) reopen, council-decidable — the digest approval is the protection for the floor's gap; openai (b) keep — a matching digest proves integrity, not that the person recognised a company term, and widening irreversible consequences is owner-reserved. A split escalates; the less-revealing option stands until the owner decides | `agents/evidence/analysis/upstream-fork-pr-linkage-2026-10-17.md` | the owner decides, or the detector table's identifier class lands |
 | D8 | reversible-technical | agent | Risk review 2026-10-19: AC-5 is reworded as D5 instructed ("corrected at the next risk review") and closed against `consumer-reaches-the-issue-step` in `tests/scripts/self_repair_release.test.ts`, watched red with the checkout condition removed from `chooseEgress`. AC-1 closed on the three Phase 1 documents plus the pipeline document and the privacy-floor rule — every backticked path resolves, or is a short-form mention of a file that exists, or is the seed path the rule names as deliberately absent — and on `check_references` (2,931 scanned, 0 broken). Rows 1–3 of the risk register re-read and kept; row 4 added | `npx vitest run tests/scripts/self_repair_release.test.ts` 30/30 · `./scripts-run src/scripts/check_references` exit 0 | the owner decides D7 — AC-5's wording then moves with it |
 | D9 | critical-technical | council:2026-10-19-upstream-closed-fields | Optional `principle` / `mechanism` / `falsifier` added to the self-repair record (shape-validated, privacy-floor-scanned, read by neither key nor body) and the retro mapping documented — council-decidable and convergent (anthropic, openai). The upstream body change (3.1) and the mechanism key (3.2) are NOT adopted: openai named a privacy boundary and a public contract as owner-reserved, and the seats split on sending `mechanism` / `falsifier` and on keeping the legacy body; a split with an owner-reserved dimension is owner residue (D7). For 3.2 openai also objected that a claim is not a mechanism identity | 2/2 present, 1 round, $0; `tests/scripts/self_repair.test.ts` claim-field cases, each watched red | the owner decides 3.1, or a corpus shows one subject per mechanism (3.2) |
+| D10 | reversible-technical | council:resolve-blockers-batch-20261019 | Upstream body from `target`, `defect_class` and `principle` only; `mechanism` and `falsifier` stay local; fingerprint stays on the evidence hash, so 3.2 and AC-3 are deferred to a corpus | 2/2 seats chose (a) and called it not owner-reserved; openai: sending free-text fields (c) is clauses 2 and 5, changing the key is clause 5 on its own | a reviewed corpus shows minimal reports are unactionable, or one subject per mechanism holds across installations |
 
 ## What this roadmap deliberately does not do
 
@@ -454,7 +465,8 @@ Nothing is sent without the person's word in that turn.
       file that does not exist.
 - [x] **AC-2** A release whose branch, identity, message or diff carries a
       consumer identifier is refused, with the finding named.
-- [ ] <!-- blocked-by: upstream-body-and-mechanism-key | asked: no — the council round of 2026-10-19 (D9) settled the record half and escalated this one; the owner has not been asked, and this blocker is the offer --> **AC-3** The same mechanism from two projects produces one fingerprint.
+- [~] **AC-3** The same mechanism from two projects produces one fingerprint.
+      Deferred with 3.2 (D10).
 - [x] **AC-4** Every upstream pull request is a draft with a noreply identity,
       and changing one byte after approval voids the approval.
 - [x] **AC-5** A consumer install reaches the issue step of the ladder; the

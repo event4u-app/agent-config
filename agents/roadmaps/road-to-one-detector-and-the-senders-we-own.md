@@ -112,6 +112,7 @@ is open.
 | D7 | reversible-technical | agent | Reading local `.env*` values into memory to build an exact-match set is in scope; nothing derived from them is written | The only detector for a password with no recognisable shape | — |
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | Consumer-facing default; this roadmap ships every replacement path behind `egress.placeholders.mode: off` and decides nothing for consumers | asked at `road-to-placeholders-on-the-wire` blocker `default-mode-for-consumers` |
 | D9 | reversible-technical | council:one-detector-bundle-budget-20261018 | The engine leaves the dispatch bundle as a conditional chunk with its own ceiling, and the linearity prose leaves the engine; an unavailable engine withholds every body in `protect` and `strict`, records the miss in `observe`, is never loaded in `off` | Measured 2026-10-18: 3,155 B of bundle headroom against 12–15 KB of queued engine work; the SVG rule set set the chunk precedent. Two-provider council (anthropic, openai), 2/2, options C and B, with the per-mode failure table, a schema handshake and a chunk budget as conditions; the prompt is `agents/evidence/council/one-detector-bundle-budget-20261018.question.md` | the chunk load costs a measurable latency in a non-`off` mode, or a host installs `dispatch.js` without its siblings |
+| D10 | reversible-technical | council:resolve-blockers-batch-20261019 | Native deny rows are offered by `hooks:doctor` and never written (option 2 of `native-deny-is-a-host-setting-write`) | 2/2 seats: option 1 adds a second exception to the published no-host-setting-write commitment (clause 5) and an ongoing obligation to the host settings schema; option 2 reaches the same rows without either | a guard bypass is demonstrated on a deny-capable host, or the owner widens the published exception |
 
 ## Phase 0 — Contract, census, pre-registration (no product code)
 
@@ -186,12 +187,15 @@ read cannot leak through any later bug.
       1,550,000), stated beside a `null` SLA row in `src/config/hook-latency-budget.json`
       until both machine classes are measured. A program that opens the file
       itself is not caught; that residue is the fixture set of 1.3.
-- [ ] **1.2 Lower the same list to the host's own primitives at install.** On
-      Claude Code, `permissions.deny Read(…)` entries recorded in the install
-      manifest so uninstall removes exactly those. The stronger sandbox and
-      environment-scrub tiers are documented as user-enabled, never written into
-      a project.
-      verify: a fresh install into an empty project shows the deny entries; `hooks:doctor` reports the tier in force; uninstall leaves no entry behind.
+- [ ] **1.2 Offer the same list as the host's own primitives — never write them.**
+      Option 2 of `native-deny-is-a-host-setting-write` (D10): on Claude Code,
+      `hooks:doctor` reports the deny tier in force and prints the
+      `permissions.deny Read(…)` rows for the credential classes, idempotent and
+      skipping rows already present, for the user to paste. Nothing is written,
+      so the published "writes no host setting" commitment keeps its single
+      exception. The stronger sandbox and environment-scrub tiers are documented
+      as user-enabled, never written into a project.
+      verify: on a project without the rows, `hooks:doctor` prints every row and reports the tier; with the rows pasted it reports them present and prints none; `~/.claude/settings.json` is byte-identical before and after install and uninstall.
 - [x] **1.3 Record what prevention cannot see** — a value printed by a program, a
       row returned by a database tool, a secret typed by the user — as fixtures
       that fail today and are referenced by the host-carrier roadmap's phases
@@ -390,7 +394,7 @@ response, with no host contract in between and no hook budget to spend — so
 ## Blockers
 
 ### blocker: native-deny-is-a-host-setting-write
-- **Status:** open
+- **Status:** resolved 2026-10-19 — option 2, offer the rows and never write them; 1.2 and AC-4 rewritten to it (council: 2026-10-19, anthropic + openai, 2/2 not owner-reserved for option 2 — option 1 alone is clause 5 — $0.00; record `agents/evidence/council/resolve-blockers-batch-20261019.md`, D10)
 - **Owner:** maintainer
 - **Blocks:** step 1.2 and the installer half of AC-4.
 - **What to do:** pick exactly one —
@@ -417,7 +421,7 @@ response, with no host contract in between and no hook budget to spend — so
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -439,8 +443,8 @@ response, with no host contract in between and no hook budget to spend — so
 - [ ] AC-3 — The sender census has no empty cell; every sender is `asserted`,
       fixed-corpus or `uncovered` with a reason.
 - [ ] AC-4 — Credential-class files cannot be read through a hooked tool on a
-      deny-capable slot, and the installer's deny entries are present and
-      removed again on uninstall.
+      deny-capable slot, and `hooks:doctor` prints the deny rows a user would
+      paste and reports which are already in force (D10 — offered, never written).
 - [ ] AC-5 — The contract and threat-model row j exist; no shipped prose about
       this feature uses the word anonymisation; every channel this package does
       not write is published `uncovered` until the host-carrier roadmap changes

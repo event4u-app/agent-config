@@ -45,7 +45,7 @@ changes what either gate is for.
 
 ## Phase 1 — The lineage gate parses what is declared
 
-- [ ] <!-- blocked-by: d1-reopen-helper-level-quote-strip | asked: no — the council of 2026-10-16 split 1:1 and the hold has sat in this step's body since; registering it here is the first time a gate or a drain screen can read it --> **1.1 Red first: pin the two inputs no test covers.** Add to
+- [ ] **1.1 Red first: pin the two inputs no test covers.** Add to
       `tests/scripts/lint_consolidation_lineage.test.ts`:
       `normalizeParent('"road-to-x" — note')` must equal `road-to-x`, and a
       `consolidates:` block list whose entries are quoted YAML scalars must
@@ -58,6 +58,13 @@ changes what either gate is for.
       `normalizeParent`" fence below; the council split on it (record:
       `agents/evidence/council/lineage-gate-parse-and-direction-20261016.md`).
       Closing it is a reopen of D1, not an implementation step.
+      **Reopened 2026-10-19 (D6, council 2/2):** the helper strips **one
+      matching pair of wrapping quotes** — around the whole input and around
+      the selected token — and the three caller-side `.replace(/["']/g, '')`
+      strips (`:177`, `:186`, `:232`) are removed. Not the global regex
+      moved verbatim: an embedded apostrophe survives. The red-first case
+      gains `normalizeParent("road-to-it's-x")` → `road-to-it's-x`, and all
+      six call sites carry a regression case.
 - [x] **1.2 Strip quotes in the block-list branch.** `:177` gains
       `.replace(/["']/g, '')`, matching its sibling at `:168`.
       verify: 1.1 green; re-running the gate over the round's own folder
@@ -179,13 +186,19 @@ changes what either gate is for.
 | D3 | critical-technical | agent | The already-exists carve-out is a policy no-op for the Bash path | the `_PATH_KEYS` path already takes it; reaching it from the other path makes two entry points agree rather than loosening either | the carve-out is removed from the `_PATH_KEYS` path |
 | D4 | deterministic | evidence | A prose-named parent is a distinct finding, not a missing one | the round's one genuine finding is exactly this shape, and reporting it as `missing-parent` sends the reader looking for a file | — |
 | D5 | reversible-technical | agent | Both gates are fixed in one roadmap | they are the same failure — a parser reporting what its input does not say — and one of them blocks the documented remediation for the other | either fix grows past a few lines |
+| D6 | reversible-technical | council:resolve-blockers-batch-20261019 | Reopen D1: `normalizeParent` strips one matching pair of wrapping quotes and the three caller strips go; supersedes D1 | D1's own revisit-if fired — 6 call sites, not 4, three duplicating `.replace(/["']/g, '')`; 2/2 seats chose (a), both bounding it to wrapping quotes so embedded apostrophes survive | a call site needs a quote-bearing token preserved |
 
 ## Blockers
 
 ### blocker: d1-reopen-helper-level-quote-strip
 
-- **Status:** open — the hold is dated 2026-10-16 and has existed in step 1.1's
-  body ever since; this entry registers it, it does not create it.
+- **Status:** resolved 2026-10-19 — (a), D1 reopened as D6: the helper strips
+  one matching pair of wrapping quotes and the three caller strips go; 1.1 and
+  AC-1 rewritten to it (council: 2026-10-19, anthropic + openai, 2/2 (a), not
+  owner-reserved, $0.00, on the new fact that D1's own revisit-if had fired —
+  six call sites, three duplicating the strip; record
+  `agents/evidence/council/resolve-blockers-batch-20261019.md`). The hold was
+  dated 2026-10-16; this entry registered it.
 - **Class:** 2 — council. The question is technical and reversible, so the
   ownership ladder does not reach the owner; it is parked only because the
   deciding body returned a 1:1 split, which is an escalation condition rather
@@ -226,8 +239,8 @@ changes what either gate is for.
   obligation are unchanged; only what the parsers can see changes.
 - It does not loosen the speaking-name policy. A new speaking directory is
   still refused, by both entry points.
-- It does not touch `normalizeParent` itself, or the three call sites that are
-  correct.
+- It does not change `normalizeParent` beyond the wrapping-quote strip D6
+  moved into it; the token, path and glob rules stay as they are.
 - It does not add a command classifier to the guard. D2 records why.
 
 ## Risk Register
@@ -242,8 +255,9 @@ changes what either gate is for.
 
 ## Acceptance Criteria
 
-- [ ] <!-- blocked-by: d1-reopen-helper-level-quote-strip | asked: no — this criterion asserts the helper-level behaviour D1 declined; it stands or falls with the blocker's (a)/(b) choice --> **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
-      and a quoted block-list `consolidates:` entry resolves; both cases were
+- [ ] **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
+      an embedded apostrophe survives the helper, all six call sites keep their
+      regression case (D6), and a quoted block-list `consolidates:` entry resolves; the cases were
       observed **red** first and the observation is in the PR.
 - [x] **AC-2** Re-running `lint_consolidation_lineage` over
       `agents/tmp.old/inbox-2026-10-t/topic-2/` yields exactly **1** finding,

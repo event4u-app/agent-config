@@ -240,6 +240,14 @@ output. It is the classifier and the data behind it.
   10.0.0 → 16.0.0 and scored 12.0.0 and 15.0.0 major and the other five
   minor, with no `action` row scored as a minor. The decision itself is
   still open.
+  **2026-10-19, council re-asked with the replay in hand (2/2, $0.00, record
+  `agents/evidence/council/resolve-blockers-batch-20261019.md`):** (a) is still
+  clause 5, unchanged by the replay, so it stays the owner's — but both seats
+  chose **(a-later)**: 7/7 is in-sample (the same seven rows the rule was
+  written against) and the surface axis is unscored. (a) returns to the owner
+  only after the frozen classifier is scored on a pre-registered window it was
+  not written on, on both axes, with zero false negatives on BREAKING. No owner
+  question is put until that measurement exists.
 - **Owner:** repository owner, **for (a) alone.**
 - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
