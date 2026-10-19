@@ -288,6 +288,28 @@ consumer behaviour points at something that executes.
       record is the owner-reserved `unbacked` downgrade).
       `./scripts-run src/scripts/build_proof` exits 0 and `docs/proof.md` now
       reads **20 of 63** exec-backed, written from that run.
+      **Third pass 2026-10-19: the residue is measured, and none of it moved.**
+      Nothing was repointed, because no row in it is closable by a lane that may
+      neither take an owner-reserved downgrade nor add a test seam to shipped
+      code — which is every lane short of the owner.
+      `install-audit-clean`'s gap is now quantified rather than asserted: the
+      published `package.json` declares **13 runtime dependencies, 12 of them
+      caret-ranged** (`web-tree-sitter` alone is pinned exactly), and no
+      `npm-shrinkwrap.json` is in `files`, so a consumer resolves its runtime
+      tree by semver range and that tree is provably not the one
+      `npm audit --omit=dev` reads from this repository's lockfile. The claim's
+      subject and its evidence's subject are different trees, and the size of the
+      difference is 12 ranges wide. Both recorded fixes stay out of reach here:
+      the preserving one is a pack-and-install audit against the registry, and
+      the narrowing one is the owner-reserved weakening.
+      Counted by what each row needs, the six rows are **five owner-reserved and
+      one shipped-code change**: `install-audit-clean` (narrowing) plus the four
+      bench/fixture rows (`unbacked`) are the preservation test's weaken row, and
+      `council-fallback-loses-zero-seats` needs the transport seam. So the step
+      is **owner-gated, not work-gated** — and AC-6 with it, since the four bench
+      rows are exactly the claims it forbids being `backed` on a repository
+      pointer alone. A further lane spent here buys nothing until one of those
+      two authorities answers.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.

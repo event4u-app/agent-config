@@ -198,6 +198,27 @@ routed rule body with nothing in the session saying so.
   `BREAKING_CHANGES.md` Pending row), so no note is placed yet; both seats agree
   a note is owed and the trailer loss is a release-tooling defect. Record:
   `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
+  *Re-measured 2026-10-19, and the 2026-10-18 correction is narrowed in both
+  directions.* The squash-trailer defect it rests on is **fixed**:
+  `trailer_blocks` in `src/scripts/_lib/consumer_impact.ts` now reads every
+  trailer-only paragraph of a body rather than the final one, so
+  `parse_impact_trailers` over `3f8c98e74` and `3245c7e7c` returns `notice` with
+  `recorded: true` for both — the two commits that measurement recorded as lost.
+  The next release does record #2455 as a `notice`, so the half of the
+  correction that rested on the trailer being lost no longer holds.
+  The step does not move, and its reason is now structural rather than a tooling
+  defect. Released notes render commit **subjects**, and the subject naming the
+  three guards is an inner bullet of a squash **body** (`* fix(hooks): reach a
+  staged dispatcher ahead of PATH, so block-no-verify, block-kernel-rule-writes
+  and block-plumbing-writes run where they were silent`), which no generator
+  reads. Naming them therefore needs a curated-head line, and
+  `render_release_head` (`src/scripts/release.ts:332`) takes its content only
+  from what the release run hands it — there is no staged or pending surface an
+  earlier change can write into, and a grep for one returns nothing. So this
+  half is reachable only from a release run, which is a Hard-Floor action, and
+  the open class question (a `notice` in the curated head against a
+  `BREAKING_CHANGES.md` Pending row) stays owner-owned, unaffected either way by
+  the re-measurement.
 
 ## Phase 5 — The plugin channel says what it carries
 
