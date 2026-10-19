@@ -56,7 +56,7 @@ Deep **and** disciplined and honest about what it deliberately is not:
 - **Depth that routes itself** — a capability router loads the right skill on intent, not a 500-artefact context dump.
 - **Governance on every host** — rules compiled into each tool's native format; deterministic runtime hooks added on hook-capable hosts. This config-space, host-agnostic governance is the moat ([the governance advantage](docs/governance-advantage.md) · [enforcement by host](docs/enforcement-by-host.md)).
 - **Surgical uninstall** — its own keys in a shared config, never a neighbour's<!-- claim:surgical-uninstall -->; under `--purge`, only files it recorded, never the anchor<!-- claim:uninstall-purge-inventory-bounded -->.
-- **Pack-scoped install** — writes the active pack and every skill it declares; others are owed [reach](./docs/decisions/ADR-289-skills-owe-reach-not-presence.md).
+- **Pack-scoped install** — writes active pack plus dependencies; others are owed [reach](./docs/decisions/ADR-289-skills-owe-reach-not-presence.md).
 
 **What it deliberately is *not*** — the core is a governance layer with optional, individually opt-in embedded engines (code intelligence, gated reach, the setup GUI, the bench lab — [the embedded-engine doctrine](docs/decisions/ADR-124-embedded-engine-doctrine.md)): **no mandatory or always-on daemon, no separate state database, no self-rewriting memory, no auto-build pipeline.** Engines are never mandatory, never default-on without measured lift and terminate with the command that invoked them. The host agent runs the loop; every learned change is human-reviewed; the same layer stays portable across tools. Capability without a process to babysit.
 
