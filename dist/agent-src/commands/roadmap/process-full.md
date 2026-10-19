@@ -96,33 +96,102 @@ command already does.
    [`/roadmap:next` § 1](../next/command.md) already carries. The corpus is the
    non-draft roadmaps directly under `agents/roadmaps/`; `later/`, `skipped/`,
    `archive/` and `stubs/` are out of scope.
-2. **Order the queue.** Roadmaps at or above 10 % checkbox progress first, in
-   **descending** progress — nearly-done first, because they convert soonest.
+2. **Order the queue — finish before start.** Run
+   `./scripts-run src/scripts/roadmap_drain_queue` (`--json` for the record) and
+   take its order; never build the queue in prose. It answers *can this started
+   roadmap still move?*, not *how far along is it?*:
+   `resume` (a dead session's claimed roadmap — continue in its worktree) →
+   `continue` (started, at least one runnable open step, fewest runnable first)
+   → `start` (unstarted, dispatchable **only** when no `resume` / `continue`
+   entry is left) → `decide` (no runnable step: never dispatched, its blockers go
+   to § Gated residue) → `claimed` (a live peer session holds it: skipped).
 
-   **This is a recorded exception to [`/roadmap:next` § 3](../next/command.md),
-   not an oversight.** That command's Iron Law is explicit: *"RANK BY DEFECT
-   SEVERITY, NEVER BY PERCENT-DONE OR STEP COUNT … picking by checkbox count is
-   the Goodhart move this package's own discipline forbids."* This step orders by
-   exactly that. The two are not in conflict because they answer different
-   questions: `next` **selects one** roadmap out of many and must not be gamed by
-   a cheap-to-finish file, while `--all` has already committed to draining the
-   **whole** estate — every member runs, so the ranking decides only the order in
-   which finished work becomes reviewable, never what gets done. Under a total
-   drain the Goodhart pressure is absent by construction: there is nothing to
-   pick, so a proxy cannot be optimised against.
-   The exception is scoped to `--all`. A single-roadmap invocation of this
-   command selects nothing and inherits `next`'s doctrine unchanged.
-   Roadmaps below 10 % are appended after, ascending by declared `complexity:`
-   tier (lightweight → bounded → structural), tiebreak ascending total
-   checkbox count. Both buckets need a **total** order or two runs over the
-   same estate disagree: within the first, ties on progress break by ascending
-   total checkbox count and then by ascending filename; within the second, by
-   ascending filename after the checkbox count.
-3. **Loop.** Per roadmap: branch from the updated default, run this command's
-   normal single-roadmap loop, deliver per § Delivery, then take the next
-   roadmap against the default **as it stands at that moment** — re-fetched,
-   never assumed. One roadmap = one branch = one PR, the existing invariant
-   iterated, not a new one.
+   Percent-done was the old key and it was the defect: it put the gated tails of
+   nearly-finished roadmaps on top, the orchestrator screened them as blocked,
+   and the unstarted bucket won. Over 50 sessions read on 2026-10-19, roadmaps
+   under 25 % received 86 progress commits and those at 75 % or more received 12;
+   24 were started and none finished. `/roadmap:next` § 3's Goodhart warning
+   still holds — under a total drain the order decides only what finishes first,
+   never what gets done.
+
+   **An owner's quantity word widens how many roadmaps are FINISHED, never how
+   many are STARTED.** "As many roadmaps as possible" reads as "as many to
+   completion", in queue order.
+3. **Claim, then loop.** Per roadmap: `agent-config sessions:claim <slug>`
+   first, so a later session's queue lists it as `claimed` and takes the next
+   started roadmap instead of this one or a new one; branch from the updated
+   default, run this command's normal single-roadmap loop, deliver per
+   § Delivery, `sessions:claim --release`, then re-run the queue against the
+   default **as it stands at that moment** — re-fetched, never assumed. One
+   roadmap = one branch = one PR, the existing invariant iterated, not a new one.
+
+### Lanes — at most two, each on the canonical brief
+
+A lane is a subagent that drains ONE roadmap. **At most two lanes run at once**
+(the cap recorded 2026-08-20); an owner's "max N" above two is reported in the
+run's first line and not obeyed — one run on record started fourteen, saturated
+CI and lost every lane to the spend limit together. A lane holds its roadmap
+until it reports `complete` or a halt; it never receives a second roadmap, and
+no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
+
+**The orchestrator sends this brief, filling only the two parameters, and adds
+nothing that changes its finish line:**
+
+```text
+Run /roadmap:process-full on <roadmap path>, in the worktree <absolute path>.
+Your finish line is count_open == 0 for this roadmap and exactly ONE pull request.
+Commit locally in logical chunks. Push and open the PR only after the last step
+is done — no intermediate push, PR or merge; delivery fixes go to that same PR.
+Do not flip checkboxes. For every step you finish, return the step id and its
+evidence (the command you ran and its result). The orchestrator verifies and flips.
+If a step needs a council or owner decision, do not stop and do not leave it with
+a reason: return it as `gated: <step> — <blocker id> — <the question>` and keep
+working the other steps. The orchestrator decides it and resumes you.
+Never cut finished work out of the diff to avoid a gate; a gated part waits for
+its decision inside this branch.
+Report, every time: steps finished, steps gated, classifier_refusals (a list,
+empty when none).
+```
+
+Forbidden in a brief or in any addendum to it: an "open, green PR" as the finish
+line; a sanctioned partial PR; a phase or step-range scope; "remove the part that
+needs ratification"; "do not ask the owner". Each of these was in the improvised
+briefs of the 2026-10-01..19 drains, and 17 of 207 drain lanes (8 %) reached
+`count_open == 0` under them.
+
+### Gated residue — decided in the run, not left in a report
+
+The queue classifies every open step as runnable, council, owner or time
+(`roadmap_drain_queue`, from `blocked-by` markers, blocker `Class` / `Owner` /
+`Status`, and a dated wait). What it cannot run, the orchestrator settles before
+the roadmap is dispatched again:
+
+1. **Owner questions are asked once, at run start.** The queue's
+   `owner_questions` become ONE numbered block, one decision per number, before
+   any lane spawns. Each answer is recorded at its step. An unanswered step keeps
+   its roadmap in `decide` — it never licenses starting an unstarted roadmap in
+   its place.
+2. **Council questions run in the run.** A lane's `gated:` return or a
+   `council_questions` entry goes to the council by the orchestrator, and the
+   verdict goes back to the SAME lane via its message channel. Ending the lane and
+   dispatching a fresh one later is how one roadmap received nine lanes in eight
+   sessions behind an unchanged blocker.
+3. **A `decide` roadmap is never re-dispatched until its blocker changed** —
+   the queue reads `Status:` live, so a resolved blocker turns the step runnable
+   and nothing else does.
+4. **A roadmap whose only open steps are time-gated is closed by carrying them**
+   into a named `-carried` follow-up in the same change (the council-routed
+   disposition of `roadmap-progress-sync` Iron Law 3), then archived. Never `[~]`
+   or `[-]` to reach zero.
+
+### The orchestrator closes the boxes
+
+A lane does not flip its own checkboxes: it returns each finished step with its
+evidence, and the orchestrator verifies the return (per `delegation-policy`
+item 4) and makes the bookkeeping commit on the lane's branch. A lane approving
+its own work is one of the actions the host classifier refused as
+"Self-Approval" among the 24 classifier stops in those drains; an orchestrator
+verifying a return is the review the classifier was asking for.
 
 **What `--all` can and cannot promise, stated plainly because the honest
 version is weaker than the obvious one.** Nothing in the run
@@ -253,6 +322,11 @@ UNDER THE HALT CONDITIONS IS THE ONLY STATEMENT OF WHICH ENDS WHICH.
 WAITING ON REMOTE CI FOR THE DELIVERY LOOP IS PART OF THE RUN. "CI IS
 RUNNING" IS NOT A BOUNDARY, NOT A HALT, AND NOT A REPORT — THE RUN ENDS
 AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
+ONE ROADMAP, ONE PR: NO PUSH, PR OR MERGE OF A ROADMAP BEFORE ITS LAST STEP
+IS DONE. LOCAL COMMITS IN LOGICAL CHUNKS STAY; DELIVERY FIXES AFTER THE PR
+OPENS ARE PUSHED TO THAT SAME PR.
+NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`.
+A STARTED ROADMAP THAT CAN STILL MOVE IS FINISHED BEFORE ANY OTHER IS STARTED.
 ```
 
 The **five — and only five — live halt conditions** (exhaustive; nothing else
