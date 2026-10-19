@@ -24,19 +24,24 @@ const FRAGILE = 'npx tsx node_modules/@event4u/agent-config/src/';
 // Markdown is what an agent reads and runs; other src/ files name the string
 // only in prose (e.g. a budget note recording why ci:settle became a verb).
 const BASELINE: Record<string, number> = {
+    // The finished-draft lexicon and claim pass on the four drafting surfaces;
+    // no consumer verb exists for check_voice_lexicon yet.
+    'src/domains/brand/brand/review/command.md': 1,
     'src/domains/engineering-base/design-system/generate/command.md': 1,
     'src/domains/engineering-base/design-system/import/command.md': 1,
     // Sibling of :import and :generate, one site; no consumer verb exists for the
     // sync script either (road-to-a-canvas-the-code-owns 4.2, 2026-10-18).
     'src/domains/engineering-base/design-system/sync/command.md': 1,
     'src/domains/git/pr/create/command.md': 1,
+    'src/domains/gtm-marketing/ghostwriter/write/command.md': 1,
+    'src/domains/gtm-marketing/post-as/me/command.md': 1,
     'src/domains/meta/sync/gitignore/fix/command.md': 2,
     'src/skills/agent-security-review/SKILL.md': 1,
     'src/skills/design-review/SKILL.md': 1,
     'src/skills/design-system-capture/references/design-system-json.md': 1,
     'src/skills/forensics-report/SKILL.md': 2,
     'src/skills/git-workflow/SKILL.md': 1,
-    'src/skills/humanizer/SKILL.md': 1,
+    'src/skills/humanizer/SKILL.md': 2,
     'src/skills/launch-readiness/SKILL.md': 2,
     'src/skills/license-compliance-borrow-check/SKILL.md': 2,
     'src/skills/license-compliance-credits/SKILL.md': 3,

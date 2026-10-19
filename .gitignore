@@ -349,6 +349,12 @@ agents/runtime/council/sessions/
 /site/src/content/docs/works-with-agent-switch.md
 # Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
 /site/public/media/
+# Ghostwriter profiles hold real-person voices: local-only here as in every
+# consumer (src/config/gitignore-block.txt), README carved out.
+/agents/reference/ghostwriter/**
+!/agents/reference/ghostwriter/README.md
+/agents/ghostwriter/**
+!/agents/ghostwriter/README.md
 # Field replay corpora await operator privacy review before any commit
 internal/bench/corpora/*.local.yaml
 

@@ -75,7 +75,14 @@ human voice there; do not inject personality or restructure it.
    ~2 per 500 words (density cap, not zero — house precedent CP1).
 5. **Verify mechanically** when a runtime is available:
    `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --stdin --fail`
-   on the final draft. No runtime → the step-3 audit is the fallback
+   on the final draft. Then the lexicon and claim pass on the same draft,
+   on stdin: `npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft -`,
+   adding `--slot` for a valid `brand-voice` slot and `--ghostwriter` for
+   the active profile. Fix an `avoid` hit with its note; a profile taboo
+   hit means the rewrite is not done; report each `unbacked-claim` located
+   with "needs proof" — never reword a claim away (step 6). Exit 2 is a
+   broken invocation: say so, never report the draft as checked.
+   No runtime → the step-3 audit is the fallback
    (degrade, do not skip the audit).
 5b. **Carrier-Unicode strip — OPT-IN, never a default.** Runs **only** when
    the operator explicitly asks for a carrier strip. `stripCarrierUnicode`
