@@ -335,3 +335,22 @@ describe('blocked-by-needs-depends — a cross-file marker needs a live depends 
         expect(mod.lint_roadmap(p, 0)).toEqual([]);
     });
 });
+
+describe('dated waits — a step that waits on a future date warns', () => {
+    const roadmap = (step: string): string =>
+        `---\ncomplexity: lightweight\n---\n## Phase 1\n\n- [x] done\n${step}\n`;
+
+    it('warns on an open step whose window opens after today', () => {
+        const warnings: string[] = [];
+        mod._check_dated_waits(roadmap('- [ ] **6.2 Read it.** The window opens 2026-11-13.'), warnings, '2026-10-19');
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0]).toContain('stubs/ entry');
+    });
+
+    it('stays silent on a past date and on a done step', () => {
+        const warnings: string[] = [];
+        mod._check_dated_waits(roadmap('- [ ] The window opened 2026-10-01.'), warnings, '2026-10-19');
+        mod._check_dated_waits(roadmap('- [x] The window opens 2026-11-13.'), warnings, '2026-10-19');
+        expect(warnings).toEqual([]);
+    });
+});

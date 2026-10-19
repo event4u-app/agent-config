@@ -1043,7 +1043,10 @@ the repetition tally in either direction.
 Per surviving file: a roadmap in `agents/roadmaps/` via
 [`roadmap-writing`](../../../../skills/roadmap-writing/SKILL.md) — Risk Register
 included, blockers named with owners, human-gated items marked `[~]` and never
-started.
+started. A finding that needs elapsed time rather than effort — a measurement
+window, a soak, a reading after the next release — is written as a `stubs/`
+entry with its trigger, never as a step of the emitted roadmap (template rule
+17c), so the roadmap can close when its work is done.
 
 **A roadmap item built on a corrected step carries the correction, and says so.**
 Write the Phase 4b wording, not the file's original, and tag the item
