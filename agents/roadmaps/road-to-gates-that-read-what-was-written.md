@@ -101,7 +101,7 @@ changes what either gate is for.
 
 ## Phase 3 — The guard judges a write, not a mention
 
-> **Held, 2026-10-16 drain; executed 2026-10-19.** Every step edits
+> **Held, 2026-10-16 drain; built and refused 2/2, 2026-10-19.** Every step edits
 > `src/scripts/hooks/block_speaking_inbox_dir.ts`, a `pre_tool_use` deny guard
 > of the same class as `block_no_verify` and `block_config_weakening`, so the
 > diff carries a two-provider ratification record under
@@ -115,8 +115,19 @@ changes what either gate is for.
 > process standing in the tree the `ls` was allowed; standing anywhere else —
 > the parent checkout of a worktree session — it was refused. 3.2 fixes that
 > base, which is the same carve-out reached from both entry points.
+>
+> **The 2026-10-19 build was refused by the council, 2/2, and reverted.** Record:
+> `agents/evidence/ratifications/drain-road-to-gates-that-read-what-was-written-20261019z.md`.
+> Two high findings, both convergent: the remediation exemption trusted the
+> spelling `scripts-run` rather than a repository-anchored executable (a bare
+> name resolves through `PATH`), and one shared base cascade let `project_dir`
+> outrank the `cwd` a Bash command actually runs in. A next round needs a
+> tool-specific base, an anchored executable, suppression of the known-safe
+> plaintext occurrence rather than the whole command, and conflicting-field
+> regressions. The red observations below stay valid; the landed notes on
+> 3.1 and 3.3 describe the refused build, not the tree.
 
-- [x] **3.1 Red first: the two commands this round was refused.** Pin both as
+- [ ] **3.1 Red first: the two commands this round was refused.** Pin both as
       polarity cases on `creatableTokens` and on the envelope path — a
       read-only `ls` of an existing inbox directory, and a `printf` whose
       single-quoted literal names one. Both must be **allowed**; a `mkdir -p`
@@ -129,7 +140,7 @@ changes what either gate is for.
       against an envelope `cwd`, against `workspace_root`, against a wrapped
       payload; the remediation naming a renamed directory; the literal deny
       message line), every block-case green.
-- [x] **3.2 Reach the already-exists carve-out from the Bash path.** A token
+- [ ] **3.2 Reach the already-exists carve-out from the Bash path.** A token
       naming a directory that exists on disk takes the same
       `directory already exists — rename, do not re-refuse` branch the
       `_PATH_KEYS` path already takes (`:338-341`). This alone clears M6 and
@@ -137,7 +148,7 @@ changes what either gate is for.
       the fix.
       verify: the `ls` case from 3.1 passes; `mkdir -p` into a **new**
       speaking directory is still refused.
-- [x] **3.3 Do not judge a token inside a quoted literal as a target.**
+- [ ] **3.3 Do not judge a token inside a quoted literal as a target.**
       `creatableTokens` splits on `'` and `"` among other characters, so a
       path inside a single-quoted string becomes a bare token. Keep the
       conservative scan, and exclude only the case M7 names: a token whose
@@ -152,7 +163,7 @@ changes what either gate is for.
       D2 forbids a verb classifier; eight bypass shapes (a second segment,
       `;`, `&&`, a newline, a redirect, `$(…)`, `| sh`, `decrypt`) are
       block-cases in the same suite.
-- [x] **3.4 Make the remediation reachable as written.** The command in the
+- [ ] **3.4 Make the remediation reachable as written.** The command in the
       guard's error text must execute unchanged in a tree where the speaking
       directory exists.
       verify: a test runs the literal command from the message against a
@@ -200,12 +211,12 @@ changes what either gate is for.
       produces no `omitted-sibling` finding; the inverse pair still does.
 - [x] **AC-4** A prose-named parent reports as `unresolvable-parent`, not
       `missing-parent`.
-- [x] **AC-5** A read-only `ls` of an **existing** inbox directory and a
+- [ ] **AC-5** A read-only `ls` of an **existing** inbox directory and a
       `printf` naming one inside a quoted literal are both allowed; a
       `mkdir -p`, a `>` redirect and a heredoc `makedirs` into a **new**
       speaking directory are all still refused. All five asserted in one
       polarity suite.
-- [x] **AC-6** The remediation command printed in the guard's own error text
+- [ ] **AC-6** The remediation command printed in the guard's own error text
       executes unblocked against a fixture.
 - [x] **AC-7** The defect-pattern sweep for `normalizeParent` without a quote
       strip is reported with its count and file list.
