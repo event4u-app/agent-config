@@ -646,6 +646,48 @@ describe('block_config_weakening — snapshot surfaces', () => {
         expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots-foo')).toBeNull();
     });
 
+    // Council round 6 (2026-10-19) residue: the flag match is lexical, so pin the
+    // shapes that only mention the flag or the runner without running an update.
+    it('snapshot: a command that only mentions the flag or the runner does not warn', () => {
+        for (const cmd of [
+            'echo "playwright --update-snapshots"',
+            "echo 'npx playwright test --update-snapshots'",
+            'git commit -m "playwright --update-snapshots"',
+            'grep -r "--update-snapshots" playwright.config.ts',
+            'npx playwrightx test --update-snapshots',
+            'npx playwright test --update-snapshots-dir out',
+            'npx test-storybook --update-snapshots=none',
+            'npx playwright test --update-snapshots=false --headed',
+            'echo playwright --update-snapshots',
+            '# npx playwright test --update-snapshots',
+            'npx jest --update-snapshots playwright',
+            'npx playwright test # --update-snapshots',
+            'cat playwright.config.ts -u',
+        ]) {
+            expect(snapshotUpdateWarning('Bash', cmd), cmd).toBeNull();
+        }
+    });
+
+    it('snapshot: every enabled update mode and a chained runner still warn', () => {
+        for (const cmd of [
+            'npx playwright test --update-snapshots=changed',
+            'npx playwright test --update-snapshots=missing',
+            'npx playwright test --update-snapshots false',
+            'npx playwright test --update-snapshots && git add .',
+            'npx playwright test --update-snapshots|tee log',
+            'npx test-storybook --update-snapshots',
+            'npx playwright test "--update-snapshots"',
+            'npx playwright test -u',
+            'CI=1 pnpm exec playwright test --update-snapshots',
+            'npx --yes playwright test --update-snapshots',
+            './node_modules/.bin/playwright test --update-snapshots',
+            'git stash; npx playwright test --update-snapshots',
+            'npx playwright test \\\n  --update-snapshots',
+        ]) {
+            expect(snapshotUpdateWarning('Bash', cmd), cmd).not.toBeNull();
+        }
+    });
+
     it('snapshot: no shell-tool name is an edit tool, so the shell warning never meets a path decision', () => {
         for (const t of ['Bash', 'bash', 'BashTool', 'shell', 'launch-process', 'launch_process']) {
             expect(EDIT_TOOLS.has(t), t).toBe(false);
