@@ -646,6 +646,75 @@ describe('block_config_weakening — snapshot surfaces', () => {
         expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots-foo')).toBeNull();
     });
 
+    // Residue of the snapshot-fence ratification (2026-10-19): the command check reads
+    // shell words, so pin the shapes that only mention the flag or the runner.
+    it('snapshot: a command that only mentions the flag or the runner does not warn', () => {
+        for (const cmd of [
+            'echo "playwright --update-snapshots"',
+            "echo 'npx playwright test --update-snapshots'",
+            'git commit -m "playwright --update-snapshots"',
+            'grep -r "--update-snapshots" playwright.config.ts',
+            'npx playwrightx test --update-snapshots',
+            'npx playwright test --update-snapshots-dir out',
+            'npx test-storybook --update-snapshots=none',
+            'npx playwright test --update-snapshots=false --headed',
+            'echo playwright --update-snapshots',
+            '# npx playwright test --update-snapshots',
+            'npx jest --update-snapshots playwright',
+            'npx playwright test # --update-snapshots',
+            'cat playwright.config.ts -u',
+            'npx playwright test -u --list',
+            "sh -c 'echo playwright --update-snapshots'",
+            'env npx jest -u',
+            'npx playwright test --help -u',
+            'npx playwright --version -u',
+            'yarn run test:visual -u',
+            'pnpm jest -u',
+            "bash script.sh -c 'npx playwright test -u'",
+            "bash -- -c 'npx playwright test -u'",
+            'sudo npx playwright test -u',
+        ]) {
+            expect(snapshotUpdateWarning('Bash', cmd), cmd).toBeNull();
+        }
+    });
+
+    it('snapshot: every enabled update mode and a chained runner still warn', () => {
+        for (const cmd of [
+            'npx playwright test --update-snapshots=changed',
+            'npx playwright test --update-snapshots=missing',
+            'npx playwright test --update-snapshots false',
+            'npx playwright test --update-snapshots && git add .',
+            'npx playwright test --update-snapshots|tee log',
+            'npx test-storybook --update-snapshots',
+            'npx playwright test "--update-snapshots"',
+            'npx playwright test -u',
+            'CI=1 pnpm exec playwright test --update-snapshots',
+            'npx --yes playwright test --update-snapshots',
+            './node_modules/.bin/playwright test --update-snapshots',
+            'git stash; npx playwright test --update-snapshots',
+            'npx playwright test \\\n  --update-snapshots',
+            'env CI=1 npx playwright test --update-snapshots',
+            'env -i PATH=/usr/bin npx playwright test -u',
+            "sh -c 'npx playwright test --update-snapshots'",
+            'bash -lc "cd web && npx playwright test -u"',
+            'npx --package @playwright/test playwright test -u',
+            'npx -p @playwright/test playwright test --update-snapshots',
+            'pnpm --filter web exec playwright test -u',
+            'yarn playwright test -u',
+            'pnpm playwright test --update-snapshots',
+            'bun x playwright test -u',
+            'env -u NODE_OPTIONS npx playwright test -u',
+            'env --unset NODE_OPTIONS npx playwright test --update-snapshots',
+            'env --chdir web npx playwright test -u',
+            'npx play\\\nwright test -u',
+            'npx playwright test "-\\\nu"',
+            "bash -o pipefail -c 'npx playwright test -u | tee log'",
+            "bash -e -x -c 'npx playwright test -u'",
+        ]) {
+            expect(snapshotUpdateWarning('Bash', cmd), cmd).not.toBeNull();
+        }
+    });
+
     it('snapshot: no shell-tool name is an edit tool, so the shell warning never meets a path decision', () => {
         for (const t of ['Bash', 'bash', 'BashTool', 'shell', 'launch-process', 'launch_process']) {
             expect(EDIT_TOOLS.has(t), t).toBe(false);

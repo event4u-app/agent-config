@@ -148,8 +148,91 @@ const SHELL_TOOL = /^(bash|bashtool|shell|launch[-_]process)$/i;
 /** A visual-runner baseline update, answered with the acceptance step. Warn only. */
 export function snapshotUpdateWarning(tool: string, command: unknown): string | null {
     if (!SHELL_TOOL.test(tool) || typeof command !== 'string') return null;
-    if (!/--update-snapshots(?!=(false|none)\b)(?==\S|[\s;&|)]|$)/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
-    return SNAPSHOT_ACCEPTANCE;
+    return shellSegments(command).some(runsSnapshotUpdate) ? SNAPSHOT_ACCEPTANCE : null;
+}
+
+const VISUAL_RUNNERS = new Set(['playwright', 'test-storybook']);
+const LAUNCHERS = new Set(['npx', 'bunx', 'pnpx']);
+const PACKAGE_MANAGERS = new Set(['npm', 'pnpm', 'yarn', 'bun']);
+/** Launcher options whose value is the next word. */
+const VALUE_OPTIONS = new Set(['-p', '--package', '--filter', '-F', '-C', '--dir', '--cwd', '-u', '--unset', '--chdir']);
+
+/** True when the segment starts a visual runner whose own arguments enable a baseline update. */
+function runsSnapshotUpdate(words: string[]): boolean {
+    const at = (k: number): string => words[k] ?? '';
+    let i = 0;
+    const skipOptions = (): void => {
+        while (at(i).startsWith('-') || /^[A-Za-z_]\w*=/.test(at(i))) i += VALUE_OPTIONS.has(at(i)) ? 2 : 1;
+    };
+    skipOptions();
+    if (at(i) === 'env') {
+        i++;
+        skipOptions();
+    }
+    if (/^(ba|z|da)?sh$/.test(at(i))) {
+        // Only the option prefix: a `-c` after the script operand or after `--` is an argument.
+        for (let k = i + 1; at(k).startsWith('-') && at(k) !== '--'; k += at(k) === '-o' ? 2 : 1) {
+            if (/^-\w*c\w*$/.test(at(k))) return shellSegments(at(k + 1)).some(runsSnapshotUpdate);
+        }
+        return false;
+    }
+    if (LAUNCHERS.has(at(i))) i++;
+    else if (PACKAGE_MANAGERS.has(at(i))) {
+        i++;
+        skipOptions();
+        // `yarn playwright` and `pnpm playwright` dispatch a binary directly; `run` names a script.
+        if (['exec', 'dlx', 'x'].includes(at(i))) i++;
+    }
+    skipOptions();
+    if (!VISUAL_RUNNERS.has(at(i).split('/').pop() ?? '')) return false;
+    const args = words.slice(i + 1);
+    return !args.some((w) => /^(--list|--help|-h|--version)$/.test(w)) && args.some((w) => w === '-u' || /^--update-snapshots(=(?!(false|none)$).+)?$/.test(w));
+}
+
+/**
+ * Split a shell command into the words of each simple command, with quotes
+ * removed, comments dropped, and `;` `&` `|` `(` `)` and newlines as separators.
+ * Lexical only — no expansion — which is enough to tell running a runner from naming one.
+ */
+export function shellSegments(command: string): string[][] {
+    const segments: string[][] = [];
+    let words: string[] = [];
+    let word: string | null = null;
+    let quote: '"' | "'" | null = null;
+    const endWord = (): void => {
+        if (word !== null) words.push(word);
+        word = null;
+    };
+    const endSegment = (): void => {
+        endWord();
+        if (words.length > 0) segments.push(words);
+        words = [];
+    };
+    for (let i = 0; i < command.length; i++) {
+        const c = command[i] ?? '';
+        if (c === '\\' && command[i + 1] === '\n' && quote !== "'") {
+            i++; // a line continuation contributes nothing, not even a word break
+        } else if (quote !== null) {
+            if (c === quote) quote = null;
+            else if (c === '\\' && quote === '"' && i + 1 < command.length) word += command[++i] ?? '';
+            else word += c;
+        } else if (c === '"' || c === "'") {
+            quote = c;
+            word ??= '';
+        } else if (c === '\\' && i + 1 < command.length) {
+            word = (word ?? '') + (command[++i] ?? '');
+        } else if (c === '#' && word === null) {
+            while (i + 1 < command.length && command[i + 1] !== '\n') i++;
+        } else if (/[;&|()\n]/.test(c)) {
+            endSegment();
+        } else if (/\s/.test(c)) {
+            endWord();
+        } else {
+            word = (word ?? '') + c;
+        }
+    }
+    endSegment();
+    return segments;
 }
 
 /** Classify a target path into a config surface, or null for everything else. */
