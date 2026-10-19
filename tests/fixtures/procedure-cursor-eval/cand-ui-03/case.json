@@ -1,0 +1,22 @@
+{
+  "id": "cand-ui-03",
+  "pilot": "existing-ui-audit",
+  "input": "Add a confirmation dialog before deleting a project.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.design_system",
+      "op": "mentions_none",
+      "values": [
+        "shadcn"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.shadcn_inventory",
+      "op": "is_null"
+    }
+  ]
+}

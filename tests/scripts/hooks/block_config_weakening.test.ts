@@ -7,9 +7,13 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+import { EDIT_TOOLS } from '../../../src/scripts/minimal_safe_diff_hook.js';
 
 import { load as jsYamlLoad } from 'js-yaml';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
     SESSION_ENTRY_CAP,
@@ -22,7 +26,10 @@ import {
     findPackageRoot,
     count_entries,
     decide,
+    evaluate,
+    isSnapshotPath,
     parseSettingsDoc,
+    snapshotUpdateWarning,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
 import {
     buildSettingsClassIndex,
@@ -590,5 +597,114 @@ describe('block_config_weakening — differential: the two readers refuse the sa
         const refused = CORPUS.filter((t) => parseSettingsDoc(t, '.agent-settings.yml') === null);
         expect(refused.length).toBeGreaterThan(8);
         expect(CORPUS.length - refused.length).toBeGreaterThan(20);
+    });
+});
+
+// road-to-a-canvas-the-code-owns 7.1 — visual baselines are a review surface.
+// The council review of 2026-10-18 (round 1) asked for the authority-monotonicity
+// cases: no path or payload that blocked before may warn after.
+const HOOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'src', 'scripts', 'hooks', 'block_config_weakening.ts');
+function runHook(envelope: Record<string, unknown>): { status: number | null; stdout: string } {
+    const r = spawnSync(path.resolve(path.dirname(HOOK), '..', '..', '..', 'node_modules', '.bin', 'tsx'), [HOOK], {
+        input: JSON.stringify(envelope),
+        encoding: 'utf-8',
+        timeout: 60_000,
+    });
+    return { status: r.status, stdout: r.stdout ?? '' };
+}
+
+describe('block_config_weakening — snapshot surfaces', () => {
+    it('snapshot: classifies baseline image directories as advisory', () => {
+        expect(classify_target('tests/e2e/home.spec.ts-snapshots/home-chromium.png')).toBe('advisory');
+        expect(classify_target('src/components/__screenshots__/button.png')).toBe('advisory');
+        // the near-miss: a folder merely named "snapshots" is not a baseline dir
+        expect(classify_target('docs/snapshots/readme.md')).toBeNull();
+    });
+
+    it('snapshot: a blocking class inside a snapshot directory keeps its class', () => {
+        expect(classify_target('component-snapshots/.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('__screenshots__/.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('a.spec.ts-snapshots/lint_allowlist.json')).toBe('allowlist');
+    });
+
+    it('snapshot: warns on a visual-runner baseline update from a shell tool only', () => {
+        const cmd = 'npx playwright test --update-snapshots';
+        const w = snapshotUpdateWarning('Bash', cmd);
+        expect(w).toMatch(/diff/);
+        expect(w).toMatch(/commit of its own/);
+        expect(snapshotUpdateWarning('launch-process', cmd)).toBe(w);
+        // an edit payload carrying a `command` field never pre-empts its path decision
+        expect(snapshotUpdateWarning('Edit', cmd)).toBeNull();
+        expect(snapshotUpdateWarning('Write', cmd)).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx vitest run --update-snapshots tests/unit')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', undefined)).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=false')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=none')).toBeNull();
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots=all')).toBe(w);
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots; git status')).toBe(w);
+        expect(snapshotUpdateWarning('Bash', 'npx playwright test --update-snapshots-foo')).toBeNull();
+    });
+
+    it('snapshot: no shell-tool name is an edit tool, so the shell warning never meets a path decision', () => {
+        for (const t of ['Bash', 'bash', 'BashTool', 'shell', 'launch-process', 'launch_process']) {
+            expect(EDIT_TOOLS.has(t), t).toBe(false);
+            expect(snapshotUpdateWarning(t, 'npx playwright test --update-snapshots')).not.toBeNull();
+        }
+        for (const t of EDIT_TOOLS) expect(snapshotUpdateWarning(t, 'npx playwright test --update-snapshots'), t).toBeNull();
+    });
+
+    it('snapshot: a snapshot write warns with the acceptance step, a shell update warns, neither blocks', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bcw-snap-'));
+        const write = runHook({ tool_name: 'Write', cwd: root, tool_input: { file_path: 'tests/e2e/a.spec.ts-snapshots/a.png', content: 'x' } });
+        expect(write.status).toBe(2);
+        expect(write.stdout).toMatch(/a\.spec\.ts-snapshots\/a\.png: baseline update.*commit of its own/);
+        const bash = runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test --update-snapshots' } });
+        expect(bash.status).toBe(2);
+        expect(runHook({ tool_name: 'Bash', cwd: root, tool_input: { command: 'npx playwright test' } }).status).toBe(0);
+    });
+
+    // Council round 5 (2026-10-19): a snapshot-shaped path takes exactly the skip it
+    // took before this change, so it can warn but never reach a blocking check.
+    it('snapshot: a snapshot-only path never enters the governance checks, even when it escapes the root', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bcw-escape-'));
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            for (const p of ['visual-snapshots/../../outside.txt', 'a.spec.ts-snapshots/a.png', '/abs/__screenshots__/b.png']) {
+                expect(isSnapshotPath(p), p).toBe(true);
+                expect(evaluate({ tool_name: 'Write', cwd: root, tool_input: { file_path: p, content: '[1,2,3]' } }), p).toBe(2);
+            }
+            // a governance class inside a snapshot directory still blocks as before
+            const many = JSON.stringify(Array.from({ length: SESSION_ENTRY_CAP + 1 }, (_, i) => `e${i}`));
+            expect(evaluate({ tool_name: 'Write', cwd: root, session_id: 'esc', tool_input: { file_path: 'x-snapshots/lint_x_allowlist.json', content: many } })).toBe(1);
+        } finally {
+            out.mockRestore();
+            err.mockRestore();
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+
+    // Council round 4 (2026-10-19): the warning must not depend on shell and edit
+    // tools being disjoint — an overlap still warns, and a path block still wins.
+    it('snapshot: a shell name that is also an edit tool still warns, and a path block wins over it', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bcw-overlap-'));
+        const overlap = new Set([...EDIT_TOOLS, 'Bash']);
+        const cmd = 'npx playwright test --update-snapshots';
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            expect(evaluate({ tool_name: 'Bash', cwd: root, tool_input: { command: cmd } }, overlap)).toBe(2);
+            const many = JSON.stringify(Array.from({ length: SESSION_ENTRY_CAP + 1 }, (_, i) => `e${i}`));
+            const blocked = evaluate(
+                { tool_name: 'Bash', cwd: root, session_id: 'overlap', tool_input: { command: cmd, file_path: 'lint_x_allowlist.json', content: many } },
+                overlap,
+            );
+            expect(blocked).toBe(1);
+        } finally {
+            out.mockRestore();
+            err.mockRestore();
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     });
 });

@@ -137,8 +137,33 @@ const CLASS_C_BASENAMES: readonly string[] = ['.agent-settings.yml', '.agent-set
 /** Where the class contract lives, relative to the package root. */
 export const SETTINGS_CLASSES_RELATIVE = 'docs/contracts/settings-classes.md';
 
+/** Visual baselines: accepted by a human, never by the run that produced them. */
+const SNAPSHOT_DIR = /(^|\/)([^/]+-snapshots|__screenshots__)\//;
+
+const SNAPSHOT_ACCEPTANCE =
+    'baseline update: show the image diff to the user and land the new baselines in a commit of its own, on the pinned renderer.';
+/** Shell tools only: an edit payload carrying a `command` field must never pre-empt a path decision. */
+const SHELL_TOOL = /^(bash|bashtool|shell|launch[-_]process)$/i;
+
+/** A visual-runner baseline update, answered with the acceptance step. Warn only. */
+export function snapshotUpdateWarning(tool: string, command: unknown): string | null {
+    if (!SHELL_TOOL.test(tool) || typeof command !== 'string') return null;
+    if (!/--update-snapshots(?!=(false|none)\b)(?==\S|[\s;&|)]|$)/.test(command) || !/\b(playwright|test-storybook)\b/.test(command)) return null;
+    return SNAPSHOT_ACCEPTANCE;
+}
+
 /** Classify a target path into a config surface, or null for everything else. */
 export function classify_target(p: string): ConfigKind {
+    // Last, so a blocking class is never downgraded by its directory.
+    return classify_config(p) ?? (isSnapshotPath(p) ? 'advisory' : null);
+}
+
+export function isSnapshotPath(p: string): boolean {
+    return SNAPSHOT_DIR.test(p.split(path.sep).join('/'));
+}
+
+/** The governance classes only — what the hook may block or warn on. A snapshot path is not one. */
+function classify_config(p: string): ConfigKind {
     const posix = p.split(path.sep).join('/');
     const base = posix.split('/').pop() ?? '';
     if (/_allowlist\.(json|txt)$/.test(base) || /^allowlist[-_.]/.test(base)) {
@@ -592,10 +617,19 @@ export function main(): number {
     if (!_isObject(envelope)) {
         return EXIT_ALLOW;
     }
+    return evaluate(envelope);
+}
 
+/** The decision for one envelope; `editTools` is a parameter only so a test can make a shell name overlap it. */
+export function evaluate(envelope: JsonObject, editTools: ReadonlySet<string> = EDIT_TOOLS): number {
     const { tool, paths, ti } = _extract(envelope);
-    if (!tool || !EDIT_TOOLS.has(tool) || ti === null) {
-        return EXIT_ALLOW;
+    // Computed for every tool and emitted only where no path decision is left,
+    // so a shell name that is also an edit tool still warns and never pre-empts a block.
+    const cmdWarn = snapshotUpdateWarning(tool, ti?.['command']);
+    if (!tool || !editTools.has(tool) || ti === null) {
+        if (cmdWarn === null) return EXIT_ALLOW;
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: cmdWarn })}\n`);
+        return EXIT_WARN;
     }
 
     const cwd = envelope['cwd'];
@@ -604,9 +638,12 @@ export function main(): number {
     const sidRaw = envelope['session_id'] ?? envelope['sessionId'];
     const session = typeof sidRaw === 'string' && sidRaw ? sidRaw : 'default';
 
+    let snapWarn: string | null = cmdWarn;
     for (const p of paths) {
-        const kind = classify_target(p);
+        const kind = classify_config(p);
         if (kind === null) {
+            // A snapshot-only path takes the same skip as before; it only leaves a warning behind.
+            if (isSnapshotPath(p)) snapWarn = `${path.relative(root, path.isAbsolute(p) ? p : path.join(root, p)) || p}: ${SNAPSHOT_ACCEPTANCE}`;
             continue;
         }
         const abs = path.isAbsolute(p) ? p : path.join(root, p);
@@ -640,6 +677,10 @@ export function main(): number {
             process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: d.reason })}\n`);
             return EXIT_WARN;
         }
+    }
+    if (snapWarn !== null) {
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: snapWarn })}\n`);
+        return EXIT_WARN;
     }
     return EXIT_ALLOW;
 }

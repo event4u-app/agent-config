@@ -1,0 +1,1 @@
+Run rotate-logs.sh every Monday. Run berth-report.sh at month end with the export from the berth board.

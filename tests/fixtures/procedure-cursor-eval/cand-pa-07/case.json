@@ -1,0 +1,16 @@
+{
+  "id": "cand-pa-07",
+  "pilot": "project-analyzer",
+  "input": "Analyse this monorepo and inventory its packages.",
+  "success": [
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/modules",
+      "op": "mentions_all",
+      "values": [
+        "quota-engine",
+        "quota-dashboard"
+      ]
+    }
+  ]
+}

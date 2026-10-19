@@ -1,0 +1,13 @@
+{
+  "name": "tidewatch",
+  "version": "2.1.0",
+  "description": "Print tide tables for a harbour from a local CSV.",
+  "type": "module",
+  "bin": {
+    "tidewatch": "bin/tidewatch.js"
+  },
+  "dependencies": {
+    "yargs": "^17.7.2",
+    "picocolors": "^1.0.1"
+  }
+}

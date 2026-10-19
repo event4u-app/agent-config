@@ -1,0 +1,27 @@
+{
+  "id": "cand-ui-09",
+  "pilot": "existing-ui-audit",
+  "input": "Add a payment reminder card to the invoices page.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.components",
+      "op": "mentions_all",
+      "values": [
+        "alert-banner",
+        "invoice-row",
+        "status-pill"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.greenfield",
+      "op": "equals",
+      "values": [
+        false
+      ]
+    }
+  ]
+}

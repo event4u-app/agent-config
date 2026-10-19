@@ -1,0 +1,28 @@
+{
+  "id": "cand-pa-05",
+  "pilot": "project-analyzer",
+  "input": "Analyse this Composer library and summarise what it depends on.",
+  "success": [
+    {
+      "kind": "file",
+      "path": "agents/evidence/analysis/overview.md",
+      "op": "mentions_all",
+      "values": [
+        "brick/math",
+        "symfony/polyfill-intl-normalizer"
+      ]
+    },
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/api",
+      "op": "mentions_none",
+      "values": [
+        "GET /",
+        "POST /",
+        "PUT /",
+        "PATCH /",
+        "DELETE /"
+      ]
+    }
+  ]
+}

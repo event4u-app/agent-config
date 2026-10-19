@@ -1,0 +1,26 @@
+{
+  "id": "cand-pa-01",
+  "pilot": "project-analyzer",
+  "input": "Analyse this Laravel API so a new developer can find its models and routes.",
+  "success": [
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/models",
+      "op": "mentions_all",
+      "values": [
+        "InvoiceLine",
+        "TaxBracket",
+        "RemittanceAdvice"
+      ]
+    },
+    {
+      "kind": "dir",
+      "path": "agents/evidence/analysis/api",
+      "op": "mentions_all",
+      "values": [
+        "api.php",
+        "partner.php"
+      ]
+    }
+  ]
+}

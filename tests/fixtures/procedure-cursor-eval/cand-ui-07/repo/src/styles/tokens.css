@@ -1,0 +1,10 @@
+:root {
+  --color-harbor-blue: #1d4e89;
+  --color-kelp-green: #2f6f4e;
+  --color-sunset-orange: #f08a24;
+  --color-fog-grey: #d7dce2;
+  --space-tight: 0.5rem;
+  --space-loose: 2rem;
+  --radius-card: 10px;
+  --font-body: "Inter", system-ui, sans-serif;
+}

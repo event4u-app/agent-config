@@ -1,0 +1,19 @@
+{
+  "id": "cand-ui-07",
+  "pilot": "existing-ui-audit",
+  "input": "Add a version switcher to the docs header.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.design_tokens.colors",
+      "op": "mentions_all",
+      "values": [
+        "harbor-blue",
+        "kelp-green",
+        "sunset-orange",
+        "fog-grey"
+      ]
+    }
+  ]
+}

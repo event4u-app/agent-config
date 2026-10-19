@@ -1,0 +1,18 @@
+{
+  "id": "cand-ui-11",
+  "pilot": "existing-ui-audit",
+  "input": "Add a churn-rate widget to the analytics dashboard.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.components",
+      "op": "mentions_all",
+      "values": [
+        "KpiTile",
+        "RevenueChart",
+        "TeamAvatarStack"
+      ]
+    }
+  ]
+}

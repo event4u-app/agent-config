@@ -1,0 +1,51 @@
+{
+  "id": "cand-ui-01",
+  "pilot": "existing-ui-audit",
+  "input": "Add a settings page with a notification preferences form.",
+  "success": [
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.components",
+      "op": "mentions_all",
+      "values": [
+        "accordion",
+        "alert",
+        "avatar",
+        "badge",
+        "button",
+        "card",
+        "checkbox",
+        "dialog",
+        "input",
+        "label",
+        "popover",
+        "select",
+        "separator",
+        "tabs"
+      ]
+    },
+    {
+      "kind": "json",
+      "file": ".work-state.json",
+      "path": "ui_audit.shadcn_inventory.primitives",
+      "op": "mentions_all",
+      "values": [
+        "accordion",
+        "alert",
+        "avatar",
+        "badge",
+        "button",
+        "card",
+        "checkbox",
+        "dialog",
+        "input",
+        "label",
+        "popover",
+        "select",
+        "separator",
+        "tabs"
+      ]
+    }
+  ]
+}
