@@ -17,7 +17,7 @@ relates:
     note: "Once its step engine ships, analyze:inbox (1,215 lines of instruction-only prose) is a candidate to split onto it. Not planned here."
   - slug: road-to-agent-throughput-recovery
     relation: disjoint
-    note: "A pending revision of that file proposes that a new inbox roadmap lands `draft` above N ready-at-0-done roadmaps (its E3, owner-reserved, undecided). The owner's directive of 2026-10-15 (always `ready`) binds here; D4 records the collision and the owner-first landing that caps growth instead."
+    note: "A pending revision of that file proposes that a new inbox roadmap lands `draft` above N ready-at-0-done roadmaps (its E3; decided 2026-10-15 as that file's D8, N = 8). The owner's directive of 2026-10-15 (always `ready`) yields to it above the limit (D18); D4 records the collision and the owner-first landing that caps growth instead."
   - slug: road-to-first-reference-analysis-observation
     relation: extends
     note: "later/. Step 6.5 offers the first two source-door runs as that file's observation runs; blocker `source-fetch-authorization` restates the fetch question its entry condition already waits on, it does not answer it."
@@ -317,7 +317,7 @@ two new scripts and the context file are additive; deleting them restores today.
       src/domains/analysis-workbench/analyze/inbox/command.md` is 0 (1 today);
       `analyze/inbox/evals/triggers.json` holds a `--no-pr` case; the final
       loop's ledger row names every directive it checked. Done 2026-10-19; record: `agents/evidence/analysis/analysis-family-step-records.md` § 3.4.
-- [ ] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
+- [x] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
       `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of them seven
       files) with `--no-pr`, no network and `subagent` analysts — the first slice
       both council seats converged on. `corrected-from-reproduction`: the plans
@@ -328,7 +328,7 @@ two new scripts and the context file are additive; deleting them restores today.
       inbox reads a round union (3.4), but the replay is a model-driven run —
       three `subagent` analysts with seed, three lenses and an exchange over a
       452 KB round that lives only in the maintainer's local `agents/tmp.old/`
-      — and needs its own session, not a drain lane.*
+      — and needs its own session, not a drain lane.* Done 2026-10-19: `validated`, 0 remote calls, 17-file lineage, 0 roadmaps per topic (15 owned arrivals); record: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`.
 
 **Exit:** a replayed round lands validated `ready` roadmaps locally; 3.3 green on
 a fixture remote. **Rollback:** revert 3.4's command edit; the inbox returns to
@@ -493,6 +493,7 @@ file; `council:pr` is unchanged.
 
 > **Screen 2026-10-18 (PR #2461).** Open and buildable, next in order: 4.5, the `analyze:pr` command (5.2, then 1.3), 3.4, 6.1, 6.2, then the 3.5 replay.
 > **Screen 2026-10-19.** 1.3, 3.4, 4.5, 5.2, 5.3, 6.1 and 6.2 closed. Open: 3.5 (a model-driven replay, own session), 6.2b (rename, waits on the 4.1 claim pin).
+> **Screen 2026-10-19, later.** 3.5 replayed and validated; AC-1–AC-10 closed. Open: 6.2b and 6.5 (owner, D19), 6.6 (ten runs; one exists).
 > Gated: 6.5 waits on the observation roadmap's answer; 6.6 waits on ten recorded runs (zero exist).
 
 ## Blockers
@@ -568,15 +569,15 @@ Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim t
       as `project_root`. Done 2026-10-19: `tests/scripts/analysis_target.test.ts` (subfolder, module with and without a marker) and `tests/scripts/analysis_doors_wiring.test.ts` (each door prints the line; the repo door lacked it, seen red).
 - [x] AC-2 — Every loop, round and fix cycle of the four doors has a numeric cap in
       a `limits:` block, and no door runs until a condition without one (ADR-118). Done 2026-10-19: `analysis_doors_wiring.test.ts` — the inbox door had no `limits:` block (seen red), now pinned and restated.
-- [ ] AC-3 — Each seed and deepen output carries independence stamps and
+- [x] AC-3 — Each seed and deepen output carries independence stamps and
       references no other analyst; each exchange records its cross-exam targets
-      verbatim, a disagreement ledger and a minority audit.
-- [ ] AC-4 — After every exchange the run shows the gate's numbers, and a further
-      round happened only on a recorded council or owner decision.
-- [ ] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
+      verbatim, a disagreement ledger and a minority audit. Done 2026-10-19 on the 3.5 replay: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md` (stamps `same-family`, two cross-exam targets quoted verbatim, three ledgers, 0 silent drops).
+- [x] AC-4 — After every exchange the run shows the gate's numbers, and a further
+      round happened only on a recorded council or owner decision. Done 2026-10-19: the replay's gate reads `offer: false`, `no-plannable-item`, and no further round ran (`agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`).
+- [x] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
       roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
-      block.
+      block. Done 2026-10-19 under `--no-pr`: every finding was owned, so the run landed arrivals and no roadmap (D18 governs a landing above the intake limit) (`agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`).
 - [x] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`
       produces a typed anchor table or states feature mode, and never presents an
       opportunity as a defect. Done 2026-10-19: `tests/scripts/analysis_anchors.test.ts` (consumer fixture, feature mode, never-a-defect).
@@ -585,7 +586,7 @@ Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim t
       stops on a moved head and never merges. Done 2026-10-19: `analysis_pr_target`, `analysis_pr_review` and `analysis_pr_optimize` tests.
 - [x] AC-8 — An interrupted run resumes from its last completed state without a
       second PR or duplicated output. Done 2026-10-19: `analysis_run.test.ts` (resume in emitted, publish once per key) and `analysis_publish.test.ts` (a re-run opens no second PR).
-- [ ] AC-9 — `run.json` exists for every run, and the retro roadmap carries the
-      `analysis-run` unit that reads it.
+- [x] AC-9 — `run.json` exists for every run, and the retro roadmap carries the
+      `analysis-run` unit that reads it. Done 2026-10-19: every door names `run.json` (`analysis_doors_wiring.test.ts`), the replay wrote one, `analysis_run_record --run` checks it; the retro carries step 1.5.
 - [x] AC-10 — `analyze:repo`, `analyze:reference-repo` and `optimize:deep` still
       resolve as aliases in the projected tree. Done 2026-10-19: `dist/agent-src/commands/analyze/{repo,and-optimize}.md` carry the `replaces:` aliases after `task generate-tools`.
