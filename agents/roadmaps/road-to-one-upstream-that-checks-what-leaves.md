@@ -205,6 +205,24 @@ Nothing is sent without the person's word in that turn.
       council. **Both seats were quota-exhausted (anthropic 50/50, openai
       50/50); 0/2 answered, so nothing was decided.** Overriding a recorded
       deferral needs that round first, so the step stays open until it runs.
+      **The round ran later on 2026-10-19 (D9): 2/2 present, one round, $0.**
+      Both seats cleared the first half and called it council-decidable: the
+      record gains optional `principle`, `mechanism` and `falsifier`, validated
+      on write and scanned by the privacy floor, with the retro mapping written
+      into `docs/contracts/retro-v1.md`. That landed, so the producer's stated
+      wait on this side's field shape is gone. The upstream body did not: the
+      openai seat named two owner-reserved dimensions for changing what leaves
+      (a privacy boundary — `mechanism` and `falsifier` are free text whatever
+      their field name — and a public contract, the cross-installation key),
+      and the seats split on whether those two lines may be sent at all
+      (anthropic keep, openai drop) and on whether a record without `principle`
+      may keep today's evidence-bearing body (openai: not indefinitely). A seat
+      naming an owner-reserved dimension makes this owner residue, as in D7.
+      The step stays open until the owner decides; the less-revealing reading
+      — body from `target`, `defect_class` and `principle` only — is the one
+      to build when he does.
+      The landed half is pinned by the four claim-field cases in
+      `tests/scripts/self_repair.test.ts`, each watched red.
 - [ ] **3.2 A mechanism fingerprint.** For records carrying `target` and
       `principle`, the fingerprint hashes those instead of the evidence, so the
       F5 pair clusters.
@@ -219,6 +237,16 @@ Nothing is sent without the person's word in that turn.
       **2026-10-19:** sequenced behind the same council round as 3.1 — the
       fingerprint change is the proposal's second half, and it changes no
       stored record because no producer sets `principle` yet.
+      **2026-10-19, after the round (D9): not adopted.** The openai seat's
+      objection holds against the formula as proposed — the retro defines
+      `subject` as a canonical *claim*, so two mechanisms may share one, and
+      `defect_class | target | principle` would merge them. It asked for a
+      versioned key and a stable mechanism identifier, and would accept the
+      formula only on corpus evidence that each subject maps to one mechanism
+      across repositories. No such corpus exists until a producer writes the
+      field, so this step now waits on evidence, not on a schema, and on the
+      owner's decision under 3.1 for the public-contract half. The key is
+      pinned unchanged by `claim-fields-change-neither-key-nor-body-yet`.
 - [x] **3.3 Draft, and a neutral branch.** `--draft` on every pull request; the
       branch is `retro/<fingerprint[:8]>`.
       **Branch half done 2026-10-17 with 2.1:** the commit is pushed as
@@ -349,6 +377,7 @@ Nothing is sent without the person's word in that turn.
 | D4 | reversible-technical | agent | No automatic upstream and no automerge of a retro pull request, in this repository either | `self-repair-loop` requires the person's word for the outward step | — |
 | D6 | reversible-technical | agent | Step 2.1's isolated checkout is a temporary index with no working tree, and the commit is pushed by sha | A worktree would run the package's commit hooks without its dependencies and leave a checkout to clean up; plumbing reaches the same property — only the net diff on the base leaves — with nothing on disk but a temp dir | a hook must run on the synthesised commit |
 | D7 | critical-technical | council:2026-10-17-d5-reopen-fork-pr | D5 is NOT reopened; the reopen is owner residue, since one seat named an owner-reserved dimension (irreversible external consequence). Its condition fires literally (matrix: no consumer-project linkage), but the seats split: anthropic (a) reopen, council-decidable — the digest approval is the protection for the floor's gap; openai (b) keep — a matching digest proves integrity, not that the person recognised a company term, and widening irreversible consequences is owner-reserved. A split escalates; the less-revealing option stands until the owner decides | `agents/evidence/analysis/upstream-fork-pr-linkage-2026-10-17.md` | the owner decides, or the detector table's identifier class lands |
+| D9 | critical-technical | council:2026-10-19-upstream-closed-fields | Optional `principle` / `mechanism` / `falsifier` added to the self-repair record (shape-validated, privacy-floor-scanned, read by neither key nor body) and the retro mapping documented — council-decidable and convergent (anthropic, openai). The upstream body change (3.1) and the mechanism key (3.2) are NOT adopted: openai named a privacy boundary and a public contract as owner-reserved, and the seats split on sending `mechanism` / `falsifier` and on keeping the legacy body; a split with an owner-reserved dimension is owner residue (D7). For 3.2 openai also objected that a claim is not a mechanism identity | 2/2 present, 1 round, $0; `tests/scripts/self_repair.test.ts` claim-field cases, each watched red | the owner decides 3.1, or a corpus shows one subject per mechanism (3.2) |
 | D8 | reversible-technical | agent | Risk review 2026-10-19: AC-5 is reworded as D5 instructed ("corrected at the next risk review") and closed against `consumer-reaches-the-issue-step` in `tests/scripts/self_repair_release.test.ts`, watched red with the checkout condition removed from `chooseEgress`. AC-1 closed on the three Phase 1 documents plus the pipeline document and the privacy-floor rule — every backticked path resolves, or is a short-form mention of a file that exists, or is the seed path the rule names as deliberately absent — and on `check_references` (2,931 scanned, 0 broken). Rows 1–3 of the risk register re-read and kept; row 4 added | `npx vitest run tests/scripts/self_repair_release.test.ts` 30/30 · `./scripts-run src/scripts/check_references` exit 0 | the owner decides D7 — AC-5's wording then moves with it |
 
 ## What this roadmap deliberately does not do
@@ -368,7 +397,7 @@ Nothing is sent without the person's word in that turn.
 | 1 | Company jargon without a literal identifier slips through | product | A term that names nothing but identifies the employer leaves in a principle field. | Closed fields only, the person sees every byte in the dry run, digest-bound approval. | Phase 3 — Synthesised, clustered, drafted |
 | 2 | Upstream pull requests flood the maintainer | product | Many installations open the same finding. | Mechanism fingerprint clusters them; the existing creation cap of 20 per 24 h; one offer per run. | Phase 5 — The retro may offer, never send |
 | 3 | The ephemeral checkout fails on a locked-down machine | implementation | No network or no git leaves the consumer without a route. | The ladder still degrades to an issue, which is today's behaviour. | Phase 4 — Approval of exact bytes, and a route from consumers |
-| 4 | Producer and consumer each wait on the other's record shape | implementation | Retro 4.4 waits on the record shape this file reads, and 3.1 / 3.2 here wait on a field the retro has not named, so neither side moves. | The proposal that breaks the wait is written into step 3.1 and goes to the council; `Candidate.subject` already carries the meaning `principle` needs. | Phase 3 — Synthesised, clustered, drafted |
+| 4 | Producer and consumer each wait on the other's record shape | implementation | Retro 4.4 waits on the record shape this file reads, and 3.1 / 3.2 here wait on a field the retro has not named, so neither side moves. | Broken on this side 2026-10-19 (D9): the record now has the fields and the mapping is in the retro contract, so retro 4.4 has a shape to write. What remains is an owner decision on what leaves, not a wait. | Phase 3 — Synthesised, clustered, drafted |
 
 ## Acceptance Criteria
 
