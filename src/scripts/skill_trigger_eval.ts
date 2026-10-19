@@ -22,6 +22,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { artefact_roots, resolve_logical } from './_lib/agent_src.js';
+import { vendorPrefix } from './_lib/egress_rules.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 
@@ -414,9 +415,10 @@ export function load_anthropic_key(p: string = ANTHROPIC_KEY_PATH): string {
     if (!key) {
         throw new KeyGateError(`${p} is empty.`);
     }
-    if (!key.startsWith('sk-ant-')) {
+    const prefix = vendorPrefix('anthropic-api-key');
+    if (!key.startsWith(prefix)) {
         throw new KeyGateError(
-            `${p} does not contain an Anthropic key (expected 'sk-ant-' prefix).`,
+            `${p} does not contain an Anthropic key (expected '${prefix}' prefix).`,
         );
     }
     return key;

@@ -155,7 +155,7 @@ gate fires later).
 ### 4c. Autonomy-first — zero human gates by default
 
 Canonical rule:
-[`templates/roadmaps.md` rule 22](../../agent-src/templates/roadmaps.md).
+[`templates/roadmaps.md` rule 22](../../templates/roadmaps.md).
 Default human-checkpoint count: **zero**. Every step is
 agent-executable — `- [ ] User verifies X` steps and "Review /
 Sign-off" phases are authoring bugs; replace each with an
@@ -190,8 +190,8 @@ seven fields of rule 20), never a stray "blocked on X" sentence. Write it so
 the owner can decide in one sitting: one option named and why, what the delay
 costs, a command or path per option rather than prose, and an offer to walk
 them through it. Ratcheted by `lint_roadmap_blockers`. Full shape:
-[`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
-Omit it entirely when there is no such gate; run the § 4c gate-test first. A **hold** is the publication-side twin — a blocker stops execution, a hold stops publication; ask once whether an intermediate tree state must stay unpublished (default **no**; roadmap incompleteness never is one), walk `re-sequence → guard → hold`, and record the avoided outcome as well as the taken one, per [`templates/roadmaps.md` rule 28](../../agent-src/templates/roadmaps.md) and the § 5c self-check in [`/roadmap:create`](../../domains/product-basic/roadmap/create/command.md).
+[`templates/roadmaps.md` rule 20](../../templates/roadmaps.md).
+Omit it entirely when there is no such gate; run the § 4c gate-test first. A **hold** is the publication-side twin — a blocker stops execution, a hold stops publication; ask once whether an intermediate tree state must stay unpublished (default **no**; roadmap incompleteness never is one), walk `re-sequence → guard → hold`, and record the avoided outcome as well as the taken one, per [`templates/roadmaps.md` rule 28](../../templates/roadmaps.md) and the § 5c self-check in [`/roadmap:create`](../../domains/product-basic/roadmap/create/command.md).
 
 ### 5c. Risk review (Gate R1) — after draft, before save
 
@@ -265,7 +265,7 @@ integrate don't dump), resolve contested design in the council *first*
 then author, encode the decision so it survives (Council notes +
 neutral-descriptor Provenance + memory lock), and make "integration, not
 dump" a testable acceptance criterion. Full four-move detail →
-[`roadmap-writing-source-derived`](../../agent-src/contexts/execution/roadmap-writing-source-derived.md).
+[`roadmap-writing-source-derived`](../../contexts/execution/roadmap-writing-source-derived.md).
 
 ## Output format
 

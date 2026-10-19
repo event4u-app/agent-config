@@ -123,8 +123,12 @@ The first non-blank line after the `## Risk Register` heading MUST be:
 
 - `reviewed:` — ISO date. **Staleness rule:** the date may not be older
   than the date of the last *substantial* change to the plan (§ 3). Stale
-  = fail. Staleness is decided against **committed** history (the newest
-  commit dated `<= reviewed:`), so while the plan file carries *uncommitted*
+  = fail. Staleness is decided against **committed** history: the baseline is
+  the newest commit, among the unbroken run of commits that carry the current
+  stamp, dated `<= reviewed:` — or, when the whole run was committed after the
+  stamp's date (a merge-day lag), the commit that introduced the stamp. A change
+  committed the day the stamp names is therefore covered (the same-day residual
+  above), and one committed later is not. While the plan file carries *uncommitted*
   modifications the check is **skipped**: the current content has no committed
   baseline yet, and comparing it against the previous commit reports a register
   written the same minute as stale. The committed case is unchanged — a

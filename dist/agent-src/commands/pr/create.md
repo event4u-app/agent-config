@@ -309,7 +309,7 @@ a touched path · a regression on a touched path · a small dependency
 adjustment · a local API change inside defined semantics · a Boy-Scout cleanup
 that is small, local, low blast radius, testable and carries no new product
 decision). Full enumeration and the council / owner rows:
-[`scope-mechanics`](../../../../agent-src/contexts/authority/scope-mechanics.md)
+[`scope-mechanics`](../../contexts/authority/scope-mechanics.md)
 section Scope growth.
 
 `./scripts-run src/scripts/scope_growth "<one-line description>"` classifies a

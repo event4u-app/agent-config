@@ -487,6 +487,20 @@ what the gate attests."*
       abstention. No item on D22's still-required list has landed. No council
       round was run, because the inputs D22 named have not changed.
       Measurement: `agents/evidence/analysis/live-tree-check-remeasure-20261017.md`.
+      **Screened 2026-10-18 on `6194e2769`, still open, no round run.** AC-3
+      does not put Phase 7 behind the blocked Phases 2, 3 or 6. Its only
+      ordering clause is that Phase 7 must come before live-tree checks are
+      restored as required gates. So the step is not held by
+      `external-bootstrap-boundary-for-phases-2-3`. It is held by D22's ordered
+      list, and the first item on that list has not landed:
+      `git ls-files src/config | grep -c gate-classification` returns 0. That
+      first item, the schema, cannot be written yet. It needs the TWO-objects
+      taxonomy choice D22 left open (multi-valued class, aspect-level rows, or
+      splitting the check), and that is a design question. No active or stub
+      roadmap owns D22's list: `grep -rl gate-classification agents/roadmaps`
+      matches only this file. Re-running 7.1 without it would be the verdict
+      shopping the 2026-10-12 screen ruled out. 7.2 follows from 7.1, and its
+      demotions weaken gates, so it does not start either.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s

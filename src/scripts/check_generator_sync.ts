@@ -593,12 +593,58 @@ const GIT_CONVENTION_GRAMMAR_TRIPLE: Triple = {
     },
 };
 
+const OWNED_DIGEST = 'agents/roadmaps-owned.md';
+const OWNED_GENERATOR = 'src/scripts/generate_owned_digest.ts';
+
+/**
+ * The owned-roadmap digest rows every active, parked and stub roadmap, so a
+ * landing, a park, an archive or a rewritten goal changes it. A checkbox flip
+ * does not: the row holds only fields that change rarely.
+ */
+const OWNED_DIGEST_TRIPLE: Triple = {
+    id: 'owned-digest',
+    output: OWNED_DIGEST,
+    remedy: './scripts-run src/scripts/generate_owned_digest',
+    why: 'the digest carries one row per active, parked and stub roadmap, read from its goal and status',
+    sourcesOf() {
+        return {
+            ok: true,
+            sources: [
+                { kind: 'prefix', value: 'agents/roadmaps/' },
+                { kind: 'file', value: OWNED_GENERATOR },
+                { kind: 'file', value: OWNED_DIGEST },
+            ],
+        };
+    },
+    regenerate(root, workDir) {
+        const outFile = path.join(workDir, 'roadmaps-owned.md');
+        const tsx = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
+        if (!fs.existsSync(tsx)) {
+            return { ok: false, reason: `no tsx at ${path.relative(root, tsx)} — run \`npm ci\` before this gate` };
+        }
+        const res = spawnSync(tsx, [path.join(root, OWNED_GENERATOR), '--out', outFile], {
+            cwd: root,
+            encoding: 'utf8',
+            maxBuffer: 64 * 1024 * 1024,
+        });
+        if (res.status !== 0) {
+            return { ok: false, reason: `generate_owned_digest exited ${String(res.status)}: ${(res.stderr ?? '').trim()}` };
+        }
+        try {
+            return { ok: true, text: fs.readFileSync(outFile, 'utf8') };
+        } catch (e) {
+            return { ok: false, reason: `generate_owned_digest reported success but wrote no readable file (${String(e)})` };
+        }
+    },
+};
+
 export const REGISTRY: readonly Triple[] = [
     CENSUS_TRIPLE,
     INSTALL_BUNDLE_TRIPLE,
     HOOK_MANIFEST_TRIPLE,
     HOST_LOWERING_TRIPLE,
     GIT_CONVENTION_GRAMMAR_TRIPLE,
+    OWNED_DIGEST_TRIPLE,
 ];
 
 // ---------------------------------------------------------------------------

@@ -149,7 +149,7 @@ User-scope anchor roots are `USER_SCOPE_PATHS`; deployed subtrees are
 | windsurf | `~/.codeium/windsurf/` | `rules/` |
 | cline | `~/Documents/Cline/Rules/` | flat `rules/` (no sub-prefix) |
 | gemini-cli | `~/.gemini/` | `rules/`, `skills/`, `commands/`, `personas/` |
-| codex | `~/.codex/` | `rules/`, `skills/`, `commands/`, `personas/` |
+| codex | `~/.codex/` | `rules/`, `skills/`, `commands/`, `personas/` — read by the host: `skills/` only; `rules/`, `commands/` and `personas/` are delivered but not read as instructions, and no `~/.codex/AGENTS.md` is written (codex-cli 0.148.0, [probe](../../agents/evidence/analysis/codex-global-delivery-reading-2026-10-18.md)) |
 | continue / roocode / kilocode / qoder / opencode / trae / codebuddy | `~/.continue/`, `~/.roo/`, `~/.kilocode/`, `~/.qoder/`, `~/.opencode/`, `~/.trae/`, `~/.codebuddy/` | claude-code bundle |
 | antigravity | `~/.agents/` | claude-code bundle |
 | droid | `~/.factory/` | claude-code bundle |
@@ -214,7 +214,10 @@ foreign keys and files intact. The pointers it follows:
    HOME produces one just as an install from the first does. Uninstall does not
    delete a sidecar: it is reported as skipped and left in place, because it may
    be half-merged into the user's file. Changing that belongs to the uninstall
-   flow, not to this record.
+   flow, not to this record. A `scope: global` entry carries no `files[]`: its
+   paths and digests live in the user-scoped deploy inventory, and a project
+   `uninstall` drops the entry without touching any file — `uninstall --global`
+   removes global content.
 3. **`merged_keys[]`** (per tool) — objects with `file` + `json_pointer` (+ optional
    `value_hash`). Uninstall removes only these keys.
 4. **`status`** — `installed` (default) or `uninstalling`; the two-phase uninstall

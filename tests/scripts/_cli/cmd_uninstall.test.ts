@@ -27,22 +27,13 @@
 // two-phase-commit / files[]-deletion arms were hand-verified against the
 // Python during porting; their golden parity unlocks once `installed_tools.ts`
 // stops using `require()`.
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { main } from '../../../src/scripts/_cli/cmd_uninstall.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_uninstall.ts');
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
 
 const itPy = it;
 
@@ -65,20 +56,6 @@ function runTs(args: string[], root: string, lock: string): RunResult {
     return runInProc(main, args, { cwd: root, env: { ...baseEnv(root, lock) } });
 }
 
-function norm(text: string, roots: string[]): string {
-    let out = text;
-    for (const root of roots) {
-        out = out.split(root).join('<TMP>');
-        let real = root;
-        try {
-            real = fs.realpathSync(root);
-        } catch {
-            /* removed */
-        }
-        out = out.split(real).join('<TMP>');
-    }
-    return out;
-}
 
 const tmps: string[] = [];
 function freshRoot(): string {
@@ -161,7 +138,7 @@ describe('cmd_uninstall — project scope', () => {
             fs.mkdirSync(path.join(r, '.claude'), { recursive: true });
             fs.writeFileSync(path.join(r, '.claude', 'settings.json'), '{}\n');
         }
-        const t = runTs(['--force', '--tools=claude-code'], ts, path.join(ts, 'lock'));
+        runTs(['--force', '--tools=claude-code'], ts, path.join(ts, 'lock'));
         expect(fs.existsSync(path.join(ts, '.claude', 'settings.json'))).toBe(false);
     });
 });
@@ -185,5 +162,70 @@ describe('cmd_uninstall — global scope', () => {
         const t = runTs(['--global', '--force'], root, lock);
         expect(t.status).toBe(0);
         expect(t.status).toBe(0);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// project scope — a global-scope entry recorded without files[]
+// ---------------------------------------------------------------------------
+
+// Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a consumer
+// lock keeps its global-scope entries but no longer records their files[]. An
+// entry without files[] used to fall through to the legacy project-marker map,
+// which for a global entry deletes a PROJECT file the global install never
+// wrote — `.cursor/hooks.json` here.
+describe('cmd_uninstall — project scope, global entry without files[]', () => {
+    it('removes the entry and leaves the project bridge marker alone', () => {
+        const root = freshRoot();
+        fs.mkdirSync(path.join(root, '.cursor'), { recursive: true });
+        const marker = path.join(root, '.cursor', 'hooks.json');
+        fs.writeFileSync(marker, '{"theirs": true}\n');
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        const lock = path.join(root, 'agents', 'installed-tools.lock');
+        fs.writeFileSync(
+            lock,
+            'schema_version: 2\nagent_config_version: "0.0.0"\ntools:\n' +
+                '  - name: cursor\n    scope: global\n    bridge_marker: ~/.cursor/\n' +
+                '    installed_at: "2026-10-18"\n',
+        );
+        const t = runInProc(main, ['--tools=cursor'], {
+            cwd: root,
+            env: { AGENT_CONFIG_ROOT_OVERRIDE: '1', AGENT_CONFIG_PROJECT_ROOT: root },
+        });
+        expect(t.status, t.stdout + t.stderr).toBe(0);
+        expect(fs.readFileSync(marker, 'utf8')).toBe('{"theirs": true}\n');
+        expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
+    });
+});
+
+describe('cmd_uninstall — project scope, a global entry still carrying $HOME files[]', () => {
+    // A lock committed before global files[] left it: a project uninstall must
+    // not delete those paths either, and a dry-run must say "would".
+    it('touches no recorded file, and the dry-run reports what it would do', () => {
+        const root = freshRoot();
+        const home = freshRoot();
+        const deployed = path.join(home, '.cursor', 'rules', 'a.md');
+        fs.mkdirSync(path.dirname(deployed), { recursive: true });
+        fs.writeFileSync(deployed, 'ours\n');
+        const marker = path.join(home, '.cursor', 'marker');
+        fs.writeFileSync(marker, 'm\n');
+        fs.mkdirSync(path.join(root, 'agents'), { recursive: true });
+        const lock = path.join(root, 'agents', 'installed-tools.lock');
+        fs.writeFileSync(
+            lock,
+            'schema_version: 2\nagent_config_version: "0.0.0"\ntools:\n' +
+                '  - name: cursor\n    scope: global\n    bridge_marker: ~/.cursor/\n' +
+                '    installed_at: "2026-10-18"\n    files:\n' +
+                `      - path: ${deployed}\n        kind: deployed\n        sha256: null\n` +
+                `      - path: ${marker}\n        kind: marker\n        sha256: null\n`,
+        );
+        const env = { AGENT_CONFIG_ROOT_OVERRIDE: '1', AGENT_CONFIG_PROJECT_ROOT: root };
+        const dry = runInProc(main, ['--tools=cursor', '--dry-run'], { cwd: root, env });
+        expect(dry.stdout).toContain('cursor: would remove global-scope entry');
+        const real = runInProc(main, ['--tools=cursor', '--purge'], { cwd: root, env });
+        expect(real.status, real.stdout + real.stderr).toBe(0);
+        expect(fs.existsSync(deployed)).toBe(true);
+        expect(fs.existsSync(marker)).toBe(true);
+        expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
     });
 });

@@ -14,6 +14,7 @@ suggestion:
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:inbox name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---
@@ -30,6 +31,11 @@ difference matters: an inbox file is a **frozen snapshot of an opinion about a
 tree that has since moved**. Most of the work is finding out which parts are
 still true — and, for the parts that tell an agent to *do* something, which of
 its steps still run when you actually run them.
+
+The final stage of the four analysis doors
+(ADR-288);
+shared vocabulary, lenses and tiers:
+[`analysis-loop`](../../contexts/execution/analysis-loop.md).
 
 ## Argument
 
@@ -264,6 +270,16 @@ already been believed.
 the file's own words, or a hit in `agents/tmp.old/` on the same subject (Phase
 4c). It is a triage column rather than a later discovery on purpose: a re-arrived
 file must not be able to look new, and the check is one `grep`.
+
+**Read `agents/roadmaps-owned.md` before that `grep`.** The digest rows every
+active, parked and stub roadmap with the first sentence of what it owns, so a
+subject that already has an owner shows up at the first look instead of after a
+deep read. Write a candidate into the `recurrence` cell as `owner?: <slug>`. A
+row is a shortlist, never an owner decision: open the roadmap and confirm the
+finding falls inside its goal before Phase 5 lands anything on it. The digest
+only ADDS candidates — the Phase 4c search still runs in full. Absent, or
+reported stale by `./scripts-run src/scripts/generate_owned_digest --check`
+(where the generator is present), skip it and run the search alone.
 
 Genre is one of: **external-review · feature-spec · prompt/persona · transcript ·
 benchmark-output · council-artifact · scratch-note**. Age matters — compare the

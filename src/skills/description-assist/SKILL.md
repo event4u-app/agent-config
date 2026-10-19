@@ -65,7 +65,7 @@ If the target is a skill, check for a trigger-eval report:
 
 * `src/skills/{name}/evals/triggers.json` — the expected-trigger corpus
 * `evals/last-run.json` — the most recent runner output (see
-  [`scripts/skill_trigger_eval.ts`](../../../scripts/skill_trigger_eval.ts))
+  [`scripts/skill_trigger_eval.ts`](../../scripts/skill_trigger_eval.ts))
 
 If `last-run.json` exists and contains failed queries for this skill,
 extract the failure patterns and **use them to inform step 3 variants**.

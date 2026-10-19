@@ -39,6 +39,10 @@ relates:
 > a merge retro did not run; (d) small sessions not worth analysing are skipped;
 > (e) **on by default**, switchable off by a setting. A neutral pull request
 > against this package is owned by `road-to-one-upstream-that-checks-what-leaves`.
+>
+> **Arrivals:** `road-to-an-analysis-family-that-deepens-itself` step 6.4
+> (2026-10-18, directive (h) of inbox round `inbox-2026-10-s`): the unit kind
+> `analysis-run`, landed owner-first as step 1.5.
 
 ## Goal
 
@@ -163,6 +167,15 @@ pre-registration in place, settings lint green with the new key.*
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t review-instruction-is-data --reporter=verbose` -> /✓.*review-instruction-is-data/
       *Done 2026-10-17: review comments and bodies are quoted (500 chars) with
       the scanner's verdict; no transcript is read (D12).*
+- [ ] **1.5 Facts for an analysis run (unit kind `analysis-run`).** The fact
+      reader takes `--analysis-run <round-id>`, reads that round's `run.json`
+      (`agents/runtime/analysis/<round-id>/run.json`, written by the analysis
+      doors of ADR-288) and reports adoption per run, source and analyst: done
+      versus cancelled steps of the roadmaps the run emitted, once they are
+      archived; `missing` while they are not. Triage, the one-learning-per-unit
+      rule and every target stay this file's. Offering `analyze:and-optimize
+      --scope=<area>` at three recurrences on one area stays off by default.
+      verify: `npx vitest run tests/scripts/retro_facts.test.ts -t analysis-run-reads-run-json --reporter=verbose` -> /✓.*analysis-run-reads-run-json/
 
 ## Phase 2 — `/retro` by hand
 
@@ -358,7 +371,7 @@ pre-registration in place, settings lint green with the new key.*
   the workflow template is reconsidered after 5.2.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

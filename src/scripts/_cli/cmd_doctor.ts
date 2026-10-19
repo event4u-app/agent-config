@@ -118,6 +118,7 @@ import {
 } from '../_lib/agent_settings.js';
 import { executionJson, forgeDepsFor, forgeProtectionJsonFor, type ForgeDeps } from './doctor_execution.js';
 import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_posture.js';
+import { updateVerdictFor } from './doctor_update_verdict.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
 import {
@@ -791,14 +792,6 @@ const MCP_BETA_GATES: ReadonlyArray<[string, string]> = [
     ['gate-5-rate-limit', 'docs/contracts/mcp-rate-limit.md'],
     ['gate-6-no-drift', '.github/workflows/mcp-no-drift.yml'],
 ];
-
-/** Visible status → glyph map (`warn` keeps a trailing space for alignment). */
-const STATUS_SYMBOLS: Record<string, string> = {
-    ok: '✅',
-    warn: '⚠️ ',
-    fail: '❌',
-    skipped: '⏭️ ',
-};
 
 /** Minimum Python interpreter the CLI targets (parity constant). */
 const MIN_PYTHON: [number, number] = [3, 10];
@@ -3014,6 +3007,7 @@ function _emit_json(
     payload['execution'] = executionJson(() => iter_setting_overrides({ cwd: project_root }));
     payload['forge_protection'] = forgeProtectionJsonFor(String(project_root), forge); // 3.2 · AC-5
     payload['traffic_environment'] = trafficEnvironmentJson(process.env);
+    payload['update_verdict'] = updateVerdictFor(String(project_root), _package_root(), _current_package_version()); // read-only
     if (checks !== null) {
         payload['checks'] = checks;
         const drift = missing.length + modified.length + foreign.length + tag_drift.length;
@@ -3026,21 +3020,6 @@ function _emit_json(
         }
     }
     print(_jsonDumpsIndentAscii(payload, 2));
-}
-
-function _emit_checks_text(checks: Dict[]): void {
-    if (checks.length === 0) {
-        return;
-    }
-    print('checks:');
-    for (const c of checks) {
-        const sym = STATUS_SYMBOLS[c['status'] as string] ?? '?';
-        print(`  ${sym} ${c['id']}: ${c['message']}`);
-        if (c['status'] !== 'ok' && c['remedy']) {
-            print(`      fix: ${c['remedy']}`);
-        }
-    }
-    print('');
 }
 
 /**
@@ -3061,7 +3040,7 @@ function _emit_detection_text(project_root: string, checks: Dict[]): void {
 
 // `--strict` lives in `_doctor_strict.ts`; the drift renderer in `_doctor_emit.ts`.
 import { STRICT_DEFAULTS, STRICT_STORE_TRUE, STRICT_USAGE, STRICT_VALUE_FLAGS, attachProceedFields, strictExit, validateStrictLevelOr } from './_doctor_strict.js';
-import { _emit_text } from './_doctor_emit.js';
+import { STATUS_SYMBOLS, _emit_checks_text, _emit_text } from './_doctor_emit.js';
 
 interface Options {
     project: string | null;

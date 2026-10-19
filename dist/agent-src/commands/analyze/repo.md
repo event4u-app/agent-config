@@ -8,7 +8,7 @@ cluster: analyze
 replaces: [analyze-reference-repo, analyze:reference-repo]
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-argument-hint: "<repo-url|owner/repo|archive> [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
+argument-hint: "<source>… [--emit-prompts] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
 limits:
   mode_default: plan
   max_iterations: 3
@@ -20,6 +20,7 @@ suggestion:
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
 workspaces:
   - agent-config-maintainer
+  - engineering
 packs:
   - meta
 ---
@@ -32,7 +33,21 @@ this repo's own verified defects, maps what the reference does well, classifies
 each finding (adopt / adapt / reject / already-have), converges its verdicts,
 and proposes concrete adoption items — optionally with a roadmap draft.
 
-Scope boundaries: § When **not** to use.
+Scope boundaries: § When **not** to use. One of the four analysis doors
+(ADR-288);
+shared vocabulary, lenses and tiers:
+[`analysis-loop`](../../contexts/execution/analysis-loop.md).
+
+**Several sources, and analysts outside this host.** `<door> <a> <b> …` runs
+one lane per source, coded S1, S2, …, and folds them with `foldLanes`
+(`src/scripts/analysis_prompts.ts`): two sources pointing at the same tree
+anchor are one gap and land as one phase. `--emit-prompts` prints the analyst
+and exchange prompts for a session outside this host, with the `handoff-v1`
+frontmatter embedded so the returned file parses:
+
+```bash
+./scripts-run src/scripts/analysis_prompts --pin <sha> --round <round-id>
+```
 
 ## Inputs
 
@@ -119,6 +134,17 @@ ambiguity the invocation did not settle, and it halts before any fetch.
 Everything the menu's "Cancel" option protected is protected elsewhere: the
 write-acts of §§ 7-8 keep their own confirmations, and plan mode (§ Enforced
 limits) is the default, so a run that is never confirmed writes nothing tracked.
+
+### 1a. Anchor profile — what this scope has
+
+Outside this package the anchors are what the scope itself already says is
+wrong or wanted, read in order: skipped tests, open issues (`gh` when present),
+the FIXME/TODO census, open roadmap steps, ADRs, then `docs/CLAIMS.md`.
+`buildAnchorTable` (`src/scripts/analysis_anchors.ts`) types every row
+`defect | capability_gap | product_opportunity | maintainability | security |
+performance` — an opportunity is never a defect. A scope with `docs/CLAIMS.md`
+keeps the profile of § 1b below. No row at all → **feature mode**, anchored on
+`--goal "…"`; without a goal, ask for it once.
 
 ### 1b. Anchor table first
 

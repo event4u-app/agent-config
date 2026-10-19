@@ -32,6 +32,8 @@ import { SIDECAR_SUFFIX } from '../../src/install/preserve.js';
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const ORCHESTRATOR = path.join(REPO_ROOT, 'src', 'scripts', 'install');
 const DOCTOR = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_doctor.ts');
+const SYNC = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_sync.ts');
+const VALIDATE = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_validate.ts');
 const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
 const TOOL = 'cursor';
 const TAG = 'event4u/agent-config';
@@ -61,9 +63,9 @@ function digestOf(p: string): string | null {
     }
 }
 
-/** Run one global install of {@link TOOL} from `cwd` into `home`. */
-function install(home: string, cwd: string): { status: number | null; out: string } {
-    const r = spawnSync('bash', [ORCHESTRATOR, '--global', `--tools=${TOOL}`, '--yes'], {
+/** Run one global install of {@link TOOL} (or `tools`) from `cwd` into `home`. */
+function install(home: string, cwd: string, tools: string = TOOL): { status: number | null; out: string } {
+    const r = spawnSync('bash', [ORCHESTRATOR, '--global', `--tools=${tools}`, '--yes'], {
         cwd,
         encoding: 'utf8',
         timeout: 240_000,
@@ -339,6 +341,87 @@ describe('step 3.1 — the installer and doctor say the same thing about one tre
             // this fixture it corroborates rather than discriminates; the two
             // assertions above are what carry the causation.
             expect(after.status).toBe(1);
+        },
+    );
+});
+
+/** A lock-reading CLI (`sync`, `validate`) run from `cwd` against `home`. */
+function cli(script: string, args: string[], home: string, cwd: string): { status: number | null; out: string } {
+    const r = spawnSync(TSX, [script, ...args], {
+        cwd,
+        encoding: 'utf8',
+        timeout: 240_000,
+        env: {
+            ...process.env,
+            HOME: home,
+            EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
+            AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
+            AGENT_CONFIG_INSTALLED_TOOLS: undefined,
+            AGENT_CONFIG_PROJECT_ROOT: cwd,
+            AGENT_CONFIG_ROOT_OVERRIDE: '1',
+            AGENT_CONFIG_NO_UI: '1',
+            CI: '1',
+        },
+    });
+    return { status: r.status, out: `${r.stdout ?? ''}\n${r.stderr ?? ''}` };
+}
+
+describe('step 3.3 — the consumer lock keeps global entries and leaks no $HOME path', () => {
+    it(
+        'global entries carry no files[], sync still replays them, the ledger holds the paths, validate accepts the lock',
+        { timeout: 900_000 },
+        () => {
+            const home = mkTmp('own-ledger-home-');
+            const project = projectWithSettings('own-ledger-lock-');
+            const lock = path.join(project, 'agents', 'installed-tools.lock');
+            const tools = `${TOOL},claude-desktop`;
+            const first = install(home, project, tools);
+            expect(first.status, first.out).toBe(0);
+
+            const text = fs.readFileSync(lock, 'utf8');
+            const real = fs.realpathSync(home);
+            expect(text, 'a global entry recorded the installing user\'s absolute home').not.toContain(home);
+            expect(text).not.toContain(real);
+            expect(text).not.toMatch(/^\s+files:/m);
+            for (const name of [TOOL, 'claude-desktop']) {
+                expect(text).toMatch(new RegExp(`- name: ${name}\\n\\s+scope: global`));
+            }
+
+            // The user-scoped ledger holds what the lock no longer records.
+            const inv = JSON.parse(fs.readFileSync(inventoryPath(home), 'utf8')) as {
+                tools: Record<string, { files: string[]; digests?: Record<string, { installed_sha256?: string }> }>;
+            };
+            const cursor = inv.tools[TOOL];
+            expect(cursor?.files.length ?? 0).toBeGreaterThan(0);
+            const rule = path.relative(path.join(home, '.cursor'), aDeployedRule(home)).split(path.sep).join('/');
+            expect(cursor?.digests?.[rule]?.installed_sha256).toBe(digestOf(aDeployedRule(home)));
+            const desktopMarker = path.join(home, 'Library', 'Application Support', 'Claude', 'agent-config.md');
+            expect(inv.tools['claude-desktop']?.digests?.['agent-config.md']?.installed_sha256).toBe(
+                digestOf(desktopMarker),
+            );
+
+            const valid = cli(VALIDATE, [], home, project);
+            expect(valid.status, valid.out).toBe(0);
+
+            // A new team member: same committed lock, a HOME with nothing installed.
+            const newcomer = mkTmp('own-ledger-newcomer-');
+            const replay = cli(SYNC, ['--dry-run'], newcomer, project);
+            expect(replay.status, replay.out).toBe(0);
+            expect(replay.out).toMatch(new RegExp(`${TOOL}\\s+→ ~/\\.cursor/ \\(missing\\)`));
+
+            // A lock committed before this change carries absolute files[] on a
+            // global entry; the next install rewrites it without them.
+            const legacy = fs
+                .readFileSync(lock, 'utf8')
+                .replace(
+                    /(- name: cursor\n(?:\s{4}\S.*\n)*)/,
+                    `$1    files:\n      - path: ${aDeployedRule(home)}\n        kind: deployed\n        sha256: null\n`,
+                );
+            fs.writeFileSync(lock, legacy);
+            expect(fs.readFileSync(lock, 'utf8')).toContain(home);
+            const second = install(home, project);
+            expect(second.status, second.out).toBe(0);
+            expect(fs.readFileSync(lock, 'utf8')).not.toContain(home);
         },
     );
 });

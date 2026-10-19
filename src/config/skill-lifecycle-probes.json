@@ -1,0 +1,57 @@
+{
+  "_comment": "First-host probes for road-to-skills-that-arrive-when-called 0.2, in the row shape of host-injection-effect.json (validated by recordProblems in src/scripts/_lib/injection_effect.ts) plus a host and an expiry. An `observed-*` row needs host_version, transcript and date; the transcripts are machine-local session files under ~/.claude/projects and are named, not committed. Every probe skill was named zz-arrival-probe-*, lived under the user skills root only for the probe, and was removed afterwards. Phase 4 of the roadmap is gated on rows (a) and (b) here being observed-true.",
+  "a-same-turn-pickup-symlink": {
+    "host": "claude",
+    "state": "observed-true",
+    "host_version": "2.1.302",
+    "transcript": "~/.claude/projects/-private-tmp-claude-501-sp-probe-proj/069ab1f1-9f18-4ca0-9046-0cba80ee0c50.jsonl; ~/.claude/projects/-private-tmp-claude-501-sp-probe-proj/2eff55cb-a222-47b5-9a1e-e63e37c3fc4a.jsonl",
+    "date": "2026-10-18",
+    "expiry": "2027-01-16",
+    "reason": "Probe (a), symlink. A `claude -p` session ran `ln -s` into ~/.claude/skills and then called the Skill tool by name in the same turn. In the first session the call returned `Launching skill: zz-arrival-probe-a2` on the first attempt. In the second (2eff55cb) the first call returned `Unknown skill: zz-arrival-probe-d1`, the skill appeared in the listing right after, and one retry launched it. So pickup is same-turn but races the directory watcher: a materialiser must expect one miss and retry once, never assume the first call lands. A second, unrelated live session on the same machine also received both new skills in its listing mid-turn."
+  },
+  "a-same-turn-pickup-copy": {
+    "host": "claude",
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "expiry": "2027-01-16",
+    "reason": "Probe (a), copy. Both attempts to `cp -R` a skill folder into ~/.claude/skills were refused by the host's auto-mode permission classifier (once inside the probe session, once from the lane that ran the probes), so the copy case was never written. Needs a run with a permission rule for that copy, or the owner running it."
+  },
+  "b-removed-skill-second-session": {
+    "host": "claude",
+    "state": "observed-true",
+    "host_version": "2.1.302",
+    "transcript": "~/.claude/projects/-private-tmp-claude-501-sp-probe-proj/069ab1f1-9f18-4ca0-9046-0cba80ee0c50.jsonl; ~/.claude/projects/<package checkout>/a0033114-4e57-4f4f-a961-0924a2dad4a5.jsonl",
+    "date": "2026-10-18",
+    "expiry": "2027-01-16",
+    "reason": "Probe (b). Listing: an entry is never withdrawn by a removal — both a resumed session and a second live session kept listing the removed skill. Already-loaded body: it stays in the conversation (the resumed session restated the token without a tool call). Invocation differs by process: a RESUMED session (new process) answered `Unknown skill: zz-arrival-probe-a2` after the symlink was removed although its target still existed; a session that stayed LIVE throughout still launched a skill whose symlink had been removed while the target folder existed, and answered `Unknown skill` only once the target was gone too. So removing the entry does not stop a live session that already resolved it, and removing the content does — the shape step 4.4's lease must hold for."
+  },
+  "c-session-start-reload-flag": {
+    "host": "claude",
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "expiry": "2027-01-16",
+    "reason": "Probe (c). The flag is documented: `hookSpecificOutput.reloadSkills: true` on SessionStart makes the host re-scan the skill and command directories after SessionStart hooks complete, because discovery otherwise runs before they finish (code.claude.com/docs/en/hooks, read 2026-10-18). Not observed: preparing a SessionStart hook that installs a skill was refused by the host's auto-mode permission classifier in the lane that ran (a), (b) and (d)."
+  },
+  "d-context-large": {
+    "host": "claude",
+    "state": "observed-true",
+    "host_version": "2.1.302",
+    "transcript": "~/.claude/projects/-private-tmp-claude-501-sp-probe-proj/2eff55cb-a222-47b5-9a1e-e63e37c3fc4a.jsonl",
+    "date": "2026-10-18",
+    "expiry": "2027-01-16",
+    "reason": "Probe (d). A skill carrying the retired package value `context: large` launched inline: no subagent or forked context was started, the body arrived as a message in the invoking conversation, and the model could see earlier turns including a canary word. The host neither errors on the unknown value nor forks on it, so before 1.1 the key was silently inert, not harmful — and no skill could have forked while it held the key."
+  },
+  "e-name-only-listing": {
+    "host": "claude",
+    "state": "observed-true",
+    "host_version": "2.1.296",
+    "transcript": "agents/evidence/analysis/host-skill-listing-override.md",
+    "date": "2026-10-13",
+    "expiry": "2027-01-16",
+    "reason": "Probe (e), read from the search roadmap's 0.1 evidence file rather than re-probed, as the step asks: `skillOverrides: name-only` keeps the listing entry without its description while invocation by the Skill tool and by `/name` both still work. The transcript pointer is that file, which carries the session pointers of the original runs."
+  }
+}

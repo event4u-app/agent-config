@@ -931,8 +931,10 @@ subagents:
   model_ceiling: ""
 
   # Maximum number of parallel subagent invocations
-  # Integer, default 3. Set to 1 to serialize. A limit the model reads
-  # from settings — no code counts spawns against it.
+  # Integer, default 3. Set to 1 to serialize. On Claude Code the installer
+  # writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on
+  # concurrent new spawns; whether that cap also bounds a resumed worker is
+  # unobserved.
   max_parallel: 3
 
   # Opt-in adversarial-verification-council (subagent-orchestration Mode 9,

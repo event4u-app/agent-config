@@ -755,6 +755,16 @@ function _uninstall_project(opts: Options): number {
             continue;
         }
 
+        if (entry['scope'] === 'global') {
+            // A global entry's files belong to the user-scoped ledger; a lock
+            // committed before they left it still lists `$HOME` paths, and the
+            // project-marker map below names a PROJECT file the global install
+            // never wrote. Neither is this command's to delete: `uninstall --global` is.
+            const verb = opts.dry_run ? 'would remove' : 'removed';
+            _print(_stdout, `  · ${tool}: ${verb} global-scope entry, no file touched (content: \`uninstall --global\`)`);
+            if (!opts.dry_run) removed_names.push(tool);
+            continue;
+        }
         if (!_is_v2_entry(entry)) {
             // v1 entry — keep the legacy single-marker behaviour.
             const [line, removed] = _remove_project_marker(project_root, tool, {

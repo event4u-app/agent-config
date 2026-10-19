@@ -108,7 +108,7 @@ twice, leaving the branch one iteration ahead of its own record.
    `approval-required`, `exhausted`, `stagnated`, `premise-invalidated` —
    declared once at `src/scripts/_lib/outcome_vocabularies.ts`
    (`RUN_TERMINAL_STATES`) and described in
-   [`terminal-states`](../../agent-src/contexts/execution/terminal-states.md).
+   [`terminal-states`](../../contexts/execution/terminal-states.md).
    A new exit condition maps onto an existing member or it is not a terminal
    state; never invent a value here.
 

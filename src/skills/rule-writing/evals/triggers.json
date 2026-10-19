@@ -1,0 +1,63 @@
+{
+    "skill": "rule-writing",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover creating a rule, rewriting one, deciding whether something should be a rule at all, the always-vs-auto classification, and converting a learning, with a German variant. Near-misses are the three exclusions this skill's SKILL.md names — multi-step workflow (skill-writing), reference material (guideline-writing), user-invoked action (command-writing). Counterexamples guard the 'rule' homonym in business validation and in lint configuration.",
+    "queries": [
+        {
+            "q": "add a rule that agents must never print secrets in their replies",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "rewrite src/rules/scope-control.md, the triggers fire on far too many prompts",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "should 'always run the formatter before commit' be a rule, or is it something else?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "is this new rule always-loaded or auto? it's 140 lines and I'm worried about the budget",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "Wir haben gelernt, dass Agents nie ungefragt Branches löschen dürfen — mach daraus eine Regel",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write a skill that walks an agent through migrating a Laravel app to Pest",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a multi-step workflow, which this skill's SKILL.md routes elsewhere → skill-writing"
+        },
+        {
+            "q": "draft a reference doc on our PHP naming conventions that skills can cite",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "reference material agents cite → guideline-writing, named in this skill's SKILL.md"
+        },
+        {
+            "q": "create a /cleanup slash command the user can run to prune stale branches",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a user-invoked action → command-writing, named in this skill's SKILL.md"
+        },
+        {
+            "q": "add a validation rule that the invoice date can't be in the future",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'rule' as business validation in application code, not an agent rule"
+        },
+        {
+            "q": "turn off the eslint rule no-console in the scripts folder",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'rule' as linter configuration, nothing to do with src/rules/"
+        }
+    ]
+}

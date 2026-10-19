@@ -83,7 +83,7 @@ rtk docker compose ps # compact container status
    completeness-critical commands).
 
 Installation and one-time setup are owned by
-[`/onboard`](../../commands/onboard.md). If the user asks to install rtk
+the setup wizard (`agent-config setup`). If the user asks to install rtk
 outside onboarding, follow the Installation section below and set
 `personal.rtk_installed: true` on success.
 

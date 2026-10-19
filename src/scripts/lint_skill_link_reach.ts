@@ -31,8 +31,12 @@
  * its own reported class — `docs/` is not delivered, and
  * `measure_docs_dead_links` owns that question. A link inside a fenced block or
  * an inline code span, or one carrying an angle-bracket placeholder, is not a
- * link. Other `SKILL.md` links that leave the skill directory are not gated by
- * this step; their unresolved count is printed so the class stays visible.
+ * link. Any other `SKILL.md` link that leaves the skill directory and resolves
+ * to nothing in the delivered tree is checked against the skill's SOURCE
+ * directory (`src/skills/<slug>/`): a target that exists there is the named
+ * repo-only class — real, but not delivered — and is reported; a target that
+ * exists in neither tree is broken and fails (road-to-steps-the-skill-cannot-skip
+ * AC-1).
  *
  * Exit codes: 0 clean · 1 unresolved link(s) · 2 usage / dead corpus.
  */
@@ -80,6 +84,9 @@ const STEPS_DIR = path.join('references', 'steps');
 
 /** The skill subdirectories a `SKILL.md` link may point into. */
 const OWN_SKILL_DIRS = /^(?:\.\/)?(?:references|scripts|assets|examples)\//;
+
+/** Where a delivered skill's source lives, relative to the repo root. */
+const SOURCE_SKILLS_ROOT = 'src/skills';
 
 /** A link that climbs out to `docs/`, which the installer does not deliver. */
 const DOCS_TARGET = /^(?:\.\.\/)+docs\//;
@@ -175,8 +182,8 @@ export interface ReachReport {
     unresolvedFiles: UnresolvedFileLink[];
     /** Links into `docs/` — not delivered; reported, never failing. */
     docsLinks: number;
-    /** Unresolved `SKILL.md` links that leave the skill directory — reported only. */
-    bodyEscapesUnresolved: number;
+    /** `SKILL.md` links whose target exists only in the source repository — reported, never failing. */
+    repoOnlyLinks: UnresolvedFileLink[];
     /** Reference files linking a sibling reference of their own skill. */
     siblingLinks: UnresolvedFileLink[];
 }
@@ -209,10 +216,10 @@ export function run(root: string, ledger?: GateLedger): ReachReport {
     const unresolved: UnresolvedLink[] = [];
     const unresolvedFiles: UnresolvedFileLink[] = [];
     const siblingLinks: UnresolvedFileLink[] = [];
+    const repoOnlyLinks: UnresolvedFileLink[] = [];
     let links = 0;
     let fileLinks = 0;
     let docsLinks = 0;
-    let bodyEscapesUnresolved = 0;
     const skillsRoot = path.join(root, DELIVERED_SKILLS_ROOT);
     for (const slug of slugs) {
         ledger?.plan(slug);
@@ -244,11 +251,11 @@ export function run(root: string, ledger?: GateLedger): ReachReport {
                 continue;
             }
             const exists = targetExists(skillDir, target);
-            if (!OWN_SKILL_DIRS.test(target)) {
-                if (!exists) bodyEscapesUnresolved += 1;
+            fileLinks += 1;
+            if (!exists && !OWN_SKILL_DIRS.test(target) && targetExists(path.join(root, SOURCE_SKILLS_ROOT, slug), target)) {
+                repoOnlyLinks.push({ file: `${slug}/SKILL.md`, target });
                 continue;
             }
-            fileLinks += 1;
             if (!exists) {
                 unresolvedFiles.push({ file: `${slug}/SKILL.md`, target });
                 bad += 1;
@@ -289,7 +296,7 @@ export function run(root: string, ledger?: GateLedger): ReachReport {
         fileLinks,
         unresolvedFiles,
         docsLinks,
-        bodyEscapesUnresolved,
+        repoOnlyLinks,
         siblingLinks,
     };
 }
@@ -469,8 +476,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 `${String(report.fileLinks)} relative link(s) across ` +
                 `${String(report.delivered)} delivered skill(s) all resolve.\n` +
                 `   reported, not gated: ${String(report.docsLinks)} link(s) into docs/ (not delivered — ` +
-                `measure_docs_dead_links owns them) · ${String(report.bodyEscapesUnresolved)} unresolved ` +
-                `SKILL.md link(s) leaving the skill directory.\n`,
+                `measure_docs_dead_links owns them) · ${String(report.repoOnlyLinks.length)} SKILL.md ` +
+                `link(s) to a repo-only target (exists in the source repository, not delivered).\n`,
         );
     }
     return 0;

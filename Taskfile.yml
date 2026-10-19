@@ -115,6 +115,7 @@ tasks:
       - task: check-refs
       - task: check-no-conflict-markers
       - task: check-secret-leak
+      - task: check-credential-spelling
       - task: check-claims
       - task: check-adr-frontmatter
       - task: check-adr-citations

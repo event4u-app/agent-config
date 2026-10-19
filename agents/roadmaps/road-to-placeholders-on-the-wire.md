@@ -74,6 +74,28 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-18, branch `drain/road-to-placeholders-on-the-wire-20261018`
+
+Phase 2 built as a module outside the dispatcher's import closure, so no hook
+bundle byte moves and no ratification is needed for it. 2.1b closed; 2.1 and 2.2
+built and held open on wiring (see each step). Identifier fixtures use a
+test-only IBAN rule, because the shipped rule table is credential-only until the
+sibling's 2.3. Phase 0 stays human-run, 1.3 waits for its release of readings,
+Phases 3–4 wait on 0.1/0.2 and 1.3, Phase 7 past 7.2 on `request-gateway-build`.
+
+**6.1 built, ratification refused three times, held as residue.** Branch
+`drain/road-to-placeholders-on-the-wire-rewrite-axis-20261018` carries the
+rewrite axis and its lint (`host_lowering.ts`, `.yaml`, `.json`,
+`lint_hook_manifest.ts`, the bundle note, +841 B). AI council, `anthropic` +
+`openai`, $0.00: round 1 refused `input: replace` on a binary-strings read (now
+`offered`, which authorizes nothing; absent is `unstated`); round 2 refused a
+probe that was any existing file and a gate that skipped propagation (now one
+fail-closed validator and a structured probe record); round 3 refused a
+non-mapping `rewrite:` reading as unstated and untested gate prerequisites —
+both fixed on the branch after the round. All three rounds agreed no authority
+is expanded. The three-round cap is reached, so the branch is not pushed: the
+next step is one more ratification round over its head, then the record.
+
 ## Execution status — 2026-10-16, branch `drain/placeholders-on-the-wire-20261016`
 
 One drain lane, scoped to steps no other lane holds. 7.1 closed.
@@ -188,7 +210,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 | D5 | reversible-technical | agent | Identifier scope: IBAN, payment card, e-mail outside the allowlist, phone with country code or context word, German tax ID with context; names and customers only from configured lists | The validated set of the sibling's 2.3; free-text names need a recogniser declared out of scope | the paired comparison shows a class costs more than it protects |
 | D6 | contested-technical | council:agents/evidence/council/identifier-table-at-rest-20261016.md | **(b) — no detected value of any class is persisted between events.** The table holds a per-session key, a keyed fingerprint, type, ordinal and an authenticated origin descriptor; every restoration re-derives from the origin and fails closed in five named outcomes, same-destination included | AI council, 2026-10-16, members `anthropic` + `openai`, prompt mode, 2 rounds, 2/2 concluded, no split, $0.00 (subscription transport). A `0600` mode decides which OS principals may read a file and is not a defence against same-user compromise, backup capture or crash residue; (a) would convert many dispersed disclosures into one durable one. Record: `agents/evidence/council/identifier-table-at-rest-20261016.md` | the capability becomes operationally unusable through prompt habituation (measured by adoption or reports, **not** by a prompt-rate threshold) · origins turn out to be commonly ephemeral, mutable or permission-sensitive · offline guessing against the fingerprint table is demonstrated on realistic low-entropy identifiers |
 | D6 | contested-technical | council:identifier-table-at-rest | How identifier values rest between hook processes | blocker `identifier-table-at-rest` | — |
-| D7 | product-owned | owner | Whether to build the request gateway | blocker `request-gateway-build` | — |
+| D7 | product-owned | council:agents/evidence/council/request-gateway-build-20261018.md | Build the request gateway, conditional on the human-run 7.2 probe passing criteria fixed before its result is read (subscription OAuth forwarded, thinking blocks survive rewriting, safe without `count_tokens`, each auth mode classified, no deal-breaking feature loss, bypass fails closed); a threat model and a conspicuous per-session opt-in come with 7.3. A failed critical criterion means (b) until the pinned host changes | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18; both seats: the policy needs no human, the probe does | the 7.2 probe fails a critical criterion, or the pinned host gains a hook that carries the typed prompt |
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | blocker `default-mode-for-consumers` | — |
 | D9 | reversible-technical | council:placeholders-phase1-scope-2026-10-14 (2/2 present, anthropic/claude-sonnet-4-5 and openai/codex-default) | Phase 1 is not built before its dependency; `observe` never mutates a view; the execution view comes from a closed dispatcher-owned list. Rejected: building the detector-independent half with a provisional token constant and credential-only counting (a persisted provisional grammar becomes a contract; credential-only counts give no identifier evidence); building a provisional detector and grammar here (duplicates the sibling's ownership). One seat would have landed 1.4's settings block now and the other would not; it was not taken, because the per-mode behaviour matrix it names is still unspecified | no step of `road-to-one-detector-and-the-senders-we-own` is checked on `main@90ed4e697` | the sibling's 0.1, 2.1 and 3.1 land, or the sibling is re-scoped so this roadmap owns the grammar |
 
@@ -265,7 +287,12 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       response timestamp)`; a database result is `(connection, query fingerprint,
       row identifier)`.
       verify: the serialised table contains no fixture value of any class, credential or identifier; a tool call that reads the table path is denied; a table older than the retention age is gone after the next `session_start`.
-- [ ] **2.1b Restoration fails closed, in five named outcomes.** Every
+      — 2026-10-18, partial: the table, its value-free serialisation, the
+      authenticated descriptors and the age prune exist and are tested as a
+      module. Open: the read refusal waits for the sibling's prevention guard
+      (its 1.1), and calling the prune at `session_start` edits a module in the
+      dispatcher's import closure, which needs a ratification round.
+- [x] **2.1b Restoration fails closed, in five named outcomes.** Every
       restoration re-derives the value from its origin object and matches the
       fingerprint first — **including a same-destination restoration**, because
       an origin that changed between detection and re-use would otherwise replay
@@ -274,12 +301,20 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       `SESSION_EXPIRED`; each carries a user-facing message and exactly one
       recovery path — explicit confirmation with the value shown.
       verify: a fixture per outcome, each asserting no value was restored; the same-destination case with a mutated origin lands on `ORIGIN_CHANGED` rather than restoring.
+      — 2026-10-18: `restoreToken` in `src/scripts/_lib/egress_session_table.ts`;
+      a fixture per outcome in `egress_session_table.test.ts`. Sensitivity: with
+      the digest match removed, the mutated-origin fixture went red.
 - [ ] **2.2 Continuity never resolves a token to the wrong value.** Text carried
       into a new session — handoff, memory recall, a resumed session — is
       re-issued at injection: restored through the predecessor's table while it
       exists, then replaced under the current key; a token whose table is gone
       becomes an explicitly dead form.
       verify: two sessions each hold a different IBAN as entity 1; a handoff from the first to the second never restores the second's value for the first's token; a resumed session resolves its own tokens and no other session's.
+      — 2026-10-18, mechanism only: `reissueIntoSession` and the fixtures of this
+      verify are green against the module. Not closed, because no injection
+      point calls it yet: no token outlives a dispatch until the stage mints
+      into the session table, so wiring handoff and memory recall now would
+      carry nothing.
 
 ## Phase 3 — Tool results carry placeholders (Claude Code → `replaced`)
 
@@ -476,7 +511,7 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
   channels keep working.
 
 ### blocker: request-gateway-build
-- **Status:** open — owner-reserved on the escalation condition (council 2026-10-16 split: `openai` DECIDE (a) conditional on 7.2, `anthropic` ESCALATE (b) with a staged opt-in); no round 2 was run because no input has changed since. Re-checked 2026-10-18, still unmet: step 7.2 is open and no 7.2 probe file exists, and that probe needs a real subscription login through a loopback base URL, so it is human-run whichever way the owner answers.
+- **Status:** open — on the human-run 7.2 probe only. The build question is decided: (a), conditional on 7.2 passing, by AI council (2/2, 2026-10-18), under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record `agents/evidence/council/request-gateway-build-20261018.md`. 7.3–7.7 proceed only once a 7.2 probe file exists and meets the pass criteria written there before its result is read; a failed critical criterion falls back to (b) with no further escalation. Was: council 2026-10-16 split (`openai` DECIDE (a) conditional on 7.2, `anthropic` ESCALATE (b) with a staged opt-in), before the delegation. Re-checked 2026-10-18, still unmet: step 7.2 is open and no 7.2 probe file exists, and that probe needs a real subscription login through a loopback base URL, so it is human-run whichever way the owner answers.
 - **Owner:** maintainer
 - **Blocks:** steps 7.3–7.7.
 - **What to do:** pick exactly one — (a) build the gateway, decided with the 7.2

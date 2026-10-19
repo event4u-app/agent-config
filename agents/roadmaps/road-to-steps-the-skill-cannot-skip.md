@@ -380,6 +380,20 @@ A split multiplies links. The gate that checks them comes first.
 The three-arm design and its decision rules are own analysis of the parallel
 plans this round carried; no external source is cited for them.
 
+*Status 2026-10-18 — not runnable in this pass; nothing below is started.*
+The instrument exists: `claude plugin eval` (Claude Code 2.1.302) takes
+`--runs`, `--model`, `--ablation`, `--max-cost-usd` and `--json`, and offers
+deterministic graders (`tool_order`, `tool_used`, `regex`, `file_exists`)
+beside the `llm` judge, so grading can stay off the implementer. Three things
+are missing, in order: (1) the corpus — 6.2 admits only tasks on which arm A
+demonstrably fails, which takes a calibration run of arm A that nobody has
+authorised; (2) the arm packaging — the tool's own baseline arm is *no plugin*,
+not the monolith, so arms A, B and C are three plugin directories run with
+`--ablation none`, and none is built; (3) the spend authorisation D17 requires,
+which waits for the computed maximum 6.4 produces. It has no grader that runs a
+script or reads an exit code, so a `check:<id>` exit is graded from the trace
+(`tool_order`, `regex`) or not at all — 6.3 has to say which.
+
 - [ ] **6.1 Pre-register** under `agents/evidence/preregistration/`: arm A the
       monolith (pilot before Phase 4), arm B the split without the cursor (the
       agent follows the head's step table itself), arm C the split with the
@@ -410,6 +424,8 @@ plans this round carried; no external source is cited for them.
       3 × 3 × 30 workload, and the aggregation rule with its confidence
       treatment, so a nominal 20 % is not read off three noisy runs. No run
       starts until the owner has authorised that stated monetary maximum (D13).
+      *Revisited 2026-10-18 (D17):* the authorisation is decided with the
+      computed maximum in hand, not before; nothing here is authorised yet.
       verify: `grep -cE '^(runs_per_case: 3|model_pin:|retry_policy:|max_tokens:|max_cost_usd:|aggregation:)' agents/evidence/preregistration/procedure-cursor.md` -> /^6$/
 - [ ] **6.5 Decide by the pre-registered rule.** B beats A by the bar and C ≈ B →
       ship the split, cursor stays opt-in. C beats B by the bar → the cursor
@@ -451,6 +467,7 @@ plans this round carried; no external source is cited for them.
 | D14 | reversible-technical | council:steps-2425-phase45 | Phase 4 and Phase 5 are council-decidable, not owner-reserved, and need not wait for Phase 6. "Consumer-visible" alone is no reserved category. Both carry pre-merge conditions: 4.2 tightened to ordered, exactly-once, link-resolved conservation; 4.5 package shipping; 5.5's pilot commands keep their path; 5.8 kill switch and state integrity | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both (a) for both phases; an earlier run had called both owner-reserved on its own judgement without routing it | an existing public compatibility promise is found that skills are a single self-contained `SKILL.md` |
 | D15 | reversible-technical | council:steps-2425-d7 | D7's revisit-if fired: F3 is true for `design-review` and `memory-consolidation`. The pilot set is re-picked (4.0) before any split; `memory-consolidation` is replaced; a shape-only check (a key exists) does not count as a verified exit, only a check that corroborates the output against the repository; a judgement step is sequenced, not verified, and needs 5.7's adjudication protocol | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both reject keeping all three unchanged; one seat keeps `design-review` as a judgement control, the other asks to separate verified and sequenced step classes, and 4.0 decides between them | 4.0 finds no replacement that meets the properties |
 | D16 | reversible-technical | council:steps-4-0-pilots | Pilots are `existing-ui-audit` and `project-analyzer`. `design-review` is dropped, not kept as a control: verified and sequenced exits are reported separately inside each pilot instead. `design-system-capture` was admitted only if a later step depends on an earlier artefact, an exit corroborates it against the repository, and its prerequisite run of another skill is resolved; its step 2 needs `existing-ui-audit` first (a skill-to-skill chain, K1) and a hard dependency means rewriting the procedure (K5), so the set is two | AI council 2026-10-18, anthropic + openai, 2/2, $0.00, both name the same two and condition the third identically (local council session `steps-4-0-pilots`); record `agents/evidence/analysis/procedure-pilot-selection.md` | a third skill meets P1–P3 without a content change |
+| D17 | spend-exhaustion | council:agents/evidence/council/procedure-cursor-spend-d13-20261018.md | D13 revisited under the delegation: Phase 6 spend is **not** authorised yet. 6.1–6.4 are written first with the pinned model and settings, the exact invocation path and transport, retry policy, aggregation, and a token estimate translated to a worst-case USD figure; the authorisation is then put to the council with that figure before any measured run. A subscription-only authorisation was refused because the eval workload's transport is not established | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); `cost.budgets` is unset on every layer, so no delegated spend threshold is recorded | the pre-registration states its computed maximum |
 | D9 | reversible-technical | evidence | The stale `existing-ui-audit` link is deleted, not "fixed" by moving sections out | `skill_linter.ts:98`; `b3cc0ada6` | the linter stops requiring `Output format` or `Gotcha` in the body |
 | D10 | reversible-technical | evidence | The canon contradiction named in Context is this file's work, not an open question | Phase 2.1 replaces `skill-writing:104` and `:126-129` with one statement; the closure scan's `contradictory` hit is that finding | — |
 | D11 | reversible-technical | evidence | Closure-scan `typed-op` hits on the word "merge" are slug text, not an operation | Both hits are the slug `road-to-a-retro-the-merge-runs`; this file merges nothing | — |
@@ -487,23 +504,29 @@ plans this round carried; no external source is cited for them.
   names.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The split makes a pilot less followed, not more | product | A head that keeps less than it should is loaded and not applied (`skill-writing:121-122`). | 2.1 keeps every write heuristic and all required sections in the head; arm B isolates the split's own effect; F1 stops the rollout. | Phase 6 — Measure before anything becomes a default |
 | 2 | The cursor costs more rounds than it saves | product | Each step adds at least one round; the gain may not cover it. | One call per step (5.2); rounds are a pre-registered metric; D8's bar includes them. | Phase 5 — The cursor in the `/work` engine (default-off) |
 | 3 | The compaction line re-runs a finished step | implementation | A position line read as an instruction executes a `SUCCESS` step again. | State phrasing, disk-only source, provenance in the line; F5 removes the line on any occurrence. | Phase 5 — The cursor in the `/work` engine (default-off) |
-| 4 | Widening the link gate reds unrelated skills | implementation | 1.1 surfaces 40 unresolved links at once. | 1.2 repairs them in the same change; `docs/` links are a reported class, not a failure. | Phase 1 — Links the gate can see |
+| 4 | Widening the link gate reds unrelated skills | implementation | 1.1 surfaced 40 unresolved links at once; the AC-1 widening to links leaving the skill directory surfaced 84 more. | 1.2 repairs them in the same change; `docs/` links and repo-only targets are reported classes, not failures. Held through AC-1 (2026-10-18): 30 rewritten by the projection, 25 repaired, 36 reported. | Phase 1 — Links the gate can see |
 | 5 | The measurement is spend-bearing | product | Three arms × three runs × 20 tasks (two pilots, D16) cost model calls. | Pre-registration fixes the size before the first run; the run is the operator's call and is not started by this roadmap's authoring. | Phase 6 — Measure before anything becomes a default |
 | 6 | A new lint and a new test file trip size and gate ratchets | implementation | New gates are counted by coverage ratchets. | Register each gate with its scanned count and self-test in the change that adds it. | Phase 3 — A procedure as data, with no runtime |
 | 7 | A shape check passes for work that was not done | implementation | A check that a state key exists proves the agent wrote something, not that the inventory is right, so the cursor would advance on a claim. | D15: only a check that corroborates the output against the repository counts as a verified exit; a judgement step is labelled sequenced and goes through 5.7's adjudication protocol. | Phase 4 — Three pilots, split without losing a line |
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** Every relative link in a delivered `SKILL.md` or
+- [x] **AC-1** Every relative link in a delivered `SKILL.md` or
       `references/*.md` resolves, or is reported by a gate as a named
-      non-delivered class; a link one `../` short fails CI.
+      non-delivered class; a link one `../` short fails CI. *Met 2026-10-18:*
+      the last ungated class — `SKILL.md` links leaving the skill directory,
+      84 unresolved — is closed. 30 were `../../agent-src/…` links the
+      projection did not map, now rewritten onto `dist/agent-src/`; 25 were
+      broken in both trees and are repaired; a target that exists only in the
+      source repository is the named repo-only class (36), reported and never
+      failing; anything else fails `lint_skill_link_reach`.
 - [x] **AC-2** The order of a pilot's procedure is held by code: with the
       cursor, step n+1 is not emitted until step n's exit is met, recorded
       `judgement`, or recorded `skipped: <reason>`.

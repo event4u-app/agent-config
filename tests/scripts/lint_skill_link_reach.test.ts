@@ -79,6 +79,25 @@ describe('lint_skill_link_reach', () => {
         expect(report.docsLinks).toBe(1);
     });
 
+    it('body-escape: a SKILL.md link leaving the skill that resolves in neither tree fails', () => {
+        skill('a', 'SKILL.md', 'see [gone](../../commands/gone.md)\n');
+
+        expect(main(['--root', tmp, '--quiet'])).toBe(1);
+        expect(run(tmp).unresolvedFiles).toEqual([{ file: 'a/SKILL.md', target: '../../commands/gone.md' }]);
+    });
+
+    it('body-escape: a link whose target exists only in the source tree is the named repo-only class', () => {
+        skill('a', 'SKILL.md', 'see [s](../../scripts/tool.ts) and [r](../../rules/r.md)\n');
+        write('src/skills/a/SKILL.md', 'see [s](../../scripts/tool.ts)\n');
+        write('src/scripts/tool.ts', 'export {};\n');
+        write('dist/agent-src/rules/r.md', 'rule\n');
+
+        expect(main(['--root', tmp, '--quiet'])).toBe(0);
+        const report = run(tmp);
+        expect(report.unresolvedFiles).toEqual([]);
+        expect(report.repoOnlyLinks).toEqual([{ file: 'a/SKILL.md', target: '../../scripts/tool.ts' }]);
+    });
+
     it('sibling-ratchet: a reference linking a sibling reference counts, and a count above the ceiling fails', () => {
         skill('a', 'SKILL.md', 'see [one](references/one.md) and [two](references/two.md)\n');
         skill('a', 'references/one.md', 'see [two](two.md#part) and [self](one.md#top) and [b](../../b/SKILL.md)\n');

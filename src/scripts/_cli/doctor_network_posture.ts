@@ -76,9 +76,9 @@ export interface TrafficVariable {
      * May THIS PACKAGE write the variable into the host env block?
      *
      * `false` on both traffic variables and it is not a policy setting — it is a
-     * structural fact: `install.ts`'s `WRITABLE_HOST_ENV` is a two-row allow
-     * table and the settings schema admits only those two keys, so neither
-     * traffic variable is expressible anywhere in the write path. Reported
+     * structural fact: `WRITABLE_HOST_ENV` is an allow table naming neither
+     * traffic variable, and the settings schema admits no key for either, so
+     * neither is expressible anywhere in the write path. Reported
      * because a consumer reading `set` on a row deserves to know whether this
      * package could have been the one that set it.
      */

@@ -138,6 +138,35 @@ describe('1.1 — origin comes from the lockfile, and both same-named skills ran
     });
 });
 
+describe('a global entry with no files[] is claimed through the user-scoped ledger', () => {
+    // Step 3.3 of road-to-an-ownership-record-that-belongs-to-the-user: a
+    // consumer lock no longer records a global entry's files[], so a skill
+    // this package deployed into the host-global root must be claimed by the
+    // deploy inventory or it reads as a neighbour's.
+    it('a ledger-listed global skill is package, an unlisted one is still home', () => {
+        const project = tmp('nb-ledger-proj-');
+        const home = tmp('nb-ledger-home-');
+        write(
+            project,
+            'agents/installed-tools.lock',
+            'schema_version: 2\ntools:\n  - name: claude-code\n    scope: global\n    bridge_marker: ~/.claude/\n',
+        );
+        const inventory = path.join(home, 'deployed-files.json');
+        write(
+            home,
+            'deployed-files.json',
+            JSON.stringify({
+                schema_version: 2,
+                tools: { 'claude-code': { anchor: `${home}/.claude/`, files: ['skills/ours/SKILL.md'] } },
+            }),
+        );
+        const claims = packageClaimedPaths(project, inventory);
+        const originOf = makeSkillOriginResolver(project, { claims });
+        expect(originOf(path.join(home, '.claude/skills/ours/SKILL.md'))).toBe('package');
+        expect(originOf(path.join(home, '.claude/skills/theirs/SKILL.md'))).toBe('home');
+    });
+});
+
 describe('1.2 — overlap from the two-root mode of the existing audit', () => {
     it('a near-duplicate foreign skill yields also: and compat: overlapping; a disjoint one unclassified', () => {
         const project = tmp('nb-ov-project-');

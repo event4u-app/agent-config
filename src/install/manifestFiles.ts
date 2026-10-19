@@ -310,3 +310,27 @@ export function preservedIndex(
     }
     return out;
 }
+
+/**
+ * Clear `files[]` on the global-scope entries of `deployed`, in place.
+ *
+ * A consumer commits this lock (`README.md` § Team reproducibility), and a
+ * global entry's files are `$HOME`-rooted absolute paths of whoever installed.
+ * The user-scoped ledger (`ownershipLedger.ts`) holds global ownership, and
+ * `sync` replays a global entry from `name`, `scope` and `bridge_marker` alone,
+ * so the entry stays and its files go. An empty list is written as no `files`
+ * key at all, which is also how a lock committed earlier loses its paths.
+ *
+ * Only for tools whose global deploy ran this install: that run just recorded
+ * their digests in the ledger. A lock-only digest of any other tool is the one
+ * record of a pre-ledger edit, and dropping it first would re-arm the overwrite.
+ */
+export function dropGlobalScopeFiles(
+    entries: ManifestFileEntry[],
+    deployed: ReadonlySet<string>,
+): ManifestFileEntry[] {
+    for (const entry of entries) {
+        if (entry['scope'] === 'global' && deployed.has(String(entry['name']))) entry['files'] = [];
+    }
+    return entries;
+}

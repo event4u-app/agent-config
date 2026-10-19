@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
+import { verdictFor as credentialReadVerdict } from '../../src/scripts/hooks/block_credential_reads.js';
 import { check_envelope as kernelRuleGuard } from '../../src/scripts/hooks/block_kernel_rule_writes.js';
 import { check_envelope as plumbingGuard } from '../../src/scripts/hooks/block_plumbing_writes.js';
 
@@ -26,7 +27,10 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * both paths. The two that can deny besides the guards are `evidence-independence`,
  * which let both edits through the built dispatcher with the guards, and
  * `one-question-per-ask`, which reads only the question tool. The rest are
- * advisory in the manifest and cannot deny.
+ * advisory in the manifest and cannot deny. `block-credential-reads` (bound
+ * 2026-10-18) can deny, and refuses only a read of a credential-class file or of
+ * the process environment; the case below sends the same three envelopes through
+ * its `verdictFor` for both paths and asserts no refusal.
  *
  * When the last case fails because a concern was bound: if it can deny (its
  * manifest `severity` is `blocking`), send an edit of both paths through the
@@ -36,6 +40,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  */
 const REVIEWED_PRE_TOOL_USE = [
     'block-config-weakening',
+    'block-credential-reads',
     'block-kernel-rule-writes',
     'block-no-verify',
     'block-plumbing-writes',
@@ -98,6 +103,12 @@ describe('the two guards the gate header names', () => {
         }
         for (const env of envelopes('src/rules/non-destructive-by-default.md')) {
             expect(kernelRuleGuard(env)[0], `kernel-rule guard, ${env.tool_name}`).toBe(true);
+        }
+    });
+
+    it.each(UNGUARDED)('the credential-read guard does not deny an edit of %s', (rel) => {
+        for (const env of envelopes(rel)) {
+            expect(credentialReadVerdict(env.tool_name, env.tool_input), env.tool_name).toBeNull();
         }
     });
 

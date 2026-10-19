@@ -187,6 +187,25 @@ routed rule body with nothing in the session saying so.
   takes no hand entries, so it is verifiable only at the release that ships 2.1.
   The PR that ships 2.1 carries `Consumer-Impact: notice` and names the three
   concerns for that release head.
+  *Corrected 2026-10-18:* the release will **not** see that trailer. #2455 was
+  squash-merged (`3f8c98e74`), its `Consumer-Impact: notice` sits in an inner
+  paragraph, and `parse_impact_trailers` reads only the body's final paragraph,
+  which GitHub's squash body makes a `Co-authored-by:` line — measured over
+  `16.5.0..origin/main`, 5 squash commits lose their trailer this way, 2 of them
+  `notice`. So the changelog half needs the three concerns named in the release
+  head by hand, whatever the class. An AI council round the same day split on
+  that class (`anthropic`: a `notice` in the curated head; `openai`: a
+  `BREAKING_CHANGES.md` Pending row), so no note is placed yet; both seats agree
+  a note is owed and the trailer loss is a release-tooling defect. Record:
+  `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
+  *Note placed (2026-10-19):* #2479 fixed the trailer loss — the release parser
+  now reads `3f8c98e74` as `notice, recorded` — and a second council round
+  (D10) settled the class as breaking: `BREAKING_CHANGES.md` carries a Pending
+  row naming `block-no-verify`, `block-kernel-rule-writes` and
+  `block-plumbing-writes`. What stays open is only the release itself: the cut
+  that ships 2.1 moves that row into its per-major table and writes the
+  `### Breaking` CHANGELOG entry, and no release has been cut since 16.5.0.
+  Cutting one is a release action this roadmap does not own.
 
 ## Phase 5 — The plugin channel says what it carries
 
@@ -250,6 +269,7 @@ plugin ships no dispatcher of its own (D4).
 | D7 | reversible-technical | agent | The staged runtime carries the bundle, `dist/agent-src`, the data files of `src/scripts`, `src/config`, `package.json`, and `node_modules/yaml` | Measured by running the real bundle from a stage: it reads `src/scripts/hooks/host_lowering.yaml` and resolves `yaml` through a `createRequire` the bundler did not inline; the rest of `src/scripts` is 27 MB of TypeScript the bundle already contains | a concern reads a package file outside the staged set, or the bundle stops resolving `yaml` at run time |
 | D8 | reversible-technical | agent | The install thins only on a carrier the stripped-environment probe reached | A layer thinned onto a dead carrier would print 3.1's line and restore at the next session — a thin that is undone before it is used; refusing it up front is the same outcome without the round trip | the probe reports not-reached on a machine whose real launcher does reach the dispatcher |
 | D9 | reversible-technical | agent | On Windows the install and doctor do not probe, and thinning keeps its earlier behaviour | There is no `/bin/sh` to run the probe with; recording "not reached" would be a measurement that was never taken | a Windows host is found to run the hook commands through a shell the probe can use |
+| D10 | contested-technical | council:hook-carrier-release-note-class-20261019 | The #2455 behaviour change is released as breaking: a `BREAKING_CHANGES.md` Pending row naming the three `fail_closed` guards, moved into the per-major table and a `### Breaking` entry by the release that carries it | Second round 2026-10-19: `anthropic` moved B2 → B1 on the new input (#2479 fixed the trailer loss; ADR-290 makes the next release a major anyway); `openai` chose B1 in round one and could not answer round two (codex exit 1). Both seats' latest answers are B1; the round itself was degraded 1/2 | a full 2/2 round returns anything other than B1, or the release carrying the row is cut as a minor |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->

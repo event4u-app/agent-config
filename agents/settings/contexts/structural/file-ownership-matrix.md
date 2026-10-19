@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **618**
-- Edges (incl. self-WRITE): **2349**
+- Files indexed: **619**
+- Edges (incl. self-WRITE): **2351**
 
 ## READ_ONLY edges
 
@@ -1154,6 +1154,7 @@
 | `.agent-src.uncondensed/skills/js-library-packaging/SKILL.md` | `.agent-src.uncondensed/skills/conventional-commits-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/js-library-packaging/SKILL.md` | `.agent-src.uncondensed/skills/standards-from-config/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/js-library-packaging/SKILL.md` | `.agent-src.uncondensed/skills/ui-component-architect/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md` | `.agent-src.uncondensed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md` | `.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md` | `.agent-src.uncondensed/skills/judge-code-quality/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/judge-artifact-completeness/SKILL.md` | `.agent-src.uncondensed/skills/judge-security-auditor/SKILL.md` | `body_link` | 1 |
@@ -1748,7 +1749,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 65 |
+| `context` | 66 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 395 |

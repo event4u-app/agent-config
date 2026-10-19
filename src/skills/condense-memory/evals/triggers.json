@@ -1,0 +1,63 @@
+{
+    "skill": "condense-memory",
+    "last_eval": "2026-10-18",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-18 under road-to-steps-the-skill-cannot-skip AC-1, which repaired dead links in this skill's SKILL.md and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the input-side telegraph pass over always-loaded memory files, in the forms the skill names: over-budget AGENTS.md / CLAUDE.md / .cursorrules, the de-condense round-trip, and the explicit 'shrink' ask. Near-misses take the skill's own exclusions where they map to a skill: the Thin-Root pointer contract (agents-md-thin-root), human-facing prose that must stay verbatim (humanizer for tone work), and a generated projection that must be edited in src/ (skill-writing as the source-side owner). Counterexamples guard 'condense' as summarising a meeting and memory as RAM.",
+    "queries": [
+        {
+            "q": "CLAUDE.md is over 4,000 chars, condense it so it costs fewer input tokens",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "shrink our .cursorrules — it's 220 lines and loaded on every prompt",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "telegraph the prose paragraphs in GEMINI.md but leave the code fences alone",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "I need to hand-edit the condensed AGENTS.md — restore the original first",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "die CLAUDE.md ist zu lang und wird bei jedem Prompt geladen — bitte verdichten",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "AGENTS.md needs more pointers and fewer inline paragraphs to meet the 40% ratio",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "same file, but the fix is the Thin-Root pointer contract, not telegraph grammar → agents-md-thin-root, which this skill's SKILL.md names as the first resort"
+        },
+        {
+            "q": "make this PR description shorter and less robotic",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a deliverable written for a human reader, which this skill's Do-NOT list keeps verbatim; tone and phrasing work → humanizer"
+        },
+        {
+            "q": "the skill text in .claude/skills is too wordy, cut it down",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a generated projection this skill refuses to condense; the edit belongs in the src/ skill source → skill-writing"
+        },
+        {
+            "q": "condense the notes from today's standup into three bullets",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'condense' homonym — summarising content, not reducing an always-loaded file's token cost"
+        },
+        {
+            "q": "the PHP worker runs out of memory on large imports",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'memory' homonym — runtime RAM, not memory files"
+        }
+    ]
+}

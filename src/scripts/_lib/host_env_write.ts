@@ -2,7 +2,7 @@
  * The only host environment variables this package will ever write.
  *
  * WHY ITS OWN MODULE. One place owns the question "which host variable may this
- * package write", and the answer is a two-row allow table rather than a rule
+ * package write", and the answer is a three-row allow table rather than a rule
  * applied at a call site. `install.ts` imports it; nothing else writes host env.
  * The move out of `install.ts` also keeps that file, already far over its size
  * cap, from paying for this feature — the same reason the doctor's
@@ -13,12 +13,15 @@
  * the host's update-disabled resolver, the blanket one as its THIRD RUNG
  * (measured on Claude Code 2.1.284, `docs/setup/host-traffic-environment.md`).
  * A writer able to express either could disable a consumer's security updates.
- * Owner-decided 2026-09-30 that it never may, and an allow table of two holds
- * that where a deny list of two would have to stay complete as the host grows
- * more variables.
+ * Owner-decided 2026-09-30 that it never may, and an allow table holds that
+ * where a deny list would have to stay complete as the host grows more
+ * variables.
  *
- * Both writable entries are request SIZE caps. Neither suppresses a call, an
- * update check or a download — they bound how big a request is, never how many.
+ * Two writable entries are request SIZE caps; the third, owner-approved
+ * 2026-10-14, is the host's
+ * subagent CONCURRENCY cap. None suppresses a call, an update check or a
+ * download — they bound how big a request is or how many workers run at once,
+ * never whether a call happens.
  */
 
 import * as fs from 'node:fs';
@@ -26,11 +29,27 @@ import * as path from 'node:path';
 
 import * as YAML from 'yaml';
 
-/** The allow table. Two rows, and adding a third is a governance change. */
-export const WRITABLE_HOST_ENV: readonly { readonly variable: string; readonly settingsKey: string }[] = [
-    { variable: 'BASH_MAX_OUTPUT_LENGTH', settingsKey: 'bash_max_output_length' },
-    { variable: 'MAX_MCP_OUTPUT_TOKENS', settingsKey: 'max_mcp_output_tokens' },
+/**
+ * The concurrency row's ceiling. The row exists to bound fan-out, so a value
+ * past this is refused rather than written: an unbounded cap would turn the
+ * one row that limits spend into a way to raise it.
+ */
+export const MAX_CONCURRENT_SUBAGENTS = 64;
+
+/**
+ * The allow table. Three rows, and adding a fourth is a governance change.
+ * `settingsKey` is the dotted path into the settings document.
+ */
+export const WRITABLE_HOST_ENV: readonly {
+    readonly variable: string;
+    readonly settingsKey: string;
+    readonly max?: number;
+}[] = [
+    { variable: 'BASH_MAX_OUTPUT_LENGTH', settingsKey: 'host_environment.request_size_caps.bash_max_output_length' },
+    { variable: 'MAX_MCP_OUTPUT_TOKENS', settingsKey: 'host_environment.request_size_caps.max_mcp_output_tokens' },
+    { variable: 'CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS', settingsKey: 'subagents.max_parallel', max: MAX_CONCURRENT_SUBAGENTS },
 ];
+
 
 /** Where a project's settings document lives, canonical first. */
 const SETTINGS_CANDIDATES: readonly string[][] = [
@@ -78,14 +97,16 @@ export function readSettingsDoc(projectRoot: string): unknown | null {
  * writing a value the host would silently reinterpret is worse than writing none.
  */
 export function hostEnvBlock(settings: unknown): Record<string, string> | null {
-    const root = settings as Record<string, unknown> | null | undefined;
-    const he = root?.['host_environment'] as Record<string, unknown> | undefined;
-    const caps = he?.['request_size_caps'] as Record<string, unknown> | undefined;
-    if (caps === undefined) return null;
     const out: Record<string, string> = {};
-    for (const { variable, settingsKey } of WRITABLE_HOST_ENV) {
-        const v = caps[settingsKey];
-        if (typeof v === 'number' && Number.isInteger(v) && v > 0) out[variable] = String(v);
+    for (const { variable, settingsKey, max } of WRITABLE_HOST_ENV) {
+        let v: unknown = settings;
+        for (const part of settingsKey.split('.')) {
+            v = v !== null && typeof v === 'object' ? (v as Record<string, unknown>)[part] : undefined;
+        }
+        // A safe integer, so `String(v)` is the digits the host parses back.
+        if (typeof v !== 'number' || !Number.isSafeInteger(v) || v <= 0) continue;
+        if (max !== undefined && v > max) continue;
+        out[variable] = String(v);
     }
     return Object.keys(out).length === 0 ? null : out;
 }
@@ -106,6 +127,6 @@ export function withHostEnv(
 ): Record<string, unknown> {
     const env = hostEnvBlock(readSettingsDoc(projectRoot));
     if (env === null) return bridge;
-    announce(`.claude/settings.json: wrote ${Object.keys(env).join(', ')} (request-size caps)`);
+    announce(`.claude/settings.json: wrote ${Object.keys(env).join(', ')} (request-size and concurrency caps)`);
     return { ...bridge, env };
 }

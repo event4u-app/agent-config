@@ -387,3 +387,22 @@ describe('is_projection_stale / list_changed_md — the post-ADR-201 basis', () 
         expect(fs.existsSync(path.join(tmp, 'internal'))).toBe(false);
     });
 });
+
+describe('_rewrite_paths — source-tree agent-src links', () => {
+    // road-to-steps-the-skill-cannot-skip AC-1: a skill at src/skills/<slug>/ that
+    // links `../../agent-src/contexts/x.md` resolves in the source tree and to
+    // nothing in dist/agent-src/, where the `agent-src/` segment does not exist.
+    it('maps an agent-src link onto the projection root at any depth', () => {
+        const skill = '---\nname: a\n---\nsee [c](../../agent-src/contexts/execution/x.md) and [d](../../agent-src/commands/)\n';
+        expect(condense._rewrite_paths(skill, 'skills/a/SKILL.md')).toContain(
+            '[c](../../contexts/execution/x.md) and [d](../../commands/)',
+        );
+        const command = 'see [t](../../../agent-src/templates/roadmaps.md)\n';
+        expect(condense._rewrite_paths(command, 'commands/x.md')).toBe('see [t](../templates/roadmaps.md)\n');
+    });
+
+    it('leaves a non-link mention and a dist/agent-src path untouched', () => {
+        const body = 'the `../../agent-src/contexts/` tree and [p](../../dist/agent-src/rules/r.md)\n';
+        expect(condense._rewrite_paths(body, 'skills/a/SKILL.md')).toBe(body);
+    });
+});

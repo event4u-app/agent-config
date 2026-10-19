@@ -134,7 +134,7 @@ composition and activation **within** the form the static gate already
 picked — severity never overrides the form gate, the Iron Law, or any
 safety floor. Guidance, not a new object class (persona-catalog
 disposition). Severity→composition table + escalation rule →
-[`subagent-modes-detail` § Severity-conditioned team composition](../../agent-src/contexts/execution/subagent-modes-detail.md).
+[`subagent-modes-detail` § Severity-conditioned team composition](../../contexts/execution/subagent-modes-detail.md).
 
 ## The nine modes
 
@@ -146,12 +146,12 @@ model pairing. Defaults come from
 
 Descriptive lookup material (per-mode topology table, anti-drift default,
 glossary) lives in
-[`subagent-topologies`](../../agent-src/contexts/execution/subagent-topologies.md) —
+[`subagent-topologies`](../../contexts/execution/subagent-topologies.md) —
 pull it for capacity planning; it is metadata, not runtime-enforced.
 
 Per-mode decision rows (when to use / when not / model pairing) and the
 mode-2 stage-routing contract live in
-[`subagent-modes-detail` § Modes 1–6](../../agent-src/contexts/execution/subagent-modes-detail.md) —
+[`subagent-modes-detail` § Modes 1–6](../../contexts/execution/subagent-modes-detail.md) —
 pull them at dispatch time.
 
 ### 1. do-and-judge
@@ -202,7 +202,7 @@ leaks into the next. Use for a multi-step cross-wing chain (≥2 senior
 skills, each ≥30 min); not for fast iteration under 30 min (overhead
 dominates). Full handoff shape, example chain, competitive per-candidate
 isolation, and the no-auto-merge Hard Floor →
-[`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 7.
+[`subagent-modes-detail`](../../contexts/execution/subagent-modes-detail.md) § Mode 7.
 
 ### 8. do-with-live-app-judge (gated — UI-heavy tasks)
 
@@ -212,7 +212,7 @@ reading the diff. Use for UI-heavy change where "looks right in the diff"
 ≠ "works in the app"; not for backend/logic (a diff judge is cheaper).
 Experimental until `verdict_changed_outcome` telemetry proves it. Rubric,
 adoption gate, and the async-verifier future candidate →
-[`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 8.
+[`subagent-modes-detail`](../../contexts/execution/subagent-modes-detail.md) § Mode 8.
 
 ### 9. adversarial-verification-council (gated — opt-in, advisory)
 
@@ -226,7 +226,7 @@ Mode 6 it emits a **findings-union**, not a go/no-go verdict. **Advisory only �
 never auto-gates (Hard Floor).** Default-off (`subagents.adversarial_council`);
 opt-in high-risk changes only; registered claim + high-risk tier need
 cross-*vendor* skeptics. Invariants, skeptic prompt, reconciliation, prove-or-drop
-gate → [`subagent-modes-detail`](../../agent-src/contexts/execution/subagent-modes-detail.md) § Mode 9
+gate → [`subagent-modes-detail`](../../contexts/execution/subagent-modes-detail.md) § Mode 9
 + [`prompts/adversarial-verification-council.md`](prompts/adversarial-verification-council.md)
 
 > **Disposition (2026-07-28, honest null).** The adversarial-council finding-
@@ -246,7 +246,7 @@ four statuses — `DONE` · `DONE_WITH_CONCERNS` · `NEEDS_CONTEXT` ·
 `BLOCKED` — no free-form alternatives; orchestrators route on status
 mechanically. Meaning/required-keys table, why-fixed rationale, and the
 `NEEDS_CONTEXT`-vs-`BLOCKED` distinction →
-[`subagent-modes-detail` § Status taxonomy](../../agent-src/contexts/execution/subagent-modes-detail.md).
+[`subagent-modes-detail` § Status taxonomy](../../contexts/execution/subagent-modes-detail.md).
 
 **The envelope is the ONLY return channel** (token-economy-dispatch
 Phase 6). A worker writes its full output to disk (runtime artifact dir,
@@ -267,7 +267,7 @@ Edits to a prompt do not bloat this skill against the 400-line sunset
 trigger. Eight prompt files cover modes 1–7 and 9 (the standalone judge
 reuses [`prompts/do-and-judge.md`](prompts/do-and-judge.md); mode 8's
 live-app rubric lives in
-[`subagent-modes-detail` § Mode 8](../../agent-src/contexts/execution/subagent-modes-detail.md));
+[`subagent-modes-detail` § Mode 8](../../contexts/execution/subagent-modes-detail.md));
 each prompt cites all four taxonomy statuses — see
 [`prompts/README.md`](prompts/README.md).
 
@@ -340,7 +340,7 @@ After every auto-dispatched run, write one audit-log-v1 line
 (`input_kind: "orchestration"`) via the `orchestration_record` recorder —
 never hand-author the JSON. Line shape, field semantics, recorder
 invocation, and `token_delta` sourcing priority →
-[`orchestration-telemetry` § Emit procedure](../../agent-src/contexts/execution/orchestration-telemetry.md).
+[`orchestration-telemetry` § Emit procedure](../../contexts/execution/orchestration-telemetry.md).
 Skip emit when `emergency.orchestration_halt` is set or `spawn_count == 0`
 (in-session run).
 
@@ -379,7 +379,7 @@ Skip emit when `emergency.orchestration_halt` is set or `spawn_count == 0`
 
 | Task                                 | Skill / command                      |
 |--------------------------------------|--------------------------------------|
-| Configuration reference              | [`subagent-configuration`](../../agent-src/contexts/execution/subagent-configuration.md) |
+| Configuration reference              | [`subagent-configuration`](../../contexts/subagent-configuration.md) |
 | Do-and-judge loop                    | Inline — see [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |
 | Stepwise plan with judge gates       | Inline — see [`prompts/do-in-steps.md`](prompts/do-in-steps.md) |
 | Standalone judge on an existing diff | Inline — see judge prompt in [`prompts/do-and-judge.md`](prompts/do-and-judge.md) |

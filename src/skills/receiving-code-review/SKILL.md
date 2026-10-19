@@ -178,7 +178,7 @@ When reporting back to the user after handling review:
 
 ## When to hand over to another skill / command
 
-* Executing the fixes across many comments → [`fix-pr-comments`](../../commands/fix-pr-comments.md)
+* Executing the fixes across many comments → [`fix-pr-comments`](../../commands/fix/pr-comments.md)
   (handles both bot + human reviewers in one pass)
 * Running the full verification gate before pushing replies →
   [`verify-completion-evidence`](../verify-completion-evidence/SKILL.md)

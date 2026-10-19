@@ -123,6 +123,13 @@ None of this is rebuilt here.
       signature or tie it to `publish-npm.yml`. That verification is what
       keeps this step open. Harmless today: the production wiring swaps
       nothing until 1.4.
+      *Found 2026-10-18, also open here:* `running_origin()` in
+      `upgrade_unattended.ts` takes `_is_source_repo(packageRoot)` for a source
+      checkout, and that probe answers true on `dist/agent-src/` — which every
+      published tarball ships — so an installed package reads as a source
+      checkout and the unattended run would always be suppressed. Same
+      harmlessness as above until 1.4; the fix is the `.git`-at-package-root
+      test `doctor_update_verdict.ts` uses, with a fixture for each shape.
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.
@@ -196,12 +203,15 @@ None of this is rebuilt here.
       45 Node-20 CI pins in the same release, so the ask path is exercised on
       a real case rather than a fixture.
       verify: blocked on `node-floor-raise`; nothing lands until it resolves.
+      Unblocked 2026-10-18: ADR-290 chose (a). Both council seats prefer this
+      major to also carry the settings-key removals of
+      `road-to-a-setup-that-decides-itself` Phase 4; that coupling is open there.
 
 ## Blockers
 
 ### blocker: node-floor-raise
 
-- **Status:** open — owner-reserved (council 2026-10-16, 2/2 ESCALATE: dropping Node 20 removes a compatibility commitment; both recommend (a) as a semver-major). Re-checked 2026-10-18, still unmet: `package.json` reads `"node": ">=20.11.0"` and no record under `docs/decisions/` names a Node floor.
+- **Status:** resolved — `docs/decisions/ADR-290-node-floor-22-as-a-major.md`: (a), `engines.node` to `>=22` as a semver-major with every Node-20 CI site moved in the same change. Decided by: AI council (2/2, 2026-10-18), under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record `agents/evidence/council/node-floor-raise-20261018.md`. Was: open — owner-reserved (council 2026-10-16, 2/2 ESCALATE before the delegation, both recommending (a) as a semver-major).
 - **Owner:** repository owner
 - **Blocks:** step 4.5 only. Phases 1–3 and steps 4.1–4.4 run without it.
 - **What to do:** pick exactly one — (a) raise `engines.node` to `>=22` in the
@@ -247,7 +257,7 @@ None of this is rebuilt here.
 
 ### blocker: auto-default-for-existing-installs
 
-- **Status:** open — owner-reserved on the escalation condition (council 2026-10-16 split: `anthropic` DECIDE (b), `openai` ESCALATE (a)); no round 2 was run because no input has changed since. Re-checked 2026-10-18, still unmet: no ADR under `docs/decisions/` records (a), (b) or (c).
+- **Status:** resolved — `docs/decisions/ADR-291-existing-installs-are-asked-never-flipped.md`: (a), `auto` may default for new installs only; an existing install is asked once, after the ring-0 exit and the live-session register, with a binding "never", and dismissal keeps `notify`. Decided by: AI council (2/2, 2026-10-18), under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); record `agents/evidence/council/auto-default-existing-installs-20261018.md`. Was: open — council 2026-10-16 split (`anthropic` DECIDE (b), `openai` ESCALATE (a)), before the delegation.
 - **Owner:** repository owner
 - **Blocks:** step 4.3's default. The question is not whether `auto` exists —
   4.1 ships it as an opt-in — but whether an install that already exists may
@@ -299,6 +309,9 @@ None of this is rebuilt here.
 | D4 | contested-technical | evidence | Ring 0 is the existing `next` dist-tag, not a new voluntary diagnostic ring | the channel already exists at `publish-npm.yml:154-168`; a second ring is a second thing to maintain | the channel is retired |
 | D5 | critical-technical | evidence | Uncertainty never resolves to `auto` | inherited from the classifier's own rule; an updater that guesses is the failure this file exists to avoid | never |
 | D6 | contested-technical | agent | Let the Phase 1.1 probe's error count decide whether activation needs a global live-session register, and design nothing on either assumption before it | the hazard is unmeasured, and a design built on a guess about it is the failure this phase exists to prevent. **Branch taken 2026-10-18: non-zero.** The 1.1 probe counted **490** failed hook invocations of **4,190** fired during four swap rounds (16.4.0 ⇄ 16.5.0; 487 exit-127, 3 exit-1), against 0 of 100 in the baseline — so activation waits on a global live-session register (step 1.4) | the probe is re-run on a host with different hook timing |
+| D7 | product-owned | council:agents/evidence/council/node-floor-raise-20261018.md | Blocker `node-floor-raise` → (a): `engines.node` `>=22` as a semver-major, the first `action` release, `engines` and every Node-20 CI site in one change, migration notes naming the last Node-20-compatible version with no backports (ADR-290) | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | consumer-usage evidence shows a material share of installs stranded on Node 20 |
+| D8 | product-owned | council:agents/evidence/council/auto-default-existing-installs-20261018.md | Blocker `auto-default-for-existing-installs` → (a): `auto` may default for new installs; an existing install is asked once with a binding "never", only after the ring-0 exit and step 1.4, never under CI, headless, non-TTY, `--json` or a subagent run (ADR-291) | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | an unattended release rolls back or breaks a live session |
+| D9 | reversible-technical | council:agents/evidence/council/hook-bundle-ceiling-20261018.md | The hook-bundle ceiling (`src/config/hook-bundle-budget.json`, 1,547,451 of 1,550,000 B at `f55e5a760`) is not raised for 3.1 and 3.3–3.5: room is made first — a per-module byte ranking from the metafile, then the largest narrow-event module moved behind a conditional import, proven inside `hook-latency-budget.json`; a raise only as the evidence-backed fallback, sized from all blocked work | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | no extraction frees meaningful room within the latency and reliability budgets |
 
 D6 closes a deferral, not a design: what was decided is that the register
 question is settled by the Phase 1.1 probe's error count rather than by
