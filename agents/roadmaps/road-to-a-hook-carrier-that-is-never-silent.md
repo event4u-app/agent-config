@@ -221,19 +221,29 @@ routed rule body with nothing in the session saying so.
   write into returns nothing. So this half is reachable only from a release run,
   a Hard-Floor action no drain lane holds.
 
-  **Two claims from a parallel run did NOT survive verification, and are
-  corrected here rather than carried.** A merge-time note asserted that a second
-  council round `D10` settled the class as breaking and that
-  `BREAKING_CHANGES.md` carries a Pending row naming the three guards. Measured
-  on `main` 2026-10-19: `grep -c 'block-no-verify' BREAKING_CHANGES.md` returns
-  **0**, the file names none of the three guards anywhere, and its only Pending
-  row is the `uninstall --global --purge` scope change; no `D10` appears in this
-  roadmap, and no council record under `agents/evidence/council/` carries a class
-  verdict for these guards. **The class question therefore stays open and
-  owner-owned** — `anthropic`: a `notice` in the curated head, `openai`: a
-  Pending row, split 1–1 on 2026-10-18 and unaffected by the trailer fix. Recorded
-  as a correction because a roadmap note asserting an artifact the tree does not
-  contain is how a screen three weeks from now concludes this step is closeable.
+  **The class is settled as breaking by D10, and the row exists** — #2491
+  (`e8b36d7ce`) placed it. `grep -c 'block-no-verify' BREAKING_CHANGES.md`
+  returns 1 on `main`, and the record is
+  `agents/evidence/council/hook-carrier-release-note-class-20261019.md`. An
+  earlier version of this note claimed otherwise; that grep had run against a
+  checkout taken before #2491 merged and the claim was wrong. It is corrected
+  here rather than quietly dropped, because the retraction is the useful part:
+  a measurement against a tree that moved under the measurer reads exactly like
+  a measurement against the tree.
+
+  **One thing about D10 is worth contesting, and it is not its existence.** Its
+  own `Resolved when` column records the round as **degraded 1/2**: `openai`
+  chose B1 in round one and could not answer round two (codex exit 1);
+  `anthropic` moved B2 → B1 in round two. Both seats' *latest* answers are B1,
+  which is how the disposition was read. But this package's own doctrine is that
+  a degraded council routes a decision to the owner rather than deciding it —
+  the same rule that kept three merge-gate PRs from clearing on 2026-10-17 — and
+  one seat's round-one answer plus another seat's round-two answer is not a round
+  that converged. **This is recorded as a contest of D10's standing, not of its
+  content**: B1 may well be right, and the row is in the file either way. What is
+  claimed here is only that a 1/2 round is weaker evidence than the decision row
+  reads, and that the revisit condition D10 already carries — a full 2/2 round
+  returning anything other than B1 — is the thing that settles it.
 
 ## Phase 5 — The plugin channel says what it carries
 
