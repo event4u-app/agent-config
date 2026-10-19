@@ -1,0 +1,1172 @@
+diff --git a/.gitignore b/.gitignore
+index 1c42c9f7bab6dc1e46ca4122539b6db7dd788d28..8bc1e818253286c5c6ba343cf3ffc6fe304ea643 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -349,6 +349,12 @@ agents/runtime/council/sessions/
+ /site/src/content/docs/works-with-agent-switch.md
+ # Media assets copied from docs/media/ by sync-docs.mjs (source lives in docs/media/).
+ /site/public/media/
++# Ghostwriter profiles hold real-person voices: local-only here as in every
++# consumer (src/config/gitignore-block.txt), README carved out.
++/agents/reference/ghostwriter/**
++!/agents/reference/ghostwriter/README.md
++/agents/ghostwriter/**
++!/agents/ghostwriter/README.md
+ # Field replay corpora await operator privacy review before any commit
+ internal/bench/corpora/*.local.yaml
+ 
+diff --git a/agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md b/agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc0688fa4d3f1024845c863481ecdd9d12261e12
+--- /dev/null
++++ b/agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md
+@@ -0,0 +1,47 @@
++<!-- evidence-type: analysis -->
++
++# Claim phrases over the pre-registered negative corpus — second measurement
++
++**Date:** 2026-10-19 · **Step:** brand-checkability roadmap 5.3 · **Result:** bar met.
++
++## What was pre-registered
++
++Committed in its own commit (`ce6201f45`, `chore(voice-lexicon): pre-register
++claim registry v2 …`) before any file of the new corpus was scanned:
++
++- **Registry v2** — `src/scripts/_lib/claim_phrases.ts` minus the four English
++  single-word entries `unmatched`, `unrivaled`, `unrivalled`, `unhackable`. The
++  reason is the roadmap's own NG-10 ("no single-word claim detection"), which v1
++  contradicted; a `claim-shapes` case now pins it (seen red against v1). German
++  compounds stay and stay at `hint`. The two-word phrases that produced v1 false
++  positives (`beats every`, `never fails`) were **kept**: removing them would be
++  tuning to the v1 answer.
++- **Corpus v2** — `tests/fixtures/voice-lexicon/negative-corpus-v2.txt`: every
++  `docs/guidelines/**/*.md` whose path does not match
++  `brand|voice|ghostwriter|write-engine|marketing|messaging|claim|positioning|gtm|copy|content|design`,
++  111 files. v1's corpus (`docs/contracts`) is excluded by construction.
++- **Word count** — whitespace-separated tokens of the raw file (stated in the
++  list header; the v1 note did not state its method).
++- **Bar** — E8 unchanged: at most 0.1 hits per 10k words, no tuning after the run.
++
++## Reading
++
++`scanClaims(text, [], now)` over each listed file:
++
++| Files | Words | Hits | Hits per 10k words | Bar |
++|---|---|---|---|---|
++| 111 | 97,835 | 0 | 0.000 | ≤ 0.10 |
++
++## What this does and does not establish
++
++- Registry v2 meets the bar on a corpus it was not revised against. The
++  `negative-corpus` case asserts it and was seen red under a planted noisy
++  phrase, so it is not vacuous.
++- At 97,835 words the bar admits at most 0 hits (one hit would read 0.102), so
++  this is a zero-false-positive reading, not a density estimate.
++- **Not evidence:** registry v2 over the already-seen v1 corpus reads 3 hits in
++  285,280 words (0.105 — `never fails` once, `beats every` twice). That corpus
++  shaped the revision, so the figure is reported only so nobody re-derives it as
++  a pass or a fail.
++- It says nothing about recall on real marketing copy; the `claim-shapes` cases
++  carry that, and findings stay advisory (`warning` English, `hint` German).
+diff --git a/agents/roadmaps/road-to-a-brand-the-tree-can-check.md b/agents/roadmaps/road-to-a-brand-the-tree-can-check.md
+index 7dc0913ab20349f1a09b8d4f659556b6af2d0857..a958269d892b8c178f11006cc0b37898e5ad3740 100644
+--- a/agents/roadmaps/road-to-a-brand-the-tree-can-check.md
++++ b/agents/roadmaps/road-to-a-brand-the-tree-can-check.md
+@@ -429,7 +429,7 @@ irreversible-external-action row of `non-destructive-by-default`).
+       `exclude` to `analyzeText`; an unknown id is a lint error.
+       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t tell-exemptions --reporter=verbose` -> /✓.*tell-exemptions/
+       Done 2026-10-17: the slot's ids go to `analyzeText` as `exclude`; an id outside `ALL_TELL_RULES` is a `brand_voice_slot` issue (`tell_exemptions[i]`), and the CLI refuses an invalid slot with exit 2. Tells are reported beside the findings and never change the exit code.
+-- [ ] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
++- [x] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
+       registry of English and German claim *phrases* (superlative, comparative,
+       absolute, certification, guarantee forms — never bare words). A hit not
+       covered by a slot `claims[]` entry, or covered by an expired one, is an
+@@ -439,7 +439,8 @@ irreversible-external-action row of `non-destructive-by-default`).
+       at hint severity until a German negative corpus is registered.
+       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t "claim-shapes|negative-corpus" --reporter=verbose` -> /✓.*claim-shapes[\s\S]*✓.*negative-corpus/
+       Open 2026-10-17: the registry (`src/scripts/_lib/claim_phrases.ts`) and the corpus list (`tests/fixtures/voice-lexicon/negative-corpus.txt`, 183 contract docs) were committed before the first run; the `claim-shapes` cases pass and the scan is live at `warning`/`hint`. The first measurement missed the bar — 8 hits over 283,204 words, 0.28 per 10k against 0.1, all false positives from three phrases (`unmatched`, `beats every`, `never fails`) — recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md`. E8 forbids tuning after the first run, so no registry edit and no bar test landed; closing needs a fresh pre-registration against a corpus the revision was not chosen on.
+-- [ ] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
++      Done 2026-10-19: the fresh pre-registration landed in its own commit before any scan — registry v2 drops the four English single-word entries NG-10 already excludes (`unmatched`, `unrivaled`, `unrivalled`, `unhackable`; a `claim-shapes` case pins it, seen red), keeps `beats every` and `never fails`, and corpus v2 is 111 `docs/guidelines` files never scanned before. Reading: 0 hits in 97,835 words, bar met; `negative-corpus` asserts it and turned red under a planted noisy phrase. Recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md`, including the v1-corpus figure under v2 (0.105) labelled as not evidence.
++- [x] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
+       `humanizer` and `/brand:review` run 5.1-5.3 on the finished draft. A
+       ghostwriter taboo hit aborts as documented; brand findings are located,
+       carry the replacement note or the missing proof, and flag without
+@@ -447,9 +448,11 @@ irreversible-external-action row of `non-destructive-by-default`).
+       judgement. The rule names the checker; `enforced_by` changes accordingly.
+       verify: `rg -l 'check_voice_lexicon' src/domains/gtm-marketing/ghostwriter/write/command.md src/skills/humanizer/SKILL.md src/domains/brand/brand/review/command.md` -> 3 files
+       Open 2026-10-17: the checker exists (5.1); wiring it into `/ghostwriter:write`, `/post-as:*`, `humanizer` and `/brand:review` changes what those consumer-facing commands do on every draft, which this drain lane treats as owner-reserved. The `enforced_by` change waits with it.
++      Done 2026-10-19: the step is this roadmap's own, and what it changes is the step's stated design — flags, never blocks, except the taboo abort `/ghostwriter:write` already documented — so it lands under the run's authority. The checker gained `--draft -` (stdin), because both drafting commands print only and may not write the draft to disk. `/ghostwriter:write` step 5b runs it with `--ghostwriter` (exit 1 aborts with no draft and no footer) and `--slot` when `brand:status` reports the slot valid; `/post-as:ghostwriter` is its alias; `/post-as:me` step 5b runs it with the slot only, since `.agent-user.md` v1 has no `style.avoid` (5.5); `humanizer` step 5 runs it after the tell detector and reports `unbacked-claim` instead of rewording it away; `/brand:review` runs it and the 3.3 palette reading before any model judgement. `brand-source-of-truth` now reads `instruction-only: check_voice_lexicon runs only when a command calls it` — a model still invokes it, so no `validator:` claim; the preamble budget reads zero net growth. `draft-surfaces` in `check_voice_lexicon.test.ts` (seen red) pins stdin and all four surfaces; `command-clusters.md` no longer calls `brand-consistency` a gate.
+ - [ ] **5.5 User schema v2** — only if 5.0 says build.
+       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
+       Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
++      Still open 2026-10-19, unchanged: the step's own condition is false, and closing it either way — `[-]` because the condition never fired, or a bare field because the middle branch reads "schema field only" — is the owner's call, not a run's.
+ - [ ] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
+       branch commits; not in default CI.
+       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
+@@ -500,6 +503,7 @@ irreversible-external-action row of `non-destructive-by-default`).
+       audit log's Read events on the slot path. At or above the bar → no carrier,
+       honest null recorded.
+       verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> 0
++      Open 2026-10-19: the prompt set E8 left open is now pre-registered and committed before any run — `tests/fixtures/brand-voice-read-rate/prompts.json`, 30 reader prompts (five per 6.1 reader), 10 unrelated prompts, and the read-event and routing protocol. The run itself is not taken here: it is 40 fresh paid host sessions in a scratch consumer project under a clean HOME (an in-repo `claude -p` measures this package's own rules, not the host), which is the operator's spend call. No reading exists, so 6.4, AC-7 and AC-9 wait on it.
+ - [ ] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
+       concern `brand-voice-card` registered in `src/config/hook-token-budget.json`
+       at the measured card size (three attributes, `avoid` terms, one sample);
+@@ -525,7 +529,7 @@ irreversible-external-action row of `non-destructive-by-default`).
+       `brand-audit` already records, so the next reader does not re-derive it,
+       and supplied material is declared data-never-instruction at the intake —
+       the reader-side half of 4.4.
+-- [ ] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
++- [x] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
+       byte for byte; greenfield; dotted near-miss; shadowed and duplicate files;
+       tokens without voice and voice without tokens; exploration without lock;
+       similar screenshot colours never merged; unbacked superlative; expired
+@@ -536,11 +540,13 @@ irreversible-external-action row of `non-destructive-by-default`).
+       brand bytes. The "sounds like us" leg stays a labelled rubric. (new test
+       file)
+       verify: `npx vitest run tests/scripts/brand_scenarios.test.ts --reporter=verbose` -> /✓/
+-- [ ] **7.3 Claims the tree can back.** `brand-voice-lexicon-recall` (planted
++      Done 2026-10-19: `tests/scripts/brand_scenarios.test.ts`, 16 legs over the real readers in scratch projects. Two legs are read narrowly and say so: "exploration without lock" is asserted as the resolver persisting nothing (no registry, cache or lock file), and "non-brand task at zero brand bytes" pins the static half — no hook concern binds `brand:status`, the checker or the slot — while 0.6's `no_brand_bytes.test.ts` keeps the dynamic half. A recall leg plants five terms and six exempt twins; writing it found German „…“ quotes unexempted, fixed in `blankExempt` (only lowers hits, so 5.3's zero reading stands). A palette probe moving the sampled token by one step turned that leg red. The "sounds like us" leg stays a labelled rubric, not a test.
++- [x] **7.3 Claims the tree can back.** `brand-voice-lexicon-recall` (planted
+       terms 100 %, quoted false positives 0) and `brand-status-state-truth`
+       (every 0.2 fixture classified correctly), registered `unbacked`, then backed
+       by 7.2.
+       verify: `rg -n 'brand-voice-lexicon-recall|brand-status-state-truth' docs/CLAIMS.md` -> 2 matches
++      Done 2026-10-19: both entries are `backed` on `exec:vitest run …` pointers over the 7.2, 0.2 and lexicon suites, each with a `non_inference` line (literal matching misses inflection; fixture classification says nothing about a consumer's intent). `docs/proof.md` rebuilt; the exec-feasibility denominator re-derived to 65.
+ 
+ ## Non-goals
+ 
+@@ -583,24 +589,24 @@ Carried from the supplied plans' kill register; each was judged and not taken.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-1 — The tree holds exactly three brand sources — tokens,
++- [x] AC-1 — The tree holds exactly three brand sources — tokens,
+       `design-system.json`/`DESIGN.md`, the `brand-voice` slot — and no persisted
+       index or registry file beside them.
+-- [ ] AC-2 — No authored surface names `.tokens.json` as the file to write, and
++- [x] AC-2 — No authored surface names `.tokens.json` as the file to write, and
+       `BRAND_TOKEN_PATHS` is declared once.
+-- [ ] AC-3 — A ghostwriter profile at either documented path is ignored by git
++- [x] AC-3 — A ghostwriter profile at either documented path is ignored by git
+       and scanned by the source lint, and no tracked file under either path is
+       a real-person profile.
+-- [ ] AC-4 — `brand:status` never reports a malformed or shadowed file as the
++- [x] AC-4 — `brand:status` never reports a malformed or shadowed file as the
+       brand, and names every source with its hash.
+-- [ ] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
++- [x] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
+       unrepresentable value fails with its token path and a non-zero exit.
+-- [ ] AC-6 — A planted banned term or unbacked claim in a finished draft from
++- [x] AC-6 — A planted banned term or unbacked claim in a finished draft from
+       ghostwriter, post-as, humanizer or brand review produces a located finding;
+       a quoted one does not.
+ - [ ] AC-7 — A non-brand task in a fully branded project carries zero brand
+       bytes, before and after any carrier.
+-- [ ] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
++- [x] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
+       `instruction-only`, and no file calls `brand-consistency` a gate.
+ - [ ] AC-9 — A runtime carrier exists only if the recorded read-rate
+       measurement missed its pre-registered bar.
+@@ -621,6 +627,8 @@ Carried from the supplied plans' kill register; each was judged and not taken.
+ | E10 | reversible-technical | evidence | Docs align to the resolver (`tokens.json`); the resolver keeps flagging dotted near-misses. Reopens the 2026-09-09 deferral: it named no owner, no blocker and no revisit condition, while `brand-asset-generation` itself loads the dotted name. No runtime behaviour changes. | `brand-to-tokens/SKILL.md:32-51`; `cmd_brand_status.ts:62-80` | a consumer reports a tool that writes the dotted name |
+ | E11 | deterministic | agent | Closure pass 2026-10-15: the `-t` titles and `rg` targets in 0.1-0.6, 2.x, 3.x, 4.x, 5.x, 6.x and 7.x name tests or text that do not exist yet, so each verify fails until its step lands; 0.7 is green today and stays the floor. The contradiction listed in D9 is the finding itself, settled by E2. Zero owner questions. | `closure_scan` on this file | a step lands without its title or sentence |
+ | E12 | reversible-technical | evidence | The starter drops `$schema` rather than guessing a replacement URL: no offline check can confirm a published schema location, and no reader consumes the key. | `design-tokens-starter.json:2`; no `$schema` read in `tokens.ts` | the specification publishes a schema URL a validator here would read |
++| E13 | reversible-technical | evidence | AC-6 and AC-8 closed 2026-10-19 with 5.4. AC-6: the four surfaces run `check_voice_lexicon` on the finished draft; the checker's located findings and quoted-text exemption are tested. AC-8: `enforced_by` names the checker under `instruction-only`; the one remaining "validation gate" wording is ADR-210's decision table, a historical record left verbatim by the same convention 1.2 applies to ADR-061. | `draft-surfaces`, `lexicon`, `control` cases in `check_voice_lexicon.test.ts`; `rg -n 'brand-consistency' src docs` | the checker becomes a CI sweep (then `validator:`), or ADR-210 is amended |
++| E14 | reversible-technical | evidence | AC-1..AC-5 closed 2026-10-19 on fresh runs: AC-1 — `brand:status` computes per call and the 7.2 "exploration without lock" leg shows no file is added; AC-2 — `token-name-parity` green and `BRAND_TOKEN_PATHS` exported once (`src/shared/brandTokenPaths.ts`); AC-3 — the managed block covers both paths, `lint_ghostwriter_source` scans both, 0 tracked profiles, and this repository's own `.gitignore` now carries the same four lines, which it lacked (its managed block predates 1.1); AC-4 — `state-fixtures`, `shadowed`, `invalid`; AC-5 — `dtcg-2025`. AC-7 and AC-9 stay open on 6.3: neither can be judged before the read-rate reading decides whether a carrier exists. | `vitest run` over `brand_status`, `brand_scenarios`, `lint_ghostwriter_source`, `skills_design_tokens_tokens` (80 + 16 pass); `git check-ignore --no-index` | a carrier lands (re-check AC-7) |
+ 
+ ## Risk Register
+ <!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude-opus -->
+diff --git a/dist/agent-src/commands/brand/review.md b/dist/agent-src/commands/brand/review.md
+index 4d97141d8581092ad9f2b74234196c94da25bd86..6597dd6ac516529250fe138f6fd03593e8b1fd10 100644
+--- a/dist/agent-src/commands/brand/review.md
++++ b/dist/agent-src/commands/brand/review.md
+@@ -24,3 +24,13 @@ emitted UI / copy / assets against the active brand tokens (from
+ `state.ui_design` / the consumer's `tokens.json`) and the voice profile, per
+ the `brand-source-of-truth` § Iron Law 2 checklist. A value not traceable to a brand token or voice
+ rule is flagged off-brand. Args: `"<artifact path or description>"`.
++
++**Deterministic checks first, before any model judgement.** For copy,
++pipe the text on stdin to
++`npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - --slot agents/context-spine/brand-voice.md` <!-- ref-ignore -->
++(drop `--slot` when `agent-config brand:status --json` does not report the
++slot valid). For CSS or markup, run the design-tokens palette reading,
++`node <skills-root>/design-tokens/scripts/tokens.mjs validate --dir <path> --json --tokens <registered tokens.json>`. Report every located
++finding — `avoid` term with its note, `unbacked-claim` with "needs proof",
++`off-palette` with its nearest token — and flag, never block. The audit's
++judgement comes after and never overrides a located finding.
+diff --git a/dist/agent-src/commands/ghostwriter/write.md b/dist/agent-src/commands/ghostwriter/write.md
+index b7e5be53ad9dcd3e84cfcb1873137fb6f53e0472..223f67f639a9e57a5185e95111d085423e9303fd 100644
+--- a/dist/agent-src/commands/ghostwriter/write.md
++++ b/dist/agent-src/commands/ghostwriter/write.md
+@@ -103,6 +103,25 @@ Generate the body as a single fenced markdown block per
+ fingerprint constraints: sentence-length ±25 %, opener / closer
+ patterns, hashtag / emoji rules, ±15 % length tolerance.
+ 
++### 5b. Check the finished draft
++
++Step 4 steers drafting; this step checks the result. Pipe the body on
++stdin — this command never writes the draft to disk:
++
++```bash
++npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
++  --ghostwriter agents/reference/ghostwriter/<slug>.md \
++  [--slot agents/context-spine/brand-voice.md]
++```
++
++Pass `--slot` only when `agent-config brand:status --json` reports the
++`brand-voice` slot valid. Exit **1** is a profile taboo in the draft:
++print its located finding and **abort** — no draft, no footer (§ Rules).
++Brand `avoid` hits and `unbacked-claim` findings flag without blocking:
++print each after the fenced block with its line, its note or the missing
++proof. Quoted, cited and code-fenced text is never scanned. No runtime →
++say so in one line and rely on step 4.
++
+ ### 6. Append the disclosure footer (literal, deterministic)
+ 
+ After the body, emit a blank line, then the literal string (rendered
+diff --git a/dist/agent-src/commands/post-as/me.md b/dist/agent-src/commands/post-as/me.md
+index 00ad7628b068727e7c4d7dbcee2699d99504fb60..6372767af40c6f94cdf3b2b92351590be49c32ea 100644
+--- a/dist/agent-src/commands/post-as/me.md
++++ b/dist/agent-src/commands/post-as/me.md
+@@ -96,6 +96,22 @@ Generate the body as a single fenced markdown block per
+ the loaded fingerprint (sentence-length ±25 %, pace),
+ ±15 % length tolerance, write in `language`.
+ 
++### 5b. Check the finished draft
++
++Pipe the body on stdin — this command never writes the draft to disk:
++
++```bash
++npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
++  [--slot agents/context-spine/brand-voice.md]
++```
++
++Pass `--slot` only when `agent-config brand:status --json` reports the
++`brand-voice` slot valid. Claim phrases are checked either way; the
++user's own `style.avoid` is not read (`.agent-user.md` v1 has no such
++field). Findings flag without blocking: print each after the fenced
++block with its line and its note or the missing proof. No runtime → say
++so in one line.
++
+ ### 6. Disclosure footer (omitted — user is the author)
+ 
+ **Do not append a footer.** `/post-as:me` is the self-author path;
+diff --git a/dist/agent-src/guidelines/agent-infra/rule-body-migration-inventory.md b/dist/agent-src/guidelines/agent-infra/rule-body-migration-inventory.md
+index 110b3b32e7f041f9d4e1ee1359fe4127cf2bcc27..3eddc1b258b11734a652702824deed4adb12c605 100644
+--- a/dist/agent-src/guidelines/agent-infra/rule-body-migration-inventory.md
++++ b/dist/agent-src/guidelines/agent-infra/rule-body-migration-inventory.md
+@@ -57,7 +57,7 @@ always-loaded rules.
+ | ask-when-uncertain.md | stay | 66 | Y | — | kernel Iron Law + ask-policy floor |
+ | augment-edit-discipline.md | thin | 29 | | `guideline:augment-portability-patterns` + `skill:agent-docs-writing` (both existing) | two explicit "body migrated to" sentences |
+ | autonomous-execution.md | thin | 81 | | `contexts/execution/autonomy-mechanics.md` + siblings (existing) | hybrid: several short Iron-Law-style blocks retained (Hard Floor pointer, N=3 budget headline), full mechanics already migrated |
+-| brand-consistency.md | stay | 75 | | — | gate definition is the enforcement surface itself; already routes deeper mechanics to `brand-identity`/`brand-to-tokens`/`design-intelligence` |
++| brand-consistency.md | stay | 75 | | — | checklist definition is the rule itself; already routes deeper mechanics to `brand-identity`/`brand-to-tokens`/`design-intelligence` |
+ | brand-source-of-truth.md | stay | 65 | | — | explicitly "light by design"; precedence order is the whole rule |
+ | broken-access-control.md | thin | 68 | | `skill:authz-review` (existing) | hybrid: 2 short Iron-Law blocks (3 negative tests) retained, deep controls/matrix/backstop-grep content already migrated |
+ | cli-output-handling.md | thin | 40 | | `skill:rtk-output-filtering` (existing) | pure P4 stub |
+diff --git a/dist/agent-src/rules/brand-source-of-truth.md b/dist/agent-src/rules/brand-source-of-truth.md
+index e93dd0f42946687c2255ed02312054225b119934..cf13a50dde454b56ad340f32d332537a849979c8 100644
+--- a/dist/agent-src/rules/brand-source-of-truth.md
++++ b/dist/agent-src/rules/brand-source-of-truth.md
+@@ -21,7 +21,7 @@ self_contained: true
+ workspaces: [engineering]
+ packs: [brand]
+ enforced_by:
+-  - "instruction-only: no checker reads emitted output yet"
++  - "instruction-only: check_voice_lexicon runs only when a command calls it"
+ obligation_frequency: "per-edit"
+ ---
+ 
+diff --git a/dist/agent-src/skills/humanizer/SKILL.md b/dist/agent-src/skills/humanizer/SKILL.md
+index 1c6650897a0f1699ac859bf314cf3e2791f55ac8..4affc0ed2d96eb4934374f7fd6dfb109be2946fc 100644
+--- a/dist/agent-src/skills/humanizer/SKILL.md
++++ b/dist/agent-src/skills/humanizer/SKILL.md
+@@ -75,7 +75,13 @@ human voice there; do not inject personality or restructure it.
+    ~2 per 500 words (density cap, not zero — house precedent CP1).
+ 5. **Verify mechanically** when a runtime is available:
+    `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --stdin --fail`
+-   on the final draft. No runtime → the step-3 audit is the fallback
++   on the final draft. Then the lexicon and claim pass on the same draft,
++   on stdin: `npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft -`,
++   adding `--slot` for a valid `brand-voice` slot and `--ghostwriter` for
++   the active profile. Fix an `avoid` hit with its note; a profile taboo
++   hit means the rewrite is not done; report each `unbacked-claim` located
++   with "needs proof" — never reword a claim away (step 6).
++   No runtime → the step-3 audit is the fallback
+    (degrade, do not skip the audit).
+ 5b. **Carrier-Unicode strip — OPT-IN, never a default.** Runs **only** when
+    the operator explicitly asks for a carrier strip. `stripCarrierUnicode`
+diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
+index 94235fa5ebe685c9fababbe9eac83435714f8f5a..615b63223bd3a2dbf95bcff581ab4194d986825e 100644
+--- a/docs/CLAIMS.md
++++ b/docs/CLAIMS.md
+@@ -307,6 +307,24 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
+ - status: backed
+ - last_verified: 2026-10-17
+ 
++### claim: brand-voice-lexicon-recall
++- claim: The brand-voice lexicon check finds every planted `avoid` term in running text of a finished draft and none of the same terms inside quoted, cited, fenced or linked text.
++- kind: quant
++- evidence: exec:vitest run tests/scripts/brand_scenarios.test.ts tests/scripts/check_voice_lexicon.test.ts -> 0
++- note: Registered `unbacked` by road-to-a-brand-the-tree-can-check 7.3 and backed by its 7.2 scenario fixtures. Recall is 5 of 5 planted terms over word and substring modes, English and German; false positives are 0 of 6 exempt twins (straight, curly and German low-high quotes, a blockquote, inline code, a URL, a fenced block). Writing the leg found the German low-high quote case unexempted, and it was fixed in the same change.
++- non_inference: Literal matching only — an inflected German form is a documented miss (E5), so 100 % recall holds for the planted spellings and says nothing about morphology, paraphrase, or any term not in the lexicon.
++- status: backed
++- last_verified: 2026-10-19
++
++### claim: brand-status-state-truth
++- claim: `brand:status` classifies every brand-state fixture correctly — a malformed or non-DTCG file is invalid and never the brand, a second differing file is shadowed with its winner, an identical one a duplicate, and the state is bare, mixed or branded from valid sources only.
++- kind: quant
++- evidence: exec:vitest run tests/scripts/brand_status.test.ts tests/scripts/brand_scenarios.test.ts -> 0
++- note: Registered `unbacked` by road-to-a-brand-the-tree-can-check 7.3 and backed by the 0.2 `state-fixtures` cases plus the 7.2 scenario legs (greenfield, dotted near-miss, shadowed, duplicate, tokens without voice, voice without tokens, profile excluded, project switch).
++- non_inference: Fixture classification only — it does not show that a consumer's brand files are well-formed, that the reported winner is the one the consumer intended, or anything about a source kind the resolver does not search.
++- status: backed
++- last_verified: 2026-10-19
++
+ ### claim: discipline-lift-weak-host
+ - claim: On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence.
+ - kind: quant
+diff --git a/docs/contracts/command-clusters.md b/docs/contracts/command-clusters.md
+index a3d26c97bbe443dfa51c8209ea7dd615ea4c8b06..1c7d64a7f326c62a0fd55c961861fa6e745b6bd7 100644
+--- a/docs/contracts/command-clusters.md
++++ b/docs/contracts/command-clusters.md
+@@ -57,7 +57,7 @@ column 1 of this table.
+ | `skills` | — | `discover` | new cluster 2026-05-30 (`road-to-leaner-core-and-discovery` Phase 3) — local, explained skill-recommendation surface over the catalog + role shortlists + optional local analytics, per [`skill-discovery`](skill-discovery.md). Every result carries a non-empty `why`; no network, honours the analytics opt-out. |
+ | `skill` | — | `preview` | new cluster 2026-05-30 (`road-to-leaner-core-and-discovery` Phase 5) — non-destructive skill/command preview: surfaces the declared steps + files/commands a skill would touch before it runs, per [`skill-dry-run`](skill-dry-run.md). Singular `skill` (one target) vs plural `skills` (the catalog) by design. |
+ | `image` | — | `analyse` · `create` · `verify` | new cluster 2026-05-31 (`road-to-character-image-fidelity` Phase 4) — character-image fidelity surface mirroring `/video:*`. `:analyse` extracts a per-feature spec from an image and diffs it against a Canon Spec down to the smallest mole (OCR for lettered tattoos, per-section severity scores, canon-breaking hard gate); `:create` assembles a max-fidelity anchors-first generation prompt from the Canon Spec, governance- + provider-gated, `AIV_DRYRUN=true` default; `:verify` runs the analyser in loop mode against a candidate and reports the gate verdict + remaining diff with plateau/oscillation/budget stop conditions. Skills: [`image-analyser`](../../skills/image-analyser/SKILL.md) + [`image-creator`](../../skills/image-creator/SKILL.md); schema/rubric/loop in [`canon-spec.md`](../../skills/image-analyser/canon-spec.md). |
+-| `brand` | — | `strategy` · `identity` · `tokens` · `review` · `voice` | new cluster 2026-06-17 (`road-to-image-brand-followups` Phase 3) — brand-as-first-class-UX surface for `pack-brand`, consulted before `design-intelligence` so brand bounds style. `:strategy` (positioning/archetype/voice/messaging over the brand corpus), `:identity` (logo/colour/type/imagery direction — defines the tokens downstream generation consumes), `:tokens` (derive a DTCG `tokens.json` source of truth → CSS/Tailwind, no Node), `:review` (audit emitted UI/copy/assets against active brand tokens + voice per the `brand-consistency` gate), `:voice` (voice-and-tone profile). Skills: [`brand-strategy`](../../skills/brand-strategy/SKILL.md) · [`brand-identity`](../../skills/brand-identity/SKILL.md) · [`brand-to-tokens`](../../skills/brand-to-tokens/SKILL.md) · [`brand-audit`](../../skills/brand-audit/SKILL.md) · [`voice-and-tone-design`](../../skills/voice-and-tone-design/SKILL.md). The companion `/imagegen:*` generation cluster (pack-ai-image) is deferred until its adapters' live submit/poll/fetch is wired. |
++| `brand` | — | `strategy` · `identity` · `tokens` · `review` · `voice` | new cluster 2026-06-17 (`road-to-image-brand-followups` Phase 3) — brand-as-first-class-UX surface for `pack-brand`, consulted before `design-intelligence` so brand bounds style. `:strategy` (positioning/archetype/voice/messaging over the brand corpus), `:identity` (logo/colour/type/imagery direction — defines the tokens downstream generation consumes), `:tokens` (derive a DTCG `tokens.json` source of truth → CSS/Tailwind, no Node), `:review` (audit emitted UI/copy/assets against active brand tokens + voice per the `brand-source-of-truth` § Iron Law 2 checklist, after `check_voice_lexicon` and the palette reading), `:voice` (voice-and-tone profile). Skills: [`brand-strategy`](../../skills/brand-strategy/SKILL.md) · [`brand-identity`](../../skills/brand-identity/SKILL.md) · [`brand-to-tokens`](../../skills/brand-to-tokens/SKILL.md) · [`brand-audit`](../../skills/brand-audit/SKILL.md) · [`voice-and-tone-design`](../../skills/voice-and-tone-design/SKILL.md). The companion `/imagegen:*` generation cluster (pack-ai-image) is deferred until its adapters' live submit/poll/fetch is wired. |
+ 
+ | `team-knowledge` | — | `consolidate` · `bootstrap` | new cluster 2026-07-05 (`road-to-knowledge-system` Phases 5-6) — the repo-tracked team-knowledge layer under `agents/knowledge/{sessions,concepts,procedures,decisions}/`. Distinct from the pre-existing [`knowledge`](#locked-clusters) cluster (arbitrary local-file ingestion into `agents/memory/knowledge/`) — different namespace, different concern. `:consolidate` reads pending typed-observation events (`consolidate_knowledge_events.ts`), finds the nearest existing page per topic (mechanical similarity), and presents a NEW/EXTEND/CONFIRM/CONFLICT batch for human approval — never writes a page automatically. `:bootstrap` (`bootstrap_knowledge.ts`) stages a one-shot deterministic seed (detected package manifest, top-level directories, known config filenames — never file content, never an LLM-invented claim) to a gitignored staging dir for review-then-commit. |
+ | `profile` | — | `activate` · `deactivate` · `show` | new cluster 2026-06-02 (`road-to-session-profile-activation`) — session-profile activation: an ephemeral `runtime.active_packs` overlay that biases the surfaced command/skill set to the active pack closure, with no persistence and no execution-gating (recommendation-bias MVP). `:activate <name…>` resolves an alias (`src/config/discovery/session-profiles.yml`) or a raw pack id, fails fast on a not-installed pack, expands the `requires_hint` closure, and writes the overlay atomically to `agents/settings/.agent-settings.local.yml`; `:deactivate [name…]` clears it (or drops named packs, keeping deps a still-active pack needs); `:show` is the observability surface (active packs + surfaced/hidden counts). Overlay = runtime modulation of the existing `pack` axis, not a fifth axis (ADR-010 addendum). Library: `src/scripts/config/session_profiles.ts`; schema in [`session-profile-overlay`](session-profile-overlay.md). |
+diff --git a/docs/guidelines/agent-infra/rule-body-migration-inventory.md b/docs/guidelines/agent-infra/rule-body-migration-inventory.md
+index da40fbd49380efda8485fc3fb1acbd0bab3001b5..9681c408e2814164088654d24da0691c9460c44b 100644
+--- a/docs/guidelines/agent-infra/rule-body-migration-inventory.md
++++ b/docs/guidelines/agent-infra/rule-body-migration-inventory.md
+@@ -57,7 +57,7 @@ always-loaded rules.
+ | ask-when-uncertain.md | stay | 66 | Y | — | kernel Iron Law + ask-policy floor |
+ | augment-edit-discipline.md | thin | 29 | | `guideline:augment-portability-patterns` + `skill:agent-docs-writing` (both existing) | two explicit "body migrated to" sentences |
+ | autonomous-execution.md | thin | 81 | | `contexts/execution/autonomy-mechanics.md` + siblings (existing) | hybrid: several short Iron-Law-style blocks retained (Hard Floor pointer, N=3 budget headline), full mechanics already migrated |
+-| brand-consistency.md | stay | 75 | | — | gate definition is the enforcement surface itself; already routes deeper mechanics to `brand-identity`/`brand-to-tokens`/`design-intelligence` |
++| brand-consistency.md | stay | 75 | | — | checklist definition is the rule itself; already routes deeper mechanics to `brand-identity`/`brand-to-tokens`/`design-intelligence` |
+ | brand-source-of-truth.md | stay | 65 | | — | explicitly "light by design"; precedence order is the whole rule |
+ | broken-access-control.md | thin | 68 | | `skill:authz-review` (existing) | hybrid: 2 short Iron-Law blocks (3 negative tests) retained, deep controls/matrix/backstop-grep content already migrated |
+ | cli-output-handling.md | thin | 40 | | `skill:rtk-output-filtering` (existing) | pure P4 stub |
+diff --git a/docs/proof.md b/docs/proof.md
+index d23999fc3461bb0a1144ec2fb6183698b97f3ed8..58f9446c0db01191ef2242ecfec175f3d76dd291 100644
+--- a/docs/proof.md
++++ b/docs/proof.md
+@@ -49,6 +49,8 @@ evidence pointer, or `task check-claims` fails the build.
+ | `adversarial-review` structures its critique as branching exploration with explicit pruning rather than a single pass, following the Tree-of-Thoughts formulation. | qual | `https://arxiv.org/abs/2305.10601 (2026-08-11)` | ✅ |
+ | The `.augment-plugin/` manifest version is the package version, not an independent plugin-API version, and every version-bearing file the release workflow triggers on is read by a job in that workflow. | qual | `src/scripts/lint_marketplace.ts#check_augment_manifests` | ✅ |
+ | `analysis-autonomous-mode` runs iterative self-critique between steps rather than only at the end, following the Self-Refine formulation. | qual | `https://arxiv.org/abs/2303.17651 (2026-08-11)` | ✅ |
++| `brand:status` classifies every brand-state fixture correctly — a malformed or non-DTCG file is invalid and never the brand, a second differing file is shadowed with its winner, an identical one a duplicate, and the state is bare, mixed or branded from valid sources only. | quant | `exec:vitest run tests/scripts/brand_status.test.ts tests/scripts/brand_scenarios.test.ts -> 0` | ✅ |
++| The brand-voice lexicon check finds every planted `avoid` term in running text of a finished draft and none of the same terms inside quoted, cited, fenced or linked text. | quant | `exec:vitest run tests/scripts/brand_scenarios.test.ts tests/scripts/check_voice_lexicon.test.ts -> 0` | ✅ |
+ | `bug-analyzer` verifies each candidate root cause against a concrete trigger before reporting it, following the Chain-of-Verification formulation — which is the mechanism behind its "never invent issues" constraint. | qual | `https://arxiv.org/abs/2309.11495 (2026-08-11)` | ✅ |
+ | The release process is documented as an inheritable runbook + succession doc, and the project's bus-factor (trailing-90-day distinct human reviewers) is tracked and reported truthfully — currently 1, not implied to be more. The doc separately reports the distinct MERGER count (2, one of them an unreviewed self-merge) so the reviewer figure cannot be inflated by conflating the two. | qual | `docs/succession.md#trailing 90 days` | ✅ |
+ | On the pre-registered 2-arm retrieval benchmark (18 hand-verified code-structure questions across 3 real repos, ground truth hash-bound before the run, deterministic, zero model calls), the native code graph scored mean recall 0.365 vs grep 0.797 on the 15 graph-shaped questions (delta -43.2 pp against a pre-declared +10 pp win threshold) and 0.111 vs 0.833 on the negative controls. HONEST NULL — measured root cause: TS arrow-function exports produce no symbol nodes (170 TS vs 13,428 PHP symbol nodes on same-shaped repos) and string-keyed dynamic consumers have no static edge. Consequence bound: code_graph.enabled stays false BY DEFAULT. NOT permanently, and the removal schedule this line used to carry was withdrawn on 2026-08-15 (docs/MIGRATION.md, the code_graph row) — the payload it existed for had already shipped when the parser pair moved to devDependencies. SCOPE OF THESE FIGURES, corrected 2026-08-26: they were measured on 2026-07-28 against a build predating the extractor repair of 2026-08-22, so they describe a build that no longer exists. The claim is retained rather than dropped because the measurement was real and no re-measurement has replaced it; road-to-inbox-harvest-2026-08-f-code-graph-evidence-refresh 3.1 is the re-run and it is blocked on benchmark inputs this repository does not hold. Reopen on that re-run, or on external evidence (a consumer case the graph answers and disciplined grep cannot). RE-MEASUREMENT ATTEMPTED 2026-08-26 and deferred: the four SHA-256-pinned question files and all three registered corpus clones read absent on the machine that attempted it, so the run could not start. The obligation is transferred, not dropped - agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md carries the criterion verbatim with a five-reading probe. Silence here would read as 'nobody tried again'. RE-MEASUREMENT PERFORMED 2026-08-28 on a DIFFERENT, SMALLER, NON-COMPARABLE corpus, because the pinned inputs re-probed absent again on that date: internal/bench/reports/code-graph-vs-grep-inrepo-2026-08-28.md, pre-registered before the run at internal/bench/code-graph/PREREGISTRATION-inrepo-2026-08-28.md, measured at commit c454648af which postdates the repair. THAT RUN IS NOT A REPLACEMENT FOR THESE FIGURES AND NO DELTA MAY BE COMPUTED BETWEEN THE TWO - it used three in-repo TypeScript subtrees instead of the three registered private repositories, 16 questions sharing no item with these 18, and per-class bars instead of a single aggregate; three independent variables moved at once. It is recorded here as a POINTER so this entry is not the only answer a reader can find, and it deliberately carries no claims entry of its own: the kind enum is {quant, qual, comparative} and none of the three makes two recall figures incomparable by construction, so a second entry would put two subtractable numbers on this surface. On its own terms that run reports ZERO of four graph-shaped classes meeting the pre-registered win criterion, with one class (path-between) VOID and the literal-string negative-control floor failed by construction against a symbol index; it withholds an overall engine verdict for exactly that reason. TWO CORRECTIONS TO THAT POINTER, 2026-08-29. (a) THE PUBLISHED ROOT CAUSE OF THE VOID CLASS WAS FALSE. That report said 'both arms returned the empty set on every question in this class'. Only the grep arm did - a word-boundary search for a token containing ' -> ' matches no text. The GRAPH ARM ANSWERED all three questions and the v1 scorer discarded the answer, comparing each returned symbol against the entire probe string 'cmdBuild -> getParser'. Two further v1 scorer defects: it never invoked the shipped `path <a> <b>` verb, and it counted unresolved `symbol:` pseudo-nodes as files, which is the sole reason its `callers` class was ruled NULL with recall tied at 1.000/1.000. v1's NUMBERS ARE NOT RETRO-EDITED - they were faithful to v1's own registration - and v1's report now carries the correction inline. (b) THE COMMIT POINTER c454648af IS UNREACHABLE FROM main: it exists only on a local branch and resolves to nothing in a fresh clone. The reachable equivalent is 6a5670b78 (the squash merge of PR #1705, on main), at which all three measured roots and the corpus file are byte-identical and the scoring functions are unchanged, so that run reproduces there. Measured trees, which survive a squash merge: src/scripts/code_graph e55fc87c7081359e1c0e2bf8263f17358de2e315, src/shared dcdc68073e0f2340b3734678cc4e82f34c241dba, src/scripts/ai_council 778a493ba915795159adcb0bb789e93b89d6a86a. RE-MEASUREMENT v2 PERFORMED 2026-08-29 after those defects were confirmed by direct execution: internal/bench/reports/code-graph-vs-grep-inrepo-v2-2026-08-29.md, pre-registered at internal/bench/code-graph/PREREGISTRATION-inrepo-v2-2026-08-29.md with bars identical to v1's, 19 questions, the `path` verb used for the path class, `symbol:` pseudo-nodes no longer counted as files, and the literal probes moved to a separate capability-boundary class with no floor derived from them. IT IS NOT COMPARABLE TO THIS ENTRY AND NOT COMPARABLE TO v1 EITHER, and carries no claims entry of its own for the same reason v1 does not. On its own terms v2 reports ZERO winning classes: callers TIE, path-between TIE (+8.3 pp against a +10 pp bar, the graph exact at recall 1.000 precision 1.000 and the repaired grep arm at 0.917), transitive-impact NULL, references NULL. A path-between delta near +89 pp is obtainable and is an ARTIFACT - it repairs the graph arm and leaves grep on v1's broken probe. ADR-246's reopen trigger was evaluated explicitly against v2 and DOES NOT FIRE; no setting default moved and no dependency moved between devDependencies and dependencies. The figures in THIS entry still describe the pre-repair build and are still the only measurement of the registered corpora. | quant | `internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively` | ✅ |
+@@ -109,11 +111,11 @@ evidence pointer, or `task check-claims` fails the build.
+ | `uninstall --global --purge` deletes only the anchor-relative paths this package's own deploy inventory recorded writing, never the host anchor itself — a file nothing recorded is byte-identical afterwards, a recorded path that is a symlink is unlinked rather than followed, and an absent or unreadable inventory refuses with exit 1 having deleted nothing. | qual | `exec:vitest run tests/install/uninstall_purge_containment.test.ts tests/install/uninstall_lockfile_retention.test.ts -> 0` | ✅ |
+ | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
+ 
+-**63 backed claim(s)** — all evidence pointers resolve in CI.
++**65 backed claim(s)** — all evidence pointers resolve in CI.
+ 
+ ### How many of those re-derive themselves
+ 
+-**20 of 63** backed claims carry `exec:` evidence —
++**22 of 65** backed claims carry `exec:` evidence —
+ CI re-runs the command and compares its exit code to the claim, so a
+ stale one turns the build red. The other
+ **43** rest on a pointer: CI checks that the artefact
+@@ -314,7 +316,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
+ | Rule | Effective level | Declared backstop(s) |
+ |---|---|---|
+ | `active-remediation` | none | `instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one` |
+-| `brand-source-of-truth` | none | `instruction-only: no checker reads emitted output yet` |
++| `brand-source-of-truth` | none | `instruction-only: check_voice_lexicon runs only when a command calls it` |
+ | `code-comment-discipline` | validator | `validator:src/scripts/lint_code_comments.ts`<br>`hook:comment-discipline` |
+ | `code-provenance` | none | `instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation` |
+ | `context-hygiene` | observer | `hook:context-hygiene` |
+@@ -359,7 +361,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
+ 
+ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
+ 
+-**Axis 2 — evidence form per public claim.** 111 ledger entries · 63 backed · 41 unbacked inventory · 7 resolved-null.
++**Axis 2 — evidence form per public claim.** 113 ledger entries · 65 backed · 41 unbacked inventory · 7 resolved-null.
+ 
+ | Claim id | Kind | Status | Measured on | Evidence pointer |
+ |---|---|---|---|---|
+@@ -373,6 +375,8 @@ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap b
+ | `adversarial-review-tree-of-thoughts` | qual | backed | — | `https://arxiv.org/abs/2305.10601 (2026-08-11)` |
+ | `augment-manifest-version-package-synced` | qual | backed | — | `src/scripts/lint_marketplace.ts#check_augment_manifests` |
+ | `autonomous-analysis-self-refine` | qual | backed | — | `https://arxiv.org/abs/2303.17651 (2026-08-11)` |
++| `brand-status-state-truth` | quant | backed | — | `exec:vitest run tests/scripts/brand_status.test.ts tests/scripts/brand_scenarios.test.ts -> 0` |
++| `brand-voice-lexicon-recall` | quant | backed | — | `exec:vitest run tests/scripts/brand_scenarios.test.ts tests/scripts/check_voice_lexicon.test.ts -> 0` |
+ | `budget-routing-relation` | qual | resolved-null | — | `docs/contracts/budget-routing.md#Why it was retired` |
+ | `bug-analyzer-chain-of-verification` | qual | backed | — | `https://arxiv.org/abs/2309.11495 (2026-08-11)` |
+ | `bus-factor-tracked` | qual | backed | — | `docs/succession.md#trailing 90 days` |
+diff --git a/internal/reports/exec-evidence-feasibility.json b/internal/reports/exec-evidence-feasibility.json
+index a91a8b9a724f39d35d2c1c5d889161bb65e7277b..b9870b8f6d1bd855a8b92957d25744ab61f353a8 100644
+--- a/internal/reports/exec-evidence-feasibility.json
++++ b/internal/reports/exec-evidence-feasibility.json
+@@ -1,8 +1,8 @@
+ {
+   "_doc": "Feasibility measurement for an `exec:` evidence form in the claims ledger (road-to-enforcement-proof Phase 5). The question this answers is NOT 'would exec: be nice' but 'would it cover enough of the ledger to earn its maintenance surface'. The threshold was pre-registered in the roadmap BEFORE this was measured: >= 10 percentage points of the backed ledger, or it gets parked with the number published. Measured 2026-07-25 against docs/CLAIMS.md. Re-derived 2026-09-04: +1 backed entry (skill-activation-census-zero) from road-to-the-tenth-arrival Phase 2.3 \u2014 the skill-activation census surfaced as its own ledger row rather than as a parenthetical inside published-artifact-counts. Pointer form, and deliberately not exec:: the reading is over the maintainer's local transcript store, which no CI checkout has, so an exec: pointer would exit non-zero in CI for a reason that is not a property of the code \u2014 the same disqualifier already recorded above for conformance-advisory-vs-blocking.",
+-  "measured_at": "2026-07-25 (re-counted three times. The first publication said 25 backed / 10 feasible and was measured mid-PR. The 11-feasible figure was then corrected DOWN to 10 when the form was actually built: context-token-reduction was counted feasible because check_token_regression re-derives token figures via js-tiktoken, but the script reads internal/bench/reports/projection-cost.json, which is gitignored as a per-run artifact \u2014 so the command is not self-sufficient in a fresh checkout and exits 1. Found by the exec: gate on its first CI run, which is the gate doing its job. The backed_claims DENOMINATOR drifted separately and is now derived and gate-checked rather than retyped. Re-derived 2026-07-27: +3 backed entries from road-to-credible-install (install-audit-clean exec-backed, hook-dispatch-latency, default-install-context-cost). Re-derived 2026-07-28: +1 backed entry (code-graph-retrieval-null \u2014 bench needs local target repos, not exec:-feasible in a fresh CI checkout; stays on its pointer form). Re-derived 2026-07-29: +2 backed entries from road-to-runtime-encoding-hardening (encoding-floor-text-layer-only and encoding-corpus-scope-guard). Both stay on pointer form rather than exec:, because the measurement report's latency figure is machine-dependent and an exec: gate on it could redden on a loaded runner \u2014 the exit code would stop being a property of the code. Re-derived 2026-08-02: +1 backed entry (scope-dedup-cold-start-reduction \u2014 the 38.0% figure entered the ledger with its unreachable-in-production condition bound into the claim text, road-to-release-shape-honesty Phase 3; pointer form, since the evidence is a written honest-null record rather than a re-runnable command). Re-derived 2026-08-02 (second sitting): +4 backed entries from road-to-governance-invariants Phase 4 (governance-aggregation-refusal-invariance, governance-decomposition-effect-boundary, governance-marker-preservation-null, governance-adjacent-properties). All four stay on pointer form rather than exec:, because their numbers are re-derived by a committed vitest drift gate (tests/scripts/governance_invariants_report.test.ts) that already runs in the node-tests job \u2014 an exec: pointer would re-run the same assertions a second time for no added signal. `delta_pp` is left at its 2026-07-25 value on purpose: it records THAT measurement's verdict, not a running ratio. Re-derived 2026-08-03: +2 backed entries from the PR-#1133 external-review follow-up (keyword-anchoring-census \u2014 census claim now carries the corpus-co-edit disclosure plus an independent 49-prompt replay record; budget-routing-relation \u2014 deliberately worded to what the code proves: relation implemented + tested with the full reserve lifecycle, delivery agent-adherent and doctor-monitored, NOT 'shipped'). Both pointer form: the census evidence is a written measurement record, and the relation's numbers are re-derived by the vitest suite already in the node-tests job. Re-derived 2026-08-10: +1 backed entry (conformance-advisory-vs-blocking \u2014 the round-5 advisory-vs-blocking result, 555 \u2192 19 vs 8 \u2192 0 and 1 \u2192 0; pointer form, since the numbers rest on a one-off transcript audit over the maintainer's local session store that no CI job can re-derive). Re-derived 2026-08-11: +6 backed entries from road-to-inbox-harvest-2026-08-b-authoring-contract Phase 4 \u2014 the six external research citations a normative sentence in src/ rests on (judge-family-llm-as-a-judge-foundation, adversarial-review-tree-of-thoughts, autonomous-analysis-self-refine, bug-analyzer-chain-of-verification, sequential-thinking-chain-of-thought, skill-improvement-reflexion). All six use pointer grammar #3 (external URL + dated stamp), which is NOT exec:-feasible by construction: the grammar is an existence-and-date check the tooling never dereferences, so a withdrawn or renumbered paper stays green \u2014 the reason only load-bearing cites were bound and the 14 ids appearing solely in roadmap prose were left unbound. Re-derived 2026-08-19: +1 backed entry (council-fallback-loses-zero-seats, road-to-council-api-fallback Phase 4). It is exec: form \u2014 the end-to-end suite re-derives the whole chain from a config file to a rendered artefact \u2014 but `exec_feasible` is NOT bumped, for the same reason `delta_pp` is frozen: both record the 2026-07-25 CLASSIFICATION pass, not a running tally, and only `backed_claims` is mechanically checked against the live ledger. Re-derived 2026-08-23: +3 backed entries from road-to-skill-link-integrity-and-manifest-sync (skill-link-census, adapter-lifecycle-day-one-table, augment-manifest-version-package-synced). Both pointer form: the census row is regenerated by `lint_handoffs --census-json` and the lifecycle pair is re-derived by the parity pass already wired into lint_media_policy_linkage, so an exec: pointer would re-run an assertion CI already makes. Re-derived 2026-08-23 (drain merge): +1 backed entry (council-parse-outcome-corpus-rate) from road-to-council-evidence-integrity \u2014 exec: form, re-derived by tests/scripts/ai_council/parse_corpus.test.ts in the node-tests job. Re-derived 2026-08-27: -1 backed entry. `no-runtime-daemon` moved from `backed` to the ledger's new `withdrawn` status (road-to-runtime-governance-flip Phase 2) -- retired by ADR-249, which permits a supervised resident process in core. This is the first DECREASE in this denominator and the first one caused by a decision rather than by a measurement: the claim was true on its 2026-07-04 last_verified and its evidence pointer still resolves, and the package decided to stop having the property. Its successor, `resident-process-permitted-under-governance`, is deliberately `unbacked` and does NOT raise the count -- it records a policy, and no supervised process has shipped for a property claim to be about. Re-derived 2026-09-13: +1 backed entry (ui-conformance-behavioral-catch, road-to-behaviour-evidence-over-pixels Phase 6.1). Pointer form rather than exec:, and the reason is the same one that keeps the encoding pair off exec: -- the assertion is already re-derived by tests/scripts/ui_conformance_probe.test.ts in the node-tests job, so an exec: pointer would re-run it for no added signal. The claim's live-capture block is browser-gated and skips where no Chromium binary is installed, which is every CI runner here; the detection assertions it carries run everywhere over frozen observation records, so the exit code is not a property of where it ran. Re-derived 2026-10-14: +1 backed entry (skill-format-package-keys, road-to-sentences-the-tree-can-back step 5.1, owner decision 2026-10-14 option (a)). Pointer form rather than exec:: the claim is that the schema defines package-specific top-level keys, which a substring pointer into src/scripts/schemas/skill.schema.json checks, and no allowlisted command has an exit code that is that verdict. Re-derived 2026-10-17: +1 backed entry (uninstall-purge-inventory-bounded, road-to-an-uninstall-that-only-removes-what-it-brought Phase 2.2). It is exec: form \u2014 two vitest files drive the uninstall path over a mkdtemp fixture and their exit code IS the containment verdict \u2014 so the live exec share moves 18/62 to 19/63. `exec_feasible` and `delta_pp` are NOT bumped, for the reason already recorded above for council-fallback-loses-zero-seats: both record the 2026-07-25 CLASSIFICATION pass rather than a running tally, and only `backed_claims` is mechanically checked against the live ledger.",
++  "measured_at": "2026-07-25 (re-counted three times. The first publication said 25 backed / 10 feasible and was measured mid-PR. The 11-feasible figure was then corrected DOWN to 10 when the form was actually built: context-token-reduction was counted feasible because check_token_regression re-derives token figures via js-tiktoken, but the script reads internal/bench/reports/projection-cost.json, which is gitignored as a per-run artifact \u2014 so the command is not self-sufficient in a fresh checkout and exits 1. Found by the exec: gate on its first CI run, which is the gate doing its job. The backed_claims DENOMINATOR drifted separately and is now derived and gate-checked rather than retyped. Re-derived 2026-07-27: +3 backed entries from road-to-credible-install (install-audit-clean exec-backed, hook-dispatch-latency, default-install-context-cost). Re-derived 2026-07-28: +1 backed entry (code-graph-retrieval-null \u2014 bench needs local target repos, not exec:-feasible in a fresh CI checkout; stays on its pointer form). Re-derived 2026-07-29: +2 backed entries from road-to-runtime-encoding-hardening (encoding-floor-text-layer-only and encoding-corpus-scope-guard). Both stay on pointer form rather than exec:, because the measurement report's latency figure is machine-dependent and an exec: gate on it could redden on a loaded runner \u2014 the exit code would stop being a property of the code. Re-derived 2026-08-02: +1 backed entry (scope-dedup-cold-start-reduction \u2014 the 38.0% figure entered the ledger with its unreachable-in-production condition bound into the claim text, road-to-release-shape-honesty Phase 3; pointer form, since the evidence is a written honest-null record rather than a re-runnable command). Re-derived 2026-08-02 (second sitting): +4 backed entries from road-to-governance-invariants Phase 4 (governance-aggregation-refusal-invariance, governance-decomposition-effect-boundary, governance-marker-preservation-null, governance-adjacent-properties). All four stay on pointer form rather than exec:, because their numbers are re-derived by a committed vitest drift gate (tests/scripts/governance_invariants_report.test.ts) that already runs in the node-tests job \u2014 an exec: pointer would re-run the same assertions a second time for no added signal. `delta_pp` is left at its 2026-07-25 value on purpose: it records THAT measurement's verdict, not a running ratio. Re-derived 2026-08-03: +2 backed entries from the PR-#1133 external-review follow-up (keyword-anchoring-census \u2014 census claim now carries the corpus-co-edit disclosure plus an independent 49-prompt replay record; budget-routing-relation \u2014 deliberately worded to what the code proves: relation implemented + tested with the full reserve lifecycle, delivery agent-adherent and doctor-monitored, NOT 'shipped'). Both pointer form: the census evidence is a written measurement record, and the relation's numbers are re-derived by the vitest suite already in the node-tests job. Re-derived 2026-08-10: +1 backed entry (conformance-advisory-vs-blocking \u2014 the round-5 advisory-vs-blocking result, 555 \u2192 19 vs 8 \u2192 0 and 1 \u2192 0; pointer form, since the numbers rest on a one-off transcript audit over the maintainer's local session store that no CI job can re-derive). Re-derived 2026-08-11: +6 backed entries from road-to-inbox-harvest-2026-08-b-authoring-contract Phase 4 \u2014 the six external research citations a normative sentence in src/ rests on (judge-family-llm-as-a-judge-foundation, adversarial-review-tree-of-thoughts, autonomous-analysis-self-refine, bug-analyzer-chain-of-verification, sequential-thinking-chain-of-thought, skill-improvement-reflexion). All six use pointer grammar #3 (external URL + dated stamp), which is NOT exec:-feasible by construction: the grammar is an existence-and-date check the tooling never dereferences, so a withdrawn or renumbered paper stays green \u2014 the reason only load-bearing cites were bound and the 14 ids appearing solely in roadmap prose were left unbound. Re-derived 2026-08-19: +1 backed entry (council-fallback-loses-zero-seats, road-to-council-api-fallback Phase 4). It is exec: form \u2014 the end-to-end suite re-derives the whole chain from a config file to a rendered artefact \u2014 but `exec_feasible` is NOT bumped, for the same reason `delta_pp` is frozen: both record the 2026-07-25 CLASSIFICATION pass, not a running tally, and only `backed_claims` is mechanically checked against the live ledger. Re-derived 2026-08-23: +3 backed entries from road-to-skill-link-integrity-and-manifest-sync (skill-link-census, adapter-lifecycle-day-one-table, augment-manifest-version-package-synced). Both pointer form: the census row is regenerated by `lint_handoffs --census-json` and the lifecycle pair is re-derived by the parity pass already wired into lint_media_policy_linkage, so an exec: pointer would re-run an assertion CI already makes. Re-derived 2026-08-23 (drain merge): +1 backed entry (council-parse-outcome-corpus-rate) from road-to-council-evidence-integrity \u2014 exec: form, re-derived by tests/scripts/ai_council/parse_corpus.test.ts in the node-tests job. Re-derived 2026-08-27: -1 backed entry. `no-runtime-daemon` moved from `backed` to the ledger's new `withdrawn` status (road-to-runtime-governance-flip Phase 2) -- retired by ADR-249, which permits a supervised resident process in core. This is the first DECREASE in this denominator and the first one caused by a decision rather than by a measurement: the claim was true on its 2026-07-04 last_verified and its evidence pointer still resolves, and the package decided to stop having the property. Its successor, `resident-process-permitted-under-governance`, is deliberately `unbacked` and does NOT raise the count -- it records a policy, and no supervised process has shipped for a property claim to be about. Re-derived 2026-09-13: +1 backed entry (ui-conformance-behavioral-catch, road-to-behaviour-evidence-over-pixels Phase 6.1). Pointer form rather than exec:, and the reason is the same one that keeps the encoding pair off exec: -- the assertion is already re-derived by tests/scripts/ui_conformance_probe.test.ts in the node-tests job, so an exec: pointer would re-run it for no added signal. The claim's live-capture block is browser-gated and skips where no Chromium binary is installed, which is every CI runner here; the detection assertions it carries run everywhere over frozen observation records, so the exit code is not a property of where it ran. Re-derived 2026-10-14: +1 backed entry (skill-format-package-keys, road-to-sentences-the-tree-can-back step 5.1, owner decision 2026-10-14 option (a)). Pointer form rather than exec:: the claim is that the schema defines package-specific top-level keys, which a substring pointer into src/scripts/schemas/skill.schema.json checks, and no allowlisted command has an exit code that is that verdict. Re-derived 2026-10-17: +1 backed entry (uninstall-purge-inventory-bounded, road-to-an-uninstall-that-only-removes-what-it-brought Phase 2.2). It is exec: form \u2014 two vitest files drive the uninstall path over a mkdtemp fixture and their exit code IS the containment verdict \u2014 so the live exec share moves 18/62 to 19/63. `exec_feasible` and `delta_pp` are NOT bumped, for the reason already recorded above for council-fallback-loses-zero-seats: both record the 2026-07-25 CLASSIFICATION pass rather than a running tally, and only `backed_claims` is mechanically checked against the live ledger. Re-derived 2026-10-19: +2 backed entries (brand-voice-lexicon-recall, brand-status-state-truth; road-to-a-brand-the-tree-can-check 7.3). Both exec: form \u2014 vitest files over scratch fixtures whose exit code IS the verdict \u2014 so the live exec share reads 22/65 (counted over the ledger, not carried forward). `exec_feasible` and `delta_pp` are NOT bumped, for the same classification-pass reason.",
+   "pre_registered_threshold_pp": 10,
+-  "backed_claims": 63,
++  "backed_claims": 65,
+   "machine_re_verifiable_today": 0,
+   "exec_feasible": 10,
+   "delta_pp": 38.5,
+diff --git a/src/domains/brand/brand/review/command.md b/src/domains/brand/brand/review/command.md
+index 4d97141d8581092ad9f2b74234196c94da25bd86..6597dd6ac516529250fe138f6fd03593e8b1fd10 100644
+--- a/src/domains/brand/brand/review/command.md
++++ b/src/domains/brand/brand/review/command.md
+@@ -24,3 +24,13 @@ emitted UI / copy / assets against the active brand tokens (from
+ `state.ui_design` / the consumer's `tokens.json`) and the voice profile, per
+ the `brand-source-of-truth` § Iron Law 2 checklist. A value not traceable to a brand token or voice
+ rule is flagged off-brand. Args: `"<artifact path or description>"`.
++
++**Deterministic checks first, before any model judgement.** For copy,
++pipe the text on stdin to
++`npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - --slot agents/context-spine/brand-voice.md` <!-- ref-ignore -->
++(drop `--slot` when `agent-config brand:status --json` does not report the
++slot valid). For CSS or markup, run the design-tokens palette reading,
++`node <skills-root>/design-tokens/scripts/tokens.mjs validate --dir <path> --json --tokens <registered tokens.json>`. Report every located
++finding — `avoid` term with its note, `unbacked-claim` with "needs proof",
++`off-palette` with its nearest token — and flag, never block. The audit's
++judgement comes after and never overrides a located finding.
+diff --git a/src/domains/brand/pack.yaml b/src/domains/brand/pack.yaml
+index 562404d1179c3ca278f3c945959a833854965871..42baf4b3c5bd47d25e8146a0af7e39d9e20bb217 100644
+--- a/src/domains/brand/pack.yaml
++++ b/src/domains/brand/pack.yaml
+@@ -23,8 +23,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 251
+-  commands_tokens: 2088
++  commands_tokens: 2275
+   other_tokens: 0
+-  rules_tokens: 1897
+-  total_tokens: 4236
++  rules_tokens: 1902
++  total_tokens: 4428
+ trust_level_default: professional
+diff --git a/src/domains/gtm-marketing/ghostwriter/write/command.md b/src/domains/gtm-marketing/ghostwriter/write/command.md
+index 221fbc999ebef9af4c5dda4ff3882c595501e020..f4eb54d225a08d7fc762c4b22bf999dd6d7c73e1 100644
+--- a/src/domains/gtm-marketing/ghostwriter/write/command.md
++++ b/src/domains/gtm-marketing/ghostwriter/write/command.md
+@@ -103,6 +103,25 @@ Generate the body as a single fenced markdown block per
+ fingerprint constraints: sentence-length ±25 %, opener / closer
+ patterns, hashtag / emoji rules, ±15 % length tolerance.
+ 
++### 5b. Check the finished draft
++
++Step 4 steers drafting; this step checks the result. Pipe the body on
++stdin — this command never writes the draft to disk:
++
++```bash
++npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
++  --ghostwriter agents/reference/ghostwriter/<slug>.md \
++  [--slot agents/context-spine/brand-voice.md]
++```
++
++Pass `--slot` only when `agent-config brand:status --json` reports the
++`brand-voice` slot valid. Exit **1** is a profile taboo in the draft:
++print its located finding and **abort** — no draft, no footer (§ Rules).
++Brand `avoid` hits and `unbacked-claim` findings flag without blocking:
++print each after the fenced block with its line, its note or the missing
++proof. Quoted, cited and code-fenced text is never scanned. No runtime →
++say so in one line and rely on step 4.
++
+ ### 6. Append the disclosure footer (literal, deterministic)
+ 
+ After the body, emit a blank line, then the literal string (rendered
+diff --git a/src/domains/gtm-marketing/post-as/me/command.md b/src/domains/gtm-marketing/post-as/me/command.md
+index 583da55bc3b9f512fb97074decfb77d0d225017b..1a4dd90645c761a578230da874c60130ebf73cc0 100644
+--- a/src/domains/gtm-marketing/post-as/me/command.md
++++ b/src/domains/gtm-marketing/post-as/me/command.md
+@@ -96,6 +96,22 @@ Generate the body as a single fenced markdown block per
+ the loaded fingerprint (sentence-length ±25 %, pace),
+ ±15 % length tolerance, write in `language`.
+ 
++### 5b. Check the finished draft
++
++Pipe the body on stdin — this command never writes the draft to disk:
++
++```bash
++npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
++  [--slot agents/context-spine/brand-voice.md]
++```
++
++Pass `--slot` only when `agent-config brand:status --json` reports the
++`brand-voice` slot valid. Claim phrases are checked either way; the
++user's own `style.avoid` is not read (`.agent-user.md` v1 has no such
++field). Findings flag without blocking: print each after the fenced
++block with its line and its note or the missing proof. No runtime → say
++so in one line.
++
+ ### 6. Disclosure footer (omitted — user is the author)
+ 
+ **Do not append a footer.** `/post-as:me` is the self-author path;
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index 6d33c2422cf5ba7b6c762a94c103caf3a1d73290..1b24c444275794ca19e64d36238742ede2d00fd4 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -96,8 +96,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 3649
+-  commands_tokens: 255227
++  commands_tokens: 255595
+   other_tokens: 1304
+   rules_tokens: 63883
+-  total_tokens: 324063
++  total_tokens: 324431
+ trust_level_default: core
+diff --git a/src/rules/brand-source-of-truth.md b/src/rules/brand-source-of-truth.md
+index 27e671ec4a19331da933f2de2fd513f24d28413d..32ba241d2f3e94a6ffdbf9ab6ea15ab9eafbbea4 100644
+--- a/src/rules/brand-source-of-truth.md
++++ b/src/rules/brand-source-of-truth.md
+@@ -21,7 +21,7 @@ self_contained: true
+ workspaces: [engineering]
+ packs: [brand]
+ enforced_by:
+-  - "instruction-only: no checker reads emitted output yet"
++  - "instruction-only: check_voice_lexicon runs only when a command calls it"
+ obligation_frequency: "per-edit"
+ ---
+ 
+diff --git a/src/scripts/_lib/claim_phrases.ts b/src/scripts/_lib/claim_phrases.ts
+index b04f575984902c93ca9ad948355a63ae84e63824..a7819947d45529763b6a74abeebbed2df784d3fb 100644
+--- a/src/scripts/_lib/claim_phrases.ts
++++ b/src/scripts/_lib/claim_phrases.ts
+@@ -7,9 +7,11 @@
+  * needs a proof. A hit is advisory: the finding says "needs proof", never
+  * "unlawful".
+  *
+- * PRE-REGISTERED: this list was frozen before the first measurement over the
+- * committed negative corpus (`tests/fixtures/voice-lexicon/negative-corpus.txt`,
+- * bar ≤ 0.1 hits per 10k words). Changing it re-opens the measurement.
++ * PRE-REGISTERED: this list was frozen before each measurement. v1 missed the
++ * bar on `tests/fixtures/voice-lexicon/negative-corpus.txt`; v2 drops the four
++ * English single-word entries NG-10 already excludes and is measured on
++ * `negative-corpus-v2.txt`, a corpus it was not revised against (bar ≤ 0.1 hits
++ * per 10k words). Changing it re-opens the measurement.
+  *
+  * German phrases run at `hint` severity until a German negative corpus is
+  * registered (E5, 5.3).
+@@ -46,9 +48,6 @@ export const CLAIM_PHRASES: readonly ClaimPhrase[] = [
+         'best-of-breed',
+         'the leading provider',
+         'the leading platform',
+-        'unmatched',
+-        'unrivaled',
+-        'unrivalled',
+         'second to none',
+     ),
+     ...en(
+@@ -61,7 +60,7 @@ export const CLAIM_PHRASES: readonly ClaimPhrase[] = [
+         'outperforms every',
+         'beats every',
+     ),
+-    ...en('absolute', 'never fails', 'zero downtime', '100% secure', '100% uptime', '100% accurate', 'completely secure', 'unhackable'),
++    ...en('absolute', 'never fails', 'zero downtime', '100% secure', '100% uptime', '100% accurate', 'completely secure'),
+     ...en('certification', 'officially certified', 'award-winning', 'award winning', 'clinically proven', 'scientifically proven'),
+     ...en('guarantee', 'guaranteed results', 'guaranteed to work', 'we guarantee', 'money-back guarantee', 'risk-free'),
+     ...de('superlative', 'nummer eins', 'marktführer', 'weltweit führend', 'branchenführend', 'unschlagbar', 'unübertroffen'),
+diff --git a/src/scripts/check_voice_lexicon.ts b/src/scripts/check_voice_lexicon.ts
+index 29397b712d5f4071820862cf4dd8aebd90aaa30f..9561d9402647980c85c5e918059ef37b45044cf8 100644
+--- a/src/scripts/check_voice_lexicon.ts
++++ b/src/scripts/check_voice_lexicon.ts
+@@ -27,7 +27,7 @@
+  * as SKIPPED with its reason, never as a clean pass.
+  *
+  * Usage:
+- *   ./scripts-run src/scripts/check_voice_lexicon --draft <file>
++ *   ./scripts-run src/scripts/check_voice_lexicon --draft <file | ->
+  *     [--slot agents/context-spine/brand-voice.md] [--ghostwriter <profile.md>]
+  *     [--json] [--now YYYY-MM-DD]
+  */
+@@ -84,6 +84,8 @@ export function blankExempt(text: string): string {
+     t = t.replace(/https?:\/\/\S+/g, blank);
+     t = t
+         .replace(/"[^"\n]{1,300}"/g, blank)
++        // German low-high quotes close on “, the English opener, so they run first.
++        .replace(/„[^“\n]{1,300}“/g, blank)
+         .replace(/“[^”\n]{1,300}”/g, blank)
+         .replace(/(^|[\s([{"“])'([^'\n]{1,120})'(?=[\s)\]},.!?;:"”]|$)/g, (m, lead: string, inner: string) =>
+             inner.includes(' ') ? lead + blank(m.slice(lead.length)) : m,
+@@ -328,7 +330,7 @@ function parseArgs(argv: readonly string[]): Args | string {
+     return { draft, slot, ghostwriter, json, now };
+ }
+ 
+-function readOrNull(p: string): string | null {
++function readOrNull(p: string | number): string | null {
+     try {
+         return fs.readFileSync(p, 'utf-8');
+     } catch {
+@@ -342,7 +344,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+         process.stderr.write(`${args}\n`);
+         return 2;
+     }
+-    const draft = readOrNull(args.draft);
++    // `-` reads stdin: a drafting command that prints only must not write its draft to disk.
++    const draft = readOrNull(args.draft === '-' ? 0 : args.draft);
+     if (draft === null) {
+         process.stderr.write(`draft not readable: ${args.draft}\n`);
+         return 2;
+diff --git a/src/skills/humanizer/SKILL.md b/src/skills/humanizer/SKILL.md
+index 23e414fea9f82aba6b880564889c13831fe05138..90aff866b72541e4fbdbcc27937173ef1550a237 100644
+--- a/src/skills/humanizer/SKILL.md
++++ b/src/skills/humanizer/SKILL.md
+@@ -75,7 +75,13 @@ human voice there; do not inject personality or restructure it.
+    ~2 per 500 words (density cap, not zero — house precedent CP1).
+ 5. **Verify mechanically** when a runtime is available:
+    `npx tsx node_modules/@event4u/agent-config/src/scripts/detect_ai_tells.ts --stdin --fail`
+-   on the final draft. No runtime → the step-3 audit is the fallback
++   on the final draft. Then the lexicon and claim pass on the same draft,
++   on stdin: `npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft -`,
++   adding `--slot` for a valid `brand-voice` slot and `--ghostwriter` for
++   the active profile. Fix an `avoid` hit with its note; a profile taboo
++   hit means the rewrite is not done; report each `unbacked-claim` located
++   with "needs proof" — never reword a claim away (step 6).
++   No runtime → the step-3 audit is the fallback
+    (degrade, do not skip the audit).
+ 5b. **Carrier-Unicode strip — OPT-IN, never a default.** Runs **only** when
+    the operator explicitly asks for a carrier strip. `stripCarrierUnicode`
+diff --git a/tests/fixtures/brand-voice-read-rate/prompts.json b/tests/fixtures/brand-voice-read-rate/prompts.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..506805e0f9fffe69772c88f96a302414b2a32c88
+--- /dev/null
++++ b/tests/fixtures/brand-voice-read-rate/prompts.json
+@@ -0,0 +1,54 @@
++{
++  "_doc": "PRE-REGISTERED 2026-10-19 for road-to-a-brand-the-tree-can-check 6.3, before any run. Decision E8 fixed N = 30 brand-copy prompts across the six 6.1 readers, bar >= 95 % of reader runs Read the slot, and 0 slot reads on unrelated prompts; this file fixes the prompts and the unrelated set (10), which E8 left open. No prompt may be edited after the first run.",
++  "protocol": {
++    "fixture": "a scratch project outside this repository, with the package installed as a consumer and agents/context-spine/brand-voice.md present and schema-valid; the host's user scope must not carry this package's own rules (a clean HOME), per the in-repo probe trap",
++    "host": "Claude Code, headless (`claude -p --output-format stream-json`), one fresh session per prompt",
++    "read_event": "a Read tool call whose file_path ends with agents/context-spine/brand-voice.md, from the stream or the audit log; a Grep or Glob naming the path does not count",
++    "rate": "reader runs with >= 1 read_event / 30; unrelated runs with >= 1 read_event must be 0",
++    "routing_check": "a reader run counts toward the denominator whether or not its skill activated; the activated skill is recorded beside each run, because E8's revisit-if is that the fixtures do not route to the readers"
++  },
++  "reader_prompts": [
++    { "reader": "release-comms", "prompt": "Write the release notes for version 2.4: CSV import is twice as fast and the export dialog remembers the last folder." },
++    { "reader": "release-comms", "prompt": "Draft a short changelog entry announcing that SSO login now supports Okta." },
++    { "reader": "release-comms", "prompt": "Write the customer email announcing we are deprecating the v1 API in six months." },
++    { "reader": "release-comms", "prompt": "Turn these merged PR titles into a user-facing 'what's new' post: dark mode, faster search, fixed timezone bug." },
++    { "reader": "release-comms", "prompt": "Write the in-app banner text for the new offline mode release." },
++    { "reader": "messaging-architecture", "prompt": "Build the messaging hierarchy for our scheduling product: one core message, three pillars, proof points." },
++    { "reader": "messaging-architecture", "prompt": "Write the value proposition and three supporting messages for our invoice automation tool aimed at small agencies." },
++    { "reader": "messaging-architecture", "prompt": "Rework our homepage headline and subhead so they say what the product actually does." },
++    { "reader": "messaging-architecture", "prompt": "Give me a message house for the new team analytics feature." },
++    { "reader": "messaging-architecture", "prompt": "Write the elevator pitch for our product in two sentences, for sales to use." },
++    { "reader": "gtm-launch", "prompt": "Plan the launch copy for our mobile app: app store description, launch tweet, and email subject line." },
++    { "reader": "gtm-launch", "prompt": "Write the Product Hunt tagline and first comment for our launch next week." },
++    { "reader": "gtm-launch", "prompt": "Draft the launch announcement blog post for our public beta." },
++    { "reader": "gtm-launch", "prompt": "Write three LinkedIn posts for the launch week of our new pricing plans." },
++    { "reader": "gtm-launch", "prompt": "Create the copy for the launch landing page hero, features section and call to action." },
++    { "reader": "content-funnel-design", "prompt": "Write the three-email nurture sequence for people who downloaded our onboarding checklist." },
++    { "reader": "content-funnel-design", "prompt": "Draft the copy for a lead magnet landing page offering our hiring scorecard template." },
++    { "reader": "content-funnel-design", "prompt": "Write the welcome email a new trial user receives on day one." },
++    { "reader": "content-funnel-design", "prompt": "Write the blog post outline and intro paragraph for a top-of-funnel article on reducing meeting time." },
++    { "reader": "content-funnel-design", "prompt": "Write the re-engagement email for trial users who have not logged in for a week." },
++    { "reader": "humanizer", "prompt": "Make this paragraph sound less like AI wrote it: 'In today's fast-paced world, our solution seamlessly empowers teams to unlock their full potential.'" },
++    { "reader": "humanizer", "prompt": "Rewrite our About page intro so it reads like a person wrote it, not a template." },
++    { "reader": "humanizer", "prompt": "This support reply sounds robotic. Humanize it: 'We apologize for any inconvenience this may have caused. Rest assured, our team is actively working on a resolution.'" },
++    { "reader": "humanizer", "prompt": "Clean up the AI tells in this product description and keep it in our brand voice: 'A game-changing, cutting-edge platform that revolutionizes collaboration.'" },
++    { "reader": "humanizer", "prompt": "Rewrite this newsletter intro so it sounds natural and on-brand." },
++    { "reader": "brand-audit", "prompt": "Audit our marketing site copy for consistency with our brand voice and list where it drifts." },
++    { "reader": "brand-audit", "prompt": "Review these three onboarding emails and tell me which ones are off-brand and why." },
++    { "reader": "brand-audit", "prompt": "Check whether our app's error messages match our brand voice." },
++    { "reader": "brand-audit", "prompt": "Do a brand audit of our social media bios and pinned posts." },
++    { "reader": "brand-audit", "prompt": "Compare our pricing page wording against our brand guidelines and flag inconsistencies." }
++  ],
++  "unrelated_prompts": [
++    "Add a database index for the orders.customer_id column and write the migration.",
++    "Why does this Python function return None when the list is empty? def first(xs): if xs: return xs[0]",
++    "Write a unit test for a function that parses ISO-8601 dates.",
++    "Set up a GitHub Actions workflow that runs npm test on pull requests.",
++    "Explain the difference between a mutex and a semaphore.",
++    "Refactor this loop into a list comprehension: out = []; for x in xs: out.append(x * 2)",
++    "What does HTTP status 409 mean and when should an API return it?",
++    "Write a bash one-liner that counts lines in all .ts files under src.",
++    "Convert this JSON object to YAML: {\"a\": 1, \"b\": [2, 3]}",
++    "Find the off-by-one bug in a binary search implementation that loops while lo < hi."
++  ]
++}
+diff --git a/tests/fixtures/voice-lexicon/negative-corpus-v2.txt b/tests/fixtures/voice-lexicon/negative-corpus-v2.txt
+new file mode 100644
+index 0000000000000000000000000000000000000000..f01e439daedc46c6f841fb9026574ab3a4fa1994
+--- /dev/null
++++ b/tests/fixtures/voice-lexicon/negative-corpus-v2.txt
+@@ -0,0 +1,118 @@
++# Pre-registered negative corpus v2 for check_voice_lexicon claim phrases (brand-checkability roadmap 5.3).
++# Registered 2026-10-19 at origin/main 95b00b656, BEFORE any scan of these files, with registry v2
++# (v1 minus the English single words unmatched, unrivaled, unrivalled, unhackable — NG-10).
++# Selection: every docs/guidelines/**/*.md whose path does not match
++# brand|voice|ghostwriter|write-engine|marketing|messaging|claim|positioning|gtm|copy|content|design (non-marketing prose).
++# v1's corpus (docs/contracts) is seen and excluded by construction.
++# Words: whitespace-separated tokens of the raw file. Bar: <= 0.1 claim-phrase hits per 10k words, no tuning after the first run.
++docs/guidelines/abstraction-thresholds.md
++docs/guidelines/agent-infra/5w2h-analysis.md
++docs/guidelines/agent-infra/active-remediation-mechanics.md
++docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md
++docs/guidelines/agent-infra/api-cost-levers.md
++docs/guidelines/agent-infra/artifact-drafting-protocol-mechanics.md
++docs/guidelines/agent-infra/ask-when-uncertain-demos.md
++docs/guidelines/agent-infra/asking-and-brevity-examples.md
++docs/guidelines/agent-infra/break-glass-usage.md
++docs/guidelines/agent-infra/carve-out-predicates.md
++docs/guidelines/agent-infra/comparison-matrix.md
++docs/guidelines/agent-infra/context-hygiene-mechanics.md
++docs/guidelines/agent-infra/corpus-grounding-authoring.md
++docs/guidelines/agent-infra/critical-thinking.md
++docs/guidelines/agent-infra/cross-source-consistency-mechanics.md
++docs/guidelines/agent-infra/developer-judgment.md
++docs/guidelines/agent-infra/direct-answers-demos.md
++docs/guidelines/agent-infra/domain-adoption-gates.md
++docs/guidelines/agent-infra/domain-eval-anti-pattern.md
++docs/guidelines/agent-infra/domain-pack-architecture.md
++docs/guidelines/agent-infra/downstream-changes-mechanics.md
++docs/guidelines/agent-infra/emphasis-budget.md
++docs/guidelines/agent-infra/engineering-memory-data-format.md
++docs/guidelines/agent-infra/evaluator-independence-mechanics.md
++docs/guidelines/agent-infra/existence-question-verdicts.md
++docs/guidelines/agent-infra/failure-signatures.md
++docs/guidelines/agent-infra/false-green.md
++docs/guidelines/agent-infra/first-principles.md
++docs/guidelines/agent-infra/framework-neutrality-patterns.md
++docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
++docs/guidelines/agent-infra/gate-authoring.md
++docs/guidelines/agent-infra/guarded-baseline.md
++docs/guidelines/agent-infra/installed-tools-manifest.md
++docs/guidelines/agent-infra/inversion-thinking.md
++docs/guidelines/agent-infra/ios-simulator-guide.md
++docs/guidelines/agent-infra/language-and-tone-examples.md
++docs/guidelines/agent-infra/layered-settings.md
++docs/guidelines/agent-infra/linked-projects-onboarding-gate.md
++docs/guidelines/agent-infra/mcp-request-signing.md
++docs/guidelines/agent-infra/memory-access.md
++docs/guidelines/agent-infra/mental-models.md
++docs/guidelines/agent-infra/minimal-safe-diff-mechanics.md
++docs/guidelines/agent-infra/missing-tool-handling.md
++docs/guidelines/agent-infra/model-recommendation.md
++docs/guidelines/agent-infra/naming.md
++docs/guidelines/agent-infra/notes-horizon-mechanics.md
++docs/guidelines/agent-infra/output-patterns.md
++docs/guidelines/agent-infra/recurring-criticism-mechanics.md
++docs/guidelines/agent-infra/reuse-verdict-mechanics.md
++docs/guidelines/agent-infra/review-routing-data-format.md
++docs/guidelines/agent-infra/roadmap-deferred-resolution-provenance.md
++docs/guidelines/agent-infra/roadmap-progress-mechanics.md
++docs/guidelines/agent-infra/role-contracts.md
++docs/guidelines/agent-infra/role-mode-router.md
++docs/guidelines/agent-infra/rule-body-migration-inventory.md
++docs/guidelines/agent-infra/rule-type-governance.md
++docs/guidelines/agent-infra/runtime-layer.md
++docs/guidelines/agent-infra/scqa-framework.md
++docs/guidelines/agent-infra/security-lint-containment.md
++docs/guidelines/agent-infra/self-improvement-pipeline.md
++docs/guidelines/agent-infra/simplicity-and-goal-demos.md
++docs/guidelines/agent-infra/six-hats.md
++docs/guidelines/agent-infra/size-and-scope.md
++docs/guidelines/agent-infra/skill-quality-checklist.md
++docs/guidelines/agent-infra/source-confidentiality-mechanics.md
++docs/guidelines/agent-infra/symptom-driven-harvest-loop.md
++docs/guidelines/agent-infra/systems-thinking.md
++docs/guidelines/agent-infra/tool-description-as-policy.md
++docs/guidelines/agent-infra/tool-integration.md
++docs/guidelines/agent-infra/traceability-field-mechanics.md
++docs/guidelines/agent-infra/untrusted-input-spotlighting.md
++docs/guidelines/agent-infra/verify-before-complete-demos.md
++docs/guidelines/augment-portability-patterns.md
++docs/guidelines/code-clarity.md
++docs/guidelines/component-oriented-and-oop-development.md
++docs/guidelines/cross-role-handoff.md
++docs/guidelines/docs/readme-size-and-splitting.md
++docs/guidelines/e2e/playwright.md
++docs/guidelines/monorepo-antipatterns.md
++docs/guidelines/php/artisan-commands.md
++docs/guidelines/php/blade-ui.md
++docs/guidelines/php/controllers.md
++docs/guidelines/php/database.md
++docs/guidelines/php/eloquent.md
++docs/guidelines/php/flux.md
++docs/guidelines/php/general.md
++docs/guidelines/php/git.md
++docs/guidelines/php/jobs.md
++docs/guidelines/php/livewire.md
++docs/guidelines/php/logging.md
++docs/guidelines/php/naming.md
++docs/guidelines/php/patterns.md
++docs/guidelines/php/patterns/dependency-injection.md
++docs/guidelines/php/patterns/dtos.md
++docs/guidelines/php/patterns/events.md
++docs/guidelines/php/patterns/factory.md
++docs/guidelines/php/patterns/pipelines.md
++docs/guidelines/php/patterns/policies.md
++docs/guidelines/php/patterns/repositories.md
++docs/guidelines/php/patterns/service-layer.md
++docs/guidelines/php/patterns/strategy.md
++docs/guidelines/php/performance.md
++docs/guidelines/php/php-coding-patterns.md
++docs/guidelines/php/resources.md
++docs/guidelines/php/security.md
++docs/guidelines/php/sql.md
++docs/guidelines/php/validations.md
++docs/guidelines/php/websocket.md
++docs/guidelines/prompt-templates.md
++docs/guidelines/redundancy-taxonomy.md
++docs/guidelines/wing4-handoff.md
+diff --git a/tests/scripts/brand_scenarios.test.ts b/tests/scripts/brand_scenarios.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..346ff81942f2bc4d6bb3354b86c54ce7d422098c
+--- /dev/null
++++ b/tests/scripts/brand_scenarios.test.ts
+@@ -0,0 +1,253 @@
++// road-to-a-brand-the-tree-can-check 7.2 — scenario fixtures with deterministic
++// legs. Each leg runs the real readers (`brand:status`, `check_voice_lexicon`,
++// the design-tokens `validate` palette reading) over a scratch project and
++// asserts one observable property. The "sounds like us" leg is not here: it
++// stays a labelled rubric, because no deterministic reader can judge it (NG-1).
++import { spawnSync } from 'node:child_process';
++import { createHash } from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import { runBrandStatus } from '../../src/scripts/_cli/cmd_brand_status.js';
++import { checkDraft, lexiconFromSlot, claimsFromSlot, scanClaims, scanLexicon } from '../../src/scripts/check_voice_lexicon.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
++const TOKENS_TS = path.join(REPO_ROOT, 'src', 'skills', 'design-tokens', 'scripts', 'tokens.ts');
++const LEXICON_TS = path.join(REPO_ROOT, 'src', 'scripts', 'check_voice_lexicon.ts');
++const NOW = new Date('2026-10-19T12:00:00Z');
++const SLOT = 'agents/context-spine/brand-voice.md';
++
++const AVOID_TERM = 'quillify';
++const TOKENS = JSON.stringify({
++    color: {
++        $type: 'color',
++        brand: { $value: { colorSpace: 'srgb', components: [1, 0, 0], hex: '#ff0000' } },
++        sampled: { $value: '#fe0101' },
++    },
++});
++
++function slot(opts: { avoid?: string; claimExpires?: string } = {}): string {
++    return [
++        '---',
++        'version: 2',
++        'attributes:',
++        '  - { is: warm, is_not: gushing, proof: "thanks once" }',
++        '  - { is: precise, is_not: pedantic, proof: "units" }',
++        '  - { is: direct, is_not: curt, proof: "answer first" }',
++        'avoid:',
++        `  - { term: ${opts.avoid ?? AVOID_TERM}, match: word, note: "say what it does" }`,
++        'claims:',
++        `  - { text: "zero downtime since 2024", evidence_ref: docs/uptime.md, expires: ${opts.claimExpires ?? '2027-01-01'} }`,
++        'provenance:',
++        '  sources: [{ ref: docs/voice.md, tier: authoritative }]',
++        '  confidence: med',
++        '  last_reviewed_at: 2026-10-01',
++        '---',
++        '# Voice',
++        '',
++    ].join('\n');
++}
++
++let tmp: string;
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'brand-scenarios-'));
++});
++afterEach(() => {
++    fs.rmSync(tmp, { recursive: true, force: true });
++});
++
++function project(name: string, files: Record<string, string>): string {
++    const root = path.join(tmp, name);
++    for (const [rel, body] of Object.entries(files)) {
++        fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
++        fs.writeFileSync(path.join(root, rel), body, 'utf-8');
++    }
++    fs.mkdirSync(root, { recursive: true });
++    return root;
++}
++
++function snapshot(root: string): Record<string, string> {
++    const out: Record<string, string> = {};
++    const walk = (dir: string): void => {
++        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
++            const p = path.join(dir, e.name);
++            if (e.isDirectory()) walk(p);
++            else out[path.relative(root, p)] = createHash('sha256').update(fs.readFileSync(p)).digest('hex');
++        }
++    };
++    walk(root);
++    return out;
++}
++
++interface Status {
++    state: string;
++    qualifiers: string[];
++    tokens_file: string | null;
++    sources: Array<{ path: string; kind: string; status: string; winner?: string }>;
++    voice: { read: boolean };
++    near_misses?: string[];
++}
++
++function status(root: string): { json: Status; text: string; all: string } {
++    const json = runBrandStatus({ cwd: root, json: true, now: NOW }).out.join('\n');
++    const text = runBrandStatus({ cwd: root, json: false, now: NOW }).out.join('\n');
++    return { json: JSON.parse(json) as Status, text, all: `${json}\n${text}` };
++}
++
++function run(bin: string, script: string, args: string[], input?: string): { status: number | null; stdout: string } {
++    const r = spawnSync(bin, [script, ...args], { encoding: 'utf8', cwd: REPO_ROOT, input });
++    return { status: r.status, stdout: r.stdout };
++}
++
++describe('brand scenarios — the resolver', () => {
++    it('existing brand: every reader leaves the project byte for byte unchanged and adds no file', () => {
++        const root = project('branded', { 'tokens.json': TOKENS, [SLOT]: slot(), 'DESIGN.md': '# DESIGN.md\n', 'src/a.css': '.a { color: #ff0000; }\n' });
++        const before = snapshot(root);
++        expect(status(root).json.state).toBe('branded');
++        run(TSX, TOKENS_TS, ['validate', '--dir', path.join(root, 'src'), '--json', '--tokens', path.join(root, 'tokens.json')]);
++        run(TSX, LEXICON_TS, ['--draft', '-', '--slot', path.join(root, SLOT)], 'Plain text.\n');
++        expect(snapshot(root)).toEqual(before);
++    });
++
++    it('greenfield: no source is bare, exits 0, and names no file', () => {
++        const root = project('greenfield', {});
++        const s = status(root);
++        expect(s.json.state).toBe('bare');
++        expect(s.json.sources).toEqual([]);
++        expect(runBrandStatus({ cwd: root, json: false, now: NOW }).code).toBe(0);
++    });
++
++    it('dotted near-miss: a .tokens.json is flagged and never becomes the brand', () => {
++        const root = project('dotted', { '.tokens.json': TOKENS });
++        const s = status(root);
++        expect(s.json.tokens_file).toBeNull();
++        expect(s.json.state).toBe('bare');
++        expect(s.all).toContain('.tokens.json');
++    });
++
++    it('shadowed and duplicate: a different second file is shadowed with its winner, an identical one a duplicate', () => {
++        const shadowed = status(project('shadowed', { 'tokens.json': TOKENS, 'assets/tokens.json': JSON.stringify({ c: { $value: '#000' } }) }));
++        expect(shadowed.json.sources.map((x) => x.status)).toEqual(['valid', 'shadowed']);
++        expect(shadowed.json.sources[1]?.winner).toBe('tokens.json');
++        expect(shadowed.json.qualifiers).toContain('shadowed');
++        const duplicate = status(project('duplicate', { 'tokens.json': TOKENS, 'assets/tokens.json': TOKENS }));
++        expect(duplicate.json.sources.map((x) => x.status)).toEqual(['valid', 'duplicate']);
++        expect(duplicate.json.qualifiers).not.toContain('shadowed');
++    });
++
++    it('tokens without voice and voice without tokens are both mixed; both together are branded', () => {
++        expect(status(project('tokens-only', { 'tokens.json': TOKENS })).json.state).toBe('mixed');
++        expect(status(project('voice-only', { [SLOT]: slot() })).json.state).toBe('mixed');
++        expect(status(project('both', { 'tokens.json': TOKENS, [SLOT]: slot() })).json.state).toBe('branded');
++    });
++
++    it('exploration without lock: asking the resolver persists nothing — no registry, no cache, no lock file', () => {
++        const root = project('explore', { 'tokens.json': TOKENS });
++        const before = Object.keys(snapshot(root));
++        status(root);
++        status(root);
++        expect(Object.keys(snapshot(root))).toEqual(before);
++    });
++
++    it('profile text excluded: a ghostwriter profile is never a brand source and none of its text is reported', () => {
++        const profile = '---\nversion: 1\nfictional: true\ntaboos:\n  - "velvetine"\n---\nVoice of a fictional author.\n';
++        const root = project('profile', { 'agents/reference/ghostwriter/fictional.md': profile });
++        const s = status(root);
++        expect(s.json.state).toBe('bare');
++        expect(s.json.sources).toEqual([]);
++        expect(s.all).not.toContain('velvetine');
++        expect(s.all).not.toContain('fictional author');
++    });
++
++    it('project switch: a stale slot in the previous project leaks no voice into the next', () => {
++        const a = project('a', { [SLOT]: slot() });
++        const b = project('b', { 'tokens.json': TOKENS });
++        expect(status(a).json.voice.read).toBe(true);
++        const sb = status(b);
++        expect(sb.json.voice.read).toBe(false);
++        expect(sb.all).not.toContain(AVOID_TERM);
++        const r = run(TSX, LEXICON_TS, ['--draft', '-'], `We ${AVOID_TERM} everything.\n`);
++        expect(r.stdout).toMatch(/lexicon: SKIPPED/);
++        expect(r.stdout).not.toMatch(new RegExp(`avoid "${AVOID_TERM}"`));
++    });
++});
++
++describe('brand scenarios — the palette', () => {
++    it('similar sampled colours are never merged: each literal tags its own token', () => {
++        const root = project('palette', { 'tokens.json': TOKENS, 'src/a.css': '.a { color: #ff0000; }\n.b { color: #fe0101; }\n' });
++        const r = run(TSX, TOKENS_TS, ['validate', '--dir', path.join(root, 'src'), '--json', '--tokens', path.join(root, 'tokens.json')]);
++        const found = JSON.parse(r.stdout) as Array<{ line: number; palette?: string }>;
++        expect(found.map((f) => [f.line, f.palette])).toEqual([
++            [1, 'on-palette (color.brand)'],
++            [2, 'on-palette (color.sampled)'],
++        ]);
++    });
++});
++
++describe('brand scenarios — the draft', () => {
++    const terms = lexiconFromSlot(slot({ avoid: 'Synergie' }));
++
++    it('lexicon recall: every planted avoid term is found, and none of its quoted, cited or fenced twins is', () => {
++        const planted = [
++            { term: 'synergy', match: 'word' as const },
++            { term: 'leverag', match: 'substring' as const },
++            { term: 'game-changer', match: 'word' as const },
++            { term: 'world class', match: 'word' as const },
++            { term: 'Einzigartig', match: 'word' as const },
++        ];
++        const lexicon = planted.map((p) => ({ ...p, source: 'brand' as const }));
++        const running = ['Our synergy works.', 'We are leveraging it.', 'A real Game-Changer.', 'It is world class.', 'Wirklich einzigartig.'];
++        const twins = ['They said "synergy".', '> We are leveraging it.', '`game-changer`', 'See https://x.test/world-class', '„Einzigartig“'];
++        const draft = [...running, ...twins, '```', 'synergy inside a fence', '```', ''].join('\n');
++        const found = scanLexicon(draft, lexicon);
++        expect(found.map((f) => f.line)).toEqual([1, 2, 3, 4, 5]);
++        expect(new Set(found.map((f) => f.text.toLowerCase()))).toHaveProperty('size', planted.length);
++    });
++
++    it('unbacked superlative: a located finding that says it needs proof', () => {
++        const found = scanClaims('Intro.\nWe are the industry-leading importer.\n', claimsFromSlot(slot()), NOW);
++        expect(found).toEqual([expect.objectContaining({ kind: 'unbacked-claim', line: 2, claim_class: 'superlative' })]);
++        expect(found[0]?.note).toMatch(/needs proof/);
++    });
++
++    it('expired claim: a claims[] entry past its day no longer backs the sentence', () => {
++        const draft = 'Zero downtime since 2024, guaranteed.\n';
++        expect(scanClaims(draft, claimsFromSlot(slot()), NOW)).toEqual([]);
++        const expired = scanClaims(draft, claimsFromSlot(slot({ claimExpires: '2026-01-01' })), NOW);
++        expect(expired[0]?.note).toMatch(/expired 2026-01-01/);
++    });
++
++    it('quoted banned term is exempt; the same term in running text is found', () => {
++        const draft = ['They called it "Synergie".', '> Synergie is their word.', 'Our Synergie is real.', ''].join('\n');
++        expect(scanLexicon(draft, terms).map((f) => f.line)).toEqual([3]);
++    });
++
++    it('German inflection is a documented miss of literal matching (E5)', () => {
++        expect(scanLexicon('Wir nutzen Synergien.\n', terms)).toEqual([]);
++        expect(scanLexicon('Wir nutzen Synergie.\n', terms)).toHaveLength(1);
++    });
++
++    it('brand findings never fail the draft', () => {
++        const brandOnly = checkDraft('The industry-leading Synergie.\n', { terms, claims: [], tellExemptions: [], now: NOW });
++        expect(brandOnly.findings.length).toBeGreaterThan(0);
++        expect(brandOnly.findings.every((f) => f.severity !== 'error')).toBe(true);
++    });
++});
++
++describe('brand scenarios — zero brand bytes off-brand', () => {
++    // The dynamic leg — every bound concern run against a fully branded
++    // fixture — is 0.6's `tests/scripts/hooks/no_brand_bytes.test.ts`. This leg
++    // pins the static half: no hook concern reaches the readers this roadmap
++    // added, so a non-brand task cannot pick their output up through a hook.
++    it('non-brand task: no hook concern binds brand:status, the lexicon checker or the voice slot', () => {
++        const manifest = fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf8');
++        for (const reader of ['brand_status', 'brand:status', 'check_voice_lexicon', 'brand-voice']) {
++            expect(manifest).not.toContain(reader);
++        }
++    });
++});
+diff --git a/tests/scripts/check_voice_lexicon.test.ts b/tests/scripts/check_voice_lexicon.test.ts
+index 7578011e59155f8ee15f7b09d42ba47c7f447814..91566251bf47c229017df3038ae632fc7d65503d 100644
+--- a/tests/scripts/check_voice_lexicon.test.ts
++++ b/tests/scripts/check_voice_lexicon.test.ts
+@@ -1,10 +1,10 @@
+ // check_voice_lexicon — "never say X" and "this claim needs a proof", checked
+ // on the finished draft (road-to-a-brand-the-tree-can-check 0.4, 5.1-5.3).
+ //
+-// The 5.3 negative-corpus bar is not asserted here: its pre-registered first
+-// measurement read 0.28 hits per 10k words against a bar of 0.1, and the
+-// registry may not be tuned after that run (E8); the reading is kept with the
+-// roadmap step rather than in this file.
++// The 5.3 negative-corpus bar is asserted over corpus v2 only: v1's first
++// measurement missed (0.28 per 10k), so registry v2 and a corpus it was not
++// revised against were pre-registered before v2 was scanned (E8). Readings:
++// agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md and -10-19.
+ import { spawnSync } from 'node:child_process';
+ import * as fs from 'node:fs';
+ import * as os from 'node:os';
+@@ -25,6 +25,7 @@ import {
+     type LexiconTerm,
+ } from '../../src/scripts/check_voice_lexicon.js';
+ import { validateBrandVoiceSlotText } from '../../src/scripts/_lib/brand_voice_slot.js';
++import { CLAIM_PHRASES } from '../../src/scripts/_lib/claim_phrases.js';
+ 
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+ const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_voice_lexicon.ts');
+@@ -82,8 +83,8 @@ function write(name: string, body: string): string {
+     return p;
+ }
+ 
+-function run(args: string[]): { status: number | null; stdout: string; stderr: string } {
+-    const r = spawnSync(TSX, [SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT });
++function run(args: string[], input?: string): { status: number | null; stdout: string; stderr: string } {
++    const r = spawnSync(TSX, [SCRIPT, ...args], { encoding: 'utf8', cwd: REPO_ROOT, input });
+     return { status: r.status, stdout: r.stdout, stderr: r.stderr };
+ }
+ 
+@@ -236,4 +237,51 @@ describe('check_voice_lexicon — claim-shapes', () => {
+         const found = scanClaims('Wir sind Marktführer.\nThe only way, the best tool.\nThey said "number one".\n', [], NOW);
+         expect(found.map((f) => [f.line, f.severity])).toEqual([[1, 'hint']]);
+     });
++
++    it('claim-shapes: no English registry entry is a single bare word (NG-10)', () => {
++        const bare = CLAIM_PHRASES.filter((p) => p.language === 'en' && !/[\s\-.]/u.test(p.phrase)).map((p) => p.phrase);
++        expect(bare).toEqual([]);
++    });
++});
++
++describe('check_voice_lexicon — negative-corpus', () => {
++    it('negative-corpus: registry v2 stays at or under 0.1 claim hits per 10k words on the pre-registered v2 corpus', () => {
++        const listFile = path.join(REPO_ROOT, 'tests', 'fixtures', 'voice-lexicon', 'negative-corpus-v2.txt');
++        const files = fs
++            .readFileSync(listFile, 'utf8')
++            .split('\n')
++            .filter((l) => l.trim() !== '' && !l.startsWith('#'));
++        expect(files.length).toBeGreaterThan(100);
++        let words = 0;
++        let hits = 0;
++        for (const rel of files) {
++            const text = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
++            words += text.split(/\s+/u).filter(Boolean).length;
++            hits += scanClaims(text, [], NOW).length;
++        }
++        expect(words).toBeGreaterThan(50_000);
++        expect((hits / words) * 10_000).toBeLessThanOrEqual(0.1);
++    });
++});
++
++describe('check_voice_lexicon — draft-surfaces', () => {
++    it('draft-surfaces: --draft - reads the finished draft from stdin, so no surface writes it to disk', () => {
++        const gw = write('gw.md', GHOSTWRITER_PROFILE);
++        const r = run(['--draft', '-', '--ghostwriter', gw], 'A real game-changer.\n');
++        expect(r.status).toBe(1);
++        expect(r.stdout).toMatch(/^-:1:\d+ error avoid "game-changer"/mu);
++    });
++
++    it('draft-surfaces: every drafting surface runs the checker on its finished draft', () => {
++        const surfaces = [
++            'src/domains/gtm-marketing/ghostwriter/write/command.md',
++            'src/domains/gtm-marketing/post-as/me/command.md',
++            'src/skills/humanizer/SKILL.md',
++            'src/domains/brand/brand/review/command.md',
++        ];
++        for (const rel of surfaces) {
++            const body = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
++            expect(body, rel).toContain('check_voice_lexicon.ts --draft -');
++        }
++    });
+ });

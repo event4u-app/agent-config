@@ -429,7 +429,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       `exclude` to `analyzeText`; an unknown id is a lint error.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t tell-exemptions --reporter=verbose` -> /✓.*tell-exemptions/
       Done 2026-10-17: the slot's ids go to `analyzeText` as `exclude`; an id outside `ALL_TELL_RULES` is a `brand_voice_slot` issue (`tell_exemptions[i]`), and the CLI refuses an invalid slot with exit 2. Tells are reported beside the findings and never change the exit code.
-- [ ] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
+- [x] **5.3 Claim phrases, advisory** (`corrected-from-reproduction`). A static
       registry of English and German claim *phrases* (superlative, comparative,
       absolute, certification, guarantee forms — never bare words). A hit not
       covered by a slot `claims[]` entry, or covered by an expired one, is an
@@ -439,7 +439,8 @@ irreversible-external-action row of `non-destructive-by-default`).
       at hint severity until a German negative corpus is registered.
       verify: `npx vitest run tests/scripts/check_voice_lexicon.test.ts -t "claim-shapes|negative-corpus" --reporter=verbose` -> /✓.*claim-shapes[\s\S]*✓.*negative-corpus/
       Open 2026-10-17: the registry (`src/scripts/_lib/claim_phrases.ts`) and the corpus list (`tests/fixtures/voice-lexicon/negative-corpus.txt`, 183 contract docs) were committed before the first run; the `claim-shapes` cases pass and the scan is live at `warning`/`hint`. The first measurement missed the bar — 8 hits over 283,204 words, 0.28 per 10k against 0.1, all false positives from three phrases (`unmatched`, `beats every`, `never fails`) — recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-17.md`. E8 forbids tuning after the first run, so no registry edit and no bar test landed; closing needs a fresh pre-registration against a corpus the revision was not chosen on.
-- [ ] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
+      Done 2026-10-19: the fresh pre-registration landed in its own commit before any scan — registry v2 drops the four English single-word entries NG-10 already excludes (`unmatched`, `unrivaled`, `unrivalled`, `unhackable`; a `claim-shapes` case pins it, seen red), keeps `beats every` and `never fails`, and corpus v2 is 111 `docs/guidelines` files never scanned before. Reading: 0 hits in 97,835 words, bar met; `negative-corpus` asserts it and turned red under a planted noisy phrase. Recorded in `agents/evidence/analysis/voice-lexicon-claim-corpus-2026-10-19.md`, including the v1-corpus figure under v2 (0.105) labelled as not evidence.
+- [x] **5.4 On the draft, not before it.** `/ghostwriter:write`, `/post-as:*`,
       `humanizer` and `/brand:review` run 5.1-5.3 on the finished draft. A
       ghostwriter taboo hit aborts as documented; brand findings are located,
       carry the replacement note or the missing proof, and flag without
@@ -447,9 +448,11 @@ irreversible-external-action row of `non-destructive-by-default`).
       judgement. The rule names the checker; `enforced_by` changes accordingly.
       verify: `rg -l 'check_voice_lexicon' src/domains/gtm-marketing/ghostwriter/write/command.md src/skills/humanizer/SKILL.md src/domains/brand/brand/review/command.md` -> 3 files
       Open 2026-10-17: the checker exists (5.1); wiring it into `/ghostwriter:write`, `/post-as:*`, `humanizer` and `/brand:review` changes what those consumer-facing commands do on every draft, which this drain lane treats as owner-reserved. The `enforced_by` change waits with it.
+      Done 2026-10-19: the step is this roadmap's own, and what it changes is the step's stated design — flags, never blocks, except the taboo abort `/ghostwriter:write` already documented — so it lands under the run's authority. The checker gained `--draft -` (stdin), because both drafting commands print only and may not write the draft to disk. `/ghostwriter:write` step 5b runs it with `--ghostwriter` (exit 1 aborts with no draft and no footer) and `--slot` when `brand:status` reports the slot valid; `/post-as:ghostwriter` is its alias; `/post-as:me` step 5b runs it with the slot only, since `.agent-user.md` v1 has no `style.avoid` (5.5); `humanizer` step 5 runs it after the tell detector and reports `unbacked-claim` instead of rewording it away; `/brand:review` runs it and the 3.3 palette reading before any model judgement. `brand-source-of-truth` now reads `instruction-only: check_voice_lexicon runs only when a command calls it` — a model still invokes it, so no `validator:` claim; the preamble budget reads zero net growth. `draft-surfaces` in `check_voice_lexicon.test.ts` (seen red) pins stdin and all four surfaces; `command-clusters.md` no longer calls `brand-consistency` a gate.
 - [ ] **5.5 User schema v2** — only if 5.0 says build.
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
       Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
+      Still open 2026-10-19, unchanged: the step's own condition is false, and closing it either way — `[-]` because the condition never fired, or a bare field because the middle branch reads "schema field only" — is the owner's call, not a run's.
 - [ ] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
       branch commits; not in default CI.
       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
@@ -500,6 +503,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       audit log's Read events on the slot path. At or above the bar → no carrier,
       honest null recorded.
       verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> 0
+      Open 2026-10-19: the prompt set E8 left open is now pre-registered and committed before any run — `tests/fixtures/brand-voice-read-rate/prompts.json`, 30 reader prompts (five per 6.1 reader), 10 unrelated prompts, and the read-event and routing protocol. The run itself is not taken here: it is 40 fresh paid host sessions in a scratch consumer project under a clean HOME (an in-repo `claude -p` measures this package's own rules, not the host), which is the operator's spend call. No reading exists, so 6.4, AC-7 and AC-9 wait on it.
 - [ ] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
       concern `brand-voice-card` registered in `src/config/hook-token-budget.json`
       at the measured card size (three attributes, `avoid` terms, one sample);
@@ -525,7 +529,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       `brand-audit` already records, so the next reader does not re-derive it,
       and supplied material is declared data-never-instruction at the intake —
       the reader-side half of 4.4.
-- [ ] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
+- [x] **7.2 Scenario fixtures with deterministic legs.** Existing brand unchanged
       byte for byte; greenfield; dotted near-miss; shadowed and duplicate files;
       tokens without voice and voice without tokens; exploration without lock;
       similar screenshot colours never merged; unbacked superlative; expired
@@ -536,11 +540,13 @@ irreversible-external-action row of `non-destructive-by-default`).
       brand bytes. The "sounds like us" leg stays a labelled rubric. (new test
       file)
       verify: `npx vitest run tests/scripts/brand_scenarios.test.ts --reporter=verbose` -> /✓/
-- [ ] **7.3 Claims the tree can back.** `brand-voice-lexicon-recall` (planted
+      Done 2026-10-19: `tests/scripts/brand_scenarios.test.ts`, 16 legs over the real readers in scratch projects. Two legs are read narrowly and say so: "exploration without lock" is asserted as the resolver persisting nothing (no registry, cache or lock file), and "non-brand task at zero brand bytes" pins the static half — no hook concern binds `brand:status`, the checker or the slot — while 0.6's `no_brand_bytes.test.ts` keeps the dynamic half. A recall leg plants five terms and seven exempt twins; writing it found German „…“ quotes unexempted, fixed in `blankExempt` (only lowers hits, so 5.3's zero reading stands). A palette probe moving the sampled token by one step turned that leg red. The "sounds like us" leg stays a labelled rubric, not a test.
+- [x] **7.3 Claims the tree can back.** `brand-voice-lexicon-recall` (planted
       terms 100 %, quoted false positives 0) and `brand-status-state-truth`
       (every 0.2 fixture classified correctly), registered `unbacked`, then backed
       by 7.2.
       verify: `rg -n 'brand-voice-lexicon-recall|brand-status-state-truth' docs/CLAIMS.md` -> 2 matches
+      Done 2026-10-19: both entries are `backed` on `exec:vitest run …` pointers over the 7.2, 0.2 and lexicon suites, each with a `non_inference` line (literal matching misses inflection; fixture classification says nothing about a consumer's intent). `docs/proof.md` rebuilt; the exec-feasibility denominator re-derived to 65.
 
 ## Non-goals
 
@@ -583,24 +589,24 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The tree holds exactly three brand sources — tokens,
+- [x] AC-1 — The tree holds exactly three brand sources — tokens,
       `design-system.json`/`DESIGN.md`, the `brand-voice` slot — and no persisted
       index or registry file beside them.
-- [ ] AC-2 — No authored surface names `.tokens.json` as the file to write, and
+- [x] AC-2 — No authored surface names `.tokens.json` as the file to write, and
       `BRAND_TOKEN_PATHS` is declared once.
-- [ ] AC-3 — A ghostwriter profile at either documented path is ignored by git
+- [x] AC-3 — A ghostwriter profile at either documented path is ignored by git
       and scanned by the source lint, and no tracked file under either path is
       a real-person profile.
-- [ ] AC-4 — `brand:status` never reports a malformed or shadowed file as the
+- [x] AC-4 — `brand:status` never reports a malformed or shadowed file as the
       brand, and names every source with its hash.
-- [ ] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
+- [x] AC-5 — No stable DTCG 2025.10 value reaches CSS as `[object Object]`; an
       unrepresentable value fails with its token path and a non-zero exit.
-- [ ] AC-6 — A planted banned term or unbacked claim in a finished draft from
+- [x] AC-6 — A planted banned term or unbacked claim in a finished draft from
       ghostwriter, post-as, humanizer or brand review produces a located finding;
       a quoted one does not.
 - [ ] AC-7 — A non-brand task in a fully branded project carries zero brand
       bytes, before and after any carrier.
-- [ ] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
+- [x] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
       `instruction-only`, and no file calls `brand-consistency` a gate.
 - [ ] AC-9 — A runtime carrier exists only if the recorded read-rate
       measurement missed its pre-registered bar.
@@ -621,6 +627,8 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 | E10 | reversible-technical | evidence | Docs align to the resolver (`tokens.json`); the resolver keeps flagging dotted near-misses. Reopens the 2026-09-09 deferral: it named no owner, no blocker and no revisit condition, while `brand-asset-generation` itself loads the dotted name. No runtime behaviour changes. | `brand-to-tokens/SKILL.md:32-51`; `cmd_brand_status.ts:62-80` | a consumer reports a tool that writes the dotted name |
 | E11 | deterministic | agent | Closure pass 2026-10-15: the `-t` titles and `rg` targets in 0.1-0.6, 2.x, 3.x, 4.x, 5.x, 6.x and 7.x name tests or text that do not exist yet, so each verify fails until its step lands; 0.7 is green today and stays the floor. The contradiction listed in D9 is the finding itself, settled by E2. Zero owner questions. | `closure_scan` on this file | a step lands without its title or sentence |
 | E12 | reversible-technical | evidence | The starter drops `$schema` rather than guessing a replacement URL: no offline check can confirm a published schema location, and no reader consumes the key. | `design-tokens-starter.json:2`; no `$schema` read in `tokens.ts` | the specification publishes a schema URL a validator here would read |
+| E13 | reversible-technical | evidence | AC-6 and AC-8 closed 2026-10-19 with 5.4. AC-6: the four surfaces run `check_voice_lexicon` on the finished draft; the checker's located findings and quoted-text exemption are tested. AC-8: `enforced_by` names the checker under `instruction-only`; the one remaining "validation gate" wording is ADR-210's decision table, a historical record left verbatim by the same convention 1.2 applies to ADR-061. | `draft-surfaces`, `lexicon`, `control` cases in `check_voice_lexicon.test.ts`; `rg -n 'brand-consistency' src docs` | the checker becomes a CI sweep (then `validator:`), or ADR-210 is amended |
+| E14 | reversible-technical | evidence | AC-1..AC-5 closed 2026-10-19 on fresh runs: AC-1 — `brand:status` computes per call and the 7.2 "exploration without lock" leg shows no file is added; AC-2 — `token-name-parity` green and `BRAND_TOKEN_PATHS` exported once (`src/shared/brandTokenPaths.ts`); AC-3 — the managed block covers both paths, `lint_ghostwriter_source` scans both, 0 tracked profiles, and this repository's own `.gitignore` now carries the same four lines, which it lacked (its managed block predates 1.1); AC-4 — `state-fixtures`, `shadowed`, `invalid`; AC-5 — `dtcg-2025`. AC-7 and AC-9 stay open on 6.3: neither can be judged before the read-rate reading decides whether a carrier exists. | `vitest run` over `brand_status`, `brand_scenarios`, `lint_ghostwriter_source`, `skills_design_tokens_tokens` (80 + 16 pass); `git check-ignore --no-index` | a carrier lands (re-check AC-7) |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude-opus -->
