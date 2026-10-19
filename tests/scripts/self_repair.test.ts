@@ -30,6 +30,7 @@ import {
     runDetectors,
     sanitizeEvidence,
     type TurnSnapshot,
+    validateRecord,
 } from '../../src/scripts/_lib/self_repair.js';
 import {
     attachReleaseErrors,
@@ -282,6 +283,64 @@ describe('self-repair — record identity', () => {
         const f = detectUserReport('du hast das falsch gemacht')!;
         const actioned: DefectRecord = { ...mergeRecord(null, f, NOW), status: 'actioned' };
         expect(mergeRecord(actioned, f, LATER).status).toBe('open');
+    });
+});
+
+describe('self-repair — claim fields a retro may set', () => {
+    const base: DefectRecord = {
+        defect_class: 'user-reported',
+        source: 'user-reported',
+        evidence: 'promised to verify and did not',
+        suggested_surface: 'the verify-before-complete rule',
+        fingerprint: 'abc',
+        first_seen: NOW,
+        last_seen: NOW,
+        occurrences: 1,
+        status: 'open',
+    };
+
+    it('claim-fields-validate-their-shape', () => {
+        expect(validateRecord({ ...base, principle: 'drain/baseline-drift', mechanism: 'reads a stale base', falsifier: 'a fresh base still drifts' })).toEqual([]);
+        expect(validateRecord({ ...base, principle: 'Acme Corp drift' }).join(' ')).toMatch(/principle/);
+        expect(validateRecord({ ...base, mechanism: 'two\nlines' }).join(' ')).toMatch(/mechanism/);
+        expect(validateRecord({ ...base, falsifier: 'x'.repeat(161) }).join(' ')).toMatch(/falsifier/);
+        expect(validateRecord({ ...base, falsifier: '   ' }).join(' ')).toMatch(/falsifier/);
+        for (const bad of ['drain//drift', 'drain/drift/', 'a..b', '/a', 'a'.repeat(81)]) {
+            expect(validateRecord({ ...base, principle: bad }).join(' '), bad).toMatch(/principle/);
+        }
+        for (const bad of ['a\tb', 'a\u0000b', 'a\u001b[31mb', 'a\u2028b']) {
+            expect(validateRecord({ ...base, mechanism: bad }).join(' '), JSON.stringify(bad)).toMatch(/mechanism/);
+        }
+    });
+
+    it('claim-fields-pass-the-privacy-floor', () => {
+        for (const field of ['principle', 'mechanism', 'falsifier'] as const) {
+            const rec = { ...base, [field]: 'mail real.person@example-corp.de' };
+            expect(egressBlockedReason(rec, null), field).not.toBeNull();
+        }
+        expect(egressBlockedReason({ ...base, principle: 'drain/baseline-drift' }, null)).toBeNull();
+    });
+
+    it('claim-fields-change-neither-key-nor-body-yet', () => {
+        const f: DefectFinding = { defect_class: base.defect_class, source: base.source, evidence: base.evidence, suggested_surface: base.suggested_surface };
+        const named = mergeRecord(null, { ...f, principle: 'drain/baseline-drift', mechanism: 'm-line', falsifier: 'f-line' }, NOW);
+        expect(named.fingerprint).toBe(mergeRecord(null, f, NOW).fingerprint);
+        for (const route of ['issue', 'pull-request'] as const) {
+            const body = renderReport(named, route);
+            for (const v of ['drain/baseline-drift', 'm-line', 'f-line']) expect(body, route).not.toContain(v);
+        }
+    });
+
+    it('a fold keeps a claim the first record did not have', () => {
+        const f: DefectFinding = { defect_class: base.defect_class, source: base.source, evidence: base.evidence, suggested_surface: base.suggested_surface };
+        const first = mergeRecord(null, f, NOW);
+        const second = mergeRecord(first, { ...f, principle: 'drain/baseline-drift' }, LATER);
+        expect(second.principle).toBe('drain/baseline-drift');
+        const third = mergeRecord(second, { ...f, principle: 'other/claim' }, LATER);
+        expect(third.principle).toBe('drain/baseline-drift');
+        const fourth = mergeRecord(third, { ...f, principle: 'other/claim', falsifier: 'from another synthesis' }, LATER);
+        expect(fourth.principle).toBe('drain/baseline-drift');
+        expect(fourth.falsifier).toBeUndefined();
     });
 });
 
