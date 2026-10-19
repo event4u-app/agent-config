@@ -414,7 +414,7 @@ the Acceptance Criteria held.
 | K9 | a new `throughput:queue` CLI and job state machine | `ci_settle` already settles by head SHA and names the background form; 3.2 adds an obligation, not a scheduler | 3.2's fixture cannot be met without persisted state |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -423,6 +423,7 @@ the Acceptance Criteria held.
 | 3 | Moving windows mislead | implementation | mtime windows differ in shape, and a worktree run reads an empty store | Every reading records its window shape and store; two windows before a verdict | Phase 1 — One instrument, extended |
 | 4 | Confounded attribution | product | The model change from W40 overlaps every window | No reading attributes a delta to one cause; Phase 2 reads binding, not blame | Phase 2 — Decide what binds a night, before adding lanes |
 | 5 | Narrowing the guard opens a bypass | implementation | Scoping short `-n` lets a hook bypass through | Every long `--no-verify` and every `commit`/`am` short form stays blocked, pinned red-first | Phase 4 — Remove the misfires, from the classes that actually fired |
+| 6 | Two-lane arm too thin to decide | product | Step 2.3 needs nights run with two lanes and nights with one inside the same two windows; if every drain runs two lanes, there is no one-lane arm and the comparison reads anything | A window with fewer than three nights in either arm is no verdict and extends to a third window, the same rule 2.1 uses for a split; D10 stays provisional until then | Phase 2 — Decide what binds a night, before adding lanes |
 
 ## Acceptance Criteria
 
