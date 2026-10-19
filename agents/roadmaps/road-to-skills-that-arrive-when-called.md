@@ -146,6 +146,9 @@ needs a transcript.
   search roadmap's 0.1 evidence. Two cells stay `unobserved`: (a) as a copy and
   (c) the documented `reloadSkills` flag — the host's auto-mode permission
   classifier refused both set-ups in this lane, so they need an owner-run probe.
+  Re-tried 2026-10-19 from a second lane: the copy into `~/.claude/skills` was
+  refused again by the probe session's classifier as `[Self-Modification]`
+  (session `cfaf8d18`), so (a) copy and (c) stay `unobserved` and stay the owner's.
 - [ ] **0.3 Second-host probes:** live pickup delay under `.agents/skills`,
   omission order and the verbatim warning, whether an implicit-disabled skill
   counts against the budget, and double listing on hosts that read both
@@ -154,6 +157,17 @@ needs a transcript.
   Not run 2026-10-18: a `codex exec` probe under a scratch `HOME` was refused
   by the host's auto-mode permission classifier before it started, so no row
   exists yet. Needs an owner-run probe.
+  PARTIAL 2026-10-19: `src/config/skill-lifecycle-probes-codex.json` carries one
+  row per item on codex-cli 0.148.0, run in a scratch repo instead of a scratch
+  `HOME`, checked by `tests/scripts/skill_lifecycle_probes_codex.test.ts`.
+  Omission is observed-true: descriptions go first as a block, then entries
+  drop from the alphabetical tail of the user scope while system and repo scope
+  stay whole; the warning is quoted verbatim. An implicit-disabled skill is not
+  listed and does not occupy the budget (observed-false: 554 → 481 omitted when
+  60 of 120 were disabled). The host never reads `.claude/skills`, but lists a
+  skill present under both `~/.codex/skills` and `~/.agents/skills` twice.
+  Live pickup stays `unobserved`: three attempts ended `429 Too Many Requests`
+  at the subscription's rate limit, so a later run can take it.
 
 ## Phase 1 — Give the host its key back
 
@@ -229,7 +243,7 @@ needs a transcript.
 
 ## Phase 3 — Fork what ends in a report
 
-- [ ] **3.1 Classify by output shape.** Per skill: *report* (runs, returns a
+- [x] **3.1 Classify by output shape.** Per skill: *report* (runs, returns a
   result, needs no later turn) vs *standing* (guidance for the rest of the task).
   Only report skills are fork candidates.
   verify: deterministic classification, every skill in exactly one class; the
@@ -348,7 +362,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   in effect even though files are written. Changing that root is a frozen
   install-ABI change and stays with Phase 4.
   verify: the digest list names both pages.
-- [ ] **6.3 Close the declared-dependency hole the default projection opens.**
+- [x] **6.3 Close the declared-dependency hole the default projection opens.**
   Round `inbox-2026-10-t` reproduced it offline against
   `_lib/scoped_projection`: **28** `skills:` declarations across `src/skills`
   and `src/domains` name a skill that exists in the package and that the
@@ -374,6 +388,16 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   delegation of 2026-10-18 (`agents/evidence/council/completeness-skills-owe-20261018.md`,
   ADR-289 § Decision 2). The step is executable as written; dependency closure is
   an installer invariant and the declaring commands are not pruned.
+  Done 2026-10-19: `declared_skill_closure` in `_lib/scoped_projection.ts` reads
+  `skills:` and `requires_skills:` of every surviving artefact, transitively, and
+  `is_pruned_under_scoped` keeps every name in it. One closure, three callers:
+  the installer's prune (`prune_scoped_modules`, over the deployed paths), the
+  published counter and the host census (over the projected skills and
+  commands). The default projection moved 230 → 243 of 301 — the 13 skills —
+  and `docs/CLAIMS.md`, `docs/proof.md` and `README.md:59` say so.
+  `tests/install/default-projection-closure.test.ts` pins the hole without the
+  closure (both `implement-ticket` edges) and zero edges with it; with the
+  installer's closure neutralised the real-install count test read 230 for 243.
 - [x] **6.4 One field, one type.** A linter rejects a RULE name in a `skills:`
   list. Measured population in the source tree at `5fa963cec`: **2**
   (`reviewer-awareness`, `security-sensitive-stop`) over 265 entries — small

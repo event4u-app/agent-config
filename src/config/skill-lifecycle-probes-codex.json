@@ -1,0 +1,39 @@
+{
+  "_comment": "Second-host probes for road-to-skills-that-arrive-when-called 0.3, in the row shape of skill-lifecycle-probes.json (validated by recordProblems in src/scripts/_lib/injection_effect.ts). Every probe ran `codex exec` in a scratch project whose `.agents/skills` held only zz-*-probe skills; the user roots were the maintainer's real ones, so the omitted counts include them. Transcripts are machine-local rollout files under ~/.codex/sessions and are named, not committed. Phase 4 of the roadmap is gated on these rows for this host.",
+  "live-pickup-agents-skills": {
+    "host": "codex",
+    "state": "unobserved",
+    "host_version": null,
+    "transcript": null,
+    "date": null,
+    "expiry": "2027-01-17",
+    "reason": "Probe: a session writes a skill under the repo's `.agents/skills` mid-turn and is asked whether its system-supplied listing now carries it. Four attempts on 2026-10-19 under codex-cli 0.148.0 did not reach an answer: the first stopped on a coordination question the package's own global instructions raised, the next three ended `429 Too Many Requests` after the session start — the subscription's rate limit, so a later run can take it. The host page says changes are detected automatically and to restart if one does not appear; that is documentation, not an observation."
+  },
+  "omission-order-and-warning": {
+    "host": "codex",
+    "state": "observed-true",
+    "host_version": "0.148.0",
+    "transcript": "~/.codex/sessions/2026/10/19/rollout-2026-10-19T21-38-11-01a155ab-e506-7ee1-bd01-e5bdb7da0f40.jsonl",
+    "date": "2026-10-19",
+    "expiry": "2027-01-17",
+    "reason": "Verbatim warning on stderr: `warning: Exceeded skills context budget. All skill descriptions were removed and 554 additional skills were not included in the model-visible skills list.` With 120 repo-scope probe skills the injected list held 347 entries: the 5 system skills first, then all 120 repo-scope skills, then the user roots (`~/.codex/skills`, `~/.agents/skills`) in name order, cut off at `guideline-writing`. So descriptions go first and as a block, then entries are dropped from the alphabetical tail of the user scope while system and repo scope survive whole."
+  },
+  "implicit-disabled-counts-against-budget": {
+    "host": "codex",
+    "state": "observed-false",
+    "host_version": "0.148.0",
+    "transcript": "~/.codex/sessions/2026/10/19/rollout-2026-10-19T21-39-15-01a155ac-e1af-7643-bb1f-e47def5bf033.jsonl",
+    "date": "2026-10-19",
+    "expiry": "2027-01-17",
+    "reason": "Same 120 repo-scope skills, 60 of them with `agents/openai.yaml` `policy: allow_implicit_invocation: false`. The 60 disabled ones left the model-visible list entirely, the omitted count fell from 554 to 481 and the list grew from 347 to 355 entries. A skill with implicit invocation disabled is not listed and does not occupy the budget — a resident set can be enforced by disabling implicit invocation for everything outside it."
+  },
+  "double-listing": {
+    "host": "codex",
+    "state": "observed-true",
+    "host_version": "0.148.0",
+    "transcript": "~/.codex/sessions/2026/10/19/rollout-2026-10-19T21-38-11-01a155ab-e506-7ee1-bd01-e5bdb7da0f40.jsonl; ~/.codex/sessions/2026/10/19/rollout-2026-10-19T21-39-15-01a155ac-e1af-7643-bb1f-e47def5bf033.jsonl",
+    "date": "2026-10-19",
+    "expiry": "2027-01-17",
+    "reason": "The host does not read `.claude/skills`: a probe skill placed only there in the repo was reported not available. It does read `~/.codex/skills` beside the documented `~/.agents/skills`, and a skill present under both is listed twice (every user-scope entry in both sessions appears once per root, 111 and 145 pairs) — the host never merges same-name skills, so a package that writes both roots spends the budget twice."
+  }
+}

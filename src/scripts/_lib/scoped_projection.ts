@@ -150,14 +150,91 @@ export function compute_active_pack_ids(
  * `scoped`. Untagged artefacts (empty `packs:` frontmatter) are core/shared
  * and always kept; a tagged artefact survives iff its tags intersect the
  * active set.
+ *
+ * `kept` is the declared-dependency closure (`declared_skill_closure`): a
+ * skill a surviving artefact declares is never pruned, whatever its tags
+ * (ADR-289 § Decision 2 — a pruned declared dependency is a broken install).
  */
-export function is_pruned_under_scoped(md_path: string, active_ids: ReadonlySet<string>): boolean {
+export function is_pruned_under_scoped(
+    md_path: string,
+    active_ids: ReadonlySet<string>,
+    kept: ReadonlySet<string> = new Set(),
+): boolean {
+    if (path.basename(md_path) === 'SKILL.md' && kept.has(path.basename(path.dirname(md_path)))) {
+        return false;
+    }
     const packs = surface_tiers.frontmatter_packs(md_path);
     if (packs.size === 0) return false;
     for (const id of packs) {
         if (active_ids.has(id)) return false;
     }
     return true;
+}
+
+/** Names in an artefact's `skills:` and `requires_skills:` frontmatter lists. */
+export function declared_skills(md_path: string): string[] {
+    let text: string;
+    try {
+        text = fs.readFileSync(md_path, 'utf-8');
+    } catch {
+        return [];
+    }
+    if (!text.startsWith('---')) return [];
+    const end = text.indexOf('\n---', 3);
+    const fm = yamlSafeLoad(end !== -1 ? text.slice(3, end) : text.slice(3));
+    if (!isPlainObject(fm)) return [];
+    const out: string[] = [];
+    for (const key of ['skills', 'requires_skills']) {
+        const v = fm[key];
+        if (Array.isArray(v)) out.push(...v.filter((s): s is string => typeof s === 'string'));
+    }
+    return out;
+}
+
+/**
+ * Every skill name a surviving artefact declares, transitively: a declared
+ * skill the pack prune would drop survives, and its own declarations count.
+ * `artefacts` is the SKILL.md and command `.md` population being pruned.
+ */
+export function declared_skill_closure(
+    artefacts: Iterable<string>,
+    active_ids: ReadonlySet<string>,
+): Set<string> {
+    const all = [...artefacts];
+    const skill_md = new Map<string, string>();
+    for (const p of all) {
+        if (path.basename(p) === 'SKILL.md') skill_md.set(path.basename(path.dirname(p)), p);
+    }
+    const kept = new Set<string>();
+    let frontier = all.filter((p) => !is_pruned_under_scoped(p, active_ids));
+    while (frontier.length > 0) {
+        const next: string[] = [];
+        for (const p of frontier) {
+            for (const name of declared_skills(p)) {
+                if (kept.has(name)) continue;
+                kept.add(name);
+                const target = skill_md.get(name);
+                if (target !== undefined && is_pruned_under_scoped(target, active_ids)) next.push(target);
+            }
+        }
+        frontier = next;
+    }
+    return kept;
+}
+
+/** Every command `.md` the package projects — the declarers beside the skills. */
+export function projected_command_files(package_root: string): string[] {
+    const out: string[] = [];
+    const walk = (dir: string): void => {
+        if (!fs.existsSync(dir)) return;
+        for (const e of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+            const full = path.join(dir, e.name);
+            if (e.isDirectory()) walk(full);
+            else if (e.name.endsWith('.md') && e.name !== 'AGENTS.md') out.push(full);
+        }
+    };
+    walk(path.join(package_root, 'dist', 'agent-src', 'commands'));
+    return out;
 }
 
 /**
@@ -242,12 +319,14 @@ export function scoped_projection_stats(
     runtime_active_packs: readonly string[] = [],
 ): ScopedProjectionStats {
     const active = compute_active_pack_ids(load_packs_registry(package_root), runtime_active_packs);
+    const skill_list = [...skills];
+    const kept = declared_skill_closure([...skill_list, ...projected_command_files(package_root)], active);
 
     let projected = 0;
     let total = 0;
-    for (const skill of skills) {
+    for (const skill of skill_list) {
         total += 1;
-        if (!is_pruned_under_scoped(skill, active)) {
+        if (!is_pruned_under_scoped(skill, active, kept)) {
             projected += 1;
         }
     }
@@ -342,6 +421,21 @@ export function prune_modules_by(
         adjusted[tool_id] = [Math.max(0, written - delete_files.length), skipped, status, keep];
     }
     return [pruned, adjusted];
+}
+
+/**
+ * The scoped prune over a completed deploy: pack-pruned skills/commands go,
+ * except the skills a surviving deployed artefact declares.
+ */
+export function prune_scoped_modules(
+    deploy_results: Record<string, DeployTuple>,
+    active_ids: ReadonlySet<string>,
+): [number, Record<string, DeployTuple>] {
+    const artefacts = Object.values(deploy_results)
+        .flatMap(([, , , paths]) => paths)
+        .filter((p) => path.basename(p) === 'SKILL.md' || (p.split(path.sep).includes('commands') && path.extname(p) === '.md'));
+    const kept = declared_skill_closure(artefacts, active_ids);
+    return prune_modules_by(deploy_results, (p) => is_pruned_under_scoped(p, active_ids, kept));
 }
 
 /**
