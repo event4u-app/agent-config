@@ -13,19 +13,27 @@ import { gitOptimizePort } from '../../src/scripts/analysis_pr_optimize.js';
 import { addedLines, gitGhReviewPort } from '../../src/scripts/analysis_pr_review.js';
 
 let repo: string;
-const git = (...args: string[]): string =>
-    execFileSync('git', args, {
-        cwd: repo,
-        encoding: 'utf8',
-        stdio: 'pipe',
-        env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@example.com', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@example.com', GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_NOSYSTEM: '1' },
-    }).trim();
+/** The ports spawn git with the process environment, so the identity has to live there too (CI has none). */
+const GIT_ENV: Record<string, string> = {
+    GIT_AUTHOR_NAME: 't',
+    GIT_AUTHOR_EMAIL: 't@example.com',
+    GIT_COMMITTER_NAME: 't',
+    GIT_COMMITTER_EMAIL: 't@example.com',
+    GIT_CONFIG_GLOBAL: '/dev/null',
+    GIT_CONFIG_NOSYSTEM: '1',
+};
+const saved: Record<string, string | undefined> = {};
+const git = (...args: string[]): string => execFileSync('git', args, { cwd: repo, encoding: 'utf8', stdio: 'pipe' }).trim();
 const write = (rel: string, body: string): void => {
     fs.mkdirSync(path.dirname(path.join(repo, rel)), { recursive: true });
     fs.writeFileSync(path.join(repo, rel), body);
 };
 
 beforeEach(() => {
+    for (const [k, v] of Object.entries(GIT_ENV)) {
+        saved[k] = process.env[k];
+        process.env[k] = v;
+    }
     repo = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'analyze-pr-git-')));
     git('init', '-q', '-b', 'main');
     write('a.ts', 'one\ntwo\n');
@@ -34,6 +42,10 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    for (const k of Object.keys(GIT_ENV)) {
+        if (saved[k] === undefined) delete process.env[k];
+        else process.env[k] = saved[k];
+    }
     fs.rmSync(repo, { recursive: true, force: true });
 });
 
