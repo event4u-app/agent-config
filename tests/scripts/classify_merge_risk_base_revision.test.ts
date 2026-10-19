@@ -146,7 +146,7 @@ describe('the code that classes a change is not the change’s own', () => {
         const head = attack('narrow-gated-set', GATED_READER, (s) =>
             s.replace(
                 '): GatedPaths {\n    const derivedSet',
-                '): GatedPaths {\n    if (files.length >= 0) return { kernelRules: [], governanceHooks: [], plumbing: [], consequenceRules: [], self: false };\n    const derivedSet',
+                '): GatedPaths {\n    if (files.length >= 0) return { kernelRules: [], governanceHooks: [], plumbing: [], self: false };\n    const derivedSet',
             ),
         );
         expect(verdictFrom(clone, head)).toBe('verdict: routine');
