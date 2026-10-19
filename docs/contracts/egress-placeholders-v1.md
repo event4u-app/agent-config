@@ -16,8 +16,9 @@ re-defines a term below.
 
 **Stability: experimental.** The rule table, the token grammar, an in-memory
 replacement and the dispatcher's egress stage (local views and counts only)
-exist, and the council channel's replacement and final check; identifier
-rules, a final check on every other sender and every host rewrite do not. A
+exist, with validated identifier rows, and the council channel's replacement
+and final check; a final check on every other sender and every host rewrite
+do not. A
 section below that names an open decision is not a promise of its outcome.
 
 ## What this is not
@@ -223,6 +224,29 @@ than claimed conforming; moving the scanner onto this rule is part of step 2.2
 of `road-to-one-detector-and-the-senders-we-own`, which shares detection across
 consumers.
 
+## Identifier rows
+
+A shape is never enough to replace an identifier: each row carries a checksum,
+a context word within a window, or both, because a false positive damages
+ordinary code and review text.
+
+| Rule | Type | Proof |
+|---|---|---|
+| `iban` | `IBAN` | the country's registered length and ISO 13616 mod-97; spaced groups of four allowed |
+| `payment-card` | `CARD` | Luhn, no single repeated digit, **and** a card word within 48 characters |
+| `email` | `EMAIL` | label and TLD shape; documentation and reserved domains (RFC 2606, RFC 6761), no-reply senders, `git@` remotes, image-density and code file names excluded; the repository's own published identities allowlisted as keyed digests, never as addresses |
+| `phone-international` | `PHONE` | a `+` country code and 8–15 digits; a date after a diff marker is not a number |
+| `phone-national` | `PHONE` | a leading `0`, 7–13 digits **and** a phone word within 32 characters |
+| `de-tax-id` | `TAXID` | the repeated-digit structure and ISO 7064 MOD 11,10 **and** a tax-ID word within 48 characters |
+| `us-ssn` | `SSN` | no `000`, `666` or `9xx` area, no `00` group, no `0000` serial |
+
+Consumers whose verdict reads credentials only take `CREDENTIAL_RULES` (the
+commit-time scanner, the self-repair payload floor, the MCP config lint, the
+council bundler's line masking). The class-tag redactor of knowledge ingestion
+and cross-repo retrieval reads `IDENTIFIER_RULES` through
+`src/scripts/_lib/identifier_redaction.ts`. Over the tracked tree the rows'
+counts are pinned as ceilings by `src/scripts/_lib/egress_identifier_census.test.ts`.
+
 ## Detection ceilings
 
 None. The credential rows match everything the commit-time scanner matched
@@ -395,8 +419,8 @@ mode that replaces nothing reports `uncovered` the same way.
 appends one line to `agents/runtime/state/egress-observations.jsonl` (gitignored,
 rotated once past 4 MiB): platform, event, an id-shaped tool name, the mode, the
 fields scanned, and per field the class, type and count, plus the rule id of any
-refusal — nothing derived from a value. The rule table holds credential rules
-only, so every count is a credential count until identifier rules exist.
+refusal — nothing derived from a value. Identifier rows count under their own
+class, so a count is a credential count only where its class says so.
 `agent-config hooks:replay … --json` reports what the stage would do with a
 fixture under the workspace's mode, in the same shape, without writing.
 
