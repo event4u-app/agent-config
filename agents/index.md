@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **749 artefacts** in this package.
+Maintainer-facing index of all **750 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (206)
+## Commands (207)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -460,13 +460,15 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analytics`](../src/domains/meta/analytics/command.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
 | command | [`analytics-prune`](../src/domains/meta/analytics/prune/command.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
 | command | [`analytics-show`](../src/domains/meta/analytics/show/command.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
-| command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester that routes to postmortem, premortem, decision-review, near-miss, incident, repo, or inbox-artifact analysis. |
+| command | [`analyze`](../src/domains/analysis-workbench/analyze/command.md) | cluster: analyze | Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project or a PR. |
+| command | [`analyze-and-optimize`](../src/domains/analysis-workbench/analyze/and-optimize/command.md) | cluster: analyze | Analyse and improve this project, repository or module — analysts reading code, exchange, council, ready roadmaps, PR, N refinement loops (default 3). E.g. 'run a deep optimization pass'. |
 | command | [`analyze-conformance`](../src/domains/analysis-workbench/analyze/conformance/command.md) | cluster: analyze | Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable. |
 | command | [`analyze-decision`](../src/domains/analysis-workbench/analyze/decision/command.md) | cluster: analyze | Audit a past architectural decision — restate what was chosen and why, compare original assumptions against reality now, produce a verdict (still valid / needs amendment / superseded). |
 | command | [`analyze-inbox`](../src/domains/analysis-workbench/analyze/inbox/command.md) | cluster: analyze | Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each. |
 | command | [`analyze-incident`](../src/domains/analysis-workbench/analyze/incident/command.md) | cluster: analyze | Full incident flow — incident-commander coordination, then RCA via root-cause-frameworks, then a blame-free write-up via blameless-post-mortem, ending with an incident-learnings candidate. |
 | command | [`analyze-near-miss`](../src/domains/analysis-workbench/analyze/near-miss/command.md) | cluster: analyze | Blame-free near-miss analysis — same post-mortem flow as analyze:postmortem but framed around a close call that did not result in a production incident. |
 | command | [`analyze-postmortem`](../src/domains/analysis-workbench/analyze/postmortem/command.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
+| command | [`analyze-pr`](../src/domains/analysis-workbench/analyze/pr/command.md) | cluster: analyze | Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch. |
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-repo`](../src/domains/analysis-workbench/analyze/repo/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../src/domains/analysis-workbench/analyze/roadmap-repos/command.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-repo, one subagent at a time, without producing one roadmap per repository. |
@@ -563,7 +565,6 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`optimize`](../src/domains/meta/optimize/command.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters, project (project-wide sweep), prompt (AI-prompt polish), deep (autonomous deep-refactoring loop) |
 | command | [`optimize-agents-dir`](../src/domains/meta/optimize/agents-dir/command.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
 | command | [`optimize-augmentignore`](../src/domains/meta/optimize/augmentignore/command.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
-| command | [`optimize-deep`](../src/domains/meta/optimize/deep/command.md) | cluster: optimize | Autonomous deep-refactoring loop — subagent analysis, verified findings, council, central + sub-roadmaps, PR, then N refinement loops (default 3). E.g. 'run a deep optimization pass'. |
 | command | [`optimize-project`](../src/domains/meta/optimize/project/command.md) | cluster: optimize | Project-wide optimization sweep — inventory roadmaps, ADRs, agent folders (incl. modules), challenge stale decisions with the user in the loop, emit new roadmap(s). E.g. 'optimize this project'. |
 | command | [`optimize-prompt`](../src/domains/meta/optimize/prompt/command.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize-rtk`](../src/domains/meta/optimize/rtk/command.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |

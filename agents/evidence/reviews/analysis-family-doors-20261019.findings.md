@@ -1,0 +1,30 @@
+# Findings: analysis-family-doors-20261019
+<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: db74e0dc8a035770cce7a3b513cd5f9a7809e682e0400615368a457c498a0681 | diff: 71bc392c2e72371e2e5de0a5796799012647bc4e | reviewer: r2-fresh-subagent-analysis-family-doors-20261019 | prompt_hash: 35bf12ec18dc87104a30feae9b7a4c687f6c7ef499317847950a856824084b93 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-analysis-family-doors-20261019"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-18 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 71bc392c2e72371e2e5de0a5796799012647bc4e
+  scope_hash: db74e0dc8a035770cce7a3b513cd5f9a7809e682e0400615368a457c498a0681
+  roadmap: agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md
+  roadmap_hash: 44194d186fbac848dc38254823bb5072d1ff464fac68d8bfbae325e5e929806e
+  ac_hash: 576392c4edc3f50eb28f9db12266265f56eaa1ec6f162eca93ec2c921ba2fdae
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-18T23:49:01Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | high | src/scripts/analysis_pr_optimize.ts:165 | `writePatch` builds the patch with `git diff HEAD`, which omits untracked files, so a fix whose disposition is a new regression test file ships a patch without that test; `applyFixes` (line 156) likewise runs `git commit -m` with no staging step, so an unstaged/new file is either missing from the pushed commit or the commit fails with "nothing to commit" unless the `apply` callback happens to `git add` everything. | fixed | c6c1f4257 — writePatch and applyFixes run in a private worktree at the pinned head and stage with add --all; tests/scripts/analysis_pr_git_ports.test.ts |
+| 2 | medium | src/scripts/analysis_pr_review.ts:206 | The port diffs `base..head` (two-dot) with `baseSha` = `baseRefOid` (base branch tip, see `analysis_pr_target.ts:88`), not the merge base; once the base branch advances, lines the base changed after the branch point show up as `+` lines of the head, so `addedLines` classifies pre-existing code as `introduced here` and inflates the D9 metric. `base...head` or an explicit merge-base is needed. | fixed | c6c1f4257 — gitGhReviewPort.diff uses base...head; merge-base test seen red with two dots |
+| 3 | medium | src/scripts/analysis_pr_optimize.ts:121 | Findings already "fixed" are filtered out of every later review via `known`, so a finding that is still present after its fix was pushed (the fix did not work) is treated as not new and the run reports `converged`; the test "a finding already fixed in an earlier round is not new" pins exactly this case (review keeps returning f1 after the push) as success. A recurring finding should surface as a failed fix, not as convergence. | fixed | c6c1f4257 — re-reported fixed finding ends fix-failed; test seen red |
+| 4 | medium | src/scripts/analysis_pr_optimize.ts:135 | The moved-head check (`remoteHead` vs `expected`) happens before `applyFixes`; if the remote moves between that check and the push, the `--force-with-lease` push (line 163) throws a raw `execFileSync` error instead of ending as `moved-head`, after `applyFixes` has already created a local commit that is left behind, and the fixes of that round are lost from the result. | fixed | c6c1f4257 — refused lease returns moved-head; test seen red |
+| 5 | medium | src/scripts/analysis_pr_optimize.ts:165 | In the patch path the review ran against the pinned PR head (`review(expected)`), but `gitOptimizePort.writePatch` applies the fixes to whatever `HEAD` the caller's `cwd` has checked out and leaves them in that working tree; for a fork or non-writable PR that is normally not the PR head, so the patch is computed against the wrong base and the user's checkout is left dirty. | fixed | c6c1f4257 — patch cut at the pinned head in its own worktree; caller checkout untouched (git ports test) |
+| 6 | low | src/scripts/analysis_pr_review.ts:94 | `addedLines` treats any line starting with `+++ ` as a file header, so an added content line whose text begins with `++ ` resets `file` mid-hunk (and the parser has no handling for quoted paths), mis-attributing the following added lines. Tracking hunk line counts instead of prefix matching avoids it. | fixed | c6c1f4257 — addedLines reads hunk counts and quoted paths; test seen red |
+| 7 | low | src/scripts/analysis_pr_review.ts:187 | The command doc defines the D9 metric as introduced findings with "a reproduction or a test", but `metric` counts only a non-empty `reproduction`; a finding backed by a test (no reproduction string) is not counted. | fixed | c6c1f4257 — metric counts reproduction or test; test seen red |
+| 8 | low | src/scripts/analysis_inbox_final.ts:143 | `foldLaneLedgers` sums census and points without checking for duplicate lane ids or a point id appearing in more than one lane, so a topic double-assigned across lanes is double-counted; it also refuses a lane with an empty point list even when its census is non-zero but nothing qualified. Separately, `roundUnion` (line 67) lets a malformed `manifest.json` escape as a raw `SyntaxError` and does not check that lineage values are string arrays. | fixed | c6c1f4257 — duplicate lane/point refused, empty point ledger with census accepted, manifest errors named; tests seen red |
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+Re-bind note, 2026-10-19: after the fix pass the roadmap changed only by moving eleven dated completion notes verbatim to `agents/evidence/analysis/analysis-family-step-records.md` (cap fix, commit 4b893f3b6); its Acceptance Criteria are unchanged (`ac_hash` still verifies), so `roadmap_hash` was re-recorded rather than re-reviewed.
