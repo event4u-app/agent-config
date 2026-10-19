@@ -66,7 +66,7 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
 
 ## Phase 1 — One lane contract, written once
 
-- [ ] **1.1 Put the mechanism-match to the council.** Two recorded locks touch
+- [x] **1.1 Put the mechanism-match to the council.** Two recorded locks touch
       this plan: `road-to-agent-throughput-recovery` AC-3 ("Phase 2's verdict
       is recorded before any lane or settle change lands") and
       `roadmap-process-loop` § 3d ("lanes are staged, not shipped; gate: ten
@@ -76,6 +76,7 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
       with the contract below. Neutral prompt, prompt stored beside the verdict.
       verify: a Decisions row per question, verdict and dissent recorded; a
       refusal stops Phase 1 and is reported, not routed around.
+      Done 2026-10-19, decided by the owner after the council degraded: two runs reached only the `anthropic` seat (the `openai` seat is skipped and the skip is stored as a failed probe, so it locks itself out — fixed separately). That seat answered (a) outside AC-3 (lane count and settle unchanged), (b) keep lanes staged, and (c) once keep 6.1 active, once carry it — no convergence. Owner decision 2026-10-19 (D2): (a) outside, (b) ship lanes under the canonical brief with the two-lane cap, (c) carry 6.1 and AC-2..4 into the `-carried` follow-up.
 - [x] **1.2 Ship the canonical lane brief.** Add `§ Lane brief` to
       `src/domains/product-basic/roadmap/process-full/command.md`: the one text
       an orchestrator sends a lane, with the roadmap path and worktree as its
@@ -94,10 +95,11 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
       verify: the Iron Law fence carries the three clauses; `check_condensation`
       green after `task sync`.
       Done 2026-10-19: the Iron Law fence carries ONE ROADMAP, ONE PR (no push, PR or merge before the last step; delivery fixes to the same PR), no merge before the lane reports `complete`, and finish-before-start; asserted by the same test file.
-- [ ] **1.4 Replace § 3d's "staged" paragraph.** Per the 1.1 verdict, either
+- [x] **1.4 Replace § 3d's "staged" paragraph.** Per the 1.1 verdict, either
       mark lanes shipped under the 1.2 brief with the two-lane cap, or record why
       they stay staged and make `--all` serial-only. No third state.
       verify: § 3d names one of the two outcomes and cites the 1.1 Decisions row.
+      Done 2026-10-19: § 3d now reads "Parallel lanes — shipped under the canonical brief", cites D2, keeps the two-lane cap, and moves coordination to roadmap claims read by `roadmap_drain_queue`; delivery opens the PR only after the roadmap's last step.
 
 ## Phase 2 — Finish-first queue, across sessions
 
@@ -207,7 +209,7 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
 
 ## Phase 6 — Measure it on the live estate
 
-- [ ] **6.1 Read the next five `--all` runs.** Re-run the 2026-10-19 lane
+- [~] **6.1 Read the next five `--all` runs.** Re-run the 2026-10-19 lane <!-- deferred-resolution: carried-to=road-to-roadmaps-finished-before-new-ones-start-carried -->
       classification on the five drains after Phase 5 lands.
       verify: an evidence file with the same table shape as the 2026-10-19
       reading; complete-share, intermediate PRs per roadmap, and unstarted
@@ -218,6 +220,7 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | reversible-technical | agent | "no intermediate commits" means no intermediate push, PR or merge; local chunked commits stay | owner request of 2026-10-19; `commit-policy` § Always split into logical chunks | the owner reads it as no local commits either |
+| D2 | product-owned | owner | (a) the lane-contract change is outside throughput AC-3; (b) lanes ship under the canonical brief, cap two; (c) 6.1 and AC-2..4 carry into the `-carried` follow-up so this roadmap archives | council degraded to one seat on two runs and split with itself on (c); owner chose option 1 on 2026-10-19 | the five readings show lanes below the 8 % baseline, or a lane collision loses data |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
@@ -231,15 +234,20 @@ time-gated is closed by carrying them into a named follow-up, so it can archive.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `process-full` carries one lane brief whose finish line is
+- [x] AC-1 — `process-full` carries one lane brief whose finish line is
       `count_open == 0` and one PR, and no orchestrator text can sanction a
       partial PR (1.2 test green, seen red).
-- [ ] AC-2 — Over the five runs read in 6.1, no unstarted roadmap was started
+      Met 2026-10-19: `process_full_lane_brief.test.ts` 10/10, red with a partial-PR line re-inserted.
+- [~] AC-2 — Over the five runs read in 6.1, no unstarted roadmap was started <!-- deferred-resolution: carried-to=road-to-roadmaps-finished-before-new-ones-start-carried -->
       while a started roadmap had a runnable step and no lane.
-- [ ] AC-3 — Over the same runs, every roadmap that a lane completed landed as
+      Deferred 2026-10-19 by D2: measured over five runs that start after this lands.
+- [~] AC-3 — Over the same runs, every roadmap that a lane completed landed as <!-- deferred-resolution: carried-to=road-to-roadmaps-finished-before-new-ones-start-carried -->
       exactly one PR, and at least half of the drain lanes ended `complete`
       (baseline 8 %).
-- [ ] AC-4 — Every owner-reserved step met in those runs was asked during the
+      Deferred 2026-10-19 by D2, same reason.
+- [~] AC-4 — Every owner-reserved step met in those runs was asked during the <!-- deferred-resolution: carried-to=road-to-roadmaps-finished-before-new-ones-start-carried -->
       run and its answer recorded at the step; none was left only in a lane
       report.
-- [ ] AC-5 — No active roadmap holds only time-gated open steps.
+      Deferred 2026-10-19 by D2, same reason.
+- [x] AC-5 — No active roadmap holds only time-gated open steps.
+      Met 2026-10-19: `roadmap_drain_queue --today 2026-10-19` lists no `decide` roadmap.

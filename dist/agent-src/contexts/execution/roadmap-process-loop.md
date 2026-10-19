@@ -484,11 +484,17 @@ the "several authorizations from one Accept" failure the enumeration guards
 against. Likewise the **N=3 validation budget** is per validation target and is
 not reset by moving to the next member.
 
-#### Parallel lanes — the shape, and why they are not on yet
+#### Parallel lanes — shipped under the canonical brief
 
-Lanes are **staged**, not shipped: the gate is ten clean serial set runs, and
-that gate has not been reached because no set run has happened. Recorded here
-so the shape is settled before the runs rather than designed under pressure:
+Lanes are **shipped**, on the owner's decision of 2026-10-19. They were staged
+behind ten clean serial set runs; that gate was overtaken in practice — 285 lane
+runs happened outside it between 2026-10-01 and 10-19, under briefs each
+orchestrator improvised, and 17 of 207 drain lanes reached `count_open == 0`.
+What ships is not those runs but the contract that replaces them: the canonical
+brief in `/roadmap:process-full` § Lanes, the finish-first order of
+`roadmap_drain_queue`, and the cap below. (The AI council was asked; only one
+seat could answer, it favoured keeping lanes staged, and without convergence the
+decision went to the owner.) The shape:
 
 - **Cap: two lanes** in the first iteration — a recorded decision
   (`decision 2026-08-20`, AI council 2/2 on the `autonomy-defaults-sheet`
@@ -500,9 +506,10 @@ so the shape is settled before the runs rather than designed under pressure:
   owned paths.
 - **Isolation:** the existing worktree scope lock
   ([`worktree-lifecycle`](../../skills/worktree-lifecycle/SKILL.md)).
-- **Coordination:** session-register branch claims, so two sessions never share
-  a branch.
-- **Delivery:** one branch and one PR per lane.
+- **Coordination:** session-register roadmap claims (`sessions:claim`), read by
+  `roadmap_drain_queue`, so two sessions never take the same roadmap.
+- **Delivery:** one branch and one PR per lane, opened only when its roadmap's
+  last step is done.
 - **Immediate removal:** a single scope-lock collision with data loss.
 - **Refusal report:** every lane report carries the fixed field
   `classifier_refusals` (an empty list when none) — a report without it is
