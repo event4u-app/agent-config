@@ -186,6 +186,11 @@ changes what either gate is for.
 
 - **Status:** open — the hold is dated 2026-10-16 and has existed in step 1.1's
   body ever since; this entry registers it, it does not create it.
+- **Class:** 2 — council. The question is technical and reversible, so the
+  ownership ladder does not reach the owner; it is parked only because the
+  deciding body returned a 1:1 split, which is an escalation condition rather
+  than a decision. Stated explicitly because an absent `Class` means 3, and a
+  technical question would then land in the owner's batch unread.
 - **Owner:** council
 - **Blocks:** step 1.1's helper-level half and AC-1. Nothing else: 1.1's
   block-list half landed and was observed red first, 1.2 is closed, and Phase 2
