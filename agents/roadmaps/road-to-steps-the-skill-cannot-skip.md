@@ -462,7 +462,7 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
 ## Blockers
 
 ### blocker: phase-6-spend-ceiling
-- **Status:** open — raised 2026-10-19 after D18. The pre-registration, the candidate pool, the scorer and the arm builder exist; no run has started.
+- **Status:** open — raised 2026-10-19 after D18. The pre-registration, the candidate pool, the scorer and the arm builder exist; no run has started. **Council 2026-10-19 (2/2, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** (a) and (b) are clause 4, owner-reserved; openai chose (c) as disproportionate to an opt-in, undocumented feature; anthropic agreed (c) is defensible and put a fourth option to the owner — the 96-run calibration with a pre-registered stop after 32 runs. (c) cancels steps, so it reaches the owner either way.
 - **Owner:** owner — spend above a delegated threshold is owner-reserved, and `cost.budgets` resolves to zero on every layer.
 - **Blocks:** 6.2 (admission needs the calibration runs), 6.5 and AC-7.
 - **What to do:** pick exactly one — (a) authorise the precondition and calibration slice, $921.60 at list price (96 runs), recorded as a positive `cost.budgets` value in the user-global `~/.event4u/agent-config/settings/.agent-settings.yml` or as a written authorisation in `agents/evidence/owner-directives/`, and say whether the organisation's extra usage beyond the team plan may be consumed; (b) authorise the whole programme, $2,649.60 (276 runs), the same way; (c) decline the measurement, which leaves the cursor opt-in and undocumented (D3) and closes 6.2, 6.5 and AC-7 as cancelled.
