@@ -240,9 +240,10 @@ ordinary code and review text.
 | `de-tax-id` | `TAXID` | the repeated-digit structure and ISO 7064 MOD 11,10 **and** a tax-ID word within 48 characters |
 | `us-ssn` | `SSN` | no `000`, `666` or `9xx` area, no `00` group, no `0000` serial |
 
-Consumers whose verdict reads credentials only take `CREDENTIAL_RULES` (the
-commit-time scanner, the self-repair payload floor, the MCP config lint, the
-council bundler's line masking). The class-tag redactor of knowledge ingestion
+Consumers whose verdict reads credentials only read the credential rows alone —
+the commit-time scanner, the MCP config lint and the council bundler's line
+masking by filtering on class, the self-repair payload floor through
+`CREDENTIAL_RULES`. The class-tag redactor of knowledge ingestion
 and cross-repo retrieval reads `IDENTIFIER_RULES` through
 `src/scripts/_lib/identifier_redaction.ts`. Over the tracked tree the rows'
 counts are pinned as ceilings by `src/scripts/_lib/egress_identifier_census.test.ts`.
