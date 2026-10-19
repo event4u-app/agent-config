@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Council question — authorisation of the Phase 6 measurement spend (road-to-steps-the-skill-cannot-skip, D17 follow-up)
 
 ## Context
