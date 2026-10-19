@@ -1,3 +1,7 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-19, committed verbatim below this header so the verdict can be checked against what was asked. -->
+
 # Two decisions on one roadmap of a governed agent-instruction package
 
 Repository: a package of skills, rules and slash-command files for AI coding
