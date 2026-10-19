@@ -1,12 +1,12 @@
 # Findings: analysis-family-doors-20261019
-<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: 96e6fe29005dcad99e6d78601db9d174242ece8faf28c80f9a3eb26c4b278e7c | diff: 4b893f3b61c4dc08b0f655d2d1fd15cbfbd92004 | reviewer: r2-fresh-subagent-analysis-family-doors-20261019 | prompt_hash: 35bf12ec18dc87104a30feae9b7a4c687f6c7ef499317847950a856824084b93 -->
+<!-- completion-review: v1 | reviewed: 2026-10-18 | scope: db74e0dc8a035770cce7a3b513cd5f9a7809e682e0400615368a457c498a0681 | diff: 71bc392c2e72371e2e5de0a5796799012647bc4e | reviewer: r2-fresh-subagent-analysis-family-doors-20261019 | prompt_hash: 35bf12ec18dc87104a30feae9b7a4c687f6c7ef499317847950a856824084b93 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-analysis-family-doors-20261019"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-18 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 4b893f3b61c4dc08b0f655d2d1fd15cbfbd92004
-  scope_hash: 96e6fe29005dcad99e6d78601db9d174242ece8faf28c80f9a3eb26c4b278e7c
+  diff_sha: 71bc392c2e72371e2e5de0a5796799012647bc4e
+  scope_hash: db74e0dc8a035770cce7a3b513cd5f9a7809e682e0400615368a457c498a0681
   roadmap: agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md
   roadmap_hash: 44194d186fbac848dc38254823bb5072d1ff464fac68d8bfbae325e5e929806e
   ac_hash: 576392c4edc3f50eb28f9db12266265f56eaa1ec6f162eca93ec2c921ba2fdae
