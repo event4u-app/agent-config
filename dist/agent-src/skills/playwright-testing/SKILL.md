@@ -141,6 +141,8 @@ test('homepage visual regression', async ({ page }) => {
 - First run creates baseline screenshots.
 - Subsequent runs compare against baselines.
 - Update baselines: `npx playwright test --update-snapshots`.
+- Baseline updates are shown as a diff and land in a commit of their own, made on
+  the pinned Docker renderer `playwright-architect` names — never on host Chromium.
 
 ## Viewport testing
 
