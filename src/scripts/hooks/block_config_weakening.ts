@@ -177,13 +177,13 @@ function runsSnapshotUpdate(words: string[]): boolean {
     else if (PACKAGE_MANAGERS.has(at(i))) {
         i++;
         skipOptions();
-        if (!['exec', 'dlx', 'x'].includes(at(i))) return false;
-        i++;
+        // `yarn playwright` and `pnpm playwright` dispatch a binary directly; `run` names a script.
+        if (['exec', 'dlx', 'x'].includes(at(i))) i++;
     }
     skipOptions();
     if (!VISUAL_RUNNERS.has(at(i).split('/').pop() ?? '')) return false;
     const args = words.slice(i + 1);
-    return !args.includes('--list') && args.some((w) => w === '-u' || /^--update-snapshots(=(?!(false|none)$).+)?$/.test(w));
+    return !args.some((w) => /^(--list|--help|-h|--version)$/.test(w)) && args.some((w) => w === '-u' || /^--update-snapshots(=(?!(false|none)$).+)?$/.test(w));
 }
 
 /**
