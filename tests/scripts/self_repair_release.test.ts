@@ -22,10 +22,11 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { gitEnv } from '../../src/scripts/_lib/git_env.js';
-import type { DefectRecord } from '../../src/scripts/_lib/self_repair.js';
+import { chooseEgress, type DefectRecord } from '../../src/scripts/_lib/self_repair.js';
 import { noreplyIdentity, outgoingDigest } from '../../src/scripts/_lib/self_repair_outgoing.js';
 import type { Probe, ReleaseDeps, ReleasePlan, RunResult, Runner } from '../../src/scripts/self_repair_cli.js';
 import {
+    capabilityOf,
     collectOutgoing,
     consumerDenyList,
     executeRelease,
@@ -517,5 +518,20 @@ describe('a consumer project reaches the issue step, not a pull request (D5)', (
         const checkout = packageCheckout();
         expect(findAgentConfigCheckout({ AGENT_CONFIG_SOURCE: checkout }, path.join(checkout, 'src', 'rules'))).toBe(checkout);
         expect(findAgentConfigCheckout({}, checkout)).toBe(checkout);
+    });
+
+    // AC-5 as D5 rewords it: the consumer's ladder ends at the issue even when
+    // every forge capability is present, and the same capabilities inside the
+    // checkout reach the pull request — so the stop is the checkout, not gh.
+    it('consumer-reaches-the-issue-step — full forge rights from a consumer plan an issue, from the checkout a pull request', () => {
+        const checkout = packageCheckout();
+        const consumer = fs.mkdtempSync(path.join(os.tmpdir(), 'self-repair-consumer-'));
+        dirs.push(consumer);
+        const rights = { ghAuthenticated: true, canPushUpstream: true, canFork: true };
+        const env = { AGENT_CONFIG_SOURCE: checkout };
+        const fromConsumer: Probe = { agentConfigCheckout: findAgentConfigCheckout(env, consumer), ...rights };
+        const fromCheckout: Probe = { agentConfigCheckout: findAgentConfigCheckout(env, checkout), ...rights };
+        expect(chooseEgress(capabilityOf(fromConsumer)).route).toBe('issue');
+        expect(chooseEgress(capabilityOf(fromCheckout)).route).toBe('pull-request');
     });
 });
