@@ -13080,6 +13080,14 @@ function lawText(body) {
   return sections.map((s) => s.text).join("\n\n");
 }
 
+// src/scripts/_lib/installed_layer_normalise.ts
+var ABSOLUTE_PATH_TOKEN = "<abs>";
+var POSIX_ABSOLUTE = /(?<![A-Za-z0-9._~%@+:/\\-])(?:\/[A-Za-z0-9._@+~-]+){2,}/g;
+var WINDOWS_ABSOLUTE = /(?<![A-Za-z0-9._~%@+:/\\-])[A-Za-z]:(?:[\\/][A-Za-z0-9._@+~-]+)+/g;
+function normaliseLayerText(text) {
+  return text.replace(WINDOWS_ABSOLUTE, ABSOLUTE_PATH_TOKEN).replace(POSIX_ABSOLUTE, ABSOLUTE_PATH_TOKEN);
+}
+
 // src/scripts/_lib/installed_layer.ts
 var TOP_FILES = 20;
 var LIMIT_WARN_FRACTION = 0.8;
@@ -13096,6 +13104,7 @@ function readLayer(host, scope, dir, recorded) {
     files: 0,
     unconditional: 0,
     chars: 0,
+    normalised_chars: 0,
     package_owned: 0,
     foreign: 0,
     package_owned_chars: 0,
@@ -13130,6 +13139,10 @@ function readLayer(host, scope, dir, recorded) {
       // a host loads" and "what a delivery carries" cannot drift into two
       // spellings of the same measurement.
       chars: ruleBody(text).length,
+      // THE SAME STRING, MEASURED TWICE. `chars` is what the host loads;
+      // this is that text with every absolute path substituted, so two
+      // machines with different package roots read one figure in common.
+      normalised_chars: normaliseLayerText(ruleBody(text)).length,
       unconditional: isUnconditional(text),
       package_owned: owned
     });
@@ -13143,6 +13156,7 @@ function readLayer(host, scope, dir, recorded) {
     files: readings.length,
     unconditional: readings.filter((r) => r.unconditional).length,
     chars: readings.reduce((n, r) => n + r.chars, 0),
+    normalised_chars: readings.reduce((n, r) => n + r.normalised_chars, 0),
     package_owned: readings.filter((r) => r.package_owned).length,
     foreign: readings.filter((r) => !r.package_owned).length,
     package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
