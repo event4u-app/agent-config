@@ -198,27 +198,42 @@ routed rule body with nothing in the session saying so.
   `BREAKING_CHANGES.md` Pending row), so no note is placed yet; both seats agree
   a note is owed and the trailer loss is a release-tooling defect. Record:
   `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
-  *Re-measured 2026-10-19, and the 2026-10-18 correction is narrowed in both
-  directions.* The squash-trailer defect it rests on is **fixed**:
-  `trailer_blocks` in `src/scripts/_lib/consumer_impact.ts` now reads every
-  trailer-only paragraph of a body rather than the final one, so
-  `parse_impact_trailers` over `3f8c98e74` and `3245c7e7c` returns `notice` with
-  `recorded: true` for both — the two commits that measurement recorded as lost.
-  The next release does record #2455 as a `notice`, so the half of the
-  correction that rested on the trailer being lost no longer holds.
-  The step does not move, and its reason is now structural rather than a tooling
-  defect. Released notes render commit **subjects**, and the subject naming the
-  three guards is an inner bullet of a squash **body** (`* fix(hooks): reach a
-  staged dispatcher ahead of PATH, so block-no-verify, block-kernel-rule-writes
-  and block-plumbing-writes run where they were silent`), which no generator
-  reads. Naming them therefore needs a curated-head line, and
-  `render_release_head` (`src/scripts/release.ts:332`) takes its content only
-  from what the release run hands it — there is no staged or pending surface an
-  earlier change can write into, and a grep for one returns nothing. So this
-  half is reachable only from a release run, which is a Hard-Floor action, and
-  the open class question (a `notice` in the curated head against a
-  `BREAKING_CHANGES.md` Pending row) stays owner-owned, unaffected either way by
-  the re-measurement.
+  *Re-measured 2026-10-19.* The squash-trailer defect the correction above rests
+  on is **fixed** — two parallel runs found this independently, #2479 on one side
+  and a re-measurement on the other. `trailer_blocks` in
+  `src/scripts/_lib/consumer_impact.ts` now returns every trailer-only paragraph
+  of a body rather than the final one, so `parse_impact_trailers` over
+  `3f8c98e74` and `3245c7e7c` returns `notice` with `recorded: true` for both —
+  the two commits the 2026-10-18 measurement recorded as lost. The next release
+  does record #2455 as a `notice`, so the half of the correction that rested on
+  the trailer being lost no longer holds.
+
+  **The step does not move, and its reason is now structural rather than a
+  tooling defect** — which is the stronger statement, because a fixed tool does
+  not unblock it. Released notes render commit **subjects**, and the subject
+  naming the three guards is an inner bullet of a squash **body** (`* fix(hooks):
+  reach a staged dispatcher ahead of PATH, so block-no-verify,
+  block-kernel-rule-writes and block-plumbing-writes run where they were
+  silent`), which no generator reads. Naming them therefore needs a curated-head
+  line, and `render_release_head` (`src/scripts/release.ts:332`) takes its
+  content only from `_derive_head_prefill`, which derives from the git span at
+  release time. A grep for a staged or pending surface an earlier change could
+  write into returns nothing. So this half is reachable only from a release run,
+  a Hard-Floor action no drain lane holds.
+
+  **Two claims from a parallel run did NOT survive verification, and are
+  corrected here rather than carried.** A merge-time note asserted that a second
+  council round `D10` settled the class as breaking and that
+  `BREAKING_CHANGES.md` carries a Pending row naming the three guards. Measured
+  on `main` 2026-10-19: `grep -c 'block-no-verify' BREAKING_CHANGES.md` returns
+  **0**, the file names none of the three guards anywhere, and its only Pending
+  row is the `uninstall --global --purge` scope change; no `D10` appears in this
+  roadmap, and no council record under `agents/evidence/council/` carries a class
+  verdict for these guards. **The class question therefore stays open and
+  owner-owned** — `anthropic`: a `notice` in the curated head, `openai`: a
+  Pending row, split 1–1 on 2026-10-18 and unaffected by the trailer fix. Recorded
+  as a correction because a roadmap note asserting an artifact the tree does not
+  contain is how a screen three weeks from now concludes this step is closeable.
 
 ## Phase 5 — The plugin channel says what it carries
 
@@ -282,6 +297,7 @@ plugin ships no dispatcher of its own (D4).
 | D7 | reversible-technical | agent | The staged runtime carries the bundle, `dist/agent-src`, the data files of `src/scripts`, `src/config`, `package.json`, and `node_modules/yaml` | Measured by running the real bundle from a stage: it reads `src/scripts/hooks/host_lowering.yaml` and resolves `yaml` through a `createRequire` the bundler did not inline; the rest of `src/scripts` is 27 MB of TypeScript the bundle already contains | a concern reads a package file outside the staged set, or the bundle stops resolving `yaml` at run time |
 | D8 | reversible-technical | agent | The install thins only on a carrier the stripped-environment probe reached | A layer thinned onto a dead carrier would print 3.1's line and restore at the next session — a thin that is undone before it is used; refusing it up front is the same outcome without the round trip | the probe reports not-reached on a machine whose real launcher does reach the dispatcher |
 | D9 | reversible-technical | agent | On Windows the install and doctor do not probe, and thinning keeps its earlier behaviour | There is no `/bin/sh` to run the probe with; recording "not reached" would be a measurement that was never taken | a Windows host is found to run the hook commands through a shell the probe can use |
+| D10 | contested-technical | council:hook-carrier-release-note-class-20261019 | The #2455 behaviour change is released as breaking: a `BREAKING_CHANGES.md` Pending row naming the three `fail_closed` guards, moved into the per-major table and a `### Breaking` entry by the release that carries it | Second round 2026-10-19: `anthropic` moved B2 → B1 on the new input (#2479 fixed the trailer loss; ADR-290 makes the next release a major anyway); `openai` chose B1 in round one and could not answer round two (codex exit 1). Both seats' latest answers are B1; the round itself was degraded 1/2 | a full 2/2 round returns anything other than B1, or the release carrying the row is cut as a minor |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
