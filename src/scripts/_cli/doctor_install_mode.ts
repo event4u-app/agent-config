@@ -39,6 +39,21 @@ function isDir(p: string): boolean {
  * the install-mode marker (written on every install) or the `agents/overrides/`
  * scaffold. Either is sufficient.
  */
+/**
+ * Whether the PACKAGE we are running from is a source checkout rather than an
+ * installed release — a different question from `_is_source_repo`, which asks
+ * whether a directory is an agent-config tree at all.
+ *
+ * A `.git` entry is the only signal that separates the two: npm never ships
+ * one, while both of `_is_source_repo`'s positive signals — a `dist/agent-src/`
+ * directory and a `package.json` named `@event4u/agent-config` — are present in
+ * every published tarball. `.git` is a directory in a normal clone and a file
+ * in a worktree, so existence is tested, never the kind.
+ */
+export function isSourceCheckoutPackage(packageRoot: string): boolean {
+    return fs.existsSync(path.join(packageRoot, '.git'));
+}
+
 export const INSTALL_MODE_MARKER_RELATIVE = 'agents/.agent-state/install-mode.txt';
 
 export function _is_global_only_consumer(project_root: string): boolean {
