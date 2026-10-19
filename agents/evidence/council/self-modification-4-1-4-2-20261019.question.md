@@ -1,3 +1,10 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-19, committed verbatim so the
+     verdict beside it can be checked against what was actually asked
+     (evaluator-independence: a recorded verdict whose prompt is not recoverable
+     is not evidence, because nobody can check what was asked). -->
+
 # Modification review — a diff that edits the ratification gate and its subject calculator
 
 You are reviewing a change to this package's own governance mechanism. Answer

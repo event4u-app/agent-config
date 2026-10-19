@@ -1,3 +1,9 @@
+<!-- evidence-type: original-review -->
+
+<!-- The openai seat's reply of 2026-10-19 to the prompt in
+     self-modification-4-1-4-2-20261019.question.md, verbatim. Historical: it
+     describes the diff that was reviewed, which was reverted, not the tree. -->
+
 1. What behaviour changes?
 
 I agree with Reviewer B: edits to the two reviewer modules, existing consequence-class members, the class list, and the shared schema now require ratification and enter the subject digest.

@@ -1,3 +1,9 @@
+<!-- evidence-type: original-review -->
+
+<!-- The anthropic seat's reply of 2026-10-19 to the prompt in
+     self-modification-4-1-4-2-20261019.question.md, verbatim. Historical: it
+     describes the diff that was reviewed, which was reverted, not the tree. -->
+
 Matze, I'll first respond to the prior critiques, then work through the nine questions.
 
 ## Response to Prior Round
