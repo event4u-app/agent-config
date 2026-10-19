@@ -778,8 +778,8 @@ line are deliberately not used: they answer which *option* wins a
 deliberation, not whether each *seat* passed a change. A missing line, an
 abstention or any other label is a seat that did not conclude.
 
-The record's verdict is then derived by one rule, and the ORDER is the rule
-(`modification_review.deriveModificationVerdict`):
+What the run does next — land, retry, escalate — is then derived by one rule,
+and the ORDER is the rule (`modification_review.deriveModificationVerdict`):
 
 1. any concluding seat on `refused` gives `refused`;
 2. fewer concluding providers than `required_providers` gives `non-convergent`;
@@ -790,6 +790,22 @@ Step 1 precedes step 2 deliberately. A single refusing seat is a refusal even
 when it is the only seat that concluded; letting the quorum rule fire first
 would turn *one reviewer said no* into *not enough reviewers answered*, which
 reads as a retryable condition rather than as the objection it is.
+
+**That rule decides the run, never the record.** For one seat `ratified` and the
+other without a final verdict it answers `non-convergent`, while the record's
+header — derived by `deriveRatificationHeader`, the sole authority over what a
+record says — is `ratified` with one provider, and the record fails on
+`diversity-required` instead. `seats:` is evidence, and a policy count must not
+relabel it, or a grep for `non-convergent` returns two failure modes with
+different remedies. `modification_review.deriveModificationOutcome` returns both
+answers under different names (`header`, `disposition`). That is a clearer
+interface, not an enforced one: `deriveModificationVerdict` stays exported, and
+nothing stops a caller writing its answer into a record except the reader's
+`header-not-derived` check. `deriveModificationVerdict` and
+`deriveModificationOutcome` each refuse a `required_providers` that is not a
+positive integer with a `RangeError`, because at zero or below an empty council
+would satisfy it, and a seat value that is neither one of the three labels nor
+`null` with a `TypeError`, because counted it would add a provider to the quorum.
 
 ## What the artifact does NOT decide
 
