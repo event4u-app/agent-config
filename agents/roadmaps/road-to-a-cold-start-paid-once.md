@@ -471,7 +471,6 @@ Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
       from an implementer (fixture).
 - [x] **AC-6** A `rate_limit` failure causes zero same-turn re-dispatches
       (fixture).
-      Done 2026-10-20: `rate-limit-never-redispatches-same-turn` in `tests/scripts/_lib_subagent_steering.test.ts`, every tier and downshift state.
 - [ ] **AC-7** Documentation and telemetry distinguish the guard's open-dispatch
       count, the host's spawn cap and whether resumes are inside it — no claim
       the host caps resumes without a row.
