@@ -34,6 +34,19 @@ export const LINEARITY: Readonly<Record<string, string>> = {
         'Starts only at the literal header; the label class excludes the dash, so label runs of different headers are disjoint, and backtracking over one run tries the fixed 16-character suffix at each position: linear with a constant factor of 16.',
     'db-connection-uri':
         'One attempt per scheme-character run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first word-boundary letter atomically. Every such start in one run reaches the same :// at the same run end, so the first one matches whenever any later one would, and nothing the unbounded scheme matched is lost. The userinfo classes exclude : and /, so each userinfo run is read by one attempt per side.',
+    'iban':
+        'Starts only at a country-code boundary; every quantifier is bounded (at most seven four-character groups and a three-character tail), so an attempt reads at most 37 characters.',
+    'payment-card':
+        'Starts only at a digit boundary; each repetition reads one digit after an optional single separator, so a digit can be the end of only one repetition and an attempt reads at most 37 characters.',
+    'email':
+        'Starts only where no address character precedes; the local part is bounded at 64, each label at 63 and the labels at eight, and the label class must end on a dot, so an attempt reads a bounded window and backtracking inside it is bounded by those constants.',
+    'phone-international':
+        'Starts only at a plus sign; each digit group is consumed atomically by a lookahead-plus-backreference of at most six digits, so groups split only at separators or the six-digit cap, and at most five groups follow: an attempt reads at most about 45 characters with no re-split.',
+    'phone-national':
+        'Starts only at a zero after a non-word character; the area code is bounded at five digits and each of at most three groups is consumed atomically by a lookahead-plus-backreference of at most eight digits, so an attempt reads at most about 35 characters with no re-split.',
+    'de-tax-id':
+        'Starts only at a digit boundary; exactly ten repetitions of an optional space and one digit follow, so an attempt reads at most 21 characters.',
+    'us-ssn': 'Fixed-length digit runs between hyphens: every attempt reads at most eleven characters.',
     'generic-assignment':
         'Starts only at a keyword; the whitespace runs end at the first non-space and the value run at the first quote or space, and a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops at the first character after the whitespace.',
 };

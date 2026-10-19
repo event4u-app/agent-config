@@ -9,7 +9,7 @@
  * list. A finding refuses and is named by WHERE it was found and which rule
  * fired — never by the value, because the refusal is printed and stored.
  */
-import { detect } from './egress_rules.js';
+import { CREDENTIAL_RULES, detect } from './egress_rules.js';
 
 export type PayloadPart = 'branch' | 'commit' | 'object' | 'title' | 'body';
 
@@ -65,7 +65,7 @@ export function scanPayload(payload: ReleasePayload, deny: readonly string[]): P
     ];
     for (const [part, text] of parts) {
         const rules = new Set<string>();
-        for (const span of detect(text)) {
+        for (const span of detect(text, CREDENTIAL_RULES)) {
             rules.add(span.rule);
         }
         for (const d of denyRes) {
