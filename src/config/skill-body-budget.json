@@ -212,7 +212,7 @@
     "pixar-storyteller": 5247,
     "playbook-authoring": 10751,
     "playwright-architect": 5774,
-    "playwright-testing": 11165,
+    "playwright-testing": 11333,
     "po-discovery": 5282,
     "positioning-strategy": 8376,
     "prediction-pool-optimizer": 16448,
@@ -615,6 +615,12 @@
       "old": 15187,
       "new": 15706,
       "reason": "Step 5 runs the lexicon and claim pass on the finished draft over stdin and says what an avoid hit, a taboo hit, an unbacked claim and exit 2 each mean. road-to-a-brand-the-tree-can-check 5.4."
+    },
+    {
+      "skill": "playwright-testing",
+      "old": 11165,
+      "new": 11333,
+      "reason": "One taught line under the visual-regression section: baseline updates are shown as a diff and land in a commit of their own, on the pinned Docker renderer. road-to-a-canvas-the-code-owns 7.3."
     }
   ]
 }
