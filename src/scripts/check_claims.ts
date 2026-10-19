@@ -378,6 +378,17 @@ export interface LedgerEntry {
      */
     retires_phrasings: string;
     /**
+     * REQUIRED on a `measured-in-repo` entry, forbidden elsewhere: the
+     * consumer-side evidence that would promote the row to `backed`.
+     *
+     * A finished bench or fixture reading of a consumer-facing mechanism, taken
+     * in the maintainer tree, is neither `backed` (nothing ran where the
+     * consumer stands) nor `unbacked` (the reading is finished, not owed).
+     * Without a named closure path the status is the dumping ground the ledger
+     * warns about, so the field is required rather than optional.
+     */
+    promotion_evidence: string;
+    /**
      * Whether the `- retires_phrasings:` LINE exists at all, independent of
      * whether it carries a value.
      *
@@ -438,6 +449,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 measured_on: cur.measured_on ?? '',
                 non_inference: cur.non_inference ?? '',
                 retires_phrasings: cur.retires_phrasings ?? '',
+                promotion_evidence: cur.promotion_evidence ?? '',
                 retires_phrasings_present: cur.retires_phrasings_present ?? false,
             });
         }
@@ -456,7 +468,7 @@ function load_ledger(): Map<string, LedgerEntry> {
         // would have silently ignored the second and dropped whichever field
         // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings|promotion_evidence):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;
@@ -668,6 +680,42 @@ function main(argv: string[] = process.argv.slice(2)): number {
                 file: LEDGER_REL,
                 reason: `retired_by is only meaningful on a withdrawn entry (status: ${entry.status || 'missing'})`,
             });
+        }
+    }
+
+    // 2c'. `measured-in-repo` — a finished in-repo reading of a consumer-facing
+    //      mechanism. It may not carry a public marker (rule 1 already refuses
+    //      every non-`backed` marker), and it must say what it measured on, keep
+    //      a resolving report pointer, and name the consumer-side evidence that
+    //      would promote it.
+    for (const entry of ledger.values()) {
+        if (entry.status !== 'measured-in-repo') {
+            if (entry.promotion_evidence) {
+                findings.push({
+                    id: entry.id,
+                    file: LEDGER_REL,
+                    reason: `promotion_evidence is only meaningful on a measured-in-repo entry (status: ${entry.status || 'missing'})`,
+                });
+            }
+            continue;
+        }
+        if (entry.promotion_evidence.length < 20) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: 'measured-in-repo entry names no `promotion_evidence` — the consumer-side evidence that would make it `backed`',
+            });
+        }
+        if (!entry.measured_on) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: 'measured-in-repo entry names no `measured_on` — the tree, corpus or environment the reading was taken on',
+            });
+        }
+        const un = pointer_unresolved(entry.evidence);
+        if (un) {
+            findings.push({ id: entry.id, file: LEDGER_REL, reason: `measured-in-repo entry has dangling evidence — ${un}` });
         }
     }
 

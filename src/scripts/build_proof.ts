@@ -229,6 +229,26 @@ function render(): string {
         L.push(`| ${e.claim.replace(/\|/g, '\\|').slice(0, 110)} | ${why} |`);
     }
     L.push('');
+    // A finished in-repo reading of a consumer-facing mechanism is neither in
+    // the backed total above nor in the debt below; listing it with the
+    // evidence that would promote it keeps it from reading as either.
+    const measuredInRepo = entries.filter((e) => e.status === 'measured-in-repo');
+    if (measuredInRepo.length > 0) {
+        L.push('### Measured in this repository, not yet where the consumer stands');
+        L.push('');
+        L.push(`**${measuredInRepo.length}** claim(s) about what a shipped install does rest on a finished`);
+        L.push("measurement taken in the maintainer tree. They are not counted as backed: nothing");
+        L.push("ran on a consumer's machine. Each names the evidence that would promote it.");
+        L.push('');
+        L.push('| Claim id | Measured on | Promoted by |');
+        L.push('|---|---|---|');
+        for (const e of measuredInRepo) {
+            const on = e.measured_on.replace(/\|/g, '\\|');
+            const by = e.promotion_evidence.replace(/\|/g, '\\|');
+            L.push(`| \`${e.id}\` | ${on} | ${by} |`);
+        }
+        L.push('');
+    }
     L.push('Artefact counts in public prose (skills, commands, governed rules,');
     L.push('guidelines, personas) are **generated from source and CI-drift-checked**:');
     L.push('`update_counts.ts` writes the numbers, `check_artefact_count_messaging.ts`');
@@ -456,9 +476,11 @@ function render(): string {
         const ledger = [...load_ledger().values()].sort((a, b) => a.id.localeCompare(b.id));
         const backed = ledger.filter((e) => e.status === 'backed').length;
         const nulls = ledger.filter((e) => e.status === 'resolved-null').length;
+        const measured = ledger.filter((e) => e.status === 'measured-in-repo').length;
         L.push(
             `**Axis 2 — evidence form per public claim.** ${ledger.length} ledger entries · ` +
-                `${backed} backed · ${ledger.length - backed - nulls} unbacked inventory · ` +
+                `${backed} backed · ${measured} measured-in-repo · ` +
+                `${ledger.length - backed - nulls - measured} unbacked inventory · ` +
                 `${nulls} resolved-null.`,
         );
         L.push('');
