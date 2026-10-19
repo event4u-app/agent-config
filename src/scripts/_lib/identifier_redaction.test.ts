@@ -39,9 +39,10 @@ describe.each([
 });
 
 /**
- * Differential parity with the phone regex the two stores carried before the
- * table (frozen verbatim). Every phone-shaped value it tagged is still tagged;
- * the shapes it tagged that are not phone numbers are listed as deliberate losses.
+ * Curated compatibility with the phone regex the two stores carried before the
+ * table (frozen verbatim): each listed phone shape it tagged is still tagged by
+ * both stores, and the listed shapes it tagged that are not phone numbers are
+ * deliberate losses. A sample of its input space, not an exhaustive differential.
  */
 const LEGACY_PHONE = new RegExp(
     '(?:(?<=\\s)|(?<=^))' +
@@ -87,18 +88,22 @@ describe('phone parity with the legacy store regex', () => {
     it('compact US numbers, which the legacy regex never tagged, are tagged now', () => {
         for (const v of [j('212555', '0142'), j('1212555', '0142')]) {
             expect(legacyTags(`x ${v}`)).toBe(false);
-            const counters: Record<string, number> = {};
-            ingestRedact(`x ${v}`, counters);
-            expect(counters['PHONE'], v).toBe(1);
+            for (const redact of [ingestRedact, crossRepoRedact]) {
+                const counters: Record<string, number> = {};
+                redact(`x ${v}`, counters);
+                expect(counters['PHONE'], v).toBe(1);
+            }
         }
     });
 
     it('deliberate losses: shapes the legacy regex tagged that are not phone numbers', () => {
         for (const v of ['2026-10-19', '10.20.30', '1999 2000 2001']) {
             expect(legacyTags(`x ${v}`), v).toBe(true);
-            const counters: Record<string, number> = {};
-            ingestRedact(`x ${v}`, counters);
-            expect(counters['PHONE'], v).toBeUndefined();
+            for (const redact of [ingestRedact, crossRepoRedact]) {
+                const counters: Record<string, number> = {};
+                redact(`x ${v}`, counters);
+                expect(counters['PHONE'], v).toBeUndefined();
+            }
         }
     });
 });
