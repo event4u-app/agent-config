@@ -121,6 +121,14 @@ read-ceiling line naming the bound that fired.
 
 ### 1. Resolve scope from the invocation — do not ask
 
+Two scopes, and the run states both before it reads anything. The **local**
+scope — which project or module the findings land in — is resolved with
+`src/scripts/analysis_target.ts` and printed first as the scope line
+[`analysis-loop`](../../contexts/execution/analysis-loop.md) defines:
+`Scope: <repo|module|subdir> <name> at <path> (anchor: <…>)`. Inside a module
+the scope is the module, with or without a marker in its own `agents/`, and the
+outer project stays `project_root`. The **reference** scope is the argument.
+
 Scope comes from the arguments, never from a prompt. A bare repository argument
 means **full scope**; `--focus=<area>` means focused. **Ask nothing before the
 first fetch.** The four-option menu this step used to open with cost one prompt

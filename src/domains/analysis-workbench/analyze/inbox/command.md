@@ -9,6 +9,12 @@ cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
 argument-hint: "[<file> | <dir> | <round-id>] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
+limits:
+  mode_default: execute
+  max_iterations: 3
+  hard_ceiling: 3
+  no_gain_stop: 1
+  target_metric: required
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /analyze:inbox name; not independently suggested (surface-consolidation)."
@@ -52,6 +58,30 @@ Flags: `--triage-only` stops after Phase 2 (no deep analysis, no roadmap) ·
 `--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6) ·
 `--worktree` runs the analysis itself in an isolated worktree (see below; off
 by default).
+
+## Enforced limits
+
+The frontmatter `limits:` block is the machine-readable pin
+(`tests/scripts/analyze_inbox_limits.test.ts` fails when flow and pin drift);
+the phases below are the enforcement. The fourth door of ADR-288 carries the
+same five keys as its three siblings, mapped onto the work it actually does:
+
+- `mode_default: execute` — unlike the three analysing doors, a round that
+  validates **publishes**: the run's own branch and one non-draft PR (§ Where
+  the work happens). `--no-pr`, `--no-roadmap`, `--triage-only` and `vcs: none`
+  each stop earlier, and the run says in one line which of them it obeyed.
+- `max_iterations: 3` and `hard_ceiling: 3` — the extraction loop is capped at
+  three passes (§ The three-pass contract). The ceiling equals the default
+  because no flag raises it: a fourth pass is not reachable from the surface.
+- `no_gain_stop: 1` — one pass that adds no row ends the loop; the run names
+  whether it converged or hit the cap, and these are different findings.
+- `target_metric: required` — the anchor census is counted over the source's
+  own enumerable structure **before** the first extraction (Phase 2b), so the
+  denominator the run is measured against exists before pass 1 reads anything.
+
+Per-file reproduction carries its own three-part ceiling (12 steps, 20 minutes,
+3 attempts per step, whichever fires first) — that bound is a probe budget
+rather than a loop budget, and it is stated where it fires.
 
 ## Where the work happens — and how a run ends
 
