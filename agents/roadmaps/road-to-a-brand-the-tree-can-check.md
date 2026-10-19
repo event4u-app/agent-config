@@ -454,7 +454,7 @@ irreversible-external-action row of `non-destructive-by-default`).
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
       Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
       Still open 2026-10-19, unchanged: the step's own condition is false, and closing it either way — `[-]` because the condition never fired, or a bare field because the middle branch reads "schema field only" — is the owner's call, not a run's.
-      blocked-by: user-negative-lexicon-schema
+      <!-- blocked-by: user-negative-lexicon-schema | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 - [x] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
       branch commits; not in default CI.
       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
@@ -533,14 +533,14 @@ irreversible-external-action row of `non-destructive-by-default`).
       verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> 0
       Open 2026-10-19: the prompt set E8 left open is now pre-registered and committed before any run — `tests/fixtures/brand-voice-read-rate/prompts.json`, 30 reader prompts (five per 6.1 reader), 10 unrelated prompts, and the read-event and routing protocol. The run itself is not taken here: it is 40 fresh paid host sessions in a scratch consumer project under a clean HOME (an in-repo `claude -p` measures this package's own rules, not the host), which is the operator's spend call. No reading exists, so 6.4, AC-7 and AC-9 wait on it.
       Still open 2026-10-19: the drain run re-checked the premise instead of repeating the note. Nothing changed — the fixture is pre-registered and frozen, and what remains is 40 fresh paid host sessions under a clean HOME, an undelegated spend decision. Recorded as a blocker so the dashboard and `open_blockers` see it rather than a prose note.
-      blocked-by: slot-read-rate-measurement-spend
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 - [ ] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
       concern `brand-voice-card` registered in `src/config/hook-token-budget.json`
       at the measured card size (three attributes, `avoid` terms, one sample);
       emitted only when a routed reader skill runs and the slot is valid; shaped
       by `injection_budget.ts`; Claude Code first. 0.6 stays green.
       verify: `npx vitest run tests/scripts/hooks -t "brand-voice-card|no-brand-bytes" --reporter=verbose` -> /✓.*brand-voice-card[\s\S]*✓.*no-brand-bytes/
-      blocked-by: slot-read-rate-measurement-spend
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 
 ## Phase 7 — Intake and proof
 
@@ -637,10 +637,12 @@ Carried from the supplied plans' kill register; each was judged and not taken.
       a quoted one does not.
 - [ ] AC-7 — A non-brand task in a fully branded project carries zero brand
       bytes, before and after any carrier.
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 - [x] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
       `instruction-only`, and no file calls `brand-consistency` a gate.
 - [ ] AC-9 — A runtime carrier exists only if the recorded read-rate
       measurement missed its pre-registered bar.
+      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
 
 ## Decisions
 
