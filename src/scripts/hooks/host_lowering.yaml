@@ -88,16 +88,16 @@ hosts:
         # read was never dated, and the absence was the record. Both are filled
         # now from sources this tree already carries — the 2026-09-06 live probe
         # recorded in `host_semantics.ts` (Claude Code 2.1.263) and a fresh
-        # documentation read on 2026-09-29, repeated 2026-10-14. `expires` is
-        # deliberately unchanged.
+        # documentation read on 2026-09-29, repeated 2026-10-14 and 2026-10-19.
+        # `expires` is deliberately unchanged.
         #
         # The committed `docs_url` was `https://docs.claude.com/en/docs/claude-code/hooks`,
         # which answers 301 and lands on the URL below. Recording the redirect
         # target is what makes a digest reproducible.
         verified:
-          docs_at: 2026-10-14
+          docs_at: 2026-10-19
           docs_url: https://code.claude.com/docs/en/hooks.md
-          docs_digest: 0ccea55b53b6b616134028b857028cf3822b89958a9c4b23806287dddeefe954
+          docs_digest: dd0f114dac70bc7836abd37797fb486d3007d889eeb6bbc88c307ed2587a44ef
           probe_at: 2026-09-06
           host_version: 2.1.263
           expires: 2027-09-06
