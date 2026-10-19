@@ -684,13 +684,13 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 - **If you do nothing:** Phases 0-5 and 7 stay closed and the roadmap stays active on four items, none of which changes behaviour in the tree.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-15 | reviewer: claude-opus -->
+<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Profiles already tracked | product | A consumer or this repo committed a real-person profile under the unignored path before 1.1 lands | 0.7 counts tracked files first; a non-zero count stops Phase 1 and reaches the owner; no history rewrite without the owner | Phase 0 — Control readings (red first) |
 | 2 | Token rename misses a writer | implementation | A surface keeps telling consumers to write the dotted file | 0.1 asserts parity over every authored surface; `brand:status` keeps flagging near-misses | Phase 1 — Small truths (one immediate PR) |
-| 3 | Claim phrases fire on ordinary prose | product | Advisory findings become noise and get ignored | phrase-level only, pre-registered corpus and ceiling (E8), German at hint severity | Phase 5 — One checker for three voices and for claims |
+| 3 | Claim phrases fire on ordinary prose | product | Advisory findings become noise and get ignored | phrase-level only, pre-registered corpus and ceiling (E8), German at hint severity. Re-reviewed 2026-10-19: corpus v2 read 0 hits in 97,835 words, so the bar is met on the measured corpus — but 5.6 now runs the same registry over commit messages and PR bodies, a corpus the bar was never measured on. Bounded rather than re-measured: the target is opt-in, its findings are `warning`, and it exits 0, so a noisy reading costs an opt-in reader attention and nothing in CI. | Phase 5 — One checker for three voices and for claims |
 | 4 | Slot becomes a second token store | implementation | Colours or type values drift into the voice slot | 4.2 schema has no visual fields; AC-1; NG-5 | Phase 4 — One voice slot, one shape |
 | 5 | Carrier built without need | implementation | A hook adds bytes to every turn | 6.4 runs only if 6.3 misses its pre-registered bar; 0.6 and AC-7 guard zero bytes off-brand | Phase 6 — Readers, producers, and a carrier only if measured |
 | 6 | Canvas and this file edit one test | implementation | Both touch `design_system_import.test.ts` | 3.5 waits for canvas 3.1 and adds one row only | Phase 3 — The stable token format |
