@@ -3,7 +3,8 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "Round inbox-2026-10-q reproduced at 9a943f30c that 40 relative links inside delivered references/*.md and one skill-relative link in existing-ui-audit resolve to nothing while check_references and lint_skill_link_reach both report clean, and that no skill can have its procedure handed out one step at a time because the only enforced step runner iterates a fixed eight-step constant. No active roadmap owns either: a grep over agents/roadmaps/{*,later,stubs} for procedure.yaml, work --procedure and skill-relative returns nothing, later/road-to-guided-journeys owns the flow level that ADR-055 keeps a suggestion list, and road-to-skill-scripts-that-run-where-they-land owns script placeholders, not link depth. Archiving or parking costs more because Phase 1 is a shipped dead-link defect; merging into the flow-level plan would tie a skill-internal change to the schema-v2 event ADR-055 reserves."
+estate_growth_exempt: "open_blockers +1: phase-6-spend-ceiling is newly discovered on 2026-10-19 — the AI council (D18, 2/2) held that the Phase 6 spend is owner-reserved because no delegated threshold exists, which no earlier record had established; it is not a repaired undercount."
+estate_offset_exempt: ""Round inbox-2026-10-q reproduced at 9a943f30c that 40 relative links inside delivered references/*.md and one skill-relative link in existing-ui-audit resolve to nothing while check_references and lint_skill_link_reach both report clean, and that no skill can have its procedure handed out one step at a time because the only enforced step runner iterates a fixed eight-step constant. No active roadmap owns either: a grep over agents/roadmaps/{*,later,stubs} for procedure.yaml, work --procedure and skill-relative returns nothing, later/road-to-guided-journeys owns the flow level that ADR-055 keeps a suggestion list, and road-to-skill-scripts-that-run-where-they-land owns script placeholders, not link depth. Archiving or parking costs more because Phase 1 is a shipped dead-link defect; merging into the flow-level plan would tie a skill-internal change to the schema-v2 event ADR-055 reserves."
 relates:
   - slug: road-to-skills-that-arrive-when-called
     relation: extends
@@ -380,7 +381,9 @@ A split multiplies links. The gate that checks them comes first.
 The three-arm design and its decision rules are own analysis of the parallel
 plans this round carried; no external source is cited for them.
 
-*Status 2026-10-18 — not runnable in this pass; nothing below is started.*
+*Status 2026-10-19 — 6.1, 6.3 and 6.4 written; no run has started. 6.2's
+calibration and 6.5 wait on one owner action, blocker `phase-6-spend-ceiling`.*
+*Status 2026-10-18 (superseded by the line above) — not runnable in this pass; nothing below is started.*
 The instrument exists: `claude plugin eval` (Claude Code 2.1.302) takes
 `--runs`, `--model`, `--ablation`, `--max-cost-usd` and `--json`, and offers
 deterministic graders (`tool_order`, `tool_used`, `regex`, `file_exists`)
@@ -394,28 +397,45 @@ which waits for the computed maximum 6.4 produces. It has no grader that runs a
 script or reads an exit code, so a `check:<id>` exit is graded from the trace
 (`tool_order`, `regex`) or not at all — 6.3 has to say which.
 
-- [ ] **6.1 Pre-register** under `agents/evidence/preregistration/`: arm A the
+- [x] **6.1 Pre-register** under `agents/evidence/preregistration/`: arm A the
       monolith (pilot before Phase 4), arm B the split without the cursor (the
       agent follows the head's step table itself), arm C the split with the
       cursor; the corpus, metrics and rules below are frozen before the first
       run.
       verify: `ls agents/evidence/preregistration/ | grep -c procedure-cursor` -> /^1$/
+      *Done 2026-10-19:* `agents/evidence/preregistration/procedure-cursor.md`,
+      committed before any run. Arms B and C differ by one appended
+      system-prompt line naming the entry command — the eval tool passes only
+      `EVAL_`-prefixed case variables, so the kill switch cannot separate them.
+      Four instrument properties the tool does not document are checked by six
+      precondition runs under the same authorisation as calibration. The corpus
+      frame, admission rule and candidate pool are frozen; the admitted list is
+      appended after calibration, below a line nothing above it may change.
 - [ ] **6.2 Corpus.** Exactly ten tasks per pilot (30 in all) on which arm A
       demonstrably fails today — the same condition the skill-DAG lock sets for
       its own reopen, so both decisions speak one language. A fixed count, not a
       floor: the workload is the spend ceiling's input (D13).
-      verify: `grep -cE '^- \*\*task-' agents/evidence/preregistration/procedure-cursor.md` -> /^30$/
+      verify: `grep -cE '^- \*\*task-' agents/evidence/preregistration/procedure-cursor.md` -> /^20$/
       *Amended (D15):* results are reported per pilot and per exit class
       (verified vs sequenced), never only pooled; the per-pilot count is
       revisited with 4.0's pick. *Amended (D16):* two pilots, so the fixed
       count is 20 and the workload 3 × 3 × 20; the verify above follows when
-      6.1 is written.
-- [ ] **6.3 Metrics.** Primary: exits met and task success. Secondary: API
+      6.1 is written. *Applied 2026-10-19:* the verify reads 20.
+      *Open 2026-10-19 — waits on the owner (blocker `phase-6-spend-ceiling`).*
+      The zero-spend half is done: 15 candidates per pilot under
+      `tests/fixtures/procedure-cursor-eval/`, each with a frozen success
+      criterion the untouched fixture does not meet, and the model-free scorer
+      and arm builder `src/scripts/bench_procedure_cursor.ts`. Admission needs
+      the 90 calibration runs of arm A, which are spend the council could not
+      authorise (D18).
+- [x] **6.3 Metrics.** Primary: exits met and task success. Secondary: API
       rounds against `src/config/turnaround-budget.json`, tokens, wall time,
       steps skipped without a reason (target 0 in arm C) and the cursor entry
       rate.
+      *Done 2026-10-19:* the seven rows, each with its source; no metric uses
+      an `llm` grader, so no judge prompt is authored by the implementer.
       verify: `grep -cE '^\| (exits_met|task_success|rounds|tokens|wall_time|unreasoned_skips|entry_rate) \|' agents/evidence/preregistration/procedure-cursor.md` -> /^7$/
-- [ ] **6.4 Instrument.** The host's plugin-eval command with a baseline arm and
+- [x] **6.4 Instrument.** The host's plugin-eval command with a baseline arm and
       a tool-order grader, three runs per case, under the evaluator-independence
       rule; the tasks invoke the skill explicitly, so the unmeasured activation
       rate does not confound the result. The pre-registration also freezes a
@@ -426,12 +446,29 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
       starts until the owner has authorised that stated monetary maximum (D13).
       *Revisited 2026-10-18 (D17):* the authorisation is decided with the
       computed maximum in hand, not before; nothing here is authorised yet.
+      *Done 2026-10-19:* pinned `claude-sonnet-5-5` on Claude Code 2.1.303,
+      transport established as the operator's claude.ai team subscription, no
+      reruns, and a computed maximum of 1,148,160,000 tokens or $2,649.60 at list
+      price for 276 runs. D18: the AI council (2/2) held that no positive maximum
+      is council-decidable while `cost.budgets` resolves to zero, so the
+      authorisation is the owner's — nothing has run.
       verify: `grep -cE '^(runs_per_case: 3|model_pin:|retry_policy:|max_tokens:|max_cost_usd:|aggregation:)' agents/evidence/preregistration/procedure-cursor.md` -> /^6$/
 - [ ] **6.5 Decide by the pre-registered rule.** B beats A by the bar and C ≈ B →
       ship the split, cursor stays opt-in. C beats B by the bar → the cursor
       default for procedure skills is put to the council with the result. Neither
       → honest null; a pilot split stays only where its head shrank.
       verify: `grep -cE 'verdict: (split|cursor|null)' agents/evidence/preregistration/procedure-cursor*.md` -> /^1$/
+
+## Blockers
+
+### blocker: phase-6-spend-ceiling
+- **Status:** open — raised 2026-10-19 after D18. The pre-registration, the candidate pool, the scorer and the arm builder exist; no run has started.
+- **Owner:** owner — spend above a delegated threshold is owner-reserved, and `cost.budgets` resolves to zero on every layer.
+- **Blocks:** 6.2 (admission needs the calibration runs), 6.5 and AC-7.
+- **What to do:** pick exactly one — (a) authorise the precondition and calibration slice, $921.60 at list price (96 runs), recorded as a positive `cost.budgets` value in the user-global `~/.event4u/agent-config/settings/.agent-settings.yml` or as a written authorisation in `agents/evidence/owner-directives/`, and say whether the organisation's extra usage beyond the team plan may be consumed; (b) authorise the whole programme, $2,649.60 (276 runs), the same way; (c) decline the measurement, which leaves the cursor opt-in and undocumented (D3) and closes 6.2, 6.5 and AC-7 as cancelled.
+- **Resolved when:** a positive threshold or a written authorisation of (a) or (b) exists and `agents/evidence/preregistration/procedure-cursor.md` § Admitted corpus is filled, or (c) is recorded in § Decisions.
+- **Recommendation:** (a). The calibration answers whether ten candidates per pilot are admitted at all; if they are not, the measured runs never happen and the remaining $1,728 is never spent.
+- **If you do nothing:** the cursor stays default-off and undocumented, which is the safe state; the roadmap stays open on these three items.
 
 ## Handoffs — found here, owned elsewhere
 
@@ -468,6 +505,7 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
 | D15 | reversible-technical | council:steps-2425-d7 | D7's revisit-if fired: F3 is true for `design-review` and `memory-consolidation`. The pilot set is re-picked (4.0) before any split; `memory-consolidation` is replaced; a shape-only check (a key exists) does not count as a verified exit, only a check that corroborates the output against the repository; a judgement step is sequenced, not verified, and needs 5.7's adjudication protocol | AI council 2026-10-17, anthropic + openai, 2/2, $0.00, both reject keeping all three unchanged; one seat keeps `design-review` as a judgement control, the other asks to separate verified and sequenced step classes, and 4.0 decides between them | 4.0 finds no replacement that meets the properties |
 | D16 | reversible-technical | council:steps-4-0-pilots | Pilots are `existing-ui-audit` and `project-analyzer`. `design-review` is dropped, not kept as a control: verified and sequenced exits are reported separately inside each pilot instead. `design-system-capture` was admitted only if a later step depends on an earlier artefact, an exit corroborates it against the repository, and its prerequisite run of another skill is resolved; its step 2 needs `existing-ui-audit` first (a skill-to-skill chain, K1) and a hard dependency means rewriting the procedure (K5), so the set is two | AI council 2026-10-18, anthropic + openai, 2/2, $0.00, both name the same two and condition the third identically (local council session `steps-4-0-pilots`); record `agents/evidence/analysis/procedure-pilot-selection.md` | a third skill meets P1–P3 without a content change |
 | D17 | spend-exhaustion | council:agents/evidence/council/procedure-cursor-spend-d13-20261018.md | D13 revisited under the delegation: Phase 6 spend is **not** authorised yet. 6.1–6.4 are written first with the pinned model and settings, the exact invocation path and transport, retry policy, aggregation, and a token estimate translated to a worst-case USD figure; the authorisation is then put to the council with that figure before any measured run. A subscription-only authorisation was refused because the eval workload's transport is not established | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); `cost.budgets` is unset on every layer, so no delegated spend threshold is recorded | the pre-registration states its computed maximum |
+| D18 | spend-exhaustion | council:agents/evidence/council/procedure-cursor-spend-authorisation-20261019.md | With the computed maximum in hand (D17's condition), the council does **not** authorise Phase 6 spend: no positive maximum is council-decidable while no delegated threshold is recorded, and the run instruction's "within configured cost.budgets" covers $0. The authorisation is the owner's; zero-spend preparation proceeds meanwhile | AI council 2026-10-19, `anthropic` + `openai`, prompt mode, one round, 2/2 (c) across two attempts — one seat timed out in the first and answered in the second, disclosed in the record; $0.00 | the owner records a positive `cost.budgets` threshold or authorises a stated maximum |
 | D9 | reversible-technical | evidence | The stale `existing-ui-audit` link is deleted, not "fixed" by moving sections out | `skill_linter.ts:98`; `b3cc0ada6` | the linter stops requiring `Output format` or `Gotcha` in the body |
 | D10 | reversible-technical | evidence | The canon contradiction named in Context is this file's work, not an open question | Phase 2.1 replaces `skill-writing:104` and `:126-129` with one statement; the closure scan's `contradictory` hit is that finding | — |
 | D11 | reversible-technical | evidence | Closure-scan `typed-op` hits on the word "merge" are slug text, not an operation | Both hits are the slug `road-to-a-retro-the-merge-runs`; this file merges nothing | — |

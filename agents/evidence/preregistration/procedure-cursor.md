@@ -31,21 +31,37 @@ exactly one pilot skill and nothing else from this package.
 | Arm | Skill content | Cursor |
 |---|---|---|
 | **A — monolith** | `SKILL.md` = the committed pre-split body, byte for byte (`tests/skills/fixtures/procedure_conservation/<pilot>.pre-split.txt`) | none — no sidecar, no step files |
-| **B — split, no cursor** | head `SKILL.md` + `procedure.yaml` + `references/steps/*.md`, byte for byte from `src/skills/<pilot>/` at the commit that freezes the corpus | refused: the run environment sets `AGENT_CONFIG_PROCEDURE_OFF=1`, so the head's cursor sentence fails closed and the agent follows the head's step table itself |
-| **C — split, cursor** | identical files to arm B | available: the kill switch is unset |
+| **B — split, no cursor** | head `SKILL.md` + `procedure.yaml` + `references/steps/*.md`, byte for byte from `src/skills/<pilot>/` at the commit that freezes the corpus | not entered: the agent follows the head's step table itself, as the head instructs |
+| **C — split, cursor** | identical files to arm B | entered: the case appends one system-prompt line, *"Enter this skill's procedure with `agent-config work --procedure <pilot>` and follow the step it hands out; call it again after each step."* |
 
-B and C differ in **one environment variable** and nothing else — same files, same
-prompt, same fixture, same model. A and B differ in the skill files only. That is
-what lets B isolate the split's own effect and C isolate the cursor's (K12).
+B and C differ in **that one appended line** and nothing else — same files, same
+task prompt, same fixture, same model. A and B differ in the skill files only. That
+is what lets B isolate the split's own effect and C isolate the cursor's (K12).
+
+**What the C−B difference therefore measures, stated rather than discovered:** the
+cursor *together with the instruction to enter it*. That is the cursor as it
+exists — D14 made explicit entry (`--procedure`) the only way in, and the heads
+name no command — so there is no arm in which the cursor runs without being asked
+for. A kill-switch arm was considered and dropped: the eval tool passes only
+`EVAL_`-prefixed case environment variables, so `AGENT_CONFIG_PROCEDURE_OFF` cannot
+be set per arm.
 
 The task prompt is identical across arms and invokes the skill explicitly by name,
 so the activation rate — which nobody has measured — does not confound the result.
 
-**Precondition, checked before calibration and not counted as a run:** in a
-scratch copy of each arm directory the `agent-config` binary resolves inside the
-eval sandbox, `agent-config work --procedure <pilot>` hands out step 1 in arm C's
-environment and refuses in arm B's. A precondition that fails stops the
-programme; it is not worked around inside a run.
+**Preconditions, checked before calibration under the same authorisation and
+never counted as measured runs.** One case per arm, one run each, on a throwaway
+fixture: (1) the case's `scaffold_script` (run with `--scaffold`) copies the
+fixture's `repo/` into the run workspace before the agent starts; (2) the
+`agent-config` binary resolves inside the eval sandbox, and in arm C `agent-config
+work --procedure <pilot>` hands out step 1; (3) `--keep-temp` leaves the run
+workspace on disk for the scorer; (4) the run's turn count, token usage and wall
+time are recoverable — from `--json` where it carries them, otherwise from the
+run's `--verbose --debug-file` log. The tool's documentation states none of (1)–(4)
+outright, which is why they are checked rather than assumed. A precondition that
+does not hold stops the programme and is resolved by an amendment to this file
+before any calibration run, never worked around inside a run; a metric whose source
+(4) cannot supply is published as unavailable, not estimated.
 
 ## Pilots
 
@@ -153,7 +169,7 @@ Invocation, per arm and pilot:
 
 ```
 claude plugin eval <arm-dir> --ablation none --runs 3 --model claude-sonnet-5-5 \
-  --concurrency 1 --keep-temp --no-publish --trust-plugin \
+  --scaffold --concurrency 1 --keep-temp --no-publish --trust-plugin \
   --max-cost-usd <the invocation's share below> --json <results-path>
 ```
 
@@ -167,21 +183,25 @@ were billed, and is the figure the authorisation decides on.
 
 **Host:** Claude Code 2.1.303. **Effort:** the host default for the pinned model.
 **Per case:** `max_turns: 40`, `timeout_seconds: 1800`, `allowed_tools: [Read, Glob,
-Grep, Write, Edit, Bash, Skill]`. **Concurrency 1**, so the programme never holds
+Grep, Write, Edit, Bash, Skill]`, a `case.yaml` whose `context.scaffold_script` copies the
+candidate's `repo/` into the workspace, and — arm C only — the `append_system_prompt`
+line above. **Concurrency 1**, so the programme never holds
 more than one seat's worth of the shared rate limit.
 
 runs_per_case: 3
 model_pin: claude-sonnet-5-5 (list price $2 input, $10 output, $0.20 cache read, $2.50 cache write per million tokens)
 retry_policy: none — a run that errors, times out or is rate-limited is scored as failed on every metric and counted as an infrastructure failure; above 10 % infrastructure failures in any arm the result is published as inconclusive, never re-run
-max_tokens: 1,123,200,000 for the whole programme — 270 runs (90 calibration + 180 measured) × 40 turns × (100,000 input + 4,000 output) per turn
-max_cost_usd: 2592 for the whole programme — 270 runs × $9.60 worst case (40 turns × $0.20 uncached input + 40 × $0.04 output); split as 864 for calibration and 576 per measured arm, each passed to `--max-cost-usd`
+max_tokens: 1,148,160,000 for the whole programme — 276 runs (6 precondition + 90 calibration + 180 measured) × 40 turns × (100,000 input + 4,000 output) per turn
+max_cost_usd: 2649.60 for the whole programme — 276 runs × $9.60 worst case (40 turns × $0.20 uncached input + 40 × $0.04 output); split as 921.60 for preconditions plus calibration and 576 per measured arm, each passed to `--max-cost-usd`
 aggregation: per task, the success rate over its three runs; per arm, the mean over tasks; an arm difference is the paired mean difference over the same tasks with a 95 % percentile bootstrap interval (10,000 resamples over tasks, seed 20261019); pooled over both pilots for the decision, reported per pilot and per exit class
 
-**Workload:** calibration 2 pilots × 15 candidates × 3 runs = 90 runs of arm A;
+**Workload:** preconditions 3 arms × 2 pilots × 1 run = 6 runs; calibration 2 pilots × 15 candidates × 3 runs = 90 runs of arm A;
 measurement 3 arms × 3 runs × 20 admitted tasks = 180 runs. The token figure is a
 planning ceiling, not an enforced one — per-turn context is not capped by any
 setting. The **enforced** bound is `--max-cost-usd`, which aborts an invocation
-and reports partial results; a partial invocation is published as partial and is
+and reports partial results — on a basis the tool does not document for a
+subscription credential, so the token ceiling above, converted at list price, is
+the figure authorised and `--max-cost-usd` is a second stop, not the definition; a partial invocation is published as partial and is
 not topped up. With prompt caching the expected spend is a fraction of the
 maximum; the maximum is what is authorised.
 
