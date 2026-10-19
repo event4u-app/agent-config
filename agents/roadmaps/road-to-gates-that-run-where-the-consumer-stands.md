@@ -310,6 +310,23 @@ consumer behaviour points at something that executes.
       rows are exactly the claims it forbids being `backed` on a repository
       pointer alone. A further lane spent here buys nothing until one of those
       two authorities answers.
+      **Two escapes were looked for and both close**, recorded so the next
+      screen does not re-derive them. (1) *Reclassification* — if the council
+      surface did not reach a consumer, `council-fallback-loses-zero-seats`
+      would leave the subset the way `scope-dedup-cold-start-reduction` did, a
+      move that weakens nothing. It does reach: the shipped
+      `dist/cli/agent-config.js`, run from outside the repository under a
+      throwaway `HOME`, answers `council:status` and resolves the user-global
+      path, so the claim belongs in the subset and the escape is closed.
+      (2) *A byte-identity harness wrapper* on the same row, in the shape
+      `hook-dispatch-latency` used — hold the installed fallback module equal to
+      the one the unit suite drives. Feasible, and **declined**: that row's
+      load-bearing half is behavioural (the seat answers over the api rung), and
+      byte-identity backs the shipping half only, so the repoint would move the
+      id out of this residue while leaving the claim backed by the wrong thing.
+      That is the defect L2 names and the move the 2026-10-17 pass already
+      refused for `surgical-uninstall`; taking it here would repeat a refusal
+      rather than reverse it.
 - [x] **4.2 Make a red harness case the entry point for a consumer bug.** A
       one-paragraph rule: a reported consumer defect lands as a failing case
       in `tests/install/` before its fix.
