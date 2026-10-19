@@ -15,7 +15,11 @@
  *
  * Every directory name below is invented. Nothing here names a real source.
  */
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
     creatableTokens,
@@ -498,5 +502,141 @@ describe('main() — the envelope surface', () => {
     it('a path outside the inbox is untouched', () => {
         expect(run({ tool_input: { file_path: 'src/rules/source-confidentiality.md' } })).toBe(0);
         expect(run({ tool_input: { file_path: 'agents/tmp/scratch.ts' } })).toBe(0);
+    });
+});
+
+/**
+ * The write-versus-mention polarity suite — `road-to-gates-that-read-what-was-
+ * written` Phase 3, AC-5 and AC-6.
+ *
+ * WHAT THE ROADMAP EXPECTED, AND WHAT THE TREE ACTUALLY SAID. Steps 3.1-3.3
+ * were written against M5-M7, which claim the Bash token path cannot reach the
+ * already-exists carve-out, so that a read of an existing round and the guard's
+ * own prescribed remediation are both refused. Measured at the roadmap's own
+ * base commit, that claim does not hold: `main` offers the `_PATH_KEYS`
+ * candidates and the `creatableTokens` output to ONE `verdictFor` call carrying
+ * the same `fs.existsSync` and the same `project_dir`, so the carve-out is
+ * reached from both. All five directions below were GREEN before this suite
+ * existed, and nothing in the guard changed to make them so.
+ *
+ * So these cases are pins, not repairs, and the roadmap's red-first clause is
+ * reported unmet rather than quietly satisfied: a suite that goes green over an
+ * unchanged parser has not reproduced M5.
+ *
+ * The residual that DOES reproduce is a different mechanism, and it is recorded
+ * as a blocker on the roadmap rather than fixed here: the carve-out resolves its
+ * probe against `project_dir`, so a round that exists inside a git WORKTREE
+ * while `project_dir` names the parent checkout is judged absent and refused.
+ * Widening that is a weakening of a deny guard and needs its own ratified
+ * record. The two cases below pin the behaviour as it stands, in both
+ * directions, so that a later widening has to come through here.
+ *
+ * SENSITIVITY, probed rather than assumed. Making `verdictFor`'s already-exists
+ * branch fall through to its block return reds exactly the two allow-cases and
+ * leaves the three block-cases green; making `inboxDirName` return `null` reds
+ * all three block-cases and leaves the allow-cases green. Each polarity is
+ * therefore measuring the branch it names, and neither direction is carried by
+ * an inert predicate.
+ *
+ * Every directory name below is invented. Nothing here names a real source.
+ */
+describe('a write is refused, a mention of an existing round is not', () => {
+    const EXISTING = 'a-speaking-round-that-exists';
+    const FRESH = 'a-speaking-round-not-yet-made';
+    let root = '';
+
+    beforeAll(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'speaking-inbox-polarity-'));
+        fs.mkdirSync(path.join(root, 'agents', 'tmp', EXISTING), { recursive: true });
+    });
+
+    afterAll(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    /** The envelope path, with `project_dir` pointing at the fixture tree. */
+    const runCmd = (command: string): number => {
+        setHookStdinOverride(
+            JSON.stringify({ project_dir: root, tool_name: 'Bash', tool_input: { command } }),
+        );
+        try {
+            return main();
+        } finally {
+            clearHookStdinOverride();
+        }
+    };
+
+    /** The pure path — `creatableTokens` into `verdictFor`, with no envelope. */
+    const tokensBlock = (command: string): boolean =>
+        creatableTokens(command).some((tok) => {
+            const v = verdictFor(tok, fs.existsSync, root);
+            return v.block && v.dir !== null;
+        });
+
+    const ALLOW_CASES: ReadonlyArray<readonly [string, string]> = [
+        ['a read-only ls of an EXISTING round', `ls -la agents/tmp/${EXISTING}/`],
+        [
+            'a printf naming an EXISTING round inside a quoted literal',
+            `printf '%s' 'agents/tmp/${EXISTING}' | ./scripts-run src/scripts/_lib/link_crypto encrypt`,
+        ],
+    ];
+
+    const BLOCK_CASES: ReadonlyArray<readonly [string, string]> = [
+        ['mkdir -p into a NEW speaking directory', `mkdir -p agents/tmp/${FRESH}`],
+        ['a > redirect into a NEW speaking directory', `echo hi > agents/tmp/${FRESH}/x.md`],
+        [
+            'a heredoc makedirs into a NEW speaking directory',
+            `python3 - <<PY\nimport os\nos.makedirs('agents/tmp/${FRESH}')\nPY`,
+        ],
+    ];
+
+    for (const [name, command] of ALLOW_CASES) {
+        it(`ALLOWS ${name}`, () => {
+            expect(runCmd(command)).toBe(0);
+            expect(tokensBlock(command)).toBe(false);
+        });
+    }
+
+    for (const [name, command] of BLOCK_CASES) {
+        it(`still REFUSES ${name}`, () => {
+            expect(runCmd(command)).toBe(1);
+            expect(tokensBlock(command)).toBe(true);
+        });
+    }
+
+    it('refuses a MENTION of a round that does not exist — the conservative scan, stated', () => {
+        // Not a defect pinned as correct: it is the trade D2 records, and it is
+        // the false-positive class this lane measured four times while writing
+        // this very file — a Bash command whose only occurrence of the name is
+        // inside a quoted literal or a heredoc body was refused because the
+        // directory did not exist. Asserted so that narrowing it later has to
+        // come through here and declare which direction it moved.
+        expect(runCmd(`printf '%s' 'agents/tmp/${FRESH}'`)).toBe(1);
+    });
+
+    it('the carve-out follows project_dir, so another tree does not vouch for the round', () => {
+        const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'speaking-inbox-elsewhere-'));
+        try {
+            expect(verdictFor(`agents/tmp/${EXISTING}/`, fs.existsSync, elsewhere).block).toBe(true);
+            expect(verdictFor(`agents/tmp/${EXISTING}/`, fs.existsSync, root).block).toBe(false);
+        } finally {
+            fs.rmSync(elsewhere, { recursive: true, force: true });
+        }
+    });
+
+    it('the remediation the deny text prints executes unblocked — AC-6', () => {
+        const remediation = denyMessage(FRESH)
+            .split('\n')
+            .map((l) => l.trim())
+            .find((l) => l.startsWith('printf') && l.includes('link_crypto encrypt'));
+        // A vacuous `find` would make the assertion below pass over nothing.
+        expect(remediation).toBeDefined();
+        const literal = (remediation as string).replace(
+            '<the real source>',
+            `agents/tmp/${EXISTING}`,
+        );
+        expect(literal).toContain(`agents/tmp/${EXISTING}`);
+        expect(literal).not.toContain('<the real source>');
+        expect(runCmd(literal)).toBe(0);
     });
 });
