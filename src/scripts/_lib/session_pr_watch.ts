@@ -20,6 +20,9 @@
  *   then dropped; the block disappears when nothing open is tracked.
  * - **Failure:** an unreachable `gh` keeps the last reading and says the probe
  *   failed. Never throws, never blocks.
+ * - **What reaches the model from GitHub:** a state coerced to four enum values,
+ *   and a merge time that must read as an ISO timestamp after `sanitize_text`,
+ *   else it is dropped. No other remote byte is emitted.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -28,6 +31,7 @@ import * as path from 'node:path';
 
 import { write_atomic } from './fs_atomic.js';
 import { git_common_dir } from './git_common_dir.js';
+import { sanitize_text } from './retrieval_sanitize.js';
 import { safe_stem } from './session_register.js';
 
 export const PROBE_INTERVAL_MS = 5 * 60 * 1000;
@@ -92,6 +96,14 @@ export function record_pr(root: string, session_id: string, url: string): void {
     write_store(root, session_id, store);
 }
 
+const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+
+function iso_or_null(v: unknown): string | null {
+    if (typeof v !== 'string') return null;
+    const clean = sanitize_text(v);
+    return ISO_RE.test(clean) ? clean : null;
+}
+
 export const gh_probe: PrProbe = (cwd, numbers) => {
     const fields = numbers.map((n) => `p${n}: pullRequest(number: ${n}) { state mergedAt }`).join(' ');
     const query = `query($owner: String!, $repo: String!) { repository(owner: $owner, name: $repo) { ${fields} } }`;
@@ -110,7 +122,7 @@ export const gh_probe: PrProbe = (cwd, numbers) => {
             const s = pr?.state;
             res[n] = {
                 state: s === 'OPEN' || s === 'MERGED' || s === 'CLOSED' ? s : 'UNKNOWN',
-                merged_at: pr?.mergedAt ?? null,
+                merged_at: iso_or_null(pr?.mergedAt),
             };
         }
         return res;
