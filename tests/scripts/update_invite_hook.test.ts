@@ -164,17 +164,24 @@ describe('4.3 — the manifest binding', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    // Refused 2/2 with update-notice on 2026-10-20; see the matching block in
-    // update_notice_hook.test.ts. Re-registering it is the commit that must
-    // carry the new council verdict, and that commit turns this red.
-    it('is neither defined nor bound while the council refusal stands', () => {
-        expect(manifest.concerns[CONCERN]).toBeUndefined();
+    // FLIPPED 2026-10-20, by the commit the previous wording predicted — see
+    // the matching block in update_notice_hook.test.ts. Round 2 returned
+    // `ratified` 2/2, and this concern registers under `interaction`, a term
+    // that ratification added because the closed vocabulary had no word for
+    // "asks the user something" that was not `notification` ("changes nothing
+    // else"). The pin inverts rather than disappears: a later edit relabelling
+    // it `notification` would be the under-declaration round 1 refused.
+    it('is registered under the ratified effect, and bound only on stop', () => {
+        const entry = manifest.concerns[CONCERN];
+        expect(entry).toBeDefined();
+        expect((entry as { effect?: string }).effect).toBe('interaction');
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound).toEqual([]);
+        expect(bound.length).toBeGreaterThan(0);
+        expect([...new Set(bound.map((b) => b.split(':')[1]))]).toEqual(['stop']);
     });
 });

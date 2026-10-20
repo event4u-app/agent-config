@@ -185,7 +185,7 @@ None of this is rebuilt here.
 
 ## Phase 3 — Delivery into the session, without entering the model
 
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.1 A `session_start` concern beside `wrapper-freshness`.**
+- [x] **3.1 A `session_start` concern beside `wrapper-freshness`.**
       Registered in `src/scripts/hook_manifest.yaml`, day-throttled through
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
@@ -205,7 +205,7 @@ None of this is rebuilt here.
       concerns it buys nothing. Without it the bundle stands at 1,549,984 of
       1,550,000 B, so the next round has to bring the room back with the
       registration.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.2 Stage and verify only; activate at a boundary.** The concern never
+- [x] **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
       before the dispatcher reads anything.
       verify: a fixture session observes no file change between its first and
@@ -216,7 +216,7 @@ None of this is rebuilt here.
       which refuses while `any_live_session` reports a foreign session. The
       fixture asserts a byte-identical install tree across five invocations.
       Open with 3.1, because a concern nobody registers delivers nothing.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.3 One line from the shipped curated head.** After an update, the
+- [x] **3.3 One line from the shipped curated head.** After an update, the
       line comes from `release_highlights.ts:35-41` in the **installed**
       package, plus any `notice` entry from the impact map. Fetched release
       notes are remote untrusted text and never enter model context.
@@ -232,7 +232,7 @@ None of this is rebuilt here.
       sentences written in `_lib/update_notice.ts`; a cached version string
       that does not parse produces no line at all. The concern exits 0 and
       writes to stderr, so nothing it emits is model context on any host.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.4 A security release is loud in every mode but `off`.** The notice
+- [x] **3.4 A security release is loud in every mode but `off`.** The notice
       names the latest-only policy at `SECURITY.md:21`.
       verify: a fixture with `Security: yes` in range produces the notice
       under `notify` and under `ask`.
@@ -241,7 +241,7 @@ None of this is rebuilt here.
       on the fixture alone because the probe now caches the impact block beside
       the version (`fetch_latest_document`) — one fetch, two readers; without
       that the security branch could never have fired in production.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.5 Hosts with no session slot keep the CLI banner.**
+- [x] **3.5 Hosts with no session slot keep the CLI banner.**
       verify: a fixture in which `agent-config hooks:status` reports no
       `session_start` binding still yields the banner path.
       True by construction today, because no host binds `update-notice` and
@@ -279,7 +279,7 @@ None of this is rebuilt here.
       a change. The record carries one machine-readable line,
       `ring-0-exit: no`, written by a human after reading the table and
       recomputed by nothing, and that line is what 4.3's gate reads.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
+- [x] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
@@ -330,7 +330,17 @@ None of this is rebuilt here.
 
 ### blocker: concerns-refused-as-authority-expansion
 
-- **Status:** open — raised 2026-10-20 by a council verdict, not by a missing
+- **Status:** resolved 2026-10-20 — round 2 returned `ratified` 2/2 (anthropic +
+  openai), recorded at `agents/evidence/ratifications/`
+  `update-concerns-declared-20261020.md`. Both concerns are registered, under
+  two effect terms the same ratification added: `update-notice` is
+  `state_change`, `update-auto-invite` is `interaction`. Four of the six
+  conditions the seats attached are tests rather than sentences
+  (`tests/scripts/update_concerns_declared_effects.test.ts`); condition 6 —
+  documenting whether staged state is visible, replaceable and clearable — is
+  NOT discharged and is named here rather than quietly dropped, because
+  `reversible` may not be assumed merely because activation is deferred.
+  Was: open — raised 2026-10-20 by a council verdict, not by a missing
   decision. The work exists, is tested and is reverted out of the manifest.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.

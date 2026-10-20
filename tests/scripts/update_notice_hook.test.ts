@@ -87,23 +87,35 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    // A lifecycle hook that may start an install is an authority expansion,
-    // whatever its `severity` says. Until a round on blocker
-    // `concerns-refused-as-authority-expansion` re-registers it, the manifest
-    // must NOT bind it — this flips red on the commit that registers it, which
-    // is exactly the commit that must carry the new verdict.
-    it('is not registered in hook_manifest.yaml while the council refusal stands', () => {
-        expect(manifest.concerns[CONCERN]).toBeUndefined();
+    // FLIPPED 2026-10-20 by the commit the previous wording predicted. These
+    // two used to assert the concern was registered NOWHERE "while the council
+    // refusal stands", and their own comment said they would go red on the
+    // commit that registers it — "which is exactly the commit that must carry
+    // the new verdict". That commit carries it: round 2 returned `ratified`
+    // 2/2 (agents/evidence/ratifications/update-concerns-declared-20261020.md).
+    //
+    // They are turned around rather than deleted, because the thing worth
+    // pinning did not go away — it inverted. What must not drift now is the
+    // DECLARATION: a later edit that quietly re-labels this concern
+    // `notification` would restore exactly the under-declaration round 1
+    // refused, and nothing else in the suite would notice.
+    it('is registered in hook_manifest.yaml under the ratified effect', () => {
+        const entry = manifest.concerns[CONCERN];
+        expect(entry).toBeDefined();
+        expect((entry as { effect?: string }).effect).toBe('state_change');
     });
 
-    it('is bound on no event of any host while the council refusal stands', () => {
+    it('is bound on session_start, and on no other event, on every host that binds it', () => {
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound).toEqual([]);
+        expect(bound.length).toBeGreaterThan(0);
+        // The event, not the host count: a concern that quietly gained a
+        // second event would be deciding at a moment nobody reviewed.
+        expect([...new Set(bound.map((b) => b.split(':')[1]))]).toEqual(['session_start']);
     });
 
     it('costs file reads only — p95 over 20 runs stays far inside the 160 ms session_start baseline', () => {
