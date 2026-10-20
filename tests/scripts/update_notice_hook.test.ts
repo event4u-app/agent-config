@@ -63,7 +63,6 @@ function deps(over: Partial<NoticeDeps> & { packageRoot: string }): NoticeDeps {
         noticeStatePath: path.join(tmp, 'state', 'update-notice.json'),
         registerDir: path.join(tmp, 'register'),
         err: { write: (t) => void lines.push(t) },
-        activate: () => 0,
         ...over,
     };
 }
@@ -126,29 +125,29 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
 
 // --- 3.2 — stage and verify only; activate at a boundary ---------------------
 
-describe('3.2 — nothing is swapped mid-session', () => {
-    it('a first sighting stages and does not activate, even under mode auto', () => {
+describe('3.2 — nothing is installed, by this concern, ever', () => {
+    it('a sighting stages and does not install, even under mode auto', () => {
         const root = install('1.0.0');
         const d = deps({ packageRoot: root, mode: 'auto', probeStatePath: probeState(tmp, { last_seen_version: '2.0.0' }) });
-        let activated: string | null = null;
-        const out = runNotice({ ...d, activate: (v) => ((activated = v), 0) });
+        const out = runNotice(d);
         expect(out.stage).toBe('2.0.0');
         expect(out.activate).toBeNull();
-        expect(activated).toBeNull();
         expect(readNoticeState(d.noticeStatePath).staged).toBe('2.0.0');
     });
 
-    it('a candidate staged by an earlier session activates at the next start', () => {
+    it('a second run on the same candidate still installs nothing', () => {
+        // The concern used to activate here, and an independent review of
+        // 2026-10-20 refused the manifest for it: a hook declared
+        // `effect: notification` may not mutate the installation. The
+        // capability was removed, so this asserts its absence rather than its
+        // gating — the one assertion that cannot pass if it comes back.
         const root = install('1.0.0');
         const d = deps({ packageRoot: root, mode: 'auto', probeStatePath: probeState(tmp, { last_seen_version: '2.0.0' }) });
         runNotice(d);
-        let activated: string | null = null;
-        const out = runNotice({ ...d, activate: (v) => ((activated = v), 0) });
-        expect(out.activate).toBe('2.0.0');
-        expect(activated).toBe('2.0.0');
+        expect(runNotice(d).activate).toBeNull();
     });
 
-    it('a live foreign session holds activation back and says so', () => {
+    it('a live foreign session is named in the notice', () => {
         const root = install('1.0.0');
         const register = path.join(tmp, 'register');
         fs.mkdirSync(register, { recursive: true });
@@ -161,7 +160,7 @@ describe('3.2 — nothing is swapped mid-session', () => {
         const { lines, run } = captured(d);
         const out = run();
         expect(out.activate).toBeNull();
-        expect(lines.join('')).toMatch(/no other session open/);
+        expect(lines.join('')).toMatch(/Another session is open on this machine/);
     });
 
     it('a fixture install is byte-identical across a whole session of invocations', () => {
@@ -178,8 +177,8 @@ describe('3.2 — nothing is swapped mid-session', () => {
                 .sort()
                 .join('\n');
         const before = snapshot();
-        // The activation seam is the ONLY path that may touch the install, and
-        // it is a separate process; inside the session the concern runs it never.
+        // There is no path from this concern to the install at all any more;
+        // the snapshot is what says so rather than a comment.
         for (let i = 0; i < 5; i += 1) runNotice(d);
         expect(snapshot()).toBe(before);
     });
@@ -297,9 +296,8 @@ describe('4.1 / AC-6 — an absent update block behaves as today', () => {
         expect(updateNotice(base('ask'))).toStrictEqual(updateNotice(base('notify')));
     });
 
-    it('neither installs anything — only `auto` reaches the activation seam', () => {
-        for (const mode of [undefined, 'notify', 'ask'] as const) expect(updateNotice(base(mode)).activate).toBeNull();
-        expect(updateNotice(base('auto')).activate).toBe('2.0.0');
+    it('no mode installs anything, `auto` included', () => {
+        for (const mode of [undefined, 'notify', 'ask', 'auto'] as const) expect(updateNotice(base(mode)).activate).toBeNull();
     });
 
     it('a settings file with no update block reads as unset', () => {

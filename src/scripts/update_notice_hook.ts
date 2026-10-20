@@ -18,18 +18,20 @@
  * is day-throttled on top, through the same `probe_throttle` stamp the three
  * sibling `session_start` probes use.
  *
- * WHAT IT NEVER DOES. It never swaps a file during a session: a candidate is
- * STAGED on one session start and may be activated on a LATER one, and only
- * when no other session is live on this machine. It never reads project
- * settings, so a repository cannot set a contributor's global update mode. It
- * never puts fetched text in front of the reader — every sentence is written in
- * `_lib/update_notice.ts` or read from the CHANGELOG of the package already
- * installed.
+ * WHAT IT NEVER DOES. It never installs anything and never swaps a file: it
+ * stages a verified candidate and says so, and `upgrade --unattended` — run by
+ * a human or a scheduler — is what installs. It used to be able to spawn that
+ * run itself; an independent review of 2026-10-20 refused the manifest for it,
+ * because `effect: notification` means "tells the human something and changes
+ * nothing else", and the capability was removed rather than the label widened.
+ * It never reads project settings, so a repository cannot set a contributor's
+ * global update mode. It never puts fetched text in front of the reader —
+ * every sentence is written in `_lib/update_notice.ts` or read from the
+ * CHANGELOG of the package already installed.
  *
  * It is fail-open on every path and returns 0 on every path, including an
  * unreadable state file, an unwritable state directory and a missing changelog.
  */
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -150,8 +152,6 @@ export interface NoticeDeps {
     readonly noticeStatePath: string;
     readonly registerDir: string;
     readonly err: { write(text: string): void };
-    /** Install the staged version now. Returns its exit code. The seam tests never cross. */
-    readonly activate: (version: string) => number;
 }
 
 /** Decide and act. Separated from `main` so every input is injectable. */
@@ -185,7 +185,6 @@ export function runNotice(deps: NoticeDeps): NoticeOutcome {
 
     for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
     writeNoticeState(deps.noticeStatePath, { staged: outcome.stage, last_seen_installed: installed });
-    if (outcome.activate !== null) deps.activate(outcome.activate);
     return outcome;
 }
 
@@ -217,9 +216,8 @@ export function main(argv?: string[]): number {
             noticeStatePath: user_global_paths.write_target(NOTICE_STATE_FILENAME),
             registerDir: global_register_dir(),
             err: process.stderr,
-            activate: activateDefault,
         };
-        const dry = runNotice({ ...deps, activate: () => 0, err: { write: () => undefined } });
+        const dry = runNotice({ ...deps, err: { write: () => undefined } });
         if (dry.suppressed !== null && dry.suppressed !== 'nothing newer cached' && dry.suppressed !== 'no cached candidate') {
             return 0;
         }
@@ -232,17 +230,6 @@ export function main(argv?: string[]): number {
     }
 }
 
-/**
- * Hand the staged version to `upgrade --unattended`, which re-runs every gate,
- * holds the single-flight lock and restores on failure. This concern decides
- * only the MOMENT; the envelope around the install is unchanged.
- */
-function activateDefault(version: string): number {
-    void version;
-    const bin = path.join(packageRootOf(), 'agent-config');
-    const r = spawnSync(bin, ['upgrade', '--unattended'], { stdio: ['ignore', 'inherit', 'inherit'] });
-    return r.status ?? 1;
-}
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {

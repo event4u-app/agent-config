@@ -13,13 +13,14 @@
  * label has nothing to travel on. That is roadmap decision D3, implemented as a
  * shape rather than as a scrubbing pass that could miss a case.
  *
- * **Nothing is activated in the middle of a session.** A candidate is STAGED on
- * one session start and may be activated on a LATER one, never on the same run
- * — the measured hazard (490 failed hook invocations of 4,190 across four swap
- * rounds, 2026-10-18) is a swap happening while hooks fire, and the only moment
- * that is quiet is a session start with no other session live. Staging is
- * what makes "activate at a boundary" a property of the data rather than a
- * promise in prose.
+ * **Nothing is activated at all, and that is narrower than it started.** A
+ * candidate is STAGED and reported; the install stays with
+ * `upgrade --unattended`, which a human or a scheduler runs. The concern used
+ * to be able to spawn that run itself, and an independent review of 2026-10-20
+ * refused the manifest for it: `effect: notification` means "tells the human
+ * something and changes nothing else", and a hook that can replace the global
+ * install is not that, whatever its `severity` says. The capability was
+ * removed rather than the label widened.
  *
  * **A security release is loud in every mode but `off`.** It is the one notice
  * that does not wait for a mode to invite it, because `SECURITY.md:21` backports
@@ -118,8 +119,18 @@ export interface NoticeOutcome {
     readonly lines: readonly string[];
     /** The version to record as staged, or `null` to clear the staging record. */
     readonly stage: string | null;
-    /** The version an unattended run may install NOW, or `null` — the boundary gate. */
-    readonly activate: string | null;
+    /**
+     * Always `null`. Kept as a field, not deleted, because its absence is the
+     * finding: an independent review of 2026-10-20 refused the manifest while
+     * this concern could spawn `upgrade --unattended`, on the ground that
+     * `effect: notification` means "tells the human something and changes
+     * nothing else" and a concern that can mutate the installation is not
+     * that. The capability was removed rather than the label widened —
+     * widening a closed effect vocabulary to fit one concern is the shape that
+     * makes the vocabulary stop meaning anything. Activation stays with
+     * `upgrade --unattended`, which a human or a scheduler runs.
+     */
+    readonly activate: null;
     /** Why nothing was said, for the lifecycle log. `null` when something was. */
     readonly suppressed: string | null;
 }
@@ -176,25 +187,24 @@ export function updateNotice(input: NoticeInput): NoticeOutcome {
     if (range.worst === 'notice') lines.push('  A release in range carries a notice — read it before upgrading.');
     if (range.worst === 'action') lines.push('  A release in range needs a hand; it is never installed unattended.');
 
-    // Staging, and the boundary. A candidate staged by an EARLIER session may
-    // activate now; one first seen on this run may only be staged. `action`
-    // never activates, and a live foreign session never does either — its hooks
-    // are what a swap breaks.
+    // Staging only. This concern records which candidate it verified and says
+    // so; it installs nothing, ever. Under `auto` it still names the live-session
+    // state, because that is what decides whether an `upgrade --unattended` run
+    // would be allowed to swap at all, and a reader under `auto` is entitled to
+    // know which of the two reasons is holding their install back.
     const stageable = range.worst !== 'action';
-    const mayActivate =
-        input.mode === 'auto' && stageable && input.staged === input.candidate && !input.foreignSessionLive;
 
-    if (input.mode === 'auto' && stageable && !mayActivate) {
+    if (input.mode === 'auto' && stageable) {
         lines.push(
             input.foreignSessionLive
-                ? '  Staged; it installs at the next session start with no other session open.'
-                : '  Staged; it installs at the next session start.',
+                ? '  Staged. Another session is open on this machine, so a swap would break its hooks.'
+                : '  Staged. Run `agent-config upgrade --unattended` to install it.',
         );
-    } else if (!mayActivate) {
+    } else {
         lines.push('  Run `agent-config upgrade` to install it.');
     }
 
-    return { lines, stage: stageable ? input.candidate : null, activate: mayActivate ? input.candidate : null, suppressed: null };
+    return { lines, stage: stageable ? input.candidate : null, activate: null, suppressed: null };
 }
 
 /**
