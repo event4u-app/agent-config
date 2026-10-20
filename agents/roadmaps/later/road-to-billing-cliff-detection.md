@@ -89,6 +89,22 @@ attempt from re-deriving it.
       **S-1 statusline stdin JSON** (the payload `session_eol_hook.ts` already
       parses for `transcript_path`) — expect null; cost fields, if any, are
       cumulative USD rather than billing class.
+      *Handoff 2026-10-21 from `road-to-a-cold-start-paid-once` step 4.6,
+      rows in `agents/evidence/investigations/host-continuation-observations-2026-10.md`
+      § Addendum 2026-10-21, Claude Code 2.1.305, subscription login:* the
+      status line's rate field, the `StopFailure` event and the
+      `quota_auto_resume_*` notifications were **not reached** (print mode
+      runs no status line, and no limit was hit), so this S-1 prior is
+      neither confirmed nor refuted by them. What **was** seen bears on S-3
+      rather than S-1: every `claude -p --output-format stream-json` session
+      emitted one structured `rate_limit_event` carrying
+      `rateLimitType`, `five_hour` / `seven_day` utilisation fractions,
+      `overageStatus` (`rejected`) and `isUsingOverage` (`false`). That is a
+      machine-readable field on a worker's stdout, not banner copy, and the
+      two overage fields are the nearest thing to a billing-class flag any
+      probe here has seen — but both readings were taken well inside the
+      window, so whether `isUsingOverage` flips at the cliff is unobserved.
+      It is not hook-visible. The billing-class question stays here.
       **S-2 transcript JSONL** per-turn `usage` blocks across the boundary —
       expect null; token counts with no billing source.
       **S-3 CLI stdout/stderr of a `claude -p` worker** — expect weak positive:

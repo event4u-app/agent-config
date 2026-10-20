@@ -342,10 +342,11 @@ waits on:
       user's existing status-line command and never replaces it (decision D4),
       read against the pre-registered threshold (decision D5).
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t recent-rate-marker-yields-would-wait --reporter=verbose` -> /✓.*recent-rate-marker-yields-would-wait/
-- [ ] **4.6 Hand the rate-surface rows to their owner.** The 1.9 verdicts are
+- [x] **4.6 Hand the rate-surface rows to their owner.** The 1.9 verdicts are
       appended to `later/road-to-billing-cliff-detection.md` under its S-1
       prior; the billing-class question stays there.
       verify: `grep -c 'host-continuation-observations-2026-10' agents/roadmaps/later/road-to-billing-cliff-detection.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-21: appended under its S-1 prior, including that the one present rate surface (`rate_limit_event` on a print-mode stream, with `overageStatus` and `isUsingOverage`) bears on its S-3 row rather than S-1; the billing-class question stays there.
 
 ## Phase 5 — Council seats that do not boot a workstation
 
