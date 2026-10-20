@@ -69,6 +69,11 @@ import {
     recordPath as overridesRecordPath,
     removeListingOverrides,
 } from '../_lib/skill_listing_overrides.js';
+import {
+    codexSkillRoots,
+    recordPath as codexResidentRecordPath,
+    removeCodexResidentSet,
+} from '../_lib/codex_resident_set.js';
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { subtract_pointers } from '../_lib/json_pointers.js';
 import { PROJECT_BRIDGE_MARKERS, USER_SCOPE_PATHS } from '../install.js';
@@ -913,6 +918,30 @@ function _uninstall_global(opts: Options): number {
     // stdout and exiting 0 would leave the caller believing the content is
     // gone, which is the state this fix exists to make impossible.
     let refused = false;
+    // The codex resident set writes one policy file into each non-resident skill
+    // directory. That file is not in the deploy inventory, so the content removal
+    // below cannot see it — drop it first, or it survives as the only thing left
+    // in a directory the uninstall emptied.
+    if (tools.includes('codex') && !opts.dry_run) {
+        try {
+            let removed = 0;
+            let kept = 0;
+            for (const anchor of codexSkillRoots(os.homedir())) {
+                const res = removeCodexResidentSet(anchor, codexResidentRecordPath(anchor));
+                removed += res.removed.length;
+                kept += res.kept_user.length;
+            }
+            if (removed > 0 || kept > 0) {
+                _print(
+                    _stdout,
+                    `  · codex: removed ${removed} resident-set policy file(s), ` +
+                        `kept ${kept} the user changed`,
+                );
+            }
+        } catch (e) {
+            _print(_stderr, `⚠️  codex: resident-set removal skipped — ${String(e)}`);
+        }
+    }
     for (const tool of tools) {
         const [line, removed] = _remove_global_content(tool, {
             dry_run: opts.dry_run,

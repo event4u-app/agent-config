@@ -108,6 +108,33 @@ describe("isSyntheticPrompt", () => {
         "Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work that is already complete.",
       ),
     ).toBe(true);
+    // The same hand-back as the host actually delivers it on Claude Code: one
+    // sentence BEFORE the tag. Reproduced 2026-10-20 — a German session's pin
+    // was rewritten to `en` (prompt_chars 2188, en_markers 68) 149 ms after a
+    // cross-session message in this exact frame.
+    expect(
+      isSyntheticPrompt(
+        'Another Claude session sent a message:\n<agent-message from="ae05428258cf41348">\n  [Subagent hand-back] The text below is the final report.',
+      ),
+    ).toBe(true);
+    expect(
+      isSyntheticPrompt(
+        'Another Claude session sent a message:\n<cross-session-message from="uds:/tmp/cc-socks/86623.sock" from-name="lane-3">\nDefect confirmed, and one correction.',
+      ),
+    ).toBe(true);
+  });
+
+  it("reads the host's agent-message sentence as human unless the wrapper tag follows it", () => {
+    expect(
+      isSyntheticPrompt(
+        "Another Claude session sent a message: warum hat das meinen Pin gesetzt?",
+      ),
+    ).toBe(false);
+    expect(
+      isSyntheticPrompt(
+        'warum steht hier Another Claude session sent a message:\n<agent-message from="x">?',
+      ),
+    ).toBe(false);
   });
 
   it("does not fire on a human prompt, including one that quotes a notification", () => {
