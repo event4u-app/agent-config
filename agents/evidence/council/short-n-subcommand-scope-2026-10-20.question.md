@@ -1,4 +1,8 @@
-<!-- evidence-type: council-question -->
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-20, committed verbatim so a
+     reader can check the seat's reading against what it was actually asked
+     (evaluator-independence § the prompt ships with the verdict). -->
 
 # Review: scoping short `-n` in a git hook-bypass guard
 
