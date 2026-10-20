@@ -17,6 +17,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     acquireCleanupLock,
+    assertNoLinks,
     cleanupSpool,
     readHandle,
     claimAndDelete,
@@ -447,6 +448,106 @@ describe('the cap, through the store path', () => {
         const big = 'x'.repeat(500);
         expect(store(big, size(big) - 1, Date.now())).toEqual({ action: 'skip', reason: 'too-large' });
         expect(spoolFiles()).toEqual([]);
+    });
+});
+
+describe('a held lock and a concurrent identical store', () => {
+    const view = (env: JsonObject): SpoolStageView => ({ mode: 'protect', placeholder: env, counts: [], refused: [] });
+    const size = (body: string): number => Buffer.byteLength(JSON.stringify({ type: 'text', file: { content: body } }));
+
+    it('with the lock held elsewhere, a store that would exceed the cap is not written; one that fits is', () => {
+        const a = 'a'.repeat(100);
+        const b = 'b'.repeat(100);
+        const now = Date.now();
+        spoolResult(readEnvelope(a), view(readEnvelope(a)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: 10_000 });
+        const dir = path.join(tmp, SPOOL_DIR);
+        const held = acquireCleanupLock(dir, now);
+        expect(held).not.toBeNull();
+        expect(spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: size(a) + size(b) - 1 })).toEqual({
+            action: 'skip',
+            reason: 'cap-busy',
+        });
+        expect(spoolFiles()).toHaveLength(1);
+        expect(spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: size(a) + size(b) })).toMatchObject({
+            action: 'stored',
+        });
+        releaseCleanupLock(dir, held as string);
+    });
+
+    it('a store whose cleanup throws while an identical store completes leaves that store\'s handle readable', () => {
+        const now = Date.now();
+        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
+        const env = readEnvelope('the same bytes, twice at once');
+        let other: { action: string; handle?: string } | null = null;
+        const interleaved = {
+            hooks: {
+                beforeClaim: (): void => {
+                    other = spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle?: string };
+                    throw new Error('disk gone');
+                },
+            },
+        };
+        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now, interleaved)).toEqual({ action: 'skip', reason: 'store-error' });
+        expect(other).toMatchObject({ action: 'stored' });
+        expect(readHandle(tmp, (other as unknown as { handle: string }).handle, S, undefined, now).state).toBe('ok');
+    });
+});
+
+describe('the repository is not trusted for spool paths', () => {
+    let outside = '';
+    beforeEach(() => {
+        outside = fs.mkdtempSync(path.join(os.tmpdir(), 'spool-outside-'));
+    });
+    afterEach(() => fs.rmSync(outside, { recursive: true, force: true }));
+    const view = (env: JsonObject): SpoolStageView => ({ mode: 'protect', placeholder: env, counts: [], refused: [] });
+
+    it.each([
+        ['the spool directory', SPOOL_DIR],
+        ['an ancestor', 'agents'],
+    ])('%s as a symlink: nothing is stored, and nothing outside is written or chmodded', (_label, rel) => {
+        fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true });
+        fs.chmodSync(outside, 0o755);
+        fs.symlinkSync(outside, path.join(tmp, rel));
+        const env = readEnvelope('would escape');
+        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
+        expect(fs.readdirSync(outside)).toEqual([]);
+        expect(fs.statSync(outside).mode & 0o777).toBe(0o755);
+    });
+
+    it('a symlinked key file is never used', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(outside, 'k'), Buffer.alloc(32, 9));
+        fs.symlinkSync(path.join(outside, 'k'), path.join(dir, '.key'));
+        const env = readEnvelope('signed with a planted key?');
+        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
+        expect(spoolFiles()).toEqual([]);
+    });
+
+    it('an entry replaced by a symlink is not served', () => {
+        const { handle, address } = storeBytes(tmp, Buffer.from('real'), S);
+        const file = path.join(tmp, SPOOL_DIR, address);
+        fs.rmSync(file);
+        fs.writeFileSync(path.join(outside, 'x'), 'real');
+        fs.symlinkSync(path.join(outside, 'x'), file);
+        expect(readHandle(tmp, handle, S).state).not.toBe('ok');
+    });
+
+    it('a symlinked observation file is not appended to', () => {
+        fs.mkdirSync(path.join(tmp, path.dirname(SPOOL_OBSERVATION_FILE)), { recursive: true });
+        fs.writeFileSync(path.join(outside, 'log'), '');
+        fs.symlinkSync(path.join(outside, 'log'), path.join(tmp, SPOOL_OBSERVATION_FILE));
+        const env = readEnvelope('observed');
+        spoolResult(env, { ...view(env), mode: 'observe' }, ['tool_response'], tmp, READ_TEXT);
+        expect(fs.readFileSync(path.join(outside, 'log'), 'utf8')).toBe('');
+    });
+
+    it('assertNoLinks passes a plain path and a missing one', () => {
+        fs.mkdirSync(path.join(tmp, SPOOL_DIR), { recursive: true });
+        expect(() => assertNoLinks(tmp, SPOOL_DIR)).not.toThrow();
+        expect(() => assertNoLinks(tmp, path.join(SPOOL_DIR, 'absent'))).not.toThrow();
     });
 });
 

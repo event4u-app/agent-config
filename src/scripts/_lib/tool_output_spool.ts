@@ -81,8 +81,6 @@ export interface StoredEntry {
     readonly address: string;
     readonly handle: string;
     readonly bytes: number;
-    /** False when an entry with these bytes already existed and this store only refreshed it. */
-    readonly created: boolean;
 }
 
 function spoolDir(root: string): string {
@@ -93,9 +91,31 @@ function sha256(bytes: Buffer): string {
     return createHash('sha256').update(bytes).digest('hex');
 }
 
+/**
+ * Throw when any existing component of `rel` under `root` is a symlink. The
+ * repository is not trusted for these paths: a checked-in link at
+ * `agents/runtime/spool` would send writes, chmod and deletions out of the
+ * workspace.
+ */
+export function assertNoLinks(root: string, rel: string): void {
+    let cur = root;
+    for (const part of rel.split(path.sep)) {
+        cur = path.join(cur, part);
+        let st: fs.Stats;
+        try {
+            st = fs.lstatSync(cur);
+        } catch {
+            return;
+        }
+        if (st.isSymbolicLink()) throw new Error('symlink in spool path');
+    }
+}
+
 /** Create the store's directory, or tighten an existing one, to 0700. */
 function ensureSpoolDir(root: string): void {
+    assertNoLinks(root, SPOOL_DIR);
     fs.mkdirSync(spoolDir(root), { recursive: true, mode: 0o700 });
+    assertNoLinks(root, SPOOL_DIR);
     fs.chmodSync(spoolDir(root), 0o700);
 }
 
@@ -103,6 +123,7 @@ function spoolKey(root: string, create: boolean): Buffer | null {
     const file = path.join(spoolDir(root), KEY_FILE);
     const read = (): Buffer | null => {
         try {
+            assertNoLinks(root, path.join(SPOOL_DIR, KEY_FILE));
             const k = fs.readFileSync(file);
             return k.length === 32 ? k : null;
         } catch {
@@ -164,10 +185,9 @@ export function storeBytes(root: string, bytes: Buffer, session: string, now: nu
     }
     fs.closeSync(fd);
     // An existing entry has the same bytes by construction; the rename refreshes its age.
-    const created = !fs.existsSync(target);
     fs.renameSync(tmp, target);
     const expiry = Math.floor((now + SPOOL_RETENTION_MS) / 1000);
-    return { address: addr, handle: `${addr}.${String(expiry)}.${mac(key, addr, expiry, session)}`, bytes: bytes.length, created };
+    return { address: addr, handle: `${addr}.${String(expiry)}.${mac(key, addr, expiry, session)}`, bytes: bytes.length };
 }
 
 /**
@@ -198,6 +218,7 @@ export function readHandle(
     }
     let bytes: Buffer;
     try {
+        assertNoLinks(root, path.join(SPOOL_DIR, addr));
         bytes = fs.readFileSync(path.join(spoolDir(root), addr));
     } catch {
         return { state: 'missing' };
@@ -211,10 +232,9 @@ export function readHandle(
     return { state: 'ok', bytes: bytes.subarray(start, end) };
 }
 
-/** Test seams and the one entry a cleanup must leave: the store that just triggered it. */
+/** Test seam: run code inside the window a concurrent writer or cleaner can use. */
 export interface CleanupHooks {
     readonly beforeClaim?: (file: string) => void;
-    readonly keep?: string;
 }
 
 /** The cap and the cleanup seams a store runs with; production passes neither. */
@@ -239,15 +259,15 @@ export function cleanupSpool(
     now: number = Date.now(),
     maxBytes: number = SPOOL_MAX_BYTES,
     hooks: CleanupHooks = {},
-): { removed: number } {
+): { removed: number; ran: boolean } {
     const dir = spoolDir(root);
-    if (!fs.existsSync(dir)) return { removed: 0 };
+    assertNoLinks(root, SPOOL_DIR);
+    if (!fs.existsSync(dir)) return { removed: 0, ran: true };
     const owner = acquireCleanupLock(dir, now);
-    if (owner === null) return { removed: 0 };
+    if (owner === null) return { removed: 0, ran: false };
     let removed = 0;
     try {
         const live: { name: string; seen: fs.Stats }[] = [];
-        let kept = 0;
         for (const name of fs.readdirSync(dir)) {
             let st: fs.Stats;
             try {
@@ -259,14 +279,12 @@ export function cleanupSpool(
             const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
             if (expired) {
                 if (claimAndDelete(dir, name, st, owner, hooks)) removed += 1;
-            } else if (name === hooks.keep) {
-                kept = st.size;
             } else if (ADDRESS.test(name)) {
                 live.push({ name, seen: st });
             }
         }
         live.sort((a, b) => a.seen.mtimeMs - b.seen.mtimeMs);
-        let total = live.reduce((n, e) => n + e.seen.size, kept);
+        let total = live.reduce((n, e) => n + e.seen.size, 0);
         for (const e of live) {
             if (total <= maxBytes) break;
             if (claimAndDelete(dir, e.name, e.seen, owner, hooks)) {
@@ -277,7 +295,7 @@ export function cleanupSpool(
     } finally {
         releaseCleanupLock(dir, owner);
     }
-    return { removed };
+    return { removed, ran: true };
 }
 
 /**
@@ -310,6 +328,21 @@ export function claimAndDelete(dir: string, name: string, seen: fs.Stats, owner:
     } finally {
         fs.rmSync(claimed, { force: true });
     }
+}
+
+/** Bytes in published entries. In-flight temp files do not count toward the cap. */
+function spoolBytes(root: string): number {
+    const dir = spoolDir(root);
+    let n = 0;
+    for (const name of fs.readdirSync(dir)) {
+        if (!ADDRESS.test(name)) continue;
+        try {
+            n += fs.statSync(path.join(dir, name)).size;
+        } catch {
+            // removed meanwhile
+        }
+    }
+    return n;
 }
 
 /**
@@ -361,7 +394,7 @@ export interface SpoolStageView {
 }
 
 export type SpoolOutcome =
-    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'too-large' | 'store-error' | 'store-unavailable' }
+    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'too-large' | 'cap-busy' | 'store-error' | 'store-unavailable' }
     | { readonly action: 'observed'; readonly class: ContentClass; readonly bytes: number; readonly digest: string }
     | ({ readonly action: 'stored'; readonly class: ContentClass } & StoredEntry);
 
@@ -381,7 +414,9 @@ function isImage(v: unknown): boolean {
 function observe(root: string, line: Record<string, unknown>): void {
     try {
         const file = path.join(root, SPOOL_OBSERVATION_FILE);
+        assertNoLinks(root, SPOOL_OBSERVATION_FILE);
         fs.mkdirSync(path.dirname(file), { recursive: true });
+        assertNoLinks(root, SPOOL_OBSERVATION_FILE);
         fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
     } catch {
         // observability never breaks the hook
@@ -428,16 +463,17 @@ export function spoolResult(
         const cap = limits.maxBytes ?? SPOOL_MAX_BYTES;
         // Admission: an entry the cap could never hold is not written at all.
         if (raw.length > cap) return { action: 'skip', reason: 'too-large' };
-        const entry = storeBytes(root, raw, session, now);
+        ensureSpoolDir(root);
+        // Room is made BEFORE anything is published, so no write ever has to be taken
+        // back: an entry at a shared address may already carry another store's handle.
+        let made: { removed: number; ran: boolean };
         try {
-            cleanupSpool(root, now, cap, { ...limits.hooks, keep: entry.address });
+            made = cleanupSpool(root, now, cap - raw.length, limits.hooks);
         } catch {
-            // A store that cannot enforce its bounds does not keep a write it created.
-            // An entry that already existed holds the same bytes and earlier handles; it stays.
-            if (entry.created) fs.rmSync(path.join(spoolDir(root), entry.address), { force: true });
             return { action: 'skip', reason: 'store-error' };
         }
-        return { action: 'stored', class: cls, ...entry };
+        if (!made.ran && spoolBytes(root) + raw.length > cap) return { action: 'skip', reason: 'cap-busy' };
+        return { action: 'stored', class: cls, ...storeBytes(root, raw, session, now) };
     } catch {
         return { action: 'skip', reason: 'store-error' };
     }

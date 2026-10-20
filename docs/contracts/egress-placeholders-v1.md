@@ -328,24 +328,27 @@ No setting, environment variable or config file populates the selection.
 - *Crash durability* — **not promised.** The directory is not fsynced, so a
   crash can lose an entry whose rename had completed. The store is a cache of
   bytes the model already received; a lost entry reads `missing`.
-- *Capacity and age* — a store first refuses an entry larger than the cap
-  (`too-large`), then writes, then runs cleanup, which never evicts the entry
-  that triggered it. A sequential store therefore completes within the cap.
-  Two limits, stated: cleanup is *attempted* at every store, and if another
-  cleaner holds the lock this one returns without cleaning, so under
-  contention a completed store can leave the store over the cap until the next
-  cleanup; writers do not reserve space. A cleanup that fails removes the
-  write it followed and answers `store-error`. A read whose handle passed
-  every check also runs cleanup; a malformed, forged or foreign-session handle
-  reaches no cleanup and no entry, though a syntactically valid one still
-  reads the key file to check its MAC.
+- *Capacity and age* — a store refuses an entry larger than the cap
+  (`too-large`), then runs cleanup to make room for its bytes, and only then
+  publishes. Nothing is ever taken back after publication, because an entry
+  at a shared address may already carry another store's handle. A cleanup that
+  throws means nothing was written (`store-error`). If another cleaner holds
+  the lock, the store measures the published entries and is not written when
+  it would exceed the cap (`cap-busy`). The cap counts published entries; temp
+  files in flight do not count, and concurrent stores that each made room can
+  together exceed it until the next cleanup. A read whose handle passed every
+  check also runs cleanup; a malformed, forged or foreign-session handle reaches
+  no cleanup and no entry, though a syntactically valid one still reads the
+  key file to check its MAC.
+- *Paths the repository could plant* — every existing component of the spool
+  directory, the key, an entry and the observation file is checked with
+  `lstat`; a symlink anywhere on those paths refuses the store or the read, so
+  writes, chmod and deletions cannot be redirected out of the workspace.
 - *Complete writes* — every byte is written (short writes are looped) and
   fsynced before the rename; a failed write removes its temp file. The key is
   published the same way, by link, so a concurrent first store reads a whole
   key or none; a key file of the wrong length refuses every store
   (`store-error`) rather than signing with it.
-- *Rollback* — a store whose cleanup fails removes its entry only if it created
-  it; an entry it merely refreshed keeps the bytes earlier handles point at.
 - *Deletion is a claim* — cleanup renames an entry to a name only it uses and
   inspects what it took (inode, mtime, size). A file a writer replaced after
   cleanup measured it is linked back, unless an even newer copy already holds
