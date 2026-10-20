@@ -178,6 +178,13 @@ selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
 
 *Exit: 2.1–2.4 green; nothing is shortened yet, and `delivered_bytes` still equals `raw_bytes`.*
 
+<!-- blocked-by: tool-output-store-refused-until-activation-is-gated -->
+**Phase 2 is written and locally green, and it does not ship.** The AI council
+refused it 2/2 on 2026-10-20 under ADR-268 § 4. The four boxes above stay `[x]`
+because the work they describe is done and verified; what is blocked is the
+LANDING, not the step. Record, verdict and the five conditions:
+`agents/evidence/ratifications/tool-output-spool-20261020.md`.
+
 ## Phase 3 — Shorten, in observe mode first
 
 - [ ] **3.1 Execution profile: a deterministic summary per selected class.** Only
@@ -234,6 +241,21 @@ selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
       of the same path within three turns. A rate above the stated bound (D4)
       disarms 4.1 and records the null.
       verify: `ls agents/evidence/analysis/ | grep -c reread-reference` -> /^[1-9]/
+
+## Blockers
+
+### blocker: tool-output-store-refused-until-activation-is-gated
+
+- **Status:** open — raised 2026-10-20 by the ratification round required for the Phase 2 push.
+- **Class:** 2 — the conditions are agent-executable work, and the verdict that lifts them is the council's, not the owner's.
+- **Run:** the five conditions below, then `./scripts-run src/scripts/council_cli run <question> --output agents/runtime/council/responses/<slug>.md --confirm` for a renewed round.
+- **Owner:** council
+- **Blocks:** the PUSH of Phase 2 (steps 2.1–2.4 and every later phase that builds on the store). Not the steps' correctness — they are locally green.
+- **Question:** is the tool-output store an increase in the agent's own power? Both seats answered yes-in-latent-form and refused the submitted framing of `confirmed-non-expanding`.
+- **What to do:** (1) show that EVERY activation or broadening path triggers ratification, not only `_lib/tool_output_selection.ts`; (2) tests proving an empty selection never loads the store, writes, issues a handle, withholds output or changes behaviour; (3) document and test authorization scope, expiry, replay, range requests, equality leakage, retention, cleanup failure, partial writes and corruption; (4) separate the code-integrity claim from the stored-data security claim; (5) resubmit the complete diff with that evidence.
+- **Recommendation:** resubmit asking for `ratified`, not `confirmed-non-expanding`. A seat said so directly: if the controls hold, this is an accepted expansion rather than no expansion, and arguing the weaker verdict again spends a round on a framing one seat has already rejected.
+- **If you do nothing:** the branch cannot be pushed at all — the pre-push gate reads the whole governed diff, so even the resolved `origin/main` merge sitting in the worktree stays local.
+- **Resolved when:** a council round over the same subject returns `ratified` or `confirmed-non-expanding` from both seats, and the artefact under `agents/evidence/ratifications/` carries that verdict with a subject digest matching the pushed diff.
 
 ## Decisions
 
