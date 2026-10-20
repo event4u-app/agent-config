@@ -99,9 +99,30 @@ settings key selects it.**
 - **D3 of `road-to-an-installed-layer-that-is-thinned`** — *the template value is
   not consent*. True while the key existed; it now has no key to apply to.
 
-ADR-267's other decisions stand, including its reading that an absent key
-resolves to the full form — which is the behaviour the computed function keeps
-as its own default.
+## Not reopened
+
+The narrowing is exactly as wide as `supersedes_scope` says, and this section
+exists because a scoped supersession without it reads as a general relaxation —
+the reading a safety floor cannot survive.
+
+- **ADR-267's other decisions are not reopened.** Only decision 3 is narrowed.
+  Its reading that an ABSENT key resolves to the FULL form stands unchanged, and
+  is the behaviour the computed function keeps as its own default: a package
+  that cannot read its own pack list ships more than it should, never less.
+  Its delivery default for `claude-code` is untouched.
+- **ADR-278 is superseded in full, and that supersedes a DESCRIPTION, not a
+  permission.** The record said the user-global layer MAY carry the thinning
+  opt-in; there is no opt-in key left to carry, so the sentence describes a
+  mergeable key that no longer exists. Nothing about what the user-global layer
+  may carry in general is decided here — the cascade, its precedence and every
+  other key on it are unchanged.
+- **D3 of `road-to-an-installed-layer-that-is-thinned` is narrowed, not
+  reversed.** "The template value is not consent" stays true for every key that
+  still exists. It is retired for this one because the key it governed is gone,
+  which removes its subject rather than its rule.
+- **No consent floor moves.** `settings-ask-protocol`'s class contract, the
+  `consentVerdict` reader and the B-class provenance requirement are untouched:
+  removing a key removes a question, never a permission.
 
 ## Consequences
 
