@@ -647,7 +647,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 <!-- asked: 2026-10-20 | record: agents/evidence/analysis/skill-arrival-effect-result-20261020.md -->
 
-- **Status:** open — raised 2026-10-20 by step 5.2's arm S3; its measurement was completed the same day (probe row `unlisted-skill-not-in-model-list`), so what is open is the remedy, not the reading
+- **Status:** resolved — remedy (a). Decided by: AI council (2/2, 2026-10-20), record `agents/evidence/council/second-host-unlisted-reachability-20261020.md` with its prompt beside it. Shipped the same day: `src/scripts/_lib/codex_skill_finder.ts` writes one listed entry, `agent-config-skill-finder`, that indexes every unlisted name under the directory holding it and routes by exact name or through `route:explain --skills`; its listing cost is reserved inside the budget before the split; `skill_reach` classifies an unlisted skill the finder routes to by the path rule against this host's keys and warns on any left unrouted. ADR-289 carries an amendment defining the one deterministic operation on such a host. Live probes: `agents/evidence/analysis/second-host-finder-probe-20261020.md`. Was: open — raised 2026-10-20 by step 5.2's arm S3; its measurement was completed the same day (probe row `unlisted-skill-not-in-model-list`), so what was open was the remedy, not the reading
 - **Owner:** council — a host-behaviour question answerable by one probe, with reversible internal remedies. It reaches the owner only if the answer turns out to weaken what ADR-289 (b) published.
 - **Class:** 2
 - **Blocks:** AC-1 and AC-4. No step: 4.1 ships, and 5.2's control says why — without it the host already drops 406 entries by alphabet behind a warning, so the resident set does not reduce reach, it stops reach being decided by spelling.
@@ -660,11 +660,11 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 <!-- asked: 2026-10-20 | record: agents/evidence/analysis/skill-fork-pilot-result-20261020.md -->
 
-- **Status:** open — posed 2026-10-20 by step 3.3 on 3.2's result
+- **Status:** resolved — carried, still open and unanswered, to `road-to-skills-that-arrive-when-called-carried` (`agents/roadmaps/later/`), by AI council decision 2026-10-20 (2/2, `agents/evidence/council/fork-widening-disposition-20261020.md`): carry rather than record `held` for the owner (was: open — posed 2026-10-20 by step 3.3 on 3.2's result)
 - **Owner:** owner — widening changes what a consumer's conversation contains when a shipped skill is invoked, on every install, and 3.2 closed HARM
 - **Class:** 3
 - **Ownership:** product-owned
-- **Blocks:** nothing. The pilot set stays at five and `renderForkContext` ships unwired; every other step proceeds.
+- **Blocks:** nothing. The pilot set stays at five and `renderForkContext` ships unwired; every other step proceeds. The owner question lives on in the carried file.
 - **What to do:** pick exactly one — (a) widen: name the report skills whose bodies carry no dependence on the invoking conversation, and ship `context: fork` for them on the first host; (b) hold at five and leave the render unwired, which is today's state; or (c) retire the pilot and delete the render.
 - **Resolved when:** the answer is recorded here and the pilot config's `status` says `widened`, `held` or `retired`.
 - **Recommendation:** (b) for now. A2 shows the saving is real and scales with the body, so there IS something here — the six D4 skills at ≥ 20,193 characters are exactly where it would pay. A3 shows the saving is paid for in conversation context, and nothing measured tells you which skill can afford that; it is a per-skill reading of what each body assumes about the turn it was called in. Five skills is a cheap place to be wrong and three hundred is not.
@@ -694,6 +694,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 | D7 | reversible-technical | council:skills-arrive-reach-shape-20261018 | Output shape is a committed data file listing every skill by hand; the class is standing wherever the call was unclear, and standing is also the runtime default for a missing name | AI council 2026-10-18; a frontmatter key would spend 301 skill byte budgets and a heuristic over prose is not deterministic | 3.2 shows a skill classed standing losing nothing when forked |
 | D5 | product-owned | owner | Option (a) on `listing-override-write-is-owner-owned`: write `skillOverrides` for package-owned skills into the user-global host settings, never over a user value, removed on uninstall, no settings key — an owner lowering of the recorded never-write commitment | Owner chat answer "1", 2026-10-14; the advisory option hands the user the configuration the 2026-10-12 directive removes | a host build changes what `name-only` does, or a consumer reports a value of theirs touched |
 | D8 | product-owned | council:agents/evidence/council/completeness-skills-owe-20261018.md | Blocker `which-completeness-skills-owe` → (b) reach, and 6.3 keeps every skill a surviving artefact declares (ADR-289). The contract is published as met only once its operational definition exists and the reach report counts zero `unreachable`; `projection.mode` stays until the reach mechanism and its tests exist | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | a supported host cannot supply a deterministic retrieval path and cannot hold the skill either |
+| D10 | reversible-technical | council:agents/evidence/council/second-host-unlisted-reachability-20261020.md | Blocker `second-host-unlisted-reachability` → remedy (a): an installer-written listed entry on the second host that indexes every unlisted skill and routes to it, paid for inside the listing budget, with its own ownership record; an unlisted skill it routes to is classified by the path rule, one it does not is a warning | AI council 2026-10-20, `anthropic` + `openai`, prompt mode, two rounds, 2/2, $0.00; both rejected (b) and (c) as weakening ADR-289 | the host gains a way to list a skill without spending budget on it, or a live probe shows the entry not consulted for a task no listed skill fits |
 | D9 | reversible-technical | agent | The lease collect runs at the start of every materialisation request and on uninstall, NOT in the `session_start` read 4.4 names. The lease, its TTL, the keying by host config root and the never-remove-under-a-live-lease rule are unchanged; only the slot moved, and it moved to another existing moment — still no daemon (K9), still nothing on `stop` (K3) | Measured 2026-10-20: the `session_start` slot is inside the hook dispatcher bundle, which had 454 bytes of headroom, and the collector measured 5,595 bytes OVER the ceiling — a standing cost on every hook event on every host for a collect that finds an empty lock on every install today. K9's recorded decision tested daemon-versus-`session_start` and did not test this mechanism, so it does not bind. What the change accepts is a LATE collect, and a late collect cannot cause the harm 4.4 prevents; only an eager one could. Routed to the council first (three runs 2026-10-20, necessity gate `proceed/necessary`, quorum `concluded` 2/2, anthropic quota 3 → 7 so the seats were contacted) and no response was written in this worktree lane | the hook bundle gains ≥ 6 KB of headroom by other means, or a consumer reports an entry lingering long enough to matter |
 
 ## Kill register
@@ -737,21 +738,26 @@ beyond its name.
 | 5 | Closing the dependency hole grows the install this file is thinning | product | 6.3 keeps every skill a surviving artefact declares, so the default projection gets larger — the opposite direction from the sibling thinning roadmap. | The growth is bounded by the declarations themselves and measured, not estimated: 6.3's verify prints the new projected count and it is published rather than assumed. A declared dependency that is pruned is a broken install either way; the honest trade is a larger install over a silently incomplete one, and 23 of the 28 sit in one pack, so per-pack pruning of the declaring COMMAND is the cheaper lever if the number lands badly. | Phase 6 — Small items to existing carriers |
 | 6 | The rule-name linter is built against the wrong population | implementation | 6.4's figure of 2 was measured on the SOURCE tree; the round's source claimed 26 from the installed tree. A linter sized for 2 may meet a much larger set where it actually runs. | 6.4 requires the installed-tree count to be re-measured before it is quoted, and the linter is a seeded-fixture check in both directions rather than a one-off cleanup — a larger population changes the effort, not the correctness. | Phase 6 — Small items to existing carriers |
 | 7 | A resident set sized against one root while the host reads two | implementation | The host reads `~/.codex/skills`, where this package deploys for it, AND `$HOME/.agents/skills`, its own documented root, which this package writes under another host's row — 309 and 459 entries on the maintainer machine, and 0.3 observed a name in both being listed twice. A set computed over one root is arithmetic applied to half the problem. | **Realised and fixed 2026-10-20**: the first 4.1 left the warning firing at 153 omitted. One set is now computed across every root the host reads that the package writes, with the duplicate disabled in the later root. Live after: no warning. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
-| 8 | Taking a skill out of the listing takes it out of reach | product | 4.1 buys a listing that fits by disabling implicit invocation for everything outside the resident set. If that also removes the skill from what a model can reach, the trade breaks what ADR-289 (b) published — every skill reachable in one deterministic step. | **Measured 2026-10-20 and it went the wrong way**: a policy-disabled skill is not in the model-visible skills list and the model does not reach for it. Not mitigated; registered as `second-host-unlisted-reachability`, AC-1 and AC-4 held open on it, and three named remedies with a recommendation. The floor under it: without 4.1 the host already drops 406 entries by alphabet, so reach is not reduced, only made knowable. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
+| 8 | Taking a skill out of the listing takes it out of reach | product | 4.1 buys a listing that fits by disabling implicit invocation for everything outside the resident set. If that also removes the skill from what a model can reach, the trade breaks what ADR-289 (b) published — every skill reachable in one deterministic step. | **Measured 2026-10-20 and it went the wrong way**: a policy-disabled skill is not in the model-visible skills list and the model does not reach for it. **Mitigated the same day** by remedy (a) of `second-host-unlisted-reachability` (AI council 2/2): an installer-written finder entry, listed inside the budget, indexes every unlisted skill and routes to it by name or by search; live probes reached a named and a searched non-resident skill and followed each one's last line. The residue: a model that is not pointed at skills does not consult the finder on its own. The floor under it: without 4.1 the host already drops 406 entries by alphabet, so reach is not reduced, only made knowable. | Phase 4 — Materialise on demand, only where a host drops or lacks a skill |
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every skill is reachable on every host with native skills; `doctor`'s
+- [x] AC-1 — Every skill is reachable on every host with native skills; `doctor`'s
   installed / described / name-only / reachable-not-installed / degraded counts sum
   to the authored count.
-  <!-- blocked-by: second-host-unlisted-reachability -->
-  Half met 2026-10-20: `doctor --check skill-reach` reports a row per host with
+  Met 2026-10-20 with the blocker's remedy (a). On a scratch home carrying the
+  second host's resident set and the finder: `codex (~/.codex/skills):
+  installed 35 (described 35 · name-only 0 · unlisted 0) ·
+  reachable-not-installed 266 · degraded 0 · unreachable 0 — of 301 authored`,
+  status `ok`; every unlisted skill passes `finderRoutes`, so the 266 is an
+  exhaustive count, and removing the finder turns the check to `warn`
+  (`tests/scripts/skill_reach.test.ts`). Earlier the same day, half met: `doctor --check skill-reach` reports a row per host with
   native skills, not one for the first host only, and each row sums —
   claude-code 300 installed + 1 reachable-not-installed of 301, codex the same
   on this machine, 0 unreachable on both. The check now WARNS on a non-zero
   `unreachable`, so the criterion is a verdict rather than a number a reader
-  has to notice. The reachability half is held: 5.2's S3 falsified "a
-  non-resident skill stays invocable" on the second host, one-armed.
+  has to notice. The reachability half was held by 5.2's S3, which falsified "a
+  non-resident skill stays invocable" on the second host.
 - [x] AC-2 — No package-owned skill frontmatter key equals a host-documented key.
   Verified 2026-10-18: `validate_frontmatter` (which carries 1.2's
   `host-key-collision` row) read 456 artefacts, 0 failing.
@@ -759,13 +765,20 @@ beyond its name.
   Verified 2026-10-20: pre-registration `skill-fork-pilot-20261020.md`
   (sha256 `e8e4fe1e…4a0dab3b`) committed in `7ee747481` before the reported
   run; result `skill-fork-pilot-result-20261020.md`, labelled, closing HARM.
-- [ ] AC-4 — On the second host a fresh session shows no omission warning and every
+- [x] AC-4 — On the second host a fresh session shows no omission warning and every
   non-resident skill is reachable by 4.2's triggers.
-  <!-- blocked-by: second-host-unlisted-reachability -->
   First half met 2026-10-20, live and with a positive control: no omission
   warning with the resident set across both roots, against a control on the
   same scratch home printing `406 additional skills were not included`. Second
-  half held by the same blocker as AC-1.
+  half met the same day, live, with the finder
+  (`agents/evidence/analysis/second-host-finder-probe-20261020.md`): called by
+  name, a non-resident `docker` was loaded and an instruction on its LAST line
+  followed; through search-read, `route:explain --skills` ranked `sql-writing`,
+  which was read whole and followed; an unknown name was refused with the
+  nearest real names; still no omission warning with the finder listed. What
+  was NOT reached is stated there too: an ordinary task with nothing pointing
+  at skills consulted no skill at all — the `model-suggested` path 4.2 does not
+  count as a trigger.
 - [x] AC-5 — No removal is observed under a live lease in the 5.1 run.
   Verified 2026-10-20: G2 reads 0, reported with its weakness rather than as a
   clean pass. No entry was materialised during the 5.2 runs, so it is a zero
