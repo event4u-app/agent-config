@@ -738,7 +738,7 @@ invocation merged as a retro unit, in one call:
 The merge is an event, never a permission: this reads no merge setting and
 writes none. It does nothing when `retro.enabled` is `false`, and it runs no
 model — the retro itself is worked from the queue line afterwards
-([`/retro`](../../../meta/retro/command.md)). A run that merged nothing skips it.
+(`/retro`, memory pack). A run that merged nothing skips it.
 `/roadmap:process-full --merge` inherits this step, because it merges through
 this command.
 
