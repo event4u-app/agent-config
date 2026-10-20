@@ -5,7 +5,7 @@ Owner question: why does work so often stop on blockers, and which of them are
 avoidable? Two read-only passes over the tree and the host transcripts, then a
 two-seat council pass. Aggregates only: no prompt text or session id beyond the
 one reproduction named in Phase 1 of
-`agents/roadmaps/road-to-blockers-routed-before-they-are-filed.md`. Counts
+`agents/roadmaps/archive/road-to-blockers-routed-before-they-are-filed.md`. Counts
 marked ≈ are regex-classified (±10 %) or hand-classified; the rest are counted.
 
 ## A — Sessions (top-level transcripts, 2026-09-21..10-20)
