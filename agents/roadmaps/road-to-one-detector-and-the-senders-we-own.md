@@ -61,7 +61,7 @@ The placeholder grammar is one constant, chosen by a pre-registered measurement,
 and the contract states what each of four published states — `asserted`,
 `replaced`, `gated`, `uncovered` — proves.
 
-## Execution status — 2026-10-15
+## Execution status — 2026-10-20
 
 One lane took the three steps `road-to-placeholders-on-the-wire` Phase 1 waits
 on (its D9) and what they depend on: 0.1, 0.2, 0.3, 2.1 and 3.1. Everything else
@@ -88,11 +88,13 @@ is open.
   values) and 3.2 (variant suffix) landed. 2.3 (identifier rows) and 2.5
   (normalised detection, whose homoglyph fixture needs the e-mail row) were built
   and are held back: see 2.3.
-- **Next in order:** 2.3's fourth ratification round, then 2.5, 2.7, 3.3, 3.4,
-  2.6, 3.5. 2.7 goes before 3.3 because 3.3 turns the bundler's whole-line masks
-  into spans: until the keyword-assignment and `Authorization:` shapes are table
-  rows, a span replacer would pass a low-entropy password or a bearer value the
-  line mask catches today.
+- **2026-10-20:** 2.7 (before 3.3, so the span replacer never passes a
+  low-entropy password or a bearer value the line mask caught), 3.4, 3.5, AC-3
+  and AC-5 landed. 3.3 and 2.6 were built and stay open only on 2.3 (the
+  five-placeholder sample and the IBAN mutation need identifier rows), as do
+  AC-1, AC-2 and the identifier half of AC-6.
+- **Next in order:** 2.3's fourth ratification round (owner-invoked), then 2.5;
+  together they close 3.3, 2.6, AC-1, AC-2 and the identifier half of AC-6.
 
 ## What this roadmap deliberately does not do
 
@@ -575,21 +577,47 @@ response, with no host contract in between and no hook budget to spend — so
 - [ ] AC-1 — One rule table defines every credential and identifier pattern;
       the drift matrix is green and the `sk-ant-api03` row passes on every
       consumer.
+      *(2026-10-20: the credential half holds — every credential shape,
+      including the keyword assignments and class-spelled prefixes of 2.7, is
+      the table's, `check_credential_spelling` refuses a second spelling, and
+      the drift matrix with its `sk-ant-api03` row is green. Open on the
+      identifier half: the two unvalidated identifier copies of F3 are
+      replaced by step 2.3, which is owner-gated.)*
 - [ ] AC-2 — The council sample leaves with five placeholders and no lost line,
       and a removed final check turns its canary red. *(Discharges the owner's
       constraint for the council channel, state `asserted`.)*
+      *(2026-10-20: no line is lost and the canary is refused (3.3); the sample
+      leaves with two placeholders, not five, until the identifier rows of 2.3
+      exist and identifiers are replaced in `protect`/`strict`.)*
 - [x] AC-3 — The sender census has no empty cell; every sender is `asserted`,
       fixed-corpus or `uncovered` with a reason. *(3.4, 2026-10-20.)*
 - [x] AC-4 — Credential-class files cannot be read through a hooked tool on a
       deny-capable slot, and `hooks:doctor` prints the deny rows a user would
       paste and reports which are already in force (D10 — offered, never written).
-- [ ] AC-5 — The contract and threat-model row j exist; no shipped prose about
+- [x] AC-5 — The contract and threat-model row j exist; no shipped prose about
       this feature uses the word anonymisation; every channel this package does
       not write is published `uncovered` until the host-carrier roadmap changes
       it.
+      *(2026-10-20: the contract gained § Published, per channel — every host
+      channel, threat rows j2, j4 and j5, and the injected context listed
+      `uncovered`; a grep for `anonymi[sz]` over `src/` and `docs/` finds it only
+      in the screenshot-hygiene and council-blinding features, never in the
+      egress contract, threat row j or this feature's code.)*
 - [ ] AC-6 — The bars of 0.3 were committed before any Phase 2–3 data, and the
       measured result is published against them whatever it is; the grammar of
       3.1 is the spelling that bar selected.
+      *(2026-10-20: (d) was published 2026-10-15 and selected the grammar 3.1
+      carries. `internal/bench/reports/egress-placeholders-engine-2026-10-20.md`
+      publishes the credential half of (a), (b), (c) and (f), each scorer first
+      rejecting a planted defect: 17 vendor rows at 100 % recall,
+      `generic-assignment` at **75 %** (a JSON-quoted key is never seen — a
+      published null, the row's type stays `uncovered`), 0.29 % of tracked files
+      flagged, 0 idempotence mismatches, p95 8.8 ms at 64 KiB on darwin-arm64.
+      Open: the identifier half of (a), (b) and (c) and the paired quality run
+      (e) all need the identifier rows of 2.3; (f) on the CI runner class is
+      not taken. The PREREG and the first Phase 2–3 code reached `main` in one
+      squash commit, so the ordering is a fact of that PR's branch, not of
+      `main`.)*
 
 ## Lineage
 
